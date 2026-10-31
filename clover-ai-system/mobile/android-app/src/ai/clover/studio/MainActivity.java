@@ -111,10 +111,10 @@ public class MainActivity extends Activity {
         settings.setDatabaseEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
-        settings.setAllowFileAccessFromFileURLs(true);
-        settings.setAllowUniversalAccessFromFileURLs(true);
+        settings.setAllowFileAccessFromFileURLs(false);
+        settings.setAllowUniversalAccessFromFileURLs(false);
         settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setUserAgentString(
                 "CloverAIStudio-Android/1.0 (Samsung-Galaxy-S23; Snapdragon-8-Gen-2; ai.clover.studio)"
         );
@@ -315,6 +315,7 @@ public class MainActivity extends Activity {
                         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
                         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+                        intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
                         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to Clover AI Studio (Samsung S23)");
                         startActivityForResult(intent, REQ_SPEECH_INPUT);
                     } catch (Exception ex) {

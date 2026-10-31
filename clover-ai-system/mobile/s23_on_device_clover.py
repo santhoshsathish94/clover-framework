@@ -1523,27 +1523,18 @@ def generate_spoken_wav_data_url(text: str, base_dir: Path) -> str:
         clean_speech = "Here is your audio response from Clover."
 
     espeak_bin = shutil.which("espeak") or shutil.which("espeak-ng") or "/data/data/com.termux/files/usr/bin/espeak"
+    if not (Path(espeak_bin).exists() or shutil.which(espeak_bin)):
+        return ""
     with tempfile.TemporaryDirectory(dir=str(base_dir)) as tmpd:
         out_wav = Path(tmpd) / "speech.wav"
-        if Path(espeak_bin).exists() or shutil.which(espeak_bin):
-            subprocess.run(
-                [espeak_bin, "-v", "en-us", "-s", "158", "-p", "52", "-w", str(out_wav), clean_speech],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            wav_bytes = out_wav.read_bytes()
-        else:
-            sr = 16000
-            t = np.linspace(0.0, 1.5, int(sr * 1.5), endpoint=False, dtype=np.float32)
-            pcm = (0.25 * np.sin(2.0 * math.pi * 220.0 * t) * np.exp(-t * 1.2) * 32767.0).astype(np.int16)
-            buf = io.BytesIO()
-            with wave.open(buf, "wb") as wf:
-                wf.setnchannels(1)
-                wf.setsampwidth(2)
-                wf.setframerate(sr)
-                wf.writeframes(pcm.tobytes())
-            wav_bytes = buf.getvalue()
+        res = subprocess.run(
+            [espeak_bin, "-v", "en-us", "-s", "158", "-p", "52", "-w", str(out_wav), clean_speech],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        if res.returncode != 0 or not out_wav.is_file():
+            return ""
+        wav_bytes = out_wav.read_bytes()
     return "data:audio/wav;base64," + base64.b64encode(wav_bytes).decode("ascii")
 
 
@@ -1634,22 +1625,28 @@ class CloverS23OnDeviceSystem:
         self.py_compiler = CloverPythonGenerativeCompiler(allow_undefined=True)
         self.sutton_td_predictor = SuttonTDStatementPredictor()
 
-        # Layer 2 Tool: Live Web / Wikipedia / arXiv / DuckDuckGo / URL Search (`LiveWebSearchTool.execute`)
-        from live_web_search import LiveWebSearchTool
+        # S3 Tool: Multi-Provider Web Search (`Tavily`, `Brave Search`, `Wikipedia`, `arXiv`) + `research()` Relevance Filter
+        from web_search import SearchConfig, WebSearch
 
-        self.search_tool = LiveWebSearchTool(max_results=3)
+        self.search_config = SearchConfig.shared(
+            self.git_memory_repo.default_repo_dir / "config" / self.git_memory_repo.device / "search.json",
+            self.git_memory_repo.vault_dir / "search-keys.json",
+        )
+        self.search_tool = WebSearch(self.search_config)
 
-        # Pre-warm the default system + `<tools>` prefix in the 24-layer KV + ShortConv cache
+        # Pre-warm the shared `<|startoftext|><|im_start|>system\n` prefix in the 24-layer KV + ShortConv cache
         self._default_sys_prefix_ids = self.tokenizer.encode(
-            self._build_system_prompt(allow_internet=True, allow_python=True),
+            "<|startoftext|><|im_start|>system\n",
             allow_special=True,
         )
         self.engine.prefill_cached(self._default_sys_prefix_ids)
         self.setup_ms = round((time.perf_counter() - t0) * 1000.0, 2)
 
         # Persistent Studio Settings & Permissions (matching Laptop Clover AI Studio + S23 Unified SoC controls)
-        self.settings_path = self.base_dir / "s23_studio_settings.json"
-        self.perms_path = self.base_dir / "s23_studio_permissions.json"
+        self.settings_path = self.git_memory_repo.default_repo_dir / "config" / self.git_memory_repo.device / "settings.json"
+        self.legacy_settings_path = self.base_dir / "s23_studio_settings.json"
+        self.perms_path = self.git_memory_repo.default_repo_dir / "config" / self.git_memory_repo.device / "permissions.json"
+        self.legacy_perms_path = self.base_dir / "s23_studio_permissions.json"
         self.settings: dict[str, Any] = {
             "model": "omni",
             "engine": "adreno",
@@ -1660,39 +1657,49 @@ class CloverS23OnDeviceSystem:
                 "hybridlink": True,
                 "ncm": False,
                 "memory": True,
+                "recall": True,
                 "ontology": True,
                 "compiler": True,
                 "specmd_madvise": True,
             },
         }
-        if self.settings_path.exists():
-            try:
-                saved_s = json.loads(self.settings_path.read_text(encoding="utf-8"))
-                if isinstance(saved_s, dict):
-                    if saved_s.get("engine") in ("adreno", "cpu"):
-                        self.settings["engine"] = saved_s["engine"]
-                    if isinstance(saved_s.get("q4_operators"), bool):
-                        self.settings["q4_operators"] = saved_s["q4_operators"]
-                    if isinstance(saved_s.get("q4_lm_head"), bool):
-                        self.settings["q4_lm_head"] = saved_s["q4_lm_head"]
-                    if saved_s.get("tools") in ("ask", "always"):
-                        self.settings["tools"] = saved_s["tools"]
-                    if isinstance(saved_s.get("layers"), dict):
-                        for lk, lv in saved_s["layers"].items():
-                            if lk in self.settings["layers"] and isinstance(lv, bool):
-                                self.settings["layers"][lk] = lv
-            except Exception:
-                pass
+        for sp in (self.legacy_settings_path, self.settings_path):
+            if sp.exists():
+                try:
+                    saved_s = json.loads(sp.read_text(encoding="utf-8"))
+                    if isinstance(saved_s, dict):
+                        if saved_s.get("engine") in ("adreno", "cpu"):
+                            self.settings["engine"] = saved_s["engine"]
+                        if isinstance(saved_s.get("q4_operators"), bool):
+                            self.settings["q4_operators"] = saved_s["q4_operators"]
+                        if isinstance(saved_s.get("q4_lm_head"), bool):
+                            self.settings["q4_lm_head"] = saved_s["q4_lm_head"]
+                        if saved_s.get("tools") in ("ask", "always"):
+                            self.settings["tools"] = saved_s["tools"]
+                        if isinstance(saved_s.get("layers"), dict):
+                            for lk, lv in saved_s["layers"].items():
+                                if lk in self.settings["layers"] and isinstance(lv, bool):
+                                    self.settings["layers"][lk] = lv
+                except Exception:
+                    pass
         self._apply_hardware_settings()
 
         self.permissions_meta: dict[str, dict[str, str]] = {
             "internet": {
                 "label": "Internet search and web pages",
-                "detail": "Searches Wikipedia, arXiv and DuckDuckGo and opens web pages you link.",
+                "detail": "Searches with the service chosen in Settings (Tavily, Brave Search, or Wikipedia & arXiv) and opens web pages.",
             },
             "code": {
                 "label": "Run code Clover writes",
                 "detail": "Executes Python code in an isolated on-device subprocess with a timeout.",
+            },
+            "shell": {
+                "label": "Run local terminal commands (Termux / sh)",
+                "detail": "Runs shell commands on this device with a 30-second limit.",
+            },
+            "ssh": {
+                "label": "Connect to remote SSH hosts",
+                "detail": "Runs non-interactive SSH commands on remote hosts you configure.",
             },
             "files": {
                 "label": "Read phone files and attachments",
@@ -1703,20 +1710,103 @@ class CloverS23OnDeviceSystem:
                 "detail": "Allows voice input, spoken audio replies and procedural PNG/MP4/WAV generation.",
             },
             "memory": {
-                "label": "Persistent Memory Graph (Layer 4)",
-                "detail": "Retrieves and stores notes in Clover's relational memory tree on this S23.",
+                "label": "Persistent Memory & Recall (S1 & S2)",
+                "detail": "Retrieves and stores notes in Clover's local Git memory repository on this S23.",
             },
         }
-        self.perm_modes: dict[str, str] = {k: "allow" for k in self.permissions_meta}
-        if self.perms_path.exists():
-            try:
-                saved_p = json.loads(self.perms_path.read_text(encoding="utf-8"))
-                if isinstance(saved_p, dict):
-                    for pk, pv in saved_p.items():
-                        if pk in self.perm_modes and pv in ("allow", "ask", "deny"):
-                            self.perm_modes[pk] = pv
-            except Exception:
-                pass
+        self.perm_modes: dict[str, str] = {
+            "internet": "allow",
+            "code": "allow",
+            "shell": "ask",
+            "ssh": "ask",
+            "files": "allow",
+            "voice_camera": "allow",
+            "memory": "allow",
+        }
+        for pp in (self.legacy_perms_path, self.perms_path):
+            if pp.exists():
+                try:
+                    saved_p = json.loads(pp.read_text(encoding="utf-8"))
+                    if isinstance(saved_p, dict):
+                        for pk, pv in saved_p.items():
+                            if pk in self.perm_modes and pv in ("allow", "ask", "deny"):
+                                self.perm_modes[pk] = pv
+                except Exception:
+                    pass
+
+        # S2 · Relationships: Turn-Level MemoryIndex (`sessions/<month>/<chat>.jsonl`, `growth/notes/`, BM25 + Dense RRF)
+        from memory_index import MemoryIndex
+
+        self._busy_turns = 0
+        self._last_turn_end = time.time()
+        self.memory_index = MemoryIndex(
+            self.base_dir,
+            self.git_memory_repo,
+            is_idle=self._is_studio_idle,
+            note_writer=self._idle_note_writer,
+            start=True,
+            recall=bool(self.settings["layers"].get("recall", True)),
+        )
+
+    def _is_studio_idle(self) -> bool:
+        return self._busy_turns == 0 and (time.time() - self._last_turn_end > 8.0)
+
+    def _idle_note_writer(self, msgs: list[dict[str, str]], max_new: int = 90) -> str | None:
+        if not self._is_studio_idle():
+            return None
+        try:
+            u_txt = "\n".join(str(m.get("content") or "") for m in msgs if m.get("content"))
+            p_str = (
+                "<|startoftext|><|im_start|>system\nYou write concise memory notes from conversations.<|im_end|>\n"
+                f"<|im_start|>user\n{u_txt}<|im_end|>\n<|im_start|>assistant\n<think></think><answer>"
+            )
+            pids = self.tokenizer.encode(p_str, allow_special=True)[:768]
+            if not self._is_studio_idle():
+                return None
+            h_p, _ = self.engine.prefill_cached(pids)
+            g_ids, _, _ = self.engine.decode_from_cache(h_p, max_new_tokens=max_new, allow_thinking=0)
+            return self._clean_model_text(self.tokenizer.decode(g_ids, skip_special_tokens=False))
+        except Exception:
+            return None
+
+    def _check_tool_permission(
+        self,
+        perm_key: str,
+        tool_name: str,
+        detail: str,
+        allow_once: set[str],
+        deny_once: set[str],
+        interactive_ask: bool,
+        explicit_flag: bool = True,
+    ) -> tuple[bool, dict[str, Any] | None, str]:
+        """
+        Checks `Allow` / `Ask` / `Off` (`deny`) for `perm_key`.
+        - If `mode == "ask"` and `interactive_ask` is True (unless already in `allow_once` or `deny_once`),
+          returns `(False, permission_prompt_dict, "ask")` so the turn stops and asks the user in the chat UI.
+        """
+        if not explicit_flag or perm_key in deny_once:
+            return False, None, f"[Clover permission] {perm_key} was not allowed for this turn."
+        if perm_key in allow_once:
+            return True, None, "allowed_once"
+        mode = self.perm_modes.get(perm_key, "allow")
+        if mode == "allow":
+            return True, None, "allowed"
+        if mode == "deny":
+            return False, None, f"[Clover permission] '{self.permissions_meta.get(perm_key, {}).get('label', perm_key)}' is turned off in Settings."
+        if mode == "ask":
+            if interactive_ask:
+                return (
+                    False,
+                    {
+                        "permission": perm_key,
+                        "tool": tool_name,
+                        "label": self.permissions_meta.get(perm_key, {}).get("label", perm_key),
+                        "detail": str(detail or "")[:600],
+                    },
+                    "ask",
+                )
+            return False, None, f"[Clover permission] '{perm_key}' is set to Ask."
+        return False, None, "denied"
 
     def _apply_hardware_settings(self) -> None:
         self.engine.set_adreno_opencl_active(self.settings.get("engine") == "adreno")
@@ -1737,9 +1827,13 @@ class CloverS23OnDeviceSystem:
             for lk, lv in changes["layers"].items():
                 if lk in self.settings["layers"] and isinstance(lv, bool):
                     self.settings["layers"][lk] = lv
+                    if lk == "recall" and hasattr(self, "memory_index"):
+                        self.memory_index.set_recall(lv)
         self._apply_hardware_settings()
         try:
+            self.settings_path.parent.mkdir(parents=True, exist_ok=True)
             self.settings_path.write_text(json.dumps(self.settings, indent=2), encoding="utf-8")
+            self.legacy_settings_path.write_text(json.dumps(self.settings, indent=2), encoding="utf-8")
         except Exception:
             pass
         return self.settings
@@ -1755,7 +1849,9 @@ class CloverS23OnDeviceSystem:
             if pk in self.perm_modes and pv in ("allow", "ask", "deny"):
                 self.perm_modes[pk] = pv
         try:
+            self.perms_path.parent.mkdir(parents=True, exist_ok=True)
             self.perms_path.write_text(json.dumps(self.perm_modes, indent=2), encoding="utf-8")
+            self.legacy_perms_path.write_text(json.dumps(self.perm_modes, indent=2), encoding="utf-8")
         except Exception:
             pass
         return self.get_permissions_view()
@@ -1835,7 +1931,7 @@ class CloverS23OnDeviceSystem:
 
     @staticmethod
     def _parse_lfm3_tool_call_xml(raw_text: str) -> dict[str, Any] | None:
-        """Parses HybridAgent's `<search>...</search>`, `<python>...</python>`, and Layer 4 Git Repo tags (`<repo_search>`, `<repo_read>`, `<repo_write>`) as well as `<tool_call><function=NAME>...`."""
+        """Parses HybridAgent's `<search>...</search>`, `<python>...</python>`, `<shell>...</shell>`, `<ssh host=\"...\">...</ssh>`, and S1 Git Repo tags (`<repo_search>`, `<repo_read>`, `<repo_write>`) as well as `<tool_call><function=NAME>...`."""
         txt = raw_text or ""
         m_srch = re.search(r"<search>\s*([\s\S]*?)\s*</search>", txt)
         if m_srch:
@@ -1843,6 +1939,17 @@ class CloverS23OnDeviceSystem:
         m_py = re.search(r"<python>\s*([\s\S]*?)\s*</python>", txt)
         if m_py:
             return {"function": "python_interpreter", "parameters": {"code": m_py.group(1).strip()}, "raw_xml": txt, "format": "hybrid_agent_python"}
+        m_sh = re.search(r"<shell>\s*([\s\S]*?)\s*</shell>", txt)
+        if m_sh:
+            return {"function": "run_shell", "parameters": {"command": m_sh.group(1).strip()}, "raw_xml": txt, "format": "hybrid_agent_search"}
+        m_ssh = re.search(r"<ssh\s+host=[\"']([^\"']+)[\"'](?:\s+port=[\"'](\d+)[\"'])?\s*>\s*([\s\S]*?)\s*</ssh>", txt)
+        if m_ssh:
+            return {
+                "function": "run_ssh",
+                "parameters": {"host": m_ssh.group(1).strip(), "port": m_ssh.group(2) or "22", "command": m_ssh.group(3).strip()},
+                "raw_xml": txt,
+                "format": "hybrid_agent_search",
+            }
         m_rsrch = re.search(r"<repo_search>\s*([\s\S]*?)\s*</repo_search>", txt)
         if m_rsrch:
             return {"function": "repo_search", "parameters": {"query": m_rsrch.group(1).strip()}, "raw_xml": txt, "format": "hybrid_agent_search"}
@@ -1899,6 +2006,31 @@ class CloverS23OnDeviceSystem:
         except Exception as ex:
             return f"Python execution error: {ex}"
 
+    def _execute_shell_subprocess(self, command: str, cwd: str | None = None, timeout_s: float = 30.0) -> str:
+        """Executes a local shell command (`local_terminal.shell`) with process-tree cleanup and 1 MB UTF-8 cap."""
+        import local_terminal
+
+        cmd = (command or "").strip()
+        if not cmd:
+            return ""
+        work_dir = str(self.git_memory_repo.repo_dir) if hasattr(self, "git_memory_repo") else str(self.base_dir)
+        resolved_cwd, err = local_terminal.resolve_cwd(cwd, workdir=work_dir)
+        if err:
+            return err
+        return local_terminal.shell(cmd, cwd=resolved_cwd, timeout_s=int(timeout_s))[:4000]
+
+    def _execute_ssh_subprocess(self, host: str, command: str, port: str | int = 22, timeout_s: float = 30.0) -> str:
+        """Executes a non-interactive SSH command via `local_terminal.SSHHosts`."""
+        import local_terminal
+
+        h = (host or "").strip()
+        cmd = (command or "").strip()
+        if not h or not cmd:
+            return "Error: both host and command are required for SSH."
+        cfg_p = self.git_memory_repo.default_repo_dir / "config" / self.git_memory_repo.device / "ssh-hosts.json"
+        ssh_mgr = local_terminal.SSHHosts(cfg_p)
+        return ssh_mgr.run_ssh(h, cmd, port=port, timeout_s=int(timeout_s))[:4000]
+
     @staticmethod
     def _audit_reply_grounding(
         prompt: str,
@@ -1947,6 +2079,14 @@ class CloverS23OnDeviceSystem:
             r"\b(?:use|using)\s+python\b|\bpython\s+to\s+(?:compute|calculate|check|solve|count|find|test)\b|"
             r"\b(?:run|execute|test)\s+(?:this|the|my|that|it|some)?\s*(?:code|script|program|python)\b|"
             r"\b(?:compute|calculate)\s+\d",
+        ),
+        (
+            "run_shell",
+            r"\b(?:terminal|command\s+line|shell|bash|termux|sh\b)\b",
+        ),
+        (
+            "run_ssh",
+            r"\b(?:ssh|remote\s+host|remote\s+server)\b",
         ),
     )
 
@@ -2044,8 +2184,8 @@ class CloverS23OnDeviceSystem:
     def run_cycle(
         self,
         prompt: str,
-        max_prompt_tokens: int = 1024,
-        max_new_tokens: int = 160,
+        max_prompt_tokens: int = 1280,
+        max_new_tokens: int = 256,
         output_type: str = "text",
         image_b64: str | None = None,
         attached_files: list[dict[str, Any]] | None = None,
@@ -2057,559 +2197,703 @@ class CloverS23OnDeviceSystem:
         allow_internet: bool = True,
         allow_python: bool = True,
         allow_files: bool = True,
+        session_id: str = "s23-studio",
+        allow_once: list[str] | None = None,
+        deny_once: list[str] | None = None,
+        interactive_ask: bool = False,
     ) -> dict[str, Any]:
         """
         Executes the Clover cycle up to `max_active_layer` (`1 .. 7`) with zero hardcoded answers:
-          - Layers 4 & 5 inject retrieved evidence into `LFM3-1.7B`'s user prompt BEFORE prefill.
-          - Layer 1 runs `LFM3-1.7B` without any forced `<tool_call>` suffix.
-          - When `LFM3-1.7B` emits a `<tool_call>`, Layer 2 executes the tool (subject to `allow_internet`
-            and `allow_python`) and feeds `<tool_response>` back into `LFM3-1.7B` for Turn 2 synthesis.
-          - Layer 6 compiles only model-written Python code and runs a repair turn in `LFM3-1.7B` if needed.
-          - Layer 7 resets `lfm3_dm_reset` at the start of the request and records per-request stats.
+          - Enforces `Allow` / `Ask` / `Off` permissions across `internet`, `code`, `shell`, `ssh`, `files`, and `memory`.
+          - S1 (`CloverMemoryGitRepo`) & S2 (`MemoryIndex` turn-level BM25 + dense RRF + `k3_ontology_graph.py`)
+            inject retrieved evidence (`F6` dated background system message for recall).
+          - C1 (`LFM3` 24-layer C engine) + C2 (`HybridLink2048` + `Lfm3NativeHybridLink`) + C3 (`11-Level NCM`).
+          - S3 (`CloverPythonGenerativeCompiler`, `WebSearch`, Python, Shell, SSH) executes and verifies tools.
         """
         t0 = time.perf_counter()
-        active_layer_cap = max(1, min(7, int(max_active_layer)))
+        self._busy_turns += 1
+        try:
+            active_layer_cap = max(1, min(7, int(max_active_layer)))
+            allow_set = {str(x) for x in (allow_once or [])}
+            deny_set = {str(x) for x in (deny_once or [])}
 
-        # Layer 7 control: reset per-request counters and set OS madvise(MADV_WILLNEED)
-        madvise_on = active_layer_cap >= 7
-        self.engine.set_madvise_active(madvise_on)
-        self.engine.reset_dm_stats()
+            madvise_on = active_layer_cap >= 7
+            self.engine.set_madvise_active(madvise_on)
+            self.engine.reset_dm_stats()
 
-        tools_used: list[str] = []
-        retrieved_context_blocks: list[str] = []
-        layer_trace: dict[str, Any] = {}
+            tools_used: list[str] = []
+            retrieved_context_blocks: list[str] = []
+            layer_trace: dict[str, Any] = {}
+            user_clean = (prompt or "Hello!").strip()
 
-        # ------------------------------------------------------------------
-        # 1. Multimodal Attachments & Local Phone Files (Enforcing `allow_files`)
-        # ------------------------------------------------------------------
-        if attached_files and allow_files:
-            tools_used.append("device_files_access")
-            for af in attached_files[:3]:
-                fname = str(af.get("name") or "file")
-                ftype = str(af.get("type") or "")
-                ftext = str(af.get("content_text") or "").strip()
-                fb64 = str(af.get("data_b64") or "")
-                if ftext:
-                    snippet = ftext[:1200].replace("\n", " ")
-                    retrieved_context_blocks.append(f"[Attached File '{fname}']: {snippet}")
-                elif ("audio" in ftype or fname.lower().endswith(".wav")) and fb64:
-                    try:
-                        raw_b64 = fb64.split(",", 1)[-1]
-                        wav_info = inspect_attached_wav_real(base64.b64decode(raw_b64), fname)
-                        retrieved_context_blocks.append(f"[Attached Audio]: {wav_info['summary']}")
-                        layer_trace["layer1_audio_attachment"] = wav_info
-                        tools_used.append("wav_audio_inspector")
-                    except Exception as ex:
-                        retrieved_context_blocks.append(f"[Attached Audio '{fname}']: could not decode WAV header ({ex}).")
-                else:
-                    retrieved_context_blocks.append(f"[Attached File '{fname}' ({ftype})]")
+            def _early_permission_response(perm_prompt: dict[str, Any]) -> dict[str, Any]:
+                dm_early = self.engine.get_dm_stats(madvise_enabled=madvise_on)
+                return {
+                    "device": platform.node(),
+                    "arch": platform.machine(),
+                    "model": "lfm3-omni-2b-4bit-s23",
+                    "max_active_layer": active_layer_cap,
+                    "exclusive_app_package": CLOVER_S23_APP_PACKAGE,
+                    "prompt": prompt,
+                    "reply": f"Clover needs your permission to use **{perm_prompt['label']}** (`{perm_prompt['tool']}`). Choose **Allow once**, **Always allow**, or **Deny** below.",
+                    "permission_required": perm_prompt,
+                    "output_type": "text",
+                    "image_png_b64": "",
+                    "video_mp4_b64": "",
+                    "audio_wav_b64": "",
+                    "speak_with_android_tts": False,
+                    "tools_used": tools_used,
+                    "layer_trace": layer_trace,
+                    "input_tokens": 0,
+                    "generated_tokens": 0,
+                    "emitted_tokens": 0,
+                    "c_24_layer_4bit_ms": 0.0,
+                    "total_cycle_ms": round((time.perf_counter() - t0) * 1000.0, 2),
+                    "dm_stats": dm_early,
+                }
 
-        file_path_match = re.search(r"(/sdcard/[^\s\"']+|/storage/[^\s\"']+|~/[^\s\"']+)", prompt or "")
-        if file_path_match and allow_files:
-            fpath = Path(os.path.expanduser(file_path_match.group(1)))
-            if fpath.exists() and fpath.is_file():
-                try:
-                    txt = fpath.read_text(encoding="utf-8", errors="replace")[:1200].replace("\n", " ")
-                    retrieved_context_blocks.append(f"[Local File '{fpath.name}']: {txt}")
+            # ------------------------------------------------------------------
+            # 1. Multimodal Attachments & Local Phone Files (Enforcing `files` Permission)
+            # ------------------------------------------------------------------
+            if attached_files:
+                ok_f, p_prompt, _ = self._check_tool_permission(
+                    "files", "attached_files", ", ".join(str(a.get("name") or "file") for a in attached_files[:3]),
+                    allow_set, deny_set, interactive_ask, explicit_flag=allow_files,
+                )
+                if p_prompt is not None:
+                    return _early_permission_response(p_prompt)
+                if ok_f:
                     tools_used.append("device_files_access")
+                    for af in attached_files[:3]:
+                        fname = str(af.get("name") or "file")
+                        ftype = str(af.get("type") or "")
+                        ftext = str(af.get("content_text") or "").strip()
+                        fb64 = str(af.get("data_b64") or "")
+                        if ftext:
+                            snippet = ftext[:1200].replace("\n", " ")
+                            retrieved_context_blocks.append(f"[Attached File '{fname}']: {snippet}")
+                        elif ("audio" in ftype or fname.lower().endswith(".wav")) and fb64:
+                            try:
+                                raw_b64 = fb64.split(",", 1)[-1]
+                                wav_info = inspect_attached_wav_real(base64.b64decode(raw_b64), fname)
+                                retrieved_context_blocks.append(f"[Attached Audio]: {wav_info['summary']}")
+                                layer_trace["layer1_audio_attachment"] = wav_info
+                                tools_used.append("wav_audio_inspector")
+                            except Exception as ex:
+                                retrieved_context_blocks.append(f"[Attached Audio '{fname}']: could not decode WAV header ({ex}).")
+                        else:
+                            retrieved_context_blocks.append(f"[Attached File '{fname}' ({ftype})]")
+
+            file_path_match = re.search(r"(/sdcard/[^\s\"']+|/storage/[^\s\"']+|~/[^\s\"']+)", prompt or "")
+            if file_path_match:
+                fpath = Path(os.path.expanduser(file_path_match.group(1))).resolve()
+                # Never allow reading files inside `vault/`
+                in_vault = str(fpath).startswith(str(self.git_memory_repo.vault_dir.resolve()))
+                if not in_vault and fpath.exists() and fpath.is_file():
+                    ok_fp, p_prompt, _ = self._check_tool_permission(
+                        "files", "read_file", str(fpath), allow_set, deny_set, interactive_ask, explicit_flag=allow_files,
+                    )
+                    if p_prompt is not None:
+                        return _early_permission_response(p_prompt)
+                    if ok_fp:
+                        try:
+                            txt = fpath.read_text(encoding="utf-8", errors="replace")[:1200].replace("\n", " ")
+                            retrieved_context_blocks.append(f"[Local File '{fpath.name}']: {txt}")
+                            tools_used.append("device_files_access")
+                        except Exception:
+                            pass
+
+            if image_b64:
+                try:
+                    raw_img = base64.b64decode(image_b64.split(",", 1)[-1])
+                    pil_img = Image.open(io.BytesIO(raw_img)).convert("RGB")
+                    img_info = inspect_attached_image_real(pil_img)
+                    retrieved_context_blocks.append(f"[Attached Image]: {img_info['summary']}")
+                    layer_trace["layer1_image_attachment"] = img_info
+                    tools_used.append("pillow_image_inspector")
+                except Exception as ex:
+                    retrieved_context_blocks.append(f"[Attached Image]: could not decode ({ex}).")
+
+            if voice_input:
+                tools_used.append("android_speech_recognizer")
+
+            # ------------------------------------------------------------------
+            # 2. S1 (`CloverMemoryGitRepo`) & S2 (`MemoryIndex` Turn-Level RRF Recall)
+            #    Enforces `memory` permission (`Allow` / `Ask` / `Off`)
+            # ------------------------------------------------------------------
+            memory_perm_ok = self.perm_modes.get("memory", "allow") != "deny" and ("memory" not in deny_set)
+            recall_sys_block = ""
+            if active_layer_cap >= 4 and memory_perm_ok and self.settings.get("layers", {}).get("memory", True):
+                t_l4 = time.perf_counter()
+                git_hits = self.git_memory_repo.search_repo_relevant(prompt, max_files=2, max_chars_per_file=550)
+                mem_pkg = self._retrieve_memory(self.memory_graph, prompt)
+                l4_items = []
+                l4_reasons = []
+                seen_snippets: set[str] = set()
+                for gh in git_hits:
+                    snip = str(gh.get("snippet") or "").strip()
+                    if snip and snip not in seen_snippets:
+                        seen_snippets.add(snip)
+                        l4_items.append({"id": gh["path"], "type": "git_repo_file", "summary": snip, "reason": f"git_repo_match(score={gh['score']})"})
+                        retrieved_context_blocks.append(f"[Git Memory Repo '{gh['path']}']: {snip}")
+                if mem_pkg is not None and mem_pkg.items:
+                    for it in mem_pkg.items[:2]:
+                        summary_clean = str(it.entry.summary or "").strip()
+                        rsn_str = str(getattr(it, "reason", "") or "")
+                        l4_reasons.append(rsn_str)
+                        if summary_clean and summary_clean not in seen_snippets:
+                            seen_snippets.add(summary_clean)
+                            l4_items.append({"id": it.entry.id, "type": it.entry.entry_type, "summary": summary_clean, "reason": rsn_str})
+                            retrieved_context_blocks.append(f"[Memory Graph {it.entry.id}]: {summary_clean}")
+                if l4_items:
+                    tools_used.append("layer4_git_memory_repo")
+
+                # S2 Turn-level Recall (`memory_index.py`: BM25 + dense RRF + v3 notes, F6 second system message)
+                recall_info = None
+                if hasattr(self, "memory_index") and self.settings.get("layers", {}).get("recall", True):
+                    cur_msgs = self.git_memory_repo.messages(session_id)
+                    next_turn_n = sum(1 for m in cur_msgs if m.get("role") == "user") + 1
+                    r_blk, r_inf = self.memory_index.recall(session_id, next_turn_n, user_clean, history_turns=2)
+                    if r_blk:
+                        recall_sys_block = r_blk
+                        tools_used.append("s2_turn_level_memory_recall")
+                    recall_info = r_inf
+
+                hopfield_fam = self.memory_graph.compute_hopfield_familiarity(prompt)
+                gtn_conf = self.memory_graph.compute_gtn_forward_confidence(prompt)
+                mh_lrn = self.memory_graph.multihead_lrn_subspace_retrieve(prompt, top_k=3)
+                td_path_ids = [it["id"] for it in l4_items if str(it["id"]).startswith("MEM-")] or ["MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001", "MEM-CORR-PER-LAYER-PARTITION-002"]
+                td_credit = self.memory_graph.compute_td_lambda_path_credit(td_path_ids, outcome_verified=True)
+                layer_trace["layer4_memory_graph"] = {
+                    "enabled": True,
+                    "storage_engine": "local_git_repository_with_selective_on_demand_fetch",
+                    "repo_path": str(self.git_memory_repo.default_repo_dir),
+                    "active_workspace_path": str(self.git_memory_repo.repo_dir),
+                    "agents_md_accepted": bool(self.git_memory_repo.get_onboarding_state().get("agents_md_accepted")),
+                    "injected_into_model_prompt": len(l4_items) > 0,
+                    "retrieved_count": len(l4_items),
+                    "entries": l4_items,
+                    "s2_turn_recall": recall_info,
+                    "eleven_foundational_papers": {
+                        "mcculloch_pitts_1943_and_minsky_papert_1969": {
+                            "veto_evaluated": True,
+                            "order_k_predicates_matched": any("structural_cue(" in r or "concept_" in r for r in l4_reasons),
+                            "rosenblatt_1958_gamma_zero_sum_applied": getattr(self.memory_graph, "use_rosenblatt_gamma", True),
+                        },
+                        "hopfield_1982_constellation_cleanup": {
+                            "is_familiar": bool(hopfield_fam.get("is_familiar")),
+                            "energy_drop": hopfield_fam.get("energy_drop"),
+                            "initial_alignment": hopfield_fam.get("initial_alignment"),
+                        },
+                        "rumelhart_1986_and_sutton_1988_td_lambda": {
+                            "terminal_target_rumelhart_1986": td_credit.get("terminal_target_rumelhart_1986"),
+                            "updated_values": td_credit.get("updated_values"),
+                        },
+                        "lecun_1998_gtn_forward_logadd": {
+                            "top_gtn_id": gtn_conf.get("top_gtn_id"),
+                            "top_gtn_confidence": gtn_conf.get("top_gtn_confidence"),
+                            "free_energy": gtn_conf.get("free_energy"),
+                        },
+                        "krizhevsky_2012_lrn_and_vaswani_2017_multihead": {
+                            "facets_multihead_lrn": mh_lrn.get("facets_multihead_lrn"),
+                            "selected_ids": [x.get("id") for x in (mh_lrn.get("results") or []) if isinstance(x, dict)],
+                        },
+                    },
+                    "ms": round((time.perf_counter() - t_l4) * 1000.0, 2),
+                }
+            else:
+                layer_trace["layer4_memory_graph"] = {"enabled": False, "memory_permission": self.perm_modes.get("memory", "allow")}
+
+            # ------------------------------------------------------------------
+            # 3. S2: Deterministic Ontology GraphRAG (`k3_ontology_graph.py`)
+            # ------------------------------------------------------------------
+            if active_layer_cap >= 5 and self.settings.get("layers", {}).get("ontology", True):
+                t_l5 = time.perf_counter()
+                turing_strat = self.symbolic_verifier.check_turing_self_reference_stratification(prompt)
+                ont_items = self.ontology_retriever.retrieve(prompt, max_entities=3, max_paths=4)
+                trav_stats = dict(getattr(self.ontology_retriever.graph, "last_traversal_stats", {}) or {})
+                csm_verify = self.symbolic_verifier.match_formula_csm_lmc(
+                    ("IMP", "a", ("OR", "a", "a")),
+                    [("*2.07_add_left", ("IMP", "p", ("OR", "p", "q")))],
+                    allow_vct_contraction=True,
+                )
+                l5_records: list[str] = []
+                if turing_strat is not None:
+                    tools_used.append("layer5_turing_1950_stratifier")
+                    retrieved_context_blocks.append(f"[Turing 1950 M0/M1 Stratification]: {turing_strat.get('explanation', '')}")
+                if ont_items:
+                    tools_used.append("layer5_ontology_graphrag")
+                    paths_first = sorted(ont_items, key=lambda x: 0 if getattr(x, "kind", "") == "path" else 1)
+                    ev_txt = self._render_ontology(paths_first)
+                    l5_records.append(ev_txt)
+                    retrieved_context_blocks = [f"[Ontology GraphRAG Evidence]:\n{ev_txt}"]
+                layer_trace["layer5_ontology_and_verifier"] = {
+                    "enabled": True,
+                    "injected_into_model_prompt": (len(ont_items) > 0 or turing_strat is not None),
+                    "ontology_hits": len(ont_items),
+                    "rendered_evidence": l5_records,
+                    "eleven_foundational_papers": {
+                        "turing_1950_m0_m1_diagonal_stratifier": turing_strat or {"self_reference_detected": False, "stratified_level": "M_0 (Object-Level)"},
+                        "newell_simon_1956_csm_and_vct": {
+                            "graph_traversal_stats": trav_stats,
+                            "csm_2_07_contraction_matched": len(csm_verify.get("matched", [])),
+                        },
+                    },
+                    "ms": round((time.perf_counter() - t_l5) * 1000.0, 2),
+                }
+            else:
+                layer_trace["layer5_ontology_and_verifier"] = {"enabled": False}
+
+            # ------------------------------------------------------------------
+            # 4. C1 (`LFM3` 24-Layer C Engine) + C2 (`HybridLink` & `<tool_call>` Loop)
+            # ------------------------------------------------------------------
+            retrieved_context_str = "\n".join(retrieved_context_blocks).strip()
+            if retrieved_context_str:
+                ctx_ids = self.tokenizer.encode(retrieved_context_str, allow_special=False)
+                if len(ctx_ids) > 420:
+                    retrieved_context_str = self.tokenizer.decode(ctx_ids[:420], skip_special_tokens=True).strip()
+                user_turn_content = (
+                    f"Retrieved Context:\n{retrieved_context_str}\n\n"
+                    f"Question: {user_clean}"
+                )
+            else:
+                user_turn_content = user_clean
+
+            has_grounded_context = bool(retrieved_context_str)
+            tools_enabled_for_turn = (active_layer_cap >= 2 and not has_grounded_context)
+            use_ha_fmt = tools_enabled_for_turn and (allow_internet or allow_python)
+            sys_prompt_str = self._build_system_prompt(
+                allow_internet=(allow_internet and tools_enabled_for_turn),
+                allow_python=(allow_python and tools_enabled_for_turn),
+                use_hybrid_agent_format=use_ha_fmt,
+            )
+            # F6 Second-System-Message injection for S2 turn-level recall (`exp G5`)
+            if recall_sys_block:
+                sys_prompt_str = f"{sys_prompt_str}<|im_start|>system\n{recall_sys_block}<|im_end|>\n"
+
+            if inject_latent_step_before_decode:
+                assistant_open = "<|im_start|>assistant\n<think><latent>"
+            elif use_ha_fmt or enable_thinking:
+                assistant_open = "<|im_start|>assistant\n<think>\n"
+            else:
+                assistant_open = "<|im_start|>assistant\n<think></think><answer>"
+
+            turn1_prompt_str = f"{sys_prompt_str}<|im_start|>user\n{user_turn_content}<|im_end|>\n{assistant_open}"
+            turn1_ids = self.tokenizer.encode(turn1_prompt_str, allow_special=True)
+            if len(turn1_ids) > max_prompt_tokens:
+                sys_ids = self.tokenizer.encode(sys_prompt_str + "<|im_start|>user\n", allow_special=True)
+                tail_ids = self.tokenizer.encode(f"\n\nQuestion: {user_clean}<|im_end|>\n{assistant_open}", allow_special=True)
+                budget = max(16, max_prompt_tokens - len(sys_ids) - len(tail_ids))
+                mid_ids = self.tokenizer.encode(f"Retrieved Context:\n{retrieved_context_str}", allow_special=False)[:budget]
+                turn1_ids = sys_ids + mid_ids + tail_ids
+
+            h_prefill, prefill_ms = self.engine.prefill_cached(turn1_ids)
+            c_total_ms = prefill_ms
+
+            h_for_decode = h_prefill
+            if active_layer_cap >= 2 and self.hybrid_ncm is not None:
+                latent_info = self.hybrid_ncm.run_continuous_latent_step(h_prefill)
+                lat_trace = {
+                    "enabled": True,
+                    "injected_before_decode": bool(inject_latent_step_before_decode),
+                    **{k: v for k, v in latent_info.items() if k != "r_np"},
+                }
+                if inject_latent_step_before_decode:
+                    h_after_lat, lat_step_c_ms = self.engine.step_embedding_cached(latent_info["r_np"])
+                    close_ids = self.tokenizer.encode("</latent></think><answer>", allow_special=True)
+                    h_after_close, close_ms = self.engine.append_cached(close_ids)
+                    c_total_ms += lat_step_c_ms + close_ms
+                    h_for_decode = h_after_close
+                    lat_trace["c_continuous_latent_step_ms"] = round(lat_step_c_ms, 2)
+                    lat_trace["post_latent_hidden_rms"] = round(float(np.sqrt(np.mean(h_after_lat ** 2))), 5)
+                layer_trace["layer2_hybrid_agent"] = lat_trace
+                tools_used.append("layer2_lfm3_native_hybridlink")
+            else:
+                layer_trace["layer2_hybrid_agent"] = {"enabled": False}
+
+            if active_layer_cap >= 2 and self.hybrid_ncm is not None and (use_ha_fmt or enable_thinking):
+                gen_ids_t1, _, decode_ms_t1, ha_t1_stats = self.hybrid_ncm.decode_hybrid_agent_turn(
+                    h_for_decode,
+                    max_new_tokens=max_new_tokens,
+                )
+                layer_trace["layer2_hybrid_agent"].update(ha_t1_stats)
+            else:
+                gen_ids_t1, _, decode_ms_t1 = self.engine.decode_from_cache(
+                    h_for_decode,
+                    max_new_tokens=max_new_tokens,
+                    allow_thinking=enable_thinking,
+                )
+            c_total_ms += decode_ms_t1
+            raw_t1_text = self.tokenizer.decode(gen_ids_t1, skip_special_tokens=False)
+            parsed_call = self._parse_lfm3_tool_call_xml(raw_t1_text)
+
+            tool_observation = ""
+            executed_py_code = ""
+            turn2_prefill_ms = 0.0
+            turn2_decode_ms = 0.0
+            gen_ids_t2: list[int] = []
+
+            if parsed_call is not None and active_layer_cap >= 2:
+                fn_name = parsed_call["function"]
+                params = parsed_call["parameters"]
+
+                if fn_name == "web_search":
+                    q_search = params.get("query") or user_clean
+                    urls_in_prompt = re.findall(r"https?://[^\s<>\"')]+", user_clean)
+                    if urls_in_prompt and urls_in_prompt[0] not in q_search:
+                        q_search = urls_in_prompt[0] + " " + q_search
+                    ok_w, p_prompt, deny_msg = self._check_tool_permission(
+                        "internet", "web_search", q_search, allow_set, deny_set, interactive_ask, explicit_flag=allow_internet,
+                    )
+                    if p_prompt is not None:
+                        return _early_permission_response(p_prompt)
+                    if ok_w:
+                        tools_used.append("layer2_live_web_search")
+                        tool_observation = self.search_tool.execute(q_search)
+                        layer_trace["layer2_hybrid_agent"]["tool_executed"] = "web_search"
+                        layer_trace["layer2_hybrid_agent"]["search_query"] = q_search
+                        layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
+                    else:
+                        tool_observation = deny_msg
+
+                elif fn_name in ("python_interpreter", "run_python"):
+                    executed_py_code = params.get("code") or ""
+                    if executed_py_code:
+                        ok_p, p_prompt, deny_msg = self._check_tool_permission(
+                            "code", "python_interpreter", executed_py_code, allow_set, deny_set, interactive_ask, explicit_flag=allow_python,
+                        )
+                        if p_prompt is not None:
+                            return _early_permission_response(p_prompt)
+                        if ok_p:
+                            tools_used.append("layer2_python_interpreter")
+                            tool_observation = self._execute_python_subprocess(executed_py_code)
+                            layer_trace["layer2_hybrid_agent"]["tool_executed"] = "python_interpreter"
+                            layer_trace["layer2_hybrid_agent"]["python_code"] = executed_py_code
+                            layer_trace["layer2_hybrid_agent"]["python_output"] = tool_observation
+                        else:
+                            tool_observation = deny_msg
+                            executed_py_code = ""
+
+                elif fn_name in ("run_shell", "run_powershell", "shell"):
+                    sh_cmd = params.get("command") or ""
+                    if sh_cmd:
+                        ok_sh, p_prompt, deny_msg = self._check_tool_permission(
+                            "shell", "run_shell", sh_cmd, allow_set, deny_set, interactive_ask, explicit_flag=True,
+                        )
+                        if p_prompt is not None:
+                            return _early_permission_response(p_prompt)
+                        if ok_sh:
+                            tools_used.append("s3_local_shell")
+                            tool_observation = self._execute_shell_subprocess(sh_cmd)
+                            layer_trace["layer2_hybrid_agent"]["tool_executed"] = "run_shell"
+                            layer_trace["layer2_hybrid_agent"]["shell_command"] = sh_cmd
+                            layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
+                        else:
+                            tool_observation = deny_msg
+
+                elif fn_name in ("run_ssh", "ssh"):
+                    ssh_host = params.get("host") or ""
+                    ssh_port = params.get("port") or "22"
+                    ssh_cmd = params.get("command") or ""
+                    ok_ssh, p_prompt, deny_msg = self._check_tool_permission(
+                        "ssh", "run_ssh", f"{ssh_host}:{ssh_port} $ {ssh_cmd}", allow_set, deny_set, interactive_ask, explicit_flag=True,
+                    )
+                    if p_prompt is not None:
+                        return _early_permission_response(p_prompt)
+                    if ok_ssh:
+                        tools_used.append("s3_remote_ssh")
+                        tool_observation = self._execute_ssh_subprocess(ssh_host, ssh_cmd, port=ssh_port)
+                        layer_trace["layer2_hybrid_agent"]["tool_executed"] = "run_ssh"
+                        layer_trace["layer2_hybrid_agent"]["ssh_host"] = f"{ssh_host}:{ssh_port}"
+                        layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
+                    else:
+                        tool_observation = deny_msg
+
+                elif fn_name == "repo_search" and active_layer_cap >= 4:
+                    rq = params.get("query") or user_clean
+                    ok_m, p_prompt, deny_msg = self._check_tool_permission(
+                        "memory", "repo_search", rq, allow_set, deny_set, interactive_ask, explicit_flag=memory_perm_ok,
+                    )
+                    if p_prompt is not None:
+                        return _early_permission_response(p_prompt)
+                    if ok_m:
+                        tools_used.append("layer4_git_repo_search")
+                        hits = self.git_memory_repo.search_repo_relevant(rq, max_files=3, max_chars_per_file=600)
+                        tool_observation = "\n".join(f"[{h['path']}]: {h['snippet']}" for h in hits) or "No matching files in memory repo."
+                        layer_trace["layer2_hybrid_agent"]["tool_executed"] = "repo_search"
+                        layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
+                    else:
+                        tool_observation = deny_msg
+
+                elif fn_name == "repo_read" and active_layer_cap >= 4:
+                    rpath = params.get("path") or "CONTEXT.md"
+                    ok_m, p_prompt, deny_msg = self._check_tool_permission(
+                        "memory", "repo_read", rpath, allow_set, deny_set, interactive_ask, explicit_flag=memory_perm_ok,
+                    )
+                    if p_prompt is not None:
+                        return _early_permission_response(p_prompt)
+                    if ok_m:
+                        tools_used.append("layer4_git_repo_read")
+                        try:
+                            rdata = self.git_memory_repo.read_file(rpath)
+                            tool_observation = str(rdata.get("content") or "")[:1200]
+                        except Exception as ex:
+                            tool_observation = f"repo_read error: {ex}"
+                        layer_trace["layer2_hybrid_agent"]["tool_executed"] = "repo_read"
+                        layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
+                    else:
+                        tool_observation = deny_msg
+
+                elif fn_name == "repo_write" and active_layer_cap >= 4:
+                    rpath = params.get("path") or "tasks/note.md"
+                    rcontent = params.get("content") or ""
+                    ok_m, p_prompt, deny_msg = self._check_tool_permission(
+                        "memory", "repo_write", f"{rpath} ({len(rcontent)} chars)", allow_set, deny_set, interactive_ask, explicit_flag=memory_perm_ok,
+                    )
+                    if p_prompt is not None:
+                        return _early_permission_response(p_prompt)
+                    if ok_m:
+                        tools_used.append("layer4_git_repo_write")
+                        try:
+                            wres = self.git_memory_repo.write_file(rpath, rcontent, commit_message=f"Model tool write {rpath}")
+                            tool_observation = f"Committed {wres['path']} ({wres['size_bytes']} B, commit {wres['commit']})."
+                        except Exception as ex:
+                            tool_observation = f"repo_write error: {ex}"
+                        layer_trace["layer2_hybrid_agent"]["tool_executed"] = "repo_write"
+                        layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
+                    else:
+                        tool_observation = deny_msg
+
+                # Feed `<result>...</result>` back into `LFM3-Omni-2B` (Turn 2) with 1 HybridLink2048 latent step before `<answer>`
+                if tool_observation:
+                    call_fmt = parsed_call.get("format", "chatml_tool_call")
+                    if call_fmt in ("hybrid_agent_search", "hybrid_agent_python"):
+                        obs_clean = tool_observation[:600]
+                        t2_open_ids = self.tokenizer.encode(
+                            f"<result>{obs_clean}</result><think><latent>",
+                            allow_special=True,
+                        )
+                        h_t2_lat, ms_t2_open = self.engine.append_cached(t2_open_ids)
+                        turn2_prefill_ms = ms_t2_open
+                        if self.hybrid_ncm is not None:
+                            lat_t2 = self.hybrid_ncm.run_continuous_latent_step(h_t2_lat)
+                            h_t2_after, ms_lat_t2 = self.engine.step_embedding_cached(lat_t2["r_np"])
+                            turn2_prefill_ms += ms_lat_t2
+                            layer_trace["layer2_hybrid_agent"]["turn2_latent_spans"] = 1
+                            layer_trace["layer2_hybrid_agent"]["turn2_latent_steps"] = 1
+                        t2_close_ids = self.tokenizer.encode(
+                            "</latent></think><answer>",
+                            allow_special=True,
+                        )
+                        h_t2, ms_t2_close = self.engine.append_cached(t2_close_ids)
+                        turn2_prefill_ms += ms_t2_close
+                        gen_ids_t2, _, turn2_decode_ms = self.engine.decode_from_cache(
+                            h_t2, max_new_tokens=max_new_tokens, allow_thinking=0
+                        )
+                    else:
+                        t1_clean_call = raw_t1_text
+                        if not t1_clean_call.endswith("</tool_call>"):
+                            t1_clean_call = t1_clean_call.rstrip() + "\n</function>\n</tool_call>"
+                        t2_prefix_ids = self.tokenizer.encode(
+                            f"{turn1_prompt_str}{t1_clean_call}<|im_end|>\n<|im_start|>tool\n<tool_response>\n",
+                            allow_special=True,
+                        )
+                        t2_suffix_ids = self.tokenizer.encode(
+                            "\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think></think>",
+                            allow_special=True,
+                        )
+                        obs_budget = max(24, 1280 - len(t2_prefix_ids) - len(t2_suffix_ids))
+                        obs_ids = self.tokenizer.encode(tool_observation, allow_special=False)[:obs_budget]
+                        turn2_ids = t2_prefix_ids + obs_ids + t2_suffix_ids
+                        h_t2, turn2_prefill_ms = self.engine.prefill_cached(turn2_ids)
+                        gen_ids_t2, _, turn2_decode_ms = self.engine.decode_from_cache(
+                            h_t2,
+                            max_new_tokens=max_new_tokens,
+                            allow_thinking=False,
+                        )
+                    c_total_ms += turn2_prefill_ms + turn2_decode_ms
+                    raw_t2_text = self.tokenizer.decode(gen_ids_t2, skip_special_tokens=False)
+                    reply_text = self._clean_model_text(raw_t2_text)
+                else:
+                    reply_text = self._clean_model_text(raw_t1_text)
+            else:
+                reply_text = self._clean_model_text(raw_t1_text)
+
+            if not reply_text:
+                reply_text = self.tokenizer.decode(gen_ids_t2 or gen_ids_t1, skip_special_tokens=True).strip()
+
+            layer_trace["layer1_lfm3_omni"] = {
+                "enabled": True,
+                "turn1_prefill_ms": round(prefill_ms, 2),
+                "turn1_decode_ms": round(decode_ms_t1, 2),
+                "turn1_generated_tokens": len(gen_ids_t1),
+                "turn1_raw_output": raw_t1_text,
+                "autonomous_tool_call": parsed_call,
+                "turn2_prefill_ms": round(turn2_prefill_ms, 2),
+                "turn2_decode_ms": round(turn2_decode_ms, 2),
+                "turn2_generated_tokens": len(gen_ids_t2),
+            }
+
+            # ------------------------------------------------------------------
+            # 5. S3: Python Generative Compilation (`CloverPythonGenerativeCompiler`)
+            # ------------------------------------------------------------------
+            compiler_report = None
+            if active_layer_cap >= 6 and self.settings.get("layers", {}).get("compiler", True):
+                compiler_report = self._compile_verify_model_code_only(
+                    model_reply_text=reply_text,
+                    model_tool_code=executed_py_code,
+                    user_prompt=user_clean,
+                    allow_python=allow_python and (self.perm_modes.get("code", "allow") == "allow" or "code" in allow_set),
+                )
+                if compiler_report is not None:
+                    tools_used.append("layer6_generative_compiler")
+                    if not compiler_report["all_ok"]:
+                        first_fail = next((r for r in compiler_report["results"] if not r["ok"]), None)
+                        if first_fail is not None and first_fail["diagnostics"]:
+                            d0 = first_fail["diagnostics"][0]
+                            err_desc = f"{d0.get('code', 'Error')} at line {d0.get('line')}: {d0.get('message')}"
+                            repair_prompt_str = (
+                                f"{sys_prompt_str}<|im_start|>user\n{user_clean}\n\n"
+                                f"Your previous Python code failed verification with:\n{err_desc}\n"
+                                f"Output ONLY the corrected Python function inside a ```python code block.<|im_end|>\n"
+                                "<|im_start|>assistant\n<think>I will output only the corrected Python code block.</think><answer>```python\n"
+                            )
+                            rep_ids = self.tokenizer.encode(repair_prompt_str, allow_special=True)[:1280]
+                            h_rep, ms_rep_pre = self.engine.prefill_cached(rep_ids)
+                            g_rep, _, ms_rep_dec = self.engine.decode_from_cache(
+                                h_rep, max_new_tokens=max_new_tokens, allow_thinking=False
+                            )
+                            c_total_ms += ms_rep_pre + ms_rep_dec
+                            repaired_reply = "```python\n" + self._clean_model_text(self.tokenizer.decode(g_rep, skip_special_tokens=False))
+                            if "```" not in repaired_reply[10:]:
+                                repaired_reply = repaired_reply.rstrip() + "\n```"
+                            repaired_report = self._compile_verify_model_code_only(
+                                model_reply_text=repaired_reply,
+                                model_tool_code="",
+                                user_prompt=user_clean,
+                                allow_python=allow_python and (self.perm_modes.get("code", "allow") == "allow" or "code" in allow_set),
+                            )
+                            compiler_report["repair_attempted"] = True
+                            compiler_report["repaired_report"] = repaired_report
+                            if repaired_report and repaired_report.get("all_ok"):
+                                reply_text = repaired_reply
+                                compiler_report["all_ok_after_repair"] = True
+                            else:
+                                compiler_report["all_ok_after_repair"] = False
+                layer_trace["layer6_generative_compiler"] = {
+                    "enabled": True,
+                    "checked_only_model_code": True,
+                    "report": compiler_report,
+                }
+            else:
+                layer_trace["layer6_generative_compiler"] = {"enabled": False}
+
+            # ------------------------------------------------------------------
+            # 6. C3: 11-Level `NCM` (`VQVAE` + `NextConceptTransformer` + `LexicalPointerDecoder`)
+            # ------------------------------------------------------------------
+            active_media = (output_type or "text").lower().strip()
+            if active_media not in ("image", "video", "audio"):
+                active_media = "text"
+
+            if active_layer_cap >= 3 and use_ncm_renderer and self.hybrid_ncm is not None and active_media == "text":
+                rendered_ncm, out_ids, ncm_meta = self.hybrid_ncm.render_plan_through_11level_ncm(reply_text)
+                if rendered_ncm:
+                    reply_text = rendered_ncm
+                layer_trace["layer3_11level_ncm"] = ncm_meta
+                tools_used.append("layer3_11level_ncm_pointer_decoder")
+            else:
+                out_ids = self.tokenizer.encode(reply_text, allow_special=False)
+                layer_trace["layer3_11level_ncm"] = {"enabled": False}
+
+            # ------------------------------------------------------------------
+            # 7. S2 Post-Generation Grounding Audit (Real Boolean Check, No Regex Rewriting)
+            # ------------------------------------------------------------------
+            if active_layer_cap >= 5 and "layer5_ontology_and_verifier" in layer_trace and layer_trace["layer5_ontology_and_verifier"].get("enabled"):
+                grounding_audit = self._audit_reply_grounding(
+                    prompt=user_clean,
+                    retrieved_context=retrieved_context_str,
+                    tool_observation=tool_observation,
+                    reply_text=reply_text,
+                )
+                layer_trace["layer5_ontology_and_verifier"]["grounding_audit"] = grounding_audit
+                layer_trace["layer5_ontology_and_verifier"]["source_grounding_verified"] = grounding_audit["source_grounding_verified"]
+
+            # ------------------------------------------------------------------
+            # 8. Optional Procedural Media Preview (Single Voice Playback Path — Never Dual Voices)
+            # ------------------------------------------------------------------
+            image_png_b64 = ""
+            video_mp4_b64 = ""
+            audio_wav_b64 = ""
+            if active_media == "image":
+                image_png_b64 = generate_image_png_data_url(user_clean)
+                tools_used.append("procedural_pillow_png_preview")
+            elif active_media == "video":
+                video_mp4_b64 = generate_video_mp4_data_url(user_clean, self.base_dir)
+                tools_used.append("procedural_ffmpeg_mp4_preview")
+            elif active_media == "audio" or voice_input:
+                audio_wav_b64 = generate_spoken_wav_data_url(reply_text, self.base_dir)
+                if audio_wav_b64:
+                    tools_used.append("espeak_spoken_wav_synthesizer")
+
+            # ------------------------------------------------------------------
+            # 9. S1 Growth Stage: Commit Session JSONL, Execution Log & Scripts in `clover-memory-repo/`
+            # ------------------------------------------------------------------
+            total_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+            turn_n_recorded = 1
+            if active_layer_cap >= 4 and memory_perm_ok:
+                try:
+                    git_growth = self.git_memory_repo.record_task_or_session_turn(
+                        session_id=session_id,
+                        prompt=user_clean,
+                        reply=reply_text,
+                        generated_code=executed_py_code,
+                        tools_used=tools_used,
+                        elapsed_ms=total_ms,
+                    )
+                    turn_n_recorded = int(git_growth.get("turn_n") or 1)
+                    if isinstance(layer_trace.get("layer4_memory_graph"), dict):
+                        layer_trace["layer4_memory_graph"]["git_growth_commit"] = git_growth
+                    if hasattr(self, "memory_index"):
+                        self.memory_index.wake()
                 except Exception:
                     pass
 
-        if image_b64:
-            try:
-                raw_img = base64.b64decode(image_b64.split(",", 1)[-1])
-                pil_img = Image.open(io.BytesIO(raw_img)).convert("RGB")
-                img_info = inspect_attached_image_real(pil_img)
-                retrieved_context_blocks.append(f"[Attached Image]: {img_info['summary']}")
-                layer_trace["layer1_image_attachment"] = img_info
-                tools_used.append("pillow_image_inspector")
-            except Exception as ex:
-                retrieved_context_blocks.append(f"[Attached Image]: could not decode ({ex}).")
+            # ------------------------------------------------------------------
+            # 10. C1 Direction B Ledger & SpecMD Policy 3 `madvise`
+            # ------------------------------------------------------------------
+            dm_stats = self.engine.get_dm_stats(madvise_enabled=madvise_on)
+            layer_trace["layer7_specmd_r4_madvise"] = dm_stats
 
-        if voice_input:
-            tools_used.append("android_speech_recognizer")
+            total_gen_tokens = len(gen_ids_t1) + len(gen_ids_t2)
 
-        # ------------------------------------------------------------------
-        # 2. Layer 4: Local Git Repository Memory Engine (`clover-memory-repo/`)
-        #    Selective On-Demand Snippet Fetch (Zero Context Bloating) +
-        #    Foundational Papers: McCulloch-Pitts (1943), Rosenblatt (1958),
-        #    Minsky-Papert (1969), Hopfield (1982), Rumelhart et al. (1986),
-        #    Sutton (1988), LeCun et al. (1998), Krizhevsky et al. (2012),
-        #    Vaswani et al. (2017).
-        # ------------------------------------------------------------------
-        if active_layer_cap >= 4:
-            t_l4 = time.perf_counter()
-            git_hits = self.git_memory_repo.search_repo_relevant(prompt, max_files=2, max_chars_per_file=550)
-            mem_pkg = self._retrieve_memory(self.memory_graph, prompt)
-            l4_items = []
-            l4_reasons = []
-            seen_snippets: set[str] = set()
-            for gh in git_hits:
-                snip = str(gh.get("snippet") or "").strip()
-                if snip and snip not in seen_snippets:
-                    seen_snippets.add(snip)
-                    l4_items.append({"id": gh["path"], "type": "git_repo_file", "summary": snip, "reason": f"git_repo_match(score={gh['score']})"})
-                    retrieved_context_blocks.append(f"[Git Memory Repo '{gh['path']}']: {snip}")
-            if mem_pkg is not None and mem_pkg.items:
-                for it in mem_pkg.items[:2]:
-                    summary_clean = str(it.entry.summary or "").strip()
-                    rsn_str = str(getattr(it, "reason", "") or "")
-                    l4_reasons.append(rsn_str)
-                    if summary_clean and summary_clean not in seen_snippets:
-                        seen_snippets.add(summary_clean)
-                        l4_items.append({"id": it.entry.id, "type": it.entry.entry_type, "summary": summary_clean, "reason": rsn_str})
-                        retrieved_context_blocks.append(f"[Memory Graph {it.entry.id}]: {summary_clean}")
-            if l4_items:
-                tools_used.append("layer4_git_memory_repo")
-            hopfield_fam = self.memory_graph.compute_hopfield_familiarity(prompt)
-            gtn_conf = self.memory_graph.compute_gtn_forward_confidence(prompt)
-            mh_lrn = self.memory_graph.multihead_lrn_subspace_retrieve(prompt, top_k=3)
-            td_path_ids = [it["id"] for it in l4_items if str(it["id"]).startswith("MEM-")] or ["MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001", "MEM-CORR-PER-LAYER-PARTITION-002"]
-            td_credit = self.memory_graph.compute_td_lambda_path_credit(td_path_ids, outcome_verified=True)
-            layer_trace["layer4_memory_graph"] = {
-                "enabled": True,
-                "storage_engine": "local_git_repository_with_selective_on_demand_fetch",
-                "repo_path": str(self.git_memory_repo.repo_dir),
-                "agents_md_accepted": bool(self.git_memory_repo.get_onboarding_state().get("agents_md_accepted")),
-                "injected_into_model_prompt": len(l4_items) > 0,
-                "retrieved_count": len(l4_items),
-                "entries": l4_items,
-                "eleven_foundational_papers": {
-                    "mcculloch_pitts_1943_and_minsky_papert_1969": {
-                        "veto_evaluated": True,
-                        "order_k_predicates_matched": any("structural_cue(" in r or "concept_" in r for r in l4_reasons),
-                        "rosenblatt_1958_gamma_zero_sum_applied": getattr(self.memory_graph, "use_rosenblatt_gamma", True),
-                    },
-                    "hopfield_1982_constellation_cleanup": {
-                        "is_familiar": bool(hopfield_fam.get("is_familiar")),
-                        "energy_drop": hopfield_fam.get("energy_drop"),
-                        "initial_alignment": hopfield_fam.get("initial_alignment"),
-                    },
-                    "rumelhart_1986_and_sutton_1988_td_lambda": {
-                        "terminal_target_rumelhart_1986": td_credit.get("terminal_target_rumelhart_1986"),
-                        "updated_values": td_credit.get("updated_values"),
-                    },
-                    "lecun_1998_gtn_forward_logadd": {
-                        "top_gtn_id": gtn_conf.get("top_gtn_id"),
-                        "top_gtn_confidence": gtn_conf.get("top_gtn_confidence"),
-                        "free_energy": gtn_conf.get("free_energy"),
-                    },
-                    "krizhevsky_2012_lrn_and_vaswani_2017_multihead": {
-                        "facets_multihead_lrn": mh_lrn.get("facets_multihead_lrn"),
-                        "selected_ids": [x.get("id") for x in (mh_lrn.get("results") or []) if isinstance(x, dict)],
-                    },
-                },
-                "ms": round((time.perf_counter() - t_l4) * 1000.0, 2),
+            return {
+                "device": platform.node(),
+                "arch": platform.machine(),
+                "model": "lfm3-omni-2b-4bit-s23",
+                "session_id": session_id,
+                "turn_n": turn_n_recorded,
+                "max_active_layer": active_layer_cap,
+                "exclusive_app_package": CLOVER_S23_APP_PACKAGE,
+                "prompt": prompt,
+                "reply": reply_text,
+                "output_type": active_media,
+                "image_png_b64": image_png_b64,
+                "video_mp4_b64": video_mp4_b64,
+                "audio_wav_b64": audio_wav_b64,
+                "speak_with_android_tts": (active_media == "audio" or voice_input) and not bool(audio_wav_b64),
+                "tools_used": tools_used,
+                "layer_trace": layer_trace,
+                "layer6_compiler_report": compiler_report,
+                "input_tokens": len(turn1_ids),
+                "generated_tokens": total_gen_tokens,
+                "emitted_tokens": len(out_ids),
+                "c_24_layer_4bit_ms": round(c_total_ms, 2),
+                "total_cycle_ms": total_ms,
+                "dm_stats": dm_stats,
             }
-        else:
-            layer_trace["layer4_memory_graph"] = {"enabled": False}
-
-        # ------------------------------------------------------------------
-        # 3. Layer 5: Deterministic Ontology GraphRAG (`k3_ontology_graph.py`)
-        #    + Foundational Papers: Turing (1950) M0/M1 Diagonal Stratifier &
-        #      Newell-Simon (1956) CSm 3-Number Filter (*2.07 Fix) + VCt Contraction.
-        # ------------------------------------------------------------------
-        if active_layer_cap >= 5:
-            t_l5 = time.perf_counter()
-            turing_strat = self.symbolic_verifier.check_turing_self_reference_stratification(prompt)
-            ont_items = self.ontology_retriever.retrieve(prompt, max_entities=3, max_paths=4)
-            trav_stats = dict(getattr(self.ontology_retriever.graph, "last_traversal_stats", {}) or {})
-            csm_verify = self.symbolic_verifier.match_formula_csm_lmc(
-                ("IMP", "a", ("OR", "a", "a")),
-                [("*2.07_add_left", ("IMP", "p", ("OR", "p", "q")))],
-                allow_vct_contraction=True,
-            )
-            l5_records: list[str] = []
-            if turing_strat is not None:
-                tools_used.append("layer5_turing_1950_stratifier")
-                retrieved_context_blocks.append(f"[Turing 1950 M0/M1 Stratification]: {turing_strat.get('explanation', '')}")
-            if ont_items:
-                tools_used.append("layer5_ontology_graphrag")
-                paths_first = sorted(ont_items, key=lambda x: 0 if getattr(x, "kind", "") == "path" else 1)
-                ev_txt = self._render_ontology(paths_first)
-                l5_records.append(ev_txt)
-                retrieved_context_blocks = [f"[Ontology GraphRAG Evidence]:\n{ev_txt}"]
-            layer_trace["layer5_ontology_and_verifier"] = {
-                "enabled": True,
-                "injected_into_model_prompt": (len(ont_items) > 0 or turing_strat is not None),
-                "ontology_hits": len(ont_items),
-                "rendered_evidence": l5_records,
-                "eleven_foundational_papers": {
-                    "turing_1950_m0_m1_diagonal_stratifier": turing_strat or {"self_reference_detected": False, "stratified_level": "M_0 (Object-Level)"},
-                    "newell_simon_1956_csm_and_vct": {
-                        "graph_traversal_stats": trav_stats,
-                        "csm_2_07_contraction_matched": len(csm_verify.get("matched", [])),
-                    },
-                },
-                "ms": round((time.perf_counter() - t_l5) * 1000.0, 2),
-            }
-        else:
-            layer_trace["layer5_ontology_and_verifier"] = {"enabled": False}
-
-        # ------------------------------------------------------------------
-        # 4. Layer 1 (`LFM3-1.7B` 24-Layer 4-Bit C Engine) + Layer 2 (`HybridLink`
-        #    & Multi-Turn `<tool_call>` -> `<tool_response>` Synthesis Loop)
-        #    Zero Python keyword prompt-steering (`is_code_write_request` removed)
-        # ------------------------------------------------------------------
-        user_clean = (prompt or "Hello!").strip()
-        retrieved_context_str = "\n".join(retrieved_context_blocks).strip()
-        if retrieved_context_str:
-            ctx_ids = self.tokenizer.encode(retrieved_context_str, allow_special=False)
-            if len(ctx_ids) > 420:
-                retrieved_context_str = self.tokenizer.decode(ctx_ids[:420], skip_special_tokens=True).strip()
-            user_turn_content = (
-                f"Retrieved Context:\n{retrieved_context_str}\n\n"
-                f"Question: {user_clean}"
-            )
-        else:
-            user_turn_content = user_clean
-
-        has_grounded_context = bool(retrieved_context_str)
-        tools_enabled_for_turn = (active_layer_cap >= 2 and not has_grounded_context)
-        use_ha_fmt = tools_enabled_for_turn and (allow_internet or allow_python)
-        sys_prompt_str = self._build_system_prompt(
-            allow_internet=(allow_internet and tools_enabled_for_turn),
-            allow_python=(allow_python and tools_enabled_for_turn),
-            use_hybrid_agent_format=use_ha_fmt,
-        )
-        if inject_latent_step_before_decode:
-            assistant_open = "<|im_start|>assistant\n<think><latent>"
-        elif use_ha_fmt or enable_thinking:
-            assistant_open = "<|im_start|>assistant\n<think>\n"
-        else:
-            assistant_open = "<|im_start|>assistant\n<think></think><answer>"
-
-        turn1_prompt_str = f"{sys_prompt_str}<|im_start|>user\n{user_turn_content}<|im_end|>\n{assistant_open}"
-        turn1_ids = self.tokenizer.encode(turn1_prompt_str, allow_special=True)
-        if len(turn1_ids) > max_prompt_tokens:
-            # Keep system header and tail question + assistant_open intact
-            sys_ids = self.tokenizer.encode(sys_prompt_str + "<|im_start|>user\n", allow_special=True)
-            tail_ids = self.tokenizer.encode(f"\n\nQuestion: {user_clean}<|im_end|>\n{assistant_open}", allow_special=True)
-            budget = max(16, max_prompt_tokens - len(sys_ids) - len(tail_ids))
-            mid_ids = self.tokenizer.encode(f"Retrieved Context:\n{retrieved_context_str}", allow_special=False)[:budget]
-            turn1_ids = sys_ids + mid_ids + tail_ids
-
-        h_prefill, prefill_ms = self.engine.prefill_cached(turn1_ids)
-        c_total_ms = prefill_ms
-
-        # Layer 2: Measure `HybridLink` on `h_prefill` and run `HybridAgent` `<latent>` continuous reasoning loop
-        h_for_decode = h_prefill
-        if active_layer_cap >= 2 and self.hybrid_ncm is not None:
-            latent_info = self.hybrid_ncm.run_continuous_latent_step(h_prefill)
-            lat_trace = {
-                "enabled": True,
-                "injected_before_decode": bool(inject_latent_step_before_decode),
-                **{k: v for k, v in latent_info.items() if k != "r_np"},
-            }
-            if inject_latent_step_before_decode:
-                h_after_lat, lat_step_c_ms = self.engine.step_embedding_cached(latent_info["r_np"])
-                close_ids = self.tokenizer.encode("</latent></think><answer>", allow_special=True)
-                h_after_close, close_ms = self.engine.append_cached(close_ids)
-                c_total_ms += lat_step_c_ms + close_ms
-                h_for_decode = h_after_close
-                lat_trace["c_continuous_latent_step_ms"] = round(lat_step_c_ms, 2)
-                lat_trace["post_latent_hidden_rms"] = round(float(np.sqrt(np.mean(h_after_lat ** 2))), 5)
-            layer_trace["layer2_hybrid_agent"] = lat_trace
-            tools_used.append("layer2_lfm3_native_hybridlink")
-        else:
-            layer_trace["layer2_hybrid_agent"] = {"enabled": False}
-
-        if active_layer_cap >= 2 and self.hybrid_ncm is not None and (use_ha_fmt or enable_thinking):
-            gen_ids_t1, _, decode_ms_t1, ha_t1_stats = self.hybrid_ncm.decode_hybrid_agent_turn(
-                h_for_decode,
-                max_new_tokens=max_new_tokens,
-            )
-            layer_trace["layer2_hybrid_agent"].update(ha_t1_stats)
-        else:
-            gen_ids_t1, _, decode_ms_t1 = self.engine.decode_from_cache(
-                h_for_decode,
-                max_new_tokens=max_new_tokens,
-                allow_thinking=enable_thinking,
-            )
-        c_total_ms += decode_ms_t1
-        raw_t1_text = self.tokenizer.decode(gen_ids_t1, skip_special_tokens=False)
-        parsed_call = self._parse_lfm3_tool_call_xml(raw_t1_text)
-
-        tool_observation = ""
-        executed_py_code = ""
-        turn2_prefill_ms = 0.0
-        turn2_decode_ms = 0.0
-        gen_ids_t2: list[int] = []
-
-        if parsed_call is not None and active_layer_cap >= 2:
-            fn_name = parsed_call["function"]
-            params = parsed_call["parameters"]
-
-            if fn_name == "web_search" and allow_internet:
-                q_search = params.get("query") or user_clean
-                urls_in_prompt = re.findall(r"https?://[^\s<>\"')]+", user_clean)
-                if urls_in_prompt and urls_in_prompt[0] not in q_search:
-                    q_search = urls_in_prompt[0] + " " + q_search
-                tools_used.append("layer2_live_web_search")
-                tool_observation = self.search_tool.execute(q_search)
-                layer_trace["layer2_hybrid_agent"]["tool_executed"] = "web_search"
-                layer_trace["layer2_hybrid_agent"]["search_query"] = q_search
-                layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
-
-            elif fn_name == "python_interpreter" and allow_python:
-                executed_py_code = params.get("code") or ""
-                if executed_py_code:
-                    tools_used.append("layer2_python_interpreter")
-                    tool_observation = self._execute_python_subprocess(executed_py_code)
-                    layer_trace["layer2_hybrid_agent"]["tool_executed"] = "python_interpreter"
-                    layer_trace["layer2_hybrid_agent"]["python_code"] = executed_py_code
-                    layer_trace["layer2_hybrid_agent"]["python_output"] = tool_observation
-
-            elif fn_name == "repo_search" and active_layer_cap >= 4:
-                rq = params.get("query") or user_clean
-                tools_used.append("layer4_git_repo_search")
-                hits = self.git_memory_repo.search_repo_relevant(rq, max_files=3, max_chars_per_file=600)
-                tool_observation = "\n".join(f"[{h['path']}]: {h['snippet']}" for h in hits) or "No matching files in memory repo."
-                layer_trace["layer2_hybrid_agent"]["tool_executed"] = "repo_search"
-                layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
-
-            elif fn_name == "repo_read" and active_layer_cap >= 4:
-                rpath = params.get("path") or "CONTEXT.md"
-                tools_used.append("layer4_git_repo_read")
-                try:
-                    rdata = self.git_memory_repo.read_file(rpath)
-                    tool_observation = str(rdata.get("content") or "")[:1200]
-                except Exception as ex:
-                    tool_observation = f"repo_read error: {ex}"
-                layer_trace["layer2_hybrid_agent"]["tool_executed"] = "repo_read"
-                layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
-
-            elif fn_name == "repo_write" and active_layer_cap >= 4:
-                rpath = params.get("path") or "tasks/note.md"
-                rcontent = params.get("content") or ""
-                tools_used.append("layer4_git_repo_write")
-                try:
-                    wres = self.git_memory_repo.write_file(rpath, rcontent, commit_message=f"Model tool write {rpath}")
-                    tool_observation = f"Committed {wres['path']} ({wres['size_bytes']} B, commit {wres['commit']})."
-                except Exception as ex:
-                    tool_observation = f"repo_write error: {ex}"
-                layer_trace["layer2_hybrid_agent"]["tool_executed"] = "repo_write"
-                layer_trace["layer2_hybrid_agent"]["observation_preview"] = tool_observation[:400]
-
-            # Feed `<result>...</result>` back into `LFM3-Omni-2B` (Turn 2) with 1 HybridLink2048 latent step before `<answer>`
-            if tool_observation:
-                call_fmt = parsed_call.get("format", "chatml_tool_call")
-                if call_fmt in ("hybrid_agent_search", "hybrid_agent_python"):
-                    obs_clean = tool_observation[:600]
-                    t2_open_ids = self.tokenizer.encode(
-                        f"<result>{obs_clean}</result><think><latent>",
-                        allow_special=True,
-                    )
-                    h_t2_lat, ms_t2_open = self.engine.append_cached(t2_open_ids)
-                    turn2_prefill_ms = ms_t2_open
-                    if self.hybrid_ncm is not None:
-                        lat_t2 = self.hybrid_ncm.run_continuous_latent_step(h_t2_lat)
-                        h_t2_after, ms_lat_t2 = self.engine.step_embedding_cached(lat_t2["r_np"])
-                        turn2_prefill_ms += ms_lat_t2
-                        layer_trace["layer2_hybrid_agent"]["turn2_latent_spans"] = 1
-                        layer_trace["layer2_hybrid_agent"]["turn2_latent_steps"] = 1
-                    t2_close_ids = self.tokenizer.encode(
-                        "</latent></think><answer>",
-                        allow_special=True,
-                    )
-                    h_t2, ms_t2_close = self.engine.append_cached(t2_close_ids)
-                    turn2_prefill_ms += ms_t2_close
-                    gen_ids_t2, _, turn2_decode_ms = self.engine.decode_from_cache(
-                        h_t2, max_new_tokens=max_new_tokens, allow_thinking=0
-                    )
-                else:
-                    t1_clean_call = raw_t1_text
-                    if not t1_clean_call.endswith("</tool_call>"):
-                        t1_clean_call = t1_clean_call.rstrip() + "\n</function>\n</tool_call>"
-                    t2_prefix_ids = self.tokenizer.encode(
-                        f"{turn1_prompt_str}{t1_clean_call}<|im_end|>\n<|im_start|>tool\n<tool_response>\n",
-                        allow_special=True,
-                    )
-                    t2_suffix_ids = self.tokenizer.encode(
-                        "\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think></think>",
-                        allow_special=True,
-                    )
-                    obs_budget = max(24, 1024 - len(t2_prefix_ids) - len(t2_suffix_ids))
-                    obs_ids = self.tokenizer.encode(tool_observation, allow_special=False)[:obs_budget]
-                    turn2_ids = t2_prefix_ids + obs_ids + t2_suffix_ids
-                    h_t2, turn2_prefill_ms = self.engine.prefill_cached(turn2_ids)
-                    gen_ids_t2, _, turn2_decode_ms = self.engine.decode_from_cache(
-                        h_t2,
-                        max_new_tokens=max_new_tokens,
-                        allow_thinking=False,
-                    )
-                c_total_ms += turn2_prefill_ms + turn2_decode_ms
-                raw_t2_text = self.tokenizer.decode(gen_ids_t2, skip_special_tokens=False)
-                reply_text = self._clean_model_text(raw_t2_text)
-            else:
-                reply_text = self._clean_model_text(raw_t1_text)
-        else:
-            reply_text = self._clean_model_text(raw_t1_text)
-
-        if not reply_text:
-            reply_text = self.tokenizer.decode(gen_ids_t2 or gen_ids_t1, skip_special_tokens=True).strip()
-
-        layer_trace["layer1_lfm3_omni"] = {
-            "enabled": True,
-            "turn1_prefill_ms": round(prefill_ms, 2),
-            "turn1_decode_ms": round(decode_ms_t1, 2),
-            "turn1_generated_tokens": len(gen_ids_t1),
-            "turn1_raw_output": raw_t1_text,
-            "autonomous_tool_call": parsed_call,
-            "turn2_prefill_ms": round(turn2_prefill_ms, 2),
-            "turn2_decode_ms": round(turn2_decode_ms, 2),
-            "turn2_generated_tokens": len(gen_ids_t2),
-        }
-
-        # ------------------------------------------------------------------
-        # 5. Layer 6: Real Python Generative Compilation (`CloverPythonGenerativeCompiler`)
-        #    Checks ONLY model-written code (`reply_text` or `executed_py_code`), with repair pass!
-        # ------------------------------------------------------------------
-        compiler_report = None
-        if active_layer_cap >= 6:
-            compiler_report = self._compile_verify_model_code_only(
-                model_reply_text=reply_text,
-                model_tool_code=executed_py_code,
-                user_prompt=user_clean,
-                allow_python=allow_python,
-            )
-            if compiler_report is not None:
-                tools_used.append("layer6_generative_compiler")
-                if not compiler_report["all_ok"]:
-                    first_fail = next((r for r in compiler_report["results"] if not r["ok"]), None)
-                    if first_fail is not None and first_fail["diagnostics"]:
-                        d0 = first_fail["diagnostics"][0]
-                        err_desc = f"{d0.get('code', 'Error')} at line {d0.get('line')}: {d0.get('message')}"
-                        repair_prompt_str = (
-                            f"{sys_prompt_str}<|im_start|>user\n{user_clean}\n\n"
-                            f"Your previous Python code failed verification with:\n{err_desc}\n"
-                            f"Output ONLY the corrected Python function inside a ```python code block.<|im_end|>\n"
-                            "<|im_start|>assistant\n<think>I will output only the corrected Python code block.</think><answer>```python\n"
-                        )
-                        rep_ids = self.tokenizer.encode(repair_prompt_str, allow_special=True)[:1024]
-                        h_rep, ms_rep_pre = self.engine.prefill_cached(rep_ids)
-                        g_rep, _, ms_rep_dec = self.engine.decode_from_cache(
-                            h_rep, max_new_tokens=max_new_tokens, allow_thinking=False
-                        )
-                        c_total_ms += ms_rep_pre + ms_rep_dec
-                        repaired_reply = "```python\n" + self._clean_model_text(self.tokenizer.decode(g_rep, skip_special_tokens=False))
-                        if "```" not in repaired_reply[10:]:
-                            repaired_reply = repaired_reply.rstrip() + "\n```"
-                        repaired_report = self._compile_verify_model_code_only(
-                            model_reply_text=repaired_reply,
-                            model_tool_code="",
-                            user_prompt=user_clean,
-                            allow_python=allow_python,
-                        )
-                        compiler_report["repair_attempted"] = True
-                        compiler_report["repaired_report"] = repaired_report
-                        if repaired_report and repaired_report.get("all_ok"):
-                            reply_text = repaired_reply
-                            compiler_report["all_ok_after_repair"] = True
-                        else:
-                            compiler_report["all_ok_after_repair"] = False
-            layer_trace["layer6_generative_compiler"] = {
-                "enabled": True,
-                "checked_only_model_code": True,
-                "report": compiler_report,
-            }
-        else:
-            layer_trace["layer6_generative_compiler"] = {"enabled": False}
-
-        # ------------------------------------------------------------------
-        # 6. Layer 3: 11-Level `NCM` (`VQVAE` + `NextConceptTransformer` + `LexicalPointerDecoder`)
-        # ------------------------------------------------------------------
-        active_media = (output_type or "text").lower().strip()
-        if active_media not in ("image", "video", "audio"):
-            active_media = "text"
-
-        if active_layer_cap >= 3 and use_ncm_renderer and self.hybrid_ncm is not None and active_media == "text":
-            rendered_ncm, out_ids, ncm_meta = self.hybrid_ncm.render_plan_through_11level_ncm(reply_text)
-            if rendered_ncm:
-                reply_text = rendered_ncm
-            layer_trace["layer3_11level_ncm"] = ncm_meta
-            tools_used.append("layer3_11level_ncm_pointer_decoder")
-        else:
-            out_ids = self.tokenizer.encode(reply_text, allow_special=False)
-            layer_trace["layer3_11level_ncm"] = {"enabled": False}
-
-        # ------------------------------------------------------------------
-        # 7. Layer 5 Post-Generation Grounding Audit (Real Boolean Check, No Regex Rewriting)
-        # ------------------------------------------------------------------
-        if active_layer_cap >= 5:
-            grounding_audit = self._audit_reply_grounding(
-                prompt=user_clean,
-                retrieved_context=retrieved_context_str,
-                tool_observation=tool_observation,
-                reply_text=reply_text,
-            )
-            layer_trace["layer5_ontology_and_verifier"]["grounding_audit"] = grounding_audit
-            layer_trace["layer5_ontology_and_verifier"]["source_grounding_verified"] = grounding_audit["source_grounding_verified"]
-
-        # ------------------------------------------------------------------
-        # 8. Optional Procedural Media Preview (Only When Explicitly Requested via `output_type` or Voice)
-        # ------------------------------------------------------------------
-        image_png_b64 = ""
-        video_mp4_b64 = ""
-        audio_wav_b64 = ""
-        if active_media == "image":
-            image_png_b64 = generate_image_png_data_url(user_clean)
-            tools_used.append("procedural_pillow_png_preview")
-        elif active_media == "video":
-            video_mp4_b64 = generate_video_mp4_data_url(user_clean, self.base_dir)
-            tools_used.append("procedural_ffmpeg_mp4_preview")
-        elif active_media == "audio" or voice_input:
-            audio_wav_b64 = generate_spoken_wav_data_url(reply_text, self.base_dir)
-            tools_used.append("espeak_spoken_wav_synthesizer")
-
-        # ------------------------------------------------------------------
-        # 9. Layer 4 Growth Stage: Commit Session Log & Verified Scripts to Local Git Repo
-        # ------------------------------------------------------------------
-        if active_layer_cap >= 4 and self.perm_modes.get("memory", "allow") != "deny":
-            try:
-                git_growth = self.git_memory_repo.record_task_or_session_turn(
-                    session_id="s23-studio",
-                    prompt=user_clean,
-                    reply=reply_text,
-                    generated_code=executed_py_code,
-                    tools_used=tools_used,
-                )
-                layer_trace["layer4_memory_graph"]["git_growth_commit"] = git_growth
-            except Exception:
-                pass
-
-        # ------------------------------------------------------------------
-        # 10. Layer 7: Per-Request SpecMD Slot Tracker & OS `madvise(MADV_WILLNEED)`
-        # ------------------------------------------------------------------
-        dm_stats = self.engine.get_dm_stats(madvise_enabled=madvise_on)
-        layer_trace["layer7_specmd_r4_madvise"] = dm_stats
-
-        total_gen_tokens = len(gen_ids_t1) + len(gen_ids_t2)
-        total_ms = round((time.perf_counter() - t0) * 1000.0, 2)
-
-        return {
-            "device": platform.node(),
-            "arch": platform.machine(),
-            "model": "lfm3-omni-2b-4bit-s23",
-            "max_active_layer": active_layer_cap,
-            "exclusive_app_package": CLOVER_S23_APP_PACKAGE,
-            "prompt": prompt,
-            "reply": reply_text,
-            "output_type": active_media,
-            "image_png_b64": image_png_b64,
-            "video_mp4_b64": video_mp4_b64,
-            "audio_wav_b64": audio_wav_b64,
-            "speak_with_android_tts": active_media == "audio" or voice_input,
-            "tools_used": tools_used,
-            "layer_trace": layer_trace,
-            "layer6_compiler_report": compiler_report,
-            "input_tokens": len(turn1_ids),
-            "generated_tokens": total_gen_tokens,
-            "emitted_tokens": len(out_ids),
-            "c_24_layer_4bit_ms": round(c_total_ms, 2),
-            "total_cycle_ms": total_ms,
-            "dm_stats": dm_stats,
-        }
+        finally:
+            self._busy_turns = max(0, self._busy_turns - 1)
+            self._last_turn_end = time.time()
 
     def run_retry_cycle(
         self,
@@ -2622,187 +2906,232 @@ class CloverS23OnDeviceSystem:
         allow_python: bool = True,
     ) -> dict[str, Any]:
         """
-        Executes the Laptop Agent's full Clover Retry Cycle (`clover_cycle.retry_cycle`) on the Samsung Galaxy S23
-        when the user says the earlier answer was not right ("try again", "that's wrong", "not what I expected",
-        the Try again button, or asking the same question again):
-          1. Deterministic Outcome checks (`arithmetic_findings` + `format_findings` + Layer 6 `CloverPythonGenerativeCompiler`).
-          2. Missing Context web search (`needs_web` -> `web_query`), passed to `solve(2)` and `rewrite` only so a
-             single misleading page moves at most 1 vote.
+        Executes the Laptop Agent's full Clover Retry Cycle (`clover_cycle.retry_cycle`) on the Samsung Galaxy S23:
+          1. Deterministic Outcome checks (`arithmetic_findings` + `format_findings` + S3 `CloverPythonGenerativeCompiler`).
+          2. Missing Context web search (`needs_web` -> `web_query`) filtered via `web_search.research()` (`obs.startswith("Searched ")`),
+             passed to `solve(2)` and `rewrite` only so a single misleading page moves at most 1 vote.
           3. Independent multi-solution majority vote for single-value questions (`solve(1)`, `solve(2)` with `<latent>`
              step, and `python_solve` verified via `clover_cycle.computes(code)`).
           4. Open-ended / creative / code rewrite (`_redo` + `_keep_code`) directed by the user's feedback.
-          5. Growth stage: stages any learned lesson in `clover-memory-repo/lessons/` (`lesson_staged`) so the user
-             can Keep (promote to `notes/`) or Discard it.
+          5. Growth stage: records negative outcome on the previous turn in `outcomes/` (so `S2` `MemoryIndex` excludes
+             the bad answer from recall) and stages any learned lesson in `clover-memory-repo/lessons/`.
         """
         import clover_cycle as C
 
         t0 = time.perf_counter()
-        active_layer_cap = max(1, min(7, int(max_active_layer)))
-        madvise_on = active_layer_cap >= 7
-        self.engine.set_madvise_active(madvise_on)
-        self.engine.reset_dm_stats()
+        self._busy_turns += 1
+        try:
+            active_layer_cap = max(1, min(7, int(max_active_layer)))
+            madvise_on = active_layer_cap >= 7
+            self.engine.set_madvise_active(madvise_on)
+            self.engine.reset_dm_stats()
 
-        tools_used: list[str] = ["clover_retry_cycle"]
-        used_names: list[str] = []
-        layer_trace: dict[str, Any] = {}
-        c_total_ms = 0.0
-        total_gen_tokens = 0
+            tools_used: list[str] = ["clover_retry_cycle"]
+            used_names: list[str] = []
+            layer_trace: dict[str, Any] = {}
+            c_total_ms = 0.0
+            total_gen_tokens = 0
+            memory_perm_ok = self.perm_modes.get("memory", "allow") != "deny"
 
-        # 1. Re-gather Layer 4 (Git Memory Repo) & Layer 5 (Ontology GraphRAG) Context for `question`
-        blocks: list[str] = []
-        if active_layer_cap >= 4:
-            git_hits = self.git_memory_repo.search_repo_relevant(question, max_files=2, max_chars_per_file=550)
-            for gh in git_hits:
-                blocks.append(f"[Git Memory Repo '{gh['path']}']: {gh['snippet']}")
-            if git_hits:
-                tools_used.append("layer4_git_memory_repo")
-        if active_layer_cap >= 5:
-            ont_items = self.ontology_retriever.retrieve(question, max_entities=3, max_paths=4)
-            if ont_items:
-                paths_first = sorted(ont_items, key=lambda x: 0 if getattr(x, "kind", "") == "path" else 1)
-                blocks.append(f"[Ontology GraphRAG Evidence]:\n{self._render_ontology(paths_first)}")
-                tools_used.append("layer5_ontology_graphrag")
-
-        notes = ("\n\n" + "\n\n".join(blocks)) if blocks else ""
-        web_ctx = ""
-        if not blocks and allow_internet and C.needs_web(question):
-            q_web = C.web_query(question)
-            if q_web:
-                obs = self.search_tool.execute(q_web)
-                if obs and not obs.startswith("Error"):
-                    web_ctx = (
-                        "\n\nClover searched the web for this question. Use these results only where they answer it; "
-                        "they can be incomplete or wrong:\n" + obs[:650]
+            # Record that the previous turn in `session_id` did not work (`tried_again` / `said_not_right`)
+            if active_layer_cap >= 4 and memory_perm_ok:
+                try:
+                    self.git_memory_repo.record_outcome_feedback(
+                        session_id,
+                        None,
+                        "said_not_right" if feedback else "tried_again",
                     )
-                    tools_used.append("layer2_live_web_search")
-                    used_names.append("a web search")
+                except Exception:
+                    pass
 
-        sys_txt = self._build_system_prompt(allow_internet=False, allow_python=False, use_hybrid_agent_format=False)
-        convo_turns: list[tuple[str, str]] = [(question, previous_answer)]
+            # 1. Re-gather S1 (Git Memory Repo) & S2 (MemoryIndex Recall + Ontology GraphRAG) Context for `question`
+            blocks: list[str] = []
+            recall_sys_block = ""
+            if active_layer_cap >= 4 and memory_perm_ok:
+                git_hits = self.git_memory_repo.search_repo_relevant(question, max_files=2, max_chars_per_file=550)
+                for gh in git_hits:
+                    blocks.append(f"[Git Memory Repo '{gh['path']}']: {gh['snippet']}")
+                if git_hits:
+                    tools_used.append("layer4_git_memory_repo")
+                if hasattr(self, "memory_index") and self.settings.get("layers", {}).get("recall", True):
+                    cur_msgs = self.git_memory_repo.messages(session_id)
+                    next_turn_n = sum(1 for m in cur_msgs if m.get("role") == "user") + 1
+                    r_blk, _ = self.memory_index.recall(session_id, next_turn_n, question, history_turns=2)
+                    if r_blk:
+                        recall_sys_block = r_blk
+                        tools_used.append("s2_turn_level_memory_recall")
+            if active_layer_cap >= 5 and self.settings.get("layers", {}).get("ontology", True):
+                ont_items = self.ontology_retriever.retrieve(question, max_entities=3, max_paths=4)
+                if ont_items:
+                    paths_first = sorted(ont_items, key=lambda x: 0 if getattr(x, "kind", "") == "path" else 1)
+                    blocks.append(f"[Ontology GraphRAG Evidence]:\n{self._render_ontology(paths_first)}")
+                    tools_used.append("layer5_ontology_graphrag")
 
-        def _run_c_prompt(user_msg: str, use_latent: bool = False, max_tok: int = 160) -> str:
-            nonlocal c_total_ms, total_gen_tokens
-            open_tag = "<|im_start|>assistant\n<think><latent>" if (use_latent and self.hybrid_ncm is not None) else "<|im_start|>assistant\n<think></think><answer>"
-            full_p = f"{sys_txt}<|im_start|>user\n{user_msg}<|im_end|>\n{open_tag}"
-            pids = self.tokenizer.encode(full_p, allow_special=True)[:1024]
-            h_p, ms_p = self.engine.prefill_cached(pids)
-            c_total_ms += ms_p
-            h_dec = h_p
-            if use_latent and self.hybrid_ncm is not None:
-                lat = self.hybrid_ncm.run_continuous_latent_step(h_p)
-                h_lat, ms_l = self.engine.step_embedding_cached(lat["r_np"])
-                close_ids = self.tokenizer.encode("</latent></think><answer>", allow_special=True)
-                h_dec, ms_c = self.engine.append_cached(close_ids)
-                c_total_ms += ms_l + ms_c
-                tools_used.append("layer2_lfm3_native_hybridlink")
-            g_ids, _, ms_d = self.engine.decode_from_cache(h_dec, max_new_tokens=max_tok, allow_thinking=0)
-            c_total_ms += ms_d
-            total_gen_tokens += len(g_ids)
-            return self._clean_model_text(self.tokenizer.decode(g_ids, skip_special_tokens=False))
+            notes = ("\n\n" + "\n\n".join(blocks)) if blocks else ""
+            web_ctx = ""
+            if not blocks and allow_internet and C.needs_web(question):
+                q_web = C.web_query(question)
+                if q_web:
+                    obs = self.search_tool.research(q_web) if hasattr(self.search_tool, "research") else self.search_tool.execute(q_web)
+                    # Only inject web_ctx when `research()` confirmed relevant results (`obs.startswith("Searched ")`)
+                    if obs and obs.startswith("Searched "):
+                        web_ctx = (
+                            "\n\nClover searched the web for this question. Use these results only where they answer it; "
+                            "they can be incomplete or wrong:\n" + obs[:900]
+                        )
+                        tools_used.append("layer2_live_web_search")
+                        used_names.append("a web search")
 
-        def rewrite(instruction: str) -> str:
-            ctx_tail = (notes + web_ctx) if len(convo_turns) == 1 else ""
-            prev_q, prev_a = convo_turns[-1]
-            u_msg = (
-                f"Original Question:\n{prev_q}{ctx_tail}\n\n"
-                f"Your Earlier Answer:\n{prev_a}\n\n"
-                f"{instruction}"
-            )
-            new_ans = _run_c_prompt(u_msg, use_latent=True, max_tok=160) or previous_answer
-            convo_turns.append((instruction, new_ans))
-            return new_ans
+            sys_txt = self._build_system_prompt(allow_internet=False, allow_python=False, use_hybrid_agent_format=False)
+            if recall_sys_block:
+                sys_txt = f"{sys_txt}<|im_start|>system\n{recall_sys_block}<|im_end|>\n"
+            convo_turns: list[tuple[str, str]] = [(question, previous_answer)]
 
-        def solve(k: int, note: str | None = None) -> str:
-            ctx = notes + (web_ctx if k == 2 else "")
-            s_prompt = C.second_solve_prompt(question + ctx, question, k=k, note=note)
-            return _run_c_prompt(s_prompt, use_latent=(k == 2), max_tok=160)
+            def _run_c_prompt(user_msg: str, use_latent: bool = False, max_tok: int = 384) -> str:
+                nonlocal c_total_ms, total_gen_tokens
+                open_tag = "<|im_start|>assistant\n<think><latent>" if (use_latent and self.hybrid_ncm is not None) else "<|im_start|>assistant\n<think></think><answer>"
+                full_p = f"{sys_txt}<|im_start|>user\n{user_msg}<|im_end|>\n{open_tag}"
+                pids = self.tokenizer.encode(full_p, allow_special=True)
+                if len(pids) > 1280:
+                    # Preserve system header and the `<|im_end|>\n{open_tag}` tail so the assistant turn opening is never cut off!
+                    head_ids = self.tokenizer.encode(f"{sys_txt}<|im_start|>user\n", allow_special=True)
+                    tail_ids = self.tokenizer.encode(f"<|im_end|>\n{open_tag}", allow_special=True)
+                    mid_budget = max(32, 1280 - len(head_ids) - len(tail_ids))
+                    mid_ids = self.tokenizer.encode(user_msg, allow_special=False)[-mid_budget:]
+                    pids = head_ids + mid_ids + tail_ids
+                h_p, ms_p = self.engine.prefill_cached(pids)
+                c_total_ms += ms_p
+                h_dec = h_p
+                if use_latent and self.hybrid_ncm is not None:
+                    lat = self.hybrid_ncm.run_continuous_latent_step(h_p)
+                    h_lat, ms_l = self.engine.step_embedding_cached(lat["r_np"])
+                    close_ids = self.tokenizer.encode("</latent></think><answer>", allow_special=True)
+                    h_dec, ms_c = self.engine.append_cached(close_ids)
+                    c_total_ms += ms_l + ms_c
+                    tools_used.append("layer2_lfm3_native_hybridlink")
+                g_ids, _, ms_d = self.engine.decode_from_cache(h_dec, max_new_tokens=max_tok, allow_thinking=0)
+                c_total_ms += ms_d
+                total_gen_tokens += len(g_ids)
+                return self._clean_model_text(self.tokenizer.decode(g_ids, skip_special_tokens=False))
 
-        def python_solve(note: str | None = None) -> str:
-            if not allow_python:
-                return ""
-            p_prompt = C.python_solve_prompt(question + notes, note=note)
-            raw_py = _run_c_prompt(p_prompt, use_latent=False, max_tok=160)
-            py_blocks = self.extract_python_from_reply(raw_py)
-            code = py_blocks[0] if py_blocks else raw_py
-            if not code or not C.computes(code):
-                return ""
-            out = self._execute_python_subprocess(code)
-            val = C.python_answer(out)
-            if val is None:
-                return ""
-            tools_used.append("layer2_python_interpreter")
-            used_names.append("a Python calculation")
-            shown = f"{int(val)}" if float(val).is_integer() else f"{val:g}"
-            return f"Clover ran this Python program:\n```python\n{code.strip()}\n```\nIt printed: {out.strip()[-300:]}\n\nANSWER: {shown}"
-
-        def code_check(ans: str) -> str | None:
-            if active_layer_cap < 6:
-                return None
-            rep = self._compile_verify_model_code_only(ans, "", question, allow_python=allow_python)
-            layer_trace["layer6_generative_compiler"] = {"enabled": True, "checked_only_model_code": True, "report": rep}
-            if not rep or rep.get("all_ok"):
-                return None
-            tools_used.append("layer6_generative_compiler")
-            diags = []
-            for r_item in rep.get("results", []):
-                for d in r_item.get("diagnostics", []):
-                    diags.append(f"{d.get('code', 'Error')}: {d.get('message', '')}")
-            return "; ".join(diags)[:500] if diags else "Code check failed."
-
-        final_reply, cyc_info = C.retry_cycle(
-            question=question,
-            previous=previous_answer,
-            feedback=feedback,
-            rewrite=rewrite,
-            solve=solve,
-            code_check=code_check if active_layer_cap >= 6 else None,
-            used=used_names,
-            program=python_solve if allow_python else None,
-        )
-        cyc_info["tools"] = list(dict.fromkeys(used_names))
-        layer_trace["clover_retry_cycle"] = cyc_info
-
-        lesson_staged = None
-        if cyc_info.get("lesson") and active_layer_cap >= 4 and self.perm_modes.get("memory", "allow") != "deny":
-            try:
-                staged = self.git_memory_repo.stage_lesson(
-                    cyc_info["lesson"],
-                    conversation_id=session_id,
-                    kind=cyc_info.get("lesson_kind", "user"),
+            def rewrite(instruction: str) -> str:
+                ctx_tail = (notes + web_ctx) if len(convo_turns) == 1 else ""
+                prev_q, prev_a = convo_turns[-1]
+                u_msg = (
+                    f"Original Question:\n{prev_q}{ctx_tail}\n\n"
+                    f"Your Earlier Answer:\n{prev_a}\n\n"
+                    f"{instruction}"
                 )
-                lesson_staged = staged["id"]
-                layer_trace["clover_retry_cycle"]["lesson_staged"] = staged
-            except Exception:
-                pass
+                new_ans = _run_c_prompt(u_msg, use_latent=True, max_tok=384) or previous_answer
+                convo_turns.append((instruction, new_ans))
+                return new_ans
 
-        dm_stats = self.engine.get_dm_stats(madvise_enabled=madvise_on)
-        layer_trace["layer7_specmd_r4_madvise"] = dm_stats
-        total_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+            def solve(k: int, note: str | None = None) -> str:
+                ctx = notes + (web_ctx if k == 2 else "")
+                s_prompt = C.second_solve_prompt(question + ctx, question, k=k, note=note)
+                return _run_c_prompt(s_prompt, use_latent=(k == 2), max_tok=384)
 
-        return {
-            "device": platform.node(),
-            "arch": platform.machine(),
-            "model": "lfm3-omni-2b-4bit-s23",
-            "max_active_layer": active_layer_cap,
-            "exclusive_app_package": CLOVER_S23_APP_PACKAGE,
-            "prompt": question,
-            "reply": final_reply,
-            "output_type": "text",
-            "image_png_b64": "",
-            "video_mp4_b64": "",
-            "audio_wav_b64": "",
-            "speak_with_android_tts": False,
-            "tools_used": list(dict.fromkeys(tools_used)),
-            "layer_trace": layer_trace,
-            "clover_cycle_info": cyc_info,
-            "lesson_staged": lesson_staged,
-            "input_tokens": len(self.tokenizer.encode(question, allow_special=False)),
-            "generated_tokens": total_gen_tokens,
-            "emitted_tokens": len(self.tokenizer.encode(final_reply, allow_special=False)),
-            "c_24_layer_4bit_ms": round(c_total_ms, 2),
-            "total_cycle_ms": total_ms,
-            "dm_stats": dm_stats,
-        }
+            def python_solve(note: str | None = None) -> str:
+                if not allow_python:
+                    return ""
+                p_prompt = C.python_solve_prompt(question + notes, note=note)
+                raw_py = _run_c_prompt(p_prompt, use_latent=False, max_tok=384)
+                py_blocks = self.extract_python_from_reply(raw_py)
+                code = py_blocks[0] if py_blocks else raw_py
+                if not code or not C.computes(code):
+                    return ""
+                out = self._execute_python_subprocess(code)
+                val = C.python_answer(out)
+                if val is None:
+                    return ""
+                tools_used.append("layer2_python_interpreter")
+                used_names.append("a Python calculation")
+                shown = f"{int(val)}" if float(val).is_integer() else f"{val:g}"
+                return f"Clover ran this Python program:\n```python\n{code.strip()}\n```\nIt printed: {out.strip()[-300:]}\n\nANSWER: {shown}"
+
+            def code_check(ans: str) -> str | None:
+                if active_layer_cap < 6:
+                    return None
+                rep = self._compile_verify_model_code_only(ans, "", question, allow_python=allow_python)
+                layer_trace["layer6_generative_compiler"] = {"enabled": True, "checked_only_model_code": True, "report": rep}
+                if not rep or rep.get("all_ok"):
+                    return None
+                tools_used.append("layer6_generative_compiler")
+                diags = []
+                for r_item in rep.get("results", []):
+                    for d in r_item.get("diagnostics", []):
+                        diags.append(f"{d.get('code', 'Error')}: {d.get('message', '')}")
+                return "; ".join(diags)[:500] if diags else "Code check failed."
+
+            final_reply, cyc_info = C.retry_cycle(
+                question=question,
+                previous=previous_answer,
+                feedback=feedback,
+                rewrite=rewrite,
+                solve=solve,
+                code_check=code_check if active_layer_cap >= 6 else None,
+                used=used_names,
+                program=python_solve if allow_python else None,
+            )
+            cyc_info["tools"] = list(dict.fromkeys(used_names))
+            layer_trace["clover_retry_cycle"] = cyc_info
+
+            lesson_staged = None
+            total_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+            if active_layer_cap >= 4 and memory_perm_ok:
+                try:
+                    if cyc_info.get("lesson"):
+                        staged = self.git_memory_repo.stage_lesson(
+                            cyc_info["lesson"],
+                            conversation_id=session_id,
+                            kind=cyc_info.get("lesson_kind", "user"),
+                        )
+                        lesson_staged = staged["id"]
+                        layer_trace["clover_retry_cycle"]["lesson_staged"] = staged
+                    self.git_memory_repo.record_task_or_session_turn(
+                        session_id=session_id,
+                        prompt=question,
+                        reply=final_reply,
+                        tools_used=tools_used,
+                        retry_kind="said" if feedback else "retry",
+                        elapsed_ms=total_ms,
+                    )
+                    if hasattr(self, "memory_index"):
+                        self.memory_index.wake()
+                except Exception:
+                    pass
+
+            dm_stats = self.engine.get_dm_stats(madvise_enabled=madvise_on)
+            layer_trace["layer7_specmd_r4_madvise"] = dm_stats
+
+            return {
+                "device": platform.node(),
+                "arch": platform.machine(),
+                "model": "lfm3-omni-2b-4bit-s23",
+                "session_id": session_id,
+                "max_active_layer": active_layer_cap,
+                "exclusive_app_package": CLOVER_S23_APP_PACKAGE,
+                "prompt": question,
+                "reply": final_reply,
+                "output_type": "text",
+                "image_png_b64": "",
+                "video_mp4_b64": "",
+                "audio_wav_b64": "",
+                "speak_with_android_tts": False,
+                "tools_used": list(dict.fromkeys(tools_used)),
+                "layer_trace": layer_trace,
+                "clover_cycle_info": cyc_info,
+                "lesson_staged": lesson_staged,
+                "input_tokens": len(self.tokenizer.encode(question, allow_special=False)),
+                "generated_tokens": total_gen_tokens,
+                "emitted_tokens": len(self.tokenizer.encode(final_reply, allow_special=False)),
+                "c_24_layer_4bit_ms": round(c_total_ms, 2),
+                "total_cycle_ms": total_ms,
+                "dm_stats": dm_stats,
+            }
+        finally:
+            self._busy_turns = max(0, self._busy_turns - 1)
+            self._last_turn_end = time.time()
 
 
 def run_on_device_s23_verification(base_dir: Path) -> dict[str, Any]:
@@ -3111,9 +3440,12 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 self._send({
                     "permissions": sys_s23.get_permissions_view(),
                 })
+            elif self.path.startswith("/api/search"):
+                self._send(sys_s23.search_config.describe())
             elif self.path.startswith("/api/memory"):
                 self._send({
                     "memories": sys_s23.list_memories(),
+                    "recall_index": sys_s23.memory_index.describe() if hasattr(sys_s23, "memory_index") else None,
                 })
             elif self.path.startswith("/api/lessons"):
                 self._send({
@@ -3154,6 +3486,8 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     "pinned_threads": sys_s23.engine.active_threads,
                     "setup_ms": sys_s23.setup_ms,
                     "settings": sys_s23.settings,
+                    "recall": sys_s23.memory_index.describe() if hasattr(sys_s23, "memory_index") else None,
+                    "search": sys_s23.search_config.describe(),
                     "data_movement_ledger": dm,
                     "engine": {
                         "mode": "omni",
@@ -3193,6 +3527,71 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 perms_in = payload.get("permissions") if isinstance(payload.get("permissions"), dict) else payload
                 updated_p = sys_s23.update_permissions(perms_in)
                 self._send({"ok": True, "permissions": updated_p})
+                return
+            if self.path.startswith("/api/search"):
+                try:
+                    if payload.get("action") == "test":
+                        ok_s, msg_s = sys_s23.search_tool.test()
+                        self._send({"ok": ok_s, "message": msg_s, **sys_s23.search_config.describe()})
+                        return
+                    s_desc = sys_s23.search_config.update(
+                        provider=payload.get("provider"),
+                        key=payload.get("key"),
+                        forget=payload.get("forget"),
+                    )
+                    self._send({"ok": True, **s_desc})
+                except Exception as ex:
+                    self._send({"error": "search_config_failed", "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/feedback"):
+                try:
+                    sid = str(payload.get("session_id") or "s23-studio")
+                    turn_n = payload.get("n")
+                    fkind = str(payload.get("kind") or "helpful")
+                    rec = sys_s23.git_memory_repo.record_outcome_feedback(
+                        sid,
+                        int(turn_n) if isinstance(turn_n, int) else None,
+                        fkind,
+                    )
+                    if hasattr(sys_s23, "memory_index"):
+                        sys_s23.memory_index.wake()
+                    self._send({"ok": True, "outcome": rec})
+                except Exception as ex:
+                    self._send({"error": "feedback_failed", "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/tools/shell"):
+                cmd_s = str(payload.get("command") or "").strip()
+                allow_o = {str(x) for x in (payload.get("allow_once") or [])}
+                deny_o = {str(x) for x in (payload.get("deny_once") or [])}
+                ok_sh, p_prompt, deny_msg = sys_s23._check_tool_permission(
+                    "shell", "run_shell", cmd_s, allow_o, deny_o, interactive_ask=True,
+                )
+                if p_prompt is not None:
+                    self._send({"ok": False, "permission_required": p_prompt})
+                    return
+                if not ok_sh:
+                    self._send({"ok": False, "output": deny_msg}, code=403)
+                    return
+                out_sh = sys_s23._execute_shell_subprocess(cmd_s)
+                self._send({"ok": True, "command": cmd_s, "output": out_sh})
+                return
+            if self.path.startswith("/api/tools/ssh"):
+                host_s = str(payload.get("host") or "").strip()
+                port_s = str(payload.get("port") or "22").strip()
+                cmd_s = str(payload.get("command") or "").strip()
+                allow_o = {str(x) for x in (payload.get("allow_once") or [])}
+                deny_o = {str(x) for x in (payload.get("deny_once") or [])}
+                ok_ssh, p_prompt, deny_msg = sys_s23._check_tool_permission(
+                    "ssh", "run_ssh", f"{host_s}:{port_s} $ {cmd_s}", allow_o, deny_o, interactive_ask=True,
+                )
+                if p_prompt is not None:
+                    self._send({"ok": False, "permission_required": p_prompt})
+                    return
+                if not ok_ssh:
+                    self._send({"ok": False, "output": deny_msg}, code=403)
+                    return
+                out_ssh = sys_s23._execute_ssh_subprocess(host_s, cmd_s, port=port_s)
+                self._send({"ok": True, "host": host_s, "port": port_s, "command": cmd_s, "output": out_ssh})
                 return
             if self.path.startswith("/api/memory/forget"):
                 mid = str(payload.get("id") or "").strip()
@@ -3392,6 +3791,10 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 allow_internet=allow_net,
                 allow_python=allow_py,
                 allow_files=allow_fl,
+                session_id=str(payload.get("session_id") or "s23-studio"),
+                allow_once=payload.get("allow_once") if isinstance(payload.get("allow_once"), list) else None,
+                deny_once=payload.get("deny_once") if isinstance(payload.get("deny_once"), list) else None,
+                interactive_ask=True,
             )
             self._send(res)
 

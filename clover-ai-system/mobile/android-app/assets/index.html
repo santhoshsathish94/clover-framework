@@ -560,7 +560,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
       autospeak: true,
       max_active_layer: 7,
       use_ncm_renderer: false,
-      layers: { hybridlink: true, ncm: false, memory: true, ontology: true, compiler: true, specmd_madvise: true }
+      layers: { hybridlink: true, ncm: false, memory: true, recall: true, ontology: true, compiler: true, specmd_madvise: true }
     },
     health: null,
     lastSpeed: 0,
@@ -568,11 +568,13 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
   };
 
   var PERM_UI = {
-    internet: { name: 'Internet', icon: 'globe', verb: 'search the live web (Wikipedia, arXiv, DuckDuckGo)' },
+    internet: { name: 'Internet', icon: 'globe', verb: 'search the web (Tavily, Brave, Wikipedia, arXiv)' },
     code: { name: 'Run code', icon: 'code', verb: 'run Python code on this S23' },
+    shell: { name: 'Terminal / Shell', icon: 'code', verb: 'run local shell commands on this S23' },
+    ssh: { name: 'Remote SSH', icon: 'globe', verb: 'connect to remote SSH hosts' },
     files: { name: 'Read files', icon: 'folder', verb: 'read phone files and attachments' },
     voice_camera: { name: 'Voice & Media', icon: 'mic', verb: 'use microphone, camera and media synthesis' },
-    memory: { name: 'Memory Graph', icon: 'note', verb: 'retrieve and store persistent memories' }
+    memory: { name: 'Memory & Recall', icon: 'note', verb: 'retrieve and store persistent memories & turn notes' }
   };
 
   var LAYERS = [
@@ -781,6 +783,39 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     (m.tools || []).forEach(function (tl) { body.appendChild(toolEl(tl)); });
     body.appendChild(el('div', 'md', markdown(m.text)));
 
+    if (m.permission_required && m.permission_required.permission) {
+      var pr = m.permission_required;
+      var pbox = el('div', 'tool');
+      pbox.style.marginTop = '.55rem';
+      pbox.innerHTML = '<div class="tool__head">' + ic('hand') + '<span class="tool__name">Permission requested: ' + esc(pr.label || pr.permission) + '</span><span class="state">ask</span></div>' +
+        '<div class="tool__body"><div class="lbl">Tool & input</div><pre>' + esc((pr.tool || '') + ': ' + (pr.detail || '')) + '</pre>' +
+        '<div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.55rem" class="perm-prompt-btns"></div></div>';
+      var bRow = pbox.querySelector('.perm-prompt-btns');
+      var bOnce = btn('btn pri', ic('check') + ' Allow once');
+      var bAlways = btn('btn', ic('shield') + ' Always allow');
+      var bDeny = btn('btn', ic('off') + ' Deny');
+      bOnce.addEventListener('click', function () {
+        if (state.busy) return;
+        pbox.remove();
+        send({ retryPrompt: m.promptOrig, allowOnce: [pr.permission] });
+      });
+      bAlways.addEventListener('click', function () {
+        if (state.busy) return;
+        pbox.remove();
+        var ch = {}; ch[pr.permission] = 'allow';
+        setPerms(ch).then(function () {
+          send({ retryPrompt: m.promptOrig, allowOnce: [pr.permission] });
+        });
+      });
+      bDeny.addEventListener('click', function () {
+        if (state.busy) return;
+        pbox.remove();
+        send({ retryPrompt: m.promptOrig, denyOnce: [pr.permission] });
+      });
+      bRow.appendChild(bOnce); bRow.appendChild(bAlways); bRow.appendChild(bDeny);
+      body.appendChild(pbox);
+    }
+
     if (m.image_png_b64) {
       var figI = el('figure', 'figure');
       var img = document.createElement('img'); img.src = m.image_png_b64; img.alt = 'Clover visual';
@@ -810,6 +845,14 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
     acts.appendChild(sv);
 
     if (!m.isNotice && m.promptOrig) {
+      var hb = btn('', ic('check') + '<span>' + (m.helpful ? 'Helpful ✓' : 'Helpful') + '</span>', 'Mark this answer helpful in S1 Outcomes');
+      hb.addEventListener('click', function () {
+        m.helpful = true; save();
+        hb.innerHTML = ic('check') + '<span>Helpful ✓</span>';
+        api('POST', '/api/feedback', { session_id: (cur() && cur().id) || 's23-studio', n: m.turn_n || 1, kind: 'helpful' }).catch(function () {});
+      });
+      acts.appendChild(hb);
+
       var rd = btn('', ic('redo') + '<span>Try again</span>', 'Not right? Clover checks this answer again (Clover Cycle)');
       rd.addEventListener('click', function () {
         if (state.busy || !state.ready) return;
@@ -1566,14 +1609,14 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
 
   function send(opts) {
     opts = opts || {};
-    var c = cur(), prompt = $('prompt').value.trim(), files = state.files.slice(), imgB64 = state.imageB64, vIn = state.voiceInput;
+    var c = cur(), prompt = opts.retryPrompt || $('prompt').value.trim(), files = state.files.slice(), imgB64 = state.imageB64, vIn = state.voiceInput;
     if (!prompt && (files.length || imgB64)) prompt = 'Analyze the attached file and answer clearly.';
     if (!prompt || !state.ready || !c || state.busy) return;
 
     var hist = historyFor(c);
-    $('prompt').value = ''; autosize();
+    if (!opts.retryPrompt) { $('prompt').value = ''; autosize(); }
     if (!c.messages.length) c.title = prompt.slice(0, 46);
-    if (!opts.retryCycle) {
+    if (!opts.retryCycle && !opts.retryPrompt) {
       c.messages.push({ role: 'user', text: prompt, files: files.map(function (f) { return f.name; }), imageB64: imgB64 });
     }
     state.files = []; state.imageB64 = null; state.voiceInput = false;
@@ -1601,6 +1644,8 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
       previous_question: opts.previousQuestion || '',
       previous_answer: opts.previousAnswer || '',
       feedback: opts.feedback || '',
+      allow_once: opts.allowOnce || [],
+      deny_once: opts.denyOnce || [],
       tools_mode: state.settings.tools || 'always',
       output_type: state.settings.output_type || 'text',
       image_b64: imgB64,
@@ -1628,6 +1673,8 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
       var m = {
         role: 'bot',
         text: r.reply || '(empty reply)',
+        turn_n: r.turn_n || 1,
+        permission_required: r.permission_required || null,
         promptOrig: opts.previousQuestion || r.prompt || prompt,
         image_png_b64: r.image_png_b64 || '',
         video_mp4_b64: r.video_mp4_b64 || '',
@@ -1645,9 +1692,9 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--pan
         loadMemories();
         loadRepoManager();
       }
-      if ((vIn || state.settings.output_type === 'audio') && state.settings.autospeak) {
+      if ((vIn || state.settings.output_type === 'audio') && state.settings.autospeak && !r.permission_required) {
         if (m.audio_wav_b64) { var a = new Audio(m.audio_wav_b64); a.play(); }
-        else speakText(m.text);
+        else if (r.speak_with_android_tts !== false) speakText(m.text);
       }
       loadHealth();
     }).catch(function (e) {

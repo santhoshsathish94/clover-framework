@@ -27,15 +27,120 @@ Replaces static/opaque memory stores with a real, human-inspectable, version-con
 
 from __future__ import annotations
 
+import ast
+import base64
 import datetime
 import json
 import os
+import platform
 import re
+import shutil
+import stat
+import statistics
 import subprocess
+import threading
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
+
+import mobile_vault
+
+CONTEXT_MARK = "<!-- clover:context v1 - Clover AI Studio keeps the lists up to date; edit the Notes freely -->"
+SECRETISH = re.compile(
+    r"(?i)(?:^\.?env(?:\..*)?$|\.(?:pem|key|p12|pfx|kdbx|keystore|jks)$|^id_(?:rsa|dsa|ecdsa|ed25519)"
+    r"|credential|secret|token|passw)"
+)
+SECRETS_RX = (
+    ("GitHub token", re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{36,255}|github_pat_[A-Za-z0-9_]{40,255})\b")),
+    ("HuggingFace token", re.compile(r"\bhf_[A-Za-z0-9]{20,255}\b")),
+    ("API key", re.compile(r"\b(?:sk-(?:proj-)?[A-Za-z0-9_\-]{20,}|tvly-[A-Za-z0-9_\-]{16,}|AIza[0-9A-Za-z_\-]{35})\b")),
+    ("AWS key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
+    ("Slack token", re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}\b")),
+    ("private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----")),
+)
+KINDS = {
+    ".py": "Python", ".md": "Markdown", ".js": "JavaScript", ".jsx": "JavaScript", ".ts": "TypeScript",
+    ".tsx": "TypeScript", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML", ".toml": "TOML", ".ini": "settings",
+    ".cfg": "settings", ".html": "HTML", ".css": "CSS", ".rs": "Rust", ".go": "Go", ".java": "Java", ".kt": "Kotlin",
+    ".c": "C", ".h": "C header", ".cpp": "C++", ".hpp": "C++ header", ".cs": "C#", ".ps1": "PowerShell",
+    ".sh": "shell script", ".bat": "batch script", ".sql": "SQL", ".txt": "text", ".csv": "CSV", ".ipynb": "notebook",
+    ".png": "image", ".jpg": "image", ".jpeg": "image", ".svg": "image", ".pdf": "PDF",
+}
+POSITIVE, NEGATIVE = ("continued", "helpful"), ("said_not_right", "tried_again")
+FEEDBACK_WORDS = {
+    "continued": "you continued",
+    "helpful": "you marked it helpful",
+    "said_not_right": "you said it was not right",
+    "tried_again": "you asked to try again",
+}
+
+
+def redact(text: str) -> tuple[str, list[str]]:
+    """Replaces secret-looking values before anything reaches the repository."""
+    out = str(text or "")
+    kinds: list[str] = []
+    for kind, rx in SECRETS_RX:
+        out, n = rx.subn(f"[redacted {kind}]", out)
+        if n:
+            kinds.append(kind)
+    return out, kinds
+
+
+def describe_file_safe(p: Path, size: int) -> str:
+    """
+    Describes a file from its structure ONLY (Markdown first `#` heading, Python module docstring & top-level
+    def/class names) and never copies arbitrary first lines or files matching `SECRETISH`.
+    """
+    kind = KINDS.get(p.suffix.lower(), "")
+    if SECRETISH.search(p.name):
+        return ", ".join(x for x in (kind, "not read: may hold secrets") if x)
+    if p.is_symlink() or size > 1_000_000 or p.suffix.lower() not in (".md", ".py"):
+        return kind or f"file ({size} B)"
+    try:
+        raw = p.read_bytes()[:300_000]
+    except OSError:
+        return kind or f"file ({size} B)"
+    if b"\x00" in raw[:4096]:
+        return "binary"
+    text = raw.decode("utf-8", errors="replace")
+    if p.suffix.lower() == ".md":
+        head = next((ln.lstrip("#").strip() for ln in text.splitlines() if ln.startswith("#")), "")
+        head_clean, _ = redact(head[:100])
+        return f"{kind}: {head_clean}" if head_clean else kind
+    try:
+        tree = ast.parse(text)
+    except (SyntaxError, ValueError):
+        return kind
+    doc = (ast.get_docstring(tree) or "").strip().splitlines()
+    defs = [n.name for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))]
+    doc_first, _ = redact(doc[0].strip()[:100].rstrip(".") if doc else "")
+    out = kind + (f": {doc_first}" if doc_first else "")
+    return out + (f". Defines {', '.join(defs[:6])}{', ...' if len(defs) > 6 else ''}" if defs else "")
+
+
+def _git_env_with_token(token: str | None = None) -> dict[str, str]:
+    """
+    Passes GitHub credentials via `GIT_CONFIG_KEY_0=http.https://github.com/.extraheader` in the environment,
+    never on the command line or in `.git/config`.
+    """
+    env = dict(
+        os.environ,
+        GIT_TERMINAL_PROMPT="0",
+        GCM_INTERACTIVE="never",
+        GIT_AUTHOR_NAME="Clover AI Studio",
+        GIT_AUTHOR_EMAIL="clover@local.device",
+        GIT_COMMITTER_NAME="Clover AI Studio",
+        GIT_COMMITTER_EMAIL="clover@local.device",
+    )
+    if token:
+        basic = base64.b64encode(f"x-access-token:{token}".encode("utf-8")).decode("ascii")
+        env.update(
+            GIT_CONFIG_COUNT="1",
+            GIT_CONFIG_KEY_0="http.https://github.com/.extraheader",
+            GIT_CONFIG_VALUE_0=f"AUTHORIZATION: basic {basic}",
+        )
+    return env
 
 
 DEFAULT_AGENTS_MD = """# AGENTS.md — Operating Instructions & Human-AI Agreement for Clover AI Studio
@@ -132,32 +237,54 @@ def _slugify(text: str, max_len: int = 42) -> str:
 
 class CloverMemoryGitRepo:
     """
-    Layer 4 Local Git Repository Memory Engine (`clover-memory-repo/`).
-    Manages `AGENTS.md` onboarding & acceptance, version-controlled `.md` / `.py` / `.sh` files,
-    selective low-token retrieval, and private GitHub repository synchronization.
+    S1 · Memory: Local Git Repository Memory Engine (`clover-memory-repo/`) + Safe Multi-Repo Workspaces.
+    Unifies the 5-stage Clover repository (`sessions/`, `execution/`, `outcomes/`, `growth/knowledge/`,
+    `growth/notes/`, `config/`) with safe workspace context files (`<folder>-context.md`, `<repo>-context-index.md`)
+    and encrypted `vault/` storage.
+
+    Guarantees (verified against `MOBILE-REVIEW.md` & `workspaces.py`):
+      1. `self.default_repo_dir` (`clover-memory-repo/`) is ALWAYS the target for memory recording (`sessions/`,
+         `execution/`, `outcomes/`, `growth/`, `lessons/`, `notes/`, `tasks/`, `scripts/`) and private GitHub memory
+         sync, even when the user switches the active coding workspace (`self.repo_dir`) to an external project.
+      2. Clover NEVER runs `git init`, `git add`, `git commit`, or `git push` inside a user's external project
+         workspace, and NEVER writes `AGENTS.md` into a user's project.
+      3. Per-folder `<folder>-context.md` and `<repo>-context-index.md` use `describe_file_safe()` (AST / Markdown
+         headings only + `SECRETISH` filename filter + `redact()`), never copying arbitrary first lines or secrets.
+      4. Secrets (GitHub token, search API keys) live encrypted in `base_dir / "vault"` via `mobile_vault` and
+         travel to `git` via `GIT_CONFIG_KEY_0=http.https://github.com/.extraheader` in the environment, never on
+         the command line or in plain JSON.
     """
 
     def __init__(self, base_dir: Path, canonical_agents_md_path: Path | None = None):
-        self.base_dir = Path(base_dir)
+        self.base_dir = Path(base_dir).resolve()
         self.default_repo_dir = self.base_dir / "clover-memory-repo"
+        self.dir = self.default_repo_dir  # Alias used by `memory_index.py`
         self.repo_dir = self.default_repo_dir
+        self.device = re.sub(r"[^a-zA-Z0-9_-]+", "-", (platform.node() or "s23").lower()).strip("-") or "s23"
+        self.vault_dir = self.base_dir / "vault"
+        self.vault_dir.mkdir(parents=True, exist_ok=True)
         self.state_file = self.base_dir / ".memory_repo_state.json"
-        self.github_cfg_file = self.base_dir / ".github_private_sync.json"
+        self.github_cfg_file = self.default_repo_dir / "config" / self.device / "github-repo.json"
+        self.legacy_github_cfg_file = self.base_dir / ".github_private_sync.json"
+        self.github_vault_file = self.vault_dir / "github.json"
         self.workspaces_cfg_file = self.base_dir / ".clover_workspace_repos.json"
         self.canonical_agents_md_path = canonical_agents_md_path
+        self.lock = threading.RLock()
+        self.current: tuple[str, int] | None = None
+        self._session_index: dict[str, Path] = {}
+        self._last_turn_cache: dict[str, tuple[int, dict[str, Any] | None]] = {}
         self._ensure_initialized()
+        self._migrate_legacy_github_token()
         self._load_workspace_registry()
 
-    def _run_git(self, args: list[str], timeout_s: float = 25.0) -> tuple[int, str, str]:
-        env = os.environ.copy()
-        env.setdefault("GIT_AUTHOR_NAME", "Clover AI Studio")
-        env.setdefault("GIT_AUTHOR_EMAIL", "clover@local.device")
-        env.setdefault("GIT_COMMITTER_NAME", "Clover AI Studio")
-        env.setdefault("GIT_COMMITTER_EMAIL", "clover@local.device")
+    def _run_git(self, args: list[str], timeout_s: float = 25.0, cwd: Path | None = None, token: str | None = None) -> tuple[int, str, str]:
+        """Runs git inside `self.default_repo_dir` (`clover-memory-repo/`) by default — never in a user's project unless explicitly requested for `git pull --ff-only`."""
+        target_cwd = Path(cwd) if cwd is not None else self.default_repo_dir
+        env = _git_env_with_token(token)
         try:
             res = subprocess.run(
                 ["git", *args],
-                cwd=str(self.repo_dir),
+                cwd=str(target_cwd),
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -169,52 +296,132 @@ class CloverMemoryGitRepo:
             return 1, "", str(ex)
 
     def _ensure_initialized(self) -> None:
-        self.repo_dir.mkdir(parents=True, exist_ok=True)
-        for sub in ("sessions", "tasks", "scripts", "notes", "lessons"):
-            (self.repo_dir / sub).mkdir(parents=True, exist_ok=True)
+        self.default_repo_dir.mkdir(parents=True, exist_ok=True)
+        for sub in (
+            "sessions",
+            f"execution/{self.device}",
+            f"outcomes/{self.device}",
+            "growth/knowledge",
+            f"growth/notes/{self.device}",
+            f"config/{self.device}",
+            "tasks",
+            "scripts",
+            "notes",
+            "lessons",
+        ):
+            (self.default_repo_dir / sub).mkdir(parents=True, exist_ok=True)
 
-        if not (self.repo_dir / ".git").exists():
-            rc, _, _ = self._run_git(["init", "-b", "main"])
+        if not (self.default_repo_dir / ".git").exists():
+            rc, _, _ = self._run_git(["init", "-b", "main"], cwd=self.default_repo_dir)
             if rc != 0:
-                self._run_git(["init"])
-            self._run_git(["config", "user.name", "Clover AI Studio"])
-            self._run_git(["config", "user.email", "clover@local.device"])
+                self._run_git(["init"], cwd=self.default_repo_dir)
+            self._run_git(["config", "user.name", "Clover AI Studio"], cwd=self.default_repo_dir)
+            self._run_git(["config", "user.email", f"clover@{self.device}.local"], cwd=self.default_repo_dir)
+            self._run_git(["config", "core.autocrlf", "false"], cwd=self.default_repo_dir)
 
-        agents_path = self.repo_dir / "AGENTS.md"
+        agents_path = self.default_repo_dir / "AGENTS.md"
         if not agents_path.exists():
             agents_path.write_text(DEFAULT_AGENTS_MD, encoding="utf-8")
 
         if self.canonical_agents_md_path and Path(self.canonical_agents_md_path).exists():
-            full_ref = self.repo_dir / "AGENTS_FULL_SPEC.md"
+            full_ref = self.default_repo_dir / "AGENTS_FULL_SPEC.md"
             if not full_ref.exists():
                 try:
                     full_ref.write_text(Path(self.canonical_agents_md_path).read_text(encoding="utf-8"), encoding="utf-8")
                 except Exception:
                     pass
 
-        ctx_path = self.repo_dir / "CONTEXT.md"
+        ctx_path = self.default_repo_dir / "CONTEXT.md"
         if not ctx_path.exists():
             ctx_path.write_text(DEFAULT_CONTEXT_MD, encoding="utf-8")
 
-        gitignore_path = self.repo_dir / ".gitignore"
+        gitignore_path = self.default_repo_dir / ".gitignore"
         if not gitignore_path.exists():
-            gitignore_path.write_text("__pycache__/\n*.pyc\n.DS_Store\n", encoding="utf-8")
+            gitignore_path.write_text("__pycache__/\n*.pyc\n*.tmp\ngrowth/knowledge/_index/\n.DS_Store\n", encoding="utf-8")
 
         for rel_p, mid, title, paras in SEED_NOTES:
-            fp = self.repo_dir / rel_p
+            fp = self.default_repo_dir / rel_p
             if not fp.exists():
                 body = f"# {mid}: {title}\n\n" + "\n\n".join(paras) + "\n"
                 fp.write_text(body, encoding="utf-8")
+            # Mirror into growth/knowledge/ as well
+            gk_fp = self.default_repo_dir / "growth" / "knowledge" / Path(rel_p).name
+            if not gk_fp.exists():
+                gk_fp.write_text(fp.read_text(encoding="utf-8"), encoding="utf-8")
 
-        rc_st, out_st, _ = self._run_git(["status", "--porcelain"])
+        for fp in (self.default_repo_dir / "sessions").glob("*/*.jsonl"):
+            self._session_index[fp.stem] = fp
+
+        self._refresh_five_stage_summaries()
+        rc_st, out_st, _ = self._run_git(["status", "--porcelain"], cwd=self.default_repo_dir)
         if rc_st == 0 and out_st:
-            self._run_git(["add", "-A"])
-            self._run_git(["commit", "-m", "Initialize Clover Layer 4 local Git memory repository with AGENTS.md and seed notes"])
-        self.refresh_context_hierarchy(commit=True)
+            self._run_git(["add", "-A"], cwd=self.default_repo_dir)
+            self._run_git(["commit", "-m", "Initialize Clover S1 local Git memory repository with AGENTS.md and 5-stage structure"], cwd=self.default_repo_dir)
+        self.refresh_context_hierarchy(commit=True, target_dir=self.default_repo_dir)
+
+    def _migrate_legacy_github_token(self) -> None:
+        """Migrates any plaintext token in `.github_private_sync.json` into encrypted `vault/github.json`."""
+        if self.legacy_github_cfg_file.is_file():
+            try:
+                raw = json.loads(self.legacy_github_cfg_file.read_text(encoding="utf-8"))
+                if isinstance(raw, dict):
+                    tok = str(raw.get("token") or "").strip()
+                    if tok:
+                        self._save_github_token(tok)
+                    meta = {
+                        "repo": str(raw.get("repo") or ""),
+                        "branch": str(raw.get("branch") or "main"),
+                        "private_enforced": True,
+                        "last_sync": raw.get("last_sync"),
+                    }
+                    self.github_cfg_file.parent.mkdir(parents=True, exist_ok=True)
+                    self.github_cfg_file.write_text(json.dumps(meta, indent=2), encoding="utf-8")
+                self.legacy_github_cfg_file.unlink()
+            except Exception:
+                pass
+
+    def _save_github_token(self, token: str | None) -> None:
+        self.vault_dir.mkdir(parents=True, exist_ok=True)
+        blob = mobile_vault.protect(token.strip()) if (token and token.strip()) else None
+        self.github_vault_file.write_text(json.dumps({"token_Protected": blob}), encoding="utf-8")
+        try:
+            os.chmod(self.github_vault_file, 0o600)
+        except OSError:
+            pass
+
+    def _load_github_token(self) -> str:
+        if not self.github_vault_file.is_file():
+            return ""
+        try:
+            raw = json.loads(self.github_vault_file.read_text(encoding="utf-8"))
+            blob = raw.get("token_Protected") or raw.get("token_dpapi")
+            return mobile_vault.unprotect(blob).strip() if blob else ""
+        except Exception:
+            return ""
 
     # ------------------------------------------------------------------
-    # 0. Multi-Repo Workspace Manager & Hierarchical Per-Folder Context Index
+    # 0. Safe Multi-Repo Workspace Manager & Per-Folder Context Index
     # ------------------------------------------------------------------
+    def _too_broad(self, p: Path) -> str | None:
+        p = p.resolve()
+        home = Path.home().resolve()
+        if p == Path(p.anchor):
+            return "a whole filesystem root"
+        broad_Set = {
+            home,
+            Path("/sdcard").resolve() if Path("/sdcard").exists() else Path("/sdcard"),
+            Path("/storage/emulated/0").resolve() if Path("/storage/emulated/0").exists() else Path("/storage/emulated/0"),
+        }
+        for sub in ("Desktop", "Documents", "Downloads", "Pictures", "Music", "Videos", "DCIM", "shared"):
+            broad_Set.add((home / sub).resolve())
+            broad_Set.add(Path(f"/sdcard/{sub}"))
+            broad_Set.add(Path(f"/storage/emulated/0/{sub}"))
+        if p in broad_Set:
+            return "a whole personal or device folder; choose a specific project folder inside it"
+        if p == self.base_dir or p in self.base_dir.parents:
+            return "Clover's own runtime directory or its parent"
+        return None
+
     def _load_workspace_registry(self) -> None:
         default_entry = {
             "name": "clover-memory-repo",
@@ -236,6 +443,8 @@ class CloverMemoryGitRepo:
                             continue
                         rp = Path(str(r.get("path") or ""))
                         if rp.exists() and rp.is_dir() and str(rp.resolve()) not in seen:
+                            if self._too_broad(rp) is not None:
+                                continue
                             seen.add(str(rp.resolve()))
                             valid.append({
                                 "name": str(r.get("name") or rp.name),
@@ -259,6 +468,12 @@ class CloverMemoryGitRepo:
                 json.dumps({"active_repo": self.active_repo_name, "repos": self.workspace_repos}, indent=2),
                 encoding="utf-8",
             )
+            cfg_ws = self.default_repo_dir / "config" / self.device / "workspaces.json"
+            cfg_ws.parent.mkdir(parents=True, exist_ok=True)
+            cfg_ws.write_text(
+                json.dumps({"active": self.active_repo_name, "workspaces": self.workspace_repos}, indent=2),
+                encoding="utf-8",
+            )
         except Exception:
             pass
 
@@ -266,6 +481,7 @@ class CloverMemoryGitRepo:
         return {
             "active_repo": self.active_repo_name,
             "active_repo_path": str(self.repo_dir),
+            "memory_repo_path": str(self.default_repo_dir),
             "repos": self.workspace_repos,
         }
 
@@ -276,76 +492,70 @@ class CloverMemoryGitRepo:
         github_token: str | None = None,
     ) -> dict[str, Any]:
         """
-        Adds or switches to a local working repository path or clones a GitHub repository (`owner/repo` or URL)
-        into `~/clover-s23/workspaces/<repo_name>`, then generates meaningful `<folder>-context.md` files
-        in each folder and `<repo>-context-index.md` at the root.
+        Adds or switches to an existing local project folder or clones a GitHub repository (`owner/repo` or URL)
+        into `<base_dir>/workspaces/<repo_name>`, then writes safe structural `<folder>-context.md` files
+        and `<repo>-context-index.md`.
+        - NEVER runs `git init`, `git add`, `git commit`, or `git push` inside a user's project.
+        - NEVER writes `AGENTS.md` into a user's project.
         """
-        target = (path_or_url or "").strip()
+        target = (path_or_url or "").strip().strip('"')
         if not target:
-            raise ValueError("Provide a repository name, local folder path, or GitHub repo ('owner/repo' or URL).")
+            raise ValueError("Provide a repository name, existing local project folder path, or GitHub repo ('owner/repo' or URL).")
 
-        # Check if switching to an already-registered repo by name or path
         for r in self.workspace_repos:
             if target in (r["name"], r["path"]):
                 self.active_repo_name = r["name"]
                 self.repo_dir = Path(r["path"])
                 self._save_workspace_registry()
-                idx_info = self.refresh_context_hierarchy(commit=True)
+                is_mem = self.repo_dir.resolve() == self.default_repo_dir.resolve()
+                idx_info = self.refresh_context_hierarchy(commit=is_mem, target_dir=self.repo_dir)
                 return {**self.list_workspace_repos(), "context_index": idx_info}
 
-        # Check if `target` is a GitHub URL or `owner/repo` shorthand to clone
         is_github = target.startswith(("https://github.com/", "http://github.com/", "git@github.com:")) or bool(
-            re.match(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", target) and not os.path.exists(os.path.expanduser(target))
+            re.match(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", target)
+            and not os.path.isabs(os.path.expanduser(target))
+            and not target.startswith(("~", ".", "/", "\\"))
         )
         if is_github:
             clean = target
-            if clean.startswith("https://github.com/"):
-                clean = clean[len("https://github.com/") :].strip("/")
-            elif clean.startswith("http://github.com/"):
-                clean = clean[len("http://github.com/") :].strip("/")
+            for pfx in ("https://github.com/", "http://github.com/", "git@github.com:"):
+                if clean.startswith(pfx):
+                    clean = clean[len(pfx) :].strip("/")
             if clean.endswith(".git"):
                 clean = clean[:-4]
             repo_slug = _slugify(name or clean.split("/")[-1], max_len=40)
             ws_root = self.base_dir / "workspaces"
             ws_root.mkdir(parents=True, exist_ok=True)
             dest_dir = ws_root / repo_slug
+            tok = (github_token or self._load_github_token() or "").strip()
+            if github_token and github_token.strip():
+                self._save_github_token(github_token.strip())
             if not dest_dir.exists():
-                tok = (github_token or "").strip()
-                clone_url = f"https://x-access-token:{tok}@github.com/{clean}.git" if tok else f"https://github.com/{clean}.git"
+                clean_url = f"https://github.com/{clean}.git"
                 res = subprocess.run(
-                    ["git", "clone", "--depth", "20", clone_url, str(dest_dir)],
+                    ["git", "clone", "--filter=blob:none", "--", clean_url, str(dest_dir)],
+                    env=_git_env_with_token(tok or None),
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
-                    timeout=90,
+                    timeout=180,
                 )
                 if res.returncode != 0:
                     err_safe = (res.stderr or res.stdout or "").replace(tok, "***") if tok else (res.stderr or res.stdout or "")
                     raise RuntimeError(f"git clone failed: {err_safe.strip()[:300]}")
-                if tok:
-                    subprocess.run(
-                        ["git", "-C", str(dest_dir), "remote", "set-url", "origin", f"https://github.com/{clean}.git"],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                    )
             repo_path = dest_dir.resolve()
-            repo_name = name or repo_slug
+            repo_name = (name or repo_slug).strip()
         else:
             expanded = Path(os.path.expandvars(os.path.expanduser(target))).resolve()
-            expanded.mkdir(parents=True, exist_ok=True)
+            if not expanded.is_dir():
+                raise ValueError(f"'{expanded}' is not an existing directory on this device.")
+            why = self._too_broad(expanded)
+            if why:
+                raise ValueError(f"Refused '{expanded}': it is {why}.")
             repo_path = expanded
             repo_name = (name or expanded.name or "workspace-repo").strip()
 
-        if not (repo_path / ".git").exists():
-            subprocess.run(["git", "-C", str(repo_path), "init", "-b", "main"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            subprocess.run(["git", "-C", str(repo_path), "config", "user.name", "Clover AI Studio"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            subprocess.run(["git", "-C", str(repo_path), "config", "user.email", "clover@local.device"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        agents_p = repo_path / "AGENTS.md"
-        if not agents_p.exists():
-            agents_p.write_text(DEFAULT_AGENTS_MD, encoding="utf-8")
-
-        if not any(r["path"] == str(repo_path) for r in self.workspace_repos):
+        if not any(Path(r["path"]).resolve() == repo_path for r in self.workspace_repos):
             self.workspace_repos.append({
                 "name": repo_name,
                 "path": str(repo_path),
@@ -355,31 +565,36 @@ class CloverMemoryGitRepo:
         self.active_repo_name = repo_name
         self.repo_dir = repo_path
         self._save_workspace_registry()
-        idx_info = self.refresh_context_hierarchy(commit=True)
+        is_mem = self.repo_dir.resolve() == self.default_repo_dir.resolve()
+        idx_info = self.refresh_context_hierarchy(commit=is_mem, target_dir=self.repo_dir)
         return {**self.list_workspace_repos(), "context_index": idx_info}
 
-    def refresh_context_hierarchy(self, commit: bool = True) -> dict[str, Any]:
+    def refresh_context_hierarchy(self, commit: bool = False, target_dir: Path | None = None) -> dict[str, Any]:
         """
-        Maintains meaningfully named per-folder context files (`<folder>/<folder>-context.md`)
-        inside every non-empty subfolder of `self.repo_dir`, plus the overall repository index
-        context file (`<repo_slug>-context-index.md` and `CONTEXT.md`) at the root of `self.repo_dir`.
+        Maintains `<folder>/<folder>-context.md` inside each subfolder (up to depth 2) and
+        `<repo_slug>-context-index.md` at the root of `target_dir` (defaults to `self.repo_dir`).
+        - Uses `describe_file_safe()` so secret-bearing files (`SECRETISH`) and arbitrary source lines
+          are NEVER copied into context files.
+        - NEVER runs `git add` or `git commit` inside a user's external project workspace (`target != default_repo_dir`).
         """
-        repo_slug = _slugify(self.repo_dir.name, max_len=36)
+        root_dir = (Path(target_dir) if target_dir is not None else self.repo_dir).resolve()
+        is_memory_repo = root_dir == self.default_repo_dir.resolve()
+        repo_slug = _slugify(root_dir.name, max_len=36)
         root_index_name = f"{repo_slug}-context-index.md"
         folder_contexts_written: list[str] = []
         folder_summaries: list[tuple[str, str, int, list[tuple[str, str, int]]]] = []
 
-        # Walk top-level and nested directories (up to depth 2) to build `<folder>-context.md`
-        for root, dirs, files in os.walk(self.repo_dir):
+        for root, dirs, files in os.walk(root_dir):
             dirs[:] = [
                 d for d in sorted(dirs)
-                if not d.startswith(".") and d not in ("__pycache__", "node_modules", "venv", ".venv", "target", "build", "dist")
+                if not d.startswith(".") and d.lower() not in ("__pycache__", "node_modules", "venv", ".venv", "env", "target", "build", "dist", "out", "bin", "obj", "vendor")
             ]
             cur_dir = Path(root)
-            rel_dir = cur_dir.relative_to(self.repo_dir).as_posix()
+            rel_dir = cur_dir.relative_to(root_dir).as_posix()
             if rel_dir == ".":
                 continue
             if len(rel_dir.split("/")) > 2:
+                dirs[:] = []
                 continue
 
             folder_slug = _slugify(cur_dir.name, max_len=32)
@@ -387,26 +602,14 @@ class CloverMemoryGitRepo:
             entries_info: list[tuple[str, str, int]] = []
 
             for fname in sorted(files):
-                if fname.startswith(".") or fname == ctx_filename:
+                if fname.startswith(".") or fname in (ctx_filename, "CONTEXT.md"):
                     continue
                 fpath = cur_dir / fname
                 if not fpath.is_file():
                     continue
                 try:
                     sz = fpath.stat().st_size
-                    raw_b = fpath.read_bytes()[:4096]
-                    if b"\x00" in raw_b:
-                        desc = f"Binary artifact ({sz} B)"
-                    else:
-                        txt = raw_b.decode("utf-8", errors="replace")
-                        desc = ""
-                        for ln in txt.splitlines():
-                            s = ln.strip().lstrip("#/*\"'- ").strip()
-                            if s and not s.startswith("!"):
-                                desc = s[:120]
-                                break
-                        if not desc:
-                            desc = f"Source/text file ({sz} B)"
+                    desc = describe_file_safe(fpath, sz)
                     entries_info.append((fname, desc, sz))
                 except Exception:
                     pass
@@ -417,13 +620,18 @@ class CloverMemoryGitRepo:
             ctx_rel_path = f"{rel_dir}/{ctx_filename}"
             ctx_fp = cur_dir / ctx_filename
 
-            # Preserve any `## User & Agent Notes` block the human or agent previously wrote in `<folder>-context.md`
+            # Respect user-owned files that were not written by Clover
             preserved_notes = ""
             if ctx_fp.exists():
                 try:
                     old_txt = ctx_fp.read_text(encoding="utf-8", errors="replace")
-                    if "## User & Agent Notes" in old_txt:
-                        preserved_notes = old_txt.split("## User & Agent Notes", 1)[1].strip()
+                    first_ln = old_txt.lstrip().splitlines()[0] if old_txt.strip() else ""
+                    if CONTEXT_MARK not in old_txt and not first_ln.startswith(f"# `{rel_dir}/`"):
+                        continue
+                    for sep in ("## User & Agent Notes", "## Notes"):
+                        if sep in old_txt:
+                            preserved_notes = old_txt.split(sep, 1)[1].strip()
+                            break
                 except Exception:
                     pass
             if not preserved_notes:
@@ -431,15 +639,16 @@ class CloverMemoryGitRepo:
 
             lines = [
                 f"# `{rel_dir}/` — Folder Context (`{ctx_filename}`)",
+                CONTEXT_MARK,
                 "",
-                f"- **Repository**: `{self.repo_dir.name}`",
+                f"- **Repository**: `{root_dir.name}`",
                 f"- **Folder Path**: `{rel_dir}/`",
                 f"- **Files Indexed**: `{len(entries_info)}`",
                 "",
                 "## Files in This Folder",
             ]
             for fname, desc, sz in entries_info[:60]:
-                lines.append(f"- [`{fname}`]({fname}) (`{sz}` B): {desc}")
+                lines.append(f"- [`{fname}`]({fname}) (`{sz}` B){': ' + desc if desc else ''}")
             lines.extend([
                 "",
                 "## User & Agent Notes",
@@ -453,28 +662,27 @@ class CloverMemoryGitRepo:
             folder_contexts_written.append(ctx_rel_path)
             folder_summaries.append((rel_dir, ctx_rel_path, len(entries_info), entries_info[:5]))
 
-        # Build overall `<repo_slug>-context-index.md` at the root of the repository
         root_files_info: list[tuple[str, str, int]] = []
-        for fpath in sorted(self.repo_dir.iterdir()):
+        for fpath in sorted(root_dir.iterdir()):
             if not fpath.is_file() or fpath.name.startswith(".") or fpath.name == root_index_name:
                 continue
             try:
                 sz = fpath.stat().st_size
-                txt = fpath.read_text(encoding="utf-8", errors="replace")[:2048]
-                desc = next((ln.strip().lstrip("#").strip()[:120] for ln in txt.splitlines() if ln.strip()), f"Root file ({sz} B)")
+                desc = describe_file_safe(fpath, sz)
                 root_files_info.append((fpath.name, desc, sz))
             except Exception:
                 pass
 
         idx_lines = [
-            f"# `{self.repo_dir.name}` — Overall Repository Context Index (`{root_index_name}`)",
+            f"# `{root_dir.name}` — Overall Repository Context Index (`{root_index_name}`)",
+            CONTEXT_MARK,
             "",
             "This overall index maps every folder's dedicated `<folder>-context.md` file and root specification in this repository so Clover and the human can navigate and fetch only relevant context without bloating the prompt window.",
             "",
             "## 1. Root Documents & Specifications",
         ]
-        for fname, desc, sz in root_files_info:
-            idx_lines.append(f"- [`{fname}`]({fname}) (`{sz}` B): {desc}")
+        for fname, desc, sz in root_files_info[:60]:
+            idx_lines.append(f"- [`{fname}`]({fname}) (`{sz}` B){': ' + desc if desc else ''}")
 
         idx_lines.extend([
             "",
@@ -490,22 +698,183 @@ class CloverMemoryGitRepo:
             idx_lines.append("- *(No subfolders with files yet)*")
         idx_lines.append("")
 
-        idx_fp = self.repo_dir / root_index_name
+        idx_fp = root_dir / root_index_name
+        can_write_idx = True
+        if idx_fp.exists():
+            old_idx_body = idx_fp.read_text(encoding="utf-8", errors="replace")
+            first_ln = old_idx_body.lstrip().splitlines()[0] if old_idx_body.strip() else ""
+            if CONTEXT_MARK not in old_idx_body and not first_ln.startswith(f"# `{root_dir.name}`"):
+                can_write_idx = False
+        else:
+            old_idx_body = ""
         new_idx_body = "\n".join(idx_lines)
-        old_idx_body = idx_fp.read_text(encoding="utf-8", errors="replace") if idx_fp.exists() else ""
-        if new_idx_body != old_idx_body:
+        if can_write_idx and new_idx_body != old_idx_body:
             idx_fp.write_text(new_idx_body, encoding="utf-8")
 
-        if commit:
-            rc_st, out_st, _ = self._run_git(["status", "--porcelain"])
+        # NEVER commit inside a user's external project repository!
+        if commit and is_memory_repo:
+            self._refresh_five_stage_summaries()
+            rc_st, out_st, _ = self._run_git(["status", "--porcelain"], cwd=self.default_repo_dir)
             if rc_st == 0 and out_st:
-                self._run_git(["add", root_index_name, *folder_contexts_written])
-                self._run_git(["commit", "-m", f"Update {root_index_name} and per-folder context files"])
+                self._run_git(["add", root_index_name, *folder_contexts_written], cwd=self.default_repo_dir)
+                self._run_git(["commit", "-m", f"Update {root_index_name} and per-folder context files"], cwd=self.default_repo_dir)
 
         return {
             "root_index_file": root_index_name,
             "folder_context_files": folder_contexts_written,
+            "committed_in_memory_repo": bool(commit and is_memory_repo),
         }
+
+    # ------------------------------------------------------------------
+    # 0b. 5-Stage `clover_repo.py` Interface (`sessions/`, `execution/`, `outcomes/`, `growth/`, `config/`)
+    #     Used by `memory_index.py` (S2) and Clover Studio
+    # ------------------------------------------------------------------
+    def _read_jsonl(self, fp: Path) -> list[dict[str, Any]]:
+        if not fp.is_file():
+            return []
+        out: list[dict[str, Any]] = []
+        try:
+            for ln in fp.read_text(encoding="utf-8", errors="replace").splitlines():
+                if ln.strip():
+                    out.append(json.loads(ln))
+        except Exception:
+            pass
+        return out
+
+    def _append_jsonl(self, fp: Path, rec: dict[str, Any]) -> None:
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        with open(fp, "a", encoding="utf-8", newline="\n") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+    def session_files(self) -> dict[str, Path]:
+        with self.lock:
+            for fp in (self.default_repo_dir / "sessions").glob("*/*.jsonl"):
+                self._session_index[fp.stem] = fp
+            return dict(self._session_index)
+
+    def _session_jsonl_file(self, sid: str, create: bool = False) -> Path | None:
+        sid_clean = _slugify(sid or "default", max_len=36)
+        with self.lock:
+            fp = self._session_index.get(sid_clean)
+            if fp is None:
+                for cand in (self.default_repo_dir / "sessions").glob(f"*/{sid_clean}.jsonl"):
+                    fp = cand
+                    self._session_index[sid_clean] = fp
+                    break
+            if fp is None and create:
+                ym = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m")
+                fp = self.default_repo_dir / "sessions" / ym / f"{sid_clean}.jsonl"
+                self._session_index[sid_clean] = fp
+            return fp
+
+    def messages(self, sid: str) -> list[dict[str, Any]]:
+        fp = self._session_jsonl_file(sid, create=False)
+        return self._read_jsonl(fp) if fp else []
+
+    def notes(self) -> dict[tuple[str, int], str]:
+        """Returns `{(session_id, turn_n): note}` across all devices in `growth/notes/`."""
+        out: dict[tuple[str, int], str] = {}
+        for fp in sorted((self.default_repo_dir / "growth" / "notes").glob("*/*.jsonl")):
+            for r in self._read_jsonl(fp):
+                if isinstance(r.get("n"), int) and r.get("session"):
+                    out[(str(r["session"]), int(r["n"]))] = str(r.get("note") or "")
+        return out
+
+    def add_note(self, sid: str, n: int, note: str) -> bool:
+        sid_clean = _slugify(sid or "default", max_len=36)
+        with self.lock:
+            if sid_clean not in self.session_files():
+                return False
+            ym = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m")
+            fp = self.default_repo_dir / "growth" / "notes" / self.device / f"{ym}.jsonl"
+            clean_note, _ = redact(note)
+            self._append_jsonl(
+                fp,
+                {"at": _utc_now(), "session": sid_clean, "n": int(n), "note": clean_note, "by": "LFM3-Omni-2B"},
+            )
+            return True
+
+    def negative_turns(self) -> set[tuple[str, int]]:
+        """Returns `{(session_id, turn_n)}` for answers the user marked not right or retried."""
+        bad: set[tuple[str, int]] = set()
+        for fp in (self.default_repo_dir / "outcomes").glob("*/*.jsonl"):
+            for r in self._read_jsonl(fp):
+                if r.get("feedback") in NEGATIVE and r.get("session") and isinstance(r.get("n"), int):
+                    bad.add((str(r["session"]), int(r["n"])))
+        return bad
+
+    def log_execution(self, sid: str | None, n: int | None, text: str) -> None:
+        now_dt = datetime.datetime.now(datetime.timezone.utc)
+        tag = f" {_slugify(sid, 36)}#{n}" if (sid and n is not None) else ""
+        clean_line, _ = redact(f"{now_dt:%Y-%m-%d %H:%M:%S}{tag} {' '.join(str(text or '').split())[:600]}")
+        fp = self.default_repo_dir / "execution" / self.device / f"{now_dt:%Y-%m-%d}.log"
+        with self.lock:
+            fp.parent.mkdir(parents=True, exist_ok=True)
+            with open(fp, "a", encoding="utf-8", newline="\n") as f:
+                f.write(clean_line + "\n")
+
+    def schedule(self, message: str) -> None:
+        """Commits pending notes/records in `clover-memory-repo/`."""
+        with self.lock:
+            self._refresh_five_stage_summaries()
+            rc_st, out_st, _ = self._run_git(["status", "--porcelain"], cwd=self.default_repo_dir)
+            if rc_st == 0 and out_st:
+                self._run_git(["add", "-A"], cwd=self.default_repo_dir)
+                self._run_git(["commit", "-m", message[:120] or "Update Clover records"], cwd=self.default_repo_dir)
+
+    def record_outcome_feedback(self, session_id: str, turn_n: int | None, feedback_kind: str) -> dict[str, Any]:
+        """Records `continued`, `helpful`, `said_not_right`, or `tried_again` in `outcomes/<device>/<yyyy-mm>.jsonl`."""
+        sid_clean = _slugify(session_id or "default", max_len=36)
+        msgs = self.messages(sid_clean)
+        last_n = max((int(m["n"]) for m in msgs if isinstance(m.get("n"), int)), default=1)
+        n = int(turn_n) if turn_n is not None else last_n
+        worked = feedback_kind in POSITIVE
+        ym = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m")
+        out_fp = self.default_repo_dir / "outcomes" / self.device / f"{ym}.jsonl"
+        rec = {
+            "at": _utc_now(),
+            "session": sid_clean,
+            "n": n,
+            "feedback": feedback_kind,
+            "worked": worked,
+        }
+        self._append_jsonl(out_fp, rec)
+        self.log_execution(sid_clean, n, f"feedback: {FEEDBACK_WORDS.get(feedback_kind, feedback_kind)}")
+        self.schedule(f"Turn {n} of {sid_clean}: {feedback_kind}")
+        return rec
+
+    def _refresh_five_stage_summaries(self) -> None:
+        """Writes deterministic `CONTEXT.md` summaries in `sessions/`, `execution/`, `outcomes/`, `growth/`, and `config/`."""
+        sfiles = self.session_files()
+        total_turns = sum(
+            sum(1 for m in self._read_jsonl(fp) if m.get("role") == "user")
+            for fp in sfiles.values()
+        )
+        ex_notes = self.notes()
+        neg = self.negative_turns()
+        summaries = {
+            "sessions": (
+                f"# Sessions\n\nEach file in `sessions/<yyyy-mm>/<chat>.jsonl` stores full user inputs and Clover answers (`{len(sfiles)}` conversations, `{total_turns}` turns).\n"
+            ),
+            "execution": (
+                f"# Execution ({self.device})\n\nPlain-text operational logs of context retrieved, tools offered/called, permissions, and timings in `execution/{self.device}/`.\n"
+            ),
+            "outcomes": (
+                f"# Outcomes ({self.device})\n\nTurn outcomes and human feedback (`helpful`, `continued`, `said_not_right`, `tried_again`) in `outcomes/{self.device}/` (`{len(neg)}` negative turns excluded from recall).\n"
+            ),
+            "growth": (
+                f"# Growth\n\nVerified notes and learnings in `growth/knowledge/` and `notes/`, plus `{len(ex_notes)}` background exchange notes in `growth/notes/`.\n"
+            ),
+            "config": (
+                f"# Config ({self.device})\n\nDevice settings, tool permissions, and workspace registry in `config/{self.device}/`. Secrets are kept encrypted in `vault/`.\n"
+            ),
+        }
+        for folder, body in summaries.items():
+            fp = self.default_repo_dir / folder / "CONTEXT.md"
+            fp.parent.mkdir(parents=True, exist_ok=True)
+            old = fp.read_text(encoding="utf-8", errors="replace") if fp.exists() else ""
+            if old != body:
+                fp.write_text(body, encoding="utf-8")
 
     # ------------------------------------------------------------------
     # 1. `AGENTS.md` First-Run Onboarding & Acceptance State
@@ -519,22 +888,22 @@ class CloverMemoryGitRepo:
                     st.update(loaded)
             except Exception:
                 pass
-        agents_path = self.repo_dir / "AGENTS.md"
+        agents_path = self.default_repo_dir / "AGENTS.md"
         agents_text = agents_path.read_text(encoding="utf-8", errors="replace") if agents_path.exists() else DEFAULT_AGENTS_MD
         return {
             **st,
-            "repo_path": str(self.repo_dir),
+            "repo_path": str(self.default_repo_dir),
             "agents_md_path": "AGENTS.md",
             "agents_md_content": agents_text,
         }
 
     def accept_agents_md(self, custom_content: str | None = None) -> dict[str, Any]:
-        agents_path = self.repo_dir / "AGENTS.md"
+        agents_path = self.default_repo_dir / "AGENTS.md"
         if custom_content is not None and custom_content.strip():
             agents_path.write_text(custom_content.strip() + "\n", encoding="utf-8")
-        self._run_git(["add", "AGENTS.md"])
-        self._run_git(["commit", "-m", "User reviewed and accepted AGENTS.md operating specification"])
-        _, head_sha, _ = self._run_git(["rev-parse", "--short", "HEAD"])
+        self._run_git(["add", "AGENTS.md"], cwd=self.default_repo_dir)
+        self._run_git(["commit", "-m", "User reviewed and accepted AGENTS.md operating specification"], cwd=self.default_repo_dir)
+        _, head_sha, _ = self._run_git(["rev-parse", "--short", "HEAD"], cwd=self.default_repo_dir)
         state_obj = {
             "agents_md_accepted": True,
             "accepted_at": _utc_now(),
@@ -546,43 +915,42 @@ class CloverMemoryGitRepo:
     # ------------------------------------------------------------------
     # 2. File CRUD + Git Commit & Log Operations
     # ------------------------------------------------------------------
-    def _safe_rel_path(self, rel_path: str) -> Path:
+    def _safe_rel_path(self, rel_path: str, base_root: Path | None = None) -> Path:
+        root = (Path(base_root) if base_root is not None else self.repo_dir).resolve()
         clean = (rel_path or "").strip().lstrip("/\\").replace("\\", "/")
         if not clean or ".." in clean.split("/") or clean.startswith(".git"):
             raise ValueError(f"Invalid repository path: {rel_path!r}")
-        resolved = (self.repo_dir / clean).resolve()
-        if not str(resolved).startswith(str(self.repo_dir.resolve())):
+        resolved = (root / clean).resolve()
+        if not str(resolved).startswith(str(root)):
             raise ValueError(f"Path escapes repository root: {rel_path!r}")
         return resolved
 
-    def list_files(self) -> list[dict[str, Any]]:
+    def list_files(self, target_dir: Path | None = None) -> list[dict[str, Any]]:
+        root_dir = (Path(target_dir) if target_dir is not None else self.repo_dir).resolve()
         out: list[dict[str, Any]] = []
-        for root, dirs, files in os.walk(self.repo_dir):
-            dirs[:] = [d for d in sorted(dirs) if d not in (".git", "__pycache__")]
+        for root, dirs, files in os.walk(root_dir):
+            dirs[:] = [
+                d for d in sorted(dirs)
+                if not d.startswith(".") and d not in ("__pycache__", "node_modules", "venv", ".venv", "target", "build", "dist")
+            ]
             for fname in sorted(files):
                 if fname.startswith("."):
                     continue
                 fpath = Path(root) / fname
-                rel = fpath.relative_to(self.repo_dir).as_posix()
+                rel = fpath.relative_to(root_dir).as_posix()
                 try:
-                    stat = fpath.stat()
-                    txt = fpath.read_text(encoding="utf-8", errors="replace")
-                    first_line = ""
-                    for ln in txt.splitlines():
-                        s = ln.strip().lstrip("#").strip()
-                        if s:
-                            first_line = s[:140]
-                            break
+                    st = fpath.stat()
+                    desc = describe_file_safe(fpath, st.st_size)
                     out.append({
                         "path": rel,
                         "category": rel.split("/")[0] if "/" in rel else "root",
-                        "size_bytes": stat.st_size,
-                        "updated_at": datetime.datetime.fromtimestamp(stat.st_mtime, tz=datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                        "summary": first_line,
+                        "size_bytes": st.st_size,
+                        "updated_at": datetime.datetime.fromtimestamp(st.st_mtime, tz=datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "summary": desc,
                     })
                 except Exception:
                     pass
-        # Sort so AGENTS.md, *-context-index.md, and CONTEXT.md appear first
+
         def _sort_key(item: dict[str, Any]) -> tuple[int, str]:
             p = item["path"]
             if p == "AGENTS.md":
@@ -591,16 +959,17 @@ class CloverMemoryGitRepo:
                 return (1, p)
             if p == "CONTEXT.md":
                 return (2, p)
-            if p.endswith("-context.md"):
+            if p.endswith("-context.md") or p.endswith("/CONTEXT.md"):
                 return (3, p)
             return (4, p)
+
         out.sort(key=_sort_key)
         return out
 
     def read_file(self, rel_path: str, start_line: int | None = None, end_line: int | None = None) -> dict[str, Any]:
         fp = self._safe_rel_path(rel_path)
         if not fp.exists() or not fp.is_file():
-            raise FileNotFoundError(f"File not found in memory repo: {rel_path}")
+            raise FileNotFoundError(f"File not found in repository: {rel_path}")
         txt = fp.read_text(encoding="utf-8", errors="replace")
         lines = txt.splitlines()
         if start_line is not None or end_line is not None:
@@ -618,13 +987,19 @@ class CloverMemoryGitRepo:
         fp = self._safe_rel_path(rel_path)
         fp.parent.mkdir(parents=True, exist_ok=True)
         existed = fp.exists()
-        fp.write_text(content, encoding="utf-8")
+        clean_content, _ = redact(content)
+        fp.write_text(clean_content, encoding="utf-8")
         rel = fp.relative_to(self.repo_dir).as_posix()
-        msg = (commit_message or "").strip() or f"{'Update' if existed else 'Create'} {rel} in Layer 4 memory repo"
-        self._run_git(["add", rel])
-        self._run_git(["commit", "-m", msg])
-        self.refresh_context_hierarchy(commit=True)
-        _, head_sha, _ = self._run_git(["rev-parse", "--short", "HEAD"])
+        msg = (commit_message or "").strip() or f"{'Update' if existed else 'Create'} {rel}"
+        is_mem = self.repo_dir.resolve() == self.default_repo_dir.resolve()
+        head_sha = "workspace"
+        if is_mem:
+            self._run_git(["add", rel], cwd=self.default_repo_dir)
+            self._run_git(["commit", "-m", msg], cwd=self.default_repo_dir)
+            self.refresh_context_hierarchy(commit=True, target_dir=self.default_repo_dir)
+            _, head_sha, _ = self._run_git(["rev-parse", "--short", "HEAD"], cwd=self.default_repo_dir)
+        else:
+            self.refresh_context_hierarchy(commit=False, target_dir=self.repo_dir)
         return {
             "ok": True,
             "path": rel,
@@ -637,17 +1012,24 @@ class CloverMemoryGitRepo:
         fp = self._safe_rel_path(rel_path)
         rel = fp.relative_to(self.repo_dir).as_posix()
         if rel == "AGENTS.md":
-            raise ValueError("AGENTS.md is required at the root of the memory repository and cannot be deleted (you may edit it instead).")
+            raise ValueError("AGENTS.md is protected at the root of the memory repository and cannot be deleted.")
+        is_mem = self.repo_dir.resolve() == self.default_repo_dir.resolve()
         if fp.exists() and fp.is_file():
             fp.unlink()
-            msg = (commit_message or "").strip() or f"Delete {rel} from Layer 4 memory repo"
-            self._run_git(["add", "-A"])
-            self._run_git(["commit", "-m", msg])
-            self.refresh_context_hierarchy(commit=True)
+            if is_mem:
+                msg = (commit_message or "").strip() or f"Delete {rel} from S1 memory repo"
+                self._run_git(["add", "-A"], cwd=self.default_repo_dir)
+                self._run_git(["commit", "-m", msg], cwd=self.default_repo_dir)
+                self.refresh_context_hierarchy(commit=True, target_dir=self.default_repo_dir)
+            else:
+                self.refresh_context_hierarchy(commit=False, target_dir=self.repo_dir)
         return {"ok": True, "deleted": rel}
 
     def git_log(self, max_count: int = 20) -> list[dict[str, str]]:
-        rc, out, _ = self._run_git(["log", f"-n{max(1, min(50, int(max_count)))}", "--pretty=format:%h|%cI|%s"])
+        rc, out, _ = self._run_git(
+            ["log", f"-n{max(1, min(50, int(max_count)))}", "--pretty=format:%h|%cI|%s"],
+            cwd=self.default_repo_dir,
+        )
         commits: list[dict[str, str]] = []
         if rc == 0 and out:
             for ln in out.splitlines():
@@ -661,16 +1043,16 @@ class CloverMemoryGitRepo:
     # ------------------------------------------------------------------
     def search_repo_relevant(self, query: str, max_files: int = 2, max_chars_per_file: int = 550) -> list[dict[str, Any]]:
         """
-        Searches `clover-memory-repo/` (`notes/`, `tasks/`, `scripts/`, `sessions/`, `CONTEXT.md`)
-        and returns ONLY high-precision matching snippets so the model's context window is never bloated.
+        Searches `self.default_repo_dir` (`clover-memory-repo/`: `notes/`, `growth/knowledge/`, `tasks/`,
+        `scripts/`, `CONTEXT.md`) AND, if an external project workspace is active, its context files,
+        returning ONLY high-precision matching snippets.
         """
         q = (query or "").strip()
         q_low = q.lower()
         if not q or len(q) < 4:
             return []
-        # Do not inject memory notes into pure standalone function-writing prompts unless they ask about memory/repo/Clover
         if ("```" in q_low or re.search(r"\bdef\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(", q)) and not any(
-            k in q_low for k in ("clover", "memory", "repo", "session", "cache", "context.md", "agents.md")
+            k in q_low for k in ("clover", "memory", "repo", "session", "cache", "context.md", "agents.md", "project", "workspace")
         ):
             return []
 
@@ -686,40 +1068,50 @@ class CloverMemoryGitRepo:
             return []
 
         scored: list[tuple[float, str, str, str]] = []
-        for item in self.list_files():
-            rel = item["path"]
-            if rel in ("AGENTS.md", "AGENTS_FULL_SPEC.md") or rel.startswith("lessons/"):
-                continue
-            fp = self.repo_dir / rel
-            try:
-                txt = fp.read_text(encoding="utf-8", errors="replace")
-            except Exception:
-                continue
-            txt_low = txt.lower()
-            rel_low = rel.lower()
-            hits = sum(1 for t in tokens if t in txt_low or t in rel_low)
-            if hits == 0:
-                continue
-            ratio = hits / float(len(tokens))
-            score = hits * 4.0 + ratio * 10.0
-            if any(k in q_low for k in ("per-layer", "cache", "partition", "flat hit", "23.3", "48.0")) and "per-layer" in txt_low:
-                score += 25.0
-            if any(k in q_low for k in ("cve-", "cwe-", "capec-", "fan-out", "stratified")) and "stratified" in txt_low:
-                score += 18.0
-            if score < 12.0:
-                continue
+        search_roots = [self.default_repo_dir]
+        if self.repo_dir.resolve() != self.default_repo_dir.resolve():
+            search_roots.append(self.repo_dir)
 
-            # Extract the most relevant paragraph or snippet (bounded to `max_chars_per_file`)
-            paras = [p.strip() for p in re.split(r"\n\s*\n", txt) if p.strip() and not p.strip().startswith("#")]
-            best_para = paras[0] if paras else txt.strip()
-            best_p_hits = -1
-            for p in paras:
-                ph = sum(1 for t in tokens if t in p.lower())
-                if ph > best_p_hits:
-                    best_p_hits = ph
-                    best_para = p
-            snippet = re.sub(r"\s+", " ", best_para).strip()[:max_chars_per_file]
-            scored.append((score, rel, item.get("summary") or rel, snippet))
+        seen_rels: set[str] = set()
+        for sroot in search_roots:
+            for item in self.list_files(target_dir=sroot):
+                rel = item["path"]
+                if rel in ("AGENTS.md", "AGENTS_FULL_SPEC.md") or rel.startswith(("lessons/", "sessions/", "execution/", "outcomes/")):
+                    continue
+                if SECRETISH.search(Path(rel).name):
+                    continue
+                fp = sroot / rel
+                if str(fp) in seen_rels:
+                    continue
+                seen_rels.add(str(fp))
+                try:
+                    txt = fp.read_text(encoding="utf-8", errors="replace")
+                except Exception:
+                    continue
+                txt_low = txt.lower()
+                rel_low = rel.lower()
+                hits = sum(1 for t in tokens if t in txt_low or t in rel_low)
+                if hits == 0:
+                    continue
+                ratio = hits / float(len(tokens))
+                score = hits * 4.0 + ratio * 10.0
+                if any(k in q_low for k in ("per-layer", "cache", "partition", "flat hit", "23.3", "48.0")) and "per-layer" in txt_low:
+                    score += 25.0
+                if any(k in q_low for k in ("cve-", "cwe-", "capec-", "fan-out", "stratified")) and "stratified" in txt_low:
+                    score += 18.0
+                if score < 12.0:
+                    continue
+
+                paras = [p.strip() for p in re.split(r"\n\s*\n", txt) if p.strip() and not p.strip().startswith("#")]
+                best_para = paras[0] if paras else txt.strip()
+                best_p_hits = -1
+                for p in paras:
+                    ph = sum(1 for t in tokens if t in p.lower())
+                    if ph > best_p_hits:
+                        best_p_hits = ph
+                        best_para = p
+                snippet, _ = redact(re.sub(r"\s+", " ", best_para).strip()[:max_chars_per_file])
+                scored.append((score, rel, item.get("summary") or rel, snippet))
 
         scored.sort(key=lambda x: x[0], reverse=True)
         return [
@@ -728,7 +1120,8 @@ class CloverMemoryGitRepo:
         ]
 
     # ------------------------------------------------------------------
-    # 4. Automatic Session & Task / Script Recording (`Growth` Stage)
+    # 4. Automatic Session, Turn JSONL, Execution Log & Outcome Recording (`S1`)
+    #    Always writes to `self.default_repo_dir` (`clover-memory-repo/`)!
     # ------------------------------------------------------------------
     def record_task_or_session_turn(
         self,
@@ -737,23 +1130,67 @@ class CloverMemoryGitRepo:
         reply: str,
         generated_code: str = "",
         tools_used: list[str] | None = None,
+        retry_kind: str | None = None,
+        elapsed_ms: float = 0.0,
     ) -> dict[str, Any]:
         """
-        Records a compact session turn in `sessions/session-<id>.md` and, if the turn produced
-        a verified Python script or explicit note/task, saves it under `scripts/` or `tasks/`
-        and commits it to the local Git repository.
+        Records a full turn in `self.default_repo_dir` (`clover-memory-repo/`):
+          1. Full untruncated JSONL messages in `sessions/<yyyy-mm>/<sid>.jsonl` (used by `S2` `MemoryIndex`).
+          2. Plain-text operational log in `execution/<device>/<day>.log`.
+          3. Turn outcome + implicit feedback on the previous turn in `outcomes/<device>/<yyyy-mm>.jsonl`.
+          4. Human-readable Markdown log in `sessions/session-<id>.md` + `scripts/` + `tasks/`.
         """
-        sid_clean = _slugify(session_id or "default", max_len=24)
-        sess_rel = f"sessions/session-{sid_clean}.md"
-        sess_fp = self.repo_dir / sess_rel
+        sid_clean = _slugify(session_id or "default", max_len=36)
         now_s = _utc_now()
-        tools_str = ", ".join(tools_used or []) or "none"
+        ym = now_s[:7]
+        clean_prompt, p_kinds = redact(prompt or "")
+        clean_reply, _ = redact(reply or "")
+        tools_list = list(tools_used or [])
+        tools_str = ", ".join(tools_list) or "none"
 
+        # 1. JSONL session file (`sessions/<yyyy-mm>/<sid>.jsonl`) for S2 turn-level MemoryIndex
+        jsonl_fp = self._session_jsonl_file(sid_clean, create=True)
+        existing_msgs = self._read_jsonl(jsonl_fp) if jsonl_fp else []
+        prev_n = sum(1 for m in existing_msgs if m.get("role") == "user")
+        turn_n = prev_n + 1
+        if prev_n > 0:
+            fb_kind = ("said_not_right" if retry_kind == "said" else "tried_again") if retry_kind else "continued"
+            self._append_jsonl(
+                self.default_repo_dir / "outcomes" / self.device / f"{ym}.jsonl",
+                {"at": now_s, "session": sid_clean, "n": prev_n, "feedback": fb_kind, "by": turn_n, "worked": fb_kind in POSITIVE},
+            )
+        if jsonl_fp is not None:
+            self._append_jsonl(jsonl_fp, {"n": turn_n, "role": "user", "at": now_s, "text": clean_prompt})
+            if clean_reply:
+                self._append_jsonl(jsonl_fp, {"n": turn_n, "role": "clover", "at": now_s, "text": clean_reply})
+
+        # 2. Execution log + Outcome record
+        self.log_execution(
+            sid_clean,
+            turn_n,
+            f"message: {len(clean_prompt)} chars; tools: {tools_str}; answer: {len(clean_reply)} chars in {elapsed_ms / 1000.0:.2f}s"
+            + (f"; redacted: {','.join(p_kinds)}" if p_kinds else ""),
+        )
+        self._append_jsonl(
+            self.default_repo_dir / "outcomes" / self.device / f"{ym}.jsonl",
+            {
+                "at": now_s,
+                "session": sid_clean,
+                "n": turn_n,
+                "result": "answered" if clean_reply else "stopped",
+                "tools": [{"tool": t, "ran": True, "worked": True} for t in tools_list],
+            },
+        )
+
+        # 3. Human-readable Markdown session log (`sessions/session-<sid>.md`) inside `default_repo_dir`
+        sess_rel = f"sessions/session-{sid_clean}.md"
+        sess_fp = self.default_repo_dir / sess_rel
+        sess_fp.parent.mkdir(parents=True, exist_ok=True)
         entry_md = (
-            f"\n## Turn ({now_s})\n"
+            f"\n## Turn {turn_n} ({now_s})\n"
             f"- **Tools / Layers**: `{tools_str}`\n"
-            f"- **User Direction**: {prompt.strip()[:300]}\n"
-            f"- **Outcome**: {reply.strip()[:500]}\n"
+            f"- **User Direction**: {clean_prompt.strip()[:600]}\n"
+            f"- **Outcome**: {clean_reply.strip()[:1200]}\n"
         )
         if not sess_fp.exists():
             header = f"# Clover Session Log (`{sid_clean}`)\n\nCreated: {now_s}\n"
@@ -763,46 +1200,48 @@ class CloverMemoryGitRepo:
                 f.write(entry_md)
 
         saved_files = [sess_rel]
+        if jsonl_fp is not None:
+            saved_files.append(jsonl_fp.relative_to(self.default_repo_dir).as_posix())
 
-        # If a Python script/function was generated and verified, save it as a reusable `.py` script in `scripts/`
         code_clean = (generated_code or "").strip()
         if not code_clean:
-            m_py = re.search(r"```(?:python|py)\s*\n([\s\S]*?)```", reply or "", flags=re.IGNORECASE)
+            m_py = re.search(r"```(?:python|py)\s*\n([\s\S]*?)```", clean_reply, flags=re.IGNORECASE)
             if m_py:
                 code_clean = m_py.group(1).strip()
         if code_clean and ("def " in code_clean or "class " in code_clean or "import " in code_clean):
             fn_match = re.search(r"(?:def|class)\s+([a-zA-Z_][a-zA-Z0-9_]*)", code_clean)
-            script_slug = _slugify(fn_match.group(1) if fn_match else prompt[:32], max_len=32)
+            script_slug = _slugify(fn_match.group(1) if fn_match else clean_prompt[:32], max_len=32)
             script_rel = f"scripts/{script_slug}.py"
-            script_fp = self.repo_dir / script_rel
-            script_header = f'"""Auto-saved by Clover Layer 4 Git Memory Repo ({now_s})\nTask: {prompt.strip()[:120]}\n"""\n\n'
+            script_fp = self.default_repo_dir / script_rel
+            script_fp.parent.mkdir(parents=True, exist_ok=True)
+            script_header = f'"""Auto-saved by Clover S1 Git Memory Repo ({now_s})\nTask: {clean_prompt.strip()[:120]}\n"""\n\n'
             script_fp.write_text(script_header + code_clean + "\n", encoding="utf-8")
             saved_files.append(script_rel)
 
-        # If the user explicitly asked to remember or save a task note
-        if re.search(r"\b(?:remember\s+that|save\s+(?:this\s+)?note|record\s+in\s+memory)\b", prompt or "", flags=re.IGNORECASE):
-            task_slug = _slugify(prompt[:40], max_len=36)
+        if re.search(r"\b(?:remember\s+that|save\s+(?:this\s+)?note|record\s+in\s+memory)\b", clean_prompt, flags=re.IGNORECASE):
+            task_slug = _slugify(clean_prompt[:40], max_len=36)
             task_rel = f"tasks/{task_slug}.md"
-            task_fp = self.repo_dir / task_rel
+            task_fp = self.default_repo_dir / task_rel
+            task_fp.parent.mkdir(parents=True, exist_ok=True)
             task_fp.write_text(
-                f"# Task Note: {prompt.strip()[:80]}\n\n- **Recorded**: {now_s}\n- **Direction**: {prompt.strip()}\n- **Outcome**: {reply.strip()}\n",
+                f"# Task Note: {clean_prompt.strip()[:80]}\n\n- **Recorded**: {now_s}\n- **Direction**: {clean_prompt.strip()}\n- **Outcome**: {clean_reply.strip()}\n",
                 encoding="utf-8",
             )
             saved_files.append(task_rel)
 
-        self._run_git(["add", *saved_files])
-        self._run_git(["commit", "-m", f"Record session turn ({sid_clean}) in Layer 4 Git memory repo"])
-        self.refresh_context_hierarchy(commit=True)
-        _, head_sha, _ = self._run_git(["rev-parse", "--short", "HEAD"])
-        return {"saved_files": saved_files, "commit": head_sha or "HEAD"}
+        self._refresh_five_stage_summaries()
+        self._run_git(["add", "-A"], cwd=self.default_repo_dir)
+        self._run_git(["commit", "-m", f"Record session turn ({sid_clean}#{turn_n}) in S1 Git memory repo"], cwd=self.default_repo_dir)
+        self.refresh_context_hierarchy(commit=True, target_dir=self.default_repo_dir)
+        _, head_sha, _ = self._run_git(["rev-parse", "--short", "HEAD"], cwd=self.default_repo_dir)
+        return {"saved_files": saved_files, "turn_n": turn_n, "commit": head_sha or "HEAD"}
 
     # ------------------------------------------------------------------
-    # 4b. Clover Cycle Staged Lessons (`lessons/MEM-LESSON-*.md` -> `notes/`)
-    #     Offered to the human to Keep or Discard (AGENTS.md Growth boundary)
+    # 4b. Clover Cycle Staged Lessons (`lessons/MEM-LESSON-*.md` -> `notes/` & `growth/knowledge/`)
     # ------------------------------------------------------------------
     def stage_lesson(self, lesson_text: str, conversation_id: str | None = None, kind: str = "user") -> dict[str, Any]:
         import hashlib
-        clean = " ".join(str(lesson_text or "").split()).strip()
+        clean, _ = redact(" ".join(str(lesson_text or "").split()).strip())
         if not clean:
             raise ValueError("Empty lesson text")
         now_s = _utc_now()
@@ -810,7 +1249,7 @@ class CloverMemoryGitRepo:
         short_hash = hashlib.sha1(clean.encode("utf-8")).hexdigest()[:6]
         lid = f"MEM-LESSON-{ts_slug}-{short_hash}"
         rel_p = f"lessons/{lid}.md"
-        fp = self.repo_dir / rel_p
+        fp = self.default_repo_dir / rel_p
         fp.parent.mkdir(parents=True, exist_ok=True)
         ev_note = (
             "Clover Outcome checks: the earlier answer failed deterministic checks and the corrected answer passed."
@@ -826,12 +1265,12 @@ class CloverMemoryGitRepo:
             f"## Lesson Summary\n{clean}\n"
         )
         fp.write_text(md_body, encoding="utf-8")
-        self._run_git(["add", rel_p])
-        self._run_git(["commit", "-m", f"Stage Clover cycle lesson {lid} in lessons/"])
+        self._run_git(["add", rel_p], cwd=self.default_repo_dir)
+        self._run_git(["commit", "-m", f"Stage Clover cycle lesson {lid} in lessons/"], cwd=self.default_repo_dir)
         return {"id": lid, "path": rel_p, "summary": clean, "created_at": now_s, "kind": kind}
 
     def list_staged_lessons(self) -> list[dict[str, Any]]:
-        lessons_dir = self.repo_dir / "lessons"
+        lessons_dir = self.default_repo_dir / "lessons"
         if not lessons_dir.exists():
             return []
         out: list[dict[str, Any]] = []
@@ -843,7 +1282,6 @@ class CloverMemoryGitRepo:
                 m_c = re.search(r"-\s*\*\*Created\*\*:\s*(\S+)", txt)
                 if m_c:
                     created = m_c.group(1).strip()
-                summary = ""
                 if "## Lesson Summary" in txt:
                     summary = txt.split("## Lesson Summary", 1)[1].strip()
                 else:
@@ -860,41 +1298,49 @@ class CloverMemoryGitRepo:
 
     def keep_staged_lesson(self, lesson_id: str) -> dict[str, Any]:
         lid = Path(str(lesson_id or "").strip()).stem
-        src_fp = self.repo_dir / "lessons" / f"{lid}.md"
+        src_fp = self.default_repo_dir / "lessons" / f"{lid}.md"
         if not src_fp.exists():
             raise FileNotFoundError(f"Staged lesson not found: {lid}")
         txt = src_fp.read_text(encoding="utf-8", errors="replace")
         promoted_txt = txt.replace("`staged_waiting_for_human`", f"`kept_by_human ({_utc_now()})`")
         dst_rel = f"notes/{lid}.md"
-        dst_fp = self.repo_dir / dst_rel
+        dst_fp = self.default_repo_dir / dst_rel
         dst_fp.parent.mkdir(parents=True, exist_ok=True)
         dst_fp.write_text(promoted_txt, encoding="utf-8")
+        gk_fp = self.default_repo_dir / "growth" / "knowledge" / f"{lid}.md"
+        gk_fp.parent.mkdir(parents=True, exist_ok=True)
+        gk_fp.write_text(promoted_txt, encoding="utf-8")
         src_fp.unlink()
-        self._run_git(["add", "-A"])
-        self._run_git(["commit", "-m", f"Keep & promote Clover lesson {lid} to notes/{lid}.md"])
+        self._run_git(["add", "-A"], cwd=self.default_repo_dir)
+        self._run_git(["commit", "-m", f"Keep & promote Clover lesson {lid} to notes/ and growth/knowledge/"], cwd=self.default_repo_dir)
         return {"ok": True, "promoted_path": dst_rel, "lessons": self.list_staged_lessons()}
 
     def discard_staged_lesson(self, lesson_id: str) -> dict[str, Any]:
         lid = Path(str(lesson_id or "").strip()).stem
-        src_fp = self.repo_dir / "lessons" / f"{lid}.md"
+        src_fp = self.default_repo_dir / "lessons" / f"{lid}.md"
         if src_fp.exists():
             src_fp.unlink()
-            self._run_git(["add", "-A"])
-            self._run_git(["commit", "-m", f"Discard staged Clover lesson {lid}"])
+            self._run_git(["add", "-A"], cwd=self.default_repo_dir)
+            self._run_git(["commit", "-m", f"Discard staged Clover lesson {lid}"], cwd=self.default_repo_dir)
         return {"ok": True, "discarded": lid, "lessons": self.list_staged_lessons()}
 
     # ------------------------------------------------------------------
-    # 5. Private Personal GitHub Repository Sync (`private: true` Enforced)
+    # 5. Private Personal GitHub Repository Sync (`private: true` Enforced, Vault-Encrypted Token)
     # ------------------------------------------------------------------
     def get_github_sync_config(self) -> dict[str, Any]:
-        cfg = {"repo": "", "branch": "main", "has_token": False, "private_enforced": True, "last_sync": None}
+        cfg = {
+            "repo": "",
+            "branch": "main",
+            "has_token": bool(self._load_github_token()),
+            "private_enforced": True,
+            "last_sync": None,
+        }
         if self.github_cfg_file.exists():
             try:
                 raw = json.loads(self.github_cfg_file.read_text(encoding="utf-8"))
                 if isinstance(raw, dict):
                     cfg["repo"] = str(raw.get("repo") or "")
                     cfg["branch"] = str(raw.get("branch") or "main")
-                    cfg["has_token"] = bool(raw.get("token"))
                     cfg["last_sync"] = raw.get("last_sync")
             except Exception:
                 pass
@@ -908,23 +1354,20 @@ class CloverMemoryGitRepo:
         branch: str = "main",
     ) -> dict[str, Any]:
         """
-        Configures and syncs (`push` or `pull`) `clover-memory-repo/` with the user's personal
-        **private** GitHub repository (`owner/repo`).
-        Strictly enforces `"private": True` via the GitHub API before pushing!
+        Configures and syncs (`push` or `pull`) `self.default_repo_dir` (`clover-memory-repo/`) with the user's
+        personal **private** GitHub repository (`owner/repo`).
+        - Strictly enforces `"private": True` via the GitHub API before pushing.
+        - Stores the token encrypted in `vault/github.json` (`mobile_vault.protect`).
+        - Passes the token via `GIT_CONFIG_KEY_0=http.https://github.com/.extraheader` in `env` (never in the URL or `ps aux`).
+        - ALWAYS operates on `self.default_repo_dir` (`clover-memory-repo/`), never touching a user's external project workspace.
         """
-        existing_raw: dict[str, Any] = {}
-        if self.github_cfg_file.exists():
-            try:
-                existing_raw = json.loads(self.github_cfg_file.read_text(encoding="utf-8"))
-            except Exception:
-                existing_raw = {}
-
-        repo_clean = (repo_full_name or existing_raw.get("repo") or "").strip().strip("/")
+        existing_cfg = self.get_github_sync_config()
+        repo_clean = (repo_full_name or existing_cfg.get("repo") or "").strip().strip("/")
         if repo_clean.startswith("https://github.com/"):
             repo_clean = repo_clean[len("https://github.com/") :].strip("/")
         if repo_clean.endswith(".git"):
             repo_clean = repo_clean[:-4]
-        tok_clean = (token or existing_raw.get("token") or "").strip()
+        tok_clean = (token or self._load_github_token() or "").strip()
 
         if not repo_clean or "/" not in repo_clean:
             raise ValueError("Please provide your GitHub repository as 'username/repo-name' (e.g. 'username/clover-memory').")
@@ -935,11 +1378,10 @@ class CloverMemoryGitRepo:
         headers = {
             "Authorization": f"Bearer {tok_clean}",
             "Accept": "application/vnd.github+json",
-            "User-Agent": "CloverAIStudio-Layer4-GitSync",
+            "User-Agent": "CloverAIStudio-S1-GitSync",
             "X-GitHub-Api-Version": "2022-11-28",
         }
 
-        # 1. Verify or create the repository on GitHub, strictly enforcing `private == True`
         repo_api_url = f"https://api.github.com/repos/{owner}/{repo_name}"
         req_check = urllib.request.Request(repo_api_url, headers=headers, method="GET")
         repo_created = False
@@ -948,14 +1390,13 @@ class CloverMemoryGitRepo:
                 repo_info = json.loads(resp.read().decode("utf-8"))
                 if not repo_info.get("private", False):
                     raise ValueError(
-                        f"Refused: GitHub repository '{repo_clean}' is PUBLIC. Layer 4 personal memory sync strictly requires a PRIVATE repository (`private: true`)."
+                        f"Refused: GitHub repository '{repo_clean}' is PUBLIC. S1 personal memory sync strictly requires a PRIVATE repository (`private: true`)."
                     )
         except urllib.error.HTTPError as he:
             if he.code == 404:
-                # Create a new PRIVATE repository for the authenticated user
                 create_body = json.dumps({
                     "name": repo_name,
-                    "description": "Clover AI Studio — Personal Layer 4 Memory & Task Repository (Private)",
+                    "description": "Clover AI Studio — Personal S1 Memory & Task Repository (Private)",
                     "private": True,
                     "auto_init": False,
                 }).encode("utf-8")
@@ -974,33 +1415,27 @@ class CloverMemoryGitRepo:
                 err_txt = he.read().decode("utf-8", errors="replace")[:240]
                 raise RuntimeError(f"GitHub API check failed (HTTP {he.code}): {err_txt}")
 
-        # 2. Save config locally with 0600 permissions
+        # Save encrypted token in `vault/github.json` and non-secret metadata in `config/<device>/github-repo.json`
+        self._save_github_token(tok_clean)
         saved_cfg = {
             "repo": repo_clean,
             "branch": branch or "main",
-            "token": tok_clean,
             "private_enforced": True,
             "last_sync": _utc_now(),
         }
+        self.github_cfg_file.parent.mkdir(parents=True, exist_ok=True)
         self.github_cfg_file.write_text(json.dumps(saved_cfg, indent=2), encoding="utf-8")
-        try:
-            self.github_cfg_file.chmod(0o600)
-        except Exception:
-            pass
 
-        # 3. Execute git push or pull using an transient credential URL (never stored in .git/config)
-        auth_url = f"https://x-access-token:{tok_clean}@github.com/{repo_clean}.git"
         clean_url = f"https://github.com/{repo_clean}.git"
-        self._run_git(["remote", "remove", "origin"])
-        self._run_git(["remote", "add", "origin", clean_url])
+        self._run_git(["remote", "remove", "origin"], cwd=self.default_repo_dir)
+        self._run_git(["remote", "add", "origin", clean_url], cwd=self.default_repo_dir)
 
         if action == "pull":
-            rc, out, err = self._run_git(["pull", "--rebase", auth_url, branch], timeout_s=45.0)
+            rc, out, err = self._run_git(["pull", "--rebase", "origin", branch], timeout_s=45.0, cwd=self.default_repo_dir, token=tok_clean)
         else:
-            self._run_git(["branch", "-M", branch])
-            rc, out, err = self._run_git(["push", "-u", auth_url, f"HEAD:{branch}"], timeout_s=45.0)
+            self._run_git(["branch", "-M", branch], cwd=self.default_repo_dir)
+            rc, out, err = self._run_git(["push", "-u", "origin", f"HEAD:{branch}"], timeout_s=45.0, cwd=self.default_repo_dir, token=tok_clean)
 
-        # Redact token from any git output
         safe_out = (out + "\n" + err).replace(tok_clean, "***").strip()
         if rc != 0:
             raise RuntimeError(f"git {action} failed: {safe_out}")
