@@ -2,12 +2,45 @@
 
 Complete 7-layer Clover AI System and CPU Workstation runtime engineered for **64 GB–128 GB CPU Workstations (`k3`: AMD Ryzen 9 7950X3D, `128 GiB` DDR5 ECC RAM)** with **`NVIDIA-Nemotron-3.5-Super-VL-120B-A12B` (`d = 4096`, `V = 131,072` Tekken, Native `1M` Context)** as the default foundation model:
 
-- **Hardware Tier Alignment across Clover AI System**:
-  - **8 GB / 16 GB Mobile & Laptop (`clover-ai-system/mobile/`)**: `LiquidAI/LFM3-1.7B` (`LFM3-Omni-2B`, `d = 2048`, `V = 128,000`).
-  - **64 GB / 128 GB Workstation (`clover-ai-system/cpu-server/`, Default in Web Studio)**: `nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B` (`120B` total / `12B` active, `d = 4096`, `V = 131,072` Tekken, `69.9 GiB` in 4-bit — fits 100% in `128 GiB` RAM with zero disk I/O).
+- **Hardware Tier & Native Installer Alignment across Clover AI System**:
+  - **8 GB / 16 GB Mobile (`clover-ai-system/mobile/`)**: `LiquidAI/LFM3-1.7B` (`LFM3-Omni-2B`) — Android `.apk` (`CloverAIStudio.apk`, portable to iOS `.ipa`).
+  - **8 GB / 16 GB Laptop**: `LiquidAI/LFM3-Omni-2B` — Windows `.exe` (`CloverAIStudio.exe` + `CloverAIStudio-Setup.exe`, portable to macOS `.dmg`/`.app`).
+  - **64 GB / 128 GB Linux Workstation (`clover-ai-system/cpu-server/`, Default in Web Studio)**: `nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B` (`120B` total / `12B` active, `d = 4096`, `V = 131,072` Tekken, `69.9 GiB` in 4-bit) — Native Linux ELF binary (`clover-ai-studio`), Debian/Ubuntu package (`clover-ai-studio-workstation_1.0.0_amd64.deb`), Universal Self-Extracting Linux Installer (`CloverAIStudio-Workstation-Linux-x86_64.run`), FreeDesktop `.desktop` launcher, and `systemd` service (`clover-ai-workstation.service`).
   - **8 × RTX 3090 Multi-GPU Server (`192 GiB` VRAM)**: `MoonshotAI/Kimi-K3` (`2.78T` total / `104B` active, `d = 7168`, `V = 163,840`).
 
+## Easy 1-Command Installation on Any Linux Workstation
+
+### Option A — Universal Self-Extracting `.run` Installer (Ubuntu, Debian, Fedora, RHEL, Rocky, Arch)
+```bash
+sudo ./CloverAIStudio-Workstation-Linux-x86_64.run
+```
+
+### Option B — Debian / Ubuntu `.deb` Package
+```bash
+sudo dpkg -i clover-ai-studio-workstation_1.0.0_amd64.deb
+```
+
+### Option C — Shell Installer & Package Builder from Source
+```bash
+sudo bash install-workstation-linux.sh            # Compiles AVX-512 C engine + launcher, installs desktop icon & systemd service
+bash build_workstation_linux_packages.sh          # Rebuilds clover-ai-studio, .deb, and .run packages
+```
+
+### Using the `clover-ai-studio` Workstation CLI & Desktop Launcher
+```bash
+clover-ai-studio                  # Starts 7-layer workstation engine (if not running) & opens Clover AI Studio window
+clover-ai-studio --engine-only    # Starts background workstation daemon on http://127.0.0.1:8765 for VS Code / Web UI
+clover-ai-studio --status         # Prints live workstation hardware, default model (nemotron-3.5-super-vl), and SpecMD R4 ledger
+clover-ai-studio --verify         # Runs full 7-layer Nemotron workstation progressive verification & Clover Cycle retry test
+clover-ai-studio --stop           # Stops the background workstation engine
+```
+
 ## Contents
+
+- **`CloverAIStudio-Workstation-Linux-x86_64.run`**: Universal self-extracting Linux workstation installer (`434 KB`).
+- **`clover-ai-studio-workstation_1.0.0_amd64.deb`**: Debian/Ubuntu `.deb` package (`430 KB`) installing `/usr/bin/clover-ai-studio`, `/opt/clover-ai-workstation/`, `/usr/share/applications/clover-ai-studio.desktop`, and official 5-leaf Clover icons.
+- **`clover-ai-studio` (`clover_workstation_launcher.c`)**: Native compiled Linux `x86_64` ELF launcher (`27 KB`, zero external library dependencies).
+- **`install-workstation-linux.sh` & `build_workstation_linux_packages.sh`**: Cross-distro Linux workstation installer (`apt` / `dnf` / `pacman` + `systemd` unit `clover-ai-workstation.service` with `LimitMEMLOCK=infinity`) and `.deb` / `.run` package builder.
 
 - **`nemotron_cpu_engine.c`**: Native C/OpenMP/AVX-512 workstation engine (`libnemotron_cpu_engine.so`) executing:
   - **Stage L1 (`trunk-0` Mamba-2 SSM)**: Selective State Space recurrence across `128` heads (`d_inner = 8192`, `d_state = 128`) with precomputed FP32 `A = -exp(A_log)`, width-4 causal depthwise `conv1d + SiLU`, `Zamba2RMSNormGated`, and per-prompt `seg_starts` isolation.
