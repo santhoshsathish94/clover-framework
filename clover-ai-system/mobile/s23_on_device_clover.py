@@ -630,18 +630,34 @@ class S23HybridAgentAndNCM:
         self._join_rendered_windows = join_rendered_windows
         self._pack_combo_prefix = pack_combo_prefix
 
+        class _ParameterlessLayerNorm(nn.Module):
+            """Zero-mean/unit-variance LayerNorm whose affine (gamma, beta) has been algebraically fused into the next Linear."""
+            def __init__(self, ndim: int, eps: float = 1e-6):
+                super().__init__()
+                self.shape = (ndim,)
+                self.eps = eps
+
+            def forward(self, x: torch.Tensor) -> torch.Tensor:
+                return F.layer_norm(x, self.shape, None, None, self.eps)
+
         class Lfm3NativeHybridLink(nn.Module):
             def __init__(self, d: int = D_LFM3, bottleneck: int = 512):
                 super().__init__()
+                self.d = d
                 self.pre_ln = nn.LayerNorm(d)
                 self.proj1 = nn.Linear(d, bottleneck)
                 self.act = nn.GELU()
                 self.proj2 = nn.Linear(bottleneck, d)
                 self.post_ln = nn.LayerNorm(d)
                 self.out_scale = nn.Parameter(torch.tensor(0.024))
+                self.fused_precomputed = False
 
             def forward(self, h_lfm3: torch.Tensor) -> torch.Tensor:
                 hf = h_lfm3.float()
+                if self.fused_precomputed:
+                    xn = F.layer_norm(hf, (self.d,), None, None, 1e-5)
+                    z = hf + self.proj2(self.act(self.proj1(xn)))
+                    return F.layer_norm(z, (self.d,), self.post_ln.weight, self.post_ln.bias, 1e-5)
                 z = self.post_ln(hf + self.proj2(self.act(self.proj1(self.pre_ln(hf)))))
                 return z * self.out_scale
 
@@ -649,20 +665,28 @@ class S23HybridAgentAndNCM:
             """Exact HybridLink (ln_res_adapter, d=2048 -> 2048 -> 2048) trained in 3-stage HybridSFT."""
             def __init__(self, hidden_size: int = D_LFM3):
                 super().__init__()
+                self.hidden_size = hidden_size
                 self.proj1 = nn.Linear(hidden_size, hidden_size)
                 self.act = nn.GELU()
                 self.proj2 = nn.Linear(hidden_size, hidden_size)
                 self.pre_ln = nn.LayerNorm(hidden_size)
                 self.post_ln = nn.LayerNorm(hidden_size)
+                self.fused_precomputed = False
 
             def forward(self, h: torch.Tensor) -> torch.Tensor:
                 hf = h.float()
+                if self.fused_precomputed:
+                    xn = F.layer_norm(hf, (self.hidden_size,), None, None, 1e-5)
+                    out = self.proj2(self.act(self.proj1(xn)))
+                    return self.post_ln(hf + out)
                 out = self.proj2(self.act(self.proj1(self.pre_ln(hf))))
                 return self.post_ln(hf + out)
 
         class Lfm3ComboBridge(nn.Module):
             def __init__(self, d_in: int = D_LFM3, d_out: int = D_VQ):
                 super().__init__()
+                self.d_in = d_in
+                self.d_out = d_out
                 self.ln_in = nn.LayerNorm(d_in)
                 self.fc1 = nn.Linear(d_in, 768)
                 self.act = nn.GELU()
@@ -671,8 +695,13 @@ class S23HybridAgentAndNCM:
                 self.scale = nn.Parameter(torch.tensor(8.5))
                 self.seg_rh = nn.Parameter(torch.zeros(1, 1, d_out))
                 self.gate = nn.Parameter(torch.tensor(1.0))
+                self.fused_precomputed = False
 
             def forward(self, r_lfm3: torch.Tensor) -> torch.Tensor:
+                if self.fused_precomputed:
+                    xn = F.layer_norm(r_lfm3.float(), (self.d_in,), None, None, 1e-5)
+                    x = self.fc2(self.act(self.fc1(xn)))
+                    return F.layer_norm(x, (self.d_out,), self.ln_out.weight, self.ln_out.bias, 1e-5).to(r_lfm3.dtype)
                 x = self.ln_in(r_lfm3.float())
                 x = self.fc2(self.act(self.fc1(x)))
                 x = self.ln_out(x) * self.scale
@@ -681,14 +710,21 @@ class S23HybridAgentAndNCM:
         class Lfm3ExpertBridge(nn.Module):
             def __init__(self, d_lfm3: int = D_LFM3, d_vq: int = D_VQ):
                 super().__init__()
+                self.d_lfm3 = d_lfm3
+                self.d_vq = d_vq
                 self.ln_in = nn.LayerNorm(d_lfm3)
                 self.proj1 = nn.Linear(d_lfm3, d_vq)
                 self.act = nn.GELU()
                 self.proj2 = nn.Linear(d_vq, d_vq)
                 self.ln_out = nn.LayerNorm(d_vq)
                 self.alpha = nn.Parameter(torch.tensor(0.5))
+                self.fused_precomputed = False
 
             def forward(self, h_lfm3: torch.Tensor) -> torch.Tensor:
+                if self.fused_precomputed:
+                    xn = F.layer_norm(h_lfm3.float(), (self.d_lfm3,), None, None, 1e-5)
+                    x = self.proj2(self.act(self.proj1(xn)))
+                    return F.layer_norm(x, (self.d_vq,), self.ln_out.weight, self.ln_out.bias, 1e-5).to(h_lfm3.dtype)
                 x = self.ln_in(h_lfm3.float())
                 x = self.proj2(self.act(self.proj1(x)))
                 return (torch.tanh(self.alpha) * self.ln_out(x)).to(h_lfm3.dtype)
@@ -803,6 +839,96 @@ class S23HybridAgentAndNCM:
         self.combo_bridge.load_state_dict(core["lfm3_combo_bridge"], strict=True)
         self.expert_bridge.load_state_dict(core["lfm3_expert_bridge"], strict=True)
         del core
+
+        # Bind Precomputed C2 (Plan) & C3 (Decode) Trunks & Experts (`ncm/precomputed/`) with zero extra RAM
+        self.precomputed_dir = self.ncm_dir / "precomputed"
+        self.precomputed_trunks_active = False
+        self.precomputed_manifest: dict[str, Any] = {}
+        manifest_fp = self.precomputed_dir / "manifest.json"
+        if not manifest_fp.exists():
+            try:
+                from prepare_c2_c3_precomputed_trunks import build_c2_c3_precomputed
+                build_c2_c3_precomputed(core_pt, self.precomputed_dir)
+            except Exception:
+                pass
+        if manifest_fp.exists():
+            try:
+                self.precomputed_manifest = json.loads(manifest_fp.read_text(encoding="utf-8"))
+            except Exception:
+                self.precomputed_manifest = {"total_trunk_and_expert_dirs": 31}
+
+        def _fuse_ln_linear_inplace(ln_mod: Any, lin_mod: Any) -> None:
+            gw = ln_mod.weight.detach().float()
+            gb = ln_mod.bias.detach().float() if getattr(ln_mod, "bias", None) is not None else torch.zeros_like(gw)
+            w = lin_mod.weight.detach().float()
+            b_add = torch.matmul(w, gb)
+            lin_mod.weight.copy_(w * gw.unsqueeze(0))
+            if getattr(lin_mod, "bias", None) is not None and lin_mod.bias is not None:
+                lin_mod.bias.copy_(lin_mod.bias.detach().float() + b_add)
+            else:
+                lin_mod.bias = nn.Parameter(b_add)
+
+        try:
+            with torch.no_grad():
+                # 1. C2 · Plan (`plan-trunk-0/`): fuse pre_ln -> proj1 and out_scale -> post_ln
+                _fuse_ln_linear_inplace(self.hybrid_link.pre_ln, self.hybrid_link.proj1)
+                nhl_s = float(self.hybrid_link.out_scale.item())
+                self.hybrid_link.post_ln.weight.mul_(nhl_s)
+                self.hybrid_link.post_ln.bias.mul_(nhl_s)
+                self.hybrid_link.fused_precomputed = True
+
+                if self.has_stage3_hybridlink_2048:
+                    _fuse_ln_linear_inplace(self.hybridlink_2048.pre_ln, self.hybridlink_2048.proj1)
+                    self.hybridlink_2048.fused_precomputed = True
+
+                # 2. C3 · Decode Bridges (`bridge-trunk-0/`): fuse ln_in -> fc1/proj1 & gate/alpha -> ln_out
+                _fuse_ln_linear_inplace(self.combo_bridge.ln_in, self.combo_bridge.fc1)
+                cb_gs = float((self.combo_bridge.scale * self.combo_bridge.gate).item())
+                self.combo_bridge.ln_out.weight.mul_(cb_gs)
+                self.combo_bridge.ln_out.bias.mul_(cb_gs).add_(self.combo_bridge.seg_rh.view(-1))
+                self.combo_bridge.fused_precomputed = True
+
+                _fuse_ln_linear_inplace(self.expert_bridge.ln_in, self.expert_bridge.proj1)
+                eb_a = float(torch.tanh(self.expert_bridge.alpha).item())
+                self.expert_bridge.ln_out.weight.mul_(eb_a)
+                self.expert_bridge.ln_out.bias.mul_(eb_a)
+                self.expert_bridge.fused_precomputed = True
+
+                # 3. C3 · Decode VQVAE (`vqvae-trunk-0/` + `vqvae-expert-0..10/`)
+                mb = self.vqvae.decoder.middle_block
+                _fuse_ln_linear_inplace(mb.ln_1, mb.attn.c_attn)
+                mb.ln_1 = _ParameterlessLayerNorm(D_VQ, eps=1e-6)
+                _fuse_ln_linear_inplace(mb.ln_2, mb.mlp.c_fc)
+                mb.ln_2 = _ParameterlessLayerNorm(D_VQ, eps=1e-6)
+
+                # 4. C3 · Decode 12-Layer NextConceptTransformer (`ncm-trunk-0..11/` + `ncm-global-0/`)
+                for blk in self.net.transformer.blocks:
+                    _fuse_ln_linear_inplace(blk.ln_1, blk.attn.c_attn)
+                    blk.ln_1 = _ParameterlessLayerNorm(768, eps=1e-6)
+                    _fuse_ln_linear_inplace(blk.ln_2, blk.mlp.c_fc)
+                    blk.ln_2 = _ParameterlessLayerNorm(768, eps=1e-6)
+
+                ln_f_orig = self.net.transformer.ln_f
+                _fuse_ln_linear_inplace(ln_f_orig, self.net.lm_head_l0)
+                for h_idx in range(len(self.net.lm_heads)):
+                    _fuse_ln_linear_inplace(ln_f_orig, self.net.lm_heads[h_idx])
+                self.net.transformer.ln_f = _ParameterlessLayerNorm(768, eps=1e-6)
+
+                # 5. C3 · Decode 3-Layer LexicalPointerDecoder (`ptr-trunk-0..2/` + `ptr-global-0/`)
+                for pblk in self.copy_dec.blocks:
+                    _fuse_ln_linear_inplace(pblk.ln1, pblk.qkv)
+                    pblk.ln1 = _ParameterlessLayerNorm(D_VQ, eps=1e-5)
+                    _fuse_ln_linear_inplace(pblk.ln_q, pblk.cx_q)
+                    pblk.ln_q = _ParameterlessLayerNorm(D_VQ, eps=1e-5)
+                    _fuse_ln_linear_inplace(pblk.ln_kv, pblk.cx_kv)
+                    pblk.ln_kv = _ParameterlessLayerNorm(D_VQ, eps=1e-5)
+                    _fuse_ln_linear_inplace(pblk.ln2, pblk.mlp[0])
+                    pblk.ln2 = _ParameterlessLayerNorm(D_VQ, eps=1e-5)
+
+            self.precomputed_trunks_active = True
+        except Exception as e:
+            print(f"[WARN] Could not bind precomputed C2/C3 trunks: {e}")
+
         import gc
         gc.collect()
 
@@ -859,6 +985,7 @@ class S23HybridAgentAndNCM:
             "raw_hidden_to_next_embed_cos": round(raw_cos, 4),
             "hybridlink_latent_to_next_embed_cos": round(latent_cos, 4),
             "stage3_hybridlink_2048_cos": round(s3_cos, 4),
+            "c2_precomputed_trunk_active": bool(self.precomputed_trunks_active),
             "hybridlink_ms": round(ms, 2),
             "r_np": r_native.squeeze(0).numpy(),
         }
@@ -1208,6 +1335,8 @@ class S23HybridAgentAndNCM:
         ncm_ms = (time.perf_counter() - t0) * 1000.0
         meta = {
             "ncm_active": True,
+            "c3_precomputed_trunks_active": bool(self.precomputed_trunks_active),
+            "c3_precomputed_dirs": int(self.precomputed_manifest.get("total_trunk_and_expert_dirs", 31)),
             "vq_levels": 11,
             "vq_codes_emitted": int(g_codes.shape[1]),
             "zhat_final_shape": list(zh_levels[-1].shape),
@@ -3014,6 +3143,14 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     "backend": "s23-snapdragon8gen2-adreno740-smmla-q4-7layer",
                     "model": "lfm3-omni-2b-4bit-s23",
                     "ncm_and_hybridlink_loaded": sys_s23.hybrid_ncm is not None,
+                    "c2_c3_precomputed_trunks_active": bool(
+                        sys_s23.hybrid_ncm is not None and sys_s23.hybrid_ncm.precomputed_trunks_active
+                    ),
+                    "c2_c3_precomputed_dirs": (
+                        int(sys_s23.hybrid_ncm.precomputed_manifest.get("total_trunk_and_expert_dirs", 31))
+                        if sys_s23.hybrid_ncm is not None
+                        else 0
+                    ),
                     "pinned_threads": sys_s23.engine.active_threads,
                     "setup_ms": sys_s23.setup_ms,
                     "settings": sys_s23.settings,
