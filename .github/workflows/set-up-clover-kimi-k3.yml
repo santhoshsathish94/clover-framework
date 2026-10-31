@@ -13,8 +13,8 @@ on:
   workflow_dispatch:
     inputs:
       hf_repo:
-        description: Hugging Face repo that holds the dataset
-        default: Santhoshsathish94/clover-kimi-k3
+        description: Hugging Face repo that holds the dataset (kimi/, nemotron/, liquid-lfm3/)
+        default: Santhoshsathish94/clover-ai-studio
       hf_repo_type:
         description: Hugging Face repo type (dataset or model)
         default: dataset

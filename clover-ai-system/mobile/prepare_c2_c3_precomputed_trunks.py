@@ -285,20 +285,29 @@ def build_c2_c3_precomputed(ckpt_path: Path, out_root: Path) -> dict[str, Any]:
     # 1. Core 2 · Plan (`plan-trunk-0/`)
     # ==========================================================================
     print("[2/6] Precomputing Core 2 · Plan (`plan-trunk-0/`) with fused pre_ln->proj1 and out_scale->post_ln...")
-    nhl = ckpt["lfm3_native_hybrid_link"]
-    hl2048 = ckpt["hybridlink_2048"]
+    nhl_key = next(
+        (k for k in ("lfm3_native_hybrid_link", "nemo_native_hybrid_link", "k3_hybridlink") if k in ckpt),
+        None,
+    )
+    hl_key = next(
+        (k for k in ("hybridlink_2048", "hybrid_link") if k in ckpt),
+        None,
+    )
+    nhl = ckpt[nhl_key]
+    hl2048 = ckpt.get(hl_key, nhl)
+    d_model = int(nhl["pre_ln.weight"].numel())
 
-    # Fuse Lfm3NativeHybridLink (2048 -> 512 -> 2048)
+    # Fuse NativeHybridLink (d_model -> bottleneck -> d_model)
     nhl_w1_fused, nhl_b1_fused = fuse_ln_into_linear(
         nhl["pre_ln.weight"], nhl["pre_ln.bias"], nhl["proj1.weight"], nhl["proj1.bias"]
     )
-    nhl_scale = float(nhl["out_scale"].item())
+    nhl_scale = float(nhl["out_scale"].item()) if "out_scale" in nhl else 0.024
     nhl_post_w_fused = nhl["post_ln.weight"].to(torch.float32) * nhl_scale
     nhl_post_b_fused = nhl["post_ln.bias"].to(torch.float32) * nhl_scale
     nhl_w2 = nhl["proj2.weight"].to(torch.float32)
     nhl_b2 = nhl["proj2.bias"].to(torch.float32)
 
-    # Fuse HybridLink2048 (2048 -> 2048 -> 2048)
+    # Fuse Stage-3 HybridLink (d_model -> d_model -> d_model)
     hl_w1_fused, hl_b1_fused = fuse_ln_into_linear(
         hl2048["pre_ln.weight"], hl2048["pre_ln.bias"], hl2048["proj1.weight"], hl2048["proj1.bias"]
     )
@@ -347,8 +356,10 @@ def build_c2_c3_precomputed(ckpt_path: Path, out_root: Path) -> dict[str, Any]:
     # 2. Core 3 · Decode — Part A: Bridges (`bridge-trunk-0/`)
     # ==========================================================================
     print("[3/6] Precomputing Core 3 · Bridges (`bridge-trunk-0/`) with fused ln_in->fc1/proj1 and gate/alpha->ln_out...")
-    cb = ckpt["lfm3_combo_bridge"]
-    eb = ckpt["lfm3_expert_bridge"]
+    cb_key = next((k for k in ("lfm3_combo_bridge", "nemo_combo_bridge", "k3_cbridge") if k in ckpt), None)
+    eb_key = next((k for k in ("lfm3_expert_bridge", "nemo_expert_bridge", "k3_bridge") if k in ckpt), None)
+    cb = ckpt[cb_key]
+    eb = ckpt[eb_key]
 
     cb_w1_fused, cb_b1_fused = fuse_ln_into_linear(
         cb["ln_in.weight"], cb["ln_in.bias"], cb["fc1.weight"], cb["fc1.bias"]
@@ -408,7 +419,7 @@ def build_c2_c3_precomputed(ckpt_path: Path, out_root: Path) -> dict[str, Any]:
     # 3. Core 3 · Decode — Part B: Multiscale VQ-VAE (`vqvae-trunk-0/` + `vqvae-expert-0..10/`)
     # ==========================================================================
     print("[4/6] Precomputing Core 3 · VQ-VAE (`vqvae-trunk-0/` + 11 `vqvae-expert-0..10/`)...")
-    vq = ckpt["vqvae_core"]
+    vq = ckpt["vqvae_core"] if "vqvae_core" in ckpt else ckpt["vqvae"]
 
     vq_attn_w_fused, vq_attn_b_fused = fuse_ln_into_linear(
         vq["decoder.middle_block.ln_1.weight"],
@@ -585,22 +596,42 @@ def build_c2_c3_precomputed(ckpt_path: Path, out_root: Path) -> dict[str, Any]:
 
     for l in range(3):
         pfx = f"blocks.{l}."
-        qkv_w_fused, qkv_b_fused = fuse_ln_into_linear(
-            ptr[pfx + "ln1.weight"], ptr[pfx + "ln1.bias"], ptr[pfx + "qkv.weight"], ptr[pfx + "qkv.bias"]
-        )
-        cx_q_w_fused, cx_q_b_fused = fuse_ln_into_linear(
-            ptr[pfx + "ln_q.weight"], ptr[pfx + "ln_q.bias"], ptr[pfx + "cx_q.weight"], ptr[pfx + "cx_q.bias"]
-        )
-        cx_kv_w_fused, cx_kv_b_fused = fuse_ln_into_linear(
-            ptr[pfx + "ln_kv.weight"], ptr[pfx + "ln_kv.bias"], ptr[pfx + "cx_kv.weight"], ptr[pfx + "cx_kv.bias"]
-        )
-        mlp0_w_fused, mlp0_b_fused = fuse_ln_into_linear(
-            ptr[pfx + "ln2.weight"], ptr[pfx + "ln2.bias"], ptr[pfx + "mlp.0.weight"], ptr[pfx + "mlp.0.bias"]
-        )
-        proj_w = ptr[pfx + "proj.weight"].to(torch.float32)
-        proj_b = ptr[pfx + "proj.bias"].to(torch.float32)
-        cx_proj_w = ptr[pfx + "cx_proj.weight"].to(torch.float32)
-        cx_proj_b = ptr[pfx + "cx_proj.bias"].to(torch.float32)
+        if (pfx + "qkv.weight") in ptr:
+            qkv_w_fused, qkv_b_fused = fuse_ln_into_linear(
+                ptr[pfx + "ln1.weight"], ptr[pfx + "ln1.bias"], ptr[pfx + "qkv.weight"], ptr[pfx + "qkv.bias"]
+            )
+            cx_q_w_fused, cx_q_b_fused = fuse_ln_into_linear(
+                ptr[pfx + "ln_q.weight"], ptr[pfx + "ln_q.bias"], ptr[pfx + "cx_q.weight"], ptr[pfx + "cx_q.bias"]
+            )
+            cx_kv_w_fused, cx_kv_b_fused = fuse_ln_into_linear(
+                ptr[pfx + "ln_kv.weight"], ptr[pfx + "ln_kv.bias"], ptr[pfx + "cx_kv.weight"], ptr[pfx + "cx_kv.bias"]
+            )
+            mlp0_w_fused, mlp0_b_fused = fuse_ln_into_linear(
+                ptr[pfx + "ln2.weight"], ptr[pfx + "ln2.bias"], ptr[pfx + "mlp.0.weight"], ptr[pfx + "mlp.0.bias"]
+            )
+            proj_w = ptr[pfx + "proj.weight"].to(torch.float32)
+            proj_b = ptr[pfx + "proj.bias"].to(torch.float32)
+            cx_proj_w = ptr[pfx + "cx_proj.weight"].to(torch.float32)
+            cx_proj_b = ptr[pfx + "cx_proj.bias"].to(torch.float32)
+        else:
+            qkv_w_fused, qkv_b_fused = fuse_ln_into_linear(
+                ptr[pfx + "ln1.weight"], ptr[pfx + "ln1.bias"], ptr[pfx + "self_attn.in_proj_weight"], ptr[pfx + "self_attn.in_proj_bias"]
+            )
+            cx_in_w = ptr[pfx + "cross_attn.in_proj_weight"]
+            cx_in_b = ptr[pfx + "cross_attn.in_proj_bias"]
+            cx_q_w_fused, cx_q_b_fused = fuse_ln_into_linear(
+                ptr[pfx + "ln2.weight"], ptr[pfx + "ln2.bias"], cx_in_w[:384], cx_in_b[:384]
+            )
+            cx_kv_w_fused, cx_kv_b_fused = fuse_ln_into_linear(
+                ptr[pfx + "ln_mem.weight"], ptr[pfx + "ln_mem.bias"], cx_in_w[384:], cx_in_b[384:]
+            )
+            mlp0_w_fused, mlp0_b_fused = fuse_ln_into_linear(
+                ptr[pfx + "ln3.weight"], ptr[pfx + "ln3.bias"], ptr[pfx + "mlp.0.weight"], ptr[pfx + "mlp.0.bias"]
+            )
+            proj_w = ptr[pfx + "self_attn.out_proj.weight"].to(torch.float32)
+            proj_b = ptr[pfx + "self_attn.out_proj.bias"].to(torch.float32)
+            cx_proj_w = ptr[pfx + "cross_attn.out_proj.weight"].to(torch.float32)
+            cx_proj_b = ptr[pfx + "cross_attn.out_proj.bias"].to(torch.float32)
         mlp2_w = ptr[pfx + "mlp.2.weight"].to(torch.float32)
         mlp2_b = ptr[pfx + "mlp.2.bias"].to(torch.float32)
 
@@ -649,11 +680,19 @@ def build_c2_c3_precomputed(ckpt_path: Path, out_root: Path) -> dict[str, Any]:
     tw_ptr_glob.add_tensor("ln_out_fused.weight", ln_out_w_fused, FILE_COMMON, store_f32=True)
     tw_ptr_glob.add_tensor("ln_out_fused.bias", ln_out_b_fused, FILE_COMMON, store_f32=True)
     tw_ptr_glob.add_tensor("copy_q.weight", ptr["copy_q.weight"], FILE_OPERATOR, store_f32=True, quant4=True)
-    tw_ptr_glob.add_tensor("copy_q.bias", ptr["copy_q.bias"], FILE_OPERATOR, store_f32=True)
+    if "copy_q.bias" in ptr:
+        tw_ptr_glob.add_tensor("copy_q.bias", ptr["copy_q.bias"], FILE_OPERATOR, store_f32=True)
     tw_ptr_glob.add_tensor("copy_k.weight", ptr["copy_k.weight"], FILE_OPERATOR, store_f32=True, quant4=True)
-    tw_ptr_glob.add_tensor("copy_k.bias", ptr["copy_k.bias"], FILE_OPERATOR, store_f32=True)
-    tw_ptr_glob.add_tensor("copy_gate.weight", ptr["copy_gate.weight"], FILE_FFN, store_f32=True)
-    tw_ptr_glob.add_tensor("copy_gate.bias", ptr["copy_gate.bias"], FILE_FFN, store_f32=True)
+    if "copy_k.bias" in ptr:
+        tw_ptr_glob.add_tensor("copy_k.bias", ptr["copy_k.bias"], FILE_OPERATOR, store_f32=True)
+    if "copy_gate.weight" in ptr:
+        tw_ptr_glob.add_tensor("copy_gate.weight", ptr["copy_gate.weight"], FILE_FFN, store_f32=True)
+        tw_ptr_glob.add_tensor("copy_gate.bias", ptr["copy_gate.bias"], FILE_FFN, store_f32=True)
+    else:
+        tw_ptr_glob.add_tensor("copy_gate.0.weight", ptr["copy_gate.0.weight"], FILE_FFN, store_f32=True)
+        tw_ptr_glob.add_tensor("copy_gate.0.bias", ptr["copy_gate.0.bias"], FILE_FFN, store_f32=True)
+        tw_ptr_glob.add_tensor("copy_gate.2.weight", ptr["copy_gate.2.weight"], FILE_FFN, store_f32=True)
+        tw_ptr_glob.add_tensor("copy_gate.2.bias", ptr["copy_gate.2.bias"], FILE_FFN, store_f32=True)
     summary_trunks.append(tw_ptr_glob.finalize(prune_attention=True))
 
     precomputed_state["c3_ptr_dec"] = {
@@ -670,30 +709,30 @@ def build_c2_c3_precomputed(ckpt_path: Path, out_root: Path) -> dict[str, Any]:
     # 6. Numerical Parity & Speedup Verification on CPU
     # ==========================================================================
     torch.manual_seed(42)
-    x_2048 = torch.randn(4, 2048, dtype=torch.float32)
+    x_dm = torch.randn(4, d_model, dtype=torch.float32)
 
     # Verify C2 NativeHybridLink parity
-    ref_nhl = F.layer_norm(x_2048, (2048,), nhl["pre_ln.weight"], nhl["pre_ln.bias"], eps=1e-5)
-    ref_nhl = F.linear(ref_nhl, nhl["proj1.weight"], nhl["proj1.bias"])
+    ref_nhl = F.layer_norm(x_dm, (d_model,), nhl["pre_ln.weight"].float(), nhl["pre_ln.bias"].float(), eps=1e-5)
+    ref_nhl = F.linear(ref_nhl, nhl["proj1.weight"].float(), nhl["proj1.bias"].float())
     ref_nhl = F.gelu(ref_nhl)
-    ref_nhl = x_2048 + F.linear(ref_nhl, nhl["proj2.weight"], nhl["proj2.bias"])
-    ref_nhl = F.layer_norm(ref_nhl, (2048,), nhl["post_ln.weight"], nhl["post_ln.bias"], eps=1e-5) * nhl_scale
+    ref_nhl = x_dm + F.linear(ref_nhl, nhl["proj2.weight"].float(), nhl["proj2.bias"].float())
+    ref_nhl = F.layer_norm(ref_nhl, (d_model,), nhl["post_ln.weight"].float(), nhl["post_ln.bias"].float(), eps=1e-5) * nhl_scale
 
-    fused_nhl = F.layer_norm(x_2048, (2048,), None, None, eps=1e-5)
+    fused_nhl = F.layer_norm(x_dm, (d_model,), None, None, eps=1e-5)
     fused_nhl = F.linear(fused_nhl, nhl_w1_fused, nhl_b1_fused)
     fused_nhl = F.gelu(fused_nhl)
-    fused_nhl = x_2048 + F.linear(fused_nhl, nhl_w2, nhl_b2)
-    fused_nhl = F.layer_norm(fused_nhl, (2048,), nhl_post_w_fused, nhl_post_b_fused, eps=1e-5)
+    fused_nhl = x_dm + F.linear(fused_nhl, nhl_w2, nhl_b2)
+    fused_nhl = F.layer_norm(fused_nhl, (d_model,), nhl_post_w_fused, nhl_post_b_fused, eps=1e-5)
     c2_max_diff = float((ref_nhl - fused_nhl).abs().max().item())
 
     # Verify C3 ComboBridge parity
-    ref_cb = F.layer_norm(x_2048, (2048,), cb["ln_in.weight"], cb["ln_in.bias"], eps=1e-5)
-    ref_cb = F.linear(ref_cb, cb["fc1.weight"], cb["fc1.bias"])
+    ref_cb = F.layer_norm(x_dm, (d_model,), cb["ln_in.weight"].float(), cb["ln_in.bias"].float(), eps=1e-5)
+    ref_cb = F.linear(ref_cb, cb["fc1.weight"].float(), cb["fc1.bias"].float())
     ref_cb = F.gelu(ref_cb)
-    ref_cb = F.linear(ref_cb, cb["fc2.weight"], cb["fc2.bias"])
-    ref_cb = F.layer_norm(ref_cb, (384,), cb["ln_out.weight"], cb["ln_out.bias"], eps=1e-5) * cb_gate_scale + cb["seg_rh"].view(1, 384)
+    ref_cb = F.linear(ref_cb, cb["fc2.weight"].float(), cb["fc2.bias"].float())
+    ref_cb = F.layer_norm(ref_cb, (384,), cb["ln_out.weight"].float(), cb["ln_out.bias"].float(), eps=1e-5) * cb_gate_scale + cb["seg_rh"].float().view(1, 384)
 
-    fused_cb = F.layer_norm(x_2048, (2048,), None, None, eps=1e-5)
+    fused_cb = F.layer_norm(x_dm, (d_model,), None, None, eps=1e-5)
     fused_cb = F.linear(fused_cb, cb_w1_fused, cb_b1_fused)
     fused_cb = F.gelu(fused_cb)
     fused_cb = F.linear(fused_cb, cb_w2, cb_b2)
@@ -702,8 +741,8 @@ def build_c2_c3_precomputed(ckpt_path: Path, out_root: Path) -> dict[str, Any]:
 
     # Verify C3 NCM Block 0 + Fused Head L0 parity (models.common.LayerNorm uses eps=1e-6)
     x_768 = torch.randn(8, 768, dtype=torch.float32)
-    ref_b0 = F.layer_norm(x_768, (768,), net["transformer.blocks.0.ln_1.weight"], net["transformer.blocks.0.ln_1.bias"], eps=1e-6)
-    ref_b0 = F.linear(ref_b0, net["transformer.blocks.0.attn.c_attn.weight"].float(), net["transformer.blocks.0.attn.c_attn.bias"])
+    ref_b0 = F.layer_norm(x_768, (768,), net["transformer.blocks.0.ln_1.weight"].float(), net["transformer.blocks.0.ln_1.bias"].float(), eps=1e-6)
+    ref_b0 = F.linear(ref_b0, net["transformer.blocks.0.attn.c_attn.weight"].float(), net["transformer.blocks.0.attn.c_attn.bias"].float())
     fused_b0 = F.layer_norm(x_768, (768,), None, None, eps=1e-6)
     fused_b0 = F.linear(fused_b0, c_attn_w_fused_b0 := fuse_ln_into_linear(net["transformer.blocks.0.ln_1.weight"], net["transformer.blocks.0.ln_1.bias"], net["transformer.blocks.0.attn.c_attn.weight"], net["transformer.blocks.0.attn.c_attn.bias"])[0], ncm_blocks_state[0]["c_attn_b_fused"])
     ncm_b0_max_diff = float((ref_b0 - fused_b0).abs().max().item())

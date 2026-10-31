@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     for (size_t fi = 0; fi < files.size(); fi++) for (size_t off = 0; off < files[fi].size; off += chunk) list.push_back({ (int)fi, off, files[fi].size - off < chunk ? files[fi].size - off : chunk, files[fi].base + off });
     unsigned char *buf = (unsigned char *)mmap(NULL, total, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE, -1, 0);
     if (buf == MAP_FAILED) { perror("mmap"); return 1; }
-    const std::string base_url = "https://huggingface.co/datasets/Santhoshsathish94/clover-kimi-k3/resolve/main/";
+    const std::string base_url = "https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio/resolve/main/kimi/experts/";
     const std::string home = getenv("HOME") ? getenv("HOME") : ".";
     const std::string ssh = "ssh -i " + home + "/.ssh/k3_read -o BatchMode=yes -o IdentitiesOnly=yes -c aes128-gcm@openssh.com root@k3";
     const size_t chunks = list.size();

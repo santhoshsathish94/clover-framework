@@ -3,10 +3,10 @@
 # Only the files in dataset-files.tsv go up. git-lfs copies every file it adds, so the upload goes in batches: one expert layer (15.7 GB) at a time, the
 # trunk folders ten at a time; each batch is committed and pushed, then its copies are deleted. Run it again after any interruption: batches already on the
 # remote are skipped and an unpushed commit is pushed first.
-# usage: [HF_REPO=Santhoshsathish94/clover-kimi-k3] [PUSH_DIR=folder for the clone] [MAX_BATCHES=n] upload-dataset-git.sh
+# usage: [HF_REPO=Santhoshsathish94/clover-ai-studio] [PUSH_DIR=folder for the clone] [MAX_BATCHES=n] upload-dataset-git.sh
 set -u
 . "$(dirname "${BASH_SOURCE[0]}")/settings.sh"
-HF_REPO="${HF_REPO:-Santhoshsathish94/clover-kimi-k3}"
+HF_REPO="${HF_REPO:-Santhoshsathish94/clover-ai-studio}"
 PUSH_DIR="${PUSH_DIR:-$WORK_DIR/hf-push}"
 MAX_BATCHES="${MAX_BATCHES:-1000}"
 LIST="${DATASET_LIST:-$SCRIPTS_DIR/dataset-files.tsv}"

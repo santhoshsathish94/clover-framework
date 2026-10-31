@@ -1,16 +1,17 @@
 #!/bin/bash
-# Downloads ONLY the required Clover Kimi K3 + HybridAgent + NCM checkpoints and evaluation datasets
-# listed in `src/scripts/hybrid-ncm-dataset-files.tsv` from Hugging Face (`Santhoshsathish94/clover-kimi-k3`,
-# dataset repo) into `$HYBRID_NCM_DIR` (`$ENGINE_DIR/src/datasets/hybrid-ncm-k3` by default),
-# leaving existing `computed/` (`expert-1..92`, `trunk-0..92`) and any unused/archived HF files untouched.
+# Downloads Clover AI Studio precomputed trunks, experts, HybridAgent/NCM checkpoints, and evaluation datasets
+# from Hugging Face (`Santhoshsathish94/clover-ai-studio`, dataset repo), where every model family
+# (`kimi/`, `nemotron/`, `liquid-lfm3/`) follows the identical 5-subfolder layout:
+#   <model>/{experts, trunks, hybridagent, ncm, bridges}/
 #
 # Usage:
-#   [HF_REPO=Santhoshsathish94/clover-kimi-k3] [HYBRID_NCM_DIR=/path/to/dir] ./download-hybrid-ncm-datasets.sh
+#   [HF_REPO=Santhoshsathish94/clover-ai-studio] [MODEL_FAMILY=kimi|nemotron|liquid-lfm3|all] ./download-hybrid-ncm-datasets.sh
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/settings.sh"
 
-HF_REPO="${HF_REPO:-Santhoshsathish94/clover-kimi-k3}"
+HF_REPO="${HF_REPO:-Santhoshsathish94/clover-ai-studio}"
 HF_REVISION="${HF_REVISION:-main}"
+MODEL_FAMILY="${MODEL_FAMILY:-kimi}"
 HYBRID_NCM_DIR="${HYBRID_NCM_DIR:-$DATASETS_DIR/hybrid-ncm-k3}"
 MANIFEST_TSV="${HYBRID_NCM_MANIFEST:-$SCRIPTS_DIR/hybrid-ncm-dataset-files.tsv}"
 
@@ -26,14 +27,24 @@ fi
 
 mapfile -t REQUIRED_REL_PATHS < <(awk -F'\t' '!/^#/ && NF>=1 && $1!="" {gsub(/\r/, "", $1); print $1}' "$MANIFEST_TSV")
 
-echo "== Downloading ${#REQUIRED_REL_PATHS[@]} required hybrid-ncm-k3 files (from $(basename "$MANIFEST_TSV")) -> $DATASETS_DIR =="
+echo "== Downloading Clover AI Studio datasets (MODEL_FAMILY=$MODEL_FAMILY from $HF_REPO) -> $DATASETS_DIR =="
 mkdir -p "$HYBRID_NCM_DIR" "$OPEN_WEIGHTS_DIR"
 
 INCLUDE_ARGS=()
-for rel_p in "${REQUIRED_REL_PATHS[@]}"; do
-  INCLUDE_ARGS+=(--include "hybrid-ncm-k3/$rel_p")
-done
-INCLUDE_ARGS+=(--include "open-weights/*")
+if [ "$MODEL_FAMILY" = "kimi" ] || [ "$MODEL_FAMILY" = "all" ]; then
+  INCLUDE_ARGS+=(
+    --include "kimi/hybridagent/**"
+    --include "kimi/ncm/**"
+    --include "kimi/bridges/**"
+    --include "kimi/trunks/open-weights/*"
+  )
+fi
+if [ "$MODEL_FAMILY" = "nemotron" ] || [ "$MODEL_FAMILY" = "all" ]; then
+  INCLUDE_ARGS+=(--include "nemotron/**")
+fi
+if [ "$MODEL_FAMILY" = "liquid-lfm3" ] || [ "$MODEL_FAMILY" = "all" ]; then
+  INCLUDE_ARGS+=(--include "liquid-lfm3/**")
+fi
 
 if [ -x "$hf_bin" ]; then
   HF_HUB_ENABLE_HF_TRANSFER=1 "$hf_bin" download "$HF_REPO" \
@@ -42,20 +53,23 @@ if [ -x "$hf_bin" ]; then
     --local-dir "$DATASETS_DIR" \
     "${INCLUDE_ARGS[@]}"
 else
-  MANIFEST_TSV="$MANIFEST_TSV" HF_REPO="$HF_REPO" HF_REVISION="$HF_REVISION" DATASETS_DIR="$DATASETS_DIR" python3 - <<'PY'
+  MANIFEST_TSV="$MANIFEST_TSV" HF_REPO="$HF_REPO" HF_REVISION="$HF_REVISION" DATASETS_DIR="$DATASETS_DIR" MODEL_FAMILY="$MODEL_FAMILY" python3 - <<'PY'
 import os
 from huggingface_hub import snapshot_download
 
-manifest = os.environ["MANIFEST_TSV"]
-allow = ["open-weights/*"]
-with open(manifest, "r", encoding="utf-8") as f:
-    for line in f:
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        rel_p = line.split("\t")[0].strip()
-        if rel_p:
-            allow.append(f"hybrid-ncm-k3/{rel_p}")
+family = os.environ.get("MODEL_FAMILY", "kimi")
+allow = []
+if family in ("kimi", "all"):
+    allow.extend([
+        "kimi/hybridagent/**",
+        "kimi/ncm/**",
+        "kimi/bridges/**",
+        "kimi/trunks/open-weights/*",
+    ])
+if family in ("nemotron", "all"):
+    allow.append("nemotron/**")
+if family in ("liquid-lfm3", "all"):
+    allow.append("liquid-lfm3/**")
 
 snapshot_download(
     repo_id=os.environ["HF_REPO"],
@@ -67,21 +81,31 @@ snapshot_download(
 PY
 fi
 
-if [ -d "$DATASETS_DIR/open-weights" ]; then
-  for f in model-00094-of-000096.safetensors tiktoken.model tokenizer_config.json; do
-    if [ -f "$DATASETS_DIR/open-weights/$f" ] && [ ! -f "$OPEN_WEIGHTS_DIR/$f" ]; then
-      ln -f "$DATASETS_DIR/open-weights/$f" "$OPEN_WEIGHTS_DIR/$f" 2>/dev/null || cp -f "$DATASETS_DIR/open-weights/$f" "$OPEN_WEIGHTS_DIR/$f"
-    fi
-  done
-fi
-
-echo "== Verifying downloaded hybrid-ncm-k3 files against $MANIFEST_TSV =="
-missing=0
-for rel_p in "${REQUIRED_REL_PATHS[@]}"; do
-  if [ ! -f "$HYBRID_NCM_DIR/$rel_p" ]; then
-    echo "MISSING: $HYBRID_NCM_DIR/$rel_p" >&2
-    missing=$((missing + 1))
+for k_sub in "$DATASETS_DIR/kimi/hybridagent" "$DATASETS_DIR/kimi/ncm" "$DATASETS_DIR/kimi/bridges"; do
+  if [ -d "$k_sub" ]; then
+    cp -rn "$k_sub/." "$HYBRID_NCM_DIR/" 2>/dev/null || cp -r "$k_sub/." "$HYBRID_NCM_DIR/"
   fi
 done
-[ "$missing" -eq 0 ] || { echo "FAIL: $missing required files missing in $HYBRID_NCM_DIR" >&2; exit 1; }
-ls -lh "$HYBRID_NCM_DIR"
+
+for ow_src in "$DATASETS_DIR/kimi/trunks/open-weights" "$DATASETS_DIR/kimi/open-weights" "$DATASETS_DIR/open-weights"; do
+  if [ -d "$ow_src" ]; then
+    for f in model-00094-of-000096.safetensors tiktoken.model tokenizer_config.json; do
+      if [ -f "$ow_src/$f" ] && [ ! -f "$OPEN_WEIGHTS_DIR/$f" ]; then
+        ln -f "$ow_src/$f" "$OPEN_WEIGHTS_DIR/$f" 2>/dev/null || cp -f "$ow_src/$f" "$OPEN_WEIGHTS_DIR/$f"
+      fi
+    done
+  fi
+done
+
+if [ "$MODEL_FAMILY" = "kimi" ] || [ "$MODEL_FAMILY" = "all" ]; then
+  echo "== Verifying downloaded hybrid-ncm-k3 files against $MANIFEST_TSV =="
+  missing=0
+  for rel_p in "${REQUIRED_REL_PATHS[@]}"; do
+    if [ ! -f "$HYBRID_NCM_DIR/$rel_p" ]; then
+      echo "MISSING: $HYBRID_NCM_DIR/$rel_p" >&2
+      missing=$((missing + 1))
+    fi
+  done
+  [ "$missing" -eq 0 ] || { echo "FAIL: $missing required files missing in $HYBRID_NCM_DIR" >&2; exit 1; }
+  ls -lh "$HYBRID_NCM_DIR"
+fi

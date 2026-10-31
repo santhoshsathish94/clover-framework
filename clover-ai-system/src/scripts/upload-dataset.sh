@@ -2,11 +2,11 @@
 # Uploads the computed dataset to a Hugging Face dataset repo: exactly the files in dataset-files.tsv (expert-N, trunk-N with operator.bin), plus the recorded
 # values of the pod's chain (engine-inputs/refs) if they are in work/inputs/refs. The files are hard-linked into a staging folder first (no copy), then sent with
 # `hf upload-large-folder`, which can be stopped and run again: it resumes.
-# usage: [HF_REPO=Santhoshsathish94/clover-kimi-k3] [HF_REPO_TYPE=dataset] [STAGING=folder] [HF_WORKERS=16] upload-dataset.sh [--dry-run]
+# usage: [HF_REPO=Santhoshsathish94/clover-ai-studio] [HF_REPO_TYPE=dataset] [STAGING=folder] [HF_WORKERS=16] upload-dataset.sh [--dry-run]
 # Needs `hf auth login` done on this machine by you (a token with write access); the script never reads or prints the token.
 set -u
 . "$(dirname "${BASH_SOURCE[0]}")/settings.sh"
-HF_REPO="${HF_REPO:-Santhoshsathish94/clover-kimi-k3}"
+HF_REPO="${HF_REPO:-Santhoshsathish94/clover-ai-studio}"
 HF_REPO_TYPE="${HF_REPO_TYPE:-dataset}"
 HF_WORKERS="${HF_WORKERS:-16}"
 STAGING="${STAGING:-$DATASETS_DIR/upload-staging}"

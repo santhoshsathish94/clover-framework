@@ -18,7 +18,7 @@ download() {   # prints seconds and bytes
     $PY - $pats <<'EOF'
 import sys, os
 from huggingface_hub import snapshot_download
-snapshot_download(repo_id="Santhoshsathish94/clover-kimi-k3", repo_type="dataset", allow_patterns=sys.argv[1:], local_dir=os.environ.get("OUT", "/dev/shm/trunk-probe"), max_workers=int(os.environ.get("HF_WORKERS", "8")))
+snapshot_download(repo_id="Santhoshsathish94/clover-ai-studio", repo_type="dataset", allow_patterns=[f"kimi/trunks/{p}" for p in sys.argv[1:]], local_dir=os.environ.get("OUT", "/dev/shm/trunk-probe"), max_workers=int(os.environ.get("HF_WORKERS", "8")))
 EOF
     local t1=$(date +%s.%N)
     local b=$(du -sb --exclude=.cache "$OUT" | cut -f1)

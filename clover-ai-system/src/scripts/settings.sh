@@ -21,7 +21,7 @@ DATASET_DIR="${DATASET_DIR:-$DATASETS_DIR/computed}"
 OPEN_WEIGHTS_DIR="${OPEN_WEIGHTS_DIR:-$DATASETS_DIR/third-party/kimi-k3-open-weights}"
 # Third party: the Kimi K3 DSpark draft checkpoint (Inferact/Kimi-K3-DSpark, 7.1 GB).
 DSPARK_DIR="${DSPARK_DIR:-$DATASETS_DIR/third-party/kimi-k3-dspark}"
-# Clover Kimi K3 + HybridAgent + NCM unified checkpoints and evaluation datasets (downloaded from Santhoshsathish94/clover-kimi-k3/hybrid-ncm-k3).
+# Clover AI Studio unified checkpoints and evaluation datasets (downloaded from Santhoshsathish94/clover-ai-studio/{kimi,nemotron,liquid-lfm3}).
 HYBRID_NCM_DIR="${HYBRID_NCM_DIR:-$DATASETS_DIR/hybrid-ncm-k3}"
 # Third party code: the five tokenizer headers (Apache-2.0, from kimi-k3-in-c at commit a2ad8e5, with licence) the words-to-embeddings stage is built from.
 TOKENIZER_DIR="${TOKENIZER_DIR:-$CODE_DIR/third-party/kimi-k3-in-c}"

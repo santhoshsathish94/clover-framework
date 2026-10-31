@@ -1,5 +1,5 @@
 # path (relative to HYBRID_NCM_DIR, i.e. src/datasets/hybrid-ncm-k3), bytes, sha256: the 15 required checkpoint-*, dataset-*, and config-* files that the Clover Kimi K3 + HybridAgent + NCM runtime and evaluation suite read.
-# Anyone running set-up-new-machine.sh or download-hybrid-ncm-datasets.sh downloads ONLY the files listed in this manifest from Santhoshsathish94/clover-kimi-k3 (leaving older/experimental checkpoints on Hugging Face untouched).
+# Anyone running set-up-new-machine.sh or download-hybrid-ncm-datasets.sh downloads ONLY the files listed in this manifest from Santhoshsathish94/clover-ai-studio/kimi/hybrid-ncm-k3 (leaving older/experimental checkpoints on Hugging Face untouched).
 checkpoint-clover-true-hybrid-agent-ncm.pt	1359957499	711b8deb9fbf770e31d0a9b17a361e7eaa63fa21aacc50ad5bd641a7bb4cb04d
 checkpoint-clover-native-hybrid-agent-ncm.pt	1359958377	7908e0ea13ee00516287c0ffe8aa1dc91e7bfdaf7697bcb481a377bd77f9dc21
 checkpoint-next-concept-direct-decoder.pt	1193776987	a848cf8cbd7da12eec5de5fbbbf17e7d4834e105f83ba66a7161547d5f9a7e2e
