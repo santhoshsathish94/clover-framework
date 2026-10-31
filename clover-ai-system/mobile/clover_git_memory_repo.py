@@ -40,6 +40,7 @@ import statistics
 import subprocess
 import threading
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -1234,7 +1235,59 @@ class CloverMemoryGitRepo:
         self._run_git(["commit", "-m", f"Record session turn ({sid_clean}#{turn_n}) in S1 Git memory repo"], cwd=self.default_repo_dir)
         self.refresh_context_hierarchy(commit=True, target_dir=self.default_repo_dir)
         _, head_sha, _ = self._run_git(["rev-parse", "--short", "HEAD"], cwd=self.default_repo_dir)
+        self._schedule_background_github_push()
         return {"saved_files": saved_files, "turn_n": turn_n, "commit": head_sha or "HEAD"}
+
+    def sessions(self) -> list[dict[str, Any]]:
+        """Lists all conversations in `sessions/<yyyy-mm>/*.jsonl` (including chats synced from GitHub across devices)."""
+        out: list[dict[str, Any]] = []
+        for sid, fp in list(self.session_files().items()):
+            msgs = self._read_jsonl(fp)
+            users = [m for m in msgs if m.get("role") == "user"]
+            answers = [m for m in msgs if m.get("role") == "clover"]
+            if not users:
+                continue
+            first_txt = " ".join(str(users[0].get("text") or "").split())
+            last_ans = " ".join(str(answers[-1].get("text") or "").split()) if answers else ""
+            out.append({
+                "id": sid,
+                "file": fp.relative_to(self.default_repo_dir).as_posix(),
+                "turns": len(users),
+                "title": first_txt[:80] or sid,
+                "started": msgs[0].get("at") or "",
+                "updated": msgs[-1].get("at") or "",
+                "first": first_txt[:160],
+                "last_answer": last_ans[:200],
+            })
+        out.sort(key=lambda s: str(s["updated"]), reverse=True)
+        return out
+
+    def delete_session(self, sid: str) -> bool:
+        """Deletes a conversation's JSONL and Markdown logs and its background exchange notes."""
+        sid_clean = _slugify(sid or "", max_len=36)
+        with self.lock:
+            sfiles = self.session_files()
+            fp = sfiles.get(sid_clean) or sfiles.get(sid)
+            self._session_index.pop(sid_clean, None)
+            self._session_index.pop(sid, None)
+            deleted = False
+            if fp and fp.is_file():
+                fp.unlink()
+                deleted = True
+            md_fp = self.default_repo_dir / "sessions" / f"session-{sid_clean}.md"
+            if md_fp.is_file():
+                md_fp.unlink()
+                deleted = True
+            for nf in (self.default_repo_dir / "growth" / "notes").glob("*/*.jsonl"):
+                recs = self._read_jsonl(nf)
+                keep = [r for r in recs if r.get("session") not in (sid_clean, sid)]
+                if len(keep) != len(recs):
+                    nf.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in keep), encoding="utf-8")
+            if deleted:
+                self.log_execution(sid_clean, None, "conversation deleted by the user (git history keeps it)")
+                self.schedule(f"Delete conversation {sid_clean}")
+                self._schedule_background_github_push()
+            return deleted
 
     # ------------------------------------------------------------------
     # 4b. Clover Cycle Staged Lessons (`lessons/MEM-LESSON-*.md` -> `notes/` & `growth/knowledge/`)
@@ -1325,13 +1378,21 @@ class CloverMemoryGitRepo:
         return {"ok": True, "discarded": lid, "lessons": self.list_staged_lessons()}
 
     # ------------------------------------------------------------------
-    # 5. Private Personal GitHub Repository Sync (`private: true` Enforced, Vault-Encrypted Token)
+    # 5. GitHub-Only Logged-In Account Sessions & Automatic Private Memory Sync
     # ------------------------------------------------------------------
+    GITHUB_DEVICE_CLIENT_ID = "178c6fc778ccc68e1d6a"
+
     def get_github_sync_config(self) -> dict[str, Any]:
-        cfg = {
+        tok = self._load_github_token()
+        cfg: dict[str, Any] = {
+            "logged_in": False,
+            "login": "",
+            "name": "",
+            "avatar_url": "",
             "repo": "",
             "branch": "main",
-            "has_token": bool(self._load_github_token()),
+            "has_token": bool(tok),
+            "auto_sync": True,
             "private_enforced": True,
             "last_sync": None,
         }
@@ -1339,40 +1400,195 @@ class CloverMemoryGitRepo:
             try:
                 raw = json.loads(self.github_cfg_file.read_text(encoding="utf-8"))
                 if isinstance(raw, dict):
+                    cfg["login"] = str(raw.get("login") or "")
+                    cfg["name"] = str(raw.get("name") or "")
+                    cfg["avatar_url"] = str(raw.get("avatar_url") or "")
                     cfg["repo"] = str(raw.get("repo") or "")
                     cfg["branch"] = str(raw.get("branch") or "main")
+                    cfg["auto_sync"] = bool(raw.get("auto_sync", True))
                     cfg["last_sync"] = raw.get("last_sync")
             except Exception:
                 pass
+        cfg["logged_in"] = bool(tok and (cfg["login"] or cfg["repo"]))
         return cfg
+
+    def _fetch_github_user(self, tok_clean: str) -> dict[str, str]:
+        headers = {
+            "Authorization": f"Bearer {tok_clean}",
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "CloverAIStudio-S1-GitSync",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+        req = urllib.request.Request("https://api.github.com/user", headers=headers, method="GET")
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                u = json.loads(resp.read().decode("utf-8"))
+                return {
+                    "login": str(u.get("login") or ""),
+                    "name": str(u.get("name") or u.get("login") or ""),
+                    "avatar_url": str(u.get("avatar_url") or ""),
+                }
+        except urllib.error.HTTPError as he:
+            raise ValueError(f"GitHub authentication failed (HTTP {he.code}). Check your GitHub token.") from None
+        except Exception as ex:
+            raise RuntimeError(f"Could not reach GitHub API ({ex})") from None
+
+    def start_github_device_flow(self, client_id: str | None = None) -> dict[str, Any]:
+        """Starts GitHub OAuth Device Flow (`https://github.com/login/device/code`) so the user can sign in with their GitHub account."""
+        cid = (client_id or os.environ.get("CLOVER_GITHUB_CLIENT_ID") or self.GITHUB_DEVICE_CLIENT_ID).strip()
+        body = urllib.parse.urlencode({"client_id": cid, "scope": "repo read:user"}).encode("utf-8")
+        req = urllib.request.Request(
+            "https://github.com/login/device/code",
+            data=body,
+            headers={"Accept": "application/json", "User-Agent": "CloverAIStudio-S1-GitSync"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return {
+                    "ok": True,
+                    "client_id": cid,
+                    "device_code": data.get("device_code"),
+                    "user_code": data.get("user_code"),
+                    "verification_uri": data.get("verification_uri") or "https://github.com/login/device",
+                    "expires_in": data.get("expires_in", 900),
+                    "interval": data.get("interval", 5),
+                }
+        except Exception as ex:
+            raise RuntimeError(f"Could not start GitHub device sign-in: {ex}") from None
+
+    def poll_github_device_flow(self, device_code: str, repo_full_name: str = "", client_id: str | None = None) -> dict[str, Any]:
+        """Polls `https://github.com/login/oauth/access_token` once and, when authorized, completes GitHub sign-in & memory sync."""
+        cid = (client_id or os.environ.get("CLOVER_GITHUB_CLIENT_ID") or self.GITHUB_DEVICE_CLIENT_ID).strip()
+        body = urllib.parse.urlencode({
+            "client_id": cid,
+            "device_code": str(device_code or "").strip(),
+            "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            "https://github.com/login/oauth/access_token",
+            data=body,
+            headers={"Accept": "application/json", "User-Agent": "CloverAIStudio-S1-GitSync"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        if data.get("access_token"):
+            return self.login_with_github(token=str(data["access_token"]), repo_full_name=repo_full_name)
+        return {
+            "ok": False,
+            "status": str(data.get("error") or "authorization_pending"),
+            "message": str(data.get("error_description") or "Waiting for GitHub sign-in approval…"),
+        }
+
+    def login_with_github(self, token: str | None = None, repo_full_name: str = "", auto_sync: bool = True) -> dict[str, Any]:
+        """
+        Signs the user in with their GitHub account (`GET /user`), defaults their private memory repo
+        to `<login>/clover-memory` (or `repo_full_name`), pulls existing memory from GitHub, and pushes local records.
+        """
+        tok_clean = (token or self._load_github_token() or "").strip()
+        if not tok_clean:
+            raise ValueError("Sign in with GitHub or provide a GitHub token with 'repo' scope.")
+        user_info = self._fetch_github_user(tok_clean)
+        login_name = user_info["login"]
+        existing_cfg = self.get_github_sync_config()
+        target_repo = (repo_full_name or existing_cfg.get("repo") or f"{login_name}/clover-memory").strip().strip("/")
+        if "/" not in target_repo:
+            target_repo = f"{login_name}/{target_repo}"
+
+        self._save_github_token(tok_clean)
+        saved_cfg = {
+            "login": login_name,
+            "name": user_info["name"],
+            "avatar_url": user_info["avatar_url"],
+            "repo": target_repo,
+            "branch": "main",
+            "auto_sync": bool(auto_sync),
+            "private_enforced": True,
+            "last_sync": existing_cfg.get("last_sync"),
+        }
+        self.github_cfg_file.parent.mkdir(parents=True, exist_ok=True)
+        self.github_cfg_file.write_text(json.dumps(saved_cfg, indent=2), encoding="utf-8")
+
+        sync_res = self.configure_and_sync_private_github(
+            repo_full_name=target_repo,
+            token=tok_clean,
+            action="sync",
+            branch="main",
+        )
+        return {**self.get_github_sync_config(), **sync_res}
+
+    def logout_github(self) -> dict[str, Any]:
+        """Signs out the GitHub session and removes the token from the vault."""
+        self._save_github_token(None)
+        if self.github_cfg_file.is_file():
+            try:
+                self.github_cfg_file.unlink()
+            except OSError:
+                pass
+        return self.get_github_sync_config()
+
+    def _schedule_background_github_push(self) -> None:
+        """Pushes new commits in `clover-memory-repo/` to the signed-in user's private GitHub repo in the background."""
+        cfg = self.get_github_sync_config()
+        if not cfg.get("logged_in") or not cfg.get("auto_sync") or not cfg.get("repo"):
+            return
+
+        def _bg() -> None:
+            try:
+                self.configure_and_sync_private_github(
+                    repo_full_name=cfg["repo"],
+                    action="push",
+                    branch=cfg.get("branch") or "main",
+                )
+            except Exception:
+                pass
+
+        threading.Thread(target=_bg, daemon=True, name="s1-github-autosync").start()
 
     def configure_and_sync_private_github(
         self,
-        repo_full_name: str,
+        repo_full_name: str = "",
         token: str | None = None,
-        action: str = "push",
+        action: str = "sync",
         branch: str = "main",
     ) -> dict[str, Any]:
         """
-        Configures and syncs (`push` or `pull`) `self.default_repo_dir` (`clover-memory-repo/`) with the user's
-        personal **private** GitHub repository (`owner/repo`).
+        Configures and syncs (`push`, `pull`, or two-way `sync`) `self.default_repo_dir` (`clover-memory-repo/`)
+        with the user's personal **private** GitHub repository (`owner/repo`).
         - Strictly enforces `"private": True` via the GitHub API before pushing.
         - Stores the token encrypted in `vault/github.json` (`mobile_vault.protect`).
         - Passes the token via `GIT_CONFIG_KEY_0=http.https://github.com/.extraheader` in `env` (never in the URL or `ps aux`).
         - ALWAYS operates on `self.default_repo_dir` (`clover-memory-repo/`), never touching a user's external project workspace.
         """
         existing_cfg = self.get_github_sync_config()
-        repo_clean = (repo_full_name or existing_cfg.get("repo") or "").strip().strip("/")
+        tok_clean = (token or self._load_github_token() or "").strip()
+        if not tok_clean:
+            raise ValueError("Please sign in with GitHub first.")
+
+        login_name = existing_cfg.get("login") or ""
+        user_name = existing_cfg.get("name") or ""
+        avatar_url = existing_cfg.get("avatar_url") or ""
+        if not login_name:
+            try:
+                uinfo = self._fetch_github_user(tok_clean)
+                login_name = uinfo["login"]
+                user_name = uinfo["name"]
+                avatar_url = uinfo["avatar_url"]
+            except Exception:
+                pass
+
+        repo_clean = (repo_full_name or existing_cfg.get("repo") or (f"{login_name}/clover-memory" if login_name else "")).strip().strip("/")
         if repo_clean.startswith("https://github.com/"):
             repo_clean = repo_clean[len("https://github.com/") :].strip("/")
         if repo_clean.endswith(".git"):
             repo_clean = repo_clean[:-4]
-        tok_clean = (token or self._load_github_token() or "").strip()
+        if repo_clean and "/" not in repo_clean and login_name:
+            repo_clean = f"{login_name}/{repo_clean}"
 
         if not repo_clean or "/" not in repo_clean:
-            raise ValueError("Please provide your GitHub repository as 'username/repo-name' (e.g. 'username/clover-memory').")
-        if not tok_clean:
-            raise ValueError("Please provide a GitHub Personal Access Token (with 'repo' scope) to sync your private repository.")
+            raise ValueError("Provide your GitHub repository as 'username/repo-name' (e.g. 'username/clover-memory').")
 
         owner, repo_name = repo_clean.split("/", 1)
         headers = {
@@ -1396,7 +1612,7 @@ class CloverMemoryGitRepo:
             if he.code == 404:
                 create_body = json.dumps({
                     "name": repo_name,
-                    "description": "Clover AI Studio — Personal S1 Memory & Task Repository (Private)",
+                    "description": "Clover AI Studio — Personal S1 Memory & Session Repository (Private)",
                     "private": True,
                     "auto_init": False,
                 }).encode("utf-8")
@@ -1415,37 +1631,170 @@ class CloverMemoryGitRepo:
                 err_txt = he.read().decode("utf-8", errors="replace")[:240]
                 raise RuntimeError(f"GitHub API check failed (HTTP {he.code}): {err_txt}")
 
-        # Save encrypted token in `vault/github.json` and non-secret metadata in `config/<device>/github-repo.json`
         self._save_github_token(tok_clean)
+        clean_url = f"https://github.com/{repo_clean}.git"
+        self._run_git(["remote", "remove", "origin"], cwd=self.default_repo_dir)
+        self._run_git(["remote", "add", "origin", clean_url], cwd=self.default_repo_dir)
+
+        out_parts: list[str] = []
+        if action in ("pull", "sync") and not repo_created:
+            rc_p, out_p, err_p = self._run_git(
+                ["pull", "--rebase", "--autostash", "origin", branch],
+                timeout_s=45.0,
+                cwd=self.default_repo_dir,
+                token=tok_clean,
+            )
+            out_parts.append(out_p + "\n" + err_p)
+            # Re-index sessions pulled from GitHub
+            self.session_files()
+
+        if action in ("push", "sync"):
+            self._run_git(["branch", "-M", branch], cwd=self.default_repo_dir)
+            rc, out, err = self._run_git(
+                ["push", "-u", "origin", f"HEAD:{branch}"],
+                timeout_s=45.0,
+                cwd=self.default_repo_dir,
+                token=tok_clean,
+            )
+            out_parts.append(out + "\n" + err)
+        else:
+            rc = 0
+
+        safe_out = "\n".join(out_parts).replace(tok_clean, "***").strip()
+        if rc != 0 and action == "push":
+            raise RuntimeError(f"git {action} failed: {safe_out}")
+
         saved_cfg = {
+            "login": login_name or owner,
+            "name": user_name or login_name or owner,
+            "avatar_url": avatar_url,
             "repo": repo_clean,
             "branch": branch or "main",
+            "auto_sync": existing_cfg.get("auto_sync", True),
             "private_enforced": True,
             "last_sync": _utc_now(),
         }
         self.github_cfg_file.parent.mkdir(parents=True, exist_ok=True)
         self.github_cfg_file.write_text(json.dumps(saved_cfg, indent=2), encoding="utf-8")
 
-        clean_url = f"https://github.com/{repo_clean}.git"
-        self._run_git(["remote", "remove", "origin"], cwd=self.default_repo_dir)
-        self._run_git(["remote", "add", "origin", clean_url], cwd=self.default_repo_dir)
-
-        if action == "pull":
-            rc, out, err = self._run_git(["pull", "--rebase", "origin", branch], timeout_s=45.0, cwd=self.default_repo_dir, token=tok_clean)
-        else:
-            self._run_git(["branch", "-M", branch], cwd=self.default_repo_dir)
-            rc, out, err = self._run_git(["push", "-u", "origin", f"HEAD:{branch}"], timeout_s=45.0, cwd=self.default_repo_dir, token=tok_clean)
-
-        safe_out = (out + "\n" + err).replace(tok_clean, "***").strip()
-        if rc != 0:
-            raise RuntimeError(f"git {action} failed: {safe_out}")
-
         return {
             "ok": True,
             "action": action,
+            "login": saved_cfg["login"],
+            "name": saved_cfg["name"],
             "repo": repo_clean,
             "private_verified": True,
             "repo_created": repo_created,
             "last_sync": saved_cfg["last_sync"],
             "git_output": safe_out[:400],
         }
+
+    # ------------------------------------------------------------------
+    # 6. Storage Locations (Memory Repo, Local or Cloud Media Folder, Project Workspace)
+    # ------------------------------------------------------------------
+    @property
+    def storage_cfg_file(self) -> Path:
+        return self.default_repo_dir / "config" / self.device / "storage.json"
+
+    def get_media_dir(self) -> Path:
+        default_media = self.base_dir / "media"
+        if self.storage_cfg_file.is_file():
+            try:
+                raw = json.loads(self.storage_cfg_file.read_text(encoding="utf-8"))
+                mp = str(raw.get("media_dir") or "").strip()
+                if mp:
+                    p = Path(os.path.expandvars(os.path.expanduser(mp))).resolve()
+                    p.mkdir(parents=True, exist_ok=True)
+                    return p
+            except Exception:
+                pass
+        default_media.mkdir(parents=True, exist_ok=True)
+        return default_media
+
+    def get_storage_locations(self) -> dict[str, Any]:
+        mdir = self.get_media_dir()
+        media_kind = "local"
+        if self.storage_cfg_file.is_file():
+            try:
+                raw = json.loads(self.storage_cfg_file.read_text(encoding="utf-8"))
+                if raw.get("media_kind") in ("local", "cloud"):
+                    media_kind = str(raw["media_kind"])
+            except Exception:
+                pass
+        if any(k in str(mdir).lower() for k in ("onedrive", "google drive", "googledrive", "dropbox", "icloud", "nextcloud", "syncthing")):
+            media_kind = "cloud"
+
+        files_cnt = 0
+        total_bytes = 0
+        if mdir.is_dir():
+            for fp in mdir.iterdir():
+                if fp.is_file():
+                    try:
+                        files_cnt += 1
+                        total_bytes += fp.stat().st_size
+                    except OSError:
+                        pass
+        active_ws = None
+        if self.repo_dir.resolve() != self.default_repo_dir.resolve():
+            active_ws = {"name": self.active_repo_name, "path": str(self.repo_dir)}
+        return {
+            "memory_dir": str(self.default_repo_dir),
+            "media_dir": str(mdir),
+            "media_kind": media_kind,
+            "media_files": files_cnt,
+            "media_bytes": total_bytes,
+            "active_workspace": active_ws,
+            "workspaces": [w for w in self.workspace_repos if w.get("kind") != "memory"],
+        }
+
+    def update_storage_locations(
+        self,
+        media_dir: str | None = None,
+        media_kind: str | None = None,
+        workspace_source: str | None = None,
+    ) -> dict[str, Any]:
+        cur = {}
+        if self.storage_cfg_file.is_file():
+            try:
+                cur = json.loads(self.storage_cfg_file.read_text(encoding="utf-8"))
+            except Exception:
+                cur = {}
+        if media_dir is not None:
+            raw_m = str(media_dir).strip()
+            if not raw_m or raw_m.lower() == "default":
+                cur["media_dir"] = str(self.base_dir / "media")
+                cur["media_kind"] = "local"
+            else:
+                p = Path(os.path.expandvars(os.path.expanduser(raw_m))).resolve()
+                why = self._too_broad(p)
+                if why:
+                    raise ValueError(f"Refused media path '{p}': it is {why}.")
+                p.mkdir(parents=True, exist_ok=True)
+                cur["media_dir"] = str(p)
+        if media_kind in ("local", "cloud"):
+            cur["media_kind"] = media_kind
+        self.storage_cfg_file.parent.mkdir(parents=True, exist_ok=True)
+        self.storage_cfg_file.write_text(json.dumps(cur, indent=2), encoding="utf-8")
+
+        if workspace_source is not None:
+            ws_s = str(workspace_source).strip()
+            if not ws_s or ws_s == "clover-memory-repo":
+                self.active_repo_name = "clover-memory-repo"
+                self.repo_dir = self.default_repo_dir
+                self._save_workspace_registry()
+            else:
+                self.add_or_switch_workspace_repo(ws_s)
+        return self.get_storage_locations()
+
+    def clear_media_storage(self) -> dict[str, Any]:
+        mdir = self.get_media_dir()
+        removed = 0
+        if mdir.is_dir():
+            for fp in list(mdir.iterdir()):
+                if fp.is_file():
+                    try:
+                        fp.unlink()
+                        removed += 1
+                    except OSError:
+                        pass
+        return {"ok": True, "removed": removed, **self.get_storage_locations()}

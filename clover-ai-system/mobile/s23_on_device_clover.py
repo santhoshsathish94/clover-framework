@@ -1642,17 +1642,18 @@ class CloverS23OnDeviceSystem:
         self.engine.prefill_cached(self._default_sys_prefix_ids)
         self.setup_ms = round((time.perf_counter() - t0) * 1000.0, 2)
 
-        # Persistent Studio Settings & Permissions (matching Laptop Clover AI Studio + S23 Unified SoC controls)
+        # Persistent Studio Settings & Permissions (Best Measured Defaults: Omni + Adreno + Tools When I Ask + S1/S2/S3 On)
         self.settings_path = self.git_memory_repo.default_repo_dir / "config" / self.git_memory_repo.device / "settings.json"
         self.legacy_settings_path = self.base_dir / "s23_studio_settings.json"
         self.perms_path = self.git_memory_repo.default_repo_dir / "config" / self.git_memory_repo.device / "permissions.json"
         self.legacy_perms_path = self.base_dir / "s23_studio_permissions.json"
         self.settings: dict[str, Any] = {
+            "schema_version": 2,
             "model": "omni",
             "engine": "adreno",
             "q4_operators": False,
             "q4_lm_head": True,
-            "tools": "always",
+            "tools": "ask",
             "layers": {
                 "hybridlink": True,
                 "ncm": False,
@@ -1663,11 +1664,12 @@ class CloverS23OnDeviceSystem:
                 "specmd_madvise": True,
             },
         }
+        migrated_v2 = False
         for sp in (self.legacy_settings_path, self.settings_path):
             if sp.exists():
                 try:
                     saved_s = json.loads(sp.read_text(encoding="utf-8"))
-                    if isinstance(saved_s, dict):
+                    if isinstance(saved_s, dict) and int(saved_s.get("schema_version") or 1) >= 2:
                         if saved_s.get("engine") in ("adreno", "cpu"):
                             self.settings["engine"] = saved_s["engine"]
                         if isinstance(saved_s.get("q4_operators"), bool):
@@ -1680,8 +1682,17 @@ class CloverS23OnDeviceSystem:
                             for lk, lv in saved_s["layers"].items():
                                 if lk in self.settings["layers"] and isinstance(lv, bool):
                                     self.settings["layers"][lk] = lv
+                    else:
+                        migrated_v2 = True
                 except Exception:
                     pass
+        if migrated_v2:
+            try:
+                self.settings_path.parent.mkdir(parents=True, exist_ok=True)
+                self.settings_path.write_text(json.dumps(self.settings, indent=2), encoding="utf-8")
+                self.legacy_settings_path.write_text(json.dumps(self.settings, indent=2), encoding="utf-8")
+            except Exception:
+                pass
         self._apply_hardware_settings()
 
         self.permissions_meta: dict[str, dict[str, str]] = {
@@ -1747,6 +1758,32 @@ class CloverS23OnDeviceSystem:
             start=True,
             recall=bool(self.settings["layers"].get("recall", True)),
         )
+
+        # If a GitHub session is signed in, pull latest sessions & memory in the background on startup
+        gh_cfg = self.git_memory_repo.get_github_sync_config()
+        if gh_cfg.get("logged_in") and gh_cfg.get("auto_sync") and gh_cfg.get("repo"):
+            def _startup_pull() -> None:
+                try:
+                    self.git_memory_repo.configure_and_sync_private_github(
+                        repo_full_name=gh_cfg["repo"],
+                        action="pull",
+                        branch=gh_cfg.get("branch") or "main",
+                    )
+                    self.memory_index.wake()
+                except Exception:
+                    pass
+            threading.Thread(target=_startup_pull, daemon=True, name="s1-startup-pull").start()
+
+    def _save_to_media_storage(self, raw_bytes: bytes, ext: str) -> str:
+        """Saves an uploaded or generated media file into the user's configured local or cloud `media_dir`."""
+        import hashlib
+        mdir = self.git_memory_repo.get_media_dir()
+        mdir.mkdir(parents=True, exist_ok=True)
+        stem = hashlib.sha256(raw_bytes).hexdigest()[:24]
+        fp = mdir / f"{stem}.{ext.lstrip('.')}"
+        if not fp.is_file():
+            fp.write_bytes(raw_bytes)
+        return fp.name
 
     def _is_studio_idle(self) -> bool:
         return self._busy_turns == 0 and (time.time() - self._last_turn_end > 8.0)
@@ -2306,8 +2343,10 @@ class CloverS23OnDeviceSystem:
             if image_b64:
                 try:
                     raw_img = base64.b64decode(image_b64.split(",", 1)[-1])
+                    saved_img_name = self._save_to_media_storage(raw_img, "png")
                     pil_img = Image.open(io.BytesIO(raw_img)).convert("RGB")
                     img_info = inspect_attached_image_real(pil_img)
+                    img_info["stored_in_media"] = saved_img_name
                     retrieved_context_blocks.append(f"[Attached Image]: {img_info['summary']}")
                     layer_trace["layer1_image_attachment"] = img_info
                     tools_used.append("pillow_image_inspector")
@@ -3442,6 +3481,28 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 })
             elif self.path.startswith("/api/search"):
                 self._send(sys_s23.search_config.describe())
+            elif self.path.startswith("/api/sessions/"):
+                import urllib.parse
+                sid = urllib.parse.unquote(self.path[len("/api/sessions/") :].split("?")[0]).strip("/")
+                self._send({"id": sid, "messages": sys_s23.git_memory_repo.messages(sid)})
+            elif self.path.startswith("/api/sessions"):
+                self._send({"sessions": sys_s23.git_memory_repo.sessions()})
+            elif self.path.startswith("/api/github/session"):
+                self._send(sys_s23.git_memory_repo.get_github_sync_config())
+            elif self.path.startswith(("/api/storage", "/api/media")):
+                st_loc = sys_s23.git_memory_repo.get_storage_locations()
+                self._send({
+                    **st_loc,
+                    "path": st_loc["media_dir"],
+                    "files": st_loc["media_files"],
+                    "bytes": st_loc["media_bytes"],
+                })
+            elif self.path.startswith("/api/ssh"):
+                import local_terminal
+                ssh_mgr = local_terminal.SSHHosts(
+                    sys_s23.git_memory_repo.default_repo_dir / "config" / sys_s23.git_memory_repo.device / "ssh-hosts.json"
+                )
+                self._send(ssh_mgr.describe())
             elif self.path.startswith("/api/memory"):
                 self._send({
                     "memories": sys_s23.list_memories(),
@@ -3460,6 +3521,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     "repo_path": str(sys_s23.git_memory_repo.repo_dir),
                     "active_repo": sys_s23.git_memory_repo.active_repo_name,
                     "workspaces": sys_s23.git_memory_repo.list_workspace_repos(),
+                    "storage": sys_s23.git_memory_repo.get_storage_locations(),
                     "onboarding": sys_s23.git_memory_repo.get_onboarding_state(),
                     "files": sys_s23.git_memory_repo.list_files(),
                     "lessons": sys_s23.git_memory_repo.list_staged_lessons(),
@@ -3488,6 +3550,8 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     "settings": sys_s23.settings,
                     "recall": sys_s23.memory_index.describe() if hasattr(sys_s23, "memory_index") else None,
                     "search": sys_s23.search_config.describe(),
+                    "github_session": sys_s23.git_memory_repo.get_github_sync_config(),
+                    "storage": sys_s23.git_memory_repo.get_storage_locations(),
                     "data_movement_ledger": dm,
                     "engine": {
                         "mode": "omni",
@@ -3678,29 +3742,108 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 except Exception as ex:
                     self._send({"error": "repo_delete_failed", "message": str(ex)}, code=400)
                 return
-            if self.path.startswith("/api/repo/github-sync"):
+            if self.path.startswith("/api/github/device-start"):
+                try:
+                    cid = payload.get("client_id")
+                    res_df = sys_s23.git_memory_repo.start_github_device_flow(client_id=str(cid) if cid else None)
+                    self._send(res_df)
+                except Exception as ex:
+                    self._send({"error": "github_device_start_failed", "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/github/device-poll"):
+                try:
+                    dcode = str(payload.get("device_code") or "").strip()
+                    rname = str(payload.get("repo") or "").strip()
+                    cid = payload.get("client_id")
+                    res_dp = sys_s23.git_memory_repo.poll_github_device_flow(
+                        device_code=dcode,
+                        repo_full_name=rname,
+                        client_id=str(cid) if cid else None,
+                    )
+                    if res_dp.get("ok") and hasattr(sys_s23, "memory_index"):
+                        sys_s23.memory_index.wake()
+                    self._send({**res_dp, "sessions": sys_s23.git_memory_repo.sessions()})
+                except Exception as ex:
+                    self._send({"error": "github_device_poll_failed", "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/github/login"):
+                try:
+                    tok = payload.get("token")
+                    rname = str(payload.get("repo") or "").strip()
+                    auto_s = bool(payload.get("auto_sync", True))
+                    res_lg = sys_s23.git_memory_repo.login_with_github(
+                        token=str(tok).strip() if tok else None,
+                        repo_full_name=rname,
+                        auto_sync=auto_s,
+                    )
+                    if hasattr(sys_s23, "memory_index"):
+                        sys_s23.memory_index.wake()
+                    self._send({"ok": True, **res_lg, "sessions": sys_s23.git_memory_repo.sessions()})
+                except Exception as ex:
+                    self._send({"error": "github_login_failed", "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/github/logout"):
+                self._send({"ok": True, **sys_s23.git_memory_repo.logout_github()})
+                return
+            if self.path.startswith(("/api/github/sync", "/api/repo/github-sync")):
                 try:
                     repo_name = str(payload.get("repo") or "").strip()
                     tok = payload.get("token")
-                    act = str(payload.get("action") or "push").strip().lower()
+                    act = str(payload.get("action") or "sync").strip().lower()
                     br = str(payload.get("branch") or "main").strip()
                     sres = sys_s23.git_memory_repo.configure_and_sync_private_github(
                         repo_full_name=repo_name,
                         token=str(tok).strip() if tok else None,
-                        action="pull" if act == "pull" else "push",
+                        action=act if act in ("push", "pull", "sync") else "sync",
                         branch=br,
                     )
+                    if hasattr(sys_s23, "memory_index"):
+                        sys_s23.memory_index.wake()
                     self._send({
                         **sres,
-                        "files": sys_s23.git_memory_repo.list_files(),
-                        "commits": sys_s23.git_memory_repo.git_log(max_count=15),
+                        "sessions": sys_s23.git_memory_repo.sessions(),
                         "github_sync": sys_s23.git_memory_repo.get_github_sync_config(),
                     })
                 except Exception as ex:
                     self._send({"error": "github_sync_failed", "message": str(ex)}, code=400)
                 return
+            if self.path.startswith("/api/storage"):
+                try:
+                    res_st = sys_s23.git_memory_repo.update_storage_locations(
+                        media_dir=payload.get("media_dir"),
+                        media_kind=payload.get("media_kind"),
+                        workspace_source=payload.get("workspace_source"),
+                    )
+                    self._send({"ok": True, **res_st})
+                except Exception as ex:
+                    self._send({"error": "storage_update_failed", "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/media/clear"):
+                self._send(sys_s23.git_memory_repo.clear_media_storage())
+                return
+            if self.path.startswith("/api/ssh"):
+                try:
+                    import local_terminal
+                    ssh_mgr = local_terminal.SSHHosts(
+                        sys_s23.git_memory_repo.default_repo_dir / "config" / sys_s23.git_memory_repo.device / "ssh-hosts.json"
+                    )
+                    res_ssh = ssh_mgr.add_host(
+                        name=str(payload.get("name") or payload.get("host") or ""),
+                        host=str(payload.get("host") or ""),
+                        user=str(payload.get("user") or "root"),
+                        port=int(payload.get("port") or 22),
+                    )
+                    self._send({"ok": True, **res_ssh})
+                except Exception as ex:
+                    self._send({"error": "ssh_host_failed", "message": str(ex)}, code=400)
+                return
             if self.path.startswith("/api/session/forget"):
-                self._send({"ok": True})
+                sid = str(payload.get("session_id") or "").strip()
+                if sid and payload.get("delete"):
+                    sys_s23.git_memory_repo.delete_session(sid)
+                    if hasattr(sys_s23, "memory_index"):
+                        sys_s23.memory_index.wake()
+                self._send({"ok": True, "sessions": sys_s23.git_memory_repo.sessions()})
                 return
             if self.path.startswith("/api/lessons/keep"):
                 try:
@@ -3772,7 +3915,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 return
 
             # Apply Laptop Agent's `asked_tools` gating when `settings["tools"] == "ask"` ("When I ask")
-            tools_mode = str(payload.get("tools_mode") or sys_s23.settings.get("tools") or "always")
+            tools_mode = str(payload.get("tools_mode") or sys_s23.settings.get("tools") or "ask")
             if tools_mode == "ask":
                 requested_tools = sys_s23.asked_tools(prompt)
                 allow_net = allow_net and ("web_search" in requested_tools)
@@ -3797,6 +3940,20 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 interactive_ask=True,
             )
             self._send(res)
+
+        def do_DELETE(self) -> None:
+            if not self._is_exclusive_clover_app():
+                self._reject_non_app()
+                return
+            if self.path.startswith("/api/sessions/"):
+                sid = self.path.split("/api/sessions/", 1)[1].split("?", 1)[0].strip("/")
+                if sid:
+                    sys_s23.git_memory_repo.delete_session(sid)
+                    if hasattr(sys_s23, "memory_index"):
+                        sys_s23.memory_index.wake()
+                self._send({"ok": True, "sessions": sys_s23.git_memory_repo.sessions()})
+                return
+            self._send({"error": "not_found"}, code=404)
 
     srv = ThreadingHTTPServer((host, port), _S23Handler)
     print(

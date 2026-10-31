@@ -154,8 +154,23 @@ def run_all_tests() -> None:
         desc = ssh_hosts.describe()
         assert len(desc["hosts"]) == 1 and desc["hosts"][0]["port"] == 2222
         assert "PRIVATE KEY" not in str(desc), "Private key must never appear in describe()"
-        print("[PASS 8/8] S3 SSHHosts host registry & public-key isolation verified")
-        print("\nALL 8 MOBILE S1/S2/S3 VERIFICATION SUITES PASSED!")
+        print("[PASS 8/9] S3 SSHHosts host registry & public-key isolation verified")
+
+        # 9. Test Sessions List, Delete Session, and Local/Cloud Media Storage Locations
+        sess_list = repo.sessions()
+        assert len(sess_list) == 1 and sess_list[0]["id"] == "chat-alpha" and sess_list[0]["turns"] == 2
+        cloud_media_dir = tmp / "OneDrive" / "CloverMedia"
+        st_loc = repo.update_storage_locations(media_dir=str(cloud_media_dir), media_kind="cloud")
+        assert st_loc["media_kind"] == "cloud" and Path(st_loc["media_dir"]) == cloud_media_dir.resolve()
+        (cloud_media_dir / "test_photo.png").write_bytes(b"PNGDATA123")
+        st_loc2 = repo.get_storage_locations()
+        assert st_loc2["media_files"] == 1 and st_loc2["media_bytes"] == 10
+        clr_res = repo.clear_media_storage()
+        assert clr_res["removed"] == 1 and clr_res["media_files"] == 0
+        assert repo.delete_session("chat-alpha") is True
+        assert len(repo.sessions()) == 0
+        print("[PASS 9/9] GitHub-syncable sessions list, delete_session & local/cloud media storage locations verified")
+        print("\nALL 9 MOBILE S1/S2/S3 & STORAGE VERIFICATION SUITES PASSED!")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

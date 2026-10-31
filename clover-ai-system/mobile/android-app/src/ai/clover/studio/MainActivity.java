@@ -61,8 +61,8 @@ public class MainActivity extends Activity {
         if (window != null) {
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            window.setStatusBarColor(Color.parseColor("#FAF8F2"));
-            window.setNavigationBarColor(Color.parseColor("#FAF8F2"));
+            window.setStatusBarColor(Color.parseColor("#F7F3E9"));
+            window.setNavigationBarColor(Color.parseColor("#F7F3E9"));
             if (Build.VERSION.SDK_INT >= 23) {
                 View decor = window.getDecorView();
                 decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);

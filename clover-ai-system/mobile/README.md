@@ -17,16 +17,26 @@ Complete on-device Clover AI System and signed Android APK (`ai.clover.studio`) 
    - Runs the user-triggered **Clover Retry Cycle** (`Context → Direction → Execution → Outcome → Growth` with deterministic arithmetic/format/compiler checks and 3-way independent majority voting).
 3. **Core 3 — Decode (`11-Level NCM` Concept Renderer, `S23HybridAgentAndNCM`)**:
    - Maps `(h_t, r_t)` through `Lfm3ComboBridge(2048 -> 384)` + `Lfm3ExpertBridge(2048 -> 384)` into an **11-level multiscale residual `VQVAE`** (`[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64]` = `313` concept codes), predicts the concept hierarchy via `NextConceptTransformer`, and decodes to final words via `LexicalPointerDecoder`.
+   - All **C1, C2, and C3 layers execute 100% from precomputed `CLVRTRK1` + `CLVR4B01` trunks & experts** (`24` C1 trunks + `24` C1 SwiGLU experts + `31` C2/C3 precomputed directories: `plan-trunk-0/`, `bridge-trunk-0/`, `vqvae-trunk-0/`, `vqvae-expert-0..10/`, `ncm-trunk-0..11/`, `ncm-global-0/`, `ptr-trunk-0..2/`, `ptr-global-0/`).
 
 ## 2. The 3 Supporting Components (`Memory · Relationships · Tools`)
 
 All 3 supporting components serve **Inference**, **Plan**, and **Decode**:
 
-1. **Support 1 — Memory (`Local Git Repository & Multi-Repo Workspaces`, `clover_git_memory_repo.py`)**:
-   - First-run `AGENTS.md` onboarding, customization, and acceptance gate (`clover-memory-repo/AGENTS.md`).
-   - Multi-repo workspace manager supporting `clover-memory-repo` plus any user project repositories (local path or cloned from GitHub), automatically maintaining **`<folder>/<folder>-context.md`** in every subfolder and **`<repo>-context-index.md`** at the root.
-   - Selective on-demand snippet fetch (`<= 420` tokens, zero context bloat), staged lessons (`lessons/` $\to$ Keep/Discard promotion to `notes/`), and strictly private personal GitHub sync (`"private": true` enforced).
-2. **Support 2 — Relationships (`Knowledge & Ontology Graph` + 11 Foundational Papers, `k3_ontology_graph.py` & `k3_memory_graph.py`)**:
-   - Multi-hop causal & relational traversal (`CVE -> CWE -> CAPEC`, domain & workspace entity graphs), Horn-rule inference, post-generation source grounding audit, and all **11 Foundational Papers (`1943–2017`)**.
-3. **Support 3 — Tools (`Syntax & Compiler Validator, MCP, Terminal/Python, Self-Hosted Web & Media`)**:
-   - Everything external the model needs: **Syntax & Generative Compiler Validator** (`CloverPythonGenerativeCompiler` AST/scope/doctest/`assert` gate + Sutton `TD(0)` statement survival), **MCP Connections & VS Code Bridge**, **Python / Terminal Subprocess Runner**, **Self-Hosted Web Browser & Search** (`Wikipedia`, `arXiv`, live URL/GitHub reader, native WebView/browser with zero paid API keys), **Multimodal & Media Generators** (Pillow PNG, FFmpeg H.264 MP4, eSpeak NG / Android TTS WAV, camera & speech recognition), and **Local File / Repo Tools** — all governed by user permissions (`Allow`, `Ask`, `Off`).
+1. **Support 1 — Memory (`5-Stage Git Repository, GitHub-Only Session Sync & Encrypted Vault`, `clover_git_memory_repo.py` & `mobile_vault.py`)**:
+   - Organizes `clover-memory-repo/` around the 5 Clover stages (`sessions/<YYYY-MM>/<chat>.jsonl`, `execution/<YYYY-MM>/<chat>-t<N>.json`, `outcomes/<YYYY-MM>/<chat>.jsonl`, `growth/knowledge/entries.jsonl`, `growth/notes/<YYYY-MM>/<chat>.jsonl`, `config/<device>/`).
+   - **GitHub-Only Logged-In Sessions**: Users sign in exclusively with their GitHub account (via OAuth Device Flow or personal token); Clover never maintains its own user/password database. Signing in automatically links `<user>/clover-memory-repo` (strictly private `"private": true`), pulls sessions & memory on startup, and pushes new turns in the background.
+   - **Configurable Storage Locations (No In-App File Explorer Clutter)**: Users configure where **Media & Attachments** (`Local` folder or `Cloud-Synced` folder such as OneDrive/Google Drive/Dropbox/Nextcloud), **Memory Repository**, and **Project Workspaces** sit on disk; users browse files directly in their native OS file explorer.
+2. **Support 2 — Relationships (`Turn-Level Recall Index + Ontology Graph + 11 Foundational Papers`, `memory_index.py`, `k3_ontology_graph.py` & `k3_memory_graph.py`)**:
+   - **Turn-Level Recall (`memory_index.py`)**: Indexes every single message (`sessions/<month>/<chat>.jsonl#<n>:<role>`) and idle background `v3` exchange note (`USER:` + `ASSISTANT:`), retrieves via `BM25 + dense vector RRF`, excludes negative-outcome turns, and injects recalled context as a dated background system message (`F6`).
+   - **Symbolic Ontology GraphRAG & 11 Foundational Papers (`1943–2017`)**: Multi-hop causal & relational traversal (`CVE -> CWE -> CAPEC`), Horn-rule inference, and post-generation source grounding audit.
+3. **Support 3 — Tools (`On-Demand Tool Gate, Relevance-Filtered WebSearch, Terminal/SSH & Compiler Check`, `web_search.py`, `local_terminal.py` & `k3_generative_compiler.py`)**:
+   - **Best Measured Default (`tools: "ask"` — "When I ask")**: Runs tools only when the prompt requests calculation, code execution, web lookup, or file/shell inspection (`asked_tools`), keeping everyday conversation fast (`~3.4 s` vs `~32 s` when unrequested tools fire).
+   - **Relevance-Filtered Multi-Provider WebSearch (`web_search.py`)**: Supports free **Wikipedia & arXiv**, **Tavily**, and **Brave Search** with encrypted API keys in `mobile_vault.py` and automatic content-word overlap filtering to drop false-positive pages.
+   - **Local Terminal & Remote SSH (`local_terminal.py`)**: Process-group timeout enforcement (`os.setsid` + `os.killpg`), 1 MB UTF-8 output cap, and device-local Ed25519 SSH public key generation (`SSHHosts`) where the private key never leaves the device.
+   - **Generative Compiler Check (`CloverPythonGenerativeCompiler`)**: AST/scope/doctest/`assert` verifier with Sutton `TD(0)` statement survival and true `Allow / Ask / Off` permission prompts.
+
+## 3. Apple-Style Progressive Disclosure & Universal `robo-icon` Pack (`v2.0.0`)
+
+- **Palette & Assets (`assets/robo-icon/`)**: Warm cream `#F7F3E9`, Clover green `#176B2C`, deep green `#0D4D20`, and leaf highlight `#83B83D`, featuring the 4-leaf `clover-mark.svg`, `robo-clover.png` hero mascot, Android adaptive icon (`ic_launcher_foreground.png` + `ic_launcher_background.png`), and 30 stroke-matched SVG interface icons.
+- **Progressive Disclosure**: Opens directly to a clean chat canvas (`Chats`, `Clover · Title`, `Settings`). Tapping `Settings` shows only 3 top-level rows (**GitHub Account**, **Storage Locations**, **Advanced**) that drill into dedicated `< Back` sub-views on demand.
