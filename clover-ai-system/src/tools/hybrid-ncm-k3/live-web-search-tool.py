@@ -80,17 +80,22 @@ class LiveWebSearchTool:
         return f"[Live Webpage: {page_title} — Link: {u}]\n{extracted}"
 
     def _search_arxiv(self, query: str, max_items: int = 4) -> list[str]:
-        """Queries the live arXiv API for recent research papers matching `query`."""
-        clean_q = re.sub(r"\b(can you|find|relevant|research|on|recent|latest|papers|about|search|for|the)\b", " ", query.lower())
-        clean_q = " ".join(clean_q.split()).strip() or query.strip()
-        if any(k in clean_q for k in ("ai", "artificial intelligence", "llm", "language model", "agent")):
-            q_expr = f'(cat:cs.AI OR cat:cs.CL OR cat:cs.LG) AND all:"{clean_q}"'
+        """Queries the live arXiv API for research papers matching `query`."""
+        q_low = query.lower()
+        wants_latest = any(k in q_low for k in ("latest", "recent", "newest", "new "))
+        is_ai = any(k in q_low for k in ("ai", "artificial intelligence", "llm", "language model", "foundation model", "agent", "neural", "transformer"))
+        clean_q = re.sub(r"\b(can you|find|relevant|research|on|recent|latest|papers|paper|about|search|for|the|web|online)\b", " ", q_low)
+        words = [w for w in re.findall(r"[a-z0-9]+", clean_q) if len(w) >= 2]
+        if words:
+            kw_expr = " AND ".join(f"all:{w}" for w in words[:5])
+            q_expr = f"(cat:cs.AI OR cat:cs.CL OR cat:cs.LG) AND ({kw_expr})" if is_ai else kw_expr
         else:
-            q_expr = f"all:{clean_q}"
+            q_expr = f"all:{query.strip()}"
+        sort_by = "submittedDate" if wants_latest else "relevance"
         url = (
             "http://export.arxiv.org/api/query?search_query="
             + urllib.parse.quote(q_expr)
-            + f"&sortBy=submittedDate&sortOrder=descending&max_results={max_items}"
+            + f"&sortBy={sort_by}&sortOrder=descending&max_results={max_items}"
         )
         out = []
         try:

@@ -1,11 +1,16 @@
+import importlib
 import torch.nn as nn
 import torch.nn.functional as F
 from models.vae import Encoder, Decoder
 from utils.registry import vector_quantizers
 import torch
-import hydra 
-from omegaconf import OmegaConf
 from utils.misc import count_params
+
+
+def _resolve_vq_class(dotted_path: str):
+    mod_name, cls_name = dotted_path.rsplit(".", 1)
+    return getattr(importlib.import_module(mod_name), cls_name)
+
 
 class VQVAE(nn.Module):
     def __init__(
@@ -47,7 +52,8 @@ class VQVAE(nn.Module):
             use_pos_emb=enc_positional,
         )
         
-        vq = hydra.utils.get_class(vector_quantizers[vector_quantizer_config.clss])
+        clss_key = vector_quantizer_config["clss"] if isinstance(vector_quantizer_config, dict) else vector_quantizer_config.clss
+        vq = _resolve_vq_class(vector_quantizers[clss_key])
         self.vq = vq.from_config({ **{'vqvae_vocab_size': vqvae_vocab_size, 'embed_dim': embed_dim}, **dict(vector_quantizer_config)})
                 
         self.decoder = Decoder(
