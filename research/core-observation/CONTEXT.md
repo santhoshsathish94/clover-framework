@@ -44,3 +44,9 @@
 
 ## Progress
 - 2026-11-01: four commits made (2d68166 semantics; ba43256, 77b75b3, db2486d other sessions' work). Direction recorded.
+- 2026-11-01: pushed (75f8c5d; the push also deployed the website, as the human chose). Both stacks set up on k3 in
+  /opt/clover-k3/core-observe as sandboxed services; 15 messages run through each; observation written in README.md
+  with traces/ as evidence. One device part was substituted for the laptop stack on Linux: its Python runner
+  (harness/linux_device). Services left running for further observation; stop with harness/k3.sh stop.
+- Next (human's call): decide from the observation what the device-free core should be. The core and user semantics
+  design waits for that.
