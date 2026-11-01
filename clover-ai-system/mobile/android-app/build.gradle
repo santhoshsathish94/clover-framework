@@ -1,0 +1,61 @@
+plugins {
+    id 'com.android.application' version '8.5.2'
+}
+
+android {
+    namespace 'ai.clover.studio'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "ai.clover.studio"
+        minSdk 24
+        targetSdk 34
+        versionCode 6
+        versionName "2.1.0"
+
+        ndk {
+            abiFilters "arm64-v8a", "x86_64"
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['src']
+            res.srcDirs = ['res']
+            assets.srcDirs = ['assets']
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    signingConfigs {
+        release {
+            def ksFile = file("clover_studio_release.keystore")
+            if (ksFile.exists()) {
+                storeFile ksFile
+                storePassword "clover2026"
+                keyAlias "cloverstudio"
+                keyPassword "clover2026"
+                enableV1Signing true
+                enableV2Signing true
+                enableV3Signing true
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            minifyEnabled false
+            if (file("clover_studio_release.keystore").exists()) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+}

@@ -169,8 +169,21 @@ def run_all_tests() -> None:
         assert clr_res["removed"] == 1 and clr_res["media_files"] == 0
         assert repo.delete_session("chat-alpha") is True
         assert len(repo.sessions()) == 0
-        print("[PASS 9/9] GitHub-syncable sessions list, delete_session & local/cloud media storage locations verified")
-        print("\nALL 9 MOBILE S1/S2/S3 & STORAGE VERIFICATION SUITES PASSED!")
+        print("[PASS 9/10] GitHub-syncable sessions list, delete_session & local/cloud media storage locations verified")
+
+        # 10. Test Laptop-Adopted Workspaces API (`describe_workspaces`, `workspace_action` add/activate/refresh/clean/remove)
+        ws_d0 = repo.describe_workspaces()
+        assert ws_d0["active"] == "my-project" and len(ws_d0["workspaces"]) == 1
+        ws_clean = repo.workspace_action("clean", {"name": "my-project"})
+        assert len(ws_clean.get("removed", [])) >= 1
+        ws_ref = repo.workspace_action("refresh", {"name": "my-project"})
+        assert len(ws_ref["context"]["written"]) >= 1
+        ws_deact = repo.workspace_action("activate", {"name": None})
+        assert ws_deact["active"] is None
+        ws_rem = repo.workspace_action("remove", {"name": "my-project"})
+        assert len(ws_rem["workspaces"]) == 0 and user_proj.is_dir()
+        print("[PASS 10/10] Laptop-adopted Workspaces API (add/activate/refresh/clean/remove) verified")
+        print("\nALL 10 MOBILE S1/S2/S3, WORKSPACES & STORAGE VERIFICATION SUITES PASSED!")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

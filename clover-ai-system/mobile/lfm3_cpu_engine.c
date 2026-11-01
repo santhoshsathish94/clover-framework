@@ -456,10 +456,89 @@ static const char *ADRENO_SWIGLU_DOT8_SRC =
 "    }\n"
 "}\n";
 
+/* Universal OpenCL 1.2/2.0/3.0 SwiGLU kernel for ARM Mali / Immortalis, Samsung Xclipse, PowerVR, and older Adreno GPUs
+ * that do not expose `cl_khr_integer_dot_product` */
+static const char *MOBILE_SWIGLU_UNIVERSAL_SRC =
+"inline float bf16_round(float x) {\n"
+"    uint u = as_uint(x);\n"
+"    if ((u & 0x7FFFFFFFu) > 0x7F800000u) return as_float((u | 0x00400000u) & 0xFFFF0000u);\n"
+"    uint rb = 0x00007FFFu + ((u >> 16) & 1u);\n"
+"    return as_float((u + rb) & 0xFFFF0000u);\n"
+"}\n"
+"inline int dot4_s8(uchar4 u, char4 x) {\n"
+"    return (int)u.s0 * (int)x.s0 + (int)u.s1 * (int)x.s1 + (int)u.s2 * (int)x.s2 + (int)u.s3 * (int)x.s3;\n"
+"}\n"
+"__kernel void adreno_swiglu_dot8_exact(\n"
+"    __global const uchar16 * restrict ffn_v16,\n"
+"    __global const char4   * restrict x_q8,\n"
+"    __global const float   * restrict x_sc,\n"
+"    __global const int     * restrict x_sum,\n"
+"    __global float         * restrict out_swiglu\n"
+") {\n"
+"    __local char4 l_xq[512];\n"
+"    __local float l_s1[128];\n"
+"    __local float l_s3[128];\n"
+"    const int lid = get_local_id(0);\n"
+"    for (int i = lid; i < 512; i += 128) l_xq[i] = x_q8[i];\n"
+"    barrier(CLK_LOCAL_MEM_FENCE);\n"
+"    const int row_in_wg = lid >> 5;\n"
+"    const int g         = lid & 31;\n"
+"    const int o         = (get_group_id(0) << 2) + row_in_wg;\n"
+"    if (o >= 7680) return;\n"
+"    const int nib16_idx = (o << 6) + (g << 1);\n"
+"    uchar16 pk1_0 = ffn_v16[nib16_idx], pk1_1 = ffn_v16[nib16_idx + 1];\n"
+"    uchar16 pk3_0 = ffn_v16[508800 + nib16_idx], pk3_1 = ffn_v16[508800 + nib16_idx + 1];\n"
+"    __global const uchar *w1_stp = (__global const uchar *)(ffn_v16 + 491520);\n"
+"    __global const float *w1_scl = (__global const float *)(ffn_v16 + 506880);\n"
+"    __global const uchar *w3_stp = (__global const uchar *)(ffn_v16 + 508800 + 491520);\n"
+"    __global const float *w3_scl = (__global const float *)(ffn_v16 + 508800 + 506880);\n"
+"    const __local char4 *xq = l_xq + (g << 4);\n"
+"    uchar16 m0f = (uchar16)(15);\n"
+"    uchar16 lo1_0 = pk1_0 & m0f, hi1_0 = pk1_0 >> (uchar16)(4);\n"
+"    uchar16 lo1_1 = pk1_1 & m0f, hi1_1 = pk1_1 >> (uchar16)(4);\n"
+"    uchar16 lo3_0 = pk3_0 & m0f, hi3_0 = pk3_0 >> (uchar16)(4);\n"
+"    uchar16 lo3_1 = pk3_1 & m0f, hi3_1 = pk3_1 >> (uchar16)(4);\n"
+"    int d1 = -8 * x_sum[g];\n"
+"    d1 += dot4_s8(lo1_0.s0123, xq[0])  + dot4_s8(lo1_0.s4567, xq[1])  + dot4_s8(lo1_0.s89ab, xq[2])  + dot4_s8(lo1_0.scdef, xq[3]);\n"
+"    d1 += dot4_s8(lo1_1.s0123, xq[4])  + dot4_s8(lo1_1.s4567, xq[5])  + dot4_s8(lo1_1.s89ab, xq[6])  + dot4_s8(lo1_1.scdef, xq[7]);\n"
+"    d1 += dot4_s8(hi1_0.s0123, xq[8])  + dot4_s8(hi1_0.s4567, xq[9])  + dot4_s8(hi1_0.s89ab, xq[10]) + dot4_s8(hi1_0.scdef, xq[11]);\n"
+"    d1 += dot4_s8(hi1_1.s0123, xq[12]) + dot4_s8(hi1_1.s4567, xq[13]) + dot4_s8(hi1_1.s89ab, xq[14]) + dot4_s8(hi1_1.scdef, xq[15]);\n"
+"    int d3 = -8 * x_sum[g];\n"
+"    d3 += dot4_s8(lo3_0.s0123, xq[0])  + dot4_s8(lo3_0.s4567, xq[1])  + dot4_s8(lo3_0.s89ab, xq[2])  + dot4_s8(lo3_0.scdef, xq[3]);\n"
+"    d3 += dot4_s8(lo3_1.s0123, xq[4])  + dot4_s8(lo3_1.s4567, xq[5])  + dot4_s8(lo3_1.s89ab, xq[6])  + dot4_s8(lo3_1.scdef, xq[7]);\n"
+"    d3 += dot4_s8(hi3_0.s0123, xq[8])  + dot4_s8(hi3_0.s4567, xq[9])  + dot4_s8(hi3_0.s89ab, xq[10]) + dot4_s8(hi3_0.scdef, xq[11]);\n"
+"    d3 += dot4_s8(hi3_1.s0123, xq[12]) + dot4_s8(hi3_1.s4567, xq[13]) + dot4_s8(hi3_1.s89ab, xq[14]) + dot4_s8(hi3_1.scdef, xq[15]);\n"
+"    float xsc = x_sc[g];\n"
+"    l_s1[lid] = (float)d1 * ((float)w1_stp[(o << 5) + g] * xsc);\n"
+"    l_s3[lid] = (float)d3 * ((float)w3_stp[(o << 5) + g] * xsc);\n"
+"    barrier(CLK_LOCAL_MEM_FENCE);\n"
+"    if (g == 0) {\n"
+"        float s1 = 0.0f, s3 = 0.0f;\n"
+"        for (int k = 0; k < 32; k++) { s1 += l_s1[lid + k]; s3 += l_s3[lid + k]; }\n"
+"        float v1 = bf16_round(s1 * w1_scl[o]);\n"
+"        float v3 = bf16_round(s3 * w3_scl[o]);\n"
+"        float silu = bf16_round(v1 / (1.0f + exp(-v1)));\n"
+"        out_swiglu[o] = bf16_round(silu * v3);\n"
+"    }\n"
+"}\n";
+
 static void init_adreno740_opencl(void)
 {
-    void *h = dlopen("/vendor/lib64/libOpenCL.so", RTLD_NOW);
-    if (!h) h = dlopen("libOpenCL.so", RTLD_NOW);
+    const char *cl_paths[] = {
+        "/vendor/lib64/libOpenCL.so",
+        "/system/vendor/lib64/libOpenCL.so",
+        "/vendor/lib64/libGLES_mali.so",
+        "/system/vendor/lib64/egl/libGLES_mali.so",
+        "/vendor/lib64/egl/libGLES_mali.so",
+        "/vendor/lib64/libPVROCL.so",
+        "libOpenCL.so",
+        NULL
+    };
+    void *h = NULL;
+    for (int i = 0; cl_paths[i]; i++) {
+        h = dlopen(cl_paths[i], RTLD_NOW);
+        if (h) break;
+    }
     if (!h) return;
 
     cl_int (*clGetPlatformIDs)(cl_uint, cl_platform_id*, cl_uint*) = dlsym(h, "clGetPlatformIDs");
@@ -513,7 +592,11 @@ static void init_adreno740_opencl(void)
 
     size_t srclen = strlen(ADRENO_SWIGLU_DOT8_SRC);
     cl_program prog = clCreateProgramWithSource(g_adreno.ctx, 1, &ADRENO_SWIGLU_DOT8_SRC, &srclen, &err);
-    if (clBuildProgram(prog, 1, &dev, "", NULL, NULL) != 0) return;
+    if (!prog || clBuildProgram(prog, 1, &dev, "", NULL, NULL) != 0) {
+        size_t ulen = strlen(MOBILE_SWIGLU_UNIVERSAL_SRC);
+        prog = clCreateProgramWithSource(g_adreno.ctx, 1, &MOBILE_SWIGLU_UNIVERSAL_SRC, &ulen, &err);
+        if (!prog || clBuildProgram(prog, 1, &dev, "", NULL, NULL) != 0) return;
+    }
 
     g_adreno.k_swiglu = clCreateKernel(prog, "adreno_swiglu_dot8_exact", &err);
     if (err != 0 || !g_adreno.k_swiglu) return;
@@ -705,46 +788,90 @@ LFM3_API void lfm3_set_use_4bit_ffn(int enable)
     g_lfm3.use_4bit_ffn = enable ? 1 : 0;
 }
 
-LFM3_API int lfm3_configure_s23_snapdragon8gen2(int pin_big_cores_3_to_7)
+static long read_sysfs_cpu_long(int cpu_id, const char *rel_path)
 {
-    /* Samsung Galaxy S23 (Snapdragon 8 Gen 2 for Galaxy, SM8550-AC):
-     *   - Cores 0..2: 3x Cortex-A510 efficiency cores (2.0 GHz, in-order)
-     *   - Cores 3..4: 2x Cortex-A710 performance cores (2.8 GHz)
-     *   - Cores 5..6: 2x Cortex-A715 performance cores (2.8 GHz)
-     *   - Core 7:     1x Cortex-X3 prime core (3.36 GHz)
-     * Inspects Android cpuset affinity first: if cores 3..7 are available (foreground/top-app),
-     * pins to the 4 or 5 out-of-order cores (3..7); if restricted by background cpuset (e.g. 0..2),
-     * matches OpenMP thread count to allowed cores to prevent barrier spinlock oversubscription. */
-    g_lfm3.s23_pin_requested = pin_big_cores_3_to_7 ? 1 : 0;
-    g_lfm3.num_threads = pin_big_cores_3_to_7 ? 5 : 8;
-#if defined(__linux__) && defined(__aarch64__)
+    char path[256];
+    snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/%s", cpu_id, rel_path);
+    FILE *f = fopen(path, "r");
+    if (!f) return -1;
+    long val = -1;
+    if (fscanf(f, "%ld", &val) != 1) val = -1;
+    fclose(f);
+    return val;
+}
+
+LFM3_API int lfm3_configure_android_soc(int pin_performance_cores)
+{
+    /* Universal Android SoC Core Topology Auto-Discovery:
+     * Works across Qualcomm Snapdragon (8 Gen 1/2/3/Elite, 7+ Gen 2/3, 6 Gen 1),
+     * Google Tensor (G1/G2/G3/G4), MediaTek Dimensity (8000/9000/9200/9300/9400),
+     * Samsung Exynos (2100/2200/2400), and uniform Android Studio Emulators (arm64-v8a / x86_64).
+     * Reads per-core `cpu_capacity` and `cpufreq/cpuinfo_max_freq` from sysfs and intersects
+     * with `sched_getaffinity()` to pin OpenMP threads to out-of-order performance/prime cores
+     * without oversubscribing background cpusets. */
+    g_lfm3.s23_pin_requested = pin_performance_cores ? 1 : 0;
+    int max_procs = omp_get_num_procs();
+    if (max_procs <= 0) max_procs = 4;
+    g_lfm3.num_threads = max_procs > 8 ? 8 : max_procs;
+#if defined(__linux__)
     cpu_set_t current_mask;
     CPU_ZERO(&current_mask);
     if (sched_getaffinity(0, sizeof(current_mask), &current_mask) == 0) {
-        cpu_set_t big_mask;
-        CPU_ZERO(&big_mask);
-        int big_avail = 0;
-        for (int c = 3; c <= 7; c++) {
-            if (CPU_ISSET(c, &current_mask)) {
-                CPU_SET(c, &big_mask);
-                big_avail++;
+        int total_avail = CPU_COUNT(&current_mask);
+        long metric[32];
+        long min_m = 0x7FFFFFFFL, max_m = -1L;
+        int n_detected = 0;
+        for (int c = 0; c < 32; c++) {
+            metric[c] = -1;
+            if (!CPU_ISSET(c, &current_mask)) continue;
+            long cap = read_sysfs_cpu_long(c, "cpu_capacity");
+            long freq = read_sysfs_cpu_long(c, "cpufreq/cpuinfo_max_freq");
+            long m = (cap > 0) ? cap : (freq > 0 ? freq : -1);
+            if (m > 0) {
+                metric[c] = m;
+                if (m < min_m) min_m = m;
+                if (m > max_m) max_m = m;
+                n_detected++;
             }
         }
-        if (pin_big_cores_3_to_7 && big_avail >= 4) {
-            if (sched_setaffinity(0, sizeof(big_mask), &big_mask) == 0) {
+        cpu_set_t perf_mask;
+        CPU_ZERO(&perf_mask);
+        int perf_avail = 0;
+        if (pin_performance_cores && n_detected >= 4 && max_m > (min_m * 115) / 100) {
+            /* Heterogeneous big.LITTLE / DynamIQ SoC detected via sysfs */
+            long thresh = min_m + ((max_m - min_m) * 18) / 100;
+            for (int c = 0; c < 32; c++) {
+                if (CPU_ISSET(c, &current_mask) && metric[c] >= thresh) {
+                    CPU_SET(c, &perf_mask);
+                    perf_avail++;
+                }
+            }
+        } else if (pin_performance_cores && total_avail == 8 && n_detected == 0) {
+            /* Fallback when sysfs cpufreq/capacity is hidden by SELinux on an 8-core mobile SoC */
+            for (int c = 3; c <= 7; c++) {
+                if (CPU_ISSET(c, &current_mask)) {
+                    CPU_SET(c, &perf_mask);
+                    perf_avail++;
+                }
+            }
+        }
+        if (pin_performance_cores && perf_avail >= 2) {
+            if (sched_setaffinity(0, sizeof(perf_mask), &perf_mask) == 0) {
                 g_lfm3.s23_big_cores_pinned = 1;
-                g_lfm3.num_threads = big_avail;
+                g_lfm3.num_threads = perf_avail;
             }
-        } else {
-            int total_avail = CPU_COUNT(&current_mask);
-            if (total_avail > 0) {
-                g_lfm3.num_threads = total_avail;
-            }
+        } else if (total_avail > 0) {
+            g_lfm3.num_threads = total_avail > 8 ? 8 : total_avail;
         }
     }
 #endif
     omp_set_num_threads(g_lfm3.num_threads);
     return g_lfm3.num_threads;
+}
+
+LFM3_API int lfm3_configure_s23_snapdragon8gen2(int pin_big_cores_3_to_7)
+{
+    return lfm3_configure_android_soc(pin_big_cores_3_to_7);
 }
 
 LFM3_API void lfm3_dm_stats(unsigned long *out_stats6)

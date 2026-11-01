@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-64 -64 128 128"><defs>
+<linearGradient id="leaf" x1="0" y1="-1" x2="1" y2="1"><stop stop-color="#3C9A37"/><stop offset=".48" stop-color="#207A2C"/><stop offset="1" stop-color="#0D5422"/></linearGradient>
+<radialGradient id="soft"><stop stop-color="#A6D65C" stop-opacity=".34"/><stop offset="1" stop-color="#A6D65C" stop-opacity="0"/></radialGradient>
+</defs><g fill="url(#leaf)" stroke="#145D26" stroke-width=".6" stroke-opacity=".22"><path d="M 0,0 C -8,-10 -25,-18 -25,-34 C -25,-52 -5,-55 0,-39 C 5,-55 25,-52 25,-34 C 25,-18 8,-10 0,0 Z" transform="rotate(0)"/><path d="M 0,0 C -8,-10 -25,-18 -25,-34 C -25,-52 -5,-55 0,-39 C 5,-55 25,-52 25,-34 C 25,-18 8,-10 0,0 Z" transform="rotate(72)"/><path d="M 0,0 C -8,-10 -25,-18 -25,-34 C -25,-52 -5,-55 0,-39 C 5,-55 25,-52 25,-34 C 25,-18 8,-10 0,0 Z" transform="rotate(144)"/><path d="M 0,0 C -8,-10 -25,-18 -25,-34 C -25,-52 -5,-55 0,-39 C 5,-55 25,-52 25,-34 C 25,-18 8,-10 0,0 Z" transform="rotate(216)"/><path d="M 0,0 C -8,-10 -25,-18 -25,-34 C -25,-52 -5,-55 0,-39 C 5,-55 25,-52 25,-34 C 25,-18 8,-10 0,0 Z" transform="rotate(288)"/></g>
+<circle r="15" fill="url(#soft)"/><path d="M0 0 C-7 -5 -8 -14 -3 -22 C1 -29 12 -34 17 -43" fill="none" stroke="#A6D65C" stroke-width="2.2" stroke-linecap="round" opacity=".55"/>
+</svg>

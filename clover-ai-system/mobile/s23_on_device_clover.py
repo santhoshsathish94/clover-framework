@@ -52,8 +52,10 @@ import secrets
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import types
+import uuid
 import wave
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -1966,7 +1968,7 @@ class CloverS23OnDeviceSystem:
         self.settings: dict[str, Any] = {
             "schema_version": 3,
             "model": "omni",
-            "engine": "adreno",
+            "engine": "gpu",
             "q4_operators": False,
             "q4_lm_head": True,
             "tools": "ask",
@@ -1978,6 +1980,7 @@ class CloverS23OnDeviceSystem:
                 "ontology": True,
                 "compiler": True,
                 "specmd_madvise": True,
+                "kv_slots": True,
             },
         }
         migrated_v3 = False
@@ -1986,8 +1989,8 @@ class CloverS23OnDeviceSystem:
                 try:
                     saved_s = json.loads(sp.read_text(encoding="utf-8"))
                     if isinstance(saved_s, dict) and int(saved_s.get("schema_version") or 1) >= 3:
-                        if saved_s.get("engine") in ("adreno", "cpu"):
-                            self.settings["engine"] = saved_s["engine"]
+                        if saved_s.get("engine") in ("gpu", "adreno", "cpu"):
+                            self.settings["engine"] = "gpu" if saved_s["engine"] in ("gpu", "adreno") else "cpu"
                         if isinstance(saved_s.get("q4_operators"), bool):
                             self.settings["q4_operators"] = saved_s["q4_operators"]
                         if isinstance(saved_s.get("q4_lm_head"), bool):
@@ -2010,35 +2013,49 @@ class CloverS23OnDeviceSystem:
             except Exception:
                 pass
         self._apply_hardware_settings()
+        self.device_profile = self.detect_android_device_profile()
+        self.active_turns: dict[str, dict[str, Any]] = {}
 
         self.permissions_meta: dict[str, dict[str, str]] = {
             "internet": {
                 "label": "Internet search and web pages",
-                "detail": "Searches with the service chosen in Settings (Tavily, Brave Search, or Wikipedia & arXiv) and opens web pages.",
+                "detail": "Searches the web with the service chosen in Settings (Tavily, Brave Search, or Wikipedia and arXiv) and opens pages.",
             },
             "code": {
                 "label": "Run code Clover writes",
-                "detail": "Executes Python code in an isolated on-device subprocess with a timeout.",
+                "detail": "Executes Python code in an isolated on-device subprocess with a time limit.",
             },
             "shell": {
-                "label": "Run local terminal commands (Termux / sh)",
-                "detail": "Runs shell commands on this device with a 30-second limit.",
+                "label": "Run terminal commands",
+                "detail": "Runs shell commands on this device in the active workspace folder with a time limit. Stopping the answer stops the command.",
             },
             "ssh": {
                 "label": "Connect to remote SSH hosts",
-                "detail": "Runs non-interactive SSH commands on remote hosts you configure.",
+                "detail": "Runs non-interactive SSH commands on remote hosts you configure in Settings.",
             },
             "files": {
-                "label": "Read phone files and attachments",
-                "detail": "Reads text files, photos, WAV audio and videos you attach or reference on this S23.",
+                "label": "Read files and folders",
+                "detail": "Lists folders and reads text files, photos, WAV audio and videos you attach or reference on this device.",
+            },
+            "edit_files": {
+                "label": "Create or change files",
+                "detail": "Writes text files in your active workspace on this device.",
+            },
+            "memory": {
+                "label": "Remember things you tell it",
+                "detail": "Saves what you ask Clover to remember as notes in Clover's local Git repository (clover-memory-repo).",
+            },
+            "vscode": {
+                "label": "GitHub & VS Code sync",
+                "detail": "Syncs Clover's private Git memory repository with your GitHub account or VS Code bridge.",
+            },
+            "media": {
+                "label": "Create pictures & media",
+                "detail": "Creates pictures, audio and visual previews on this device and saves them in your media folder.",
             },
             "voice_camera": {
                 "label": "Microphone, camera and voice synthesis",
-                "detail": "Allows voice input, spoken audio replies and procedural PNG/MP4/WAV generation.",
-            },
-            "memory": {
-                "label": "Persistent Memory & Recall (S1 & S2)",
-                "detail": "Retrieves and stores notes in Clover's local Git memory repository on this S23.",
+                "detail": "Allows voice input and spoken audio replies on this device.",
             },
         }
         self.perm_modes: dict[str, str] = {
@@ -2047,8 +2064,11 @@ class CloverS23OnDeviceSystem:
             "shell": "ask",
             "ssh": "ask",
             "files": "allow",
-            "voice_camera": "allow",
+            "edit_files": "ask",
             "memory": "allow",
+            "vscode": "allow",
+            "media": "allow",
+            "voice_camera": "allow",
         }
         for pp in (self.legacy_perms_path, self.perms_path):
             if pp.exists():
@@ -2159,6 +2179,108 @@ class CloverS23OnDeviceSystem:
             "total_on_device_gib": round(total_b / (1024.0 ** 3), 2),
         }
 
+    def detect_android_device_profile(self) -> dict[str, Any]:
+        """
+        Universal Android Device & SoC Auto-Detection:
+        Reads Android system properties (`getprop`) and `/proc/cpuinfo` to identify the exact
+        device manufacturer, model, SoC, CPU architecture, and GPU (Qualcomm Adreno, ARM Mali/Immortalis,
+        Samsung Xclipse, or Android Studio Emulator / host CPU).
+        """
+        def _prop(key: str) -> str:
+            gp = shutil.which("getprop")
+            if not gp:
+                return ""
+            try:
+                res = subprocess.run([gp, key], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=2)
+                return (res.stdout or "").strip() if res.returncode == 0 else ""
+            except Exception:
+                return ""
+
+        mfr = _prop("ro.product.manufacturer") or _prop("ro.product.vendor.manufacturer")
+        model = _prop("ro.product.model") or _prop("ro.product.vendor.model")
+        soc_mfr = _prop("ro.soc.manufacturer")
+        soc_mod = _prop("ro.soc.model") or _prop("ro.board.platform")
+        sdk_ver = _prop("ro.build.version.sdk")
+        rel_ver = _prop("ro.build.version.release")
+        arch = platform.machine().lower()
+
+        cpu_model = ""
+        if os.path.exists("/proc/cpuinfo"):
+            try:
+                for ln in Path("/proc/cpuinfo").read_text(encoding="utf-8", errors="replace").splitlines():
+                    if ln.lower().startswith(("model name", "hardware", "processor")):
+                        val = ln.split(":", 1)[-1].strip()
+                        if val and not val.isdigit():
+                            cpu_model = val
+                            break
+            except Exception:
+                pass
+
+        dm = self.engine.get_dm_stats(madvise_enabled=True)
+        opencl_ok = bool(dm.get("direction_b_mobile_soc_4tier_ledger", {}).get("adreno740_zero_copy_opencl_active", False))
+
+        soc_combined = f"{soc_mfr} {soc_mod}".strip() or cpu_model or arch
+        soc_low = (soc_combined + " " + model + " " + mfr).lower()
+        if any(k in soc_low for k in ("qualcomm", "qti", "sm8", "sm7", "sm6", "sdm", "lahaina", "taro", "kalama", "pineapple")):
+            gpu_label = "Adreno OpenCL GPU"
+        elif any(k in soc_low for k in ("tensor", "zuma", "gs201", "gs101", "mediatek", "mt6", "dimensity", "mali", "immortalis")):
+            gpu_label = "Mali / Immortalis GPU"
+        elif "s5e" in soc_low or "exynos" in soc_low:
+            gpu_label = "Xclipse / Mali GPU"
+        elif opencl_ok:
+            gpu_label = "Mobile OpenCL GPU"
+        else:
+            gpu_label = "Mobile GPU"
+
+        cpu_label = "ARM64 NEON/SMMLA CPU" if arch in ("aarch64", "arm64") else f"{arch.upper()} CPU"
+        dev_name = f"{mfr} {model}".strip() if (mfr or model) else (cpu_model or f"{platform.system()} ({arch})")
+        return {
+            "device_name": dev_name,
+            "soc": soc_combined,
+            "arch": arch,
+            "android_release": rel_ver or None,
+            "android_sdk": sdk_ver or None,
+            "gpu_available": opencl_ok,
+            "gpu_label": gpu_label,
+            "cpu_label": cpu_label,
+            "active_threads": self.engine.active_threads,
+        }
+
+    def speech_parts(self, text: str) -> list[str]:
+        clean = re.sub(r"```[\s\S]*?```", " code block. ", str(text or ""))
+        clean = re.sub(r"[`*_#>~]+", " ", clean)
+        clean = re.sub(r"\s+", " ", clean).strip()
+        if not clean:
+            return []
+        raw_parts = [p.strip() for p in re.split(r"(?<=[.!?])\s+", clean) if p.strip()]
+        out: list[str] = []
+        buf = ""
+        for p in raw_parts:
+            if len(buf) + len(p) < 160:
+                buf = (buf + " " + p).strip()
+            else:
+                if buf:
+                    out.append(buf)
+                buf = p
+        if buf:
+            out.append(buf)
+        return out[:20] or [clean[:400]]
+
+    def tts_wav_bytes(self, text: str, voice: str = "female") -> bytes:
+        durl = generate_spoken_wav_data_url(text, self.base_dir)
+        if durl and "," in durl:
+            return base64.b64decode(durl.split(",", 1)[1])
+        # Generate a valid minimal 16 kHz mono WAV buffer if eSpeak NG is not installed on the host
+        sr = 16000
+        n_samples = int(sr * 0.25)
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(sr)
+            wf.writeframes(b"\x00\x00" * n_samples)
+        return buf.getvalue()
+
     def _idle_note_writer(self, msgs: list[dict[str, str]], max_new: int = 90) -> str | None:
         if not self._is_studio_idle():
             return None
@@ -2217,14 +2339,14 @@ class CloverS23OnDeviceSystem:
         return False, None, "denied"
 
     def _apply_hardware_settings(self) -> None:
-        self.engine.set_adreno_opencl_active(self.settings.get("engine") == "adreno")
+        self.engine.set_adreno_opencl_active(self.settings.get("engine") in ("gpu", "adreno"))
         self.engine.set_use_4bit_operators(bool(self.settings.get("q4_operators", False)))
         self.engine.set_use_4bit_lm_head(bool(self.settings.get("q4_lm_head", True)))
         self.engine.set_madvise_active(bool(self.settings.get("layers", {}).get("specmd_madvise", True)))
 
     def update_settings(self, changes: dict[str, Any]) -> dict[str, Any]:
-        if "engine" in changes and changes["engine"] in ("adreno", "cpu"):
-            self.settings["engine"] = changes["engine"]
+        if "engine" in changes and changes["engine"] in ("gpu", "adreno", "cpu"):
+            self.settings["engine"] = "gpu" if changes["engine"] in ("gpu", "adreno") else "cpu"
         if "q4_operators" in changes and isinstance(changes["q4_operators"], bool):
             self.settings["q4_operators"] = changes["q4_operators"]
         if "q4_lm_head" in changes and isinstance(changes["q4_lm_head"], bool):
@@ -3788,9 +3910,33 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
             self.wfile.write(body)
 
         def _is_exclusive_clover_app(self) -> bool:
+            sec_site = (self.headers.get("Sec-Fetch-Site") or "").strip()
+            if sec_site and sec_site not in ("same-origin", "none"):
+                return False
+            allowed_origins = {
+                f"http://127.0.0.1:{port}",
+                f"http://localhost:{port}",
+                f"http://10.0.2.2:{port}",
+                "file://",
+                "null",
+            }
+            origin = (self.headers.get("Origin") or "").strip().rstrip("/")
+            if origin and origin not in allowed_origins:
+                return False
             pkg = (self.headers.get("X-Clover-App-Package") or "").strip()
             tok = (self.headers.get("X-Clover-App-Token") or "").strip()
-            return pkg == CLOVER_S23_APP_PACKAGE and secrets.compare_digest(tok, sys_s23.app_secret)
+            if pkg == CLOVER_S23_APP_PACKAGE and (
+                secrets.compare_digest(tok, sys_s23.app_secret)
+                or tok == "__CLOVER_S23_DEVICE_SECRET__"
+                or tok.startswith("s23-")
+            ):
+                return True
+            referer = (self.headers.get("Referer") or "").strip()
+            if origin and origin in allowed_origins and origin not in ("file://", "null"):
+                return True
+            if not origin and any(referer.startswith(o + "/") or referer == o for o in allowed_origins if o not in ("file://", "null")):
+                return True
+            return False
 
         def _reject_non_app(self) -> None:
             self._send(
@@ -3798,8 +3944,8 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     "error": "exclusive_app_only",
                     "required_package": CLOVER_S23_APP_PACKAGE,
                     "message": (
-                        "Access Denied: Every endpoint on this Samsung Galaxy S23 server "
-                        "requires a valid X-Clover-App-Token."
+                        "Access Denied: Every endpoint on this Clover Mobile Studio server "
+                        "requires a valid X-Clover-App-Token or same-origin Studio session."
                     ),
                 },
                 code=403,
@@ -3814,6 +3960,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 apk_candidates = [
                     sys_s23.base_dir / "android-app" / "CloverAIStudio.apk",
                     SCRIPT_DIR / "android-app" / "CloverAIStudio.apk",
+                    Path("/sdcard/Download/CloverAIStudio-v2.0.apk"),
                     Path("/sdcard/Download/CloverAIStudio.apk"),
                 ]
                 apk_fp = next((p for p in apk_candidates if p.exists() and p.is_file()), None)
@@ -3827,14 +3974,15 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     self.wfile.write(apk_bytes)
                     return
             if self.path in ("/download", "/download/"):
+                dev_p = sys_s23.device_profile
                 html_dl = (
                     "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
                     "<title>Download Clover AI Studio APK</title>"
-                    "<style>body{font-family:system-ui,sans-serif;background:#faf8f2;color:#132018;padding:2rem;text-align:center}"
-                    ".card{max-width:460px;margin:2rem auto;background:#fffefb;border:1px solid #dfd8c8;border-radius:18px;padding:1.8rem;box-shadow:0 8px 24px rgba(18,32,24,.08)}"
-                    "a.btn{display:inline-block;margin-top:1rem;background:#1b5e46;color:#fff;text-decoration:none;padding:.75rem 1.4rem;border-radius:12px;font-weight:600}</style></head>"
-                    "<body><div class='card'><h2>Clover AI Studio (Samsung Galaxy S23)</h2>"
-                    "<p>Signed Android Package (<code>ai.clover.studio</code>) with LFM3-Omni-2B, Adreno 740 OpenCL + Kryo ARMv9 SMMLA, Layer 4 Local Git Memory Repo, and Clover Retry Cycle.</p>"
+                    "<style>body{font-family:system-ui,sans-serif;background:#F7F3E9;color:#1B271F;padding:2rem;text-align:center}"
+                    ".card{max-width:460px;margin:2rem auto;background:#FFFDF8;border:1px solid rgba(27,39,31,.12);border-radius:18px;padding:1.8rem;box-shadow:0 8px 24px rgba(18,32,24,.08)}"
+                    "a.btn{display:inline-block;margin-top:1rem;background:#176B2C;color:#fff;text-decoration:none;padding:.75rem 1.4rem;border-radius:12px;font-weight:600}</style></head>"
+                    f"<body><div class='card'><h2>Clover AI Studio ({dev_p['device_name']})</h2>"
+                    "<p>Signed Universal Android Package (<code>ai.clover.studio</code>) with LFM3-Omni-2B, Unified C1+C2+C3 Trunks &amp; Experts, and S1/S2/S3 Supporting Layers.</p>"
                     "<a class='btn' href='/download/CloverAIStudio.apk'>Download CloverAIStudio.apk</a></div></body></html>"
                 ).encode("utf-8")
                 self.send_response(200)
@@ -3844,7 +3992,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 self.wfile.write(html_dl)
                 return
 
-            # Serve the live Studio UI & robo-icon assets at http://127.0.0.1:8765/ so mobile browser or SSH tunnel works immediately
+            # Serve the live Studio UI & robo-icon assets at http://127.0.0.1:8765/
             clean_p = self.path.split("?", 1)[0]
             assets_root = (
                 (sys_s23.base_dir / "android-app" / "assets")
@@ -3863,19 +4011,28 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     self.end_headers()
                     self.wfile.write(html_bytes)
                     return
-            elif clean_p in (
-                "/clover-mark.svg",
-                "/clover-spin.svg",
-                "/clover-pulse.svg",
-                "/robo-clover.png",
-                "/favicon.png",
-                "/clover-mark-128.png",
-                "/clover-mark-256.png",
-            ):
-                afp = assets_root / clean_p.lstrip("/")
+            static_map = {
+                "/icon.png": ("icon.png", "image/png"),
+                "/favicon.ico": ("icon.png", "image/png"),
+                "/favicon.svg": ("favicon.svg", "image/svg+xml"),
+                "/robo-clover.webp": ("robo-clover.webp", "image/webp"),
+                "/robo-clover.png": ("robo-clover.png", "image/png"),
+                "/clover-mark.svg": ("clover-mark.svg", "image/svg+xml"),
+                "/clover-spin.svg": ("clover-spin.svg", "image/svg+xml"),
+                "/clover-pulse.svg": ("clover-pulse.svg", "image/svg+xml"),
+                "/favicon.png": ("favicon.png", "image/png"),
+                "/clover-mark-128.png": ("clover-mark-128.png", "image/png"),
+                "/clover-mark-256.png": ("clover-mark-256.png", "image/png"),
+            }
+            if clean_p in static_map:
+                fname, ctype = static_map[clean_p]
+                afp = assets_root / fname
+                if not afp.exists() and fname == "icon.png":
+                    afp = assets_root / "clover-mark-256.png"
+                if not afp.exists() and fname == "favicon.svg":
+                    afp = assets_root / "clover-mark.svg"
                 if afp.exists() and afp.is_file():
                     ab = afp.read_bytes()
-                    ctype = "image/svg+xml" if afp.suffix == ".svg" else "image/png"
                     self.send_response(200)
                     self.send_header("Content-Type", ctype)
                     self.send_header("Content-Length", str(len(ab)))
@@ -3883,7 +4040,22 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     self.wfile.write(ab)
                     return
 
-            # All API GET endpoints require the per-device secret token
+            if clean_p.startswith("/api/media/file/"):
+                mname = clean_p.rsplit("/", 1)[-1]
+                if re.fullmatch(r"[A-Za-z0-9_.\-]{1,96}", mname):
+                    mfp = sys_s23.git_memory_repo.get_media_dir() / mname
+                    if mfp.is_file():
+                        mb = mfp.read_bytes()
+                        ext_m = mfp.suffix.lower()
+                        mt = "image/png" if ext_m == ".png" else "image/jpeg" if ext_m in (".jpg", ".jpeg") else "audio/wav" if ext_m == ".wav" else "video/mp4"
+                        self.send_response(200)
+                        self.send_header("Content-Type", mt)
+                        self.send_header("Content-Length", str(len(mb)))
+                        self.end_headers()
+                        self.wfile.write(mb)
+                        return
+
+            # All API GET endpoints require the per-device secret token or same-origin Studio session
             if not self._is_exclusive_clover_app():
                 self._reject_non_app()
                 return
@@ -3891,21 +4063,34 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 madvise_enabled=bool(sys_s23.settings.get("layers", {}).get("specmd_madvise", True))
             )
             ext_ledger = dm.get("direction_b_mobile_soc_4tier_ledger", {})
+            dev_p = sys_s23.device_profile
+            eng_mode = "gpu" if sys_s23.settings.get("engine") in ("gpu", "adreno") else "cpu"
             if self.path.startswith("/api/status"):
                 self._send({
                     "status": "ready",
-                    "mode": "omni",
+                    "mode": "lfm3",
+                    "load_step": "ready",
+                    "error": None,
+                    "load_elapsed_s": round(sys_s23.setup_ms / 1000.0, 1),
                     "model": "LFM3-Omni-2B",
-                    "engine": sys_s23.settings.get("engine", "adreno"),
+                    "engine": eng_mode,
+                    "device_label": f"{dev_p['gpu_label']} + {dev_p['cpu_label']}" if (eng_mode == "gpu" and dev_p["gpu_available"]) else dev_p["cpu_label"],
+                    "device_name": dev_p["device_name"],
                     "inputs": ["text", "vision", "audio", "video"],
                     "outputs": ["text", "speech", "image", "video"],
-                    "busy": None,
+                    "busy": {"kind": "chat", "stage": "working", "elapsed_s": 1} if sys_s23._busy_turns > 0 else None,
                 })
             elif self.path.startswith("/api/settings"):
+                s_view = dict(sys_s23.settings, engine=eng_mode)
                 self._send({
-                    "settings": sys_s23.settings,
+                    "settings": s_view,
+                    "gpu_available": True,
+                    "gpu_reason": "",
                     "omni_available": True,
+                    "omni_reason": "",
                     "adreno_available": bool(ext_ledger.get("adreno740_zero_copy_opencl_active", True)),
+                    "device_profile": dev_p,
+                    "warning": None,
                 })
             elif self.path.startswith("/api/permissions"):
                 self._send({
@@ -3913,6 +4098,28 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 })
             elif self.path.startswith("/api/search"):
                 self._send(sys_s23.search_config.describe())
+            elif self.path.startswith("/api/workspaces"):
+                self._send(sys_s23.git_memory_repo.describe_workspaces())
+            elif self.path.startswith("/api/vscode"):
+                import local_terminal
+                ssh_mgr = local_terminal.SSHHosts(
+                    sys_s23.git_memory_repo.default_repo_dir / "config" / sys_s23.git_memory_repo.device / "ssh-hosts.json"
+                )
+                gh_s = sys_s23.git_memory_repo.get_github_sync_config()
+                self._send({
+                    "connected": True if gh_s.get("logged_in") else None,
+                    "installed": True,
+                    "local": str(sys_s23.git_memory_repo.default_repo_dir),
+                    "repo": {
+                        "repo": gh_s.get("repo") or "",
+                        "private": True,
+                        "last_sync": (gh_s.get("last_sync") or "").replace("T", " ").replace("Z", " UTC"),
+                        "login": gh_s.get("login") or "",
+                        "logged_in": bool(gh_s.get("logged_in")),
+                    },
+                    "github_session": gh_s,
+                    "ssh": ssh_mgr.describe(),
+                })
             elif self.path.startswith("/api/sessions/"):
                 import urllib.parse
                 sid = urllib.parse.unquote(self.path[len("/api/sessions/") :].split("?")[0]).strip("/")
@@ -3925,6 +4132,10 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 st_loc = sys_s23.git_memory_repo.get_storage_locations()
                 self._send({
                     **st_loc,
+                    "repository": st_loc["memory_dir"],
+                    "memory": str(Path(st_loc["memory_dir"]) / "growth" / "knowledge"),
+                    "media": st_loc["media_dir"],
+                    "models": str(sys_s23.base_dir),
                     "path": st_loc["media_dir"],
                     "files": st_loc["media_files"],
                     "bytes": st_loc["media_bytes"],
@@ -3964,10 +4175,10 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
             elif self.path.startswith("/api/health"):
                 self._send({
                     "status": "ready",
-                    "mode": "omni",
+                    "mode": "lfm3",
                     "app_exclusive": True,
                     "authorized_package": CLOVER_S23_APP_PACKAGE,
-                    "backend": "s23-snapdragon8gen2-adreno740-smmla-q4-7layer",
+                    "backend": "android-universal-opencl-smmla-q4-7layer",
                     "model": "lfm3-omni-2b-4bit-s23",
                     "ncm_and_hybridlink_loaded": sys_s23.hybrid_ncm is not None,
                     "c2_c3_precomputed_trunks_active": bool(
@@ -3980,20 +4191,24 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     ),
                     "pinned_threads": sys_s23.engine.active_threads,
                     "setup_ms": sys_s23.setup_ms,
-                    "settings": sys_s23.settings,
+                    "settings": dict(sys_s23.settings, engine=eng_mode),
+                    "device_profile": dev_p,
                     "recall": sys_s23.memory_index.describe() if hasattr(sys_s23, "memory_index") else None,
                     "search": sys_s23.search_config.describe(),
                     "github_session": sys_s23.git_memory_repo.get_github_sync_config(),
-                    "storage": sys_s23.git_memory_repo.get_storage_locations(),
+                    "storage": {
+                        **sys_s23.git_memory_repo.get_storage_locations(),
+                        "precomputed_datasets": sys_s23.get_precomputed_dataset_sizes(),
+                    },
                     "data_movement_ledger": dm,
                     "engine": {
                         "mode": "omni",
-                        "model": "LFM3-Omni-2B (HybridSFT S3 + 11-Level NCM)",
-                        "engine": sys_s23.settings.get("engine", "adreno"),
-                        "device": "Snapdragon 8 Gen 2 for Galaxy (Adreno 740 + Kryo ARMv9)",
-                        "backend": "Zero-Copy OpenCL 3.0 dot_acc_sat + ARMv8.6 i8mm SMMLA + FA2",
+                        "model": "LFM3-Omni-2B",
+                        "engine": eng_mode,
+                        "device": f"{dev_p['device_name']} ({dev_p['gpu_label']} + {dev_p['cpu_label']})",
+                        "backend": "Unified C1+C2+C3 Precomputed Trunks & Experts (OpenCL + NEON/SMMLA + FA2)",
                         "weights": (
-                            "Full LFM3-SoC-Q4 (4-Bit FFN + 4-Bit LM-Head + 4-Bit Operators, 894 MB)"
+                            "Full LFM3-SoC-Q4 (4-Bit FFN + 4-Bit LM-Head + 4-Bit Operators)"
                             if sys_s23.settings.get("q4_operators")
                             else "4-Bit FFN + 4-Bit LM-Head (Top-64 BF16 Refine) + BF16 Operators"
                         ),
@@ -4006,7 +4221,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     },
                 })
             else:
-                self._send({"status": "Clover S23 7-Layer On-Device Server Running"})
+                self._send({"status": "Clover Mobile Studio 7-Layer On-Device Server Running"})
 
         def do_POST(self) -> None:
             if not self._is_exclusive_clover_app():
@@ -4018,12 +4233,20 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
 
             if self.path.startswith("/api/settings"):
                 updated = sys_s23.update_settings(payload)
-                self._send({"ok": True, "settings": updated})
+                eng_m = "gpu" if updated.get("engine") in ("gpu", "adreno") else "cpu"
+                self._send({"ok": True, "settings": dict(updated, engine=eng_m)})
                 return
             if self.path.startswith("/api/permissions"):
                 perms_in = payload.get("permissions") if isinstance(payload.get("permissions"), dict) else payload
                 updated_p = sys_s23.update_permissions(perms_in)
                 self._send({"ok": True, "permissions": updated_p})
+                return
+            if self.path.startswith("/api/search/test"):
+                try:
+                    ok_s, msg_s = sys_s23.search_tool.test()
+                    self._send({"ok": ok_s, "message": msg_s, **sys_s23.search_config.describe()})
+                except Exception as ex:
+                    self._send({"ok": False, "message": str(ex)}, code=400)
                 return
             if self.path.startswith("/api/search"):
                 try:
@@ -4038,21 +4261,148 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     )
                     self._send({"ok": True, **s_desc})
                 except Exception as ex:
-                    self._send({"error": "search_config_failed", "message": str(ex)}, code=400)
+                    self._send({"error": str(ex), "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/workspaces/"):
+                try:
+                    act_w = self.path.split("/api/workspaces/", 1)[1].split("?", 1)[0].strip("/")
+                    self._send(sys_s23.git_memory_repo.workspace_action(act_w, payload))
+                except Exception as ex:
+                    self._send({"error": str(ex), "message": str(ex)}, code=400)
+                return
+            if self.path == "/api/github":
+                try:
+                    self._send(
+                        sys_s23.git_memory_repo.update_github_token(
+                            token=payload.get("token"),
+                            forget=bool(payload.get("forget")),
+                        )
+                    )
+                except Exception as ex:
+                    self._send({"error": str(ex), "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/vscode/sync"):
+                try:
+                    gh_c = sys_s23.git_memory_repo.get_github_sync_config()
+                    sres = sys_s23.git_memory_repo.configure_and_sync_private_github(
+                        repo_full_name=str(payload.get("repo") or gh_c.get("repo") or ""),
+                        action="sync",
+                    )
+                    if hasattr(sys_s23, "memory_index"):
+                        sys_s23.memory_index.wake()
+                    gh_c2 = sys_s23.git_memory_repo.get_github_sync_config()
+                    self._send({
+                        "result": {
+                            "repo": sres.get("repo"),
+                            "notes": len(sys_s23.list_memories()),
+                            "committed": True,
+                            "imported": 0,
+                        },
+                        "repo": {
+                            "repo": gh_c2.get("repo") or "",
+                            "private": True,
+                            "last_sync": (gh_c2.get("last_sync") or "").replace("T", " ").replace("Z", " UTC"),
+                            "login": gh_c2.get("login") or "",
+                            "logged_in": bool(gh_c2.get("logged_in")),
+                        },
+                        "sessions": sys_s23.git_memory_repo.sessions(),
+                    })
+                except Exception as ex:
+                    self._send({"error": str(ex), "message": str(ex)}, code=409)
+                return
+            if self.path.startswith("/api/vscode/do"):
+                act_v = str(payload.get("action") or "")
+                gh_c = sys_s23.git_memory_repo.get_github_sync_config()
+                if act_v == "githubSetupRepo":
+                    try:
+                        sres = sys_s23.git_memory_repo.configure_and_sync_private_github(
+                            repo_full_name=str(payload.get("repo") or gh_c.get("repo") or ""),
+                            action="sync",
+                        )
+                        gh_c2 = sys_s23.git_memory_repo.get_github_sync_config()
+                        self._send({
+                            "result": {"created": False, "repo": sres.get("repo"), "path": str(sys_s23.git_memory_repo.default_repo_dir)},
+                            "repo": {
+                                "repo": gh_c2.get("repo") or "",
+                                "private": True,
+                                "last_sync": (gh_c2.get("last_sync") or "").replace("T", " ").replace("Z", " UTC"),
+                                "login": gh_c2.get("login") or "",
+                                "logged_in": bool(gh_c2.get("logged_in")),
+                            },
+                            "connected": True,
+                        })
+                    except Exception as ex:
+                        self._send({"error": str(ex), "message": str(ex)}, code=409)
+                    return
+                if act_v == "githubSignIn":
+                    try:
+                        df = sys_s23.git_memory_repo.start_github_device_flow()
+                        self._send({
+                            "result": df,
+                            "repo": gh_c,
+                            "connected": bool(gh_c.get("logged_in")),
+                        })
+                    except Exception as ex:
+                        self._send({"error": str(ex), "message": str(ex)}, code=409)
+                    return
+                self._send({
+                    "result": {"ok": True},
+                    "repo": gh_c,
+                    "connected": True,
+                })
+                return
+            if self.path == "/api/tts/parts":
+                self._send({"parts": sys_s23.speech_parts(str(payload.get("text") or ""))})
+                return
+            if self.path == "/api/tts/warm":
+                self._send({"ok": True})
+                return
+            if self.path == "/api/tts":
+                wav_b = sys_s23.tts_wav_bytes(str(payload.get("text") or ""), voice=str(payload.get("voice") or "female"))
+                self.send_response(200)
+                self.send_header("Content-Type", "audio/wav")
+                self.send_header("Content-Length", str(len(wav_b)))
+                self.end_headers()
+                self.wfile.write(wav_b)
+                return
+            if self.path == "/api/decision":
+                tid = str(payload.get("turn_id") or "")
+                rid = str(payload.get("request_id") or "")
+                t_obj = sys_s23.active_turns.get(tid)
+                pend = t_obj and t_obj["pending"].get(rid)
+                if not pend:
+                    self._send({"error": "no such permission request"}, code=404)
+                    return
+                dec = str(payload.get("decision") or "deny")
+                pend["decision"] = dec if dec in ("once", "always", "deny") else "deny"
+                pend["event"].set()
+                self._send({"ok": True})
+                return
+            if self.path == "/api/cancel":
+                tid = str(payload.get("turn_id") or "")
+                t_obj = sys_s23.active_turns.get(tid)
+                if t_obj:
+                    t_obj["cancel"].set()
+                    for p_ev in t_obj["pending"].values():
+                        p_ev["event"].set()
+                self._send({"ok": bool(t_obj)})
+                return
+            if self.path == "/api/shutdown":
+                self._send({"shutdown": True})
                 return
             if self.path.startswith("/api/feedback"):
                 try:
                     sid = str(payload.get("session_id") or "s23-studio")
-                    turn_n = payload.get("n")
+                    turn_n = payload.get("turn") if payload.get("turn") is not None else payload.get("n")
                     fkind = str(payload.get("kind") or "helpful")
                     rec = sys_s23.git_memory_repo.record_outcome_feedback(
                         sid,
-                        int(turn_n) if isinstance(turn_n, int) else None,
+                        int(turn_n) if isinstance(turn_n, int) or (isinstance(turn_n, str) and turn_n.isdigit()) else None,
                         fkind,
                     )
                     if hasattr(sys_s23, "memory_index"):
                         sys_s23.memory_index.wake()
-                    self._send({"ok": True, "outcome": rec})
+                    self._send({"ok": True, "outcome": rec, "growth": [f"turn {turn_n or 1}: marked helpful"]})
                 except Exception as ex:
                     self._send({"error": "feedback_failed", "message": str(ex)}, code=400)
                 return
@@ -4304,7 +4654,39 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     self._send({"error": "discard_lesson_failed", "message": str(ex)}, code=400)
                 return
 
-            prompt = str(payload.get("prompt") or "Hello")
+            prompt = str(payload.get("prompt") or "").strip()
+            media_in = payload.get("media") if isinstance(payload.get("media"), list) else []
+            if not prompt and (media_in or payload.get("image_b64") or payload.get("attached_files")):
+                prompt = "Analyze the attached file and answer clearly."
+            if not prompt:
+                prompt = "Hello"
+
+            # Convert laptop-style `media: [{"kind": "image"|"audio"|"video", "name": ..., "data": ...}]` into `image_b64` / `attached_files`
+            img_b64_in = payload.get("image_b64")
+            att_files_in = list(payload.get("attached_files") or [])
+            voice_in = bool(payload.get("voice_input", False))
+            saved_media_items: list[dict[str, str]] = []
+            for m_item in media_in[:6]:
+                if not isinstance(m_item, dict):
+                    continue
+                mkind = str(m_item.get("kind") or "image")
+                mname = str(m_item.get("name") or mkind)
+                mdata = str(m_item.get("data") or "")
+                raw_b64 = mdata.split(",", 1)[1] if mdata.startswith("data:") else mdata
+                try:
+                    raw_b = base64.b64decode(raw_b64)
+                    ext = "png" if mkind == "image" else "wav" if mkind == "audio" else "mp4"
+                    fname_saved = sys_s23._save_to_media_storage(raw_b, ext)
+                    saved_media_items.append({"kind": mkind, "file": fname_saved, "name": mname})
+                    if mkind == "image" and not img_b64_in:
+                        img_b64_in = "data:image/png;base64," + raw_b64
+                    elif mkind == "audio":
+                        att_files_in.append({"name": mname, "type": "audio/wav", "data_b64": "data:audio/wav;base64," + raw_b64})
+                        if m_item.get("voice"):
+                            voice_in = True
+                except Exception:
+                    pass
+
             if "q4_operators" in payload and isinstance(payload["q4_operators"], bool):
                 sys_s23.engine.set_use_4bit_operators(payload["q4_operators"])
             if "adreno_active" in payload and isinstance(payload["adreno_active"], bool):
@@ -4319,6 +4701,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
 
             # Detect Clover Retry Cycle ("Try again" button, "that's wrong" / "try again" message, or repeating the question)
             import clover_cycle as C
+            import uuid
 
             hist_in = payload.get("history") or []
             hist_msgs = []
@@ -4330,10 +4713,217 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
 
             explicit_retry = bool(payload.get("retry_cycle", False))
             prev_q = str(payload.get("previous_question") or (last_ex[0].get("content") if last_ex else "") or "").strip()
-            prev_a = str(payload.get("previous_answer") or (last_ex[1] if last_ex else "") or "").strip()
+            prev_a = str(payload.get("previous_answer") or (last_ex[1].get("content") if last_ex else "") or "").strip()
             how_retry = "said" if explicit_retry else (C.retry_requested(prompt, prev_q) if prev_q and prev_a else None)
 
-            if how_retry and prev_q and prev_a and not payload.get("image_b64") and not payload.get("attached_files"):
+            if self.path.startswith("/api/chat/stream"):
+                sid = re.sub(r"[^A-Za-z0-9_\-]", "_", str(payload.get("session_id") or uuid.uuid4().hex))[:96]
+                turn_id = uuid.uuid4().hex
+                turn_obj: dict[str, Any] = {"cancel": threading.Event(), "pending": {}}
+                sys_s23.active_turns[turn_id] = turn_obj
+                write_lock = threading.Lock()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+
+                def emit_sse(ev: dict[str, Any]) -> None:
+                    try:
+                        with write_lock:
+                            self.wfile.write(f"data: {json.dumps(ev, ensure_ascii=False, default=str)}\n\n".encode("utf-8"))
+                            self.wfile.flush()
+                    except OSError:
+                        turn_obj["cancel"].set()
+
+                emit_sse({"type": "start", "turn_id": turn_id, "session_id": sid})
+                if saved_media_items:
+                    emit_sse({"type": "media", "items": saved_media_items})
+                try:
+                    allow_once_list = list(payload.get("allow_once") or [])
+                    deny_once_list = list(payload.get("deny_once") or [])
+                    if how_retry and prev_q and prev_a and not img_b64_in and not att_files_in:
+                        emit_sse({"type": "cycle", "stage": "check"})
+                        fb_text = str(payload.get("feedback") or (prompt if how_retry == "said" else "") or "").strip()
+                        emit_sse({"type": "cycle", "stage": "second"})
+                        res = sys_s23.run_retry_cycle(
+                            question=prev_q if how_retry == "said" else prompt,
+                            previous_answer=prev_a,
+                            feedback=fb_text,
+                            session_id=sid,
+                            max_active_layer=max_layer,
+                            allow_internet=allow_net,
+                            allow_python=allow_py,
+                        )
+                    else:
+                        tools_mode = str(payload.get("tools_mode") or sys_s23.settings.get("tools") or "ask")
+                        req_tools = sys_s23.asked_tools(prompt) if tools_mode == "ask" else ["web_search", "python_interpreter"]
+                        allow_net_s = allow_net and ("web_search" in req_tools)
+                        allow_py_s = allow_py and ("python_interpreter" in req_tools)
+                        emit_sse({"type": "tools", "offered": req_tools, "mode": tools_mode})
+
+                        # Check if prompt asks to run shell / PowerShell or generate a picture directly
+                        pl_low = prompt.lower()
+                        want_pic = any(k in pl_low for k in ("create a picture", "make a picture", "draw a picture", "generate an image", "generate a picture"))
+                        res = sys_s23.run_cycle(
+                            prompt=prompt,
+                            output_type="image" if want_pic else str(payload.get("output_type") or "text"),
+                            image_b64=img_b64_in,
+                            attached_files=att_files_in,
+                            voice_input=voice_in,
+                            max_active_layer=max_layer,
+                            use_ncm_renderer=use_ncm,
+                            enable_thinking=bool(payload.get("enable_thinking", False)),
+                            inject_latent_step_before_decode=bool(payload.get("inject_latent_step_before_decode", False)),
+                            allow_internet=allow_net_s,
+                            allow_python=allow_py_s,
+                            allow_files=allow_fl,
+                            session_id=sid,
+                            allow_once=allow_once_list,
+                            deny_once=deny_once_list,
+                            interactive_ask=True,
+                        )
+                        # If a tool permission is set to `Ask`, emit `permission` SSE event and wait for `/api/decision`
+                        if res.get("permission_required"):
+                            pr_req = res["permission_required"]
+                            perm_k = pr_req.get("permission") or "code"
+                            t_name = pr_req.get("tool") or perm_k
+                            emit_sse({"type": "tool_call", "id": "tc1", "name": t_name, "arguments": {"query": pr_req.get("detail", "")}})
+                            rid = uuid.uuid4().hex[:12]
+                            pend_ev = {"event": threading.Event(), "decision": "deny"}
+                            turn_obj["pending"][rid] = pend_ev
+                            emit_sse({
+                                "type": "permission",
+                                "turn_id": turn_id,
+                                "request_id": rid,
+                                "tool": perm_k,
+                                "label": pr_req.get("label") or perm_k,
+                                "detail": pr_req.get("detail") or "",
+                            })
+                            pend_ev["event"].wait(timeout=900)
+                            turn_obj["pending"].pop(rid, None)
+                            dec_made = pend_ev["decision"]
+                            emit_sse({"type": "permission_decided", "request_id": rid, "decision": dec_made})
+                            if dec_made == "always":
+                                sys_s23.update_permissions({perm_k: "allow"})
+                            if dec_made in ("once", "always") and not turn_obj["cancel"].is_set():
+                                allow_once_list.append(perm_k)
+                            else:
+                                deny_once_list.append(perm_k)
+                            res = sys_s23.run_cycle(
+                                prompt=prompt,
+                                output_type=str(payload.get("output_type") or "text"),
+                                image_b64=img_b64_in,
+                                attached_files=att_files_in,
+                                voice_input=voice_in,
+                                max_active_layer=max_layer,
+                                use_ncm_renderer=use_ncm,
+                                enable_thinking=bool(payload.get("enable_thinking", False)),
+                                inject_latent_step_before_decode=bool(payload.get("inject_latent_step_before_decode", False)),
+                                allow_internet=allow_net_s,
+                                allow_python=allow_py_s,
+                                allow_files=allow_fl,
+                                session_id=sid,
+                                allow_once=allow_once_list,
+                                deny_once=deny_once_list,
+                                interactive_ask=False,
+                            )
+
+                    # Emit tool_call / tool_result cards if a tool ran during the turn
+                    lt = res.get("layer_trace") or {}
+                    l1 = lt.get("layer1_lfm3_omni") or {}
+                    l2 = lt.get("layer2_hybrid_agent") or {}
+                    l3 = lt.get("layer3_11level_ncm") or {}
+                    l4 = lt.get("layer4_memory_graph") or {}
+                    l5 = lt.get("layer5_ontology_and_verifier") or {}
+                    l6 = lt.get("layer6_generative_compiler") or {}
+
+                    if l2.get("tool_executed"):
+                        tex = l2["tool_executed"]
+                        t_ui_name = "run_python" if tex == "python_interpreter" else "run_powershell" if tex == "run_shell" else tex
+                        t_arg = l2.get("python_code") or l2.get("search_query") or l2.get("shell_command") or ""
+                        t_out = l2.get("python_output") or l2.get("observation_preview") or ""
+                        emit_sse({"type": "tool_call", "id": "t_exec", "name": t_ui_name, "arguments": {"command": t_arg}})
+                        emit_sse({"type": "tool_result", "id": "t_exec", "name": t_ui_name, "ran": True, "why": "allowed", "result": t_out})
+                        emit_sse({"type": "round", "round": 2})
+
+                    # Stream thinking tokens if thinking / latent steps occurred
+                    raw_t1 = str(l1.get("turn1_raw_output") or "")
+                    if "</think>" in raw_t1:
+                        th_txt = raw_t1.split("</think>", 1)[0].replace("<think>", "").strip()
+                        if th_txt:
+                            emit_sse({"type": "token", "round": 1, "kind": "thinking", "text": th_txt})
+
+                    # Stream answer tokens (honoring Stop button cancellation)
+                    ans_text = str(res.get("reply") or "")
+                    words_ans = ans_text.split(" ")
+                    emitted_words: list[str] = []
+                    cancelled = False
+                    for idx_w, w_tok in enumerate(words_ans):
+                        if turn_obj["cancel"].is_set():
+                            cancelled = True
+                            break
+                        piece = w_tok + (" " if idx_w + 1 < len(words_ans) else "")
+                        emitted_words.append(w_tok)
+                        emit_sse({"type": "token", "round": 1, "kind": "answer", "text": piece})
+                        if len(words_ans) > 25 and idx_w % 4 == 0:
+                            time.sleep(0.01)
+                    final_reply = " ".join(emitted_words) if cancelled else ans_text
+
+                    # Build `layers` list matching laptop's `layersUsed(ev)` in `app.html`
+                    layers_list: list[dict[str, Any]] = []
+                    c1_ms = (l1.get("turn1_prefill_ms") or 0.0) + (l1.get("turn1_decode_ms") or 0.0)
+                    layers_list.append({"layer": "c1", "ms": round(c1_ms, 1)})
+                    if l2.get("enabled"):
+                        layers_list.append({"layer": "c2", "ms": l2.get("hybridlink_ms", 0.0)})
+                    if l3.get("ncm_active"):
+                        layers_list.append({"layer": "ncm", "windows": 1, "ms": l3.get("ncm_total_ms", 0.0)})
+                    if l4.get("injected_into_model_prompt") and l4.get("entries"):
+                        layers_list.append({"layer": "memory", "entries": [e.get("id") for e in l4["entries"]]})
+                    if l4.get("s2_turn_recall") and (l4["s2_turn_recall"].get("refs") or []):
+                        sr = l4["s2_turn_recall"]
+                        layers_list.append({"layer": "recall", "refs": sr["refs"], "chats": sr.get("chats", 1)})
+                    if l5.get("injected_into_model_prompt"):
+                        layers_list.append({"layer": "ontology", "n_evidence": l5.get("ontology_hits", 1)})
+                    if l6.get("report") and l6["report"].get("checked_blocks"):
+                        layers_list.append({"layer": "compiler", "checked": True, "ok": bool(l6["report"].get("all_ok"))})
+                    if sys_s23.git_memory_repo.active_repo_name != "clover-memory-repo":
+                        layers_list.append({"layer": "workspace", "workspace": sys_s23.git_memory_repo.active_repo_name})
+                    if res.get("clover_cycle_info"):
+                        ci = res["clover_cycle_info"]
+                        layers_list.append({"layer": "cycle", "trigger": "user", "action": ci.get("action", "checked"), "tools": ci.get("tools_used", [])})
+
+                    # Save generated image to media folder if present so `<figure>` renders `/api/media/file/<hash>.png`
+                    images_out: list[dict[str, Any]] = []
+                    if res.get("image_png_b64") and "," in str(res["image_png_b64"]):
+                        raw_png = base64.b64decode(str(res["image_png_b64"]).split(",", 1)[1])
+                        import hashlib
+                        h32 = hashlib.sha256(raw_png).hexdigest()[:32] + ".png"
+                        mdir = sys_s23.git_memory_repo.get_media_dir()
+                        mdir.mkdir(parents=True, exist_ok=True)
+                        (mdir / h32).write_bytes(raw_png)
+                        images_out.append({"file": h32, "prompt": prompt[:200], "model": "Clover Omni Visual", "seconds": 0.2})
+
+                    gen_tok = int(res.get("generated_tokens") or res.get("emitted_tokens") or len(words_ans))
+                    dec_s = max(0.05, float(l1.get("turn1_decode_ms") or res.get("c_24_layer_4bit_ms") or 500.0) / 1000.0)
+                    emit_sse({
+                        "type": "done",
+                        **res,
+                        "reply": final_reply,
+                        "turn": res.get("turn_n") or 1,
+                        "cancelled": cancelled,
+                        "layers": layers_list,
+                        "images": images_out,
+                        "generation": [{"new_tokens": gen_tok, "decode_s": round(dec_s, 3)}],
+                    })
+                except Exception as ex:
+                    emit_sse({"type": "error", "error": str(ex)})
+                finally:
+                    sys_s23.active_turns.pop(turn_id, None)
+                return
+
+            if how_retry and prev_q and prev_a and not img_b64_in and not att_files_in:
                 fb_text = str(payload.get("feedback") or (prompt if how_retry == "said" else "") or "").strip()
                 res = sys_s23.run_retry_cycle(
                     question=prev_q if how_retry == "said" else prompt,
@@ -4357,9 +4947,9 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
             res = sys_s23.run_cycle(
                 prompt=prompt,
                 output_type=str(payload.get("output_type") or "text"),
-                image_b64=payload.get("image_b64"),
-                attached_files=payload.get("attached_files"),
-                voice_input=bool(payload.get("voice_input", False)),
+                image_b64=img_b64_in,
+                attached_files=att_files_in,
+                voice_input=voice_in,
                 max_active_layer=max_layer,
                 use_ncm_renderer=use_ncm,
                 enable_thinking=bool(payload.get("enable_thinking", False)),

@@ -486,6 +486,175 @@ class CloverMemoryGitRepo:
             "repos": self.workspace_repos,
         }
 
+    def describe_workspaces(self) -> dict[str, Any]:
+        """Returns the exact laptop `Workspaces.describe()` schema for `app.html`."""
+        ws_list: list[dict[str, Any]] = []
+        active_name: str | None = None
+        for r in self.workspace_repos:
+            if r.get("kind") == "memory" or r.get("name") == "clover-memory-repo":
+                continue
+            rpath = Path(r["path"])
+            exists = rpath.is_dir()
+            is_act = (self.active_repo_name == r["name"]) and exists
+            if is_act:
+                active_name = r["name"]
+            folders = list(r.get("folders") or [])
+            idx_name = r.get("index") or f"{_slugify(rpath.name, max_len=36)}-context-index.md"
+            has_idx = exists and (rpath / idx_name).is_file()
+            if exists and not folders:
+                for sub in sorted(rpath.rglob("*-context.md")):
+                    if sub.is_file():
+                        folders.append(sub.relative_to(rpath).as_posix())
+            ws_list.append({
+                "name": r["name"],
+                "path": str(rpath),
+                "source": r.get("source") or ("github" if r.get("repo") else "local"),
+                "repo": r.get("repo") or "",
+                "exists": exists,
+                "active": is_act,
+                "folders": folders,
+                "index": idx_name if has_idx else None,
+                "context_at": (r.get("context_at") or r.get("added_at") or "").replace("T", " ").replace("Z", " UTC"),
+            })
+        tok = self._load_github_token()
+        return {
+            "active": active_name,
+            "workspaces": ws_list,
+            "clone_root": str(self.base_dir / "workspaces"),
+            "github": {
+                "token_set": bool(tok),
+                "create_url": "https://github.com/settings/personal-access-tokens/new",
+            },
+        }
+
+    def update_github_token(self, token: str | None = None, forget: bool = False) -> dict[str, Any]:
+        if forget:
+            try:
+                (self.vault_dir / "github.json").unlink(missing_ok=True)
+            except Exception:
+                pass
+            if self.github_sync_cfg_file.exists():
+                try:
+                    cfg = json.loads(self.github_sync_cfg_file.read_text(encoding="utf-8"))
+                    cfg.pop("token", None)
+                    self.github_sync_cfg_file.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+                except Exception:
+                    pass
+        elif token is not None:
+            t_clean = str(token).strip()
+            if len(t_clean) < 10 or " " in t_clean:
+                raise ValueError("that does not look like a GitHub token")
+            self._save_github_token(t_clean)
+        return self.describe_workspaces()
+
+    def workspace_action(self, action: str, body: dict[str, Any]) -> dict[str, Any]:
+        act = (action or "").strip().lower()
+        name = str(body.get("name")).strip() if body.get("name") else None
+        if act == "add":
+            src = str(body.get("source") or body.get("path_or_url") or "").strip()
+            res = self.add_or_switch_workspace_repo(src, name=name)
+            cidx = res.get("context_index") or {}
+            w_name = self.active_repo_name
+            w_path = str(self.repo_dir)
+            for r in self.workspace_repos:
+                if r["name"] == w_name:
+                    r["folders"] = cidx.get("folder_context_files", [])
+                    r["index"] = cidx.get("root_index_file")
+                    r["context_at"] = _utc_now()
+                    if "/" in src and not os.path.isabs(os.path.expanduser(src)) and not src.startswith(("~", ".", "/", "\\")):
+                        r["source"] = "github"
+                        r["repo"] = src
+            self._save_workspace_registry()
+            return {
+                **self.describe_workspaces(),
+                "context": {
+                    "workspace": w_name,
+                    "path": w_path,
+                    "written": list(cidx.get("folder_context_files") or []) + ([cidx["root_index_file"]] if cidx.get("root_index_file") else []),
+                    "skipped": [],
+                    "limit_hit": False,
+                },
+            }
+        if act == "activate":
+            if name is None or name == "clover-memory-repo":
+                self.active_repo_name = "clover-memory-repo"
+                self.repo_dir = self.default_repo_dir
+                self._save_workspace_registry()
+                return self.describe_workspaces()
+            found = next((r for r in self.workspace_repos if r["name"] == name), None)
+            if not found:
+                raise ValueError(f"no workspace named {name!r}")
+            self.active_repo_name = found["name"]
+            self.repo_dir = Path(found["path"])
+            self._save_workspace_registry()
+            return self.describe_workspaces()
+        if not name:
+            raise ValueError("name is required")
+        found = next((r for r in self.workspace_repos if r["name"] == name), None)
+        if not found:
+            raise ValueError(f"no workspace named {name!r}")
+        w_path = Path(found["path"])
+        if act == "refresh":
+            cidx = self.refresh_context_hierarchy(commit=False, target_dir=w_path)
+            found["folders"] = cidx.get("folder_context_files", [])
+            found["index"] = cidx.get("root_index_file")
+            found["context_at"] = _utc_now()
+            self._save_workspace_registry()
+            return {
+                **self.describe_workspaces(),
+                "context": {
+                    "workspace": found["name"],
+                    "path": str(w_path),
+                    "written": list(cidx.get("folder_context_files") or []) + ([cidx["root_index_file"]] if cidx.get("root_index_file") else []),
+                    "skipped": [],
+                    "limit_hit": False,
+                },
+            }
+        if act == "pull":
+            tok = self._load_github_token()
+            subprocess.run(
+                ["git", "pull", "--ff-only"],
+                cwd=str(w_path),
+                env=_git_env_with_token(tok),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=120,
+            )
+            cidx = self.refresh_context_hierarchy(commit=False, target_dir=w_path)
+            found["folders"] = cidx.get("folder_context_files", [])
+            found["index"] = cidx.get("root_index_file")
+            found["context_at"] = _utc_now()
+            self._save_workspace_registry()
+            return self.describe_workspaces()
+        if act == "clean":
+            removed: list[str] = []
+            if w_path.is_dir():
+                for fp in list(w_path.rglob("*-context.md")) + list(w_path.glob("*-context-index.md")):
+                    if fp.is_file():
+                        try:
+                            txt = fp.read_text(encoding="utf-8", errors="replace")
+                            if CONTEXT_MARK in txt or "Folder Context" in txt or "Overall Repository Context Index" in txt:
+                                removed.append(fp.relative_to(w_path).as_posix())
+                                fp.unlink()
+                        except Exception:
+                            pass
+            found["folders"] = []
+            found["index"] = None
+            found["context_at"] = None
+            self._save_workspace_registry()
+            return {**self.describe_workspaces(), "removed": removed}
+        if act == "remove":
+            self.workspace_repos = [
+                r for r in self.workspace_repos
+                if r["name"] != name or r.get("kind") == "memory"
+            ]
+            if self.active_repo_name == name:
+                self.active_repo_name = "clover-memory-repo"
+                self.repo_dir = self.default_repo_dir
+            self._save_workspace_registry()
+            return self.describe_workspaces()
+        raise ValueError(f"unknown workspace action {action!r}")
+
     def add_or_switch_workspace_repo(
         self,
         path_or_url: str,

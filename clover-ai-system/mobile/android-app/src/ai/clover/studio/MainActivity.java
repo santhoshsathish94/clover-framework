@@ -41,7 +41,13 @@ public class MainActivity extends Activity {
 
     private static final String EXCLUSIVE_APP_PACKAGE = "ai.clover.studio";
     private static final String EXCLUSIVE_APP_TOKEN = "__CLOVER_S23_DEVICE_SECRET__";
-    private static final String LOCAL_S23_BASE_URL = "http://127.0.0.1:8765";
+    private static final String[] CANDIDATE_BASE_URLS = new String[]{
+            "http://127.0.0.1:8765",
+            "http://127.0.0.1:8766",
+            "http://10.0.2.2:8765",
+            "http://10.0.2.2:8766"
+    };
+    private volatile String activeBaseUrl = "http://127.0.0.1:8765";
 
     private static final int REQ_FILE_CHOOSER = 1001;
     private static final int REQ_SPEECH_INPUT = 1002;
@@ -115,8 +121,9 @@ public class MainActivity extends Activity {
         settings.setAllowUniversalAccessFromFileURLs(false);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+        String devTag = (Build.MANUFACTURER + " " + Build.MODEL + "; " + Build.HARDWARE).replace("\"", "");
         settings.setUserAgentString(
-                "CloverAIStudio-Android/1.0 (Samsung-Galaxy-S23; Snapdragon-8-Gen-2; ai.clover.studio)"
+                "CloverAIStudio-Android/2.0 (" + devTag + "; Android " + Build.VERSION.RELEASE + "; ai.clover.studio)"
         );
 
         webView.addJavascriptInterface(new CloverAndroidBridge(), "CloverAndroidBridge");
@@ -184,21 +191,31 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
-        public String callLocalS23Api(String method, String endpoint, String jsonBody) {
+        public String getDeviceInfo() {
+            String abi = (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) ? Build.SUPPORTED_ABIS[0] : "unknown";
+            return "{\"manufacturer\":\"" + Build.MANUFACTURER.replace("\"", "") + "\","
+                    + "\"model\":\"" + Build.MODEL.replace("\"", "") + "\","
+                    + "\"hardware\":\"" + Build.HARDWARE.replace("\"", "") + "\","
+                    + "\"abi\":\"" + abi + "\","
+                    + "\"sdk\":" + Build.VERSION.SDK_INT + ","
+                    + "\"release\":\"" + Build.VERSION.RELEASE + "\"}";
+        }
+
+        private String executeRequestAgainstBase(String baseUrl, String method, String endpoint, String jsonBody) throws Exception {
             HttpURLConnection conn = null;
             try {
                 String path = endpoint.startsWith("/") ? endpoint : ("/" + endpoint);
-                URL url = new URL(LOCAL_S23_BASE_URL + path);
+                URL url = new URL(baseUrl + path);
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod(method != null ? method.toUpperCase(Locale.US) : "GET");
-                conn.setConnectTimeout(6000);
+                conn.setConnectTimeout(3500);
                 conn.setReadTimeout(240000);
                 conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
                 conn.setRequestProperty("X-Clover-App-Package", EXCLUSIVE_APP_PACKAGE);
                 conn.setRequestProperty("X-Clover-App-Token", EXCLUSIVE_APP_TOKEN);
                 conn.setRequestProperty(
                         "User-Agent",
-                        "CloverAIStudio-Android/1.0 (Samsung-Galaxy-S23; Snapdragon-8-Gen-2; ai.clover.studio)"
+                        "CloverAIStudio-Android/2.0 (" + Build.MANUFACTURER + " " + Build.MODEL + "; " + Build.HARDWARE + "; ai.clover.studio)"
                 );
 
                 if ("POST".equalsIgnoreCase(method) && jsonBody != null) {
@@ -214,7 +231,7 @@ public class MainActivity extends Activity {
                 int code = conn.getResponseCode();
                 InputStream is = (code >= 200 && code < 400) ? conn.getInputStream() : conn.getErrorStream();
                 if (is == null) {
-                    return "{\"error\":\"empty_response\",\"http_code\":" + code + "}";
+                    throw new java.io.IOException("HTTP " + code + " empty response");
                 }
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
                 StringBuilder sb = new StringBuilder();
@@ -223,14 +240,34 @@ public class MainActivity extends Activity {
                     sb.append(line).append('\n');
                 }
                 reader.close();
-                return sb.toString().trim();
-            } catch (Exception ex) {
-                String msg = ex.getMessage() != null ? ex.getMessage().replace("\"", "'") : "connection_failed";
-                return "{\"error\":\"s23_local_unreachable\",\"message\":\"" + msg + "\"}";
+                String bodyStr = sb.toString().trim();
+                if (code >= 400 && !bodyStr.startsWith("{")) {
+                    throw new java.io.IOException("HTTP " + code + " non-JSON error from " + baseUrl);
+                }
+                return bodyStr;
             } finally {
                 if (conn != null) {
                     conn.disconnect();
                 }
+            }
+        }
+
+        @JavascriptInterface
+        public String callLocalS23Api(String method, String endpoint, String jsonBody) {
+            try {
+                return executeRequestAgainstBase(activeBaseUrl, method, endpoint, jsonBody);
+            } catch (Exception firstEx) {
+                for (String candidate : CANDIDATE_BASE_URLS) {
+                    if (candidate.equals(activeBaseUrl)) continue;
+                    try {
+                        String resp = executeRequestAgainstBase(candidate, method, endpoint, jsonBody);
+                        activeBaseUrl = candidate;
+                        return resp;
+                    } catch (Exception ignored) {
+                    }
+                }
+                String msg = firstEx.getMessage() != null ? firstEx.getMessage().replace("\"", "'") : "connection_failed";
+                return "{\"error\":\"clover_local_unreachable\",\"message\":\"" + msg + "\"}";
             }
         }
 
@@ -316,7 +353,7 @@ public class MainActivity extends Activity {
                         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
                         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
                         intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
-                        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to Clover AI Studio (Samsung S23)");
+                        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to Clover AI Studio");
                         startActivityForResult(intent, REQ_SPEECH_INPUT);
                     } catch (Exception ex) {
                         Toast.makeText(MainActivity.this, "Voice input unavailable on this device", Toast.LENGTH_SHORT).show();

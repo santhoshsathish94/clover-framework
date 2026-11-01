@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ai.clover.studio"
-    android:versionCode="5"
-    android:versionName="2.0.0">
+    android:versionCode="6"
+    android:versionName="2.1.0">
 
     <uses-sdk
         android:minSdkVersion="24"
         android:targetSdkVersion="34" />
+
+    <supports-screens
+        android:smallScreens="true"
+        android:normalScreens="true"
+        android:largeScreens="true"
+        android:xlargeScreens="true"
+        android:anyDensity="true" />
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <!-- User-controllable permissions for Internet, Microphone, Camera, Files & Storage, and WakeLock -->
     <uses-permission android:name="android.permission.INTERNET" />
