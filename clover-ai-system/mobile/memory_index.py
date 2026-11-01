@@ -389,17 +389,26 @@ class MemoryIndex:
         with self.lock:
             texts = [u["text"] for u in cands]
             e = np.stack([self.vec[key(t)] for t in texts])
+            # Paper 1 (Schiekiera et al., ICML 2026): Mean-center candidate & query vectors to remove cone anisotropy
+            mu_e = e.mean(axis=0, keepdims=True)
+            e_mc = e - mu_e
+            e_mc = e_mc / np.clip(np.linalg.norm(e_mc, axis=1, keepdims=True), 1e-12, None)
+            qv_mc = qv - mu_e[0]
+            qv_mc = qv_mc / max(float(np.linalg.norm(qv_mc)), 1e-12)
             bm25_text = bm25([toks(t) for t in texts], qt)
-            cos_text = e @ qv
+            cos_text = 0.5 * (e @ qv) + 0.5 * (e_mc @ qv_mc)
             lists = [bm25_text, cos_text]
             noted = all(x is not None for x in notes)
             bm25_note_max = 0.0
             if noted:
                 bm25_notes = bm25([toks(x) for x in notes], qt)
                 bm25_note_max = float(bm25_notes.max()) if len(bm25_notes) else 0.0
+                en = np.stack([self.vec[key(x or "(nothing)")] for x in notes])
+                en_mc = en - en.mean(axis=0, keepdims=True)
+                en_mc = en_mc / np.clip(np.linalg.norm(en_mc, axis=1, keepdims=True), 1e-12, None)
                 lists += [
                     bm25_notes,
-                    np.stack([self.vec[key(x or "(nothing)")] for x in notes]) @ qv,
+                    0.5 * (en @ qv) + 0.5 * (en_mc @ qv_mc),
                 ]
             best_cos = float(cos_text.max()) if len(cos_text) else 0.0
             best_bm25 = max(float(bm25_text.max()) if len(bm25_text) else 0.0, bm25_note_max)
