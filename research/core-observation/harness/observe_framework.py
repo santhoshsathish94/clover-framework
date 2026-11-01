@@ -88,8 +88,9 @@ import web_search as WS  # noqa: E402
 import k3_memory_graph as MG  # noqa: E402
 import k3_ontology_graph as OG  # noqa: E402
 
-for fn in ("search_repo_relevant", "record_task_or_session_turn", "read_file", "write_file"):
-    T.wrap(GR.CloverMemoryGitRepo, fn, "S1")
+for fn in ("search_repo_relevant", "record_task_or_session_turn", "read_file", "write_file", "remember_note", "user_notes"):
+    if hasattr(GR.CloverMemoryGitRepo, fn):  # remember_note and user_notes: added after the first observation
+        T.wrap(GR.CloverMemoryGitRepo, fn, "S1")
 T.wrap(MG, "retrieve_relevant_memory_package", "S1-graph")
 T.wrap(MI.MemoryIndex, "recall", "S2-recall")
 T.wrap(OG.CloverOntologyRetriever, "retrieve", "S2-ontology")

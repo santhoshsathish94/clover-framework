@@ -1,0 +1,30 @@
+{
+ "seeds": [
+  {
+   "prompt": "Name one primary colour.",
+   "sent_wall": 1793546612.889507,
+   "seconds": 25.15,
+   "reply": "Red",
+   "error": null
+  },
+  {
+   "prompt": "Name one planet.",
+   "sent_wall": 1793546638.0363748,
+   "seconds": 34.58,
+   "reply": "Mars",
+   "error": null
+  }
+ ],
+ "note_writer_call": [
+  1793546702.63,
+  "prefill_cached"
+ ],
+ "probe": {
+  "prompt": "What is the capital of Australia?",
+  "sent_wall": 1793546702.8730516,
+  "seconds": 49.24,
+  "reply": "Canberra is the capital of Australia.",
+  "error": null
+ },
+ "probe_sent_after_writer_call_s": 0.24
+}

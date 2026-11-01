@@ -14,6 +14,14 @@
   127.0.0.1, low priority; push to GitHub then clone on k3 (the push also deploys the website; the human chose to
   include it). GPU server (8x3090) offered; not needed while both stacks run on CPU; ask if a full-precision C1
   comparison is needed.
+- After the observation (human, 2026-11-01): "let's do the fixes of A first, then build B". For B: "use the 8 3090 gpus
+  and build the sematics core with internet data so that the core is solid with real meaning that already exist and
+  user sematics will happen when the actual users start using it more". For C: "C1 + C2 + C3 should happen always, C1
+  should do only inference C2 should always plan based on inference and latent and C3 should always decode and produce
+  output based on C2 nothing should change all these 3 should use the memory relationships and tools when they are
+  required the sematics should decide that that's why it should be the core, it should decide what each next step
+  should happen". "the core sematics will help in recall because it understand the true meaning so it can recall what
+  is need what tools to use what to plan what to output and that's the layer that can grow".
 
 ## Boundaries on k3
 - Write only under /opt/clover-k3/core-observe. Bind 127.0.0.1 on ports other than 8765. nice 19.
@@ -50,3 +58,12 @@
   (harness/linux_device). Services left running for further observation; stop with harness/k3.sh stop.
 - Next (human's call): decide from the observation what the device-free core should be. The core and user semantics
   design waits for that.
+- 2026-11-01: human chose fix group A (A1 import order, A2 C1 lock, A3 history, A4 semantics decides tools, A5
+  remember and diet notes, A6 attachment errors). Implemented in clover-ai-system/mobile (s23_on_device_clover.py,
+  clover_git_memory_repo.py) with tests (test_semantics_frame.py 67, test_mobile_s1_s2_s3.py 13/13). Same 15
+  messages rerun on k3 from an empty memory, plus a contention check, a tool-opening probe and a bad-photo check;
+  recorded in README.md "After A" with traces/after-a-final and traces/after-a. Not committed yet (asks first).
+- Observed after A, outside A: S2 recall's cue-word gate and lexical matches bring unrelated earlier conversations
+  into C1; clover_cycle.final_answer read "15 times" as the answer; C1 alters digits when copying a tool result;
+  repo_read covers the memory repository only; C1 has no image path; C3 still returns C1's text.
+- Next: B (semantics core trained on internet data on the 8x3090 server): design and questions before GPU time.

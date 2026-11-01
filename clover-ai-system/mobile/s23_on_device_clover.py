@@ -89,8 +89,12 @@ LOCAL_NCM_DIR = SCRIPT_DIR / "ncm"
 LFM3_DIR = SCRIPT_DIR.parent / "src" / "models" / "lfm3-1.7b"
 MODELS_DIR = SCRIPT_DIR.parent / "src" / "models"
 TOOLS_DIR = SCRIPT_DIR.parent / "src" / "tools" / "hybrid-ncm-k3"
-for _p in (SCRIPT_DIR, LOCAL_TOOLS_DIR, LOCAL_NCM_DIR, LFM3_DIR, MODELS_DIR, TOOLS_DIR, SCRIPT_DIR.parent, SCRIPT_DIR.parent.parent / "tools" / "hybrid-ncm-k3"):
-    if _p.exists() and str(_p) not in sys.path:
+# Earlier folders win: this file's own modules come before the older copies in src/tools/hybrid-ncm-k3, which lack
+# clover_cycle.context_before and CloverMemoryGitRepo.get_media_dir (both raised on k3, research/core-observation).
+for _p in reversed((SCRIPT_DIR, LOCAL_TOOLS_DIR, LOCAL_NCM_DIR, LFM3_DIR, MODELS_DIR, TOOLS_DIR, SCRIPT_DIR.parent, SCRIPT_DIR.parent.parent / "tools" / "hybrid-ncm-k3")):
+    if _p.exists():
+        if str(_p) in sys.path:
+            sys.path.remove(str(_p))
         sys.path.insert(0, str(_p))
 
 D_LFM3 = 2048
@@ -105,6 +109,7 @@ PHONE_TOOLS = {
     "files.read": ("repo_read",), "files.list": ("repo_read",), "files.write": ("repo_write",),
     "shell": ("run_shell",), "status": ("run_shell",), "ssh": ("run_ssh",), "image": ("generate_image",),
     "memory.search": ("repo_search",),
+    "remember": ("remember",),  # not a model tool: semantics.align saves the user's words (remember_for)
 }
 PHONE_OFFER = ("web_search", "python_interpreter")  # what a phone turn offers when the message names no tool
 
@@ -115,8 +120,9 @@ def phone_runtime():
     return semantics.Runtime(tools=PHONE_TOOLS, device="phone", risky=local_terminal.risky)
 
 
-def align_turn(frame, res: dict[str, Any]) -> list[str]:
-    """semantics.align on a phone turn. Evidence: its one tool step (layer 2), memory (layer 4), the Try again cycle."""
+def align_turn(frame, res: dict[str, Any], remember_fn=None) -> list[str]:
+    """semantics.align on a phone turn. Evidence: its one tool step (layer 2), memory (layer 4), the Try again cycle.
+    remember_fn: saves the user's words when they asked Clover to remember something (`CloverS23OnDeviceSystem.remember_for`)."""
     import semantics
     lt = res.setdefault("layer_trace", {})
     l2 = lt.get("layer2_hybrid_agent") or {}
@@ -130,7 +136,7 @@ def align_turn(frame, res: dict[str, Any]) -> list[str]:
     if cycle:
         layers.append({"layer": "cycle", "action": cycle.get("action")})
     evidence = {"reply": res.get("reply"), "tool_calls": calls if tool else [], "layers": layers}
-    notes = semantics.align(frame, evidence)
+    notes = semantics.align(frame, evidence, remember_fn=remember_fn)
     res["reply"] = evidence["reply"]
     lt["semantics_frame"] = frame.layer()
     return notes
@@ -1943,6 +1949,68 @@ class CloverS23OnDeviceSystem:
             "required": ["code"],
         },
     }
+    TOOL_REPO_READ = {
+        "name": "repo_read",
+        "description": "Read a text file from Clover's memory repository or the open workspace, by its path inside it.",
+        "parameters": {
+            "type": "object",
+            "properties": {"path": {"type": "string", "description": "Path inside the repository, such as notes/todo.md"}},
+            "required": ["path"],
+        },
+    }
+    TOOL_REPO_WRITE = {
+        "name": "repo_write",
+        "description": "Write a text file in Clover's memory repository or the open workspace; the change is committed.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Path inside the repository"},
+                "content": {"type": "string", "description": "The whole new content of the file"},
+            },
+            "required": ["path", "content"],
+        },
+    }
+    TOOL_REPO_SEARCH = {
+        "name": "repo_search",
+        "description": "Search Clover's memory repository (notes, knowledge, tasks) for files matching a query.",
+        "parameters": {
+            "type": "object",
+            "properties": {"query": {"type": "string", "description": "Words to look for"}},
+            "required": ["query"],
+        },
+    }
+    TOOL_SHELL = {
+        "name": "run_shell",
+        "description": "Run a shell command on this device in the active workspace folder and return its output.",
+        "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string", "description": "The shell command"}},
+            "required": ["command"],
+        },
+    }
+    TOOL_SSH = {
+        "name": "run_ssh",
+        "description": "Run a non-interactive command on a remote SSH host the user has configured.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "host": {"type": "string", "description": "The configured host name"},
+                "port": {"type": "string", "description": "SSH port (default 22)"},
+                "command": {"type": "string", "description": "The command to run"},
+            },
+            "required": ["host", "command"],
+        },
+    }
+    # The phone's tools by the names semantics routes (PHONE_TOOLS); the order is the order C1 sees them in.
+    TOOL_DEFS = {
+        "web_search": TOOL_WEB_SEARCH,
+        "python_interpreter": TOOL_PYTHON,
+        "repo_read": TOOL_REPO_READ,
+        "repo_write": TOOL_REPO_WRITE,
+        "repo_search": TOOL_REPO_SEARCH,
+        "run_shell": TOOL_SHELL,
+        "run_ssh": TOOL_SSH,
+    }
 
     def __init__(self, base_dir: Path, load_neural_ncm: bool = True):
         t0 = time.perf_counter()
@@ -2141,6 +2209,9 @@ class CloverS23OnDeviceSystem:
         # S2 · Relationships: Turn-Level MemoryIndex (`sessions/<month>/<chat>.jsonl`, `growth/notes/`, BM25 + Dense RRF)
         from memory_index import MemoryIndex
 
+        # C1 is not safe to call from two threads: S2's note writer and a turn ran together on k3 and both outputs were
+        # unreadable (research/core-observation). Turns wait for this lock; the note writer skips when it is taken.
+        self.engine_lock = threading.RLock()
         self._busy_turns = 0
         self._last_turn_end = time.time()
         self.memory_index = MemoryIndex(
@@ -2343,6 +2414,8 @@ class CloverS23OnDeviceSystem:
     def _idle_note_writer(self, msgs: list[dict[str, str]], max_new: int = 90) -> str | None:
         if not self._is_studio_idle():
             return None
+        if not self.engine_lock.acquire(blocking=False):
+            return None
         try:
             u_txt = "\n".join(str(m.get("content") or "") for m in msgs if m.get("content"))
             p_str = (
@@ -2357,6 +2430,8 @@ class CloverS23OnDeviceSystem:
             return self._clean_model_text(self.tokenizer.decode(g_ids, skip_special_tokens=False))
         except Exception:
             return None
+        finally:
+            self.engine_lock.release()
 
     DECLINED_TEXT = (
         "[Clover permission] The user chose not to allow this just now, so it did not run. "
@@ -2488,18 +2563,51 @@ class CloverS23OnDeviceSystem:
         "<think>\nThis is a key first step.<latent>This is the latent reasoning process.</latent>This is a key reasoning step.\n</think><search>search query here</search><result>search result here</result><think>\nThis is a key first step.<latent>This is the latent reasoning process.</latent>This is the key decision step.\n</think><python>python code here</python><result>python interpreter result here</result><think>\nThis is a key first step.<latent>This is the latent reasoning process.</latent>This is the key conclusion.\n</think><answer>\\boxed{answer here}</answer>"
     )
 
-    def _build_system_prompt(self, allow_internet: bool = True, allow_python: bool = True, use_hybrid_agent_format: bool = True) -> str:
-        if use_hybrid_agent_format and (allow_internet or allow_python):
+    def _build_system_prompt(
+        self,
+        allow_internet: bool = True,
+        allow_python: bool = True,
+        use_hybrid_agent_format: bool = True,
+        tools: list[str] | None = None,
+    ) -> str:
+        """tools: the tool names to offer (`TOOL_DEFS`); None means web search and Python by the two flags. Web search
+        and Python alone use HybridAgent's format; any other tool uses the `<tools>` list."""
+        if tools is None:
+            tools = [n for n, on in (("web_search", allow_internet), ("python_interpreter", allow_python)) if on]
+        if use_hybrid_agent_format and tools and set(tools) <= {"web_search", "python_interpreter"}:
             return f"<|startoftext|><|im_start|>system\n{self.HYBRID_AGENT_SYSTEM_PROMPT}<|im_end|>\n"
-        active_tools = []
-        if allow_internet:
-            active_tools.append(self.TOOL_WEB_SEARCH)
-        if allow_python:
-            active_tools.append(self.TOOL_PYTHON)
+        active_tools = [self.TOOL_DEFS[t] for t in tools if t in self.TOOL_DEFS]
         if active_tools:
             tools_block = "\n".join(json.dumps(t) for t in active_tools)
             return f"<|startoftext|><|im_start|>system\n<tools>\n{tools_block}\n</tools><|im_end|>\n"
         return "<|startoftext|><|im_start|>system\nYou are Clover, a helpful AI assistant. Answer the user's request directly.<|im_end|>\n"
+
+    _SPECIAL_TOKEN = re.compile(r"<\|[^|<>\s]{1,40}\|>")
+
+    def _history_turns(self, history: list[dict[str, Any]] | None, budget_tokens: int) -> str:
+        """This conversation's earlier messages as chat turns for C1: the most recent that fit in `budget_tokens`, each cut
+        to 200 tokens, starting with a user message. Special-token text inside a message is removed, so a quoted page
+        cannot open a system turn."""
+        turns: list[str] = []
+        used = 0
+        for m in reversed(history or []):
+            role = "user" if m.get("role") == "user" else "assistant"
+            text = self._SPECIAL_TOKEN.sub(" ", str(m.get("content") or "")).strip()
+            if not text:
+                continue
+            ids = self.tokenizer.encode(text, allow_special=False)
+            if len(ids) > 200:
+                text = self.tokenizer.decode(ids[:200], skip_special_tokens=True).strip() + " ..."
+            turn = f"<|im_start|>{role}\n{text}<|im_end|>\n"
+            n = len(self.tokenizer.encode(turn, allow_special=True))
+            if used + n > budget_tokens:
+                break
+            turns.append(turn)
+            used += n
+        turns.reverse()
+        while turns and not turns[0].startswith("<|im_start|>user"):
+            turns.pop(0)
+        return "".join(turns)
 
     @staticmethod
     def looping(text: str) -> tuple[bool, str]:
@@ -2756,6 +2864,23 @@ class CloverS23OnDeviceSystem:
                 "layer_trace": {"semantics_frame": frame.layer()}, "generated_tokens": 0, "emitted_tokens": 0,
                 "total_cycle_ms": 0.0}
 
+    def remember_for(self, session_id: str, max_active_layer: int = 7):
+        """The save `semantics.align` makes when the user asked Clover to remember something: their words, as a note in
+        S1 (`notes/MEM-USER-*.md`). None when memory is not set to Allow, as on the laptop."""
+        if max(1, min(7, int(max_active_layer))) < 4 or self.perm_modes.get("memory", "allow") != "allow" \
+                or not self.settings.get("layers", {}).get("memory", True):
+            return None
+
+        def save(note: str) -> str:
+            try:
+                saved = self.git_memory_repo.remember_note(note, conversation_id=session_id)
+            except Exception as ex:
+                return f"Not saved: {ex}"
+            if hasattr(self, "memory_index"):
+                self.memory_index.wake()
+            return f"Saved to memory as {saved['id']}."
+        return save
+
     @classmethod
     def extract_python_from_reply(cls, reply: str) -> list[str]:
         """
@@ -2862,6 +2987,9 @@ class CloverS23OnDeviceSystem:
         allow_once: list[str] | None = None,
         deny_once: list[str] | None = None,
         interactive_ask: bool = False,
+        history: list[dict[str, Any]] | None = None,
+        tools: list[str] | None = None,
+        meaning: Any = None,
     ) -> dict[str, Any]:
         """
         Executes the Clover cycle up to `max_active_layer` (`1 .. 7`) with zero hardcoded answers:
@@ -2870,9 +2998,15 @@ class CloverS23OnDeviceSystem:
             inject retrieved evidence (`F6` dated background system message for recall).
           - C1 (`LFM3` 24-layer C engine) + C2 (`HybridLink2048` + `Lfm3NativeHybridLink`) + C3 (`11-Level NCM`).
           - S3 (`CloverPythonGenerativeCompiler`, `WebSearch`, Python, Shell, SSH) executes and verifies tools.
+        history: this conversation's earlier messages (`{"role", "content"}`), given to C1 before the message.
+        tools: the tool names semantics routed for this message (`semantics.route`); only these are offered to C1 and
+          run. None keeps the older rule for callers without semantics: web search and Python only when nothing was
+          retrieved.
+        meaning: the message's `semantics.Frame` (a meal question brings the user's diet and allergy notes from S1).
         """
-        t0 = time.perf_counter()
         self._busy_turns += 1
+        self.engine_lock.acquire()
+        t0 = time.perf_counter()
         try:
             active_layer_cap = max(1, min(7, int(max_active_layer)))
             allow_set = {str(x) for x in (allow_once or [])}
@@ -2973,8 +3107,9 @@ class CloverS23OnDeviceSystem:
                             txt = fpath.read_text(encoding="utf-8", errors="replace")[:1200].replace("\n", " ")
                             retrieved_context_blocks.append(f"[Local File '{fpath.name}']: {txt}")
                             tools_used.append("device_files_access")
-                        except Exception:
-                            pass
+                        except Exception as ex:
+                            retrieved_context_blocks.append(f"[Local File '{fpath.name}']: could not be read ({type(ex).__name__}).")
+                            layer_trace.setdefault("errors", []).append(f"read {fpath.name}: {ex!r}")
 
             if image_b64:
                 try:
@@ -3016,6 +3151,14 @@ class CloverS23OnDeviceSystem:
                         seen_snippets.add(snip)
                         l4_items.append({"id": rel_p, "type": "git_repo_file", "summary": snip, "reason": f"git_repo_match(score={gh['score']})"})
                         retrieved_context_blocks.append(f"[Git Memory Repo '{rel_p}']: {snip}")
+                if getattr(meaning, "diet", False):
+                    # "Suggest a quick dinner" shares no word with "I'm vegetarian": the dinner suggested garlic shrimp on k3
+                    import semantics
+                    for note in self.git_memory_repo.user_notes(semantics.FOOD_NOTE)[-3:]:
+                        if note["text"] not in seen_snippets:
+                            seen_snippets.add(note["text"])
+                            l4_items.append({"id": note["id"], "type": "user_note", "summary": note["text"], "reason": "diet_note_for_a_meal_question"})
+                            retrieved_context_blocks.append(f"[The user asked you to remember ({note['created_at'][:10]})]: {note['text']}")
                 if mem_pkg is not None and mem_pkg.items:
                     for it in mem_pkg.items[:2]:
                         summary_clean = str(it.entry.summary or "").strip()
@@ -3147,13 +3290,18 @@ class CloverS23OnDeviceSystem:
                 user_turn_content = user_clean
 
             has_grounded_context = bool(retrieved_context_str)
-            tools_enabled_for_turn = (active_layer_cap >= 2 and not has_grounded_context)
-            use_ha_fmt = tools_enabled_for_turn and (allow_internet or allow_python)
-            sys_prompt_str = self._build_system_prompt(
-                allow_internet=(allow_internet and tools_enabled_for_turn),
-                allow_python=(allow_python and tools_enabled_for_turn),
-                use_hybrid_agent_format=use_ha_fmt,
-            )
+            if tools is None:
+                tools_enabled_for_turn = (active_layer_cap >= 2 and not has_grounded_context)
+                offered_tools = [n for n, on in (("web_search", allow_internet), ("python_interpreter", allow_python)) if on and tools_enabled_for_turn]
+            else:
+                # Semantics decides. On k3 a context file S1 retrieved for "Use Python to compute 2**64 + 17" switched off
+                # the Python tool semantics had routed, and the model guessed (research/core-observation).
+                offered_tools = [
+                    t for t in dict.fromkeys(tools)
+                    if t in self.TOOL_DEFS and (t != "web_search" or allow_internet) and (t != "python_interpreter" or allow_python)
+                ] if active_layer_cap >= 2 else []
+            use_ha_fmt = bool(offered_tools) and set(offered_tools) <= {"web_search", "python_interpreter"}
+            sys_prompt_str = self._build_system_prompt(tools=offered_tools, use_hybrid_agent_format=use_ha_fmt)
             # F6 Second-System-Message injection for S2 turn-level recall (`exp G5`)
             if recall_sys_block:
                 sys_prompt_str = f"{sys_prompt_str}<|im_start|>system\n{recall_sys_block}<|im_end|>\n"
@@ -3162,11 +3310,25 @@ class CloverS23OnDeviceSystem:
                 assistant_open = "<|im_start|>assistant\n<think><latent>"
             elif use_ha_fmt or enable_thinking:
                 assistant_open = "<|im_start|>assistant\n<think>\n"
+            elif offered_tools:
+                # The <tools> list: with <answer> already open, C1 answered in prose and called nothing; with the think
+                # block closed and no <answer>, it called the listed tool (k3, harness/c1_tool_open.py)
+                assistant_open = "<|im_start|>assistant\n<think></think>"
             else:
                 assistant_open = "<|im_start|>assistant\n<think></think><answer>"
 
             turn1_prompt_str = f"{sys_prompt_str}<|im_start|>user\n{user_turn_content}<|im_end|>\n{assistant_open}"
             turn1_ids = self.tokenizer.encode(turn1_prompt_str, allow_special=True)
+            # The conversation so far, most recent first, in what is left of the prompt budget ("And 45 pens?" reached
+            # C1 alone on k3 and it asked for the price per pen)
+            history_str = self._history_turns(history, max_prompt_tokens - len(turn1_ids)) if history else ""
+            if history_str:
+                with_hist = f"{sys_prompt_str}{history_str}<|im_start|>user\n{user_turn_content}<|im_end|>\n{assistant_open}"
+                with_hist_ids = self.tokenizer.encode(with_hist, allow_special=True)
+                if len(with_hist_ids) <= max_prompt_tokens:
+                    turn1_prompt_str, turn1_ids = with_hist, with_hist_ids
+                else:
+                    history_str = ""
             if len(turn1_ids) > max_prompt_tokens:
                 sys_ids = self.tokenizer.encode(sys_prompt_str + "<|im_start|>user\n", allow_special=True)
                 tail_ids = self.tokenizer.encode(f"\n\nQuestion: {user_clean}<|im_end|>\n{assistant_open}", allow_special=True)
@@ -3243,13 +3405,17 @@ class CloverS23OnDeviceSystem:
                 fn_name = parsed_call["function"]
                 params = parsed_call["parameters"]
 
+                def _offered(name: str) -> bool:
+                    return tools is None or name in offered_tools
+
                 if fn_name == "web_search":
                     q_search = params.get("query") or user_clean
                     urls_in_prompt = re.findall(r"https?://[^\s<>\"')]+", user_clean)
                     if urls_in_prompt and urls_in_prompt[0] not in q_search:
                         q_search = urls_in_prompt[0] + " " + q_search
                     ok_w, p_prompt, deny_msg = self._check_tool_permission(
-                        "internet", "web_search", q_search, allow_set, deny_set, interactive_ask, explicit_flag=allow_internet,
+                        "internet", "web_search", q_search, allow_set, deny_set, interactive_ask,
+                        explicit_flag=allow_internet and _offered("web_search"),
                     )
                     if p_prompt is not None:
                         return _early_permission_response(p_prompt)
@@ -3266,7 +3432,8 @@ class CloverS23OnDeviceSystem:
                     executed_py_code = params.get("code") or ""
                     if executed_py_code:
                         ok_p, p_prompt, deny_msg = self._check_tool_permission(
-                            "code", "python_interpreter", executed_py_code, allow_set, deny_set, interactive_ask, explicit_flag=allow_python,
+                            "code", "python_interpreter", executed_py_code, allow_set, deny_set, interactive_ask,
+                            explicit_flag=allow_python and _offered("python_interpreter"),
                         )
                         if p_prompt is not None:
                             return _early_permission_response(p_prompt)
@@ -3284,7 +3451,7 @@ class CloverS23OnDeviceSystem:
                     sh_cmd = params.get("command") or ""
                     if sh_cmd:
                         ok_sh, p_prompt, deny_msg = self._check_tool_permission(
-                            "shell", "run_shell", sh_cmd, allow_set, deny_set, interactive_ask, explicit_flag=True,
+                            "shell", "run_shell", sh_cmd, allow_set, deny_set, interactive_ask, explicit_flag=_offered("run_shell"),
                         )
                         if p_prompt is not None:
                             return _early_permission_response(p_prompt)
@@ -3302,7 +3469,7 @@ class CloverS23OnDeviceSystem:
                     ssh_port = params.get("port") or "22"
                     ssh_cmd = params.get("command") or ""
                     ok_ssh, p_prompt, deny_msg = self._check_tool_permission(
-                        "ssh", "run_ssh", f"{ssh_host}:{ssh_port} $ {ssh_cmd}", allow_set, deny_set, interactive_ask, explicit_flag=True,
+                        "ssh", "run_ssh", f"{ssh_host}:{ssh_port} $ {ssh_cmd}", allow_set, deny_set, interactive_ask, explicit_flag=_offered("run_ssh"),
                     )
                     if p_prompt is not None:
                         return _early_permission_response(p_prompt)
@@ -3318,7 +3485,7 @@ class CloverS23OnDeviceSystem:
                 elif fn_name == "repo_search" and active_layer_cap >= 4:
                     rq = params.get("query") or user_clean
                     ok_m, p_prompt, deny_msg = self._check_tool_permission(
-                        "memory", "repo_search", rq, allow_set, deny_set, interactive_ask, explicit_flag=memory_perm_ok,
+                        "memory", "repo_search", rq, allow_set, deny_set, interactive_ask, explicit_flag=memory_perm_ok and _offered("repo_search"),
                     )
                     if p_prompt is not None:
                         return _early_permission_response(p_prompt)
@@ -3334,7 +3501,7 @@ class CloverS23OnDeviceSystem:
                 elif fn_name == "repo_read" and active_layer_cap >= 4:
                     rpath = params.get("path") or "CONTEXT.md"
                     ok_m, p_prompt, deny_msg = self._check_tool_permission(
-                        "memory", "repo_read", rpath, allow_set, deny_set, interactive_ask, explicit_flag=memory_perm_ok,
+                        "memory", "repo_read", rpath, allow_set, deny_set, interactive_ask, explicit_flag=memory_perm_ok and _offered("repo_read"),
                     )
                     if p_prompt is not None:
                         return _early_permission_response(p_prompt)
@@ -3354,7 +3521,8 @@ class CloverS23OnDeviceSystem:
                     rpath = params.get("path") or "tasks/note.md"
                     rcontent = params.get("content") or ""
                     ok_m, p_prompt, deny_msg = self._check_tool_permission(
-                        "memory", "repo_write", f"{rpath} ({len(rcontent)} chars)", allow_set, deny_set, interactive_ask, explicit_flag=memory_perm_ok,
+                        "memory", "repo_write", f"{rpath} ({len(rcontent)} chars)", allow_set, deny_set, interactive_ask,
+                        explicit_flag=memory_perm_ok and _offered("repo_write"),
                     )
                     if p_prompt is not None:
                         return _early_permission_response(p_prompt)
@@ -3448,6 +3616,8 @@ class CloverS23OnDeviceSystem:
 
             layer_trace["layer1_lfm3_omni"] = {
                 "enabled": True,
+                "tools_offered": offered_tools,
+                "history_messages": history_str.count("<|im_start|>"),
                 "turn1_prefill_ms": round(prefill_ms, 2),
                 "turn1_decode_ms": round(decode_ms_t1, 2),
                 "turn1_generated_tokens": len(gen_ids_t1),
@@ -3626,6 +3796,7 @@ class CloverS23OnDeviceSystem:
         finally:
             self._busy_turns = max(0, self._busy_turns - 1)
             self._last_turn_end = time.time()
+            self.engine_lock.release()
 
     def run_retry_cycle(
         self,
@@ -3651,8 +3822,9 @@ class CloverS23OnDeviceSystem:
         """
         import clover_cycle as C
 
-        t0 = time.perf_counter()
         self._busy_turns += 1
+        self.engine_lock.acquire()
+        t0 = time.perf_counter()
         try:
             active_layer_cap = max(1, min(7, int(max_active_layer)))
             madvise_on = active_layer_cap >= 7
@@ -3874,6 +4046,7 @@ class CloverS23OnDeviceSystem:
         finally:
             self._busy_turns = max(0, self._busy_turns - 1)
             self._last_turn_end = time.time()
+            self.engine_lock.release()
 
 
 def run_on_device_s23_verification(base_dir: Path) -> dict[str, Any]:
@@ -3978,6 +4151,7 @@ def run_on_device_s23_verification(base_dir: Path) -> dict[str, Any]:
         "<|startoftext|><|im_start|>user\nExplain why the sky is blue in two sentences.<|im_end|>\n<|im_start|>assistant\n<think></think><answer>",
         allow_special=True,
     )
+    sys_s23.engine_lock.acquire()  # the benchmarks call C1 directly; S2's note writer waits until they finish
     sys_s23.engine.set_madvise_active(False)
     sys_s23.engine.reset_dm_stats()
     sys_s23.engine.prefill_cached([124894, 124893])
@@ -4024,6 +4198,7 @@ def run_on_device_s23_verification(base_dir: Path) -> dict[str, Any]:
     sys_s23.engine.set_use_4bit_lm_head(True)
     sys_s23.engine.set_use_4bit_operators(False)
     sys_s23.engine.set_adreno_opencl_active(True)
+    sys_s23.engine_lock.release()
 
     vm_rss_mb = 0.0
     if os.path.exists("/proc/self/status"):
@@ -4865,6 +5040,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
             att_files_in = list(payload.get("attached_files") or [])
             voice_in = bool(payload.get("voice_input", False))
             saved_media_items: list[dict[str, str]] = []
+            media_errors: list[str] = []
             for m_item in media_in[:6]:
                 if not isinstance(m_item, dict):
                     continue
@@ -4883,8 +5059,10 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                         att_files_in.append({"name": mname, "type": "audio/wav", "data_b64": "data:audio/wav;base64," + raw_b64})
                         if m_item.get("voice"):
                             voice_in = True
-                except Exception:
-                    pass
+                except Exception as ex:
+                    # k3: the photo was dropped here without a word and the model said it saw no image
+                    print(f"[Clover-S23] attachment {mname!r} not taken: {ex!r}", file=sys.stderr, flush=True)
+                    media_errors.append(f"{mname}: {'the data could not be decoded' if isinstance(ex, ValueError) else 'it could not be saved'}")
 
             if "q4_operators" in payload and isinstance(payload["q4_operators"], bool):
                 sys_s23.engine.set_use_4bit_operators(payload["q4_operators"])
@@ -4996,6 +5174,9 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                                 allow_once=allow_once_list,
                                 deny_once=deny_once_list,
                                 interactive_ask=True,
+                                history=hist_msgs,
+                                tools=req_tools,
+                                meaning=frame,
                             )
                         # If a tool permission is set to `Ask` (or is a risky shell command), emit `permission` SSE event and wait for `/api/decision`
                         if res.get("permission_required"):
@@ -5042,8 +5223,16 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                                 allow_once=allow_once_list,
                                 deny_once=deny_once_list,
                                 interactive_ask=False,
+                                history=hist_msgs,
+                                tools=req_tools,
+                                meaning=frame,
                             )
-                        align_turn(frame, res)
+                        align_turn(frame, res, sys_s23.remember_for(sid, max_layer))
+
+                    if media_errors:
+                        res["media_errors"] = media_errors
+                        res["reply"] = (str(res.get("reply") or "").rstrip()
+                                        + f"\n\n(Note: I could not open {', '.join(media_errors)}, so this answer is without it.)").strip()
 
                     # Emit tool_call / tool_result cards if a tool ran during the turn
                     lt = res.get("layer_trace") or {}
@@ -5192,9 +5381,16 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 allow_once=payload.get("allow_once") if isinstance(payload.get("allow_once"), list) else None,
                 deny_once=payload.get("deny_once") if isinstance(payload.get("deny_once"), list) else None,
                 interactive_ask=True,
+                history=hist_msgs,
+                tools=req_tools,
+                meaning=frame,
             )
             if not res.get("permission_required"):
-                align_turn(frame, res)
+                align_turn(frame, res, sys_s23.remember_for(str(payload.get("session_id") or "s23-studio"), max_layer))
+            if media_errors:
+                res["media_errors"] = media_errors
+                res["reply"] = (str(res.get("reply") or "").rstrip()
+                                + f"\n\n(Note: I could not open {', '.join(media_errors)}, so this answer is without it.)").strip()
             self._send(res)
 
         def do_DELETE(self) -> None:

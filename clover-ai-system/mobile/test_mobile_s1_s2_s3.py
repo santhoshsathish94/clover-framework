@@ -344,7 +344,29 @@ def run_all_tests() -> None:
         bins_m2 = sem.bidirectional_bins_diagnose("Trapezoid midsegment FC", "", [], missing_bridge_concepts=["Trapezoid midsegment theorem FC=(AB+ED)/2"])
         assert bins_m2["bins_mode"] == "Mode_ii_Auxiliary_Hypothesis"
         print("[PASS 12/12] Clover Central Semantic Interface (Indra Yoneda, NS-Mem+MAGMA DAG, Odense-Garcez I_DAT, BiNS+DualMemory & Dharma) verified")
-        print("\nALL 12 MOBILE S1/S2/S3, WORKSPACES, STORAGE, STEP-24/25 & SEMANTIC INTERFACE SUITES PASSED!")
+
+        # 13. S1: what the user asked Clover to remember, and the memory repo's own maps kept out of retrieval
+        import semantics
+
+        n1 = repo.remember_note("I'm vegetarian and allergic to peanuts.", conversation_id="chat-gamma")
+        n2 = repo.remember_note("i'm  vegetarian and allergic to peanuts.", conversation_id="chat-delta")
+        assert n1["id"].startswith("MEM-USER-") and n2["id"] == n1["id"], "the same note twice must stay one note"
+        assert (repo.default_repo_dir / n1["path"]).is_file()
+        repo.remember_note("My sister Meera lives in Coimbatore.")
+        assert [n["text"] for n in repo.user_notes(semantics.FOOD_NOTE)] == ["I'm vegetarian and allergic to peanuts."]
+        assert len(repo.user_notes()) == 2
+        repo.refresh_context_hierarchy(commit=True, target_dir=repo.default_repo_dir)
+        assert (repo.default_repo_dir / "notes" / "notes-context.md").is_file()
+        repo.record_task_or_session_turn(session_id="chat-zeta", prompt="My sister Meera lives in Coimbatore.", reply="Noted.")
+        assert repo.add_note("chat-zeta", 1, "USER: My sister Meera lives in Coimbatore")  # S2's own notes file
+        hits = repo.search_repo_relevant("Which files are in the notes folder?")
+        assert not any(h["path"].endswith(("-context.md", "-context-index.md", "CONTEXT.md")) for h in hits), hits
+        hits = repo.search_repo_relevant("Where does my sister Meera live?")
+        assert hits and hits[0]["path"].startswith("notes/MEM-USER-") and hits[0]["snippet"] == "My sister Meera lives in Coimbatore.", hits
+        assert not any(h["path"].startswith("growth/notes/") for h in hits), hits
+        assert repo.search_repo_relevant("Use Python to compute 2**64 + 17") == []
+        print("[PASS 13/13] S1 remembered notes (one per note, diet notes found by meaning) and context files kept out of retrieval")
+        print("\nALL 13 MOBILE S1/S2/S3, WORKSPACES, STORAGE, STEP-24/25, SEMANTIC INTERFACE & REMEMBER SUITES PASSED!")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

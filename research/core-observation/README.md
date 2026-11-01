@@ -2,7 +2,8 @@
 
 Observation only, as directed: what each layer received, what it handed on, and how the layers interacted.
 Nothing here is a fix, a ranking or a recommendation. Each statement points to the evidence in `traces/`.
-Where something was not established, it says so.
+Where something was not established, it says so. The last section, "After A", records the first fixes the human
+chose from this observation and the same observation repeated with them.
 
 ## What ran
 
@@ -196,3 +197,81 @@ These are this machine and these settings; they are not the phone or the laptop.
   `show_turn.py`, `c1_stats.py`, `c3_vs_c1.py`, `c1_concurrency.py`, `shadow_check.sh`).
 - k3: `/opt/clover-k3/core-observe` (services `clover-observe-fw`, `clover-observe-laptop`; stop with
   `harness/k3.sh stop`).
+
+## After A: the first fixes, observed the same way (2026-11-01)
+
+The human chose a first group of fixes (A) from the findings above. They change the framework runtime only
+(`clover-ai-system/mobile/`); the laptop stack is unchanged. The same 15 messages then ran through the framework
+again on k3, under the same sandbox and settings, from an empty memory as the first run did (the first run's memory
+is kept in `archive/before-a/` on k3). Trace and turns: `traces/after-a-final/`.
+
+### What changed
+| | Finding | Change (`s23_on_device_clover.py` unless named) |
+|---|---|---|
+| A1 | `src/tools/` copies shadowed the runtime's own modules | the `sys.path` loop puts folders in their listed order, the runtime's own first |
+| A2 | two threads on one C1 engine garbled both outputs | `engine_lock` (re-entrant): turns and the self-test benchmarks hold it; S2's note writer skips when it is taken |
+| A3 | C1 got each message alone | `run_cycle(history=)`: the conversation, most recent first, in what is left of the 1,280-token prompt; each message cut to 200 tokens; special-token text in a message removed |
+| A4 | retrieval switched the routed tools off | `run_cycle(tools=)`: the tools semantics routed are offered to C1 and only those run, whether or not S1/S2 found anything. The phone's other tools now have descriptions (`TOOL_DEFS`); a `<tools>` prompt opens the answer without `<answer>` (see "Tool calls" below). S1 search skips the memory repository's own maps (`*-context.md`, stage `CONTEXT.md`, S2's `growth/notes/`) and the word "use" (`clover_git_memory_repo.py`) |
+| A5 | nothing saved "Remember that ..."; the dinner question never saw the note | `semantics.align` saves the user's words as `notes/MEM-USER-*.md` when memory is set to Allow (`remember_for`, `CloverMemoryGitRepo.remember_note`); a meal question brings the diet and allergy notes into the context (`run_cycle(meaning=)`, `user_notes(FOOD_NOTE)`). The phone's runtime now names the `remember` capability, so the label reads "verified · saved" |
+| A6 | a photo that could not be taken was dropped without a word | logged, added to the reply as a note and to the response as `media_errors`; a local file that cannot be read is said in the context and in `layer_trace.errors` |
+
+Old callers without semantics (the phone's self-test) keep the earlier tool rule: `tools=None`.
+
+### What each message showed, before and after
+| # | Message | Before A | After A |
+|---|---|---|---|
+| 1-3 | Hi / How are you? / Thanks | semantics replies, no model | same |
+| 4 | What is the capital of Australia? | unreadable (C1 shared by two threads) | "Canberra is the capital of Australia." |
+| 5 | Pens, 3 for $2, 12 pens? | steps to the answer | "12 pens cost $8." |
+| 6 | And 45 pens? | C1 got the message alone; asked for the price per pen | C1 got the earlier exchange (2 messages): "$30" |
+| 7 | That's wrong, try again | handler error (`context_before` missing) | the Clover cycle ran; it read the earlier answer as 15 and kept "15" (see "Not changed by A") |
+| 8 | Search the web for Jaipur's population | `<search>`, Wikipedia, "3.1 million (2011)" | same |
+| 9 | Use Python to compute 2**64 + 17 | a context file switched Python off; "4,194,304,001" | Python ran: `18446744073709551633`; C1 then copied it into its answer with digits changed |
+| 10 | Remember that I'm vegetarian | nothing saved | saved as `MEM-USER-...-c83843`; label "verified · saved" |
+| 11 | Suggest a quick dinner | "garlic shrimp" | the note reached C1: "a quick veggie stir-fry ... like tofu or chicken" |
+| 12 | Photo: what is in it? | the photo was dropped; "I don't see an image" | the photo reached the turn; C1 got only its colour statistics ("mean RGB value of (246.8, ...)") |
+| 13 | What number is written on it? | "1" | C1 got the earlier exchange, no image: "246" |
+| 14 | Read meeting-notes.txt and summarize | no tool format; a generic sentence | C1 called `repo_read`; S1 had no such file; reply says it could not find the file; label "the tool failed" |
+| 15 | Delete the old report files | no tool format; declined in text | C1 called `run_shell` with `rm -rf .../reports`; the shell permission (off) refused it; nothing ran; reply says so |
+
+### Checks beyond the 15 messages
+- **C1 under contention** (`harness/contention.py`, `traces/after-a/contention.json`). In the 15-message runs the
+  note writer only ran after the last message, because the driver never left the studio idle for 8 s. So a message
+  was sent 0.24 s after the note writer entered a C1 prefill. Its C1 calls started when the writer's decode
+  returned; the reply was "Canberra is the capital of Australia."; no C1 calls overlapped (`overlap.py`). It waited
+  about 15 s for the writer.
+- **Tool calls** (`harness/c1_tool_open.py`). In the first pass after A, C1 saw the `<tools>` list in turns 14-15
+  and answered in prose. The same two prompts, replayed with the assistant turn opened four ways: with `<answer>`
+  already open, no call in 2 of 2; with the think block closed and no `<answer>`, a `<tool_call>` in 2 of 2. The
+  runtime now opens that way for the `<tools>` format; HybridAgent's format is unchanged.
+- **A photo that cannot be taken** (`harness/bad_media.py`, `traces/after-a-final/bad-media.json`). Invalid
+  base64: the reply ends "(Note: I could not open broken.png: the data could not be decoded, ...)",
+  `media_errors` is set, the service log has the cause.
+- **Tests:** `test_semantics_frame.py` 67 checks (10 new), `test_mobile_s1_s2_s3.py` 13 of 13 (1 new).
+
+### Observed after A, not changed by A
+- **S2 recall's gate.** A message containing "remember", "my ", "earlier", "before" and similar skips recall's
+  relevance check (`memory_index.py` `recall`, `past_cue`), and the block then fills its budget with the top-ranked
+  earlier turns: greetings in turn 10. Messages that match lexically pass it too: in the bad-photo check, "What is in
+  this picture?" brought in another conversation's photo answer, and C1 repeated it as if about this message.
+  In a second pass of turns 14-15 with the first pass's memory still present (`traces/after-a/framework-2-*`),
+  recall put the model's own earlier refusals into the prompt, and C1 again answered without calling the tool.
+- **The Clover cycle reads the wrong number.** `clover_cycle.final_answer` took 15 from "45 pens would cost $30 ...
+  45 pens is 15 times that amount". One of C1's two direct solutions said 15 (the other 16, the Python step produced
+  no program), so the cycle kept 15.
+- **C1 copying a tool's output.** Turn 9: Python printed `18446744073709551633`; C1's answer has digits changed. The
+  alignment label says "model knowledge · not checked"; it does not say the answer disagrees with Python.
+- **Files outside the phone's file scope.** On the phone, `repo_read` reads the memory repository and the open
+  workspace; device files are read only for `/sdcard`, `/storage` and `~/` paths. `/opt/...` is neither (turn 14).
+- **Vision.** C1 receives image statistics, not the image (turns 12-13).
+- **C3.** Unchanged: the reply is C1's text.
+- **Time.** History and the tool steps add prefill: turn 6 took 4.7 s with the earlier exchange (1.5 s before A, the
+  message alone); turn 14 took 29 s with its tool step. The note writer still runs on C1 between turns.
+
+### Evidence (after A)
+- `traces/after-a-final/`: the 15 messages with the final code (trace, turns, summary), and the bad-photo check.
+- `traces/after-a/`: the first pass after A (before the `<tools>` opening and the `growth/notes/` exclusion), its
+  second pass for turns 14-15 (`framework-2-*`), and the contention check.
+- `harness/`: `rerun_after_a.sh` (the final pass on k3), `report_turns.py` (per-turn report), `contention.py`,
+  `c1_tool_open.py`, `bad_media.py`, `c1_threads.py` (C1 calls per thread), and `observe_framework.py` now also wraps
+  `remember_note` and `user_notes`.

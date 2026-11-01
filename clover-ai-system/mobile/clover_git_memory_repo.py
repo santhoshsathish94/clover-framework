@@ -1268,7 +1268,7 @@ class CloverMemoryGitRepo:
             if w not in {
                 "what", "when", "where", "which", "who", "whom", "whose", "why", "how", "does", "did",
                 "the", "and", "for", "with", "that", "this", "from", "into", "your", "have", "has",
-                "write", "short", "poem", "about", "compute", "using", "python", "search", "web",
+                "write", "short", "poem", "about", "compute", "use", "using", "python", "search", "web",
             }
         ]
         if not tokens:
@@ -1284,9 +1284,12 @@ class CloverMemoryGitRepo:
             is_default_mem_repo = (sroot.resolve() == self.default_repo_dir.resolve())
             for item in self.list_files(target_dir=sroot):
                 rel = item["path"]
-                if rel in ("AGENTS.md", "AGENTS_FULL_SPEC.md") or rel.startswith(("lessons/", "sessions/", "execution/", "outcomes/", "config/")):
+                if rel in ("AGENTS.md", "AGENTS_FULL_SPEC.md") or rel.startswith(("lessons/", "sessions/", "execution/", "outcomes/", "config/", "growth/notes/")):
                     continue
-                if is_default_mem_repo and (rel == "CONTEXT.md" or rel.endswith("-context-index.md")) and not any(
+                # The memory repo's own maps (root index, folder context files, stage CONTEXT.md) describe its layout, not
+                # what the user knows: on k3 one matched "Use Python to compute ..." on the word "use". growth/notes/ above:
+                # S2's exchange notes (its own JSONL, recalled by S2), which S1 returned raw for "Read the file ...".
+                if is_default_mem_repo and (rel == "CONTEXT.md" or rel.endswith(("-context-index.md", "-context.md", "/CONTEXT.md"))) and not any(
                     k in q_low for k in ("context.md", "memory repo", "clover repo", "workspace")
                 ):
                     continue
@@ -1597,6 +1600,52 @@ class CloverMemoryGitRepo:
             self._run_git(["add", "-A"], cwd=self.default_repo_dir)
             self._run_git(["commit", "-m", f"Discard staged Clover lesson {lid}"], cwd=self.default_repo_dir)
         return {"ok": True, "discarded": lid, "lessons": self.list_staged_lessons()}
+
+    # ------------------------------------------------------------------
+    # 4c. What the user asked Clover to remember (`notes/MEM-USER-*.md`, the user's own words)
+    # ------------------------------------------------------------------
+    def remember_note(self, text: str, conversation_id: str | None = None) -> dict[str, Any]:
+        """Saves the user's words as `notes/MEM-USER-<time>-<hash>.md` and commits it. The same note again returns the
+        one already saved."""
+        import hashlib
+        clean, _ = redact(" ".join(str(text or "").split())[:2000])
+        if len(clean) < 3:
+            raise ValueError("nothing to remember")
+        same = next((n for n in self.user_notes() if n["text"].lower() == clean.lower()), None)
+        if same is not None:
+            return same
+        now_s = _utc_now()
+        ts_slug = now_s.replace("-", "").replace(":", "").replace("T", "-").replace("Z", "")
+        nid = f"MEM-USER-{ts_slug}-{hashlib.sha1(clean.encode('utf-8')).hexdigest()[:6]}"
+        rel_p = f"notes/{nid}.md"
+        fp = self.default_repo_dir / rel_p
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        fp.write_text(
+            f"# {nid}: Remembered for the user\n\n"
+            f"- **Created**: {now_s}\n"
+            f"- **Conversation**: `{conversation_id or 's23-studio'}`\n"
+            f"- **Provenance**: Stated by the user in a Clover chat.\n\n"
+            f"## Note\n\n{clean}\n",
+            encoding="utf-8",
+        )
+        self._run_git(["add", rel_p], cwd=self.default_repo_dir)
+        self._run_git(["commit", "-m", f"Remember {nid} in notes/"], cwd=self.default_repo_dir)
+        return {"id": nid, "path": rel_p, "text": clean, "created_at": now_s}
+
+    def user_notes(self, pattern: re.Pattern[str] | None = None) -> list[dict[str, Any]]:
+        """The notes the user asked Clover to remember, oldest first; with `pattern`, only those it matches."""
+        out: list[dict[str, Any]] = []
+        for fp in sorted((self.default_repo_dir / "notes").glob("MEM-USER-*.md")):
+            try:
+                txt = fp.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            body = txt.split("## Note", 1)[1].strip() if "## Note" in txt else txt.strip()
+            if pattern is not None and not pattern.search(body):
+                continue
+            m_c = re.search(r"-\s*\*\*Created\*\*:\s*(\S+)", txt)
+            out.append({"id": fp.stem, "path": f"notes/{fp.name}", "text": body, "created_at": m_c.group(1) if m_c else ""})
+        return out
 
     # ------------------------------------------------------------------
     # 5. GitHub-Only Logged-In Account Sessions & Automatic Private Memory Sync
