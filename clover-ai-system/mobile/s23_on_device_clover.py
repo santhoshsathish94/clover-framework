@@ -2114,6 +2114,8 @@ class CloverS23OnDeviceSystem:
             start=True,
             recall=bool(self.settings["layers"].get("recall", True)),
         )
+        from clover_semantics import CloverSemanticInterface
+        self.semantics = CloverSemanticInterface()
 
         # If a GitHub session is signed in, pull latest sessions & memory in the background on startup
         gh_cfg = self.git_memory_repo.get_github_sync_config()
@@ -2897,6 +2899,18 @@ class CloverS23OnDeviceSystem:
             retrieved_context_blocks: list[str] = []
             layer_trace: dict[str, Any] = {}
             user_clean = (prompt or "Hello!").strip()
+
+            if hasattr(self, "semantics"):
+                sem_frame = self.semantics.analyze_turn(user_clean, asked_tools_fn=self.asked_tools)
+                layer_trace["central_semantics"] = {
+                    "top_anchors": sem_frame.top_anchors,
+                    "query_view": sem_frame.query_view,
+                    "dharma_state": sem_frame.dharma_state,
+                    "dharma_reason": sem_frame.dharma_reason,
+                    "is_concept_only": sem_frame.is_concept_only,
+                    "offered_tools": sem_frame.offered_tools,
+                    "epistemic_state": sem_frame.epistemic_state,
+                }
 
             def _early_permission_response(perm_prompt: dict[str, Any]) -> dict[str, Any]:
                 dm_early = self.engine.get_dm_stats(madvise_enabled=madvise_on)

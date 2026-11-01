@@ -1,0 +1,633 @@
+{
+  "timestamp_utc": "2026-11-01T04:29:33Z",
+  "elapsed_s": 82.82,
+  "model_inspected": "LFM3-Omni-2B (24 Tri-Hybrid Layers: 13 Gated ShortConv + 5 Sliding GQA + 6 Full GQA)",
+  "experiment_1_paper1_schiekiera_icml2026": {
+    "paper": "Paper 1 (Schiekiera et al., ICML 2026) \u2014 Behavioral vs. Hidden-State Semantic Geometry",
+    "n_concepts": 30,
+    "summary_by_strategy": {
+      "Averaged": {
+        "peak_layer": 18,
+        "peak_layer_kind": "full_gqa",
+        "peak_rsa_consensus_mc": 0.515,
+        "mean_rsa_consensus_raw": 0.2237,
+        "mean_rsa_consensus_mc": 0.4192,
+        "mean_centering_gain_rsa": 0.1955,
+        "mean_rsa_forced_choice_fc": 0.3282,
+        "mean_rsa_free_association_fa": 0.2322,
+        "fc_over_fa_advantage": 0.096,
+        "layer23_last_rsa_mc": 0.4577,
+        "mid_layer_10_to_14_mean_rsa_mc": 0.3006
+      },
+      "Meaning": {
+        "peak_layer": 18,
+        "peak_layer_kind": "full_gqa",
+        "peak_rsa_consensus_mc": 0.5544,
+        "mean_rsa_consensus_raw": 0.2527,
+        "mean_rsa_consensus_mc": 0.4342,
+        "mean_centering_gain_rsa": 0.1815,
+        "mean_rsa_forced_choice_fc": 0.3548,
+        "mean_rsa_free_association_fa": 0.2741,
+        "fc_over_fa_advantage": 0.0807,
+        "layer23_last_rsa_mc": 0.4783,
+        "mid_layer_10_to_14_mean_rsa_mc": 0.3367
+      },
+      "Task_FC": {
+        "peak_layer": 1,
+        "peak_layer_kind": "conv",
+        "peak_rsa_consensus_mc": 0.4219,
+        "mean_rsa_consensus_raw": 0.198,
+        "mean_rsa_consensus_mc": 0.3085,
+        "mean_centering_gain_rsa": 0.1105,
+        "mean_rsa_forced_choice_fc": 0.4712,
+        "mean_rsa_free_association_fa": 0.3053,
+        "fc_over_fa_advantage": 0.1659,
+        "layer23_last_rsa_mc": 0.3353,
+        "mid_layer_10_to_14_mean_rsa_mc": 0.2018
+      }
+    },
+    "meaning_layerwise_profile": [
+      {
+        "layer": 0,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.3437,
+        "anisotropy_mc_mean_cos": -0.0343,
+        "rsa_consensus_raw": 0.1658,
+        "rsa_consensus_mc": 0.2928,
+        "rsa_domain_raw": 0.1148,
+        "rsa_domain_mc": 0.2126,
+        "rsa_fc_mc": 0.2345,
+        "rsa_fa_mc": 0.225,
+        "nn5_consensus_mc": 0.36
+      },
+      {
+        "layer": 1,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.4367,
+        "anisotropy_mc_mean_cos": -0.0342,
+        "rsa_consensus_raw": 0.1844,
+        "rsa_consensus_mc": 0.3957,
+        "rsa_domain_raw": 0.1491,
+        "rsa_domain_mc": 0.3479,
+        "rsa_fc_mc": 0.2753,
+        "rsa_fa_mc": 0.2642,
+        "nn5_consensus_mc": 0.3133
+      },
+      {
+        "layer": 2,
+        "kind": "full_gqa",
+        "anisotropy_raw_mean_cos": 0.5889,
+        "anisotropy_mc_mean_cos": -0.0342,
+        "rsa_consensus_raw": 0.2647,
+        "rsa_consensus_mc": 0.4398,
+        "rsa_domain_raw": 0.2267,
+        "rsa_domain_mc": 0.4005,
+        "rsa_fc_mc": 0.2858,
+        "rsa_fa_mc": 0.2776,
+        "nn5_consensus_mc": 0.4067
+      },
+      {
+        "layer": 3,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.6235,
+        "anisotropy_mc_mean_cos": -0.0342,
+        "rsa_consensus_raw": 0.345,
+        "rsa_consensus_mc": 0.4911,
+        "rsa_domain_raw": 0.3122,
+        "rsa_domain_mc": 0.4368,
+        "rsa_fc_mc": 0.3182,
+        "rsa_fa_mc": 0.3,
+        "nn5_consensus_mc": 0.4267
+      },
+      {
+        "layer": 4,
+        "kind": "sliding_gqa",
+        "anisotropy_raw_mean_cos": 0.6785,
+        "anisotropy_mc_mean_cos": -0.0342,
+        "rsa_consensus_raw": 0.3189,
+        "rsa_consensus_mc": 0.4821,
+        "rsa_domain_raw": 0.2935,
+        "rsa_domain_mc": 0.4326,
+        "rsa_fc_mc": 0.3186,
+        "rsa_fa_mc": 0.2945,
+        "nn5_consensus_mc": 0.4067
+      },
+      {
+        "layer": 5,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.7465,
+        "anisotropy_mc_mean_cos": -0.0342,
+        "rsa_consensus_raw": 0.3331,
+        "rsa_consensus_mc": 0.4945,
+        "rsa_domain_raw": 0.3065,
+        "rsa_domain_mc": 0.4428,
+        "rsa_fc_mc": 0.3278,
+        "rsa_fa_mc": 0.2916,
+        "nn5_consensus_mc": 0.4133
+      },
+      {
+        "layer": 6,
+        "kind": "full_gqa",
+        "anisotropy_raw_mean_cos": 0.6908,
+        "anisotropy_mc_mean_cos": -0.0342,
+        "rsa_consensus_raw": 0.3094,
+        "rsa_consensus_mc": 0.4011,
+        "rsa_domain_raw": 0.312,
+        "rsa_domain_mc": 0.3929,
+        "rsa_fc_mc": 0.3583,
+        "rsa_fa_mc": 0.2804,
+        "nn5_consensus_mc": 0.36
+      },
+      {
+        "layer": 7,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.7403,
+        "anisotropy_mc_mean_cos": -0.0342,
+        "rsa_consensus_raw": 0.2824,
+        "rsa_consensus_mc": 0.3861,
+        "rsa_domain_raw": 0.2782,
+        "rsa_domain_mc": 0.3684,
+        "rsa_fc_mc": 0.3695,
+        "rsa_fa_mc": 0.2587,
+        "nn5_consensus_mc": 0.3733
+      },
+      {
+        "layer": 8,
+        "kind": "sliding_gqa",
+        "anisotropy_raw_mean_cos": 0.7936,
+        "anisotropy_mc_mean_cos": -0.0342,
+        "rsa_consensus_raw": 0.2683,
+        "rsa_consensus_mc": 0.3704,
+        "rsa_domain_raw": 0.2465,
+        "rsa_domain_mc": 0.3421,
+        "rsa_fc_mc": 0.3807,
+        "rsa_fa_mc": 0.2515,
+        "nn5_consensus_mc": 0.3733
+      },
+      {
+        "layer": 9,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.7629,
+        "anisotropy_mc_mean_cos": -0.0342,
+        "rsa_consensus_raw": 0.2597,
+        "rsa_consensus_mc": 0.349,
+        "rsa_domain_raw": 0.2403,
+        "rsa_domain_mc": 0.3279,
+        "rsa_fc_mc": 0.3723,
+        "rsa_fa_mc": 0.2402,
+        "nn5_consensus_mc": 0.3533
+      },
+      {
+        "layer": 10,
+        "kind": "full_gqa",
+        "anisotropy_raw_mean_cos": 0.8395,
+        "anisotropy_mc_mean_cos": -0.0341,
+        "rsa_consensus_raw": 0.2165,
+        "rsa_consensus_mc": 0.3166,
+        "rsa_domain_raw": 0.2063,
+        "rsa_domain_mc": 0.3093,
+        "rsa_fc_mc": 0.3372,
+        "rsa_fa_mc": 0.2431,
+        "nn5_consensus_mc": 0.3533
+      },
+      {
+        "layer": 11,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.8365,
+        "anisotropy_mc_mean_cos": -0.0341,
+        "rsa_consensus_raw": 0.1923,
+        "rsa_consensus_mc": 0.2994,
+        "rsa_domain_raw": 0.1897,
+        "rsa_domain_mc": 0.3091,
+        "rsa_fc_mc": 0.3369,
+        "rsa_fa_mc": 0.2344,
+        "nn5_consensus_mc": 0.3333
+      },
+      {
+        "layer": 12,
+        "kind": "sliding_gqa",
+        "anisotropy_raw_mean_cos": 0.8596,
+        "anisotropy_mc_mean_cos": -0.0342,
+        "rsa_consensus_raw": 0.2098,
+        "rsa_consensus_mc": 0.3039,
+        "rsa_domain_raw": 0.2059,
+        "rsa_domain_mc": 0.3012,
+        "rsa_fc_mc": 0.315,
+        "rsa_fa_mc": 0.236,
+        "nn5_consensus_mc": 0.3267
+      },
+      {
+        "layer": 13,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.8411,
+        "anisotropy_mc_mean_cos": -0.0341,
+        "rsa_consensus_raw": 0.2005,
+        "rsa_consensus_mc": 0.3237,
+        "rsa_domain_raw": 0.1859,
+        "rsa_domain_mc": 0.3093,
+        "rsa_fc_mc": 0.3438,
+        "rsa_fa_mc": 0.2599,
+        "nn5_consensus_mc": 0.3
+      },
+      {
+        "layer": 14,
+        "kind": "full_gqa",
+        "anisotropy_raw_mean_cos": 0.6915,
+        "anisotropy_mc_mean_cos": -0.0342,
+        "rsa_consensus_raw": 0.2691,
+        "rsa_consensus_mc": 0.44,
+        "rsa_domain_raw": 0.2557,
+        "rsa_domain_mc": 0.4266,
+        "rsa_fc_mc": 0.4046,
+        "rsa_fa_mc": 0.2992,
+        "nn5_consensus_mc": 0.4
+      },
+      {
+        "layer": 15,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.6488,
+        "anisotropy_mc_mean_cos": -0.0341,
+        "rsa_consensus_raw": 0.2732,
+        "rsa_consensus_mc": 0.4783,
+        "rsa_domain_raw": 0.2603,
+        "rsa_domain_mc": 0.4725,
+        "rsa_fc_mc": 0.404,
+        "rsa_fa_mc": 0.298,
+        "nn5_consensus_mc": 0.44
+      },
+      {
+        "layer": 16,
+        "kind": "sliding_gqa",
+        "anisotropy_raw_mean_cos": 0.7362,
+        "anisotropy_mc_mean_cos": -0.0339,
+        "rsa_consensus_raw": 0.2626,
+        "rsa_consensus_mc": 0.5336,
+        "rsa_domain_raw": 0.2334,
+        "rsa_domain_mc": 0.4856,
+        "rsa_fc_mc": 0.4092,
+        "rsa_fa_mc": 0.2802,
+        "nn5_consensus_mc": 0.46
+      },
+      {
+        "layer": 17,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.6459,
+        "anisotropy_mc_mean_cos": -0.0337,
+        "rsa_consensus_raw": 0.2596,
+        "rsa_consensus_mc": 0.5476,
+        "rsa_domain_raw": 0.2352,
+        "rsa_domain_mc": 0.5035,
+        "rsa_fc_mc": 0.406,
+        "rsa_fa_mc": 0.2888,
+        "nn5_consensus_mc": 0.48
+      },
+      {
+        "layer": 18,
+        "kind": "full_gqa",
+        "anisotropy_raw_mean_cos": 0.7658,
+        "anisotropy_mc_mean_cos": -0.0336,
+        "rsa_consensus_raw": 0.2378,
+        "rsa_consensus_mc": 0.5544,
+        "rsa_domain_raw": 0.22,
+        "rsa_domain_mc": 0.5138,
+        "rsa_fc_mc": 0.401,
+        "rsa_fa_mc": 0.2865,
+        "nn5_consensus_mc": 0.5
+      },
+      {
+        "layer": 19,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.789,
+        "anisotropy_mc_mean_cos": -0.0332,
+        "rsa_consensus_raw": 0.2069,
+        "rsa_consensus_mc": 0.5434,
+        "rsa_domain_raw": 0.1983,
+        "rsa_domain_mc": 0.5128,
+        "rsa_fc_mc": 0.3806,
+        "rsa_fa_mc": 0.2822,
+        "nn5_consensus_mc": 0.4667
+      },
+      {
+        "layer": 20,
+        "kind": "sliding_gqa",
+        "anisotropy_raw_mean_cos": 0.7494,
+        "anisotropy_mc_mean_cos": -0.0335,
+        "rsa_consensus_raw": 0.2355,
+        "rsa_consensus_mc": 0.5428,
+        "rsa_domain_raw": 0.219,
+        "rsa_domain_mc": 0.5123,
+        "rsa_fc_mc": 0.4082,
+        "rsa_fa_mc": 0.2966,
+        "nn5_consensus_mc": 0.4867
+      },
+      {
+        "layer": 21,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.6871,
+        "anisotropy_mc_mean_cos": -0.0333,
+        "rsa_consensus_raw": 0.2301,
+        "rsa_consensus_mc": 0.5293,
+        "rsa_domain_raw": 0.2136,
+        "rsa_domain_mc": 0.4991,
+        "rsa_fc_mc": 0.4215,
+        "rsa_fa_mc": 0.291,
+        "nn5_consensus_mc": 0.46
+      },
+      {
+        "layer": 22,
+        "kind": "full_gqa",
+        "anisotropy_raw_mean_cos": 0.6636,
+        "anisotropy_mc_mean_cos": -0.0343,
+        "rsa_consensus_raw": 0.2677,
+        "rsa_consensus_mc": 0.4275,
+        "rsa_domain_raw": 0.2167,
+        "rsa_domain_mc": 0.3603,
+        "rsa_fc_mc": 0.35,
+        "rsa_fa_mc": 0.3338,
+        "nn5_consensus_mc": 0.3733
+      },
+      {
+        "layer": 23,
+        "kind": "conv",
+        "anisotropy_raw_mean_cos": 0.799,
+        "anisotropy_mc_mean_cos": -0.0337,
+        "rsa_consensus_raw": 0.2726,
+        "rsa_consensus_mc": 0.4783,
+        "rsa_domain_raw": 0.2339,
+        "rsa_domain_mc": 0.4277,
+        "rsa_fc_mc": 0.3573,
+        "rsa_fa_mc": 0.2651,
+        "nn5_consensus_mc": 0.4267
+      }
+    ]
+  },
+  "experiment_2_paper2_indra_neurips2025": {
+    "paper": "Paper 2 (Lu et al., NeurIPS 2025) \u2014 The Indra Representation Hypothesis (V-Enriched Yoneda Embedding)",
+    "lawvere_metric_verification": {
+      "identity_max_error": 3.332000937312528e-08,
+      "total_triples_checked": 27000,
+      "triangle_inequality_violations": 0,
+      "lawvere_valid": true
+    },
+    "cross_module_alignment": {
+      "S2_BGE_to_C1_Mid_L12_2048d": {
+        "raw_direct_top1": 0.0,
+        "indra_yoneda_top1": 0.0556,
+        "raw_direct_top3": 0.0556,
+        "indra_yoneda_top3": 0.2222,
+        "raw_domain_top1": 0.0,
+        "indra_domain_top1": 0.3333,
+        "rsa_with_s2_bge": 0.2422
+      },
+      "S2_BGE_to_C1_Peak_L18_FullGQA_2048d": {
+        "raw_direct_top1": 0.0556,
+        "indra_yoneda_top1": 0.3333,
+        "raw_direct_top3": 0.1111,
+        "indra_yoneda_top3": 0.5556,
+        "raw_domain_top1": 0.1111,
+        "indra_domain_top1": 0.5556,
+        "rsa_with_s2_bge": 0.4628
+      },
+      "S2_BGE_to_C1_Last_L23_2048d": {
+        "raw_direct_top1": 0.1111,
+        "indra_yoneda_top1": 0.1111,
+        "raw_direct_top3": 0.1667,
+        "indra_yoneda_top3": 0.3889,
+        "raw_domain_top1": 0.1667,
+        "indra_domain_top1": 0.3889,
+        "rsa_with_s2_bge": 0.3687
+      },
+      "S2_BGE_to_C2_HybridLink_2048d": {
+        "raw_direct_top1": 0.0556,
+        "indra_yoneda_top1": 0.0556,
+        "raw_direct_top3": 0.1111,
+        "indra_yoneda_top3": 0.2222,
+        "raw_domain_top1": 0.1111,
+        "indra_domain_top1": 0.1667,
+        "rsa_with_s2_bge": 0.2001
+      },
+      "S2_BGE_to_C3_VQVAE_11Level_384d": {
+        "raw_direct_top1": 0.1111,
+        "indra_yoneda_top1": 0.1667,
+        "raw_direct_top3": 0.1667,
+        "indra_yoneda_top3": 0.2222,
+        "raw_domain_top1": 0.2222,
+        "indra_domain_top1": 0.3333,
+        "rsa_with_s2_bge": 0.1485
+      }
+    },
+    "noise_robustness_c1_l12": {
+      "sigma_0.0": {
+        "raw_rsa_with_clean": 1.0,
+        "indra_rsa_with_clean": 0.8816
+      },
+      "sigma_0.5": {
+        "raw_rsa_with_clean": 0.9233,
+        "indra_rsa_with_clean": 0.8806
+      },
+      "sigma_1.0": {
+        "raw_rsa_with_clean": 0.6448,
+        "indra_rsa_with_clean": 0.7943
+      },
+      "sigma_1.5": {
+        "raw_rsa_with_clean": 0.3421,
+        "indra_rsa_with_clean": 0.7409
+      }
+    }
+  },
+  "experiment_3_paper3_saglam_linear_separability": {
+    "paper": "Paper 3 (Saglam et al., 2025) & Paper 8 (Hakim et al., 2026) \u2014 Linear & Indra Intent/Dharma Separability",
+    "n_prompts": 36,
+    "naive_keyword_routing_acc": 0.3056,
+    "step25_regex_plus_risky_acc": 0.8889,
+    "best_latent_linear_layer": 4,
+    "best_latent_linear_cv_acc": 0.9444,
+    "best_latent_indra_layer": 8,
+    "best_latent_indra_cv_acc": 0.9722,
+    "layerwise_separability": [
+      {
+        "layer": 0,
+        "kind": "conv",
+        "linear_cv_acc": 0.4167,
+        "indra_cv_acc": 0.4167
+      },
+      {
+        "layer": 1,
+        "kind": "conv",
+        "linear_cv_acc": 0.5556,
+        "indra_cv_acc": 0.6389
+      },
+      {
+        "layer": 2,
+        "kind": "full_gqa",
+        "linear_cv_acc": 0.9167,
+        "indra_cv_acc": 0.9167
+      },
+      {
+        "layer": 3,
+        "kind": "conv",
+        "linear_cv_acc": 0.8889,
+        "indra_cv_acc": 0.8611
+      },
+      {
+        "layer": 4,
+        "kind": "sliding_gqa",
+        "linear_cv_acc": 0.9444,
+        "indra_cv_acc": 0.9444
+      },
+      {
+        "layer": 5,
+        "kind": "conv",
+        "linear_cv_acc": 0.9167,
+        "indra_cv_acc": 0.9167
+      },
+      {
+        "layer": 6,
+        "kind": "full_gqa",
+        "linear_cv_acc": 0.9167,
+        "indra_cv_acc": 0.9167
+      },
+      {
+        "layer": 7,
+        "kind": "conv",
+        "linear_cv_acc": 0.8889,
+        "indra_cv_acc": 0.8889
+      },
+      {
+        "layer": 8,
+        "kind": "sliding_gqa",
+        "linear_cv_acc": 0.9444,
+        "indra_cv_acc": 0.9722
+      },
+      {
+        "layer": 9,
+        "kind": "conv",
+        "linear_cv_acc": 0.9444,
+        "indra_cv_acc": 0.9167
+      },
+      {
+        "layer": 10,
+        "kind": "full_gqa",
+        "linear_cv_acc": 0.9167,
+        "indra_cv_acc": 0.9444
+      },
+      {
+        "layer": 11,
+        "kind": "conv",
+        "linear_cv_acc": 0.9167,
+        "indra_cv_acc": 0.9167
+      },
+      {
+        "layer": 12,
+        "kind": "sliding_gqa",
+        "linear_cv_acc": 0.9444,
+        "indra_cv_acc": 0.9444
+      },
+      {
+        "layer": 13,
+        "kind": "conv",
+        "linear_cv_acc": 0.9444,
+        "indra_cv_acc": 0.9444
+      },
+      {
+        "layer": 14,
+        "kind": "full_gqa",
+        "linear_cv_acc": 0.9444,
+        "indra_cv_acc": 0.9167
+      },
+      {
+        "layer": 15,
+        "kind": "conv",
+        "linear_cv_acc": 0.9167,
+        "indra_cv_acc": 0.8889
+      },
+      {
+        "layer": 16,
+        "kind": "sliding_gqa",
+        "linear_cv_acc": 0.8889,
+        "indra_cv_acc": 0.8889
+      },
+      {
+        "layer": 17,
+        "kind": "conv",
+        "linear_cv_acc": 0.8889,
+        "indra_cv_acc": 0.8889
+      },
+      {
+        "layer": 18,
+        "kind": "full_gqa",
+        "linear_cv_acc": 0.8889,
+        "indra_cv_acc": 0.8611
+      },
+      {
+        "layer": 19,
+        "kind": "conv",
+        "linear_cv_acc": 0.8333,
+        "indra_cv_acc": 0.8611
+      },
+      {
+        "layer": 20,
+        "kind": "sliding_gqa",
+        "linear_cv_acc": 0.8333,
+        "indra_cv_acc": 0.8333
+      },
+      {
+        "layer": 21,
+        "kind": "conv",
+        "linear_cv_acc": 0.8333,
+        "indra_cv_acc": 0.8333
+      },
+      {
+        "layer": 22,
+        "kind": "full_gqa",
+        "linear_cv_acc": 0.8333,
+        "indra_cv_acc": 0.8056
+      },
+      {
+        "layer": 23,
+        "kind": "conv",
+        "linear_cv_acc": 0.8333,
+        "indra_cv_acc": 0.8056
+      }
+    ]
+  },
+  "experiment_4_papers_4_5_6_7_10_neurosymbolic": {
+    "paper_7_odense_garcez_idat": {
+      "neural_model_sound": true,
+      "semantic_encoding_complete": true,
+      "fixed_point_steps": 2,
+      "entailed_atoms_verified": [
+        "Causes(CWE-362, CVE-2024-6387)",
+        "Enables(CWE-362, CAPEC-74)",
+        "Exploits(CAPEC-74, CVE-2024-6387)",
+        "Mitigates(OpenSSH-9.8p1, CVE-2024-6387)"
+      ]
+    },
+    "paper_4_5_bins_and_dualmemory": {
+      "total_cases": 4,
+      "unidirectional_pass_rate": 0.0,
+      "bidirectional_bins_pass_rate": 1.0
+    },
+    "paper_6_10_ns_mem_and_magma": {
+      "vector_only_rag_path": [
+        "START",
+        "chop_fruits",
+        "mix_in_home_bowl",
+        "serve",
+        "GOAL"
+      ],
+      "vector_only_satisfies_constraints": false,
+      "ns_mem_symbolic_filtered_path": [
+        "START",
+        "chop_fruits",
+        "buy_bowl_downstairs",
+        "mix_in_new_bowl",
+        "serve",
+        "GOAL"
+      ],
+      "ns_mem_satisfies_constraints": true,
+      "posterior_success_broken_path": 0.2,
+      "posterior_success_valid_path": 0.8571
+    }
+  }
+}

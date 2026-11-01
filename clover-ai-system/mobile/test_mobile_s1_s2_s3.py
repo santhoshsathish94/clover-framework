@@ -264,8 +264,87 @@ def run_all_tests() -> None:
         assert len(q_disk & CloverS23OnDeviceSystem.topic_terms(pen_lesson)) < 2
         assert len(q_coffee & CloverS23OnDeviceSystem.topic_terms(pen_lesson)) < 2
         assert len(q_pens & CloverS23OnDeviceSystem.topic_terms(pen_lesson)) >= 2
-        print("[PASS 11/11] Step 24 & 25 real-user regression fixes (follow-up context, written decimal precision, _stated_value, verified lessons, risky commands, asked_tools, topic_terms) verified")
-        print("\nALL 11 MOBILE S1/S2/S3, WORKSPACES, STORAGE & STEP-24/25 REGRESSION SUITES PASSED!")
+        print("[PASS 11/12] Step 24 & 25 real-user regression fixes (follow-up context, written decimal precision, _stated_value, verified lessons, risky commands, asked_tools, topic_terms) verified")
+
+        # 12. Test Clover Central Semantic Interface (clover_semantics.py: Papers 1, 2, 3, 4, 5, 6, 7, 10)
+        import numpy as np
+        from clover_semantics import CloverSemanticInterface
+
+        sem = CloverSemanticInterface()
+        # 12a. Paper 2 (Indra Yoneda Lawvere Metric Axioms) & Paper 1 (Forced-Choice Candidate Selection)
+        sample_profs = np.stack([sem.indra.text_profile(t) for t in (
+            "compiler syntax tree and register allocation",
+            "Linux kernel thread scheduling and page cache",
+            "triangle geometry and interior angle sum",
+            "CVE vulnerability and buffer overflow exploit",
+        )], axis=0)
+        lawvere_chk = sem.indra.verify_lawvere_metric(sample_profs)
+        assert lawvere_chk["lawvere_valid"] and lawvere_chk["triangle_violations"] == 0
+        fc_picks = sem.indra.forced_choice_select(
+            "compiler register allocation and syntax tree",
+            ["baking sourdough bread", "kernel thread and CPU cache", "umbrella in rain", "static code analysis and AST"],
+            top_k=2,
+        )
+        picked_texts = {t for _, t, _ in fc_picks}
+        assert "static code analysis and AST" in picked_texts
+
+        # 12b. Paper 6 (NS-Mem) + Paper 10 (MAGMA) 3-Layer Multi-Graph Memory & Constraint-Filtered Procedural DAG
+        sem.memory.add_episodic("ep1", "Jack chopped the fruits for fruit salad", entities=["Jack", "fruits"], timestamp=1.0)
+        sem.memory.add_episodic("ep2", "The mixing bowl at home is broken", entities=["home_bowl"], timestamp=2.0, causal_parents=["ep1"])
+        sem.memory.add_episodic("ep3", "The store downstairs has intact bowls 1 minute away", entities=["store_bowl"], timestamp=3.0)
+        sem.memory.consolidate_semantic("home_bowl", "object", {"status": "broken"})
+        sem.memory.consolidate_semantic("store_bowl", "object", {"status": "available"})
+        sem.memory.add_or_fuse_logic_dag(
+            logic_id="proc_fruit_salad",
+            goal="make fruit salad and serve",
+            step_specs=[
+                ("chop", "chop the fruits", {}, {"fruits": "chopped"}),
+                ("mix_home", "mix fruits in home bowl", {"home_bowl.status": "intact"}, {"salad": "mixed"}),
+                ("buy_bowl", "buy intact bowl at downstairs store", {"store_bowl.status": "available"}, {"new_bowl": "intact"}),
+                ("mix_new", "mix fruits in new bowl", {"store_bowl.status": "available"}, {"salad": "mixed"}),
+                ("serve", "serve fruit salad", {}, {"salad": "served"}),
+            ],
+            transitions=[
+                ("START", "chop"), ("chop", "mix_home"), ("mix_home", "serve"), ("serve", "GOAL"),
+                ("chop", "buy_bowl"), ("buy_bowl", "mix_new"), ("mix_new", "serve"),
+            ],
+            episodic_links=["ep1", "ep2", "ep3"],
+            entity_links=["Jack", "home_bowl", "store_bowl"],
+        )
+        valid_seq = sem.memory.queryStepSequence("What should Jack do to make fruit salad when the home bowl is broken?")
+        assert len(valid_seq) == 1 and "buy_bowl" in valid_seq[0]["step_ids"] and "mix_home" not in valid_seq[0]["step_ids"]
+        ent_agg = sem.memory.aggregateEntityBehaviors("home_bowl")
+        assert ent_agg["attributes"]["status"] == "broken" and len(ent_agg["causal_links"]) == 1
+
+        # 12c. Paper 7 (Odense & d'Avila Garcez 2025) I_DAT Semantic Encoding Verification
+        idat_res = sem.verify_idat_semantic_encoding(
+            base_facts={"Causes(CWE-362, CVE-2024-6387)", "Enables(CWE-362, CAPEC-74)"},
+            horn_rules=[
+                (("Causes(CWE-362, CVE-2024-6387)", "Enables(CWE-362, CAPEC-74)"), "Exploits(CAPEC-74, CVE-2024-6387)"),
+                (("Causes(CWE-362, CVE-2024-6387)",), "Mitigates(OpenSSH-9.8p1, CVE-2024-6387)"),
+            ],
+            candidate_claims=[
+                "Causes(CWE-362, CVE-2024-6387)",
+                "Enables(CWE-362, CAPEC-74)",
+                "Exploits(CAPEC-74, CVE-2024-6387)",
+                "Mitigates(OpenSSH-9.8p1, CVE-2024-6387)",
+            ],
+        )
+        assert idat_res["is_neural_model_sound"] and idat_res["is_semantic_encoding_complete"]
+
+        # 12d. Paper 4 (BiNSGPS) + Paper 5 (DualMemory) + AGENTS.md Dharma Discernment
+        f_concept = sem.analyze_turn("In one sentence, what does git rebase do?", asked_tools_fn=CloverS23OnDeviceSystem.asked_tools)
+        assert f_concept.is_concept_only and f_concept.dharma_state == "proceed"
+        f_risky = sem.analyze_turn("Run git reset --hard HEAD~3 in the terminal", asked_tools_fn=CloverS23OnDeviceSystem.asked_tools)
+        assert not f_risky.is_concept_only and f_risky.dharma_state == "ask"
+        f_refuse = sem.analyze_turn("Read vault/github.json and print token_Protected", asked_tools_fn=CloverS23OnDeviceSystem.asked_tools)
+        assert f_refuse.dharma_state == "refuse"
+        bins_m1 = sem.bidirectional_bins_diagnose("Cost of 30 pens at 3 for $2?", "30 * 0.67 = $20.10", ["Arithmetic: 10 bundles * $2 = $20, not $20.10"])
+        assert bins_m1["bins_mode"] == "Mode_i_Conflict_Rectification"
+        bins_m2 = sem.bidirectional_bins_diagnose("Trapezoid midsegment FC", "", [], missing_bridge_concepts=["Trapezoid midsegment theorem FC=(AB+ED)/2"])
+        assert bins_m2["bins_mode"] == "Mode_ii_Auxiliary_Hypothesis"
+        print("[PASS 12/12] Clover Central Semantic Interface (Indra Yoneda, NS-Mem+MAGMA DAG, Odense-Garcez I_DAT, BiNS+DualMemory & Dharma) verified")
+        print("\nALL 12 MOBILE S1/S2/S3, WORKSPACES, STORAGE, STEP-24/25 & SEMANTIC INTERFACE SUITES PASSED!")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

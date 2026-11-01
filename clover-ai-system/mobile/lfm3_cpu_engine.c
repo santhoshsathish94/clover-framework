@@ -1659,6 +1659,57 @@ LFM3_API float lfm3_forward_24_layers(const int *token_ids, int T, float *out_fi
     return lfm3_forward_24_layers_clubbed(token_ids, NULL, T, out_final_hidden);
 }
 
+/* Executes all 24 tri-hybrid layers and records every layer's hidden state:
+ *   - out_all_layers_25_T_D: [25, T, 2048] (slot 0 = embedding, slots 1..24 = post-layer 0..23)
+ *   - out_final_norm_T_D:    [T, 2048] (after final embedding_norm) */
+LFM3_API float lfm3_forward_all_layers(
+    const int *token_ids,
+    int T,
+    float *out_all_layers_25_T_D,
+    float *out_final_norm_T_D
+)
+{
+    double t0 = now_ms();
+    const uint16_t *emb_w = (const uint16_t *)g_lfm3.emb_mf.ptr;
+    const uint16_t *emb_norm_w = (const uint16_t *)g_lfm3.emb_norm_mf.ptr;
+
+    float *cur = (float *)malloc((size_t)T * LFM3_D * sizeof(float));
+    float *nxt = (float *)malloc((size_t)T * LFM3_D * sizeof(float));
+
+    for (int t = 0; t < T; t++) {
+        int tid = token_ids[t];
+        const uint16_t *erow = emb_w + (size_t)tid * LFM3_D;
+        float *dst = cur + (size_t)t * LFM3_D;
+        for (int d = 0; d < LFM3_D; d++) dst[d] = bf16_to_f32(erow[d]);
+    }
+    if (out_all_layers_25_T_D) {
+        memcpy(out_all_layers_25_T_D, cur, (size_t)T * LFM3_D * sizeof(float));
+    }
+
+    for (int l = 0; l < LFM3_LAYERS; l++) {
+        lfm3_dm_record_layer(l, T);
+        execute_single_lfm3_layer_c(&g_lfm3.trunks[l], cur, nxt, T, NULL);
+        if (out_all_layers_25_T_D) {
+            memcpy(
+                out_all_layers_25_T_D + (size_t)(l + 1) * (size_t)T * LFM3_D,
+                nxt,
+                (size_t)T * LFM3_D * sizeof(float)
+            );
+        }
+        float *tmp = cur;
+        cur = nxt;
+        nxt = tmp;
+    }
+
+    if (out_final_norm_T_D) {
+        rms_norm_bf16(cur, emb_norm_w, out_final_norm_T_D, T, LFM3_D, 1e-5f);
+    }
+
+    free(cur);
+    free(nxt);
+    return (float)(now_ms() - t0);
+}
+
 /* Two-Stage LM Head (`global-0/lm_head.4bit.bin` SDOT + Top-64 Exact 16-bit BF16 Refinement):
  * Stage A: Computes all 128,000 logits in 4-bit Group-64 (`129.39 MiB` instead of `500.00 MiB` BF16 = `3.86x` less DRAM bw).
  * Stage B: Recomputes the exact 16-bit BF16 dot product (`64 x 2048 = 256 KB` = `0.02 ms`) for the top-64 candidates
