@@ -310,6 +310,83 @@
       </div>
       <div class="clover-topbar__right">
         <span class="clover-cpu-pill" id="clover-cpu-pill" title="Clover is running on a CPU server, so responses take longer">CPU Server &middot; Slow Response</span>
+        <button type="button" class="clover-model-trigger" id="k3-org-repo-btn" onclick="k3ToggleOrgRepoDrawer()" style="width:auto;padding:0.34rem 0.72rem;font-size:0.76rem;" title="Layer 4 Multi-User Organization Git Memory Repository &amp; AGENTS.md">AGENTS.md &middot; Org Git Repo</button>
+      </div>
+    </div>
+
+    <aside id="k3-org-repo-drawer" hidden aria-label="Organization Git Memory Repository" style="position:fixed;top:52px;right:0;bottom:0;width:min(480px,92vw);background:var(--surface);border-left:1px solid var(--line-2);z-index:130;display:flex;flex-direction:column;box-shadow:-6px 0 24px rgba(19,32,24,0.12);">
+      <div style="padding:0.75rem 1rem;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:0.9rem;">
+        <span>Layer 4 &middot; Multi-User Organization Git Repo</span>
+        <button type="button" class="clover-model-trigger" style="width:auto;padding:0.25rem 0.6rem;font-size:0.76rem;" onclick="k3ToggleOrgRepoDrawer()">Close</button>
+      </div>
+      <div style="padding:0.65rem 1rem;border-bottom:1px solid var(--line);background:var(--soft);display:flex;flex-direction:column;gap:0.45rem;">
+        <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;font-size:0.76rem;">
+          <label style="font-weight:650;">User:</label>
+          <input type="text" id="k3-org-user-id" value="default" placeholder="user_id (e.g. alice)" style="width:110px;padding:0.28rem 0.5rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;">
+          <label style="font-weight:650;">Team:</label>
+          <select id="k3-org-team-id" style="padding:0.28rem 0.5rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;background:var(--surface);">
+            <option value="core">core</option>
+            <option value="ml">ml</option>
+            <option value="security">security</option>
+            <option value="platform">platform</option>
+          </select>
+          <button type="button" class="clover-model-trigger" style="width:auto;padding:0.26rem 0.58rem;font-size:0.74rem;" onclick="k3SwitchOrgUser()">Switch User/Team</button>
+        </div>
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+          <button type="button" class="clover-model-trigger" style="width:auto;padding:0.3rem 0.65rem;font-size:0.75rem;background:var(--accent);color:#fff;border-color:var(--accent);" onclick="k3OpenOrgAgentsModal()">Review / Accept AGENTS.md</button>
+          <button type="button" class="clover-model-trigger" style="width:auto;padding:0.3rem 0.65rem;font-size:0.75rem;" onclick="k3NewOrgFile()">+ New File (.md / .py)</button>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:0.85rem 1rem;font-size:0.8rem;">
+        <div id="k3-org-editor-box" hidden style="border:1px solid var(--accent-line);border-radius:9px;padding:0.65rem;margin-bottom:0.75rem;background:var(--accent-tint);">
+          <div style="font-weight:700;margin-bottom:0.35rem;">Editing: <code id="k3-org-edit-label">tasks/note.md</code></div>
+          <input type="text" id="k3-org-edit-path" placeholder="Path (e.g. tasks/note.md, scripts/tool.py, shared/notes/MEM-1.md)" style="width:100%;padding:0.35rem 0.55rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;margin-bottom:0.35rem;">
+          <textarea id="k3-org-edit-content" rows="8" style="width:100%;font-family:monospace;font-size:0.76rem;padding:0.5rem;border:1px solid var(--line-2);border-radius:6px;background:#14181d;color:#f6f8fa;margin-bottom:0.35rem;min-height:150px;"></textarea>
+          <input type="text" id="k3-org-edit-msg" placeholder="Git commit message (attributed to user@team)" style="width:100%;padding:0.35rem 0.55rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;margin-bottom:0.4rem;">
+          <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+            <button type="button" class="clover-model-trigger" style="width:auto;padding:0.28rem 0.6rem;font-size:0.74rem;background:var(--accent);color:#fff;" onclick="k3SaveOrgFile()">Save &amp; Git Commit</button>
+            <button type="button" class="clover-model-trigger" style="width:auto;padding:0.28rem 0.6rem;font-size:0.74rem;" onclick="k3PromoteOrgFile('shared')">Promote &rarr; shared/</button>
+            <button type="button" class="clover-model-trigger" style="width:auto;padding:0.28rem 0.6rem;font-size:0.74rem;" onclick="k3PromoteOrgFile('team')">Promote &rarr; team/</button>
+            <button type="button" class="clover-model-trigger" style="width:auto;padding:0.28rem 0.6rem;font-size:0.74rem;" onclick="k3DeleteOrgFile()">Delete</button>
+            <button type="button" class="clover-model-trigger" style="width:auto;padding:0.28rem 0.6rem;font-size:0.74rem;" onclick="document.getElementById('k3-org-editor-box').hidden=true">Cancel</button>
+          </div>
+        </div>
+        <div id="k3-org-lessons-box"></div>
+        <div style="font-weight:700;margin-bottom:0.35rem;">Organization &amp; User Files (User + Team + Shared Scopes)</div>
+        <div id="k3-org-files-list" style="margin-bottom:0.75rem;">Loading files...</div>
+        <div style="border-top:1px solid var(--line);padding-top:0.65rem;margin-bottom:0.75rem;">
+          <div style="font-weight:700;margin-bottom:0.25rem;">Private Organization GitHub Sync (<code>private: true</code>)</div>
+          <input type="text" id="k3-org-gh-repo" placeholder="org-or-user/clover-org-memory (Private repo)" style="width:100%;padding:0.35rem 0.55rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;margin-bottom:0.35rem;">
+          <input type="password" id="k3-org-gh-token" placeholder="GitHub Personal Access Token (repo scope)" style="width:100%;padding:0.35rem 0.55rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;margin-bottom:0.4rem;">
+          <div style="display:flex;gap:0.4rem;">
+            <button type="button" class="clover-model-trigger" style="width:auto;padding:0.28rem 0.65rem;font-size:0.74rem;background:var(--accent);color:#fff;" onclick="k3SyncOrgGithub('push')">Push to Private GitHub</button>
+            <button type="button" class="clover-model-trigger" style="width:auto;padding:0.28rem 0.65rem;font-size:0.74rem;" onclick="k3SyncOrgGithub('pull')">Pull from Private GitHub</button>
+          </div>
+          <div id="k3-org-gh-status" style="font-size:0.74rem;color:var(--muted);margin-top:0.3rem;"></div>
+        </div>
+        <div style="border-top:1px solid var(--line);padding-top:0.65rem;">
+          <div style="font-weight:700;margin-bottom:0.3rem;">Multi-User Git Commit Log (<code>git log</code>)</div>
+          <div id="k3-org-commits-list"></div>
+        </div>
+      </div>
+    </aside>
+
+    <div id="k3-org-agents-modal" hidden style="position:fixed;inset:0;background:rgba(19,32,24,0.58);z-index:150;display:flex;align-items:center;justify-content:center;padding:1rem;">
+      <div style="width:min(680px,100%);max-height:88vh;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,0.22);">
+        <div style="padding:0.85rem 1.15rem;border-bottom:1px solid var(--line);background:var(--soft);display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;font-size:0.98rem;">AGENTS.md &mdash; Multi-User Organization Operating Specification</div>
+            <div style="font-size:0.74rem;color:var(--muted);">Tracked in <code>clover-org-memory-repo/users/&lt;user&gt;/AGENTS.md</code> &amp; <code>AGENTS.md</code></div>
+          </div>
+          <button type="button" class="clover-model-trigger" style="width:auto;padding:0.25rem 0.6rem;font-size:0.75rem;" onclick="document.getElementById('k3-org-agents-modal').hidden=true">Close</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:1rem 1.15rem;">
+          <textarea id="k3-org-agents-textarea" style="width:100%;min-height:310px;font-family:monospace;font-size:0.78rem;line-height:1.5;padding:0.75rem;border:1px solid var(--line-2);border-radius:8px;background:var(--soft);color:var(--ink);"></textarea>
+        </div>
+        <div style="padding:0.75rem 1.15rem;border-top:1px solid var(--line);background:var(--soft);display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+          <span style="font-size:0.75rem;color:var(--muted);">Accepting commits your user agreement to the organization Git memory repo.</span>
+          <button type="button" class="clover-model-trigger" style="width:auto;padding:0.35rem 0.85rem;font-size:0.78rem;background:var(--accent);color:#fff;border-color:var(--accent);" onclick="k3AcceptOrgAgentsMd()">Accept AGENTS.md &amp; Commit</button>
+        </div>
       </div>
     </div>
 
@@ -329,12 +406,6 @@
             <span id="k3-img-preview-name">Attachment ready</span>
           </div>
           <button type="button" onclick="k3ClearAttachments()">Remove</button>
-        </div>
-        <div class="clover-output-tabs" id="k3-output-tabs" role="tablist" aria-label="Select output type">
-          <button type="button" class="clover-output-tab is-active" role="tab" aria-selected="true" data-output-type="text" id="k3-opt-text" onclick="k3OnOutputTypeChanged('text')">Text</button>
-          <button type="button" class="clover-output-tab" role="tab" aria-selected="false" data-output-type="image" id="k3-opt-image" onclick="k3OnOutputTypeChanged('image')">Image</button>
-          <button type="button" class="clover-output-tab" role="tab" aria-selected="false" data-output-type="video" id="k3-opt-video" onclick="k3OnOutputTypeChanged('video')">Video</button>
-          <button type="button" class="clover-output-tab" role="tab" aria-selected="false" data-output-type="audio" id="k3-opt-audio" onclick="k3OnOutputTypeChanged('audio')">Audio</button>
         </div>
         <div class="clover-composer-row">
           <input type="file" id="k3-file-input" multiple hidden onchange="k3OnFilesSelected(event)">
@@ -1977,11 +2048,19 @@
       }
 
       try {
+        var variable_org_uid = (document.getElementById('k3-org-user-id') && document.getElementById('k3-org-user-id').value.trim()) || 'default';
+        var variable_org_tid = (document.getElementById('k3-org-team-id') && document.getElementById('k3-org-team-id').value.trim()) || 'core';
         var variable_chat_response = await fetch(this.variable_active_backend_base_url + '/api/chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Clover-User': variable_org_uid,
+            'X-Clover-Team': variable_org_tid
+          },
           body: JSON.stringify({
             session_id: variable_submitted_session_id,
+            user_id: variable_org_uid,
+            team_id: variable_org_tid,
             model: this.variable_selected_model_key,
             output_type: variable_requested_output_type,
             prompt: variable_effective_prompt_text,
@@ -2304,6 +2383,216 @@
         variable_self_coordinator.function_select_foundation_model_key(variable_new_model_key);
       };
 
+      // Multi-User Organization Git Memory Repo & AGENTS.md Onboarding Controls
+      function function_get_org_user() {
+        var el = document.getElementById('k3-org-user-id');
+        return (el && el.value.trim()) || localStorage.getItem('clover_org_user_id_v1') || 'default';
+      }
+      function function_get_org_team() {
+        var el = document.getElementById('k3-org-team-id');
+        return (el && el.value.trim()) || localStorage.getItem('clover_org_team_id_v1') || 'core';
+      }
+      try {
+        var su = localStorage.getItem('clover_org_user_id_v1');
+        var st = localStorage.getItem('clover_org_team_id_v1');
+        if (su && document.getElementById('k3-org-user-id')) document.getElementById('k3-org-user-id').value = su;
+        if (st && document.getElementById('k3-org-team-id')) document.getElementById('k3-org-team-id').value = st;
+      } catch (e) {}
+
+      function function_render_org_repo_state(d) {
+        if (!d) return;
+        var esc = function (s) {
+          return variable_self_coordinator.variable_reply_renderer.function_escape_html_entities(s || '');
+        };
+        var files = d.files || [];
+        var commits = d.commits || [];
+        var lessons = d.staged_lessons || [];
+        var onb = d.onboarding || {};
+        var gh = d.github_sync || {};
+        var btn = document.getElementById('k3-org-repo-btn');
+        if (btn) {
+          btn.textContent = 'AGENTS.md · ' + (onb.user_id || function_get_org_user()) + '@' + (onb.team_id || function_get_org_team()) + ' (' + files.length + ')';
+        }
+        if (gh.repo && document.getElementById('k3-org-gh-repo') && !document.getElementById('k3-org-gh-repo').value) {
+          document.getElementById('k3-org-gh-repo').value = gh.repo;
+        }
+        if (gh.last_sync && document.getElementById('k3-org-gh-status')) {
+          document.getElementById('k3-org-gh-status').textContent = 'Last synced private repo ' + gh.repo + ' at ' + gh.last_sync;
+        }
+        var lbox = document.getElementById('k3-org-lessons-box');
+        if (lbox) {
+          lbox.innerHTML = lessons.length
+            ? '<div style="font-weight:700;margin-bottom:0.35rem;">Staged Clover Cycle Lessons (' + lessons.length + ')</div>' +
+              lessons.map(function (l) {
+                return '<div style="border:1px solid #f59e0b;background:#fffbeb;border-radius:8px;padding:0.55rem;margin-bottom:0.5rem;">' +
+                  '<div><strong>' + esc(l.id) + '</strong></div>' +
+                  '<div style="margin:0.2rem 0;">' + esc(l.summary) + '</div>' +
+                  '<div style="display:flex;gap:0.35rem;"><button type="button" onclick="k3KeepOrgLesson(\'' + esc(l.id) + '\')">Keep</button><button type="button" onclick="k3DiscardOrgLesson(\'' + esc(l.id) + '\')">Discard</button></div>' +
+                '</div>';
+              }).join('')
+            : '';
+        }
+        var fbox = document.getElementById('k3-org-files-list');
+        if (fbox) {
+          fbox.innerHTML = files.map(function (f) {
+            return '<div style="border:1px solid var(--line);background:var(--soft);border-radius:8px;padding:0.5rem 0.65rem;margin-bottom:0.4rem;cursor:pointer;" onclick="k3OpenOrgFile(\'' + esc(f.path) + '\')">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;gap:0.4rem;"><code><strong>' + esc(f.path) + '</strong></code><span style="font-size:0.68rem;padding:0.08rem 0.4rem;border-radius:999px;background:var(--accent-tint);color:var(--accent);">' + esc(f.scope || f.category || 'file') + ' · ' + (f.size_bytes || 0) + ' B</span></div>' +
+              '<div style="font-size:0.72rem;color:var(--muted);margin-top:0.12rem;">' + esc(f.summary || '') + '</div>' +
+            '</div>';
+          }).join('');
+        }
+        var cbox = document.getElementById('k3-org-commits-list');
+        if (cbox) {
+          cbox.innerHTML = commits.map(function (c) {
+            return '<div style="padding:0.28rem 0;border-bottom:1px solid var(--line);font-size:0.73rem;"><code><strong>' + esc(c.hash) + '</strong></code> ' + esc(c.message) + ' <span style="color:var(--muted);">&mdash; ' + esc(c.author || '') + '</span></div>';
+          }).join('');
+        }
+      }
+
+      window.k3LoadOrgRepo = function () {
+        var base = variable_self_coordinator.variable_active_backend_base_url;
+        var u = encodeURIComponent(function_get_org_user());
+        var t = encodeURIComponent(function_get_org_team());
+        return fetch(base + '/api/repo/files?user_id=' + u + '&team_id=' + t)
+          .then(function (r) { return r.json(); })
+          .then(function_render_org_repo_state)
+          .catch(function () {});
+      };
+      window.k3ToggleOrgRepoDrawer = function () {
+        var dr = document.getElementById('k3-org-repo-drawer');
+        if (!dr) return;
+        if (dr.hasAttribute('hidden')) {
+          dr.removeAttribute('hidden');
+          window.k3LoadOrgRepo();
+        } else {
+          dr.setAttribute('hidden', '');
+        }
+      };
+      window.k3SwitchOrgUser = function () {
+        try {
+          localStorage.setItem('clover_org_user_id_v1', function_get_org_user());
+          localStorage.setItem('clover_org_team_id_v1', function_get_org_team());
+        } catch (e) {}
+        window.k3LoadOrgRepo();
+      };
+      window.k3OpenOrgFile = function (pathStr) {
+        var base = variable_self_coordinator.variable_active_backend_base_url;
+        fetch(base + '/api/repo/read', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: pathStr, user_id: function_get_org_user(), team_id: function_get_org_team() })
+        }).then(function (r) { return r.json(); }).then(function (d) {
+          document.getElementById('k3-org-editor-box').hidden = false;
+          document.getElementById('k3-org-edit-label').textContent = d.path || pathStr;
+          document.getElementById('k3-org-edit-path').value = d.path || pathStr;
+          document.getElementById('k3-org-edit-content').value = d.content || '';
+          document.getElementById('k3-org-edit-msg').value = '';
+        }).catch(function () {});
+      };
+      window.k3NewOrgFile = function () {
+        var u = function_get_org_user();
+        document.getElementById('k3-org-editor-box').hidden = false;
+        document.getElementById('k3-org-edit-label').textContent = 'users/' + u + '/tasks/new-note.md';
+        document.getElementById('k3-org-edit-path').value = 'users/' + u + '/tasks/new-note.md';
+        document.getElementById('k3-org-edit-content').value = '# Task / Design Note (' + u + ')\n\nWrite Markdown notes or Python scripts here.\n';
+        document.getElementById('k3-org-edit-msg').value = 'Add task note';
+      };
+      window.k3SaveOrgFile = function () {
+        var base = variable_self_coordinator.variable_active_backend_base_url;
+        var p = document.getElementById('k3-org-edit-path').value.trim();
+        var c = document.getElementById('k3-org-edit-content').value;
+        var m = document.getElementById('k3-org-edit-msg').value.trim();
+        if (!p) return;
+        fetch(base + '/api/repo/write', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: p, content: c, commit_message: m, user_id: function_get_org_user(), team_id: function_get_org_team() })
+        }).then(function (r) { return r.json(); }).then(function (d) {
+          document.getElementById('k3-org-editor-box').hidden = true;
+          function_render_org_repo_state(d);
+        }).catch(function () {});
+      };
+      window.k3PromoteOrgFile = function (targetScope) {
+        var base = variable_self_coordinator.variable_active_backend_base_url;
+        var p = document.getElementById('k3-org-edit-path').value.trim();
+        if (!p) return;
+        fetch(base + '/api/repo/promote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: p, target_scope: targetScope, user_id: function_get_org_user(), team_id: function_get_org_team() })
+        }).then(function (r) { return r.json(); }).then(function (d) {
+          document.getElementById('k3-org-editor-box').hidden = true;
+          function_render_org_repo_state(d);
+        }).catch(function () {});
+      };
+      window.k3DeleteOrgFile = function () {
+        var base = variable_self_coordinator.variable_active_backend_base_url;
+        var p = document.getElementById('k3-org-edit-path').value.trim();
+        if (!p) return;
+        fetch(base + '/api/repo/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: p, user_id: function_get_org_user(), team_id: function_get_org_team() })
+        }).then(function (r) { return r.json(); }).then(function (d) {
+          document.getElementById('k3-org-editor-box').hidden = true;
+          function_render_org_repo_state(d);
+        }).catch(function () {});
+      };
+      window.k3KeepOrgLesson = function (lid) {
+        var base = variable_self_coordinator.variable_active_backend_base_url;
+        fetch(base + '/api/repo/lesson/keep', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: lid, user_id: function_get_org_user(), team_id: function_get_org_team() })
+        }).then(function (r) { return r.json(); }).then(function_render_org_repo_state).catch(function () {});
+      };
+      window.k3DiscardOrgLesson = function (lid) {
+        var base = variable_self_coordinator.variable_active_backend_base_url;
+        fetch(base + '/api/repo/lesson/discard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: lid, user_id: function_get_org_user(), team_id: function_get_org_team() })
+        }).then(function (r) { return r.json(); }).then(function_render_org_repo_state).catch(function () {});
+      };
+      window.k3SyncOrgGithub = function (action) {
+        var base = variable_self_coordinator.variable_active_backend_base_url;
+        var repo = document.getElementById('k3-org-gh-repo').value.trim();
+        var tok = document.getElementById('k3-org-gh-token').value.trim();
+        var stEl = document.getElementById('k3-org-gh-status');
+        if (stEl) stEl.textContent = (action === 'pull' ? 'Pulling from ' : 'Verifying private repo & pushing to ') + (repo || 'GitHub') + '...';
+        fetch(base + '/api/repo/github-sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ repo: repo, token: tok || undefined, action: action, branch: 'main', user_id: function_get_org_user() })
+        }).then(function (r) { return r.json(); }).then(function (d) {
+          if (d.error) { if (stEl) stEl.textContent = 'Sync error: ' + (d.message || d.error); return; }
+          document.getElementById('k3-org-gh-token').value = '';
+          function_render_org_repo_state(d);
+        }).catch(function () {});
+      };
+      window.k3OpenOrgAgentsModal = function () {
+        var base = variable_self_coordinator.variable_active_backend_base_url;
+        var u = encodeURIComponent(function_get_org_user());
+        var t = encodeURIComponent(function_get_org_team());
+        fetch(base + '/api/repo/onboarding?user_id=' + u + '&team_id=' + t)
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            document.getElementById('k3-org-agents-textarea').value = d.agents_md_content || '';
+            document.getElementById('k3-org-agents-modal').hidden = false;
+          }).catch(function () {});
+      };
+      window.k3AcceptOrgAgentsMd = function () {
+        var base = variable_self_coordinator.variable_active_backend_base_url;
+        var txt = document.getElementById('k3-org-agents-textarea').value;
+        try { localStorage.setItem('clover_org_agents_accepted_' + function_get_org_user(), '1'); } catch (e) {}
+        document.getElementById('k3-org-agents-modal').hidden = true;
+        fetch(base + '/api/repo/accept-agents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: function_get_org_user(), team_id: function_get_org_team(), content: txt })
+        }).then(function () { window.k3LoadOrgRepo(); }).catch(function () {});
+      };
+
       var variable_saved_model_key = constant_default_model_key;
       try {
         var variable_stored_model = localStorage.getItem(constant_model_storage_key);
@@ -2316,7 +2605,9 @@
       this.variable_session_store.function_load_sessions_from_browser_storage();
       this.function_render_session_sidebar_list();
       this.function_render_active_session_messages();
-      this.function_probe_healthy_backend_endpoint();
+      this.function_probe_healthy_backend_endpoint().then(function () {
+        if (typeof window.k3LoadOrgRepo === 'function') window.k3LoadOrgRepo();
+      });
     }
   }
 

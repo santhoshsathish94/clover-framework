@@ -30,7 +30,7 @@ gcc -O3 -march=native -fopenmp -fPIC -shared "${SCRIPT_DIR}/nemotron_cpu_engine.
 # Stage files into .deb tree
 install -m 0755 "${SCRIPT_DIR}/clover-ai-studio" "${BUILD_ROOT}/deb/usr/bin/clover-ai-studio"
 install -m 0755 "${SCRIPT_DIR}/install-workstation-linux.sh" "${BUILD_ROOT}/deb/opt/clover-ai-workstation/cpu-server/install-workstation-linux.sh"
-for f in nemotron_cpu_engine.c nemotron_hybrid_ncm.py nemotron_workstation_clover.py clover_workstation_launcher.c README.md; do
+for f in nemotron_cpu_engine.c nemotron_hybrid_ncm.py nemotron_workstation_clover.py clover_server_org_git_memory.py clover_workstation_launcher.c README.md; do
     if [[ -f "${SCRIPT_DIR}/${f}" ]]; then
         install -m 0644 "${SCRIPT_DIR}/${f}" "${BUILD_ROOT}/deb/opt/clover-ai-workstation/cpu-server/${f}"
     fi
@@ -115,6 +115,7 @@ cp -f "${SCRIPT_DIR}/clover-ai-studio" \
       "${SCRIPT_DIR}/nemotron_cpu_engine.c" \
       "${SCRIPT_DIR}/nemotron_hybrid_ncm.py" \
       "${SCRIPT_DIR}/nemotron_workstation_clover.py" \
+      "${SCRIPT_DIR}/clover_server_org_git_memory.py" \
       "${SCRIPT_DIR}/install-workstation-linux.sh" \
       "${SCRIPT_DIR}/README.md" \
       "${BUILD_ROOT}/run_payload/cpu-server/"

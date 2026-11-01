@@ -299,7 +299,16 @@ class CloverNemotronWorkstationSystem:
         # Layer 2 Tools: LiveWebSearchTool (Wikipedia, arXiv, DuckDuckGo, URL fetch) + Python subprocess
         self.search_tool = LiveWebSearchTool(max_results=4)
 
-        # Layer 4: Persistent File-Based Memory Tree & Relational Knowledge Graph
+        # Layer 4: Multi-User Organization Git Memory Repository (`clover-org-memory-repo/`)
+        #          + Foundational Relational Memory Graph (`k3_memory_graph.py`)
+        from clover_server_org_git_memory import CloverServerOrgGitMemoryRepo
+
+        canonical_agents = CLOVER_AI_DIR.parent / "AGENTS.md" if "CLOVER_AI_DIR" in globals() else SCRIPT_DIR.parent.parent / "AGENTS.md"
+        org_repo_base = Path(os.environ.get("CLOVER_ORG_MEMORY_BASE_DIR", str(self.pruned_dir.parent / "org-memory")))
+        self.org_git_repo = CloverServerOrgGitMemoryRepo(
+            base_dir=org_repo_base,
+            canonical_agents_md_path=canonical_agents if canonical_agents.exists() else None,
+        )
         self.memory_graph = ensure_default_memory_tree()
 
         # Layer 5: Deterministic Symbolic Ontology GraphRAG & Verifier
@@ -506,13 +515,16 @@ class CloverNemotronWorkstationSystem:
         allow_python: bool = True,
         output_type: str = "text",
         image_b64: str | None = None,
+        user_id: str = "default",
+        team_id: str = "core",
+        session_id: str = "workstation",
     ) -> dict[str, Any]:
         """
         Executes the progressive 7-layer Clover cycle on `nemotron-3.5-super-vl` up to `max_active_layer` (`1 .. 7`):
           - `max_active_layer = 1`: Layer 1 (`libnemotron_cpu_engine.so` Mamba-2 + 512-Expert Latent ReLU² MoE + NoPE 16:1 GQA + 131,072 Tekken `lm_head` + Native 2-Layer MTP)
           - `max_active_layer = 2`: + Layer 2 (`HybridLink4096` + `NemotronNativeHybridLink(d=4096)` continuous `<latent>` step injection + live `<search>` & `<python>` tool execution)
           - `max_active_layer = 3`: + Layer 3 (`NemotronComboBridge` + `NemotronExpertBridge` + 8-GPU trained `131,072`-vocab 11-level `VQ-VAE` + `NextConceptTransformer` + `NemotronLexicalPointerDecoder`)
-          - `max_active_layer = 4`: + Layer 4 (`k3_memory_graph.py` persistent relational memory tree + 9 foundational paper algorithms)
+          - `max_active_layer = 4`: + Layer 4 (`CloverServerOrgGitMemoryRepo` Multi-User & Organization Git Repository `clover-org-memory-repo/` + `k3_memory_graph.py` + 9 foundational paper algorithms)
           - `max_active_layer = 5`: + Layer 5 (`k3_ontology_graph.py` Horn-rule inference + `Turing 1950` M0/M1 stratifier + `Newell-Simon 1956` CSm/VCt + symbolic math solver + honest grounding audit)
           - `max_active_layer = 6`: + Layer 6 (`k3_generative_compiler.py` checking only model-written code + prompt `assert` verification + diagnostic repair loop)
           - `max_active_layer = 7`: + Layer 7 (`SpecMD Policy 3 Least-Stale + R4 Clean-Drop` SlotCache + OS `madvise(MADV_WILLNEED)` + 4-Tier Workstation Data-Movement Ledger)
@@ -532,38 +544,65 @@ class CloverNemotronWorkstationSystem:
         layer_trace: dict[str, Any] = {}
 
         # ------------------------------------------------------------------
-        # 1. Layer 4: Persistent File-Based Memory Tree (`k3_memory_graph.py`)
+        # 1. Layer 4: Multi-User Organization Git Memory Repo (`clover-org-memory-repo/`)
+        #    (`users/<user_id>/` + `teams/<team_id>/` + `shared/`) + `k3_memory_graph.py`
         # ------------------------------------------------------------------
         if active_cap >= 4:
             t_l4 = time.perf_counter()
+            git_hits = self.org_git_repo.search_repo_relevant(
+                user_clean, user_id=user_id, team_id=team_id, max_files=3, max_chars_per_file=550
+            )
             mem_pkg = retrieve_relevant_memory_package(self.memory_graph, user_clean)
             l4_items = []
             l4_reasons = []
+            seen_snippets: set[str] = set()
+            for gh in git_hits:
+                snip = str(gh.get("snippet") or "").strip()
+                if snip and snip not in seen_snippets:
+                    seen_snippets.add(snip)
+                    l4_items.append({
+                        "id": gh["path"],
+                        "scope": gh.get("scope", "shared"),
+                        "type": "org_git_repo_file",
+                        "epistemic_status": "git_tracked",
+                        "summary": snip,
+                        "reason": f"org_git_repo_match(scope={gh.get('scope')}, score={gh['score']})",
+                    })
+                    retrieved_context_blocks.append(f"[Org Git Repo ({gh.get('scope')}) '{gh['path']}']: {snip}")
             if mem_pkg is not None and mem_pkg.items:
-                tools_used.append("layer4_memory_graph")
                 for it in mem_pkg.items[:3]:
                     summary_clean = str(it.entry.summary or "").strip()
                     rsn_str = str(getattr(it, "reason", "") or "")
                     l4_reasons.append(rsn_str)
-                    l4_items.append({
-                        "id": it.entry.id,
-                        "type": it.entry.entry_type,
-                        "epistemic_status": it.entry.epistemic_status,
-                        "summary": summary_clean,
-                        "reason": rsn_str,
-                    })
-                    if summary_clean:
+                    if summary_clean and summary_clean not in seen_snippets:
+                        seen_snippets.add(summary_clean)
+                        l4_items.append({
+                            "id": it.entry.id,
+                            "scope": "shared_memory_graph",
+                            "type": it.entry.entry_type,
+                            "epistemic_status": it.entry.epistemic_status,
+                            "summary": summary_clean,
+                            "reason": rsn_str,
+                        })
                         retrieved_context_blocks.append(f"[Memory Graph {it.entry.id}]: {summary_clean}")
+            if l4_items:
+                tools_used.append("layer4_org_git_memory_repo")
             hopfield_fam = self.memory_graph.compute_hopfield_familiarity(user_clean)
             gtn_conf = self.memory_graph.compute_gtn_forward_confidence(user_clean)
             mh_lrn = self.memory_graph.multihead_lrn_subspace_retrieve(user_clean, top_k=3)
-            td_path_ids = [it["id"] for it in l4_items] or [
+            td_path_ids = [it["id"] for it in l4_items if str(it["id"]).startswith("MEM-")] or [
                 "MEM-CONCEPT-FLAT-RESPONSE-DIAGNOSIS-001",
                 "MEM-CORR-PER-LAYER-PARTITION-002",
             ]
             td_credit = self.memory_graph.compute_td_lambda_path_credit(td_path_ids, outcome_verified=True)
+            onb_state = self.org_git_repo.get_onboarding_state(user_id=user_id, team_id=team_id)
             layer_trace["layer4_memory_graph"] = {
                 "enabled": True,
+                "storage_engine": "multi_user_organization_git_repository_with_selective_on_demand_fetch",
+                "repo_path": str(self.org_git_repo.repo_dir),
+                "active_user_id": onb_state["user_id"],
+                "active_team_id": onb_state["team_id"],
+                "agents_md_accepted": bool(onb_state.get("agents_md_accepted")),
                 "injected_into_prompt": len(l4_items) > 0,
                 "retrieved_count": len(l4_items),
                 "entries": l4_items,
@@ -727,7 +766,9 @@ class CloverNemotronWorkstationSystem:
                     s = ln.strip()
                     if not s or s.startswith(("[Memory Graph", "[Ontology GraphRAG", "[E1]", "[E2]", "[P1]", "[P2]", "Category:", "Published:")):
                         continue
-                    clean_lines.append(s)
+                    s = re.sub(r"^\[Org Git Repo \([^\)]+\) '[^']+'\]:\s*", "", s).strip()
+                    if s:
+                        clean_lines.append(s)
                 plans = clean_lines[:3] if clean_lines else [retrieved_context_str[:280]]
             else:
                 # Layer 1 standalone: decode top-1 next-token & 2-layer Native MTP draft from Nemotron's untied 131,072 lm_head
@@ -798,6 +839,24 @@ class CloverNemotronWorkstationSystem:
             )
             layer_trace["layer5_ontology_and_verifier"]["grounding_audit"] = grounding_audit
             layer_trace["layer5_ontology_and_verifier"]["source_grounding_verified"] = grounding_audit["source_grounding_verified"]
+
+        # ------------------------------------------------------------------
+        # 6b. Layer 4 Growth Stage: Commit Session Turn & Scripts to Multi-User Org Git Repo
+        # ------------------------------------------------------------------
+        if active_cap >= 4:
+            try:
+                git_growth = self.org_git_repo.record_task_or_session_turn(
+                    session_id=session_id,
+                    prompt=user_clean,
+                    reply=reply_text,
+                    user_id=user_id,
+                    team_id=team_id,
+                    generated_code=executed_py_code,
+                    tools_used=tools_used,
+                )
+                layer_trace["layer4_memory_graph"]["git_growth_commit"] = git_growth
+            except Exception:
+                pass
 
         # ------------------------------------------------------------------
         # 7. Layer 7: Per-Request SpecMD R4 SlotCache & 4-Tier Workstation Ledger
@@ -1052,6 +1111,44 @@ def run_workstation_7layer_verification() -> dict[str, Any]:
         stage_lesson_to_memory=True,
     )
 
+    # Multi-User Organization Git Memory Collaboration Verification:
+    # 1. Alice (team 'ml') accepts AGENTS.md, writes a personal note in users/alice/tasks/, and promotes it to shared/notes/
+    alice_onb = sys_nemo.org_git_repo.accept_agents_md(user_id="alice", display_name="Alice Chen", team_id="ml")
+    alice_write = sys_nemo.org_git_repo.write_file(
+        "tasks/nemotron-top22-routing.md",
+        "# Nemotron 3.5 Super VL MoE Routing\n\nNemotron 3.5 Super VL routes top-22 of 512 experts per token in 1024-d Latent ReLU-squared space plus 1 shared expert.\n",
+        user_id="alice",
+        team_id="ml",
+        commit_message="Document Nemotron top-22 of 512 Latent ReLU^2 routing",
+    )
+    alice_promote = sys_nemo.org_git_repo.promote_to_shared(
+        source_rel_path=alice_write["path"],
+        user_id="alice",
+        team_id="ml",
+        target_scope="shared",
+        target_subpath="shared/notes/MEM-ORG-NEMO-ROUTING-004.md",
+    )
+    # 2. Bob (team 'core') accepts AGENTS.md and runs a Layer-4 query that retrieves Alice's promoted shared note!
+    bob_onb = sys_nemo.org_git_repo.accept_agents_md(user_id="bob", display_name="Bob Kumar", team_id="core")
+    bob_collab_turn = sys_nemo.run_cycle(
+        "How many experts per token does Nemotron 3.5 Super VL route in its 1024-d Latent ReLU-squared space?",
+        max_active_layer=4,
+        use_ncm_renderer=True,
+        user_id="bob",
+        team_id="core",
+        session_id="bob-workstation",
+    )
+    multi_user_org_git_report = {
+        "repo_path": str(sys_nemo.org_git_repo.repo_dir),
+        "alice_onboarding": {k: v for k, v in alice_onb.items() if k != "agents_md_content"},
+        "alice_personal_write": alice_write,
+        "alice_promoted_to_shared": alice_promote,
+        "bob_onboarding": {k: v for k, v in bob_onb.items() if k != "agents_md_content"},
+        "bob_retrieved_alice_shared_note_in_layer4": bob_collab_turn,
+        "organization_members": sys_nemo.org_git_repo.list_members_and_teams(),
+        "recent_git_commits": sys_nemo.org_git_repo.git_log(max_count=10),
+    }
+
     report = {
         "device_uname": list(platform.uname()),
         "setup_ms": sys_nemo.setup_ms,
@@ -1064,6 +1161,7 @@ def run_workstation_7layer_verification() -> dict[str, Any]:
             "layer2_live_web_search": l2_web,
             "layer3_11level_ncm_131k_tekken": l3_ncm,
             "layer4_memory_graph_injected": l4_mem,
+            "layer4_multi_user_organization_git_collaboration": multi_user_org_git_report,
             "layer5_ontology_graphrag_injected": l5_ont,
             "layer6_generative_compiler_and_asserts": l6_comp,
             "layer7_bf16_vs_4bit_specmd_madvise": {

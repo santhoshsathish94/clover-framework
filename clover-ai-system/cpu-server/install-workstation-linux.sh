@@ -74,6 +74,7 @@ mkdir -p "${INSTALL_OPT}/cpu-server"
 cp -f "${SCRIPT_DIR}/nemotron_cpu_engine.c" "${INSTALL_OPT}/cpu-server/"
 cp -f "${SCRIPT_DIR}/nemotron_hybrid_ncm.py" "${INSTALL_OPT}/cpu-server/"
 cp -f "${SCRIPT_DIR}/nemotron_workstation_clover.py" "${INSTALL_OPT}/cpu-server/"
+cp -f "${SCRIPT_DIR}/clover_server_org_git_memory.py" "${INSTALL_OPT}/cpu-server/"
 cp -f "${SCRIPT_DIR}/clover_workstation_launcher.c" "${INSTALL_OPT}/cpu-server/"
 if [[ -f "${SCRIPT_DIR}/nemotron_workstation_7layer_report.json" ]]; then
     cp -f "${SCRIPT_DIR}/nemotron_workstation_7layer_report.json" "${INSTALL_OPT}/cpu-server/"

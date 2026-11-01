@@ -554,9 +554,86 @@ HTML_UI = """<!DOCTYPE html>
   </div>
   <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
     <span id="clover-cpu-pill" style="font-size:0.75rem;font-weight:600;padding:0.25rem 0.6rem;border-radius:999px;background:#fef3c7;color:#92400e;border:1px solid #f59e0b;" title="Clover is running on a CPU server, so responses take longer">CPU Server &middot; Slow Response</span>
+    <button type="button" class="btn" onclick="toggleOrgRepoDrawer()" id="org-repo-btn" title="Layer 4 Multi-User Organization Git Memory Repository &amp; AGENTS.md">AGENTS.md &middot; Org Git Repo</button>
     <button type="button" class="btn" onclick="toggleMemoryDrawer()" id="mem-drawer-btn" title="Inspect File-Based Memory Tree & Relational Knowledge Graph">Memory Graph</button>
   </div>
 </header>
+
+<aside class="mem-drawer" id="org-repo-drawer" hidden aria-label="Organization Git Memory Repository" style="width:490px;">
+  <div class="mem-drawer__head">
+    <span id="org-repo-title">Layer 4 &middot; Multi-User Organization Git Repo</span>
+    <button type="button" class="btn" onclick="toggleOrgRepoDrawer()">Close</button>
+  </div>
+  <div style="padding:0.65rem 1rem;border-bottom:1px solid var(--line);background:var(--soft);display:flex;flex-direction:column;gap:0.45rem;">
+    <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
+      <label style="font-size:0.76rem;font-weight:650;color:var(--ink-2);">User:</label>
+      <input type="text" id="org-user-id" value="default" placeholder="user_id (e.g. alice)" style="width:110px;padding:0.3rem 0.5rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;font-size:0.8rem;">
+      <label style="font-size:0.76rem;font-weight:650;color:var(--ink-2);">Team:</label>
+      <select id="org-team-id" style="padding:0.3rem 0.5rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;font-size:0.8rem;background:#fff;">
+        <option value="core">core</option>
+        <option value="ml">ml</option>
+        <option value="security">security</option>
+        <option value="platform">platform</option>
+      </select>
+      <button type="button" class="btn" onclick="applyOrgUserSwitch()">Switch User/Team</button>
+    </div>
+    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+      <button type="button" class="btn btn--primary" onclick="openOrgAgentsModal()">Review / Accept AGENTS.md</button>
+      <button type="button" class="btn" onclick="newOrgRepoFile()">+ New File (.md / .py)</button>
+    </div>
+  </div>
+  <div class="mem-drawer__body" id="org-repo-body">
+    <div id="org-repo-editor-box" hidden style="border:1px solid var(--accent-line);border-radius:8px;padding:0.65rem;margin-bottom:0.75rem;background:var(--accent-soft);">
+      <div style="font-weight:700;margin-bottom:0.35rem;">Editing: <code id="org-edit-label">tasks/note.md</code></div>
+      <input type="text" id="org-edit-path" placeholder="Path (e.g. tasks/note.md, scripts/tool.py, shared/notes/MEM-1.md)" style="width:100%;padding:0.36rem 0.55rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;font-size:0.8rem;margin-bottom:0.4rem;">
+      <textarea id="org-edit-content" rows="8" style="width:100%;font-family:monospace;font-size:0.78rem;padding:0.5rem;border:1px solid var(--line-2);border-radius:6px;background:#14181d;color:#f6f8fa;margin-bottom:0.4rem;min-height:160px;"></textarea>
+      <input type="text" id="org-edit-msg" placeholder="Git commit message (attributed to active user@team)" style="width:100%;padding:0.36rem 0.55rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;font-size:0.8rem;margin-bottom:0.45rem;">
+      <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+        <button type="button" class="btn btn--primary" onclick="saveOrgRepoFile()">Save &amp; Git Commit</button>
+        <button type="button" class="btn" id="org-promote-shared-btn" onclick="promoteOrgRepoFile('shared')" title="Share with entire organization in shared/">Promote &rarr; shared/</button>
+        <button type="button" class="btn" id="org-promote-team-btn" onclick="promoteOrgRepoFile('team')" title="Share with your team in teams/<team>/">Promote &rarr; team/</button>
+        <button type="button" class="btn" id="org-del-btn" onclick="deleteOrgRepoFile()">Delete</button>
+        <button type="button" class="btn" onclick="document.getElementById('org-repo-editor-box').hidden=true">Cancel</button>
+      </div>
+    </div>
+    <div id="org-staged-lessons-box"></div>
+    <div style="font-weight:700;margin-bottom:0.35rem;">Organization &amp; User Files (User + Team + Shared Scopes)</div>
+    <div id="org-repo-files-list" style="margin-bottom:0.8rem;">Loading files...</div>
+    <div style="border-top:1px solid var(--line);padding-top:0.65rem;margin-bottom:0.8rem;">
+      <div style="font-weight:700;margin-bottom:0.25rem;">Private Organization GitHub Sync (<code>private: true</code>)</div>
+      <input type="text" id="org-gh-repo" placeholder="org-or-user/clover-org-memory (Private repo)" style="width:100%;padding:0.36rem 0.55rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;font-size:0.8rem;margin-bottom:0.35rem;">
+      <input type="password" id="org-gh-token" placeholder="GitHub Personal Access Token (repo scope)" style="width:100%;padding:0.36rem 0.55rem;border:1px solid var(--line-2);border-radius:6px;font:inherit;font-size:0.8rem;margin-bottom:0.4rem;">
+      <div style="display:flex;gap:0.4rem;">
+        <button type="button" class="btn btn--primary" onclick="syncOrgGithub('push')">Push to Private GitHub</button>
+        <button type="button" class="btn" onclick="syncOrgGithub('pull')">Pull from Private GitHub</button>
+      </div>
+      <div id="org-gh-status" style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem;"></div>
+    </div>
+    <div style="border-top:1px solid var(--line);padding-top:0.65rem;">
+      <div style="font-weight:700;margin-bottom:0.3rem;">Multi-User Git Commit Log (<code>git log</code>)</div>
+      <div id="org-repo-commits-list"></div>
+    </div>
+  </div>
+</aside>
+
+<div id="org-agents-modal" hidden style="position:fixed;inset:0;background:rgba(20,24,29,0.58);z-index:90;display:flex;align-items:center;justify-content:center;padding:1rem;">
+  <div style="width:min(680px,100%);max-height:88vh;background:var(--bg);border:1px solid var(--line-2);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,0.22);">
+    <div style="padding:0.85rem 1.15rem;border-bottom:1px solid var(--line);background:var(--soft);display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-weight:700;font-size:1rem;">AGENTS.md &mdash; Multi-User Organization Operating Specification</div>
+        <div style="font-size:0.75rem;color:var(--muted);">Tracked in <code>clover-org-memory-repo/users/&lt;user&gt;/AGENTS.md</code> &amp; <code>AGENTS.md</code></div>
+      </div>
+      <button type="button" class="btn" onclick="document.getElementById('org-agents-modal').hidden=true">Close</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:1rem 1.15rem;">
+      <textarea id="org-agents-textarea" style="width:100%;min-height:320px;font-family:monospace;font-size:0.8rem;line-height:1.5;padding:0.75rem;border:1px solid var(--line-2);border-radius:8px;background:var(--soft);color:var(--ink);"></textarea>
+    </div>
+    <div style="padding:0.75rem 1.15rem;border-top:1px solid var(--line);background:var(--soft);display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+      <span style="font-size:0.76rem;color:var(--muted);">Accepting commits your user agreement to the organization Git memory repo.</span>
+      <button type="button" class="btn btn--primary" onclick="acceptOrgAgentsMd()">Accept AGENTS.md &amp; Commit</button>
+    </div>
+  </div>
+</div>
 
 <aside class="mem-drawer" id="mem-drawer" hidden aria-label="Memory Graph Inspector">
   <div class="mem-drawer__head">
@@ -625,12 +702,6 @@ HTML_UI = """<!DOCTYPE html>
     </div>
 
     <footer>
-      <div class="output-tabs" id="output-type-tabs" role="tablist" aria-label="Select output type">
-        <button type="button" class="output-tab is-active" role="tab" aria-selected="true" data-output-type="text" id="opt-text" onclick="onOutputTypeChange('text')">Text</button>
-        <button type="button" class="output-tab" role="tab" aria-selected="false" data-output-type="image" id="opt-image" onclick="onOutputTypeChange('image')">Image</button>
-        <button type="button" class="output-tab" role="tab" aria-selected="false" data-output-type="video" id="opt-video" onclick="onOutputTypeChange('video')">Video</button>
-        <button type="button" class="output-tab" role="tab" aria-selected="false" data-output-type="audio" id="opt-audio" onclick="onOutputTypeChange('audio')">Audio</button>
-      </div>
       <div class="footer-row">
         <input type="file" id="file-input" multiple hidden onchange="onFilesSelected(event)">
         <button type="button" class="btn icon-btn" onclick="document.getElementById('file-input').click()" title="Attach any file (images, video, audio, PDF, documents, code, text)" aria-label="Attach files">
@@ -1243,9 +1314,15 @@ async function sendPrompt() {
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Clover-User': getActiveOrgUser(),
+        'X-Clover-Team': getActiveOrgTeam()
+      },
       body: JSON.stringify({
         session_id: activeSid,
+        user_id: getActiveOrgUser(),
+        team_id: getActiveOrgTeam(),
         model: selectedModelKey,
         output_type: reqOutputType,
         prompt: effectivePrompt,
@@ -1386,6 +1463,255 @@ async function discardStaged(entryId) {
   });
   await loadMemoryDrawer();
 }
+
+const ORG_USER_KEY = 'clover_org_user_id_v1';
+const ORG_TEAM_KEY = 'clover_org_team_id_v1';
+function getActiveOrgUser() {
+  const el = document.getElementById('org-user-id');
+  return (el && el.value.trim()) || localStorage.getItem(ORG_USER_KEY) || 'default';
+}
+function getActiveOrgTeam() {
+  const el = document.getElementById('org-team-id');
+  return (el && el.value.trim()) || localStorage.getItem(ORG_TEAM_KEY) || 'core';
+}
+try {
+  const su = localStorage.getItem(ORG_USER_KEY);
+  const st = localStorage.getItem(ORG_TEAM_KEY);
+  if (su && document.getElementById('org-user-id')) document.getElementById('org-user-id').value = su;
+  if (st && document.getElementById('org-team-id')) document.getElementById('org-team-id').value = st;
+} catch (e) {}
+
+async function applyOrgUserSwitch() {
+  const u = getActiveOrgUser();
+  const t = getActiveOrgTeam();
+  try {
+    localStorage.setItem(ORG_USER_KEY, u);
+    localStorage.setItem(ORG_TEAM_KEY, t);
+  } catch (e) {}
+  await loadOrgRepoDrawer();
+}
+
+async function toggleOrgRepoDrawer() {
+  const dr = document.getElementById('org-repo-drawer');
+  if (!dr) return;
+  if (dr.hasAttribute('hidden')) {
+    dr.removeAttribute('hidden');
+    await loadOrgRepoDrawer();
+  } else {
+    dr.setAttribute('hidden', '');
+  }
+}
+
+function renderOrgRepoState(d) {
+  if (!d) return;
+  const files = d.files || [];
+  const commits = d.commits || [];
+  const lessons = d.staged_lessons || [];
+  const onb = d.onboarding || {};
+  const gh = d.github_sync || {};
+  const btn = document.getElementById('org-repo-btn');
+  if (btn) {
+    btn.textContent = `AGENTS.md · ${onb.user_id || getActiveOrgUser()}@${onb.team_id || getActiveOrgTeam()} (${files.length})`;
+  }
+  if (gh.repo && document.getElementById('org-gh-repo') && !document.getElementById('org-gh-repo').value) {
+    document.getElementById('org-gh-repo').value = gh.repo;
+  }
+  if (gh.last_sync && document.getElementById('org-gh-status')) {
+    document.getElementById('org-gh-status').textContent = `Last synced private repo ${gh.repo} at ${gh.last_sync} by ${gh.last_sync_by || 'user'}`;
+  }
+  const lbox = document.getElementById('org-staged-lessons-box');
+  if (lbox) {
+    if (!lessons.length) {
+      lbox.innerHTML = '';
+    } else {
+      lbox.innerHTML = `<div style="font-weight:700;margin-bottom:0.3rem;">Staged Clover Cycle Lessons (${lessons.length})</div>` +
+        lessons.map(l => `<div class="mem-card mem-card--staged">
+          <div><strong>${escHtml(l.id)}</strong> <span class="mem-badge">${escHtml(l.author || 'team')}</span></div>
+          <div style="margin:0.25rem 0;">${escHtml(l.summary || '')}</div>
+          <div style="display:flex;gap:0.35rem;">
+            <button type="button" class="btn" onclick="keepOrgLesson('${escHtml(l.id)}')">Keep in shared/notes/</button>
+            <button type="button" class="btn" onclick="discardOrgLesson('${escHtml(l.id)}')">Discard</button>
+          </div>
+        </div>`).join('');
+    }
+  }
+  const fbox = document.getElementById('org-repo-files-list');
+  if (fbox) {
+    fbox.innerHTML = files.map(f => `<div class="mem-card" style="cursor:pointer;" onclick="openOrgFile('${escHtml(f.path)}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.4rem;">
+        <code><strong>${escHtml(f.path)}</strong></code>
+        <span class="mem-badge">${escHtml(f.scope || f.category || 'file')} &middot; ${f.size_bytes || 0} B</span>
+      </div>
+      <div style="color:var(--muted);font-size:0.75rem;margin-top:0.15rem;">${escHtml(f.summary || '')}</div>
+    </div>`).join('');
+  }
+  const cbox = document.getElementById('org-repo-commits-list');
+  if (cbox) {
+    cbox.innerHTML = commits.map(c => `<div style="padding:0.3rem 0;border-bottom:1px solid var(--line);font-size:0.75rem;">
+      <code><strong>${escHtml(c.hash)}</strong></code> ${escHtml(c.message)}
+      <span style="color:var(--muted);"> &mdash; ${escHtml(c.author || '')} (${escHtml((c.date || '').slice(0, 19).replace('T', ' '))})</span>
+    </div>`).join('');
+  }
+}
+
+async function loadOrgRepoDrawer() {
+  try {
+    const u = encodeURIComponent(getActiveOrgUser());
+    const t = encodeURIComponent(getActiveOrgTeam());
+    const r = await fetch(`/api/repo/files?user_id=${u}&team_id=${t}`);
+    const d = await r.json();
+    renderOrgRepoState(d);
+  } catch (e) {}
+}
+
+async function openOrgFile(pathStr) {
+  try {
+    const r = await fetch('/api/repo/read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: pathStr, user_id: getActiveOrgUser(), team_id: getActiveOrgTeam() })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.message || d.error);
+    document.getElementById('org-repo-editor-box').hidden = false;
+    document.getElementById('org-edit-label').textContent = d.path || pathStr;
+    document.getElementById('org-edit-path').value = d.path || pathStr;
+    document.getElementById('org-edit-content').value = d.content || '';
+    document.getElementById('org-edit-msg').value = '';
+  } catch (e) {
+    alert('Could not read file: ' + e.message);
+  }
+}
+
+function newOrgRepoFile() {
+  const u = getActiveOrgUser();
+  document.getElementById('org-repo-editor-box').hidden = false;
+  document.getElementById('org-edit-label').textContent = `users/${u}/tasks/new-note.md`;
+  document.getElementById('org-edit-path').value = `users/${u}/tasks/new-note.md`;
+  document.getElementById('org-edit-content').value = `# Task / Design Note (${u})\n\nWrite Markdown notes or Python scripts here. Promote to shared/ when ready for the team.\n`;
+  document.getElementById('org-edit-msg').value = 'Add task note';
+}
+
+async function saveOrgRepoFile() {
+  const p = document.getElementById('org-edit-path').value.trim();
+  const c = document.getElementById('org-edit-content').value;
+  const m = document.getElementById('org-edit-msg').value.trim();
+  if (!p) return;
+  const r = await fetch('/api/repo/write', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: p, content: c, commit_message: m, user_id: getActiveOrgUser(), team_id: getActiveOrgTeam() })
+  });
+  const d = await r.json();
+  if (d.error) { alert(d.message || d.error); return; }
+  document.getElementById('org-repo-editor-box').hidden = true;
+  renderOrgRepoState(d);
+}
+
+async function promoteOrgRepoFile(targetScope) {
+  const p = document.getElementById('org-edit-path').value.trim();
+  if (!p) return;
+  const r = await fetch('/api/repo/promote', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: p, target_scope: targetScope, user_id: getActiveOrgUser(), team_id: getActiveOrgTeam() })
+  });
+  const d = await r.json();
+  if (d.error) { alert(d.message || d.error); return; }
+  document.getElementById('org-repo-editor-box').hidden = true;
+  renderOrgRepoState(d);
+}
+
+async function deleteOrgRepoFile() {
+  const p = document.getElementById('org-edit-path').value.trim();
+  if (!p) return;
+  const r = await fetch('/api/repo/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: p, user_id: getActiveOrgUser(), team_id: getActiveOrgTeam() })
+  });
+  const d = await r.json();
+  if (d.error) { alert(d.message || d.error); return; }
+  document.getElementById('org-repo-editor-box').hidden = true;
+  renderOrgRepoState(d);
+}
+
+async function keepOrgLesson(lid) {
+  const r = await fetch('/api/repo/lesson/keep', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: lid, user_id: getActiveOrgUser(), team_id: getActiveOrgTeam() })
+  });
+  const d = await r.json();
+  renderOrgRepoState(d);
+}
+
+async function discardOrgLesson(lid) {
+  const r = await fetch('/api/repo/lesson/discard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: lid, user_id: getActiveOrgUser(), team_id: getActiveOrgTeam() })
+  });
+  const d = await r.json();
+  renderOrgRepoState(d);
+}
+
+async function syncOrgGithub(action) {
+  const repo = document.getElementById('org-gh-repo').value.trim();
+  const tok = document.getElementById('org-gh-token').value.trim();
+  const stEl = document.getElementById('org-gh-status');
+  if (stEl) stEl.textContent = `${action === 'pull' ? 'Pulling from' : 'Verifying private repo & pushing to'} ${repo || 'GitHub'}...`;
+  const r = await fetch('/api/repo/github-sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repo: repo, token: tok || undefined, action: action, branch: 'main', user_id: getActiveOrgUser() })
+  });
+  const d = await r.json();
+  if (d.error) {
+    if (stEl) stEl.textContent = 'Sync error: ' + (d.message || d.error);
+    return;
+  }
+  document.getElementById('org-gh-token').value = '';
+  renderOrgRepoState(d);
+}
+
+async function openOrgAgentsModal() {
+  try {
+    const u = encodeURIComponent(getActiveOrgUser());
+    const t = encodeURIComponent(getActiveOrgTeam());
+    const r = await fetch(`/api/repo/onboarding?user_id=${u}&team_id=${t}`);
+    const d = await r.json();
+    document.getElementById('org-agents-textarea').value = d.agents_md_content || '';
+    document.getElementById('org-agents-modal').hidden = false;
+  } catch (e) {}
+}
+
+async function acceptOrgAgentsMd() {
+  const txt = document.getElementById('org-agents-textarea').value;
+  try { localStorage.setItem('clover_org_agents_accepted_' + getActiveOrgUser(), '1'); } catch (e) {}
+  document.getElementById('org-agents-modal').hidden = true;
+  await fetch('/api/repo/accept-agents', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: getActiveOrgUser(), team_id: getActiveOrgTeam(), content: txt })
+  });
+  await loadOrgRepoDrawer();
+}
+
+(async function initOrgRepoGate() {
+  try {
+    const u = getActiveOrgUser();
+    const t = getActiveOrgTeam();
+    const r = await fetch(`/api/repo/onboarding?user_id=${encodeURIComponent(u)}&team_id=${encodeURIComponent(t)}`);
+    const d = await r.json();
+    const localAcc = localStorage.getItem('clover_org_agents_accepted_' + u) === '1';
+    if (!d.agents_md_accepted && !localAcc && d.agents_md_content) {
+      document.getElementById('org-agents-textarea').value = d.agents_md_content;
+      document.getElementById('org-agents-modal').hidden = false;
+    }
+    await loadOrgRepoDrawer();
+  } catch (e) {}
+})();
 </script>
 </body>
 </html>
@@ -1393,7 +1719,7 @@ async function discardStaged(entryId) {
 
 
 class PendingTextRequest:
-    def __init__(self, session_id, prompt, hist_snapshot, cands, remember, display_prompt=None, attachments_meta=None, callable_fn=None, model_key="nemotron-3.5-super-vl"):
+    def __init__(self, session_id, prompt, hist_snapshot, cands, remember, display_prompt=None, attachments_meta=None, callable_fn=None, model_key="nemotron-3.5-super-vl", user_id="default", team_id="core"):
         self.session_id = session_id
         self.prompt = prompt
         self.display_prompt = display_prompt if display_prompt is not None else prompt
@@ -1403,6 +1729,8 @@ class PendingTextRequest:
         self.remember = remember
         self.callable_fn = callable_fn
         self.model_key = model_key or "nemotron-3.5-super-vl"
+        self.user_id = user_id or "default"
+        self.team_id = team_id or "core"
         self.event = threading.Event()
         self.result = None
         self.error = None
@@ -1434,6 +1762,24 @@ class MultiGPUCloverCoordinator:
         self.default_clover_context = load_default_clover_context()
         print(
             f"[Clover AI] Loaded default AGENTS.md operating rules & context ({len(self.default_clover_context)} chars) from {CLOVER_DEFAULT_CONTEXT_PATH}",
+            flush=True,
+        )
+
+        # Layer 4: Multi-User Organization Git Memory Repository (`clover-org-memory-repo/`)
+        for rel_d in ("../../cpu-server", "../../models/nemotron-3.5-super-vl"):
+            cand_d = os.path.abspath(os.path.join(TOOLS_DIR, rel_d))
+            if os.path.isdir(cand_d) and cand_d not in sys.path:
+                sys.path.insert(0, cand_d)
+        from pathlib import Path as _Path
+        from clover_server_org_git_memory import CloverServerOrgGitMemoryRepo
+        org_repo_base = _Path(os.environ.get("CLOVER_ORG_MEMORY_BASE_DIR", os.path.join(TOOLS_DIR, "out/org-memory")))
+        canon_agents_p = _Path(CLOVER_DEFAULT_CONTEXT_PATH) if os.path.exists(CLOVER_DEFAULT_CONTEXT_PATH) else None
+        self.org_git_repo = CloverServerOrgGitMemoryRepo(
+            base_dir=org_repo_base,
+            canonical_agents_md_path=canon_agents_p,
+        )
+        print(
+            f"[Clover AI] Initialized Layer 4 Multi-User Organization Git Memory Repo at {self.org_git_repo.repo_dir}",
             flush=True,
         )
 
@@ -2064,6 +2410,8 @@ class MultiGPUCloverCoordinator:
                 # If the user says the previous answer in this session was wrong ("try again", "that's wrong", or re-asks),
                 # run deterministic Outcome checks (`check_outcome_findings` + Layer-6 compiler check) and inject findings into Context!
                 effective_req_prompt = req.prompt
+                req_uid = getattr(req, "user_id", "default") or "default"
+                req_tid = getattr(req, "team_id", "core") or "core"
                 retry_cycle_meta = None
                 if req.hist_snapshot:
                     try:
@@ -2099,7 +2447,28 @@ class MultiGPUCloverCoordinator:
                     except Exception:
                         pass
 
-                direct_hit = None if retry_cycle_meta is not None else eng.try_direct_k3_ha_ncm_decode(effective_req_prompt, history=req.hist_snapshot)
+                # Layer 4 Multi-User Organization Git Memory Selective Retrieval (User + Team + Shared Scopes, Zero Context Bloat)
+                org_git_hits = []
+                if getattr(self, "org_git_repo", None) is not None and retry_cycle_meta is None:
+                    try:
+                        org_git_hits = self.org_git_repo.search_repo_relevant(
+                            req.display_prompt, user_id=req_uid, team_id=req_tid, max_files=2, max_chars_per_file=500
+                        )
+                        if org_git_hits:
+                            git_ctx_lines = [
+                                f"[Org Git Repo ({h.get('scope')}) '{h['path']}']: {h['snippet']}"
+                                for h in org_git_hits
+                            ]
+                            effective_req_prompt = (
+                                "Layer 4 Organization Git Memory Context:\n"
+                                + "\n".join(git_ctx_lines)
+                                + "\n\n"
+                                + effective_req_prompt
+                            )
+                    except Exception:
+                        org_git_hits = []
+
+                direct_hit = None if (retry_cycle_meta is not None or org_git_hits) else eng.try_direct_k3_ha_ncm_decode(effective_req_prompt, history=req.hist_snapshot)
                 if direct_hit is not None:
                     text_mbr, ids_mbr, k3_expert_meta, mean_conf = direct_hit
                     cuda_sync(eng.dev, eng.dev_ha)
@@ -2131,6 +2500,20 @@ class MultiGPUCloverCoordinator:
                         text_mbr = eng.symbolic_verifier.verify_source_grounding(req.display_prompt, text_mbr)
                     if retry_cycle_meta is not None:
                         tool_calls = list(tool_calls or []) + [{"tool": "clover_retry_cycle", **retry_cycle_meta}]
+                        if getattr(self, "org_git_repo", None) is not None and retry_cycle_meta.get("pre_retry_findings"):
+                            try:
+                                st_l = self.org_git_repo.stage_lesson(
+                                    lesson_text=f"Question: {retry_cycle_meta['previous_question'][:120]} — Caught {retry_cycle_meta['pre_retry_findings'][0][:160]} and verified fix.",
+                                    user_id=req_uid,
+                                    team_id=req_tid,
+                                    conversation_id=req.session_id,
+                                    kind="verified",
+                                )
+                                retry_cycle_meta["staged_git_lesson_id"] = st_l["id"]
+                            except Exception:
+                                pass
+                    if org_git_hits:
+                        tool_calls = list(tool_calls or []) + [{"tool": "layer4_org_git_memory_repo", "user_id": req_uid, "team_id": req_tid, "hits": org_git_hits}]
                     cuda_sync(eng.dev, eng.dev_ha)
                     t_ncm_mbr_ms = (time.perf_counter() - t1) * 1000.0
 
@@ -2139,6 +2522,21 @@ class MultiGPUCloverCoordinator:
                     h_len = self.append_session_turn(
                         req.session_id, req.display_prompt, text_mbr, plans, attachments_meta=req.attachments_meta
                     )
+                    if getattr(self, "org_git_repo", None) is not None:
+                        try:
+                            py_code_exec = next((str(tc.get("input") or "") for tc in (tool_calls or []) if isinstance(tc, dict) and tc.get("tool") == "python"), "")
+                            t_names = [str(tc.get("tool") or "") for tc in (tool_calls or []) if isinstance(tc, dict) and tc.get("tool")]
+                            self.org_git_repo.record_task_or_session_turn(
+                                session_id=req.session_id,
+                                prompt=req.display_prompt,
+                                reply=text_mbr,
+                                user_id=req_uid,
+                                team_id=req_tid,
+                                generated_code=py_code_exec,
+                                tools_used=t_names,
+                            )
+                        except Exception:
+                            pass
                 sess_info = self.get_session_details(req.session_id)
                 media_items = []
                 for tc in (tool_calls or []):
@@ -2309,7 +2707,7 @@ class MultiGPUCloverCoordinator:
             self._lfm3_mm_engine = None
         return self._lfm3_mm_engine
 
-    def submit_text_request(self, session_id, prompt, cands=8, remember=True, attachments=None, model_key="nemotron-3.5-super-vl", output_type="text"):
+    def submit_text_request(self, session_id, prompt, cands=8, remember=True, attachments=None, model_key="nemotron-3.5-super-vl", output_type="text", user_id="default", team_id="core"):
         from clover_request_pipeline import CloverModelBackendFactory, CloverRequestValidator
         model_key = CloverModelBackendFactory.resolve_canonical_model_key(model_key)
         p_low = (prompt or "").strip().lower()
@@ -2432,6 +2830,8 @@ class MultiGPUCloverCoordinator:
             display_prompt=prompt or (f"Attached {', '.join(m['name'] for m in att_meta)}" if att_meta else ""),
             attachments_meta=att_meta,
             model_key=model_key or "nemotron-3.5-super-vl",
+            user_id=user_id or "default",
+            team_id=team_id or "core",
         )
         with self.q_cond:
             self.pending_queue.append(req)
@@ -2798,6 +3198,27 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                         for s in staged
                     ],
                 })
+        elif self.path.startswith("/api/repo/onboarding"):
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            uid = (qs.get("user_id") or [self.headers.get("X-Clover-User") or "default"])[0]
+            tid = (qs.get("team_id") or [self.headers.get("X-Clover-Team") or "core"])[0]
+            self._send_json(STATE.org_git_repo.get_onboarding_state(user_id=uid, team_id=tid))
+        elif self.path.startswith("/api/repo/files"):
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            uid = (qs.get("user_id") or [self.headers.get("X-Clover-User") or "default"])[0]
+            tid = (qs.get("team_id") or [self.headers.get("X-Clover-Team") or "core"])[0]
+            inc_all = (qs.get("include_other_users") or ["0"])[0] in ("1", "true")
+            self._send_json({
+                "repo_path": str(STATE.org_git_repo.repo_dir),
+                "onboarding": STATE.org_git_repo.get_onboarding_state(user_id=uid, team_id=tid),
+                "organization": STATE.org_git_repo.list_members_and_teams(),
+                "files": STATE.org_git_repo.list_files(user_id=uid, team_id=tid, include_other_users=inc_all),
+                "staged_lessons": STATE.org_git_repo.list_staged_lessons(),
+                "commits": STATE.org_git_repo.git_log(max_count=20),
+                "github_sync": STATE.org_git_repo.get_github_sync_config(),
+            })
+        elif self.path.startswith("/api/repo/members"):
+            self._send_json(STATE.org_git_repo.list_members_and_teams())
         elif self.path.startswith("/api/models/capabilities"):
             self._send_json({
                 "default_model": "nemotron-3.5-super-vl",
@@ -3015,6 +3436,159 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
             })
             return
 
+        if self.path.startswith("/api/repo/accept-agents"):
+            uid = str(payload.get("user_id") or self.headers.get("X-Clover-User") or "default").strip()
+            tid = str(payload.get("team_id") or self.headers.get("X-Clover-Team") or "core").strip()
+            dname = payload.get("display_name")
+            custom_md = payload.get("content")
+            upd_root = bool(payload.get("update_org_root", False))
+            st = STATE.org_git_repo.accept_agents_md(
+                user_id=uid,
+                custom_content=custom_md if isinstance(custom_md, str) else None,
+                display_name=str(dname).strip() if dname else None,
+                team_id=tid,
+                update_org_root=upd_root,
+            )
+            self._send_json({"ok": True, **st})
+            return
+
+        if self.path.startswith("/api/repo/read"):
+            try:
+                uid = str(payload.get("user_id") or self.headers.get("X-Clover-User") or "default").strip()
+                tid = str(payload.get("team_id") or self.headers.get("X-Clover-Team") or "core").strip()
+                rel_p = str(payload.get("path") or "AGENTS.md")
+                rdata = STATE.org_git_repo.read_file(rel_p, user_id=uid, team_id=tid)
+                self._send_json({"ok": True, **rdata})
+            except Exception as ex:
+                self._send_json({"error": "repo_read_failed", "message": str(ex)}, code=400)
+            return
+
+        if self.path.startswith("/api/repo/write"):
+            try:
+                uid = str(payload.get("user_id") or self.headers.get("X-Clover-User") or "default").strip()
+                tid = str(payload.get("team_id") or self.headers.get("X-Clover-Team") or "core").strip()
+                rel_p = str(payload.get("path") or "").strip()
+                content_s = str(payload.get("content") or "")
+                c_msg = payload.get("commit_message")
+                wres = STATE.org_git_repo.write_file(
+                    rel_p, content_s, user_id=uid, team_id=tid, commit_message=str(c_msg) if c_msg else None
+                )
+                self._send_json({
+                    **wres,
+                    "onboarding": STATE.org_git_repo.get_onboarding_state(user_id=uid, team_id=tid),
+                    "files": STATE.org_git_repo.list_files(user_id=uid, team_id=tid),
+                    "staged_lessons": STATE.org_git_repo.list_staged_lessons(),
+                    "commits": STATE.org_git_repo.git_log(max_count=20),
+                })
+            except Exception as ex:
+                self._send_json({"error": "repo_write_failed", "message": str(ex)}, code=400)
+            return
+
+        if self.path.startswith("/api/repo/promote"):
+            try:
+                uid = str(payload.get("user_id") or self.headers.get("X-Clover-User") or "default").strip()
+                tid = str(payload.get("team_id") or self.headers.get("X-Clover-Team") or "core").strip()
+                rel_p = str(payload.get("path") or "").strip()
+                t_scope = str(payload.get("target_scope") or "shared").strip()
+                t_sub = payload.get("target_subpath")
+                c_msg = payload.get("commit_message")
+                pres = STATE.org_git_repo.promote_to_shared(
+                    source_rel_path=rel_p,
+                    user_id=uid,
+                    team_id=tid,
+                    target_scope=t_scope,
+                    target_subpath=str(t_sub).strip() if t_sub else None,
+                    commit_message=str(c_msg) if c_msg else None,
+                )
+                self._send_json({
+                    **pres,
+                    "onboarding": STATE.org_git_repo.get_onboarding_state(user_id=uid, team_id=tid),
+                    "files": STATE.org_git_repo.list_files(user_id=uid, team_id=tid),
+                    "staged_lessons": STATE.org_git_repo.list_staged_lessons(),
+                    "commits": STATE.org_git_repo.git_log(max_count=20),
+                })
+            except Exception as ex:
+                self._send_json({"error": "repo_promote_failed", "message": str(ex)}, code=400)
+            return
+
+        if self.path.startswith("/api/repo/delete"):
+            try:
+                uid = str(payload.get("user_id") or self.headers.get("X-Clover-User") or "default").strip()
+                tid = str(payload.get("team_id") or self.headers.get("X-Clover-Team") or "core").strip()
+                rel_p = str(payload.get("path") or "").strip()
+                dres = STATE.org_git_repo.delete_file(rel_p, user_id=uid, team_id=tid)
+                self._send_json({
+                    **dres,
+                    "onboarding": STATE.org_git_repo.get_onboarding_state(user_id=uid, team_id=tid),
+                    "files": STATE.org_git_repo.list_files(user_id=uid, team_id=tid),
+                    "staged_lessons": STATE.org_git_repo.list_staged_lessons(),
+                    "commits": STATE.org_git_repo.git_log(max_count=20),
+                })
+            except Exception as ex:
+                self._send_json({"error": "repo_delete_failed", "message": str(ex)}, code=400)
+            return
+
+        if self.path.startswith("/api/repo/lesson/keep"):
+            try:
+                uid = str(payload.get("user_id") or self.headers.get("X-Clover-User") or "default").strip()
+                tid = str(payload.get("team_id") or self.headers.get("X-Clover-Team") or "core").strip()
+                lid = str(payload.get("id") or "").strip()
+                kres = STATE.org_git_repo.keep_staged_lesson(lid, user_id=uid, team_id=tid)
+                self._send_json({
+                    **kres,
+                    "onboarding": STATE.org_git_repo.get_onboarding_state(user_id=uid, team_id=tid),
+                    "files": STATE.org_git_repo.list_files(user_id=uid, team_id=tid),
+                    "staged_lessons": kres["lessons"],
+                    "commits": STATE.org_git_repo.git_log(max_count=20),
+                })
+            except Exception as ex:
+                self._send_json({"error": "lesson_keep_failed", "message": str(ex)}, code=400)
+            return
+
+        if self.path.startswith("/api/repo/lesson/discard"):
+            try:
+                uid = str(payload.get("user_id") or self.headers.get("X-Clover-User") or "default").strip()
+                tid = str(payload.get("team_id") or self.headers.get("X-Clover-Team") or "core").strip()
+                lid = str(payload.get("id") or "").strip()
+                dres = STATE.org_git_repo.discard_staged_lesson(lid, user_id=uid, team_id=tid)
+                self._send_json({
+                    **dres,
+                    "onboarding": STATE.org_git_repo.get_onboarding_state(user_id=uid, team_id=tid),
+                    "files": STATE.org_git_repo.list_files(user_id=uid, team_id=tid),
+                    "staged_lessons": dres["lessons"],
+                    "commits": STATE.org_git_repo.git_log(max_count=20),
+                })
+            except Exception as ex:
+                self._send_json({"error": "lesson_discard_failed", "message": str(ex)}, code=400)
+            return
+
+        if self.path.startswith("/api/repo/github-sync"):
+            try:
+                uid = str(payload.get("user_id") or self.headers.get("X-Clover-User") or "default").strip()
+                tid = str(payload.get("team_id") or self.headers.get("X-Clover-Team") or "core").strip()
+                repo_name = str(payload.get("repo") or "").strip()
+                tok = payload.get("token")
+                act = str(payload.get("action") or "push").strip().lower()
+                br = str(payload.get("branch") or "main").strip()
+                sres = STATE.org_git_repo.configure_and_sync_private_github(
+                    repo_full_name=repo_name,
+                    token=str(tok).strip() if tok else None,
+                    action="pull" if act == "pull" else "push",
+                    branch=br,
+                    user_id=uid,
+                )
+                self._send_json({
+                    **sres,
+                    "onboarding": STATE.org_git_repo.get_onboarding_state(user_id=uid, team_id=tid),
+                    "files": STATE.org_git_repo.list_files(user_id=uid, team_id=tid),
+                    "staged_lessons": STATE.org_git_repo.list_staged_lessons(),
+                    "commits": STATE.org_git_repo.git_log(max_count=20),
+                    "github_sync": STATE.org_git_repo.get_github_sync_config(),
+                })
+            except Exception as ex:
+                self._send_json({"error": "github_sync_failed", "message": str(ex)}, code=400)
+            return
+
         if self.path.startswith("/api/chat"):
             from clover_request_pipeline import CloverRequestValidator
             default_cands = 1 if getattr(STATE.k3_experts, "is_cpu_backend", False) else 8
@@ -3051,6 +3625,8 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                         model_key=val_req.model_key,
                     )
                 else:
+                    req_uid = str(payload.get("user_id") or self.headers.get("X-Clover-User") or "default").strip()
+                    req_tid = str(payload.get("team_id") or self.headers.get("X-Clover-Team") or "core").strip()
                     r = STATE.submit_text_request(
                         session_id,
                         val_req.prompt,
@@ -3059,6 +3635,8 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                         attachments=val_req.non_image_attachments,
                         model_key=val_req.model_key,
                         output_type=val_req.output_type,
+                        user_id=req_uid,
+                        team_id=req_tid,
                     )
                 self._send_json(r)
             except Exception as e:
