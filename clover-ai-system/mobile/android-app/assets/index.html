@@ -1713,8 +1713,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       if (speakIt) speakOmni(m.text);
     }
 
+    var lastUser = inp.c.messages.slice(0, -1).filter(function (m) { return m.role === 'user'; }).pop();
     var reqPayload = {
       prompt: inp.prompt, session_id: c.id, attached_files: inp.files, history: inp.hist,
+      previous_media: lastUser && lastUser.media ? lastUser.media.map(function (md) { return md.kind; }) : [],
       media: (inp.media || []).map(function (md) { return { kind: md.kind, name: md.name, data: md.data, voice: !!md.voice }; }),
       sampling: state.settings.sampling, thinking: state.settings.thinking, enable_thinking: state.settings.thinking, max_new_tokens: state.settings.budget
     };
@@ -1785,7 +1787,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function layersUsed(ev) {
     var out = [];
     (ev.layers || []).forEach(function (l) {
-      if (l.layer === 'c1' && l.ms != null) out.push('C1 Inference · ' + (l.ms / 1000).toFixed(2) + 's');
+      if (l.layer === 'semantics') { if (l.understood) out.push(l.understood); if (l.label) out.push(l.label); }
+      else if (l.layer === 'c1' && l.ms != null) out.push('C1 Inference · ' + (l.ms / 1000).toFixed(2) + 's');
       else if (l.layer === 'c2' && l.ms != null) out.push('C2 Plan · ' + Math.round(l.ms) + 'ms');
       else if (l.layer === 'memory' && (l.entries || []).length) out.push('S1 memory · ' + l.entries.length);
       else if (l.layer === 'records') out.push('S1 records: ' + (l.parts || []).join(', '));
@@ -1805,7 +1808,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       }
     });
     var lt = ev.layer_trace || {};
-    if (!out.length && lt.layer1_lfm3_omni) {
+    if (!out.length && lt.semantics_frame) {
+      if (lt.semantics_frame.understood) out.push(lt.semantics_frame.understood);
+      if (lt.semantics_frame.label) out.push(lt.semantics_frame.label);
+    }
+    if (out.length <= 2 && lt.layer1_lfm3_omni && !(ev.layers || []).length) {
       var l1 = lt.layer1_lfm3_omni || {}, l2 = lt.layer2_hybrid_agent || {}, l3 = lt.layer3_11level_ncm || {};
       var c1Ms = (l1.turn1_prefill_ms || 0) + (l1.turn1_decode_ms || 0);
       if (l1.enabled) out.push('C1 Inference · ' + (c1Ms / 1000).toFixed(2) + 's');

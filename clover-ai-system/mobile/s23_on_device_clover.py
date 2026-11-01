@@ -98,6 +98,43 @@ V_LFM3 = 128000
 D_VQ = 384
 CLOVER_S23_APP_PACKAGE = "ai.clover.studio"
 
+# Semantics is common to every Clover process (semantics.py beside this file; the laptop Studio ships the same file).
+# The phone's own part: which of its tools serves each capability, and its terminal's risky commands.
+PHONE_TOOLS = {
+    "web.search": ("web_search",), "web.page": ("web_search",), "python": ("python_interpreter",),
+    "files.read": ("repo_read",), "files.list": ("repo_read",), "files.write": ("repo_write",),
+    "shell": ("run_shell",), "status": ("run_shell",), "ssh": ("run_ssh",), "image": ("generate_image",),
+    "memory.search": ("repo_search",),
+}
+PHONE_OFFER = ("web_search", "python_interpreter")  # what a phone turn offers when the message names no tool
+
+
+def phone_runtime():
+    import local_terminal
+    import semantics
+    return semantics.Runtime(tools=PHONE_TOOLS, device="phone", risky=local_terminal.risky)
+
+
+def align_turn(frame, res: dict[str, Any]) -> list[str]:
+    """semantics.align on a phone turn. Evidence: its one tool step (layer 2), memory (layer 4), the Try again cycle."""
+    import semantics
+    lt = res.setdefault("layer_trace", {})
+    l2 = lt.get("layer2_hybrid_agent") or {}
+    l4 = lt.get("layer4_memory_graph") or {}
+    cycle = res.get("clover_cycle_info") or lt.get("clover_retry_cycle")
+    tool = str(l2.get("tool_executed") or "")
+    calls = [{"tool": tool, "ran": True, "result": str(l2.get("python_output") or l2.get("observation_preview") or "")}]
+    layers = []
+    if l4.get("injected_into_model_prompt"):
+        layers.append({"layer": "memory", "entries": [e.get("id") for e in l4.get("entries") or []] or ["memory"]})
+    if cycle:
+        layers.append({"layer": "cycle", "action": cycle.get("action")})
+    evidence = {"reply": res.get("reply"), "tool_calls": calls if tool else [], "layers": layers}
+    notes = semantics.align(frame, evidence)
+    res["reply"] = evidence["reply"]
+    lt["semantics_frame"] = frame.layer()
+    return notes
+
 
 def load_or_create_device_app_secret(base_dir: Path) -> str:
     """Loads or generates a per-device 256-bit secret stored only on the phone (`.app_secret`, `0600`)."""
@@ -2660,22 +2697,6 @@ class CloverS23OnDeviceSystem:
         r"^\s*(?:def|class|import|from|for|while|if|elif|try|with|return|print\(|[A-Za-z_]\w*\s*=(?!=))",
         re.M,
     )
-    # Conceptual questions about a command or tool ("what does git rebase do?", "how does ssh work?") ask for an answer, not a tool call
-    _CONCEPT = re.compile(
-        r"^\W*(?:in\s+(?:one|a\s+few|two|three|simple|plain)\s+(?:sentences?|words?|lines?|terms)\W+)?(?:"
-        r"what\s+(?:does|do|did|is|are|was|were)\s+[\w\s.\-+#']{1,40}?\s+(?:do|does|mean|means|stand\s+for|used\s+for)\b|"
-        r"how\s+(?:does|do|did)\s+[\w\s.\-+#']{1,40}?\s+work\b|explain\b|describe\b|define\b|"
-        r"what(?:'s|\s+is)\s+the\s+difference\s+between\b|tell\s+me\s+about\b)",
-        re.I,
-    )
-    _EXPLICIT_TOOL = re.compile(
-        r"\b(?:use|using|run|execute|search|look\s+(?:it\s+|that\s+)?up|google|browse)\b|https?://|[A-Za-z]:\\|/(?:sdcard|storage|data|home)/",
-        re.I,
-    )
-    _EDIT_FILE = re.compile(
-        r"\b(?:add|append|insert|edit|change|update|modify|replace|rename)\b",
-        re.I,
-    )
     _ASKS_USER = re.compile(
         r"\?\s*(?:\n|$)|\b(?:could|can|would) you (?:please )?(?:tell|provide|confirm|clarify|share|specify)\b"
         r"|\bplease (?:tell|provide|confirm|clarify|specify)\b",
@@ -2698,51 +2719,6 @@ class CloverS23OnDeviceSystem:
         "gave", "check", "checked", "checks", "user", "clover", "sentence", "sentences", "word", "words",
         "found", "right", "wrong", "really", "here",
     }
-    _TOOL_ASKS = (
-        (
-            "web_search",
-            r"\b(?:search|google|look\s+(?:it\s+|that\s+|this\s+)?up|browse|web|internet|online|website|web\s*page|url|arxiv|wikipedia)\b|https?://|www\.",
-        ),
-        (
-            "python_interpreter",
-            r"\b(?:use|using)\s+python\b|\bpython\s+to\s+(?:compute|calculate|check|solve|count|find|test)\b|"
-            r"\b(?:run|execute|test)\s+(?:this|the|my|that|it|some)?\s*(?:code|script|program|python)\b|"
-            r"\b(?:compute|calculate)\s+\d",
-        ),
-        (
-            "run_shell",
-            r"\b(?:powershell|cmd\.exe|terminal|command\s+line|shell|bash|termux)\b|"
-            r"\bgit\s+(?:log|status|diff|show|branch|blame|remote|tag|shortlog|describe|rev-parse)\b|"
-            r"\b(?:recent|latest|last)\s+(?:\d+\s+)?commits?\b|\bcommit\s+(?:history|log)\b|"
-            r"\b(?:what|which)\s+version\b[^.?!\n]{0,40}\binstalled\b|"
-            r"\b(?:free|available)\s+(?:disk\s+|storage\s+)?space\b|"
-            r"\bdisk\s+space\b[^.?!\n]{0,30}\b(?:do\s+i|i\s+have|left|free|on\s+(?:this|my))\b|"
-            r"\bbattery\s+(?:level|status|charge|percentage)\b|\bhow\s+much\s+battery\b|"
-            r"\b(?:which|what)\s+(?:apps|programs|processes)\b[^.?!\n]{0,40}\b(?:running|open|using)\b|"
-            r"\brunning\s+process(?:es)?\b|\benvironment\s+variable\b|\brun\s+(?:the\s+|a\s+)?command\b",
-        ),
-        (
-            "run_ssh",
-            r"\b(?:ssh|remote\s+(?:host|machine|server|box))\b|\bon\s+[a-z0-9._-]+@[a-z0-9._-]+",
-        ),
-        (
-            "repo_read",
-            r"\b(?:read|open|show|view|inspect|cat|check|list|look\s+at|find|summari[sz]e)\b[^.?!\n]{0,50}\b(?:files?|folders?|director(?:y|ies)|readme|config|workspace|repo|\w+\."
-            r"(?:py|md|txt|json|yaml|yml|toml|js|ts|html|css|sh|ps1|c|h|cpp|rs|go|log|ini|cfg))\b|"
-            r"\b(?:my|this|that|these)\s+(?:files?|folders?|documents|desktop|downloads)\b|[A-Za-z]:\\[^\s\"']+|\bwhat(?:'s|\s+is|\s+files\s+are)\s+in\b[^.?!\n]{0,40}\b(?:folder|directory|dir|workspace|repo)\b",
-        ),
-        (
-            "repo_write",
-            r"\b(?:write|save|create|make)\b[^.?!\n]{0,50}\b(?:file|to\s+\S+\.\w+|\w+\."
-            r"(?:py|md|txt|json|yaml|yml|toml|js|ts|html|css|sh|ps1))\b|"
-            r"\b(?:add|append|insert)\b[^.?!\n]{0,60}\b(?:to|into|in)\s+(?:the|that|this|my|it)\b[^.?!\n]{0,20}\b(?:file|list|note|document)\b",
-        ),
-        (
-            "generate_image",
-            r"\b(?:generate|create|make|draw|paint|render|design|sketch)\b[^.?!\n]{0,40}"
-            r"\b(?:image|picture|photo|drawing|painting|illustration|artwork|logo|icon|portrait|wallpaper)s?\b",
-        ),
-    )
 
     @classmethod
     def topic_terms(cls, text: str) -> set[str]:
@@ -2757,17 +2733,28 @@ class CloverS23OnDeviceSystem:
 
     @classmethod
     def asked_tools(cls, text: str) -> list[str]:
-        """Returns the tool names explicitly requested by `text` (used when `settings['tools'] == 'ask'`, or to narrow `'always'`)."""
-        t = text or ""
-        if cls._CONCEPT.search(t) and not cls._EXPLICIT_TOOL.search(t):
-            return []
-        found = [name for name, pat in cls._TOOL_ASKS if re.search(pat, t, re.I)]
-        # "add a line ... and show me the file" matches repo_read or repo_write and needs both
-        if ("repo_read" in found or "repo_write" in found) and cls._EDIT_FILE.search(t):
-            for rw in ("repo_read", "repo_write"):
-                if rw not in found:
-                    found.append(rw)
-        return list(dict.fromkeys(found))
+        """The phone's tools that `text` asks for (used when `settings['tools'] == 'ask'`, or to narrow `'always'`). The
+        rules are common to every Clover process (semantics.py); the phone adds only its tool names."""
+        import semantics
+        return semantics.asked(text, phone_runtime())
+
+    def social_turn(self, prompt: str, frame, session_id: str, max_active_layer: int = 7) -> dict[str, Any]:
+        """A message made only of pleasantries ("hi", "thanks", "bye"): semantics answers and the model is not called.
+        The turn is still recorded, so "thanks" counts as feedback on the answer before it (Growth)."""
+        turn_n = 1
+        if max(1, min(7, int(max_active_layer))) >= 4 and self.perm_modes.get("memory", "allow") != "deny":
+            try:
+                growth = self.git_memory_repo.record_task_or_session_turn(
+                    session_id=session_id, prompt=prompt, reply=frame.reply, tools_used=[], elapsed_ms=0.0)
+                turn_n = int(growth.get("turn_n") or 1)
+                if hasattr(self, "memory_index"):
+                    self.memory_index.wake()
+            except Exception:
+                pass
+        return {"device": platform.node(), "model": "semantics", "session_id": session_id, "turn_n": turn_n,
+                "prompt": prompt, "reply": frame.reply, "output_type": "text", "tools_used": [],
+                "layer_trace": {"semantics_frame": frame.layer()}, "generated_tokens": 0, "emitted_tokens": 0,
+                "total_cycle_ms": 0.0}
 
     @classmethod
     def extract_python_from_reply(cls, reply: str) -> list[str]:
@@ -4925,7 +4912,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
 
             explicit_retry = bool(payload.get("retry_cycle", False))
             prev_q = str(payload.get("previous_question") or (last_ex[0].get("content") if last_ex else "") or "").strip()
-            prev_a = str(payload.get("previous_answer") or (last_ex[1].get("content") if last_ex else "") or "").strip()
+            prev_a = str(payload.get("previous_answer") or (last_ex[1] if last_ex else "") or "").strip()
             how_retry = "said" if explicit_retry else (C.retry_requested(prompt, prev_q) if prev_q and prev_a else None)
 
             if self.path.startswith("/api/chat/stream"):
@@ -4953,6 +4940,8 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 if saved_media_items:
                     emit_sse({"type": "media", "items": saved_media_items})
                 try:
+                    import semantics
+                    phone = phone_runtime()
                     allow_once_list = list(payload.get("allow_once") or [])
                     deny_once_list = list(payload.get("deny_once") or [])
                     if how_retry and prev_q and prev_a and not img_b64_in and not att_files_in:
@@ -4970,33 +4959,44 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                             allow_python=allow_py,
                             context=ctx_before,
                         )
+                        frame = semantics.interpret(prompt, phone, history=hist_msgs)
+                        frame.act, frame.retry, frame.route = "retry", how_retry, "try again"
+                        align_turn(frame, res)
                     else:
                         tools_mode = str(payload.get("tools_mode") or sys_s23.settings.get("tools") or "ask")
-                        asked_for = sys_s23.asked_tools(prompt)
-                        req_tools = asked_for if (tools_mode == "ask" or asked_for) else ["web_search", "python_interpreter"]
+                        frame = semantics.interpret(prompt, phone, media=[m["kind"] for m in saved_media_items],
+                                                    history=hist_msgs, previous_media=payload.get("previous_media") or [],
+                                                    attached=bool(att_files_in))
+                        only, _on = semantics.route(frame, tools_mode, True, offer=PHONE_OFFER)
+                        req_tools = list(PHONE_OFFER) if only is None else only
                         allow_net_s = allow_net and ("web_search" in req_tools)
                         allow_py_s = allow_py and ("python_interpreter" in req_tools)
+                        emit_sse(dict(frame.layer(), type="semantics"))
                         emit_sse({"type": "tools", "offered": req_tools, "mode": tools_mode})
 
-                        want_pic = "generate_image" in asked_for
-                        res = sys_s23.run_cycle(
-                            prompt=prompt,
-                            output_type="image" if want_pic else str(payload.get("output_type") or "text"),
-                            image_b64=img_b64_in,
-                            attached_files=att_files_in,
-                            voice_input=voice_in,
-                            max_active_layer=max_layer,
-                            use_ncm_renderer=use_ncm,
-                            enable_thinking=bool(payload.get("enable_thinking", False)),
-                            inject_latent_step_before_decode=bool(payload.get("inject_latent_step_before_decode", False)),
-                            allow_internet=allow_net_s,
-                            allow_python=allow_py_s,
-                            allow_files=allow_fl,
-                            session_id=sid,
-                            allow_once=allow_once_list,
-                            deny_once=deny_once_list,
-                            interactive_ask=True,
-                        )
+                        want_pic = "generate_image" in frame.asked
+                        if frame.act == "social":
+                            # only pleasantries ("hi", "thanks", "bye"): semantics answers and the model is not called
+                            res = sys_s23.social_turn(prompt, frame, sid, max_layer)
+                        else:
+                            res = sys_s23.run_cycle(
+                                prompt=prompt,
+                                output_type="image" if want_pic else str(payload.get("output_type") or "text"),
+                                image_b64=img_b64_in,
+                                attached_files=att_files_in,
+                                voice_input=voice_in,
+                                max_active_layer=max_layer,
+                                use_ncm_renderer=use_ncm,
+                                enable_thinking=bool(payload.get("enable_thinking", False)),
+                                inject_latent_step_before_decode=bool(payload.get("inject_latent_step_before_decode", False)),
+                                allow_internet=allow_net_s,
+                                allow_python=allow_py_s,
+                                allow_files=allow_fl,
+                                session_id=sid,
+                                allow_once=allow_once_list,
+                                deny_once=deny_once_list,
+                                interactive_ask=True,
+                            )
                         # If a tool permission is set to `Ask` (or is a risky shell command), emit `permission` SSE event and wait for `/api/decision`
                         if res.get("permission_required"):
                             pr_req = res["permission_required"]
@@ -5043,6 +5043,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                                 deny_once=deny_once_list,
                                 interactive_ask=False,
                             )
+                        align_turn(frame, res)
 
                     # Emit tool_call / tool_result cards if a tool ran during the turn
                     lt = res.get("layer_trace") or {}
@@ -5087,8 +5088,11 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
 
                     # Build `layers` list matching laptop's `layersUsed(ev)` in `app.html`
                     layers_list: list[dict[str, Any]] = []
+                    if lt.get("semantics_frame"):
+                        layers_list.append(lt["semantics_frame"])
                     c1_ms = (l1.get("turn1_prefill_ms") or 0.0) + (l1.get("turn1_decode_ms") or 0.0)
-                    layers_list.append({"layer": "c1", "ms": round(c1_ms, 1)})
+                    if frame.act != "social":  # a pleasantry answered by semantics never reached C1
+                        layers_list.append({"layer": "c1", "ms": round(c1_ms, 1)})
                     if l2.get("enabled"):
                         layers_list.append({"layer": "c2", "ms": l2.get("hybridlink_ms", 0.0)})
                     if l3.get("ncm_active"):
@@ -5129,7 +5133,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                         "cancelled": cancelled,
                         "layers": layers_list,
                         "images": images_out,
-                        "generation": [{"new_tokens": gen_tok, "decode_s": round(dec_s, 3)}],
+                        "generation": [] if frame.act == "social" else [{"new_tokens": gen_tok, "decode_s": round(dec_s, 3)}],
                     })
                 except Exception as ex:
                     emit_sse({"type": "error", "error": str(ex)})
@@ -5150,15 +5154,26 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     allow_python=allow_py,
                     context=ctx_before,
                 )
+                import semantics
+                frame = semantics.interpret(prompt, phone_runtime(), history=hist_msgs)
+                frame.act, frame.retry, frame.route = "retry", how_retry, "try again"
+                align_turn(frame, res)
                 self._send(res)
                 return
 
-            # Apply Laptop Agent's `asked_tools` gating ("When I ask", or narrowing "Always" when a tool is explicitly asked for)
+            # Meaning first (semantics.py, common to every Clover process): a pleasantry, then the tools this turn gets
+            import semantics
             tools_mode = str(payload.get("tools_mode") or sys_s23.settings.get("tools") or "ask")
-            asked_for = sys_s23.asked_tools(prompt)
-            if tools_mode == "ask" or asked_for:
-                allow_net = allow_net and ("web_search" in asked_for)
-                allow_py = allow_py and ("python_interpreter" in asked_for)
+            frame = semantics.interpret(prompt, phone_runtime(), media=[m["kind"] for m in saved_media_items],
+                                        history=hist_msgs, previous_media=payload.get("previous_media") or [],
+                                        attached=bool(att_files_in))
+            only, _on = semantics.route(frame, tools_mode, True, offer=PHONE_OFFER)
+            if frame.act == "social":  # only pleasantries ("hi", "thanks", "bye"): answered without the model
+                self._send(sys_s23.social_turn(prompt, frame, str(payload.get("session_id") or "s23-studio"), max_layer))
+                return
+            req_tools = list(PHONE_OFFER) if only is None else only
+            allow_net = allow_net and ("web_search" in req_tools)
+            allow_py = allow_py and ("python_interpreter" in req_tools)
 
             res = sys_s23.run_cycle(
                 prompt=prompt,
@@ -5178,6 +5193,8 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 deny_once=payload.get("deny_once") if isinstance(payload.get("deny_once"), list) else None,
                 interactive_ask=True,
             )
+            if not res.get("permission_required"):
+                align_turn(frame, res)
             self._send(res)
 
         def do_DELETE(self) -> None:
