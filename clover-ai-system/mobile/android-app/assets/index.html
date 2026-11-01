@@ -641,6 +641,17 @@ pre.trace {
         </div>
         <div id="ws-add-status" class="card__d" style="margin-top:.4rem;margin-bottom:0"></div>
       </div>
+
+      <div class="card">
+        <div class="card__t">
+          <span>Precomputed Datasets &amp; App Size</span>
+          <svg class="ic" style="color:var(--accent)" aria-hidden="true"><use href="#i-compute"/></svg>
+        </div>
+        <div class="card__d">
+          100% precomputed <code>CLVRTRK1</code> + <code>CLVR4B01</code> trunks &amp; experts from <code>Santhoshsathish94/clover-ai-studio</code>:
+        </div>
+        <div class="kv" id="dataset-sizes-kv"></div>
+      </div>
     </div>
 
     <!-- 4. SUB-VIEW: ADVANCED (Layers C1-C3 + S1-S3, Permissions, Tools & Search, Engine, SSH) -->
@@ -857,7 +868,13 @@ pre.trace {
         }, 10);
       });
     }
-    var opt = { method: method, headers: { 'X-Clover-App-Package': 'ai.clover.studio' } };
+    var opt = {
+      method: method,
+      headers: {
+        'X-Clover-App-Package': 'ai.clover.studio',
+        'X-Clover-App-Token': window.__CLOVER_LOCAL_TOKEN || ''
+      }
+    };
     if (body !== undefined) { opt.headers['Content-Type'] = 'application/json'; opt.body = jsonStr; }
     var url = path.indexOf('http') === 0 ? path : ('http://127.0.0.1:8765' + path);
     return fetch(url, opt).then(function (r) { return r.json(); });
@@ -1281,7 +1298,27 @@ pre.trace {
     $('mem-loc-display').textContent = st.memory_dir || '~/clover-s23/clover-memory-repo';
     var aws = st.active_workspace;
     $('ws-loc-display').textContent = aws ? (aws.name + ' (' + aws.path + ')') : 'None (using Memory Repository)';
-    $('home-store-sub').textContent = (mKind === 'cloud' ? 'Cloud media · ' : 'Local media · ') + mb(st.media_bytes || 0) + (aws ? (' · Workspace: ' + aws.name) : '');
+    var pd = st.precomputed_datasets || {};
+    var totLabel = pd.total_on_device_gib ? (pd.total_on_device_gib + ' GiB total') : mb(st.media_bytes || 0);
+    $('home-store-sub').textContent = (mKind === 'cloud' ? 'Cloud media · ' : 'Local media · ') + totLabel + (aws ? (' · Workspace: ' + aws.name) : '');
+    if ($('dataset-sizes-kv') && pd.total_on_device_mib) {
+      var dsRows = [
+        ['App APK (CloverAIStudio.apk)', pd.app_apk_mib + ' MiB'],
+        ['Tokenizer + C Engine (.so)', pd.tokenizer_and_c_engine_mib + ' MiB'],
+        ['C1 Base Model (24 Trunks)', pd.c1_trunks_24_bf16_mib + ' MiB BF16 + ' + pd.c1_trunks_24_4bit_mib + ' MiB Q4'],
+        ['C1 Base Model (24 Experts)', pd.c1_experts_24_swiglu_4bit_mib + ' MiB (ffn.4bit.bin)'],
+        ['C1 Global-0 (Embed + LM-Head)', pd.c1_global_0_embed_and_lmhead_mib + ' MiB'],
+        ['C2 HybridAgent (plan-trunk-0)', pd.c2_hybridagent_plan_trunk_0_mib + ' MiB'],
+        ['C3 Bridges (bridge-trunk-0)', pd.c3_bridges_trunk_0_mib + ' MiB'],
+        ['C3 VQ-VAE (Trunk + 11 Experts)', pd.c3_vqvae_trunk_and_11_experts_mib + ' MiB'],
+        ['C3 NCM (12 Trunks + Global)', pd.c3_ncm_12_trunks_and_global_mib + ' MiB'],
+        ['C3 Pointer Decoder (3 Trunks)', pd.c3_pointer_decoder_trunks_mib + ' MiB'],
+        ['C3 VQ-VAE Shared Vocab Maps', pd.c3_vqvae_shared_vocab_maps_mib + ' MiB'],
+        ['S1/S2 Memory & Ontology Repo', pd.s1_s2_memory_and_ontology_mib + ' MiB'],
+        ['Total App + Datasets', pd.total_on_device_mib + ' MiB (' + pd.total_on_device_gib + ' GiB)']
+      ];
+      $('dataset-sizes-kv').innerHTML = dsRows.map(function (r) { return '<span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b>'; }).join('');
+    }
   }
 
   function loadStorageLocations() {
@@ -1624,8 +1661,10 @@ pre.trace {
     var l1 = lt.layer1_lfm3_omni || {}, l2 = lt.layer2_hybrid_agent || {}, l3 = lt.layer3_11level_ncm || {};
     var l4 = lt.layer4_memory_graph || {}, l5 = lt.layer5_ontology_and_verifier || {}, l6 = lt.layer6_generative_compiler || {};
 
+    var c1Ms = (l1.turn1_prefill_ms || 0) + (l1.turn1_decode_ms || 0) + (l1.turn2_prefill_ms || 0) + (l1.turn2_decode_ms || 0);
+    if (l1.enabled) used.push('C1 Inference · ' + (c1Ms / 1000).toFixed(2) + 's');
     if (l2.enabled) {
-      used.push('C2 Plan');
+      used.push('C2 Plan · ' + Math.round(l2.hybridlink_ms || 0) + 'ms');
       if (l2.latent_steps_total) {
         used.push(l2.latent_steps_total + ' latent steps');
         thinkParts.push('[C2 HybridLink2048] ' + l2.latent_steps_total + ' continuous <latent> steps (cos=' + (l2.stage3_hybridlink_2048_cos || l2.hybridlink_latent_to_next_embed_cos || 0) + ')');
@@ -1639,7 +1678,7 @@ pre.trace {
       var rawThink = l1.turn1_raw_output.split('</think>')[0].replace(/<think>/g, '').trim();
       if (rawThink) thinkParts.push(rawThink);
     }
-    if (l3.ncm_active) used.push('C3 NCM');
+    if (l3.ncm_active) used.push('C3 NCM · ' + (l3.ncm_total_ms >= 1000 ? (l3.ncm_total_ms / 1000).toFixed(2) + 's' : Math.round(l3.ncm_total_ms || 0) + 'ms'));
     if (l4.injected_into_model_prompt) used.push('S1 Memory · ' + (l4.retrieved_count || 1));
     if (l4.s2_turn_recall && l4.s2_turn_recall.refs && l4.s2_turn_recall.refs.length) used.push('S2 Recall · ' + l4.s2_turn_recall.refs.length);
     if (l5.injected_into_model_prompt) used.push('S2 Ontology · ' + (l5.ontology_hits || 1));
@@ -1651,7 +1690,12 @@ pre.trace {
       traceLines.push('=== Clover Retry Cycle ===');
       traceLines.push('Action: ' + (cyc.action || 'checked') + ' | Solutions: ' + JSON.stringify(cyc.solutions || []));
     }
-    traceLines.push('=== 3 Core + 3 Supporting Trace ===');
+    traceLines.push('=== Unified C1 -> C2 -> C3 (1-Pass Precomputed Trunks & Experts) ===');
+    traceLines.push('C1 Inference: prefill=' + (l1.turn1_prefill_ms || 0) + ' ms + decode=' + (l1.turn1_decode_ms || 0) + ' ms (24 trunks + 24 experts)');
+    traceLines.push('C2 Plan (plan-trunk-0): ' + (l2.hybridlink_ms || 0) + ' ms | cos=' + (l2.stage3_hybridlink_2048_cos || l2.hybridlink_latent_to_next_embed_cos || 0));
+    if (l3.ncm_active) {
+      traceLines.push('C3 Decode (bridge-trunk-0 + vqvae + ncm-trunk-0..11 + ptr-trunk-0..2): ' + (l3.ncm_total_ms || 0) + ' ms (redundant C1 re-run=' + (l3.c_backbone_ms || 0) + ' ms, single_pass=' + !!l3.unified_c1_c2_c3_single_pass + ')');
+    }
     traceLines.push('Input: ' + (r.input_tokens || 0) + ' tok | Generated: ' + (r.generated_tokens || 0) + ' tok | Total: ' + (r.total_cycle_ms || 0) + ' ms');
     traceLines.push('C1 Direction B Ledger: LPDDR5X=' + (db.tier2_unified_lpddr5x_dram_mb || 0) + ' MB, Saved=' + (db.bytes_saved_q4_and_broadcast_mb || 0) + ' MB, SMMLA=' + (db.armv86_i8mm_smmla_2x2_tiles || 0));
 
@@ -1728,7 +1772,7 @@ pre.trace {
     api('POST', '/api/chat', payload).then(function (r) {
       clearInterval(timer);
       turn.remove();
-      var secs = Math.max(1, Math.round((r.total_cycle_ms || (Date.now() - tStart)) / 1000));
+      var secs = ((r.total_cycle_ms || (Date.now() - tStart)) / 1000).toFixed(2);
       var genTok = r.generated_tokens || r.emitted_tokens || 0;
       var decMs = ((r.layer_trace || {}).layer1_lfm3_omni || {}).turn1_decode_ms || r.c_24_layer_4bit_ms || r.total_cycle_ms || 1000;
       var speed = genTok > 0 && decMs > 0 ? (genTok / (decMs / 1000.0)) : 0;

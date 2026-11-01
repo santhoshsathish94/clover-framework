@@ -861,36 +861,15 @@ class S23HybridAgentAndNCM:
         self.combo_bridge = Lfm3ComboBridge(D_LFM3, D_VQ).cpu().eval()
         self.expert_bridge = Lfm3ExpertBridge(D_LFM3, D_VQ).cpu().eval()
 
-        core_pt = self.ncm_dir / "lfm3_ncm_core_bf16.pt"
-        core = torch.load(str(core_pt), map_location="cpu", weights_only=False)
-        self.vqvae.load_state_dict(
-            {k: v.float() if v.dtype == torch.bfloat16 else v for k, v in core["vqvae_core"].items()},
-            strict=False,
-        )
         self.vqvae.encoder.wte = MmapBF16Embedding(self.ncm_dir / "vqvae_wte.bf16.bin", V_LFM3, D_VQ)
         self.vqvae.decoder.output_layer = MmapBF16Linear(self.ncm_dir / "vqvae_dec.bf16.bin", D_VQ, V_LFM3)
-        self.net.load_state_dict(
-            {k: v.float() if v.dtype == torch.bfloat16 else v for k, v in core["net"].items()},
-            strict=True,
-        )
-        self.copy_dec.load_state_dict(core["ptr_dec"], strict=True)
-        self.hybrid_link.load_state_dict(core["lfm3_native_hybrid_link"], strict=True)
-        if "hybridlink_2048" in core:
-            self.hybridlink_2048.load_state_dict(
-                {k: v.float() if v.dtype == torch.bfloat16 else v for k, v in core["hybridlink_2048"].items()},
-                strict=True,
-            )
-            self.has_stage3_hybridlink_2048 = True
-        self.combo_bridge.load_state_dict(core["lfm3_combo_bridge"], strict=True)
-        self.expert_bridge.load_state_dict(core["lfm3_expert_bridge"], strict=True)
-        del core
 
-        # Bind Precomputed C2 (Plan) & C3 (Decode) Trunks & Experts (`ncm/precomputed/`) with zero extra RAM
         self.precomputed_dir = self.ncm_dir / "precomputed"
         self.precomputed_trunks_active = False
         self.precomputed_manifest: dict[str, Any] = {}
         manifest_fp = self.precomputed_dir / "manifest.json"
-        if not manifest_fp.exists():
+        core_pt = self.ncm_dir / "lfm3_ncm_core_bf16.pt"
+        if not manifest_fp.exists() and core_pt.exists():
             try:
                 from prepare_c2_c3_precomputed_trunks import build_c2_c3_precomputed
                 build_c2_c3_precomputed(core_pt, self.precomputed_dir)
@@ -902,77 +881,197 @@ class S23HybridAgentAndNCM:
             except Exception:
                 self.precomputed_manifest = {"total_trunk_and_expert_dirs": 31}
 
-        def _fuse_ln_linear_inplace(ln_mod: Any, lin_mod: Any) -> None:
-            gw = ln_mod.weight.detach().float()
-            gb = ln_mod.bias.detach().float() if getattr(ln_mod, "bias", None) is not None else torch.zeros_like(gw)
-            w = lin_mod.weight.detach().float()
-            b_add = torch.matmul(w, gb)
-            lin_mod.weight.copy_(w * gw.unsqueeze(0))
-            if getattr(lin_mod, "bias", None) is not None and lin_mod.bias is not None:
-                lin_mod.bias.copy_(lin_mod.bias.detach().float() + b_add)
-            else:
-                lin_mod.bias = nn.Parameter(b_add)
+        def _read_clvrtrk1(trunk_dir: Path) -> dict[str, Any]:
+            import struct
+            idx_bytes = (trunk_dir / "index.bin").read_bytes()
+            if idx_bytes[:8] != b"CLVRTRK1":
+                raise ValueError(f"Invalid CLVRTRK1 magic in {trunk_dir}")
+            _, _, n_entries = struct.unpack("<III", idx_bytes[8:20])
+            fnames = {0: "common.bin", 1: "operator.bin", 3: "ffn.bin"}
+            blobs: dict[int, memoryview] = {}
+            for fid, fn in fnames.items():
+                fp = trunk_dir / fn
+                if fp.exists() and fp.stat().st_size > 0:
+                    blobs[fid] = memoryview(fp.read_bytes())
+            out_t: dict[str, Any] = {}
+            pos = 20
+            for _ in range(n_entries):
+                tname = idx_bytes[pos : pos + 64].split(b"\x00", 1)[0].decode("utf-8")
+                pos += 64
+                fid, dtype_code, ndim, offset, nbytes, d0, d1, d2, d3 = struct.unpack("<IIIQQIIII", idx_bytes[pos : pos + 44])
+                pos += 44
+                dims = [d0, d1, d2, d3][:ndim] if ndim > 0 else [1]
+                raw = blobs[fid][offset : offset + nbytes]
+                if dtype_code == 1:
+                    arr = np.frombuffer(raw, dtype=np.uint16).copy()
+                    out_t[tname] = torch.from_numpy(arr).view(torch.bfloat16).float().reshape(dims)
+                else:
+                    arr = np.frombuffer(raw, dtype=np.float32).copy()
+                    out_t[tname] = torch.from_numpy(arr).reshape(dims)
+            return out_t
 
-        try:
+        if (self.precomputed_dir / "plan-trunk-0" / "index.bin").exists():
+            # Load 100% directly from the 31 precomputed CLVRTRK1 directories (zero dependency on lfm3_ncm_core_bf16.pt!)
             with torch.no_grad():
-                # 1. C2 · Plan (`plan-trunk-0/`): fuse pre_ln -> proj1 and out_scale -> post_ln
-                _fuse_ln_linear_inplace(self.hybrid_link.pre_ln, self.hybrid_link.proj1)
-                nhl_s = float(self.hybrid_link.out_scale.item())
-                self.hybrid_link.post_ln.weight.mul_(nhl_s)
-                self.hybrid_link.post_ln.bias.mul_(nhl_s)
+                # 1. C2 · Plan (`plan-trunk-0/`)
+                dp = _read_clvrtrk1(self.precomputed_dir / "plan-trunk-0")
+                self.hybrid_link.proj1.weight.copy_(dp["native.proj1_fused.weight"])
+                self.hybrid_link.proj1.bias.copy_(dp["native.proj1_fused.bias"])
+                self.hybrid_link.proj2.weight.copy_(dp["native.proj2.weight"])
+                self.hybrid_link.proj2.bias.copy_(dp["native.proj2.bias"])
+                self.hybrid_link.post_ln.weight.copy_(dp["native.post_ln_fused.weight"])
+                self.hybrid_link.post_ln.bias.copy_(dp["native.post_ln_fused.bias"])
                 self.hybrid_link.fused_precomputed = True
 
-                if self.has_stage3_hybridlink_2048:
-                    _fuse_ln_linear_inplace(self.hybridlink_2048.pre_ln, self.hybridlink_2048.proj1)
+                if "hl2048.proj1_fused.weight" in dp:
+                    self.hybridlink_2048.proj1.weight.copy_(dp["hl2048.proj1_fused.weight"])
+                    self.hybridlink_2048.proj1.bias.copy_(dp["hl2048.proj1_fused.bias"])
+                    self.hybridlink_2048.proj2.weight.copy_(dp["hl2048.proj2.weight"])
+                    self.hybridlink_2048.proj2.bias.copy_(dp["hl2048.proj2.bias"])
+                    self.hybridlink_2048.post_ln.weight.copy_(dp["hl2048.post_ln.weight"])
+                    self.hybridlink_2048.post_ln.bias.copy_(dp["hl2048.post_ln.bias"])
                     self.hybridlink_2048.fused_precomputed = True
+                    self.has_stage3_hybridlink_2048 = True
 
-                # 2. C3 · Decode Bridges (`bridge-trunk-0/`): fuse ln_in -> fc1/proj1 & gate/alpha -> ln_out
-                _fuse_ln_linear_inplace(self.combo_bridge.ln_in, self.combo_bridge.fc1)
-                cb_gs = float((self.combo_bridge.scale * self.combo_bridge.gate).item())
-                self.combo_bridge.ln_out.weight.mul_(cb_gs)
-                self.combo_bridge.ln_out.bias.mul_(cb_gs).add_(self.combo_bridge.seg_rh.view(-1))
+                # 2. C3 · Bridges (`bridge-trunk-0/`)
+                db = _read_clvrtrk1(self.precomputed_dir / "bridge-trunk-0")
+                self.combo_bridge.fc1.weight.copy_(db["combo.fc1_fused.weight"])
+                self.combo_bridge.fc1.bias.copy_(db["combo.fc1_fused.bias"])
+                self.combo_bridge.fc2.weight.copy_(db["combo.fc2.weight"])
+                self.combo_bridge.fc2.bias.copy_(db["combo.fc2.bias"])
+                self.combo_bridge.ln_out.weight.copy_(db["combo.ln_out_fused.weight"])
+                self.combo_bridge.ln_out.bias.copy_(db["combo.ln_out_fused.bias"])
                 self.combo_bridge.fused_precomputed = True
 
-                _fuse_ln_linear_inplace(self.expert_bridge.ln_in, self.expert_bridge.proj1)
-                eb_a = float(torch.tanh(self.expert_bridge.alpha).item())
-                self.expert_bridge.ln_out.weight.mul_(eb_a)
-                self.expert_bridge.ln_out.bias.mul_(eb_a)
+                self.expert_bridge.proj1.weight.copy_(db["expert.proj1_fused.weight"])
+                self.expert_bridge.proj1.bias.copy_(db["expert.proj1_fused.bias"])
+                self.expert_bridge.proj2.weight.copy_(db["expert.proj2.weight"])
+                self.expert_bridge.proj2.bias.copy_(db["expert.proj2.bias"])
+                self.expert_bridge.ln_out.weight.copy_(db["expert.ln_out_fused.weight"])
+                self.expert_bridge.ln_out.bias.copy_(db["expert.ln_out_fused.bias"])
                 self.expert_bridge.fused_precomputed = True
 
-                # 3. C3 · Decode VQVAE (`vqvae-trunk-0/` + `vqvae-expert-0..10/`)
+                # 3. C3 · VQ-VAE (`vqvae-trunk-0/` + `vqvae-expert-0..10/`)
+                dvq = _read_clvrtrk1(self.precomputed_dir / "vqvae-trunk-0")
+                self.vqvae.encoder.wpe.weight.copy_(dvq["encoder.wpe.weight"])
+                self.vqvae.decoder.ln_f.weight.copy_(dvq["decoder.ln_f.weight"])
+                for k_idx in (0, 2, 4):
+                    self.vqvae.vq.learned_down_l1[k_idx].weight.copy_(dvq[f"learned_down_l1.{k_idx}.weight"])
+                    self.vqvae.vq.learned_down_l1[k_idx].bias.copy_(dvq[f"learned_down_l1.{k_idx}.bias"])
+                    self.vqvae.vq.learned_up_l1[k_idx].weight.copy_(dvq[f"learned_up_l1.{k_idx}.weight"])
+                    self.vqvae.vq.learned_up_l1[k_idx].bias.copy_(dvq[f"learned_up_l1.{k_idx}.bias"])
                 mb = self.vqvae.decoder.middle_block
-                _fuse_ln_linear_inplace(mb.ln_1, mb.attn.c_attn)
                 mb.ln_1 = _ParameterlessLayerNorm(D_VQ, eps=1e-6)
-                _fuse_ln_linear_inplace(mb.ln_2, mb.mlp.c_fc)
+                mb.attn.c_attn.weight.copy_(dvq["middle_block.attn.c_attn_fused.weight"])
+                mb.attn.c_attn.bias.copy_(dvq["middle_block.attn.c_attn_fused.bias"])
+                mb.attn.c_proj.weight.copy_(dvq["middle_block.attn.c_proj.weight"])
+                mb.attn.c_proj.bias.copy_(dvq["middle_block.attn.c_proj.bias"])
+                mb.attn.q_norm.weight.copy_(dvq["middle_block.attn.q_norm.weight"])
+                mb.attn.k_norm.weight.copy_(dvq["middle_block.attn.k_norm.weight"])
                 mb.ln_2 = _ParameterlessLayerNorm(D_VQ, eps=1e-6)
+                mb.mlp.c_fc.weight.copy_(dvq["middle_block.mlp.c_fc_fused.weight"])
+                mb.mlp.c_fc.bias.copy_(dvq["middle_block.mlp.c_fc_fused.bias"])
+                mb.mlp.c_proj.weight.copy_(dvq["middle_block.mlp.c_proj.weight"])
+                mb.mlp.c_proj.bias.copy_(dvq["middle_block.mlp.c_proj.bias"])
 
-                # 4. C3 · Decode 12-Layer NextConceptTransformer (`ncm-trunk-0..11/` + `ncm-global-0/`)
-                for blk in self.net.transformer.blocks:
-                    _fuse_ln_linear_inplace(blk.ln_1, blk.attn.c_attn)
-                    blk.ln_1 = _ParameterlessLayerNorm(768, eps=1e-6)
-                    _fuse_ln_linear_inplace(blk.ln_2, blk.mlp.c_fc)
-                    blk.ln_2 = _ParameterlessLayerNorm(768, eps=1e-6)
+                for s in range(11):
+                    dve = _read_clvrtrk1(self.precomputed_dir / f"vqvae-expert-{s}")
+                    self.vqvae.vq.embeddings[s].weight.copy_(dve["codebook.weight"])
+                    self.vqvae.vq.quant_resi[s].weight.copy_(dve["quant_resi.weight"])
+                    self.vqvae.vq.quant_resi[s].bias.copy_(dve["quant_resi.bias"])
 
-                ln_f_orig = self.net.transformer.ln_f
-                _fuse_ln_linear_inplace(ln_f_orig, self.net.lm_head_l0)
-                for h_idx in range(len(self.net.lm_heads)):
-                    _fuse_ln_linear_inplace(ln_f_orig, self.net.lm_heads[h_idx])
+                # 4. C3 · 12-Layer NextConceptTransformer (`ncm-trunk-0..11/` + `ncm-global-0/`)
+                dng = _read_clvrtrk1(self.precomputed_dir / "ncm-global-0")
+                self.net.transformer.wte.weight.copy_(dng["transformer.wte.weight"])
+                self.net.transformer.wte.bias.copy_(dng["transformer.wte.bias"])
+                self.net.transformer.wle.weight.copy_(dng["transformer.wle.weight"])
                 self.net.transformer.ln_f = _ParameterlessLayerNorm(768, eps=1e-6)
+                self.net.lm_head_l0.weight.copy_(dng["lm_head_l0_fused.weight"])
+                self.net.lm_head_l0.bias = nn.Parameter(dng["lm_head_l0_fused.bias"].clone())
+                for h_idx in range(10):
+                    self.net.lm_heads[h_idx].weight.copy_(dng[f"lm_heads.{h_idx}_fused.weight"])
+                    self.net.lm_heads[h_idx].bias = nn.Parameter(dng[f"lm_heads.{h_idx}_fused.bias"].clone())
 
-                # 5. C3 · Decode 3-Layer LexicalPointerDecoder (`ptr-trunk-0..2/` + `ptr-global-0/`)
-                for pblk in self.copy_dec.blocks:
-                    _fuse_ln_linear_inplace(pblk.ln1, pblk.qkv)
+                for l in range(12):
+                    dnl = _read_clvrtrk1(self.precomputed_dir / f"ncm-trunk-{l}")
+                    blk = self.net.transformer.blocks[l]
+                    blk.ln_1 = _ParameterlessLayerNorm(768, eps=1e-6)
+                    blk.attn.c_attn.weight.copy_(dnl["attn.c_attn_fused.weight"])
+                    blk.attn.c_attn.bias.copy_(dnl["attn.c_attn_fused.bias"])
+                    blk.attn.c_proj.weight.copy_(dnl["attn.c_proj.weight"])
+                    blk.attn.c_proj.bias.copy_(dnl["attn.c_proj.bias"])
+                    blk.attn.q_norm.weight.copy_(dnl["attn.q_norm.weight"])
+                    blk.attn.k_norm.weight.copy_(dnl["attn.k_norm.weight"])
+                    blk.ln_2 = _ParameterlessLayerNorm(768, eps=1e-6)
+                    blk.mlp.c_fc.weight.copy_(dnl["mlp.c_fc_fused.weight"])
+                    blk.mlp.c_fc.bias.copy_(dnl["mlp.c_fc_fused.bias"])
+                    blk.mlp.c_proj.weight.copy_(dnl["mlp.c_proj.weight"])
+                    blk.mlp.c_proj.bias.copy_(dnl["mlp.c_proj.bias"])
+
+                # 5. C3 · 3-Layer LexicalPointerDecoder (`ptr-trunk-0..2/` + `ptr-global-0/`)
+                dpg = _read_clvrtrk1(self.precomputed_dir / "ptr-global-0")
+                self.copy_dec.tgt_pos.weight.copy_(dpg["tgt_pos.weight"])
+                self.copy_dec.plan_pos.weight.copy_(dpg["plan_pos.weight"])
+                self.copy_dec.rh_pos.weight.copy_(dpg["rh_pos.weight"])
+                self.copy_dec.ln_out.weight.copy_(dpg["ln_out_fused.weight"])
+                self.copy_dec.ln_out.bias.copy_(dpg["ln_out_fused.bias"])
+                self.copy_dec.res_scale.fill_(1.0)
+                self.copy_dec.copy_q.weight.copy_(dpg["copy_q.weight"])
+                if "copy_q.bias" in dpg and self.copy_dec.copy_q.bias is not None:
+                    self.copy_dec.copy_q.bias.copy_(dpg["copy_q.bias"])
+                self.copy_dec.copy_k.weight.copy_(dpg["copy_k.weight"])
+                if "copy_k.bias" in dpg and self.copy_dec.copy_k.bias is not None:
+                    self.copy_dec.copy_k.bias.copy_(dpg["copy_k.bias"])
+                if "copy_gate.weight" in dpg:
+                    self.copy_dec.copy_gate.weight.copy_(dpg["copy_gate.weight"])
+                    self.copy_dec.copy_gate.bias.copy_(dpg["copy_gate.bias"])
+
+                for l in range(3):
+                    dpl = _read_clvrtrk1(self.precomputed_dir / f"ptr-trunk-{l}")
+                    pblk = self.copy_dec.blocks[l]
                     pblk.ln1 = _ParameterlessLayerNorm(D_VQ, eps=1e-5)
-                    _fuse_ln_linear_inplace(pblk.ln_q, pblk.cx_q)
+                    pblk.qkv.weight.copy_(dpl["qkv_fused.weight"])
+                    pblk.qkv.bias.copy_(dpl["qkv_fused.bias"])
+                    pblk.proj.weight.copy_(dpl["proj.weight"])
+                    pblk.proj.bias.copy_(dpl["proj.bias"])
                     pblk.ln_q = _ParameterlessLayerNorm(D_VQ, eps=1e-5)
-                    _fuse_ln_linear_inplace(pblk.ln_kv, pblk.cx_kv)
+                    pblk.cx_q.weight.copy_(dpl["cx_q_fused.weight"])
+                    pblk.cx_q.bias.copy_(dpl["cx_q_fused.bias"])
                     pblk.ln_kv = _ParameterlessLayerNorm(D_VQ, eps=1e-5)
-                    _fuse_ln_linear_inplace(pblk.ln2, pblk.mlp[0])
+                    pblk.cx_kv.weight.copy_(dpl["cx_kv_fused.weight"])
+                    pblk.cx_kv.bias.copy_(dpl["cx_kv_fused.bias"])
+                    pblk.cx_proj.weight.copy_(dpl["cx_proj.weight"])
+                    pblk.cx_proj.bias.copy_(dpl["cx_proj.bias"])
                     pblk.ln2 = _ParameterlessLayerNorm(D_VQ, eps=1e-5)
+                    pblk.mlp[0].weight.copy_(dpl["mlp0_fused.weight"])
+                    pblk.mlp[0].bias.copy_(dpl["mlp0_fused.bias"])
+                    pblk.mlp[2].weight.copy_(dpl["mlp2.weight"])
+                    pblk.mlp[2].bias.copy_(dpl["mlp2.bias"])
 
             self.precomputed_trunks_active = True
-        except Exception as e:
-            print(f"[WARN] Could not bind precomputed C2/C3 trunks: {e}")
+        elif core_pt.exists():
+            core = torch.load(str(core_pt), map_location="cpu", weights_only=False)
+            self.vqvae.load_state_dict(
+                {k: v.float() if v.dtype == torch.bfloat16 else v for k, v in core["vqvae_core"].items()},
+                strict=False,
+            )
+            self.vqvae.encoder.wte = MmapBF16Embedding(self.ncm_dir / "vqvae_wte.bf16.bin", V_LFM3, D_VQ)
+            self.vqvae.decoder.output_layer = MmapBF16Linear(self.ncm_dir / "vqvae_dec.bf16.bin", D_VQ, V_LFM3)
+            self.net.load_state_dict(
+                {k: v.float() if v.dtype == torch.bfloat16 else v for k, v in core["net"].items()},
+                strict=True,
+            )
+            self.copy_dec.load_state_dict(core["ptr_dec"], strict=True)
+            self.hybrid_link.load_state_dict(core["lfm3_native_hybrid_link"], strict=True)
+            if "hybridlink_2048" in core:
+                self.hybridlink_2048.load_state_dict(
+                    {k: v.float() if v.dtype == torch.bfloat16 else v for k, v in core["hybridlink_2048"].items()},
+                    strict=True,
+                )
+                self.has_stage3_hybridlink_2048 = True
+            self.combo_bridge.load_state_dict(core["lfm3_combo_bridge"], strict=True)
+            self.expert_bridge.load_state_dict(core["lfm3_expert_bridge"], strict=True)
+            del core
 
         import gc
         gc.collect()
@@ -1802,8 +1901,12 @@ class CloverS23OnDeviceSystem:
         self.engine.configure_stop_mask(self.tokenizer)
 
         # Layer 2 + Layer 3: Real PyTorch `Lfm3NativeHybridLink` + 11-Level `NCM` + `LexicalPointerDecoder`
+        # Loaded 100% from the 31 precomputed CLVRTRK1/CLVR4B01 directories in `ncm/precomputed/`
         self.hybrid_ncm: S23HybridAgentAndNCM | None = None
-        if load_neural_ncm and (self.ncm_dir / "lfm3_ncm_core_bf16.pt").exists():
+        if load_neural_ncm and (
+            (self.ncm_dir / "precomputed" / "plan-trunk-0" / "index.bin").exists()
+            or (self.ncm_dir / "lfm3_ncm_core_bf16.pt").exists()
+        ):
             self.hybrid_ncm = S23HybridAgentAndNCM(
                 ncm_dir=self.ncm_dir,
                 pruned_dir=self.pruned_dir,
@@ -2000,6 +2103,61 @@ class CloverS23OnDeviceSystem:
 
     def _is_studio_idle(self) -> bool:
         return self._busy_turns == 0 and (time.time() - self._last_turn_end > 8.0)
+
+    def get_precomputed_dataset_sizes(self) -> dict[str, Any]:
+        def _sz(p: Path) -> int:
+            if not p.exists():
+                return 0
+            if p.is_file():
+                return int(p.stat().st_size)
+            return sum(int(f.stat().st_size) for f in p.rglob("*") if f.is_file())
+
+        def _mib(b: int) -> float:
+            return round(b / (1024.0 * 1024.0), 2)
+
+        apk_b = _sz(self.base_dir / "android-app" / "CloverAIStudio.apk") or _sz(SCRIPT_DIR / "android-app" / "CloverAIStudio.apk")
+        tok_b = _sz(self.base_dir / "tokenizer.json")
+        so_b = _sz(self.base_dir / "liblfm3_cpu_engine.so")
+
+        c1_op_bf16 = sum(_sz(self.pruned_dir / f"trunk-{i}" / "operator.bin") + _sz(self.pruned_dir / f"trunk-{i}" / "common.bin") + _sz(self.pruned_dir / f"trunk-{i}" / "index.bin") for i in range(24))
+        c1_op_4bit = sum(_sz(self.pruned_dir / f"trunk-{i}" / "operator.4bit.bin") for i in range(24))
+        c1_exp_4bit = sum(_sz(self.pruned_dir / f"trunk-{i}" / "ffn.4bit.bin") for i in range(24))
+        c1_glob_emb = _sz(self.pruned_dir / "global-0" / "embed_tokens.bf16.bin")
+        c1_glob_lm4 = _sz(self.pruned_dir / "global-0" / "lm_head.4bit.bin")
+        c1_total = c1_op_bf16 + c1_op_4bit + c1_exp_4bit + c1_glob_emb + c1_glob_lm4
+
+        prec = self.ncm_dir / "precomputed"
+        c2_plan = _sz(prec / "plan-trunk-0")
+        c3_bridge = _sz(prec / "bridge-trunk-0")
+        c3_vq_trk = _sz(prec / "vqvae-trunk-0")
+        c3_vq_exp = sum(_sz(prec / f"vqvae-expert-{i}") for i in range(11))
+        c3_ncm_trk = sum(_sz(prec / f"ncm-trunk-{i}") for i in range(12))
+        c3_ncm_glb = _sz(prec / "ncm-global-0")
+        c3_ptr_trk = sum(_sz(prec / f"ptr-trunk-{i}") for i in range(3)) + _sz(prec / "ptr-global-0")
+        c3_vq_vocab = _sz(self.ncm_dir / "vqvae_wte.bf16.bin") + _sz(self.ncm_dir / "vqvae_dec.bf16.bin")
+        c3_total = c3_bridge + c3_vq_trk + c3_vq_exp + c3_ncm_trk + c3_ncm_glb + c3_ptr_trk + c3_vq_vocab
+        s1_s2_b = _sz(self.git_memory_repo.default_repo_dir)
+        total_b = apk_b + tok_b + so_b + c1_total + c2_plan + c3_total + s1_s2_b
+
+        return {
+            "app_apk_mib": _mib(apk_b),
+            "tokenizer_and_c_engine_mib": _mib(tok_b + so_b),
+            "c1_base_model_total_mib": _mib(c1_total),
+            "c1_trunks_24_bf16_mib": _mib(c1_op_bf16),
+            "c1_trunks_24_4bit_mib": _mib(c1_op_4bit),
+            "c1_experts_24_swiglu_4bit_mib": _mib(c1_exp_4bit),
+            "c1_global_0_embed_and_lmhead_mib": _mib(c1_glob_emb + c1_glob_lm4),
+            "c2_hybridagent_plan_trunk_0_mib": _mib(c2_plan),
+            "c3_bridges_trunk_0_mib": _mib(c3_bridge),
+            "c3_vqvae_trunk_and_11_experts_mib": _mib(c3_vq_trk + c3_vq_exp),
+            "c3_ncm_12_trunks_and_global_mib": _mib(c3_ncm_trk + c3_ncm_glb),
+            "c3_pointer_decoder_trunks_mib": _mib(c3_ptr_trk),
+            "c3_vqvae_shared_vocab_maps_mib": _mib(c3_vq_vocab),
+            "c3_decode_total_mib": _mib(c3_total),
+            "s1_s2_memory_and_ontology_mib": _mib(s1_s2_b),
+            "total_on_device_mib": _mib(total_b),
+            "total_on_device_gib": round(total_b / (1024.0 ** 3), 2),
+        }
 
     def _idle_note_writer(self, msgs: list[dict[str, str]], max_new: int = 90) -> str | None:
         if not self._is_studio_idle():
@@ -3686,6 +3844,45 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 self.wfile.write(html_dl)
                 return
 
+            # Serve the live Studio UI & robo-icon assets at http://127.0.0.1:8765/ so mobile browser or SSH tunnel works immediately
+            clean_p = self.path.split("?", 1)[0]
+            assets_root = (
+                (sys_s23.base_dir / "android-app" / "assets")
+                if (sys_s23.base_dir / "android-app" / "assets" / "index.html").exists()
+                else (SCRIPT_DIR / "android-app" / "assets")
+            )
+            if clean_p in ("/", "/index.html"):
+                idx_fp = assets_root / "index.html"
+                if idx_fp.exists():
+                    html_txt = idx_fp.read_text(encoding="utf-8")
+                    inject = f"<script>window.__CLOVER_LOCAL_TOKEN={json.dumps(sys_s23.app_secret)};</script>"
+                    html_bytes = html_txt.replace("<head>", "<head>" + inject, 1).encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header("Content-Length", str(len(html_bytes)))
+                    self.end_headers()
+                    self.wfile.write(html_bytes)
+                    return
+            elif clean_p in (
+                "/clover-mark.svg",
+                "/clover-spin.svg",
+                "/clover-pulse.svg",
+                "/robo-clover.png",
+                "/favicon.png",
+                "/clover-mark-128.png",
+                "/clover-mark-256.png",
+            ):
+                afp = assets_root / clean_p.lstrip("/")
+                if afp.exists() and afp.is_file():
+                    ab = afp.read_bytes()
+                    ctype = "image/svg+xml" if afp.suffix == ".svg" else "image/png"
+                    self.send_response(200)
+                    self.send_header("Content-Type", ctype)
+                    self.send_header("Content-Length", str(len(ab)))
+                    self.end_headers()
+                    self.wfile.write(ab)
+                    return
+
             # All API GET endpoints require the per-device secret token
             if not self._is_exclusive_clover_app():
                 self._reject_non_app()
@@ -3731,6 +3928,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     "path": st_loc["media_dir"],
                     "files": st_loc["media_files"],
                     "bytes": st_loc["media_bytes"],
+                    "precomputed_datasets": sys_s23.get_precomputed_dataset_sizes(),
                 })
             elif self.path.startswith("/api/ssh"):
                 import local_terminal
