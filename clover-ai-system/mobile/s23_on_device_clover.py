@@ -2464,8 +2464,11 @@ class CloverS23OnDeviceSystem:
 
     @staticmethod
     def looping(text: str) -> tuple[bool, str]:
-        """Detects and trims any repeated tail (a 25+ char substring repeated 3x or an identical line repeated 5x)."""
+        """Detects and trims any repeated tail (160-char tail seen twice before, 25+ char substring repeated 3x, or identical line repeated 5x)."""
         s = text or ""
+        if len(s) >= 640 and s.count(s[-160:], 0, len(s) - 160) >= 2:
+            tail = s[-160:]
+            return True, s[: s.find(tail) + 160].rstrip()
         if len(s) >= 90:
             for w in range(25, min(140, len(s) // 3) + 1):
                 unit = s[-w:]
@@ -2597,7 +2600,13 @@ class CloverS23OnDeviceSystem:
         resolved_cwd, err = local_terminal.resolve_cwd(cwd, workdir=work_dir)
         if err:
             return err
-        return local_terminal.shell(cmd, cwd=resolved_cwd, timeout_s=int(timeout_s))[:4000]
+        out = local_terminal.shell(cmd, cwd=resolved_cwd, timeout_s=int(timeout_s))
+        if "is not recognized as the name of a cmdlet" in out or "command not found" in out:
+            out += (
+                "\n[That command does not exist on this device. Use a real command or an installed program, "
+                "e.g. git log --oneline -5, git status, ls -la, df -h.]"
+            )
+        return out[:4000]
 
     def _execute_ssh_subprocess(self, host: str, command: str, port: str | int = 22, timeout_s: float = 30.0) -> str:
         """Executes a non-interactive SSH command via `local_terminal.SSHHosts`."""
@@ -2651,23 +2660,29 @@ class CloverS23OnDeviceSystem:
     )
     # Conceptual questions about a command or tool ("what does git rebase do?", "how does ssh work?") ask for an answer, not a tool call
     _CONCEPT = re.compile(
-        r"\b(?:what\s+(?:does|is|are)|how\s+does|explain|describe|define|meaning\s+of|"
-        r"difference\s+between|when\s+(?:should|would|to)\s+use)\b",
+        r"^\W*(?:in\s+(?:one|a\s+few|two|three|simple|plain)\s+(?:sentences?|words?|lines?|terms)\W+)?(?:"
+        r"what\s+(?:does|do|did|is|are|was|were)\s+[\w\s.\-+#']{1,40}?\s+(?:do|does|mean|means|stand\s+for|used\s+for)\b|"
+        r"how\s+(?:does|do|did)\s+[\w\s.\-+#']{1,40}?\s+work\b|explain\b|describe\b|define\b|"
+        r"what(?:'s|\s+is)\s+the\s+difference\s+between\b|tell\s+me\s+about\b)",
         re.I,
     )
     _EXPLICIT_TOOL = re.compile(
-        r"\b(?:use|using|run|execute|call|check\s+with|search|google|look\s+up|browse|open|read|list|"
-        r"write|save|create|add\s+a\s+line|append|edit|modify|update|remember)\b|https?://|[A-Za-z]:\\|/(?:sdcard|storage|data|home)/",
+        r"\b(?:use|using|run|execute|search|look\s+(?:it\s+|that\s+)?up|google|browse)\b|https?://|[A-Za-z]:\\|/(?:sdcard|storage|data|home)/",
         re.I,
     )
     _EDIT_FILE = re.compile(
-        r"\b(?:add\s+(?:a\s+line|to|text)|append|insert|edit|modify|update|change|replace\s+in|"
-        r"put\s+.+\s+in(?:to)?)\b",
+        r"\b(?:add|append|insert|edit|change|update|modify|replace|rename)\b",
+        re.I,
+    )
+    _ASKS_USER = re.compile(
+        r"\?\s*(?:\n|$)|\b(?:could|can|would) you (?:please )?(?:tell|provide|confirm|clarify|share|specify)\b"
+        r"|\bplease (?:tell|provide|confirm|clarify|specify)\b",
         re.I,
     )
     _LINKS_AND_PATHS = re.compile(
-        r"https?://\S+|www\.\S+|[A-Za-z]:\\[^\s\"')]+|/(?:sdcard|storage|data|home|Users|tmp|var|etc|opt)/[^\s\"')]+|[\w.\-]+/[\w.\-/]+"
+        r"https?://\S+|www\.\S+|\b[A-Za-z]:\\\S*|(?:~|\.{1,2})?/[\w.\-]+(?:/[\w.\-]+)+"
     )
+    _LESSON_QUESTION = re.compile(r'(?:On a question like|Question:)\s*["\']([^"\']+)["\']', re.I)
     _LESSON_TOPIC = re.compile(r"[a-z][a-z0-9_\-]{2,}|\d+(?:\.\d+)?")
     _LESSON_FILLER = {
         "the", "and", "for", "with", "that", "this", "from", "into", "what", "when", "where", "which", "who",
@@ -2679,6 +2694,7 @@ class CloverS23OnDeviceSystem:
         "need", "want", "like", "give", "given", "take", "get", "got", "let", "say", "said", "tell", "told",
         "ask", "asked", "question", "answer", "earlier", "later", "independent", "solution", "solutions",
         "gave", "check", "checked", "checks", "user", "clover", "sentence", "sentences", "word", "words",
+        "found", "right", "wrong", "really", "here",
     }
     _TOOL_ASKS = (
         (
@@ -2693,9 +2709,15 @@ class CloverS23OnDeviceSystem:
         ),
         (
             "run_shell",
-            r"\b(?:powershell|cmd\.exe|terminal|command\s+line|shell|bash|termux|git\s+(?:status|log|diff|branch|show|rev-parse|rebase|reset|clean|push|checkout|restore)\b|"
-            r"running\s+process(?:es)?|free\s+(?:disk\s+)?space|disk\s+space|environment\s+variable)\b|"
-            r"\brun\s+(?:the\s+|a\s+)?command\b",
+            r"\b(?:powershell|cmd\.exe|terminal|command\s+line|shell|bash|termux)\b|"
+            r"\bgit\s+(?:log|status|diff|show|branch|blame|remote|tag|shortlog|describe|rev-parse)\b|"
+            r"\b(?:recent|latest|last)\s+(?:\d+\s+)?commits?\b|\bcommit\s+(?:history|log)\b|"
+            r"\b(?:what|which)\s+version\b[^.?!\n]{0,40}\binstalled\b|"
+            r"\b(?:free|available)\s+(?:disk\s+|storage\s+)?space\b|"
+            r"\bdisk\s+space\b[^.?!\n]{0,30}\b(?:do\s+i|i\s+have|left|free|on\s+(?:this|my))\b|"
+            r"\bbattery\s+(?:level|status|charge|percentage)\b|\bhow\s+much\s+battery\b|"
+            r"\b(?:which|what)\s+(?:apps|programs|processes)\b[^.?!\n]{0,40}\b(?:running|open|using)\b|"
+            r"\brunning\s+process(?:es)?\b|\benvironment\s+variable\b|\brun\s+(?:the\s+|a\s+)?command\b",
         ),
         (
             "run_ssh",
@@ -2703,42 +2725,47 @@ class CloverS23OnDeviceSystem:
         ),
         (
             "repo_read",
-            r"\b(?:read|open|show|view|inspect|cat|check)\b[^.?!]{0,50}\b(?:file|readme|config|\w+\."
+            r"\b(?:read|open|show|view|inspect|cat|check|list|look\s+at|find|summari[sz]e)\b[^.?!\n]{0,50}\b(?:files?|folders?|director(?:y|ies)|readme|config|workspace|repo|\w+\."
             r"(?:py|md|txt|json|yaml|yml|toml|js|ts|html|css|sh|ps1|c|h|cpp|rs|go|log|ini|cfg))\b|"
-            r"[A-Za-z]:\\[^\s\"']+|\b(?:list|what(?:'s|\s+is|\s+files\s+are)\s+in)\b[^.?!]{0,40}\b(?:folder|directory|dir|workspace|repo)\b",
+            r"\b(?:my|this|that|these)\s+(?:files?|folders?|documents|desktop|downloads)\b|[A-Za-z]:\\[^\s\"']+|\bwhat(?:'s|\s+is|\s+files\s+are)\s+in\b[^.?!\n]{0,40}\b(?:folder|directory|dir|workspace|repo)\b",
         ),
         (
             "repo_write",
-            r"\b(?:write|save|create)\b[^.?!]{0,50}\b(?:file|to\s+\S+\.\w+|\w+\."
-            r"(?:py|md|txt|json|yaml|yml|toml|js|ts|html|css|sh|ps1))\b",
+            r"\b(?:write|save|create|make)\b[^.?!\n]{0,50}\b(?:file|to\s+\S+\.\w+|\w+\."
+            r"(?:py|md|txt|json|yaml|yml|toml|js|ts|html|css|sh|ps1))\b|"
+            r"\b(?:add|append|insert)\b[^.?!\n]{0,60}\b(?:to|into|in)\s+(?:the|that|this|my|it)\b[^.?!\n]{0,20}\b(?:file|list|note|document)\b",
         ),
         (
             "generate_image",
-            r"\b(?:draw|paint|sketch|illustrate|render)\b|"
-            r"\b(?:generate|create|make)\s+(?:an?\s+)?(?:image|picture|photo|illustration|icon|logo|portrait|wallpaper)\b",
+            r"\b(?:generate|create|make|draw|paint|render|design|sketch)\b[^.?!\n]{0,40}"
+            r"\b(?:image|picture|photo|drawing|painting|illustration|artwork|logo|icon|portrait|wallpaper)s?\b",
         ),
     )
 
     @classmethod
     def topic_terms(cls, text: str) -> set[str]:
-        """Content words of `text`, without question filler (`much`, `would`) or lesson framing (`question`, `solutions`)."""
+        """Content words of `text` (for a learning/lesson, of the question it is about), without filler words."""
+        m = cls._LESSON_QUESTION.search(text or "")
+        src = (m.group(1) if m else (text or "")).lower()
         return {
-            w[:-1] if len(w) > 4 and w.endswith("s") else w
-            for w in cls._LESSON_TOPIC.findall((text or "").lower())
+            w[:-1] if len(w) > 3 and w.endswith("s") else w
+            for w in cls._LESSON_TOPIC.findall(src)
             if w not in cls._LESSON_FILLER
         }
 
     @classmethod
     def asked_tools(cls, text: str) -> list[str]:
-        """Returns the tool names explicitly requested by `text` (used when `settings['tools'] == 'ask'`)."""
+        """Returns the tool names explicitly requested by `text` (used when `settings['tools'] == 'ask'`, or to narrow `'always'`)."""
         t = text or ""
         if cls._CONCEPT.search(t) and not cls._EXPLICIT_TOOL.search(t):
             return []
         found = [name for name, pat in cls._TOOL_ASKS if re.search(pat, t, re.I)]
-        # "add a line ... and show me" matches repo_read ("show ... file") and also needs repo_write
-        if "repo_read" in found and "repo_write" not in found and cls._EDIT_FILE.search(t):
-            found.append("repo_write")
-        return found
+        # "add a line ... and show me the file" matches repo_read or repo_write and needs both
+        if ("repo_read" in found or "repo_write" in found) and cls._EDIT_FILE.search(t):
+            for rw in ("repo_read", "repo_write"):
+                if rw not in found:
+                    found.append(rw)
+        return list(dict.fromkeys(found))
 
     @classmethod
     def extract_python_from_reply(cls, reply: str) -> list[str]:
@@ -3197,6 +3224,12 @@ class CloverS23OnDeviceSystem:
             c_total_ms += decode_ms_t1
             raw_t1_text = self.tokenizer.decode(gen_ids_t1, skip_special_tokens=False)
             parsed_call = self._parse_lfm3_tool_call_xml(raw_t1_text)
+            if parsed_call is not None:
+                pre_call = re.split(r"<(?:tool_call|search|python|shell|ssh|repo_search|repo_read|repo_write)\b", raw_t1_text, maxsplit=1)[0]
+                if "</think>" in pre_call:
+                    pre_call = pre_call.split("</think>", 1)[1]
+                if self._ASKS_USER.search(pre_call[-400:]):
+                    parsed_call = None
 
             tool_observation = ""
             executed_py_code = ""
@@ -4925,14 +4958,13 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                         )
                     else:
                         tools_mode = str(payload.get("tools_mode") or sys_s23.settings.get("tools") or "ask")
-                        req_tools = sys_s23.asked_tools(prompt) if tools_mode == "ask" else ["web_search", "python_interpreter"]
+                        asked_for = sys_s23.asked_tools(prompt)
+                        req_tools = asked_for if (tools_mode == "ask" or asked_for) else ["web_search", "python_interpreter"]
                         allow_net_s = allow_net and ("web_search" in req_tools)
                         allow_py_s = allow_py and ("python_interpreter" in req_tools)
                         emit_sse({"type": "tools", "offered": req_tools, "mode": tools_mode})
 
-                        # Check if prompt asks to run shell / PowerShell or generate a picture directly
-                        pl_low = prompt.lower()
-                        want_pic = any(k in pl_low for k in ("create a picture", "make a picture", "draw a picture", "generate an image", "generate a picture"))
+                        want_pic = "generate_image" in asked_for
                         res = sys_s23.run_cycle(
                             prompt=prompt,
                             output_type="image" if want_pic else str(payload.get("output_type") or "text"),
@@ -5107,12 +5139,12 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 self._send(res)
                 return
 
-            # Apply Laptop Agent's `asked_tools` gating when `settings["tools"] == "ask"` ("When I ask")
+            # Apply Laptop Agent's `asked_tools` gating ("When I ask", or narrowing "Always" when a tool is explicitly asked for)
             tools_mode = str(payload.get("tools_mode") or sys_s23.settings.get("tools") or "ask")
-            if tools_mode == "ask":
-                requested_tools = sys_s23.asked_tools(prompt)
-                allow_net = allow_net and ("web_search" in requested_tools)
-                allow_py = allow_py and ("python_interpreter" in requested_tools)
+            asked_for = sys_s23.asked_tools(prompt)
+            if tools_mode == "ask" or asked_for:
+                allow_net = allow_net and ("web_search" in asked_for)
+                allow_py = allow_py and ("python_interpreter" in asked_for)
 
             res = sys_s23.run_cycle(
                 prompt=prompt,

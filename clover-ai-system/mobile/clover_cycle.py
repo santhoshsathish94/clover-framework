@@ -299,9 +299,13 @@ def final_answer(question, text):
                 return m[0].upper()
         return None
     if is_numeric(question):
-        m = re.findall(r"####\s*(-?[\d,]*\.?\d+)", t) or re.findall(r"ANSWER:\s*(-?[\d,]*\.?\d+)", t, re.I)
+        m = re.findall(r"####\s*(-?[\d,]*\.?\d+)", t)
         if m:
             return _num(m[-1])
+        for line in reversed(re.findall(r"ANSWER:\s*([^\n]+)", text or "", re.I)):
+            v = _stated_value(line)
+            if v is not None:
+                return v
         tail = " ".join(t.strip().splitlines()[-3:])
         # a stated result ("There are 15 primes: 2, 3, ..., 47", "the answer is 21") before the last number in a list
         m = re.findall(r"\b(?:there\s+(?:are|is|were)|answer\s+is|result\s+is|total\s+(?:is|of)|equals?|comes\s+to|"
@@ -314,14 +318,34 @@ def final_answer(question, text):
     return None
 
 
+def _stated_value(line):
+    """The amount an answer line states: its only number, else its last money amount, else its last number.
+    "Answer: 30 pens cost about $20.01" was read as 30 (2026-11-01)."""
+    money = re.findall(r"[$\u20ac\u00a3\u20b9]\s*(-?\d[\d,]*(?:\.\d+)?)", line)
+    if money:
+        return _num(money[-1])
+    nums = re.findall(r"-?\d[\d,]*(?:\.\d+)?", normalize(line))
+    return _num(nums[-1]) if nums else None
+
+
+def _decimals(x):
+    s = f"{x:.6f}".rstrip("0").rstrip(".")
+    return len(s.split(".")[1]) if "." in s else 0
+
+
 def same(a, b):
-    """Two answers agree: equal letters, or numbers within 0.2% (written precision). 20.1 and 20 differ: a correct 20 from
-    the checks confirmed a wrong $20.10 when whole-number rounding counted as agreement (2026-11-01)."""
+    """Two answers agree: equal letters, or numbers equal at the precision they were written. Roundings of one value
+    agree (3.33 and 3.333); an exact whole number does not (a program's 20.0 and the model's $20.01 differ: within 0.2%
+    they counted as one answer and made a false "verified" lesson, 2026-11-01). Float noise (19.999999999999996) is
+    ignored."""
     if a is None or b is None:
         return False
     if isinstance(a, str) or isinstance(b, str):
         return a == b
-    return abs(a - b) <= 0.002 * max(1.0, abs(a), abs(b))
+    a, b = round(a, 6), round(b, 6)
+    da, db = _decimals(a), _decimals(b)
+    d = min(da, db) if da and db else max(da, db)
+    return abs(a - b) <= 0.5 * 10 ** -d + 1e-9 * max(1.0, abs(a), abs(b))
 
 
 def second_solve_prompt(question_text, question, k=1, note=None):

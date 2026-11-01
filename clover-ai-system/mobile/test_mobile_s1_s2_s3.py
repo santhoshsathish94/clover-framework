@@ -197,9 +197,14 @@ def run_all_tests() -> None:
         import clover_cycle
         from s23_on_device_clover import CloverS23OnDeviceSystem
 
-        # 11a. Exact written numeric precision in same()
+        # 11a. Exact written numeric precision in same() & _stated_value in final_answer()
         assert not clover_cycle.same(20.1, 20) and not clover_cycle.same(20, 20.1)
-        assert clover_cycle.same(20.0, 20) and clover_cycle.same(3.333, 3.33)
+        assert not clover_cycle.same(20.01, 20.0), "20.01 and 20.0 must differ at written precision"
+        assert clover_cycle.same(8.0, 8) and clover_cycle.same(3.333, 3.33)
+        assert clover_cycle.same(19.999999999999996, 20) and clover_cycle.same(0.6667, 0.67)
+        assert clover_cycle.final_answer("And how much would 30 pens cost?", "30 x $0.67 = $20.01\n\nAnswer: 30 pens cost about $20.01.") == 20.01
+        assert clover_cycle.final_answer("And how much would 30 pens cost?", "ANSWER: 20.0") == 20.0
+        assert clover_cycle.final_answer("And how much would 30 pens cost?", "**Answer:** 18 apples") == 18.0
         # 11b. Follow-up context_before & needs_web
         hist_follow = [
             {"role": "user", "content": "A shop sells pens at 3 for $2, or $0.80 each. What is the minimum cost for 8 pens?"},
@@ -222,22 +227,44 @@ def run_all_tests() -> None:
         )
         assert info_verified["action"] == "overturned" and info_verified.get("lesson_kind") == "verified"
         # 11d. Terminal ANSI stripping & risky command detection
-        assert local_terminal.strip_ansi("\x1b[32mok\x1b[0m") == "ok"
-        assert local_terminal.risky("git rebase -i HEAD~2") and local_terminal.risky("rm -rf build")
-        assert not local_terminal.risky("git status") and not local_terminal.risky("git log -n 5")
-        assert local_terminal.risky("echo format is nice") is None
+        assert local_terminal.strip_ansi("\x1b[?1049h\x1b[22;0;0tVim\x1b[0m done\x1b]0;title\x07") == "Vim done"
+        for c_risky in (
+            "git rebase -i HEAD~1", "git reset --hard HEAD~1", "git push origin main", "git clean -fd",
+            r"Remove-Item C:\x -Recurse -Force", "del notes.txt", "rm -r build", "git checkout -- .",
+            "git branch -D old", "Stop-Process -Name code", "Format-Volume -DriveLetter D", "git commit --amend -m x",
+        ):
+            assert local_terminal.risky(c_risky), f"Expected risky: {c_risky}"
+        for c_safe in (
+            "git log --oneline -5", "git status", "git diff", "Get-ChildItem", "Get-PSDrive C",
+            "git --version", "python --version", "echo format is nice", "git pull --dry-run",
+        ):
+            assert not local_terminal.risky(c_safe), f"Expected safe: {c_safe}"
         # 11e. Conceptual question vs explicit tool call in asked_tools, and 2-topic-word learning filter
-        assert CloverS23OnDeviceSystem.asked_tools("In one sentence, what does git rebase do?") == []
-        assert "run_shell" in CloverS23OnDeviceSystem.asked_tools("Run git status in the terminal")
-        assert "generate_image" in CloverS23OnDeviceSystem.asked_tools("Draw a picture of a green clover")
-        ed_tools = CloverS23OnDeviceSystem.asked_tools("In test.txt, add a line and show me the file")
+        for q_concept in (
+            "In one sentence, what does git rebase do?", "what does git rebase do", "Explain how git merge works",
+            "What is the difference between git pull and git fetch?", "How does a VPN work?",
+        ):
+            assert CloverS23OnDeviceSystem.asked_tools(q_concept) == [], f"Expected no tools for concept question: {q_concept}"
+        assert "run_shell" in CloverS23OnDeviceSystem.asked_tools("Explain git rebase, then run git status in the terminal")
+        assert "run_shell" in CloverS23OnDeviceSystem.asked_tools("What version of git is installed on this laptop?")
+        assert "run_shell" in CloverS23OnDeviceSystem.asked_tools("How much free disk space does this laptop have?")
+        assert "run_shell" in CloverS23OnDeviceSystem.asked_tools("What's my battery level?")
+        assert "run_shell" not in CloverS23OnDeviceSystem.asked_tools("How long does an iPhone battery last?")
+        assert "run_shell" in CloverS23OnDeviceSystem.asked_tools(r"Use the terminal to show the last 3 commits in C:\x")
+        assert CloverS23OnDeviceSystem.asked_tools("can you generate and image of parrot") == ["generate_image"]
+        assert "generate_image" not in CloverS23OnDeviceSystem.asked_tools("What is in this picture?")
+        assert "generate_image" not in CloverS23OnDeviceSystem.asked_tools("describe the image I attached")
+        ed_tools = CloverS23OnDeviceSystem.asked_tools('Now add a fourth line "coffee" to that file and show me the whole file.')
         assert "repo_read" in ed_tools and "repo_write" in ed_tools
-        pen_lesson = "Question: 'And how much would 30 pens cost?' - three independent solutions gave 24, not 20."
-        q_disk = CloverS23OnDeviceSystem.topic_terms("How much free disk space is on C:?")
-        q_pens = CloverS23OnDeviceSystem.topic_terms("If I buy 60 pens at that shop, how much would they cost?")
+        assert "repo_write" not in CloverS23OnDeviceSystem.asked_tools(r"Read C:\x\README.md and tell me what the project is.")
+        pen_lesson = 'On a question like "And how much would 30 pens cost?"; Clover\'s checks found: two independent solutions gave 20, not 20.1.'
+        q_disk = CloverS23OnDeviceSystem.topic_terms("How much free disk space does this laptop have?")
+        q_coffee = CloverS23OnDeviceSystem.topic_terms("How much does a coffee cost?")
+        q_pens = CloverS23OnDeviceSystem.topic_terms("How much would 45 pens cost at 3 for $2?")
         assert len(q_disk & CloverS23OnDeviceSystem.topic_terms(pen_lesson)) < 2
+        assert len(q_coffee & CloverS23OnDeviceSystem.topic_terms(pen_lesson)) < 2
         assert len(q_pens & CloverS23OnDeviceSystem.topic_terms(pen_lesson)) >= 2
-        print("[PASS 11/11] Step 24 & 25 real-user regression fixes (follow-up context, numeric precision, verified lessons, risky commands, asked_tools, topic_terms) verified")
+        print("[PASS 11/11] Step 24 & 25 real-user regression fixes (follow-up context, written decimal precision, _stated_value, verified lessons, risky commands, asked_tools, topic_terms) verified")
         print("\nALL 11 MOBILE S1/S2/S3, WORKSPACES, STORAGE & STEP-24/25 REGRESSION SUITES PASSED!")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

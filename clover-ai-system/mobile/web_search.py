@@ -22,6 +22,12 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+try:
+    import truststore
+    truststore.inject_into_ssl()
+except Exception:
+    pass
+
 import mobile_vault
 
 PROVIDERS = {
