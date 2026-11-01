@@ -36,7 +36,23 @@ All 3 supporting components serve **Inference**, **Plan**, and **Decode**:
    - **Local Terminal & Remote SSH (`local_terminal.py`)**: Process-group timeout enforcement (`os.setsid` + `os.killpg`), 1 MB UTF-8 output cap, and device-local Ed25519 SSH public key generation (`SSHHosts`) where the private key never leaves the device.
    - **Generative Compiler Check (`CloverPythonGenerativeCompiler`)**: AST/scope/doctest/`assert` verifier with Sutton `TD(0)` statement survival and true `Allow / Ask / Off` permission prompts.
 
-## 3. Apple-Style Progressive Disclosure & Universal `robo-icon` Pack (`v2.0.0`)
+## 3. Apple-Style Progressive Disclosure & Universal `robo-icon` Pack (`v2.1.0`)
 
-- **Palette & Assets (`assets/robo-icon/`)**: Warm cream `#F7F3E9`, Clover green `#176B2C`, deep green `#0D4D20`, and leaf highlight `#83B83D`, featuring the 4-leaf `clover-mark.svg`, `robo-clover.png` hero mascot, Android adaptive icon (`ic_launcher_foreground.png` + `ic_launcher_background.png`), and 30 stroke-matched SVG interface icons.
+- **Palette & Assets (`assets/robo-icon/`)**: Warm cream `#F7F3E9`, Clover green `#176B2C`, deep green `#0D4D20`, and leaf highlight `#83B83D`, featuring the 4-leaf `clover-mark.svg`, `robo-clover.webp` / `robo-clover.png` hero mascot, Android adaptive icon (`ic_launcher_foreground.png` + `ic_launcher_background.png`), and 30 stroke-matched SVG interface icons.
 - **Progressive Disclosure**: Opens directly to a clean chat canvas (`Chats`, `Clover · Title`, `Settings`). Tapping `Settings` shows only 3 top-level rows (**GitHub Account**, **Storage Locations**, **Advanced**) that drill into dedicated `< Back` sub-views on demand.
+
+## 4. Laptop Step 21D–25 Parity & Real-User Regression Fixes Verified on Mobile (`11 / 11` Suites)
+
+All laptop real-user findings and regression fixes (`Steps 21D–25`) are implemented and verified across Windows and Samsung Galaxy S23 (`SM-S911B`):
+1. **Follow-Up Context & Exact Written Precision in `clover_cycle.py`**:
+   - `follow_up()` + `context_before(history, msg)` prepend the preceding exchange before follow-up retries (`"And how much would 30 pens cost?"`), and `needs_web(context + question)` sees the earlier numbers so unnecessary web searches are skipped.
+   - `same(a, b)` requires `0.2%` numeric precision (`same(20.1, 20) == False`), and overturn lessons are recorded only when backed by user detail or a verified Python calculation (`program_at in best[1]`).
+2. **Non-Interactive Git, ANSI Stripping & Destructive Command Gate in `local_terminal.py`**:
+   - `QUIET_GIT` (`GIT_EDITOR=true`, `GIT_SEQUENCE_EDITOR=true`, `GIT_PAGER=cat`, `GIT_TERMINAL_PROMPT=0`, `GCM_INTERACTIVE=never`) prevents interactive git commands from hanging.
+   - `local_terminal.risky(cmd)` detects destructive commands (`git rebase/reset/clean/push/restore`, `rm/rmdir/del/Remove-Item`, `kill/taskkill/Stop-Process`, `shutdown/reboot/mkfs`) and always triggers an `Ask` confirmation card (`Allow once` / `Don't allow`, with `Always allow` hidden) even when `shell` permission is set to `Allow`.
+3. **Conceptual Question vs. Tool Routing, Ontology URL/Path Filtering & 2-Topic-Word Learning Filter**:
+   - `asked_tools()` distinguishes conceptual questions (`"In one sentence, what does git rebase do?"` -> `[]`) from explicit tool requests, offers both `repo_read` and `repo_write` on file-edit prompts, and routes image requests to `generate_image`.
+   - `_LINKS_AND_PATHS` strips URLs and file paths before ontology matching, skips ontology on pure tool turns, and requires `>= 2` shared topic words (`topic_terms`) before injecting learned lessons.
+4. **Clean User Git Status (`.git/info/exclude`) & Safe Shared Media Folder Clear**:
+   - `_git_exclude()` records Clover's exact `<folder>-context.md` and `<repo>-context-index.md` paths in `<workspace>/.git/info/exclude` (and removes them on `clean`) so `git status` in the user's repo stays completely clean.
+   - `get_storage_locations()` and `clear_media_storage()` count and remove only Clover's content-hash files (`^[0-9a-f]{24,32}\.[a-z0-9]{2,5}$`), preserving any user files in shared local or cloud folders.

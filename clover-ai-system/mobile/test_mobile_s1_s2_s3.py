@@ -156,34 +156,89 @@ def run_all_tests() -> None:
         assert "PRIVATE KEY" not in str(desc), "Private key must never appear in describe()"
         print("[PASS 8/9] S3 SSHHosts host registry & public-key isolation verified")
 
-        # 9. Test Sessions List, Delete Session, and Local/Cloud Media Storage Locations
+        # 9. Test Sessions List, Delete Session, and Safe Local/Cloud Media Storage Locations
         sess_list = repo.sessions()
         assert len(sess_list) == 1 and sess_list[0]["id"] == "chat-alpha" and sess_list[0]["turns"] == 2
         cloud_media_dir = tmp / "OneDrive" / "CloverMedia"
         st_loc = repo.update_storage_locations(media_dir=str(cloud_media_dir), media_kind="cloud")
         assert st_loc["media_kind"] == "cloud" and Path(st_loc["media_dir"]) == cloud_media_dir.resolve()
-        (cloud_media_dir / "test_photo.png").write_bytes(b"PNGDATA123")
+        clover_hash_file = cloud_media_dir / "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4.png"
+        user_own_file = cloud_media_dir / "my_family_photo.png"
+        clover_hash_file.write_bytes(b"PNGDATA123")
+        user_own_file.write_bytes(b"USERPHOTO")
         st_loc2 = repo.get_storage_locations()
         assert st_loc2["media_files"] == 1 and st_loc2["media_bytes"] == 10
         clr_res = repo.clear_media_storage()
-        assert clr_res["removed"] == 1 and clr_res["media_files"] == 0
+        # Only Clover's content-hash file is deleted; the user's own file in the shared folder is preserved!
+        assert clr_res["removed"] == 1 and not clover_hash_file.exists() and user_own_file.exists()
         assert repo.delete_session("chat-alpha") is True
         assert len(repo.sessions()) == 0
-        print("[PASS 9/10] GitHub-syncable sessions list, delete_session & local/cloud media storage locations verified")
+        print("[PASS 9/11] GitHub-syncable sessions list, delete_session & safe content-hash media clear verified")
 
-        # 10. Test Laptop-Adopted Workspaces API (`describe_workspaces`, `workspace_action` add/activate/refresh/clean/remove)
+        # 10. Test Laptop-Adopted Workspaces API (`describe_workspaces`, `workspace_action` add/activate/refresh/clean/remove + `.git/info/exclude`)
         ws_d0 = repo.describe_workspaces()
         assert ws_d0["active"] == "my-project" and len(ws_d0["workspaces"]) == 1
-        ws_clean = repo.workspace_action("clean", {"name": "my-project"})
-        assert len(ws_clean.get("removed", [])) >= 1
         ws_ref = repo.workspace_action("refresh", {"name": "my-project"})
         assert len(ws_ref["context"]["written"]) >= 1
+        ex_txt = (user_proj / ".git" / "info" / "exclude").read_text(encoding="utf-8")
+        assert "# clover:context" in ex_txt
+        clover_block = ex_txt.split("# clover:context", 1)[1]
+        assert "*" not in clover_block and "/src/src-context.md" in clover_block
+        ws_clean = repo.workspace_action("clean", {"name": "my-project"})
+        assert len(ws_clean.get("removed", [])) >= 1
+        assert "# clover:context" not in (user_proj / ".git" / "info" / "exclude").read_text(encoding="utf-8")
         ws_deact = repo.workspace_action("activate", {"name": None})
         assert ws_deact["active"] is None
         ws_rem = repo.workspace_action("remove", {"name": "my-project"})
         assert len(ws_rem["workspaces"]) == 0 and user_proj.is_dir()
-        print("[PASS 10/10] Laptop-adopted Workspaces API (add/activate/refresh/clean/remove) verified")
-        print("\nALL 10 MOBILE S1/S2/S3, WORKSPACES & STORAGE VERIFICATION SUITES PASSED!")
+        print("[PASS 10/11] Laptop-adopted Workspaces API & .git/info/exclude clean git status verified")
+
+        # 11. Test Laptop Step 24 Real-User Regression Fixes (clover_cycle, local_terminal, asked_tools, topic_terms)
+        import clover_cycle
+        from s23_on_device_clover import CloverS23OnDeviceSystem
+
+        # 11a. Exact written numeric precision in same()
+        assert not clover_cycle.same(20.1, 20) and not clover_cycle.same(20, 20.1)
+        assert clover_cycle.same(20.0, 20) and clover_cycle.same(3.333, 3.33)
+        # 11b. Follow-up context_before & needs_web
+        hist_follow = [
+            {"role": "user", "content": "A shop sells pens at 3 for $2, or $0.80 each. What is the minimum cost for 8 pens?"},
+            {"role": "assistant", "content": "Two bundles of 3 ($4) plus 2 singles ($1.60) is $5.60."},
+            {"role": "user", "content": "And how much would 30 pens cost?"},
+            {"role": "assistant", "content": "30 pens cost $20.10."},
+        ]
+        last_m, prev_ans = clover_cycle.last_exchange(hist_follow)
+        ctx_b = clover_cycle.context_before(hist_follow, last_m)
+        assert "3 for $2" in ctx_b and not clover_cycle.needs_web(ctx_b + last_m["content"])
+        # 11c. Evidence-backed lessons in retry_cycle
+        _, info_unverified = clover_cycle.retry_cycle(
+            "And how much would 30 pens cost?", "30 pens cost $20.", "",
+            rewrite=lambda d: "", solve=lambda k, n: "ANSWER: 24", program=lambda n: "",
+        )
+        assert info_unverified["action"] == "overturned" and "lesson" not in info_unverified
+        _, info_verified = clover_cycle.retry_cycle(
+            "And how much would 30 pens cost?", "30 pens cost $20.10.", "",
+            rewrite=lambda d: "", solve=lambda k, n: "10 * 2 = 20\nANSWER: 20", program=lambda n: "ANSWER: 20",
+        )
+        assert info_verified["action"] == "overturned" and info_verified.get("lesson_kind") == "verified"
+        # 11d. Terminal ANSI stripping & risky command detection
+        assert local_terminal.strip_ansi("\x1b[32mok\x1b[0m") == "ok"
+        assert local_terminal.risky("git rebase -i HEAD~2") and local_terminal.risky("rm -rf build")
+        assert not local_terminal.risky("git status") and not local_terminal.risky("git log -n 5")
+        assert local_terminal.risky("echo format is nice") is None
+        # 11e. Conceptual question vs explicit tool call in asked_tools, and 2-topic-word learning filter
+        assert CloverS23OnDeviceSystem.asked_tools("In one sentence, what does git rebase do?") == []
+        assert "run_shell" in CloverS23OnDeviceSystem.asked_tools("Run git status in the terminal")
+        assert "generate_image" in CloverS23OnDeviceSystem.asked_tools("Draw a picture of a green clover")
+        ed_tools = CloverS23OnDeviceSystem.asked_tools("In test.txt, add a line and show me the file")
+        assert "repo_read" in ed_tools and "repo_write" in ed_tools
+        pen_lesson = "Question: 'And how much would 30 pens cost?' - three independent solutions gave 24, not 20."
+        q_disk = CloverS23OnDeviceSystem.topic_terms("How much free disk space is on C:?")
+        q_pens = CloverS23OnDeviceSystem.topic_terms("If I buy 60 pens at that shop, how much would they cost?")
+        assert len(q_disk & CloverS23OnDeviceSystem.topic_terms(pen_lesson)) < 2
+        assert len(q_pens & CloverS23OnDeviceSystem.topic_terms(pen_lesson)) >= 2
+        print("[PASS 11/11] Step 24 & 25 real-user regression fixes (follow-up context, numeric precision, verified lessons, risky commands, asked_tools, topic_terms) verified")
+        print("\nALL 11 MOBILE S1/S2/S3, WORKSPACES, STORAGE & STEP-24/25 REGRESSION SUITES PASSED!")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

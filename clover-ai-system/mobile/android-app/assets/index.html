@@ -113,6 +113,11 @@ button { cursor: pointer; }
 .md ul, .md ol { margin: .3rem 0 .7rem 1.3rem; padding: 0; } .md li { margin: .2rem 0; }
 .md strong { font-weight: 650; }
 .md h4 { margin: 1rem 0 .35rem; font-size: 1rem; }
+.md table { width: 100%; border-collapse: collapse; margin: .65rem 0 .85rem; font-size: .86rem; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.md th, .md td { padding: .45rem .65rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.md th { background: var(--fill); font-weight: 600; }
+.md tr:last-child td { border-bottom: 0; }
 .md code { font-family: var(--mono); font-size: .86em; background: var(--fill); padding: .05rem .35rem; border-radius: 6px; }
 .code { position: relative; margin: .6rem 0 .8rem; border-radius: 12px; overflow: hidden; }
 .code pre { margin: 0; padding: 2.1rem 1.1rem 1rem; overflow: auto; background: var(--code-bg); color: var(--code-ink); font: .84rem/1.55 var(--mono); }
@@ -161,6 +166,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 .tool__body .lbl { font-size: .7rem; font-weight: 600; color: var(--faint); margin-bottom: .2rem; }
 .ask { border: 1px solid var(--warn-line); background: var(--warn-soft); border-radius: 16px; padding: .8rem .9rem; margin: 0 0 .65rem; animation: rise .2s var(--ease) both; }
 .ask__t { display: flex; align-items: center; gap: .5rem; font-weight: 600; color: var(--warn); font-size: .92rem; }
+.ask .risk { margin: .3rem 0 0; font-size: .8rem; color: var(--danger); }
 .ask pre { white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow: auto; background: var(--surface); border: 1px solid var(--warn-line);
   border-radius: 10px; padding: .5rem .6rem; font: .78rem/1.5 var(--mono); margin: .55rem 0 0; color: var(--ink-2); }
 .ask__b { display: flex; gap: .45rem; flex-wrap: wrap; align-items: center; margin-top: .65rem; }
@@ -829,10 +835,24 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         out.push('<div class="code"><button type="button" data-copy="code">Copy</button><pre><code>' + esc(code.replace(/\n$/, '')) + '</code></pre></div>');
         return;
       }
-      var list = [], ordered = false;
+      var list = [], ordered = false, tbl = [];
       function flush() { if (list.length) { out.push((ordered ? '<ol>' : '<ul>') + list.join('') + (ordered ? '</ol>' : '</ul>')); list = []; } }
+      function flushTable() {
+        if (!tbl.length) return;
+        function cells(r) { return r.replace(/^\||\|$/g, '').split('|').map(function (c) { return c.trim(); }); }
+        if (tbl.length >= 2 && /^[\s|:\-]+$/.test(tbl[1]) && tbl[1].indexOf('-') >= 0) {
+          var head = cells(tbl[0]).map(function (c) { return '<th>' + inline(c) + '</th>'; }).join('');
+          var body = tbl.slice(2).map(function (r) {
+            return '<tr>' + cells(r).map(function (c) { return '<td>' + inline(c) + '</td>'; }).join('') + '</tr>';
+          }).join('');
+          out.push('<table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>');
+        } else tbl.forEach(function (r) { out.push('<p>' + inline(r) + '</p>'); });
+        tbl = [];
+      }
       esc(part).split('\n').forEach(function (ln) {
         var t = ln.trim();
+        if (/^\|.+\|$/.test(t)) { flush(); tbl.push(t); return; }
+        flushTable();
         var h = t.match(/^#{1,4}\s+(.*)$/);
         var m = t.match(/^([-*•]|\d+[.)])\s+(.*)$/);
         if (m) { var o = /\d/.test(m[1]); if (list.length && o !== ordered) flush(); ordered = o; list.push('<li>' + inline(m[2]) + '</li>'); return; }
@@ -840,7 +860,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         if (h) out.push('<h4>' + inline(h[1]) + '</h4>');
         else if (t) out.push('<p>' + inline(t) + '</p>');
       });
-      flush();
+      flush(); flushTable();
     });
     return out.join('') || '<p>(empty reply)</p>';
   }
@@ -1705,8 +1725,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           var pr = r.permission_required;
           onEvent({ type: 'tool_call', id: 'tc1', name: pr.tool || pr.permission, arguments: { query: pr.detail || '' } });
           var host = lastCard ? lastCard.el : toolsBox;
-          host.parentNode.insertBefore(askEl({ tool: pr.permission, detail: pr.detail }, function (decision) {
-            if (decision === 'always') setPerms((function () { var ch = {}; ch[pr.permission] = 'allow'; return ch; })());
+          host.parentNode.insertBefore(askEl({ tool: pr.permission, detail: pr.detail, risky: pr.risky }, function (decision) {
+            if (decision === 'always' && !pr.risky) setPerms((function () { var ch = {}; ch[pr.permission] = 'allow'; return ch; })());
             var req2 = Object.assign({}, reqPayload, {
               allow_once: decision in { once: 1, always: 1 } ? [pr.permission] : [],
               deny_once: decision === 'deny' ? [pr.permission] : []
@@ -1799,10 +1819,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function askEl(ev, onDecide) {
     var ui = PERM_UI[ev.tool] || { icon: 'shield', verb: 'use a tool' };
     var box = el('div', 'ask', '<div class="ask__t">' + ic(ui.icon) + '<span></span></div>');
-    box.querySelector('span').textContent = 'Allow Clover to ' + ui.verb + '?';
+    box.querySelector('span').textContent = ev.risky ? 'Allow Clover to run this command?' : ('Allow Clover to ' + ui.verb + '?');
+    if (ev.risky) { var w = el('p', 'risk'); w.textContent = 'Clover asks first because ' + (ev.risky.indexOf('it ') === 0 ? ev.risky : 'it ' + ev.risky) + '.'; box.appendChild(w); }
     if (ev.detail) { var pre = el('pre'); pre.textContent = ev.detail; box.appendChild(pre); }
     var row = el('div', 'ask__b');
-    [['Allow once', 'once', 'pri'], ['Always allow', 'always', ''], ["Don't allow", 'deny', '']].forEach(function (b) {
+    var opts = ev.risky ? [['Allow once', 'once', 'pri'], ["Don't allow", 'deny', '']]
+      : [['Allow once', 'once', 'pri'], ['Always allow', 'always', ''], ["Don't allow", 'deny', '']];
+    opts.forEach(function (b) {
       var x = btn('btn ' + b[2], esc(b[0]));
       x.addEventListener('click', function () { box.remove(); onDecide(b[1]); });
       row.appendChild(x);
@@ -1814,10 +1837,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function fmtArgs(a) {
     if (!a) return '';
     if (a.code) return a.code;
+    if (a.target && a.command) return a.target + ' $ ' + a.command;
     if (a.command) return a.command;
     if (a.query) return a.query;
     if (a.prompt) return a.prompt;
     if (a.url) return a.url;
+    if (a.repository) return a.repository;
+    if (a.extension) return a.extension;
+    if (a.text && a.title) return a.title + ' — ' + a.text;
+    if (a.text) return a.text;
     if (a.path && a.content != null) return a.path + '\n---\n' + String(a.content).slice(0, 1500);
     if (a.path) return a.path + (a.start_line ? ' (lines ' + a.start_line + '-' + (a.end_line || 'end') + ')' : '');
     return JSON.stringify(a);

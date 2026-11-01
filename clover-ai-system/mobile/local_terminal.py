@@ -42,6 +42,46 @@ PS_HEAD = (
     "$ProgressPreference = 'SilentlyContinue'\n"
 )
 PS_TAIL = "\nif (-not $?) { exit $(if ($LASTEXITCODE) { $LASTEXITCODE } else { 1 }) }"
+# stdin is closed: git must never open an editor, a pager, or a credential prompt (git rebase -i opened Vim and hung 30s)
+QUIET_GIT = {
+    "GIT_EDITOR": "true",
+    "GIT_SEQUENCE_EDITOR": "true",
+    "GIT_PAGER": "cat",
+    "PAGER": "cat",
+    "GIT_TERMINAL_PROMPT": "0",
+    "GCM_INTERACTIVE": "never",
+}
+ANSI = re.compile(r"\x1b(?:\[[0-9;?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[@-Z\\-_])")
+# commands that change history, delete files, or alter the machine: always ask, even when the terminal is on Allow
+RISKY = (
+    (re.compile(r"\bgit\s+(?:rebase|reset|clean|filter-branch|filter-repo|rm)\b|\bgit\s+push\b|"
+                r"\bgit\s+(?:checkout|switch)\s+(?:-f\b|--force\b|--\s|\.\s*$|--discard-changes)|\bgit\s+restore\b|"
+                r"\bgit\s+branch\s+(?:-D|--delete\s+--force)\b|\bgit\s+stash\s+(?:drop|clear)\b|"
+                r"\bgit\s+commit\b[^\n;|]*--amend\b|\bgit\s+reflog\s+(?:expire|delete)\b", re.I),
+     "it rewrites git history, discards changes or publishes to a remote"),
+    (re.compile(r"(?:^|[;|&({\s])(?:Remove-Item|ri|rm|rmdir|rd|del|erase|shred|Clear-Content|Clear-RecycleBin)(?=\s|$)", re.I),
+     "it deletes files or folders"),
+    (re.compile(r"\b(?:Format-Volume|Clear-Disk|Initialize-Disk|diskpart|mkfs|fdisk|format\s+[a-z]:|bcdedit|vssadmin|cipher\s+/w|"
+                r"Stop-Computer|Restart-Computer|shutdown|reboot|Set-ExecutionPolicy|reg(?:\.exe)?\s+delete|"
+                r"Remove-ItemProperty|takeown|icacls\b[^\n;|]*/(?:grant|reset|remove))\b", re.I),
+     "it changes the system itself"),
+    (re.compile(r"\b(?:Stop-Process|taskkill|kill|pkill|killall|Uninstall-Package|Uninstall-Module|Remove-AppxPackage)\b|"
+                r"\b(?:winget|choco|pip|npm|pkg)\s+uninstall\b|\bapt(?:-get)?\s+(?:remove|purge)\b", re.I),
+     "it stops programs or uninstalls software"),
+)
+
+
+def strip_ansi(text: str | None) -> str:
+    return ANSI.sub("", text or "")
+
+
+def risky(command: str | None) -> str | None:
+    """Why `command` needs confirmation before it runs (even when shell is on Allow), or None."""
+    c = command or ""
+    for pat, why in RISKY:
+        if pat.search(c):
+            return why
+    return None
 
 
 def clamp_timeout(t: Any) -> int:
@@ -65,7 +105,7 @@ def run(
         "stdout": subprocess.PIPE,
         "stderr": subprocess.STDOUT,
         "stdin": subprocess.DEVNULL,
-        "env": env,
+        "env": {**os.environ, **QUIET_GIT, **(env or {})},
     }
     if os.name == "nt":
         popen_kwargs["creationflags"] = NO_WINDOW
@@ -109,7 +149,7 @@ def run(
             p.kill()
 
     t.join(3)
-    out = b"".join(chunks).decode("utf-8", errors="replace").replace("\r\n", "\n")
+    out = strip_ansi(b"".join(chunks).decode("utf-8", errors="replace").replace("\r\n", "\n"))
     if size[0] > OUT_CAP_BYTES:
         out += f"\n[output cut: {size[0]:,} bytes printed, the first {OUT_CAP_BYTES:,} kept]"
     return out, (p.returncode if how == "exit" else None), how

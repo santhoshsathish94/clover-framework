@@ -1442,6 +1442,7 @@ class S23HybridAgentAndNCM:
         self,
         plan_text: str,
         precomputed_h_seq: np.ndarray | None = None,
+        precomputed_r_seq: np.ndarray | Any | None = None,
         precomputed_gen_ids: list[int] | None = None,
     ) -> tuple[str, list[int], dict[str, Any]]:
         """
@@ -1449,7 +1450,8 @@ class S23HybridAgentAndNCM:
           1. Uses the in-situ 24-layer C1 hidden states `precomputed_h_seq` directly (`c_backbone_ms = 0.0 ms`,
              zero redundant `forward_24_layers` re-execution!). Falls back to `forward_24_layers` only if
              called standalone without `precomputed_h_seq`.
-          2. Projects `h_valid -> r_valid` once through precomputed `plan-trunk-0` (`Lfm3NativeHybridLink`).
+          2. Uses the precomputed C2 latent plan states `precomputed_r_seq` directly from Stage C2 (`plan-trunk-0`:
+             `Lfm3NativeHybridLink`), or computes `r_valid = self.hybrid_link(h_valid)` if called standalone.
           3. Projects `(r_valid, h_valid)` through precomputed `bridge-trunk-0` (`Lfm3ComboBridge` + `Lfm3ExpertBridge`)
              on the exact unpadded length `L_val = len(pids)` (`[1, 2*L_val, 384]`, zero dead padding tokens).
           4. Runs `NextConceptTransformer` (`ncm-trunk-0..11` + `ncm-global-0`) + `vqvae-expert-0..10` up to the
@@ -1476,8 +1478,9 @@ class S23HybridAgentAndNCM:
         # 1. C1 Hidden States: reuse in-situ hidden states from the unified C1 pass (`0.00 ms` extra C1 cost!)
         c_ms = 0.0
         reused_c1_hidden = False
+        reused_c2_plan = False
+        start_idx = 0
         if precomputed_h_seq is not None and isinstance(precomputed_h_seq, np.ndarray) and precomputed_h_seq.shape[0] > 0:
-            start_idx = 0
             if precomputed_gen_ids and len(precomputed_gen_ids) >= 1:
                 for idx_s in range(0, len(precomputed_gen_ids)):
                     if precomputed_gen_ids[idx_s] == pids[0]:
@@ -1497,7 +1500,23 @@ class S23HybridAgentAndNCM:
 
         with torch.no_grad():
             # 2. C2 Plan (`plan-trunk-0`) & C3 Bridges (`bridge-trunk-0`) on unpadded `L_val` tokens
-            r_valid = self.hybrid_link(h_valid)
+            if precomputed_r_seq is not None:
+                if isinstance(precomputed_r_seq, np.ndarray) and precomputed_r_seq.shape[0] > 0:
+                    r_slice = precomputed_r_seq[start_idx : start_idx + L_val]
+                    if r_slice.shape[0] == 0:
+                        r_slice = precomputed_r_seq[:L_val]
+                    if r_slice.shape[0] < L_val:
+                        pad_r = np.repeat(r_slice[-1:], L_val - r_slice.shape[0], axis=0)
+                        r_slice = np.concatenate([r_slice, pad_r], axis=0)
+                    r_valid = torch.from_numpy(r_slice[:L_val]).float().unsqueeze(0)
+                    reused_c2_plan = True
+                elif hasattr(precomputed_r_seq, "shape") and precomputed_r_seq.shape[1] >= L_val:
+                    r_valid = precomputed_r_seq[:, :L_val, :].float()
+                    reused_c2_plan = True
+                else:
+                    r_valid = self.hybrid_link(h_valid)
+            else:
+                r_valid = self.hybrid_link(h_valid)
             z_rh_v = self.combo_bridge(r_valid).float()
             z_exp_v = self.expert_bridge(h_valid).float()
             p_valid = torch.tensor([pids], dtype=torch.long)
@@ -1648,6 +1667,7 @@ class S23HybridAgentAndNCM:
         meta = {
             "ncm_active": True,
             "unified_c1_c2_c3_single_pass": bool(reused_c1_hidden),
+            "reused_c2_plan_sequence": bool(reused_c2_plan),
             "c3_precomputed_trunks_active": bool(self.precomputed_trunks_active),
             "c3_precomputed_dirs": int(self.precomputed_manifest.get("total_trunk_and_expert_dirs", 31)),
             "vq_levels": max_lvl + 1,
@@ -2299,6 +2319,11 @@ class CloverS23OnDeviceSystem:
         except Exception:
             return None
 
+    DECLINED_TEXT = (
+        "[Clover permission] The user chose not to allow this just now, so it did not run. "
+        "Say so plainly (it is not turned off) and offer another way."
+    )
+
     def _check_tool_permission(
         self,
         perm_key: str,
@@ -2311,31 +2336,38 @@ class CloverS23OnDeviceSystem:
     ) -> tuple[bool, dict[str, Any] | None, str]:
         """
         Checks `Allow` / `Ask` / `Off` (`deny`) for `perm_key`.
-        - If `mode == "ask"` and `interactive_ask` is True (unless already in `allow_once` or `deny_once`),
-          returns `(False, permission_prompt_dict, "ask")` so the turn stops and asks the user in the chat UI.
+        - If `perm_key == "shell"` and `local_terminal.risky(detail)` is non-None, always prompts (`ask`)
+          even when `shell` is set to `Allow`, with `"risky": why` so destructive commands are never run silently.
+        - If `perm_key in deny_once` (the user clicked "Don't allow" on the Ask card), returns `DECLINED_TEXT`
+          so Clover explains that the user declined it just now rather than saying the permission is turned off.
         """
-        if not explicit_flag or perm_key in deny_once:
+        if perm_key in deny_once:
+            return False, None, self.DECLINED_TEXT
+        if not explicit_flag:
             return False, None, f"[Clover permission] {perm_key} was not allowed for this turn."
+        risk_why = None
+        if perm_key == "shell":
+            import local_terminal
+            risk_why = local_terminal.risky(detail)
         if perm_key in allow_once:
             return True, None, "allowed_once"
         mode = self.perm_modes.get(perm_key, "allow")
-        if mode == "allow":
-            return True, None, "allowed"
         if mode == "deny":
             return False, None, f"[Clover permission] '{self.permissions_meta.get(perm_key, {}).get('label', perm_key)}' is turned off in Settings."
-        if mode == "ask":
+        if mode == "allow" and not risk_why:
+            return True, None, "allowed"
+        if mode == "ask" or risk_why:
             if interactive_ask:
-                return (
-                    False,
-                    {
-                        "permission": perm_key,
-                        "tool": tool_name,
-                        "label": self.permissions_meta.get(perm_key, {}).get("label", perm_key),
-                        "detail": str(detail or "")[:600],
-                    },
-                    "ask",
-                )
-            return False, None, f"[Clover permission] '{perm_key}' is set to Ask."
+                prompt_d: dict[str, Any] = {
+                    "permission": perm_key,
+                    "tool": tool_name,
+                    "label": self.permissions_meta.get(perm_key, {}).get("label", perm_key),
+                    "detail": str(detail or "")[:600],
+                }
+                if risk_why:
+                    prompt_d["risky"] = risk_why
+                return False, prompt_d, "ask"
+            return False, None, f"[Clover permission] '{perm_key}' requires confirmation."
         return False, None, "denied"
 
     def _apply_hardware_settings(self) -> None:
@@ -2431,7 +2463,24 @@ class CloverS23OnDeviceSystem:
         return "<|startoftext|><|im_start|>system\nYou are Clover, a helpful AI assistant. Answer the user's request directly.<|im_end|>\n"
 
     @staticmethod
-    def _clean_model_text(text: str) -> str:
+    def looping(text: str) -> tuple[bool, str]:
+        """Detects and trims any repeated tail (a 25+ char substring repeated 3x or an identical line repeated 5x)."""
+        s = text or ""
+        if len(s) >= 90:
+            for w in range(25, min(140, len(s) // 3) + 1):
+                unit = s[-w:]
+                if s.endswith(unit * 3):
+                    idx = s.find(unit)
+                    return True, s[: idx + len(unit)].rstrip()
+        lines = [ln.strip() for ln in s.splitlines() if len(ln.strip()) >= 8]
+        if len(lines) >= 5 and len(set(lines[-5:])) == 1:
+            unit = lines[-1]
+            idx = s.find(unit)
+            return True, s[: idx + len(unit)].rstrip()
+        return False, s
+
+    @classmethod
+    def _clean_model_text(cls, text: str) -> str:
         s = (text or "").strip()
         if not s:
             return ""
@@ -2457,6 +2506,7 @@ class CloverS23OnDeviceSystem:
         s = re.sub(r"```json\s*\{\s*\"(?:tool|query)\"[\s\S]*$", "", s).strip()
         s = re.sub(r"\n*(?:I can confirm this by searching|Let me do that quickly|Would you like me to)[^\n]*$", "", s).strip()
         s = re.sub(r"<\|[^>]+?\|>|</?think>|</?answer>", "", s).strip()
+        _, s = cls.looping(s)
         return s
 
     @staticmethod
@@ -2599,6 +2649,37 @@ class CloverS23OnDeviceSystem:
         r"^\s*(?:def|class|import|from|for|while|if|elif|try|with|return|print\(|[A-Za-z_]\w*\s*=(?!=))",
         re.M,
     )
+    # Conceptual questions about a command or tool ("what does git rebase do?", "how does ssh work?") ask for an answer, not a tool call
+    _CONCEPT = re.compile(
+        r"\b(?:what\s+(?:does|is|are)|how\s+does|explain|describe|define|meaning\s+of|"
+        r"difference\s+between|when\s+(?:should|would|to)\s+use)\b",
+        re.I,
+    )
+    _EXPLICIT_TOOL = re.compile(
+        r"\b(?:use|using|run|execute|call|check\s+with|search|google|look\s+up|browse|open|read|list|"
+        r"write|save|create|add\s+a\s+line|append|edit|modify|update|remember)\b|https?://|[A-Za-z]:\\|/(?:sdcard|storage|data|home)/",
+        re.I,
+    )
+    _EDIT_FILE = re.compile(
+        r"\b(?:add\s+(?:a\s+line|to|text)|append|insert|edit|modify|update|change|replace\s+in|"
+        r"put\s+.+\s+in(?:to)?)\b",
+        re.I,
+    )
+    _LINKS_AND_PATHS = re.compile(
+        r"https?://\S+|www\.\S+|[A-Za-z]:\\[^\s\"')]+|/(?:sdcard|storage|data|home|Users|tmp|var|etc|opt)/[^\s\"')]+|[\w.\-]+/[\w.\-/]+"
+    )
+    _LESSON_TOPIC = re.compile(r"[a-z][a-z0-9_\-]{2,}|\d+(?:\.\d+)?")
+    _LESSON_FILLER = {
+        "the", "and", "for", "with", "that", "this", "from", "into", "what", "when", "where", "which", "who",
+        "why", "how", "are", "was", "were", "will", "would", "could", "should", "have", "has", "had", "does",
+        "did", "not", "but", "you", "your", "can", "about", "after", "before", "over", "under", "more", "most",
+        "some", "any", "each", "other", "than", "then", "also", "just", "only", "very", "much", "many", "such",
+        "there", "their", "they", "them", "these", "those", "its", "his", "her", "our", "out", "one", "two",
+        "three", "first", "new", "use", "used", "using", "make", "made", "way", "well", "may", "might", "must",
+        "need", "want", "like", "give", "given", "take", "get", "got", "let", "say", "said", "tell", "told",
+        "ask", "asked", "question", "answer", "earlier", "later", "independent", "solution", "solutions",
+        "gave", "check", "checked", "checks", "user", "clover", "sentence", "sentences", "word", "words",
+    }
     _TOOL_ASKS = (
         (
             "web_search",
@@ -2612,18 +2693,52 @@ class CloverS23OnDeviceSystem:
         ),
         (
             "run_shell",
-            r"\b(?:terminal|command\s+line|shell|bash|termux|sh\b)\b",
+            r"\b(?:powershell|cmd\.exe|terminal|command\s+line|shell|bash|termux|git\s+(?:status|log|diff|branch|show|rev-parse|rebase|reset|clean|push|checkout|restore)\b|"
+            r"running\s+process(?:es)?|free\s+(?:disk\s+)?space|disk\s+space|environment\s+variable)\b|"
+            r"\brun\s+(?:the\s+|a\s+)?command\b",
         ),
         (
             "run_ssh",
-            r"\b(?:ssh|remote\s+host|remote\s+server)\b",
+            r"\b(?:ssh|remote\s+(?:host|machine|server|box))\b|\bon\s+[a-z0-9._-]+@[a-z0-9._-]+",
+        ),
+        (
+            "repo_read",
+            r"\b(?:read|open|show|view|inspect|cat|check)\b[^.?!]{0,50}\b(?:file|readme|config|\w+\."
+            r"(?:py|md|txt|json|yaml|yml|toml|js|ts|html|css|sh|ps1|c|h|cpp|rs|go|log|ini|cfg))\b|"
+            r"[A-Za-z]:\\[^\s\"']+|\b(?:list|what(?:'s|\s+is|\s+files\s+are)\s+in)\b[^.?!]{0,40}\b(?:folder|directory|dir|workspace|repo)\b",
+        ),
+        (
+            "repo_write",
+            r"\b(?:write|save|create)\b[^.?!]{0,50}\b(?:file|to\s+\S+\.\w+|\w+\."
+            r"(?:py|md|txt|json|yaml|yml|toml|js|ts|html|css|sh|ps1))\b",
+        ),
+        (
+            "generate_image",
+            r"\b(?:draw|paint|sketch|illustrate|render)\b|"
+            r"\b(?:generate|create|make)\s+(?:an?\s+)?(?:image|picture|photo|illustration|icon|logo|portrait|wallpaper)\b",
         ),
     )
 
     @classmethod
+    def topic_terms(cls, text: str) -> set[str]:
+        """Content words of `text`, without question filler (`much`, `would`) or lesson framing (`question`, `solutions`)."""
+        return {
+            w[:-1] if len(w) > 4 and w.endswith("s") else w
+            for w in cls._LESSON_TOPIC.findall((text or "").lower())
+            if w not in cls._LESSON_FILLER
+        }
+
+    @classmethod
     def asked_tools(cls, text: str) -> list[str]:
         """Returns the tool names explicitly requested by `text` (used when `settings['tools'] == 'ask'`)."""
-        return [name for name, pat in cls._TOOL_ASKS if re.search(pat, text or "", re.I)]
+        t = text or ""
+        if cls._CONCEPT.search(t) and not cls._EXPLICIT_TOOL.search(t):
+            return []
+        found = [name for name, pat in cls._TOOL_ASKS if re.search(pat, t, re.I)]
+        # "add a line ... and show me" matches repo_read ("show ... file") and also needs repo_write
+        if "repo_read" in found and "repo_write" not in found and cls._EDIT_FILE.search(t):
+            found.append("repo_write")
+        return found
 
     @classmethod
     def extract_python_from_reply(cls, reply: str) -> list[str]:
@@ -2859,18 +2974,25 @@ class CloverS23OnDeviceSystem:
                 t_l4 = time.perf_counter()
                 git_hits = self.git_memory_repo.search_repo_relevant(prompt, max_files=2, max_chars_per_file=550)
                 mem_pkg = self._retrieve_memory(self.memory_graph, prompt)
+                qt_terms = self.topic_terms(prompt)
                 l4_items = []
                 l4_reasons = []
                 seen_snippets: set[str] = set()
                 for gh in git_hits:
                     snip = str(gh.get("snippet") or "").strip()
+                    rel_p = str(gh.get("path") or "")
+                    # A lesson/learning must share >= 2 topic words with the query (not filler like "much" or "would")
+                    if ("MEM-LESSON" in rel_p or rel_p.startswith("lessons/")) and len(qt_terms & self.topic_terms(snip)) < 2:
+                        continue
                     if snip and snip not in seen_snippets:
                         seen_snippets.add(snip)
-                        l4_items.append({"id": gh["path"], "type": "git_repo_file", "summary": snip, "reason": f"git_repo_match(score={gh['score']})"})
-                        retrieved_context_blocks.append(f"[Git Memory Repo '{gh['path']}']: {snip}")
+                        l4_items.append({"id": rel_p, "type": "git_repo_file", "summary": snip, "reason": f"git_repo_match(score={gh['score']})"})
+                        retrieved_context_blocks.append(f"[Git Memory Repo '{rel_p}']: {snip}")
                 if mem_pkg is not None and mem_pkg.items:
                     for it in mem_pkg.items[:2]:
                         summary_clean = str(it.entry.summary or "").strip()
+                        if it.entry.entry_type == "learning" and len(qt_terms & self.topic_terms(summary_clean)) < 2:
+                            continue
                         rsn_str = str(getattr(it, "reason", "") or "")
                         l4_reasons.append(rsn_str)
                         if summary_clean and summary_clean not in seen_snippets:
@@ -2938,11 +3060,16 @@ class CloverS23OnDeviceSystem:
 
             # ------------------------------------------------------------------
             # 3. S2: Deterministic Ontology GraphRAG (`k3_ontology_graph.py`)
+            #    Strip URLs and file paths before matching, and skip when the user asked for a tool
+            #    (unless the prompt explicitly mentions a CVE/CWE/CAPEC identifier).
             # ------------------------------------------------------------------
-            if active_layer_cap >= 5 and self.settings.get("layers", {}).get("ontology", True):
+            explicit_cve_query = bool(re.search(r"\b(?:CVE-\d{4}-\d+|CWE-\d+|CAPEC-\d+)\b", prompt or "", re.I))
+            tool_request_only = bool(self.asked_tools(prompt)) and not explicit_cve_query
+            if active_layer_cap >= 5 and self.settings.get("layers", {}).get("ontology", True) and not tool_request_only:
                 t_l5 = time.perf_counter()
-                turing_strat = self.symbolic_verifier.check_turing_self_reference_stratification(prompt)
-                ont_items = self.ontology_retriever.retrieve(prompt, max_entities=3, max_paths=4)
+                clean_ont_q = self._LINKS_AND_PATHS.sub(" ", prompt or "")
+                turing_strat = self.symbolic_verifier.check_turing_self_reference_stratification(clean_ont_q)
+                ont_items = self.ontology_retriever.retrieve(clean_ont_q, max_entities=3, max_paths=4)
                 trav_stats = dict(getattr(self.ontology_retriever.graph, "last_traversal_stats", {}) or {})
                 csm_verify = self.symbolic_verifier.match_formula_csm_lmc(
                     ("IMP", "a", ("OR", "a", "a")),
@@ -3269,6 +3396,21 @@ class CloverS23OnDeviceSystem:
 
             active_gen_ids = gen_ids_t2 if gen_ids_t2 else gen_ids_t1
             active_h_seq: np.ndarray | None = h_seq_t2 if len(gen_ids_t2) > 0 else h_seq_t1
+            active_r_seq: Any = None
+            if (
+                active_layer_cap >= 2
+                and self.hybrid_ncm is not None
+                and active_h_seq is not None
+                and isinstance(active_h_seq, np.ndarray)
+                and active_h_seq.shape[0] > 0
+            ):
+                t_c2_seq = time.perf_counter()
+                with self.hybrid_ncm.torch.no_grad():
+                    h_seq_t = self.hybrid_ncm.torch.from_numpy(active_h_seq).float().unsqueeze(0)
+                    active_r_seq = self.hybrid_ncm.hybrid_link(h_seq_t)
+                if isinstance(layer_trace.get("layer2_hybrid_agent"), dict):
+                    layer_trace["layer2_hybrid_agent"]["c2_sequence_plan_tokens"] = int(active_h_seq.shape[0])
+                    layer_trace["layer2_hybrid_agent"]["c2_sequence_plan_ms"] = round((time.perf_counter() - t_c2_seq) * 1000.0, 2)
 
             layer_trace["layer1_lfm3_omni"] = {
                 "enabled": True,
@@ -3326,6 +3468,7 @@ class CloverS23OnDeviceSystem:
                             if repaired_report and repaired_report.get("all_ok"):
                                 reply_text = repaired_reply
                                 active_h_seq = None
+                                active_r_seq = None
                                 compiler_report["all_ok_after_repair"] = True
                             else:
                                 compiler_report["all_ok_after_repair"] = False
@@ -3339,7 +3482,7 @@ class CloverS23OnDeviceSystem:
 
             # ------------------------------------------------------------------
             # 6. C3: Unified 11-Level `NCM` (`VQVAE` + `NextConceptTransformer` + `LexicalPointerDecoder`)
-            #    Uses in-situ `active_h_seq` directly from C1 (`0.00 ms` redundant C1 cost!)
+            #    Uses in-situ `active_h_seq` (from C1) and `active_r_seq` (from C2) directly (`0.00 ms` redundant C1/C2 cost!)
             # ------------------------------------------------------------------
             active_media = (output_type or "text").lower().strip()
             if active_media not in ("image", "video", "audio"):
@@ -3349,6 +3492,7 @@ class CloverS23OnDeviceSystem:
                 rendered_ncm, out_ids, ncm_meta = self.hybrid_ncm.render_plan_through_11level_ncm(
                     reply_text,
                     precomputed_h_seq=active_h_seq,
+                    precomputed_r_seq=active_r_seq,
                     precomputed_gen_ids=active_gen_ids,
                 )
                 if rendered_ncm:
@@ -3458,6 +3602,7 @@ class CloverS23OnDeviceSystem:
         max_active_layer: int = 7,
         allow_internet: bool = True,
         allow_python: bool = True,
+        context: str = "",
     ) -> dict[str, Any]:
         """
         Executes the Laptop Agent's full Clover Retry Cycle (`clover_cycle.retry_cycle`) on the Samsung Galaxy S23:
@@ -3501,11 +3646,16 @@ class CloverS23OnDeviceSystem:
             # 1. Re-gather S1 (Git Memory Repo) & S2 (MemoryIndex Recall + Ontology GraphRAG) Context for `question`
             blocks: list[str] = []
             recall_sys_block = ""
+            qt_terms_retry = self.topic_terms(question)
             if active_layer_cap >= 4 and memory_perm_ok:
                 git_hits = self.git_memory_repo.search_repo_relevant(question, max_files=2, max_chars_per_file=550)
                 for gh in git_hits:
-                    blocks.append(f"[Git Memory Repo '{gh['path']}']: {gh['snippet']}")
-                if git_hits:
+                    rel_p = str(gh.get("path") or "")
+                    snip = str(gh.get("snippet") or "")
+                    if ("MEM-LESSON" in rel_p or rel_p.startswith("lessons/")) and len(qt_terms_retry & self.topic_terms(snip)) < 2:
+                        continue
+                    blocks.append(f"[Git Memory Repo '{rel_p}']: {snip}")
+                if blocks:
                     tools_used.append("layer4_git_memory_repo")
                 if hasattr(self, "memory_index") and self.settings.get("layers", {}).get("recall", True):
                     cur_msgs = self.git_memory_repo.messages(session_id)
@@ -3514,16 +3664,20 @@ class CloverS23OnDeviceSystem:
                     if r_blk:
                         recall_sys_block = r_blk
                         tools_used.append("s2_turn_level_memory_recall")
-            if active_layer_cap >= 5 and self.settings.get("layers", {}).get("ontology", True):
-                ont_items = self.ontology_retriever.retrieve(question, max_entities=3, max_paths=4)
+            explicit_cve_retry = bool(re.search(r"\b(?:CVE-\d{4}-\d+|CWE-\d+|CAPEC-\d+)\b", question or "", re.I))
+            tool_req_retry = bool(self.asked_tools(question)) and not explicit_cve_retry
+            if active_layer_cap >= 5 and self.settings.get("layers", {}).get("ontology", True) and not tool_req_retry:
+                clean_ont_retry = self._LINKS_AND_PATHS.sub(" ", question or "")
+                ont_items = self.ontology_retriever.retrieve(clean_ont_retry, max_entities=3, max_paths=4)
                 if ont_items:
                     paths_first = sorted(ont_items, key=lambda x: 0 if getattr(x, "kind", "") == "path" else 1)
                     blocks.append(f"[Ontology GraphRAG Evidence]:\n{self._render_ontology(paths_first)}")
                     tools_used.append("layer5_ontology_graphrag")
 
             notes = ("\n\n" + "\n\n".join(blocks)) if blocks else ""
+            q_with_context = (context + question) if context else question
             web_ctx = ""
-            if not blocks and allow_internet and C.needs_web(question):
+            if not blocks and allow_internet and C.needs_web(q_with_context):
                 q_web = C.web_query(question)
                 if q_web:
                     obs = self.search_tool.research(q_web) if hasattr(self.search_tool, "research") else self.search_tool.execute(q_web)
@@ -3539,7 +3693,7 @@ class CloverS23OnDeviceSystem:
             sys_txt = self._build_system_prompt(allow_internet=False, allow_python=False, use_hybrid_agent_format=False)
             if recall_sys_block:
                 sys_txt = f"{sys_txt}<|im_start|>system\n{recall_sys_block}<|im_end|>\n"
-            convo_turns: list[tuple[str, str]] = [(question, previous_answer)]
+            convo_turns: list[tuple[str, str]] = [(q_with_context, previous_answer)]
 
             def _run_c_prompt(user_msg: str, use_latent: bool = False, max_tok: int = 384) -> str:
                 nonlocal c_total_ms, total_gen_tokens
@@ -3582,13 +3736,13 @@ class CloverS23OnDeviceSystem:
 
             def solve(k: int, note: str | None = None) -> str:
                 ctx = notes + (web_ctx if k == 2 else "")
-                s_prompt = C.second_solve_prompt(question + ctx, question, k=k, note=note)
+                s_prompt = C.second_solve_prompt(q_with_context + ctx, question, k=k, note=note)
                 return _run_c_prompt(s_prompt, use_latent=(k == 2), max_tok=384)
 
             def python_solve(note: str | None = None) -> str:
                 if not allow_python:
                     return ""
-                p_prompt = C.python_solve_prompt(question + notes, note=note)
+                p_prompt = C.python_solve_prompt(q_with_context + notes, note=note)
                 raw_py = _run_c_prompt(p_prompt, use_latent=False, max_tok=384)
                 py_blocks = self.extract_python_from_reply(raw_py)
                 code = py_blocks[0] if py_blocks else raw_py
@@ -4065,7 +4219,12 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
             ext_ledger = dm.get("direction_b_mobile_soc_4tier_ledger", {})
             dev_p = sys_s23.device_profile
             eng_mode = "gpu" if sys_s23.settings.get("engine") in ("gpu", "adreno") else "cpu"
-            if self.path.startswith("/api/status"):
+            if self.path.startswith("/v1/models"):
+                self._send({
+                    "object": "list",
+                    "data": [{"id": "lfm3-omni-2b", "object": "model", "owned_by": "clover-ai-studio"}],
+                })
+            elif self.path.startswith("/api/status"):
                 self._send({
                     "status": "ready",
                     "mode": "lfm3",
@@ -4389,6 +4548,12 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 return
             if self.path == "/api/shutdown":
                 self._send({"shutdown": True})
+                if hasattr(sys_s23, "memory_index"):
+                    try:
+                        sys_s23.memory_index.stop()
+                    except Exception:
+                        pass
+                threading.Thread(target=self.server.shutdown, daemon=True).start()
                 return
             if self.path.startswith("/api/feedback"):
                 try:
@@ -4746,6 +4911,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     if how_retry and prev_q and prev_a and not img_b64_in and not att_files_in:
                         emit_sse({"type": "cycle", "stage": "check"})
                         fb_text = str(payload.get("feedback") or (prompt if how_retry == "said" else "") or "").strip()
+                        ctx_before = C.context_before(hist_msgs, last_ex[0]) if (how_retry == "said" and last_ex) else ""
                         emit_sse({"type": "cycle", "stage": "second"})
                         res = sys_s23.run_retry_cycle(
                             question=prev_q if how_retry == "said" else prompt,
@@ -4755,6 +4921,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                             max_active_layer=max_layer,
                             allow_internet=allow_net,
                             allow_python=allow_py,
+                            context=ctx_before,
                         )
                     else:
                         tools_mode = str(payload.get("tools_mode") or sys_s23.settings.get("tools") or "ask")
@@ -4784,28 +4951,29 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                             deny_once=deny_once_list,
                             interactive_ask=True,
                         )
-                        # If a tool permission is set to `Ask`, emit `permission` SSE event and wait for `/api/decision`
+                        # If a tool permission is set to `Ask` (or is a risky shell command), emit `permission` SSE event and wait for `/api/decision`
                         if res.get("permission_required"):
                             pr_req = res["permission_required"]
                             perm_k = pr_req.get("permission") or "code"
                             t_name = pr_req.get("tool") or perm_k
+                            risk_why = pr_req.get("risky")
                             emit_sse({"type": "tool_call", "id": "tc1", "name": t_name, "arguments": {"query": pr_req.get("detail", "")}})
                             rid = uuid.uuid4().hex[:12]
                             pend_ev = {"event": threading.Event(), "decision": "deny"}
                             turn_obj["pending"][rid] = pend_ev
-                            emit_sse({
+                            emit_sse(dict({
                                 "type": "permission",
                                 "turn_id": turn_id,
                                 "request_id": rid,
                                 "tool": perm_k,
                                 "label": pr_req.get("label") or perm_k,
                                 "detail": pr_req.get("detail") or "",
-                            })
+                            }, **({"risky": risk_why} if risk_why else {})))
                             pend_ev["event"].wait(timeout=900)
                             turn_obj["pending"].pop(rid, None)
                             dec_made = pend_ev["decision"]
                             emit_sse({"type": "permission_decided", "request_id": rid, "decision": dec_made})
-                            if dec_made == "always":
+                            if dec_made == "always" and not risk_why:
                                 sys_s23.update_permissions({perm_k: "allow"})
                             if dec_made in ("once", "always") and not turn_obj["cancel"].is_set():
                                 allow_once_list.append(perm_k)
@@ -4925,6 +5093,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
 
             if how_retry and prev_q and prev_a and not img_b64_in and not att_files_in:
                 fb_text = str(payload.get("feedback") or (prompt if how_retry == "said" else "") or "").strip()
+                ctx_before = C.context_before(hist_msgs, last_ex[0]) if (how_retry == "said" and last_ex) else ""
                 res = sys_s23.run_retry_cycle(
                     question=prev_q if how_retry == "said" else prompt,
                     previous_answer=prev_a,
@@ -4933,6 +5102,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     max_active_layer=max_layer,
                     allow_internet=allow_net,
                     allow_python=allow_py,
+                    context=ctx_before,
                 )
                 self._send(res)
                 return
@@ -4978,6 +5148,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 return
             self._send({"error": "not_found"}, code=404)
 
+    ThreadingHTTPServer.allow_reuse_address = True
     srv = ThreadingHTTPServer((host, port), _S23Handler)
     print(
         f"[Clover-S23] Per-Device Secret-Locked LFM3-1.7B Server ({CLOVER_S23_APP_PACKAGE}) listening on http://{host}:{port}",

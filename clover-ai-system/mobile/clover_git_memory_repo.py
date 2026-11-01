@@ -638,6 +638,7 @@ class CloverMemoryGitRepo:
                                 fp.unlink()
                         except Exception:
                             pass
+                self._git_exclude(w_path, [])
             found["folders"] = []
             found["index"] = None
             found["context_at"] = None
@@ -881,8 +882,11 @@ class CloverMemoryGitRepo:
         if can_write_idx and new_idx_body != old_idx_body:
             idx_fp.write_text(new_idx_body, encoding="utf-8")
 
-        # NEVER commit inside a user's external project repository!
-        if commit and is_memory_repo:
+        # NEVER commit inside a user's external project repository; instead list context files in .git/info/exclude
+        if not is_memory_repo:
+            known_ctx = list(folder_contexts_written) + ([root_index_name] if can_write_idx else [])
+            self._git_exclude(root_dir, known_ctx)
+        elif commit and is_memory_repo:
             self._refresh_five_stage_summaries()
             rc_st, out_st, _ = self._run_git(["status", "--porcelain"], cwd=self.default_repo_dir)
             if rc_st == 0 and out_st:
@@ -894,6 +898,39 @@ class CloverMemoryGitRepo:
             "folder_context_files": folder_contexts_written,
             "committed_in_memory_repo": bool(commit and is_memory_repo),
         }
+
+    EXCLUDE_START = "# clover:context - files Clover AI Studio keeps (not part of the project)"
+    EXCLUDE_END = "# clover:context end"
+
+    def _git_exclude(self, root: Path, rels: list[str]) -> None:
+        """Lists Clover's context files in `.git/info/exclude` (never `.gitignore`, never committed) so `git status`
+        stays clean in the user's repo. Uses exact paths, never wildcards."""
+        git = root / ".git"
+        if git.is_file():
+            try:
+                m = re.match(r"gitdir:\s*(.+)", git.read_text(encoding="utf-8", errors="replace").strip())
+                git = (root / m.group(1)).resolve() if m else git
+            except OSError:
+                return
+        if not git.is_dir():
+            return
+        ex = git / "info" / "exclude"
+        try:
+            old = ex.read_text(encoding="utf-8", errors="replace") if ex.is_file() else ""
+        except OSError:
+            return
+        body = re.sub(re.escape(self.EXCLUDE_START) + r"[\s\S]*?" + re.escape(self.EXCLUDE_END) + r"\n?", "", old).rstrip("\n")
+        if rels:
+            block = "\n".join([self.EXCLUDE_START, *(f"/{r.lstrip('/')}" for r in sorted(set(rels))), self.EXCLUDE_END])
+            new = (body + "\n\n" + block if body else block) + "\n"
+        else:
+            new = (body + "\n") if body else ""
+        if new != old:
+            try:
+                ex.parent.mkdir(parents=True, exist_ok=True)
+                ex.write_text(new, encoding="utf-8")
+            except OSError:
+                pass
 
     # ------------------------------------------------------------------
     # 0b. 5-Stage `clover_repo.py` Interface (`sessions/`, `execution/`, `outcomes/`, `growth/`, `config/`)
@@ -1442,16 +1479,26 @@ class CloverMemoryGitRepo:
         with self.lock:
             sfiles = self.session_files()
             fp = sfiles.get(sid_clean) or sfiles.get(sid)
-            self._session_index.pop(sid_clean, None)
-            self._session_index.pop(sid, None)
             deleted = False
             if fp and fp.is_file():
-                fp.unlink()
-                deleted = True
+                for i in range(5):
+                    try:
+                        fp.unlink()
+                        deleted = True
+                        break
+                    except PermissionError:
+                        if i == 4:
+                            return False
+                        time.sleep(0.05)
+            self._session_index.pop(sid_clean, None)
+            self._session_index.pop(sid, None)
             md_fp = self.default_repo_dir / "sessions" / f"session-{sid_clean}.md"
             if md_fp.is_file():
-                md_fp.unlink()
-                deleted = True
+                try:
+                    md_fp.unlink()
+                    deleted = True
+                except OSError:
+                    pass
             for nf in (self.default_repo_dir / "growth" / "notes").glob("*/*.jsonl"):
                 recs = self._read_jsonl(nf)
                 keep = [r for r in recs if r.get("session") not in (sid_clean, sid)]
@@ -1902,7 +1949,9 @@ class CloverMemoryGitRepo:
         total_bytes = 0
         if mdir.is_dir():
             for fp in mdir.iterdir():
-                if fp.is_file():
+                if fp.is_file() and (
+                    re.fullmatch(r"[0-9a-f]{24,32}\.[a-z0-9]{2,5}", fp.name) or fp.name.startswith("clover_")
+                ):
                     try:
                         files_cnt += 1
                         total_bytes += fp.stat().st_size
@@ -1965,10 +2014,13 @@ class CloverMemoryGitRepo:
         removed = 0
         if mdir.is_dir():
             for fp in list(mdir.iterdir()):
-                if fp.is_file():
+                # Only delete files Clover named by content hash (or clover_ prefix): the folder may be a shared user/cloud folder
+                if fp.is_file() and (
+                    re.fullmatch(r"[0-9a-f]{24,32}\.[a-z0-9]{2,5}", fp.name) or fp.name.startswith("clover_")
+                ):
                     try:
                         fp.unlink()
                         removed += 1
                     except OSError:
                         pass
-        return {"ok": True, "removed": removed, **self.get_storage_locations()}
+        return {"ok": True, "removed": removed, "deleted": removed, **self.get_storage_locations()}

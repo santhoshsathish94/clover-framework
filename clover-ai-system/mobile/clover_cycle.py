@@ -315,13 +315,13 @@ def final_answer(question, text):
 
 
 def same(a, b):
+    """Two answers agree: equal letters, or numbers within 0.2% (written precision). 20.1 and 20 differ: a correct 20 from
+    the checks confirmed a wrong $20.10 when whole-number rounding counted as agreement (2026-11-01)."""
     if a is None or b is None:
         return False
     if isinstance(a, str) or isinstance(b, str):
         return a == b
-    if abs(a - b) <= 1e-6 * max(1.0, abs(a), abs(b)):
-        return True
-    return (float(b).is_integer() and round(a) == b) or (float(a).is_integer() and round(b) == a)
+    return abs(a - b) <= 0.002 * max(1.0, abs(a), abs(b))
 
 
 def second_solve_prompt(question_text, question, k=1, note=None):
@@ -391,6 +391,36 @@ def last_exchange(history):
         elif m.get("role") == "user" and not is_retry_message(m):
             return m, answer
     return None
+
+
+_FOLLOW = re.compile(r"^\W*(?:and|but|so|then|also|now|ok(?:ay)?|what\s+about|how\s+about|what\s+if)\b|"
+                     r"\b(?:it|that|this|those|these|them|they|same|instead)\b", re.I)
+
+
+def follow_up(question):
+    """A message that leans on the turn before it ("And how much would 30 pens cost?", "what about it?")."""
+    return bool(_FOLLOW.search(question or "")) or len(_content(question)) < 3
+
+
+def context_before(history, msg, chars=700):
+    """The exchange before `msg` (a user message in `history`) when `msg` follows from it, as text that goes before the
+    question in the checks; "" otherwise. A retry of "And how much would 30 pens cost?" was solved without "3 for $2"."""
+    if not isinstance(msg.get("content"), str) or not follow_up(msg["content"]):
+        return ""
+    at = next((i for i, m in enumerate(history or []) if m is msg), None)
+    q = a = None
+    for m in reversed((history or [])[:at] if at else []):
+        if a is None:
+            if m.get("role") == "assistant" and isinstance(m.get("content"), str) and m["content"].strip():
+                a = m["content"]
+        elif m.get("role") == "user" and isinstance(m.get("content"), str) and not is_retry_message(m):
+            q = m["content"]
+            break
+    if not (q and a):
+        return ""
+    clip = lambda s: " ".join(s.split())[:chars]  # noqa: E731
+    return (f"Earlier in this conversation the user asked: \"{clip(q)}\"\nThe answer was: \"{clip(a)}\"\n"
+            "The question below follows from that exchange.\n\n")
 
 
 def _fmt(v):
@@ -585,8 +615,12 @@ def retry_cycle(question, previous, feedback, rewrite, solve=None, code_check=No
             head += f" **{_fmt(v1)}**" + _dissent(vals, v1, program_at)
             if mine is not None:
                 head += ", so my earlier answer" + ("" if is_choice(question) else f" ({_fmt(mine)})") + " was wrong"
-                info.update(lesson=lesson_text(question, [f"{words[n]} independent solutions gave {_fmt(v1)}, not "
-                                                          f"{_fmt(mine)}"], detail), lesson_kind="user")
+                # a lesson needs more than a majority of the model's own solves: what the user said, or the program
+                # (a wrong overturn became a "user_stated_belief" and leaked into an unrelated question, 2026-11-01)
+                if detail or (program_at is not None and program_at in best[1]):
+                    info.update(lesson=lesson_text(question, [f"{words[n]} independent solutions gave {_fmt(v1)}, not "
+                                                              f"{_fmt(mine)}"], detail),
+                                lesson_kind="user" if detail else "verified")
             return head + ". Here is the working:\n\n" + _as_answer(question, texts[best[1][0]], v1), info
         if backing:
             info["action"] = "kept"
