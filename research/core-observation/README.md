@@ -104,10 +104,15 @@ each stack moves a message through its layers.
 S2's note writer started a C1 call at 476.3 s (`traces/framework.jsonl`, thread `s2-memory-index`). The message
 "What is the capital of Australia?" arrived at 481.5 s. From 481.5 s to 527.1 s both threads called the same C1
 engine (`overlap.py`: 3 overlapping spans). Both outputs from that window are unreadable: the reply, and the note.
-No other turn overlapped a background call, and every other reply reads normally. The same weights gave readable
-replies on this machine in the earlier phone report (`s23-omni2b/lfm3_omni_s23_live_phone_report.json`,
-device `Ubuntu-noble-latest-amd64-base.zst`: "What is the capital of Japan?" -> "Tokyo"). That the overlap caused
-the unreadable text is consistent with all of this, but has not been tested by repeating it.
+No other turn overlapped a background call, and every other reply reads normally.
+
+Tested afterwards in a separate process (`harness/c1_concurrency.py`), with the two prompts from that window:
+- **Alone**, twice each: identical output every time ("Canberra is the capital of Australia." and "User: Hi").
+- **From two threads at once**: all 6 outputs garbled, in 3 of 3 runs.
+
+The C1 engine is not safe to call from two threads. The note writer checks that the studio is idle only before it
+starts (`_idle_note_writer`, `_is_studio_idle`: no turn running and 8 s since the last one). Nothing holds the
+engine while it runs, so a message that arrives during its 14 s prefill runs alongside it.
 
 In the laptop stack, the turn holds a gate (`SideGate`) that stops side completions, and llama-server serves one
 request at a time. No overlapping C1 calls were recorded.
@@ -139,6 +144,11 @@ The handler uses names the loaded copies do not have:
 The runtime also loads C3's model code (`ncm_runtime.py`, `models/`) from the base folder's `ncm/`. In the
 repository, `ncm_runtime.py` is absent and `models/*.py` differs from `src/tools/hybrid-ncm-k3/models/`; the copy
 used came from k3's `s23-omni2b` staging folder.
+
+The cause is the loop at `s23_on_device_clover.py` 92-94: it inserts each folder at position 0, so folders listed
+later come before the runtime's own. This applies to the repository layout, which is what any server or desktop
+running from a checkout gets. The phone-format folder on k3 has no module names that clash
+(`harness/shadow_check.sh`).
 
 ### Semantics is common; the hand-off around it is not
 Both stacks loaded the same `semantics.py`. The laptop's copy differs only in line endings (CRLF), so a
@@ -172,7 +182,6 @@ byte-for-byte check reports a difference between the two machines.
 These are this machine and these settings; they are not the phone or the laptop.
 
 ## Not established
-- That the overlap caused the unreadable text (not repeated without the background writer).
 - Why S2 recall's threshold passed "Hi" and "How are you?" for unrelated questions (turns 10, 15).
 - Whether `_dec_model_aligned` ever changes C1's text in a way that reaches the reply (shorter in 3 turns here; the
   reply was C1's text in all 11).
@@ -184,6 +193,6 @@ These are this machine and these settings; they are not the phone or the laptop.
   thread). `traces/*-turns.jsonl`: what each stack streamed back per message. `traces/*-summary.md`: per-turn
   sequences (`harness/summarize.py`).
 - `harness/`: tracer, launchers, driver, k3 service script, and the analysis scripts (`overlap.py`, `counts.py`,
-  `show_turn.py`, `c1_stats.py`, `c3_vs_c1.py`).
+  `show_turn.py`, `c1_stats.py`, `c3_vs_c1.py`, `c1_concurrency.py`, `shadow_check.sh`).
 - k3: `/opt/clover-k3/core-observe` (services `clover-observe-fw`, `clover-observe-laptop`; stop with
   `harness/k3.sh stop`).
