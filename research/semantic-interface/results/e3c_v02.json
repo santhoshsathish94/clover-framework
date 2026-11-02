@@ -1,0 +1,8016 @@
+{
+ "system": "CSI 0.2-lexical",
+ "parser": "en_core_web_trf",
+ "lemmas": "/opt/clover-k3/meaning-core/csi/frozen/morph-verb-v1.1",
+ "senses": "/opt/clover-k3/meaning-core/csi/frozen/dictionary-v1.1",
+ "P": {
+  "n": 288,
+  "balanced_accuracy": 0.8299,
+  "coverage": 1.0,
+  "per_phenomenon_accuracy": {
+   "dist:other_agent": 1.0,
+   "dist:other_patient": 1.0,
+   "dist:other_predicate": 1.0,
+   "dist:other_predicate_passive": 1.0,
+   "equiv:synonym_agent": 0.4583,
+   "equiv:synonym_patient": 0.8333,
+   "equiv:synonym_predicate": 0.6667,
+   "equiv:synonym_predicate_passive": 0.6667
+  },
+  "correct": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   1,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   1,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   1,
+   1,
+   0,
+   1,
+   1,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "n_errors": 49,
+  "errors": [
+   {
+    "a": "The visitor got the painting.",
+    "b": "The visitor acquired the painting.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "get",
+      "b": "acquire"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "get",
+       {
+        "status": "chosen",
+        "synset": "oewn-01435927-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "painting",
+        {
+         "status": "chosen",
+         "synset": "oewn-03882197-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "acquire",
+       {
+        "status": "chosen",
+        "synset": "oewn-02215637-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "painting",
+        {
+         "status": "chosen",
+         "synset": "oewn-03882197-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor got the painting.",
+    "b": "The painting was acquired by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "get",
+      "b": "acquire"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "get",
+       {
+        "status": "chosen",
+        "synset": "oewn-01435927-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "painting",
+        {
+         "status": "chosen",
+         "synset": "oewn-03882197-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "acquire",
+       {
+        "status": "chosen",
+        "synset": "oewn-02215637-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "painting",
+        {
+         "status": "chosen",
+         "synset": "oewn-03882197-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker got the painting.",
+    "b": "The worker acquired the painting.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "get",
+      "b": "acquire"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "get",
+       {
+        "status": "chosen",
+        "synset": "oewn-01435927-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "painting",
+        {
+         "status": "chosen",
+         "synset": "oewn-03882197-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "acquire",
+       {
+        "status": "chosen",
+        "synset": "oewn-02215637-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "painting",
+        {
+         "status": "chosen",
+         "synset": "oewn-03882197-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker got the painting.",
+    "b": "The painting was acquired by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "get",
+      "b": "acquire"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "get",
+       {
+        "status": "chosen",
+        "synset": "oewn-01435927-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "painting",
+        {
+         "status": "chosen",
+         "synset": "oewn-03882197-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "acquire",
+       {
+        "status": "chosen",
+        "synset": "oewn-02215637-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "painting",
+        {
+         "status": "chosen",
+         "synset": "oewn-03882197-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-10501296-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist retrieved the suitcase.",
+    "b": "The artist recovered the suitcase.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "retrieve",
+      "b": "recover"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "retrieve",
+       {
+        "status": "chosen",
+        "synset": "oewn-01436442-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "suitcase",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02776843-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recover",
+       {
+        "status": "chosen",
+        "synset": "oewn-02252785-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "suitcase",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02776843-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist retrieved the suitcase.",
+    "b": "The suitcase was recovered by the artist.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "retrieve",
+      "b": "recover"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "retrieve",
+       {
+        "status": "chosen",
+        "synset": "oewn-01436442-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "suitcase",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02776843-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recover",
+       {
+        "status": "chosen",
+        "synset": "oewn-02252785-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "suitcase",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02776843-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker retrieved the suitcase.",
+    "b": "The worker recovered the suitcase.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "retrieve",
+      "b": "recover"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "retrieve",
+       {
+        "status": "chosen",
+        "synset": "oewn-01436442-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "suitcase",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02776843-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recover",
+       {
+        "status": "chosen",
+        "synset": "oewn-02252785-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "suitcase",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02776843-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker retrieved the suitcase.",
+    "b": "The suitcase was recovered by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "retrieve",
+      "b": "recover"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "retrieve",
+       {
+        "status": "chosen",
+        "synset": "oewn-01436442-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "suitcase",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02776843-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recover",
+       {
+        "status": "chosen",
+        "synset": "oewn-02252785-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "suitcase",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02776843-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor retrieved the suitcase.",
+    "b": "The neighbor recovered the suitcase.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "retrieve",
+      "b": "recover"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "retrieve",
+       {
+        "status": "chosen",
+        "synset": "oewn-01436442-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "suitcase",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02776843-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recover",
+       {
+        "status": "chosen",
+        "synset": "oewn-02252785-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "suitcase",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02776843-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor retrieved the suitcase.",
+    "b": "The suitcase was recovered by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "retrieve",
+      "b": "recover"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "retrieve",
+       {
+        "status": "chosen",
+        "synset": "oewn-01436442-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "suitcase",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02776843-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recover",
+       {
+        "status": "chosen",
+        "synset": "oewn-02252785-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "suitcase",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02776843-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor published the book.",
+    "b": "The visitor printed the book.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "publish",
+      "b": "print"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "publish",
+       {
+        "status": "chosen",
+        "synset": "oewn-01749530-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "book",
+        {
+         "status": "chosen",
+         "synset": "oewn-06422547-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "print",
+       {
+        "status": "chosen",
+        "synset": "oewn-01750523-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "book",
+        {
+         "status": "chosen",
+         "synset": "oewn-02873453-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor published the book.",
+    "b": "The neighbor printed the book.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "publish",
+      "b": "print"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "publish",
+       {
+        "status": "chosen",
+        "synset": "oewn-01749530-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "book",
+        {
+         "status": "chosen",
+         "synset": "oewn-06422547-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "print",
+       {
+        "status": "chosen",
+        "synset": "oewn-01750523-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "book",
+        {
+         "status": "chosen",
+         "synset": "oewn-02873453-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor published the book.",
+    "b": "The book was printed by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "publish",
+      "b": "print"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "publish",
+       {
+        "status": "chosen",
+        "synset": "oewn-01749530-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "book",
+        {
+         "status": "chosen",
+         "synset": "oewn-06422547-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "print",
+       {
+        "status": "chosen",
+        "synset": "oewn-01750523-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "book",
+        {
+         "status": "chosen",
+         "synset": "oewn-06422547-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist published the book.",
+    "b": "The artist printed the book.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "publish",
+      "b": "print"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "publish",
+       {
+        "status": "chosen",
+        "synset": "oewn-01749530-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "book",
+        {
+         "status": "chosen",
+         "synset": "oewn-06422547-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "print",
+       {
+        "status": "chosen",
+        "synset": "oewn-01752992-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "book",
+        {
+         "status": "chosen",
+         "synset": "oewn-02873453-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist published the book.",
+    "b": "The book was printed by the artist.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "publish",
+      "b": "print"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "publish",
+       {
+        "status": "chosen",
+        "synset": "oewn-01749530-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "book",
+        {
+         "status": "chosen",
+         "synset": "oewn-06422547-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "print",
+       {
+        "status": "chosen",
+        "synset": "oewn-01752992-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "book",
+        {
+         "status": "chosen",
+         "synset": "oewn-06422547-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor changed the dress.",
+    "b": "The visitor altered the dress.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "change",
+      "b": "alter"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "change",
+       {
+        "status": "chosen",
+        "synset": "oewn-00169266-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "dress",
+        {
+         "status": "chosen",
+         "synset": "oewn-03241438-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "alter",
+       {
+        "status": "chosen",
+        "synset": "oewn-01671027-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "dress",
+        {
+         "status": "chosen",
+         "synset": "oewn-03241438-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor changed the dress.",
+    "b": "The dress was altered by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "change",
+      "b": "alter"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "change",
+       {
+        "status": "chosen",
+        "synset": "oewn-00169266-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "dress",
+        {
+         "status": "chosen",
+         "synset": "oewn-03241438-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "alter",
+       {
+        "status": "chosen",
+        "synset": "oewn-01671027-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "dress",
+        {
+         "status": "chosen",
+         "synset": "oewn-02759103-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The customer changed the dress.",
+    "b": "The customer altered the dress.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "change",
+      "b": "alter"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "change",
+       {
+        "status": "chosen",
+        "synset": "oewn-00163059-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10004189-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "dress",
+        {
+         "status": "chosen",
+         "synset": "oewn-03241438-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "alter",
+       {
+        "status": "chosen",
+        "synset": "oewn-01671027-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10004189-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "dress",
+        {
+         "status": "chosen",
+         "synset": "oewn-03241438-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The customer changed the dress.",
+    "b": "The dress was altered by the customer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "change",
+      "b": "alter"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "change",
+       {
+        "status": "chosen",
+        "synset": "oewn-00163059-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10004189-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "dress",
+        {
+         "status": "chosen",
+         "synset": "oewn-03241438-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "alter",
+       {
+        "status": "chosen",
+        "synset": "oewn-01671027-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "dress",
+        {
+         "status": "chosen",
+         "synset": "oewn-03241438-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "customer",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10004189-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer changed the dress.",
+    "b": "The engineer altered the dress.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "change",
+      "b": "alter"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "change",
+       {
+        "status": "chosen",
+        "synset": "oewn-00163059-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "dress",
+        {
+         "status": "chosen",
+         "synset": "oewn-03241438-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "alter",
+       {
+        "status": "chosen",
+        "synset": "oewn-01671027-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "dress",
+        {
+         "status": "chosen",
+         "synset": "oewn-03241438-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer changed the dress.",
+    "b": "The dress was altered by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "change",
+      "b": "alter"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "change",
+       {
+        "status": "chosen",
+        "synset": "oewn-00163059-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "dress",
+        {
+         "status": "chosen",
+         "synset": "oewn-03241438-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "alter",
+       {
+        "status": "chosen",
+        "synset": "oewn-01671027-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "dress",
+        {
+         "status": "chosen",
+         "synset": "oewn-02759103-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer split the cake.",
+    "b": "The engineer divided the cake.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "split",
+      "b": "divide"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "split",
+       {
+        "status": "chosen",
+        "synset": "oewn-01559354-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "cake",
+        {
+         "status": "chosen",
+         "synset": "oewn-07679644-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "divide",
+       {
+        "status": "chosen",
+        "synset": "oewn-02473085-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "cake",
+        {
+         "status": "chosen",
+         "synset": "oewn-07679644-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer split the cake.",
+    "b": "The cake was divided by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "split",
+      "b": "divide"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "split",
+       {
+        "status": "chosen",
+        "synset": "oewn-01559354-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "cake",
+        {
+         "status": "chosen",
+         "synset": "oewn-07679644-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "divide",
+       {
+        "status": "chosen",
+        "synset": "oewn-02473085-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "cake",
+        {
+         "status": "chosen",
+         "synset": "oewn-07679644-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker split the cake.",
+    "b": "The worker divided the cake.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "split",
+      "b": "divide"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "split",
+       {
+        "status": "chosen",
+        "synset": "oewn-01559354-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "cake",
+        {
+         "status": "chosen",
+         "synset": "oewn-07679644-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "divide",
+       {
+        "status": "chosen",
+        "synset": "oewn-02473085-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "cake",
+        {
+         "status": "chosen",
+         "synset": "oewn-07679644-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker split the cake.",
+    "b": "The cake was divided by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "split",
+      "b": "divide"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "split",
+       {
+        "status": "chosen",
+        "synset": "oewn-01559354-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "cake",
+        {
+         "status": "chosen",
+         "synset": "oewn-07679644-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "divide",
+       {
+        "status": "chosen",
+        "synset": "oewn-02473085-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "cake",
+        {
+         "status": "chosen",
+         "synset": "oewn-07679644-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter split the cake.",
+    "b": "The carpenter divided the cake.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "split",
+      "b": "divide"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "split",
+       {
+        "status": "chosen",
+        "synset": "oewn-01559354-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "cake",
+        {
+         "status": "chosen",
+         "synset": "oewn-07679644-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "divide",
+       {
+        "status": "chosen",
+        "synset": "oewn-02473085-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "cake",
+        {
+         "status": "chosen",
+         "synset": "oewn-07679644-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter split the cake.",
+    "b": "The cake was divided by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "split",
+      "b": "divide"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "split",
+       {
+        "status": "chosen",
+        "synset": "oewn-01559354-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "cake",
+        {
+         "status": "chosen",
+         "synset": "oewn-07679644-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "divide",
+       {
+        "status": "chosen",
+        "synset": "oewn-02473085-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "cake",
+        {
+         "status": "chosen",
+         "synset": "oewn-02940853-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor assisted the engineer.",
+    "b": "The neighbor aided the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "assist",
+      "b": "aid"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "assist",
+       {
+        "status": "chosen",
+        "synset": "oewn-02419840-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "aid",
+       {
+        "status": "chosen",
+        "synset": "oewn-02553283-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor assisted the engineer.",
+    "b": "The engineer was aided by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "assist",
+      "b": "aid"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "assist",
+       {
+        "status": "chosen",
+        "synset": "oewn-02419840-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "aid",
+       {
+        "status": "chosen",
+        "synset": "oewn-02553283-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker assisted the neighbor.",
+    "b": "The worker aided the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "assist",
+      "b": "aid"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "assist",
+       {
+        "status": "chosen",
+        "synset": "oewn-02546367-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "aid",
+       {
+        "status": "chosen",
+        "synset": "oewn-02553283-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker assisted the neighbor.",
+    "b": "The neighbor was aided by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "assist",
+      "b": "aid"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "assist",
+       {
+        "status": "chosen",
+        "synset": "oewn-02546367-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "aid",
+       {
+        "status": "chosen",
+        "synset": "oewn-02553283-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-10501296-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker enrolled the artist.",
+    "b": "The artist was recruited by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "enroll",
+      "b": "recruit"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "enroll",
+       {
+        "status": "single_meaning",
+        "synset": "oewn-02476750-v",
+        "upos": "VERB",
+        "usage_trained": false
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recruit",
+       {
+        "status": "chosen",
+        "synset": "oewn-02245101-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-10501296-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The director noticed the tray.",
+    "b": "The manager noticed the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "director",
+      "b": "manager"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02158938-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "director",
+        {
+         "status": "chosen",
+         "synset": "oewn-10034684-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "manager",
+        {
+         "status": "chosen",
+         "synset": "oewn-09951098-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The director moved the chest.",
+    "b": "The manager moved the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "director",
+      "b": "manager"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "director",
+        {
+         "status": "chosen",
+         "synset": "oewn-10034684-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-05560240-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "manager",
+        {
+         "status": "chosen",
+         "synset": "oewn-09951098-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-05560240-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The director moved the tray.",
+    "b": "The manager moved the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "director",
+      "b": "manager"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "director",
+        {
+         "status": "chosen",
+         "synset": "oewn-10034684-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "manager",
+        {
+         "status": "chosen",
+         "synset": "oewn-09951098-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The dealer moved the chest.",
+    "b": "The trader moved the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "dealer",
+      "b": "trader"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "dealer",
+        {
+         "status": "chosen",
+         "synset": "oewn-10016174-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-03018359-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "trader",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10740102-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-03018359-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The insurgent moved the tray.",
+    "b": "The rebel moved the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "insurgent",
+      "b": "rebel"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "insurgent",
+        {
+         "status": "chosen",
+         "synset": "oewn-10170076-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "rebel",
+        {
+         "status": "chosen",
+         "synset": "oewn-10647730-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The insurgent noticed the package.",
+    "b": "The rebel noticed the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "insurgent",
+      "b": "rebel"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "insurgent",
+        {
+         "status": "chosen",
+         "synset": "oewn-10170076-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "rebel",
+        {
+         "status": "chosen",
+         "synset": "oewn-10647730-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The insurgent noticed the tray.",
+    "b": "The rebel noticed the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "insurgent",
+      "b": "rebel"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "insurgent",
+        {
+         "status": "chosen",
+         "synset": "oewn-10170076-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "rebel",
+        {
+         "status": "chosen",
+         "synset": "oewn-10647730-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The author moved the carton.",
+    "b": "The writer moved the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "author",
+      "b": "writer"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "author",
+        {
+         "status": "chosen",
+         "synset": "oewn-10145714-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01854282-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "writer",
+        {
+         "status": "chosen",
+         "synset": "oewn-10820913-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The author noticed the tray.",
+    "b": "The writer noticed the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "author",
+      "b": "writer"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "author",
+        {
+         "status": "chosen",
+         "synset": "oewn-10145714-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "writer",
+        {
+         "status": "chosen",
+         "synset": "oewn-10820913-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The author noticed the carton.",
+    "b": "The writer noticed the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "author",
+      "b": "writer"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "author",
+        {
+         "status": "chosen",
+         "synset": "oewn-10145714-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "writer",
+        {
+         "status": "chosen",
+         "synset": "oewn-10820913-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The owner noticed the package.",
+    "b": "The proprietor noticed the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "owner",
+      "b": "proprietor"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "owner",
+        {
+         "status": "chosen",
+         "synset": "oewn-10409097-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "proprietor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10408623-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The owner noticed the carton.",
+    "b": "The proprietor noticed the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "owner",
+      "b": "proprietor"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "owner",
+        {
+         "status": "chosen",
+         "synset": "oewn-10409097-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "proprietor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10408623-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-13788477-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The owner noticed the chest.",
+    "b": "The proprietor noticed the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "owner",
+      "b": "proprietor"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02158938-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "owner",
+        {
+         "status": "chosen",
+         "synset": "oewn-10409097-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-03018359-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02158938-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "proprietor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10408623-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-03018359-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter moved the handbag.",
+    "b": "The carpenter moved the purse.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "handbag",
+      "b": "purse"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "handbag",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-02777157-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "purse",
+        {
+         "status": "chosen",
+         "synset": "oewn-04032893-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer moved the marionette.",
+    "b": "The engineer moved the puppet.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "marionette",
+      "b": "puppet"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "marionette",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04031744-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "puppet",
+        {
+         "status": "chosen",
+         "synset": "oewn-04031524-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist moved the marionette.",
+    "b": "The artist moved the puppet.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "marionette",
+      "b": "puppet"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "marionette",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04031744-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-01835473-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "puppet",
+        {
+         "status": "chosen",
+         "synset": "oewn-04031524-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker noticed the marionette.",
+    "b": "The worker noticed the puppet.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "marionette",
+      "b": "puppet"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02158938-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "marionette",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04031744-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       {
+        "status": "chosen",
+        "synset": "oewn-02122959-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "puppet",
+        {
+         "status": "chosen",
+         "synset": "oewn-04031524-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "A": {
+  "n": 78,
+  "balanced_accuracy": 0.6026,
+  "coverage": 1.0,
+  "per_phenomenon_accuracy": {
+   "dist:other_patient": 1.0,
+   "dist:other_predicate": 1.0,
+   "dist:other_predicate_passive": 1.0,
+   "equiv:synonym_patient": 0.6667,
+   "equiv:synonym_predicate": 0.1667,
+   "equiv:synonym_predicate_passive": 0.1667
+  },
+  "correct": [
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   1
+  ],
+  "n_errors": 31,
+  "errors": [
+   {
+    "a": "The worker gone the package.",
+    "b": "The worker travelled the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "go",
+      "b": "travel"
+     },
+     {
+      "type": "tense",
+      "a": "unmarked",
+      "b": "past"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "go",
+       {
+        "status": "chosen",
+        "synset": "oewn-01321509-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "travel",
+       {
+        "status": "chosen",
+        "synset": "oewn-01850858-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker gone the package.",
+    "b": "The package was travelled by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "go",
+      "b": "travel"
+     },
+     {
+      "type": "tense",
+      "a": "unmarked",
+      "b": "past"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "go",
+       {
+        "status": "chosen",
+        "synset": "oewn-01321509-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "travel",
+       {
+        "status": "chosen",
+        "synset": "oewn-01845021-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter gone the package.",
+    "b": "The carpenter travelled the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "go",
+      "b": "travel"
+     },
+     {
+      "type": "tense",
+      "a": "unmarked",
+      "b": "past"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "go",
+       {
+        "status": "chosen",
+        "synset": "oewn-01321509-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-08024575-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "travel",
+       {
+        "status": "chosen",
+        "synset": "oewn-01850858-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter gone the package.",
+    "b": "The package was travelled by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "go",
+      "b": "travel"
+     },
+     {
+      "type": "tense",
+      "a": "unmarked",
+      "b": "past"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "go",
+       {
+        "status": "chosen",
+        "synset": "oewn-01321509-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-08024575-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "travel",
+       {
+        "status": "chosen",
+        "synset": "oewn-01845021-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor gone the package.",
+    "b": "The visitor travelled the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "go",
+      "b": "travel"
+     },
+     {
+      "type": "tense",
+      "a": "unmarked",
+      "b": "past"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "go",
+       {
+        "status": "chosen",
+        "synset": "oewn-01321509-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "travel",
+       {
+        "status": "chosen",
+        "synset": "oewn-01845021-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor gone the package.",
+    "b": "The package was travelled by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "go",
+      "b": "travel"
+     },
+     {
+      "type": "tense",
+      "a": "unmarked",
+      "b": "past"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "go",
+       {
+        "status": "chosen",
+        "synset": "oewn-01321509-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "travel",
+       {
+        "status": "chosen",
+        "synset": "oewn-01845021-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist allowed the package.",
+    "b": "The artist leted the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "allow",
+      "b": "let"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "allow",
+       {
+        "status": "chosen",
+        "synset": "oewn-02260270-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "let",
+       {
+        "status": "chosen",
+        "synset": "oewn-00497754-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist allowed the package.",
+    "b": "The package was leted by the artist.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "allow",
+      "b": "let"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "allow",
+       {
+        "status": "chosen",
+        "synset": "oewn-02260270-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "let",
+       {
+        "status": "chosen",
+        "synset": "oewn-00497754-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "artist",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09831743-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor allowed the tray.",
+    "b": "The neighbor leted the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "allow",
+      "b": "let"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "allow",
+       {
+        "status": "chosen",
+        "synset": "oewn-02260270-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "let",
+       {
+        "status": "chosen",
+        "synset": "oewn-00120604-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor allowed the tray.",
+    "b": "The tray was leted by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "allow",
+      "b": "let"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "allow",
+       {
+        "status": "chosen",
+        "synset": "oewn-02260270-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "let",
+       {
+        "status": "chosen",
+        "synset": "oewn-00120604-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer allowed the chest.",
+    "b": "The engineer leted the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "allow",
+      "b": "let"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "allow",
+       {
+        "status": "chosen",
+        "synset": "oewn-02260270-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-05560240-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "let",
+       {
+        "status": "chosen",
+        "synset": "oewn-00120604-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-03018359-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer allowed the chest.",
+    "b": "The chest was leted by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "allow",
+      "b": "let"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "allow",
+       {
+        "status": "chosen",
+        "synset": "oewn-02260270-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-05560240-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "let",
+       {
+        "status": "chosen",
+        "synset": "oewn-00120604-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-03018359-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor began the tray.",
+    "b": "The visitor started the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "begin",
+      "b": "start"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "begin",
+       {
+        "status": "chosen",
+        "synset": "oewn-00349400-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "start",
+       {
+        "status": "chosen",
+        "synset": "oewn-01868216-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor began the tray.",
+    "b": "The tray was started by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "begin",
+      "b": "start"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "begin",
+       {
+        "status": "chosen",
+        "synset": "oewn-00349400-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "start",
+       {
+        "status": "chosen",
+        "synset": "oewn-01631641-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter began the chest.",
+    "b": "The carpenter started the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "begin",
+      "b": "start"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "begin",
+       {
+        "status": "chosen",
+        "synset": "oewn-00349400-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-03018359-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "start",
+       {
+        "status": "chosen",
+        "synset": "oewn-01868216-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-03018359-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter began the chest.",
+    "b": "The chest was started by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "begin",
+      "b": "start"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "begin",
+       {
+        "status": "chosen",
+        "synset": "oewn-00349400-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-03018359-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "start",
+       {
+        "status": "chosen",
+        "synset": "oewn-01631641-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-03018359-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor began the package.",
+    "b": "The neighbor started the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "begin",
+      "b": "start"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "begin",
+       {
+        "status": "chosen",
+        "synset": "oewn-02685037-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "start",
+       {
+        "status": "chosen",
+        "synset": "oewn-01631641-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor began the package.",
+    "b": "The package was started by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "begin",
+      "b": "start"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "begin",
+       {
+        "status": "chosen",
+        "synset": "oewn-02685037-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "start",
+       {
+        "status": "chosen",
+        "synset": "oewn-01631641-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "package",
+        {
+         "status": "chosen",
+         "synset": "oewn-03876761-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor remained the tray.",
+    "b": "The visitor stayed the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "remain",
+      "b": "stay"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "remain",
+       {
+        "status": "chosen",
+        "synset": "oewn-02733337-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "stay",
+       {
+        "status": "chosen",
+        "synset": "oewn-01347325-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor remained the tray.",
+    "b": "The tray was stayed by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": null,
+      "b": "tray"
+     }
+    ],
+    "notes": [
+     "remain ~ stay: shared meaning (oewn-02733337-v, oewn-01861378-v)",
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "remain",
+       {
+        "status": "chosen",
+        "synset": "oewn-02733337-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "stay",
+       {
+        "status": "chosen",
+        "synset": "oewn-01861378-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG0": [
+        "visitor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10776861-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer remained the carton.",
+    "b": "The engineer stayed the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "remain",
+      "b": "stay"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "remain",
+       {
+        "status": "chosen",
+        "synset": "oewn-02733337-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "stay",
+       {
+        "status": "chosen",
+        "synset": "oewn-01347325-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer remained the carton.",
+    "b": "The carton was stayed by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": null,
+      "b": "carton"
+     }
+    ],
+    "notes": [
+     "remain ~ stay: shared meaning (oewn-02733337-v, oewn-01861378-v)",
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "remain",
+       {
+        "status": "chosen",
+        "synset": "oewn-02733337-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "stay",
+       {
+        "status": "chosen",
+        "synset": "oewn-01861378-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-10077522-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor remained the chest.",
+    "b": "The neighbor stayed the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "remain",
+      "b": "stay"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "remain",
+       {
+        "status": "chosen",
+        "synset": "oewn-02733337-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "stay",
+       {
+        "status": "chosen",
+        "synset": "oewn-01347325-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor remained the chest.",
+    "b": "The chest was stayed by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": null,
+      "b": "chest"
+     }
+    ],
+    "notes": [
+     "remain ~ stay: shared meaning (oewn-02733337-v, oewn-01861378-v)",
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "remain",
+       {
+        "status": "chosen",
+        "synset": "oewn-02733337-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "stay",
+       {
+        "status": "chosen",
+        "synset": "oewn-01861378-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "chest",
+        {
+         "status": "chosen",
+         "synset": "oewn-03018359-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "neighbor",
+        {
+         "status": "chosen",
+         "synset": "oewn-10372030-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer did the carton.",
+    "b": "The engineer made the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "do",
+      "b": "make"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "do",
+       {
+        "status": "chosen",
+        "synset": "oewn-02567910-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-10077522-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "make",
+       {
+        "status": "chosen",
+        "synset": "oewn-00276867-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer did the carton.",
+    "b": "The carton was made by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "do",
+      "b": "make"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "do",
+       {
+        "status": "chosen",
+        "synset": "oewn-02567910-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-10077522-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "make",
+       {
+        "status": "chosen",
+        "synset": "oewn-01624592-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "engineer",
+        {
+         "status": "chosen",
+         "synset": "oewn-09638837-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter did the tray.",
+    "b": "The carpenter made the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "do",
+      "b": "make"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "do",
+       {
+        "status": "chosen",
+        "synset": "oewn-02567910-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "make",
+       {
+        "status": "chosen",
+        "synset": "oewn-01657416-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter did the tray.",
+    "b": "The tray was made by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "do",
+      "b": "make"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "do",
+       {
+        "status": "chosen",
+        "synset": "oewn-02567910-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "make",
+       {
+        "status": "chosen",
+        "synset": "oewn-01624592-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "tray",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-04483494-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker did the carton.",
+    "b": "The worker made the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "do",
+      "b": "make"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "do",
+       {
+        "status": "chosen",
+        "synset": "oewn-02567910-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "make",
+       {
+        "status": "chosen",
+        "synset": "oewn-00276867-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker did the carton.",
+    "b": "The carton was made by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "do",
+      "b": "make"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "do",
+       {
+        "status": "chosen",
+        "synset": "oewn-02567910-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-09655706-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "make",
+       {
+        "status": "chosen",
+        "synset": "oewn-01624592-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG1": [
+        "carton",
+        {
+         "status": "chosen",
+         "synset": "oewn-02974815-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG0": [
+        "worker",
+        {
+         "status": "chosen",
+         "synset": "oewn-10501296-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter moved the shop.",
+    "b": "The carpenter moved the store.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "shop",
+      "b": "store"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-02360955-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "shop",
+        {
+         "status": "chosen",
+         "synset": "oewn-04610439-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       {
+        "status": "chosen",
+        "synset": "oewn-02360955-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-09916137-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "store",
+        {
+         "status": "chosen",
+         "synset": "oewn-04209460-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "heldout3": {
+  "n": 627,
+  "balanced_accuracy": 0.994,
+  "coverage": 1.0,
+  "per_phenomenon_accuracy": {
+   "dist:attempt": 1.0,
+   "dist:dative_roles_swapped": 1.0,
+   "dist:future": 1.0,
+   "dist:modality": 1.0,
+   "dist:negation": 1.0,
+   "dist:passive_vs_negated_active": 1.0,
+   "dist:predicate": 1.0,
+   "dist:progressive": 1.0,
+   "dist:role_reversal": 1.0,
+   "equiv:dative": 0.9667,
+   "equiv:negated_passive": 1.0,
+   "equiv:passive": 1.0
+  },
+  "correct": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "n_errors": 2,
+  "errors": [
+   {
+    "a": "The pirate leased the tailor the hammer.",
+    "b": "The pirate leased the hammer to the tailor.",
+    "label": 1,
+    "phenomenon": "equiv:dative",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": null,
+      "b": "hammer"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "lease",
+       {
+        "status": "chosen",
+        "synset": "oewn-02465622-v",
+        "upos": "VERB",
+        "usage_trained": false
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "pirate",
+        {
+         "status": "chosen",
+         "synset": "oewn-10455134-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG2": [
+        "tailor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10709060-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "lease",
+       {
+        "status": "chosen",
+        "synset": "oewn-02213685-v",
+        "upos": "VERB",
+        "usage_trained": false
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "pirate",
+        {
+         "status": "chosen",
+         "synset": "oewn-10455134-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG1": [
+        "hammer",
+        {
+         "status": "chosen",
+         "synset": "oewn-03486255-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG2": [
+        "tailor",
+        {
+         "status": "single_meaning",
+         "synset": "oewn-10709060-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The cashier bounced the pirate the key.",
+    "b": "The cashier bounced the key to the pirate.",
+    "label": 1,
+    "phenomenon": "equiv:dative",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG2",
+      "a": "pirate",
+      "b": null
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "bounce",
+       {
+        "status": "chosen",
+        "synset": "oewn-02259575-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "cashier",
+        {
+         "status": "chosen",
+         "synset": "oewn-09918741-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "key",
+        {
+         "status": "chosen",
+         "synset": "oewn-03618503-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ],
+       "ARG2": [
+        "pirate",
+        {
+         "status": "chosen",
+         "synset": "oewn-10457029-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "bounce",
+       {
+        "status": "chosen",
+        "synset": "oewn-02259575-v",
+        "upos": "VERB",
+        "usage_trained": true
+       }
+      ],
+      "roles": {
+       "ARG0": [
+        "cashier",
+        {
+         "status": "chosen",
+         "synset": "oewn-09918741-n",
+         "upos": "NOUN",
+         "usage_trained": false
+        }
+       ],
+       "ARG1": [
+        "key",
+        {
+         "status": "chosen",
+         "synset": "oewn-03618503-n",
+         "upos": "NOUN",
+         "usage_trained": true
+        }
+       ]
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "nonce2": {
+  "n": 420,
+  "balanced_accuracy": 1.0,
+  "coverage": 1.0,
+  "per_phenomenon_accuracy": {
+   "dist:attempt": 1.0,
+   "dist:future": 1.0,
+   "dist:modality": 1.0,
+   "dist:negation": 1.0,
+   "dist:passive_vs_negated_active": 1.0,
+   "dist:predicate": 1.0,
+   "dist:progressive": 1.0,
+   "dist:role_reversal": 1.0,
+   "equiv:negated_passive": 1.0,
+   "equiv:passive": 1.0
+  },
+  "correct": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "n_errors": 0,
+  "errors": []
+ },
+ "sizes": {
+  "P": 288,
+  "A": 78
+ }
+}

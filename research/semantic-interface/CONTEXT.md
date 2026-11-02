@@ -130,3 +130,8 @@
   notices - redistributable with the NOTICE now beside the checkpoint); contract `csi/senses.py` passes its checks; an
   independent reviewer agent found no blocker, its should-fix items were fixed and its qualifications recorded.
   **Dictionary v1.1 frozen** (`csi/frozen/dictionary-v1.1` on k3). Next: Experiment 3c.
+- 2026-11-02 ~11:50-13:20 UTC: **Experiment 3c fails as pre-registered** (lexicon amended before any run: pairs must
+  share their first OEWN sense). CSI v0.2-lexical 0.830 on 288 sentence pairs vs v0.1 0.500 and bge-small 0.757; no
+  control merged, no regression on structure (heldout3 0.994, nonce2 1.000); but synonym agents 0.458 and predicates
+  0.667. Every error: the dictionary picked neighbouring, different WordNet synsets for the two synonyms. v0.2 is not
+  adopted; next candidate: compare meanings by learned closeness or WordNet relations (needs pre-registration).

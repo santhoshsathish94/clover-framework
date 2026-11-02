@@ -393,6 +393,80 @@ tokenizer, `usage_lemmas.json`, licence files and NOTICE; card with every file's
 `results/dictionary-v1.1.card.json`); the GPU server keeps the source copy with the same licence files. It is not in
 the repository (size) and not published; publishing is the human's decision. It enters CSI only through Experiment 3c.
 
+**Experiment 3c = dictionary meanings in CSI sentence comparison (pre-registered 2026-11-02 11:50 UTC, after the
+freeze, before any 3c code or data).** The human: "integrate dictionary meanings into CSI sentence comparison."
+Question: given word meanings from the frozen Dictionary v1.1, does CSI recognise that two sentences differing only by
+synonyms mean the same, while different words still mean different things, without losing what it does with
+structure? **CSI v0.2-lexical:** the analysis adds the dictionary's choice (contract 2b) for the main predicate and
+each role head tagged NOUN, VERB or ADJ. Comparison rule (written, one line): two heads match if their lemmas are
+equal (v0.1, unchanged) or each word's chosen meaning is one of the other lemma's OEWN meanings; a word the dictionary
+does not cover (out of scope, not in OEWN, proper noun) matches only by lemma, as in v0.1. Same-lemma polysemy is not
+tested here. **Data**, fixed before any CSI or dictionary output on it is seen; Experiment 1 templates, trf parser,
+verb lemmatiser v1.1; no word from an earlier lexicon:
+- **(P) primary:** synonym pairs I choose from OEWN under written criteria - both single common words sharing an OEWN
+  synset whose definition fits a person acting on a physical thing (verbs; plus person-on-person verbs for the
+  animate template), a kind of person (agents) or a physical object (patients) - each with a control word that shares
+  no OEWN synset with it. A script checks every pair (shared synset; none for controls; UniMorph forms for verbs) and
+  drops failures before anything runs. Targets: 12 verb pairs, 8 agent pairs, 8 patient pairs. Phenomena:
+  equiv:synonym_predicate (active-active and active-passive), equiv:synonym_agent, equiv:synonym_patient,
+  dist:other_predicate, dist:other_agent, dist:other_patient; labels balanced.
+- **(A) secondary, no hand selection:** the same templates with synonym pairs sampled from OEWN by seed 3105 (both
+  lemmas at least 20 times in UD EWT train with that part of speech, verb forms in UniMorph, verbs from verb.contact /
+  verb.creation / verb.change / verb.possession / verb.motion synsets, nouns from noun.person / noun.artifact), controls
+  sampled the same way.
+- **Systems:** CSI v0.2-lexical; CSI v0.1 (lemmas only); bge-small cosine with the threshold from E1 seen (as in E1).
+- **Criteria on (P):** L1 v0.2 balanced accuracy >= 0.90 and beats v0.1 and bge-small (95% paired bootstrap interval
+  above 0); L2 every synonym-equivalence phenomenon >= 0.80 and every control phenomenon >= 0.95 (the dictionary must
+  not make different words the same); L3 no regression: with v0.2 the E1 heldout3 and nonce2 sets stay within 0.005
+  of v0.1 (0.994 and 1.000).
+- **Reported:** (A); errors by layer (parser: wrong head or role; dictionary: chosen meaning not shared; rule);
+  `usage_trained` breakdown. **Decision:** L1-L3 passing makes v0.2-lexical CSI's comparison for single-word
+  synonyms; otherwise the failure is analysed first.
+
+**3c amended (2026-11-02 12:20 UTC, after the lexicon checks and before any CSI or dictionary output on 3c data).**
+The checking script rejected 17 of my 32 hand-chosen pairs: WordNet's synsets are finer than my intuition
+(heat/warm, pierce/puncture, policeman/cop, trash/garbage and faucet/tap are separate synsets), and UniMorph lacks the
+forms of sew, chill, destroy, assist and abduct. The seeded sample (A) produced pairs that share only a rare sense
+(come/get, baby/love, terror/threat), which are not synonyms in a template sentence, so its gold labels would be
+wrong. Changed, for both sets: **a pair qualifies only if the synset they share is the first OEWN sense of both
+words** (synonyms in their main sense); verb forms come from OEWN's listed irregular forms plus regular spelling
+rules (the test generator's table, as in Experiment 1), not from UniMorph. (P) is chosen by me from that candidate
+pool for template fit (a person acting on a physical thing, a kind of person, a physical object); (A) is a seeded
+sample (3105) from the same pool, no hand selection. Targets, phenomena, systems and criteria are unchanged.
+
+**3c results (k3, trf, verb lemmatiser v1.1; `results/e3c_*.json`, `e3c_report.json`). 3c fails as pre-registered: L3
+passes, L1 and L2 fail.** Lexicon: all 32 hand-chosen pairs passed the checks (12 verb + 4 person-on-person verb, 8
+agent, 8 patient pairs; 288 sentence pairs, balanced); (A) yielded only 6 verb pairs and 1 noun pair at the
+pre-registered frequency (78 sentence pairs), most of them verbs that take no object (go/travel, remain/stay).
+
+| (P) | CSI v0.2-lexical | CSI v0.1 | bge-small |
+|---|---|---|---|
+| balanced accuracy | **0.830** | 0.500 | 0.757 |
+| synonym predicate (active / passive) | 0.667 / 0.667 | 0 / 0 | |
+| synonym agent | **0.458** | 0 | |
+| synonym patient | 0.833 | 0 | |
+| control predicates, agents, patients | 1.000 each | 1.000 each | |
+
+L1: 0.830 < 0.90 (fail), though v0.2 beats v0.1 by +0.330 [0.278, 0.385] and bge-small by +0.073 [0.024, 0.125]. L2:
+synonym agents 0.458 and predicates 0.667 are below 0.80 (fail); synonym patients 0.833 and every control (1.000) pass.
+L3 passes: E1 heldout3 0.994 and nonce2 1.000 with and without the dictionary. On (A), v0.2 0.603 against bge-small
+0.795 and v0.1 0.500. **Analysis (`prototype/analyse_3c.py`).** All 49 v0.2 errors on (P) are synonym pairs the
+comparison did not accept because one word's chosen meaning is not among the other word's meanings (32 predicate, 13
+agent, 4 patient); no control was merged and no error came from the parser. The failures are systematic, not noise:
+retrieve/recover, change/alter and split/divide fail in all 6 sentence pairs, publish/print in 5, get/acquire and
+assist/aid in 4, and director/manager, insurgent/rebel, author/writer, owner/proprietor and marionette/puppet in all
+3. The words are mostly usage-trained (get, acquire, retrieve, recover, publish, print all are), so the cause is not
+missing SemCor data: in these neutral sentences the dictionary chooses a different, neighbouring WordNet meaning for
+each word ("retrieved the suitcase" -> 01436442-v, "recovered the suitcase" -> 02252785-v), and WordNet treats
+neighbouring meanings as different synsets. **Reading.** Word meanings help CSI substantially (0.50 -> 0.83) without
+merging different words or touching structure, but "same meaning = same synset" is too brittle for real synonyms:
+the dictionary's choice among WordNet's fine-grained neighbours is not stable across two synonyms in the same
+sentence. By the pre-registered decision v0.2-lexical is not adopted as CSI's comparison; the analysis points to
+comparing meanings by learned closeness (for example the gloss encoder's vectors of the two chosen meanings, or
+WordNet relations between them, Experiment 3b) rather than by identity - a change that needs its own pre-registration
+and data not yet examined. Environment note: Hugging Face transformers 5.22.1 was added to k3's venv-csi so that
+CSI runs the parser and the dictionary in one process; spaCy trf parses as before.
+
 ## Experiment 4 = E2: morphology (defined)
 Lemmatisation, inflection and derivation on UD features and OEWN derivation links, including unseen lemma+affix
 combinations; learned vs lookup baselines.

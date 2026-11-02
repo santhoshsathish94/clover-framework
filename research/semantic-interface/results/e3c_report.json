@@ -1,0 +1,61 @@
+{
+ "P": {
+  "v0.2": 0.8299,
+  "v0.1": 0.5,
+  "bge": 0.7569,
+  "per_phenomenon_v0.2": {
+   "dist:other_agent": 1.0,
+   "dist:other_patient": 1.0,
+   "dist:other_predicate": 1.0,
+   "dist:other_predicate_passive": 1.0,
+   "equiv:synonym_agent": 0.4583,
+   "equiv:synonym_patient": 0.8333,
+   "equiv:synonym_predicate": 0.6667,
+   "equiv:synonym_predicate_passive": 0.6667
+  }
+ },
+ "A": {
+  "v0.2": 0.6026,
+  "v0.1": 0.5,
+  "bge": 0.7949,
+  "per_phenomenon_v0.2": {
+   "dist:other_patient": 1.0,
+   "dist:other_predicate": 1.0,
+   "dist:other_predicate_passive": 1.0,
+   "equiv:synonym_patient": 0.6667,
+   "equiv:synonym_predicate": 0.1667,
+   "equiv:synonym_predicate_passive": 0.1667
+  }
+ },
+ "regression": {
+  "heldout3": {
+   "v0.1": 0.994,
+   "v0.2": 0.994
+  },
+  "nonce2": {
+   "v0.1": 1.0,
+   "v0.2": 1.0
+  }
+ },
+ "criteria": {
+  "L1": {
+   "pass": false,
+   "v0.2_minus_v0.1": [
+    0.3299,
+    0.2778,
+    0.3854
+   ],
+   "v0.2_minus_bge": [
+    0.0729,
+    0.0243,
+    0.125
+   ]
+  },
+  "L2": {
+   "pass": false
+  },
+  "L3": {
+   "pass": true
+  }
+ }
+}

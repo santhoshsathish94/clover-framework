@@ -5,7 +5,8 @@ same correspondences written for UD labels (ARCHITECTURE.md section 3b). Output 
 import functools
 import os
 
-CSI_VERSION = "0.1"
+CSI_SENSES = os.environ.get("CSI_SENSES")  # frozen Dictionary v1.1 checkpoint (Experiment 3c); unset = lemmas only
+CSI_VERSION = "0.2-lexical" if CSI_SENSES else "0.1"
 SPACY_MODEL = os.environ.get("CSI_PARSER", "en_core_web_sm")  # Experiment 2 compares parsers; recorded in provenance
 PARSER = f"spacy/{SPACY_MODEL}"
 CSI_MORPH = os.environ.get("CSI_MORPH")  # frozen verb lemmatiser artefact (Experiment 4d); unset = parser lemmas
@@ -38,6 +39,19 @@ def _lemmatiser():
     return load(CSI_MORPH), Dictionary.load_oewn(CSI_DICT), f"csi.morphology:{os.path.basename(CSI_MORPH.rstrip('/'))}+oewn"
 
 
+@functools.lru_cache(maxsize=1)
+def _senses():
+    from .senses import Senses
+    return Senses(CSI_SENSES, CSI_DICT)
+
+
+def _sense_of(doc, i):
+    t = doc[i]
+    r = _senses().choose(doc.text, t.idx, t.idx + len(t.text), t.lemma_.lower(), t.pos_)
+    return {"status": r["status"], "synset": r["senses"][0]["synset"] if r["senses"] else None, "upos": t.pos_,
+            "usage_trained": r["usage_trained"]}
+
+
 def _kids(tok, deps):
     return [c for c in tok.children if c.dep_ in deps]
 
@@ -45,7 +59,8 @@ def _kids(tok, deps):
 def _role(tok):
     span = sorted(tok.subtree, key=lambda t: t.i)
     start, end = span[0].i, span[-1].i
-    return {"text": tok.doc[start:end + 1].text, "head_lemma": tok.lemma_.lower(), "tokens": list(range(start, end + 1))}
+    return {"text": tok.doc[start:end + 1].text, "head_lemma": tok.lemma_.lower(), "head": tok.i,
+            "tokens": list(range(start, end + 1))}
 
 
 def _pobj(prep):
@@ -157,6 +172,11 @@ def analyze(text):
     prop, problem = _proposition(doc, parser_id, scheme)
     if prop:
         prop["provenance"]["lemmas"] = lemma_source
+        if CSI_SENSES:
+            prop["predicate"]["sense"] = _sense_of(doc, prop["predicate"]["token"])
+            for role in prop["roles"].values():
+                role["head_sense"] = _sense_of(doc, role["head"])
+            prop["provenance"]["senses"] = _senses().provenance["version"]
     unsupported = [problem] if problem else []
     reading = {"confidence": 1.0 if not unsupported else 0.5, "tokens": tokens,
                "propositions": [prop] if prop else []}

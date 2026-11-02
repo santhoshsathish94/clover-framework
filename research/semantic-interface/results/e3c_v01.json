@@ -1,0 +1,10720 @@
+{
+ "system": "CSI 0.1",
+ "parser": "en_core_web_trf",
+ "lemmas": "/opt/clover-k3/meaning-core/csi/frozen/morph-verb-v1.1",
+ "senses": null,
+ "P": {
+  "n": 288,
+  "balanced_accuracy": 0.5,
+  "coverage": 1.0,
+  "per_phenomenon_accuracy": {
+   "dist:other_agent": 1.0,
+   "dist:other_patient": 1.0,
+   "dist:other_predicate": 1.0,
+   "dist:other_predicate_passive": 1.0,
+   "equiv:synonym_agent": 0.0,
+   "equiv:synonym_patient": 0.0,
+   "equiv:synonym_predicate": 0.0,
+   "equiv:synonym_predicate_passive": 0.0
+  },
+  "correct": [
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1
+  ],
+  "n_errors": 144,
+  "errors": [
+   {
+    "a": "The worker finished the puzzle.",
+    "b": "The worker completed the puzzle.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "finish",
+      "b": "complete"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "finish",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "puzzle",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "complete",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "puzzle",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker finished the puzzle.",
+    "b": "The puzzle was completed by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "finish",
+      "b": "complete"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "finish",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "puzzle",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "complete",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "puzzle",
+        null
+       ],
+       "ARG0": [
+        "worker",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker finished the puzzle.",
+    "b": "The worker completed the puzzle.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "finish",
+      "b": "complete"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "finish",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "puzzle",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "complete",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "puzzle",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker finished the puzzle.",
+    "b": "The puzzle was completed by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "finish",
+      "b": "complete"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "finish",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "puzzle",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "complete",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "puzzle",
+        null
+       ],
+       "ARG0": [
+        "worker",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter finished the puzzle.",
+    "b": "The carpenter completed the puzzle.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "finish",
+      "b": "complete"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "finish",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "puzzle",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "complete",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "puzzle",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter finished the puzzle.",
+    "b": "The puzzle was completed by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "finish",
+      "b": "complete"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "finish",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "puzzle",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "complete",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "puzzle",
+        null
+       ],
+       "ARG0": [
+        "carpenter",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist got the painting.",
+    "b": "The artist acquired the painting.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "get",
+      "b": "acquire"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "get",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "painting",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "acquire",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "painting",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist got the painting.",
+    "b": "The painting was acquired by the artist.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "get",
+      "b": "acquire"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "get",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "painting",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "acquire",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "painting",
+        null
+       ],
+       "ARG0": [
+        "artist",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor got the painting.",
+    "b": "The visitor acquired the painting.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "get",
+      "b": "acquire"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "get",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "painting",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "acquire",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "painting",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor got the painting.",
+    "b": "The painting was acquired by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "get",
+      "b": "acquire"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "get",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "painting",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "acquire",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "painting",
+        null
+       ],
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker got the painting.",
+    "b": "The worker acquired the painting.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "get",
+      "b": "acquire"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "get",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "painting",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "acquire",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "painting",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker got the painting.",
+    "b": "The painting was acquired by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "get",
+      "b": "acquire"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "get",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "painting",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "acquire",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "painting",
+        null
+       ],
+       "ARG0": [
+        "worker",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor supplied the food.",
+    "b": "The visitor provided the food.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "supply",
+      "b": "provide"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "supply",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "food",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "provide",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "food",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor supplied the food.",
+    "b": "The food was provided by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "supply",
+      "b": "provide"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "supply",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "food",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "provide",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "food",
+        null
+       ],
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor supplied the food.",
+    "b": "The neighbor provided the food.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "supply",
+      "b": "provide"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "supply",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "food",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "provide",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "food",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor supplied the food.",
+    "b": "The food was provided by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "supply",
+      "b": "provide"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "supply",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "food",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "provide",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "food",
+        null
+       ],
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist supplied the food.",
+    "b": "The artist provided the food.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "supply",
+      "b": "provide"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "supply",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "food",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "provide",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "food",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist supplied the food.",
+    "b": "The food was provided by the artist.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "supply",
+      "b": "provide"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "supply",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "food",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "provide",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "food",
+        null
+       ],
+       "ARG0": [
+        "artist",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer collected the stamps.",
+    "b": "The engineer accumulated the stamps.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "collect",
+      "b": "accumulate"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "collect",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "stamp",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "accumulate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "stamp",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer collected the stamps.",
+    "b": "The stamps was accumulated by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "collect",
+      "b": "accumulate"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "collect",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "stamp",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "accumulate",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "stamp",
+        null
+       ],
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer collected the stamps.",
+    "b": "The engineer accumulated the stamps.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "collect",
+      "b": "accumulate"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "collect",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "stamp",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "accumulate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "stamp",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer collected the stamps.",
+    "b": "The stamps was accumulated by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "collect",
+      "b": "accumulate"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "collect",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "stamp",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "accumulate",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "stamp",
+        null
+       ],
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer collected the stamps.",
+    "b": "The engineer accumulated the stamps.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "collect",
+      "b": "accumulate"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "collect",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "stamp",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "accumulate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "stamp",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer collected the stamps.",
+    "b": "The stamps was accumulated by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "collect",
+      "b": "accumulate"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "collect",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "stamp",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "accumulate",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "stamp",
+        null
+       ],
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist retrieved the suitcase.",
+    "b": "The artist recovered the suitcase.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "retrieve",
+      "b": "recover"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "retrieve",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "suitcase",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recover",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "suitcase",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist retrieved the suitcase.",
+    "b": "The suitcase was recovered by the artist.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "retrieve",
+      "b": "recover"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "retrieve",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "suitcase",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recover",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "suitcase",
+        null
+       ],
+       "ARG0": [
+        "artist",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker retrieved the suitcase.",
+    "b": "The worker recovered the suitcase.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "retrieve",
+      "b": "recover"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "retrieve",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "suitcase",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recover",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "suitcase",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker retrieved the suitcase.",
+    "b": "The suitcase was recovered by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "retrieve",
+      "b": "recover"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "retrieve",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "suitcase",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recover",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "suitcase",
+        null
+       ],
+       "ARG0": [
+        "worker",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor retrieved the suitcase.",
+    "b": "The neighbor recovered the suitcase.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "retrieve",
+      "b": "recover"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "retrieve",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "suitcase",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recover",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "suitcase",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor retrieved the suitcase.",
+    "b": "The suitcase was recovered by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "retrieve",
+      "b": "recover"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "retrieve",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "suitcase",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recover",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "suitcase",
+        null
+       ],
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer built the shed.",
+    "b": "The engineer constructed the shed.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "build",
+      "b": "construct"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "build",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "shed",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "construct",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "shed",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer built the shed.",
+    "b": "The shed was constructed by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "build",
+      "b": "construct"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "build",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "shed",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "construct",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "shed",
+        null
+       ],
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer built the shed.",
+    "b": "The engineer constructed the shed.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "build",
+      "b": "construct"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "build",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "shed",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "construct",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "shed",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer built the shed.",
+    "b": "The shed was constructed by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "build",
+      "b": "construct"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "build",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "shed",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "construct",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "shed",
+        null
+       ],
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor built the shed.",
+    "b": "The visitor constructed the shed.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "build",
+      "b": "construct"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "build",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "shed",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "construct",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "shed",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor built the shed.",
+    "b": "The shed was constructed by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "build",
+      "b": "construct"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "build",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "shed",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "construct",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "shed",
+        null
+       ],
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor decorated the tree.",
+    "b": "The visitor adorned the tree.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "decorate",
+      "b": "adorn"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "decorate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "tree",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "adorn",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "tree",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor decorated the tree.",
+    "b": "The tree was adorned by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "decorate",
+      "b": "adorn"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "decorate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "tree",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "adorn",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "tree",
+        null
+       ],
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The customer decorated the tree.",
+    "b": "The customer adorned the tree.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "decorate",
+      "b": "adorn"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "decorate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        null
+       ],
+       "ARG1": [
+        "tree",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "adorn",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        null
+       ],
+       "ARG1": [
+        "tree",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The customer decorated the tree.",
+    "b": "The tree was adorned by the customer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "decorate",
+      "b": "adorn"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "decorate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        null
+       ],
+       "ARG1": [
+        "tree",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "adorn",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "tree",
+        null
+       ],
+       "ARG0": [
+        "customer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter decorated the tree.",
+    "b": "The carpenter adorned the tree.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "decorate",
+      "b": "adorn"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "decorate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "tree",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "adorn",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "tree",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter decorated the tree.",
+    "b": "The tree was adorned by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "decorate",
+      "b": "adorn"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "decorate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "tree",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "adorn",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "tree",
+        null
+       ],
+       "ARG0": [
+        "carpenter",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor published the book.",
+    "b": "The visitor printed the book.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "publish",
+      "b": "print"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "publish",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "book",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "print",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "book",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor published the book.",
+    "b": "The book was printed by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "publish",
+      "b": "print"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "publish",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "book",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "print",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "book",
+        null
+       ],
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor published the book.",
+    "b": "The neighbor printed the book.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "publish",
+      "b": "print"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "publish",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "book",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "print",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "book",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor published the book.",
+    "b": "The book was printed by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "publish",
+      "b": "print"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "publish",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "book",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "print",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "book",
+        null
+       ],
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist published the book.",
+    "b": "The artist printed the book.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "publish",
+      "b": "print"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "publish",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "book",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "print",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "book",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist published the book.",
+    "b": "The book was printed by the artist.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "publish",
+      "b": "print"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "publish",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "book",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "print",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "book",
+        null
+       ],
+       "ARG0": [
+        "artist",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor changed the dress.",
+    "b": "The visitor altered the dress.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "change",
+      "b": "alter"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "change",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "dress",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "alter",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "dress",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor changed the dress.",
+    "b": "The dress was altered by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "change",
+      "b": "alter"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "change",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "dress",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "alter",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "dress",
+        null
+       ],
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The customer changed the dress.",
+    "b": "The customer altered the dress.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "change",
+      "b": "alter"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "change",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        null
+       ],
+       "ARG1": [
+        "dress",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "alter",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        null
+       ],
+       "ARG1": [
+        "dress",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The customer changed the dress.",
+    "b": "The dress was altered by the customer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "change",
+      "b": "alter"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "change",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        null
+       ],
+       "ARG1": [
+        "dress",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "alter",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "dress",
+        null
+       ],
+       "ARG0": [
+        "customer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer changed the dress.",
+    "b": "The engineer altered the dress.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "change",
+      "b": "alter"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "change",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "dress",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "alter",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "dress",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer changed the dress.",
+    "b": "The dress was altered by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "change",
+      "b": "alter"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "change",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "dress",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "alter",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "dress",
+        null
+       ],
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The gardener polluted the river.",
+    "b": "The gardener contaminated the river.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "pollute",
+      "b": "contaminate"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "pollute",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "river",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "contaminate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "river",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The gardener polluted the river.",
+    "b": "The river was contaminated by the gardener.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "pollute",
+      "b": "contaminate"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "pollute",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "river",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "contaminate",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "river",
+        null
+       ],
+       "ARG0": [
+        "gardener",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor polluted the river.",
+    "b": "The neighbor contaminated the river.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "pollute",
+      "b": "contaminate"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "pollute",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "river",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "contaminate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "river",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor polluted the river.",
+    "b": "The river was contaminated by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "pollute",
+      "b": "contaminate"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "pollute",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "river",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "contaminate",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "river",
+        null
+       ],
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor polluted the river.",
+    "b": "The neighbor contaminated the river.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "pollute",
+      "b": "contaminate"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "pollute",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "river",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "contaminate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "river",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor polluted the river.",
+    "b": "The river was contaminated by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "pollute",
+      "b": "contaminate"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "pollute",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "river",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "contaminate",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "river",
+        null
+       ],
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer exploded the bomb.",
+    "b": "The engineer detonated the bomb.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "explode",
+      "b": "detonate"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "explode",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "bomb",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "detonate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "bomb",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer exploded the bomb.",
+    "b": "The bomb was detonated by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "explode",
+      "b": "detonate"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "explode",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "bomb",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "detonate",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "bomb",
+        null
+       ],
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The gardener exploded the bomb.",
+    "b": "The gardener detonated the bomb.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "explode",
+      "b": "detonate"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "explode",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "bomb",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "detonate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "bomb",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The gardener exploded the bomb.",
+    "b": "The bomb was detonated by the gardener.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "explode",
+      "b": "detonate"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "explode",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "bomb",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "detonate",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "bomb",
+        null
+       ],
+       "ARG0": [
+        "gardener",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter exploded the bomb.",
+    "b": "The carpenter detonated the bomb.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "explode",
+      "b": "detonate"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "explode",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "bomb",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "detonate",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "bomb",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter exploded the bomb.",
+    "b": "The bomb was detonated by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "explode",
+      "b": "detonate"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "explode",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "bomb",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "detonate",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "bomb",
+        null
+       ],
+       "ARG0": [
+        "carpenter",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer split the cake.",
+    "b": "The engineer divided the cake.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "split",
+      "b": "divide"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "split",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "cake",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "divide",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "cake",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer split the cake.",
+    "b": "The cake was divided by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "split",
+      "b": "divide"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "split",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "cake",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "divide",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "cake",
+        null
+       ],
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker split the cake.",
+    "b": "The worker divided the cake.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "split",
+      "b": "divide"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "split",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "cake",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "divide",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "cake",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker split the cake.",
+    "b": "The cake was divided by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "split",
+      "b": "divide"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "split",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "cake",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "divide",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "cake",
+        null
+       ],
+       "ARG0": [
+        "worker",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter split the cake.",
+    "b": "The carpenter divided the cake.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "split",
+      "b": "divide"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "split",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "cake",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "divide",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "cake",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter split the cake.",
+    "b": "The cake was divided by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "split",
+      "b": "divide"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "split",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "cake",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "divide",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "cake",
+        null
+       ],
+       "ARG0": [
+        "carpenter",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor assisted the engineer.",
+    "b": "The neighbor aided the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "assist",
+      "b": "aid"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "assist",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "engineer",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "aid",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor assisted the engineer.",
+    "b": "The engineer was aided by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "assist",
+      "b": "aid"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "assist",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "engineer",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "aid",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "engineer",
+        null
+       ],
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor assisted the visitor.",
+    "b": "The neighbor aided the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "assist",
+      "b": "aid"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "assist",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "visitor",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "aid",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor assisted the visitor.",
+    "b": "The visitor was aided by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "assist",
+      "b": "aid"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "assist",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "visitor",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "aid",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "visitor",
+        null
+       ],
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker assisted the neighbor.",
+    "b": "The worker aided the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "assist",
+      "b": "aid"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "assist",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "neighbor",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "aid",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker assisted the neighbor.",
+    "b": "The neighbor was aided by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "assist",
+      "b": "aid"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "assist",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "neighbor",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "aid",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "neighbor",
+        null
+       ],
+       "ARG0": [
+        "worker",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter deceived the gardener.",
+    "b": "The carpenter deluded the gardener.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "deceive",
+      "b": "delude"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "deceive",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "gardener",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "delude",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "gardener",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter deceived the gardener.",
+    "b": "The gardener was deluded by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "deceive",
+      "b": "delude"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "deceive",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "gardener",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "delude",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "gardener",
+        null
+       ],
+       "ARG0": [
+        "carpenter",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The customer deceived the engineer.",
+    "b": "The customer deluded the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "deceive",
+      "b": "delude"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "deceive",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        null
+       ],
+       "ARG1": [
+        "engineer",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "delude",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        null
+       ],
+       "ARG1": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The customer deceived the engineer.",
+    "b": "The engineer was deluded by the customer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "deceive",
+      "b": "delude"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "deceive",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        null
+       ],
+       "ARG1": [
+        "engineer",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "delude",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "engineer",
+        null
+       ],
+       "ARG0": [
+        "customer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor deceived the carpenter.",
+    "b": "The neighbor deluded the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "deceive",
+      "b": "delude"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "deceive",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "carpenter",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "delude",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "carpenter",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor deceived the carpenter.",
+    "b": "The carpenter was deluded by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "deceive",
+      "b": "delude"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "deceive",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "carpenter",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "delude",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "carpenter",
+        null
+       ],
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter supervised the visitor.",
+    "b": "The carpenter oversaw the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "supervise",
+      "b": "oversee"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "supervise",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "visitor",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "oversee",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter supervised the visitor.",
+    "b": "The visitor was overseen by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "supervise",
+      "b": "oversee"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "supervise",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "visitor",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "oversee",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "visitor",
+        null
+       ],
+       "ARG0": [
+        "carpenter",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The gardener supervised the customer.",
+    "b": "The gardener oversaw the customer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "supervise",
+      "b": "oversee"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "supervise",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "customer",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "oversee",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "customer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The gardener supervised the customer.",
+    "b": "The customer was overseen by the gardener.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "supervise",
+      "b": "oversee"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "supervise",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "customer",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "oversee",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "customer",
+        null
+       ],
+       "ARG0": [
+        "gardener",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter supervised the worker.",
+    "b": "The carpenter oversaw the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "supervise",
+      "b": "oversee"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "supervise",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "worker",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "oversee",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "worker",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter supervised the worker.",
+    "b": "The worker was overseen by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "supervise",
+      "b": "oversee"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "supervise",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "worker",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "oversee",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "worker",
+        null
+       ],
+       "ARG0": [
+        "carpenter",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor enrolled the customer.",
+    "b": "The visitor recruited the customer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "enroll",
+      "b": "recruit"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "enroll",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "customer",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recruit",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "customer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor enrolled the customer.",
+    "b": "The customer was recruited by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "enroll",
+      "b": "recruit"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "enroll",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "customer",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recruit",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "customer",
+        null
+       ],
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor enrolled the customer.",
+    "b": "The visitor recruited the customer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "enroll",
+      "b": "recruit"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "enroll",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "customer",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recruit",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "customer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor enrolled the customer.",
+    "b": "The customer was recruited by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "enroll",
+      "b": "recruit"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "enroll",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "customer",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recruit",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "customer",
+        null
+       ],
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker enrolled the artist.",
+    "b": "The worker recruited the artist.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "enroll",
+      "b": "recruit"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "enroll",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "artist",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recruit",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "artist",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker enrolled the artist.",
+    "b": "The artist was recruited by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "enroll",
+      "b": "recruit"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "enroll",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "artist",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "recruit",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "artist",
+        null
+       ],
+       "ARG0": [
+        "worker",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The director noticed the tray.",
+    "b": "The manager noticed the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "director",
+      "b": "manager"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "director",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "manager",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The director moved the chest.",
+    "b": "The manager moved the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "director",
+      "b": "manager"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "director",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "manager",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The director moved the tray.",
+    "b": "The manager moved the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "director",
+      "b": "manager"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "director",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "manager",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The dealer moved the package.",
+    "b": "The trader moved the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "dealer",
+      "b": "trader"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "dealer",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "trader",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The dealer moved the chest.",
+    "b": "The trader moved the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "dealer",
+      "b": "trader"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "dealer",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "trader",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The dealer moved the carton.",
+    "b": "The trader moved the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "dealer",
+      "b": "trader"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "dealer",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "trader",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The insurgent moved the tray.",
+    "b": "The rebel moved the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "insurgent",
+      "b": "rebel"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "insurgent",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "rebel",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The insurgent noticed the package.",
+    "b": "The rebel noticed the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "insurgent",
+      "b": "rebel"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "insurgent",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "rebel",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The insurgent noticed the tray.",
+    "b": "The rebel noticed the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "insurgent",
+      "b": "rebel"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "insurgent",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "rebel",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The provider moved the tray.",
+    "b": "The supplier moved the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "provider",
+      "b": "supplier"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "provider",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "supplier",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The provider noticed the tray.",
+    "b": "The supplier noticed the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "provider",
+      "b": "supplier"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "provider",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "supplier",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The provider moved the chest.",
+    "b": "The supplier moved the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "provider",
+      "b": "supplier"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "provider",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "supplier",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The grandma noticed the chest.",
+    "b": "The grandmother noticed the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "grandma",
+      "b": "grandmother"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "grandma",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "grandmother",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The grandma moved the package.",
+    "b": "The grandmother moved the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "grandma",
+      "b": "grandmother"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "grandma",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "grandmother",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The grandma moved the tray.",
+    "b": "The grandmother moved the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "grandma",
+      "b": "grandmother"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "grandma",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "grandmother",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The minister moved the carton.",
+    "b": "The pastor moved the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "minister",
+      "b": "pastor"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "minister",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "pastor",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The minister noticed the chest.",
+    "b": "The pastor noticed the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "minister",
+      "b": "pastor"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "minister",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "pastor",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The minister moved the chest.",
+    "b": "The pastor moved the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "minister",
+      "b": "pastor"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "minister",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "pastor",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The author moved the carton.",
+    "b": "The writer moved the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "author",
+      "b": "writer"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "author",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "writer",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The author noticed the tray.",
+    "b": "The writer noticed the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "author",
+      "b": "writer"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "author",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "writer",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The author noticed the carton.",
+    "b": "The writer noticed the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "author",
+      "b": "writer"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "author",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "writer",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The owner noticed the package.",
+    "b": "The proprietor noticed the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "owner",
+      "b": "proprietor"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "owner",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "proprietor",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The owner noticed the carton.",
+    "b": "The proprietor noticed the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "owner",
+      "b": "proprietor"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "owner",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "proprietor",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The owner noticed the chest.",
+    "b": "The proprietor noticed the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG0",
+      "a": "owner",
+      "b": "proprietor"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "owner",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "proprietor",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist noticed the couch.",
+    "b": "The artist noticed the sofa.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "couch",
+      "b": "sofa"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "couch",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "sofa",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist noticed the couch.",
+    "b": "The artist noticed the sofa.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "couch",
+      "b": "sofa"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "couch",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "sofa",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor noticed the couch.",
+    "b": "The visitor noticed the sofa.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "couch",
+      "b": "sofa"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "couch",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "sofa",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor moved the photo.",
+    "b": "The visitor moved the photograph.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "photo",
+      "b": "photograph"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "photo",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "photograph",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The customer noticed the photo.",
+    "b": "The customer noticed the photograph.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "photo",
+      "b": "photograph"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        null
+       ],
+       "ARG1": [
+        "photo",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "customer",
+        null
+       ],
+       "ARG1": [
+        "photograph",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor noticed the photo.",
+    "b": "The visitor noticed the photograph.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "photo",
+      "b": "photograph"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "photo",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "photograph",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The gardener noticed the handbag.",
+    "b": "The gardener noticed the purse.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "handbag",
+      "b": "purse"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "handbag",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "purse",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The gardener noticed the handbag.",
+    "b": "The gardener noticed the purse.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "handbag",
+      "b": "purse"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "handbag",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "purse",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter moved the handbag.",
+    "b": "The carpenter moved the purse.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "handbag",
+      "b": "purse"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "handbag",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "purse",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker noticed the airplane.",
+    "b": "The worker noticed the plane.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "airplane",
+      "b": "plane"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "airplane",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "plane",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor moved the airplane.",
+    "b": "The visitor moved the plane.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "airplane",
+      "b": "plane"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "airplane",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "plane",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter moved the airplane.",
+    "b": "The carpenter moved the plane.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "airplane",
+      "b": "plane"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "airplane",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "plane",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer moved the marionette.",
+    "b": "The engineer moved the puppet.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "marionette",
+      "b": "puppet"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "marionette",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "puppet",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist moved the marionette.",
+    "b": "The artist moved the puppet.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "marionette",
+      "b": "puppet"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "marionette",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "puppet",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker noticed the marionette.",
+    "b": "The worker noticed the puppet.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "marionette",
+      "b": "puppet"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "marionette",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "puppet",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer moved the cloth.",
+    "b": "The engineer moved the fabric.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "cloth",
+      "b": "fabric"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "cloth",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "fabric",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The gardener noticed the cloth.",
+    "b": "The gardener noticed the fabric.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "cloth",
+      "b": "fabric"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "cloth",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "fabric",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist noticed the cloth.",
+    "b": "The artist noticed the fabric.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "cloth",
+      "b": "fabric"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "cloth",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "fabric",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The gardener moved the cargo.",
+    "b": "The gardener moved the freight.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "cargo",
+      "b": "freight"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "cargo",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "gardener",
+        null
+       ],
+       "ARG1": [
+        "freight",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter moved the cargo.",
+    "b": "The carpenter moved the freight.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "cargo",
+      "b": "freight"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "cargo",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "freight",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist noticed the cargo.",
+    "b": "The artist noticed the freight.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "cargo",
+      "b": "freight"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "cargo",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "freight",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer moved the detector.",
+    "b": "The engineer moved the sensor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "detector",
+      "b": "sensor"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "detector",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "sensor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker moved the detector.",
+    "b": "The worker moved the sensor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "detector",
+      "b": "sensor"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "detector",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "sensor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor noticed the detector.",
+    "b": "The neighbor noticed the sensor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "detector",
+      "b": "sensor"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "detector",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "sensor",
+        null
+       ]
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "A": {
+  "n": 78,
+  "balanced_accuracy": 0.5,
+  "coverage": 1.0,
+  "per_phenomenon_accuracy": {
+   "dist:other_patient": 1.0,
+   "dist:other_predicate": 1.0,
+   "dist:other_predicate_passive": 1.0,
+   "equiv:synonym_patient": 0.0,
+   "equiv:synonym_predicate": 0.0,
+   "equiv:synonym_predicate_passive": 0.0
+  },
+  "correct": [
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1
+  ],
+  "n_errors": 39,
+  "errors": [
+   {
+    "a": "The worker gone the package.",
+    "b": "The worker travelled the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "go",
+      "b": "travel"
+     },
+     {
+      "type": "tense",
+      "a": "unmarked",
+      "b": "past"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "go",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "travel",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker gone the package.",
+    "b": "The package was travelled by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "go",
+      "b": "travel"
+     },
+     {
+      "type": "tense",
+      "a": "unmarked",
+      "b": "past"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "go",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "travel",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "package",
+        null
+       ],
+       "ARG0": [
+        "worker",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter gone the package.",
+    "b": "The carpenter travelled the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "go",
+      "b": "travel"
+     },
+     {
+      "type": "tense",
+      "a": "unmarked",
+      "b": "past"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "go",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "travel",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter gone the package.",
+    "b": "The package was travelled by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "go",
+      "b": "travel"
+     },
+     {
+      "type": "tense",
+      "a": "unmarked",
+      "b": "past"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "go",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "travel",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "package",
+        null
+       ],
+       "ARG0": [
+        "carpenter",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor gone the package.",
+    "b": "The visitor travelled the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "go",
+      "b": "travel"
+     },
+     {
+      "type": "tense",
+      "a": "unmarked",
+      "b": "past"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "go",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "travel",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor gone the package.",
+    "b": "The package was travelled by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "go",
+      "b": "travel"
+     },
+     {
+      "type": "tense",
+      "a": "unmarked",
+      "b": "past"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "go",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "travel",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "package",
+        null
+       ],
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor placed the chest.",
+    "b": "The visitor seted the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "place",
+      "b": "set"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "place",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "set",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor placed the chest.",
+    "b": "The chest was seted by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "place",
+      "b": "set"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "place",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "set",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "chest",
+        null
+       ],
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist placed the tray.",
+    "b": "The artist seted the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "place",
+      "b": "set"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "place",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "set",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist placed the tray.",
+    "b": "The tray was seted by the artist.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "place",
+      "b": "set"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "place",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "set",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "tray",
+        null
+       ],
+       "ARG0": [
+        "artist",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer placed the tray.",
+    "b": "The engineer seted the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "place",
+      "b": "set"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "place",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "set",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer placed the tray.",
+    "b": "The tray was seted by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "place",
+      "b": "set"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "place",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "set",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "tray",
+        null
+       ],
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist allowed the package.",
+    "b": "The artist leted the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "allow",
+      "b": "let"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "allow",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "let",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The artist allowed the package.",
+    "b": "The package was leted by the artist.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "allow",
+      "b": "let"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "allow",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "artist",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "let",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "package",
+        null
+       ],
+       "ARG0": [
+        "artist",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor allowed the tray.",
+    "b": "The neighbor leted the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "allow",
+      "b": "let"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "allow",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "let",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor allowed the tray.",
+    "b": "The tray was leted by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "allow",
+      "b": "let"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "allow",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "let",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "tray",
+        null
+       ],
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer allowed the chest.",
+    "b": "The engineer leted the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "allow",
+      "b": "let"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "allow",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "let",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer allowed the chest.",
+    "b": "The chest was leted by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "allow",
+      "b": "let"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "allow",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "let",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "chest",
+        null
+       ],
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor began the tray.",
+    "b": "The visitor started the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "begin",
+      "b": "start"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "begin",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "start",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor began the tray.",
+    "b": "The tray was started by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "begin",
+      "b": "start"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "begin",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "start",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "tray",
+        null
+       ],
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter began the chest.",
+    "b": "The carpenter started the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "begin",
+      "b": "start"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "begin",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "start",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter began the chest.",
+    "b": "The chest was started by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "begin",
+      "b": "start"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "begin",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "chest",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "start",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "chest",
+        null
+       ],
+       "ARG0": [
+        "carpenter",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor began the package.",
+    "b": "The neighbor started the package.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "begin",
+      "b": "start"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "begin",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "start",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor began the package.",
+    "b": "The package was started by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "begin",
+      "b": "start"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "begin",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "package",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "start",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "package",
+        null
+       ],
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor remained the tray.",
+    "b": "The visitor stayed the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "remain",
+      "b": "stay"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "remain",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "stay",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The visitor remained the tray.",
+    "b": "The tray was stayed by the visitor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "remain",
+      "b": "stay"
+     },
+     {
+      "type": "role:ARG1",
+      "a": null,
+      "b": "tray"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "remain",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "stay",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "tray",
+        null
+       ],
+       "ARG0": [
+        "visitor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer remained the carton.",
+    "b": "The engineer stayed the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "remain",
+      "b": "stay"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "remain",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "stay",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer remained the carton.",
+    "b": "The carton was stayed by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "remain",
+      "b": "stay"
+     },
+     {
+      "type": "role:ARG1",
+      "a": null,
+      "b": "carton"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "remain",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "stay",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "carton",
+        null
+       ],
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor remained the chest.",
+    "b": "The neighbor stayed the chest.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "remain",
+      "b": "stay"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "remain",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "stay",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor remained the chest.",
+    "b": "The chest was stayed by the neighbor.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "remain",
+      "b": "stay"
+     },
+     {
+      "type": "role:ARG1",
+      "a": null,
+      "b": "chest"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "remain",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "stay",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "chest",
+        null
+       ],
+       "ARG0": [
+        "neighbor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer did the carton.",
+    "b": "The engineer made the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "do",
+      "b": "make"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "do",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "make",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The engineer did the carton.",
+    "b": "The carton was made by the engineer.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "do",
+      "b": "make"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "do",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "engineer",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "make",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "carton",
+        null
+       ],
+       "ARG0": [
+        "engineer",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter did the tray.",
+    "b": "The carpenter made the tray.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "do",
+      "b": "make"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "do",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "make",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter did the tray.",
+    "b": "The tray was made by the carpenter.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "do",
+      "b": "make"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "do",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "tray",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "make",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "tray",
+        null
+       ],
+       "ARG0": [
+        "carpenter",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker did the carton.",
+    "b": "The worker made the carton.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "do",
+      "b": "make"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "do",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "make",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker did the carton.",
+    "b": "The carton was made by the worker.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "predicate",
+      "a": "do",
+      "b": "make"
+     }
+    ],
+    "notes": [
+     "voice differs (active vs passive): grammatical, not a meaning difference"
+    ],
+    "senses": [
+     {
+      "predicate": [
+       "do",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "carton",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "make",
+       null
+      ],
+      "roles": {
+       "ARG1": [
+        "carton",
+        null
+       ],
+       "ARG0": [
+        "worker",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The neighbor moved the shop.",
+    "b": "The neighbor moved the store.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "shop",
+      "b": "store"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "shop",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "neighbor",
+        null
+       ],
+       "ARG1": [
+        "store",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The worker noticed the shop.",
+    "b": "The worker noticed the store.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "shop",
+      "b": "store"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "shop",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "notice",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "worker",
+        null
+       ],
+       "ARG1": [
+        "store",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The carpenter moved the shop.",
+    "b": "The carpenter moved the store.",
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": "shop",
+      "b": "store"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "shop",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "move",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "carpenter",
+        null
+       ],
+       "ARG1": [
+        "store",
+        null
+       ]
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "heldout3": {
+  "n": 627,
+  "balanced_accuracy": 0.994,
+  "coverage": 1.0,
+  "per_phenomenon_accuracy": {
+   "dist:attempt": 1.0,
+   "dist:dative_roles_swapped": 1.0,
+   "dist:future": 1.0,
+   "dist:modality": 1.0,
+   "dist:negation": 1.0,
+   "dist:passive_vs_negated_active": 1.0,
+   "dist:predicate": 1.0,
+   "dist:progressive": 1.0,
+   "dist:role_reversal": 1.0,
+   "equiv:dative": 0.9667,
+   "equiv:negated_passive": 1.0,
+   "equiv:passive": 1.0
+  },
+  "correct": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "n_errors": 2,
+  "errors": [
+   {
+    "a": "The pirate leased the tailor the hammer.",
+    "b": "The pirate leased the hammer to the tailor.",
+    "label": 1,
+    "phenomenon": "equiv:dative",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG1",
+      "a": null,
+      "b": "hammer"
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "lease",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "pirate",
+        null
+       ],
+       "ARG2": [
+        "tailor",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "lease",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "pirate",
+        null
+       ],
+       "ARG1": [
+        "hammer",
+        null
+       ],
+       "ARG2": [
+        "tailor",
+        null
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "a": "The cashier bounced the pirate the key.",
+    "b": "The cashier bounced the key to the pirate.",
+    "label": 1,
+    "phenomenon": "equiv:dative",
+    "pred": 0,
+    "differences": [
+     {
+      "type": "role:ARG2",
+      "a": "pirate",
+      "b": null
+     }
+    ],
+    "notes": [],
+    "senses": [
+     {
+      "predicate": [
+       "bounce",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "cashier",
+        null
+       ],
+       "ARG1": [
+        "key",
+        null
+       ],
+       "ARG2": [
+        "pirate",
+        null
+       ]
+      }
+     },
+     {
+      "predicate": [
+       "bounce",
+       null
+      ],
+      "roles": {
+       "ARG0": [
+        "cashier",
+        null
+       ],
+       "ARG1": [
+        "key",
+        null
+       ]
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "nonce2": {
+  "n": 420,
+  "balanced_accuracy": 1.0,
+  "coverage": 1.0,
+  "per_phenomenon_accuracy": {
+   "dist:attempt": 1.0,
+   "dist:future": 1.0,
+   "dist:modality": 1.0,
+   "dist:negation": 1.0,
+   "dist:passive_vs_negated_active": 1.0,
+   "dist:predicate": 1.0,
+   "dist:progressive": 1.0,
+   "dist:role_reversal": 1.0,
+   "equiv:negated_passive": 1.0,
+   "equiv:passive": 1.0
+  },
+  "correct": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "n_errors": 0,
+  "errors": []
+ },
+ "sizes": {
+  "P": 288,
+  "A": 78
+ }
+}

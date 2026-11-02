@@ -1,0 +1,638 @@
+{
+ "P": {
+  "verbs": [
+   {
+    "a": [
+     "finish",
+     "finished",
+     "finished",
+     "finishing"
+    ],
+    "b": [
+     "complete",
+     "completed",
+     "completed",
+     "completing"
+    ],
+    "control": [
+     "abandon",
+     "abandoned",
+     "abandoned",
+     "abandoning"
+    ],
+    "patient": "puzzle",
+    "shared": "oewn-00485097-v"
+   },
+   {
+    "a": [
+     "get",
+     "got",
+     "gotten",
+     "getting"
+    ],
+    "b": [
+     "acquire",
+     "acquired",
+     "acquired",
+     "acquiring"
+    ],
+    "control": [
+     "damage",
+     "damaged",
+     "damaged",
+     "damaging"
+    ],
+    "patient": "painting",
+    "shared": "oewn-02215637-v"
+   },
+   {
+    "a": [
+     "supply",
+     "supplied",
+     "supplied",
+     "supplying"
+    ],
+    "b": [
+     "provide",
+     "provided",
+     "provided",
+     "providing"
+    ],
+    "control": [
+     "refuse",
+     "refused",
+     "refused",
+     "refusing"
+    ],
+    "patient": "food",
+    "shared": "oewn-02332196-v"
+   },
+   {
+    "a": [
+     "collect",
+     "collected",
+     "collected",
+     "collecting"
+    ],
+    "b": [
+     "accumulate",
+     "accumulated",
+     "accumulated",
+     "accumulating"
+    ],
+    "control": [
+     "scatter",
+     "scattered",
+     "scattered",
+     "scattering"
+    ],
+    "patient": "stamps",
+    "shared": "oewn-02309962-v"
+   },
+   {
+    "a": [
+     "retrieve",
+     "retrieved",
+     "retrieved",
+     "retrieving"
+    ],
+    "b": [
+     "recover",
+     "recovered",
+     "recovered",
+     "recovering"
+    ],
+    "control": [
+     "misplace",
+     "misplaced",
+     "misplaced",
+     "misplacing"
+    ],
+    "patient": "suitcase",
+    "shared": "oewn-02252785-v"
+   },
+   {
+    "a": [
+     "build",
+     "built",
+     "built",
+     "building"
+    ],
+    "b": [
+     "construct",
+     "constructed",
+     "constructed",
+     "constructing"
+    ],
+    "control": [
+     "demolish",
+     "demolished",
+     "demolished",
+     "demolishing"
+    ],
+    "patient": "shed",
+    "shared": "oewn-01658171-v"
+   },
+   {
+    "a": [
+     "decorate",
+     "decorated",
+     "decorated",
+     "decorating"
+    ],
+    "b": [
+     "adorn",
+     "adorned",
+     "adorned",
+     "adorning"
+    ],
+    "control": [
+     "chop",
+     "chopped",
+     "chopped",
+     "chopping"
+    ],
+    "patient": "tree",
+    "shared": "oewn-01679858-v"
+   },
+   {
+    "a": [
+     "publish",
+     "published",
+     "published",
+     "publishing"
+    ],
+    "b": [
+     "print",
+     "printed",
+     "printed",
+     "printing"
+    ],
+    "control": [
+     "censor",
+     "censored",
+     "censored",
+     "censoring"
+    ],
+    "patient": "book",
+    "shared": "oewn-01749530-v"
+   },
+   {
+    "a": [
+     "change",
+     "changed",
+     "changed",
+     "changing"
+    ],
+    "b": [
+     "alter",
+     "altered",
+     "altered",
+     "altering"
+    ],
+    "control": [
+     "wear",
+     "wore",
+     "worn",
+     "wearing"
+    ],
+    "patient": "dress",
+    "shared": "oewn-00126072-v"
+   },
+   {
+    "a": [
+     "pollute",
+     "polluted",
+     "polluted",
+     "polluting"
+    ],
+    "b": [
+     "contaminate",
+     "contaminated",
+     "contaminated",
+     "contaminating"
+    ],
+    "control": [
+     "purify",
+     "purified",
+     "purified",
+     "purifying"
+    ],
+    "patient": "river",
+    "shared": "oewn-00493642-v"
+   },
+   {
+    "a": [
+     "explode",
+     "exploded",
+     "exploded",
+     "exploding"
+    ],
+    "b": [
+     "detonate",
+     "detonated",
+     "detonated",
+     "detonating"
+    ],
+    "control": [
+     "defuse",
+     "defused",
+     "defused",
+     "defusing"
+    ],
+    "patient": "bomb",
+    "shared": "oewn-00307505-v"
+   },
+   {
+    "a": [
+     "split",
+     "split",
+     "split",
+     "splitting"
+    ],
+    "b": [
+     "divide",
+     "divided",
+     "divided",
+     "dividing"
+    ],
+    "control": [
+     "bake",
+     "baked",
+     "baked",
+     "baking"
+    ],
+    "patient": "cake",
+    "shared": "oewn-02473085-v"
+   }
+  ],
+  "animate_verbs": [
+   {
+    "a": [
+     "assist",
+     "assisted",
+     "assisted",
+     "assisting"
+    ],
+    "b": [
+     "aid",
+     "aided",
+     "aided",
+     "aiding"
+    ],
+    "control": [
+     "hinder",
+     "hindered",
+     "hindered",
+     "hindering"
+    ],
+    "patient": null,
+    "shared": "oewn-02553283-v"
+   },
+   {
+    "a": [
+     "deceive",
+     "deceived",
+     "deceived",
+     "deceiving"
+    ],
+    "b": [
+     "delude",
+     "deluded",
+     "deluded",
+     "deluding"
+    ],
+    "control": [
+     "insult",
+     "insulted",
+     "insulted",
+     "insulting"
+    ],
+    "patient": null,
+    "shared": "oewn-02581157-v"
+   },
+   {
+    "a": [
+     "supervise",
+     "supervised",
+     "supervised",
+     "supervising"
+    ],
+    "b": [
+     "oversee",
+     "oversaw",
+     "overseen",
+     "overseeing"
+    ],
+    "control": [
+     "replace",
+     "replaced",
+     "replaced",
+     "replacing"
+    ],
+    "patient": null,
+    "shared": "oewn-02447914-v"
+   },
+   {
+    "a": [
+     "enroll",
+     "enrolled",
+     "enrolled",
+     "enrolling"
+    ],
+    "b": [
+     "recruit",
+     "recruited",
+     "recruited",
+     "recruiting"
+    ],
+    "control": [
+     "dismiss",
+     "dismissed",
+     "dismissed",
+     "dismissing"
+    ],
+    "patient": null,
+    "shared": "oewn-02476750-v"
+   }
+  ],
+  "agents": [
+   {
+    "a": "director",
+    "b": "manager",
+    "control": "pharmacist",
+    "shared": "oewn-10034684-n"
+   },
+   {
+    "a": "dealer",
+    "b": "trader",
+    "control": "dentist",
+    "shared": "oewn-10740102-n"
+   },
+   {
+    "a": "insurgent",
+    "b": "rebel",
+    "control": "librarian",
+    "shared": "oewn-10229738-n"
+   },
+   {
+    "a": "provider",
+    "b": "supplier",
+    "control": "astronaut",
+    "shared": "oewn-10696710-n"
+   },
+   {
+    "a": "grandma",
+    "b": "grandmother",
+    "control": "electrician",
+    "shared": "oewn-10162267-n"
+   },
+   {
+    "a": "minister",
+    "b": "pastor",
+    "control": "mechanic",
+    "shared": "oewn-10003102-n"
+   },
+   {
+    "a": "author",
+    "b": "writer",
+    "control": "reader",
+    "shared": "oewn-10813654-n"
+   },
+   {
+    "a": "owner",
+    "b": "proprietor",
+    "control": "tenant",
+    "shared": "oewn-10408623-n"
+   }
+  ],
+  "patients": [
+   {
+    "a": "couch",
+    "b": "sofa",
+    "control": "stool",
+    "shared": "oewn-04263630-n"
+   },
+   {
+    "a": "photo",
+    "b": "photograph",
+    "control": "envelope",
+    "shared": "oewn-03931348-n"
+   },
+   {
+    "a": "handbag",
+    "b": "purse",
+    "control": "umbrella",
+    "shared": "oewn-02777157-n"
+   },
+   {
+    "a": "airplane",
+    "b": "plane",
+    "control": "helicopter",
+    "shared": "oewn-02694015-n"
+   },
+   {
+    "a": "marionette",
+    "b": "puppet",
+    "control": "drum",
+    "shared": "oewn-04031744-n"
+   },
+   {
+    "a": "cloth",
+    "b": "fabric",
+    "control": "wire",
+    "shared": "oewn-03314753-n"
+   },
+   {
+    "a": "cargo",
+    "b": "freight",
+    "control": "crane",
+    "shared": "oewn-02967841-n"
+   },
+   {
+    "a": "detector",
+    "b": "sensor",
+    "control": "battery",
+    "shared": "oewn-03185635-n"
+   }
+  ]
+ },
+ "A": {
+  "verbs": [
+   {
+    "a": [
+     "go",
+     "gone",
+     "went",
+     "going"
+    ],
+    "b": [
+     "travel",
+     "travelled",
+     "travelled",
+     "traveling"
+    ],
+    "control": [
+     "want",
+     "wanted",
+     "wanted",
+     "wanting"
+    ],
+    "shared": "oewn-01839438-v",
+    "patient": null
+   },
+   {
+    "a": [
+     "place",
+     "placed",
+     "placed",
+     "placing"
+    ],
+    "b": [
+     "set",
+     "seted",
+     "seted",
+     "seting"
+    ],
+    "control": [
+     "understand",
+     "understanded",
+     "understanded",
+     "understanding"
+    ],
+    "shared": "oewn-01496967-v",
+    "patient": null
+   },
+   {
+    "a": [
+     "allow",
+     "allowed",
+     "allowed",
+     "allowing"
+    ],
+    "b": [
+     "let",
+     "leted",
+     "leted",
+     "leting"
+    ],
+    "control": [
+     "walk",
+     "walked",
+     "walked",
+     "walking"
+    ],
+    "shared": "oewn-02427979-v",
+    "patient": null
+   },
+   {
+    "a": [
+     "begin",
+     "began",
+     "begun",
+     "begining"
+    ],
+    "b": [
+     "start",
+     "started",
+     "started",
+     "starting"
+    ],
+    "control": [
+     "support",
+     "supported",
+     "supported",
+     "supporting"
+    ],
+    "shared": "oewn-00346415-v",
+    "patient": null
+   },
+   {
+    "a": [
+     "remain",
+     "remained",
+     "remained",
+     "remaining"
+    ],
+    "b": [
+     "stay",
+     "stayed",
+     "stayed",
+     "staying"
+    ],
+    "control": [
+     "happen",
+     "happened",
+     "happened",
+     "happening"
+    ],
+    "shared": "oewn-00117793-v",
+    "patient": null
+   },
+   {
+    "a": [
+     "do",
+     "did",
+     "done",
+     "doing"
+    ],
+    "b": [
+     "make",
+     "made",
+     "made",
+     "makeing"
+    ],
+    "control": [
+     "describe",
+     "described",
+     "described",
+     "describing"
+    ],
+    "shared": "oewn-02566500-v",
+    "patient": null
+   }
+  ],
+  "agents": [],
+  "patients": [
+   {
+    "a": "shop",
+    "b": "store",
+    "control": "menu",
+    "shared": "oewn-04209460-n"
+   }
+  ]
+ },
+ "dropped_from_P": [],
+ "fillers": {
+  "people": [
+   "worker",
+   "artist",
+   "neighbor",
+   "visitor",
+   "customer",
+   "engineer",
+   "carpenter",
+   "gardener"
+  ],
+  "things": [
+   "package",
+   "chest",
+   "tray",
+   "carton"
+  ],
+  "neutral_verbs": [
+   [
+    "move",
+    "moved",
+    "moved",
+    "moving"
+   ],
+   [
+    "notice",
+    "noticed",
+    "noticed",
+    "noticing"
+   ]
+  ]
+ }
+}
