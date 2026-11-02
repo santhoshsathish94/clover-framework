@@ -182,6 +182,35 @@ check reads main-clause polarity.
   by a setting (off by default); measured in the framework runtime on k3 (the core-observation drive with CSI off and
   on, plus declining messages) and live in the laptop Studio.
 
+**1d results (k3, 2026-11-02 15:55-16:00 UTC; `results/e1d.json`; code committed before the run, 59c90d2). 1d fails as
+pre-registered: R1 fails; Q1, R2, R3, C1, S1 and S2 pass.** (Q) 216 request pairs: balanced accuracy 0.965, phenomena
+0.917-1.000; all 9 errors are sentences the parser read without a verb ("Archive ...", "Copy ..." tagged as nouns). (R)
+192 messages, all named their tool for today's routing: asked tools offered 1.000 with CSI (today 1.000, keyword rule
+0.635), scope items 1.000 (keyword rule 0.042), but **declined tools still offered in 0.690 of declining messages with
+verbal negation** (today 1.000, keyword rule 0.000): caught only where the declined request was its own sentence
+("Please don't search the web. Just answer from memory." 0.000 offered) and in some others (D4 never 0.667, D5 I don't
+need you to 0.417, D6 0.833, D1 0.917, D2 and D7 1.000). Declining without a verbal negation ("No need to ..."): offered
+1.000 with CSI, as expected. (C) 196 reply sentences: CSI rule 0.954, the core's rule 0.842 (it misses every claim with
+a negation in a relative or second clause: 0/28); CSI's 9 errors: "installed" lemmatised to OEWN's variant "instal" (6)
+and the participle "run", which the core's claim pattern does not list either (3). (S1) heldout3 0.994, nonce2 1.000.
+(S2) v0.1r reads 26 of the 30 core-observation messages (v0.1: 12; unread: "Hi", "Thanks"), and changes no route.
+Latency 0.095 s per message (mean; p95 0.116). **Analysis of R1** (parses in `e1d_parses.txt`): when the declined
+request and the next clause share a sentence, joined by a comma, semicolon or colon, the parser makes the next clause
+the root and attaches the declined request to it as `advcl` or `ccomp` ("Don't search the web ..., just tell me ..." ->
+search/advcl -> tell/ROOT; "I don't need you to browse ..., just explain ..." -> need/ccomp -> explain/ROOT). Rule 9
+follows only `conj` and `parataxis`, so the request formed no proposition and its words were governed by the positive
+root. A parser reading, not a CSI judgement error; the fix is a correspondence for two main clauses read as one.
+
+## Experiment 1e: requests with joined main clauses (pre-registered 2026-11-02 16:05 UTC, after 1d, before any 1e code or data)
+Second attempt, with what 1d showed. **CSI v0.1r2** = v0.1r plus rule 9b (ARCHITECTURE.md section 3c): a verb attached
+to a clause's head by `advcl` or `ccomp` forms its own proposition when it comes before that head, a comma, semicolon
+or colon stands between them, and it has no subordinating word (`mark`) or infinitival "to". The claim rule
+identifies the claim verb by the word the core's claim pattern matched (its inflected form), not by the lemma, so a
+lemmatiser variant ("instal") does not hide a claim. Everything else as in 1d - systems, criteria and decision
+unchanged - on **fresh data** (seed 3121): new request verbs and objects for (Q), new topics, expressions, paths,
+folders and closing phrases for (R) with the same forms, new objects for (C); S1 and S2 as in 1d. If 1e fails, the
+routing use is not integrated and the failure is reported; no third variant without the human.
+
 ## Experiment 2 = E3 run plan (pre-registered 2026-11-01)
 **Data.** UD English-EWT r2.18 (tag commit b7711cce, CC BY-SA 4.0): train for our parser, dev for model choice, test
 reported once. Gold word segmentation is given to every system (tokenisation differences do not count).

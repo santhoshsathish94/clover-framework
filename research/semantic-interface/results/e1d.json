@@ -1,0 +1,1702 @@
+{
+ "seed": 3120,
+ "csi_parser": "en_core_web_trf",
+ "csi_lemmas": "/opt/clover-k3/meaning-core/csi/frozen/morph-verb-v1.1",
+ "Q": {
+  "n": 216,
+  "balanced_accuracy": 0.9653,
+  "per_phenomenon": {
+   "dist:negated": 0.9722,
+   "dist:other_object": 0.9167,
+   "dist:other_verb": 0.9167,
+   "dist:request_vs_report": 0.9722,
+   "equiv:dont_forms": 1.0,
+   "equiv:please": 0.9722
+  },
+  "errors": [
+   {
+    "a": "Copy the backup.",
+    "b": "Archive the backup.",
+    "label": 0,
+    "phenomenon": "dist:other_verb",
+    "pred": -1,
+    "differences": []
+   },
+   {
+    "a": "Archive the report.",
+    "b": "Archive the photo.",
+    "label": 0,
+    "phenomenon": "dist:other_object",
+    "pred": -1,
+    "differences": []
+   },
+   {
+    "a": "Please archive the folder.",
+    "b": "Archive the folder.",
+    "label": 1,
+    "phenomenon": "equiv:please",
+    "pred": -1,
+    "differences": []
+   },
+   {
+    "a": "Archive the folder.",
+    "b": "Don't archive the folder.",
+    "label": 0,
+    "phenomenon": "dist:negated",
+    "pred": -1,
+    "differences": []
+   },
+   {
+    "a": "Archive the folder.",
+    "b": "Archive the playlist.",
+    "label": 0,
+    "phenomenon": "dist:other_object",
+    "pred": -1,
+    "differences": []
+   },
+   {
+    "a": "Archive the folder.",
+    "b": "Upload the folder.",
+    "label": 0,
+    "phenomenon": "dist:other_verb",
+    "pred": -1,
+    "differences": []
+   },
+   {
+    "a": "Archive the folder.",
+    "b": "You archived the folder.",
+    "label": 0,
+    "phenomenon": "dist:request_vs_report",
+    "pred": -1,
+    "differences": []
+   },
+   {
+    "a": "Archive the playlist.",
+    "b": "Archive the folder.",
+    "label": 0,
+    "phenomenon": "dist:other_object",
+    "pred": -1,
+    "differences": []
+   },
+   {
+    "a": "Sort the folder.",
+    "b": "Archive the folder.",
+    "label": 0,
+    "phenomenon": "dist:other_verb",
+    "pred": -1,
+    "differences": []
+   }
+  ]
+ },
+ "R": {
+  "messages_kept": 192,
+  "messages_dropped_not_asked_today": [],
+  "items": 204,
+  "declined_offered": {
+   "today": 1.0,
+   "csi": 0.6905,
+   "keyword": 0.0
+  },
+  "asked_offered": {
+   "today": 1.0,
+   "csi": 1.0,
+   "keyword": 0.6354
+  },
+  "scope_offered": {
+   "today": 1.0,
+   "csi": 1.0,
+   "keyword": 0.0417
+  },
+  "no_verbal_negation_declined_offered": {
+   "today": 1.0,
+   "csi": 1.0,
+   "keyword": 0.0
+  },
+  "by_form": {
+   "A1 plain [asked]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 1.0,
+    "keyword": 1.0
+   },
+   "A2 please [asked]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 1.0,
+    "keyword": 1.0
+   },
+   "A3 can you [asked]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 1.0,
+    "keyword": 1.0
+   },
+   "A4 I need you to [asked]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 1.0,
+    "keyword": 1.0
+   },
+   "A5 second clause [asked]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 1.0,
+    "keyword": 1.0
+   },
+   "A6 scope: negation inside [asked]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 1.0,
+    "keyword": 0.0833
+   },
+   "A7 scope: negation in another clause [asked]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 1.0,
+    "keyword": 0.0
+   },
+   "D1 don't, just [declined]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 0.9167,
+    "keyword": 0.0
+   },
+   "D2 do not [declined]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 1.0,
+    "keyword": 0.0
+   },
+   "D3 please don't + sentence [declined]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 0.0,
+    "keyword": 0.0
+   },
+   "D4 never [declined]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 0.6667,
+    "keyword": 0.0
+   },
+   "D5 I don't need you to [declined]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 0.4167,
+    "keyword": 0.0
+   },
+   "D6 you don't have to [declined]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 0.8333,
+    "keyword": 0.0
+   },
+   "D7 decline one, ask another [asked]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 1.0,
+    "keyword": 0.0
+   },
+   "D7 decline one, ask another [declined]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 1.0,
+    "keyword": 0.0
+   },
+   "N1 no need to [declined]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 1.0,
+    "keyword": 0.0
+   },
+   "N2 there is no need to [declined]": {
+    "n": 12,
+    "today": 1.0,
+    "csi": 1.0,
+    "keyword": 0.0
+   }
+  },
+  "csi_errors": [
+   {
+    "text": "Don't search the web for the opening hours of the city library, just tell me what you know.",
+    "form": "D1 don't, just",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't browse the internet for the distance from Delhi to Agra, just tell me what you know.",
+    "form": "D1 don't, just",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't look up the population of Jaipur online, give me your best estimate.",
+    "form": "D1 don't, just",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Do not browse the internet for the boiling point of ethanol; just explain it briefly.",
+    "form": "D2 do not",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Do not browse the internet for the population of Jaipur; give me your best estimate.",
+    "form": "D2 do not",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Do not browse the internet for the latest version of Python; just tell me what you know.",
+    "form": "D2 do not",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Never browse the internet for the boiling point of ethanol for this, just tell me what you know.",
+    "form": "D4 never",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "I don't need you to browse the internet for the population of Jaipur, just explain it briefly.",
+    "form": "D5 I don't need you to",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "I don't need you to browse the internet for the boiling point of ethanol, give me your best estimate.",
+    "form": "D5 I don't need you to",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "You don't have to search the web for the population of Jaipur: give me your best estimate.",
+    "form": "D6 you don't have to",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "You don't have to browse the internet for the boiling point of ethanol: just tell me what you know.",
+    "form": "D6 you don't have to",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "You don't have to browse the internet for the latest version of Python: just explain it briefly.",
+    "form": "D6 you don't have to",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't search the web for the height of Mount Everest; use Python to calculate 2**64 + 17.",
+    "form": "D7 decline one, ask another",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't look up the population of Jaipur online; run the command git status.",
+    "form": "D7 decline one, ask another",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't browse the internet for the distance from Delhi to Agra; list the files in the folder /home/user/docs.",
+    "form": "D7 decline one, ask another",
+    "cap": "web.search",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't use Python to compute 17 * 23 * 31, give me your best estimate.",
+    "form": "D1 don't, just",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't use Python to calculate the sum of the first 100 primes, give me your best estimate.",
+    "form": "D1 don't, just",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't use Python to calculate the sum of the first 100 primes, just tell me what you know.",
+    "form": "D1 don't, just",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Do not use Python to compute 2**64 + 17; just tell me what you know.",
+    "form": "D2 do not",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Do not use Python to compute 17 * 23 * 31; just explain it briefly.",
+    "form": "D2 do not",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Do not use Python to calculate 2**64 + 17; give me your best estimate.",
+    "form": "D2 do not",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Never use Python to compute the sum of the first 100 primes for this, give me your best estimate.",
+    "form": "D4 never",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Never use Python to compute 2**64 + 17 for this, just tell me what you know.",
+    "form": "D4 never",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "I don't need you to use Python to compute the sum of the first 100 primes, give me your best estimate.",
+    "form": "D5 I don't need you to",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "I don't need you to use Python to calculate the square root of 2 to 10 digits, just tell me what you know.",
+    "form": "D5 I don't need you to",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "You don't have to use Python to compute the square root of 2 to 10 digits: just explain it briefly.",
+    "form": "D6 you don't have to",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "You don't have to use Python to calculate the square root of 2 to 10 digits: just answer from memory.",
+    "form": "D6 you don't have to",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "You don't have to use Python to calculate 17 * 23 * 31: just tell me what you know.",
+    "form": "D6 you don't have to",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't use Python to calculate 17 * 23 * 31; read the file C:\\notes\\todo.txt and summarize it.",
+    "form": "D7 decline one, ask another",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't use Python to calculate 2**64 + 17; look up the boiling point of ethanol online.",
+    "form": "D7 decline one, ask another",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't use Python to compute the sum of the first 100 primes; list the files in the folder /home/user/docs.",
+    "form": "D7 decline one, ask another",
+    "cap": "python",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't read the file D:\\work\\plan.md and summarize it, just tell me what you know.",
+    "form": "D1 don't, just",
+    "cap": "files.read",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't read the file D:\\work\\plan.md and summarize it, just tell me what you know.",
+    "form": "D1 don't, just",
+    "cap": "files.read",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Do not list the files in the folder /home/user/docs; give me your best estimate.",
+    "form": "D2 do not",
+    "cap": "files.read",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Do not read the file /home/user/notes.txt and summarize it; just explain it briefly.",
+    "form": "D2 do not",
+    "cap": "files.read",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Do not read the file D:\\work\\plan.md and summarize it; just tell me what you know.",
+    "form": "D2 do not",
+    "cap": "files.read",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Never list the files in the folder /home/user/docs for this, just tell me what you know.",
+    "form": "D4 never",
+    "cap": "files.read",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Never list the files in the folder C:\\projects for this, just tell me what you know.",
+    "form": "D4 never",
+    "cap": "files.read",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "You don't have to read the file C:\\notes\\todo.txt and summarize it: just explain it briefly.",
+    "form": "D6 you don't have to",
+    "cap": "files.read",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "You don't have to read the file D:\\work\\plan.md and summarize it: give me your best estimate.",
+    "form": "D6 you don't have to",
+    "cap": "files.read",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't read the file C:\\notes\\todo.txt and summarize it; run the command git status.",
+    "form": "D7 decline one, ask another",
+    "cap": "files.read",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't list the files in the folder D:\\photos; use the terminal to check the disk usage.",
+    "form": "D7 decline one, ask another",
+    "cap": "files.read",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't list the files in the folder /home/user/docs; look up the opening hours of the city library online.",
+    "form": "D7 decline one, ask another",
+    "cap": "files.read",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't use the terminal to check the disk usage, just explain it briefly.",
+    "form": "D1 don't, just",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't run the command ls -la in C:\\projects, just answer from memory.",
+    "form": "D1 don't, just",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't run the command git status, just answer from memory.",
+    "form": "D1 don't, just",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Do not run the command ls -la in D:\\photos; give me your best estimate.",
+    "form": "D2 do not",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Do not run the command git status; give me your best estimate.",
+    "form": "D2 do not",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Do not use the terminal to check the disk usage; just answer from memory.",
+    "form": "D2 do not",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Never use the terminal to check the disk usage for this, just answer from memory.",
+    "form": "D4 never",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Never run the command ls -la in C:\\projects for this, just tell me what you know.",
+    "form": "D4 never",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Never run the command ls -la in C:\\projects for this, just tell me what you know.",
+    "form": "D4 never",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "I don't need you to run the command ls -la in /home/user/docs, just tell me what you know.",
+    "form": "D5 I don't need you to",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "You don't have to run the command git status: just tell me what you know.",
+    "form": "D6 you don't have to",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "You don't have to run the command git status: just tell me what you know.",
+    "form": "D6 you don't have to",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't run the command git status; list the files in the folder /home/user/docs.",
+    "form": "D7 decline one, ask another",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't use the terminal to check the disk usage; look up the latest version of Python online.",
+    "form": "D7 decline one, ask another",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   },
+   {
+    "text": "Don't run the command git status; look up the population of Jaipur online.",
+    "form": "D7 decline one, ask another",
+    "cap": "shell",
+    "gold": "declined",
+    "scope": false,
+    "verbal_negation": true,
+    "today": true,
+    "csi": true,
+    "keyword": false
+   }
+  ]
+ },
+ "C": {
+  "n": 196,
+  "accuracy": {
+   "core": 0.8418,
+   "csi": 0.9541
+  },
+  "by_form": {
+   "C1 perfect": {
+    "core": 0.9286,
+    "csi": 0.8571
+   },
+   "C2 past": {
+    "core": 1.0,
+    "csi": 0.9286
+   },
+   "C3 passive": {
+    "core": 0.9286,
+    "csi": 0.8571
+   },
+   "C4 successfully": {
+    "core": 0.9286,
+    "csi": 0.8571
+   },
+   "C5 negation in a relative clause": {
+    "core": 0.0,
+    "csi": 0.9286
+   },
+   "C6 negation in a second clause": {
+    "core": 0.0,
+    "csi": 0.9286
+   },
+   "N1 not": {
+    "core": 1.0,
+    "csi": 1.0
+   },
+   "N2 couldn't": {
+    "core": 1.0,
+    "csi": 1.0
+   },
+   "N3 tried to": {
+    "core": 1.0,
+    "csi": 1.0
+   },
+   "N4 future": {
+    "core": 1.0,
+    "csi": 1.0
+   },
+   "N5 never": {
+    "core": 1.0,
+    "csi": 1.0
+   },
+   "N6 question": {
+    "core": 1.0,
+    "csi": 1.0
+   },
+   "N7 unable": {
+    "core": 1.0,
+    "csi": 1.0
+   },
+   "N8 passive not": {
+    "core": 1.0,
+    "csi": 1.0
+   }
+  },
+  "csi_errors": [
+   {
+    "text": "I have installed the backup.",
+    "gold": 1,
+    "form": "C1 perfect",
+    "core": 1,
+    "csi": 0
+   },
+   {
+    "text": "I installed the script.",
+    "gold": 1,
+    "form": "C2 past",
+    "core": 1,
+    "csi": 0
+   },
+   {
+    "text": "The package has been installed.",
+    "gold": 1,
+    "form": "C3 passive",
+    "core": 1,
+    "csi": 0
+   },
+   {
+    "text": "I've successfully installed the config file.",
+    "gold": 1,
+    "form": "C4 successfully",
+    "core": 1,
+    "csi": 0
+   },
+   {
+    "text": "I installed the report that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 0
+   },
+   {
+    "text": "I installed the folder, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 0
+   },
+   {
+    "text": "I have run the package.",
+    "gold": 1,
+    "form": "C1 perfect",
+    "core": 0,
+    "csi": 0
+   },
+   {
+    "text": "The branch has been run.",
+    "gold": 1,
+    "form": "C3 passive",
+    "core": 0,
+    "csi": 0
+   },
+   {
+    "text": "I've successfully run the branch.",
+    "gold": 1,
+    "form": "C4 successfully",
+    "core": 0,
+    "csi": 0
+   }
+  ],
+  "core_errors": [
+   {
+    "text": "I deleted the config file that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I deleted the branch, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I removed the report that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I removed the branch, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I created the script that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I created the config file, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I saved the folder that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I saved the branch, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I wrote the branch that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I wrote the script, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I committed the backup that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I committed the package, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I pushed the package that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I pushed the branch, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I moved the package that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I moved the repository, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I renamed the branch that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I renamed the config file, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I installed the report that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 0
+   },
+   {
+    "text": "I installed the folder, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 0
+   },
+   {
+    "text": "I cloned the repository that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I cloned the folder, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I opened the config file that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I opened the branch, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I have run the package.",
+    "gold": 1,
+    "form": "C1 perfect",
+    "core": 0,
+    "csi": 0
+   },
+   {
+    "text": "The branch has been run.",
+    "gold": 1,
+    "form": "C3 passive",
+    "core": 0,
+    "csi": 0
+   },
+   {
+    "text": "I've successfully run the branch.",
+    "gold": 1,
+    "form": "C4 successfully",
+    "core": 0,
+    "csi": 0
+   },
+   {
+    "text": "I ran the branch that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I ran the branch, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I executed the config file that you did not need.",
+    "gold": 1,
+    "form": "C5 negation in a relative clause",
+    "core": 0,
+    "csi": 1
+   },
+   {
+    "text": "I executed the branch, but the log file was not updated.",
+    "gold": 1,
+    "form": "C6 negation in a second clause",
+    "core": 0,
+    "csi": 1
+   }
+  ]
+ },
+ "S1": {
+  "heldout3": 0.994,
+  "nonce2": 1.0
+ },
+ "S2": {
+  "messages": 30,
+  "read": 26,
+  "route_changes": [],
+  "rows": [
+   {
+    "text": "Hi",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": false,
+    "propositions": []
+   },
+   {
+    "text": "How are you?",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "be",
+      "indicative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Thanks",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": false,
+    "propositions": []
+   },
+   {
+    "text": "What is the capital of Australia?",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "be",
+      "indicative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "A shop sells pens at 3 for $2. How much do 12 pens cost?",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "sell",
+      "indicative",
+      "positive"
+     ],
+     [
+      "cost",
+      "indicative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "And how much would 45 pens cost?",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "cost",
+      "indicative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "That's wrong, try again",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "try",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Search the web for the population of Jaipur",
+    "today": [
+     "web.search",
+     "web.page"
+    ],
+    "csi": [
+     "web.search",
+     "web.page"
+    ],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "search",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Use Python to compute 2**64 + 17",
+    "today": [
+     "python"
+    ],
+    "csi": [
+     "python"
+    ],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "compute",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Remember that I'm vegetarian.",
+    "today": [
+     "remember"
+    ],
+    "csi": [
+     "remember"
+    ],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "remember",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Suggest a quick dinner I can cook tonight.",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "suggest",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "What is in this picture?",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "be",
+      "indicative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "What number is written on it?",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "write",
+      "indicative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Read the file /opt/clover-k3/core-observe/files/meeting-notes.txt and summarize it.",
+    "today": [
+     "files.read",
+     "files.list"
+    ],
+    "csi": [
+     "files.read",
+     "files.list"
+    ],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "read",
+      "imperative",
+      "positive"
+     ],
+     [
+      "summarize",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Delete the old report files in /opt/clover-k3/core-observe/files/reports",
+    "today": [
+     "shell",
+     "files.list"
+    ],
+    "csi": [
+     "shell",
+     "files.list"
+    ],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "delete",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Hi",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": false,
+    "propositions": []
+   },
+   {
+    "text": "How are you?",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "be",
+      "indicative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Thanks",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": false,
+    "propositions": []
+   },
+   {
+    "text": "What is the capital of Australia?",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "be",
+      "indicative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "A shop sells pens at 3 for $2. How much do 12 pens cost?",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "sell",
+      "indicative",
+      "positive"
+     ],
+     [
+      "cost",
+      "indicative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "And how much would 45 pens cost?",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "cost",
+      "indicative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "That's wrong, try again",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "try",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Search the web for the population of Jaipur",
+    "today": [
+     "web.search",
+     "web.page"
+    ],
+    "csi": [
+     "web.search",
+     "web.page"
+    ],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "search",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Use Python to compute 2**64 + 17",
+    "today": [
+     "python"
+    ],
+    "csi": [
+     "python"
+    ],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "compute",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Remember that I'm vegetarian.",
+    "today": [
+     "remember"
+    ],
+    "csi": [
+     "remember"
+    ],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "remember",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Suggest a quick dinner I can cook tonight.",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "suggest",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "What is in this picture?",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "be",
+      "indicative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "What number is written on it?",
+    "today": [],
+    "csi": [],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "write",
+      "indicative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Read the file /opt/clover-k3/core-observe/files/meeting-notes.txt and summarize it.",
+    "today": [
+     "files.read",
+     "files.list"
+    ],
+    "csi": [
+     "files.read",
+     "files.list"
+    ],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "read",
+      "imperative",
+      "positive"
+     ],
+     [
+      "summarize",
+      "imperative",
+      "positive"
+     ]
+    ]
+   },
+   {
+    "text": "Delete the old report files in /opt/clover-k3/core-observe/files/reports",
+    "today": [
+     "shell",
+     "files.list"
+    ],
+    "csi": [
+     "shell",
+     "files.list"
+    ],
+    "declined": [],
+    "read": true,
+    "propositions": [
+     [
+      "delete",
+      "imperative",
+      "positive"
+     ]
+    ]
+   }
+  ]
+ },
+ "latency_s": {
+  "mean": 0.0954,
+  "p95": 0.1164,
+  "n": 270
+ },
+ "criteria": {
+  "Q1": true,
+  "R1": false,
+  "R2": true,
+  "R3": true,
+  "C1": true,
+  "S1": true,
+  "S2": true
+ }
+}

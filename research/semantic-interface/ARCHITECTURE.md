@@ -167,4 +167,8 @@ No correspondence was added or removed; the recipient passive found in Experimen
     other proposition has mood "indicative". Negation as rule 6.
 11. A token belongs to the proposition of its nearest ancestor (itself included) that is a proposition's predicate. A
     negation inside a subordinate clause that forms no proposition does not change that proposition's polarity.
+9b. (v0.1r2, Experiment 1e, written after 1d) A verb attached to a clause's head by `advcl` or `ccomp` forms its own
+    proposition when it comes before that head, a comma, semicolon or colon stands between them, and it has no
+    subordinating word (`mark`) or infinitival "to": the parser's reading of two main clauses joined in one sentence
+    ("Don't search the web ..., just tell me ..."). It takes no subject from that head.
 Comparison (rule 8) adds mood to the compared fields and still compares each text's first proposition.

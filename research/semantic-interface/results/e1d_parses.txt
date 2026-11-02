@@ -1,0 +1,36 @@
+== Don't search the web for the opening hours of the city library, just tell me what you know.
+   sents: ["Don't search the web for the opening hours of the city library, just tell me what you know."]
+    Do/AUX/VB/aux->2 n't/PART/RB/neg->2 search/VERB/VB/advcl->15 the/DET/DT/det->4 web/NOUN/NN/dobj->2 for/ADP/IN/prep->2 the/DET/DT/det->8 opening/NOUN/NN/compound->8 hours/NOUN/NNS/pobj->5 of/ADP/IN/prep->8 the/DET/DT/det->12 city/NOUN/NN/compound->12 library/NOUN/NN/pobj->9 ,/PUNCT/,/punct->15 just/ADV/RB/advmod->15 tell/VERB/VB/ROOT->15 me/PRON/PRP/dobj->15 what/PRON/WP/dobj->19 you/PRON/PRP/nsubj->19 know/VERB/VBP/ccomp->15 ./PUNCT/./punct->15
+    PROP tell imperative positive {'ARG1': 'i', 'ARG0': 'you'}
+    problems []
+== Do not use Python to compute 17 * 23 * 31; just explain it briefly.
+   sents: ['Do not use Python to compute 17 * 23 * 31; just explain it briefly.']
+    Do/AUX/VB/aux->2 not/PART/RB/neg->2 use/VERB/VB/advcl->13 Python/PROPN/NNP/dobj->2 to/PART/TO/aux->5 compute/VERB/VB/xcomp->2 17/NUM/CD/nummod->10 */SYM/SYM/punct->10 23/NUM/CD/nummod->10 */SYM/SYM/punct->10 31/NUM/CD/dobj->5 ;/PUNCT/:/punct->13 just/ADV/RB/advmod->13 explain/VERB/VB/ROOT->13 it/PRON/PRP/dobj->13 briefly/ADV/RB/advmod->13 ./PUNCT/./punct->13
+    PROP explain imperative positive {'ARG1': 'it', 'ARG0': 'you'}
+    problems []
+== Never use the terminal to check the disk usage for this, just answer from memory.
+   sents: ['Never use the terminal to check the disk usage for this, just answer from memory.']
+    Never/ADV/RB/neg->1 use/VERB/VB/advcl->13 the/DET/DT/det->3 terminal/NOUN/NN/dobj->1 to/PART/TO/aux->5 check/VERB/VB/xcomp->1 the/DET/DT/det->8 disk/NOUN/NN/compound->8 usage/NOUN/NN/dobj->5 for/ADP/IN/prep->5 this/PRON/DT/pobj->9 ,/PUNCT/,/punct->13 just/ADV/RB/advmod->13 answer/VERB/VB/ROOT->13 from/ADP/IN/prep->13 memory/NOUN/NN/pobj->14 ./PUNCT/./punct->13
+    PROP answer imperative positive {'ARG0': 'you'}
+    problems []
+== I don't need you to browse the internet for the population of Jaipur, just explain it briefly.
+   sents: ["I don't need you to browse the internet for the population of Jaipur, just explain it briefly."]
+    I/PRON/PRP/nsubj->3 do/AUX/VBP/aux->3 n't/PART/RB/neg->3 need/VERB/VB/ccomp->16 you/PRON/PRP/nsubj->6 to/PART/TO/aux->6 browse/VERB/VB/ccomp->3 the/DET/DT/det->8 internet/NOUN/NN/dobj->6 for/ADP/IN/prep->6 the/DET/DT/det->11 population/NOUN/NN/pobj->9 of/ADP/IN/prep->11 Jaipur/PROPN/NNP/pobj->12 ,/PUNCT/,/punct->16 just/ADV/RB/advmod->16 explain/VERB/VB/ROOT->16 it/PRON/PRP/dobj->16 briefly/ADV/RB/advmod->16 ./PUNCT/./punct->16
+    PROP explain imperative positive {'ARG1': 'it', 'ARG0': 'you'}
+    problems []
+== You don't have to run the command git status: just tell me what you know.
+   sents: ["You don't have to run the command git status: just tell me what you know."]
+    You/PRON/PRP/nsubj->3 do/AUX/VBP/aux->3 n't/PART/RB/neg->3 have/VERB/VB/ccomp->12 to/PART/TO/aux->5 run/VERB/VB/xcomp->3 the/DET/DT/det->7 command/NOUN/NN/compound->9 git/NOUN/NN/compound->9 status/NOUN/NN/dobj->5 :/PUNCT/:/punct->12 just/ADV/RB/advmod->12 tell/VERB/VB/ROOT->12 me/PRON/PRP/dobj->12 what/PRON/WP/dobj->16 you/PRON/PRP/nsubj->16 know/VERB/VBP/ccomp->12 ./PUNCT/./punct->12
+    PROP tell imperative positive {'ARG1': 'i', 'ARG0': 'you'}
+    problems []
+== Don't run the command git status; look up the population of Jaipur online.
+   sents: ["Don't run the command git status; look up the population of Jaipur online."]
+    Do/AUX/VB/aux->2 n't/PART/RB/neg->2 run/VERB/VB/advcl->8 the/DET/DT/det->6 command/NOUN/NN/compound->6 git/NOUN/NN/compound->6 status/NOUN/NN/dobj->2 ;/PUNCT/:/punct->8 look/VERB/VB/ROOT->8 up/ADP/RP/prt->8 the/DET/DT/det->11 population/NOUN/NN/dobj->8 of/ADP/IN/prep->11 Jaipur/PROPN/NNP/pobj->12 online/ADV/RB/advmod->8 ./PUNCT/./punct->8
+    PROP look imperative positive {'ARG1': 'population', 'ARG0': 'you'}
+    problems []
+== Please don't search the web for the population of Jaipur. Just answer from memory.
+   sents: ["Please don't search the web for the population of Jaipur.", 'Just answer from memory.']
+    Please/INTJ/UH/intj->3 do/AUX/VB/aux->3 n't/PART/RB/neg->3 search/VERB/VB/ROOT->3 the/DET/DT/det->5 web/NOUN/NN/dobj->3 for/ADP/IN/prep->3 the/DET/DT/det->8 population/NOUN/NN/pobj->6 of/ADP/IN/prep->8 Jaipur/PROPN/NNP/pobj->9 ./PUNCT/./punct->3 Just/ADV/RB/advmod->13 answer/VERB/VB/ROOT->13 from/ADP/IN/prep->13 memory/NOUN/NN/pobj->14 ./PUNCT/./punct->13
+    PROP search imperative negative {'ARG1': 'web', 'ARG0': 'you'}
+    PROP answer imperative positive {'ARG0': 'you'}
+    problems []
