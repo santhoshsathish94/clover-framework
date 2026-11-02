@@ -171,13 +171,14 @@ No correspondence was added or removed; the recipient passive found in Experimen
     proposition when it comes before that head, a comma, semicolon or colon stands between them, and it has no
     subordinating word (`mark`) or infinitival "to": the parser's reading of two main clauses joined in one sentence
     ("Don't search the web ..., just tell me ..."). It takes no subject from that head.
-12. (v0.1r3, Experiment 1f, written after 1e) A sentence the parser reads without a verbal root is re-read as a
-    request only when the Grammar layer supports that reading twice: (a) its tagger gives the sentence's first word,
-    as written, a probability of at least 0.02 of being a base-form verb (tag VB); (b) the parser, reading the same
-    words as an emphatic request ("Do" + the sentence with its first letter lowercased), makes that word a VB heading
-    the sentence, finds one sentence, attaches nothing to the added "Do", and the words align one to one. Then the
-    sentence is read from that parse with "Do" removed, by rules 1-11 unchanged (rule 10 makes it an imperative with
-    the addressee as ARG0); otherwise it stays unread. A sentence with a verbal root is never re-read. The emphatic
-    form adds no content ("Do forward the timetable." is the request "Forward the timetable."); the threshold was
-    chosen on development data (EXPERIMENTS.md, Experiment 1f).
+12. (v0.1r3, Experiment 1f, written after 1e; amended before any 1f test data) A sentence the parser reads without a
+    verbal root is re-read as a request only when the Grammar layer supports that reading twice: (a) its tagger gives
+    the sentence's first word, as written, a probability of at least 0.02 of being a base-form verb (tag VB); (b) the
+    parser, reading the same words as a polite request ("Please" + the sentence with its first letter lowercased),
+    makes that word a VB heading the sentence with no subject, finds one sentence, attaches nothing to the added
+    "Please", and the words align one to one. Then the sentence is read from that parse with "Please" removed, by
+    rules 1-11 unchanged (rule 10 makes it an imperative with the addressee as ARG0); otherwise it stays unread. A
+    sentence with a verbal root is never re-read. The request form adds no content ("Please forward the timetable." is
+    the request "Forward the timetable."); the threshold and the form were chosen on development data (EXPERIMENTS.md,
+    Experiment 1f and its amendment).
 Comparison (rule 8) adds mood to the compared fields and still compares each text's first proposition.

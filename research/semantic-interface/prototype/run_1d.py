@@ -1,8 +1,10 @@
-"""Experiments 1d and 1e: CSI reads requests, for Clover's core (EXPERIMENTS.md). Builds the request minimal pairs (Q),
+"""Experiments 1d, 1e and 1f: CSI reads requests, for Clover's core (EXPERIMENTS.md). Builds the request minimal pairs (Q),
 the routing messages (R) and the reply sentences (C) from the fixed templates below (1d: seed 3120; 1e: seed 3121 and the
-fresh lists in SET_1E, same forms), runs CSI and the core's own rules on them, the E1 regression sets (S1) and the
-core-observation messages (S2), and checks the criteria.
-Usage: python run_1d.py <out json> [--set 1d|1e] [--mobile clover-ai-system/mobile] [--observed turns.jsonl ...]"""
+fresh lists in SET_1E; 1f: seed 3122 and SET_1F; same forms), runs CSI and the core's own rules on them, the E1
+regression sets (S1) and the core-observation messages (S2), for 1f also natural text (P, UD English-EWT test), and
+checks the criteria.
+Usage: python run_1d.py <out json> [--set 1d|1e|1f] [--mobile clover-ai-system/mobile] [--observed turns.jsonl ...]
+       [--ewt en_ewt-ud-test.conllu]"""
 import argparse
 import json
 import os
@@ -104,6 +106,41 @@ SET_1E = {
              "just summarise what you know"],
     "CLAIM_OBJECTS": ["database", "document", "image", "notebook", "archive", "module", "template", "spreadsheet"],
 }
+# Experiment 1f: fresh words (written before any 1f run); every request verb is an OEWN 2025 verb that OEWN also lists
+# as a noun, adjective or adverb (checked before the pre-registration)
+SET_1F = {
+    "SEED": 3122,
+    "REQUEST_VERBS": [("email", "emailed"), ("text", "texted"), ("fax", "faxed"), ("mail", "mailed"), ("file", "filed"),
+                      ("label", "labeled"), ("flag", "flagged"), ("pin", "pinned"), ("star", "starred"),
+                      ("index", "indexed"), ("stamp", "stamped"), ("post", "posted"), ("outline", "outlined"),
+                      ("sketch", "sketched"), ("chart", "charted"), ("track", "tracked"), ("clear", "cleared"),
+                      ("empty", "emptied"), ("lower", "lowered"), ("double", "doubled"), ("clean", "cleaned"),
+                      ("narrow", "narrowed"), ("smooth", "smoothed"), ("dry", "dried")],
+    "REQUEST_OBJECTS": ["agenda", "itinerary", "newsletter", "poster", "invitation", "transcript", "manuscript",
+                        "diagram", "checklist", "proposal", "certificate", "ticket"],
+    "TOPICS": ["the population of Nairobi", "the depth of Lake Baikal", "the speed of sound in water",
+               "the founding year of Infosys", "the longest river in Australia", "the capital of Mongolia"],
+    "EXPRS": ["7**30 + 11", "98765 * 4321", "the sum of the squares from 1 to 50", "the fifth root of 1000 to 6 digits"],
+    "PATHS": ["C:\\reports\\q3.xlsx", "F:\\notes\\ideas.txt", "/var/data/log.txt"],
+    "FOLDERS": ["C:\\backups", "F:\\videos", "/var/data"],
+    "TOOLS": {
+        "web.search": {"ask": TOOLS["web.search"]["ask"],
+                       "scope": ["search the web for why the battery does not last",
+                                 "look up online why the screen does not turn on",
+                                 "search the internet for reasons why bread does not rise"]},
+        "python": {"ask": TOOLS["python"]["ask"],
+                   "scope": ["use Python to list the numbers below 80 that are not even",
+                             "use Python to find which of 51, 53 and 57 are not prime"]},
+        "files.read": {"ask": TOOLS["files.read"]["ask"],
+                       "scope": ["read the file {path} and tell me which bills are not paid",
+                                 "list the files in {folder} that were not backed up"]},
+        "shell": {"ask": TOOLS["shell"]["ask"],
+                  "scope": ["run the command git status and tell me which files are not tracked",
+                            "use the terminal to find the ports that are not open"]}},
+    "ALTS": ["just give me your own answer", "tell me what you remember", "an approximate answer is fine",
+             "just reply from your knowledge"],
+    "CLAIM_OBJECTS": ["workflow", "container", "cache", "certificate", "dashboard", "schema", "playbook", "migration"],
+}
 
 
 def cap1(s):
@@ -172,15 +209,44 @@ def keyword_declined(text, sem):
     return declined - asked
 
 
+def ewt_sentences(path):
+    """UD English-EWT: (text, {character offset: gold token}) per sentence; gold is used only for scoring."""
+    text, toks = None, []
+    for line in open(path, encoding="utf-8"):
+        line = line.rstrip("\n")
+        if line.startswith("# text = "):
+            text = line[9:]
+        elif not line:
+            if toks and text:
+                starts, pos = {}, 0
+                for t in toks:
+                    i = text.find(t["form"], pos)
+                    if i >= 0:
+                        starts[i], pos = t, i + len(t["form"])
+                yield text, starts
+            text, toks = None, []
+        elif not line.startswith("#"):
+            c = line.split("\t")
+            if "-" not in c[0] and "." not in c[0]:
+                toks.append({"form": c[1], "upos": c[3], "feats": c[5]})
+
+
+def rereads(an):
+    return an["readings"][0].get("request_rereads", [])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out")
-    ap.add_argument("--set", default="1d", choices=("1d", "1e"))
+    ap.add_argument("--set", default="1d", choices=("1d", "1e", "1f"))
     ap.add_argument("--mobile", default=os.path.join(HERE, "..", "..", "..", "clover-ai-system", "mobile"))
     ap.add_argument("--observed", nargs="*", default=[])
+    ap.add_argument("--ewt", default=None, help="UD English-EWT test file (1f, part P)")
     a = ap.parse_args()
     if a.set == "1e":
         globals().update(SET_1E)
+    if a.set == "1f":
+        globals().update(SET_1F)
     sys.path.insert(0, a.mobile)
     import semantics as sem
     rng = random.Random(SEED)
@@ -203,8 +269,28 @@ def main():
         r["pred"], r["differences"] = pred[-1], [d["type"] for d in c["differences"]]
     y = [r["label"] for r in Q]
     scored = [p if p != -1 else 1 - t for p, t in zip(pred, y)]
-    out["Q"] = {"n": len(Q), "balanced_accuracy": round(balanced_acc(y, scored), 4),
-                "per_phenomenon": per_phenomenon(Q, scored), "errors": [r for r, s, t in zip(Q, scored, y) if s != t]}
+    # 1f amendment: a 'please' pair whose bare sentence rule 12 re-read is equivalent by construction (the re-read is the
+    # parse of the pair's other sentence): Q1 is computed without those pairs; they are reported
+    by_construction = [r["phenomenon"] == "equiv:please" and any(x["accepted"] and x["token"] == 0 for x in rereads(read(r["b"])))
+                       for r in Q]
+    keep = [i for i, b in enumerate(by_construction) if not b]
+    out["Q"] = {"n": len(Q), "n_scored": len(keep),
+                "balanced_accuracy": round(balanced_acc([y[i] for i in keep], [scored[i] for i in keep]), 4),
+                "per_phenomenon": per_phenomenon([Q[i] for i in keep], [scored[i] for i in keep]),
+                "balanced_accuracy_all_pairs": round(balanced_acc(y, scored), 4),
+                "per_phenomenon_all_pairs": per_phenomenon(Q, scored),
+                "please_pairs_equivalent_by_construction": [(Q[i]["a"], Q[i]["b"], scored[i]) for i, b in enumerate(by_construction) if b],
+                "errors": [r for r, s, t in zip(Q, scored, y) if s != t]}
+    # coverage of the bare requests "V the N." with and without rule 12 (1f)
+    bare = sorted({f"{cap1(v)} the {o}." for v, _ in REQUEST_VERBS for o in REQUEST_OBJECTS} &
+                  {x for r in Q for x in (r["a"], r["b"])})
+    no_root = {t: [r for r in rereads(read(t)) if r["token"] == 0] for t in bare}
+    out["Q"]["bare_requests"] = {
+        "n": len(bare),
+        "read_without_rule12": round(sum(not v for v in no_root.values()) / len(bare), 4),
+        "read_with_rule12": round(sum(not v or v[0]["accepted"] for v in no_root.values()) / len(bare), 4),
+        "unread": [(t, v[0]["p_vb"]) for t, v in no_root.items() if v and not v[0]["accepted"]],
+        "reread": [(t, v[0]["p_vb"]) for t, v in no_root.items() if v and v[0]["accepted"]]}
     # (R) a message counts only if today's routing reads it as naming its target tool (decided before CSI runs)
     kept, dropped = [], []
     for r in R:
@@ -275,6 +361,32 @@ def main():
                         "propositions": [(p["predicate"]["lemma"], p["mood"], p["polarity"]) for p in an["readings"][0]["propositions"]]})
     out["S2"] = {"messages": len(obs), "read": sum(o["read"] for o in obs), "route_changes": [o for o in obs if o["today"] != o["csi"]],
                  "rows": obs}
+    # rule 12 firings (sentences without a verbal root) and acceptances, per set
+    sets = {"Q": {x for r in Q for x in (r["a"], r["b"])}, "R": {r["text"] for r in R}, "C": {r["text"] for r in Cs},
+            "S2": {o["text"] for o in obs}}
+    for t in sets["Q"]:
+        read(t)
+    out["rule12"] = {k: {"texts_read": sum(t in cache for t in v), "fired": sum(len(rereads(cache[t])) for t in v if t in cache),
+                         "accepted": sum(r["accepted"] for t in v if t in cache for r in rereads(cache[t])),
+                         "accepted_texts": sorted(t for t in v if t in cache and any(r["accepted"] for r in rereads(cache[t])))}
+                     for k, v in sets.items()}
+    # (P) natural text, 1f: every EWT test sentence read without a verbal root; gold scores the re-reads
+    if a.ewt:
+        p_rows = []
+        for text, gold in ewt_sentences(a.ewt):
+            an = analyze(text)
+            toks = an["readings"][0]["tokens"]
+            for r in rereads(an):
+                g = gold.get(toks[r["token"]]["idx"])
+                imp = g is not None and g["upos"] == "VERB" and "Mood=Imp" in g["feats"]
+                p_rows.append({"text": text, "first": toks[r["token"]]["text"], "p_vb": r["p_vb"],
+                               "accepted": r["accepted"], "gold_imperative": imp, "gold_upos": g["upos"] if g else None})
+        non = [r for r in p_rows if not r["gold_imperative"]]
+        imp = [r for r in p_rows if r["gold_imperative"]]
+        out["P"] = {"sentences_without_verbal_root": len(p_rows), "non_imperative": len(non),
+                    "P1_false_request_rate": round(sum(r["accepted"] for r in non) / len(non), 4) if non else None,
+                    "false_requests": [r for r in non if r["accepted"]],
+                    "P2_gold_imperatives": len(imp), "P2_recovered": sum(r["accepted"] for r in imp), "P2_rows": imp}
     out["latency_s"] = {"mean": round(sum(times) / len(times), 4), "p95": round(sorted(times)[int(0.95 * (len(times) - 1))], 4),
                         "n": len(times)} if times else None
     ph = out["Q"]["per_phenomenon"]
@@ -286,6 +398,8 @@ def main():
         "C1": out["C"]["accuracy"]["csi"] >= 0.95 and out["C"]["accuracy"]["csi"] >= out["C"]["accuracy"]["core"],
         "S1": s1["heldout3"] >= 0.994 - 0.005 and s1["nonce2"] >= 1.0 - 0.005,
         "S2": all(o["declined"] for o in out["S2"]["route_changes"])}
+    if "P" in out:
+        out["criteria"]["P1"] = out["P"]["P1_false_request_rate"] is not None and out["P"]["P1_false_request_rate"] <= 0.01
     json.dump(out, open(a.out, "w"), indent=1)
     print(json.dumps({k: out[k] for k in ("criteria", "latency_s")}, indent=1))
     print("Q", out["Q"]["balanced_accuracy"], ph)
@@ -293,6 +407,10 @@ def main():
           "no-verb", out["R"]["no_verbal_negation_declined_offered"], "kept", out["R"]["messages_kept"])
     print("C", out["C"]["accuracy"], "| S1", s1, "| S2 read", out["S2"]["read"], "/", out["S2"]["messages"],
           "changes", len(out["S2"]["route_changes"]))
+    print("bare requests", {k: v for k, v in out["Q"]["bare_requests"].items() if k != "reread"})
+    print("rule12", {k: (v["texts_read"], v["fired"], v["accepted"]) for k, v in out["rule12"].items()})
+    if "P" in out:
+        print("P", {k: v for k, v in out["P"].items() if k not in ("false_requests", "P2_rows")})
 
 
 if __name__ == "__main__":

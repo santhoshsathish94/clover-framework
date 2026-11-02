@@ -237,7 +237,8 @@ and 1e was a bare request that the parser read without a verb ("Archive the N." 
 adverb), so CSI abstained.
 - **CSI v0.1r3** = v0.1r2 + rule 12 (ARCHITECTURE.md section 3c): such a sentence is re-read as a request only when
   the parser's tagger gives its first word a probability of at least 0.02 of being a base-form verb and the parser,
-  reading the same words as the emphatic request "Do ...", makes that word the verb heading the sentence.
+  reading the same words as the emphatic request "Do ...", makes that word the verb heading the sentence (amended
+  below, before any test data: no subject, and the form "Please ...").
 - **Development, before this pre-registration (development data only: the 1d and 1e sets, 30 handwritten fragments,
   UD English-EWT dev; scratch scripts, results not committed as findings).** On the 1d and 1e sets (1,156 texts) the
   parser read 25 sentences without a verbal root: 8 bare requests ("Archive" 3, "Forward" 5) and 17 "No need to
@@ -267,6 +268,29 @@ adverb), so CSI abstained.
   passing -> also the claim check; integration as pre-registered in 1d (local side service, setting off by default,
   measured in the framework runtime on k3 and live in the laptop Studio). If 1f fails, nothing is integrated and the
   failure is reported to the human.
+
+**1f amendment (2026-11-02 23:18 UTC, before any 1f test data was generated or read; development data only).** Smoke
+and development checks of the 1f code on the 1d and 1e sets, the E1 sets, the core-observation messages, the
+handwritten fragments and EWT dev found three things, now changed:
+1. *Rule 12 as written accepted readings that are not requests*: in "Do forward the draft." the parser takes "the
+   draft" as the subject ("draft" `nsubj` of "forward"), so the re-read gave ARG0 = draft, indicative. Rule 12 now
+   also requires that the re-read verb has no subject - its stated intent (a request, rule 10).
+2. *The request form.* With that condition, the selection rule fixed before running was: keep "Do" unless "Please"
+   reads more development imperatives correctly with no false acceptance. "Please": 7 of the 8 bare requests of the
+   1d and 1e sets that the parser reads without a verb, 3 of the 4 such EWT dev imperatives (the fourth is below the
+   threshold), 0 false acceptances (27 fragments, all EWT dev sentences); "Do": 6, 3 and 0. So rule 12 re-reads in
+   the form "Please ...". Consequence for Q: when rule 12
+   re-reads "V the N.", its reading is the parse of "Please v the N.", so the pair "Please V the N." / "V the N." is
+   equivalent by construction. Q1 is computed without those pairs (they are reported), which can only make Q1
+   harder.
+3. *A defect since 1d, unrelated to rule 12*: `analyze()` compared spaCy tokens by identity (`head is sent.root`),
+   which is never true because spaCy creates a new token object on each access, so `unsupported` was never set in
+   v0.1r and v0.1r2. Fixed (token indices compared). Measured on development data: it changes no number reported
+   for 1d or 1e - the flag is now set only on 7 "No need to ..." routing messages (routing does not use it); Q, C, S1
+   (heldout3 0.994, nonce2 1.000, no abstention) and S2 (26 of 30 read) are unchanged.
+With all three on development data: Q balanced accuracy 1.000 on the 1d pairs and 0.976 on the 1e pairs (all pairs
+counted; reported 1d 0.965, 1e 0.931); "Forward the timetable." (P(VB) 0.008) stays unread. Criteria, threshold,
+data and decision are otherwise unchanged.
 
 ## Experiment 2 = E3 run plan (pre-registered 2026-11-01)
 **Data.** UD English-EWT r2.18 (tag commit b7711cce, CC BY-SA 4.0): train for our parser, dev for model choice, test

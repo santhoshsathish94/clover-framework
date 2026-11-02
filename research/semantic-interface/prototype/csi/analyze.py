@@ -3,7 +3,9 @@ correspondences of ARCHITECTURE.md section 3 (and only those) turn them into a p
 CSI_PARSER (default spaCy en_core_web_sm, ClearNLP labels); a UD-label parser (e.g. our EWT-trained pipeline) gets the
 same correspondences written for UD labels (ARCHITECTURE.md section 3b). Output follows the JSON contract (section 2).
 v0.1r (Experiment 1d, section 3c): every sentence and its coordinated or paratactic clauses, imperatives, and the
-proposition that governs each token; v0.1r2 (Experiment 1e): rule 9b, main clauses joined in one sentence."""
+proposition that governs each token; v0.1r2 (Experiment 1e): rule 9b, main clauses joined in one sentence; v0.1r3
+(Experiment 1f): rule 12, a sentence read without a verbal root is re-read as a request when the tagger and the parser
+both support it."""
 import functools
 import os
 
@@ -21,6 +23,8 @@ SUBJECTS = {"nsubj", "nsubjpass", "csubj", "csubjpass", "expl", "nsubj:pass", "c
 ATTACHED = {"conj", "parataxis"}  # rule 9
 JOINS = {",", ";", ":"}  # rule 9b
 ADDRESSEE = {"text": "", "head_lemma": "you", "head": None, "tokens": [], "implicit": True}  # rule 10
+REQUEST_FORM = "Please"  # rule 12: the polite request form the sentence is re-read in (1f amendment, development data)
+REQUEST_P_VB = 0.02  # rule 12: tagger probability that the first word is a base-form verb (development data, 1f)
 # the same correspondences under the two label schemes (section 3 = ClearNLP, section 3b = UD)
 SCHEME = {
     "clearnlp": {"aux": {"aux", "auxpass"}, "passive": {"nsubjpass", "auxpass", "csubjpass"}, "subjpass": {"nsubjpass"},
@@ -202,9 +206,60 @@ def _sentence(root, parser_id, scheme):
     return out[:1] + sorted(out[1:], key=lambda x: x[0].i)
 
 
+def _vb_probability(nlp, doc):
+    """Rule 12 (a): the tagger's probability of tag VB for every token, in the text as written."""
+    import numpy
+    tagger = nlp.get_pipe("tagger")
+    s = tagger.model.predict([doc])[0]
+    s = s.get() if hasattr(s, "get") else numpy.asarray(s)
+    if not (numpy.all(s >= 0) and numpy.allclose(s.sum(1), 1, atol=1e-3)):
+        e = numpy.exp(s - s.max(1, keepdims=True))
+        s = e / e.sum(1, keepdims=True)
+    return s[:, list(tagger.labels).index("VB")]
+
+
+def _request_readings(nlp, doc):
+    """Rule 12: each sentence without a verbal root is re-read as the polite request "Please ..." when the tagger gives
+    its first word P(VB) >= REQUEST_P_VB and the parser makes that word the VB heading the re-read sentence, with no
+    subject (a request, rule 10).
+    -> (doc with the accepted sentences' annotations replaced, one record per sentence without a verbal root)"""
+    if "tagger" not in nlp.pipe_names or "VB" not in nlp.get_pipe("tagger").labels:
+        return doc, []
+    records, accepted, p_vb = [], [], None
+    for s in doc.sents:
+        if s.root.pos_ in ("VERB", "AUX") or not s.text.strip():
+            continue
+        if p_vb is None:
+            p_vb = _vb_probability(nlp, doc)
+        rec = {"token": s.start, "p_vb": round(float(p_vb[s.start]), 5), "accepted": False}
+        records.append(rec)
+        if p_vb[s.start] < REQUEST_P_VB:
+            continue
+        alt = nlp(f"{REQUEST_FORM} {s.text[0].lower()}{s.text[1:]}")
+        words, orig = [w.text for w in alt], [w.text for w in s]
+        if (len(words) == len(orig) + 1 and words[1].lower() == orig[0].lower() and words[2:] == orig[1:]
+                and len(list(alt.sents)) == 1 and alt[1].tag_ == "VB" and alt[1].head.i == 1
+                and not any(w.head.i == 0 for w in alt[1:])
+                and not any(c.dep_ in SUBJECTS for c in alt[1].children)):  # a request: no subject (rule 10)
+            rec["accepted"] = True
+            accepted.append((s, alt))
+    if not accepted:
+        return doc, records
+    from spacy.tokens import Doc
+    ann = {"tags": [t.tag_ for t in doc], "pos": [t.pos_ for t in doc], "morphs": [str(t.morph) for t in doc],
+           "lemmas": [t.lemma_ for t in doc], "heads": [t.head.i for t in doc], "deps": [t.dep_ for t in doc]}
+    for s, alt in accepted:  # the re-read sentence without the added word
+        for w in alt[1:]:
+            j = s.start + w.i - 1
+            ann["tags"][j], ann["pos"][j], ann["morphs"][j] = w.tag_, w.pos_, str(w.morph)
+            ann["lemmas"][j], ann["heads"][j], ann["deps"][j] = w.lemma_, s.start + w.head.i - 1, w.dep_
+    return Doc(doc.vocab, words=[t.text for t in doc], spaces=[bool(t.whitespace_) for t in doc], **ann), records
+
+
 def analyze(text):
     nlp, parser_id, scheme = _nlp()
-    doc = nlp(text)
+    doc, request_records = _request_readings(nlp, nlp(text))
+    reread = {r["token"] for r in request_records if r["accepted"]}
     lemma_source = parser_id
     if CSI_MORPH:
         from .dictionary import lemmatise
@@ -218,13 +273,15 @@ def analyze(text):
     for s_i, sent in enumerate(doc.sents):
         for head, prop, problem in _sentence(sent.root, parser_id, scheme):
             if problem:
-                if s_i == 0 and head is sent.root:  # comparison reads the first sentence's main clause, as in v0.1
+                if s_i == 0 and head.i == sent.root.i:  # comparison reads the first sentence's main clause, as in v0.1
                     unsupported = [problem]
                 problems.append({"token": head.i, "why": problem})
             if prop is None:
                 continue
             owner[head.i] = owner[prop["predicate"]["token"]] = len(propositions)
             prop["provenance"]["lemmas"] = lemma_source
+            if sent.start in reread:
+                prop["provenance"]["request_reading"] = "rule 12"
             if CSI_SENSES:
                 prop["predicate"]["sense"] = _sense_of(doc, prop["predicate"]["token"])
                 for role in prop["roles"].values():
@@ -238,6 +295,6 @@ def analyze(text):
             t = t.head
         tok["prop"] = owner.get(t.i)
     reading = {"confidence": 1.0 if not unsupported else 0.5, "tokens": tokens, "propositions": propositions,
-               "problems": problems}
+               "problems": problems, "request_rereads": request_records}
     return {"csi_version": CSI_VERSION, "text": text, "readings": [reading], "ambiguity": [],
             "unsupported": unsupported, "confidence_note": "v0.1 confidence is uncalibrated (coverage only)"}
