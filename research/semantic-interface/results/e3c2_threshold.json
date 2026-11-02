@@ -1,0 +1,45 @@
+{
+ "rule": [
+  "from its dev run in record mode and bge-small's from its dev cosines. Candidates are midpoints between consecutive",
+  "distinct values; the highest dev balanced accuracy among candidates keeping every dev control phenomenon at <= 0.05",
+  "false equivalence wins (if none does: lowest maximum false equivalence, then balanced accuracy); ties go to the higher"
+ ],
+ "inputs_sha256": {
+  "/opt/clover-k3/meaning-core/csi/results/e3c2_dev_record.json": "2f2d78ad1b23a3fb",
+  "/opt/clover-k3/meaning-core/csi/results/e3c2_bge_dev.json": "ea9904cfd65fa663"
+ },
+ "csi": {
+  "tau": 0.9882,
+  "dev_balanced_accuracy": 0.697,
+  "dev_false_equivalence": {
+   "dist:random_agent": 0.0,
+   "dist:random_patient": 0.0,
+   "dist:random_predicate": 0.0,
+   "dist:random_predicate_passive": 0.0,
+   "dist:related_agent": 0.0,
+   "dist:related_patient": 0.0,
+   "dist:related_predicate": 0.0,
+   "dist:related_predicate_passive": 0.0
+  },
+  "candidates": 118,
+  "candidates_within_0.05": 1
+ },
+ "bge": {
+  "tau": 0.960504,
+  "dev_balanced_accuracy": 0.5473,
+  "dev_false_equivalence": {
+   "dist:random_agent": 0.0,
+   "dist:random_patient": 0.0,
+   "dist:random_predicate": 0.0,
+   "dist:random_predicate_passive": 0.0,
+   "dist:related_agent": 0.0,
+   "dist:related_patient": 0.0,
+   "dist:related_predicate": 0.0444,
+   "dist:related_predicate_passive": 0.0222
+  },
+  "candidates": 395,
+  "candidates_within_0.05": 17
+ },
+ "dev_items": 29,
+ "dev_pairs": 396
+}

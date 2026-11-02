@@ -73,7 +73,8 @@ def summarize(rows, preds):
 
 
 def run_csi(rows):
-    import csi.compare as cc
+    import importlib
+    cc = importlib.import_module("csi.compare")  # the module: csi/__init__ exports a function of the same name
     cc.analyze = functools.lru_cache(maxsize=None)(cc.analyze)  # sentences repeat across pairs; analysis is deterministic
     out = []
     for r in rows:
