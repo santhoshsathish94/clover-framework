@@ -246,8 +246,8 @@ holds on running text; putting senses into CSI's analysis and comparison (e.g. "
 meaning) is a separate pre-registered experiment. If D2 fails, the learner has memorised uses, not definitions; that
 is analysed before anything else. Relations between meanings (hypernymy, antonymy on held-out synsets) follow as 3b.
 
-**3a results (GPU server; `results/e3a_*.json`, `e3a_report.json`; data sha256 items.jsonl 06d31a02..., synsets.json
-9c221dfa...).** Data: 20,545 training examples; test-S 2,492; test-Z 3,056 (2,092 meanings never seen used); test-L
+**3a results (GPU server; `results/e3a_*.json`, `e3a_report.json`; data sha256 items.jsonl c01a9ef7... as used on
+the GPU server - 06d31a02... is the CRLF Windows copy - synsets.json 9c221dfa...).** Data: 20,545 training examples; test-S 2,492; test-Z 3,056 (2,092 meanings never seen used); test-L
 1,243 (512 words never seen); SemCor 12,766 tokens from 20 documents (852 SemCor senses had no OEWN id and were
 dropped). Mean candidates per item 6.2-7.4.
 
@@ -287,14 +287,16 @@ Dictionary v1; N3 on test-Z D2 >= the 3a seed mean - 0.02 and still beats MFS, L
 **Decision:** N1-N3 passing makes Dictionary v1.1 the candidate for a frozen dictionary layer; putting its meanings
 into CSI's analysis and comparison is then pre-registered separately (3c). If N1 fails, the analysis comes first.
 
-**3a2 data and baselines (GPU server; `results/e3a2_*.json`; items.jsonl sha256 32c34713...).** OEWN splits are
+**3a2 data and baselines (GPU server; `results/e3a2_*.json`; items.jsonl sha256 4ed40e94... as used on the GPU
+server; my first record, 32c34713..., was of the Windows copy with CRLF line endings, same content).** OEWN splits are
 identical to 3a (30,113 items checked) and dev-N is exactly the 3a SemCor set. train-N: 146 documents, 96,582 tokens,
 80,209 after removing held-out meanings and words; test-N2: 20 documents (seed 3102), 13,370 tokens, mean 7.4
 candidates. On test-N2: random 0.229, MFS-train (frequency table from train-N) 0.609, Lesk 0.595, untrained encoder
 0.380, Dictionary v1 (the saved 3a model) 0.509, OEWN first sense 0.684 (partly fitted to SemCor). The saved 3a model
 reproduces its 3a scores to within 0.0012 (it was saved in half precision).
 
-**3a2 results: N1, N2 and N3 pass for every seed.** Selected epochs 4 / 3 / 3 (dev mean).
+**3a2 results: N1, N2 and N3 pass for every seed.** Selected epochs 4 / 3 / 4 (dev mean; corrected from "4 / 3 / 3",
+which I had read off dev-N alone - found by the independent review).
 
 | Accuracy | D2 (seeds 1 / 2 / 3) | Dictionary v1 | MFS-train | Lesk | untrained | OEWN first sense |
 |---|---|---|---|---|---|---|
@@ -315,6 +317,81 @@ covered:** running text from other domains (test-N2 is Brown-corpus prose like t
 Senseval/SemEval sets were not used because their licence was not confirmed); multiword expressions; SemCor tokens
 whose sense has no OEWN id (about 7%) were dropped; 0.71 still means about 3 in 10 tokens of running text get the
 wrong meaning.
+
+**Freeze checks for Dictionary v1.1 (pre-registered 2026-11-02 10:00 UTC, at the human's request, before any check
+ran).** The human: freeze "only after its saved checkpoint, reproducibility, licensing and integration contract are
+independently checked. Its current result is promising, but it is not yet a complete dictionary." Scope of what may
+be frozen: choosing the OEWN meaning of a single-word noun, verb or adjective in a sentence - not a complete
+dictionary (no adverbs, multiword expressions, words outside OEWN, relations or calibrated confidence).
+- **F1 checkpoint:** inventory and sha256 of every file of the saved seed-1 checkpoint; reloaded in a fresh process
+  on another machine (k3, CPU, fp32, a different transformers version) by a scorer written separately from
+  `dict_meaning.py`, on test-N2, test-Z, test-S and test-L: accuracy within 0.005 of the recorded seed-1 results and
+  per-item agreement (both right or both wrong) >= 97% on each split.
+- **F2 reproducibility:** (a) the 3a2 data rebuilt from the source files on k3 by `prep --semcor-train` at commit
+  03a434d has the same sha256 as the data used; (b) seed 1 retrained from scratch on the GPU server with the recorded
+  command lands within 0.01 of the original on test-N2 and test-Z (GPU kernels are not bit-deterministic, so
+  bit-identity is not expected); (c) library versions, GPU and base-model revision recorded.
+- **F3 licensing, read at the source:** bert-base-uncased (Hugging Face model card), OEWN 2025 (LMF header and
+  repository licence), SemCor 3.0 (licence file in the distribution). The checkpoint counts as redistributable only if
+  every licence permits it; the obligations go into a NOTICE that travels with the checkpoint.
+- **F4 integration contract:** written in ARCHITECTURE.md (inputs, outputs, scope, behaviour outside the scope,
+  provenance, determinism, uncalibrated scores) and implemented by `csi/senses.py`, with a contract test on k3: output
+  schema, a word outside OEWN gets no sense, a one-meaning word gets that meaning without a model call, the same input
+  twice gives identical output, and agreement with the F1 scorer on 200 test-N2 items.
+- **F5 independent review:** a separate reviewer, given the code, the data description and this pre-registration
+  but not my conclusions, audits the 3a2 pipeline for test leakage and baseline errors and the contract for gaps;
+  its findings are recorded.
+**Decision:** frozen only if F1-F5 pass; otherwise not frozen and the findings recorded.
+
+**Freeze check results (2026-11-02; `results/f1_recheck.json`, `f4_contract.json`, `f_inventory.txt`,
+`e3a2_repro_seed1.json`).**
+- **F1 passes.** The checkpoint (6 files, 419 MB; context weights sha256 e78597e7..., gloss weights 0d913fb2...) has the
+  same checksums on the GPU server, locally and on k3. Re-scored on k3 by `check_senses.py` (CPU, float32, torch 2.1.2,
+  transformers 4.36.2; training used torch 2.14.1 and transformers 5.22.1 on an RTX 3090): test-N2 0.7086 vs recorded
+  0.7089, test-Z 0.6656 vs 0.6656, test-S 0.6850 vs 0.6842, test-L 0.6903 vs 0.6895; per-item agreement 99.85-99.92%.
+  (Agreement counts two different wrong answers as agreement; the experiment saved correctness, not predictions.)
+- **F2 (a) passes:** the data rebuilt on k3 from the sources (OEWN sha256 9ca6d1dc..., SemCor zip 126fa2e8...) with
+  `dict_meaning.py` at 03a434d (sha256 de624029..., identical on the GPU server) is byte-identical to the data used
+  (items 4ed40e94..., synsets 5ace50a0...). **(c)** Python 3.12.15, torch 2.14.1+cu130, transformers 5.22.1,
+  tokenizers 0.23.3, RTX 3090 (driver 580.173.02), bert-base-uncased revision 86b5e093.... **(b) passes:** seed 1
+  retrained from scratch with the recorded command gives test-N2 0.7098 (original 0.7089, +0.0009) and test-Z 0.6682
+  (0.6656, +0.0026); test-S 0.6846, test-L 0.6830 (original 0.6842, 0.6895).
+- **F3 passes, with obligations.** Read at the source: bert-base-uncased is Apache-2.0 (model card and LICENSE at the
+  pinned revision); OEWN 2025 is CC BY 4.0 with the Princeton WordNet licence for the underlying data (attribution to
+  both); SemCor 3.0 is under the Princeton licence (use, copy, modify and distribute for any purpose, provided its
+  copyright notice and disclaimer appear on all copies, including modifications). None is non-commercial or
+  share-alike, so the checkpoint may be redistributed if it carries the Apache licence, a statement that the weights
+  were modified, the OEWN attribution and the Princeton notices: these files and a NOTICE now sit beside the
+  checkpoint. Not settled here: whether to publish the checkpoint at all (the human's decision); BERT's own
+  pre-training data (BookCorpus) has a contested licence upstream, which the Apache grant of the weights does not
+  resolve for us.
+- **F4 passes** after the reviewer's fixes (below): schema, provenance (weights, configs, code, tokenizer and
+  inventory checksums), out-of-scope words, invalid spans, words outside OEWN, one-meaning words without a model call,
+  a word beyond the token limit (now encoded in a window, not guessed from the sentence vector), independence from
+  query history, identical output in a fresh process, identical candidates, and agreement with the F1 scorer 1.000 on
+  200 test-N2 items from all 20 documents (threshold 0.99).
+- **F5 done: no blocker; should-fix items fixed or recorded.** The reviewer (a separate agent that rebuilt the data,
+  recomputed every non-neural baseline and checked the inventory exhaustively) found no test leakage, correct
+  baselines and item pairing, and candidate lists identical between training and `csi/senses.py` on all 72,780 keys.
+  Fixed: uncommitted code and incomplete provenance; no span validation; the sentence-vector fallback when truncation
+  cut the word off (52 of 13,370 test-N2 items; the comment claiming these were counted was untrue); a definition cache
+  that kept whole encoder outputs alive; a determinism test that could not fail; an agreement sample from one document;
+  my two wrong records above. Recorded as qualifications of the 3a2 claims: (1) the frequency table built from *all*
+  146 training documents (before removing held-out meanings and words) scores 0.632 on test-N2, so N1's margin over the
+  stronger table is +0.077 to +0.081 (still passing; seed 1's interval with whole documents resampled starts at
+  +0.054); (2) test-Z meanings were never *trained on*, but 974 dev-N items carry test-Z meanings and dev-N is a third
+  of the epoch-selection score, and unlabelled SemCor training sentences contain uses of 861 of them, so "never seen
+  used" overstates; (3) 24% of test-L items have a meaning trained through another word, so test-L means "this word
+  was never a training target", not "an unseen meaning"; (4) in running text the model is weak exactly where it has
+  no usage data: test-N2 items with held-out meanings 0.50-0.51 vs OEWN's first sense 0.66, and lemmas with no SemCor
+  training example 0.66-0.69 vs 0.81 (the first sense is partly fitted to SemCor, so these comparisons favour it) - the
+  contract now reports `usage_trained` for every word; (5) item-level bootstrap ignores that test-N2 comes from 1,878
+  sentences in 20 documents; document-level intervals are about twice as wide and change no verdict.
+**Decision: F1-F5 pass; Dictionary v1.1 is frozen (2026-11-02) for the stated scope, with the qualifications above.**
+Artefact `dictionary-v1.1` on k3 (`csi/frozen/dictionary-v1.1`, 420 MB: both encoders, tokenizer files, the pinned base
+tokenizer, `usage_lemmas.json`, licence files and NOTICE; card with every file's sha256 in
+`results/dictionary-v1.1.card.json`); the GPU server keeps the source copy with the same licence files. It is not in
+the repository (size) and not published; publishing is the human's decision. It enters CSI only through Experiment 3c.
 
 ## Experiment 4 = E2: morphology (defined)
 Lemmatisation, inflection and derivation on UD features and OEWN derivation links, including unseen lemma+affix

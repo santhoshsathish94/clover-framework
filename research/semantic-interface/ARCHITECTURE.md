@@ -31,7 +31,7 @@ Frozen components (artefact, validated scope, status; details and checksums in E
 |---|---|---|---|
 | `morph-verb-v1` (verb lemmatiser: Morphology + OEWN) | inflected verbs (VBD/VBN/VBG/VBZ) inside English ending families: held-out lemmas 0.96, fresh real text 0.988 (trf 0.960) | ending families never seen (0.56-0.76); prefers a known word for unknown verbs | frozen; not in CSI (4d failed) |
 | `morph-verb-v1.1` (v1 + analysis by synthesis) | as v1; real text 0.9925 (trf 0.975), invented verbs 0.972, CSI minimal pairs with invented verbs 1.000 and no predicate mismatch | ending families never seen; stress-dependent doubling in its generator can veto a correct lemma | frozen; **the CSI verb lemmatiser** (4h passed; enabled with `CSI_MORPH` + `CSI_DICT`, recorded in each proposition's provenance) |
-| Dictionary v1.1 (bi-encoder, OEWN examples + SemCor, seed 1) | meaning of a noun/verb/adjective in context among its OEWN meanings: running text 0.71 (frequency table 0.61), meanings never seen used 0.67 | other text domains untested; multiword expressions; about 3 in 10 running-text tokens wrong | candidate (3a2 passed); not frozen, not in CSI |
+| Dictionary v1.1 (`csi/senses.py` + checkpoint `dictionary-v1.1`) | meaning of a single-word noun/verb/adjective in context among its OEWN meanings: running text 0.71 (frequency table 0.61-0.63), meanings never trained on 0.67; contract section 2b | lemmas without SemCor training examples (OEWN's first sense better: 0.81 vs 0.66-0.69); other text domains untested; multiword expressions; uncalibrated scores | frozen after checks F1-F5; **not yet in CSI** (Experiment 3c) |
 
 ## 2. Interface contract v0.1 (model-independent; JSON)
 
@@ -81,6 +81,48 @@ Contract rules:
 - Model-independent: no field depends on a particular LLM; a connected LLM receives the JSON (or a rendered text
   form) as input. As a service: same JSON over HTTP (later). Inside Clover: through the existing
   `CloverSemanticInterface` seam (runtime integration needs the human's approval).
+
+## 2b. Dictionary layer contract (Dictionary v1.1, `csi/senses.py`; written 2026-11-02 for freeze check F4)
+
+`Senses(checkpoint, oewn_path).choose(text, start, end, lemma, upos) -> SenseChoice`
+
+```json
+{"lemma": "bank", "upos": "NOUN", "span": [4, 8], "status": "chosen", "windowed": false, "usage_trained": true,
+ "senses": [{"synset": "oewn-08437235-n", "definition": "a financial institution that accepts deposits ...",
+             "score": 12.3, "p": 0.91}, {"synset": "oewn-09236472-n", "definition": "sloping land ...",
+             "score": 9.9, "p": 0.08}],
+ "scores_calibrated": false,
+ "provenance": {"component": "csi.senses", "version": "dictionary-v1.1", "code_sha256": "...",
+                "checkpoint_sha256": {"context/model.safetensors": "e78597e79e7caa50",
+                                      "gloss/model.safetensors": "0d913fb27fe37703", "...": "configs"},
+                "weights_stored": "float16", "compute": "float32", "tokenizer": "bert-base-uncased-86b5e09",
+                "tokenizer_sha256": "...", "inventory": "english-wordnet-2025.xml.gz",
+                "inventory_sha256": "9ca6d1dcb75f822f"}}
+```
+
+- **Inputs.** The sentence, the character span of the word, its lemma (parser, or the frozen verb lemmatiser for
+  inflected verbs) and its UD part of speech. Grammar and Morphology supply these; the dictionary layer never
+  re-tokenises or re-lemmatises.
+- **Scope.** Single-word lemmas tagged NOUN, VERB or ADJ. Candidates are all OEWN 2025 meanings of (lemma, part of
+  speech), built exactly as in training: OEWN sense order within an entry; where entries merge, head adjectives come
+  before satellites and lower-case lemmas before capitalised ones (our construction, not OEWN's, for 576 keys).
+- **Outside the scope, nothing is guessed:** other parts of speech, multiword expressions and non-alphabetic lemmas
+  -> `out_of_scope`; an empty or out-of-range span -> `invalid_span`; a lemma OEWN does not list ->
+  `not_in_dictionary`; a word that cannot be located even in a window -> `target_not_located`; all with an empty
+  `senses` list. A lemma with one meaning -> `single_meaning` with that meaning, p = 1.0 and no model call.
+- **Output.** All candidates, best first, with the raw dot-product `score` and a softmax `p` over the candidates.
+  `scores_calibrated` is false: p is a ranking aid, not a probability anyone may act on (Experiment 8b: no verdict to
+  an LLM without calibrated confidence). `windowed` is true when the word lay beyond 128 word pieces and was encoded
+  in a 250-character window around it. `usage_trained` says whether the lemma had SemCor training examples: where it
+  did not, OEWN's first sense beat the model on running text (0.81 vs 0.66-0.69), so a consumer should weigh the
+  choice accordingly.
+- **Determinism and provenance.** Weights stored in float16, computed in float32 in evaluation mode; the same input
+  gives the same output, independent of earlier queries and across processes. Every result names the component
+  version and the checksums of the code, weights, configs, tokenizer and inventory.
+- **Not a complete dictionary.** No definitions are generated, no relations between meanings, no adverbs, multiword
+  expressions or words outside OEWN. Accuracy 0.71 on running text assumes the correct lemma, part of speech and span
+  and covers only words with at least two meanings whose SemCor sense maps to OEWN, in SemCor (Brown) text; OEWN's
+  first sense scores 0.684 on the same items; other text domains are untested.
 
 ## 3. v0.1 structural correspondences (the complete written list)
 

@@ -29,6 +29,10 @@
 - Decisions (human, 2026-11-02, after 4g): scoped freeze of the verb lemmatiser approved, then 4d; commit and push
   approved. "My recommendation is to preserve this layered architecture as a core CSI design principle." "The next
   challenge is teaching the dictionary layer to understand what words mean, not merely whether they exist."
+- Decisions (human, 2026-11-02, after 3a2): "The next experiment should be 3c: integrate dictionary meanings into CSI
+  sentence comparison." "Dictionary v1.1 should be frozen only after its saved checkpoint, reproducibility, licensing
+  and integration contract are independently checked. Its current result is promising, but it is not yet a complete
+  dictionary."
 
 ## Boundaries
 - Research area only: nothing here changes Clover's runtime; integration needs the human's approval.
@@ -120,3 +124,9 @@
   0.51) and keeps reading definitions of never-seen meanings (0.67, unchanged). Dictionary v1.1 (seed 1, saved on the
   GPU server) is the candidate for a frozen dictionary layer; freezing it and 3c (its meanings in CSI's comparison)
   wait for the human.
+- 2026-11-02 ~10:00-11:30 UTC: freeze checks F1-F5 for Dictionary v1.1 (pre-registered at the human's request) all
+  pass: identical checkpoint checksums on three machines; independent CPU re-score on k3 within 0.0008; data rebuilt
+  byte-identically; seed 1 retrained within 0.003; licences read at the source (Apache-2.0, CC BY 4.0, Princeton
+  notices - redistributable with the NOTICE now beside the checkpoint); contract `csi/senses.py` passes its checks; an
+  independent reviewer agent found no blocker, its should-fix items were fixed and its qualifications recorded.
+  **Dictionary v1.1 frozen** (`csi/frozen/dictionary-v1.1` on k3). Next: Experiment 3c.

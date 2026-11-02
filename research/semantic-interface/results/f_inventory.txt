@@ -1,0 +1,18 @@
+== checkpoint files
+a10a8c4fe15bba06eb629f2c21857bc7c5151265b8727d400b77074b79d651d6  ./context/config.json
+e78597e79e7caa50672a91c0b000b5d60e99fe796c01b50acb5019f8839209ab  ./context/model.safetensors
+a10a8c4fe15bba06eb629f2c21857bc7c5151265b8727d400b77074b79d651d6  ./gloss/config.json
+0d913fb27fe377037f1a2f31adb74e904898088e69f4ff52ebfeec95c0791794  ./gloss/model.safetensors
+2fc687b11de0bc1b3d8348f92e3b49ef1089a621506c7661fbf3248fcd54947e  ./tokenizer.json
+e1c2a61a99bda00f6c55303a210b30e2f92dcf8b555e215812e2eb583e177ffd  ./tokenizer_config.json
+419M	.
+== data
+4ed40e941b1b66b025be26d8ba95662f8d4719bcea605bcfd640b7483c1e8a87  /workspace/csi/data/e3a2/items.jsonl
+5ace50a017cae03685ab5a0b579fe2d8217ff4e18b26441ea91defcbd5ebbd8f  /workspace/csi/data/e3a2/synsets.json
+== code
+de624029d9fc656d9e9e1643150530450fc3500f1016c2c83198f869e9981f73  /workspace/csi/prototype/dict_meaning.py
+== environment
+3.12.15 torch 2.14.1+cu130 cuda 13.0 transformers 5.22.1 tokenizers 0.23.3
+NVIDIA GeForce RTX 3090, 580.173.02
+== base model revision
+86b5e0934494bd15c9632b12f734a8a67f723594

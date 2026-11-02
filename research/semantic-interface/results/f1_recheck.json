@@ -1,0 +1,41 @@
+{
+ "checkpoint": "/opt/clover-k3/meaning-core/csi/freeze-dict/e3a2_seed1",
+ "transformers": "4.36.2",
+ "torch": "2.1.2+cpu",
+ "device": "cpu",
+ "dtype": "float32",
+ "splits": {
+  "test_n2": {
+   "n": 13370,
+   "accuracy_recheck": 0.7086,
+   "accuracy_recorded": 0.7089,
+   "difference": -0.0003,
+   "item_agreement": 0.9985
+  },
+  "test_z": {
+   "n": 3056,
+   "accuracy_recheck": 0.6656,
+   "accuracy_recorded": 0.6656,
+   "difference": -0.0,
+   "item_agreement": 0.9987
+  },
+  "test_s": {
+   "n": 2492,
+   "accuracy_recheck": 0.685,
+   "accuracy_recorded": 0.6842,
+   "difference": 0.0008,
+   "item_agreement": 0.9992
+  },
+  "test_l": {
+   "n": 1243,
+   "accuracy_recheck": 0.6903,
+   "accuracy_recorded": 0.6895,
+   "difference": 0.0008,
+   "item_agreement": 0.9992
+  }
+ },
+ "seconds": {
+  "glosses": 231,
+  "total": 527
+ }
+}

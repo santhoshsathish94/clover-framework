@@ -1,0 +1,26 @@
+{
+ "component": "csi.senses",
+ "version": "dictionary-v1.1",
+ "frozen": "2026-11-02",
+ "source_run": "Experiment 3a2, seed 1 (GPU server /workspace/csi/runs/e3a2_seed1)",
+ "scope": "meaning (OEWN 2025 synset) of a single-word NOUN/VERB/ADJ in a sentence; contract ARCHITECTURE.md 2b",
+ "checks": "EXPERIMENTS.md, freeze checks F1-F5",
+ "files": {
+  "LICENSE-OEWN.md": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb",
+  "LICENSE-SemCor.txt": "c8ad77c89391611a2da31c461c495f41b400d2b0a7ff426f424ace0c33dc4a93",
+  "LICENSE-WordNet.txt": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904",
+  "LICENSE-bert-base-uncased.txt": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
+  "NOTICE.txt": "f42726d9959148337ad3d712bc3258e496fcd3220c1f6a5f7fd3cce1aab3a7c8",
+  "tokenizer.json": "2fc687b11de0bc1b3d8348f92e3b49ef1089a621506c7661fbf3248fcd54947e",
+  "tokenizer_config.json": "e1c2a61a99bda00f6c55303a210b30e2f92dcf8b555e215812e2eb583e177ffd",
+  "usage_lemmas.json": "3d65db98e6e5adb02d2b7c46b02a7887bd88b2ddae149994d1d9b330ee9b4582",
+  "context/config.json": "a10a8c4fe15bba06eb629f2c21857bc7c5151265b8727d400b77074b79d651d6",
+  "context/model.safetensors": "e78597e79e7caa50672a91c0b000b5d60e99fe796c01b50acb5019f8839209ab",
+  "tokenizer-base/special_tokens_map.json": "b6d346be366a7d1d48332dbc9fdf3bf8960b5d879522b7799ddba59e76237ee3",
+  "tokenizer-base/tokenizer.json": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+  "tokenizer-base/tokenizer_config.json": "f62a57a75856b93282501c92a86f62b169997c81e93cf6f75b7cc15d6285968e",
+  "tokenizer-base/vocab.txt": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3",
+  "gloss/config.json": "a10a8c4fe15bba06eb629f2c21857bc7c5151265b8727d400b77074b79d651d6",
+  "gloss/model.safetensors": "0d913fb27fe377037f1a2f31adb74e904898088e69f4ff52ebfeec95c0791794"
+ }
+}
