@@ -163,8 +163,8 @@ CLAIM = re.compile(r"\b(?:I(?:'ve|\s+have)?|has\s+been|have\s+been|was|were)\s+(
                    r"(?:successfully\s+)?(?:deleted|removed|created|saved|written|wrote|committed|pushed|moved|renamed|"
                    r"installed|cloned|opened|ran|executed)\b", re.I)
 NEGATION = re.compile(r"\b(?:not|never|couldn'?t|can'?t|cannot|wasn'?t|weren'?t|didn'?t|unable|failed|won'?t)\b", re.I)
-CLAIM_LEMMAS = {"delete", "remove", "create", "save", "write", "commit", "push", "move", "rename", "install", "clone",
-                "open", "run", "execute"}  # CLAIM's verbs, for CSI's reading of a claim
+CLAIM_FORMS = {"deleted", "removed", "created", "saved", "written", "wrote", "committed", "pushed", "moved", "renamed",
+               "installed", "cloned", "opened", "ran", "executed"}  # CLAIM's verbs as written: a lemma can be a variant (instal)
 CANNOT = re.compile(r"\bI\s+(?:could|can|was)(?:n'?t|\s+not)(?:\s+able\s+to)?\s+(?:find|retrieve|get|access|determine|check|"
                     r"see|read|locate|open|confirm|verify|look\s+up)\b|\bunable\s+to\s+(?:find|retrieve|get|access|determine|"
                     r"check|read|locate|open|confirm|verify)\b|\bI\s+(?:do\s+not|don'?t)\s+(?:know|have\s+access)\b", re.I)
@@ -484,13 +484,15 @@ def _claims(text, read=None):
 
 
 def csi_claim(analysis):
-    """CSI's reading of one sentence as a claim that an action was done (Experiment 1d): its main proposition is a claim
-    verb, positive, past or perfect, neither modal nor embedded ("tried to"), said by I/we or passive. None: not read."""
+    """CSI's reading of one sentence as a claim that an action was done (Experiments 1d, 1e): its main proposition's verb
+    is one CLAIM lists, positive, past or perfect, neither modal nor embedded ("tried to"), said by I/we or passive.
+    None: not read."""
     if not analysis or analysis.get("unsupported") or not analysis["readings"][0]["propositions"]:
         return None
     p = analysis["readings"][0]["propositions"][0]
     agent = (p["roles"].get("ARG0") or {}).get("head_lemma")
-    return (p["predicate"]["lemma"] in CLAIM_LEMMAS and p["polarity"] == "positive" and p["modality"] is None
+    verb = analysis["readings"][0]["tokens"][p["predicate"]["token"]]["text"].lower()
+    return (verb in CLAIM_FORMS and p["polarity"] == "positive" and p["modality"] is None
             and p["embedded_under"] is None and (p["tense"] == "past" or p["aspect"].startswith("perfect"))
             and (p["voice"] == "passive" or agent in ("i", "we")))
 

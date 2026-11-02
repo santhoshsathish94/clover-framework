@@ -1,7 +1,8 @@
-"""Experiment 1d: CSI reads requests, for Clover's core (EXPERIMENTS.md). Builds the request minimal pairs (Q), the
-routing messages (R) and the reply sentences (C) from the fixed templates below (seed 3120), runs CSI v0.1r and the
-core's own rules on them, the E1 regression sets (S1) and the core-observation messages (S2), and checks the criteria.
-Usage: python run_1d.py <out json> [--mobile clover-ai-system/mobile] [--observed turns.jsonl ...]"""
+"""Experiments 1d and 1e: CSI reads requests, for Clover's core (EXPERIMENTS.md). Builds the request minimal pairs (Q),
+the routing messages (R) and the reply sentences (C) from the fixed templates below (1d: seed 3120; 1e: seed 3121 and the
+fresh lists in SET_1E, same forms), runs CSI and the core's own rules on them, the E1 regression sets (S1) and the
+core-observation messages (S2), and checks the criteria.
+Usage: python run_1d.py <out json> [--set 1d|1e] [--mobile clover-ai-system/mobile] [--observed turns.jsonl ...]"""
 import argparse
 import json
 import os
@@ -72,6 +73,37 @@ CLAIM_TEMPLATES = [(1, "C1 perfect", "I have {pp} the {o}."), (1, "C2 past", "I 
                    (0, "N5 never", "I have never {pp} the {o}."), (0, "N6 question", "Should I {base} the {o}?"),
                    (0, "N7 unable", "I was unable to {base} the {o}."), (0, "N8 passive not", "The {o} was not {pp}.")]
 NEG_WORDS = re.compile(r"\b(?:not|never|no)\b|n't\b", re.I)  # the naive keyword baseline for routing
+# Experiment 1e: fresh words for the same forms (written before any 1e run)
+SET_1E = {
+    "SEED": 3121,
+    "REQUEST_VERBS": [("close", "closed"), ("export", "exported"), ("compress", "compressed"), ("encrypt", "encrypted"),
+                      ("restore", "restored"), ("duplicate", "duplicated"), ("edit", "edited"), ("review", "reviewed"),
+                      ("scan", "scanned"), ("tag", "tagged"), ("format", "formatted"), ("forward", "forwarded")],
+    "REQUEST_OBJECTS": ["document", "draft", "budget", "calendar", "logo", "survey", "receipt", "memo", "archive",
+                        "notebook", "brochure", "timetable"],
+    "TOPICS": ["the tallest building in Mumbai", "the melting point of iron", "the train timetable from Pune to Goa",
+               "the current price of gold", "the author of Godan", "the area of Lake Victoria"],
+    "EXPRS": ["3**40 - 1", "123456 * 789", "the product of the first 20 primes", "the cube root of 50 to 8 digits"],
+    "PATHS": ["C:\\data\\budget.csv", "E:\\docs\\minutes.md", "/srv/share/plan.txt"],
+    "FOLDERS": ["C:\\downloads", "E:\\music", "/srv/share"],
+    "TOOLS": {
+        "web.search": {"ask": TOOLS["web.search"]["ask"],
+                       "scope": ["search the web for why the printer is not working",
+                                 "look up online why the app does not open",
+                                 "search the internet for reasons why tomatoes do not ripen"]},
+        "python": {"ask": TOOLS["python"]["ask"],
+                   "scope": ["use Python to list the numbers below 60 that are not divisible by 3",
+                             "use Python to find which of 91, 97 and 99 are not prime"]},
+        "files.read": {"ask": TOOLS["files.read"]["ask"],
+                       "scope": ["read the file {path} and tell me which items are not paid",
+                                 "list the files in {folder} that were not opened this month"]},
+        "shell": {"ask": TOOLS["shell"]["ask"],
+                  "scope": ["run the command git status and tell me which changes are not staged",
+                            "use the terminal to find the services that are not running"]}},
+    "ALTS": ["just give me a rough answer", "answer from what you already know", "a quick estimate is enough",
+             "just summarise what you know"],
+    "CLAIM_OBJECTS": ["database", "document", "image", "notebook", "archive", "module", "template", "spreadsheet"],
+}
 
 
 def cap1(s):
@@ -143,9 +175,12 @@ def keyword_declined(text, sem):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out")
+    ap.add_argument("--set", default="1d", choices=("1d", "1e"))
     ap.add_argument("--mobile", default=os.path.join(HERE, "..", "..", "..", "clover-ai-system", "mobile"))
     ap.add_argument("--observed", nargs="*", default=[])
     a = ap.parse_args()
+    if a.set == "1e":
+        globals().update(SET_1E)
     sys.path.insert(0, a.mobile)
     import semantics as sem
     rng = random.Random(SEED)
@@ -159,7 +194,7 @@ def main():
             times.append(time.perf_counter() - t0)
         return cache[text]
 
-    out = {"seed": SEED, "csi_parser": os.environ.get("CSI_PARSER"), "csi_lemmas": os.environ.get("CSI_MORPH")}
+    out = {"set": a.set, "seed": SEED, "csi_parser": os.environ.get("CSI_PARSER"), "csi_lemmas": os.environ.get("CSI_MORPH")}
     # (Q)
     pred = []
     for r in Q:

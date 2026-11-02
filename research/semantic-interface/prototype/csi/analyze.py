@@ -3,7 +3,7 @@ correspondences of ARCHITECTURE.md section 3 (and only those) turn them into a p
 CSI_PARSER (default spaCy en_core_web_sm, ClearNLP labels); a UD-label parser (e.g. our EWT-trained pipeline) gets the
 same correspondences written for UD labels (ARCHITECTURE.md section 3b). Output follows the JSON contract (section 2).
 v0.1r (Experiment 1d, section 3c): every sentence and its coordinated or paratactic clauses, imperatives, and the
-proposition that governs each token."""
+proposition that governs each token; v0.1r2 (Experiment 1e): rule 9b, main clauses joined in one sentence."""
 import functools
 import os
 
@@ -19,6 +19,7 @@ FUTURE = {"will", "shall"}
 FINITE_TENSE = {"VBD": "past", "VBZ": "present", "VBP": "present"}
 SUBJECTS = {"nsubj", "nsubjpass", "csubj", "csubjpass", "expl", "nsubj:pass", "csubj:pass"}
 ATTACHED = {"conj", "parataxis"}  # rule 9
+JOINS = {",", ";", ":"}  # rule 9b
 ADDRESSEE = {"text": "", "head_lemma": "you", "head": None, "tokens": [], "implicit": True}  # rule 10
 # the same correspondences under the two label schemes (section 3 = ClearNLP, section 3b = UD)
 SCHEME = {
@@ -173,9 +174,17 @@ def _clause(head, parser_id, scheme="clearnlp", carried=None):
     return prop, missing
 
 
+def _joined(c, head):
+    """Rule 9b: a clause attached to `head` by advcl or ccomp that is a second main clause ("Don't search the web ...,
+    just tell me ..."): before the head, a comma, semicolon or colon between them, no subordinating word or "to"."""
+    return (c.dep_ in ("advcl", "ccomp") and c.pos_ in ("VERB", "AUX") and c.i < head.i
+            and not any(k.dep_ == "mark" or k.tag_ == "TO" for k in c.children)
+            and any(t.text in JOINS for t in c.doc[c.right_edge.i + 1:head.i]))
+
+
 def _sentence(root, parser_id, scheme):
-    """Rule 9: the root's clause first, then every clause attached to it by conj or parataxis (also to those), in
-    text order. -> [(head token, proposition or None, problem or None)]"""
+    """Rules 9, 9b: the root's clause first, then every clause attached to it by conj or parataxis (also to those) and
+    every joined main clause, in text order. -> [(head token, proposition or None, problem or None)]"""
     first, problem = _clause(root, parser_id, scheme)
     out, todo = [(root, first, problem)], [(root, first)]
     while todo:
@@ -184,8 +193,12 @@ def _sentence(root, parser_id, scheme):
         for c in head.children:
             if c.dep_ in ATTACHED and c.pos_ in ("VERB", "AUX"):
                 p, why = _clause(c, parser_id, scheme, carried)
-                out.append((c, p, why))
-                todo.append((c, p))
+            elif _joined(c, head):
+                p, why = _clause(c, parser_id, scheme)
+            else:
+                continue
+            out.append((c, p, why))
+            todo.append((c, p))
     return out[:1] + sorted(out[1:], key=lambda x: x[0].i)
 
 
