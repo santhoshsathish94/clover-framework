@@ -31,6 +31,7 @@ Frozen components (artefact, validated scope, status; details and checksums in E
 |---|---|---|---|
 | `morph-verb-v1` (verb lemmatiser: Morphology + OEWN) | inflected verbs (VBD/VBN/VBG/VBZ) inside English ending families: held-out lemmas 0.96, fresh real text 0.988 (trf 0.960) | ending families never seen (0.56-0.76); prefers a known word for unknown verbs | frozen; not in CSI (4d failed) |
 | `morph-verb-v1.1` (v1 + analysis by synthesis) | as v1; real text 0.9925 (trf 0.975), invented verbs 0.972, CSI minimal pairs with invented verbs 1.000 and no predicate mismatch | ending families never seen; stress-dependent doubling in its generator can veto a correct lemma | frozen; **the CSI verb lemmatiser** (4h passed; enabled with `CSI_MORPH` + `CSI_DICT`, recorded in each proposition's provenance) |
+| Dictionary v1.1 (bi-encoder, OEWN examples + SemCor, seed 1) | meaning of a noun/verb/adjective in context among its OEWN meanings: running text 0.71 (frequency table 0.61), meanings never seen used 0.67 | other text domains untested; multiword expressions; about 3 in 10 running-text tokens wrong | candidate (3a2 passed); not frozen, not in CSI |
 
 ## 2. Interface contract v0.1 (model-independent; JSON)
 

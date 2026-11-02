@@ -115,3 +115,8 @@
   ones (0.66 vs 0.66; MFS 0.33, Lesk 0.36, untrained 0.40), and meanings of unseen words (0.67); shuffled definitions
   give chance. On SemCor running text 0.49-0.50 < Lesk 0.59 < MFS 0.66: it reads definitions but knows nothing about
   how often meanings are used.
+- 2026-11-02 ~07:45-09:40 UTC: **Experiment 3a2 passes** (pre-registered): trained on OEWN examples + 146 SemCor
+  documents, the dictionary layer reaches 0.71 on 20 fresh SemCor documents (frequency table 0.61, Dictionary v1
+  0.51) and keeps reading definitions of never-seen meanings (0.67, unchanged). Dictionary v1.1 (seed 1, saved on the
+  GPU server) is the candidate for a frozen dictionary layer; freezing it and 3c (its meanings in CSI's comparison)
+  wait for the human.

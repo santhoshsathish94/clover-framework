@@ -1,0 +1,161 @@
+{
+ "accuracy": {
+  "dev_n": {
+   "D2 seed 1": 0.7016,
+   "D2 seed 2": 0.7015,
+   "D2 seed 3": 0.7026,
+   "dictionary v1 (3a seed 1)": 0.5028,
+   "random": 0.2294,
+   "mfs": 0.6621,
+   "lesk": 0.5925,
+   "mfs_train": 0.6058,
+   "untrained_encoder": 0.3654,
+   "n": 12766
+  },
+  "test_n2": {
+   "D2 seed 1": 0.7089,
+   "D2 seed 2": 0.7109,
+   "D2 seed 3": 0.7124,
+   "dictionary v1 (3a seed 1)": 0.5091,
+   "random": 0.2291,
+   "mfs": 0.6838,
+   "lesk": 0.5947,
+   "mfs_train": 0.6088,
+   "untrained_encoder": 0.38,
+   "n": 13370
+  },
+  "test_s": {
+   "D2 seed 1": 0.6842,
+   "D2 seed 2": 0.6842,
+   "D2 seed 3": 0.6802,
+   "dictionary v1 (3a seed 1)": 0.6593,
+   "random": 0.262,
+   "mfs": 0.3648,
+   "lesk": 0.3981,
+   "mfs_train": 0.3756,
+   "untrained_encoder": 0.3824,
+   "n": 2492
+  },
+  "test_z": {
+   "D2 seed 1": 0.6656,
+   "D2 seed 2": 0.6688,
+   "D2 seed 3": 0.6774,
+   "dictionary v1 (3a seed 1)": 0.6662,
+   "random": 0.2758,
+   "mfs": 0.3321,
+   "lesk": 0.3609,
+   "mfs_train": 0.2389,
+   "untrained_encoder": 0.4022,
+   "n": 3056
+  },
+  "test_l": {
+   "D2 seed 1": 0.6895,
+   "D2 seed 2": 0.6862,
+   "D2 seed 3": 0.6879,
+   "dictionary v1 (3a seed 1)": 0.683,
+   "random": 0.2789,
+   "mfs": 0.3097,
+   "lesk": 0.3427,
+   "mfs_train": 0.3097,
+   "untrained_encoder": 0.436,
+   "n": 1243
+  }
+ },
+ "criteria": {
+  "N1": {
+   "split": "test_n2",
+   "pass": true,
+   "differences_with_95ci": {
+    "seed 1 - mfs_train": [
+     0.1001,
+     0.0911,
+     0.1091
+    ],
+    "seed 2 - mfs_train": [
+     0.1022,
+     0.0934,
+     0.1107
+    ],
+    "seed 3 - mfs_train": [
+     0.1037,
+     0.0948,
+     0.1125
+    ]
+   }
+  },
+  "N2": {
+   "split": "test_n2",
+   "pass": true,
+   "differences_with_95ci": {
+    "seed 1 - dictionary v1": [
+     0.1999,
+     0.1905,
+     0.2092
+    ],
+    "seed 2 - dictionary v1": [
+     0.2019,
+     0.1926,
+     0.2111
+    ],
+    "seed 3 - dictionary v1": [
+     0.2034,
+     0.1941,
+     0.2125
+    ]
+   }
+  },
+  "N3": {
+   "split": "test_z",
+   "pass": true,
+   "differences_with_95ci": {
+    "seed 1 - mfs": [
+     0.3334,
+     0.3105,
+     0.3563
+    ],
+    "seed 1 - lesk": [
+     0.3046,
+     0.2817,
+     0.3276
+    ],
+    "seed 1 - untrained_encoder": [
+     0.2634,
+     0.2431,
+     0.2844
+    ],
+    "seed 2 - mfs": [
+     0.3367,
+     0.3141,
+     0.3593
+    ],
+    "seed 2 - lesk": [
+     0.3079,
+     0.2857,
+     0.3308
+    ],
+    "seed 2 - untrained_encoder": [
+     0.2667,
+     0.2467,
+     0.2866
+    ],
+    "seed 3 - mfs": [
+     0.3452,
+     0.3226,
+     0.3678
+    ],
+    "seed 3 - lesk": [
+     0.3164,
+     0.2935,
+     0.339
+    ],
+    "seed 3 - untrained_encoder": [
+     0.2752,
+     0.2549,
+     0.2958
+    ]
+   },
+   "test_z_floor": 0.6417,
+   "test_z_kept": true
+  }
+ }
+}

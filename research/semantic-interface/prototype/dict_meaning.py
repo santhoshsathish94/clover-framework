@@ -4,10 +4,14 @@ never seen used, by reading their definitions. EXPERIMENTS.md has the pre-regist
   train      bi-encoder (context encoder: target-word vector; gloss encoder: [CLS]; dot product; cross-entropy)
   baselines  random, most-frequent sense, simplified Lesk, the untrained encoder
   report     criteria D1-D5 with paired bootstrap intervals
-Usage: python dict_meaning.py prep <data dir> --oewn oewn.xml.gz --semcor semcor.zip
-       python dict_meaning.py train <data dir> <out json> --seed 1 [--shuffle-glosses]
+  (3a2: prep --semcor-train adds SemCor train/dev/test documents; train --train-splits train train_n; evaluate scores
+   a saved model; report-usage gives criteria N1-N3)
+Usage: python dict_meaning.py prep <data dir> --oewn oewn.xml.gz --semcor semcor.zip [--semcor-train]
+       python dict_meaning.py train <data dir> <out json> --seed 1 [--shuffle-glosses] [--train-splits train train_n]
        python dict_meaning.py baselines <data dir> <out json>
-       python dict_meaning.py report <data dir> <out json> --runs r1.json ... --control c.json --baselines b.json"""
+       python dict_meaning.py evaluate <data dir> <out json> --model <saved model dir>
+       python dict_meaning.py report <data dir> <out json> --runs r1.json ... --control c.json --baselines b.json
+       python dict_meaning.py report-usage <data dir> <out json> --runs ... --v1 v1.json --v1-runs ... --baselines b.json"""
 import argparse
 import collections
 import gzip
@@ -126,7 +130,20 @@ def prep(a):
         if it["split"] == "train":
             it["train_candidates"] = [c for c in it["candidates"] if c not in held]
     items = [it for it in items if it["split"] != "train" or len(it["train_candidates"]) >= 2]
-    items += semcor_items(a.semcor, lemma_synsets, sense_synset)
+    docs = semcor_docs(a.semcor)
+    dev_docs = sorted(random.Random(SEED).sample(docs, 20))  # the 3a SemCor test documents
+    if not a.semcor_train:
+        items += semcor_items(a.semcor, dev_docs, "test_n", lemma_synsets, sense_synset)
+    else:  # Experiment 3a2: the 3a documents become dev-N; 20 fresh test documents; the rest trains
+        rest = [d for d in docs if d not in dev_docs]
+        test_docs = sorted(random.Random(SEED + 1).sample(rest, 20))
+        items += semcor_items(a.semcor, dev_docs, "dev_n", lemma_synsets, sense_synset)
+        items += semcor_items(a.semcor, test_docs, "test_n2", lemma_synsets, sense_synset)
+        train_n = semcor_items(a.semcor, [d for d in rest if d not in test_docs], "train_n", lemma_synsets, sense_synset)
+        for it in train_n:
+            it["train_candidates"] = [c for c in it["candidates"] if c not in held]
+        items += [it for it in train_n if it["synset"] not in held and (it["lemma"], it["pos"]) not in l_test
+                  and len(it["train_candidates"]) >= 2]
     os.makedirs(a.data, exist_ok=True)
     with open(os.path.join(a.data, "items.jsonl"), "w", encoding="utf-8") as fh:
         for it in items:
@@ -144,10 +161,12 @@ def prep(a):
     print(json.dumps(stats, indent=1))
 
 
-def semcor_items(path, lemma_synsets, sense_synset):
+def semcor_docs(path):
+    return sorted(n for n in zipfile.ZipFile(path).namelist() if re.search(r"/brown[12]/tagfiles/br-.*\.xml$", n))
+
+
+def semcor_items(path, chosen, split, lemma_synsets, sense_synset):
     z = zipfile.ZipFile(path)
-    docs = sorted(n for n in z.namelist() if re.search(r"/brown[12]/tagfiles/br-.*\.xml$", n))
-    chosen = sorted(random.Random(SEED).sample(docs, 20))
     out, unmapped = [], collections.Counter()
     for name in chosen:
         root = ET.fromstring(z.read(name))
@@ -177,8 +196,8 @@ def semcor_items(path, lemma_synsets, sense_synset):
                 if len(cands) < 2:
                     continue
                 out.append({"id": f"{name.split('/')[-1]}:{s.get('snum')}:{st}", "synset": syn, "lemma": lemma.lower(),
-                            "pos": g, "text": text, "start": st, "end": en, "candidates": cands, "split": "test_n"})
-    print("semcor documents", chosen, "items", len(out), "unmapped", dict(unmapped))
+                            "pos": g, "text": text, "start": st, "end": en, "candidates": cands, "split": split})
+    print("semcor", split, "documents", len(chosen), chosen[:20], "items", len(out), "unmapped", dict(unmapped))
     return out
 
 
@@ -188,7 +207,8 @@ def load_data(d):
     return items, json.load(open(os.path.join(d, "synsets.json")))
 
 
-EVAL_SPLITS = ("dev_s", "dev_z", "test_s", "test_z", "test_l", "test_n")
+EVAL_SPLITS = ("dev_s", "dev_z", "dev_n", "test_s", "test_z", "test_l", "test_n", "test_n2")
+DEV_SPLITS = ("dev_s", "dev_z", "dev_n")
 
 
 class Encoders:
@@ -196,9 +216,10 @@ class Encoders:
         import torch
         from transformers import AutoModel, AutoTokenizer
         self.torch, self.device = torch, device
+        saved = os.path.isdir(os.path.join(name, "context"))  # a model saved by train --save
         self.tok = AutoTokenizer.from_pretrained(name)
-        self.ctx = AutoModel.from_pretrained(name).to(device)
-        self.gls = AutoModel.from_pretrained(name).to(device)
+        self.ctx = AutoModel.from_pretrained(os.path.join(name, "context") if saved else name).to(device)
+        self.gls = AutoModel.from_pretrained(os.path.join(name, "gloss") if saved else name).to(device)
 
     def context_vectors(self, batch):
         enc = self.tok([it["text"] for it in batch], return_offsets_mapping=True, truncation=True, max_length=128,
@@ -236,6 +257,8 @@ def evaluate(enc, items, synsets, gloss_of, pool="cls", cosine=False, bs=64):
             gv.update({c: v[k] for k, c in enumerate(chunk)})
         for split in EVAL_SPLITS:
             sel = [it for it in items if it["split"] == split]
+            if not sel:
+                continue
             correct = []
             for i in range(0, len(sel), bs):
                 batch = sel[i:i + bs]
@@ -255,7 +278,7 @@ def train(a):
     random.seed(a.seed)
     torch.manual_seed(a.seed)
     items, synsets = load_data(a.data)
-    tr = [it for it in items if it["split"] == "train"]
+    tr = [it for it in items if it["split"] in a.train_splits]
     gloss = {sid: s["definition"] for sid, s in synsets.items()}
     if a.shuffle_glosses:
         train_syns = sorted({c for it in tr for c in it["train_candidates"]})
@@ -301,10 +324,10 @@ def train(a):
             tot += float(loss)
         enc.ctx.eval()
         enc.gls.eval()
-        dev = evaluate(enc, [it for it in items if it["split"] in ("dev_s", "dev_z")], synsets, lambda c: gloss[c])
-        score = (dev["dev_s"]["acc"] + dev["dev_z"]["acc"]) / 2
-        log.append({"epoch": epoch + 1, "loss": round(tot / max(1, len(tr) // a.batch), 4), "dev_s": dev["dev_s"]["acc"],
-                    "dev_z": dev["dev_z"]["acc"], "seconds": round(time.time() - t0)})
+        dev = evaluate(enc, [it for it in items if it["split"] in DEV_SPLITS], synsets, lambda c: gloss[c])
+        score = sum(v["acc"] for v in dev.values()) / len(dev)
+        log.append({"epoch": epoch + 1, "loss": round(tot / max(1, len(tr) // a.batch), 4),
+                    **{s: v["acc"] for s, v in dev.items()}, "seconds": round(time.time() - t0)})
         print(json.dumps(log[-1]), flush=True)
         if score > best:
             best = score
@@ -314,6 +337,7 @@ def train(a):
     enc.gls.load_state_dict(best_state[1])
     res = evaluate(enc, items, synsets, lambda c: gloss[c])
     out = {"experiment": "E3a dictionary v1", "learner": "bi-encoder", "model": a.model, "seed": a.seed,
+           "train_splits": a.train_splits,
            "shuffle_glosses": a.shuffle_glosses, "n_train": len(tr), "log": log, "best_dev": round(best, 4),
            "results": res}
     json.dump(out, open(a.out, "w"))
@@ -351,6 +375,22 @@ def baselines(a):
             best = max(range(len(it["candidates"])), key=lambda k: (overlap(it["candidates"][k]), -k))
             lesk.append(int(it["candidates"][best] == it["synset"]))
         res["lesk"][split] = {"n": len(sel), "acc": round(sum(lesk) / max(1, len(sel)), 4), "correct": lesk}
+    train_n = [it for it in items if it["split"] == "train_n"]
+    if train_n:  # Experiment 3a2: the frequency table learned from the SemCor training documents
+        freq = collections.defaultdict(collections.Counter)
+        for it in train_n:
+            freq[(it["lemma"], it["pos"])][it["synset"]] += 1
+        res["mfs_train"] = {}
+        for split in EVAL_SPLITS:
+            sel = [it for it in ev if it["split"] == split]
+            if not sel:
+                continue
+            ok = []
+            for it in sel:
+                f = freq.get((it["lemma"], it["pos"]), {})
+                pred = max(range(len(it["candidates"])), key=lambda k: (f.get(it["candidates"][k], 0), -k))
+                ok.append(int(it["candidates"][pred] == it["synset"]))
+            res["mfs_train"][split] = {"n": len(sel), "acc": round(sum(ok) / len(sel), 4), "correct": ok}
     enc = Encoders(a.model, "cuda")
     enc.ctx.eval()
     enc.gls.eval()
@@ -377,6 +417,8 @@ def report(a):
             "D3": ("test_l", ("mfs", "lesk", "untrained_encoder")), "D5": ("test_n", ("lesk", "untrained_encoder"))}
     out = {"accuracy": {}, "criteria": {}}
     for split in EVAL_SPLITS:
+        if split not in base["mfs"]:
+            continue
         out["accuracy"][split] = {**{f"D seed {r['seed']}": r["results"][split]["acc"] for r in runs},
                                   "shuffled-gloss control": control[split]["acc"],
                                   **{b: base[b][split]["acc"] for b in base}, "n": base["mfs"][split]["n"]}
@@ -396,6 +438,43 @@ def report(a):
     print(json.dumps(out, indent=1))
 
 
+def evaluate_saved(a):
+    items, synsets = load_data(a.data)
+    enc = Encoders(a.model, "cuda")
+    enc.ctx.eval()
+    enc.gls.eval()
+    res = evaluate(enc, items, synsets, lambda c: synsets[c]["definition"])
+    json.dump({"experiment": "E3a2 evaluation of a saved model", "model": a.model, "results": res}, open(a.out, "w"))
+    print(json.dumps({s: (v["n"], v["acc"]) for s, v in res.items()}))
+
+
+def report_usage(a):
+    runs = [json.load(open(p)) for p in a.runs]
+    v1 = json.load(open(a.v1))["results"]
+    v1_z = sum(json.load(open(p))["results"]["test_z"]["acc"] for p in a.v1_runs) / len(a.v1_runs)
+    base = json.load(open(a.baselines))["results"]
+    out = {"accuracy": {s: {**{f"D2 seed {r['seed']}": r["results"][s]["acc"] for r in runs}, "dictionary v1 (3a seed 1)": v1[s]["acc"],
+                            **{b: base[b][s]["acc"] for b in base if s in base[b]}, "n": base["mfs"][s]["n"]}
+                        for s in ("dev_n", "test_n2", "test_s", "test_z", "test_l") if s in base["mfs"]},
+           "criteria": {}}
+    checks = {"N1": ("test_n2", {"mfs_train": base["mfs_train"]["test_n2"]["correct"]}),
+              "N2": ("test_n2", {"dictionary v1": v1["test_n2"]["correct"]}),
+              "N3": ("test_z", {b: base[b]["test_z"]["correct"] for b in ("mfs", "lesk", "untrained_encoder")})}
+    for name, (split, against) in checks.items():
+        rows, ok = {}, True
+        for r in runs:
+            for b, ref in against.items():
+                diff, lo, hi = paired_ci(r["results"][split]["correct"], ref)
+                rows[f"seed {r['seed']} - {b}"] = [diff, lo, hi]
+                ok &= lo > 0
+        out["criteria"][name] = {"split": split, "pass": ok, "differences_with_95ci": rows}
+    floor = round(v1_z - 0.02, 4)
+    kept = all(r["results"]["test_z"]["acc"] >= floor for r in runs)
+    out["criteria"]["N3"].update({"test_z_floor": floor, "test_z_kept": kept, "pass": out["criteria"]["N3"]["pass"] and kept})
+    json.dump(out, open(a.out, "w"), indent=1)
+    print(json.dumps(out, indent=1))
+
+
 def main():
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -403,7 +482,8 @@ def main():
     p.add_argument("data")
     p.add_argument("--oewn", required=True)
     p.add_argument("--semcor", required=True)
-    for name in ("train", "baselines"):
+    p.add_argument("--semcor-train", action="store_true", help="Experiment 3a2: SemCor train/dev/test documents")
+    for name in ("train", "baselines", "evaluate"):
         p = sub.add_parser(name)
         p.add_argument("data")
         p.add_argument("out")
@@ -416,14 +496,23 @@ def main():
             p.add_argument("--max-candidates", type=int, default=16)
             p.add_argument("--lr", type=float, default=2e-5)
             p.add_argument("--save", default=None)
+            p.add_argument("--train-splits", nargs="+", default=["train"])
     p = sub.add_parser("report")
     p.add_argument("data")
     p.add_argument("out")
     p.add_argument("--runs", nargs="+", required=True)
     p.add_argument("--control", required=True)
     p.add_argument("--baselines", required=True)
+    p = sub.add_parser("report-usage")
+    p.add_argument("data")
+    p.add_argument("out")
+    p.add_argument("--runs", nargs="+", required=True)
+    p.add_argument("--v1", required=True, help="evaluate output of the saved 3a model on the 3a2 data")
+    p.add_argument("--v1-runs", nargs="+", required=True, help="the 3a seed results (test-Z floor)")
+    p.add_argument("--baselines", required=True)
     a = ap.parse_args()
-    {"prep": prep, "train": train, "baselines": baselines, "report": report}[a.cmd](a)
+    {"prep": prep, "train": train, "baselines": baselines, "evaluate": evaluate_saved, "report": report,
+     "report-usage": report_usage}[a.cmd](a)
 
 
 if __name__ == "__main__":

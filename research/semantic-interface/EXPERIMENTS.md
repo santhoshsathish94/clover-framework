@@ -271,6 +271,51 @@ gloss), and MFS (0.662) is partly fitted to this test, since WordNet's sense ord
 the pre-registered decision, Dictionary v1 is validated for choosing meanings in dictionary-style contexts and is
 not validated for running text.
 
+**Experiment 3a2 = Dictionary layer v1.1: learning how meanings are used (pre-registered 2026-11-02 07:45 UTC, after
+the 3a results, before any 3a2 code or data).** Question: can the dictionary layer learn how meanings are used in
+running text without losing the ability to read the definition of a meaning it has never seen used? **Data:** SemCor
+3.0 brown1 + brown2 documents (186). The 20 documents of 3a are now development data (dev-N). **test-N2** = 20 other
+documents chosen by seed 3102, never examined. **train-N** = the remaining 146 documents, same target filter, minus
+every item whose meaning is a 3a held-out meaning (test-Z, dev-Z) or whose word is a 3a held-out word (test-L), and
+with held-out meanings removed from training candidates, so test-Z and test-L stay zero-shot. **Learner D2:** the 3a
+bi-encoder trained on the 3a OEWN training examples plus train-N, 4 epochs, model selection on the mean of dev-S,
+dev-Z and dev-N, 3 seeds. **Baselines on test-N2:** a frequency table learned from train-N (MFS-train: the lemma's
+most frequent meaning there, else OEWN's first sense); Lesk; Dictionary v1 (3a seed 1, the saved model); OEWN's first
+sense is reported but is partly fitted to SemCor. **Criteria, every seed, "beats" = the 95% paired bootstrap interval
+excludes 0:** N1 on test-N2 D2 beats MFS-train (it has learned usage beyond a frequency table); N2 on test-N2 D2 beats
+Dictionary v1; N3 on test-Z D2 >= the 3a seed mean - 0.02 and still beats MFS, Lesk and the untrained encoder.
+**Decision:** N1-N3 passing makes Dictionary v1.1 the candidate for a frozen dictionary layer; putting its meanings
+into CSI's analysis and comparison is then pre-registered separately (3c). If N1 fails, the analysis comes first.
+
+**3a2 data and baselines (GPU server; `results/e3a2_*.json`; items.jsonl sha256 32c34713...).** OEWN splits are
+identical to 3a (30,113 items checked) and dev-N is exactly the 3a SemCor set. train-N: 146 documents, 96,582 tokens,
+80,209 after removing held-out meanings and words; test-N2: 20 documents (seed 3102), 13,370 tokens, mean 7.4
+candidates. On test-N2: random 0.229, MFS-train (frequency table from train-N) 0.609, Lesk 0.595, untrained encoder
+0.380, Dictionary v1 (the saved 3a model) 0.509, OEWN first sense 0.684 (partly fitted to SemCor). The saved 3a model
+reproduces its 3a scores to within 0.0012 (it was saved in half precision).
+
+**3a2 results: N1, N2 and N3 pass for every seed.** Selected epochs 4 / 3 / 3 (dev mean).
+
+| Accuracy | D2 (seeds 1 / 2 / 3) | Dictionary v1 | MFS-train | Lesk | untrained | OEWN first sense |
+|---|---|---|---|---|---|---|
+| **test-N2 running text (fresh)** | **0.709 / 0.711 / 0.712** | 0.509 | 0.609 | 0.595 | 0.380 | 0.684 |
+| dev-N running text (3a's set) | 0.702 / 0.702 / 0.703 | 0.503 | 0.606 | 0.593 | 0.365 | 0.662 |
+| **test-Z meanings never seen used** | **0.666 / 0.669 / 0.677** | 0.666 | 0.239 | 0.361 | 0.402 | 0.332 |
+| test-S seen meanings | 0.684 / 0.684 / 0.680 | 0.659 | 0.376 | 0.398 | 0.382 | 0.365 |
+| test-L words never seen | 0.690 / 0.686 / 0.688 | 0.683 | 0.310 | 0.343 | 0.436 | 0.310 |
+
+N1: D2 - MFS-train on test-N2 = +0.100 to +0.104 (intervals from +0.091). N2: D2 - Dictionary v1 = +0.200 to +0.203.
+N3: test-Z 0.666-0.677 >= floor 0.642 (the 3a seed mean 0.662 - 0.02), and D2 still beats MFS, Lesk and the untrained
+encoder there by +0.26 or more. Beside the criteria (no interval computed): D2 is also above OEWN's first sense on
+test-N2 by 0.025-0.029, although that baseline was partly fitted to SemCor. **Reading.** Learning from running text
+gave the dictionary layer what 3a lacked - knowledge of how meanings are used - without costing its ability to
+read the definition of a meaning it has never seen used (test-Z unchanged, test-S and test-L slightly higher). By
+the pre-registered decision Dictionary v1.1 (seed 1, saved) is the candidate for a frozen dictionary layer. **Not
+covered:** running text from other domains (test-N2 is Brown-corpus prose like the training documents; the
+Senseval/SemEval sets were not used because their licence was not confirmed); multiword expressions; SemCor tokens
+whose sense has no OEWN id (about 7%) were dropped; 0.71 still means about 3 in 10 tokens of running text get the
+wrong meaning.
+
 ## Experiment 4 = E2: morphology (defined)
 Lemmatisation, inflection and derivation on UD features and OEWN derivation links, including unseen lemma+affix
 combinations; learned vs lookup baselines.
