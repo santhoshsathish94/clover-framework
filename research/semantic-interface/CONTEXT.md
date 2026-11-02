@@ -172,3 +172,13 @@
     not integrated; no third variant without the human. An earlier 1e run used stale code (silent upload failure),
     caught by checksums, kept aside and not used.
   - **Waiting on the human:** what to integrate, if anything (see the hand-back of 2026-11-02 16:25 UTC).
+- 2026-11-02 22:49-23:32 UTC (clock): the human chose "Third variant first (pre-registered, fresh data)".
+  - Development (EWT dev, 1d/1e sets): re-reading verbless sentences as requests invents requests in natural text
+    unless gated; the tagger's P(VB) of the first word separates imperatives (>= 0.008) from non-requests (<= 0.045).
+  - **Experiment 1f** pre-registered (b85b3d6), amended before any test data (a00322e: the re-read must have no
+    subject; form "Please"; Q1 without please-pairs equivalent by construction; a defect since 1d fixed - `unsupported`
+    was never set - with no effect on any reported 1d/1e number).
+  - **1f passes as pre-registered**: Q 0.974 (24 verbs that can be read as other word classes; 13 errors, all
+    "Double the N." below the threshold), declined tools offered 0.000, asked 1.000, scope 1.000, claims 0.985 vs
+    0.842, S1 and S2 unchanged, false requests on EWT test 2 of 743 (0.27%). Decision: integrate the routing use and
+    the claim check, off by default (framework runtime and laptop Studio, as the human chose after 3c2).

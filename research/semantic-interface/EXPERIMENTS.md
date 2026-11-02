@@ -292,6 +292,29 @@ With all three on development data: Q balanced accuracy 1.000 on the 1d pairs an
 counted; reported 1d 0.965, 1e 0.931); "Forward the timetable." (P(VB) 0.008) stays unread. Criteria, threshold,
 data and decision are otherwise unchanged.
 
+**1f results (k3, 2026-11-02 23:21:37-23:31:50 UTC; `results/e1f.json`, run record `results/e1f_run.txt`; code a00322e,
+checked on k3 against the commit's checksums before the run started). 1f passes as pre-registered (with the amendment
+made before any test data): Q1, R1, R2, R3, C1, S1, S2 and P1 pass.** (Q) 432 request pairs over 24 verbs that can
+be read as another word class; the 6 "please" pairs that were equivalent by construction are excluded: balanced
+accuracy 0.974 on 426 pairs (all 432: 0.974); phenomena 0.944-1.000. All 13 errors involve "Double the N.": the
+parser reads it without a verb and the tagger gives "Double" P(VB) 0.005-0.012, below 0.02, so CSI abstains. Of the
+159 bare requests "V the N.", 0.925 are read without rule 12 and 0.969 with it; rule 12 re-read 7 ("Narrow" 3,
+"Double" 2, "Star" 2), 5 stay unread ("Double"). (R) 204 items from 192 messages: declined tools offered 0.000 with
+CSI (today 1.000, keyword rule 0.000); asked tools 1.000 (keyword rule 0.625); scope items 1.000 (keyword rule
+0.000); no CSI error; declining without a verbal negation offered 1.000 (outside scope). (C) 196 reply sentences: CSI
+rule 0.985, the core's rule 0.842; CSI's 3 errors are the participle "run", as in 1e. (S1) heldout3 0.994, nonce2
+1.000. (S2) 26 of the 30 core-observation messages read, no route changed. (P) UD English-EWT test: 745 sentences read
+without a verbal root; of the 743 whose first word is not a gold imperative, rule 12 read 2 as requests (0.27%;
+criterion at most 1%): "Link to video: http://..." (P(VB) 0.29) and "Ship on a Stick (Prize at ...)" (0.034); the 2
+gold imperatives among them ("Reply", "Followup-To: alt.animals") were both re-read as requests. Rule 12 fired on 12
+Q texts (7 accepted), 6 routing messages (all "No need to ...", none accepted) and 2 core-observation messages
+("Hi", "Thanks", none accepted). Latency 0.106 s per message (mean; p95 0.119; n 692, now including the Q texts).
+**Decision as pre-registered: integrate the routing use and the claim check** (local side service, setting off by
+default, measured in the framework runtime on k3 and live in the laptop Studio). What this does not show: the
+template messages are short single requests; P covers only EWT's sentences without a verbal root; rule 12 matters only
+for sentences the parser misreads, which none of the 30 core-observation messages were; R and C are unchanged from 1e
+because rule 12 does not touch sentences with a verb.
+
 ## Experiment 2 = E3 run plan (pre-registered 2026-11-01)
 **Data.** UD English-EWT r2.18 (tag commit b7711cce, CC BY-SA 4.0): train for our parser, dev for model choice, test
 reported once. Gold word segmentation is given to every system (tokenisation differences do not count).
