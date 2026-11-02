@@ -43,6 +43,11 @@
   should decide how those meanings relate in the context of the whole proposition. Don't let the dictionary itself
   declare two sentences equivalent." "The next step is not to call the dictionary complete. It's to investigate how a
   system can move from identifying meanings to understanding relationships between meanings."
+- Decisions (human, 2026-11-02, after 3c2): "Usable as an experimental component. CSI Preview v0.1 is a reasonable so
+  let's integrate it to the core and see how it improves or do you have a better version let me know". After my probe
+  (v0.1 reads none of the core's requests; routing offers declined tools), the human chose: v0.1 + requests first,
+  validated on fresh pre-registered pairs (Experiment 1d); then integration into the framework runtime and the laptop
+  Studio through the common semantics.py (phone unchanged); runtime code committed and pushed to main, off by default.
 
 ## Boundaries
 - Research area only: nothing here changes Clover's runtime; integration needs the human's approval.

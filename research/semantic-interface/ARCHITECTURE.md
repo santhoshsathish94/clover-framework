@@ -155,3 +155,16 @@ Used automatically when the parser's label set is UD (e.g. the pipeline we train
 6. An `advmod` dependent with Polarity=Neg (not, n't, never) on the predicate or root -> negative.
 7-8. Unchanged (`xcomp` has the same name in both schemes).
 No correspondence was added or removed; the recipient passive found in Experiment 6a is still not covered.
+
+## 3c. Request correspondences (v0.1r; written 2026-11-02 for Experiment 1d, before its data)
+9. Every sentence is analysed. In a sentence, the root verb's clause and each verb attached to it by `conj` or
+   `parataxis` form their own propositions, in text order. A clause without its own subject takes the subject of the
+   clause it is attached to; polarity, tense, aspect and modality are read from each clause's own dependents (a
+   negation is not carried into another clause).
+10. A clause whose verb is in base form (tag VB), with no subject of its own and no auxiliary other than do-support
+    ("do", "don't", "do not"), is an imperative: mood "imperative", ARG0 = the addressee (implicit, head lemma
+    "you"), tense "unmarked"; a clause attached to an imperative without its own subject is an imperative too. Every
+    other proposition has mood "indicative". Negation as rule 6.
+11. A token belongs to the proposition of its nearest ancestor (itself included) that is a proposition's predicate. A
+    negation inside a subordinate clause that forms no proposition does not change that proposition's polarity.
+Comparison (rule 8) adds mood to the compared fields and still compares each text's first proposition.
