@@ -467,6 +467,78 @@ WordNet relations between them, Experiment 3b) rather than by identity - a chang
 and data not yet examined. Environment note: Hugging Face transformers 5.22.1 was added to k3's venv-csi so that
 CSI runs the parser and the dictionary in one process; spaCy trf parses as before.
 
+**Correction to recorded times (2026-11-02 07:55 UTC, read from the clock).** The clock times I wrote for the entries
+from Morphology v2 (4c) to 3c, labelled UTC, were my estimates, not clock readings, and they are wrong - later than
+the real times by up to about five hours. The commit times in git are the reliable record: af79e7c 03:30 UTC (4c-4g),
+27e7ef4 04:19 UTC (verb lemmatiser freeze, 4d, 4h, 3a), 03a434d 05:33 UTC (3a2), 847c841 06:42 UTC (freeze checks),
+9a0e3ac 07:23 UTC (3c). The order stated in each entry (pre-registration before its data and runs) is as I recorded
+it, but git cannot show it, because each pre-registration was committed together with its results. From 3c2 on, the
+pre-registration is committed and pushed before any of its data exist, and the threshold before any test output.
+
+**Experiment 3c2 = closeness of dictionary meanings in CSI comparison (pre-registered 2026-11-02 07:55 UTC, after 3c,
+before any 3c2 code, data or closeness value; I first counted candidate pairs in OEWN for feasibility, running no
+system).** The human: "The next experiment should test whether the dictionary's own gloss representations can
+recognise related meanings without requiring exact synset identity", with the boundary "Dictionary should report
+candidate meanings and evidence; CSI should decide how those meanings relate in the context of the whole proposition.
+Don't let the dictionary itself declare two sentences equivalent." Question: when the frozen dictionary chooses
+neighbouring but different meanings for two synonyms (3c's failure), can CSI recognise them as one meaning from how
+close the dictionary's representations of the two meanings are - without merging words that mean different, even
+closely related, things, and without losing what it does with structure?
+- **Dictionary (unchanged).** Dictionary v1.1 stays frozen: the checkpoint, `csi/senses.py` (code sha256
+  58580570...) and its choice of meaning are used exactly as in 3c. Evidence CSI reads from it: each word's chosen
+  meaning (with `usage_trained`, the number of meanings and the top choice's p) and the gloss encoder's vector of each
+  meaning's definition - the vectors the dictionary already scores contexts against, read through the frozen object.
+  The dictionary returns no match and no verdict.
+- **CSI v0.3-lexical (written; the decision is CSI's).** Two slot heads (predicate, ARG0, ARG1, ARG2) agree if their
+  lemmas are equal (v0.1) or, when the dictionary covers both words, the cosine between the gloss vectors of the two
+  chosen meanings (closeness, rounded to 4 decimals) is at least τ **and** neither word heads another slot of the
+  other proposition (a word present in both propositions has changed role, not been replaced: role reversals stay
+  distinctions). Words the dictionary does not cover agree only by lemma. The rest of the comparison is v0.1.
+- **τ from development data only.** Candidates: midpoints between consecutive distinct closeness values on dev.
+  Chosen: the highest dev balanced accuracy among candidates that keep every dev control phenomenon at or below 0.05
+  false equivalence; if none does, the lowest maximum false-equivalence rate, then the highest balanced accuracy; ties
+  go to the higher τ. One τ for all parts of speech. τ is committed to the repository before any test output exists.
+  bge-small's threshold is chosen on the same dev pairs by the same rule.
+- **Data (fresh, built by script with seed 3110; nothing chosen by hand).** Pool: pairs of single lower-case words
+  whose **first OEWN sense is the same synset** (3c's amended rule), both attested in UD English-EWT (train, dev or
+  test) with that part of speech; no word from the E1 lexicons, from 3c (P, A, fillers) or from the 3c2 fillers; no
+  spelling variants or clippings (edit distance <= 2, or one word a prefix or suffix of the other). Template fit comes
+  from OEWN, not from me: verbs whose shared sense lists the frame "Somebody ----s something" for both words take a
+  thing object, else "Somebody ----s somebody" a person object, else they are excluded; agents are noun.person;
+  patients noun.artifact, food, object, plant, animal, substance or body. Two **controls** per pair, each sharing no
+  synset with either word: **related** = the most EWT-frequent word whose first sense is a co-hyponym of the shared
+  synset (shares a direct hypernym, is neither its hypernym nor its hyponym; for verbs the same frame) - a different
+  kind of the same thing or action, the hard case for closeness; **random** = a word of the same class drawn by seed,
+  not a co-hyponym, hypernym or hyponym of the shared synset. Each word is used once; pairs without both controls are
+  skipped. Items are split by seed, within each class, into dev (one third) and test (two thirds). Verb forms: OEWN's
+  irregular forms, else the past and participle attested in EWT, else regular spelling rules. Templates as in 3c with
+  new fillers, 3 instances per item (fillers drawn by seed 3112): per verb item synonym, related and random rows, each
+  active and passive; per noun item synonym, related and random rows.
+- **Label audit, before any system output.** A separate reviewer agent sees one instance of each row type per item and
+  flags items whose gold label is wrong in the most natural reading, or whose verb form is misspelt; flagged items are
+  removed from dev and test, and the list is recorded.
+- **Systems.** CSI v0.3-lexical; CSI v0.2-lexical (3c's shared-synset rule) and v0.1 (lemmas), computed from the same
+  analyses; bge-small cosine (dev threshold; the E1-seen threshold reported too). Trf parser and verb lemmatiser v1.1
+  as in 3c.
+- **Criteria on the test items.** K1 balanced accuracy >= 0.90, and v0.3 beats v0.2, v0.1 and bge-small (95% interval
+  of the balanced-accuracy difference above 0; paired bootstrap resampling whole items, 10,000 resamples, seed 3111).
+  K2 every synonym phenomenon (predicate active, predicate passive, agent, patient) >= 0.80. **K3 false equivalence,
+  measured separately:** every control phenomenon (related and random; predicate active, predicate passive, agent,
+  patient) >= 0.95, i.e. at most 5% of different meanings merged. K4 no regression: E1 heldout3 and nonce2 within
+  0.005 of v0.1 (0.994 and 1.000), with their distinctions counted separately.
+- **Reported, no criterion.** Breakdowns by `usage_trained` (both words trained vs at least one not) and by ambiguity
+  (the larger number of OEWN meanings of the two words: 1, 2-3, 4-7, 8+; whether the dictionary chose the shared first
+  sense for both words; top choice p < 0.5 for either word); by part of speech; synonym items whose two chosen
+  meanings are identical vs different; closeness AUC on test (synonyms vs related, vs random controls) and the τ that
+  would have been best on test (threshold transfer vs separability); the 3c (P) pairs at τ (examined data: they
+  motivated this experiment); v0.3 without the role condition on heldout3, nonce2 and test (ablation); errors by
+  layer; closeness recomputed on the GPU server from its copy of the checkpoint by a separately written script
+  (agreement within 0.001).
+- **Decision.** K1-K4 passing makes v0.3-lexical CSI's comparison for single-word substitutions (nouns and verbs,
+  synonyms in their main sense); otherwise the failure is analysed first. Either way, WordNet relations between
+  meanings (3b) are a separate experiment; 3c2's test set is kept so that 3b can also be measured on it (its related
+  controls are defined by hypernymy, which a 3b rule built on hypernymy must declare).
+
 ## Experiment 4 = E2: morphology (defined)
 Lemmatisation, inflection and derivation on UD features and OEWN derivation links, including unseen lemma+affix
 combinations; learned vs lookup baselines.

@@ -33,6 +33,16 @@
   sentence comparison." "Dictionary v1.1 should be frozen only after its saved checkpoint, reproducibility, licensing
   and integration contract are independently checked. Its current result is promising, but it is not yet a complete
   dictionary."
+- Decisions (human, 2026-11-02, after 3c): "3c2 before 3b ... The next experiment should test whether the dictionary's
+  own gloss representations can recognise related meanings without requiring exact synset identity." Design: keep
+  Dictionary v1.1 frozen ("Don't retrain it or change its sense-selection behaviour"); compare the encoded definitions
+  of the two selected senses, not their synset ids; threshold from development data only; fresh synonym and control
+  pairs, "no reuse of the 3c test pairs for threshold selection"; keep the structural regression tests and "measure
+  false equivalence separately"; words without SemCor usage training and ambiguous senses as separate breakdowns.
+  Then 3b (WordNet relations) separately. Boundary: "Dictionary should report candidate meanings and evidence; CSI
+  should decide how those meanings relate in the context of the whole proposition. Don't let the dictionary itself
+  declare two sentences equivalent." "The next step is not to call the dictionary complete. It's to investigate how a
+  system can move from identifying meanings to understanding relationships between meanings."
 
 ## Boundaries
 - Research area only: nothing here changes Clover's runtime; integration needs the human's approval.
@@ -137,3 +147,6 @@
   control merged, no regression on structure (heldout3 0.994, nonce2 1.000); but synonym agents 0.458 and predicates
   0.667. Every error: the dictionary picked neighbouring, different WordNet synsets for the two synonyms. v0.2 is not
   adopted; next candidate: compare meanings by learned closeness or WordNet relations (needs pre-registration).
+- 2026-11-02 07:55 UTC (clock): my recorded times for 4c-3c were estimates and wrong (correction in EXPERIMENTS.md;
+  git commit times are the record). **Experiment 3c2 pre-registered** (closeness of the frozen dictionary's meaning
+  vectors, threshold from fresh dev pairs, related and random controls, fresh test); committed before any 3c2 data.

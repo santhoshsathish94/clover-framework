@@ -24,6 +24,8 @@ listed irregular forms); **Morphology** = how a word is constructed and changes 
 **Semantics** = what the resulting expression means (L3 propositions, L5, L6). Each layer is validated on its own job,
 and a layer does not absorb another's knowledge: lemmatisation composes Grammar (class), Morphology (ranked
 candidates) and Dictionary (`csi/dictionary.py`, Experiment 4g).
+Boundary (human, 2026-11-02, after 3c): the Dictionary reports candidate meanings and evidence; CSI decides how those
+meanings relate in the context of the whole proposition; the dictionary never declares two sentences equivalent.
 
 Frozen components (artefact, validated scope, status; details and checksums in EXPERIMENTS.md):
 
