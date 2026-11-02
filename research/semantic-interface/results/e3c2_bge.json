@@ -1,0 +1,8441 @@
+{
+ "system": "bge-small 5c38ec7c cosine",
+ "threshold_from_e1_seen": 0.961845,
+ "dev": {
+  "n": 396,
+  "balanced_accuracy": 0.5417,
+  "coverage": 1.0,
+  "per_phenomenon_accuracy": {
+   "dist:random_agent": 1.0,
+   "dist:random_patient": 1.0,
+   "dist:random_predicate": 1.0,
+   "dist:random_predicate_passive": 1.0,
+   "dist:related_agent": 1.0,
+   "dist:related_patient": 1.0,
+   "dist:related_predicate": 0.9556,
+   "dist:related_predicate_passive": 1.0,
+   "equiv:synonym_agent": 0.1111,
+   "equiv:synonym_patient": 0.0,
+   "equiv:synonym_predicate": 0.1111,
+   "equiv:synonym_predicate_passive": 0.0889
+  },
+  "rows": [
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.9506
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.941276
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.849185
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.86728
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.906268
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.912982
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.954268
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.946973
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.879256
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.889416
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.914909
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.927162
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.942508
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.93266
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.850536
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.865492
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.89718
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-00",
+    "class": "verb_thing",
+    "cos": 0.909586
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.897442
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.913136
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.827996
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.856238
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.884912
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.898314
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.926611
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.936959
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.880309
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.911411
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.920597
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.928371
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.884008
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.90319
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.80623
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.851901
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.836569
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-01",
+    "class": "verb_thing",
+    "cos": 0.872166
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.88713
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.897171
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.910986
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.919158
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.923727
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.91491
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.89016
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.906381
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.921539
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.927747
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.92039
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.921502
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.894915
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.905665
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.927389
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.934749
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.926623
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-03",
+    "class": "verb_thing",
+    "cos": 0.923994
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.924443
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.909195
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.889727
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.875269
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.87898
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.904524
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.902445
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.892424
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.858404
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.850308
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.847191
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.873209
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.922458
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.908571
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.892945
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.873876
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.873799
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-04",
+    "class": "verb_thing",
+    "cos": 0.896953
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.961369
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.965826
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.867307
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.865514
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.852371
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.863931
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.947137
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.960897
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.7915
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.815194
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.76248
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.793186
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.970131
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.973484
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.872963
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.871939
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.877711
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-05",
+    "class": "verb_thing",
+    "cos": 0.884833
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.940416
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.939869
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.964087
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.961231
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.922938
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.932915
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.93452
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.935343
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.942918
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.941859
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.908929
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.917864
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.859223
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.866334
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.93059
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.923902
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.835941
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-06",
+    "class": "verb_thing",
+    "cos": 0.857195
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.975986
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.956063
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.930556
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.909527
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.860333
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.866431
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.976572
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.950801
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.928186
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.911003
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.843849
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.851633
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.96356
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.931662
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.881979
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.853524
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.774965
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-07",
+    "class": "verb_thing",
+    "cos": 0.801663
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.951204
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.941709
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.911361
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.920606
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.912183
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.90365
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.963149
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.952121
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.921324
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.934948
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.922504
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.923255
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.947281
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.925045
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.903326
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.914725
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.897682
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-08",
+    "class": "verb_thing",
+    "cos": 0.902248
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.865169
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.901088
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.845856
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.82293
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.830106
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.871915
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.902039
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.933171
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.895112
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.902699
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.879897
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.905028
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.900273
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.931787
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.891158
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.896817
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.881356
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-09",
+    "class": "verb_thing",
+    "cos": 0.899861
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.942513
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.933931
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.933634
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.92536
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.81208
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.843305
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.924825
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.914737
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.908848
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.897474
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.740616
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.793534
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.942447
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.934213
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.930343
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.921322
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.827037
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-10",
+    "class": "verb_thing",
+    "cos": 0.859924
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.841278
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.837745
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.889917
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.880338
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.827788
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.843911
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.864094
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.855968
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.89789
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.889574
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.869066
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.879932
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.770086
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.764778
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.837426
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.81854
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.75575
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-11",
+    "class": "verb_thing",
+    "cos": 0.78783
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.947012
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.948137
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.951969
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.922017
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.920508
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.929705
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.921413
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.925186
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.937008
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.901033
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.907362
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.921981
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.92929
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.931617
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.933988
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.902959
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.906946
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-12",
+    "class": "verb_thing",
+    "cos": 0.916906
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.915575
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.905926
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.84715
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.837641
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.900983
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.897484
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.931374
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.918805
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.865693
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.854536
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.910076
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.907369
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.866629
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.848404
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.735923
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.752276
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.837966
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-13",
+    "class": "verb_thing",
+    "cos": 0.842149
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.949962
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.953104
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.959844
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.94974
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.770456
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.815302
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.952786
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.955035
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.962893
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.952474
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.752113
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.796451
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.951172
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.952759
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.960112
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.946129
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.774559
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-00",
+    "class": "verb_person",
+    "cos": 0.80363
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.815117
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.9672
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.939585
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.937179
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.816008
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.819565
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.804989
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.972073
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.947095
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.936818
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.82509
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.81401
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.734236
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.958957
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.930827
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.920781
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.763645
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-01",
+    "class": "verb_person",
+    "cos": 0.728404
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-00",
+    "class": "agent",
+    "cos": 0.933712
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-00",
+    "class": "agent",
+    "cos": 0.860013
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-00",
+    "class": "agent",
+    "cos": 0.858232
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-00",
+    "class": "agent",
+    "cos": 0.935976
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-00",
+    "class": "agent",
+    "cos": 0.852724
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-00",
+    "class": "agent",
+    "cos": 0.853339
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-00",
+    "class": "agent",
+    "cos": 0.929689
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-00",
+    "class": "agent",
+    "cos": 0.852529
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-00",
+    "class": "agent",
+    "cos": 0.842239
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-01",
+    "class": "agent",
+    "cos": 0.894777
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-01",
+    "class": "agent",
+    "cos": 0.896322
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-01",
+    "class": "agent",
+    "cos": 0.861196
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-01",
+    "class": "agent",
+    "cos": 0.893075
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-01",
+    "class": "agent",
+    "cos": 0.898974
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-01",
+    "class": "agent",
+    "cos": 0.845545
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-01",
+    "class": "agent",
+    "cos": 0.89814
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-01",
+    "class": "agent",
+    "cos": 0.886785
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-01",
+    "class": "agent",
+    "cos": 0.834431
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-02",
+    "class": "agent",
+    "cos": 0.866046
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-02",
+    "class": "agent",
+    "cos": 0.82856
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-02",
+    "class": "agent",
+    "cos": 0.809195
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-02",
+    "class": "agent",
+    "cos": 0.865277
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-02",
+    "class": "agent",
+    "cos": 0.800796
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-02",
+    "class": "agent",
+    "cos": 0.797659
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-02",
+    "class": "agent",
+    "cos": 0.884684
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-02",
+    "class": "agent",
+    "cos": 0.83906
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-02",
+    "class": "agent",
+    "cos": 0.830387
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-03",
+    "class": "agent",
+    "cos": 0.88873
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-03",
+    "class": "agent",
+    "cos": 0.85913
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-03",
+    "class": "agent",
+    "cos": 0.845142
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-03",
+    "class": "agent",
+    "cos": 0.861865
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-03",
+    "class": "agent",
+    "cos": 0.797368
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-03",
+    "class": "agent",
+    "cos": 0.775476
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-03",
+    "class": "agent",
+    "cos": 0.861813
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-03",
+    "class": "agent",
+    "cos": 0.809683
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-03",
+    "class": "agent",
+    "cos": 0.797819
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-04",
+    "class": "agent",
+    "cos": 0.806794
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-04",
+    "class": "agent",
+    "cos": 0.859079
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-04",
+    "class": "agent",
+    "cos": 0.842645
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-04",
+    "class": "agent",
+    "cos": 0.832827
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-04",
+    "class": "agent",
+    "cos": 0.86157
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-04",
+    "class": "agent",
+    "cos": 0.842618
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-04",
+    "class": "agent",
+    "cos": 0.823265
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-04",
+    "class": "agent",
+    "cos": 0.867428
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-04",
+    "class": "agent",
+    "cos": 0.852408
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-05",
+    "class": "agent",
+    "cos": 0.975809
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-05",
+    "class": "agent",
+    "cos": 0.830201
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-05",
+    "class": "agent",
+    "cos": 0.808594
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-05",
+    "class": "agent",
+    "cos": 0.976697
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-05",
+    "class": "agent",
+    "cos": 0.832781
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-05",
+    "class": "agent",
+    "cos": 0.808769
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-05",
+    "class": "agent",
+    "cos": 0.974506
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-05",
+    "class": "agent",
+    "cos": 0.811327
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-05",
+    "class": "agent",
+    "cos": 0.775859
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-06",
+    "class": "agent",
+    "cos": 0.811437
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-06",
+    "class": "agent",
+    "cos": 0.792173
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-06",
+    "class": "agent",
+    "cos": 0.827823
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-06",
+    "class": "agent",
+    "cos": 0.860335
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-06",
+    "class": "agent",
+    "cos": 0.814389
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-06",
+    "class": "agent",
+    "cos": 0.83932
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-06",
+    "class": "agent",
+    "cos": 0.860165
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-06",
+    "class": "agent",
+    "cos": 0.811179
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-06",
+    "class": "agent",
+    "cos": 0.841022
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-08",
+    "class": "agent",
+    "cos": 0.939459
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-08",
+    "class": "agent",
+    "cos": 0.887303
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-08",
+    "class": "agent",
+    "cos": 0.861497
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-08",
+    "class": "agent",
+    "cos": 0.942077
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-08",
+    "class": "agent",
+    "cos": 0.875782
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-08",
+    "class": "agent",
+    "cos": 0.844491
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-08",
+    "class": "agent",
+    "cos": 0.943558
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-08",
+    "class": "agent",
+    "cos": 0.863265
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-08",
+    "class": "agent",
+    "cos": 0.841908
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-09",
+    "class": "agent",
+    "cos": 0.852982
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-09",
+    "class": "agent",
+    "cos": 0.758865
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-09",
+    "class": "agent",
+    "cos": 0.86247
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-09",
+    "class": "agent",
+    "cos": 0.868917
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-09",
+    "class": "agent",
+    "cos": 0.736787
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-09",
+    "class": "agent",
+    "cos": 0.877563
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-09",
+    "class": "agent",
+    "cos": 0.856328
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-09",
+    "class": "agent",
+    "cos": 0.75735
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-09",
+    "class": "agent",
+    "cos": 0.862417
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-00",
+    "class": "patient",
+    "cos": 0.885203
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-00",
+    "class": "patient",
+    "cos": 0.883693
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-00",
+    "class": "patient",
+    "cos": 0.721081
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-00",
+    "class": "patient",
+    "cos": 0.897348
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-00",
+    "class": "patient",
+    "cos": 0.885705
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-00",
+    "class": "patient",
+    "cos": 0.750102
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-00",
+    "class": "patient",
+    "cos": 0.876936
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-00",
+    "class": "patient",
+    "cos": 0.862976
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-00",
+    "class": "patient",
+    "cos": 0.700764
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-01",
+    "class": "patient",
+    "cos": 0.938316
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-01",
+    "class": "patient",
+    "cos": 0.861484
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-01",
+    "class": "patient",
+    "cos": 0.840366
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-01",
+    "class": "patient",
+    "cos": 0.862787
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-01",
+    "class": "patient",
+    "cos": 0.791554
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-01",
+    "class": "patient",
+    "cos": 0.782707
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-01",
+    "class": "patient",
+    "cos": 0.89082
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-01",
+    "class": "patient",
+    "cos": 0.834661
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-01",
+    "class": "patient",
+    "cos": 0.823676
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-02",
+    "class": "patient",
+    "cos": 0.779915
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-02",
+    "class": "patient",
+    "cos": 0.762877
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-02",
+    "class": "patient",
+    "cos": 0.739766
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-02",
+    "class": "patient",
+    "cos": 0.756189
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-02",
+    "class": "patient",
+    "cos": 0.738191
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-02",
+    "class": "patient",
+    "cos": 0.703723
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-02",
+    "class": "patient",
+    "cos": 0.73353
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-02",
+    "class": "patient",
+    "cos": 0.708387
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-02",
+    "class": "patient",
+    "cos": 0.680048
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-03",
+    "class": "patient",
+    "cos": 0.839647
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-03",
+    "class": "patient",
+    "cos": 0.837827
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-03",
+    "class": "patient",
+    "cos": 0.801825
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-03",
+    "class": "patient",
+    "cos": 0.843099
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-03",
+    "class": "patient",
+    "cos": 0.848378
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-03",
+    "class": "patient",
+    "cos": 0.810229
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-03",
+    "class": "patient",
+    "cos": 0.871629
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-03",
+    "class": "patient",
+    "cos": 0.861837
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-03",
+    "class": "patient",
+    "cos": 0.849205
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-04",
+    "class": "patient",
+    "cos": 0.900892
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-04",
+    "class": "patient",
+    "cos": 0.912832
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-04",
+    "class": "patient",
+    "cos": 0.81234
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-04",
+    "class": "patient",
+    "cos": 0.878322
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-04",
+    "class": "patient",
+    "cos": 0.885597
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-04",
+    "class": "patient",
+    "cos": 0.785381
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-04",
+    "class": "patient",
+    "cos": 0.882983
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-04",
+    "class": "patient",
+    "cos": 0.893936
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-04",
+    "class": "patient",
+    "cos": 0.795085
+   }
+  ]
+ },
+ "test": {
+  "n": 801,
+  "balanced_accuracy": 0.5843,
+  "coverage": 1.0,
+  "per_phenomenon_accuracy": {
+   "dist:random_agent": 1.0,
+   "dist:random_patient": 1.0,
+   "dist:random_predicate": 1.0,
+   "dist:random_predicate_passive": 1.0,
+   "dist:related_agent": 0.9583,
+   "dist:related_patient": 1.0,
+   "dist:related_predicate": 1.0,
+   "dist:related_predicate_passive": 1.0,
+   "equiv:synonym_agent": 0.0,
+   "equiv:synonym_patient": 0.037,
+   "equiv:synonym_predicate": 0.25,
+   "equiv:synonym_predicate_passive": 0.2188
+  },
+  "rows": [
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.884702
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.906701
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.895037
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.896049
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.826538
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.869628
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.935878
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.945826
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.930983
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.934881
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.886495
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.906604
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.854124
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.873801
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.865909
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.871467
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.780082
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-14",
+    "class": "verb_thing",
+    "cos": 0.828589
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.853668
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.844438
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.803178
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.797182
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.853016
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.883514
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.907645
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.900845
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.890449
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.867738
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.932172
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.941369
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.895165
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.879933
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.865482
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.848309
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.911284
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-15",
+    "class": "verb_thing",
+    "cos": 0.92542
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.927518
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.917337
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.834277
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.843082
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.798701
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.829559
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.948058
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.94679
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.877877
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.893754
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.851666
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.873611
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.942974
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.940793
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.843486
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.864523
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.819958
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-16",
+    "class": "verb_thing",
+    "cos": 0.853908
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.865423
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.879831
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.857138
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.874071
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.835565
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.854364
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.805501
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.824502
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.810451
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.826917
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.770046
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.797197
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.82582
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.828693
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.837954
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.845354
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.803931
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-17",
+    "class": "verb_thing",
+    "cos": 0.816061
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.891875
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.921546
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.828143
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.855665
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.812888
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.83052
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.85498
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.896395
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.785983
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.802242
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.768644
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.798678
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.885182
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.914842
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.82666
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.851425
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.814125
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-18",
+    "class": "verb_thing",
+    "cos": 0.827363
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.891352
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.887202
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.779324
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.78456
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.845841
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.856074
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.901452
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.889539
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.787477
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.808209
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.8684
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.874469
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.895447
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.879859
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.782389
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.777924
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.847034
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-19",
+    "class": "verb_thing",
+    "cos": 0.854905
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.947619
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.921137
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.86711
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.887704
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.833224
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.886936
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.956041
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.922333
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.8595
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.871313
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.834174
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.890201
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.939258
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.893708
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.779562
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.814741
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.741199
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-20",
+    "class": "verb_thing",
+    "cos": 0.82524
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.970402
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.973337
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.854065
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.87326
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.863059
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.864241
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.966771
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.967471
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.846178
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.863267
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.862924
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.861772
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.975119
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.976325
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.880168
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.896783
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.874897
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-21",
+    "class": "verb_thing",
+    "cos": 0.877718
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.979859
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.975848
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.847942
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.858954
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.871345
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.893791
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.979984
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.972882
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.836144
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.852964
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.879391
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.894279
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.958691
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.956083
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.816694
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.824475
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.83841
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-22",
+    "class": "verb_thing",
+    "cos": 0.861441
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.937816
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.887954
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.941903
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.939822
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.885707
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.880426
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.944064
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.904584
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.948019
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.946568
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.887088
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.901192
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.921261
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.878153
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.931122
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.926251
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.862615
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-23",
+    "class": "verb_thing",
+    "cos": 0.870886
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.974481
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.968197
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.92347
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.931079
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.941934
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.949652
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.968665
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.962917
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.910089
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.913935
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.930061
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.934731
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.968372
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.951529
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.906645
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.898593
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.913776
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-24",
+    "class": "verb_thing",
+    "cos": 0.922559
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.952593
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.935534
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.920865
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.908563
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.745074
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.783615
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.960862
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.946463
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.943606
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.930332
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.790588
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.822505
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.96902
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.956759
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.952072
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.940963
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.786243
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-26",
+    "class": "verb_thing",
+    "cos": 0.832302
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.923088
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.923791
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.864887
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.870096
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.829714
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.824358
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.925781
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.935426
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.890052
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.896341
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.869435
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.864007
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.925801
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.932029
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.885945
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.890451
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.858858
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-27",
+    "class": "verb_thing",
+    "cos": 0.854979
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.96988
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.975316
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.916811
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.903178
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.913707
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.935546
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.968636
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.973326
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.902423
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.892233
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.908312
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.934019
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.96799
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.970147
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.875545
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.867431
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.907012
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-28",
+    "class": "verb_thing",
+    "cos": 0.92191
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.986438
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.965086
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.90239
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.894629
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.875165
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.910017
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.979607
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.951245
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.89499
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.879488
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.852621
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.869243
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.987365
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.966844
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.921246
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.899303
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.899076
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-29",
+    "class": "verb_thing",
+    "cos": 0.919455
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.925542
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.9082
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.834243
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.816376
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.822165
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.810466
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.946848
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.924479
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.897273
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.898175
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.846258
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.860581
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.950169
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.925083
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.878197
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.862787
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.852816
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-30",
+    "class": "verb_thing",
+    "cos": 0.840178
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.903066
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.892994
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.748578
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.816542
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.786927
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.815718
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.936662
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.931309
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.813396
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.876616
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.850779
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.884144
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.929083
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.923465
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.835446
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.864972
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.864513
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-31",
+    "class": "verb_thing",
+    "cos": 0.871285
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.867644
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.884022
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.902608
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.90691
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.828278
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.863755
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.912677
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.91813
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.930954
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.927755
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.865101
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.896288
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.846075
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.861245
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.843871
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.869099
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.799082
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-32",
+    "class": "verb_thing",
+    "cos": 0.823066
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.866785
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.880992
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.888868
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.879745
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.784229
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.833596
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.86687
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.884422
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.879927
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.88235
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.794825
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.839933
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.827715
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.845237
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.861688
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.852938
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.720803
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-33",
+    "class": "verb_thing",
+    "cos": 0.775935
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.934185
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.919967
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.913012
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.93961
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.845632
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.78707
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.930567
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.916719
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.91114
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.932007
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.852144
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.778755
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.938262
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.930987
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.921441
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.942229
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.869971
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-34",
+    "class": "verb_thing",
+    "cos": 0.803919
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.911406
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.897506
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.914462
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.900289
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.804667
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.820653
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.921116
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.90714
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.92397
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.914485
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.814763
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.849461
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.919305
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.904627
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.927334
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.913333
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.814656
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-35",
+    "class": "verb_thing",
+    "cos": 0.841296
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.957788
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.941307
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.914228
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.915467
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.872754
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.845155
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.954767
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.939445
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.927223
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.925842
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.871911
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.847891
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.933416
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.919339
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.892489
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.893856
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.804118
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-36",
+    "class": "verb_thing",
+    "cos": 0.794308
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.938455
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.932421
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.919806
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.915875
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.858691
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.863038
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.941723
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.929642
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.930839
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.922594
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.843114
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.851016
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.926114
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.908384
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.919204
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.904263
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.812007
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-38",
+    "class": "verb_thing",
+    "cos": 0.807705
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.980141
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.967024
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.905435
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.909369
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.83983
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.852305
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.977496
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.967177
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.901671
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.91009
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.841235
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.859162
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.96973
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.961249
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.878864
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.8848
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.770098
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-39",
+    "class": "verb_thing",
+    "cos": 0.78584
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.858575
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.84002
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.871872
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.842908
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.877799
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.868756
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.868272
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.856409
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.871981
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.846815
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.876052
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.875896
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.875944
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.859882
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.867162
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.834898
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.881271
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-40",
+    "class": "verb_thing",
+    "cos": 0.882279
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.967512
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.970706
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.944252
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.944496
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.881812
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.875603
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.96943
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.97025
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.945633
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.939832
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.878972
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.874744
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.948346
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.95028
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.891743
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.893346
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.829779
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-41",
+    "class": "verb_thing",
+    "cos": 0.833773
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.968835
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.974497
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.919005
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.935581
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.927506
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.932598
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.96169
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.964078
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.918556
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.925168
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.919843
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.919436
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.956055
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.959961
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.905834
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.913848
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.911537
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_thing-42",
+    "class": "verb_thing",
+    "cos": 0.909765
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.987935
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.978892
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.825908
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.81632
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.837951
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.819943
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.986994
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.976335
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.828204
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.814926
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.837795
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.820264
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.986084
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.972764
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.804167
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.793947
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.817097
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-02",
+    "class": "verb_person",
+    "cos": 0.806663
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.880604
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.893651
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.841355
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.83941
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.767633
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.76574
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.896715
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.914881
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.861919
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.875984
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.809003
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.810638
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.895682
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.900102
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.857565
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.87027
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.809635
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-03",
+    "class": "verb_person",
+    "cos": 0.803852
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.903269
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.91667
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.891927
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.904911
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.898614
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.912352
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.892789
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.893589
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.873542
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.87668
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.89041
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.889364
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.908045
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.923748
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.90508
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.923576
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.912714
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-04",
+    "class": "verb_person",
+    "cos": 0.921081
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.951998
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.947631
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.922604
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.908937
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.783018
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.780328
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.936305
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.930289
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.919751
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.910271
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.781615
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.778036
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.941772
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.940453
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.928361
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.919226
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.792574
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-05",
+    "class": "verb_person",
+    "cos": 0.795101
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.961186
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.953729
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.912998
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.906665
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.799824
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.827678
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.960958
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.958716
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.922207
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.919185
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.82519
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.836453
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.949815
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_predicate_passive",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.945238
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.927095
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_predicate_passive",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.913522
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.828055
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_predicate_passive",
+    "item": "verb_person-06",
+    "class": "verb_person",
+    "cos": 0.818471
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-12",
+    "class": "agent",
+    "cos": 0.952459
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-12",
+    "class": "agent",
+    "cos": 0.843153
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-12",
+    "class": "agent",
+    "cos": 0.779069
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-12",
+    "class": "agent",
+    "cos": 0.94283
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-12",
+    "class": "agent",
+    "cos": 0.827465
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-12",
+    "class": "agent",
+    "cos": 0.768435
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-12",
+    "class": "agent",
+    "cos": 0.955048
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-12",
+    "class": "agent",
+    "cos": 0.851007
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-12",
+    "class": "agent",
+    "cos": 0.801571
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-13",
+    "class": "agent",
+    "cos": 0.895085
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-13",
+    "class": "agent",
+    "cos": 0.883307
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-13",
+    "class": "agent",
+    "cos": 0.778054
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-13",
+    "class": "agent",
+    "cos": 0.921584
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-13",
+    "class": "agent",
+    "cos": 0.910661
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-13",
+    "class": "agent",
+    "cos": 0.83378
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-13",
+    "class": "agent",
+    "cos": 0.897837
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-13",
+    "class": "agent",
+    "cos": 0.885224
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-13",
+    "class": "agent",
+    "cos": 0.793199
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-14",
+    "class": "agent",
+    "cos": 0.894418
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-14",
+    "class": "agent",
+    "cos": 0.865743
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-14",
+    "class": "agent",
+    "cos": 0.811325
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-14",
+    "class": "agent",
+    "cos": 0.887286
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-14",
+    "class": "agent",
+    "cos": 0.863205
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-14",
+    "class": "agent",
+    "cos": 0.807293
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-14",
+    "class": "agent",
+    "cos": 0.878124
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-14",
+    "class": "agent",
+    "cos": 0.856543
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-14",
+    "class": "agent",
+    "cos": 0.787675
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-16",
+    "class": "agent",
+    "cos": 0.954607
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-16",
+    "class": "agent",
+    "cos": 0.896008
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-16",
+    "class": "agent",
+    "cos": 0.778719
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-16",
+    "class": "agent",
+    "cos": 0.950391
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-16",
+    "class": "agent",
+    "cos": 0.889344
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-16",
+    "class": "agent",
+    "cos": 0.769021
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-16",
+    "class": "agent",
+    "cos": 0.942875
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-16",
+    "class": "agent",
+    "cos": 0.877734
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-16",
+    "class": "agent",
+    "cos": 0.750351
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-17",
+    "class": "agent",
+    "cos": 0.948056
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-17",
+    "class": "agent",
+    "cos": 0.82238
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-17",
+    "class": "agent",
+    "cos": 0.811477
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-17",
+    "class": "agent",
+    "cos": 0.940605
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-17",
+    "class": "agent",
+    "cos": 0.796412
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-17",
+    "class": "agent",
+    "cos": 0.769803
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-17",
+    "class": "agent",
+    "cos": 0.937458
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-17",
+    "class": "agent",
+    "cos": 0.82239
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-17",
+    "class": "agent",
+    "cos": 0.782975
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-18",
+    "class": "agent",
+    "cos": 0.926534
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-18",
+    "class": "agent",
+    "cos": 0.9306
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-18",
+    "class": "agent",
+    "cos": 0.792494
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-18",
+    "class": "agent",
+    "cos": 0.914066
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-18",
+    "class": "agent",
+    "cos": 0.911966
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-18",
+    "class": "agent",
+    "cos": 0.77487
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-18",
+    "class": "agent",
+    "cos": 0.917886
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-18",
+    "class": "agent",
+    "cos": 0.922906
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-18",
+    "class": "agent",
+    "cos": 0.760731
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-19",
+    "class": "agent",
+    "cos": 0.935261
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-19",
+    "class": "agent",
+    "cos": 0.849771
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-19",
+    "class": "agent",
+    "cos": 0.900265
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-19",
+    "class": "agent",
+    "cos": 0.941906
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-19",
+    "class": "agent",
+    "cos": 0.840719
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-19",
+    "class": "agent",
+    "cos": 0.895052
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-19",
+    "class": "agent",
+    "cos": 0.94933
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-19",
+    "class": "agent",
+    "cos": 0.832978
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-19",
+    "class": "agent",
+    "cos": 0.90104
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-20",
+    "class": "agent",
+    "cos": 0.877916
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-20",
+    "class": "agent",
+    "cos": 0.875382
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-20",
+    "class": "agent",
+    "cos": 0.840598
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-20",
+    "class": "agent",
+    "cos": 0.883109
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-20",
+    "class": "agent",
+    "cos": 0.880575
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-20",
+    "class": "agent",
+    "cos": 0.830987
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-20",
+    "class": "agent",
+    "cos": 0.891809
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-20",
+    "class": "agent",
+    "cos": 0.894476
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-20",
+    "class": "agent",
+    "cos": 0.841167
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-21",
+    "class": "agent",
+    "cos": 0.924073
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-21",
+    "class": "agent",
+    "cos": 0.882176
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-21",
+    "class": "agent",
+    "cos": 0.837017
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-21",
+    "class": "agent",
+    "cos": 0.90866
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-21",
+    "class": "agent",
+    "cos": 0.841356
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-21",
+    "class": "agent",
+    "cos": 0.804817
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-21",
+    "class": "agent",
+    "cos": 0.923328
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-21",
+    "class": "agent",
+    "cos": 0.883659
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-21",
+    "class": "agent",
+    "cos": 0.851082
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-22",
+    "class": "agent",
+    "cos": 0.923529
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-22",
+    "class": "agent",
+    "cos": 0.850148
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-22",
+    "class": "agent",
+    "cos": 0.767582
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-22",
+    "class": "agent",
+    "cos": 0.927129
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-22",
+    "class": "agent",
+    "cos": 0.854788
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-22",
+    "class": "agent",
+    "cos": 0.780641
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-22",
+    "class": "agent",
+    "cos": 0.927024
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-22",
+    "class": "agent",
+    "cos": 0.850046
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-22",
+    "class": "agent",
+    "cos": 0.768203
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-23",
+    "class": "agent",
+    "cos": 0.792289
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-23",
+    "class": "agent",
+    "cos": 0.795313
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-23",
+    "class": "agent",
+    "cos": 0.81335
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-23",
+    "class": "agent",
+    "cos": 0.793185
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-23",
+    "class": "agent",
+    "cos": 0.781612
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-23",
+    "class": "agent",
+    "cos": 0.809727
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-23",
+    "class": "agent",
+    "cos": 0.781349
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-23",
+    "class": "agent",
+    "cos": 0.774714
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-23",
+    "class": "agent",
+    "cos": 0.804161
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-24",
+    "class": "agent",
+    "cos": 0.924894
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-24",
+    "class": "agent",
+    "cos": 0.899029
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-24",
+    "class": "agent",
+    "cos": 0.834638
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-24",
+    "class": "agent",
+    "cos": 0.93323
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-24",
+    "class": "agent",
+    "cos": 0.9094
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-24",
+    "class": "agent",
+    "cos": 0.837672
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-24",
+    "class": "agent",
+    "cos": 0.942067
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-24",
+    "class": "agent",
+    "cos": 0.925585
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-24",
+    "class": "agent",
+    "cos": 0.857185
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-25",
+    "class": "agent",
+    "cos": 0.85983
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-25",
+    "class": "agent",
+    "cos": 0.808249
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-25",
+    "class": "agent",
+    "cos": 0.710429
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-25",
+    "class": "agent",
+    "cos": 0.850914
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-25",
+    "class": "agent",
+    "cos": 0.803413
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-25",
+    "class": "agent",
+    "cos": 0.697309
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-25",
+    "class": "agent",
+    "cos": 0.870413
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-25",
+    "class": "agent",
+    "cos": 0.821551
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-25",
+    "class": "agent",
+    "cos": 0.749873
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-26",
+    "class": "agent",
+    "cos": 0.917603
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-26",
+    "class": "agent",
+    "cos": 0.955668
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-26",
+    "class": "agent",
+    "cos": 0.846696
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-26",
+    "class": "agent",
+    "cos": 0.929173
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-26",
+    "class": "agent",
+    "cos": 0.962988
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-26",
+    "class": "agent",
+    "cos": 0.827689
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-26",
+    "class": "agent",
+    "cos": 0.937423
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-26",
+    "class": "agent",
+    "cos": 0.966148
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-26",
+    "class": "agent",
+    "cos": 0.860004
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-27",
+    "class": "agent",
+    "cos": 0.913099
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-27",
+    "class": "agent",
+    "cos": 0.842737
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-27",
+    "class": "agent",
+    "cos": 0.781165
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-27",
+    "class": "agent",
+    "cos": 0.899381
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-27",
+    "class": "agent",
+    "cos": 0.798226
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-27",
+    "class": "agent",
+    "cos": 0.767491
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-27",
+    "class": "agent",
+    "cos": 0.903247
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-27",
+    "class": "agent",
+    "cos": 0.798232
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-27",
+    "class": "agent",
+    "cos": 0.766418
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-28",
+    "class": "agent",
+    "cos": 0.921582
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-28",
+    "class": "agent",
+    "cos": 0.870534
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-28",
+    "class": "agent",
+    "cos": 0.871224
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-28",
+    "class": "agent",
+    "cos": 0.909871
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-28",
+    "class": "agent",
+    "cos": 0.839386
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-28",
+    "class": "agent",
+    "cos": 0.843198
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_agent",
+    "item": "agent-28",
+    "class": "agent",
+    "cos": 0.926791
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_agent",
+    "item": "agent-28",
+    "class": "agent",
+    "cos": 0.886699
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_agent",
+    "item": "agent-28",
+    "class": "agent",
+    "cos": 0.877744
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-05",
+    "class": "patient",
+    "cos": 0.947834
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-05",
+    "class": "patient",
+    "cos": 0.929785
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-05",
+    "class": "patient",
+    "cos": 0.787709
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-05",
+    "class": "patient",
+    "cos": 0.956102
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-05",
+    "class": "patient",
+    "cos": 0.932853
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-05",
+    "class": "patient",
+    "cos": 0.809176
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-05",
+    "class": "patient",
+    "cos": 0.949483
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-05",
+    "class": "patient",
+    "cos": 0.926783
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-05",
+    "class": "patient",
+    "cos": 0.796109
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-06",
+    "class": "patient",
+    "cos": 0.89992
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-06",
+    "class": "patient",
+    "cos": 0.908803
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-06",
+    "class": "patient",
+    "cos": 0.695978
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-06",
+    "class": "patient",
+    "cos": 0.926009
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-06",
+    "class": "patient",
+    "cos": 0.928802
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-06",
+    "class": "patient",
+    "cos": 0.775701
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-06",
+    "class": "patient",
+    "cos": 0.912823
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-06",
+    "class": "patient",
+    "cos": 0.921978
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-06",
+    "class": "patient",
+    "cos": 0.73659
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-07",
+    "class": "patient",
+    "cos": 0.956584
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-07",
+    "class": "patient",
+    "cos": 0.850745
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-07",
+    "class": "patient",
+    "cos": 0.656326
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-07",
+    "class": "patient",
+    "cos": 0.961504
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-07",
+    "class": "patient",
+    "cos": 0.869527
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-07",
+    "class": "patient",
+    "cos": 0.70912
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-07",
+    "class": "patient",
+    "cos": 0.963446
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-07",
+    "class": "patient",
+    "cos": 0.87872
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-07",
+    "class": "patient",
+    "cos": 0.714854
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-08",
+    "class": "patient",
+    "cos": 0.8808
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-08",
+    "class": "patient",
+    "cos": 0.810563
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-08",
+    "class": "patient",
+    "cos": 0.70683
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-08",
+    "class": "patient",
+    "cos": 0.866052
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-08",
+    "class": "patient",
+    "cos": 0.807997
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-08",
+    "class": "patient",
+    "cos": 0.736735
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-08",
+    "class": "patient",
+    "cos": 0.91312
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-08",
+    "class": "patient",
+    "cos": 0.855219
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-08",
+    "class": "patient",
+    "cos": 0.795736
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-09",
+    "class": "patient",
+    "cos": 0.95552
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-09",
+    "class": "patient",
+    "cos": 0.866531
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-09",
+    "class": "patient",
+    "cos": 0.835599
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-09",
+    "class": "patient",
+    "cos": 0.96101
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-09",
+    "class": "patient",
+    "cos": 0.880292
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-09",
+    "class": "patient",
+    "cos": 0.85198
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-09",
+    "class": "patient",
+    "cos": 0.937706
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-09",
+    "class": "patient",
+    "cos": 0.84554
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-09",
+    "class": "patient",
+    "cos": 0.800087
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-11",
+    "class": "patient",
+    "cos": 0.835018
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-11",
+    "class": "patient",
+    "cos": 0.825956
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-11",
+    "class": "patient",
+    "cos": 0.757174
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-11",
+    "class": "patient",
+    "cos": 0.833689
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-11",
+    "class": "patient",
+    "cos": 0.825815
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-11",
+    "class": "patient",
+    "cos": 0.774606
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-11",
+    "class": "patient",
+    "cos": 0.803822
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-11",
+    "class": "patient",
+    "cos": 0.82553
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-11",
+    "class": "patient",
+    "cos": 0.730275
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-12",
+    "class": "patient",
+    "cos": 0.897126
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-12",
+    "class": "patient",
+    "cos": 0.819277
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-12",
+    "class": "patient",
+    "cos": 0.774216
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-12",
+    "class": "patient",
+    "cos": 0.920975
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-12",
+    "class": "patient",
+    "cos": 0.851801
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-12",
+    "class": "patient",
+    "cos": 0.817665
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-12",
+    "class": "patient",
+    "cos": 0.871083
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-12",
+    "class": "patient",
+    "cos": 0.765264
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-12",
+    "class": "patient",
+    "cos": 0.697384
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-13",
+    "class": "patient",
+    "cos": 0.944587
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-13",
+    "class": "patient",
+    "cos": 0.877758
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-13",
+    "class": "patient",
+    "cos": 0.854501
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-13",
+    "class": "patient",
+    "cos": 0.933955
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-13",
+    "class": "patient",
+    "cos": 0.860155
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-13",
+    "class": "patient",
+    "cos": 0.863018
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-13",
+    "class": "patient",
+    "cos": 0.937239
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-13",
+    "class": "patient",
+    "cos": 0.875756
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-13",
+    "class": "patient",
+    "cos": 0.863747
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-14",
+    "class": "patient",
+    "cos": 0.870581
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-14",
+    "class": "patient",
+    "cos": 0.856059
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-14",
+    "class": "patient",
+    "cos": 0.761205
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-14",
+    "class": "patient",
+    "cos": 0.859983
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-14",
+    "class": "patient",
+    "cos": 0.843469
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-14",
+    "class": "patient",
+    "cos": 0.756425
+   },
+   {
+    "label": 1,
+    "phenomenon": "equiv:synonym_patient",
+    "item": "patient-14",
+    "class": "patient",
+    "cos": 0.865779
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:related_patient",
+    "item": "patient-14",
+    "class": "patient",
+    "cos": 0.850234
+   },
+   {
+    "label": 0,
+    "phenomenon": "dist:random_patient",
+    "item": "patient-14",
+    "class": "patient",
+    "cos": 0.760441
+   }
+  ]
+ },
+ "lexicon_sha256": "6f35e26893306b65",
+ "audit_sha256": "bf4523a04109e699",
+ "flagged": [
+  "agent-07",
+  "agent-10",
+  "agent-11",
+  "agent-15",
+  "patient-10",
+  "verb_thing-02",
+  "verb_thing-25",
+  "verb_thing-37"
+ ],
+ "sizes": {
+  "dev": 396,
+  "test": 801
+ }
+}

@@ -150,3 +150,9 @@
 - 2026-11-02 07:55 UTC (clock): my recorded times for 4c-3c were estimates and wrong (correction in EXPERIMENTS.md;
   git commit times are the record). **Experiment 3c2 pre-registered** (closeness of the frozen dictionary's meaning
   vectors, threshold from fresh dev pairs, related and random controls, fresh test); committed before any 3c2 data.
+- 2026-11-02 08:09-11:20 UTC (clock): **Experiment 3c2 fails as pre-registered** (K3, K4 pass; K1, K2 fail). To keep
+  false equivalence at or below 5% on dev, the rule had to set the closeness threshold at identity (0.988); on 57 fresh
+  test items v0.3 0.768 vs v0.2 0.775, v0.1 0.500, bge-small 0.597; no control merged, no structural regression.
+  Closeness of the dictionary's meaning vectors ranks synonyms' different meanings no higher than co-hyponym controls
+  (AUC 0.47 test, 0.39 dev): it measures relatedness, not sameness. v0.3 not adopted; CSI's comparison stays v0.1.
+  Order in git: pre-registration 3e2ccfb, data and audit 2e3613d, dev threshold 218c3cf, then the test run. Next: 3b.

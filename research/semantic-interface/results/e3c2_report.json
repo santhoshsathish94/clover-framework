@@ -1,0 +1,2626 @@
+{
+ "tau": 0.9882,
+ "tau_bge_dev": 0.960504,
+ "tau_bge_e1": 0.961845,
+ "checks": {
+  "test_online_equals_offline": true,
+  "dev_online_equals_offline": true,
+  "dev_record_margins_equal": true,
+  "p3c_v02_reproduces_3c": true,
+  "p3c_v01_reproduces_3c": true,
+  "regression_v01_reproduces_3c": true
+ },
+ "flagged": [
+  "agent-07",
+  "agent-10",
+  "agent-11",
+  "agent-15",
+  "patient-10",
+  "verb_thing-02",
+  "verb_thing-25",
+  "verb_thing-37"
+ ],
+ "test_items": 57,
+ "test_pairs": 801,
+ "test": {
+  "v0.3": {
+   "balanced_accuracy": 0.7678,
+   "per_phenomenon": {
+    "dist:random_agent": [
+     1.0,
+     48
+    ],
+    "dist:random_patient": [
+     1.0,
+     27
+    ],
+    "dist:random_predicate": [
+     1.0,
+     96
+    ],
+    "dist:random_predicate_passive": [
+     1.0,
+     96
+    ],
+    "dist:related_agent": [
+     1.0,
+     48
+    ],
+    "dist:related_patient": [
+     1.0,
+     27
+    ],
+    "dist:related_predicate": [
+     1.0,
+     96
+    ],
+    "dist:related_predicate_passive": [
+     1.0,
+     96
+    ],
+    "equiv:synonym_agent": [
+     0.75,
+     48
+    ],
+    "equiv:synonym_patient": [
+     0.7778,
+     27
+    ],
+    "equiv:synonym_predicate": [
+     0.4688,
+     96
+    ],
+    "equiv:synonym_predicate_passive": [
+     0.4271,
+     96
+    ]
+   }
+  },
+  "v0.2": {
+   "balanced_accuracy": 0.7753,
+   "per_phenomenon": {
+    "dist:random_agent": [
+     1.0,
+     48
+    ],
+    "dist:random_patient": [
+     1.0,
+     27
+    ],
+    "dist:random_predicate": [
+     1.0,
+     96
+    ],
+    "dist:random_predicate_passive": [
+     1.0,
+     96
+    ],
+    "dist:related_agent": [
+     1.0,
+     48
+    ],
+    "dist:related_patient": [
+     1.0,
+     27
+    ],
+    "dist:related_predicate": [
+     1.0,
+     96
+    ],
+    "dist:related_predicate_passive": [
+     1.0,
+     96
+    ],
+    "equiv:synonym_agent": [
+     0.75,
+     48
+    ],
+    "equiv:synonym_patient": [
+     0.7778,
+     27
+    ],
+    "equiv:synonym_predicate": [
+     0.4896,
+     96
+    ],
+    "equiv:synonym_predicate_passive": [
+     0.4479,
+     96
+    ]
+   }
+  },
+  "v0.1": {
+   "balanced_accuracy": 0.5,
+   "per_phenomenon": {
+    "dist:random_agent": [
+     1.0,
+     48
+    ],
+    "dist:random_patient": [
+     1.0,
+     27
+    ],
+    "dist:random_predicate": [
+     1.0,
+     96
+    ],
+    "dist:random_predicate_passive": [
+     1.0,
+     96
+    ],
+    "dist:related_agent": [
+     1.0,
+     48
+    ],
+    "dist:related_patient": [
+     1.0,
+     27
+    ],
+    "dist:related_predicate": [
+     1.0,
+     96
+    ],
+    "dist:related_predicate_passive": [
+     1.0,
+     96
+    ],
+    "equiv:synonym_agent": [
+     0.0,
+     48
+    ],
+    "equiv:synonym_patient": [
+     0.0,
+     27
+    ],
+    "equiv:synonym_predicate": [
+     0.0,
+     96
+    ],
+    "equiv:synonym_predicate_passive": [
+     0.0,
+     96
+    ]
+   }
+  },
+  "bge_dev_tau": {
+   "balanced_accuracy": 0.5974,
+   "per_phenomenon": {
+    "dist:random_agent": [
+     1.0,
+     48
+    ],
+    "dist:random_patient": [
+     1.0,
+     27
+    ],
+    "dist:random_predicate": [
+     1.0,
+     96
+    ],
+    "dist:random_predicate_passive": [
+     1.0,
+     96
+    ],
+    "dist:related_agent": [
+     0.9583,
+     48
+    ],
+    "dist:related_patient": [
+     1.0,
+     27
+    ],
+    "dist:related_predicate": [
+     1.0,
+     96
+    ],
+    "dist:related_predicate_passive": [
+     1.0,
+     96
+    ],
+    "equiv:synonym_agent": [
+     0.0,
+     48
+    ],
+    "equiv:synonym_patient": [
+     0.1111,
+     27
+    ],
+    "equiv:synonym_predicate": [
+     0.2917,
+     96
+    ],
+    "equiv:synonym_predicate_passive": [
+     0.2292,
+     96
+    ]
+   }
+  },
+  "bge_e1_tau": {
+   "balanced_accuracy": 0.5843,
+   "per_phenomenon": {
+    "dist:random_agent": [
+     1.0,
+     48
+    ],
+    "dist:random_patient": [
+     1.0,
+     27
+    ],
+    "dist:random_predicate": [
+     1.0,
+     96
+    ],
+    "dist:random_predicate_passive": [
+     1.0,
+     96
+    ],
+    "dist:related_agent": [
+     0.9583,
+     48
+    ],
+    "dist:related_patient": [
+     1.0,
+     27
+    ],
+    "dist:related_predicate": [
+     1.0,
+     96
+    ],
+    "dist:related_predicate_passive": [
+     1.0,
+     96
+    ],
+    "equiv:synonym_agent": [
+     0.0,
+     48
+    ],
+    "equiv:synonym_patient": [
+     0.037,
+     27
+    ],
+    "equiv:synonym_predicate": [
+     0.25,
+     96
+    ],
+    "equiv:synonym_predicate_passive": [
+     0.2188,
+     96
+    ]
+   }
+  }
+ },
+ "regression": {
+  "heldout3": {
+   "v0.3": 0.994,
+   "v0.1": 0.994,
+   "v0.3_without_role_condition": 0.994,
+   "false_equivalence_v0.3": {},
+   "false_equivalence_v0.1": {},
+   "false_equivalence_without_role_condition": {}
+  },
+  "nonce2": {
+   "v0.3": 1.0,
+   "v0.1": 1.0,
+   "v0.3_without_role_condition": 1.0,
+   "false_equivalence_v0.3": {},
+   "false_equivalence_v0.1": {},
+   "false_equivalence_without_role_condition": {}
+  }
+ },
+ "criteria": {
+  "K1": {
+   "pass": false,
+   "balanced_accuracy": 0.7678,
+   "difference_ci": {
+    "v0.2": [
+     -0.0075,
+     -0.0235,
+     0.0
+    ],
+    "v0.1": [
+     0.2678,
+     0.2066,
+     0.3293
+    ],
+    "bge_dev_tau": [
+     0.1704,
+     0.0944,
+     0.2471
+    ]
+   }
+  },
+  "K2": {
+   "pass": false
+  },
+  "K3": {
+   "pass": true
+  },
+  "K4": {
+   "pass": true
+  }
+ },
+ "breakdowns": {
+  "usage_trained": {
+   "at least one untrained": {
+    "bge_dev_tau:control": [
+     0.9938,
+     321
+    ],
+    "bge_dev_tau:synonym": [
+     0.1667,
+     192
+    ],
+    "v0.2:control": [
+     1.0,
+     321
+    ],
+    "v0.2:synonym": [
+     0.6875,
+     192
+    ],
+    "v0.3:control": [
+     1.0,
+     321
+    ],
+    "v0.3:synonym": [
+     0.6667,
+     192
+    ]
+   },
+   "both trained": {
+    "bge_dev_tau:control": [
+     1.0,
+     213
+    ],
+    "bge_dev_tau:synonym": [
+     0.28,
+     75
+    ],
+    "v0.2:control": [
+     1.0,
+     213
+    ],
+    "v0.2:synonym": [
+     0.2,
+     75
+    ],
+    "v0.3:control": [
+     1.0,
+     213
+    ],
+    "v0.3:synonym": [
+     0.2,
+     75
+    ]
+   }
+  },
+  "polysemy_max": {
+   "1": {
+    "bge_dev_tau:control": [
+     1.0,
+     54
+    ],
+    "bge_dev_tau:synonym": [
+     0.0,
+     27
+    ],
+    "v0.2:control": [
+     1.0,
+     54
+    ],
+    "v0.2:synonym": [
+     1.0,
+     27
+    ],
+    "v0.3:control": [
+     1.0,
+     54
+    ],
+    "v0.3:synonym": [
+     1.0,
+     27
+    ]
+   },
+   "2-3": {
+    "bge_dev_tau:control": [
+     1.0,
+     147
+    ],
+    "bge_dev_tau:synonym": [
+     0.2581,
+     93
+    ],
+    "v0.2:control": [
+     1.0,
+     147
+    ],
+    "v0.2:synonym": [
+     0.7634,
+     93
+    ],
+    "v0.3:control": [
+     1.0,
+     147
+    ],
+    "v0.3:synonym": [
+     0.7204,
+     93
+    ]
+   },
+   "4-7": {
+    "bge_dev_tau:control": [
+     1.0,
+     237
+    ],
+    "bge_dev_tau:synonym": [
+     0.2157,
+     102
+    ],
+    "v0.2:control": [
+     1.0,
+     237
+    ],
+    "v0.2:synonym": [
+     0.3824,
+     102
+    ],
+    "v0.3:control": [
+     1.0,
+     237
+    ],
+    "v0.3:synonym": [
+     0.3824,
+     102
+    ]
+   },
+   "8+": {
+    "bge_dev_tau:control": [
+     0.9792,
+     96
+    ],
+    "bge_dev_tau:synonym": [
+     0.1556,
+     45
+    ],
+    "v0.2:control": [
+     1.0,
+     96
+    ],
+    "v0.2:synonym": [
+     0.2222,
+     45
+    ],
+    "v0.3:control": [
+     1.0,
+     96
+    ],
+    "v0.3:synonym": [
+     0.2222,
+     45
+    ]
+   }
+  },
+  "dictionary_uncertain": {
+   "both top p >= 0.5": {
+    "bge_dev_tau:control": [
+     0.9961,
+     514
+    ],
+    "bge_dev_tau:synonym": [
+     0.2,
+     265
+    ],
+    "v0.2:control": [
+     1.0,
+     514
+    ],
+    "v0.2:synonym": [
+     0.5547,
+     265
+    ],
+    "v0.3:control": [
+     1.0,
+     514
+    ],
+    "v0.3:synonym": [
+     0.5396,
+     265
+    ]
+   },
+   "n/a": {
+    "bge_dev_tau:control": [
+     1.0,
+     6
+    ],
+    "v0.2:control": [
+     1.0,
+     6
+    ],
+    "v0.3:control": [
+     1.0,
+     6
+    ]
+   },
+   "top p < 0.5 for either": {
+    "bge_dev_tau:control": [
+     1.0,
+     14
+    ],
+    "bge_dev_tau:synonym": [
+     0.0,
+     2
+    ],
+    "v0.2:control": [
+     1.0,
+     14
+    ],
+    "v0.2:synonym": [
+     0.0,
+     2
+    ],
+    "v0.3:control": [
+     1.0,
+     14
+    ],
+    "v0.3:synonym": [
+     0.0,
+     2
+    ]
+   }
+  },
+  "part_of_speech": {
+   "noun": {
+    "bge_dev_tau:control": [
+     0.9867,
+     150
+    ],
+    "bge_dev_tau:synonym": [
+     0.04,
+     75
+    ],
+    "v0.2:control": [
+     1.0,
+     150
+    ],
+    "v0.2:synonym": [
+     0.76,
+     75
+    ],
+    "v0.3:control": [
+     1.0,
+     150
+    ],
+    "v0.3:synonym": [
+     0.76,
+     75
+    ]
+   },
+   "verb": {
+    "bge_dev_tau:control": [
+     1.0,
+     384
+    ],
+    "bge_dev_tau:synonym": [
+     0.2604,
+     192
+    ],
+    "v0.2:control": [
+     1.0,
+     384
+    ],
+    "v0.2:synonym": [
+     0.4688,
+     192
+    ],
+    "v0.3:control": [
+     1.0,
+     384
+    ],
+    "v0.3:synonym": [
+     0.4479,
+     192
+    ]
+   }
+  },
+  "synonyms_first_sense": {
+   "both chose the shared first sense": {
+    "bge_dev_tau:synonym": [
+     0.2238,
+     143
+    ],
+    "v0.2:synonym": [
+     1.0,
+     143
+    ],
+    "v0.3:synonym": [
+     1.0,
+     143
+    ]
+   },
+   "not both": {
+    "bge_dev_tau:synonym": [
+     0.1694,
+     124
+    ],
+    "v0.2:synonym": [
+     0.0323,
+     124
+    ],
+    "v0.3:synonym": [
+     0.0,
+     124
+    ]
+   }
+  },
+  "synonyms_chosen_meanings": {
+   "different chosen meanings": {
+    "bge_dev_tau:synonym": [
+     0.1694,
+     124
+    ],
+    "v0.2:synonym": [
+     0.0323,
+     124
+    ],
+    "v0.3:synonym": [
+     0.0,
+     124
+    ]
+   },
+   "same chosen meaning": {
+    "bge_dev_tau:synonym": [
+     0.2238,
+     143
+    ],
+    "v0.2:synonym": [
+     1.0,
+     143
+    ],
+    "v0.3:synonym": [
+     1.0,
+     143
+    ]
+   }
+  }
+ },
+ "closeness_auc_test": {
+  "synonym_vs_related": 0.76,
+  "synonym_vs_random": 0.8879,
+  "pairs_with_closeness": 777
+ },
+ "best_tau_on_test": {
+  "balanced_accuracy": 0.7678,
+  "tau": 0.994
+ },
+ "test_without_role_condition": 0.7678,
+ "p3c_examined": {
+  "v0.3": 0.8229,
+  "v0.2": 0.8299,
+  "per_phenomenon_v0.3": {
+   "dist:other_agent": [
+    1.0,
+    24
+   ],
+   "dist:other_patient": [
+    1.0,
+    24
+   ],
+   "dist:other_predicate": [
+    1.0,
+    48
+   ],
+   "dist:other_predicate_passive": [
+    1.0,
+    48
+   ],
+   "equiv:synonym_agent": [
+    0.4583,
+    24
+   ],
+   "equiv:synonym_patient": [
+    0.8333,
+    24
+   ],
+   "equiv:synonym_predicate": [
+    0.6667,
+    48
+   ],
+   "equiv:synonym_predicate_passive": [
+    0.625,
+    48
+   ]
+  }
+ },
+ "errors_by_layer": {
+  "synonym: closeness below tau": 118,
+  "other difference (parser or structure)": 6
+ },
+ "errors": [
+  {
+   "a": "The child catered something.",
+   "b": "The child plied something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7772,
+   "chosen": [
+    "oewn-01185006-v",
+    "oewn-01227217-v"
+   ],
+   "shared": "oewn-01185006-v"
+  },
+  {
+   "a": "The child catered something.",
+   "b": "Something was plied by the child.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7772,
+   "chosen": [
+    "oewn-01185006-v",
+    "oewn-01227217-v"
+   ],
+   "shared": "oewn-01185006-v"
+  },
+  {
+   "a": "The nurse catered something.",
+   "b": "The nurse plied something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7772,
+   "chosen": [
+    "oewn-01185006-v",
+    "oewn-01227217-v"
+   ],
+   "shared": "oewn-01185006-v"
+  },
+  {
+   "a": "The nurse catered something.",
+   "b": "Something was plied by the nurse.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7772,
+   "chosen": [
+    "oewn-01185006-v",
+    "oewn-01227217-v"
+   ],
+   "shared": "oewn-01185006-v"
+  },
+  {
+   "a": "The woman catered something.",
+   "b": "The woman plied something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.676,
+   "chosen": [
+    "oewn-01183141-v",
+    "oewn-01227217-v"
+   ],
+   "shared": "oewn-01185006-v"
+  },
+  {
+   "a": "The woman catered something.",
+   "b": "Something was plied by the woman.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.676,
+   "chosen": [
+    "oewn-01183141-v",
+    "oewn-01227217-v"
+   ],
+   "shared": "oewn-01185006-v"
+  },
+  {
+   "a": "The woman endured something.",
+   "b": "The woman tolerated something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8375,
+   "chosen": [
+    "oewn-02113644-v",
+    "oewn-00670017-v"
+   ],
+   "shared": "oewn-00670017-v"
+  },
+  {
+   "a": "The woman endured something.",
+   "b": "Something was tolerated by the woman.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8375,
+   "chosen": [
+    "oewn-02113644-v",
+    "oewn-00670017-v"
+   ],
+   "shared": "oewn-00670017-v"
+  },
+  {
+   "a": "The nurse endured something.",
+   "b": "The nurse tolerated something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8375,
+   "chosen": [
+    "oewn-02113644-v",
+    "oewn-00670017-v"
+   ],
+   "shared": "oewn-00670017-v"
+  },
+  {
+   "a": "The nurse endured something.",
+   "b": "Something was tolerated by the nurse.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8375,
+   "chosen": [
+    "oewn-02113644-v",
+    "oewn-00670017-v"
+   ],
+   "shared": "oewn-00670017-v"
+  },
+  {
+   "a": "The student endured something.",
+   "b": "The student tolerated something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8375,
+   "chosen": [
+    "oewn-02113644-v",
+    "oewn-00670017-v"
+   ],
+   "shared": "oewn-00670017-v"
+  },
+  {
+   "a": "The student endured something.",
+   "b": "Something was tolerated by the student.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8375,
+   "chosen": [
+    "oewn-02113644-v",
+    "oewn-00670017-v"
+   ],
+   "shared": "oewn-00670017-v"
+  },
+  {
+   "a": "The child aggravated something.",
+   "b": "The child exacerbated something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8729,
+   "chosen": [
+    "oewn-01824839-v",
+    "oewn-00208618-v"
+   ],
+   "shared": "oewn-00208618-v"
+  },
+  {
+   "a": "The child aggravated something.",
+   "b": "Something was exacerbated by the child.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8729,
+   "chosen": [
+    "oewn-01824839-v",
+    "oewn-00208618-v"
+   ],
+   "shared": "oewn-00208618-v"
+  },
+  {
+   "a": "The farmer aggravated something.",
+   "b": "The farmer exacerbated something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8729,
+   "chosen": [
+    "oewn-01824839-v",
+    "oewn-00208618-v"
+   ],
+   "shared": "oewn-00208618-v"
+  },
+  {
+   "a": "The farmer aggravated something.",
+   "b": "Something was exacerbated by the farmer.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8729,
+   "chosen": [
+    "oewn-01824839-v",
+    "oewn-00208618-v"
+   ],
+   "shared": "oewn-00208618-v"
+  },
+  {
+   "a": "The doctor boosted something.",
+   "b": "The doctor hiked something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7749,
+   "chosen": [
+    "oewn-01518703-v",
+    "oewn-01979926-v"
+   ],
+   "shared": "oewn-01979926-v"
+  },
+  {
+   "a": "The doctor boosted something.",
+   "b": "Something was hiked by the doctor.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7455,
+   "chosen": [
+    "oewn-01518703-v",
+    "oewn-01924925-v"
+   ],
+   "shared": "oewn-01979926-v"
+  },
+  {
+   "a": "The woman boosted something.",
+   "b": "The woman hiked something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7455,
+   "chosen": [
+    "oewn-01518703-v",
+    "oewn-01924925-v"
+   ],
+   "shared": "oewn-01979926-v"
+  },
+  {
+   "a": "The woman boosted something.",
+   "b": "Something was hiked by the woman.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7455,
+   "chosen": [
+    "oewn-01518703-v",
+    "oewn-01924925-v"
+   ],
+   "shared": "oewn-01979926-v"
+  },
+  {
+   "a": "The child boosted something.",
+   "b": "The child hiked something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7455,
+   "chosen": [
+    "oewn-01518703-v",
+    "oewn-01924925-v"
+   ],
+   "shared": "oewn-01979926-v"
+  },
+  {
+   "a": "The child boosted something.",
+   "b": "Something was hiked by the child.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7455,
+   "chosen": [
+    "oewn-01518703-v",
+    "oewn-01924925-v"
+   ],
+   "shared": "oewn-01979926-v"
+  },
+  {
+   "a": "The teacher retreated something.",
+   "b": "The teacher withdrew something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "other difference (parser or structure)",
+   "closeness": 0.8603,
+   "chosen": [
+    "oewn-01998474-v",
+    "oewn-01514012-v"
+   ],
+   "shared": "oewn-01998474-v"
+  },
+  {
+   "a": "The teacher retreated something.",
+   "b": "Something was withdrawn by the teacher.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "other difference (parser or structure)",
+   "closeness": 0.8516,
+   "chosen": [
+    "oewn-01998474-v",
+    "oewn-00173351-v"
+   ],
+   "shared": "oewn-01998474-v"
+  },
+  {
+   "a": "The woman retreated something.",
+   "b": "The woman withdrew something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "other difference (parser or structure)",
+   "closeness": 0.8603,
+   "chosen": [
+    "oewn-01998474-v",
+    "oewn-01514012-v"
+   ],
+   "shared": "oewn-01998474-v"
+  },
+  {
+   "a": "The woman retreated something.",
+   "b": "Something was withdrawn by the woman.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "other difference (parser or structure)",
+   "closeness": 0.8603,
+   "chosen": [
+    "oewn-01998474-v",
+    "oewn-01514012-v"
+   ],
+   "shared": "oewn-01998474-v"
+  },
+  {
+   "a": "The student retreated something.",
+   "b": "The student withdrew something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "other difference (parser or structure)",
+   "closeness": 0.8603,
+   "chosen": [
+    "oewn-01998474-v",
+    "oewn-01514012-v"
+   ],
+   "shared": "oewn-01998474-v"
+  },
+  {
+   "a": "The student retreated something.",
+   "b": "Something was withdrawn by the student.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "other difference (parser or structure)",
+   "closeness": 0.8603,
+   "chosen": [
+    "oewn-01998474-v",
+    "oewn-01514012-v"
+   ],
+   "shared": "oewn-01998474-v"
+  },
+  {
+   "a": "The farmer recalled something.",
+   "b": "Something was remembered by the farmer.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.853,
+   "chosen": [
+    "oewn-00609334-v",
+    "oewn-00613035-v"
+   ],
+   "shared": "oewn-00609334-v"
+  },
+  {
+   "a": "The teacher recalled something.",
+   "b": "Something was remembered by the teacher.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.853,
+   "chosen": [
+    "oewn-00609334-v",
+    "oewn-00613035-v"
+   ],
+   "shared": "oewn-00609334-v"
+  },
+  {
+   "a": "The woman recalled something.",
+   "b": "Something was remembered by the woman.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.853,
+   "chosen": [
+    "oewn-00609334-v",
+    "oewn-00613035-v"
+   ],
+   "shared": "oewn-00609334-v"
+  },
+  {
+   "a": "The farmer employed something.",
+   "b": "The farmer utilised something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.687,
+   "chosen": [
+    "oewn-02414542-v",
+    "oewn-01161188-v"
+   ],
+   "shared": "oewn-01161188-v"
+  },
+  {
+   "a": "The farmer employed something.",
+   "b": "Something was utilised by the farmer.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.687,
+   "chosen": [
+    "oewn-02414542-v",
+    "oewn-01161188-v"
+   ],
+   "shared": "oewn-01161188-v"
+  },
+  {
+   "a": "The student employed something.",
+   "b": "The student utilised something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.687,
+   "chosen": [
+    "oewn-02414542-v",
+    "oewn-01161188-v"
+   ],
+   "shared": "oewn-01161188-v"
+  },
+  {
+   "a": "The student employed something.",
+   "b": "Something was utilised by the student.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.687,
+   "chosen": [
+    "oewn-02414542-v",
+    "oewn-01161188-v"
+   ],
+   "shared": "oewn-01161188-v"
+  },
+  {
+   "a": "The teacher activated something.",
+   "b": "The teacher triggered something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.9031,
+   "chosen": [
+    "oewn-00191014-v",
+    "oewn-01647199-v"
+   ],
+   "shared": "oewn-01647199-v"
+  },
+  {
+   "a": "The teacher activated something.",
+   "b": "Something was triggered by the teacher.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.9031,
+   "chosen": [
+    "oewn-00191014-v",
+    "oewn-01647199-v"
+   ],
+   "shared": "oewn-01647199-v"
+  },
+  {
+   "a": "The farmer activated something.",
+   "b": "The farmer triggered something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7575,
+   "chosen": [
+    "oewn-00191014-v",
+    "oewn-01137797-v"
+   ],
+   "shared": "oewn-01647199-v"
+  },
+  {
+   "a": "The farmer activated something.",
+   "b": "Something was triggered by the farmer.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.9031,
+   "chosen": [
+    "oewn-00191014-v",
+    "oewn-01647199-v"
+   ],
+   "shared": "oewn-01647199-v"
+  },
+  {
+   "a": "The doctor activated something.",
+   "b": "The doctor triggered something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.9031,
+   "chosen": [
+    "oewn-00191014-v",
+    "oewn-01647199-v"
+   ],
+   "shared": "oewn-01647199-v"
+  },
+  {
+   "a": "The doctor activated something.",
+   "b": "Something was triggered by the doctor.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.9031,
+   "chosen": [
+    "oewn-00191014-v",
+    "oewn-01647199-v"
+   ],
+   "shared": "oewn-01647199-v"
+  },
+  {
+   "a": "The farmer anticipated something.",
+   "b": "The farmer expected something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8951,
+   "chosen": [
+    "oewn-00722732-v",
+    "oewn-00721658-v"
+   ],
+   "shared": "oewn-00721658-v"
+  },
+  {
+   "a": "The farmer anticipated something.",
+   "b": "Something was expected by the farmer.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8951,
+   "chosen": [
+    "oewn-00722732-v",
+    "oewn-00721658-v"
+   ],
+   "shared": "oewn-00721658-v"
+  },
+  {
+   "a": "The pilot anticipated something.",
+   "b": "The pilot expected something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8951,
+   "chosen": [
+    "oewn-00722732-v",
+    "oewn-00721658-v"
+   ],
+   "shared": "oewn-00721658-v"
+  },
+  {
+   "a": "The pilot anticipated something.",
+   "b": "Something was expected by the pilot.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8951,
+   "chosen": [
+    "oewn-00722732-v",
+    "oewn-00721658-v"
+   ],
+   "shared": "oewn-00721658-v"
+  },
+  {
+   "a": "The child anticipated something.",
+   "b": "The child expected something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8766,
+   "chosen": [
+    "oewn-01808928-v",
+    "oewn-00721658-v"
+   ],
+   "shared": "oewn-00721658-v"
+  },
+  {
+   "a": "The child anticipated something.",
+   "b": "Something was expected by the child.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8766,
+   "chosen": [
+    "oewn-01808928-v",
+    "oewn-00721658-v"
+   ],
+   "shared": "oewn-00721658-v"
+  },
+  {
+   "a": "The woman demonstrated something.",
+   "b": "Something was presented by the woman.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8218,
+   "chosen": [
+    "oewn-02153218-v",
+    "oewn-02205200-v"
+   ],
+   "shared": "oewn-02153218-v"
+  },
+  {
+   "a": "The student demonstrated something.",
+   "b": "Something was presented by the student.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8252,
+   "chosen": [
+    "oewn-02153218-v",
+    "oewn-02267560-v"
+   ],
+   "shared": "oewn-02153218-v"
+  },
+  {
+   "a": "The teacher demonstrated something.",
+   "b": "Something was presented by the teacher.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8252,
+   "chosen": [
+    "oewn-02153218-v",
+    "oewn-02267560-v"
+   ],
+   "shared": "oewn-02153218-v"
+  },
+  {
+   "a": "The child encouraged something.",
+   "b": "The child promoted something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8297,
+   "chosen": [
+    "oewn-02560630-v",
+    "oewn-00978685-v"
+   ],
+   "shared": "oewn-02560630-v"
+  },
+  {
+   "a": "The student encouraged something.",
+   "b": "The student promoted something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8297,
+   "chosen": [
+    "oewn-02560630-v",
+    "oewn-00978685-v"
+   ],
+   "shared": "oewn-02560630-v"
+  },
+  {
+   "a": "The teacher encouraged something.",
+   "b": "The teacher promoted something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8297,
+   "chosen": [
+    "oewn-02560630-v",
+    "oewn-00978685-v"
+   ],
+   "shared": "oewn-02560630-v"
+  },
+  {
+   "a": "The nurse said something.",
+   "b": "The nurse stated something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.9336,
+   "chosen": [
+    "oewn-00981902-v",
+    "oewn-01011267-v"
+   ],
+   "shared": "oewn-01011267-v"
+  },
+  {
+   "a": "The nurse said something.",
+   "b": "Something was stated by the nurse.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.9336,
+   "chosen": [
+    "oewn-00981902-v",
+    "oewn-01011267-v"
+   ],
+   "shared": "oewn-01011267-v"
+  },
+  {
+   "a": "The child said something.",
+   "b": "The child stated something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.9336,
+   "chosen": [
+    "oewn-00981902-v",
+    "oewn-01011267-v"
+   ],
+   "shared": "oewn-01011267-v"
+  },
+  {
+   "a": "The child said something.",
+   "b": "Something was stated by the child.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.9336,
+   "chosen": [
+    "oewn-00981902-v",
+    "oewn-01011267-v"
+   ],
+   "shared": "oewn-01011267-v"
+  },
+  {
+   "a": "The farmer said something.",
+   "b": "The farmer stated something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.9336,
+   "chosen": [
+    "oewn-00981902-v",
+    "oewn-01011267-v"
+   ],
+   "shared": "oewn-01011267-v"
+  },
+  {
+   "a": "The farmer said something.",
+   "b": "Something was stated by the farmer.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.9336,
+   "chosen": [
+    "oewn-00981902-v",
+    "oewn-01011267-v"
+   ],
+   "shared": "oewn-01011267-v"
+  },
+  {
+   "a": "The woman applied something.",
+   "b": "The woman utilized something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7375,
+   "chosen": [
+    "oewn-02314145-v",
+    "oewn-01161188-v"
+   ],
+   "shared": "oewn-01161188-v"
+  },
+  {
+   "a": "The woman applied something.",
+   "b": "Something was utilized by the woman.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7375,
+   "chosen": [
+    "oewn-02314145-v",
+    "oewn-01161188-v"
+   ],
+   "shared": "oewn-01161188-v"
+  },
+  {
+   "a": "The doctor applied something.",
+   "b": "The doctor utilized something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7375,
+   "chosen": [
+    "oewn-02314145-v",
+    "oewn-01161188-v"
+   ],
+   "shared": "oewn-01161188-v"
+  },
+  {
+   "a": "The doctor applied something.",
+   "b": "Something was utilized by the doctor.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7375,
+   "chosen": [
+    "oewn-02314145-v",
+    "oewn-01161188-v"
+   ],
+   "shared": "oewn-01161188-v"
+  },
+  {
+   "a": "The child applied something.",
+   "b": "The child utilized something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7375,
+   "chosen": [
+    "oewn-02314145-v",
+    "oewn-01161188-v"
+   ],
+   "shared": "oewn-01161188-v"
+  },
+  {
+   "a": "The child applied something.",
+   "b": "Something was utilized by the child.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7375,
+   "chosen": [
+    "oewn-02314145-v",
+    "oewn-01161188-v"
+   ],
+   "shared": "oewn-01161188-v"
+  },
+  {
+   "a": "The woman enclosed something.",
+   "b": "The woman enveloped something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8372,
+   "chosen": [
+    "oewn-00187671-v",
+    "oewn-01583316-v"
+   ],
+   "shared": "oewn-01583316-v"
+  },
+  {
+   "a": "The woman enclosed something.",
+   "b": "Something was enveloped by the woman.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8372,
+   "chosen": [
+    "oewn-00187671-v",
+    "oewn-01583316-v"
+   ],
+   "shared": "oewn-01583316-v"
+  },
+  {
+   "a": "The student enclosed something.",
+   "b": "The student enveloped something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8372,
+   "chosen": [
+    "oewn-00187671-v",
+    "oewn-01583316-v"
+   ],
+   "shared": "oewn-01583316-v"
+  },
+  {
+   "a": "The student enclosed something.",
+   "b": "Something was enveloped by the student.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8372,
+   "chosen": [
+    "oewn-00187671-v",
+    "oewn-01583316-v"
+   ],
+   "shared": "oewn-01583316-v"
+  },
+  {
+   "a": "The farmer enclosed something.",
+   "b": "The farmer enveloped something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8372,
+   "chosen": [
+    "oewn-00187671-v",
+    "oewn-01583316-v"
+   ],
+   "shared": "oewn-01583316-v"
+  },
+  {
+   "a": "The farmer enclosed something.",
+   "b": "Something was enveloped by the farmer.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8372,
+   "chosen": [
+    "oewn-00187671-v",
+    "oewn-01583316-v"
+   ],
+   "shared": "oewn-01583316-v"
+  },
+  {
+   "a": "The woman approved something.",
+   "b": "The woman sanctioned something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.9462,
+   "chosen": [
+    "oewn-00808164-v",
+    "oewn-02484743-v"
+   ],
+   "shared": "oewn-00808164-v"
+  },
+  {
+   "a": "The doctor discovered something.",
+   "b": "The doctor observed something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8941,
+   "chosen": [
+    "oewn-00600349-v",
+    "oewn-02158938-v"
+   ],
+   "shared": "oewn-02158938-v"
+  },
+  {
+   "a": "The doctor discovered something.",
+   "b": "Something was observed by the doctor.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8941,
+   "chosen": [
+    "oewn-00600349-v",
+    "oewn-02158938-v"
+   ],
+   "shared": "oewn-02158938-v"
+  },
+  {
+   "a": "The student discovered something.",
+   "b": "The student observed something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.843,
+   "chosen": [
+    "oewn-00600349-v",
+    "oewn-02460829-v"
+   ],
+   "shared": "oewn-02158938-v"
+  },
+  {
+   "a": "The student discovered something.",
+   "b": "Something was observed by the student.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8941,
+   "chosen": [
+    "oewn-00600349-v",
+    "oewn-02158938-v"
+   ],
+   "shared": "oewn-02158938-v"
+  },
+  {
+   "a": "The child discovered something.",
+   "b": "The child observed something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.843,
+   "chosen": [
+    "oewn-00600349-v",
+    "oewn-02460829-v"
+   ],
+   "shared": "oewn-02158938-v"
+  },
+  {
+   "a": "The child discovered something.",
+   "b": "Something was observed by the child.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8941,
+   "chosen": [
+    "oewn-00600349-v",
+    "oewn-02158938-v"
+   ],
+   "shared": "oewn-02158938-v"
+  },
+  {
+   "a": "The doctor confined something.",
+   "b": "The doctor limited something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8942,
+   "chosen": [
+    "oewn-01349980-v",
+    "oewn-00236085-v"
+   ],
+   "shared": "oewn-00234091-v"
+  },
+  {
+   "a": "The doctor confined something.",
+   "b": "Something was limited by the doctor.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8674,
+   "chosen": [
+    "oewn-01349980-v",
+    "oewn-00234091-v"
+   ],
+   "shared": "oewn-00234091-v"
+  },
+  {
+   "a": "The teacher confined something.",
+   "b": "The teacher limited something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8942,
+   "chosen": [
+    "oewn-01349980-v",
+    "oewn-00236085-v"
+   ],
+   "shared": "oewn-00234091-v"
+  },
+  {
+   "a": "The teacher confined something.",
+   "b": "Something was limited by the teacher.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8674,
+   "chosen": [
+    "oewn-01349980-v",
+    "oewn-00234091-v"
+   ],
+   "shared": "oewn-00234091-v"
+  },
+  {
+   "a": "The student confined something.",
+   "b": "The student limited something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8942,
+   "chosen": [
+    "oewn-01349980-v",
+    "oewn-00236085-v"
+   ],
+   "shared": "oewn-00234091-v"
+  },
+  {
+   "a": "The student confined something.",
+   "b": "Something was limited by the student.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8674,
+   "chosen": [
+    "oewn-01349980-v",
+    "oewn-00234091-v"
+   ],
+   "shared": "oewn-00234091-v"
+  },
+  {
+   "a": "The nurse procured something.",
+   "b": "The nurse secured something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7892,
+   "chosen": [
+    "oewn-02243552-v",
+    "oewn-01343121-v"
+   ],
+   "shared": "oewn-02243552-v"
+  },
+  {
+   "a": "The nurse procured something.",
+   "b": "Something was secured by the nurse.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7892,
+   "chosen": [
+    "oewn-02243552-v",
+    "oewn-01343121-v"
+   ],
+   "shared": "oewn-02243552-v"
+  },
+  {
+   "a": "The teacher procured something.",
+   "b": "The teacher secured something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7892,
+   "chosen": [
+    "oewn-02243552-v",
+    "oewn-01343121-v"
+   ],
+   "shared": "oewn-02243552-v"
+  },
+  {
+   "a": "The teacher procured something.",
+   "b": "Something was secured by the teacher.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7892,
+   "chosen": [
+    "oewn-02243552-v",
+    "oewn-01343121-v"
+   ],
+   "shared": "oewn-02243552-v"
+  },
+  {
+   "a": "The woman procured something.",
+   "b": "The woman secured something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7892,
+   "chosen": [
+    "oewn-02243552-v",
+    "oewn-01343121-v"
+   ],
+   "shared": "oewn-02243552-v"
+  },
+  {
+   "a": "The woman procured something.",
+   "b": "Something was secured by the woman.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7892,
+   "chosen": [
+    "oewn-02243552-v",
+    "oewn-01343121-v"
+   ],
+   "shared": "oewn-02243552-v"
+  },
+  {
+   "a": "The farmer noted something.",
+   "b": "The farmer remarked something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8444,
+   "chosen": [
+    "oewn-02122959-v",
+    "oewn-01022014-v"
+   ],
+   "shared": "oewn-01022014-v"
+  },
+  {
+   "a": "The farmer noted something.",
+   "b": "Something was remarked by the farmer.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8444,
+   "chosen": [
+    "oewn-02122959-v",
+    "oewn-01022014-v"
+   ],
+   "shared": "oewn-01022014-v"
+  },
+  {
+   "a": "The pilot noted something.",
+   "b": "The pilot remarked something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8444,
+   "chosen": [
+    "oewn-02122959-v",
+    "oewn-01022014-v"
+   ],
+   "shared": "oewn-01022014-v"
+  },
+  {
+   "a": "The pilot noted something.",
+   "b": "Something was remarked by the pilot.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8444,
+   "chosen": [
+    "oewn-02122959-v",
+    "oewn-01022014-v"
+   ],
+   "shared": "oewn-01022014-v"
+  },
+  {
+   "a": "The doctor noted something.",
+   "b": "The doctor remarked something.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8389,
+   "chosen": [
+    "oewn-02123398-v",
+    "oewn-01022014-v"
+   ],
+   "shared": "oewn-01022014-v"
+  },
+  {
+   "a": "The doctor noted something.",
+   "b": "Something was remarked by the doctor.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8389,
+   "chosen": [
+    "oewn-02123398-v",
+    "oewn-01022014-v"
+   ],
+   "shared": "oewn-01022014-v"
+  },
+  {
+   "a": "The woman reassigned somebody.",
+   "b": "Somebody was transferred by the woman.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8233,
+   "chosen": [
+    "oewn-02398228-v",
+    "oewn-01438013-v"
+   ],
+   "shared": "oewn-02398228-v"
+  },
+  {
+   "a": "The student reassigned somebody.",
+   "b": "Somebody was transferred by the student.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8233,
+   "chosen": [
+    "oewn-02398228-v",
+    "oewn-01438013-v"
+   ],
+   "shared": "oewn-02398228-v"
+  },
+  {
+   "a": "The child reassigned somebody.",
+   "b": "The child transferred somebody.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8233,
+   "chosen": [
+    "oewn-02398228-v",
+    "oewn-01438013-v"
+   ],
+   "shared": "oewn-02398228-v"
+  },
+  {
+   "a": "The child reassigned somebody.",
+   "b": "Somebody was transferred by the child.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8233,
+   "chosen": [
+    "oewn-02398228-v",
+    "oewn-01438013-v"
+   ],
+   "shared": "oewn-02398228-v"
+  },
+  {
+   "a": "The nurse instructed somebody.",
+   "b": "The nurse taught somebody.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8552,
+   "chosen": [
+    "oewn-00751969-v",
+    "oewn-00830768-v"
+   ],
+   "shared": "oewn-00830768-v"
+  },
+  {
+   "a": "The nurse instructed somebody.",
+   "b": "Somebody was taught by the nurse.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8552,
+   "chosen": [
+    "oewn-00751969-v",
+    "oewn-00830768-v"
+   ],
+   "shared": "oewn-00830768-v"
+  },
+  {
+   "a": "The pilot instructed somebody.",
+   "b": "The pilot taught somebody.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8552,
+   "chosen": [
+    "oewn-00751969-v",
+    "oewn-00830768-v"
+   ],
+   "shared": "oewn-00830768-v"
+  },
+  {
+   "a": "The pilot instructed somebody.",
+   "b": "Somebody was taught by the pilot.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8552,
+   "chosen": [
+    "oewn-00751969-v",
+    "oewn-00830768-v"
+   ],
+   "shared": "oewn-00830768-v"
+  },
+  {
+   "a": "The farmer instructed somebody.",
+   "b": "The farmer taught somebody.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8552,
+   "chosen": [
+    "oewn-00751969-v",
+    "oewn-00830768-v"
+   ],
+   "shared": "oewn-00830768-v"
+  },
+  {
+   "a": "The farmer instructed somebody.",
+   "b": "Somebody was taught by the farmer.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_predicate_passive",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8552,
+   "chosen": [
+    "oewn-00751969-v",
+    "oewn-00830768-v"
+   ],
+   "shared": "oewn-00830768-v"
+  },
+  {
+   "a": "The buster saw the chair.",
+   "b": "The dude saw the chair.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_agent",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7564,
+   "chosen": [
+    "oewn-09903082-n",
+    "oewn-10010564-n"
+   ],
+   "shared": "oewn-10103127-n"
+  },
+  {
+   "a": "The buster saw the box.",
+   "b": "The dude saw the box.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_agent",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7564,
+   "chosen": [
+    "oewn-09903082-n",
+    "oewn-10010564-n"
+   ],
+   "shared": "oewn-10103127-n"
+  },
+  {
+   "a": "The buster found the box.",
+   "b": "The dude found the box.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_agent",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7564,
+   "chosen": [
+    "oewn-09903082-n",
+    "oewn-10010564-n"
+   ],
+   "shared": "oewn-10103127-n"
+  },
+  {
+   "a": "The advocate found the box.",
+   "b": "The proponent found the box.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_agent",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8597,
+   "chosen": [
+    "oewn-09795104-n",
+    "oewn-09794206-n"
+   ],
+   "shared": "oewn-09794206-n"
+  },
+  {
+   "a": "The advocate found the bottle.",
+   "b": "The proponent found the bottle.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_agent",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8597,
+   "chosen": [
+    "oewn-09795104-n",
+    "oewn-09794206-n"
+   ],
+   "shared": "oewn-09794206-n"
+  },
+  {
+   "a": "The advocate saw the box.",
+   "b": "The proponent saw the box.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_agent",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8597,
+   "chosen": [
+    "oewn-09795104-n",
+    "oewn-09794206-n"
+   ],
+   "shared": "oewn-09794206-n"
+  },
+  {
+   "a": "The viewer found the bag.",
+   "b": "The watcher found the bag.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_agent",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.638,
+   "chosen": [
+    "oewn-04541946-n",
+    "oewn-10789727-n"
+   ],
+   "shared": "oewn-10652848-n"
+  },
+  {
+   "a": "The viewer found the box.",
+   "b": "The watcher found the box.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_agent",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7827,
+   "chosen": [
+    "oewn-10652848-n",
+    "oewn-10789727-n"
+   ],
+   "shared": "oewn-10652848-n"
+  },
+  {
+   "a": "The viewer saw the bag.",
+   "b": "The watcher saw the bag.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_agent",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7827,
+   "chosen": [
+    "oewn-10652848-n",
+    "oewn-10789727-n"
+   ],
+   "shared": "oewn-10652848-n"
+  },
+  {
+   "a": "The investigator saw the bag.",
+   "b": "The researcher saw the bag.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_agent",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7273,
+   "chosen": [
+    "oewn-10028930-n",
+    "oewn-10542669-n"
+   ],
+   "shared": "oewn-10542669-n"
+  },
+  {
+   "a": "The investigator saw the chair.",
+   "b": "The researcher saw the chair.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_agent",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7273,
+   "chosen": [
+    "oewn-10028930-n",
+    "oewn-10542669-n"
+   ],
+   "shared": "oewn-10542669-n"
+  },
+  {
+   "a": "The investigator saw the bottle.",
+   "b": "The researcher saw the bottle.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_agent",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7273,
+   "chosen": [
+    "oewn-10028930-n",
+    "oewn-10542669-n"
+   ],
+   "shared": "oewn-10542669-n"
+  },
+  {
+   "a": "The child saw the material.",
+   "b": "The child saw the stuff.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_patient",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8308,
+   "chosen": [
+    "oewn-14604877-n",
+    "oewn-04352366-n"
+   ],
+   "shared": "oewn-14604877-n"
+  },
+  {
+   "a": "The student saw the material.",
+   "b": "The student saw the stuff.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_patient",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8308,
+   "chosen": [
+    "oewn-14604877-n",
+    "oewn-04352366-n"
+   ],
+   "shared": "oewn-14604877-n"
+  },
+  {
+   "a": "The woman saw the material.",
+   "b": "The woman saw the stuff.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_patient",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.7051,
+   "chosen": [
+    "oewn-03314753-n",
+    "oewn-04352366-n"
+   ],
+   "shared": "oewn-14604877-n"
+  },
+  {
+   "a": "The child saw the apparatus.",
+   "b": "The child saw the setup.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_patient",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8048,
+   "chosen": [
+    "oewn-02730750-n",
+    "oewn-04938444-n"
+   ],
+   "shared": "oewn-02730750-n"
+  },
+  {
+   "a": "The teacher saw the apparatus.",
+   "b": "The teacher saw the setup.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_patient",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8048,
+   "chosen": [
+    "oewn-02730750-n",
+    "oewn-04938444-n"
+   ],
+   "shared": "oewn-02730750-n"
+  },
+  {
+   "a": "The doctor saw the pedestal.",
+   "b": "The doctor saw the stand.",
+   "label": 1,
+   "phenomenon": "equiv:synonym_patient",
+   "why": "synonym: closeness below tau",
+   "closeness": 0.8241,
+   "chosen": [
+    "oewn-03909987-n",
+    "oewn-08671281-n"
+   ],
+   "shared": "oewn-02800851-n"
+  }
+ ],
+ "sensitivity_undoubted_items": {
+  "items": 37,
+  "pairs": 531,
+  "v0.3": {
+   "balanced_accuracy": 0.7627,
+   "per_phenomenon": {
+    "dist:random_agent": [
+     1.0,
+     30
+    ],
+    "dist:random_patient": [
+     1.0,
+     15
+    ],
+    "dist:random_predicate": [
+     1.0,
+     66
+    ],
+    "dist:random_predicate_passive": [
+     1.0,
+     66
+    ],
+    "dist:related_agent": [
+     1.0,
+     30
+    ],
+    "dist:related_patient": [
+     1.0,
+     15
+    ],
+    "dist:related_predicate": [
+     1.0,
+     66
+    ],
+    "dist:related_predicate_passive": [
+     1.0,
+     66
+    ],
+    "equiv:synonym_agent": [
+     0.7,
+     30
+    ],
+    "equiv:synonym_patient": [
+     0.6,
+     15
+    ],
+    "equiv:synonym_predicate": [
+     0.5152,
+     66
+    ],
+    "equiv:synonym_predicate_passive": [
+     0.4394,
+     66
+    ]
+   }
+  },
+  "v0.2": {
+   "balanced_accuracy": 0.774,
+   "per_phenomenon": {
+    "dist:random_agent": [
+     1.0,
+     30
+    ],
+    "dist:random_patient": [
+     1.0,
+     15
+    ],
+    "dist:random_predicate": [
+     1.0,
+     66
+    ],
+    "dist:random_predicate_passive": [
+     1.0,
+     66
+    ],
+    "dist:related_agent": [
+     1.0,
+     30
+    ],
+    "dist:related_patient": [
+     1.0,
+     15
+    ],
+    "dist:related_predicate": [
+     1.0,
+     66
+    ],
+    "dist:related_predicate_passive": [
+     1.0,
+     66
+    ],
+    "equiv:synonym_agent": [
+     0.7,
+     30
+    ],
+    "equiv:synonym_patient": [
+     0.6,
+     15
+    ],
+    "equiv:synonym_predicate": [
+     0.5455,
+     66
+    ],
+    "equiv:synonym_predicate_passive": [
+     0.4697,
+     66
+    ]
+   }
+  },
+  "v0.1": {
+   "balanced_accuracy": 0.5,
+   "per_phenomenon": {
+    "dist:random_agent": [
+     1.0,
+     30
+    ],
+    "dist:random_patient": [
+     1.0,
+     15
+    ],
+    "dist:random_predicate": [
+     1.0,
+     66
+    ],
+    "dist:random_predicate_passive": [
+     1.0,
+     66
+    ],
+    "dist:related_agent": [
+     1.0,
+     30
+    ],
+    "dist:related_patient": [
+     1.0,
+     15
+    ],
+    "dist:related_predicate": [
+     1.0,
+     66
+    ],
+    "dist:related_predicate_passive": [
+     1.0,
+     66
+    ],
+    "equiv:synonym_agent": [
+     0.0,
+     30
+    ],
+    "equiv:synonym_patient": [
+     0.0,
+     15
+    ],
+    "equiv:synonym_predicate": [
+     0.0,
+     66
+    ],
+    "equiv:synonym_predicate_passive": [
+     0.0,
+     66
+    ]
+   }
+  },
+  "bge_dev_tau": {
+   "balanced_accuracy": 0.6243,
+   "per_phenomenon": {
+    "dist:random_agent": [
+     1.0,
+     30
+    ],
+    "dist:random_patient": [
+     1.0,
+     15
+    ],
+    "dist:random_predicate": [
+     1.0,
+     66
+    ],
+    "dist:random_predicate_passive": [
+     1.0,
+     66
+    ],
+    "dist:related_agent": [
+     1.0,
+     30
+    ],
+    "dist:related_patient": [
+     1.0,
+     15
+    ],
+    "dist:related_predicate": [
+     1.0,
+     66
+    ],
+    "dist:related_predicate_passive": [
+     1.0,
+     66
+    ],
+    "equiv:synonym_agent": [
+     0.0,
+     30
+    ],
+    "equiv:synonym_patient": [
+     0.2,
+     15
+    ],
+    "equiv:synonym_predicate": [
+     0.3485,
+     66
+    ],
+    "equiv:synonym_predicate_passive": [
+     0.2727,
+     66
+    ]
+   }
+  },
+  "bge_e1_tau": {
+   "balanced_accuracy": 0.6045,
+   "per_phenomenon": {
+    "dist:random_agent": [
+     1.0,
+     30
+    ],
+    "dist:random_patient": [
+     1.0,
+     15
+    ],
+    "dist:random_predicate": [
+     1.0,
+     66
+    ],
+    "dist:random_predicate_passive": [
+     1.0,
+     66
+    ],
+    "dist:related_agent": [
+     1.0,
+     30
+    ],
+    "dist:related_patient": [
+     1.0,
+     15
+    ],
+    "dist:related_predicate": [
+     1.0,
+     66
+    ],
+    "dist:related_predicate_passive": [
+     1.0,
+     66
+    ],
+    "equiv:synonym_agent": [
+     0.0,
+     30
+    ],
+    "equiv:synonym_patient": [
+     0.0667,
+     15
+    ],
+    "equiv:synonym_predicate": [
+     0.2879,
+     66
+    ],
+    "equiv:synonym_predicate_passive": [
+     0.2576,
+     66
+    ]
+   }
+  }
+ },
+ "gpu_recheck": {
+  "pairs": 251,
+  "max_abs_difference": 5e-05,
+  "pass": true
+ }
+}

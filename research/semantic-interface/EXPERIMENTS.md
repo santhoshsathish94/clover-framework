@@ -560,6 +560,47 @@ for example partner/spouse, bike/motorcycle, voiced/said as a control, and the m
 wrote that list before any system output; it changes nothing in the criteria and is used only for a reported
 sensitivity analysis on the items neither of us doubted.
 
+**3c2 results (k3, trf, verb lemmatiser v1.1, frozen Dictionary v1.1; GPU server for the re-check; `results/e3c2_*.json`,
+`e3c2_report.json`; order in git: pre-registration 3e2ccfb, data and audit 2e3613d, dev threshold 218c3cf before any test
+output). 3c2 fails as pre-registered: K3 and K4 pass, K1 and K2 fail.** On dev, only the highest of 118 candidate
+thresholds kept every control phenomenon at or below 0.05 false equivalence, so the rule chose **τ = 0.9882** - in effect
+identity of the two chosen meanings (dev balanced accuracy 0.697); bge-small's dev threshold is 0.9605 (dev 0.547).
+
+| Test: 57 items, 801 sentence pairs | CSI v0.3 (closeness) | CSI v0.2 (3c rule) | CSI v0.1 | bge-small (dev threshold) |
+|---|---|---|---|---|
+| balanced accuracy | **0.768** | 0.775 | 0.500 | 0.597 |
+| synonym predicate (active / passive) | 0.469 / 0.427 | 0.490 / 0.448 | 0 / 0 | 0.292 / 0.229 |
+| synonym agent / patient | 0.750 / 0.778 | 0.750 / 0.778 | 0 / 0 | 0 / 0.111 |
+| every control, related and random | 1.000 | 1.000 | 1.000 | 0.958-1.000 |
+
+K1: 0.768 < 0.90, and v0.3 does not beat v0.2 (-0.008 [-0.024, 0.000]); it beats v0.1 (+0.268 [0.207, 0.329]) and
+bge-small (+0.170 [0.094, 0.247]). K2: all four synonym phenomena are below 0.80. K3: no control was merged, related or
+random. K4: heldout3 0.994 and nonce2 1.000, as v0.1, with no false equivalence; the role condition never came into
+play at this threshold. **Checks:** online decisions equal their offline recomputation on dev and test; the same analyses
+reproduce 3c's v0.1 and v0.2 results on the 3c pairs and the regression sets exactly; closeness recomputed on the GPU
+server from its own checkpoint copy by separate code agrees within 0.00005 on all 251 test meaning pairs (75 definitions
+there read from OEWN, the rest from the training file). **Analysis.** The dictionary chose the same meaning for both
+synonyms in 143 of 267 test synonym rows (all accepted) and different meanings in 124 (v0.3 accepted none, v0.2 four
+through membership); 6 of those also failed in the parser ("retreated something" gets no object). Closeness does not
+separate the others from the controls: median 0.837 against 0.839 for related controls and 0.764 for random ones; ranking AUC of
+synonyms with different chosen meanings against related controls 0.47 on test and 0.39 on dev (chance 0.5), against
+random controls 0.75 and 0.69. The best threshold in hindsight on test (0.994) gives the same 0.768: no threshold on this
+measure beats identity. The highest closeness values belong to co-hyponyms (bike/auto 0.988, fry/youth 0.97,
+gut/stomach 0.964), and every pair scores at least 0.61. Breakdowns (synonym rows, v0.3): both words usage-trained 0.20
+(75 rows) vs at least one without SemCor training 0.67 (192), not separated here from ambiguity; by the larger number of
+OEWN meanings of the two words, 1: 1.00 (27), 2-3: 0.72 (93), 4-7: 0.38 (102), 8+: 0.22 (45); the top choice had p >= 0.5
+for both words in 265 of 267 synonym rows, so the dictionary's confidence did not flag its disagreements; nouns 0.76,
+verbs 0.45. Sensitivity (items neither the reviewer nor I doubted, 37 items, 531 pairs): v0.3 0.763, v0.2 0.774,
+bge-small 0.624 - the same picture. The 3c (P) pairs (examined) give v0.3 0.823 against v0.2 0.830: closeness repaired
+none of 3c's failures. **Reading.** For this representation the answer is no: the cosine between the frozen dictionary's
+meaning vectors measures how related two meanings are, not whether they are the same, so a threshold that keeps false
+equivalence low falls back to identity, and identity misses about half of the synonym pairs - more with ambiguous words.
+A sentence encoder (bge-small) under the same false-equivalence limit does worse. Recognising that two different
+meanings amount to the same one has to be represented or learned as a relation; it is not a distance in this space. By
+the pre-registered decision v0.3 is not adopted, and CSI's comparison stays v0.1 (lemmas); `csi/compare.py` keeps v0.2
+and v0.3 behind their environment switches for later experiments. Next: 3b (WordNet relations between meanings), as
+directed.
+
 ## Experiment 4 = E2: morphology (defined)
 Lemmatisation, inflection and derivation on UD features and OEWN derivation links, including unseen lemma+affix
 combinations; learned vs lookup baselines.
