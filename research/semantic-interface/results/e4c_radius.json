@@ -1,0 +1,49 @@
+{
+ "experiment": "E4c post-hoc generalisation radius",
+ "radius": {
+  "2": {
+   "held_out_families": 56,
+   "n_test_lemmas": 2300,
+   "accuracy": 0.3104,
+   "error_categories": {
+    "silent e (added or missing)": 4310,
+    "y / ie": 908,
+    "consonant doubling": 712,
+    "other": 414
+   }
+  },
+  "3": {
+   "held_out_families": 331,
+   "n_test_lemmas": 3247,
+   "accuracy": 0.6217,
+   "error_categories": {
+    "silent e (added or missing)": 3819,
+    "other": 662,
+    "y / ie": 260,
+    "consonant doubling": 173
+   }
+  },
+  "4": {
+   "held_out_families": 1038,
+   "n_test_lemmas": 4757,
+   "accuracy": 0.8429,
+   "error_categories": {
+    "silent e (added or missing)": 2129,
+    "consonant doubling": 376,
+    "other": 346,
+    "y / ie": 138
+   }
+  },
+  "5": {
+   "held_out_families": 1962,
+   "n_test_lemmas": 4836,
+   "accuracy": 0.9389,
+   "error_categories": {
+    "silent e (added or missing)": 825,
+    "other": 177,
+    "consonant doubling": 101,
+    "y / ie": 78
+   }
+  }
+ }
+}

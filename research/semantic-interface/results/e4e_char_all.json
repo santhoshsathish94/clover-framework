@@ -1,0 +1,32 @@
+{
+ "experiment": "E4e char transformer",
+ "split": "all",
+ "n_train_pairs": 93154,
+ "best_dev": 0.941,
+ "test_acc": 0.9811,
+ "n_test": 2800,
+ "by_form_type": {
+  "past": 0.98,
+  "past_participle": 0.98,
+  "gerund": 0.9829,
+  "third_singular": 0.9814
+ },
+ "nonce_by_class": {
+  "doubling": 1.0,
+  "cluster": 1.0,
+  "silent_e": 1.0,
+  "consonant_y": 0.9125,
+  "sibilant": 0.955,
+  "ck": 1.0,
+  "vowel_wy": 1.0
+ },
+ "error_sample": [
+  "griggies -> griggie (want griggy)",
+  "fottied -> fottie (want fotty)",
+  "vaggied -> vaggie (want vaggy)",
+  "juggied -> juggi (want juggy)",
+  "cleggied -> cleggi (want cleggy)",
+  "feggied -> feggie (want feggy)",
+  "claching -> clache (want clach)"
+ ]
+}

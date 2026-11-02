@@ -235,6 +235,13 @@ chance); frozen LFM3 carries similarity in early layers (STS-B val 0.64 at layer
   I expected in b4_test.json is not there (the earlier run's outcome not yet checked); to rerun.
 - B4 frozen LFM3 hidden state 4 (no head) on test, run 2026-11-02 (it had never been run; my earlier note that it was
   "started on card 5" was wrong): STS 54.99, PAWS 0.580, SNLI 0.729, CondaQA 0.485.
+- B4 on test for the two remaining cores (2026-11-02 02:28 / 02:46 UTC; watcher runs/core/after_cores.log, whose
+  lines are cut after the SNLI field, so CondaQA and the server sentences are not in this note): **core-l16-full**
+  STS mean 64.39, PAWS test AUC 0.937; **core-l32-full** STS mean 63.97, PAWS 0.934, SNLI rank 0.95. Reading hidden
+  state 32 instead of 16 adds nothing; both beat core-f on distinction (PAWS 0.94 vs 0.85) at the same graded
+  similarity (about 64, still below bge-small 81.28). On the CSI minimal pairs (E1 baseline, AUC / balanced accuracy):
+  core-l16 unseen 0.651 / 0.496, heldout2 0.589 / 0.446, heldout3 0.576 / 0.418; core-l32 unseen 0.664 / 0.554,
+  heldout2 0.620 / 0.494, heldout3 0.619 / 0.476 - above core-f (0.37) but near chance on structure-only meaning.
 - **T3 DONE: Learning Concepts on LFM3-Omni-2B S3 (C1)** (released train/eval code via harness/lfm3_lc.py; C4 10,000
   texts; LFM3's own embedding synonyms; 3 seeds; MTEB STS mean of 9 tasks; results/lc_lfm3_sts_table.json):
   pretrained 44.17; NTP-only (lambda 0) 48.74, range 48.72-48.78; concept (lambda 1) 50.10, 50.07-50.14; randomized

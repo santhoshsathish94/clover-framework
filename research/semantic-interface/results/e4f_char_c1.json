@@ -1,0 +1,39 @@
+{
+ "experiment": "E4e char transformer",
+ "split": "c1",
+ "n_train_pairs": 74496,
+ "best_dev": 0.9487,
+ "test_acc": 0.9449,
+ "n_test": 19004,
+ "by_form_type": {
+  "past": 0.924,
+  "past_participle": 0.9282,
+  "gerund": 0.9436,
+  "third_singular": 0.9838
+ },
+ "error_sample": [
+  "backshone -> backshon (want backshine)",
+  "boobfed -> boob (want boobfeed)",
+  "coadding -> coad (want coadd)",
+  "coiffed -> coiff (want coiffe)",
+  "coquetting -> coquet (want coquette)",
+  "counterprogrammed -> counterprogram (want counterprogramme)",
+  "debiasing -> debiase (want debias)",
+  "forslouthed -> forslouth (want forslouthe)",
+  "irised -> irise (want iris)",
+  "munging -> munge (want mung)",
+  "outdrawn -> outdriw (want outdraw)",
+  "outslid -> outslid (want outslide)",
+  "outvied -> outvy (want outvie)",
+  "passing -> pass (want passe)",
+  "probed -> prob (want probe)",
+  "psyched -> psych (want psyche)",
+  "red -> reed (want rede)",
+  "restringing -> restring (want restringe)",
+  "rose -> rose (want rise)",
+  "subcloned -> subclon (want subclone)",
+  "talked -> talk (want talke)",
+  "teuk -> teak (want tyek)",
+  "ziptied -> zipty (want ziptie)"
+ ]
+}

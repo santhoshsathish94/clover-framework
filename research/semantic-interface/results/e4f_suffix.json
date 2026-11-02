@@ -1,0 +1,1602 @@
+{
+ "experiment": "E4c Morphology v2",
+ "n_verb_lemmas_4forms": 23755,
+ "n_noun_lemmas": 124236,
+ "n_adj_lemmas": 1864,
+ "n_irregular_verb_lemmas": 29,
+ "feature_set": "suffix",
+ "seeds": {
+  "folds": 101,
+  "endings": 103,
+  "nonce": 107
+ },
+ "c2_novel_endings_k4": {
+  "ending_letters": 4,
+  "held_out_endings": 1038,
+  "n_train_lemmas": 19220,
+  "n_test_lemmas": 4535,
+  "table": {
+   "all": {
+    "n": 18140,
+    "model": 0.854,
+    "component": 0.8524
+   },
+   "ambiguous": {
+    "n": 185,
+    "model": 0.2432,
+    "component": 0.0919
+   },
+   "gerund": {
+    "n": 4535,
+    "model": 0.8595,
+    "component": 0.8562
+   },
+   "irregular": {
+    "n": 32,
+    "model": 0.375,
+    "component": 0.375
+   },
+   "past": {
+    "n": 4535,
+    "model": 0.7974,
+    "component": 0.7963
+   },
+   "past_participle": {
+    "n": 4535,
+    "model": 0.8011,
+    "component": 0.7998
+   },
+   "regular": {
+    "n": 18108,
+    "model": 0.8548,
+    "component": 0.8533
+   },
+   "third_singular": {
+    "n": 4535,
+    "model": 0.9579,
+    "component": 0.9574
+   },
+   "unambiguous": {
+    "n": 17955,
+    "model": 0.8603,
+    "component": 0.8603
+   }
+  },
+  "errors": [
+   "abbreviated -> abbreviat (want abbreviate; unambiguous, regular)",
+   "abbreviated -> abbreviat (want abbreviate; unambiguous, regular)",
+   "abbreviating -> abbreviat (want abbreviate; unambiguous, regular)",
+   "abode -> abede (want abide; unambiguous, regular)",
+   "abode -> abede (want abide; unambiguous, regular)",
+   "absinthiated -> absinthiat (want absinthiate; unambiguous, regular)",
+   "absinthiated -> absinthiat (want absinthiate; unambiguous, regular)",
+   "absinthiating -> absinthiat (want absinthiate; unambiguous, regular)",
+   "accoupled -> accouplead (want accouple; unambiguous, regular)",
+   "accoupled -> accouplead (want accouple; unambiguous, regular)",
+   "accustomed -> accustome (want accustom; unambiguous, regular)",
+   "accustomed -> accustome (want accustom; unambiguous, regular)",
+   "accustoming -> accustome (want accustom; unambiguous, regular)",
+   "ached -> ach (want ache; unambiguous, regular)",
+   "ached -> ach (want ache; unambiguous, regular)",
+   "aching -> ach (want ache; unambiguous, regular)",
+   "aches -> ach (want ache; unambiguous, regular)",
+   "acronymed -> acronyme (want acronym; unambiguous, regular)",
+   "acronymed -> acronyme (want acronym; unambiguous, regular)",
+   "acronyming -> acronyme (want acronym; unambiguous, regular)",
+   "addressed -> addresse (want address; unambiguous, regular)",
+   "addressed -> addresse (want address; unambiguous, regular)",
+   "addresses -> addresse (want address; unambiguous, regular)",
+   "adiated -> adiat (want adiate; unambiguous, regular)",
+   "adiated -> adiat (want adiate; unambiguous, regular)"
+  ]
+ },
+ "c1_fold0": {
+  "n_train_lemmas": 19004,
+  "n_test_lemmas": 4751,
+  "table": {
+   "all": {
+    "n": 19004,
+    "model": 0.9569,
+    "component": 0.9526
+   },
+   "ambiguous": {
+    "n": 274,
+    "model": 0.4161,
+    "component": 0.1168
+   },
+   "gerund": {
+    "n": 4751,
+    "model": 0.9507,
+    "component": 0.9444
+   },
+   "irregular": {
+    "n": 36,
+    "model": 0.3611,
+    "component": 0.3611
+   },
+   "past": {
+    "n": 4751,
+    "model": 0.9438,
+    "component": 0.9392
+   },
+   "past_participle": {
+    "n": 4751,
+    "model": 0.9449,
+    "component": 0.9402
+   },
+   "regular": {
+    "n": 18968,
+    "model": 0.958,
+    "component": 0.9537
+   },
+   "third_singular": {
+    "n": 4751,
+    "model": 0.9882,
+    "component": 0.9865
+   },
+   "unambiguous": {
+    "n": 18730,
+    "model": 0.9648,
+    "component": 0.9648
+   }
+  },
+  "rule_baseline": 0.8128,
+  "errors": [
+   "abstringing -> abstring (want abstringe; unambiguous, regular)",
+   "accouched -> accouch (want accouche; unambiguous, regular)",
+   "accouched -> accouch (want accouche; unambiguous, regular)",
+   "accouching -> accouch (want accouche; unambiguous, regular)",
+   "accouches -> accouch (want accouche; unambiguous, regular)",
+   "alibied -> aliby (want alibi; unambiguous, regular)",
+   "alibied -> aliby (want alibi; unambiguous, regular)",
+   "aliquoted -> aliquote (want aliquot; unambiguous, regular)",
+   "aliquoted -> aliquote (want aliquot; unambiguous, regular)",
+   "aliquoting -> aliquote (want aliquot; unambiguous, regular)",
+   "alledged -> alledge (want alledg; ambiguous, regular)",
+   "alledged -> alledge (want alledg; ambiguous, regular)",
+   "alledging -> alledge (want alledg; ambiguous, regular)",
+   "alledges -> alledge (want alledg; ambiguous, regular)",
+   "alumed -> alume (want alum; unambiguous, regular)",
+   "alumed -> alume (want alum; unambiguous, regular)",
+   "aluming -> alume (want alum; unambiguous, regular)",
+   "amenused -> amenus (want amenuse; unambiguous, regular)",
+   "amenused -> amenus (want amenuse; unambiguous, regular)",
+   "amenusing -> amenus (want amenuse; unambiguous, regular)",
+   "amenuses -> amenus (want amenuse; unambiguous, regular)",
+   "ancestored -> ancestore (want ancestor; unambiguous, regular)",
+   "ancestored -> ancestore (want ancestor; unambiguous, regular)",
+   "aneled -> anel (want anele; unambiguous, regular)",
+   "aneled -> anel (want anele; unambiguous, regular)",
+   "aneling -> anel (want anele; unambiguous, regular)",
+   "annulling -> annull (want annul; unambiguous, regular)",
+   "answered -> answer (want answere; ambiguous, regular)",
+   "answered -> answer (want answere; ambiguous, regular)",
+   "answering -> answer (want answere; ambiguous, regular)",
+   "anthemed -> antheme (want anthem; unambiguous, regular)",
+   "anthemed -> antheme (want anthem; unambiguous, regular)",
+   "antheming -> antheme (want anthem; unambiguous, regular)",
+   "appeared -> appear (want appeare; unambiguous, regular)",
+   "appeared -> appear (want appeare; unambiguous, regular)",
+   "appearing -> appear (want appeare; unambiguous, regular)",
+   "aqualunged -> aqualunge (want aqualung; unambiguous, regular)",
+   "aqualunged -> aqualunge (want aqualung; unambiguous, regular)",
+   "aqualunging -> aqualunge (want aqualung; unambiguous, regular)",
+   "arced -> arce (want arc; unambiguous, regular)"
+  ],
+  "seconds": 211
+ },
+ "c2_novel_endings": {
+  "ending_letters": 3,
+  "held_out_endings": 331,
+  "n_train_lemmas": 19882,
+  "n_test_lemmas": 3873,
+  "table": {
+   "all": {
+    "n": 15492,
+    "model": 0.5558,
+    "component": 0.5557
+   },
+   "ambiguous": {
+    "n": 314,
+    "model": 0.1338,
+    "component": 0.1306
+   },
+   "gerund": {
+    "n": 3873,
+    "model": 0.4735,
+    "component": 0.4733
+   },
+   "irregular": {
+    "n": 16,
+    "model": 0.375,
+    "component": 0.375
+   },
+   "past": {
+    "n": 3873,
+    "model": 0.4407,
+    "component": 0.4407
+   },
+   "past_participle": {
+    "n": 3873,
+    "model": 0.4456,
+    "component": 0.4456
+   },
+   "regular": {
+    "n": 15476,
+    "model": 0.556,
+    "component": 0.5559
+   },
+   "third_singular": {
+    "n": 3873,
+    "model": 0.8632,
+    "component": 0.8632
+   },
+   "unambiguous": {
+    "n": 15178,
+    "model": 0.5645,
+    "component": 0.5645
+   }
+  },
+  "errors": [
+   "abore -> abeese (want abear; unambiguous, regular)",
+   "aborn -> abeese (want abear; unambiguous, regular)",
+   "abearing -> abeare (want abear; unambiguous, regular)",
+   "abjudged -> abjudg (want abjudge; unambiguous, regular)",
+   "abjudged -> abjudg (want abjudge; unambiguous, regular)",
+   "abjudging -> abjudg (want abjudge; unambiguous, regular)",
+   "abrenounced -> abrenounc (want abrenounce; unambiguous, regular)",
+   "abrenounced -> abrenounc (want abrenounce; unambiguous, regular)",
+   "abrenouncing -> abrenounc (want abrenounce; unambiguous, regular)",
+   "abridged -> abridg (want abridge; unambiguous, regular)",
+   "abridged -> abridg (want abridge; unambiguous, regular)",
+   "abridging -> abridg (want abridge; unambiguous, regular)",
+   "abused -> abus (want abuse; unambiguous, regular)",
+   "abused -> abus (want abuse; unambiguous, regular)",
+   "abusing -> abus (want abuse; unambiguous, regular)",
+   "abuses -> abus (want abuse; unambiguous, regular)",
+   "accompassed -> accompas (want accompass; unambiguous, regular)",
+   "accompassed -> accompas (want accompass; unambiguous, regular)",
+   "accompassing -> accompas (want accompass; unambiguous, regular)",
+   "accordioned -> accordione (want accordion; unambiguous, regular)",
+   "accordioned -> accordione (want accordion; unambiguous, regular)",
+   "accoupled -> accouplead (want accouple; unambiguous, regular)",
+   "accoupled -> accouplead (want accouple; unambiguous, regular)",
+   "accresced -> accresc (want accresce; unambiguous, regular)",
+   "accresced -> accresc (want accresce; unambiguous, regular)"
+  ]
+ },
+ "replication_4b": {
+  "seen": {
+   "n": 2000,
+   "model": 0.966,
+   "component": 0.935
+  },
+  "unseen": {
+   "n": 2000,
+   "model": 0.9665,
+   "component": 0.9615
+  }
+ },
+ "c1_fold1": {
+  "n_train_lemmas": 19004,
+  "n_test_lemmas": 4751,
+  "table": {
+   "all": {
+    "n": 19004,
+    "model": 0.9554,
+    "component": 0.9516
+   },
+   "ambiguous": {
+    "n": 272,
+    "model": 0.3824,
+    "component": 0.1176
+   },
+   "gerund": {
+    "n": 4751,
+    "model": 0.948,
+    "component": 0.9423
+   },
+   "irregular": {
+    "n": 24,
+    "model": 0.5833,
+    "component": 0.5833
+   },
+   "past": {
+    "n": 4751,
+    "model": 0.9423,
+    "component": 0.9381
+   },
+   "past_participle": {
+    "n": 4751,
+    "model": 0.9425,
+    "component": 0.9381
+   },
+   "regular": {
+    "n": 18980,
+    "model": 0.9559,
+    "component": 0.9521
+   },
+   "third_singular": {
+    "n": 4751,
+    "model": 0.9888,
+    "component": 0.988
+   },
+   "unambiguous": {
+    "n": 18732,
+    "model": 0.9638,
+    "component": 0.9638
+   }
+  },
+  "rule_baseline": 0.8105,
+  "errors": [
+   "ablaqueating -> ablaqueat (want ablaqueate; unambiguous, regular)",
+   "acquiting -> acquit (want acquite; unambiguous, regular)",
+   "added -> add (want adde; ambiguous, regular)",
+   "added -> add (want adde; ambiguous, regular)",
+   "adding -> add (want adde; ambiguous, regular)",
+   "adhering -> adher (want adhere; unambiguous, regular)",
+   "admined -> admine (want admin; unambiguous, regular)",
+   "admined -> admine (want admin; unambiguous, regular)",
+   "admining -> admine (want admin; unambiguous, regular)",
+   "adzed -> adze (want adz; ambiguous, regular)",
+   "adzed -> adze (want adz; ambiguous, regular)",
+   "adzing -> adze (want adz; ambiguous, regular)",
+   "adzes -> adze (want adz; ambiguous, regular)",
+   "annexed -> annexe (want annex; ambiguous, regular)",
+   "annexed -> annexe (want annex; ambiguous, regular)",
+   "annexing -> annexe (want annex; ambiguous, regular)",
+   "annexes -> annexe (want annex; ambiguous, regular)",
+   "answered -> answere (want answer; ambiguous, regular)",
+   "answered -> answere (want answer; ambiguous, regular)",
+   "answering -> answere (want answer; ambiguous, regular)",
+   "anticked -> antick (want antic; unambiguous, regular)",
+   "anticked -> antick (want antic; unambiguous, regular)",
+   "anticking -> antick (want antic; unambiguous, regular)",
+   "apostilled -> apostill (want apostille; unambiguous, regular)",
+   "apostilled -> apostill (want apostille; unambiguous, regular)",
+   "apostilling -> apostill (want apostille; unambiguous, regular)",
+   "autocompleting -> autocomplet (want autocomplete; unambiguous, regular)",
+   "awed -> aw (want awe; unambiguous, regular)",
+   "awed -> aw (want awe; unambiguous, regular)",
+   "awing -> aw (want awe; unambiguous, regular)",
+   "bandited -> bandite (want bandit; unambiguous, regular)",
+   "bandited -> bandite (want bandit; unambiguous, regular)",
+   "banditing -> bandite (want bandit; unambiguous, regular)",
+   "bathed -> bath (want bathe; ambiguous, regular)",
+   "bathed -> bath (want bathe; ambiguous, regular)",
+   "bathing -> bath (want bathe; ambiguous, regular)",
+   "bauffed -> bauff (want bauf; unambiguous, regular)",
+   "bauffed -> bauff (want bauf; unambiguous, regular)",
+   "bauffing -> bauff (want bauf; unambiguous, regular)",
+   "bade -> bake (want bede; unambiguous, regular)"
+  ],
+  "seconds": 273
+ },
+ "c1_fold2": {
+  "n_train_lemmas": 19004,
+  "n_test_lemmas": 4751,
+  "table": {
+   "all": {
+    "n": 19004,
+    "model": 0.9591,
+    "component": 0.9549
+   },
+   "ambiguous": {
+    "n": 217,
+    "model": 0.4101,
+    "component": 0.0415
+   },
+   "gerund": {
+    "n": 4751,
+    "model": 0.9497,
+    "component": 0.9434
+   },
+   "irregular": {
+    "n": 20,
+    "model": 0.45,
+    "component": 0.45
+   },
+   "past": {
+    "n": 4751,
+    "model": 0.9472,
+    "component": 0.9427
+   },
+   "past_participle": {
+    "n": 4751,
+    "model": 0.9484,
+    "component": 0.944
+   },
+   "regular": {
+    "n": 18984,
+    "model": 0.9597,
+    "component": 0.9554
+   },
+   "third_singular": {
+    "n": 4751,
+    "model": 0.9912,
+    "component": 0.9895
+   },
+   "unambiguous": {
+    "n": 18787,
+    "model": 0.9655,
+    "component": 0.9655
+   }
+  },
+  "rule_baseline": 0.8179,
+  "errors": [
+   "absoluing -> absolu (want absolue; unambiguous, regular)",
+   "added -> adde (want add; ambiguous, regular)",
+   "added -> adde (want add; ambiguous, regular)",
+   "adding -> adde (want add; ambiguous, regular)",
+   "adored -> ador (want adore; unambiguous, regular)",
+   "adored -> ador (want adore; unambiguous, regular)",
+   "adoring -> ador (want adore; unambiguous, regular)",
+   "adzed -> adz (want adze; ambiguous, regular)",
+   "adzed -> adz (want adze; ambiguous, regular)",
+   "adzing -> adz (want adze; ambiguous, regular)",
+   "adzes -> adz (want adze; ambiguous, regular)",
+   "aksed -> akse (want aks; unambiguous, regular)",
+   "aksed -> akse (want aks; unambiguous, regular)",
+   "aks -> ak (want aks; unambiguous, regular)",
+   "alegged -> aleg (want alegge; unambiguous, regular)",
+   "alegged -> aleg (want alegge; unambiguous, regular)",
+   "alegging -> aleg (want alegge; unambiguous, regular)",
+   "aliened -> alien (want aliene; ambiguous, regular)",
+   "aliened -> alien (want aliene; ambiguous, regular)",
+   "aliening -> alien (want aliene; ambiguous, regular)",
+   "allineating -> allineat (want allineate; unambiguous, regular)",
+   "allonged -> allong (want allonge; unambiguous, regular)",
+   "allonged -> allong (want allonge; unambiguous, regular)",
+   "allonging -> allong (want allonge; unambiguous, regular)",
+   "anted -> ante (want ant; ambiguous, regular)",
+   "anted -> ante (want ant; ambiguous, regular)",
+   "anvilling -> anvill (want anvil; unambiguous, regular)",
+   "appealled -> appeal (want appeall; unambiguous, regular)",
+   "appealled -> appeal (want appeall; unambiguous, regular)",
+   "aproned -> aprone (want apron; unambiguous, regular)",
+   "aproned -> aprone (want apron; unambiguous, regular)",
+   "aproning -> aprone (want apron; unambiguous, regular)",
+   "ared -> are (want aread; unambiguous, regular)",
+   "ared -> are (want aread; unambiguous, regular)",
+   "arquebused -> arquebuse (want arquebus; ambiguous, regular)",
+   "arquebused -> arquebuse (want arquebus; ambiguous, regular)",
+   "arquebusing -> arquebuse (want arquebus; ambiguous, regular)",
+   "arquebuses -> arquebuse (want arquebus; ambiguous, regular)",
+   "asked -> aske (want ask; ambiguous, regular)",
+   "asked -> aske (want ask; ambiguous, regular)"
+  ],
+  "seconds": 227
+ },
+ "c1_fold4": {
+  "n_train_lemmas": 19004,
+  "n_test_lemmas": 4751,
+  "table": {
+   "all": {
+    "n": 19004,
+    "model": 0.9587,
+    "component": 0.9557
+   },
+   "ambiguous": {
+    "n": 267,
+    "model": 0.3371,
+    "component": 0.1236
+   },
+   "gerund": {
+    "n": 4751,
+    "model": 0.9486,
+    "component": 0.9449
+   },
+   "irregular": {
+    "n": 16,
+    "model": 0.5,
+    "component": 0.5
+   },
+   "past": {
+    "n": 4751,
+    "model": 0.9484,
+    "component": 0.9446
+   },
+   "past_participle": {
+    "n": 4751,
+    "model": 0.948,
+    "component": 0.9442
+   },
+   "regular": {
+    "n": 18988,
+    "model": 0.9591,
+    "component": 0.9561
+   },
+   "third_singular": {
+    "n": 4751,
+    "model": 0.9897,
+    "component": 0.9891
+   },
+   "unambiguous": {
+    "n": 18737,
+    "model": 0.9676,
+    "component": 0.9676
+   }
+  },
+  "rule_baseline": 0.8118,
+  "errors": [
+   "abode -> abede (want abide; unambiguous, regular)",
+   "abode -> abede (want abide; unambiguous, regular)",
+   "abought -> abegge (want abuy; ambiguous, regular)",
+   "abought -> abegge (want abuy; ambiguous, regular)",
+   "abought -> abegge (want aby; ambiguous, regular)",
+   "abought -> abegge (want aby; ambiguous, regular)",
+   "abought -> abegge (want abye; ambiguous, regular)",
+   "abought -> abegge (want abye; ambiguous, regular)",
+   "abying -> aby (want abye; ambiguous, regular)",
+   "accusing -> accus (want accuse; unambiguous, regular)",
+   "accustomed -> accustome (want accustom; unambiguous, regular)",
+   "accustomed -> accustome (want accustom; unambiguous, regular)",
+   "accustoming -> accustome (want accustom; unambiguous, regular)",
+   "adjudged -> adjudge (want adjudg; ambiguous, regular)",
+   "adjudged -> adjudge (want adjudg; ambiguous, regular)",
+   "adjudging -> adjudge (want adjudg; ambiguous, regular)",
+   "adjudges -> adjudge (want adjudg; ambiguous, regular)",
+   "aerosoled -> aerosole (want aerosol; unambiguous, regular)",
+   "aerosoled -> aerosole (want aerosol; unambiguous, regular)",
+   "aerosoling -> aerosole (want aerosol; unambiguous, regular)",
+   "allemanded -> allemand (want allemande; unambiguous, regular)",
+   "allemanded -> allemand (want allemande; unambiguous, regular)",
+   "allemanding -> allemand (want allemande; unambiguous, regular)",
+   "anchored -> anchore (want anchor; unambiguous, regular)",
+   "anchored -> anchore (want anchor; unambiguous, regular)",
+   "anchoring -> anchore (want anchor; unambiguous, regular)",
+   "anted -> ant (want ante; ambiguous, regular)",
+   "anted -> ant (want ante; ambiguous, regular)",
+   "arquebused -> arquebus (want arquebuse; ambiguous, regular)",
+   "arquebused -> arquebus (want arquebuse; ambiguous, regular)",
+   "arquebusing -> arquebus (want arquebuse; ambiguous, regular)",
+   "arquebuses -> arquebus (want arquebuse; ambiguous, regular)",
+   "arranging -> arrang (want arrange; unambiguous, regular)",
+   "asked -> ask (want aske; ambiguous, regular)",
+   "asked -> ask (want aske; ambiguous, regular)",
+   "asking -> ask (want aske; ambiguous, regular)",
+   "assoilzied -> assoilzy (want assoilzie; unambiguous, regular)",
+   "assoilzied -> assoilzy (want assoilzie; unambiguous, regular)",
+   "assoilzies -> assoilzy (want assoilzie; unambiguous, regular)",
+   "atened -> aten (want atene; unambiguous, regular)"
+  ],
+  "seconds": 196
+ },
+ "c1_fold3": {
+  "n_train_lemmas": 19004,
+  "n_test_lemmas": 4751,
+  "table": {
+   "all": {
+    "n": 19004,
+    "model": 0.9624,
+    "component": 0.9605
+   },
+   "ambiguous": {
+    "n": 230,
+    "model": 0.2391,
+    "component": 0.0783
+   },
+   "gerund": {
+    "n": 4751,
+    "model": 0.9562,
+    "component": 0.9516
+   },
+   "irregular": {
+    "n": 20,
+    "model": 0.35,
+    "component": 0.35
+   },
+   "past": {
+    "n": 4751,
+    "model": 0.9522,
+    "component": 0.9507
+   },
+   "past_participle": {
+    "n": 4751,
+    "model": 0.9518,
+    "component": 0.9503
+   },
+   "regular": {
+    "n": 18984,
+    "model": 0.9631,
+    "component": 0.9611
+   },
+   "third_singular": {
+    "n": 4751,
+    "model": 0.9895,
+    "component": 0.9893
+   },
+   "unambiguous": {
+    "n": 18774,
+    "model": 0.9713,
+    "component": 0.9713
+   }
+  },
+  "rule_baseline": 0.8156,
+  "errors": [
+   "abought -> abuy (want abegge; ambiguous, regular)",
+   "abought -> abuy (want abegge; ambiguous, regular)",
+   "abegging -> abeg (want abegge; unambiguous, regular)",
+   "accinging -> accing (want accinge; unambiguous, regular)",
+   "ached -> ach (want ache; unambiguous, regular)",
+   "ached -> ach (want ache; unambiguous, regular)",
+   "aching -> ach (want ache; unambiguous, regular)",
+   "aches -> ach (want ache; unambiguous, regular)",
+   "agrised -> agris (want agrise; unambiguous, regular)",
+   "agrised -> agris (want agrise; unambiguous, regular)",
+   "agrises -> agris (want agrise; unambiguous, regular)",
+   "amused -> amus (want amuse; unambiguous, regular)",
+   "amused -> amus (want amuse; unambiguous, regular)",
+   "amuses -> amus (want amuse; unambiguous, regular)",
+   "annexed -> annex (want annexe; ambiguous, regular)",
+   "annexed -> annex (want annexe; ambiguous, regular)",
+   "annexing -> annex (want annexe; ambiguous, regular)",
+   "annexes -> annex (want annexe; ambiguous, regular)",
+   "appalling -> appall (want appal; unambiguous, regular)",
+   "aroze -> areeze (want arize; unambiguous, irregular)",
+   "assailed -> assail (want assaile; unambiguous, regular)",
+   "assailed -> assail (want assaile; unambiguous, regular)",
+   "assailing -> assail (want assaile; unambiguous, regular)",
+   "astringing -> astring (want astringe; unambiguous, regular)",
+   "automatised -> roboticise (want automatise; ambiguous, regular)",
+   "automatised -> roboticise (want automatise; ambiguous, regular)",
+   "automatising -> roboticise (want automatise; ambiguous, regular)",
+   "automatises -> roboticise (want automatise; ambiguous, regular)",
+   "balladed -> ballade (want ballad; unambiguous, regular)",
+   "balladed -> ballade (want ballad; unambiguous, regular)",
+   "ballading -> ballade (want ballad; unambiguous, regular)",
+   "ballockses -> ballockse (want ballocks; unambiguous, regular)",
+   "beachballing -> beachbal (want beachball; unambiguous, regular)",
+   "beating -> beate (want beat; unambiguous, regular)",
+   "beckoned -> beckone (want beckon; unambiguous, regular)",
+   "beckoned -> beckone (want beckon; unambiguous, regular)",
+   "beclept -> becleep (want beclepe; unambiguous, regular)",
+   "beclept -> becleep (want beclepe; unambiguous, regular)",
+   "bedeviling -> bedevile (want bedevil; unambiguous, regular)",
+   "befound -> befoind (want befind; unambiguous, regular)"
+  ],
+  "seconds": 306
+ },
+ "c6_fold0": {
+  "table": {
+   "all": {
+    "n": 19004,
+    "model": 0.9753,
+    "component": 0.9753
+   },
+   "past": {
+    "n": 4751,
+    "model": 0.9634,
+    "component": 0.9634
+   },
+   "past_participle": {
+    "n": 4751,
+    "model": 0.9625,
+    "component": 0.9625
+   },
+   "gerund": {
+    "n": 4751,
+    "model": 0.9796,
+    "component": 0.9796
+   },
+   "third_singular": {
+    "n": 4751,
+    "model": 0.9958,
+    "component": 0.9958
+   }
+  },
+  "error_categories": {
+   "other": 118,
+   "doubling or e (one letter)": 336,
+   "irregular": 15
+  }
+ },
+ "c6_fold1": {
+  "table": {
+   "all": {
+    "n": 19004,
+    "model": 0.9766,
+    "component": 0.9766
+   },
+   "past": {
+    "n": 4751,
+    "model": 0.9655,
+    "component": 0.9655
+   },
+   "past_participle": {
+    "n": 4751,
+    "model": 0.9644,
+    "component": 0.9644
+   },
+   "gerund": {
+    "n": 4751,
+    "model": 0.9811,
+    "component": 0.9811
+   },
+   "third_singular": {
+    "n": 4751,
+    "model": 0.9956,
+    "component": 0.9956
+   }
+  },
+  "error_categories": {
+   "other": 135,
+   "doubling or e (one letter)": 300,
+   "irregular": 9
+  }
+ },
+ "c7_noun_fold0": {
+  "table": {
+   "all": {
+    "n": 24850,
+    "model": 0.9716,
+    "component": 0.9701
+   },
+   "ambiguous": {
+    "n": 577,
+    "model": 0.1023,
+    "component": 0.0347
+   },
+   "unambiguous": {
+    "n": 24273,
+    "model": 0.9923,
+    "component": 0.9923
+   }
+  },
+  "errors": [
+   "abilities -> ability (want abilitie; unambiguous, regular)",
+   "acuities -> acuitie (want acuity; unambiguous, regular)",
+   "uncountable -> undress (want adipometry; ambiguous, regular)",
+   "countable -> dress (want advantage; ambiguous, regular)",
+   "adzes -> adze (want adz; ambiguous, regular)",
+   "uncountable -> undress (want aft; ambiguous, regular)",
+   "uncountable -> undress (want aggro; ambiguous, regular)",
+   "uncountable -> undress (want agroinjection; ambiguous, regular)",
+   "alkies -> alkie (want alky; ambiguous, regular)",
+   "countable -> dress (want allowance; ambiguous, regular)",
+   "countable -> dress (want allure; ambiguous, regular)",
+   "ambies -> ambie (want amby; unambiguous, regular)",
+   "countable -> dress (want amnesty; ambiguous, regular)",
+   "annexes -> annexe (want annex; ambiguous, regular)",
+   "apophyses -> apophys (want apophyse; unambiguous, regular)"
+  ]
+ },
+ "c6_fold2": {
+  "table": {
+   "all": {
+    "n": 19004,
+    "model": 0.9782,
+    "component": 0.9782
+   },
+   "past": {
+    "n": 4751,
+    "model": 0.9674,
+    "component": 0.9674
+   },
+   "past_participle": {
+    "n": 4751,
+    "model": 0.9663,
+    "component": 0.9663
+   },
+   "gerund": {
+    "n": 4751,
+    "model": 0.9825,
+    "component": 0.9825
+   },
+   "third_singular": {
+    "n": 4751,
+    "model": 0.9966,
+    "component": 0.9966
+   }
+  },
+  "error_categories": {
+   "other": 124,
+   "doubling or e (one letter)": 284,
+   "irregular": 6
+  }
+ },
+ "c6_fold3": {
+  "table": {
+   "all": {
+    "n": 19004,
+    "model": 0.9791,
+    "component": 0.9791
+   },
+   "past": {
+    "n": 4751,
+    "model": 0.9691,
+    "component": 0.9691
+   },
+   "past_participle": {
+    "n": 4751,
+    "model": 0.9665,
+    "component": 0.9665
+   },
+   "gerund": {
+    "n": 4751,
+    "model": 0.9836,
+    "component": 0.9836
+   },
+   "third_singular": {
+    "n": 4751,
+    "model": 0.9973,
+    "component": 0.9973
+   }
+  },
+  "error_categories": {
+   "doubling or e (one letter)": 263,
+   "other": 125,
+   "irregular": 9
+  }
+ },
+ "c7_noun_fold1": {
+  "table": {
+   "all": {
+    "n": 24847,
+    "model": 0.9718,
+    "component": 0.9699
+   },
+   "ambiguous": {
+    "n": 573,
+    "model": 0.1082,
+    "component": 0.0279
+   },
+   "unambiguous": {
+    "n": 24274,
+    "model": 0.9922,
+    "component": 0.9922
+   }
+  },
+  "errors": [
+   "countable -> care (want aba; ambiguous, regular)",
+   "abnormies -> abnormy (want abnormie; unambiguous, regular)",
+   "abraxases -> abraxase (want abraxas; unambiguous, regular)",
+   "countable -> care (want acacia; ambiguous, regular)",
+   "aeries -> aerie (want aery; ambiguous, regular)",
+   "countable -> care (want affection; ambiguous, regular)",
+   "afties -> aftie (want afty; unambiguous, regular)",
+   "uncountable -> uncare (want aggress; ambiguous, regular)",
+   "countable -> care (want agitprop; ambiguous, regular)",
+   "albumoses -> albumos (want albumose; unambiguous, regular)",
+   "ambries -> ambrie (want ambry; unambiguous, regular)",
+   "ancestries -> ancestrie (want ancestry; ambiguous, regular)",
+   "anthemises -> anthemise (want anthemis; unambiguous, regular)",
+   "apologies -> apologie (want apology; ambiguous, regular)",
+   "uncountable -> uncare (want argal; ambiguous, regular)"
+  ]
+ },
+ "c7_noun_fold4": {
+  "table": {
+   "all": {
+    "n": 24847,
+    "model": 0.9712,
+    "component": 0.9698
+   },
+   "ambiguous": {
+    "n": 561,
+    "model": 0.0998,
+    "component": 0.0374
+   },
+   "unambiguous": {
+    "n": 24286,
+    "model": 0.9914,
+    "component": 0.9914
+   }
+  },
+  "errors": [
+   "uncountable -> unnature (want abgusht; ambiguous, regular)",
+   "countable -> nature (want acquittance; ambiguous, regular)",
+   "countable -> nature (want adventure; ambiguous, regular)",
+   "countable -> nature (want age; ambiguous, regular)",
+   "countable -> nature (want aggie; ambiguous, regular)",
+   "countable -> nature (want aggregate; ambiguous, regular)",
+   "uncountable -> unnature (want aguise; ambiguous, regular)",
+   "countable -> nature (want alliance; ambiguous, regular)",
+   "uncountable -> unnature (want alt; ambiguous, regular)",
+   "countable -> nature (want alum; ambiguous, regular)",
+   "annexes -> annex (want annexe; ambiguous, regular)",
+   "anteclises -> anteclis (want anteclise; unambiguous, regular)",
+   "anticommies -> anticommy (want anticommie; unambiguous, regular)",
+   "countable -> nature (want antiseize; ambiguous, regular)",
+   "apologies -> apology (want apologie; ambiguous, regular)"
+  ]
+ },
+ "c7_adj_fold0": {
+  "table": {
+   "all": {
+    "n": 750,
+    "model": 0.9027,
+    "component": 0.888
+   },
+   "ambiguous": {
+    "n": 59,
+    "model": 0.2712,
+    "component": 0.0847
+   },
+   "unambiguous": {
+    "n": 691,
+    "model": 0.9566,
+    "component": 0.9566
+   }
+  },
+  "errors": [
+   "benat -> be (want ben; ambiguous, regular)",
+   "benar -> ben (want bene; ambiguous, regular)",
+   "benat -> be (want bene; ambiguous, regular)",
+   "blither -> blith (want blithe; unambiguous, regular)",
+   "blithest -> blith (want blithe; unambiguous, regular)",
+   "bougier -> bougy (want bougie; unambiguous, regular)",
+   "bougiest -> bougy (want bougie; unambiguous, regular)",
+   "cagier -> cagy (want cagey; ambiguous, regular)",
+   "cagiest -> cagy (want cagey; ambiguous, regular)",
+   "calicoes -> calic (want calico; unambiguous, regular)",
+   "uncountable -> uncounta (want calico; ambiguous, regular)",
+   "chocolatier -> chocolaty (want chocolatey; ambiguous, regular)",
+   "chocolatiest -> chocolaty (want chocolatey; ambiguous, regular)",
+   "cliquier -> cliquy (want cliquey; ambiguous, regular)",
+   "cliquiest -> cliquy (want cliquey; ambiguous, regular)"
+  ]
+ },
+ "c7_adj_fold1": {
+  "table": {
+   "all": {
+    "n": 751,
+    "model": 0.8668,
+    "component": 0.8535
+   },
+   "ambiguous": {
+    "n": 63,
+    "model": 0.2857,
+    "component": 0.127
+   },
+   "unambiguous": {
+    "n": 688,
+    "model": 0.9201,
+    "component": 0.9201
+   }
+  },
+  "errors": [
+   "blater -> blat (want blate; unambiguous, regular)",
+   "blatest -> blat (want blate; unambiguous, regular)",
+   "bolshier -> bolshy (want bolshie; ambiguous, regular)",
+   "bolshiest -> bolshy (want bolshie; ambiguous, regular)",
+   "bonier -> bony (want boney; ambiguous, regular)",
+   "boniest -> bony (want boney; ambiguous, regular)",
+   "cakier -> caky (want cakey; ambiguous, regular)",
+   "cakiest -> caky (want cakey; ambiguous, regular)",
+   "cockier -> cocky (want cockie; ambiguous, regular)",
+   "cockiest -> cocky (want cockie; ambiguous, regular)",
+   "cringier -> cringy (want cringey; unambiguous, regular)",
+   "cringiest -> cringy (want cringey; unambiguous, regular)",
+   "dickier -> dickey (want dicky; ambiguous, regular)",
+   "dickiest -> dickey (want dicky; ambiguous, regular)",
+   "douchier -> douchy (want douchey; ambiguous, regular)"
+  ]
+ },
+ "c7_adj_fold2": {
+  "table": {
+   "all": {
+    "n": 748,
+    "model": 0.9104,
+    "component": 0.8917
+   },
+   "ambiguous": {
+    "n": 48,
+    "model": 0.3333,
+    "component": 0.0417
+   },
+   "unambiguous": {
+    "n": 700,
+    "model": 0.95,
+    "component": 0.95
+   }
+  },
+  "errors": [
+   "further -> furth (want away; ambiguous, regular)",
+   "furthest -> furth (want away; ambiguous, regular)",
+   "bittier -> bittie (want bitty; ambiguous, regular)",
+   "bittiest -> bittie (want bitty; ambiguous, regular)",
+   "blued -> blu (want blue; unambiguous, regular)",
+   "cagier -> cagey (want cagy; ambiguous, regular)",
+   "cagiest -> cagey (want cagy; ambiguous, regular)",
+   "cakier -> cakey (want caky; ambiguous, regular)",
+   "cakiest -> cakey (want caky; ambiguous, regular)",
+   "chavvier -> chavvie (want chavvy; ambiguous, regular)",
+   "chavviest -> chavvie (want chavvy; ambiguous, regular)",
+   "cliquier -> cliquey (want cliquy; ambiguous, regular)",
+   "cliquiest -> cliquey (want cliquy; ambiguous, regular)",
+   "cosier -> cosy (want cosie; ambiguous, regular)",
+   "cosiest -> cosy (want cosie; ambiguous, regular)"
+  ]
+ },
+ "c7_adj_fold3": {
+  "table": {
+   "all": {
+    "n": 750,
+    "model": 0.9027,
+    "component": 0.892
+   },
+   "ambiguous": {
+    "n": 40,
+    "model": 0.3,
+    "component": 0.1
+   },
+   "unambiguous": {
+    "n": 710,
+    "model": 0.9366,
+    "component": 0.9366
+   }
+  },
+  "errors": [
+   "bolshier -> bolshie (want bolshy; ambiguous, regular)",
+   "bolshiest -> bolshie (want bolshy; ambiguous, regular)",
+   "chaster -> chast (want chaste; unambiguous, regular)",
+   "chastest -> chast (want chaste; unambiguous, regular)",
+   "chavvier -> chavvy (want chavvie; ambiguous, regular)",
+   "chavviest -> chavvy (want chavvie; ambiguous, regular)",
+   "chocolatier -> chocolatey (want chocolaty; ambiguous, regular)",
+   "chocolatiest -> chocolatey (want chocolaty; ambiguous, regular)",
+   "cockier -> cockie (want cocky; ambiguous, regular)",
+   "cockiest -> cockie (want cocky; ambiguous, regular)",
+   "informal -> infor (want cocky; unambiguous, regular)",
+   "crasser -> cras (want crass; unambiguous, regular)",
+   "crassest -> cras (want crass; unambiguous, regular)",
+   "deerer -> deer (want deere; unambiguous, regular)",
+   "deerest -> deer (want deere; unambiguous, regular)"
+  ]
+ },
+ "c7_adj_fold4": {
+  "table": {
+   "all": {
+    "n": 754,
+    "model": 0.8952,
+    "component": 0.8846
+   },
+   "ambiguous": {
+    "n": 50,
+    "model": 0.28,
+    "component": 0.12
+   },
+   "unambiguous": {
+    "n": 704,
+    "model": 0.9389,
+    "component": 0.9389
+   }
+  },
+  "errors": [
+   "worse -> wor (want bad; unambiguous, regular)",
+   "worst -> wor (want bad; unambiguous, regular)",
+   "bitier -> bity (want bitey; unambiguous, regular)",
+   "bitiest -> bity (want bitey; unambiguous, regular)",
+   "bittier -> bitty (want bittie; ambiguous, regular)",
+   "bittiest -> bitty (want bittie; ambiguous, regular)",
+   "clayier -> clayy (want clayey; unambiguous, regular)",
+   "clayiest -> clayy (want clayey; unambiguous, regular)",
+   "cosier -> cosie (want cosy; ambiguous, regular)",
+   "cosiest -> cosie (want cosy; ambiguous, regular)",
+   "crosser -> crosse (want cross; unambiguous, regular)",
+   "cuuutest -> cuuut (want cuuute; unambiguous, regular)",
+   "debbier -> debbie (want debby; unambiguous, regular)",
+   "deffer -> deff (want def; unambiguous, regular)",
+   "deffest -> deff (want def; unambiguous, regular)"
+  ]
+ },
+ "c7_noun_fold3": {
+  "table": {
+   "all": {
+    "n": 24848,
+    "model": 0.973,
+    "component": 0.9706
+   },
+   "ambiguous": {
+    "n": 577,
+    "model": 0.13,
+    "component": 0.0277
+   },
+   "unambiguous": {
+    "n": 24271,
+    "model": 0.993,
+    "component": 0.993
+   }
+  },
+  "errors": [
+   "uncountable -> uncause (want able; ambiguous, regular)",
+   "abscisses -> abscisse (want absciss; unambiguous, regular)",
+   "countable -> cause (want access; ambiguous, regular)",
+   "uncountable -> uncause (want accuse; ambiguous, regular)",
+   "uncountable -> uncause (want acupuncture; ambiguous, regular)",
+   "addies -> addie (want addy; unambiguous, regular)",
+   "countable -> cause (want admin; ambiguous, regular)",
+   "adzes -> adz (want adze; ambiguous, regular)",
+   "countable -> cause (want aerodontalgia; ambiguous, regular)",
+   "uncountable -> uncause (want agida; ambiguous, regular)",
+   "alties -> alty (want altie; unambiguous, regular)",
+   "uncountable -> uncause (want amaze; ambiguous, regular)",
+   "ancestries -> ancestry (want ancestrie; ambiguous, regular)",
+   "anchovies -> anchovie (want anchovy; unambiguous, regular)",
+   "anties -> anty (want antie; unambiguous, regular)"
+  ]
+ },
+ "c7_noun_fold2": {
+  "table": {
+   "all": {
+    "n": 24847,
+    "model": 0.973,
+    "component": 0.9708
+   },
+   "ambiguous": {
+    "n": 548,
+    "model": 0.1314,
+    "component": 0.031
+   },
+   "unambiguous": {
+    "n": 24299,
+    "model": 0.992,
+    "component": 0.992
+   }
+  },
+  "errors": [
+   "countable -> hate (want abuse; ambiguous, regular)",
+   "aeries -> aery (want aerie; ambiguous, regular)",
+   "affies -> affie (want affy; unambiguous, regular)",
+   "uncountable -> unhate (want aggrace; ambiguous, regular)",
+   "agouties -> agoutie (want agouty; unambiguous, regular)",
+   "countable -> hate (want ague; ambiguous, regular)",
+   "alkies -> alky (want alkie; ambiguous, regular)",
+   "almadies -> almady (want almadie; unambiguous, regular)",
+   "apalises -> apalise (want apalis; unambiguous, regular)",
+   "archdioceses -> archdioces (want archdiocese; unambiguous, regular)",
+   "archies -> archy (want archie; unambiguous, regular)",
+   "uncountable -> unhate (want armshouse; ambiguous, regular)",
+   "armies -> armie (want army; ambiguous, regular)",
+   "arquebuses -> arquebus (want arquebuse; ambiguous, regular)",
+   "arrases -> arrase (want arras; unambiguous, regular)"
+  ]
+ },
+ "c6_fold4": {
+  "table": {
+   "all": {
+    "n": 19004,
+    "model": 0.9744,
+    "component": 0.9744
+   },
+   "past": {
+    "n": 4751,
+    "model": 0.963,
+    "component": 0.963
+   },
+   "past_participle": {
+    "n": 4751,
+    "model": 0.9609,
+    "component": 0.9609
+   },
+   "gerund": {
+    "n": 4751,
+    "model": 0.9779,
+    "component": 0.9779
+   },
+   "third_singular": {
+    "n": 4751,
+    "model": 0.996,
+    "component": 0.996
+   }
+  },
+  "error_categories": {
+   "other": 136,
+   "doubling or e (one letter)": 347,
+   "irregular": 3
+  }
+ },
+ "c3_c4_full": {
+  "c3_nonce": {
+   "doubling": {
+    "n": 400,
+    "analysis": 0.99,
+    "generation": 0.905,
+    "errors": [
+     "jen/past_participle: analyse jenned->jen; generate ->jened (want jenned)",
+     "vot/past: analyse votted->votte; generate ->votted (want votted)",
+     "vot/past_participle: analyse votted->votte; generate ->votted (want votted)",
+     "squot/past: analyse squotted->squot; generate ->squoted (want squotted)",
+     "squot/past_participle: analyse squotted->squot; generate ->squoted (want squotted)",
+     "squot/gerund: analyse squotting->squot; generate ->squoting (want squotting)"
+    ]
+   },
+   "cluster": {
+    "n": 400,
+    "analysis": 0.995,
+    "generation": 0.99,
+    "errors": [
+     "thrend/past: analyse thrended->thrend; generate ->thrent (want thrended)",
+     "thrend/past_participle: analyse thrended->thrend; generate ->thrent (want thrended)",
+     "brend/past: analyse brended->brend; generate ->brent (want brended)",
+     "brend/past_participle: analyse brended->brend; generate ->brent (want brended)",
+     "nast/past: analyse nasted->naste; generate ->nasted (want nasted)",
+     "nast/past_participle: analyse nasted->naste; generate ->nasted (want nasted)"
+    ]
+   },
+   "silent_e": {
+    "n": 400,
+    "analysis": 0.925,
+    "generation": 0.9925,
+    "errors": [
+     "strupe/past: analyse struped->strup; generate ->struped (want struped)",
+     "strupe/past_participle: analyse struped->strup; generate ->struped (want struped)",
+     "strupe/gerund: analyse struping->strup; generate ->struping (want struping)",
+     "spuve/gerund: analyse spuving->spuv; generate ->spuving (want spuving)",
+     "thupe/past: analyse thuped->thup; generate ->thuped (want thuped)",
+     "thupe/past_participle: analyse thuped->thup; generate ->thuped (want thuped)"
+    ]
+   },
+   "consonant_y": {
+    "n": 400,
+    "analysis": 0.9975,
+    "generation": 1.0,
+    "errors": [
+     "naddy/third_singular: analyse naddies->naddie; generate ->naddies (want naddies)"
+    ]
+   },
+   "sibilant": {
+    "n": 400,
+    "analysis": 0.9425,
+    "generation": 1.0,
+    "errors": [
+     "shruch/past: analyse shruched->shruche; generate ->shruched (want shruched)",
+     "shruch/past_participle: analyse shruched->shruche; generate ->shruched (want shruched)",
+     "shruch/third_singular: analyse shruches->shruche; generate ->shruches (want shruches)",
+     "sloch/past: analyse sloched->sloche; generate ->sloched (want sloched)",
+     "sloch/past_participle: analyse sloched->sloche; generate ->sloched (want sloched)",
+     "sloch/third_singular: analyse sloches->sloche; generate ->sloches (want sloches)"
+    ]
+   },
+   "ck": {
+    "n": 400,
+    "analysis": 0.985,
+    "generation": 1.0,
+    "errors": [
+     "gick/past: analyse gicked->gic; generate ->gicked (want gicked)",
+     "gick/past_participle: analyse gicked->gic; generate ->gicked (want gicked)",
+     "fick/past: analyse ficked->fic; generate ->ficked (want ficked)",
+     "fick/past_participle: analyse ficked->fic; generate ->ficked (want ficked)",
+     "vock/past: analyse vocked->voc; generate ->vocked (want vocked)",
+     "vock/past_participle: analyse vocked->voc; generate ->vocked (want vocked)"
+    ]
+   },
+   "vowel_wy": {
+    "n": 400,
+    "analysis": 0.905,
+    "generation": 0.9875,
+    "errors": [
+     "brey/past: analyse breyed->breye; generate ->breyed (want breyed)",
+     "brey/past_participle: analyse breyed->breye; generate ->breyed (want breyed)",
+     "brey/gerund: analyse breying->breye; generate ->breying (want breying)",
+     "straw/past_participle: analyse strawed->straw; generate ->strawn (want strawed)",
+     "crey/past: analyse creyed->creye; generate ->creyed (want creyed)",
+     "crey/past_participle: analyse creyed->creye; generate ->creyed (want creyed)"
+    ]
+   },
+   "_all": {
+    "analysis": 0.9629,
+    "generation": 0.9821,
+    "n": 2800,
+    "rule_baseline": 0.9961
+   }
+  },
+  "c4_ewt": {
+   "n_tokens": 2580,
+   "n_in_unimorph": 2164,
+   "systems": {
+    "csi_morphology": {
+     "all": {
+      "n": 2580,
+      "acc": 0.9112
+     },
+     "lemma_in_unimorph": {
+      "n": 2164,
+      "acc": 0.9445
+     },
+     "lemma_not_in_unimorph": {
+      "n": 416,
+      "acc": 0.738
+     }
+    },
+    "en_core_web_trf": {
+     "all": {
+      "n": 2580,
+      "acc": 0.9667
+     },
+     "lemma_in_unimorph": {
+      "n": 2164,
+      "acc": 0.9672
+     },
+     "lemma_not_in_unimorph": {
+      "n": 416,
+      "acc": 0.9639
+     }
+    }
+   },
+   "component_errors": [
+    "added -> ad (want add)",
+    "adding -> ad (want add)",
+    "amplifiaed -> amplifia (want amplify)",
+    "appeared -> appeare (want appear)",
+    "been -> bee (want be)",
+    "belonged -> belonge (want belong)",
+    "commiting -> commite (want commit)",
+    "confirmed -> confirme (want confirm)",
+    "conrfirmed -> conrfirm (want confirm)",
+    "deposited -> deposite (want deposit)",
+    "developed -> develope (want develop)",
+    "developiong -> developi (want develop)",
+    "est -> est (want estimate)",
+    "feared -> feare (want fear)",
+    "fearing -> feare (want fear)",
+    "fixed -> fixe (want fix)",
+    "forbade -> forbede (want forbid)",
+    "found -> foind (want find)",
+    "geiven -> geive (want give)",
+    "gon -> gin (want go)",
+    "gotten -> git (want get)",
+    "had -> haue (want have)",
+    "influnced -> influnce (want influence)",
+    "installed -> instal (want install)",
+    "is -> i (want be)",
+    "lied -> ly (want lie)",
+    "mimicking -> mimick (want mimic)",
+    "name -> num (want name)",
+    "playing -> playe (want play)",
+    "proven -> preave (want prove)",
+    "ran -> rin (want run)",
+    "recomended -> recomend (want recommend)",
+    "red -> rede (want read)",
+    "regarded -> regarde (want regard)",
+    "regarding -> regarde (want regard)",
+    "response -> respoise (want respond)",
+    "ruined -> ruine (want ruin)",
+    "run -> rin (want run)",
+    "s ->  (want be)",
+    "sailed -> saile (want sail)"
+   ]
+  },
+  "exceptions": 1133,
+  "nonce_examples": {
+   "doubling": [
+    [
+     "dwom",
+     {
+      "past": "dwommed",
+      "past_participle": "dwommed",
+      "gerund": "dwomming",
+      "third_singular": "dwoms"
+     }
+    ],
+    [
+     "plem",
+     {
+      "past": "plemmed",
+      "past_participle": "plemmed",
+      "gerund": "plemming",
+      "third_singular": "plems"
+     }
+    ],
+    [
+     "chag",
+     {
+      "past": "chagged",
+      "past_participle": "chagged",
+      "gerund": "chagging",
+      "third_singular": "chags"
+     }
+    ]
+   ],
+   "cluster": [
+    [
+     "dost",
+     {
+      "past": "dosted",
+      "past_participle": "dosted",
+      "gerund": "dosting",
+      "third_singular": "dosts"
+     }
+    ],
+    [
+     "spesk",
+     {
+      "past": "spesked",
+      "past_participle": "spesked",
+      "gerund": "spesking",
+      "third_singular": "spesks"
+     }
+    ],
+    [
+     "duft",
+     {
+      "past": "dufted",
+      "past_participle": "dufted",
+      "gerund": "dufting",
+      "third_singular": "dufts"
+     }
+    ]
+   ],
+   "silent_e": [
+    [
+     "shrude",
+     {
+      "past": "shruded",
+      "past_participle": "shruded",
+      "gerund": "shruding",
+      "third_singular": "shrudes"
+     }
+    ],
+    [
+     "strupe",
+     {
+      "past": "struped",
+      "past_participle": "struped",
+      "gerund": "struping",
+      "third_singular": "strupes"
+     }
+    ],
+    [
+     "skube",
+     {
+      "past": "skubed",
+      "past_participle": "skubed",
+      "gerund": "skubing",
+      "third_singular": "skubes"
+     }
+    ]
+   ],
+   "consonant_y": [
+    [
+     "critty",
+     {
+      "past": "crittied",
+      "past_participle": "crittied",
+      "gerund": "crittying",
+      "third_singular": "critties"
+     }
+    ],
+    [
+     "thutty",
+     {
+      "past": "thuttied",
+      "past_participle": "thuttied",
+      "gerund": "thuttying",
+      "third_singular": "thutties"
+     }
+    ],
+    [
+     "tronny",
+     {
+      "past": "tronnied",
+      "past_participle": "tronnied",
+      "gerund": "tronnying",
+      "third_singular": "tronnies"
+     }
+    ]
+   ],
+   "sibilant": [
+    [
+     "spush",
+     {
+      "past": "spushed",
+      "past_participle": "spushed",
+      "gerund": "spushing",
+      "third_singular": "spushes"
+     }
+    ],
+    [
+     "shruch",
+     {
+      "past": "shruched",
+      "past_participle": "shruched",
+      "gerund": "shruching",
+      "third_singular": "shruches"
+     }
+    ],
+    [
+     "sloch",
+     {
+      "past": "sloched",
+      "past_participle": "sloched",
+      "gerund": "sloching",
+      "third_singular": "sloches"
+     }
+    ]
+   ],
+   "ck": [
+    [
+     "zuck",
+     {
+      "past": "zucked",
+      "past_participle": "zucked",
+      "gerund": "zucking",
+      "third_singular": "zucks"
+     }
+    ],
+    [
+     "tweck",
+     {
+      "past": "twecked",
+      "past_participle": "twecked",
+      "gerund": "twecking",
+      "third_singular": "twecks"
+     }
+    ],
+    [
+     "smeck",
+     {
+      "past": "smecked",
+      "past_participle": "smecked",
+      "gerund": "smecking",
+      "third_singular": "smecks"
+     }
+    ]
+   ],
+   "vowel_wy": [
+    [
+     "brey",
+     {
+      "past": "breyed",
+      "past_participle": "breyed",
+      "gerund": "breying",
+      "third_singular": "breys"
+     }
+    ],
+    [
+     "swow",
+     {
+      "past": "swowed",
+      "past_participle": "swowed",
+      "gerund": "swowing",
+      "third_singular": "swows"
+     }
+    ],
+    [
+     "glaw",
+     {
+      "past": "glawed",
+      "past_participle": "glawed",
+      "gerund": "glawing",
+      "third_singular": "glaws"
+     }
+    ]
+   ]
+  }
+ },
+ "c5_learned_not_trivial": {
+  "curve": {
+   "0.01": {
+    "n_train_lemmas": 190,
+    "model": 0.866
+   },
+   "0.03": {
+    "n_train_lemmas": 570,
+    "model": 0.893
+   },
+   "0.1": {
+    "n_train_lemmas": 1900,
+    "model": 0.9373
+   },
+   "0.3": {
+    "n_train_lemmas": 5701,
+    "model": 0.9495
+   },
+   "1.0": {
+    "n_train_lemmas": 19004,
+    "model": 0.9569
+   }
+  },
+  "ablation_max_len": {
+   "2": 0.6691,
+   "3": 0.7569,
+   "4": 0.8914
+  },
+  "shuffled_label_control": 0.4622,
+  "majority_edit_baseline": 0.51,
+  "majority_edit_per_form_type": 0.6541,
+  "rule_baseline": 0.8128
+ },
+ "seconds": 1274
+}

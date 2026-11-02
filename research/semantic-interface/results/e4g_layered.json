@@ -1,0 +1,315 @@
+{
+ "experiment": "E4g Morphology v3 (layered)",
+ "n_verb_lemmas_4forms": 23755,
+ "n_noun_lemmas": 124236,
+ "n_adj_lemmas": 1864,
+ "n_irregular_verb_lemmas": 29,
+ "feature_set": "suffix",
+ "seeds": {
+  "folds": 11,
+  "endings": 13,
+  "nonce": 19
+ },
+ "g_nonce": {
+  "doubling": {
+   "n": 400,
+   "n_lemmas": 100,
+   "layered": 0.9925,
+   "morphology_alone": 0.995,
+   "errors": [
+    "skibs -> ski (want skib; morphology alone skib)",
+    "zetted -> zette (want zet; morphology alone zette)",
+    "zetted -> zette (want zet; morphology alone zette)"
+   ]
+  },
+  "cluster": {
+   "n": 400,
+   "n_lemmas": 100,
+   "layered": 0.95,
+   "morphology_alone": 1.0,
+   "errors": [
+    "spinded -> spin (want spind; morphology alone spind)",
+    "spinded -> spin (want spind; morphology alone spind)",
+    "spinding -> spin (want spind; morphology alone spind)",
+    "spinds -> spin (want spind; morphology alone spind)",
+    "ginded -> gin (want gind; morphology alone gind)",
+    "ginded -> gin (want gind; morphology alone gind)"
+   ]
+  },
+  "silent_e": {
+   "n": 400,
+   "n_lemmas": 100,
+   "layered": 0.8825,
+   "morphology_alone": 0.96,
+   "errors": [
+    "cluped -> clup (want clupe; morphology alone clup)",
+    "cluped -> clup (want clupe; morphology alone clup)",
+    "cluping -> clup (want clupe; morphology alone clup)",
+    "bubed -> bub (want bube; morphology alone bub)",
+    "bubed -> bub (want bube; morphology alone bub)",
+    "bubing -> bub (want bube; morphology alone bub)"
+   ]
+  },
+  "consonant_y": {
+   "n": 400,
+   "n_lemmas": 100,
+   "layered": 1.0,
+   "morphology_alone": 1.0,
+   "errors": []
+  },
+  "sibilant": {
+   "n": 400,
+   "n_lemmas": 100,
+   "layered": 0.955,
+   "morphology_alone": 0.9625,
+   "errors": [
+    "snached -> snache (want snach; morphology alone snache)",
+    "snached -> snache (want snach; morphology alone snache)",
+    "snaches -> snache (want snach; morphology alone snache)",
+    "thruched -> thruche (want thruch; morphology alone thruche)",
+    "thruched -> thruche (want thruch; morphology alone thruche)",
+    "thruches -> thruche (want thruch; morphology alone thruche)"
+   ]
+  },
+  "ck": {
+   "n": 400,
+   "n_lemmas": 100,
+   "layered": 0.985,
+   "morphology_alone": 0.985,
+   "errors": [
+    "vocked -> voc (want vock; morphology alone voc)",
+    "vocked -> voc (want vock; morphology alone voc)",
+    "ficked -> fic (want fick; morphology alone fic)",
+    "ficked -> fic (want fick; morphology alone fic)",
+    "gicked -> gic (want gick; morphology alone gic)",
+    "gicked -> gic (want gick; morphology alone gic)"
+   ]
+  },
+  "vowel_wy": {
+   "n": 400,
+   "n_lemmas": 100,
+   "layered": 0.925,
+   "morphology_alone": 0.94,
+   "errors": [
+    "breyed -> breye (want brey; morphology alone breye)",
+    "breyed -> breye (want brey; morphology alone breye)",
+    "breying -> breye (want brey; morphology alone breye)",
+    "creyed -> creye (want crey; morphology alone creye)",
+    "creyed -> creye (want crey; morphology alone creye)",
+    "creying -> creye (want crey; morphology alone creye)"
+   ]
+  },
+  "_all": {
+   "layered": 0.9557,
+   "morphology_alone": 0.9775,
+   "n": 2800
+  }
+ },
+ "g_layered": {
+  "gum": {
+   "n_sentences": 3039,
+   "layer_source": {
+    "known": 5244,
+    "listed": 1034,
+    "unknown": 184
+   },
+   "by_class": {
+    "verb": {
+     "n": 3439,
+     "gold_known_to_dictionary": 0.9953,
+     "systems": {
+      "layered": 0.9878,
+      "morphology_alone": 0.9311,
+      "component_4c": 0.9279,
+      "en_core_web_trf": 0.9602,
+      "en_core_web_sm": 0.9494
+     }
+    },
+    "noun": {
+     "n": 2798,
+     "gold_known_to_dictionary": 0.9821,
+     "systems": {
+      "layered": 0.9439,
+      "morphology_alone": 0.9271,
+      "component_4c": 0.916,
+      "en_core_web_trf": 0.9407,
+      "en_core_web_sm": 0.9332
+     }
+    },
+    "adj": {
+     "n": 225,
+     "gold_known_to_dictionary": 1.0,
+     "systems": {
+      "layered": 0.6622,
+      "morphology_alone": 0.4978,
+      "component_4c": 0.4978,
+      "en_core_web_trf": 0.9022,
+      "en_core_web_sm": 0.8889
+     }
+    }
+   },
+   "verb_errors_by_layer": {
+    "another known candidate chosen": 34,
+    "gold unknown to dictionary": 4,
+    "gold not among morphology candidates": 4
+   },
+   "verb_errors": [
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "embedded -> embed (want embd; gold unknown to dictionary)",
+    "encl -> encl (want enclose; gold not among morphology candidates)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "pending -> pen (want pend; gold unknown to dictionary)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "premiered -> premier (want premiere; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "set -> set (want sit; another known candidate chosen)",
+    "set -> set (want sit; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "flew -> fly (want flead; gold unknown to dictionary)",
+    "preceeding -> preceed (want precede; gold not among morphology candidates)",
+    "lives -> live (want life; gold unknown to dictionary)",
+    "recognises -> recognise (want recognize; gold not among morphology candidates)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "gon -> gin (want go; another known candidate chosen)"
+   ]
+  },
+  "pud": {
+   "n_sentences": 1000,
+   "layer_source": {
+    "listed": 482,
+    "known": 2215,
+    "unknown": 65
+   },
+   "by_class": {
+    "verb": {
+     "n": 1579,
+     "gold_known_to_dictionary": 0.9994,
+     "systems": {
+      "layered": 0.9994,
+      "morphology_alone": 0.9322,
+      "component_4c": 0.9291,
+      "en_core_web_trf": 0.9791,
+      "en_core_web_sm": 0.9709
+     }
+    },
+    "noun": {
+     "n": 1090,
+     "gold_known_to_dictionary": 0.9817,
+     "systems": {
+      "layered": 0.9183,
+      "morphology_alone": 0.9018,
+      "component_4c": 0.8844,
+      "en_core_web_trf": 0.9477,
+      "en_core_web_sm": 0.944
+     }
+    },
+    "adj": {
+     "n": 93,
+     "gold_known_to_dictionary": 1.0,
+     "systems": {
+      "layered": 0.5376,
+      "morphology_alone": 0.4301,
+      "component_4c": 0.4301,
+      "en_core_web_trf": 0.957,
+      "en_core_web_sm": 0.9355
+     }
+    }
+   },
+   "verb_errors_by_layer": {
+    "another known candidate chosen": 1
+   },
+   "verb_errors": [
+    "appalled -> appal (want appall; another known candidate chosen)"
+   ]
+  },
+  "ewt_devtest_development": {
+   "n_sentences": 4078,
+   "layer_source": {
+    "known": 3594,
+    "listed": 880,
+    "unknown": 185
+   },
+   "by_class": {
+    "verb": {
+     "n": 2580,
+     "gold_known_to_dictionary": 0.9977,
+     "systems": {
+      "layered": 0.9938,
+      "morphology_alone": 0.914,
+      "component_4c": 0.9078,
+      "en_core_web_trf": 0.9667,
+      "en_core_web_sm": 0.9578
+     }
+    },
+    "noun": {
+     "n": 1811,
+     "gold_known_to_dictionary": 0.9608,
+     "systems": {
+      "layered": 0.8995,
+      "morphology_alone": 0.8912,
+      "component_4c": 0.8829,
+      "en_core_web_trf": 0.9426,
+      "en_core_web_sm": 0.931
+     }
+    },
+    "adj": {
+     "n": 268,
+     "gold_known_to_dictionary": 0.9963,
+     "systems": {
+      "layered": 0.75,
+      "morphology_alone": 0.2612,
+      "component_4c": 0.2612,
+      "en_core_web_trf": 0.8955,
+      "en_core_web_sm": 0.791
+     }
+    }
+   },
+   "verb_errors_by_layer": {
+    "another known candidate chosen": 3,
+    "gold not among morphology candidates": 13
+   },
+   "verb_errors": [
+    "red -> rede (want read; another known candidate chosen)",
+    "undrstood -> undrstand (want understand; gold not among morphology candidates)",
+    "influnced -> influnce (want influence; gold not among morphology candidates)",
+    "est -> est (want estimate; gold not among morphology candidates)",
+    "soing -> so (want do; gold not among morphology candidates)",
+    "geiven -> geive (want give; gold not among morphology candidates)",
+    "amplifiaed -> amplifia (want amplify; gold not among morphology candidates)",
+    "gon -> gin (want go; another known candidate chosen)",
+    "conrfirmed -> conrfirm (want confirm; gold not among morphology candidates)",
+    "s ->  (want be; gold not among morphology candidates)",
+    "s ->  (want be; gold not among morphology candidates)",
+    "usint -> usin (want use; gold not among morphology candidates)",
+    "response -> respoise (want respond; gold not among morphology candidates)",
+    "installed -> instal (want install; another known candidate chosen)",
+    "visted -> vist (want visit; gold not among morphology candidates)",
+    "recomended -> recomend (want recommend; gold not among morphology candidates)"
+   ]
+  }
+ },
+ "seconds": 432
+}

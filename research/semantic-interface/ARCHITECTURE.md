@@ -17,6 +17,13 @@ tested. Stage 2 (experiential process understanding) is out of scope.
 Principle: written parts stay small, listed and measured; whenever a written part fails measurably, the next experiment
 replaces it with a learned one. Every field records which layer and which component produced it.
 
+Layer model (human, 2026-11-02; **a core CSI design principle**, decided by the human after Experiment 4g): **Dictionary** = what a word means (L4, OEWN; also which words exist and their
+listed irregular forms); **Morphology** = how a word is constructed and changes (the learned component
+`csi/morphology.py`, split out of L1); **Grammar** = how words function together (L2 and the correspondences of L3);
+**Semantics** = what the resulting expression means (L3 propositions, L5, L6). Each layer is validated on its own job,
+and a layer does not absorb another's knowledge: lemmatisation composes Grammar (class), Morphology (ranked
+candidates) and Dictionary (`csi/dictionary.py`, Experiment 4g).
+
 ## 2. Interface contract v0.1 (model-independent; JSON)
 
 `analyze(text) -> Analysis`

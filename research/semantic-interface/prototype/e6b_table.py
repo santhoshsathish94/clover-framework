@@ -13,13 +13,18 @@ def load(p):
     return json.load(open(p)) if os.path.exists(p) else None
 
 
-def s1_cases(run_dir):
+def s1_cases(run_dir, summary=None):
     by, tot = {}, [0, 0, 0]
-    shards = sorted(glob.glob(os.path.join(run_dir, "eval_gen_shard*of3.json")))
+    if summary is not None:
+        files = {k: v for k, v in summary.items() if k.startswith("eval_gen_shard")}
+        shards = [files[k] for k in sorted(files)]
+        test = summary.get("eval_test_shard0of1.json")
+    else:
+        shards = [json.load(open(f)) for f in sorted(glob.glob(os.path.join(run_dir, "eval_gen_shard*of3.json")))]
+        test = load(os.path.join(run_dir, "eval_test_shard0of1.json"))
     if len(shards) != 3:
         return None, None
-    for f in shards:
-        r = json.load(open(f))
+    for r in shards:
         for case, v in r["by_case"].items():
             b = by.setdefault(case, [0, 0, 0])
             b[0] += v["n"]
@@ -28,7 +33,6 @@ def s1_cases(run_dir):
     for v in by.values():
         for i in range(3):
             tot[i] += v[i]
-    test = load(os.path.join(run_dir, "eval_test_shard0of1.json"))
     out = {c: {"lf": v[1] / v[0], "role": v[2] / v[0]} for c, v in by.items()}
     out["_gen"] = {"lf": tot[1] / tot[0], "role": tot[2] / tot[0]}
     if test:
@@ -50,12 +54,18 @@ def main():
     if r:
         cols["S2"] = {c: v["role_exact_6a"] for c, v in r["gen"]["by_case"].items()}
         cols["S2"]["_gen"], cols["S2"]["_test"] = r["gen"]["role_exact_6a"], r["test"]["role_exact_6a"]
+    r = load(os.path.join(d, "e6b_s2b_trf.json"))
+    if r:
+        cols["S2b(post-hoc)"] = {c: v["role_exact_6a"] for c, v in r["gen"]["by_case"].items()}
+        cols["S2b(post-hoc)"]["_gen"], cols["S2b(post-hoc)"]["_test"] = r["gen"]["role_exact_6a"], r["test"]["role_exact_6a"]
     s1 = []
-    for run in sys.argv[2:]:
-        o, _ = s1_cases(run)
+    summary = load(os.path.join(d, "e6b_s1_summary.json")) or {}
+    runs = [(k, None, v) for k, v in summary.items()] + [(os.path.basename(p), p, None) for p in sys.argv[2:]]
+    for name, path, summ in runs:
+        o, _ = s1_cases(path, summ)
         if o:
             s1.append(o)
-            cols[f"S1-{os.path.basename(run)}"] = {c: v["role"] for c, v in o.items()}
+            cols[f"S1-{name}"] = {c: v["role"] for c, v in o.items()}
     if s1:
         cases = set.intersection(*(set(o) for o in s1))
         cols["S1-mean"] = {c: sum(o[c]["role"] for o in s1) / len(s1) for c in cases}

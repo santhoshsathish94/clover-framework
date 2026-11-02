@@ -1,0 +1,1153 @@
+{
+ "cogs_s1": {
+  "eval_gen_shard0of3.json": {
+   "n": 7000,
+   "lf_exact": 0.806,
+   "role_exact": 0.9039,
+   "by_case": {
+    "active_to_passive": {
+     "n": 345,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "cp_recursion": {
+     "n": 347,
+     "lf_exact": 0.0115,
+     "role_exact": 0.5533
+    },
+    "do_dative_to_pp_dative": {
+     "n": 315,
+     "lf_exact": 0.9683,
+     "role_exact": 0.9968
+    },
+    "obj_omitted_transitive_to_transitive": {
+     "n": 331,
+     "lf_exact": 0.994,
+     "role_exact": 0.997
+    },
+    "obj_pp_to_subj_pp": {
+     "n": 356,
+     "lf_exact": 0.0028,
+     "role_exact": 0.5028
+    },
+    "obj_to_subj_common": {
+     "n": 334,
+     "lf_exact": 0.988,
+     "role_exact": 1.0
+    },
+    "obj_to_subj_proper": {
+     "n": 329,
+     "lf_exact": 0.9909,
+     "role_exact": 1.0
+    },
+    "only_seen_as_transitive_subj_as_unacc_subj": {
+     "n": 340,
+     "lf_exact": 0.9824,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_obj_omitted_transitive_subj": {
+     "n": 319,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_unerg_subj": {
+     "n": 329,
+     "lf_exact": 0.9939,
+     "role_exact": 1.0
+    },
+    "passive_to_active": {
+     "n": 334,
+     "lf_exact": 0.994,
+     "role_exact": 1.0
+    },
+    "pp_dative_to_do_dative": {
+     "n": 318,
+     "lf_exact": 0.9623,
+     "role_exact": 0.9969
+    },
+    "pp_recursion": {
+     "n": 338,
+     "lf_exact": 0.145,
+     "role_exact": 0.8047
+    },
+    "prim_to_inf_arg": {
+     "n": 335,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_common": {
+     "n": 358,
+     "lf_exact": 0.9832,
+     "role_exact": 0.9972
+    },
+    "prim_to_obj_proper": {
+     "n": 336,
+     "lf_exact": 0.622,
+     "role_exact": 0.6667
+    },
+    "prim_to_subj_common": {
+     "n": 331,
+     "lf_exact": 0.9909,
+     "role_exact": 1.0
+    },
+    "prim_to_subj_proper": {
+     "n": 328,
+     "lf_exact": 0.9909,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_common": {
+     "n": 338,
+     "lf_exact": 0.9734,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_proper": {
+     "n": 329,
+     "lf_exact": 0.6292,
+     "role_exact": 0.6687
+    },
+    "unacc_to_transitive": {
+     "n": 310,
+     "lf_exact": 0.8065,
+     "role_exact": 0.8387
+    }
+   },
+   "split": "gen",
+   "shard": "0/3",
+   "seconds": 1965.2
+  },
+  "eval_gen_shard1of3.json": {
+   "n": 7000,
+   "lf_exact": 0.8147,
+   "role_exact": 0.907,
+   "by_case": {
+    "active_to_passive": {
+     "n": 329,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "cp_recursion": {
+     "n": 304,
+     "lf_exact": 0.023,
+     "role_exact": 0.5395
+    },
+    "do_dative_to_pp_dative": {
+     "n": 351,
+     "lf_exact": 0.9715,
+     "role_exact": 0.9943
+    },
+    "obj_omitted_transitive_to_transitive": {
+     "n": 331,
+     "lf_exact": 0.994,
+     "role_exact": 1.0
+    },
+    "obj_pp_to_subj_pp": {
+     "n": 307,
+     "lf_exact": 0.0,
+     "role_exact": 0.5342
+    },
+    "obj_to_subj_common": {
+     "n": 304,
+     "lf_exact": 0.9836,
+     "role_exact": 1.0
+    },
+    "obj_to_subj_proper": {
+     "n": 344,
+     "lf_exact": 0.9913,
+     "role_exact": 0.9971
+    },
+    "only_seen_as_transitive_subj_as_unacc_subj": {
+     "n": 324,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_obj_omitted_transitive_subj": {
+     "n": 352,
+     "lf_exact": 0.983,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_unerg_subj": {
+     "n": 352,
+     "lf_exact": 0.983,
+     "role_exact": 1.0
+    },
+    "passive_to_active": {
+     "n": 329,
+     "lf_exact": 0.9878,
+     "role_exact": 1.0
+    },
+    "pp_dative_to_do_dative": {
+     "n": 343,
+     "lf_exact": 0.9679,
+     "role_exact": 0.9971
+    },
+    "pp_recursion": {
+     "n": 336,
+     "lf_exact": 0.1518,
+     "role_exact": 0.7946
+    },
+    "prim_to_inf_arg": {
+     "n": 346,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_common": {
+     "n": 324,
+     "lf_exact": 0.9691,
+     "role_exact": 0.9969
+    },
+    "prim_to_obj_proper": {
+     "n": 327,
+     "lf_exact": 0.5902,
+     "role_exact": 0.6514
+    },
+    "prim_to_subj_common": {
+     "n": 360,
+     "lf_exact": 0.9833,
+     "role_exact": 1.0
+    },
+    "prim_to_subj_proper": {
+     "n": 339,
+     "lf_exact": 0.9912,
+     "role_exact": 0.9971
+    },
+    "subj_to_obj_common": {
+     "n": 314,
+     "lf_exact": 0.9873,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_proper": {
+     "n": 331,
+     "lf_exact": 0.6012,
+     "role_exact": 0.6465
+    },
+    "unacc_to_transitive": {
+     "n": 353,
+     "lf_exact": 0.796,
+     "role_exact": 0.8244
+    }
+   },
+   "split": "gen",
+   "shard": "1/3",
+   "seconds": 1846.1
+  },
+  "eval_gen_shard2of3.json": {
+   "n": 7000,
+   "lf_exact": 0.8083,
+   "role_exact": 0.9054,
+   "by_case": {
+    "active_to_passive": {
+     "n": 326,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "cp_recursion": {
+     "n": 349,
+     "lf_exact": 0.0172,
+     "role_exact": 0.49
+    },
+    "do_dative_to_pp_dative": {
+     "n": 334,
+     "lf_exact": 0.979,
+     "role_exact": 0.994
+    },
+    "obj_omitted_transitive_to_transitive": {
+     "n": 338,
+     "lf_exact": 0.997,
+     "role_exact": 1.0
+    },
+    "obj_pp_to_subj_pp": {
+     "n": 337,
+     "lf_exact": 0.0,
+     "role_exact": 0.5401
+    },
+    "obj_to_subj_common": {
+     "n": 362,
+     "lf_exact": 0.9862,
+     "role_exact": 1.0
+    },
+    "obj_to_subj_proper": {
+     "n": 327,
+     "lf_exact": 0.9908,
+     "role_exact": 1.0
+    },
+    "only_seen_as_transitive_subj_as_unacc_subj": {
+     "n": 336,
+     "lf_exact": 0.9821,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_obj_omitted_transitive_subj": {
+     "n": 329,
+     "lf_exact": 0.9848,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_unerg_subj": {
+     "n": 319,
+     "lf_exact": 0.9906,
+     "role_exact": 1.0
+    },
+    "passive_to_active": {
+     "n": 337,
+     "lf_exact": 0.9941,
+     "role_exact": 1.0
+    },
+    "pp_dative_to_do_dative": {
+     "n": 339,
+     "lf_exact": 0.9617,
+     "role_exact": 0.9971
+    },
+    "pp_recursion": {
+     "n": 326,
+     "lf_exact": 0.1288,
+     "role_exact": 0.8221
+    },
+    "prim_to_inf_arg": {
+     "n": 319,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_common": {
+     "n": 318,
+     "lf_exact": 0.9811,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_proper": {
+     "n": 337,
+     "lf_exact": 0.6528,
+     "role_exact": 0.6944
+    },
+    "prim_to_subj_common": {
+     "n": 309,
+     "lf_exact": 0.9871,
+     "role_exact": 1.0
+    },
+    "prim_to_subj_proper": {
+     "n": 333,
+     "lf_exact": 0.991,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_common": {
+     "n": 348,
+     "lf_exact": 0.9598,
+     "role_exact": 0.9943
+    },
+    "subj_to_obj_proper": {
+     "n": 340,
+     "lf_exact": 0.6618,
+     "role_exact": 0.7059
+    },
+    "unacc_to_transitive": {
+     "n": 337,
+     "lf_exact": 0.7804,
+     "role_exact": 0.8131
+    }
+   },
+   "split": "gen",
+   "shard": "2/3",
+   "seconds": 1877.4
+  },
+  "eval_test_shard0of1.json": {
+   "n": 3000,
+   "lf_exact": 0.9943,
+   "role_exact": 0.9997,
+   "by_case": {
+    "in_distribution": {
+     "n": 3000,
+     "lf_exact": 0.9943,
+     "role_exact": 0.9997
+    }
+   },
+   "split": "test",
+   "shard": "0/1",
+   "seconds": 253.4
+  },
+  "best": {
+   "epoch": 3,
+   "dev": {
+    "n": 3000,
+    "lf_exact": 0.995,
+    "role_exact": 0.9993
+   },
+   "args": {
+    "mode": "train",
+    "data": "/workspace/csi/data/COGS/data",
+    "out": "/workspace/csi/runs/cogs_s1",
+    "epochs": 3,
+    "rank": 16,
+    "lr": 0.0002,
+    "token_budget": 4096,
+    "limit": 0,
+    "dev_limit": 0,
+    "split": "test",
+    "shard": "0/1"
+   }
+  }
+ },
+ "cogs_s1_seed2": {
+  "eval_gen_shard0of3.json": {
+   "n": 7000,
+   "lf_exact": 0.8177,
+   "role_exact": 0.9137,
+   "by_case": {
+    "active_to_passive": {
+     "n": 345,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "cp_recursion": {
+     "n": 347,
+     "lf_exact": 0.0202,
+     "role_exact": 0.4841
+    },
+    "do_dative_to_pp_dative": {
+     "n": 315,
+     "lf_exact": 0.9746,
+     "role_exact": 1.0
+    },
+    "obj_omitted_transitive_to_transitive": {
+     "n": 331,
+     "lf_exact": 0.997,
+     "role_exact": 1.0
+    },
+    "obj_pp_to_subj_pp": {
+     "n": 356,
+     "lf_exact": 0.0,
+     "role_exact": 0.4579
+    },
+    "obj_to_subj_common": {
+     "n": 334,
+     "lf_exact": 0.988,
+     "role_exact": 1.0
+    },
+    "obj_to_subj_proper": {
+     "n": 329,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "only_seen_as_transitive_subj_as_unacc_subj": {
+     "n": 340,
+     "lf_exact": 0.9941,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_obj_omitted_transitive_subj": {
+     "n": 319,
+     "lf_exact": 0.9812,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_unerg_subj": {
+     "n": 329,
+     "lf_exact": 0.9878,
+     "role_exact": 1.0
+    },
+    "passive_to_active": {
+     "n": 334,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "pp_dative_to_do_dative": {
+     "n": 318,
+     "lf_exact": 0.9623,
+     "role_exact": 1.0
+    },
+    "pp_recursion": {
+     "n": 338,
+     "lf_exact": 0.1213,
+     "role_exact": 0.784
+    },
+    "prim_to_inf_arg": {
+     "n": 335,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_common": {
+     "n": 358,
+     "lf_exact": 0.9832,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_proper": {
+     "n": 336,
+     "lf_exact": 0.6845,
+     "role_exact": 0.7917
+    },
+    "prim_to_subj_common": {
+     "n": 331,
+     "lf_exact": 0.997,
+     "role_exact": 1.0
+    },
+    "prim_to_subj_proper": {
+     "n": 328,
+     "lf_exact": 0.9939,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_common": {
+     "n": 338,
+     "lf_exact": 0.9763,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_proper": {
+     "n": 329,
+     "lf_exact": 0.7052,
+     "role_exact": 0.7933
+    },
+    "unacc_to_transitive": {
+     "n": 310,
+     "lf_exact": 0.9161,
+     "role_exact": 0.9323
+    }
+   },
+   "split": "gen",
+   "shard": "0/3",
+   "seconds": 1812.0
+  },
+  "eval_gen_shard1of3.json": {
+   "n": 7000,
+   "lf_exact": 0.8291,
+   "role_exact": 0.9286,
+   "by_case": {
+    "active_to_passive": {
+     "n": 329,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "cp_recursion": {
+     "n": 304,
+     "lf_exact": 0.0329,
+     "role_exact": 0.523
+    },
+    "do_dative_to_pp_dative": {
+     "n": 351,
+     "lf_exact": 0.9658,
+     "role_exact": 0.9943
+    },
+    "obj_omitted_transitive_to_transitive": {
+     "n": 331,
+     "lf_exact": 0.994,
+     "role_exact": 1.0
+    },
+    "obj_pp_to_subj_pp": {
+     "n": 307,
+     "lf_exact": 0.0,
+     "role_exact": 0.5537
+    },
+    "obj_to_subj_common": {
+     "n": 304,
+     "lf_exact": 0.9934,
+     "role_exact": 1.0
+    },
+    "obj_to_subj_proper": {
+     "n": 344,
+     "lf_exact": 0.9884,
+     "role_exact": 1.0
+    },
+    "only_seen_as_transitive_subj_as_unacc_subj": {
+     "n": 324,
+     "lf_exact": 0.9907,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_obj_omitted_transitive_subj": {
+     "n": 352,
+     "lf_exact": 0.9801,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_unerg_subj": {
+     "n": 352,
+     "lf_exact": 0.9773,
+     "role_exact": 1.0
+    },
+    "passive_to_active": {
+     "n": 329,
+     "lf_exact": 0.9878,
+     "role_exact": 1.0
+    },
+    "pp_dative_to_do_dative": {
+     "n": 343,
+     "lf_exact": 0.9796,
+     "role_exact": 1.0
+    },
+    "pp_recursion": {
+     "n": 336,
+     "lf_exact": 0.1369,
+     "role_exact": 0.8095
+    },
+    "prim_to_inf_arg": {
+     "n": 346,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_common": {
+     "n": 324,
+     "lf_exact": 0.9599,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_proper": {
+     "n": 327,
+     "lf_exact": 0.6667,
+     "role_exact": 0.7798
+    },
+    "prim_to_subj_common": {
+     "n": 360,
+     "lf_exact": 0.9861,
+     "role_exact": 1.0
+    },
+    "prim_to_subj_proper": {
+     "n": 339,
+     "lf_exact": 0.9912,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_common": {
+     "n": 314,
+     "lf_exact": 0.9713,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_proper": {
+     "n": 331,
+     "lf_exact": 0.7341,
+     "role_exact": 0.8308
+    },
+    "unacc_to_transitive": {
+     "n": 353,
+     "lf_exact": 0.9178,
+     "role_exact": 0.932
+    }
+   },
+   "split": "gen",
+   "shard": "1/3",
+   "seconds": 1681.1
+  },
+  "eval_gen_shard2of3.json": {
+   "n": 7000,
+   "lf_exact": 0.8243,
+   "role_exact": 0.9199,
+   "by_case": {
+    "active_to_passive": {
+     "n": 326,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "cp_recursion": {
+     "n": 349,
+     "lf_exact": 0.0201,
+     "role_exact": 0.5014
+    },
+    "do_dative_to_pp_dative": {
+     "n": 334,
+     "lf_exact": 0.979,
+     "role_exact": 0.994
+    },
+    "obj_omitted_transitive_to_transitive": {
+     "n": 338,
+     "lf_exact": 0.997,
+     "role_exact": 1.0
+    },
+    "obj_pp_to_subj_pp": {
+     "n": 337,
+     "lf_exact": 0.003,
+     "role_exact": 0.4896
+    },
+    "obj_to_subj_common": {
+     "n": 362,
+     "lf_exact": 0.9862,
+     "role_exact": 1.0
+    },
+    "obj_to_subj_proper": {
+     "n": 327,
+     "lf_exact": 0.9878,
+     "role_exact": 1.0
+    },
+    "only_seen_as_transitive_subj_as_unacc_subj": {
+     "n": 336,
+     "lf_exact": 0.994,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_obj_omitted_transitive_subj": {
+     "n": 329,
+     "lf_exact": 0.9848,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_unerg_subj": {
+     "n": 319,
+     "lf_exact": 0.9875,
+     "role_exact": 1.0
+    },
+    "passive_to_active": {
+     "n": 337,
+     "lf_exact": 0.9911,
+     "role_exact": 1.0
+    },
+    "pp_dative_to_do_dative": {
+     "n": 339,
+     "lf_exact": 0.9617,
+     "role_exact": 0.9971
+    },
+    "pp_recursion": {
+     "n": 326,
+     "lf_exact": 0.1227,
+     "role_exact": 0.7669
+    },
+    "prim_to_inf_arg": {
+     "n": 319,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_common": {
+     "n": 318,
+     "lf_exact": 0.9843,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_proper": {
+     "n": 337,
+     "lf_exact": 0.73,
+     "role_exact": 0.8131
+    },
+    "prim_to_subj_common": {
+     "n": 309,
+     "lf_exact": 0.9935,
+     "role_exact": 1.0
+    },
+    "prim_to_subj_proper": {
+     "n": 333,
+     "lf_exact": 0.988,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_common": {
+     "n": 348,
+     "lf_exact": 0.9598,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_proper": {
+     "n": 340,
+     "lf_exact": 0.7765,
+     "role_exact": 0.8618
+    },
+    "unacc_to_transitive": {
+     "n": 337,
+     "lf_exact": 0.911,
+     "role_exact": 0.9228
+    }
+   },
+   "split": "gen",
+   "shard": "2/3",
+   "seconds": 1818.4
+  },
+  "eval_test_shard0of1.json": {
+   "n": 3000,
+   "lf_exact": 0.9937,
+   "role_exact": 0.9997,
+   "by_case": {
+    "in_distribution": {
+     "n": 3000,
+     "lf_exact": 0.9937,
+     "role_exact": 0.9997
+    }
+   },
+   "split": "test",
+   "shard": "0/1",
+   "seconds": 252.8
+  },
+  "best": {
+   "epoch": 3,
+   "dev": {
+    "n": 3000,
+    "lf_exact": 0.995,
+    "role_exact": 1.0
+   },
+   "args": {
+    "mode": "train",
+    "data": "/workspace/csi/data/COGS/data",
+    "out": "/workspace/csi/runs/cogs_s1_seed2",
+    "epochs": 3,
+    "rank": 16,
+    "lr": 0.0002,
+    "token_budget": 4096,
+    "limit": 0,
+    "dev_limit": 0,
+    "split": "test",
+    "shard": "0/1",
+    "seed": 2
+   }
+  }
+ },
+ "cogs_s1_seed3": {
+  "eval_gen_shard0of3.json": {
+   "n": 7000,
+   "lf_exact": 0.8121,
+   "role_exact": 0.9003,
+   "by_case": {
+    "active_to_passive": {
+     "n": 345,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "cp_recursion": {
+     "n": 347,
+     "lf_exact": 0.0115,
+     "role_exact": 0.5274
+    },
+    "do_dative_to_pp_dative": {
+     "n": 315,
+     "lf_exact": 0.9714,
+     "role_exact": 0.9905
+    },
+    "obj_omitted_transitive_to_transitive": {
+     "n": 331,
+     "lf_exact": 0.997,
+     "role_exact": 1.0
+    },
+    "obj_pp_to_subj_pp": {
+     "n": 356,
+     "lf_exact": 0.0,
+     "role_exact": 0.3483
+    },
+    "obj_to_subj_common": {
+     "n": 334,
+     "lf_exact": 0.988,
+     "role_exact": 1.0
+    },
+    "obj_to_subj_proper": {
+     "n": 329,
+     "lf_exact": 0.9939,
+     "role_exact": 1.0
+    },
+    "only_seen_as_transitive_subj_as_unacc_subj": {
+     "n": 340,
+     "lf_exact": 0.9882,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_obj_omitted_transitive_subj": {
+     "n": 319,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_unerg_subj": {
+     "n": 329,
+     "lf_exact": 0.9818,
+     "role_exact": 1.0
+    },
+    "passive_to_active": {
+     "n": 334,
+     "lf_exact": 0.994,
+     "role_exact": 1.0
+    },
+    "pp_dative_to_do_dative": {
+     "n": 318,
+     "lf_exact": 0.9686,
+     "role_exact": 1.0
+    },
+    "pp_recursion": {
+     "n": 338,
+     "lf_exact": 0.145,
+     "role_exact": 0.8018
+    },
+    "prim_to_inf_arg": {
+     "n": 335,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_common": {
+     "n": 358,
+     "lf_exact": 0.9832,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_proper": {
+     "n": 336,
+     "lf_exact": 0.6607,
+     "role_exact": 0.7054
+    },
+    "prim_to_subj_common": {
+     "n": 331,
+     "lf_exact": 0.9909,
+     "role_exact": 1.0
+    },
+    "prim_to_subj_proper": {
+     "n": 328,
+     "lf_exact": 0.9939,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_common": {
+     "n": 338,
+     "lf_exact": 0.9822,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_proper": {
+     "n": 329,
+     "lf_exact": 0.6413,
+     "role_exact": 0.7021
+    },
+    "unacc_to_transitive": {
+     "n": 310,
+     "lf_exact": 0.871,
+     "role_exact": 0.8871
+    }
+   },
+   "split": "gen",
+   "shard": "0/3",
+   "seconds": 2500.7
+  },
+  "eval_gen_shard1of3.json": {
+   "n": 7000,
+   "lf_exact": 0.8209,
+   "role_exact": 0.9044,
+   "by_case": {
+    "active_to_passive": {
+     "n": 329,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "cp_recursion": {
+     "n": 304,
+     "lf_exact": 0.0132,
+     "role_exact": 0.5164
+    },
+    "do_dative_to_pp_dative": {
+     "n": 351,
+     "lf_exact": 0.9658,
+     "role_exact": 0.9886
+    },
+    "obj_omitted_transitive_to_transitive": {
+     "n": 331,
+     "lf_exact": 0.9909,
+     "role_exact": 1.0
+    },
+    "obj_pp_to_subj_pp": {
+     "n": 307,
+     "lf_exact": 0.0033,
+     "role_exact": 0.3485
+    },
+    "obj_to_subj_common": {
+     "n": 304,
+     "lf_exact": 0.9967,
+     "role_exact": 1.0
+    },
+    "obj_to_subj_proper": {
+     "n": 344,
+     "lf_exact": 0.9913,
+     "role_exact": 0.9971
+    },
+    "only_seen_as_transitive_subj_as_unacc_subj": {
+     "n": 324,
+     "lf_exact": 0.9938,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_obj_omitted_transitive_subj": {
+     "n": 352,
+     "lf_exact": 0.9943,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_unerg_subj": {
+     "n": 352,
+     "lf_exact": 0.983,
+     "role_exact": 1.0
+    },
+    "passive_to_active": {
+     "n": 329,
+     "lf_exact": 0.9909,
+     "role_exact": 1.0
+    },
+    "pp_dative_to_do_dative": {
+     "n": 343,
+     "lf_exact": 0.9738,
+     "role_exact": 0.9971
+    },
+    "pp_recursion": {
+     "n": 336,
+     "lf_exact": 0.1369,
+     "role_exact": 0.8095
+    },
+    "prim_to_inf_arg": {
+     "n": 346,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_common": {
+     "n": 324,
+     "lf_exact": 0.9753,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_proper": {
+     "n": 327,
+     "lf_exact": 0.6239,
+     "role_exact": 0.6881
+    },
+    "prim_to_subj_common": {
+     "n": 360,
+     "lf_exact": 0.9861,
+     "role_exact": 1.0
+    },
+    "prim_to_subj_proper": {
+     "n": 339,
+     "lf_exact": 0.9971,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_common": {
+     "n": 314,
+     "lf_exact": 0.9809,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_proper": {
+     "n": 331,
+     "lf_exact": 0.6314,
+     "role_exact": 0.6888
+    },
+    "unacc_to_transitive": {
+     "n": 353,
+     "lf_exact": 0.8527,
+     "role_exact": 0.8669
+    }
+   },
+   "split": "gen",
+   "shard": "1/3",
+   "seconds": 1754.7
+  },
+  "eval_gen_shard2of3.json": {
+   "n": 7000,
+   "lf_exact": 0.8166,
+   "role_exact": 0.9044,
+   "by_case": {
+    "active_to_passive": {
+     "n": 326,
+     "lf_exact": 0.9969,
+     "role_exact": 1.0
+    },
+    "cp_recursion": {
+     "n": 349,
+     "lf_exact": 0.0143,
+     "role_exact": 0.4957
+    },
+    "do_dative_to_pp_dative": {
+     "n": 334,
+     "lf_exact": 0.9731,
+     "role_exact": 0.991
+    },
+    "obj_omitted_transitive_to_transitive": {
+     "n": 338,
+     "lf_exact": 0.997,
+     "role_exact": 1.0
+    },
+    "obj_pp_to_subj_pp": {
+     "n": 337,
+     "lf_exact": 0.0,
+     "role_exact": 0.4006
+    },
+    "obj_to_subj_common": {
+     "n": 362,
+     "lf_exact": 0.989,
+     "role_exact": 1.0
+    },
+    "obj_to_subj_proper": {
+     "n": 327,
+     "lf_exact": 0.9939,
+     "role_exact": 1.0
+    },
+    "only_seen_as_transitive_subj_as_unacc_subj": {
+     "n": 336,
+     "lf_exact": 0.9821,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_obj_omitted_transitive_subj": {
+     "n": 329,
+     "lf_exact": 0.9848,
+     "role_exact": 1.0
+    },
+    "only_seen_as_unacc_subj_as_unerg_subj": {
+     "n": 319,
+     "lf_exact": 0.9937,
+     "role_exact": 1.0
+    },
+    "passive_to_active": {
+     "n": 337,
+     "lf_exact": 0.9911,
+     "role_exact": 1.0
+    },
+    "pp_dative_to_do_dative": {
+     "n": 339,
+     "lf_exact": 0.9735,
+     "role_exact": 1.0
+    },
+    "pp_recursion": {
+     "n": 326,
+     "lf_exact": 0.1258,
+     "role_exact": 0.773
+    },
+    "prim_to_inf_arg": {
+     "n": 319,
+     "lf_exact": 1.0,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_common": {
+     "n": 318,
+     "lf_exact": 0.9843,
+     "role_exact": 1.0
+    },
+    "prim_to_obj_proper": {
+     "n": 337,
+     "lf_exact": 0.6973,
+     "role_exact": 0.7359
+    },
+    "prim_to_subj_common": {
+     "n": 309,
+     "lf_exact": 0.9871,
+     "role_exact": 1.0
+    },
+    "prim_to_subj_proper": {
+     "n": 333,
+     "lf_exact": 0.988,
+     "role_exact": 1.0
+    },
+    "subj_to_obj_common": {
+     "n": 348,
+     "lf_exact": 0.9598,
+     "role_exact": 0.9971
+    },
+    "subj_to_obj_proper": {
+     "n": 340,
+     "lf_exact": 0.6941,
+     "role_exact": 0.7471
+    },
+    "unacc_to_transitive": {
+     "n": 337,
+     "lf_exact": 0.8724,
+     "role_exact": 0.8872
+    }
+   },
+   "split": "gen",
+   "shard": "2/3",
+   "seconds": 1881.3
+  },
+  "eval_test_shard0of1.json": {
+   "n": 3000,
+   "lf_exact": 0.9937,
+   "role_exact": 0.9997,
+   "by_case": {
+    "in_distribution": {
+     "n": 3000,
+     "lf_exact": 0.9937,
+     "role_exact": 0.9997
+    }
+   },
+   "split": "test",
+   "shard": "0/1",
+   "seconds": 246.8
+  },
+  "best": {
+   "epoch": 3,
+   "dev": {
+    "n": 3000,
+    "lf_exact": 0.995,
+    "role_exact": 1.0
+   },
+   "args": {
+    "mode": "train",
+    "data": "/workspace/csi/data/COGS/data",
+    "out": "/workspace/csi/runs/cogs_s1_seed3",
+    "epochs": 3,
+    "rank": 16,
+    "lr": 0.0002,
+    "token_budget": 4096,
+    "limit": 0,
+    "dev_limit": 0,
+    "split": "test",
+    "shard": "0/1",
+    "seed": 3
+   }
+  }
+ }
+}

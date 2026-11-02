@@ -1,0 +1,37 @@
+{
+ "experiment": "E4e char transformer",
+ "split": "all",
+ "n_train_pairs": 93154,
+ "best_dev": 0.9405,
+ "test_acc": 0.9696,
+ "n_test": 2800,
+ "by_form_type": {
+  "past": 0.9671,
+  "past_participle": 0.9671,
+  "gerund": 0.97,
+  "third_singular": 0.9743
+ },
+ "nonce_by_class": {
+  "doubling": 1.0,
+  "cluster": 0.985,
+  "silent_e": 0.9875,
+  "consonant_y": 0.9475,
+  "sibilant": 0.8675,
+  "ck": 1.0,
+  "vowel_wy": 1.0
+ },
+ "error_sample": [
+  "brumed -> brum (want brume)",
+  "vuggying -> vuggie (want vuggy)",
+  "vittying -> vittie (want vitty)",
+  "totties -> tottie (want totty)",
+  "gettied -> gettie (want getty)",
+  "zattied -> zattie (want zatty)",
+  "sloching -> sloche (want sloch)",
+  "gluched -> gluche (want gluch)",
+  "vessed -> ves (want vess)",
+  "plaching -> plache (want plach)",
+  "guches -> guche (want guch)",
+  "bliched -> bliche (want blich)"
+ ]
+}

@@ -1,0 +1,40 @@
+{
+ "experiment": "E4e char transformer",
+ "split": "c1",
+ "n_train_pairs": 74496,
+ "best_dev": 0.9618,
+ "test_acc": 0.9496,
+ "n_test": 19004,
+ "by_form_type": {
+  "past": 0.9345,
+  "past_participle": 0.9348,
+  "gerund": 0.9434,
+  "third_singular": 0.9859
+ },
+ "error_sample": [
+  "aksing -> akse (want aks)",
+  "allomothered -> allomothere (want allomother)",
+  "baaed -> baae (want baa)",
+  "dodding -> dod (want dodd)",
+  "eared -> eare (want ear)",
+  "fordries -> fordrye (want fordry)",
+  "foreslain -> foreslie (want foreslay)",
+  "justifies -> justify (want justifie)",
+  "keyseating -> keyseate (want keyseat)",
+  "laughing -> laughe (want laugh)",
+  "levied -> levie (want levy)",
+  "misled -> misle (want mislead)",
+  "outtold -> outteal (want outtell)",
+  "previsiting -> previsite (want previsit)",
+  "pronged -> pronge (want prong)",
+  "quaered -> quaer (want quaere)",
+  "respelled -> respel (want respell)",
+  "schpritzed -> schpritze (want schpritz)",
+  "stencilled -> stencille (want stencil)",
+  "umbelapping -> umbelap (want umbelappe)",
+  "unsaw -> unsea (want unsee)",
+  "vassalled -> vassall (want vassal)",
+  "whatsapping -> whatsap (want whatsapp)",
+  "wronging -> wronge (want wrong)"
+ ]
+}

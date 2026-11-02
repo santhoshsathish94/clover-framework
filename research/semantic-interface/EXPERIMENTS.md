@@ -266,6 +266,191 @@ CSI. A CSI v0.2 morphology layer = this learned model for unknown words + a list
 needs a fresh held-out test before any claim. Licence note: trained on CC BY-SA 3.0 data (share-alike applies if the
 model is distributed).
 
+**Experiment 4c = Morphology v2: is 4b a genuinely generalisable, learned capability? (pre-registered 2026-11-02
+02:10 UTC, before any code for it existed; `prototype/morph_v2.py`, component `prototype/csi/morphology.py`).**
+Direction (human): establish whether 96.6% is genuine; if it holds, freeze it as a validated CSI component. Data:
+UniMorph English 66e0e9e (23,916 verb lemmas with past / participle / gerund / 3sg; 125,314 noun plurals; 2,008
+adjectives with comparative and superlative). The component = an exception lexicon (forms whose spelling the learned
+model gets wrong in training, i.e. memorised irregulars) + the learned edit model (form -> strip k letters, append s;
+logistic regression over the last 1-6 letters). All splits are by lemma. Criteria for "genuine" (all must hold):
+- **C1 stability:** 5-fold cross-validation over all verb lemmas: mean unseen-lemma accuracy >= 0.95, fold range <= 0.02.
+- **C2 novel endings:** test lemmas whose last three letters occur in no training lemma: >= 0.90.
+- **C3 nonce verbs (wug test):** invented monosyllabic verbs absent from UniMorph, 7 spelling classes (consonant
+  doubling "blip -> blipped", clusters "plemp -> plemped", silent e "brone -> broned", consonant+y "glemmy ->
+  glemmied", sibilants "glush -> glushes", -ck "blick -> blicked", vowel+w/y "blaw -> blawed"), gold from standard
+  orthography for monosyllables: >= 0.90 overall and >= 0.80 in every class.
+- **C4 real text:** verb tokens of UD EWT dev+test (VERB with VBD/VBN/VBG/VBZ, alphabetic; gold lemmas): the component
+  trained on all UniMorph >= the trf lemmatiser overall, and >= 0.90 on lemmas absent from UniMorph (n reported).
+- **C5 learned, not trivial:** accuracy rises with training data (1%, 3%, 10%, 30%, 100% of lemmas); a shuffled-label
+  control stays within 0.05 of the majority-edit baseline; the learned model >= a hand-written orthographic rule set
+  (strip -ed/-ing/-s with doubling, e-restoration and y rules, no lexicon) on the held-out folds.
+- **C6 generation (the other direction):** lemma -> each form on held-out lemmas >= 0.90 (stress-dependent doubling
+  in long verbs is a known ambiguity; errors categorised).
+- **C7 other inflection classes:** nouns plural -> singular >= 0.95 and adjectives comparative/superlative -> base
+  >= 0.90 on held-out lemmas (5-fold).
+Also reported: accuracy on forms whose spelling is ambiguous in UniMorph (>1 lemma) vs unambiguous; irregular verbs
+with and without the exception lexicon; suffix-length ablation (2, 3, 4, 6). **Decision:** if C1-C5 hold, the
+component is frozen (trained on all UniMorph; classes that pass C7 included) and must then pass an integration test
+inside CSI on fresh minimal pairs with nonce verbs (pre-registered separately before its data is generated). If any of
+C1-C5 fails, it is not frozen; the failure is analysed first.
+
+**4c results (k3; `results/e4c_morph_v2.json`; C3/C4 below when finished).** Incident: the first nonce generator could
+loop forever when a spelling class had fewer than 100 unused words (it hung that task); fixed with a wider onset list
+and an attempt cap before any nonce result existed; all other tasks had finished and were kept.
+
+| Criterion | Result | Bar | Verdict |
+|---|---|---|---|
+| 4b replication (same split) | unseen 0.9665, seen 0.966 (4b: 0.9655 / 0.969) | - | replicated |
+| C1 5-fold, model / component | 0.9585 (range 0.0026) / 0.9548 (0.0038) | >= 0.95, range <= 0.02 | **pass** |
+| C2 novel three-letter endings | **0.622** (past 0.52, participle 0.53, gerund 0.54, 3sg 0.90) | >= 0.90 | **fail** |
+| C5 learning curve 1/3/10/30/100% | 0.845 / 0.895 / 0.930 / 0.947 / 0.958 | rises | pass |
+| C5 shuffled labels vs majority edit | 0.457 vs 0.505 | within 0.05 | pass |
+| C5 learned vs hand-written rules | 0.958 vs 0.809 | learned >= rules | pass |
+| C6 generation 5-fold | 0.976 | >= 0.90 | pass |
+| C7 nouns plural -> singular | 0.972 (unambiguous 0.992) | >= 0.95 | pass |
+| C7 adjectives | 0.896 (component 0.882) | >= 0.90 | fail (by 0.004) |
+| C3 nonce verbs, 7 classes x 100 x 4 forms | analysis 0.973 (lowest class 0.93), generation 0.989 | >= 0.90, every class >= 0.80 | pass |
+| C4 real text, EWT dev+test verb tokens (n = 2,580) | component **0.908** vs trf 0.967, sm 0.958, ours 0.907 | >= trf | **fail** |
+| C4, lemmas absent from UniMorph (n = 416) | **0.740** | >= 0.90 | **fail** |
+
+**Why C4 fails (`results/e4c_morph_v2.json` component errors; UniMorph checked directly):** UniMorph English, which
+the component learns from, is incomplete and partly archaic for common verbs. "appear", "confirm", "fear" and "find"
+are listed with their base form only; "be" is absent; "appeared" is listed as the past of an archaic lemma "appeare",
+"added" also under "adde", and "fix" has only the past "fixt". The component learned those entries faithfully
+("appeared" -> "appeare", "found" -> "foind", "fixed" -> "fixe"). The spaCy lemmatisers win on real text because
+running text is dominated by frequent words, which their curated tables cover; the learned model wins on rare and
+unseen words (Experiment 4a/4b).
+
+Within C1: ambiguous spellings (1.3% of forms, e.g. a form shared by two lemmas) 0.35 model / 0.07 component - the
+exception lexicon hurts exactly there; irregular verbs (116 forms) 0.44 (an unseen irregular cannot be learned).
+Suffix ablation: last 2 / 3 / 4 / 6 letters -> 0.66 / 0.76 / 0.89 / 0.96. Noun "ambiguous" items are mostly a
+UniMorph artefact (the strings "countable"/"uncountable" listed as plural forms). **Post-hoc radius analysis
+(`results/e4c_radius.json`)**, holding out whole ending families of k letters: k = 2: 0.310, k = 3: 0.622, k = 4: 0.843,
+k = 5: 0.939 (random lemmas: 0.958); errors are dominated by silent e ("abraded" -> "abrad", "abused" -> "abus"), then
+y/ie and consonant doubling. **4e (character transformer, same C2 split): 0.758** (past 0.68, participle 0.69, gerund
+0.74, 3sg 0.92) - better than the suffix model (+0.136) but below the hypothesised 0.80.
+**Reading so far.** The 96.6% is a genuine, learned capability *within the ending families English verbs use*: stable
+across 24k held-out lemmas, it generates as well as it analyses, extends to nouns, rises with data and beats
+hand-written rules by 0.15. It does **not** transfer to an entire unseen ending family (0.62; a character model 0.76):
+it has learned English endings, not abstract spelling rules that would recover a silent e from letters alone. By the
+pre-registered rule the component is **not frozen** (C2, C4 and the adjective part of C7 fail).
+
+**Experiment 4d: integration of the morphology component into CSI (pre-registered 2026-11-02 02:35 UTC, before its
+data was generated; runs only if 4c passes).** Minimal pairs with the Experiment 1 design built on **nonce verbs**
+(lexicon "nonce1": 14 transitive + 7 animate-object invented verbs, 2 resp. 1 per spelling class of 4c, generated with a
+new seed and excluded from UniMorph and from the 4c nonce set; new nouns; no dative pairs, so parser behaviour on
+unknown ditransitives does not enter). Systems: CSI v0.1 + trf with spaCy's lemmas (as in 1c) vs the same with the
+frozen component supplying lemmas for inflected verbs (VBD/VBN/VBG/VBZ), plural nouns and comparative/superlative
+adjectives. **Pass:** with the component, zero predicate mismatches between inflected forms of the same nonce verb,
+and balanced accuracy >= 0.95 on covered pairs (coverage reported; trf may not parse every nonce verb as a verb, which
+is a parser limit, not a morphology result). The spaCy-lemma run is reported beside it.
+
+**Experiment 4e: is the novel-ending failure a property of the learner or of the task? (pre-registered 2026-11-02
+02:50 UTC, after the first 4c results showed C2 = 0.62 and before running 4e; `prototype/char_seq2seq.py`).** A
+character-level transformer encoder-decoder trained from scratch (no pretraining, so no memorised words; about 3M
+parameters) maps the inflected form to its lemma letter by letter. It is trained and tested on exactly the 4c splits:
+C1 fold 0 (lemmas held out), C2 (whole three-letter ending families held out), and the C3 nonce verbs (trained on all
+verbs). **Hypothesis:** it matches the suffix model on C1 (about 0.96) and does clearly better on novel endings
+(>= 0.80), because it can represent letter patterns (consonant-vowel-consonant doubling, silent e) without the
+specific ending string. If it also stays near 0.6, the failure belongs to the task: inflection of an unseen ending
+family is not predictable from spelling alone.
+
+**Experiment 4f = Morphology v2b (pre-registered 2026-11-02 03:05 UTC, after the 4c C2 failure and the first 4e
+result, before any 4f run).** Question: can a learner with an abstract representation generalise across ending
+families while keeping in-family accuracy? Learners: (S) the 4c suffix model; (SS) suffix + consonant/vowel shape
+features (letter classes of the word end and of the stem left after a candidate suffix, plus that stem's last letter
+and whether it ends in a doubled letter; nothing names an ending family); (T) the 4e character transformer. **Fresh
+splits never used before:** fold seed 101, ending-family seed 103 (families of 3 and of 4 letters), nonce seed 107;
+the 4c seeds (11/13/19) are now development data. **Measures:** the full 4c battery for S and SS, and C1/C2/nonce for
+T. **Improvement criterion:** SS or T reaches >= 0.80 on the fresh three-letter families while keeping fresh C1 >=
+0.95. The 4c freeze rule is not changed by this experiment.
+
+**Experiment 4g = Morphology v3: does real-text evidence close the C4 gap? (pre-registered 2026-11-02 04:05 UTC,
+after the 4c C4 failure and its diagnosis, before any 4g code or data existed.)** The 4c error list on EWT dev+test
+was examined to diagnose C4, so **EWT dev+test is development data from now on** and the test uses real text never
+examined: **UD_English-GUM r2.18 (dev+test) and UD_English-PUD r2.18 (test)**, the same token selection as C4 (VERB
+with VBD/VBN/VBG/VBZ, alphabetic, gold lemmas). **v3 = the 4c component (suffix features, unchanged) plus two
+learned-from-data changes, nothing hand-written:** (a) the verb pairs of UD EWT *train* (form, gold lemma, form type
+from the tag) are added to the UniMorph training pairs; (b) a form with more than one known lemma is resolved by
+lemma frequency in EWT train (the model decides when no candidate is attested). **G1 real text:** on the fresh
+tokens (pooled; each treebank reported) v3 >= the trf lemmatiser, and v3 > the 4c component. **G2 the learned
+generalisation is kept:** fresh 5-fold lemma holdout (fold seed 109; held-out lemmas removed from both UniMorph and EWT
+pairs, and from the frequency prior) >= 0.95, and fresh nonce verbs (seed 113, also excluded from EWT train) >= 0.90
+overall and >= 0.80 in every class. Also reported: EWT dev+test (development), the sm lemmatiser, the error list.
+**Decision:** G1 and G2 passing makes v3 the candidate for a *scoped* freeze (validated inside English ending
+families, with unseen ending families as the documented boundary); because C2 of the 4c rule is still unmet, that
+freeze is the human's decision, and 4d must pass before the component enters CSI. Robustness check beside 4e/4f (not
+a criterion): the character transformer on C2 with training seeds 2 and 3, on the 4c split and on the fresh split.
+
+**4g amended (2026-11-02 04:25 UTC, after the human's layer model and before any 4g code or fresh data existed).** The
+human's model: "Dictionary teaches what a word means. Morphology teaches how a word is constructed and changes. Grammar
+teaches how words function together. Semantics teaches what the resulting expression means." The C4 errors are
+dictionary facts (which words exist, which lemma is current English, which forms are irregular), so (a) and (b) above
+would have put dictionary knowledge inside the morphology model. **Replaced by a layered lemmatiser, each layer doing
+its own job:** *Grammar* gives the word's class and form (the tag; gold tags as in C4, so this tests lemmatisation
+given the class); *Morphology* is the 4c learned edit model, unchanged, without its exception lexicon (memorised
+words are a dictionary function), returning its 5 best-ranked candidate lemmas; the *Dictionary* is Open English
+WordNet 2025 (CC BY 4.0; lemma inventory per part of speech and its 4,473 listed irregular or spelling-changed forms).
+Composition (written, three steps): a form the Dictionary lists -> its lemma (ties broken by the Morphology ranking);
+otherwise the best-ranked candidate the Dictionary knows for that class; otherwise the top candidate, marked unknown.
+**G1** as above on the fresh GUM/PUD verb tokens: layered >= trf, and layered > the 4c component. **G2** replaced:
+the Morphology layer is unchanged, so its unseen-word results (C1/C3/C6/C7) stand; what must be shown is that the
+composition does not hurt unknown words: fresh nonce verbs (seed 113, excluded from UniMorph and from OEWN lemmas and
+forms) >= 0.90 overall and >= 0.80 in every class with the layered lemmatiser. Errors on the fresh verbs are
+attributed to a layer: gold lemma unknown to the Dictionary; gold known but not among the Morphology candidates; gold
+among them but another known candidate ranked higher. Secondary (reported, no criterion): plural nouns (NNS) and
+comparative/superlative adjectives (JJR/JJS) on the same treebanks; EWT dev+test as development data.
+Data note (04:35 UTC, after cloning, before any 4g run): GUM r2.18 (b58e74b; CC BY-NC-SA 4.0, evaluation only) has
+manual lemmas; PUD r2.18 (e173a1b; CC BY-SA 3.0) has *automatic* lemmas, so **G1 is decided on GUM dev+test** (3,476
+verb tokens); PUD (1,596) and the pooled numbers are reported beside it.
+
+**4f results (fresh splits: folds 101, endings 103, nonce 107; `results/e4f_suffix.json`, `e4f_suffix_shape.json`,
+`e4f_char_*.json`; seed replicates `e4g_charseed_*.json`).**
+
+| Measure | Suffix (S) | Suffix + shape (SS) | Character transformer (T) |
+|---|---|---|---|
+| C1 lemma holdout, 5 folds | 0.9585 (range 0.007) | 0.9601 (range 0.0065) | 0.9449 (fold 0) |
+| C2 unseen three-letter families | 0.556 | 0.637 | 0.755 (training seeds 2/3: 0.749 / 0.759) |
+| C2 unseen four-letter families | 0.854 | 0.869 | - |
+| C3 nonce verbs (lowest class) | 0.963 (0.905) | 0.969 (0.935) | 0.970 (0.868) |
+| C5 curve 1% -> 100%; shuffled vs majority; rules | 0.866 -> 0.957; 0.462 vs 0.510; 0.813 | 0.894 -> 0.958; 0.463 vs 0.510; 0.813 | - |
+| C6 generation | 0.977 | 0.978 | - |
+| C7 nouns / adjectives | 0.972 / 0.896 | 0.972 / 0.904 | - |
+| C4 EWT dev+test (development) | 0.911 | 0.925 | - |
+
+**Improvement criterion not met:** on fresh three-letter families SS reaches 0.637 and T 0.755 (and T's C1 is 0.945).
+T on the 4c split with training seeds 2 and 3: 0.735 and 0.728 (first run 0.758), so over six runs it stays between
+0.73 and 0.76. Everything else replicates on fresh splits: in-family accuracy 0.96, nonce 0.96-0.97, generation 0.98,
+nouns 0.97, learning curve, controls. The unseen-family boundary is a property of the task as these learners see it,
+not of the suffix features: a model that sees every letter, and one given letter-class shapes, still cannot recover
+how an ending family it has never seen inflects. One unexplained difference: the 4c and 4f suffix runs train the C4
+component on identical data yet give 0.908 and 0.911 (9 of 2,580 tokens); not investigated (the two runs used
+different solver thread counts).
+
+**4g results (k3; `results/e4g_layered.json`).** Verbs, lemma accuracy given the class:
+
+| Set | n | Layered | Morphology alone | 4c component | trf | sm |
+|---|---|---|---|---|---|---|
+| **GUM dev+test (fresh, manual lemmas; decides G1)** | 3,439 | **0.988** | 0.931 | 0.928 | 0.960 | 0.949 |
+| PUD test (fresh, automatic lemmas) | 1,579 | 0.999 | 0.932 | 0.929 | 0.979 | 0.971 |
+| EWT dev+test (development) | 2,580 | 0.994 | 0.914 | 0.908 | 0.967 | 0.958 |
+
+**G1 passes** (0.988 >= trf 0.960; > the 4c component 0.928). The Dictionary knows 99.5% of the GUM gold verb lemmas.
+Of the 42 GUM errors, 34 are "another known candidate chosen", about 30 of them one token type: "gon" (GUM splits
+"gonna" into "gon" + "na"), which the Morphology ranks as "gin" (the won/win pattern) and the Dictionary knows as a
+verb; 4 have a gold lemma OEWN lacks (e.g. "pend"; also gold-side typos such as "embd", "flead"); 4 are not among the
+Morphology candidates (misspellings, "recognises" with the American lemma "recognize"). PUD's 0.999 is likely inflated
+by its automatic lemmas. **G2 passes:** fresh nonce verbs (seed 113) layered 0.956 (every class >= 0.88; silent e
+lowest), but the composition **costs 2.2 points** against Morphology alone (0.978): preferring a known word turns
+"spinded" into "spin" and "skibs" into "ski". Secondary classes: plural nouns layered 0.944 / 0.918 / 0.900 vs trf
+0.941 / 0.948 / 0.943 (GUM / PUD / EWT) - at trf level on GUM, below it on the other two; comparative/superlative
+adjectives 0.66 / 0.54 / 0.75 vs trf 0.90 / 0.96 / 0.90 - poor, because real JJR/JJS tokens are dominated by words
+like "more", "most", "less" whose treebank lemma is the word itself, a case absent from UniMorph's adjective data.
+**Reading.** The C4 failure belonged to the dictionary, not to morphology: with each layer doing its own job, verbs
+on fresh real text go from 0.928 to 0.988, above the trf lemmatiser. By the amended 4g rule the layered verb
+lemmatiser is the candidate for a scoped freeze; the decision is the human's (C2 still unmet), and 4d must pass
+first.
+
 ## Experiment 5 = E5: context and ambiguity (defined)
 Polysemy ("The bank is closed." with and without disambiguating context), structural ambiguity ("I saw her duck."),
 pronoun reference (Winograd-style pairs). Success = alternative readings returned when evidence is insufficient and
@@ -333,6 +518,31 @@ cannot learn recipient passives. **Post-hoc S2b (pre-registered 2026-11-02 01:55
 which is development data since its errors were read):** add that one cue (voice x number of remaining objects).
 Hypothesis: obj_pp_to_subj_pp and test exact match rise above the written rules, showing that a missing
 correspondence can be learned from data once the structure offers the cue.
+**S2b result (development run, `results/e6b_s2b_trf.json`):** test 0.890 (S2 0.838, written rules 0.838), gen 0.928
+(0.913 / 0.913), obj_pp_to_subj_pp 0.848 (0.714 / 0.760), subj_to_obj_proper 0.852 (0.793 / 0.791). With one
+structural cue the learned linker absorbs recipient passives from data and exceeds the written correspondences. This
+is post-hoc on development data: it shows feasibility, not a validated result; a validated claim needs a fresh test.
+**S1 results and the 6b comparison (`results/e6b_s1_summary.json`, `prototype/e6b_table.py`; main-event role-set
+exact match, S1 also full logical form).**
+
+| | CSI-sm | CSI-trf | S2 | S2b (post-hoc) | S1 mean of 3 seeds (range) | S1 full LF |
+|---|---|---|---|---|---|---|
+| test (in-distribution) | 0.786 | 0.838 | 0.838 | 0.890 | 1.000 | 0.994 |
+| gen, all 21 cases | 0.835 | 0.913 | 0.913 | 0.928 | 0.910 (0.903-0.921) | 0.817 |
+| structural cases (cp_recursion, pp_recursion, obj_pp_to_subj_pp) | 0.812 | 0.871 | 0.856 | 0.901 | **0.591** (0.558-0.620) | **0.051** |
+| cp_recursion | 0.862 | 0.882 | 0.882 | 0.882 | 0.514 | 0.018 |
+| obj_pp_to_subj_pp | 0.682 | 0.760 | 0.714 | 0.848 | 0.463 | 0.001 |
+| pp_recursion | 0.893 | 0.971 | 0.971 | 0.972 | 0.796 | 0.135 |
+| lexical cases (18) | lower: parser errors | 0.77-0.99 | 0.79-0.98 | 0.83-0.99 | mostly 1.000; proper-name objects 0.73, unacc->transitive 0.88 | |
+
+**Against the hypotheses.** (a) **Confirmed**: S1 reaches 0.994 full-LF exact match in distribution, 0.817 on gen, and
+collapses on the structural cases (full LF 0.001-0.135) - the COGS pattern for sequence models, now shown for Clover's
+C1 with LoRA. (b) First half **confirmed** (structural, role level: S2 0.856 vs S1 0.591); second half not supported
+(S2 = written rules; only the post-hoc cue variant exceeds them). (c) Not analysed. **Conclusion:** the two kinds of
+learner fail in opposite places. The sequence learner generalises to new words in known structures almost perfectly
+and fails on new structures (deeper recursion, modified subjects); learning over explicit structure generalises across
+structures and loses on lexical cases through parser errors. This is direct evidence for CSI's split: structure from an
+explicit layer, word knowledge learned.
 
 ## Experiment 7 = E8: generalisation and training objectives (defined; nanochat-based)
 Small models trained from scratch at equal compute: next-token only vs next-token + dependency + role +
