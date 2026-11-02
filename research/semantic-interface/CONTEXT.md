@@ -44,7 +44,9 @@
   attribution appreciated), e6a_cogs.json (COGS, MIT), e3_iobj_pretrained.json (UD English-EWT, CC BY-SA 4.0:
   attribution and same licence for those excerpts if published). Morphology results (e4c_*, e4f_*, e4g_*) list single
   words from UniMorph English (CC BY-SA 3.0), UD EWT, UD GUM (CC BY-NC-SA 4.0, used for evaluation only) and UD PUD
-  (CC BY-SA 3.0); the dictionary layer uses Open English WordNet 2025 (CC BY 4.0).
+  (CC BY-SA 3.0); the dictionary layer uses Open English WordNet 2025 (CC BY 4.0). `e3c_pool.json` and
+  `e3c_lexicon.json` contain OEWN synset ids and definitions (Open English WordNet 2025, The Open English WordNet Team,
+  CC BY 4.0, derived from Princeton WordNet under the WordNet License).
 
 ## Relation to research/meaning-core (decided 2026-11-02)
 - research/meaning-core trains a meaning head on LFM3-Omni-2B S3 hidden states. That is **model-dependent**: it is
