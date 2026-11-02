@@ -1,0 +1,127 @@
+{
+ "clover_hash": {
+  "sts": {
+   "STS12": 58.79,
+   "STS13": 61.61,
+   "STS14": 65.89,
+   "STS15": 74.36,
+   "STS17": 80.73,
+   "STS22.v2": 58.43,
+   "STSBenchmark": 68.35,
+   "SICK-R": 56.21,
+   "BIOSSES": 77.46
+  },
+  "sts_mean": 66.87,
+  "paws_test_auc": 0.4883,
+  "snli_test_rank": 0.7843,
+  "condaqa_test_auc": 0.3989,
+  "condaqa_test_pairs": 1696,
+  "server_cos_to_first": [
+   1.0,
+   0.415,
+   1.0,
+   0.726
+  ],
+  "seconds": 41.4
+ },
+ "clover_indra_hash": {
+  "sts": {
+   "STS12": 47.25,
+   "STS13": 46.86,
+   "STS14": 48.59,
+   "STS15": 58.15,
+   "STS17": 63.89,
+   "STS22.v2": 48.16,
+   "STSBenchmark": 51.46,
+   "SICK-R": 48.86,
+   "BIOSSES": 55.8
+  },
+  "sts_mean": 52.11,
+  "paws_test_auc": 0.4872,
+  "snli_test_rank": 0.683,
+  "condaqa_test_auc": 0.391,
+  "condaqa_test_pairs": 1696,
+  "server_cos_to_first": [
+   1.0,
+   0.785,
+   1.0,
+   0.944
+  ],
+  "seconds": 8.8
+ },
+ "bge_small": {
+  "sts": {
+   "STS12": 77.44,
+   "STS13": 82.98,
+   "STS14": 81.84,
+   "STS15": 87.27,
+   "STS17": 87.14,
+   "STS22.v2": 65.79,
+   "STSBenchmark": 85.86,
+   "SICK-R": 79.41,
+   "BIOSSES": 83.75
+  },
+  "sts_mean": 81.28,
+  "paws_test_auc": 0.6051,
+  "snli_test_rank": 0.9555,
+  "condaqa_test_auc": 0.5048,
+  "condaqa_test_pairs": 1696,
+  "server_cos_to_first": [
+   1.0,
+   0.915,
+   0.987,
+   0.931
+  ],
+  "seconds": 51.6
+ },
+ "core:runs/core/core-f-full": {
+  "sts": {
+   "STS12": 55.14,
+   "STS13": 59.82,
+   "STS14": 57.24,
+   "STS15": 70.0,
+   "STS17": 82.59,
+   "STS22.v2": 50.35,
+   "STSBenchmark": 69.94,
+   "SICK-R": 73.78,
+   "BIOSSES": 55.96
+  },
+  "sts_mean": 63.87,
+  "paws_test_auc": 0.853,
+  "snli_test_rank": 0.9243,
+  "condaqa_test_auc": 0.6784,
+  "condaqa_test_pairs": 1696,
+  "server_cos_to_first": [
+   1.0,
+   0.763,
+   0.906,
+   0.4
+  ],
+  "seconds": 372.4
+ },
+ "lfm3_frozen_l4": {
+  "sts": {
+   "STS12": 40.15,
+   "STS13": 47.3,
+   "STS14": 45.76,
+   "STS15": 65.4,
+   "STS17": 70.9,
+   "STS22.v2": 52.41,
+   "STSBenchmark": 45.84,
+   "SICK-R": 56.95,
+   "BIOSSES": 70.18
+  },
+  "sts_mean": 54.99,
+  "paws_test_auc": 0.5797,
+  "snli_test_rank": 0.7292,
+  "condaqa_test_auc": 0.485,
+  "condaqa_test_pairs": 1696,
+  "server_cos_to_first": [
+   1.0,
+   0.935,
+   0.973,
+   0.969
+  ],
+  "seconds": 63.5
+ }
+}

@@ -1,0 +1,215 @@
+{
+ "experiment": "E8 A/B/C on Experiment 1 pairs",
+ "csi_version": "0.1",
+ "model": "/workspace/meaning-core/models/lfm3-omni2b-s3-backbone",
+ "yes_ids": [
+  11683,
+  12447,
+  17550,
+  18171
+ ],
+ "no_ids": [
+  794,
+  2243,
+  2752,
+  4547,
+  19598
+ ],
+ "sizes": {
+  "seen": 6,
+  "unseen": 6
+ },
+ "conditions": {
+  "A": {
+   "threshold_from_seen": 0.0914,
+   "seen": {
+    "balanced_accuracy_own_choice": 0.875,
+    "said_yes_share": 0.5,
+    "balanced_accuracy_seen_threshold": 1.0,
+    "auc": 1.0,
+    "per_phenomenon_accuracy_own_choice": {
+     "dist:future": 1.0,
+     "dist:modality": 1.0,
+     "dist:negation": 1.0,
+     "dist:progressive": 0.0,
+     "equiv:negated_passive": 1.0,
+     "equiv:passive": 1.0
+    }
+   },
+   "unseen": {
+    "balanced_accuracy_own_choice": 1.0,
+    "said_yes_share": 0.3333,
+    "balanced_accuracy_seen_threshold": 0.75,
+    "auc": 1.0,
+    "per_phenomenon_accuracy_own_choice": {
+     "dist:future": 1.0,
+     "dist:modality": 1.0,
+     "dist:negation": 1.0,
+     "dist:progressive": 1.0,
+     "equiv:negated_passive": 1.0,
+     "equiv:passive": 1.0
+    }
+   },
+   "mean_yes_no_mass": 0.0,
+   "seconds": 3.8,
+   "top_first_tokens": {
+    "</think>": 12
+   },
+   "scores": {
+    "seen": [
+     0.1243,
+     0.0914,
+     -0.7803,
+     -0.5344,
+     0.0567,
+     -0.3537
+    ],
+    "unseen": [
+     0.1065,
+     0.0654,
+     -0.6925,
+     -0.5244,
+     -0.218,
+     -0.5098
+    ]
+   }
+  },
+  "B1": {
+   "threshold_from_seen": -0.9813,
+   "seen": {
+    "balanced_accuracy_own_choice": 0.5,
+    "said_yes_share": 0.0,
+    "balanced_accuracy_seen_threshold": 1.0,
+    "auc": 1.0,
+    "per_phenomenon_accuracy_own_choice": {
+     "dist:future": 1.0,
+     "dist:modality": 1.0,
+     "dist:negation": 1.0,
+     "dist:progressive": 1.0,
+     "equiv:negated_passive": 0.0,
+     "equiv:passive": 0.0
+    }
+   },
+   "unseen": {
+    "balanced_accuracy_own_choice": 0.5,
+    "said_yes_share": 0.0,
+    "balanced_accuracy_seen_threshold": 1.0,
+    "auc": 1.0,
+    "per_phenomenon_accuracy_own_choice": {
+     "dist:future": 1.0,
+     "dist:modality": 1.0,
+     "dist:negation": 1.0,
+     "dist:progressive": 1.0,
+     "equiv:negated_passive": 0.0,
+     "equiv:passive": 0.0
+    }
+   },
+   "mean_yes_no_mass": 0.0,
+   "seconds": 1.8,
+   "top_first_tokens": {
+    "</think>": 12
+   },
+   "scores": {
+    "seen": [
+     -0.9813,
+     -0.8061,
+     -1.3361,
+     -1.3427,
+     -1.108,
+     -1.2985
+    ],
+    "unseen": [
+     -0.9089,
+     -0.7404,
+     -1.4431,
+     -1.2686,
+     -1.092,
+     -1.2766
+    ]
+   }
+  },
+  "B2": {
+   "threshold_from_seen": -0.9377,
+   "seen": {
+    "balanced_accuracy_own_choice": 0.5,
+    "said_yes_share": 0.0,
+    "balanced_accuracy_seen_threshold": 1.0,
+    "auc": 1.0,
+    "per_phenomenon_accuracy_own_choice": {
+     "dist:future": 1.0,
+     "dist:modality": 1.0,
+     "dist:negation": 1.0,
+     "dist:progressive": 1.0,
+     "equiv:negated_passive": 0.0,
+     "equiv:passive": 0.0
+    }
+   },
+   "unseen": {
+    "balanced_accuracy_own_choice": 0.5,
+    "said_yes_share": 0.0,
+    "balanced_accuracy_seen_threshold": 0.75,
+    "auc": 1.0,
+    "per_phenomenon_accuracy_own_choice": {
+     "dist:future": 1.0,
+     "dist:modality": 1.0,
+     "dist:negation": 1.0,
+     "dist:progressive": 1.0,
+     "equiv:negated_passive": 0.0,
+     "equiv:passive": 0.0
+    }
+   },
+   "mean_yes_no_mass": 0.0,
+   "seconds": 1.1,
+   "top_first_tokens": {
+    "</think>": 12
+   },
+   "scores": {
+    "seen": [
+     -0.9377,
+     -0.8159,
+     -1.7483,
+     -1.6795,
+     -1.6769,
+     -1.3782
+    ],
+    "unseen": [
+     -0.937,
+     -0.9466,
+     -1.929,
+     -1.6235,
+     -1.7275,
+     -1.4937
+    ]
+   }
+  },
+  "C": {
+   "seen": {
+    "balanced_accuracy": 1.0,
+    "per_phenomenon_accuracy": {
+     "dist:future": 1.0,
+     "dist:modality": 1.0,
+     "dist:negation": 1.0,
+     "dist:progressive": 1.0,
+     "equiv:negated_passive": 1.0,
+     "equiv:passive": 1.0
+    }
+   },
+   "unseen": {
+    "balanced_accuracy": 1.0,
+    "per_phenomenon_accuracy": {
+     "dist:future": 1.0,
+     "dist:modality": 1.0,
+     "dist:negation": 1.0,
+     "dist:progressive": 1.0,
+     "equiv:negated_passive": 1.0,
+     "equiv:passive": 1.0
+    }
+   }
+  }
+ },
+ "examples": {
+  "A:seen:1": "<|startoftext|><|im_start|>user\nSentence 1: The boy opened the door.\nSentence 2: The door was opened by the boy.\n\nDo these two sentences mean the same thing? Answer Yes or No.<|im_end|>\n<|im_start|>assistant\n<think>",
+  "A:seen:2": "<|startoftext|><|im_start|>user\nSentence 1: The boy did not open the door.\nSentence 2: The door was not opened by the boy.\n\nDo these two sentences mean the same thing? Answer Yes or No.<|im_end|>\n<|im_start|>assistant\n<think>",
+  "A:seen:3": "<|startoftext|><|im_start|>user\nSentence 1: The boy opened the door.\nSentence 2: The boy did not open the door.\n\nDo these two sentences mean the same thing? Answer Yes or No.<|im_end|>\n<|im_start|>assistant\n<think>"
+ }
+}

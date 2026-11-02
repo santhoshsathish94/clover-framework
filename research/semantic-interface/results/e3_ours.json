@@ -1,0 +1,756 @@
+{
+ "experiment": "E3 parsers on UD English-EWT (gold words)",
+ "sizes": {
+  "dev": 2001,
+  "test": 2077
+ },
+ "systems": {
+  "/opt/clover-k3/meaning-core/csi/runs/ewt-seed1/model-best": {
+   "pipeline": [
+    "tok2vec",
+    "tagger",
+    "morphologizer",
+    "trainable_lemmatizer",
+    "parser"
+   ],
+   "version": "0.0.0",
+   "label_scheme": "UD",
+   "dev": {
+    "words": 25148,
+    "upos": 0.9403,
+    "xpos": 0.9333,
+    "lemma_ci": 0.9803,
+    "features": {
+     "Tense": {
+      "acc": 0.9445,
+      "n_gold": 2665,
+      "false_pos_rate": 0.0074
+     },
+     "VerbForm": {
+      "acc": 0.9123,
+      "n_gold": 4274,
+      "false_pos_rate": 0.0067
+     },
+     "Mood": {
+      "acc": 0.9197,
+      "n_gold": 2141,
+      "false_pos_rate": 0.005
+     },
+     "Voice": {
+      "acc": 0.8738,
+      "n_gold": 309,
+      "false_pos_rate": 0.0029
+     },
+     "Polarity": {
+      "acc": 0.9818,
+      "n_gold": 220,
+      "false_pos_rate": 0.0001
+     },
+     "Number": {
+      "acc": 0.9524,
+      "n_gold": 9629,
+      "false_pos_rate": 0.0251
+     },
+     "Person": {
+      "acc": 0.956,
+      "n_gold": 3731,
+      "false_pos_rate": 0.0046
+     }
+    },
+    "relations": {
+     "nsubj": {
+      "p": 0.9448,
+      "r": 0.8928,
+      "f1": 0.9181,
+      "n_gold": 1381,
+      "n_pred": 1305
+     },
+     "nsubj:pass": {
+      "p": 0.8355,
+      "r": 0.8247,
+      "f1": 0.8301,
+      "n_gold": 154,
+      "n_pred": 152
+     },
+     "obj": {
+      "p": 0.8691,
+      "r": 0.8633,
+      "f1": 0.8662,
+      "n_gold": 1207,
+      "n_pred": 1199
+     },
+     "iobj": {
+      "p": 0.8088,
+      "r": 0.7333,
+      "f1": 0.7692,
+      "n_gold": 75,
+      "n_pred": 68
+     },
+     "obl:agent": {
+      "p": 0.9167,
+      "r": 0.7857,
+      "f1": 0.8462,
+      "n_gold": 28,
+      "n_pred": 24
+     },
+     "aux": {
+      "p": 0.9804,
+      "r": 0.9544,
+      "f1": 0.9672,
+      "n_gold": 680,
+      "n_pred": 662
+     },
+     "aux:pass": {
+      "p": 0.9545,
+      "r": 0.9074,
+      "f1": 0.9304,
+      "n_gold": 162,
+      "n_pred": 154
+     },
+     "xcomp": {
+      "p": 0.8466,
+      "r": 0.7908,
+      "f1": 0.8178,
+      "n_gold": 349,
+      "n_pred": 326
+     },
+     "negator": {
+      "p": 0.9832,
+      "r": 0.907,
+      "f1": 0.9435,
+      "n_gold": 129,
+      "n_pred": 119
+     }
+    },
+    "csi_macro_f1": 0.8765,
+    "double_object": {
+     "iobj_gold": 75,
+     "iobj_found": 55,
+     "theme_gold": 42,
+     "theme_found": 36
+    },
+    "uas": 0.8457,
+    "las": 0.8091,
+    "las_universal": 0.8112,
+    "seconds": 3.7
+   },
+   "test": {
+    "words": 25094,
+    "upos": 0.9426,
+    "xpos": 0.9346,
+    "lemma_ci": 0.9829,
+    "features": {
+     "Tense": {
+      "acc": 0.9574,
+      "n_gold": 2535,
+      "false_pos_rate": 0.0062
+     },
+     "VerbForm": {
+      "acc": 0.9315,
+      "n_gold": 4148,
+      "false_pos_rate": 0.0059
+     },
+     "Mood": {
+      "acc": 0.9264,
+      "n_gold": 2011,
+      "false_pos_rate": 0.0046
+     },
+     "Voice": {
+      "acc": 0.8679,
+      "n_gold": 280,
+      "false_pos_rate": 0.002
+     },
+     "Polarity": {
+      "acc": 0.9736,
+      "n_gold": 227,
+      "false_pos_rate": 0.0
+     },
+     "Number": {
+      "acc": 0.9462,
+      "n_gold": 9658,
+      "false_pos_rate": 0.0221
+     },
+     "Person": {
+      "acc": 0.9593,
+      "n_gold": 3587,
+      "false_pos_rate": 0.0047
+     }
+    },
+    "relations": {
+     "nsubj": {
+      "p": 0.9367,
+      "r": 0.9073,
+      "f1": 0.9218,
+      "n_gold": 1403,
+      "n_pred": 1359
+     },
+     "nsubj:pass": {
+      "p": 0.7632,
+      "r": 0.8056,
+      "f1": 0.7838,
+      "n_gold": 108,
+      "n_pred": 114
+     },
+     "obj": {
+      "p": 0.8713,
+      "r": 0.8895,
+      "f1": 0.8803,
+      "n_gold": 1149,
+      "n_pred": 1173
+     },
+     "iobj": {
+      "p": 0.8594,
+      "r": 0.7746,
+      "f1": 0.8148,
+      "n_gold": 71,
+      "n_pred": 64
+     },
+     "obl:agent": {
+      "p": 0.9118,
+      "r": 0.8611,
+      "f1": 0.8857,
+      "n_gold": 36,
+      "n_pred": 34
+     },
+     "aux": {
+      "p": 0.9847,
+      "r": 0.9711,
+      "f1": 0.9778,
+      "n_gold": 727,
+      "n_pred": 717
+     },
+     "aux:pass": {
+      "p": 0.9823,
+      "r": 0.9024,
+      "f1": 0.9407,
+      "n_gold": 123,
+      "n_pred": 113
+     },
+     "xcomp": {
+      "p": 0.8302,
+      "r": 0.7935,
+      "f1": 0.8115,
+      "n_gold": 339,
+      "n_pred": 324
+     },
+     "negator": {
+      "p": 1.0,
+      "r": 0.9231,
+      "f1": 0.96,
+      "n_gold": 143,
+      "n_pred": 132
+     }
+    },
+    "csi_macro_f1": 0.8863,
+    "double_object": {
+     "iobj_gold": 71,
+     "iobj_found": 55,
+     "theme_gold": 34,
+     "theme_found": 32
+    },
+    "uas": 0.8496,
+    "las": 0.8147,
+    "las_universal": 0.8168,
+    "seconds": 2.6
+   }
+  },
+  "/opt/clover-k3/meaning-core/csi/runs/ewt-seed2/model-best": {
+   "pipeline": [
+    "tok2vec",
+    "tagger",
+    "morphologizer",
+    "trainable_lemmatizer",
+    "parser"
+   ],
+   "version": "0.0.0",
+   "label_scheme": "UD",
+   "dev": {
+    "words": 25148,
+    "upos": 0.9419,
+    "xpos": 0.9329,
+    "lemma_ci": 0.9775,
+    "features": {
+     "Tense": {
+      "acc": 0.9452,
+      "n_gold": 2665,
+      "false_pos_rate": 0.0064
+     },
+     "VerbForm": {
+      "acc": 0.9146,
+      "n_gold": 4274,
+      "false_pos_rate": 0.0066
+     },
+     "Mood": {
+      "acc": 0.9276,
+      "n_gold": 2141,
+      "false_pos_rate": 0.0054
+     },
+     "Voice": {
+      "acc": 0.8706,
+      "n_gold": 309,
+      "false_pos_rate": 0.003
+     },
+     "Polarity": {
+      "acc": 0.9864,
+      "n_gold": 220,
+      "false_pos_rate": 0.0002
+     },
+     "Number": {
+      "acc": 0.9543,
+      "n_gold": 9629,
+      "false_pos_rate": 0.0251
+     },
+     "Person": {
+      "acc": 0.9585,
+      "n_gold": 3731,
+      "false_pos_rate": 0.0049
+     }
+    },
+    "relations": {
+     "nsubj": {
+      "p": 0.9181,
+      "r": 0.9175,
+      "f1": 0.9178,
+      "n_gold": 1381,
+      "n_pred": 1380
+     },
+     "nsubj:pass": {
+      "p": 0.8538,
+      "r": 0.7208,
+      "f1": 0.7817,
+      "n_gold": 154,
+      "n_pred": 130
+     },
+     "obj": {
+      "p": 0.8546,
+      "r": 0.8616,
+      "f1": 0.8581,
+      "n_gold": 1207,
+      "n_pred": 1217
+     },
+     "iobj": {
+      "p": 0.8814,
+      "r": 0.6933,
+      "f1": 0.7761,
+      "n_gold": 75,
+      "n_pred": 59
+     },
+     "obl:agent": {
+      "p": 0.9231,
+      "r": 0.8571,
+      "f1": 0.8889,
+      "n_gold": 28,
+      "n_pred": 26
+     },
+     "aux": {
+      "p": 0.9741,
+      "r": 0.9412,
+      "f1": 0.9574,
+      "n_gold": 680,
+      "n_pred": 657
+     },
+     "aux:pass": {
+      "p": 0.9852,
+      "r": 0.821,
+      "f1": 0.8956,
+      "n_gold": 162,
+      "n_pred": 135
+     },
+     "xcomp": {
+      "p": 0.8261,
+      "r": 0.7622,
+      "f1": 0.7928,
+      "n_gold": 349,
+      "n_pred": 322
+     },
+     "negator": {
+      "p": 0.9839,
+      "r": 0.9457,
+      "f1": 0.9644,
+      "n_gold": 129,
+      "n_pred": 124
+     }
+    },
+    "csi_macro_f1": 0.8703,
+    "double_object": {
+     "iobj_gold": 75,
+     "iobj_found": 52,
+     "theme_gold": 42,
+     "theme_found": 37
+    },
+    "uas": 0.8487,
+    "las": 0.812,
+    "las_universal": 0.8144,
+    "seconds": 2.4
+   },
+   "test": {
+    "words": 25094,
+    "upos": 0.9436,
+    "xpos": 0.935,
+    "lemma_ci": 0.982,
+    "features": {
+     "Tense": {
+      "acc": 0.9511,
+      "n_gold": 2535,
+      "false_pos_rate": 0.0051
+     },
+     "VerbForm": {
+      "acc": 0.9351,
+      "n_gold": 4148,
+      "false_pos_rate": 0.0055
+     },
+     "Mood": {
+      "acc": 0.9304,
+      "n_gold": 2011,
+      "false_pos_rate": 0.0045
+     },
+     "Voice": {
+      "acc": 0.8536,
+      "n_gold": 280,
+      "false_pos_rate": 0.0016
+     },
+     "Polarity": {
+      "acc": 0.9868,
+      "n_gold": 227,
+      "false_pos_rate": 0.0
+     },
+     "Number": {
+      "acc": 0.9526,
+      "n_gold": 9658,
+      "false_pos_rate": 0.0221
+     },
+     "Person": {
+      "acc": 0.9576,
+      "n_gold": 3587,
+      "false_pos_rate": 0.0043
+     }
+    },
+    "relations": {
+     "nsubj": {
+      "p": 0.9269,
+      "r": 0.9216,
+      "f1": 0.9242,
+      "n_gold": 1403,
+      "n_pred": 1395
+     },
+     "nsubj:pass": {
+      "p": 0.875,
+      "r": 0.7778,
+      "f1": 0.8235,
+      "n_gold": 108,
+      "n_pred": 96
+     },
+     "obj": {
+      "p": 0.8744,
+      "r": 0.8903,
+      "f1": 0.8823,
+      "n_gold": 1149,
+      "n_pred": 1170
+     },
+     "iobj": {
+      "p": 0.9298,
+      "r": 0.7465,
+      "f1": 0.8281,
+      "n_gold": 71,
+      "n_pred": 57
+     },
+     "obl:agent": {
+      "p": 0.8,
+      "r": 0.7778,
+      "f1": 0.7887,
+      "n_gold": 36,
+      "n_pred": 35
+     },
+     "aux": {
+      "p": 0.9901,
+      "r": 0.9629,
+      "f1": 0.9763,
+      "n_gold": 727,
+      "n_pred": 707
+     },
+     "aux:pass": {
+      "p": 0.9815,
+      "r": 0.8618,
+      "f1": 0.9177,
+      "n_gold": 123,
+      "n_pred": 108
+     },
+     "xcomp": {
+      "p": 0.8459,
+      "r": 0.7935,
+      "f1": 0.8189,
+      "n_gold": 339,
+      "n_pred": 318
+     },
+     "negator": {
+      "p": 1.0,
+      "r": 0.965,
+      "f1": 0.9822,
+      "n_gold": 143,
+      "n_pred": 138
+     }
+    },
+    "csi_macro_f1": 0.8824,
+    "double_object": {
+     "iobj_gold": 71,
+     "iobj_found": 53,
+     "theme_gold": 34,
+     "theme_found": 30
+    },
+    "uas": 0.85,
+    "las": 0.8165,
+    "las_universal": 0.8181,
+    "seconds": 2.5
+   }
+  },
+  "/opt/clover-k3/meaning-core/csi/runs/ewt-seed3/model-best": {
+   "pipeline": [
+    "tok2vec",
+    "tagger",
+    "morphologizer",
+    "trainable_lemmatizer",
+    "parser"
+   ],
+   "version": "0.0.0",
+   "label_scheme": "UD",
+   "dev": {
+    "words": 25148,
+    "upos": 0.9412,
+    "xpos": 0.9313,
+    "lemma_ci": 0.9789,
+    "features": {
+     "Tense": {
+      "acc": 0.9441,
+      "n_gold": 2665,
+      "false_pos_rate": 0.0061
+     },
+     "VerbForm": {
+      "acc": 0.9188,
+      "n_gold": 4274,
+      "false_pos_rate": 0.007
+     },
+     "Mood": {
+      "acc": 0.9239,
+      "n_gold": 2141,
+      "false_pos_rate": 0.0053
+     },
+     "Voice": {
+      "acc": 0.8738,
+      "n_gold": 309,
+      "false_pos_rate": 0.003
+     },
+     "Polarity": {
+      "acc": 0.9818,
+      "n_gold": 220,
+      "false_pos_rate": 0.0
+     },
+     "Number": {
+      "acc": 0.9563,
+      "n_gold": 9629,
+      "false_pos_rate": 0.0255
+     },
+     "Person": {
+      "acc": 0.959,
+      "n_gold": 3731,
+      "false_pos_rate": 0.0042
+     }
+    },
+    "relations": {
+     "nsubj": {
+      "p": 0.9382,
+      "r": 0.9015,
+      "f1": 0.9195,
+      "n_gold": 1381,
+      "n_pred": 1327
+     },
+     "nsubj:pass": {
+      "p": 0.8779,
+      "r": 0.7468,
+      "f1": 0.807,
+      "n_gold": 154,
+      "n_pred": 131
+     },
+     "obj": {
+      "p": 0.8793,
+      "r": 0.8509,
+      "f1": 0.8648,
+      "n_gold": 1207,
+      "n_pred": 1168
+     },
+     "iobj": {
+      "p": 0.8462,
+      "r": 0.7333,
+      "f1": 0.7857,
+      "n_gold": 75,
+      "n_pred": 65
+     },
+     "obl:agent": {
+      "p": 0.8667,
+      "r": 0.9286,
+      "f1": 0.8966,
+      "n_gold": 28,
+      "n_pred": 30
+     },
+     "aux": {
+      "p": 0.9863,
+      "r": 0.95,
+      "f1": 0.9678,
+      "n_gold": 680,
+      "n_pred": 655
+     },
+     "aux:pass": {
+      "p": 0.9864,
+      "r": 0.8951,
+      "f1": 0.9385,
+      "n_gold": 162,
+      "n_pred": 147
+     },
+     "xcomp": {
+      "p": 0.8227,
+      "r": 0.8109,
+      "f1": 0.8167,
+      "n_gold": 349,
+      "n_pred": 344
+     },
+     "negator": {
+      "p": 0.976,
+      "r": 0.9457,
+      "f1": 0.9606,
+      "n_gold": 129,
+      "n_pred": 125
+     }
+    },
+    "csi_macro_f1": 0.8841,
+    "double_object": {
+     "iobj_gold": 75,
+     "iobj_found": 55,
+     "theme_gold": 42,
+     "theme_found": 31
+    },
+    "uas": 0.8512,
+    "las": 0.815,
+    "las_universal": 0.817,
+    "seconds": 2.8
+   },
+   "test": {
+    "words": 25094,
+    "upos": 0.944,
+    "xpos": 0.9336,
+    "lemma_ci": 0.9821,
+    "features": {
+     "Tense": {
+      "acc": 0.9562,
+      "n_gold": 2535,
+      "false_pos_rate": 0.0052
+     },
+     "VerbForm": {
+      "acc": 0.9339,
+      "n_gold": 4148,
+      "false_pos_rate": 0.0057
+     },
+     "Mood": {
+      "acc": 0.9388,
+      "n_gold": 2011,
+      "false_pos_rate": 0.0052
+     },
+     "Voice": {
+      "acc": 0.85,
+      "n_gold": 280,
+      "false_pos_rate": 0.0016
+     },
+     "Polarity": {
+      "acc": 0.9824,
+      "n_gold": 227,
+      "false_pos_rate": 0.0002
+     },
+     "Number": {
+      "acc": 0.9489,
+      "n_gold": 9658,
+      "false_pos_rate": 0.0219
+     },
+     "Person": {
+      "acc": 0.9638,
+      "n_gold": 3587,
+      "false_pos_rate": 0.0044
+     }
+    },
+    "relations": {
+     "nsubj": {
+      "p": 0.943,
+      "r": 0.9195,
+      "f1": 0.9311,
+      "n_gold": 1403,
+      "n_pred": 1368
+     },
+     "nsubj:pass": {
+      "p": 0.8617,
+      "r": 0.75,
+      "f1": 0.802,
+      "n_gold": 108,
+      "n_pred": 94
+     },
+     "obj": {
+      "p": 0.8924,
+      "r": 0.8877,
+      "f1": 0.8901,
+      "n_gold": 1149,
+      "n_pred": 1143
+     },
+     "iobj": {
+      "p": 0.8657,
+      "r": 0.8169,
+      "f1": 0.8406,
+      "n_gold": 71,
+      "n_pred": 67
+     },
+     "obl:agent": {
+      "p": 0.8485,
+      "r": 0.7778,
+      "f1": 0.8116,
+      "n_gold": 36,
+      "n_pred": 33
+     },
+     "aux": {
+      "p": 0.9943,
+      "r": 0.956,
+      "f1": 0.9748,
+      "n_gold": 727,
+      "n_pred": 699
+     },
+     "aux:pass": {
+      "p": 0.9658,
+      "r": 0.9187,
+      "f1": 0.9417,
+      "n_gold": 123,
+      "n_pred": 117
+     },
+     "xcomp": {
+      "p": 0.8079,
+      "r": 0.8437,
+      "f1": 0.8254,
+      "n_gold": 339,
+      "n_pred": 354
+     },
+     "negator": {
+      "p": 1.0,
+      "r": 0.972,
+      "f1": 0.9858,
+      "n_gold": 143,
+      "n_pred": 139
+     }
+    },
+    "csi_macro_f1": 0.8892,
+    "double_object": {
+     "iobj_gold": 71,
+     "iobj_found": 58,
+     "theme_gold": 34,
+     "theme_found": 32
+    },
+    "uas": 0.8477,
+    "las": 0.8144,
+    "las_universal": 0.8162,
+    "seconds": 2.4
+   }
+  }
+ }
+}

@@ -1,0 +1,1390 @@
+{
+ "experiment": "E6a COGS role check",
+ "csi_version": "0.1",
+ "splits": {
+  "test": {
+   "n": 3000,
+   "coverage": 0.9793,
+   "predicate_match": 0.9653,
+   "exact_match": 0.7857,
+   "roles": {
+    "ARG0": {
+     "p": 0.9459,
+     "r": 0.9571,
+     "n_gold": 2355
+    },
+    "ARG1": {
+     "p": 0.8248,
+     "r": 0.7913,
+     "n_gold": 2362
+    },
+    "ARG2": {
+     "p": 1.0,
+     "r": 0.5854,
+     "n_gold": 1001
+    }
+   },
+   "error_patterns": {
+    "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1": 216,
+    "gold ARG1,ARG2 | csi ARG1": 164,
+    "gold ARG1 | csi ARG0": 87,
+    "unsupported": 62,
+    "predicate": 42,
+    "gold ARG0,ARG1,ARG2 | csi ARG1": 34,
+    "gold ARG0,ARG1,ARG2 | csi ARG1,ARG2": 28,
+    "gold ARG0,ARG1,ARG2 | csi ARG0,ARG2": 6,
+    "gold ARG0 | csi ARG0,ARG1": 2,
+    "gold ARG0,ARG1,ARG2 | csi ARG0": 1,
+    "gold ARG0,ARG1 | csi ARG0": 1
+   },
+   "by_case": {},
+   "error_sample_seed7": [
+    {
+     "text": "Evelyn hoped that a child lended Olivia the bag .",
+     "case": "in_distribution",
+     "why": "predicate",
+     "csi": {
+      "predicate": "hop",
+      "embedded_under": null,
+      "roles": {
+       "ARG0": "evelyn"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "evelyn"
+      },
+      "ccomp": 5
+     }
+    },
+    {
+     "text": "Amelia was mailed a cake .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "amelia"
+     },
+     "gold": {
+      "ARG2": "amelia",
+      "ARG1": "cake"
+     }
+    },
+    {
+     "text": "Mason was posted the cookie by Liam .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "mason",
+      "ARG0": "liam"
+     },
+     "gold": {
+      "ARG2": "mason",
+      "ARG1": "cookie",
+      "ARG0": "liam"
+     }
+    },
+    {
+     "text": "Liam hoped to eat .",
+     "case": "in_distribution",
+     "why": "predicate",
+     "csi": {
+      "predicate": "eat",
+      "embedded_under": "hop",
+      "roles": {
+       "ARG0": "liam"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "liam"
+      },
+      "xcomp": 3
+     }
+    },
+    {
+     "text": "The cookie crumpled .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG0": "cookie"
+     },
+     "gold": {
+      "ARG1": "cookie"
+     }
+    },
+    {
+     "text": "Benjamin forwarded the girl a rose .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG0": "benjamin",
+      "ARG1": "girl"
+     },
+     "gold": {
+      "ARG0": "benjamin",
+      "ARG2": "girl",
+      "ARG1": "rose"
+     }
+    },
+    {
+     "text": "A baby hoped that the rose was stabbed .",
+     "case": "in_distribution",
+     "why": "predicate",
+     "csi": {
+      "predicate": "hop",
+      "embedded_under": null,
+      "roles": {
+       "ARG0": "baby"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "baby"
+      },
+      "ccomp": 7
+     }
+    },
+    {
+     "text": "Emma was given the box by Olivia .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "emma",
+      "ARG0": "olivia"
+     },
+     "gold": {
+      "ARG2": "emma",
+      "ARG1": "box",
+      "ARG0": "olivia"
+     }
+    },
+    {
+     "text": "A baby decomposed .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG0": "baby"
+     },
+     "gold": {
+      "ARG1": "baby"
+     }
+    },
+    {
+     "text": "Emily shortened a baby on a stage .",
+     "case": "in_distribution",
+     "why": [
+      "no subject"
+     ]
+    },
+    {
+     "text": "A rose floated .",
+     "case": "in_distribution",
+     "why": [
+      "no subject"
+     ]
+    },
+    {
+     "text": "The boy was given a cookie beside a machine .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "boy"
+     },
+     "gold": {
+      "ARG2": "boy",
+      "ARG1": "cookie"
+     }
+    },
+    {
+     "text": "The butterfly fed a cat the cake in a room .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG0": "butterfly",
+      "ARG1": "cat"
+     },
+     "gold": {
+      "ARG0": "butterfly",
+      "ARG2": "cat",
+      "ARG1": "cake"
+     }
+    },
+    {
+     "text": "Olivia was given a cake on a chair .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "olivia"
+     },
+     "gold": {
+      "ARG2": "olivia",
+      "ARG1": "cake"
+     }
+    },
+    {
+     "text": "A girl was lended a lollipop in the cot by a president .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "girl",
+      "ARG0": "president"
+     },
+     "gold": {
+      "ARG2": "girl",
+      "ARG1": "lollipop",
+      "ARG0": "president"
+     }
+    },
+    {
+     "text": "A frog was given a cookie .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "frog"
+     },
+     "gold": {
+      "ARG2": "frog",
+      "ARG1": "cookie"
+     }
+    },
+    {
+     "text": "The seed rolled .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG0": "seed"
+     },
+     "gold": {
+      "ARG1": "seed"
+     }
+    },
+    {
+     "text": "Sophia liked that a girl preferred to walk .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG0": "sophia",
+      "ARG1": "that"
+     },
+     "gold": {
+      "ARG0": "sophia"
+     }
+    },
+    {
+     "text": "A frog was handed a donut in a room .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "frog"
+     },
+     "gold": {
+      "ARG2": "frog",
+      "ARG1": "donut"
+     }
+    },
+    {
+     "text": "A donut was given to a girl by Emma .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "donut",
+      "ARG2": "girl"
+     },
+     "gold": {
+      "ARG1": "donut",
+      "ARG2": "girl",
+      "ARG0": "emma"
+     }
+    },
+    {
+     "text": "A lawyer valued that the pencil was eaten .",
+     "case": "in_distribution",
+     "why": [
+      "no verbal root"
+     ]
+    },
+    {
+     "text": "A frog was given the rose .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "frog"
+     },
+     "gold": {
+      "ARG2": "frog",
+      "ARG1": "rose"
+     }
+    },
+    {
+     "text": "A professor hoped to walk .",
+     "case": "in_distribution",
+     "why": "predicate",
+     "csi": {
+      "predicate": "walk",
+      "embedded_under": "hop",
+      "roles": {
+       "ARG0": "professor"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "professor"
+      },
+      "xcomp": 4
+     }
+    },
+    {
+     "text": "Isabella hoped that a cake was burned .",
+     "case": "in_distribution",
+     "why": "predicate",
+     "csi": {
+      "predicate": "hop",
+      "embedded_under": null,
+      "roles": {
+       "ARG0": "isabella"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "isabella"
+      },
+      "ccomp": 6
+     }
+    },
+    {
+     "text": "Oliver hoped that William was given a donut on the table .",
+     "case": "in_distribution",
+     "why": "predicate",
+     "csi": {
+      "predicate": "hop",
+      "embedded_under": null,
+      "roles": {
+       "ARG0": "oliver"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "oliver"
+      },
+      "ccomp": 5
+     }
+    },
+    {
+     "text": "Emma was rented a cake beside a table by the cat .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "emma",
+      "ARG0": "cat"
+     },
+     "gold": {
+      "ARG2": "emma",
+      "ARG1": "cake",
+      "ARG0": "cat"
+     }
+    },
+    {
+     "text": "The girl was given a donut in a room .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "girl"
+     },
+     "gold": {
+      "ARG2": "girl",
+      "ARG1": "donut"
+     }
+    },
+    {
+     "text": "A bunny was given a donut by a child .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "bunny",
+      "ARG0": "child"
+     },
+     "gold": {
+      "ARG2": "bunny",
+      "ARG1": "donut",
+      "ARG0": "child"
+     }
+    },
+    {
+     "text": "Andrew was forwarded a donut in the pit .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "andrew"
+     },
+     "gold": {
+      "ARG2": "andrew",
+      "ARG1": "donut"
+     }
+    },
+    {
+     "text": "Noah posted the boy the donut on a table on the leaflet .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG0": "noah",
+      "ARG1": "boy"
+     },
+     "gold": {
+      "ARG0": "noah",
+      "ARG2": "boy",
+      "ARG1": "donut"
+     }
+    },
+    {
+     "text": "A goose was rented a cake beside a stage in the vehicle by a girl .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "goose",
+      "ARG0": "girl"
+     },
+     "gold": {
+      "ARG2": "goose",
+      "ARG1": "cake",
+      "ARG0": "girl"
+     }
+    },
+    {
+     "text": "Amelia floated .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG0": "amelia"
+     },
+     "gold": {
+      "ARG1": "amelia"
+     }
+    },
+    {
+     "text": "Emma was given the present by a cat .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "emma",
+      "ARG0": "cat"
+     },
+     "gold": {
+      "ARG2": "emma",
+      "ARG1": "present",
+      "ARG0": "cat"
+     }
+    },
+    {
+     "text": "A crocodile was given a rose by Harper .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "crocodile"
+     },
+     "gold": {
+      "ARG2": "crocodile",
+      "ARG1": "rose",
+      "ARG0": "harper"
+     }
+    },
+    {
+     "text": "Sophia rented a boy a strawberry beside a stage .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG0": "sophia",
+      "ARG1": "boy"
+     },
+     "gold": {
+      "ARG0": "sophia",
+      "ARG2": "boy",
+      "ARG1": "strawberry"
+     }
+    },
+    {
+     "text": "Liam was lended the box .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "liam"
+     },
+     "gold": {
+      "ARG2": "liam",
+      "ARG1": "box"
+     }
+    },
+    {
+     "text": "A mouse returned Emma a cookie beside a bed .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG0": "mouse",
+      "ARG1": "emma"
+     },
+     "gold": {
+      "ARG0": "mouse",
+      "ARG2": "emma",
+      "ARG1": "cookie"
+     }
+    },
+    {
+     "text": "Olivia was fed a raisin on a chair by Emma .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "olivia",
+      "ARG0": "emma"
+     },
+     "gold": {
+      "ARG2": "olivia",
+      "ARG1": "raisin",
+      "ARG0": "emma"
+     }
+    },
+    {
+     "text": "A cake was lended to a girl by Olivia .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG1": "cake",
+      "ARG2": "girl"
+     },
+     "gold": {
+      "ARG1": "cake",
+      "ARG2": "girl",
+      "ARG0": "olivia"
+     }
+    },
+    {
+     "text": "A baby broke .",
+     "case": "in_distribution",
+     "why": "roles",
+     "csi": {
+      "ARG0": "baby"
+     },
+     "gold": {
+      "ARG1": "baby"
+     }
+    }
+   ]
+  },
+  "gen": {
+   "n": 21000,
+   "coverage": 0.9783,
+   "predicate_match": 0.9386,
+   "exact_match": 0.8353,
+   "roles": {
+    "ARG0": {
+     "p": 0.9543,
+     "r": 0.958,
+     "n_gold": 20065
+    },
+    "ARG1": {
+     "p": 0.8878,
+     "r": 0.8819,
+     "n_gold": 13553
+    },
+    "ARG2": {
+     "p": 0.9997,
+     "r": 0.6323,
+     "n_gold": 5148
+    }
+   },
+   "error_patterns": {
+    "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1": 1750,
+    "predicate": 834,
+    "unsupported": 455,
+    "gold ARG1,ARG2 | csi ARG1": 117,
+    "gold ARG0 | csi ARG0,ARG1": 98,
+    "gold ARG1 | csi ARG0": 86,
+    "gold ARG0,ARG1,ARG2 | csi ARG0,ARG2": 57,
+    "gold ARG0,ARG1 | csi ARG0": 29,
+    "gold ARG0,ARG1,ARG2 | csi ARG0": 18,
+    "gold ARG0,ARG1,ARG2 | csi ARG1": 7,
+    "gold ARG0,ARG1,ARG2 | csi ARG1,ARG2": 2,
+    "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1,ARG2 (same roles, other heads)": 2
+   },
+   "by_case": {
+    "active_to_passive": {
+     "n": 1000,
+     "coverage": 1.0,
+     "predicate_match": 0.988,
+     "exact_match": 0.988,
+     "top_error": [
+      "predicate",
+      12
+     ]
+    },
+    "cp_recursion": {
+     "n": 1000,
+     "coverage": 0.992,
+     "predicate_match": 0.873,
+     "exact_match": 0.862,
+     "top_error": [
+      "predicate",
+      119
+     ]
+    },
+    "do_dative_to_pp_dative": {
+     "n": 1000,
+     "coverage": 0.996,
+     "predicate_match": 0.983,
+     "exact_match": 0.871,
+     "top_error": [
+      "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1",
+      112
+     ]
+    },
+    "obj_omitted_transitive_to_transitive": {
+     "n": 1000,
+     "coverage": 0.991,
+     "predicate_match": 0.972,
+     "exact_match": 0.971,
+     "top_error": [
+      "predicate",
+      19
+     ]
+    },
+    "obj_pp_to_subj_pp": {
+     "n": 1000,
+     "coverage": 0.935,
+     "predicate_match": 0.924,
+     "exact_match": 0.682,
+     "top_error": [
+      "gold ARG1,ARG2 | csi ARG1",
+      117
+     ]
+    },
+    "obj_to_subj_common": {
+     "n": 1000,
+     "coverage": 0.954,
+     "predicate_match": 0.933,
+     "exact_match": 0.836,
+     "top_error": [
+      "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1",
+      89
+     ]
+    },
+    "obj_to_subj_proper": {
+     "n": 1000,
+     "coverage": 0.997,
+     "predicate_match": 0.977,
+     "exact_match": 0.873,
+     "top_error": [
+      "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1",
+      99
+     ]
+    },
+    "only_seen_as_transitive_subj_as_unacc_subj": {
+     "n": 1000,
+     "coverage": 0.985,
+     "predicate_match": 0.848,
+     "exact_match": 0.749,
+     "top_error": [
+      "predicate",
+      137
+     ]
+    },
+    "only_seen_as_unacc_subj_as_obj_omitted_transitive_subj": {
+     "n": 1000,
+     "coverage": 0.989,
+     "predicate_match": 0.847,
+     "exact_match": 0.841,
+     "top_error": [
+      "predicate",
+      142
+     ]
+    },
+    "only_seen_as_unacc_subj_as_unerg_subj": {
+     "n": 1000,
+     "coverage": 0.989,
+     "predicate_match": 0.847,
+     "exact_match": 0.842,
+     "top_error": [
+      "predicate",
+      142
+     ]
+    },
+    "passive_to_active": {
+     "n": 1000,
+     "coverage": 0.998,
+     "predicate_match": 0.976,
+     "exact_match": 0.975,
+     "top_error": [
+      "predicate",
+      22
+     ]
+    },
+    "pp_dative_to_do_dative": {
+     "n": 1000,
+     "coverage": 0.999,
+     "predicate_match": 0.987,
+     "exact_match": 0.353,
+     "top_error": [
+      "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1",
+      607
+     ]
+    },
+    "pp_recursion": {
+     "n": 1000,
+     "coverage": 0.998,
+     "predicate_match": 0.996,
+     "exact_match": 0.893,
+     "top_error": [
+      "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1",
+      97
+     ]
+    },
+    "prim_to_inf_arg": {
+     "n": 1000,
+     "coverage": 0.828,
+     "predicate_match": 0.768,
+     "exact_match": 0.763,
+     "top_error": [
+      "unsupported",
+      172
+     ]
+    },
+    "prim_to_obj_common": {
+     "n": 1000,
+     "coverage": 0.995,
+     "predicate_match": 0.979,
+     "exact_match": 0.912,
+     "top_error": [
+      "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1",
+      66
+     ]
+    },
+    "prim_to_obj_proper": {
+     "n": 1000,
+     "coverage": 0.986,
+     "predicate_match": 0.975,
+     "exact_match": 0.764,
+     "top_error": [
+      "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1",
+      185
+     ]
+    },
+    "prim_to_subj_common": {
+     "n": 1000,
+     "coverage": 0.946,
+     "predicate_match": 0.937,
+     "exact_match": 0.842,
+     "top_error": [
+      "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1",
+      82
+     ]
+    },
+    "prim_to_subj_proper": {
+     "n": 1000,
+     "coverage": 0.998,
+     "predicate_match": 0.978,
+     "exact_match": 0.896,
+     "top_error": [
+      "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1",
+      76
+     ]
+    },
+    "subj_to_obj_common": {
+     "n": 1000,
+     "coverage": 0.994,
+     "predicate_match": 0.978,
+     "exact_match": 0.88,
+     "top_error": [
+      "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1",
+      90
+     ]
+    },
+    "subj_to_obj_proper": {
+     "n": 1000,
+     "coverage": 0.98,
+     "predicate_match": 0.969,
+     "exact_match": 0.773,
+     "top_error": [
+      "gold ARG0,ARG1,ARG2 | csi ARG0,ARG1",
+      193
+     ]
+    },
+    "unacc_to_transitive": {
+     "n": 1000,
+     "coverage": 0.995,
+     "predicate_match": 0.976,
+     "exact_match": 0.976,
+     "top_error": [
+      "predicate",
+      19
+     ]
+    }
+   },
+   "error_sample_seed7": [
+    {
+     "text": "The prince in a bin smiled .",
+     "case": "obj_pp_to_subj_pp",
+     "why": [
+      "no verbal root"
+     ]
+    },
+    {
+     "text": "A penguin shipped Lillian a cake .",
+     "case": "pp_dative_to_do_dative",
+     "why": "roles",
+     "csi": {
+      "ARG0": "penguin",
+      "ARG1": "lillian"
+     },
+     "gold": {
+      "ARG0": "penguin",
+      "ARG2": "lillian",
+      "ARG1": "cake"
+     }
+    },
+    {
+     "text": "Charlie rented William the cake .",
+     "case": "obj_to_subj_proper",
+     "why": "roles",
+     "csi": {
+      "ARG0": "charlie",
+      "ARG1": "william"
+     },
+     "gold": {
+      "ARG0": "charlie",
+      "ARG2": "william",
+      "ARG1": "cake"
+     }
+    },
+    {
+     "text": "Emma lended a cat Paula .",
+     "case": "prim_to_obj_proper",
+     "why": "roles",
+     "csi": {
+      "ARG0": "emma",
+      "ARG1": "cat"
+     },
+     "gold": {
+      "ARG0": "emma",
+      "ARG2": "cat",
+      "ARG1": "paula"
+     }
+    },
+    {
+     "text": "Olivia lended Thomas the shark on a bed .",
+     "case": "prim_to_obj_common",
+     "why": "roles",
+     "csi": {
+      "ARG0": "olivia",
+      "ARG1": "thomas"
+     },
+     "gold": {
+      "ARG0": "olivia",
+      "ARG2": "thomas",
+      "ARG1": "shark"
+     }
+    },
+    {
+     "text": "A bear hated to crawl .",
+     "case": "prim_to_inf_arg",
+     "why": [
+      "no verbal root"
+     ]
+    },
+    {
+     "text": "William liked that Ava said that Lillian liked that Liam respected that Olivia dreamed that a citizen liked that a ball rolled .",
+     "case": "cp_recursion",
+     "why": "roles",
+     "csi": {
+      "ARG0": "william",
+      "ARG1": "that"
+     },
+     "gold": {
+      "ARG0": "william"
+     }
+    },
+    {
+     "text": "A boy passed the lion the cake on a crack beside the bicycle on the stage in the backpack on a booklet beside the TV in the car on the table beside a piano in the house .",
+     "case": "pp_recursion",
+     "why": "roles",
+     "csi": {
+      "ARG0": "boy",
+      "ARG1": "lion"
+     },
+     "gold": {
+      "ARG0": "boy",
+      "ARG2": "lion",
+      "ARG1": "cake"
+     }
+    },
+    {
+     "text": "A turkey beside a log was given the crayon on the table .",
+     "case": "obj_pp_to_subj_pp",
+     "why": "roles",
+     "csi": {
+      "ARG1": "turkey"
+     },
+     "gold": {
+      "ARG2": "turkey",
+      "ARG1": "crayon"
+     }
+    },
+    {
+     "text": "Paula lended Emma the cake .",
+     "case": "prim_to_subj_proper",
+     "why": "roles",
+     "csi": {
+      "ARG0": "paula",
+      "ARG1": "emma"
+     },
+     "gold": {
+      "ARG0": "paula",
+      "ARG2": "emma",
+      "ARG1": "cake"
+     }
+    },
+    {
+     "text": "A girl in the garden enlarged .",
+     "case": "obj_pp_to_subj_pp",
+     "why": "roles",
+     "csi": {
+      "ARG0": "girl"
+     },
+     "gold": {
+      "ARG1": "girl"
+     }
+    },
+    {
+     "text": "A girl posted a chicken Paula .",
+     "case": "prim_to_obj_proper",
+     "why": "roles",
+     "csi": {
+      "ARG0": "girl",
+      "ARG1": "chicken"
+     },
+     "gold": {
+      "ARG0": "girl",
+      "ARG2": "chicken",
+      "ARG1": "paula"
+     }
+    },
+    {
+     "text": "The mouse teleported a donut to the puppy .",
+     "case": "do_dative_to_pp_dative",
+     "why": "roles",
+     "csi": {
+      "ARG0": "mouse",
+      "ARG1": "donut"
+     },
+     "gold": {
+      "ARG0": "mouse",
+      "ARG1": "donut",
+      "ARG2": "puppy"
+     }
+    },
+    {
+     "text": "William lended Emma the cake beside a dragon in the house on the bed in the shoe beside the table on the canvas on a stool beside a stage in a tent in the glass .",
+     "case": "pp_recursion",
+     "why": "roles",
+     "csi": {
+      "ARG0": "william",
+      "ARG1": "emma"
+     },
+     "gold": {
+      "ARG0": "william",
+      "ARG2": "emma",
+      "ARG1": "cake"
+     }
+    },
+    {
+     "text": "The donkey shipped Emma the radio beside the crystal .",
+     "case": "pp_dative_to_do_dative",
+     "why": "roles",
+     "csi": {
+      "ARG0": "donkey",
+      "ARG1": "emma"
+     },
+     "gold": {
+      "ARG0": "donkey",
+      "ARG2": "emma",
+      "ARG1": "radio"
+     }
+    },
+    {
+     "text": "The kitty shipped Emma a key .",
+     "case": "pp_dative_to_do_dative",
+     "why": "roles",
+     "csi": {
+      "ARG0": "kitty",
+      "ARG1": "emma"
+     },
+     "gold": {
+      "ARG0": "kitty",
+      "ARG2": "emma",
+      "ARG1": "key"
+     }
+    },
+    {
+     "text": "A cockroach lended the girl the box on a table in a soup .",
+     "case": "obj_to_subj_common",
+     "why": "roles",
+     "csi": {
+      "ARG0": "cockroach",
+      "ARG1": "girl"
+     },
+     "gold": {
+      "ARG0": "cockroach",
+      "ARG2": "girl",
+      "ARG1": "box"
+     }
+    },
+    {
+     "text": "Charlie wired a boy the rose .",
+     "case": "obj_to_subj_proper",
+     "why": "roles",
+     "csi": {
+      "ARG0": "charlie",
+      "ARG1": "boy"
+     },
+     "gold": {
+      "ARG0": "charlie",
+      "ARG2": "boy",
+      "ARG1": "rose"
+     }
+    },
+    {
+     "text": "Benjamin shipped the dog the cake on a chair on a table .",
+     "case": "pp_dative_to_do_dative",
+     "why": "roles",
+     "csi": {
+      "ARG0": "benjamin",
+      "ARG1": "dog"
+     },
+     "gold": {
+      "ARG0": "benjamin",
+      "ARG2": "dog",
+      "ARG1": "cake"
+     }
+    },
+    {
+     "text": "Emma hoped that the hippo screamed .",
+     "case": "only_seen_as_unacc_subj_as_unerg_subj",
+     "why": "predicate",
+     "csi": {
+      "predicate": "hop",
+      "embedded_under": null,
+      "roles": {
+       "ARG0": "emma"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "emma"
+      },
+      "ccomp": 5
+     }
+    },
+    {
+     "text": "Emma shipped the visitor the cookie .",
+     "case": "pp_dative_to_do_dative",
+     "why": "roles",
+     "csi": {
+      "ARG0": "emma",
+      "ARG1": "visitor"
+     },
+     "gold": {
+      "ARG0": "emma",
+      "ARG2": "visitor",
+      "ARG1": "cookie"
+     }
+    },
+    {
+     "text": "Olivia hoped that the hippo laughed .",
+     "case": "only_seen_as_unacc_subj_as_unerg_subj",
+     "why": "predicate",
+     "csi": {
+      "predicate": "hop",
+      "embedded_under": null,
+      "roles": {
+       "ARG0": "olivia"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "olivia"
+      },
+      "ccomp": 5
+     }
+    },
+    {
+     "text": "Emma gave the human Lina .",
+     "case": "subj_to_obj_proper",
+     "why": "roles",
+     "csi": {
+      "ARG0": "emma",
+      "ARG1": "lina"
+     },
+     "gold": {
+      "ARG0": "emma",
+      "ARG2": "human",
+      "ARG1": "lina"
+     }
+    },
+    {
+     "text": "Liam offered Noah Paula .",
+     "case": "prim_to_obj_proper",
+     "why": "roles",
+     "csi": {
+      "ARG0": "liam",
+      "ARG1": "paula"
+     },
+     "gold": {
+      "ARG0": "liam",
+      "ARG2": "noah",
+      "ARG1": "paula"
+     }
+    },
+    {
+     "text": "A cobra slid .",
+     "case": "only_seen_as_transitive_subj_as_unacc_subj",
+     "why": "roles",
+     "csi": {
+      "ARG0": "cobra"
+     },
+     "gold": {
+      "ARG1": "cobra"
+     }
+    },
+    {
+     "text": "The girl in a house scoffed .",
+     "case": "obj_pp_to_subj_pp",
+     "why": [
+      "no verbal root"
+     ]
+    },
+    {
+     "text": "The butterfly hoped that a girl believed that Sebastian liked that Noah liked that Evelyn confessed that a cake was sketched .",
+     "case": "cp_recursion",
+     "why": "predicate",
+     "csi": {
+      "predicate": "hop",
+      "embedded_under": null,
+      "roles": {
+       "ARG0": "butterfly"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "butterfly"
+      },
+      "ccomp": 6
+     }
+    },
+    {
+     "text": "A shark fed a cat a muffin beside a house in a bag .",
+     "case": "prim_to_subj_common",
+     "why": "roles",
+     "csi": {
+      "ARG0": "shark",
+      "ARG1": "cat"
+     },
+     "gold": {
+      "ARG0": "shark",
+      "ARG2": "cat",
+      "ARG1": "muffin"
+     }
+    },
+    {
+     "text": "The moose hoped that a governor tolerated a hedgehog .",
+     "case": "subj_to_obj_common",
+     "why": "predicate",
+     "csi": {
+      "predicate": "hop",
+      "embedded_under": null,
+      "roles": {
+       "ARG0": "moose"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "moose"
+      },
+      "ccomp": 6
+     }
+    },
+    {
+     "text": "William hoped that a cobra rolled .",
+     "case": "only_seen_as_transitive_subj_as_unacc_subj",
+     "why": "predicate",
+     "csi": {
+      "predicate": "hop",
+      "embedded_under": null,
+      "roles": {
+       "ARG0": "william"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "william"
+      },
+      "ccomp": 5
+     }
+    },
+    {
+     "text": "A creature shipped Madison a hammer .",
+     "case": "pp_dative_to_do_dative",
+     "why": "roles",
+     "csi": {
+      "ARG0": "creature",
+      "ARG1": "madison"
+     },
+     "gold": {
+      "ARG0": "creature",
+      "ARG2": "madison",
+      "ARG1": "hammer"
+     }
+    },
+    {
+     "text": "Oliver shipped a girl the raisin .",
+     "case": "pp_dative_to_do_dative",
+     "why": "roles",
+     "csi": {
+      "ARG0": "oliver",
+      "ARG1": "girl"
+     },
+     "gold": {
+      "ARG0": "oliver",
+      "ARG2": "girl",
+      "ARG1": "raisin"
+     }
+    },
+    {
+     "text": "A hero hoped that a hippo ate .",
+     "case": "only_seen_as_unacc_subj_as_obj_omitted_transitive_subj",
+     "why": "predicate",
+     "csi": {
+      "predicate": "hop",
+      "embedded_under": null,
+      "roles": {
+       "ARG0": "hero"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "hero"
+      },
+      "ccomp": 6
+     }
+    },
+    {
+     "text": "A dog wired Emma Paula .",
+     "case": "prim_to_obj_proper",
+     "why": "roles",
+     "csi": {
+      "ARG0": "dog",
+      "ARG1": "paula"
+     },
+     "gold": {
+      "ARG0": "dog",
+      "ARG2": "emma",
+      "ARG1": "paula"
+     }
+    },
+    {
+     "text": "Paula offered the turkey a donut in a coffin .",
+     "case": "prim_to_subj_proper",
+     "why": "roles",
+     "csi": {
+      "ARG0": "paula",
+      "ARG1": "turkey"
+     },
+     "gold": {
+      "ARG0": "paula",
+      "ARG2": "turkey",
+      "ARG1": "donut"
+     }
+    },
+    {
+     "text": "A girl hoped that a hippo laughed .",
+     "case": "only_seen_as_unacc_subj_as_unerg_subj",
+     "why": "predicate",
+     "csi": {
+      "predicate": "hop",
+      "embedded_under": null,
+      "roles": {
+       "ARG0": "girl"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "girl"
+      },
+      "ccomp": 6
+     }
+    },
+    {
+     "text": "Liam liked that a cobra split .",
+     "case": "only_seen_as_transitive_subj_as_unacc_subj",
+     "why": "roles",
+     "csi": {
+      "ARG0": "liam",
+      "ARG1": "that"
+     },
+     "gold": {
+      "ARG0": "liam"
+     }
+    },
+    {
+     "text": "Grayson hoped that the sailor respected that a crocodile believed that the customer liked that a cat was posted a sandwich by Noah .",
+     "case": "cp_recursion",
+     "why": "predicate",
+     "csi": {
+      "predicate": "hop",
+      "embedded_under": null,
+      "roles": {
+       "ARG0": "grayson"
+      }
+     },
+     "gold": {
+      "verb": "hope",
+      "roles": {
+       "ARG0": "grayson"
+      },
+      "ccomp": 5
+     }
+    },
+    {
+     "text": "Charlotte shipped the lion a cookie .",
+     "case": "pp_dative_to_do_dative",
+     "why": "roles",
+     "csi": {
+      "ARG0": "charlotte",
+      "ARG1": "lion"
+     },
+     "gold": {
+      "ARG0": "charlotte",
+      "ARG2": "lion",
+      "ARG1": "cookie"
+     }
+    },
+    {
+     "text": "A girl enjoyed to crawl .",
+     "case": "prim_to_inf_arg",
+     "why": [
+      "no verbal root"
+     ]
+    }
+   ]
+  }
+ },
+ "seconds": 267.0
+}

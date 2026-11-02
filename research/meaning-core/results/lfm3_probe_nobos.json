@@ -1,0 +1,292 @@
+{
+ "transformers": "5.22.1",
+ "load_s": 5.2,
+ "class": "Lfm3ForCausalLM",
+ "params_m": 1728.8,
+ "vocab": 125035,
+ "config": {
+  "hidden_size": 2048,
+  "num_hidden_layers": 24,
+  "layer_types": [
+   "conv",
+   "conv",
+   "full_attention",
+   "conv",
+   "sliding_attention",
+   "conv",
+   "full_attention",
+   "conv",
+   "sliding_attention",
+   "conv",
+   "full_attention",
+   "conv",
+   "sliding_attention",
+   "conv",
+   "full_attention",
+   "conv",
+   "sliding_attention",
+   "conv",
+   "full_attention",
+   "conv",
+   "sliding_attention",
+   "conv",
+   "full_attention",
+   "conv"
+  ],
+  "tie_word_embeddings": true
+ },
+ "linear_suffixes": {
+  "in_proj": 13,
+  "out_proj": 13,
+  "w1": 24,
+  "w3": 24,
+  "w2": 24,
+  "q_proj": 11,
+  "k_proj": 11,
+  "v_proj": 11,
+  "o_proj": 11,
+  "gate_proj": 11,
+  "lm_head": 1
+ },
+ "first_layer_modules": [
+  "model.layers.0.conv",
+  "model.layers.0.conv.conv",
+  "model.layers.0.conv.in_proj",
+  "model.layers.0.conv.out_proj",
+  "model.layers.0.feed_forward",
+  "model.layers.0.feed_forward.w1",
+  "model.layers.0.feed_forward.w3",
+  "model.layers.0.feed_forward.w2",
+  "model.layers.0.operator_norm",
+  "model.layers.0.ffn_norm",
+  "model.layers.0.post_operator_norm",
+  "model.layers.0.post_ffn_norm",
+  "model.layers.2.self_attn",
+  "model.layers.2.self_attn.q_proj",
+  "model.layers.2.self_attn.k_proj",
+  "model.layers.2.self_attn.v_proj",
+  "model.layers.2.self_attn.o_proj",
+  "model.layers.2.self_attn.q_norm",
+  "model.layers.2.self_attn.k_norm",
+  "model.layers.2.self_attn.gate_proj",
+  "model.layers.2.feed_forward",
+  "model.layers.2.feed_forward.w1",
+  "model.layers.2.feed_forward.w3",
+  "model.layers.2.feed_forward.w2",
+  "model.layers.2.operator_norm",
+  "model.layers.2.ffn_norm",
+  "model.layers.2.post_operator_norm",
+  "model.layers.2.post_ffn_norm"
+ ],
+ "next_token": [
+  {
+   "prefix": "this sticker can be placed",
+   "bos_first": [
+    "this",
+    "\u0120stick"
+   ],
+   "top10": [
+    [
+     " placed",
+     0.2991
+    ],
+    [
+     "\n\n",
+     0.1704
+    ],
+    [
+     " in",
+     0.1034
+    ],
+    [
+     " on",
+     0.0306
+    ],
+    [
+     " if",
+     0.0224
+    ],
+    [
+     ".\n\n",
+     0.0185
+    ],
+    [
+     " when",
+     0.018
+    ],
+    [
+     " with",
+     0.0164
+    ],
+    [
+     " can",
+     0.0164
+    ],
+    [
+     " where",
+     0.0149
+    ]
+   ],
+   "target_p": 0.0306,
+   "concept_first_tokens": 3,
+   "concept_mass": 0.0335
+  },
+  {
+   "prefix": "The Urban Knife Caddy by Kapoosh holds the same",
+   "bos_first": [
+    "The",
+    "\u0120Urban"
+   ],
+   "top10": [
+    [
+     " The",
+     0.5622
+    ],
+    [
+     " the",
+     0.2827
+    ],
+    [
+     " by",
+     0.0317
+    ],
+    [
+     " Kn",
+     0.0317
+    ],
+    [
+     ".",
+     0.0069
+    ],
+    [
+     " as",
+     0.0059
+    ],
+    [
+     "<|im_end|>",
+     0.0057
+    ],
+    [
+     "\n\n",
+     0.0044
+    ],
+    [
+     " kn",
+     0.0034
+    ],
+    [
+     " same",
+     0.0034
+    ]
+   ],
+   "target_p": 0.0,
+   "concept_first_tokens": 3,
+   "concept_mass": 0.0002
+  },
+  {
+   "prefix": "The server stopped because memory ran",
+   "bos_first": [
+    "The",
+    "\u0120server"
+   ],
+   "top10": [
+    [
+     " because",
+     0.6026
+    ],
+    [
+     ".",
+     0.1187
+    ],
+    [
+     " stopped",
+     0.034
+    ],
+    [
+     " ran",
+     0.0249
+    ],
+    [
+     " until",
+     0.0226
+    ],
+    [
+     " when",
+     0.0206
+    ],
+    [
+     " and",
+     0.0142
+    ],
+    [
+     ".\n\n",
+     0.0129
+    ],
+    [
+     " The",
+     0.0083
+    ],
+    [
+     " as",
+     0.0074
+    ]
+   ],
+   "target_p": 0.0017,
+   "concept_first_tokens": 1,
+   "concept_mass": 0.0017
+  },
+  {
+   "prefix": "The doctor examined the",
+   "bos_first": [
+    "The",
+    "\u0120doctor"
+   ],
+   "top10": [
+    [
+     " doctor",
+     0.9876
+    ],
+    [
+     " The",
+     0.002
+    ],
+    [
+     " patient",
+     0.0016
+    ],
+    [
+     " teacher",
+     0.0008
+    ],
+    [
+     " medical",
+     0.0006
+    ],
+    [
+     " physician",
+     0.0004
+    ],
+    [
+     " health",
+     0.0003
+    ],
+    [
+     " student",
+     0.0003
+    ],
+    [
+     " medicine",
+     0.0002
+    ],
+    [
+     " medic",
+     0.0002
+    ]
+   ],
+   "target_p": 0.0016,
+   "concept_first_tokens": 4,
+   "concept_mass": 0.0017
+  }
+ ],
+ "gpu_mem_gb": 3.23
+}

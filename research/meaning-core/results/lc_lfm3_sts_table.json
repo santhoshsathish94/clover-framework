@@ -1,0 +1,110 @@
+{
+ "randomized lambda 0.25": {
+  "mean": 46.0,
+  "min": 45.96,
+  "max": 46.06,
+  "seeds": {
+   "42": 45.96,
+   "43": 46.06,
+   "44": 45.98
+  },
+  "paper": 54.04,
+  "per_task_mean": {
+   "BIOSSES": 47.13,
+   "SICK-R": 49.57,
+   "STS12": 39.41,
+   "STS13": 43.41,
+   "STS14": 34.86,
+   "STS15": 49.01,
+   "STS17": 57.17,
+   "STS22.v2": 57.65,
+   "STSBenchmark": 35.78
+  }
+ },
+ "randomized lambda 1.0": {
+  "mean": 37.21,
+  "min": 37.14,
+  "max": 37.24,
+  "seeds": {
+   "42": 37.23,
+   "43": 37.14,
+   "44": 37.24
+  },
+  "paper": 50.61,
+  "per_task_mean": {
+   "BIOSSES": 33.85,
+   "SICK-R": 45.95,
+   "STS12": 35.44,
+   "STS13": 26.97,
+   "STS14": 24.39,
+   "STS15": 37.75,
+   "STS17": 51.2,
+   "STS22.v2": 53.3,
+   "STSBenchmark": 26.0
+  }
+ },
+ "pretrained": {
+  "mean": 44.17,
+  "min": 44.17,
+  "max": 44.17,
+  "seeds": {
+   "42": 44.17
+  },
+  "paper": 53.28,
+  "per_task_mean": {
+   "BIOSSES": 50.27,
+   "SICK-R": 45.27,
+   "STS12": 37.92,
+   "STS13": 40.14,
+   "STS14": 33.45,
+   "STS15": 49.13,
+   "STS17": 49.02,
+   "STS22.v2": 60.13,
+   "STSBenchmark": 32.19
+  }
+ },
+ "ntp_only (lambda 0)": {
+  "mean": 48.74,
+  "min": 48.72,
+  "max": 48.78,
+  "seeds": {
+   "42": 48.72,
+   "43": 48.78,
+   "44": 48.73
+  },
+  "paper": 54.35,
+  "per_task_mean": {
+   "BIOSSES": 53.08,
+   "SICK-R": 50.52,
+   "STS12": 39.98,
+   "STS13": 49.44,
+   "STS14": 38.7,
+   "STS15": 51.89,
+   "STS17": 57.0,
+   "STS22.v2": 59.39,
+   "STSBenchmark": 38.68
+  }
+ },
+ "concept (lambda 1)": {
+  "mean": 50.1,
+  "min": 50.07,
+  "max": 50.14,
+  "seeds": {
+   "42": 50.09,
+   "43": 50.14,
+   "44": 50.07
+  },
+  "paper": 55.11,
+  "per_task_mean": {
+   "BIOSSES": 55.25,
+   "SICK-R": 51.32,
+   "STS12": 38.64,
+   "STS13": 52.07,
+   "STS14": 41.2,
+   "STS15": 53.86,
+   "STS17": 56.59,
+   "STS22.v2": 61.1,
+   "STSBenchmark": 40.84
+  }
+ }
+}

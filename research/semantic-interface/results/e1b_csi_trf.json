@@ -1,0 +1,105 @@
+{
+ "experiment": "E1 = E6+E7 minimal pairs",
+ "csi_version": "0.1",
+ "parser": "spacy/en_core_web_trf",
+ "test_lexicon": "heldout2",
+ "sizes": {
+  "seen": 531,
+  "heldout2": 627
+ },
+ "label_balance": {
+  "seen": 0.226,
+  "heldout2": 0.2679
+ },
+ "csi": {
+  "heldout2": {
+   "balanced_accuracy": 0.9911,
+   "coverage": 1.0,
+   "per_phenomenon_accuracy": {
+    "dist:attempt": 1.0,
+    "dist:dative_roles_swapped": 1.0,
+    "dist:future": 1.0,
+    "dist:modality": 1.0,
+    "dist:negation": 1.0,
+    "dist:passive_vs_negated_active": 1.0,
+    "dist:predicate": 1.0,
+    "dist:progressive": 1.0,
+    "dist:role_reversal": 1.0,
+    "equiv:dative": 1.0,
+    "equiv:negated_passive": 1.0,
+    "equiv:passive": 0.9444
+   },
+   "n_errors": 3,
+   "errors": [
+    {
+     "a": "The clerk forgave the chef.",
+     "b": "The chef was forgiven by the clerk.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "forgave",
+       "b": "forgive"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The monk forgave the plumber.",
+     "b": "The plumber was forgiven by the monk.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "forgave",
+       "b": "forgive"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The miner forgave the waiter.",
+     "b": "The waiter was forgiven by the miner.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "forgave",
+       "b": "forgive"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    }
+   ],
+   "seconds": 24.7
+  }
+ },
+ "baselines": {}
+}

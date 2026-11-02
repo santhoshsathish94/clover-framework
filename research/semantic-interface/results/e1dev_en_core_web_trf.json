@@ -1,0 +1,59 @@
+{
+ "experiment": "E1 = E6+E7 minimal pairs",
+ "csi_version": "0.1",
+ "parser": "spacy/en_core_web_trf",
+ "test_lexicon": "unseen",
+ "sizes": {
+  "seen": 531,
+  "unseen": 531
+ },
+ "label_balance": {
+  "seen": 0.226,
+  "unseen": 0.226
+ },
+ "csi": {
+  "seen": {
+   "balanced_accuracy": 1.0,
+   "coverage": 1.0,
+   "per_phenomenon_accuracy": {
+    "dist:attempt": 1.0,
+    "dist:dative_roles_swapped": 1.0,
+    "dist:future": 1.0,
+    "dist:modality": 1.0,
+    "dist:negation": 1.0,
+    "dist:passive_vs_negated_active": 1.0,
+    "dist:predicate": 1.0,
+    "dist:progressive": 1.0,
+    "dist:role_reversal": 1.0,
+    "equiv:dative": 1.0,
+    "equiv:negated_passive": 1.0,
+    "equiv:passive": 1.0
+   },
+   "n_errors": 0,
+   "errors": [],
+   "seconds": 144.8
+  },
+  "unseen": {
+   "balanced_accuracy": 1.0,
+   "coverage": 1.0,
+   "per_phenomenon_accuracy": {
+    "dist:attempt": 1.0,
+    "dist:dative_roles_swapped": 1.0,
+    "dist:future": 1.0,
+    "dist:modality": 1.0,
+    "dist:negation": 1.0,
+    "dist:passive_vs_negated_active": 1.0,
+    "dist:predicate": 1.0,
+    "dist:progressive": 1.0,
+    "dist:role_reversal": 1.0,
+    "equiv:dative": 1.0,
+    "equiv:negated_passive": 1.0,
+    "equiv:passive": 1.0
+   },
+   "n_errors": 0,
+   "errors": [],
+   "seconds": 161.0
+  }
+ },
+ "baselines": {}
+}

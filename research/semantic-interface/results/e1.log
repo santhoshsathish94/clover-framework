@@ -1,0 +1,8 @@
+CSI seen {'balanced_accuracy': 0.9917, 'coverage': 1.0, 'per_phenomenon_accuracy': {'dist:attempt': 1.0, 'dist:dative_roles_swapped': 1.0, 'dist:future': 1.0, 'dist:modality': 1.0, 'dist:negation': 1.0, 'dist:passive_vs_negated_active': 1.0, 'dist:predicate': 1.0, 'dist:progressive': 1.0, 'dist:role_reversal': 1.0, 'equiv:dative': 0.8333, 'equiv:negated_passive': 1.0, 'equiv:passive': 1.0}, 'n_errors': 2, 'seconds': 9.5}
+CSI unseen {'balanced_accuracy': 0.9875, 'coverage': 1.0, 'per_phenomenon_accuracy': {'dist:attempt': 1.0, 'dist:dative_roles_swapped': 1.0, 'dist:future': 1.0, 'dist:modality': 1.0, 'dist:negation': 1.0, 'dist:passive_vs_negated_active': 1.0, 'dist:predicate': 1.0, 'dist:progressive': 1.0, 'dist:role_reversal': 1.0, 'equiv:dative': 0.75, 'equiv:negated_passive': 1.0, 'equiv:passive': 1.0}, 'n_errors': 3, 'seconds': 6.2}
+clover_hash {"threshold_from_seen": 0.7452, "seen": {"balanced_accuracy": 0.7166, "auc": 0.7915}, "seconds": 1.4} unseen: 0.6885 0.774
+clover_indra_hash {"threshold_from_seen": 0.9568, "seen": {"balanced_accuracy": 0.7128, "auc": 0.7481}, "seconds": 0.1} unseen: 0.6967 0.746
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 3816.14it/s]
+bge_small {"threshold_from_seen": 0.9618, "seen": {"balanced_accuracy": 0.724, "auc": 0.779}, "seconds": 6.3} unseen: 0.766 0.8153
+Loading weights:   0%|          | 0/286 [00:00<?, ?it/s]Loading weights: 100%|██████████| 286/286 [00:00<00:00, 4021.49it/s]
+lfm3_frozen_l4 {"threshold_from_seen": 0.9565, "seen": {"balanced_accuracy": 0.5603, "auc": 0.2912}, "seconds": 6.0} unseen: 0.52 0.2724

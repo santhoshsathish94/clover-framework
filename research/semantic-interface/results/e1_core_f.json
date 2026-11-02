@@ -1,0 +1,55 @@
+{
+ "experiment": "E1 = E6+E7 minimal pairs",
+ "csi_version": "0.1",
+ "sizes": {
+  "seen": 531,
+  "unseen": 531
+ },
+ "label_balance": {
+  "seen": 0.226,
+  "unseen": 0.226
+ },
+ "csi": {},
+ "baselines": {
+  "core:/workspace/meaning-core/runs/core/core-f-full": {
+   "threshold_from_seen": 0.7425,
+   "seen": {
+    "balanced_accuracy": 0.5731,
+    "auc": 0.397
+   },
+   "unseen": {
+    "balanced_accuracy": 0.4698,
+    "auc": 0.372,
+    "per_phenomenon_accuracy": {
+     "dist:attempt": 0.0,
+     "dist:dative_roles_swapped": 0.0,
+     "dist:future": 0.0,
+     "dist:modality": 0.0,
+     "dist:negation": 0.6852,
+     "dist:passive_vs_negated_active": 1.0,
+     "dist:predicate": 0.7593,
+     "dist:progressive": 0.0,
+     "dist:role_reversal": 0.5238,
+     "equiv:dative": 1.0,
+     "equiv:negated_passive": 0.7963,
+     "equiv:passive": 0.2963
+    },
+    "mean_cos_by_phenomenon": {
+     "dist:attempt": 0.8983,
+     "dist:dative_roles_swapped": 0.9784,
+     "dist:future": 0.9287,
+     "dist:modality": 0.9173,
+     "dist:negation": 0.6888,
+     "dist:passive_vs_negated_active": 0.523,
+     "dist:predicate": 0.6453,
+     "dist:progressive": 0.9456,
+     "dist:role_reversal": 0.7253,
+     "equiv:dative": 0.8709,
+     "equiv:negated_passive": 0.7934,
+     "equiv:passive": 0.7002
+    }
+   },
+   "seconds": 14.4
+  }
+ }
+}

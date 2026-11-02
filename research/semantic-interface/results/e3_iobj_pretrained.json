@@ -1,0 +1,239 @@
+{
+ "n_iobj": 146,
+ "n_double_object": 76,
+ "systems": {
+  "en_core_web_sm": {
+   "recipient_in_double_object": {
+    "dative": 64,
+    "dobj": 11,
+    "compound (other head)": 1
+   },
+   "recipient_other": {
+    "dobj": 60,
+    "nsubj (other head)": 6,
+    "compound (other head)": 3,
+    "dobj (other head)": 1
+   },
+   "theme_in_double_object": {
+    "dobj": 66,
+    "npadvmod": 2,
+    "dobj (other head)": 2,
+    "det (other head)": 2,
+    "appos (other head)": 1,
+    "advmod (other head)": 1,
+    "nmod (other head)": 1,
+    "pobj (other head)": 1
+   },
+   "examples": [
+    {
+     "text": "Simplicity gave it that blessed, laudatory lack of clutter, the efficient and effective text-based ads, and the support of anyone with a dial-up connection. ",
+     "recipient": "it",
+     "got": "dobj",
+     "theme": "lack",
+     "theme_got": "dobj"
+    },
+    {
+     "text": "I used to e-mail Vince Kaminski about the advice on his article \"The Challenge of Pricing and Risk Managing Electricity Derivatives\" and he had mailed me the copy. ",
+     "recipient": "me",
+     "got": "dobj",
+     "theme": "copy",
+     "theme_got": "dobj"
+    },
+    {
+     "text": "...Nope and I am proud of it...because my teacher havent taught us that yet... ",
+     "recipient": "us",
+     "got": "dobj",
+     "theme": "that",
+     "theme_got": "advmod"
+    },
+    {
+     "text": "Give it three days barring Sundays and holidays. ",
+     "recipient": "it",
+     "got": "dobj",
+     "theme": "days",
+     "theme_got": "npadvmod"
+    },
+    {
+     "text": "Alike...both were fought for securities reasons by the US (no matter what the liberal revisionist historians tell you). ",
+     "recipient": "you",
+     "got": "dobj",
+     "theme": "what",
+     "theme_got": "det"
+    },
+    {
+     "text": "the easiest thing would be a fish - but u need to clean the tank weekly, feed it the right amt, etc etc x ",
+     "recipient": "it",
+     "got": "dobj",
+     "theme": "amt",
+     "theme_got": "dobj"
+    },
+    {
+     "text": "Thought adding a comment would save someone the hassle with a useless trip there. ",
+     "recipient": "someone",
+     "got": "dobj",
+     "theme": "hassle",
+     "theme_got": "dobj"
+    },
+    {
+     "text": "you guys have any job opening for ex natural gas traders that made their now almost defunctc ompany over 40 million in the last two years? ",
+     "recipient": "ompany",
+     "got": "dobj",
+     "theme": "million",
+     "theme_got": "pobj"
+    },
+    {
+     "text": "Money can't buy you happiness... but it does bring you a more pleasant form of misery. ",
+     "recipient": "you",
+     "got": "dobj",
+     "theme": "happiness",
+     "theme_got": "dobj"
+    },
+    {
+     "text": "I give this place 11/10. ",
+     "recipient": "place",
+     "got": "dobj",
+     "theme": "11",
+     "theme_got": "npadvmod"
+    },
+    {
+     "text": "okay, I dont have a review, but why in the hell would you name your business something that has the initials KKK....is there something behind the scenes at this place? ",
+     "recipient": "business",
+     "got": "compound (other head)",
+     "theme": "something",
+     "theme_got": "dobj"
+    },
+    {
+     "text": "It can be a little on the spicy side but just ask them exactly what you want and they are very helpful. ",
+     "recipient": "them",
+     "got": "dobj",
+     "theme": "what",
+     "theme_got": "dobj"
+    }
+   ]
+  },
+  "en_core_web_md": {
+   "recipient_in_double_object": {
+    "dative": 68,
+    "dobj": 7,
+    "nsubj (other head)": 1
+   },
+   "recipient_other": {
+    "dobj": 60,
+    "nsubj (other head)": 7,
+    "compound (other head)": 3
+   },
+   "theme_in_double_object": {
+    "dobj": 66,
+    "appos (other head)": 2,
+    "dobj (other head)": 2,
+    "det (other head)": 1,
+    "dative": 1,
+    "ccomp": 1,
+    "nmod (other head)": 1,
+    "pobj (other head)": 1,
+    "nummod (other head)": 1
+   },
+   "examples": [
+    {
+     "text": "Simplicity gave it that blessed, laudatory lack of clutter, the efficient and effective text-based ads, and the support of anyone with a dial-up connection. ",
+     "recipient": "it",
+     "got": "dobj",
+     "theme": "lack",
+     "theme_got": "dobj"
+    },
+    {
+     "text": "...Nope and I am proud of it...because my teacher havent taught us that yet... ",
+     "recipient": "us",
+     "got": "dobj",
+     "theme": "that",
+     "theme_got": "dobj"
+    },
+    {
+     "text": "Alike...both were fought for securities reasons by the US (no matter what the liberal revisionist historians tell you). ",
+     "recipient": "you",
+     "got": "dobj",
+     "theme": "what",
+     "theme_got": "dative"
+    },
+    {
+     "text": "Walked in and was outta there in 10 mins with a really good deal i thought i was going to be paying alot because i had a DUI but with my DUI and Sr-22 they were able to get me the best deal out there. ",
+     "recipient": "me",
+     "got": "nsubj (other head)",
+     "theme": "deal",
+     "theme_got": "ccomp"
+    },
+    {
+     "text": "you guys have any job opening for ex natural gas traders that made their now almost defunctc ompany over 40 million in the last two years? ",
+     "recipient": "ompany",
+     "got": "dobj",
+     "theme": "million",
+     "theme_got": "pobj"
+    },
+    {
+     "text": "I give this place 11/10. ",
+     "recipient": "place",
+     "got": "dobj",
+     "theme": "11",
+     "theme_got": "nummod"
+    },
+    {
+     "text": "okay, I dont have a review, but why in the hell would you name your business something that has the initials KKK....is there something behind the scenes at this place? ",
+     "recipient": "business",
+     "got": "dobj",
+     "theme": "something",
+     "theme_got": "dobj"
+    },
+    {
+     "text": "It can be a little on the spicy side but just ask them exactly what you want and they are very helpful. ",
+     "recipient": "them",
+     "got": "dobj",
+     "theme": "what",
+     "theme_got": "dobj"
+    }
+   ]
+  },
+  "en_core_web_trf": {
+   "recipient_in_double_object": {
+    "dative": 73,
+    "dobj": 3
+   },
+   "recipient_other": {
+    "dobj": 61,
+    "nsubj (other head)": 6,
+    "compound (other head)": 2,
+    "dobj (other head)": 1
+   },
+   "theme_in_double_object": {
+    "dobj": 69,
+    "dobj (other head)": 2,
+    "nummod (other head)": 2,
+    "dative": 1,
+    "nmod (other head)": 1,
+    "oprd": 1
+   },
+   "examples": [
+    {
+     "text": "Alike...both were fought for securities reasons by the US (no matter what the liberal revisionist historians tell you). ",
+     "recipient": "you",
+     "got": "dobj",
+     "theme": "what",
+     "theme_got": "dative"
+    },
+    {
+     "text": "you guys have any job opening for ex natural gas traders that made their now almost defunctc ompany over 40 million in the last two years? ",
+     "recipient": "ompany",
+     "got": "dobj",
+     "theme": "million",
+     "theme_got": "nummod"
+    },
+    {
+     "text": "It can be a little on the spicy side but just ask them exactly what you want and they are very helpful. ",
+     "recipient": "them",
+     "got": "dobj",
+     "theme": "what",
+     "theme_got": "dobj"
+    }
+   ]
+  }
+ }
+}

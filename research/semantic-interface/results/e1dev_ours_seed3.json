@@ -1,0 +1,1089 @@
+{
+ "experiment": "E1 = E6+E7 minimal pairs",
+ "csi_version": "0.1",
+ "parser": "spacy//opt/clover-k3/meaning-core/csi/runs/ewt-seed3/model-best",
+ "test_lexicon": "unseen",
+ "sizes": {
+  "seen": 531,
+  "unseen": 531
+ },
+ "label_balance": {
+  "seen": 0.226,
+  "unseen": 0.226
+ },
+ "csi": {
+  "seen": {
+   "balanced_accuracy": 0.953,
+   "coverage": 1.0,
+   "per_phenomenon_accuracy": {
+    "dist:attempt": 1.0,
+    "dist:dative_roles_swapped": 0.9167,
+    "dist:future": 1.0,
+    "dist:modality": 1.0,
+    "dist:negation": 1.0,
+    "dist:passive_vs_negated_active": 1.0,
+    "dist:predicate": 1.0,
+    "dist:progressive": 1.0,
+    "dist:role_reversal": 1.0,
+    "equiv:dative": 0.25,
+    "equiv:negated_passive": 1.0,
+    "equiv:passive": 0.963
+   },
+   "n_errors": 12,
+   "errors": [
+    {
+     "a": "The girl called the child.",
+     "b": "The child was called by the girl.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The girl praised the doctor.",
+     "b": "The doctor was praised by the girl.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The student sent the girl the bottle.",
+     "b": "The student sent the bottle to the girl.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "girl",
+       "b": "bottle"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "girl"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The student sent the woman the car.",
+     "b": "The student sent the car to the woman.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "woman",
+       "b": "car"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "woman"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The boy sent the student the car.",
+     "b": "The boy sent the car to the student.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "student",
+       "b": "car"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "student"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The nurse showed the child the bottle.",
+     "b": "The nurse showed the bottle to the child.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "child",
+       "b": "bottle"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "child"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The nurse showed the child the bottle.",
+     "b": "The nurse showed the child to the bottle.",
+     "label": 0,
+     "phenomenon": "dist:dative_roles_swapped",
+     "pred": 1,
+     "differences": [],
+     "notes": []
+    },
+    {
+     "a": "The nurse showed the farmer the bottle.",
+     "b": "The nurse showed the bottle to the farmer.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "farmer",
+       "b": "bottle"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "farmer"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The farmer showed the woman the box.",
+     "b": "The farmer showed the box to the woman.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": null,
+       "b": "box"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The doctor handed the boy the letter.",
+     "b": "The doctor handed the letter to the boy.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "boy",
+       "b": "letter"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "boy"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The farmer handed the boy the bag.",
+     "b": "The farmer handed the bag to the boy.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "boy",
+       "b": "bag"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "boy"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The student handed the teacher the bottle.",
+     "b": "The student handed the bottle to the teacher.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "teacher",
+       "b": "bottle"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "teacher"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": []
+    }
+   ],
+   "seconds": 2.3
+  },
+  "unseen": {
+   "balanced_accuracy": 0.8508,
+   "coverage": 0.9171,
+   "per_phenomenon_accuracy": {
+    "dist:attempt": 0.9074,
+    "dist:dative_roles_swapped": 0.6667,
+    "dist:future": 0.9074,
+    "dist:modality": 0.9074,
+    "dist:negation": 0.9074,
+    "dist:passive_vs_negated_active": 1.0,
+    "dist:predicate": 0.8519,
+    "dist:progressive": 0.9074,
+    "dist:role_reversal": 1.0,
+    "equiv:dative": 0.25,
+    "equiv:negated_passive": 0.9074,
+    "equiv:passive": 0.7963
+   },
+   "n_errors": 62,
+   "errors": [
+    {
+     "a": "The singer loaded the jar.",
+     "b": "The jar was loaded by the singer.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no subject'] b=[]"
+     ]
+    },
+    {
+     "a": "The singer loaded the jar.",
+     "b": "The singer did not load the jar.",
+     "label": 0,
+     "phenomenon": "dist:negation",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no subject'] b=[]"
+     ]
+    },
+    {
+     "a": "The singer loaded the jar.",
+     "b": "The singer will load the jar.",
+     "label": 0,
+     "phenomenon": "dist:future",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no subject'] b=[]"
+     ]
+    },
+    {
+     "a": "The singer loaded the jar.",
+     "b": "The singer was loading the jar.",
+     "label": 0,
+     "phenomenon": "dist:progressive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no subject'] b=[]"
+     ]
+    },
+    {
+     "a": "The singer loaded the jar.",
+     "b": "The singer might load the jar.",
+     "label": 0,
+     "phenomenon": "dist:modality",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no subject'] b=[]"
+     ]
+    },
+    {
+     "a": "The singer loaded the jar.",
+     "b": "The singer tried to load the jar.",
+     "label": 0,
+     "phenomenon": "dist:attempt",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no subject'] b=[]"
+     ]
+    },
+    {
+     "a": "The singer loaded the jar.",
+     "b": "The singer hid the jar.",
+     "label": 0,
+     "phenomenon": "dist:predicate",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no subject'] b=['no verbal root']"
+     ]
+    },
+    {
+     "a": "The singer inspected the jar.",
+     "b": "The singer stole the jar.",
+     "label": 0,
+     "phenomenon": "dist:predicate",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=[] b=['no verbal root']"
+     ]
+    },
+    {
+     "a": "The sailor inspected the gate.",
+     "b": "The sailor stole the gate.",
+     "label": 0,
+     "phenomenon": "dist:predicate",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=[] b=['no verbal root']"
+     ]
+    },
+    {
+     "a": "The singer covered the basket.",
+     "b": "The basket was covered by the singer.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The lawyer covered the gate.",
+     "b": "The gate was covered by the lawyer.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The lawyer covered the gate.",
+     "b": "The lawyer did not cover the gate.",
+     "label": 0,
+     "phenomenon": "dist:negation",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The lawyer covered the gate.",
+     "b": "The lawyer will cover the gate.",
+     "label": 0,
+     "phenomenon": "dist:future",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The lawyer covered the gate.",
+     "b": "The lawyer was covering the gate.",
+     "label": 0,
+     "phenomenon": "dist:progressive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The lawyer covered the gate.",
+     "b": "The lawyer might cover the gate.",
+     "label": 0,
+     "phenomenon": "dist:modality",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The lawyer covered the gate.",
+     "b": "The lawyer tried to cover the gate.",
+     "label": 0,
+     "phenomenon": "dist:attempt",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The lawyer covered the gate.",
+     "b": "The lawyer loaded the gate.",
+     "label": 0,
+     "phenomenon": "dist:predicate",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The lawyer filled the bench.",
+     "b": "The bench was filled by the lawyer.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": null,
+       "b": "bench"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The lawyer filled the bench.",
+     "b": "The lawyer stole the bench.",
+     "label": 0,
+     "phenomenon": "dist:predicate",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=[] b=['no verbal root']"
+     ]
+    },
+    {
+     "a": "The singer hid the wall.",
+     "b": "The wall was hidden by the singer.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The singer hid the wall.",
+     "b": "The singer did not hide the wall.",
+     "label": 0,
+     "phenomenon": "dist:negation",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The singer hid the wall.",
+     "b": "The singer will hide the wall.",
+     "label": 0,
+     "phenomenon": "dist:future",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The singer hid the wall.",
+     "b": "The singer was hiding the wall.",
+     "label": 0,
+     "phenomenon": "dist:progressive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The singer hid the wall.",
+     "b": "The singer might hide the wall.",
+     "label": 0,
+     "phenomenon": "dist:modality",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The singer hid the wall.",
+     "b": "The singer tried to hide the wall.",
+     "label": 0,
+     "phenomenon": "dist:attempt",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The singer hid the wall.",
+     "b": "The singer loaded the wall.",
+     "label": 0,
+     "phenomenon": "dist:predicate",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=['no subject']"
+     ]
+    },
+    {
+     "a": "The judge stole the truck.",
+     "b": "The truck was stolen by the judge.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The judge stole the truck.",
+     "b": "The judge did not steal the truck.",
+     "label": 0,
+     "phenomenon": "dist:negation",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The judge stole the truck.",
+     "b": "The judge will steal the truck.",
+     "label": 0,
+     "phenomenon": "dist:future",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The judge stole the truck.",
+     "b": "The judge was stealing the truck.",
+     "label": 0,
+     "phenomenon": "dist:progressive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The judge stole the truck.",
+     "b": "The judge might steal the truck.",
+     "label": 0,
+     "phenomenon": "dist:modality",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The judge stole the truck.",
+     "b": "The judge tried to steal the truck.",
+     "label": 0,
+     "phenomenon": "dist:attempt",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The judge stole the truck.",
+     "b": "The judge locked the truck.",
+     "label": 0,
+     "phenomenon": "dist:predicate",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The driver stole the wall.",
+     "b": "The wall was stolen by the driver.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "stole",
+       "b": "steal"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The tourist stole the drawer.",
+     "b": "The drawer was stolen by the tourist.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The tourist stole the drawer.",
+     "b": "The tourist did not steal the drawer.",
+     "label": 0,
+     "phenomenon": "dist:negation",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The tourist stole the drawer.",
+     "b": "The tourist will steal the drawer.",
+     "label": 0,
+     "phenomenon": "dist:future",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The tourist stole the drawer.",
+     "b": "The tourist was stealing the drawer.",
+     "label": 0,
+     "phenomenon": "dist:progressive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The tourist stole the drawer.",
+     "b": "The tourist might steal the drawer.",
+     "label": 0,
+     "phenomenon": "dist:modality",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The tourist stole the drawer.",
+     "b": "The tourist tried to steal the drawer.",
+     "label": 0,
+     "phenomenon": "dist:attempt",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The tourist stole the drawer.",
+     "b": "The tourist loaded the drawer.",
+     "label": 0,
+     "phenomenon": "dist:predicate",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The driver threw the jar.",
+     "b": "The jar was thrown by the driver.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG0",
+       "a": "driver",
+       "b": null
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The driver did not throw the jar.",
+     "b": "The jar was not thrown by the driver.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG0",
+       "a": "driver",
+       "b": null
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The sailor threw the jar.",
+     "b": "The jar was thrown by the sailor.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG0",
+       "a": "sailor",
+       "b": null
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The sailor did not throw the jar.",
+     "b": "The jar was not thrown by the sailor.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG0",
+       "a": "sailor",
+       "b": null
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The baker warned the singer.",
+     "b": "The singer was warned by the baker.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": null,
+       "b": "singer"
+      },
+      {
+       "type": "role:ARG2",
+       "a": "singer",
+       "b": null
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The painter did not blame the judge.",
+     "b": "The judge was not blamed by the painter.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "blame",
+       "b": "blam"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The sailor did not blame the dancer.",
+     "b": "The dancer was not blamed by the sailor.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "blame",
+       "b": "blam"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The driver did not blame the sailor.",
+     "b": "The sailor was not blamed by the driver.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "blame",
+       "b": "blam"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The singer lent the lawyer the desk.",
+     "b": "The singer lent the desk to the lawyer.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=['no verbal root']"
+     ]
+    },
+    {
+     "a": "The singer lent the lawyer the desk.",
+     "b": "The singer lent the lawyer to the desk.",
+     "label": 0,
+     "phenomenon": "dist:dative_roles_swapped",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=['no verbal root']"
+     ]
+    },
+    {
+     "a": "The driver lent the dancer the gate.",
+     "b": "The driver lent the gate to the dancer.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=['no verbal root']"
+     ]
+    },
+    {
+     "a": "The driver lent the dancer the gate.",
+     "b": "The driver lent the dancer to the gate.",
+     "label": 0,
+     "phenomenon": "dist:dative_roles_swapped",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=['no verbal root']"
+     ]
+    },
+    {
+     "a": "The dancer lent the soldier the drawer.",
+     "b": "The dancer lent the drawer to the soldier.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=['no verbal root']"
+     ]
+    },
+    {
+     "a": "The dancer lent the soldier the drawer.",
+     "b": "The dancer lent the soldier to the drawer.",
+     "label": 0,
+     "phenomenon": "dist:dative_roles_swapped",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=['no verbal root']"
+     ]
+    },
+    {
+     "a": "The soldier offered the lawyer the truck.",
+     "b": "The soldier offered the truck to the lawyer.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": null,
+       "b": "truck"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The painter offered the soldier the parcel.",
+     "b": "The painter offered the parcel to the soldier.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "parcel",
+       "b": null
+      },
+      {
+       "type": "role:ARG2",
+       "a": "soldier",
+       "b": "parcel"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The painter sold the sailor the parcel.",
+     "b": "The painter sold the parcel to the sailor.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "sailor",
+       "b": "parcel"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "sailor"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The painter sold the sailor the parcel.",
+     "b": "The painter sold the sailor to the parcel.",
+     "label": 0,
+     "phenomenon": "dist:dative_roles_swapped",
+     "pred": 1,
+     "differences": [],
+     "notes": []
+    },
+    {
+     "a": "The dancer passed the singer the basket.",
+     "b": "The dancer passed the basket to the singer.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "singer",
+       "b": "basket"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "singer"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The lawyer passed the soldier the crate.",
+     "b": "The lawyer passed the crate to the soldier.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "soldier",
+       "b": "crate"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "soldier"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The painter passed the singer the gate.",
+     "b": "The painter passed the gate to the singer.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "singer",
+       "b": "gate"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "singer"
+      }
+     ],
+     "notes": []
+    }
+   ],
+   "seconds": 1.3
+  }
+ },
+ "baselines": {}
+}

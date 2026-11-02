@@ -1,0 +1,217 @@
+{
+ "experiment": "E1 = E6+E7 minimal pairs",
+ "csi_version": "0.1",
+ "parser": "spacy/en_core_web_sm",
+ "test_lexicon": "heldout3",
+ "sizes": {
+  "seen": 531,
+  "heldout3": 627
+ },
+ "label_balance": {
+  "seen": 0.226,
+  "heldout3": 0.2679
+ },
+ "csi": {},
+ "baselines": {
+  "clover_hash": {
+   "threshold_from_seen": 0.7452,
+   "seen": {
+    "balanced_accuracy": 0.7166,
+    "auc": 0.7915
+   },
+   "heldout3": {
+    "balanced_accuracy": 0.7029,
+    "auc": 0.7924,
+    "per_phenomenon_accuracy": {
+     "dist:attempt": 1.0,
+     "dist:dative_roles_swapped": 0.0,
+     "dist:future": 0.5,
+     "dist:modality": 0.5,
+     "dist:negation": 0.5,
+     "dist:passive_vs_negated_active": 0.5,
+     "dist:predicate": 0.9815,
+     "dist:progressive": 0.8333,
+     "dist:role_reversal": 0.0,
+     "equiv:dative": 1.0,
+     "equiv:negated_passive": 0.5,
+     "equiv:passive": 1.0
+    },
+    "mean_cos_by_phenomenon": {
+     "dist:attempt": 0.6409,
+     "dist:dative_roles_swapped": 1.0,
+     "dist:future": 0.7416,
+     "dist:modality": 0.7416,
+     "dist:negation": 0.7416,
+     "dist:passive_vs_negated_active": 0.7416,
+     "dist:predicate": 0.6654,
+     "dist:progressive": 0.7132,
+     "dist:role_reversal": 1.0,
+     "equiv:dative": 1.0,
+     "equiv:negated_passive": 0.7416,
+     "equiv:passive": 1.0
+    }
+   },
+   "seconds": 1.4
+  },
+  "clover_indra_hash": {
+   "threshold_from_seen": 0.9568,
+   "seen": {
+    "balanced_accuracy": 0.7128,
+    "auc": 0.7481
+   },
+   "heldout3": {
+    "balanced_accuracy": 0.7455,
+    "auc": 0.7617,
+    "per_phenomenon_accuracy": {
+     "dist:attempt": 1.0,
+     "dist:dative_roles_swapped": 0.0,
+     "dist:future": 0.9259,
+     "dist:modality": 0.9259,
+     "dist:negation": 0.9259,
+     "dist:passive_vs_negated_active": 0.9259,
+     "dist:predicate": 1.0,
+     "dist:progressive": 1.0,
+     "dist:role_reversal": 0.0,
+     "equiv:dative": 1.0,
+     "equiv:negated_passive": 0.0741,
+     "equiv:passive": 1.0
+    },
+    "mean_cos_by_phenomenon": {
+     "dist:attempt": 0.6673,
+     "dist:dative_roles_swapped": 1.0,
+     "dist:future": 0.7527,
+     "dist:modality": 0.7527,
+     "dist:negation": 0.7527,
+     "dist:passive_vs_negated_active": 0.7527,
+     "dist:predicate": 0.7267,
+     "dist:progressive": 0.7209,
+     "dist:role_reversal": 1.0,
+     "equiv:dative": 1.0,
+     "equiv:negated_passive": 0.7527,
+     "equiv:passive": 1.0
+    }
+   },
+   "seconds": 0.1
+  },
+  "bge_small": {
+   "threshold_from_seen": 0.9618,
+   "seen": {
+    "balanced_accuracy": 0.724,
+    "auc": 0.779
+   },
+   "heldout3": {
+    "balanced_accuracy": 0.7459,
+    "auc": 0.7713,
+    "per_phenomenon_accuracy": {
+     "dist:attempt": 0.6481,
+     "dist:dative_roles_swapped": 0.0,
+     "dist:future": 0.963,
+     "dist:modality": 1.0,
+     "dist:negation": 1.0,
+     "dist:passive_vs_negated_active": 1.0,
+     "dist:predicate": 0.9815,
+     "dist:progressive": 0.0556,
+     "dist:role_reversal": 0.0,
+     "equiv:dative": 1.0,
+     "equiv:negated_passive": 0.463,
+     "equiv:passive": 1.0
+    },
+    "mean_cos_by_phenomenon": {
+     "dist:attempt": 0.9606,
+     "dist:dative_roles_swapped": 0.9868,
+     "dist:future": 0.9371,
+     "dist:modality": 0.9285,
+     "dist:negation": 0.8338,
+     "dist:passive_vs_negated_active": 0.8357,
+     "dist:predicate": 0.8781,
+     "dist:progressive": 0.9782,
+     "dist:role_reversal": 0.9932,
+     "equiv:dative": 0.9847,
+     "equiv:negated_passive": 0.9565,
+     "equiv:passive": 0.9869
+    }
+   },
+   "seconds": 8.3
+  },
+  "lfm3_frozen_l4": {
+   "threshold_from_seen": 0.9565,
+   "seen": {
+    "balanced_accuracy": 0.5603,
+    "auc": 0.2912
+   },
+   "heldout3": {
+    "balanced_accuracy": 0.5139,
+    "auc": 0.418,
+    "per_phenomenon_accuracy": {
+     "dist:attempt": 0.0,
+     "dist:dative_roles_swapped": 0.0,
+     "dist:future": 0.0,
+     "dist:modality": 0.0,
+     "dist:negation": 0.0,
+     "dist:passive_vs_negated_active": 0.7222,
+     "dist:predicate": 0.2222,
+     "dist:progressive": 0.0,
+     "dist:role_reversal": 0.0,
+     "equiv:dative": 1.0,
+     "equiv:negated_passive": 0.8889,
+     "equiv:passive": 0.8519
+    },
+    "mean_cos_by_phenomenon": {
+     "dist:attempt": 0.974,
+     "dist:dative_roles_swapped": 0.9918,
+     "dist:future": 0.9828,
+     "dist:modality": 0.9804,
+     "dist:negation": 0.9762,
+     "dist:passive_vs_negated_active": 0.9531,
+     "dist:predicate": 0.9633,
+     "dist:progressive": 0.9827,
+     "dist:role_reversal": 0.9841,
+     "equiv:dative": 0.9897,
+     "equiv:negated_passive": 0.9616,
+     "equiv:passive": 0.9622
+    }
+   },
+   "seconds": 5.0
+  },
+  "core:/workspace/meaning-core/runs/core/core-f-full": {
+   "threshold_from_seen": 0.7425,
+   "seen": {
+    "balanced_accuracy": 0.5731,
+    "auc": 0.397
+   },
+   "heldout3": {
+    "balanced_accuracy": 0.4335,
+    "auc": 0.3207,
+    "per_phenomenon_accuracy": {
+     "dist:attempt": 0.0,
+     "dist:dative_roles_swapped": 0.0,
+     "dist:future": 0.0,
+     "dist:modality": 0.0,
+     "dist:negation": 0.6667,
+     "dist:passive_vs_negated_active": 0.9815,
+     "dist:predicate": 0.463,
+     "dist:progressive": 0.0,
+     "dist:role_reversal": 0.381,
+     "equiv:dative": 0.8333,
+     "equiv:negated_passive": 0.537,
+     "equiv:passive": 0.4074
+    },
+    "mean_cos_by_phenomenon": {
+     "dist:attempt": 0.9108,
+     "dist:dative_roles_swapped": 0.9604,
+     "dist:future": 0.9307,
+     "dist:modality": 0.9278,
+     "dist:negation": 0.6893,
+     "dist:passive_vs_negated_active": 0.5185,
+     "dist:predicate": 0.7384,
+     "dist:progressive": 0.9506,
+     "dist:role_reversal": 0.7424,
+     "equiv:dative": 0.8377,
+     "equiv:negated_passive": 0.738,
+     "equiv:passive": 0.7011
+    }
+   },
+   "seconds": 3.4
+  }
+ }
+}

@@ -1,0 +1,1767 @@
+{
+ "experiment": "E1 = E6+E7 minimal pairs",
+ "csi_version": "0.1",
+ "parser": "spacy//opt/clover-k3/meaning-core/csi/runs/ewt-seed3/model-best",
+ "test_lexicon": "heldout2",
+ "sizes": {
+  "seen": 531,
+  "heldout2": 627
+ },
+ "label_balance": {
+  "seen": 0.226,
+  "heldout2": 0.2679
+ },
+ "csi": {
+  "heldout2": {
+   "balanced_accuracy": 0.7434,
+   "coverage": 0.9761,
+   "per_phenomenon_accuracy": {
+    "dist:attempt": 0.963,
+    "dist:dative_roles_swapped": 0.9333,
+    "dist:future": 0.963,
+    "dist:modality": 0.963,
+    "dist:negation": 0.963,
+    "dist:passive_vs_negated_active": 1.0,
+    "dist:predicate": 0.9444,
+    "dist:progressive": 0.963,
+    "dist:role_reversal": 1.0,
+    "equiv:dative": 0.05,
+    "equiv:negated_passive": 0.7778,
+    "equiv:passive": 0.7963
+   },
+   "n_errors": 97,
+   "errors": [
+    {
+     "a": "The waiter wrapped the blanket.",
+     "b": "The waiter tore the blanket.",
+     "label": 0,
+     "phenomenon": "dist:predicate",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=[] b=['no verbal root']"
+     ]
+    },
+    {
+     "a": "The miner did not scrub the bucket.",
+     "b": "The bucket was not scrubbed by the miner.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "scrub",
+       "b": "scrubbe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The plumber scrubbed the blanket.",
+     "b": "The blanket was scrubbed by the plumber.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "scrubb",
+       "b": "scrubbe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The plumber did not scrub the blanket.",
+     "b": "The blanket was not scrubbed by the plumber.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "scrub",
+       "b": "scrubbe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The monk scrubbed the carpet.",
+     "b": "The carpet was scrubbed by the monk.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "scrubb",
+       "b": "scrubbe"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The monk did not scrub the carpet.",
+     "b": "The carpet was not scrubbed by the monk.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "scrub",
+       "b": "scrubbe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The banker shook the mirror.",
+     "b": "The mirror was shaken by the banker.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "shook",
+       "b": "shake"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The guard shook the coin.",
+     "b": "The coin was shaken by the guard.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "shook",
+       "b": "shake"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The clerk shook the shelf.",
+     "b": "The shelf was shaken by the clerk.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "shook",
+       "b": "shake"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The guard tore the bucket.",
+     "b": "The bucket was torn by the guard.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The guard did not tear the bucket.",
+     "b": "The bucket was not torn by the guard.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "tear",
+       "b": "torn"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The guard tore the bucket.",
+     "b": "The guard did not tear the bucket.",
+     "label": 0,
+     "phenomenon": "dist:negation",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The guard tore the bucket.",
+     "b": "The guard will tear the bucket.",
+     "label": 0,
+     "phenomenon": "dist:future",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The guard tore the bucket.",
+     "b": "The guard was tearing the bucket.",
+     "label": 0,
+     "phenomenon": "dist:progressive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The guard tore the bucket.",
+     "b": "The guard might tear the bucket.",
+     "label": 0,
+     "phenomenon": "dist:modality",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The guard tore the bucket.",
+     "b": "The guard tried to tear the bucket.",
+     "label": 0,
+     "phenomenon": "dist:attempt",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The guard tore the bucket.",
+     "b": "The guard dropped the bucket.",
+     "label": 0,
+     "phenomenon": "dist:predicate",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The waiter tore the bucket.",
+     "b": "The bucket was torn by the waiter.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The waiter did not tear the bucket.",
+     "b": "The bucket was not torn by the waiter.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "tear",
+       "b": "torn"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The waiter tore the bucket.",
+     "b": "The waiter did not tear the bucket.",
+     "label": 0,
+     "phenomenon": "dist:negation",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The waiter tore the bucket.",
+     "b": "The waiter will tear the bucket.",
+     "label": 0,
+     "phenomenon": "dist:future",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The waiter tore the bucket.",
+     "b": "The waiter was tearing the bucket.",
+     "label": 0,
+     "phenomenon": "dist:progressive",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The waiter tore the bucket.",
+     "b": "The waiter might tear the bucket.",
+     "label": 0,
+     "phenomenon": "dist:modality",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The waiter tore the bucket.",
+     "b": "The waiter tried to tear the bucket.",
+     "label": 0,
+     "phenomenon": "dist:attempt",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The waiter tore the bucket.",
+     "b": "The waiter bought the bucket.",
+     "label": 0,
+     "phenomenon": "dist:predicate",
+     "pred": -1,
+     "differences": [],
+     "notes": [
+      "unsupported: a=['no verbal root'] b=[]"
+     ]
+    },
+    {
+     "a": "The clerk tore the ladder.",
+     "b": "The ladder was torn by the clerk.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "tore",
+       "b": "tear"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The clerk did not tear the ladder.",
+     "b": "The ladder was not torn by the clerk.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "tear",
+       "b": "torn"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The monk did not hug the plumber.",
+     "b": "The plumber was not hugged by the monk.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "hug",
+       "b": "hugge"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The poet did not hug the actor.",
+     "b": "The actor was not hugged by the poet.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "hug",
+       "b": "hugge"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The chef did not hug the clerk.",
+     "b": "The clerk was not hugged by the chef.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "hug",
+       "b": "hugge"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The actor did not trust the waiter.",
+     "b": "The waiter was not trusted by the actor.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": null,
+       "b": "waiter"
+      },
+      {
+       "type": "role:ARG2",
+       "a": "waiter",
+       "b": null
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The miner did not trust the chef.",
+     "b": "The chef was not trusted by the miner.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": null,
+       "b": "chef"
+      },
+      {
+       "type": "role:ARG2",
+       "a": "chef",
+       "b": null
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The banker did not trust the waiter.",
+     "b": "The waiter was not trusted by the banker.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": null,
+       "b": "waiter"
+      },
+      {
+       "type": "role:ARG2",
+       "a": "waiter",
+       "b": null
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The clerk forgave the chef.",
+     "b": "The chef was forgiven by the clerk.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "forgave",
+       "b": "forgiven"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The monk forgave the plumber.",
+     "b": "The plumber was forgiven by the monk.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "forgave",
+       "b": "forgiven"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The miner forgave the waiter.",
+     "b": "The waiter was forgiven by the miner.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "forgave",
+       "b": "forgiven"
+      },
+      {
+       "type": "tense",
+       "a": "unmarked",
+       "b": "past"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The miner tossed the actor the shelf.",
+     "b": "The miner tossed the shelf to the actor.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "actor",
+       "b": "shelf"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "actor"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The chef tossed the monk the coin.",
+     "b": "The chef tossed the coin to the monk.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "monk",
+       "b": "coin"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "monk"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The actor tossed the plumber the lamp.",
+     "b": "The actor tossed the lamp to the plumber.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "plumber",
+       "b": "lamp"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "plumber"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The miner tossed the waiter the rope.",
+     "b": "The miner tossed the rope to the waiter.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "waiter",
+       "b": "rope"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "waiter"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The chef mailed the guard the carpet.",
+     "b": "The chef mailed the carpet to the guard.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "guard",
+       "b": "carpet"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "guard"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The chef mailed the miner the lamp.",
+     "b": "The chef mailed the lamp to the miner.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "miner",
+       "b": "lamp"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "miner"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The plumber mailed the actor the rope.",
+     "b": "The plumber mailed the rope to the actor.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "actor",
+       "b": "rope"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "actor"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The miner mailed the chef the kettle.",
+     "b": "The miner mailed the kettle to the chef.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "chef",
+       "b": "kettle"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "chef"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The monk mailed the guard the lamp.",
+     "b": "The monk mailed the lamp to the guard.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "guard",
+       "b": "lamp"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "guard"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The chef mailed the actor the coin.",
+     "b": "The chef mailed the coin to the actor.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "actor",
+       "b": "coin"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "actor"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The chef loaned the banker the lamp.",
+     "b": "The chef loaned the lamp to the banker.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "banker",
+       "b": "lamp"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "banker"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The chef loaned the miner the kettle.",
+     "b": "The chef loaned the kettle to the miner.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "miner",
+       "b": "kettle"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "miner"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The monk loaned the banker the shelf.",
+     "b": "The monk loaned the shelf to the banker.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "banker",
+       "b": "shelf"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "banker"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The poet loaned the chef the mirror.",
+     "b": "The poet loaned the mirror to the chef.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "chef",
+       "b": "mirror"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "chef"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The miner loaned the guard the coin.",
+     "b": "The miner loaned the coin to the guard.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "guard",
+       "b": "coin"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The chef loaned the actor the carpet.",
+     "b": "The chef loaned the carpet to the actor.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "actor",
+       "b": "carpet"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "actor"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The monk rented the guard the rope.",
+     "b": "The monk rented the rope to the guard.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "guard",
+       "b": "rope"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "guard"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The plumber rented the miner the mirror.",
+     "b": "The plumber rented the mirror to the miner.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "miner",
+       "b": "mirror"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The guard rented the monk the mirror.",
+     "b": "The guard rented the mirror to the monk.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG2",
+       "a": "monk",
+       "b": null
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The waiter rented the miner the shelf.",
+     "b": "The waiter rented the shelf to the miner.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "miner",
+       "b": "shelf"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "miner"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The poet rented the monk the shelf.",
+     "b": "The poet rented the shelf to the monk.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "monk",
+       "b": "shelf"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "monk"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The waiter rented the chef the bucket.",
+     "b": "The waiter rented the bucket to the chef.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "chef",
+       "b": "bucket"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "chef"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The waiter rented the chef the bucket.",
+     "b": "The waiter rented the chef to the bucket.",
+     "label": 0,
+     "phenomenon": "dist:dative_roles_swapped",
+     "pred": 1,
+     "differences": [],
+     "notes": []
+    },
+    {
+     "a": "The actor shipped the guard the shelf.",
+     "b": "The actor shipped the shelf to the guard.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "guard",
+       "b": "shelf"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "guard"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The waiter shipped the chef the lamp.",
+     "b": "The waiter shipped the lamp to the chef.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "chef",
+       "b": "lamp"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "chef"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The plumber shipped the poet the kettle.",
+     "b": "The plumber shipped the kettle to the poet.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "poet",
+       "b": "kettle"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "poet"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The plumber shipped the poet the kettle.",
+     "b": "The plumber shipped the poet to the kettle.",
+     "label": 0,
+     "phenomenon": "dist:dative_roles_swapped",
+     "pred": 1,
+     "differences": [],
+     "notes": []
+    },
+    {
+     "a": "The miner shipped the clerk the kettle.",
+     "b": "The miner shipped the kettle to the clerk.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "clerk",
+       "b": "kettle"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "clerk"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The banker shipped the waiter the bucket.",
+     "b": "The banker shipped the bucket to the waiter.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "waiter",
+       "b": "bucket"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "waiter"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The waiter shipped the clerk the lamp.",
+     "b": "The waiter shipped the lamp to the clerk.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "clerk",
+       "b": "lamp"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "clerk"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The poet kicked the banker the mirror.",
+     "b": "The poet kicked the mirror to the banker.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "banker",
+       "b": "mirror"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "banker"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The miner kicked the waiter the coin.",
+     "b": "The miner kicked the coin to the waiter.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "waiter",
+       "b": "coin"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "waiter"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The plumber kicked the monk the rope.",
+     "b": "The plumber kicked the rope to the monk.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "monk",
+       "b": "rope"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "monk"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The poet kicked the guard the lamp.",
+     "b": "The poet kicked the lamp to the guard.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "guard",
+       "b": "lamp"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "guard"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The plumber kicked the miner the coin.",
+     "b": "The plumber kicked the coin to the miner.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "miner",
+       "b": "coin"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "miner"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The plumber posted the guard the carpet.",
+     "b": "The plumber posted the carpet to the guard.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "guard",
+       "b": "carpet"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "guard"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The plumber posted the poet the mirror.",
+     "b": "The plumber posted the mirror to the poet.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "poet",
+       "b": "mirror"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "poet"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The miner posted the clerk the kettle.",
+     "b": "The miner posted the kettle to the clerk.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "clerk",
+       "b": "kettle"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "clerk"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The miner posted the waiter the shelf.",
+     "b": "The miner posted the shelf to the waiter.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "waiter",
+       "b": "shelf"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "waiter"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The banker posted the waiter the bucket.",
+     "b": "The banker posted the bucket to the waiter.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "waiter",
+       "b": "bucket"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "waiter"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The actor posted the guard the bucket.",
+     "b": "The actor posted the bucket to the guard.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "guard",
+       "b": "bucket"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "guard"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The poet left the plumber the kettle.",
+     "b": "The poet left the kettle to the plumber.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "plumber",
+       "b": "kettle"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "plumber"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The actor left the chef the ladder.",
+     "b": "The actor left the ladder to the chef.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "chef",
+       "b": "ladder"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The plumber left the miner the blanket.",
+     "b": "The plumber left the blanket to the miner.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "miner",
+       "b": "blanket"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "miner"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The monk left the banker the carpet.",
+     "b": "The monk left the carpet to the banker.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "banker",
+       "b": "carpet"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "banker"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The plumber left the waiter the carpet.",
+     "b": "The plumber left the carpet to the waiter.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "waiter",
+       "b": "carpet"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "waiter"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The miner left the actor the bucket.",
+     "b": "The miner left the bucket to the actor.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "actor",
+       "b": "bucket"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "actor"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The banker owed the monk the kettle.",
+     "b": "The banker owed the kettle to the monk.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "monk",
+       "b": "kettle"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "monk"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The miner owed the poet the lamp.",
+     "b": "The miner owed the lamp to the poet.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "poet",
+       "b": "lamp"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "poet"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The miner owed the poet the lamp.",
+     "b": "The miner owed the poet to the lamp.",
+     "label": 0,
+     "phenomenon": "dist:dative_roles_swapped",
+     "pred": 1,
+     "differences": [],
+     "notes": []
+    },
+    {
+     "a": "The chef owed the clerk the blanket.",
+     "b": "The chef owed the blanket to the clerk.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "clerk",
+       "b": "blanket"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "clerk"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The banker owed the clerk the carpet.",
+     "b": "The banker owed the carpet to the clerk.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "clerk",
+       "b": "carpet"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "clerk"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The miner owed the guard the carpet.",
+     "b": "The miner owed the carpet to the guard.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "guard",
+       "b": "carpet"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "guard"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The chef owed the monk the ladder.",
+     "b": "The chef owed the ladder to the monk.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "monk",
+       "b": "ladder"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The miner slid the plumber the mirror.",
+     "b": "The miner slid the mirror to the plumber.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "plumber",
+       "b": "mirror"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "plumber"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The poet slid the clerk the shelf.",
+     "b": "The poet slid the shelf to the clerk.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "clerk",
+       "b": "shelf"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "clerk"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The miner slid the actor the rope.",
+     "b": "The miner slid the rope to the actor.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "actor",
+       "b": "rope"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "actor"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The clerk slid the guard the carpet.",
+     "b": "The clerk slid the carpet to the guard.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "guard",
+       "b": "carpet"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "guard"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The poet slid the chef the lamp.",
+     "b": "The poet slid the lamp to the chef.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "chef",
+       "b": "lamp"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "chef"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The poet slid the chef the lamp.",
+     "b": "The poet slid the chef to the lamp.",
+     "label": 0,
+     "phenomenon": "dist:dative_roles_swapped",
+     "pred": 1,
+     "differences": [],
+     "notes": []
+    },
+    {
+     "a": "The monk slid the banker the carpet.",
+     "b": "The monk slid the carpet to the banker.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "banker",
+       "b": "carpet"
+      },
+      {
+       "type": "role:ARG2",
+       "a": null,
+       "b": "banker"
+      }
+     ],
+     "notes": []
+    }
+   ],
+   "seconds": 2.5
+  }
+ },
+ "baselines": {}
+}

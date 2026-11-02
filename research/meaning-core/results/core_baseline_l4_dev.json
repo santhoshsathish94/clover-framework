@@ -1,0 +1,17 @@
+{
+ "sts_b_val_spearman": 0.586,
+ "paws_dev_auc": 0.5936,
+ "condaqa_dev_auc": 0.5505,
+ "role_swap_below_paraphrase_median": 0.6458,
+ "role_swap_mean_cos": 0.9831,
+ "antonym_substitution_below_paraphrase_median": 0.8844,
+ "antonym_substitution_mean_cos": 0.9749,
+ "nli_dev_rank": 0.7293,
+ "server_cos_to_first": [
+  1.0,
+  0.935,
+  0.973,
+  0.969
+ ],
+ "variant": "frozen LFM3 mean pooling, hidden state 4, no head"
+}

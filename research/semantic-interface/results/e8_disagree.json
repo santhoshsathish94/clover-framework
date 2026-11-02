@@ -1,0 +1,76 @@
+{
+ "seen": {
+  "b2_vs_c": {
+   "LLM overrode a correct CSI verdict": 3,
+   "LLM corrected CSI": 1
+  },
+  "b2_vs_c_items": [
+   {
+    "phenomenon": "dist:predicate",
+    "a": "The child thanked the boy.",
+    "b": "The child praised the boy.",
+    "label": 0,
+    "csi": 0,
+    "b2": 1,
+    "b2_score": 2.3751,
+    "kind": "LLM overrode a correct CSI verdict"
+   },
+   {
+    "phenomenon": "dist:progressive",
+    "a": "The farmer helped the doctor.",
+    "b": "The farmer was helping the doctor.",
+    "label": 0,
+    "csi": 0,
+    "b2": 1,
+    "b2_score": 0.6876,
+    "kind": "LLM overrode a correct CSI verdict"
+   },
+   {
+    "phenomenon": "dist:predicate",
+    "a": "The doctor greeted the boy.",
+    "b": "The doctor met the boy.",
+    "label": 0,
+    "csi": 0,
+    "b2": 1,
+    "b2_score": 0.1876,
+    "kind": "LLM overrode a correct CSI verdict"
+   },
+   {
+    "phenomenon": "equiv:dative",
+    "a": "The nurse showed the child the bottle.",
+    "b": "The nurse showed the bottle to the child.",
+    "label": 1,
+    "csi": 0,
+    "b2": 1,
+    "b2_score": 2.1251,
+    "kind": "LLM corrected CSI"
+   }
+  ],
+  "a_to_b1_flips": {
+   "broken by B1 | dist:predicate": 1,
+   "fixed by B1 | dist:attempt": 18,
+   "fixed by B1 | dist:dative_roles_swapped": 3,
+   "fixed by B1 | dist:future": 4,
+   "fixed by B1 | dist:modality": 4,
+   "fixed by B1 | dist:passive_vs_negated_active": 2,
+   "fixed by B1 | dist:predicate": 2,
+   "fixed by B1 | dist:progressive": 14
+  }
+ },
+ "unseen": {
+  "b2_vs_c": {},
+  "b2_vs_c_items": [],
+  "a_to_b1_flips": {
+   "broken by B1 | dist:dative_roles_swapped": 1,
+   "broken by B1 | dist:modality": 5,
+   "broken by B1 | equiv:passive": 1,
+   "fixed by B1 | dist:attempt": 21,
+   "fixed by B1 | dist:future": 11,
+   "fixed by B1 | dist:modality": 3,
+   "fixed by B1 | dist:negation": 3,
+   "fixed by B1 | dist:passive_vs_negated_active": 14,
+   "fixed by B1 | dist:predicate": 1,
+   "fixed by B1 | dist:progressive": 5
+  }
+ }
+}

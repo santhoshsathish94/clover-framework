@@ -1,0 +1,613 @@
+{
+ "experiment": "E1N PAWS labeled_final test",
+ "csi_version": "0.1",
+ "n": 8000,
+ "label_balance": 0.442,
+ "coverage": 0.9151,
+ "balanced_accuracy_covered": 0.6024,
+ "balanced_accuracy_unsupported_as_error": 0.5513,
+ "confusion_label_vs_equivalent": {
+  "0->False": 2023,
+  "0->None": 379,
+  "0->True": 2062,
+  "1->False": 940,
+  "1->None": 300,
+  "1->True": 2296
+ },
+ "unsupported_reasons_top": {
+  "unsupported: a=['no subject'] b=['no subject']": 225,
+  "unsupported: a=[] b=['no subject']": 135,
+  "unsupported: a=['no subject'] b=[]": 131,
+  "unsupported: a=['no verbal root'] b=[]": 77,
+  "unsupported: a=[] b=['no verbal root']": 61,
+  "unsupported: a=['no verbal root'] b=['no verbal root']": 42,
+  "unsupported: a=['no verbal root'] b=['no subject']": 5,
+  "unsupported: a=['no subject'] b=['no verbal root']": 3
+ },
+ "difference_types_when_not_equivalent": {
+  "role:ARG0": 1593,
+  "predicate": 1099,
+  "role:ARG1": 1001,
+  "role:ARG2": 201,
+  "tense": 168,
+  "aspect": 106,
+  "embedded_under": 58,
+  "modality": 34,
+  "polarity": 6
+ },
+ "error_sample_seed7": [
+  {
+   "a": "Since September 2013 she has been Ambassador of Denmark in Finland .",
+   "b": "She has been Ambassador of Finland to Denmark since September 2013 .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "He had many imitators , including his son Alonzo Mart\u00ednez , who died in 1668 . His students included Juan de Mesa .",
+   "b": "He had many imitations , including his son Alonzo Mart\u00ednez , who died in 1668 , and his students included Juan de Mesa .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "role:ARG1",
+     "a": "imitator",
+     "b": "imitation"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "The following example shows two classes : explicit for which all special element functions are explicitly declared , and implicit for which none are declared .",
+   "b": "The following example depicts two classes : Explicit for which all special member functions are explicitly declared and Implicit for which none are declared .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "predicate",
+     "a": "show",
+     "b": "depict"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "Born in Shelby County , Alabama , Sawyer moved with his parents to Lee County , Mississippi .",
+   "b": "Sawyer was born in Shelby County , Alabama , and moved to Lee County , Mississippi with his parents .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "predicate",
+     "a": "move",
+     "b": "bear"
+    },
+    {
+     "type": "role:ARG0",
+     "a": "sawyer",
+     "b": null
+    },
+    {
+     "type": "role:ARG1",
+     "a": null,
+     "b": "sawyer"
+    }
+   ],
+   "notes": [
+    "voice differs (active vs passive): grammatical, not a meaning difference"
+   ]
+  },
+  {
+   "a": "She got her second Takarazuka Bow Hall show ( `` Grand Shanghai '' ) in 1995 and the first one ( `` Wuthering Heights '' ) in 1997 .",
+   "b": "In 1995 , she received her second Takarazuka Bow Hall Show ( `` Grand Shanghai '' ) and the first `` Wuthering Heights '' in 1997 .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "predicate",
+     "a": "get",
+     "b": "receive"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "The 1981-1982 World Cup started on 9 January 1982 in Reit im Winkl , Kiruna , Sweden , and ended in Germany on 13 April 1982 .",
+   "b": "The World Cup started in Reit im Winkl on 9 January 1982 and ended on 13 April 1982 in Kiruna , Sweden .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "The game was published on 2 October 2014 in North America and Europe and in Japan in June 2015 .",
+   "b": "The game was published on 2 October 2014 in Japan and in North America and Europe in June 2015 .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "Eman Ukpa is a village in Uruan region of the local government of Akwa Ibom State , Nigeria The Ibibio people are residents of Eman Ukpa village .",
+   "b": "Eman Ukpa is a village in Uruan Ibibio government area of Akwa Ibom State , Nigeria . The local people are occupants of the Eman Ukpa village .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "They do not follow the pattern of caldera growth and destruction that other shield volcanoes do ; caldera may form , but they generally do not disappear .",
+   "b": "They do not follow the pattern of caldera - growth and destruction , the other shield - do volcanoes , caldera can form , but they generally do not disappear .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "modality",
+     "a": "may",
+     "b": "can"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "He moved to New York , and later to Pike , Allegheny County , Pennsylvania , and continued the practice of law . Held various local offices .",
+   "b": "He moved to Allegheny County , Pennsylvania , and later to Pike , New York , and continued the practice of law .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "Charlie Charlie Bannington ( b . 1951 ) , sometimes known as Arthur Charles Bannington , was a British political activist .",
+   "b": "Arthur Charles Bannington ( died 1951 ) , sometimes known as Charlie Bannington , was a British political activist .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "The province with the lowest crime rate for the third consecutive year in 2006 was Ontario with 5,689 per 100,000 , followed by Quebec at 5,909 per 100,000 .",
+   "b": "The province with the lowest crime rate for the third consecutive year in 2006 was Quebec with 5,689 per 100,000 inhabitants , followed by Ontario at 5,909 per 100,000 .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "The former is tied by Hamazaki , the latter was broken by Ayumi Hamasaki .",
+   "b": "The former is tied by Hamazaki and the latter was broken by Ayumi Hamasaki .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "predicate",
+     "a": "break",
+     "b": "tie"
+    },
+    {
+     "type": "role:ARG0",
+     "a": "hamasaki",
+     "b": "hamazaki"
+    },
+    {
+     "type": "role:ARG1",
+     "a": "latter",
+     "b": "former"
+    },
+    {
+     "type": "tense",
+     "a": "past",
+     "b": "present"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "He was born in Wanganui and died in a private hospital of Dunedin .",
+   "b": "He was born in Dunedin and died at a private Wanganui hospital .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "It is situated south of Bolu and north of the K\u00f6ro\u011flu mountains .",
+   "b": "It is situated south of the K\u00f6ro\u011flu mountains and north of Bolu .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "In retirement , Peck continued to live in Montpelier , died on May 8 , 2008 at the Old Nursing Home in Woodridge , Berlin , Vermont .",
+   "b": "In retirement , Peck continued to reside in Montpelier . He died at the Woodridge Nursing Home in Berlin , Vermont on May 8 , 2008 .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "predicate",
+     "a": "live",
+     "b": "reside"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "During the American Revolution , Girty initially served with Indian troops against the British American allies .",
+   "b": "During the American Revolution , Girty served initially with American armed forces against British Indian allies .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "At the same time , a Neapolitan garrison would bribe it for the first man who would betray him .",
+   "b": "At the same time , a Neapolitan garrison would bribe it to the first man , who would betray him .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "role:ARG2",
+     "a": null,
+     "b": "man"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "After playing for Millwall , Clapton Orient and Chelmsford City in England , Walsingham moved to Italy to play there with Genoa and Bologna .",
+   "b": "After playing in England for Millwall , Clapton Orient and Chelmsford City , Walsingham moved to Italy to play with Genoa and Bologna .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "predicate",
+     "a": "play",
+     "b": "move"
+    },
+    {
+     "type": "role:ARG0",
+     "a": "walsingham",
+     "b": "orient"
+    },
+    {
+     "type": "embedded_under",
+     "a": "move",
+     "b": null
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "Outside of Europe , the French-style macaron can be found in Canada and the United States .",
+   "b": "The French - Style Macaron can be found outside of Canada in Europe and the United States .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "Oblast is a Slavic term that exists in the Russian language , Russian was official in all the republics .",
+   "b": "Oblast is a Slavic term that exists in the Russian language . Russian was official in all republics .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "role:ARG0",
+     "a": "russian",
+     "b": "oblast"
+    },
+    {
+     "type": "tense",
+     "a": "past",
+     "b": "present"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "On 28 May 2011 , a leadership was chosen to replace Dennis Fentie , Darrell Pasloski was elected after only one ballot .",
+   "b": "On May 28 , 2011 , a leadership election was held to replace Dennis Fentie . Darrell Pasloski was chosen after only one ballot .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "predicate",
+     "a": "elect",
+     "b": "hold"
+    },
+    {
+     "type": "role:ARG1",
+     "a": "pasloski",
+     "b": "election"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "Tomasz Kafarski ( born January 13 , 1975 in Ko\u015bcierzyna ) is a former Polish football manager and football player .",
+   "b": "Tomasz Kafarski ( born January 13 , 1975 in Ko\u015bcierzyna ) is a Polish football manager and former footballer .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "The 1990 South Australian National Football League season was the 110th season of the highest Australian rules football competition in South Australia .",
+   "b": "The 1990 South Australian National Football League season was the 110th season of the Australian top rules football contest in South Australia .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "They believed in universal education and social reform and were generally accepted as members of the community and as local members of the large families .",
+   "b": "They believed in universal education and social reform and were generally accepted as members of the community and as extended members of local families .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "He was trained by Rachel Ostheimer and droven by Raoul Ostheimer , who was deaf .",
+   "b": "He was trained by Raoul Ostheimer and driven by Rachel Ostheimer , who was deaf .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "His teachers were Wolfgang Fortner ( composition ) , Hans Grischkat and Karl M\u00fcnchinger ( conducting ) as well as .",
+   "b": "His teachers included Wolfgang Fortner ( composition ) , Hans Grischkat and Karl M\u00fcnchinger ( conducting ) as well as .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "predicate",
+     "a": "be",
+     "b": "include"
+    },
+    {
+     "type": "role:ARG1",
+     "a": null,
+     "b": "fortner"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "The University of Otago , the first university in New Zealand , was founded in 1869 as the provincial university in Dunedin .",
+   "b": "The provincial university of New Zealand , the University of Otago , was founded in 1869 as the first university in Dunedin .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "The Meads of Asphodel is a British black metal band with pronounced medieval influences , eastern , punk and progressive metal from Hertfordshire in the United Kingdom .",
+   "b": "The Meads of Asphodel are a medieval metal band with pronounced British black , eastern , punk and progressive metal influences from Hertfordshire in the UK .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "Winnie Hill is a mountain located in the center of New York region New York north of Oneonta , New York .",
+   "b": "Winnie Hill is a mountain located in Oneonta , New York of Central New York Region north of New York .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "Skujaine is a village in the municipality of Penkule and Dobele municipality in the historical region of Zemgale and the Zemgale Planning Region in Latvia .",
+   "b": "Skujaine is a village in Latvia and Dobele Municipality in the historical region of Zemgale , and the Zemgale Planning Region in Penkule Parish .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "Moyano , however , retained his re-election as CGT boss and secured the support of 134 unions , including most of the larger ones .",
+   "b": "Moyano , however , secured his re-election as CGT - boss and retained the support of 134 unions , including most of the larger ones .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "predicate",
+     "a": "retain",
+     "b": "secure"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "First , the problem is specified in the form of a matrix as written below :",
+   "b": "First the problem is given in the form of a matrix as written below :",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "predicate",
+     "a": "specify",
+     "b": "give"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "is the national member federation for Grenada in the following international organisations :",
+   "b": "GAA is the national member federation for Grenada in the following international organisations :",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "role:ARG0",
+     "a": "federation",
+     "b": "gaa"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "No physical evidence for the existence of a historical person that fits the description of the Menehune has been discovered .",
+   "b": "No historical evidence has been discovered of the existence of a physical person that fits in with the description of the Menehune .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "He was graduated in 1872 from Mansfield College and the Legal Department of Cumberland University , Lebanon , Tennessee .",
+   "b": "He was graduated in 1872 from Cumberland University and the Legal Department of Mansfield College , Lebanon , Tennessee .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "They consist of almost 30 expatriates , some members of the US Communist Party , while others are English writers or left teachers .",
+   "b": "They consist of almost 30 expatriates , some members of the US Communist Party , while others are leftist writers or English teachers .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "Winifred died in Sydney in 1986 at his home in Miami , which he survived in 1973 from Winnie , who later returned to Australia .",
+   "b": "He died at his home in Miami in 1973 survived by Winnie who later returned to Australia . Winifred died in 1986 in Sydney .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "role:ARG0",
+     "a": "winifred",
+     "b": "he"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "The school was taken over by Patrick Kilroy in the 1960s . His son Charles Kilroy took over running of Kilroy 's College in 1999 .",
+   "b": "The school was taken over by Charles Kilroy in the 1960s , and in 1999 his son Patrick Kilroy took over the management of Kilroy 's College .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "17.1 % were German descent , 12.4 % Finnish , 10.5 % Norwegian , 9.4 % Italian , 6.4 % Irish and 5.9 % of Swedish origin .",
+   "b": "17.1 % were German , 12.4 % Finnish , 10.5 % Norwegian , 9.4 % Italian , 6.4 % Swedish and 5.9 % of Irish extraction .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "The other two rivers are the Mangles River , and the Matiri River .",
+   "b": "The other two streams are the Mangles River and the Matiri River .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "role:ARG0",
+     "a": "river",
+     "b": "stream"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "William Cook and Son of Waimate North , who had built the church of St. John the Baptist in 1871 , were also the builders of St James .",
+   "b": "The builders of St. James were also William William Cook and the son of Waimate North , who built the Church of St. John the Baptist in 1871 .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "role:ARG0",
+     "a": "cook",
+     "b": "builder"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "The party banner of a swastika was designed by Hitler in a red circle on a white background .",
+   "b": "The party banner of a swastika was designed by Hitler in a white circle on a red background .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "The Rond\u00f4nia ( Juru\u00e1 - River ) is a river in the state of Rond\u00f4nia in western Brazil .",
+   "b": "The River Juru\u00e1 ( Rond\u00f4nia ) is a river of the state of Rond\u00f4nia in western Brazil .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "role:ARG0",
+     "a": "rond\u00f4nia",
+     "b": "juru\u00e1"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "The Woolston Memorial Hospital was a Christian hospital in Fuzhou , the first of its kind in China .",
+   "b": "The Woolston Memorial Hospital was a Christian hospital in China and the first of its kind in Fuzhou .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "Melancholic melodies are paired with raw aggression , introspective acoustic moments and bluesy guitars .",
+   "b": "Melancholic melodies are being paired with bluesy aggression , raw moments and introspective acoustic guitars .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "The Stanislao Cannizzaro reaction , named after its discoverer Cannizzaro , is a chemical reaction that involves the base-induced disproportionation of a non-enolizable aldehyde .",
+   "b": "The Cannizzaro reaction , named after its discoverer , Stanislao Cannizzaro , is a chemical reaction that involves the base-induced disproportion of a non-oxidizable aldehyde .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "The game was published on 2 October 2014 in North America and Europe and in Japan in June 2015 .",
+   "b": "The game was released in North America and Europe on October 2 , 2014 , and in Japan in June 2015 .",
+   "label": 1,
+   "equivalent": false,
+   "differences": [
+    {
+     "type": "predicate",
+     "a": "publish",
+     "b": "release"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "a": "Grand Stade de Casablanca is a proposed title of the planned football stadium ( soccer stadium ) to be built in Casablanca , Morocco .",
+   "b": "Grand Stade de Casablanca is a planned title of the proposed football stadium ( football stadium ) , which is to be built in Casablanca , Morocco .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  },
+  {
+   "a": "The six people killed were four Burmese and two Russian citizens .",
+   "b": "The six killed people were four Russian citizens and two Burmese citizens .",
+   "label": 0,
+   "equivalent": true,
+   "differences": [],
+   "notes": []
+  }
+ ],
+ "seconds": 124.9
+}

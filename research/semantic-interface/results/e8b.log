@@ -1,0 +1,6 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/286 [00:00<?, ?it/s]Loading weights: 100%|██████████| 286/286 [00:00<00:00, 4693.51it/s]
+A {"balanced_accuracy_own_choice": 0.8118, "auc": 0.91, "said_yes_share": 0.5879, "mean_yes_no_mass": 0.9978, "agrees_with_csi_when_csi_right": 0.8446, "agrees_with_csi_when_csi_wrong": 0.2582, "balanced_accuracy_own_choice_covered": 0.8163, "seconds": 396.7}
+B1 {"balanced_accuracy_own_choice": 0.8189, "auc": 0.8948, "said_yes_share": 0.5086, "mean_yes_no_mass": 0.9902, "agrees_with_csi_when_csi_right": 0.8965, "agrees_with_csi_when_csi_wrong": 0.2961, "balanced_accuracy_own_choice_covered": 0.8233, "seconds": 471.6}
+B2 {"balanced_accuracy_own_choice": 0.7187, "auc": 0.8259, "said_yes_share": 0.5164, "mean_yes_no_mass": 0.9982, "agrees_with_csi_when_csi_right": 0.9843, "agrees_with_csi_when_csi_wrong": 0.6805, "balanced_accuracy_own_choice_covered": 0.7182, "seconds": 429.7}
+C {"coverage": 0.9151, "balanced_accuracy_covered": 0.6024}

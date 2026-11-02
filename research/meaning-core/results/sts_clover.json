@@ -1,0 +1,66 @@
+{
+ "clover_hash": {
+  "note": "384-d hashed words + character trigrams",
+  "tasks": {
+   "STS12": 58.79,
+   "STS13": 61.61,
+   "STS14": 65.89,
+   "STS15": 74.36,
+   "STS17": 80.73,
+   "STS22.v2": 58.43,
+   "STSBenchmark": 68.35,
+   "SICK-R": 56.21,
+   "BIOSSES": 77.46
+  },
+  "mean": 66.87,
+  "seconds": 125.1
+ },
+ "clover_indra_hash": {
+  "note": "18 anchors over clover_hash",
+  "tasks": {
+   "STS12": 47.25,
+   "STS13": 46.86,
+   "STS14": 48.59,
+   "STS15": 58.15,
+   "STS17": 63.89,
+   "STS22.v2": 48.16,
+   "STSBenchmark": 51.46,
+   "SICK-R": 48.86,
+   "BIOSSES": 55.8
+  },
+  "mean": 52.11,
+  "seconds": 5.9
+ },
+ "bge_small": {
+  "note": "bge-small-en-v1.5 CLS",
+  "tasks": {
+   "STS12": 77.44,
+   "STS13": 82.98,
+   "STS14": 81.84,
+   "STS15": 87.27,
+   "STS17": 87.14,
+   "STS22.v2": 65.79,
+   "STSBenchmark": 85.86,
+   "SICK-R": 79.41,
+   "BIOSSES": 83.75
+  },
+  "mean": 81.28,
+  "seconds": 44.1
+ },
+ "clover_indra_bge": {
+  "note": "18 anchors over bge_small",
+  "tasks": {
+   "STS12": 62.04,
+   "STS13": 65.77,
+   "STS14": 62.5,
+   "STS15": 66.02,
+   "STS17": 70.06,
+   "STS22.v2": 65.56,
+   "STSBenchmark": 70.81,
+   "SICK-R": 68.75,
+   "BIOSSES": 58.0
+  },
+  "mean": 65.5,
+  "seconds": 26.6
+ }
+}

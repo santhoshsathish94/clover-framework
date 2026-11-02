@@ -1,0 +1,69 @@
+{
+ "experiment": "E1 = E6+E7 minimal pairs",
+ "csi_version": "0.1",
+ "parser": "spacy/en_core_web_trf",
+ "test_lexicon": "heldout3",
+ "sizes": {
+  "seen": 531,
+  "heldout3": 627
+ },
+ "label_balance": {
+  "seen": 0.226,
+  "heldout3": 0.2679
+ },
+ "csi": {
+  "heldout3": {
+   "balanced_accuracy": 0.994,
+   "coverage": 1.0,
+   "per_phenomenon_accuracy": {
+    "dist:attempt": 1.0,
+    "dist:dative_roles_swapped": 1.0,
+    "dist:future": 1.0,
+    "dist:modality": 1.0,
+    "dist:negation": 1.0,
+    "dist:passive_vs_negated_active": 1.0,
+    "dist:predicate": 1.0,
+    "dist:progressive": 1.0,
+    "dist:role_reversal": 1.0,
+    "equiv:dative": 0.9667,
+    "equiv:negated_passive": 1.0,
+    "equiv:passive": 1.0
+   },
+   "n_errors": 2,
+   "errors": [
+    {
+     "a": "The pirate leased the tailor the hammer.",
+     "b": "The pirate leased the hammer to the tailor.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": null,
+       "b": "hammer"
+      }
+     ],
+     "notes": []
+    },
+    {
+     "a": "The cashier bounced the pirate the key.",
+     "b": "The cashier bounced the key to the pirate.",
+     "label": 1,
+     "phenomenon": "equiv:dative",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG2",
+       "a": "pirate",
+       "b": null
+      }
+     ],
+     "notes": []
+    }
+   ],
+   "seconds": 24.9
+  }
+ },
+ "baselines": {}
+}

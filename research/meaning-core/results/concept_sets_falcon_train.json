@@ -1,0 +1,104 @@
+{
+ "targets": 379563,
+ "coverage": 0.9625,
+ "mean_set_size": 8.04,
+ "pairs": 3052605,
+ "relation_share": {
+  "other": 0.6929,
+  "hypernym_or_hyponym": 0.1145,
+  "co_hyponym": 0.0847,
+  "synonym": 0.0636,
+  "inflection": 0.0283,
+  "not_in_wordnet": 0.016
+ },
+ "cosine_min_mean": [
+  0.75,
+  0.9314
+ ],
+ "samples": {
+  "inflection": [
+   "holds -> hold",
+   "amount -> amounts",
+   "knife -> knives",
+   "block -> blocks",
+   "taking -> takes",
+   "taking -> taken",
+   "taking -> took",
+   "taking -> take",
+   "taking -> Take",
+   "lot -> lots",
+   "space -> spacing",
+   "design -> designing"
+  ],
+  "synonym": [
+   "holds -> contains",
+   "holds -> carries",
+   "holds -> accommodates",
+   "holds -> retains",
+   "holds -> keeps",
+   "amount -> number",
+   "amount -> quantity",
+   "amount -> quantities",
+   "amount -> measure",
+   "taking -> occupying",
+   "taking -> consuming",
+   "taking -> filling"
+  ],
+  "hypernym_or_hyponym": [
+   "holds -> includes",
+   "amount -> volume",
+   "knife -> cutlery",
+   "block -> slab",
+   "taking -> soaking",
+   "counter -> table",
+   "space -> area",
+   "space -> workspace",
+   "design -> device",
+   "design -> structure",
+   "features -> combines",
+   "shape -> structure"
+  ],
+  "co_hyponym": [
+   "holds -> accepts",
+   "knife -> blade",
+   "block -> pack",
+   "counter -> desk",
+   "counter -> cabinet",
+   "rods -> sticks",
+   "conform -> deform",
+   "type -> style",
+   "adding -> gaining",
+   "splash -> touch",
+   "splash -> hint",
+   "splash -> pop"
+  ],
+  "other": [
+   "same -> similar",
+   "same -> identical",
+   "same -> equivalent",
+   "same -> exact",
+   "same -> right",
+   "same -> equal",
+   "same -> approximate",
+   "amount -> level",
+   "amount -> assortment",
+   "amount -> array",
+   "cutlery -> food",
+   "cutlery -> things"
+  ],
+  "not_in_wordnet": [
+   "has -> should",
+   "has -> would",
+   "farewell -> goodnight",
+   "did -> could",
+   "did -> would",
+   "did -> should",
+   "do -> would",
+   "Hoy -> Barra",
+   "Hoy -> Iona",
+   "Hoy -> Orkney",
+   "Hoy -> Sark",
+   "sign -> screenshot"
+  ]
+ }
+}

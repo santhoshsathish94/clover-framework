@@ -1,0 +1,418 @@
+{
+ "experiment": "E2a lemmatisation generalisation",
+ "available": {
+  "seen": 1459,
+  "unseen": 20487
+ },
+ "sampled": {
+  "seen": 500,
+  "unseen": 500
+ },
+ "systems": {
+  "en_core_web_sm": {
+   "table": {
+    "seen:gerund": {
+     "n": 500,
+     "lemma_acc": 0.972,
+     "verb_tag_rate": 0.992
+    },
+    "seen:past": {
+     "n": 500,
+     "lemma_acc": 0.972,
+     "verb_tag_rate": 0.998
+    },
+    "seen:past_participle": {
+     "n": 500,
+     "lemma_acc": 0.968,
+     "verb_tag_rate": 0.988
+    },
+    "seen:third_singular": {
+     "n": 500,
+     "lemma_acc": 0.986,
+     "verb_tag_rate": 1.0
+    },
+    "unseen:gerund": {
+     "n": 500,
+     "lemma_acc": 0.688,
+     "verb_tag_rate": 0.998
+    },
+    "unseen:past": {
+     "n": 500,
+     "lemma_acc": 0.686,
+     "verb_tag_rate": 0.996
+    },
+    "unseen:past_participle": {
+     "n": 500,
+     "lemma_acc": 0.68,
+     "verb_tag_rate": 0.964
+    },
+    "unseen:third_singular": {
+     "n": 500,
+     "lemma_acc": 0.912,
+     "verb_tag_rate": 1.0
+    },
+    "seen:all": {
+     "n": 2000,
+     "lemma_acc": 0.9745,
+     "verb_tag_rate": 0.9945
+    },
+    "unseen:all": {
+     "n": 2000,
+     "lemma_acc": 0.7415,
+     "verb_tag_rate": 0.9895
+    }
+   },
+   "unseen_error_sample": [
+    "crandalled -> crandalle (want crandall)",
+    "giddyaped -> giddyape (want giddyap)",
+    "blebbed -> blebbe (want bleb)",
+    "reamplified -> reamplifie (want reamplify)",
+    "dognapped -> dognappe (want dognap)",
+    "unwilled -> unwille (want unwill)",
+    "hanked -> hanke (want hank)",
+    "leasowed -> leasowe (want leasow)",
+    "disintensified -> disintensifie (want disintensify)",
+    "forthleapt -> forthleapt (want forthleap)",
+    "inwheeled -> inwheele (want inwheel)",
+    "sicklied -> sicklie (want sickly)",
+    "ungilded -> ungilde (want ungild)",
+    "unsubbed -> unsubbe (want unsub)",
+    "philibustered -> philibustere (want philibuster)",
+    "winged -> wing (want winge)",
+    "destinked -> destinke (want destink)",
+    "snooled -> snoole (want snool)",
+    "squinnied -> squinnie (want squinny)",
+    "gimbleted -> gimblete (want gimblet)",
+    "backpatched -> backpatche (want backpatch)",
+    "deminished -> deminishe (want deminish)",
+    "countersupported -> countersupporte (want countersupport)",
+    "overtripped -> overtrippe (want overtrip)",
+    "biocalcified -> biocalcifie (want biocalcify)"
+   ]
+  },
+  "en_core_web_trf": {
+   "table": {
+    "seen:gerund": {
+     "n": 500,
+     "lemma_acc": 0.978,
+     "verb_tag_rate": 0.998
+    },
+    "seen:past": {
+     "n": 500,
+     "lemma_acc": 0.976,
+     "verb_tag_rate": 0.998
+    },
+    "seen:past_participle": {
+     "n": 500,
+     "lemma_acc": 0.972,
+     "verb_tag_rate": 0.992
+    },
+    "seen:third_singular": {
+     "n": 500,
+     "lemma_acc": 0.986,
+     "verb_tag_rate": 0.998
+    },
+    "unseen:gerund": {
+     "n": 500,
+     "lemma_acc": 0.688,
+     "verb_tag_rate": 0.998
+    },
+    "unseen:past": {
+     "n": 500,
+     "lemma_acc": 0.686,
+     "verb_tag_rate": 0.998
+    },
+    "unseen:past_participle": {
+     "n": 500,
+     "lemma_acc": 0.668,
+     "verb_tag_rate": 0.97
+    },
+    "unseen:third_singular": {
+     "n": 500,
+     "lemma_acc": 0.908,
+     "verb_tag_rate": 0.982
+    },
+    "seen:all": {
+     "n": 2000,
+     "lemma_acc": 0.978,
+     "verb_tag_rate": 0.9965
+    },
+    "unseen:all": {
+     "n": 2000,
+     "lemma_acc": 0.7375,
+     "verb_tag_rate": 0.987
+    }
+   },
+   "unseen_error_sample": [
+    "crandalled -> crandalle (want crandall)",
+    "giddyaped -> giddyape (want giddyap)",
+    "blebbed -> blebbe (want bleb)",
+    "reamplified -> reamplifie (want reamplify)",
+    "dognapped -> dognappe (want dognap)",
+    "unwilled -> unwille (want unwill)",
+    "hanked -> hanke (want hank)",
+    "leasowed -> leasowe (want leasow)",
+    "forthleapt -> forthleapt (want forthleap)",
+    "inwheeled -> inwheele (want inwheel)",
+    "sicklied -> sicklie (want sickly)",
+    "ungilded -> ungilde (want ungild)",
+    "unsubbed -> unsubbe (want unsub)",
+    "philibustered -> philibustere (want philibuster)",
+    "winged -> wing (want winge)",
+    "destinked -> destinke (want destink)",
+    "snooled -> snoole (want snool)",
+    "squinnied -> squinnie (want squinny)",
+    "gimbleted -> gimblete (want gimblet)",
+    "backpatched -> backpatche (want backpatch)",
+    "deminished -> deminishe (want deminish)",
+    "countersupported -> countersupporte (want countersupport)",
+    "overtripped -> overtrippe (want overtrip)",
+    "biocalcified -> biocalcifie (want biocalcify)",
+    "subcrossed -> subcrosse (want subcross)"
+   ]
+  },
+  "/opt/clover-k3/meaning-core/csi/runs/ewt-seed1/model-best": {
+   "table": {
+    "seen:gerund": {
+     "n": 500,
+     "lemma_acc": 0.65,
+     "verb_tag_rate": 0.996
+    },
+    "seen:past": {
+     "n": 500,
+     "lemma_acc": 0.768,
+     "verb_tag_rate": 0.994
+    },
+    "seen:past_participle": {
+     "n": 500,
+     "lemma_acc": 0.752,
+     "verb_tag_rate": 0.97
+    },
+    "seen:third_singular": {
+     "n": 500,
+     "lemma_acc": 0.922,
+     "verb_tag_rate": 0.866
+    },
+    "unseen:gerund": {
+     "n": 500,
+     "lemma_acc": 0.434,
+     "verb_tag_rate": 0.994
+    },
+    "unseen:past": {
+     "n": 500,
+     "lemma_acc": 0.546,
+     "verb_tag_rate": 0.984
+    },
+    "unseen:past_participle": {
+     "n": 500,
+     "lemma_acc": 0.556,
+     "verb_tag_rate": 0.96
+    },
+    "unseen:third_singular": {
+     "n": 500,
+     "lemma_acc": 0.854,
+     "verb_tag_rate": 0.872
+    },
+    "seen:all": {
+     "n": 2000,
+     "lemma_acc": 0.773,
+     "verb_tag_rate": 0.9565
+    },
+    "unseen:all": {
+     "n": 2000,
+     "lemma_acc": 0.5975,
+     "verb_tag_rate": 0.9525
+    }
+   },
+   "unseen_error_sample": [
+    "refocillated -> refocillat (want refocillate)",
+    "crandalled -> crandalle (want crandall)",
+    "giddyaped -> giddya (want giddyap)",
+    "novated -> novat (want novate)",
+    "faggoted -> faggoted (want faggot)",
+    "deproteinised -> deproteinis (want deproteinise)",
+    "carburated -> carburat (want carburate)",
+    "jawboned -> jawbon (want jawbone)",
+    "unwilled -> unwille (want unwill)",
+    "reoperated -> reoperat (want reoperate)",
+    "enveigled -> enveigl (want enveigle)",
+    "overdescribed -> overdescri (want overdescribe)",
+    "monologuized -> monologuiz (want monologuize)",
+    "misprescribed -> misprescribed (want misprescribe)",
+    "hectored -> hectore (want hector)",
+    "forthleapt -> forthleapt (want forthleap)",
+    "clomed -> clom (want clome)",
+    "retrofired -> retrofir (want retrofire)",
+    "inwheeled -> inwheele (want inwheel)",
+    "despiked -> despik (want despike)",
+    "pollenated -> pollenat (want pollenate)",
+    "pignerated -> pignerat (want pignerate)",
+    "astoned -> aston (want astone)",
+    "manualised -> manualis (want manualise)",
+    "glycoconjugated -> glycoconjugat (want glycoconjugate)"
+   ]
+  },
+  "/opt/clover-k3/meaning-core/csi/runs/ewt-seed2/model-best": {
+   "table": {
+    "seen:gerund": {
+     "n": 500,
+     "lemma_acc": 0.618,
+     "verb_tag_rate": 0.992
+    },
+    "seen:past": {
+     "n": 500,
+     "lemma_acc": 0.766,
+     "verb_tag_rate": 0.994
+    },
+    "seen:past_participle": {
+     "n": 500,
+     "lemma_acc": 0.732,
+     "verb_tag_rate": 0.968
+    },
+    "seen:third_singular": {
+     "n": 500,
+     "lemma_acc": 0.96,
+     "verb_tag_rate": 0.894
+    },
+    "unseen:gerund": {
+     "n": 500,
+     "lemma_acc": 0.434,
+     "verb_tag_rate": 0.994
+    },
+    "unseen:past": {
+     "n": 500,
+     "lemma_acc": 0.584,
+     "verb_tag_rate": 0.98
+    },
+    "unseen:past_participle": {
+     "n": 500,
+     "lemma_acc": 0.568,
+     "verb_tag_rate": 0.946
+    },
+    "unseen:third_singular": {
+     "n": 500,
+     "lemma_acc": 0.918,
+     "verb_tag_rate": 0.928
+    },
+    "seen:all": {
+     "n": 2000,
+     "lemma_acc": 0.769,
+     "verb_tag_rate": 0.962
+    },
+    "unseen:all": {
+     "n": 2000,
+     "lemma_acc": 0.626,
+     "verb_tag_rate": 0.962
+    }
+   },
+   "unseen_error_sample": [
+    "refocillated -> refocillat (want refocillate)",
+    "skippered -> skippere (want skipper)",
+    "novated -> novat (want novate)",
+    "blebbed -> blebbed (want bleb)",
+    "carburated -> carburat (want carburate)",
+    "dognapped -> dognappe (want dognap)",
+    "jawboned -> jawbon (want jawbone)",
+    "reoperated -> reoperat (want reoperate)",
+    "enveigled -> enveigl (want enveigle)",
+    "misprescribed -> misprescrib (want misprescribe)",
+    "hectored -> hectore (want hector)",
+    "merchandised -> merchandis (want merchandise)",
+    "forthleapt -> forthleapt (want forthleap)",
+    "ablated -> ablat (want ablate)",
+    "despiked -> despik (want despike)",
+    "pollenated -> pollenat (want pollenate)",
+    "pignerated -> pignerat (want pignerate)",
+    "astoned -> aston (want astone)",
+    "glycoconjugated -> glycoconjugat (want glycoconjugate)",
+    "ungilded -> ungilded (want ungild)",
+    "striddled -> striddl (want striddle)",
+    "unsubbed -> unsubbed (want unsub)",
+    "philibustered -> philibustere (want philibuster)",
+    "scythed -> scyth (want scythe)",
+    "razzed -> razze (want razz)"
+   ]
+  },
+  "/opt/clover-k3/meaning-core/csi/runs/ewt-seed3/model-best": {
+   "table": {
+    "seen:gerund": {
+     "n": 500,
+     "lemma_acc": 0.642,
+     "verb_tag_rate": 0.994
+    },
+    "seen:past": {
+     "n": 500,
+     "lemma_acc": 0.756,
+     "verb_tag_rate": 0.988
+    },
+    "seen:past_participle": {
+     "n": 500,
+     "lemma_acc": 0.752,
+     "verb_tag_rate": 0.976
+    },
+    "seen:third_singular": {
+     "n": 500,
+     "lemma_acc": 0.944,
+     "verb_tag_rate": 0.822
+    },
+    "unseen:gerund": {
+     "n": 500,
+     "lemma_acc": 0.418,
+     "verb_tag_rate": 0.994
+    },
+    "unseen:past": {
+     "n": 500,
+     "lemma_acc": 0.612,
+     "verb_tag_rate": 0.97
+    },
+    "unseen:past_participle": {
+     "n": 500,
+     "lemma_acc": 0.604,
+     "verb_tag_rate": 0.964
+    },
+    "unseen:third_singular": {
+     "n": 500,
+     "lemma_acc": 0.914,
+     "verb_tag_rate": 0.848
+    },
+    "seen:all": {
+     "n": 2000,
+     "lemma_acc": 0.7735,
+     "verb_tag_rate": 0.945
+    },
+    "unseen:all": {
+     "n": 2000,
+     "lemma_acc": 0.637,
+     "verb_tag_rate": 0.944
+    }
+   },
+   "unseen_error_sample": [
+    "refocillated -> refocillat (want refocillate)",
+    "skippered -> skippere (want skipper)",
+    "giddyaped -> giddya (want giddyap)",
+    "faggoted -> faggoted (want faggot)",
+    "blebbed -> blebbed (want bleb)",
+    "parathyroidectomized -> parathyroidectomiz (want parathyroidectomize)",
+    "jawboned -> jawbon (want jawbone)",
+    "unwilled -> unwille (want unwill)",
+    "enveigled -> enveigl (want enveigle)",
+    "imprinted -> imprinte (want imprint)",
+    "misprescribed -> misprescrib (want misprescribe)",
+    "hectored -> hectore (want hector)",
+    "forthleapt -> forthleapt (want forthleap)",
+    "retrofired -> retrofir (want retrofire)",
+    "inwheeled -> inwheele (want inwheel)",
+    "hirpled -> hirpl (want hirple)",
+    "acylated -> acylat (want acylate)",
+    "pollenated -> pollenat (want pollenate)",
+    "unhobbled -> unhobbl (want unhobble)",
+    "astoned -> aston (want astone)",
+    "ungilded -> ungilded (want ungild)",
+    "unsubbed -> unsubbed (want unsub)",
+    "philibustered -> philibustere (want philibuster)",
+    "mistranscribed -> mistranscrib (want mistranscribe)",
+    "scythed -> scyth (want scythe)"
+   ]
+  }
+ }
+}

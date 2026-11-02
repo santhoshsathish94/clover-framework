@@ -1,0 +1,155 @@
+{
+ "experiment": "E6b S2 learned linker",
+ "parser": "en_core_web_trf",
+ "train_pairs": 64871,
+ "train_label_counts": {
+  "theme": 21038,
+  "agent": 22072,
+  "recipient": 8661,
+  "none": 13100
+ },
+ "skipped_train": 0,
+ "dev": {
+  "0.1": {
+   "n": 3000,
+   "role_exact_6a": 0.8417,
+   "role_exact_index": 0.8573
+  },
+  "1.0": {
+   "n": 3000,
+   "role_exact_6a": 0.8387,
+   "role_exact_index": 0.8543
+  },
+  "10.0": {
+   "n": 3000,
+   "role_exact_6a": 0.8377,
+   "role_exact_index": 0.8533
+  }
+ },
+ "chosen_C": 0.1,
+ "test": {
+  "n": 3000,
+  "role_exact_6a": 0.8383,
+  "role_exact_index": 0.8487,
+  "by_case": {
+   "in_distribution": {
+    "n": 3000,
+    "role_exact_6a": 0.8383,
+    "role_exact_index": 0.8487
+   }
+  }
+ },
+ "gen": {
+  "n": 21000,
+  "role_exact_6a": 0.9134,
+  "role_exact_index": 0.9497,
+  "by_case": {
+   "active_to_passive": {
+    "n": 1000,
+    "role_exact_6a": 0.988,
+    "role_exact_index": 1.0
+   },
+   "cp_recursion": {
+    "n": 1000,
+    "role_exact_6a": 0.882,
+    "role_exact_index": 1.0
+   },
+   "do_dative_to_pp_dative": {
+    "n": 1000,
+    "role_exact_6a": 0.984,
+    "role_exact_index": 0.996
+   },
+   "obj_omitted_transitive_to_transitive": {
+    "n": 1000,
+    "role_exact_6a": 0.981,
+    "role_exact_index": 1.0
+   },
+   "obj_pp_to_subj_pp": {
+    "n": 1000,
+    "role_exact_6a": 0.714,
+    "role_exact_index": 0.721
+   },
+   "obj_to_subj_common": {
+    "n": 1000,
+    "role_exact_6a": 0.967,
+    "role_exact_index": 0.983
+   },
+   "obj_to_subj_proper": {
+    "n": 1000,
+    "role_exact_6a": 0.971,
+    "role_exact_index": 0.982
+   },
+   "only_seen_as_transitive_subj_as_unacc_subj": {
+    "n": 1000,
+    "role_exact_6a": 0.823,
+    "role_exact_index": 0.96
+   },
+   "only_seen_as_unacc_subj_as_obj_omitted_transitive_subj": {
+    "n": 1000,
+    "role_exact_6a": 0.85,
+    "role_exact_index": 0.992
+   },
+   "only_seen_as_unacc_subj_as_unerg_subj": {
+    "n": 1000,
+    "role_exact_6a": 0.858,
+    "role_exact_index": 1.0
+   },
+   "passive_to_active": {
+    "n": 1000,
+    "role_exact_6a": 0.977,
+    "role_exact_index": 0.999
+   },
+   "pp_dative_to_do_dative": {
+    "n": 1000,
+    "role_exact_6a": 0.94,
+    "role_exact_index": 0.952
+   },
+   "pp_recursion": {
+    "n": 1000,
+    "role_exact_6a": 0.971,
+    "role_exact_index": 0.973
+   },
+   "prim_to_inf_arg": {
+    "n": 1000,
+    "role_exact_6a": 0.928,
+    "role_exact_index": 0.941
+   },
+   "prim_to_obj_common": {
+    "n": 1000,
+    "role_exact_6a": 0.944,
+    "role_exact_index": 0.96
+   },
+   "prim_to_obj_proper": {
+    "n": 1000,
+    "role_exact_6a": 0.793,
+    "role_exact_index": 0.804
+   },
+   "prim_to_subj_common": {
+    "n": 1000,
+    "role_exact_6a": 0.97,
+    "role_exact_index": 0.978
+   },
+   "prim_to_subj_proper": {
+    "n": 1000,
+    "role_exact_6a": 0.974,
+    "role_exact_index": 0.989
+   },
+   "subj_to_obj_common": {
+    "n": 1000,
+    "role_exact_6a": 0.895,
+    "role_exact_index": 0.911
+   },
+   "subj_to_obj_proper": {
+    "n": 1000,
+    "role_exact_6a": 0.793,
+    "role_exact_index": 0.804
+   },
+   "unacc_to_transitive": {
+    "n": 1000,
+    "role_exact_6a": 0.979,
+    "role_exact_index": 0.998
+   }
+  }
+ },
+ "seconds": 1220.2
+}
