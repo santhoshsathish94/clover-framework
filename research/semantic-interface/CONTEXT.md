@@ -161,3 +161,14 @@
   Closeness of the dictionary's meaning vectors ranks synonyms' different meanings no higher than co-hyponym controls
   (AUC 0.47 test, 0.39 dev): it measures relatedness, not sameness. v0.3 not adopted; CSI's comparison stays v0.1.
   Order in git: pre-registration 3e2ccfb, data and audit 2e3613d, dev threshold 218c3cf, then the test run. Next: 3b.
+- 2026-11-02 15:55-16:21 UTC (clock): integration path, Experiments 1d and 1e (details in EXPERIMENTS.md).
+  - **1d fails as pre-registered (R1)**: CSI v0.1r (requests: every sentence, imperatives, governing proposition)
+    still offered declined tools in 0.690 of declining messages: the parser attaches a declined clause joined by a
+    comma, semicolon or colon to the next clause as `advcl`/`ccomp`. Q1, R2, R3, C1, S1, S2 passed.
+  - **1e fails as pre-registered (Q1 0.931 < 0.95)**: CSI v0.1r2 (+ rule 9b, claim verb by its written form), fresh
+    data: declined tools offered 0.000 (today 1.000), asked tools 1.000 (keyword rule 0.625), scope 1.000 (keyword
+    rule 0.000), claims 0.985 vs the core's 0.842, S1 and S2 pass, 0.10 s per message. All 17 Q errors are one parser
+    reading ("Forward the N.": "Forward" as an adverb, no verb, CSI abstains). As pre-registered, the routing use is
+    not integrated; no third variant without the human. An earlier 1e run used stale code (silent upload failure),
+    caught by checksums, kept aside and not used.
+  - **Waiting on the human:** what to integrate, if anything (see the hand-back of 2026-11-02 16:25 UTC).

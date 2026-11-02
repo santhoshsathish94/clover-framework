@@ -211,6 +211,26 @@ unchanged - on **fresh data** (seed 3121): new request verbs and objects for (Q)
 folders and closing phrases for (R) with the same forms, new objects for (C); S1 and S2 as in 1d. If 1e fails, the
 routing use is not integrated and the failure is reported; no third variant without the human.
 
+**1e results (k3, 2026-11-02 16:16-16:21 UTC; `results/e1e.json`; code committed before the run, 3da1d1b; checksums of
+`run_1d.py`, `analyze.py`, `compare.py` and `semantics.py` verified on k3 against the commit before the run started).
+1e fails as pre-registered: Q1 fails; R1, R2, R3, C1, S1 and S2 pass. So the routing use is not integrated.** (Q) 216
+request pairs: balanced accuracy 0.931 (criterion 0.95); phenomena: negated 0.917, other object 0.917, other verb
+0.861 (criterion 0.90), request vs report 0.917, "Don't"/"Do not" 1.000, "Please" 0.917. All 17 errors contain the
+sentence "Forward the N.": the parser reads "Forward" there as an adverb (`RB`, `advmod`) of the noun, which it makes
+the root, so the sentence has no verb and CSI abstains ("Please forward the N." is read correctly). The same parser
+limitation as 1d's 9 errors ("Archive ...", "Copy ..." read as nouns), on one fresh verb. (R) 204 messages, of which
+192 named their tool for today's routing: **declined tools offered 0.000 with CSI** in every declining form with
+verbal negation (D1-D7, 12 each; today 1.000, keyword rule 0.000); asked tools 1.000 (today 1.000, keyword rule 0.625,
+including the tool asked for beside a declined one in D7: CSI 1.000, keyword rule 0.000); scope items 1.000 (keyword
+rule 0.000). Declining without a verbal negation: offered 1.000 with CSI, outside its scope. (C) 196 reply sentences:
+CSI rule 0.985, the core's rule 0.842 (0/28 claims with a negation in a relative or second clause); CSI's 3 errors are
+the participle "run", which the core's claim pattern does not list either. (S1) heldout3 0.994, nonce2 1.000. (S2)
+reads 26 of the 30 core-observation messages (unread: "Hi", "Thanks"), no route changed. Latency 0.101 s per message
+(mean; p95 0.119; n 274). **An earlier 1e run is invalid** (finished 16:13 UTC, kept as `results/e1e_stale_code.json`):
+the upload to k3 had failed silently, so it ran the previous `analyze.py` and `semantics.py`; the checksums the run
+script printed afterwards showed this, and the rerun above started only after checksums matched. Its numbers are not
+used.
+
 ## Experiment 2 = E3 run plan (pre-registered 2026-11-01)
 **Data.** UD English-EWT r2.18 (tag commit b7711cce, CC BY-SA 4.0): train for our parser, dev for model choice, test
 reported once. Gold word segmentation is given to every system (tokenisation differences do not count).
