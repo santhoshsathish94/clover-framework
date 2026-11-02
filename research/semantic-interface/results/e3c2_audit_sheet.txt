@@ -1,0 +1,526 @@
+== verb_thing-00
+SAME  The nurse affirmed something.  ||  The nurse confirmed something.
+SAME  The nurse affirmed something.  ||  Something was confirmed by the nurse.
+DIFF  The nurse affirmed something.  ||  The nurse joined something.
+DIFF  The nurse affirmed something.  ||  Something was joined by the nurse.
+DIFF  The nurse affirmed something.  ||  The nurse checked something.
+DIFF  The nurse affirmed something.  ||  Something was checked by the nurse.
+== verb_thing-01
+SAME  The child roamed something.  ||  The child wandered something.
+SAME  The child roamed something.  ||  Something was wandered by the child.
+DIFF  The child roamed something.  ||  The child entered something.
+DIFF  The child roamed something.  ||  Something was entered by the child.
+DIFF  The child roamed something.  ||  The child withstood something.
+DIFF  The child roamed something.  ||  Something was withstood by the child.
+== verb_thing-02
+SAME  The farmer earned something.  ||  The farmer realised something.
+SAME  The farmer earned something.  ||  Something was realised by the farmer.
+DIFF  The farmer earned something.  ||  The farmer received something.
+DIFF  The farmer earned something.  ||  Something was received by the farmer.
+DIFF  The farmer earned something.  ||  The farmer unleashed something.
+DIFF  The farmer earned something.  ||  Something was unleashed by the farmer.
+== verb_thing-03
+SAME  The doctor compounded something.  ||  The doctor deepened something.
+SAME  The doctor compounded something.  ||  Something was deepened by the doctor.
+DIFF  The doctor compounded something.  ||  The doctor added something.
+DIFF  The doctor compounded something.  ||  Something was added by the doctor.
+DIFF  The doctor compounded something.  ||  The doctor substantiated something.
+DIFF  The doctor compounded something.  ||  Something was substantiated by the doctor.
+== verb_thing-04
+SAME  The teacher incited something.  ||  The teacher prompted something.
+SAME  The teacher incited something.  ||  Something was prompted by the teacher.
+DIFF  The teacher incited something.  ||  The teacher bred something.
+DIFF  The teacher incited something.  ||  Something was bred by the teacher.
+DIFF  The teacher incited something.  ||  The teacher melted something.
+DIFF  The teacher incited something.  ||  Something was melted by the teacher.
+== verb_thing-05
+SAME  The doctor analyzed something.  ||  The doctor examined something.
+SAME  The doctor analyzed something.  ||  Something was examined by the doctor.
+DIFF  The doctor analyzed something.  ||  The doctor respected something.
+DIFF  The doctor analyzed something.  ||  Something was respected by the doctor.
+DIFF  The doctor analyzed something.  ||  The doctor controlled something.
+DIFF  The doctor analyzed something.  ||  Something was controlled by the doctor.
+== verb_thing-06
+SAME  The farmer engaged something.  ||  The farmer pursued something.
+SAME  The farmer engaged something.  ||  Something was pursued by the farmer.
+DIFF  The farmer engaged something.  ||  The farmer intended something.
+DIFF  The farmer engaged something.  ||  Something was intended by the farmer.
+DIFF  The farmer engaged something.  ||  The farmer filed something.
+DIFF  The farmer engaged something.  ||  Something was filed by the farmer.
+== verb_thing-07
+SAME  The pilot achieved something.  ||  The pilot attained something.
+SAME  The pilot achieved something.  ||  Something was attained by the pilot.
+DIFF  The pilot achieved something.  ||  The pilot managed something.
+DIFF  The pilot achieved something.  ||  Something was managed by the pilot.
+DIFF  The pilot achieved something.  ||  The pilot inked something.
+DIFF  The pilot achieved something.  ||  Something was inked by the pilot.
+== verb_thing-08
+SAME  The pilot acknowledged something.  ||  The pilot admitted something.
+SAME  The pilot acknowledged something.  ||  Something was admitted by the pilot.
+DIFF  The pilot acknowledged something.  ||  The pilot formalized something.
+DIFF  The pilot acknowledged something.  ||  Something was formalized by the pilot.
+DIFF  The pilot acknowledged something.  ||  The pilot manifested something.
+DIFF  The pilot acknowledged something.  ||  Something was manifested by the pilot.
+== verb_thing-09
+SAME  The child gleaned something.  ||  The child reaped something.
+SAME  The child gleaned something.  ||  Something was reaped by the child.
+DIFF  The child gleaned something.  ||  The child mustered something.
+DIFF  The child gleaned something.  ||  Something was mustered by the child.
+DIFF  The child gleaned something.  ||  The child outlined something.
+DIFF  The child gleaned something.  ||  Something was outlined by the child.
+== verb_thing-10
+SAME  The teacher looted something.  ||  The teacher plundered something.
+SAME  The teacher looted something.  ||  Something was plundered by the teacher.
+DIFF  The teacher looted something.  ||  The teacher robbed something.
+DIFF  The teacher looted something.  ||  Something was robbed by the teacher.
+DIFF  The teacher looted something.  ||  The teacher pretended something.
+DIFF  The teacher looted something.  ||  Something was pretended by the teacher.
+== verb_thing-11
+SAME  The pilot accented something.  ||  The pilot stressed something.
+SAME  The pilot accented something.  ||  Something was stressed by the pilot.
+DIFF  The pilot accented something.  ||  The pilot implied something.
+DIFF  The pilot accented something.  ||  Something was implied by the pilot.
+DIFF  The pilot accented something.  ||  The pilot purchased something.
+DIFF  The pilot accented something.  ||  Something was purchased by the pilot.
+== verb_thing-12
+SAME  The farmer formed something.  ||  The farmer organized something.
+SAME  The farmer formed something.  ||  Something was organized by the farmer.
+DIFF  The farmer formed something.  ||  The farmer caused something.
+DIFF  The farmer formed something.  ||  Something was caused by the farmer.
+DIFF  The farmer formed something.  ||  The farmer circled something.
+DIFF  The farmer formed something.  ||  Something was circled by the farmer.
+== verb_thing-13
+SAME  The nurse regenerated something.  ||  The nurse renewed something.
+SAME  The nurse regenerated something.  ||  Something was renewed by the nurse.
+DIFF  The nurse regenerated something.  ||  The nurse staged something.
+DIFF  The nurse regenerated something.  ||  Something was staged by the nurse.
+DIFF  The nurse regenerated something.  ||  The nurse incorporated something.
+DIFF  The nurse regenerated something.  ||  Something was incorporated by the nurse.
+== verb_thing-14
+SAME  The child catered something.  ||  The child plied something.
+SAME  The child catered something.  ||  Something was plied by the child.
+DIFF  The child catered something.  ||  The child distributed something.
+DIFF  The child catered something.  ||  Something was distributed by the child.
+DIFF  The child catered something.  ||  The child recognised something.
+DIFF  The child catered something.  ||  Something was recognised by the child.
+== verb_thing-15
+SAME  The woman endured something.  ||  The woman tolerated something.
+SAME  The woman endured something.  ||  Something was tolerated by the woman.
+DIFF  The woman endured something.  ||  The woman authorized something.
+DIFF  The woman endured something.  ||  Something was authorized by the woman.
+DIFF  The woman endured something.  ||  The woman fancied something.
+DIFF  The woman endured something.  ||  Something was fancied by the woman.
+== verb_thing-16
+SAME  The child aggravated something.  ||  The child exacerbated something.
+SAME  The child aggravated something.  ||  Something was exacerbated by the child.
+DIFF  The child aggravated something.  ||  The child killed something.
+DIFF  The child aggravated something.  ||  Something was killed by the child.
+DIFF  The child aggravated something.  ||  The child exported something.
+DIFF  The child aggravated something.  ||  Something was exported by the child.
+== verb_thing-17
+SAME  The doctor boosted something.  ||  The doctor hiked something.
+SAME  The doctor boosted something.  ||  Something was hiked by the doctor.
+DIFF  The doctor boosted something.  ||  The doctor hoisted something.
+DIFF  The doctor boosted something.  ||  Something was hoisted by the doctor.
+DIFF  The doctor boosted something.  ||  The doctor whacked something.
+DIFF  The doctor boosted something.  ||  Something was whacked by the doctor.
+== verb_thing-18
+SAME  The teacher retreated something.  ||  The teacher withdrew something.
+SAME  The teacher retreated something.  ||  Something was withdrawn by the teacher.
+DIFF  The teacher retreated something.  ||  The teacher rode something.
+DIFF  The teacher retreated something.  ||  Something was ridden by the teacher.
+DIFF  The teacher retreated something.  ||  The teacher rejected something.
+DIFF  The teacher retreated something.  ||  Something was rejected by the teacher.
+== verb_thing-19
+SAME  The nurse basked something.  ||  The nurse enjoyed something.
+SAME  The nurse basked something.  ||  Something was enjoyed by the nurse.
+DIFF  The nurse basked something.  ||  The nurse regreted something.
+DIFF  The nurse basked something.  ||  Something was regretted by the nurse.
+DIFF  The nurse basked something.  ||  The nurse dictated something.
+DIFF  The nurse basked something.  ||  Something was dictated by the nurse.
+== verb_thing-20
+SAME  The farmer recalled something.  ||  The farmer remembered something.
+SAME  The farmer recalled something.  ||  Something was remembered by the farmer.
+DIFF  The farmer recalled something.  ||  The farmer decided something.
+DIFF  The farmer recalled something.  ||  Something was decided by the farmer.
+DIFF  The farmer recalled something.  ||  The farmer tilled something.
+DIFF  The farmer recalled something.  ||  Something was tilled by the farmer.
+== verb_thing-21
+SAME  The nurse chose something.  ||  The nurse selected something.
+SAME  The nurse chose something.  ||  Something was selected by the nurse.
+DIFF  The nurse chose something.  ||  The nurse measured something.
+DIFF  The nurse chose something.  ||  Something was measured by the nurse.
+DIFF  The nurse chose something.  ||  The nurse questioned something.
+DIFF  The nurse chose something.  ||  Something was questioned by the nurse.
+== verb_thing-22
+SAME  The farmer employed something.  ||  The farmer utilised something.
+SAME  The farmer employed something.  ||  Something was utilised by the farmer.
+DIFF  The farmer employed something.  ||  The farmer missed something.
+DIFF  The farmer employed something.  ||  Something was missed by the farmer.
+DIFF  The farmer employed something.  ||  The farmer messaged something.
+DIFF  The farmer employed something.  ||  Something was messaged by the farmer.
+== verb_thing-23
+SAME  The teacher activated something.  ||  The teacher triggered something.
+SAME  The teacher activated something.  ||  Something was triggered by the teacher.
+DIFF  The teacher activated something.  ||  The teacher undertook something.
+DIFF  The teacher activated something.  ||  Something was undertaken by the teacher.
+DIFF  The teacher activated something.  ||  The teacher stirred something.
+DIFF  The teacher activated something.  ||  Something was stirred by the teacher.
+== verb_thing-24
+SAME  The farmer anticipated something.  ||  The farmer expected something.
+SAME  The farmer anticipated something.  ||  Something was expected by the farmer.
+DIFF  The farmer anticipated something.  ||  The farmer accepted something.
+DIFF  The farmer anticipated something.  ||  Something was accepted by the farmer.
+DIFF  The farmer anticipated something.  ||  The farmer realized something.
+DIFF  The farmer anticipated something.  ||  Something was realized by the farmer.
+== verb_thing-25
+SAME  The child forgone something.  ||  The child waived something.
+SAME  The child forgone something.  ||  Something was waived by the child.
+DIFF  The child forgone something.  ||  The child tried something.
+DIFF  The child forgone something.  ||  Something was tried by the child.
+DIFF  The child forgone something.  ||  The child arranged something.
+DIFF  The child forgone something.  ||  Something was arranged by the child.
+== verb_thing-26
+SAME  The woman demonstrated something.  ||  The woman presented something.
+SAME  The woman demonstrated something.  ||  Something was presented by the woman.
+DIFF  The woman demonstrated something.  ||  The woman revealed something.
+DIFF  The woman demonstrated something.  ||  Something was revealed by the woman.
+DIFF  The woman demonstrated something.  ||  The woman resigned something.
+DIFF  The woman demonstrated something.  ||  Something was resigned by the woman.
+== verb_thing-27
+SAME  The child encouraged something.  ||  The child promoted something.
+SAME  The child encouraged something.  ||  Something was promoted by the child.
+DIFF  The child encouraged something.  ||  The child frequented something.
+DIFF  The child encouraged something.  ||  Something was frequented by the child.
+DIFF  The child encouraged something.  ||  The child gentrified something.
+DIFF  The child encouraged something.  ||  Something was gentrified by the child.
+== verb_thing-28
+SAME  The pilot equipped something.  ||  The pilot outfitted something.
+SAME  The pilot equipped something.  ||  Something was outfitted by the pilot.
+DIFF  The pilot equipped something.  ||  The pilot fueled something.
+DIFF  The pilot equipped something.  ||  Something was fueled by the pilot.
+DIFF  The pilot equipped something.  ||  The pilot fostered something.
+DIFF  The pilot equipped something.  ||  Something was fostered by the pilot.
+== verb_thing-29
+SAME  The nurse said something.  ||  The nurse stated something.
+SAME  The nurse said something.  ||  Something was stated by the nurse.
+DIFF  The nurse said something.  ||  The nurse voiced something.
+DIFF  The nurse said something.  ||  Something was voiced by the nurse.
+DIFF  The nurse said something.  ||  The nurse impugned something.
+DIFF  The nurse said something.  ||  Something was impugned by the nurse.
+== verb_thing-30
+SAME  The woman applied something.  ||  The woman utilized something.
+SAME  The woman applied something.  ||  Something was utilized by the woman.
+DIFF  The woman applied something.  ||  The woman led something.
+DIFF  The woman applied something.  ||  Something was led by the woman.
+DIFF  The woman applied something.  ||  The woman redlined something.
+DIFF  The woman applied something.  ||  Something was redlined by the woman.
+== verb_thing-31
+SAME  The woman enclosed something.  ||  The woman enveloped something.
+SAME  The woman enclosed something.  ||  Something was enveloped by the woman.
+DIFF  The woman enclosed something.  ||  The woman buttered something.
+DIFF  The woman enclosed something.  ||  Something was buttered by the woman.
+DIFF  The woman enclosed something.  ||  The woman pickled something.
+DIFF  The woman enclosed something.  ||  Something was pickled by the woman.
+== verb_thing-32
+SAME  The doctor approved something.  ||  The doctor sanctioned something.
+SAME  The doctor approved something.  ||  Something was sanctioned by the doctor.
+DIFF  The doctor approved something.  ||  The doctor licensed something.
+DIFF  The doctor approved something.  ||  Something was licensed by the doctor.
+DIFF  The doctor approved something.  ||  The doctor airlifted something.
+DIFF  The doctor approved something.  ||  Something was airlifted by the doctor.
+== verb_thing-33
+SAME  The teacher frustrated something.  ||  The teacher thwarted something.
+SAME  The teacher frustrated something.  ||  Something was thwarted by the teacher.
+DIFF  The teacher frustrated something.  ||  The teacher averted something.
+DIFF  The teacher frustrated something.  ||  Something was averted by the teacher.
+DIFF  The teacher frustrated something.  ||  The teacher shed something.
+DIFF  The teacher frustrated something.  ||  Something was shed by the teacher.
+== verb_thing-34
+SAME  The teacher conceived something.  ||  The teacher conceptualized something.
+SAME  The teacher conceived something.  ||  Something was conceptualized by the teacher.
+DIFF  The teacher conceived something.  ||  The teacher imagined something.
+DIFF  The teacher conceived something.  ||  Something was imagined by the teacher.
+DIFF  The teacher conceived something.  ||  The teacher bit something.
+DIFF  The teacher conceived something.  ||  Something was bitten by the teacher.
+== verb_thing-35
+SAME  The student reiterated something.  ||  The student repeated something.
+SAME  The student reiterated something.  ||  Something was repeated by the student.
+DIFF  The student reiterated something.  ||  The student disclosed something.
+DIFF  The student reiterated something.  ||  Something was disclosed by the student.
+DIFF  The student reiterated something.  ||  The student quitted something.
+DIFF  The student reiterated something.  ||  Something was quitted by the student.
+== verb_thing-36
+SAME  The student battled something.  ||  The student combatted something.
+SAME  The student battled something.  ||  Something was combatted by the student.
+DIFF  The student battled something.  ||  The student attacked something.
+DIFF  The student battled something.  ||  Something was attacked by the student.
+DIFF  The student battled something.  ||  The student overplayed something.
+DIFF  The student battled something.  ||  Something was overplayed by the student.
+== verb_thing-37
+SAME  The woman hedged something.  ||  The woman sidestepped something.
+SAME  The woman hedged something.  ||  Something was sidestepped by the woman.
+DIFF  The woman hedged something.  ||  The woman bypast something.
+DIFF  The woman hedged something.  ||  Something was bypast by the woman.
+DIFF  The woman hedged something.  ||  The woman evened something.
+DIFF  The woman hedged something.  ||  Something was evened by the woman.
+== verb_thing-38
+SAME  The doctor discovered something.  ||  The doctor observed something.
+SAME  The doctor discovered something.  ||  Something was observed by the doctor.
+DIFF  The doctor discovered something.  ||  The doctor spotted something.
+DIFF  The doctor discovered something.  ||  Something was spotted by the doctor.
+DIFF  The doctor discovered something.  ||  The doctor weakened something.
+DIFF  The doctor discovered something.  ||  Something was weakened by the doctor.
+== verb_thing-39
+SAME  The nurse assessed something.  ||  The nurse evaluated something.
+SAME  The nurse assessed something.  ||  Something was evaluated by the nurse.
+DIFF  The nurse assessed something.  ||  The nurse figured something.
+DIFF  The nurse assessed something.  ||  Something was figured by the nurse.
+DIFF  The nurse assessed something.  ||  The nurse overcame something.
+DIFF  The nurse assessed something.  ||  Something was overcome by the nurse.
+== verb_thing-40
+SAME  The doctor confined something.  ||  The doctor limited something.
+SAME  The doctor confined something.  ||  Something was limited by the doctor.
+DIFF  The doctor confined something.  ||  The doctor released something.
+DIFF  The doctor confined something.  ||  Something was released by the doctor.
+DIFF  The doctor confined something.  ||  The doctor rectified something.
+DIFF  The doctor confined something.  ||  Something was rectified by the doctor.
+== verb_thing-41
+SAME  The nurse procured something.  ||  The nurse secured something.
+SAME  The nurse procured something.  ||  Something was secured by the nurse.
+DIFF  The nurse procured something.  ||  The nurse gained something.
+DIFF  The nurse procured something.  ||  Something was gained by the nurse.
+DIFF  The nurse procured something.  ||  The nurse suggested something.
+DIFF  The nurse procured something.  ||  Something was suggested by the nurse.
+== verb_thing-42
+SAME  The farmer noted something.  ||  The farmer remarked something.
+SAME  The farmer noted something.  ||  Something was remarked by the farmer.
+DIFF  The farmer noted something.  ||  The farmer declared something.
+DIFF  The farmer noted something.  ||  Something was declared by the farmer.
+DIFF  The farmer noted something.  ||  The farmer used something.
+DIFF  The farmer noted something.  ||  Something was used by the farmer.
+== verb_person-00
+SAME  The doctor complimented somebody.  ||  The doctor congratulated somebody.
+SAME  The doctor complimented somebody.  ||  Somebody was congratulated by the doctor.
+DIFF  The doctor complimented somebody.  ||  The doctor lauded somebody.
+DIFF  The doctor complimented somebody.  ||  Somebody was lauded by the doctor.
+DIFF  The doctor complimented somebody.  ||  The doctor flogged somebody.
+DIFF  The doctor complimented somebody.  ||  Somebody was flogged by the doctor.
+== verb_person-01
+SAME  The doctor murdered somebody.  ||  The doctor slew somebody.
+SAME  The doctor murdered somebody.  ||  Somebody was slain by the doctor.
+DIFF  The doctor murdered somebody.  ||  The doctor executed somebody.
+DIFF  The doctor murdered somebody.  ||  Somebody was executed by the doctor.
+DIFF  The doctor murdered somebody.  ||  The doctor conducted somebody.
+DIFF  The doctor murdered somebody.  ||  Somebody was conducted by the doctor.
+== verb_person-02
+SAME  The farmer frightened somebody.  ||  The farmer scared somebody.
+SAME  The farmer frightened somebody.  ||  Somebody was scared by the farmer.
+DIFF  The farmer frightened somebody.  ||  The farmer inspired somebody.
+DIFF  The farmer frightened somebody.  ||  Somebody was inspired by the farmer.
+DIFF  The farmer frightened somebody.  ||  The farmer smelled somebody.
+DIFF  The farmer frightened somebody.  ||  Somebody was smelled by the farmer.
+== verb_person-03
+SAME  The woman reassigned somebody.  ||  The woman transferred somebody.
+SAME  The woman reassigned somebody.  ||  Somebody was transferred by the woman.
+DIFF  The woman reassigned somebody.  ||  The woman elevated somebody.
+DIFF  The woman reassigned somebody.  ||  Somebody was elevated by the woman.
+DIFF  The woman reassigned somebody.  ||  The woman misinformed somebody.
+DIFF  The woman reassigned somebody.  ||  Somebody was misinformed by the woman.
+== verb_person-04
+SAME  The nurse apprised somebody.  ||  The nurse notified somebody.
+SAME  The nurse apprised somebody.  ||  Somebody was notified by the nurse.
+DIFF  The nurse apprised somebody.  ||  The nurse reported somebody.
+DIFF  The nurse apprised somebody.  ||  Somebody was reported by the nurse.
+DIFF  The nurse apprised somebody.  ||  The nurse awaited somebody.
+DIFF  The nurse apprised somebody.  ||  Somebody was awaited by the nurse.
+== verb_person-05
+SAME  The nurse instructed somebody.  ||  The nurse taught somebody.
+SAME  The nurse instructed somebody.  ||  Somebody was taught by the nurse.
+DIFF  The nurse instructed somebody.  ||  The nurse explained somebody.
+DIFF  The nurse instructed somebody.  ||  Somebody was explained by the nurse.
+DIFF  The nurse instructed somebody.  ||  The nurse libeled somebody.
+DIFF  The nurse instructed somebody.  ||  Somebody was libeled by the nurse.
+== verb_person-06
+SAME  The child imprisoned somebody.  ||  The child jailed somebody.
+SAME  The child imprisoned somebody.  ||  Somebody was jailed by the child.
+DIFF  The child imprisoned somebody.  ||  The child trapped somebody.
+DIFF  The child imprisoned somebody.  ||  Somebody was trapped by the child.
+DIFF  The child imprisoned somebody.  ||  The child tempted somebody.
+DIFF  The child imprisoned somebody.  ||  Somebody was tempted by the child.
+== agent-00
+SAME  The partner saw the bottle.  ||  The spouse saw the bottle.
+DIFF  The partner saw the bottle.  ||  The cousin saw the bottle.
+DIFF  The partner saw the bottle.  ||  The journalist saw the bottle.
+== agent-01
+SAME  The curate saw the bottle.  ||  The rector saw the bottle.
+DIFF  The curate saw the bottle.  ||  The cleric saw the bottle.
+DIFF  The curate saw the bottle.  ||  The conspirator saw the bottle.
+== agent-02
+SAME  The activist found the chair.  ||  The militant found the chair.
+DIFF  The activist found the chair.  ||  The hippy found the chair.
+DIFF  The activist found the chair.  ||  The spy found the chair.
+== agent-03
+SAME  The killer found the bottle.  ||  The slayer found the bottle.
+DIFF  The killer found the bottle.  ||  The friend found the bottle.
+DIFF  The killer found the bottle.  ||  The youngster found the bottle.
+== agent-04
+SAME  The accountant saw the box.  ||  The controller saw the box.
+DIFF  The accountant saw the box.  ||  The merchant saw the box.
+DIFF  The accountant saw the box.  ||  The ma saw the box.
+== agent-05
+SAME  The gay saw the box.  ||  The homosexual saw the box.
+DIFF  The gay saw the box.  ||  The adult saw the box.
+DIFF  The gay saw the box.  ||  The suspect saw the box.
+== agent-06
+SAME  The hood found the chair.  ||  The thug found the chair.
+DIFF  The hood found the chair.  ||  The murderer found the chair.
+DIFF  The hood found the chair.  ||  The deacon found the chair.
+== agent-07
+SAME  The dwarf found the chair.  ||  The midget found the chair.
+DIFF  The dwarf found the chair.  ||  The shrimp found the chair.
+DIFF  The dwarf found the chair.  ||  The foe found the chair.
+== agent-08
+SAME  The divinity found the bottle.  ||  The god found the bottle.
+DIFF  The divinity found the bottle.  ||  The angel found the bottle.
+DIFF  The divinity found the bottle.  ||  The nerd found the bottle.
+== agent-09
+SAME  The booster found the box.  ||  The supporter found the box.
+DIFF  The booster found the box.  ||  The fascist found the box.
+DIFF  The booster found the box.  ||  The fellow found the box.
+== agent-10
+SAME  The lunatic saw the box.  ||  The maniac saw the box.
+DIFF  The lunatic saw the box.  ||  The patient saw the box.
+DIFF  The lunatic saw the box.  ||  The manikin saw the box.
+== agent-11
+SAME  The cretin saw the bag.  ||  The idiot saw the bag.
+DIFF  The cretin saw the bag.  ||  The fool saw the bag.
+DIFF  The cretin saw the bag.  ||  The thinker saw the bag.
+== agent-12
+SAME  The buddy found the box.  ||  The pal found the box.
+DIFF  The buddy found the box.  ||  The girlfriend found the box.
+DIFF  The buddy found the box.  ||  The stylist found the box.
+== agent-13
+SAME  The marketer found the box.  ||  The seller found the box.
+DIFF  The marketer found the box.  ||  The retailer found the box.
+DIFF  The marketer found the box.  ||  The piranha found the box.
+== agent-14
+SAME  The rescuer found the box.  ||  The saviour found the box.
+DIFF  The rescuer found the box.  ||  The donor found the box.
+DIFF  The rescuer found the box.  ||  The lender found the box.
+== agent-15
+SAME  The bozo saw the chair.  ||  The jackass saw the chair.
+DIFF  The bozo saw the chair.  ||  The clown saw the chair.
+DIFF  The bozo saw the chair.  ||  The representative saw the chair.
+== agent-16
+SAME  The mama found the box.  ||  The mommy found the box.
+DIFF  The mama found the box.  ||  The mater found the box.
+DIFF  The mama found the box.  ||  The explorer found the box.
+== agent-17
+SAME  The conservationist saw the bottle.  ||  The environmentalist saw the bottle.
+DIFF  The conservationist saw the bottle.  ||  The dry saw the bottle.
+DIFF  The conservationist saw the bottle.  ||  The thief saw the bottle.
+== agent-18
+SAME  The assistant found the bottle.  ||  The helper found the bottle.
+DIFF  The assistant found the bottle.  ||  The employee found the bottle.
+DIFF  The assistant found the bottle.  ||  The cuckoo found the bottle.
+== agent-19
+SAME  The combatant saw the bottle.  ||  The fighter saw the bottle.
+DIFF  The combatant saw the bottle.  ||  The expert saw the bottle.
+DIFF  The combatant saw the bottle.  ||  The warlord saw the bottle.
+== agent-20
+SAME  The buster saw the chair.  ||  The dude saw the chair.
+DIFF  The buster saw the chair.  ||  The guy saw the chair.
+DIFF  The buster saw the chair.  ||  The subsidiary saw the chair.
+== agent-21
+SAME  The contender found the box.  ||  The rival found the box.
+DIFF  The contender found the box.  ||  The player found the box.
+DIFF  The contender found the box.  ||  The stranger found the box.
+== agent-22
+SAME  The advocate found the box.  ||  The proponent found the box.
+DIFF  The advocate found the box.  ||  The leader found the box.
+DIFF  The advocate found the box.  ||  The sniper found the box.
+== agent-23
+SAME  The fry saw the bottle.  ||  The kid saw the bottle.
+DIFF  The fry saw the bottle.  ||  The youth saw the bottle.
+DIFF  The fry saw the bottle.  ||  The descendant saw the bottle.
+== agent-24
+SAME  The viewer found the bag.  ||  The watcher found the bag.
+DIFF  The viewer found the bag.  ||  The listener found the bag.
+DIFF  The viewer found the bag.  ||  The granddaughter found the bag.
+== agent-25
+SAME  The trafficker found the box.  ||  The vendor found the box.
+DIFF  The trafficker found the box.  ||  The grocer found the box.
+DIFF  The trafficker found the box.  ||  The sommelier found the box.
+== agent-26
+SAME  The bloke saw the chair.  ||  The chap saw the chair.
+DIFF  The bloke saw the chair.  ||  The man saw the chair.
+DIFF  The bloke saw the chair.  ||  The coordinator saw the chair.
+== agent-27
+SAME  The advisor found the bottle.  ||  The consultant found the bottle.
+DIFF  The advisor found the bottle.  ||  The connoisseur found the bottle.
+DIFF  The advisor found the bottle.  ||  The longshoreman found the bottle.
+== agent-28
+SAME  The investigator saw the bag.  ||  The researcher saw the bag.
+DIFF  The investigator saw the bag.  ||  The biologist saw the bag.
+DIFF  The investigator saw the bag.  ||  The mate saw the bag.
+== patient-00
+SAME  The child found the dessert.  ||  The child found the sweet.
+DIFF  The child found the dessert.  ||  The child found the entree.
+DIFF  The child found the dessert.  ||  The child found the shovel.
+== patient-01
+SAME  The farmer saw the crude.  ||  The farmer saw the petroleum.
+DIFF  The farmer saw the crude.  ||  The farmer saw the coal.
+DIFF  The farmer saw the crude.  ||  The farmer saw the scruff.
+== patient-02
+SAME  The teacher saw the grinder.  ||  The teacher saw the sub.
+DIFF  The teacher saw the grinder.  ||  The teacher saw the burger.
+DIFF  The teacher saw the grinder.  ||  The teacher saw the barn.
+== patient-03
+SAME  The teacher saw the factory.  ||  The teacher saw the mill.
+DIFF  The teacher saw the factory.  ||  The teacher saw the refinery.
+DIFF  The teacher saw the factory.  ||  The teacher saw the tent.
+== patient-04
+SAME  The farmer saw the bush.  ||  The farmer saw the shrub.
+DIFF  The farmer saw the bush.  ||  The farmer saw the tree.
+DIFF  The farmer saw the bush.  ||  The farmer saw the condo.
+== patient-05
+SAME  The child saw the gut.  ||  The child saw the intestine.
+DIFF  The child saw the gut.  ||  The child saw the stomach.
+DIFF  The child saw the gut.  ||  The child saw the cocker.
+== patient-06
+SAME  The woman saw the housing.  ||  The woman saw the lodging.
+DIFF  The woman saw the housing.  ||  The woman saw the building.
+DIFF  The woman saw the housing.  ||  The woman saw the piano.
+== patient-07
+SAME  The child found the rubbish.  ||  The child found the trash.
+DIFF  The child found the rubbish.  ||  The child found the sewage.
+DIFF  The child found the rubbish.  ||  The child found the embassy.
+== patient-08
+SAME  The nurse found the bike.  ||  The nurse found the motorcycle.
+DIFF  The nurse found the bike.  ||  The nurse found the auto.
+DIFF  The nurse found the bike.  ||  The nurse found the bullfight.
+== patient-09
+SAME  The child saw the material.  ||  The child saw the stuff.
+DIFF  The child saw the material.  ||  The child saw the fluid.
+DIFF  The child saw the material.  ||  The child saw the yam.
+== patient-10
+SAME  The nurse found the piss.  ||  The nurse found the urine.
+DIFF  The nurse found the piss.  ||  The nurse found the feces.
+DIFF  The nurse found the piss.  ||  The nurse found the cheek.
+== patient-11
+SAME  The teacher found the macrocosm.  ||  The teacher found the universe.
+DIFF  The teacher found the macrocosm.  ||  The teacher found the body.
+DIFF  The teacher found the macrocosm.  ||  The teacher found the apartment.
+== patient-12
+SAME  The nurse found the cosmos.  ||  The nurse found the world.
+DIFF  The nurse found the cosmos.  ||  The nurse found the rock.
+DIFF  The nurse found the cosmos.  ||  The nurse found the paste.
+== patient-13
+SAME  The farmer found the apparatus.  ||  The farmer found the setup.
+DIFF  The farmer found the apparatus.  ||  The farmer found the satellite.
+DIFF  The farmer found the apparatus.  ||  The farmer found the terminal.
+== patient-14
+SAME  The teacher found the pedestal.  ||  The teacher found the stand.
+DIFF  The teacher found the pedestal.  ||  The teacher found the stair.
+DIFF  The teacher found the pedestal.  ||  The teacher found the nitrogen.

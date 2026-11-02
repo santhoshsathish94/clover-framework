@@ -1,0 +1,132 @@
+{
+ "pairs_in_pool": {
+  "verb_thing": 118,
+  "patient": 38,
+  "agent": 62,
+  "verb_person": 18
+ },
+ "skipped_without_controls": {
+  "verb_thing": 51,
+  "verb_person": 11,
+  "agent": 17,
+  "patient": 15
+ },
+ "items": {
+  "verb_thing": {
+   "dev": 14,
+   "test": 29
+  },
+  "verb_person": {
+   "dev": 2,
+   "test": 5
+  },
+  "agent": {
+   "dev": 10,
+   "test": 19
+  },
+  "patient": {
+   "dev": 5,
+   "test": 10
+  }
+ },
+ "excluded_words": 364,
+ "ewt_files": [
+  "en_ewt-ud-dev.conllu",
+  "en_ewt-ud-test.conllu",
+  "en_ewt-ud-train.conllu"
+ ]
+}
+verb_thing-00 dev affirm confirm | related join | random check {'affirm': ['ewt', 'ewt'], 'confirm': ['ewt', 'ewt'], 'join': ['ewt', 'ewt'], 'check': ['ewt', 'ewt']}
+verb_thing-01 dev roam wander | related enter | random withstand {'roam': ['rule', 'rule'], 'wander': ['rule', 'rule'], 'enter': ['ewt', 'ewt'], 'withstand': ['oewn', 'oewn']}
+verb_thing-02 dev earn realise | related receive | random unleash {'earn': ['ewt', 'ewt'], 'realise': ['rule', 'rule'], 'receive': ['ewt', 'ewt'], 'unleash': ['ewt', 'ewt']}
+verb_thing-03 dev compound deepen | related add | random substantiate {'compound': ['ewt', 'ewt'], 'deepen': ['rule', 'rule'], 'add': ['ewt', 'ewt'], 'substantiate': ['rule', 'rule']}
+verb_thing-04 dev incite prompt | related breed | random melt {'incite': ['ewt', 'ewt'], 'prompt': ['ewt', 'ewt'], 'breed': ['ewt', 'ewt'], 'melt': ['ewt', 'ewt']}
+verb_thing-05 dev analyze examine | related respect | random control {'analyze': ['ewt', 'ewt'], 'examine': ['ewt', 'ewt'], 'respect': ['ewt', 'ewt'], 'control': ['ewt', 'ewt']}
+verb_thing-06 dev engage pursue | related intend | random file {'engage': ['ewt', 'ewt'], 'pursue': ['ewt', 'ewt'], 'intend': ['ewt', 'ewt'], 'file': ['ewt', 'ewt']}
+verb_thing-07 dev achieve attain | related manage | random ink {'achieve': ['ewt', 'ewt'], 'attain': ['rule', 'rule'], 'manage': ['ewt', 'ewt'], 'ink': ['ewt', 'ewt']}
+verb_thing-08 dev acknowledge admit | related formalize | random manifest {'acknowledge': ['ewt', 'ewt'], 'admit': ['ewt', 'ewt'], 'formalize': ['rule', 'rule'], 'manifest': ['rule', 'rule']}
+verb_thing-09 dev glean reap | related muster | random outline {'glean': ['ewt', 'ewt'], 'reap': ['ewt', 'ewt'], 'muster': ['rule', 'rule'], 'outline': ['ewt', 'ewt']}
+verb_thing-10 dev loot plunder | related rob | random pretend {'loot': ['rule', 'rule'], 'plunder': ['rule', 'rule'], 'rob': ['ewt', 'ewt'], 'pretend': ['ewt', 'ewt']}
+verb_thing-11 dev accent stress | related imply | random purchase {'accent': ['rule', 'rule'], 'stress': ['ewt', 'ewt'], 'imply': ['ewt', 'ewt'], 'purchase': ['ewt', 'ewt']}
+verb_thing-12 dev form organize | related cause | random circle {'form': ['ewt', 'ewt'], 'organize': ['ewt', 'ewt'], 'cause': ['ewt', 'ewt'], 'circle': ['rule', 'rule']}
+verb_thing-13 dev regenerate renew | related stage | random incorporate {'regenerate': ['rule', 'rule'], 'renew': ['ewt', 'ewt'], 'stage': ['ewt', 'ewt'], 'incorporate': ['ewt', 'ewt']}
+verb_thing-14 test cater ply | related distribute | random recognise {'cater': ['rule', 'rule'], 'ply': ['oewn', 'oewn'], 'distribute': ['ewt', 'ewt'], 'recognise': ['ewt', 'ewt']}
+verb_thing-15 test endure tolerate | related authorize | random fancy {'endure': ['rule', 'rule'], 'tolerate': ['rule', 'rule'], 'authorize': ['ewt', 'ewt'], 'fancy': ['oewn', 'oewn']}
+verb_thing-16 test aggravate exacerbate | related kill | random export {'aggravate': ['ewt', 'ewt'], 'exacerbate': ['ewt', 'ewt'], 'kill': ['ewt', 'ewt'], 'export': ['rule', 'rule']}
+verb_thing-17 test boost hike | related hoist | random whack {'boost': ['ewt', 'ewt'], 'hike': ['rule', 'rule'], 'hoist': ['rule', 'rule'], 'whack': ['rule', 'rule']}
+verb_thing-18 test retreat withdraw | related ride | random reject {'retreat': ['rule', 'rule'], 'withdraw': ['ewt', 'ewt'], 'ride': ['ewt', 'ewt'], 'reject': ['ewt', 'ewt']}
+verb_thing-19 test bask enjoy | related regret | random dictate {'bask': ['rule', 'rule'], 'enjoy': ['ewt', 'ewt'], 'regret': ['ewt', 'ewt'], 'dictate': ['rule', 'rule']}
+verb_thing-20 test recall remember | related decide | random till {'recall': ['ewt', 'ewt'], 'remember': ['ewt', 'ewt'], 'decide': ['ewt', 'ewt'], 'till': ['rule', 'rule']}
+verb_thing-21 test choose select | related measure | random question {'choose': ['ewt', 'ewt'], 'select': ['ewt', 'ewt'], 'measure': ['ewt', 'ewt'], 'question': ['ewt', 'ewt']}
+verb_thing-22 test employ utilise | related miss | random message {'employ': ['ewt', 'ewt'], 'utilise': ['rule', 'rule'], 'miss': ['ewt', 'ewt'], 'message': ['rule', 'rule']}
+verb_thing-23 test activate trigger | related undertake | random stir {'activate': ['ewt', 'ewt'], 'trigger': ['ewt', 'ewt'], 'undertake': ['oewn', 'ewt'], 'stir': ['oewn', 'oewn']}
+verb_thing-24 test anticipate expect | related accept | random realize {'anticipate': ['ewt', 'ewt'], 'expect': ['ewt', 'ewt'], 'accept': ['ewt', 'ewt'], 'realize': ['ewt', 'ewt']}
+verb_thing-25 test forgo waive | related try | random arrange {'forgo': ['oewn', 'oewn'], 'waive': ['ewt', 'ewt'], 'try': ['ewt', 'ewt'], 'arrange': ['ewt', 'ewt']}
+verb_thing-26 test demonstrate present | related reveal | random resign {'demonstrate': ['ewt', 'ewt'], 'present': ['ewt', 'ewt'], 'reveal': ['ewt', 'ewt'], 'resign': ['ewt', 'ewt']}
+verb_thing-27 test encourage promote | related frequent | random gentrify {'encourage': ['ewt', 'ewt'], 'promote': ['ewt', 'ewt'], 'frequent': ['ewt', 'ewt'], 'gentrify': ['ewt', 'ewt']}
+verb_thing-28 test equip outfit | related fuel | random foster {'equip': ['ewt', 'ewt'], 'outfit': ['oewn', 'oewn'], 'fuel': ['ewt', 'ewt'], 'foster': ['rule', 'rule']}
+verb_thing-29 test say state | related voice | random impugn {'say': ['ewt', 'ewt'], 'state': ['ewt', 'ewt'], 'voice': ['ewt', 'ewt'], 'impugn': ['ewt', 'ewt']}
+verb_thing-30 test apply utilize | related lead | random redline {'apply': ['ewt', 'ewt'], 'utilize': ['ewt', 'ewt'], 'lead': ['ewt', 'ewt'], 'redline': ['ewt', 'ewt']}
+verb_thing-31 test enclose envelop | related butter | random pickle {'enclose': ['ewt', 'ewt'], 'envelop': ['rule', 'rule'], 'butter': ['ewt', 'ewt'], 'pickle': ['rule', 'rule']}
+verb_thing-32 test approve sanction | related license | random airlift {'approve': ['ewt', 'ewt'], 'sanction': ['ewt', 'ewt'], 'license': ['ewt', 'ewt'], 'airlift': ['ewt', 'ewt']}
+verb_thing-33 test frustrate thwart | related avert | random shed {'frustrate': ['ewt', 'ewt'], 'thwart': ['ewt', 'ewt'], 'avert': ['ewt', 'ewt'], 'shed': ['oewn', 'oewn']}
+verb_thing-34 test conceive conceptualize | related imagine | random bite {'conceive': ['ewt', 'ewt'], 'conceptualize': ['rule', 'rule'], 'imagine': ['ewt', 'ewt'], 'bite': ['oewn', 'oewn']}
+verb_thing-35 test reiterate repeat | related disclose | random quit {'reiterate': ['rule', 'rule'], 'repeat': ['ewt', 'ewt'], 'disclose': ['ewt', 'ewt'], 'quit': ['oewn', 'oewn']}
+verb_thing-36 test battle combat | related attack | random overplay {'battle': ['rule', 'rule'], 'combat': ['oewn', 'oewn'], 'attack': ['ewt', 'ewt'], 'overplay': ['ewt', 'ewt']}
+verb_thing-37 test hedge sidestep | related bypass | random even {'hedge': ['rule', 'rule'], 'sidestep': ['oewn', 'oewn'], 'bypass': ['oewn', 'oewn'], 'even': ['ewt', 'ewt']}
+verb_thing-38 test discover observe | related spot | random weaken {'discover': ['ewt', 'ewt'], 'observe': ['ewt', 'ewt'], 'spot': ['ewt', 'ewt'], 'weaken': ['ewt', 'ewt']}
+verb_thing-39 test assess evaluate | related figure | random overcome {'assess': ['rule', 'rule'], 'evaluate': ['ewt', 'ewt'], 'figure': ['ewt', 'ewt'], 'overcome': ['oewn', 'ewt']}
+verb_thing-40 test confine limit | related release | random rectify {'confine': ['ewt', 'ewt'], 'limit': ['ewt', 'ewt'], 'release': ['ewt', 'ewt'], 'rectify': ['ewt', 'ewt']}
+verb_thing-41 test procure secure | related gain | random suggest {'procure': ['rule', 'rule'], 'secure': ['ewt', 'ewt'], 'gain': ['ewt', 'ewt'], 'suggest': ['ewt', 'ewt']}
+verb_thing-42 test note remark | related declare | random use {'note': ['ewt', 'ewt'], 'remark': ['rule', 'rule'], 'declare': ['ewt', 'ewt'], 'use': ['ewt', 'ewt']}
+verb_person-00 dev compliment congratulate | related laud | random flog {'compliment': ['ewt', 'ewt'], 'congratulate': ['ewt', 'ewt'], 'laud': ['ewt', 'ewt'], 'flog': ['oewn', 'oewn']}
+verb_person-01 dev murder slay | related execute | random conduct {'murder': ['ewt', 'ewt'], 'slay': ['oewn', 'oewn'], 'execute': ['ewt', 'ewt'], 'conduct': ['ewt', 'ewt']}
+verb_person-02 test frighten scare | related inspire | random smell {'frighten': ['rule', 'rule'], 'scare': ['ewt', 'ewt'], 'inspire': ['ewt', 'ewt'], 'smell': ['ewt', 'ewt']}
+verb_person-03 test reassign transfer | related elevate | random misinform {'reassign': ['rule', 'rule'], 'transfer': ['ewt', 'ewt'], 'elevate': ['ewt', 'ewt'], 'misinform': ['rule', 'rule']}
+verb_person-04 test apprise notify | related report | random await {'apprise': ['ewt', 'ewt'], 'notify': ['ewt', 'ewt'], 'report': ['ewt', 'ewt'], 'await': ['ewt', 'ewt']}
+verb_person-05 test instruct teach | related explain | random libel {'instruct': ['ewt', 'ewt'], 'teach': ['ewt', 'ewt'], 'explain': ['ewt', 'ewt'], 'libel': ['ewt', 'ewt']}
+verb_person-06 test imprison jail | related trap | random tempt {'imprison': ['ewt', 'ewt'], 'jail': ['ewt', 'ewt'], 'trap': ['ewt', 'ewt'], 'tempt': ['ewt', 'ewt']}
+agent-00 dev partner spouse | related cousin | random journalist 
+agent-01 dev curate rector | related cleric | random conspirator 
+agent-02 dev activist militant | related hippy | random spy 
+agent-03 dev killer slayer | related friend | random youngster 
+agent-04 dev accountant controller | related merchant | random ma 
+agent-05 dev gay homosexual | related adult | random suspect 
+agent-06 dev hood thug | related murderer | random deacon 
+agent-07 dev dwarf midget | related shrimp | random foe 
+agent-08 dev divinity god | related angel | random nerd 
+agent-09 dev booster supporter | related fascist | random fellow 
+agent-10 test lunatic maniac | related patient | random manikin 
+agent-11 test cretin idiot | related fool | random thinker 
+agent-12 test buddy pal | related girlfriend | random stylist 
+agent-13 test marketer seller | related retailer | random piranha 
+agent-14 test rescuer saviour | related donor | random lender 
+agent-15 test bozo jackass | related clown | random representative 
+agent-16 test mama mommy | related mater | random explorer 
+agent-17 test conservationist environmentalist | related dry | random thief 
+agent-18 test assistant helper | related employee | random cuckoo 
+agent-19 test combatant fighter | related expert | random warlord 
+agent-20 test buster dude | related guy | random subsidiary 
+agent-21 test contender rival | related player | random stranger 
+agent-22 test advocate proponent | related leader | random sniper 
+agent-23 test fry kid | related youth | random descendant 
+agent-24 test viewer watcher | related listener | random granddaughter 
+agent-25 test trafficker vendor | related grocer | random sommelier 
+agent-26 test bloke chap | related man | random coordinator 
+agent-27 test advisor consultant | related connoisseur | random longshoreman 
+agent-28 test investigator researcher | related biologist | random mate 
+patient-00 dev dessert sweet | related entree | random shovel 
+patient-01 dev crude petroleum | related coal | random scruff 
+patient-02 dev grinder sub | related burger | random barn 
+patient-03 dev factory mill | related refinery | random tent 
+patient-04 dev bush shrub | related tree | random condo 
+patient-05 test gut intestine | related stomach | random cocker 
+patient-06 test housing lodging | related building | random piano 
+patient-07 test rubbish trash | related sewage | random embassy 
+patient-08 test bike motorcycle | related auto | random bullfight 
+patient-09 test material stuff | related fluid | random yam 
+patient-10 test piss urine | related feces | random cheek 
+patient-11 test macrocosm universe | related body | random apartment 
+patient-12 test cosmos world | related rock | random paste 
+patient-13 test apparatus setup | related satellite | random terminal 
+patient-14 test pedestal stand | related stair | random nitrogen 

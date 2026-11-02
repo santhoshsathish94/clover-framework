@@ -1,0 +1,3953 @@
+{
+ "seed": 3110,
+ "fillers": {
+  "people": [
+   "child",
+   "teacher",
+   "student",
+   "doctor",
+   "farmer",
+   "woman",
+   "nurse",
+   "pilot"
+  ],
+  "things": [
+   "box",
+   "bottle",
+   "bag",
+   "chair"
+  ],
+  "neutral_verbs": [
+   [
+    "see",
+    "saw",
+    "seen"
+   ],
+   [
+    "find",
+    "found",
+    "found"
+   ]
+  ]
+ },
+ "summary": {
+  "pairs_in_pool": {
+   "verb_thing": 118,
+   "patient": 38,
+   "agent": 62,
+   "verb_person": 18
+  },
+  "skipped_without_controls": {
+   "verb_thing": 51,
+   "verb_person": 11,
+   "agent": 17,
+   "patient": 15
+  },
+  "items": {
+   "verb_thing": {
+    "dev": 14,
+    "test": 29
+   },
+   "verb_person": {
+    "dev": 2,
+    "test": 5
+   },
+   "agent": {
+    "dev": 10,
+    "test": 19
+   },
+   "patient": {
+    "dev": 5,
+    "test": 10
+   }
+  },
+  "excluded_words": 364,
+  "ewt_files": [
+   "en_ewt-ud-dev.conllu",
+   "en_ewt-ud-test.conllu",
+   "en_ewt-ud-train.conllu"
+  ]
+ },
+ "items": [
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00667804-v",
+   "shared_definition": "establish or strengthen as with new evidence or facts",
+   "a": "affirm",
+   "b": "confirm",
+   "related": "join",
+   "related_synset": "oewn-02439823-v",
+   "random": "check",
+   "random_synset": "oewn-00663742-v",
+   "ewt_counts": {
+    "affirm": 4,
+    "confirm": 36,
+    "join": 41,
+    "check": 88
+   },
+   "forms": {
+    "affirm": [
+     "affirm",
+     "affirmed",
+     "affirmed"
+    ],
+    "confirm": [
+     "confirm",
+     "confirmed",
+     "confirmed"
+    ],
+    "join": [
+     "join",
+     "joined",
+     "joined"
+    ],
+    "check": [
+     "check",
+     "checked",
+     "checked"
+    ]
+   },
+   "form_source": {
+    "affirm": [
+     "ewt",
+     "ewt"
+    ],
+    "confirm": [
+     "ewt",
+     "ewt"
+    ],
+    "join": [
+     "ewt",
+     "ewt"
+    ],
+    "check": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-00"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01885173-v",
+   "shared_definition": "move about aimlessly or without any destination, often in search of food or employment",
+   "a": "roam",
+   "b": "wander",
+   "related": "enter",
+   "related_synset": "oewn-02020375-v",
+   "random": "withstand",
+   "random_synset": "oewn-02712676-v",
+   "ewt_counts": {
+    "roam": 1,
+    "wander": 3,
+    "enter": 25,
+    "withstand": 1
+   },
+   "forms": {
+    "roam": [
+     "roam",
+     "roamed",
+     "roamed"
+    ],
+    "wander": [
+     "wander",
+     "wandered",
+     "wandered"
+    ],
+    "enter": [
+     "enter",
+     "entered",
+     "entered"
+    ],
+    "withstand": [
+     "withstand",
+     "withstood",
+     "withstood"
+    ]
+   },
+   "form_source": {
+    "roam": [
+     "rule",
+     "rule"
+    ],
+    "wander": [
+     "rule",
+     "rule"
+    ],
+    "enter": [
+     "ewt",
+     "ewt"
+    ],
+    "withstand": [
+     "oewn",
+     "oewn"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-01"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-02294200-v",
+   "shared_definition": "earn on some commercial or business transaction; earn as salary or wages",
+   "a": "earn",
+   "b": "realise",
+   "related": "receive",
+   "related_synset": "oewn-02214901-v",
+   "random": "unleash",
+   "random_synset": "oewn-01478045-v",
+   "ewt_counts": {
+    "earn": 11,
+    "realise": 3,
+    "receive": 116,
+    "unleash": 1
+   },
+   "forms": {
+    "earn": [
+     "earn",
+     "earned",
+     "earned"
+    ],
+    "realise": [
+     "realise",
+     "realised",
+     "realised"
+    ],
+    "receive": [
+     "receive",
+     "received",
+     "received"
+    ],
+    "unleash": [
+     "unleash",
+     "unleashed",
+     "unleashed"
+    ]
+   },
+   "form_source": {
+    "earn": [
+     "ewt",
+     "ewt"
+    ],
+    "realise": [
+     "rule",
+     "rule"
+    ],
+    "receive": [
+     "ewt",
+     "ewt"
+    ],
+    "unleash": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-02"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00227591-v",
+   "shared_definition": "make more intense, stronger, or more marked",
+   "a": "compound",
+   "b": "deepen",
+   "related": "add",
+   "related_synset": "oewn-00182551-v",
+   "random": "substantiate",
+   "random_synset": "oewn-00667804-v",
+   "ewt_counts": {
+    "compound": 5,
+    "deepen": 1,
+    "add": 96,
+    "substantiate": 1
+   },
+   "forms": {
+    "compound": [
+     "compound",
+     "compounded",
+     "compounded"
+    ],
+    "deepen": [
+     "deepen",
+     "deepened",
+     "deepened"
+    ],
+    "add": [
+     "add",
+     "added",
+     "added"
+    ],
+    "substantiate": [
+     "substantiate",
+     "substantiated",
+     "substantiated"
+    ]
+   },
+   "form_source": {
+    "compound": [
+     "ewt",
+     "ewt"
+    ],
+    "deepen": [
+     "rule",
+     "rule"
+    ],
+    "add": [
+     "ewt",
+     "ewt"
+    ],
+    "substantiate": [
+     "rule",
+     "rule"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-03"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01653541-v",
+   "shared_definition": "give an incentive for action",
+   "a": "incite",
+   "b": "prompt",
+   "related": "breed",
+   "related_synset": "oewn-01652566-v",
+   "random": "melt",
+   "random_synset": "oewn-00445584-v",
+   "ewt_counts": {
+    "incite": 4,
+    "prompt": 2,
+    "breed": 7,
+    "melt": 9
+   },
+   "forms": {
+    "incite": [
+     "incite",
+     "incited",
+     "incited"
+    ],
+    "prompt": [
+     "prompt",
+     "prompted",
+     "prompted"
+    ],
+    "breed": [
+     "breed",
+     "bred",
+     "bred"
+    ],
+    "melt": [
+     "melt",
+     "melted",
+     "melted"
+    ]
+   },
+   "form_source": {
+    "incite": [
+     "ewt",
+     "ewt"
+    ],
+    "prompt": [
+     "ewt",
+     "ewt"
+    ],
+    "breed": [
+     "ewt",
+     "ewt"
+    ],
+    "melt": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-04"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00646245-v",
+   "shared_definition": "consider in detail and subject to an analysis in order to discover essential features or meaning",
+   "a": "analyze",
+   "b": "examine",
+   "related": "respect",
+   "related_synset": "oewn-00695834-v",
+   "random": "control",
+   "random_synset": "oewn-02445887-v",
+   "ewt_counts": {
+    "analyze": 2,
+    "examine": 8,
+    "respect": 6,
+    "control": 14
+   },
+   "forms": {
+    "analyze": [
+     "analyze",
+     "analyzed",
+     "analyzed"
+    ],
+    "examine": [
+     "examine",
+     "examined",
+     "examined"
+    ],
+    "respect": [
+     "respect",
+     "respected",
+     "respected"
+    ],
+    "control": [
+     "control",
+     "controlled",
+     "controlled"
+    ]
+   },
+   "form_source": {
+    "analyze": [
+     "ewt",
+     "ewt"
+    ],
+    "examine": [
+     "ewt",
+     "ewt"
+    ],
+    "respect": [
+     "ewt",
+     "ewt"
+    ],
+    "control": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-05"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-02380222-v",
+   "shared_definition": "carry out or participate in an activity; be involved in",
+   "a": "engage",
+   "b": "pursue",
+   "related": "intend",
+   "related_synset": "oewn-00710367-v",
+   "random": "file",
+   "random_synset": "oewn-01003902-v",
+   "ewt_counts": {
+    "engage": 8,
+    "pursue": 7,
+    "intend": 34,
+    "file": 24
+   },
+   "forms": {
+    "engage": [
+     "engage",
+     "engaged",
+     "engaged"
+    ],
+    "pursue": [
+     "pursue",
+     "pursued",
+     "pursued"
+    ],
+    "intend": [
+     "intend",
+     "intended",
+     "intended"
+    ],
+    "file": [
+     "file",
+     "filed",
+     "filed"
+    ]
+   },
+   "form_source": {
+    "engage": [
+     "ewt",
+     "ewt"
+    ],
+    "pursue": [
+     "ewt",
+     "ewt"
+    ],
+    "intend": [
+     "ewt",
+     "ewt"
+    ],
+    "file": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-06"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-02531751-v",
+   "shared_definition": "to gain with effort",
+   "a": "achieve",
+   "b": "attain",
+   "related": "manage",
+   "related_synset": "oewn-02528530-v",
+   "random": "ink",
+   "random_synset": "oewn-00999065-v",
+   "ewt_counts": {
+    "achieve": 19,
+    "attain": 3,
+    "manage": 20,
+    "ink": 1
+   },
+   "forms": {
+    "achieve": [
+     "achieve",
+     "achieved",
+     "achieved"
+    ],
+    "attain": [
+     "attain",
+     "attained",
+     "attained"
+    ],
+    "manage": [
+     "manage",
+     "managed",
+     "managed"
+    ],
+    "ink": [
+     "ink",
+     "inked",
+     "inked"
+    ]
+   },
+   "form_source": {
+    "achieve": [
+     "ewt",
+     "ewt"
+    ],
+    "attain": [
+     "rule",
+     "rule"
+    ],
+    "manage": [
+     "ewt",
+     "ewt"
+    ],
+    "ink": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-07"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00818972-v",
+   "shared_definition": "declare to be true or admit the existence or reality or truth of",
+   "a": "acknowledge",
+   "b": "admit",
+   "related": "formalize",
+   "related_synset": "oewn-02484525-v",
+   "random": "manifest",
+   "random_synset": "oewn-00822637-v",
+   "ewt_counts": {
+    "acknowledge": 5,
+    "admit": 17,
+    "formalize": 1,
+    "manifest": 1
+   },
+   "forms": {
+    "acknowledge": [
+     "acknowledge",
+     "acknowledged",
+     "acknowledged"
+    ],
+    "admit": [
+     "admit",
+     "admitted",
+     "admitted"
+    ],
+    "formalize": [
+     "formalize",
+     "formalized",
+     "formalized"
+    ],
+    "manifest": [
+     "manifest",
+     "manifested",
+     "manifested"
+    ]
+   },
+   "form_source": {
+    "acknowledge": [
+     "ewt",
+     "ewt"
+    ],
+    "admit": [
+     "ewt",
+     "ewt"
+    ],
+    "formalize": [
+     "rule",
+     "rule"
+    ],
+    "manifest": [
+     "rule",
+     "rule"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-08"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01322669-v",
+   "shared_definition": "gather, as of natural products",
+   "a": "glean",
+   "b": "reap",
+   "related": "muster",
+   "related_synset": "oewn-01384203-v",
+   "random": "outline",
+   "random_synset": "oewn-01008466-v",
+   "ewt_counts": {
+    "glean": 1,
+    "reap": 3,
+    "muster": 1,
+    "outline": 1
+   },
+   "forms": {
+    "glean": [
+     "glean",
+     "gleaned",
+     "gleaned"
+    ],
+    "reap": [
+     "reap",
+     "reaped",
+     "reaped"
+    ],
+    "muster": [
+     "muster",
+     "mustered",
+     "mustered"
+    ],
+    "outline": [
+     "outline",
+     "outlined",
+     "outlined"
+    ]
+   },
+   "form_source": {
+    "glean": [
+     "ewt",
+     "ewt"
+    ],
+    "reap": [
+     "ewt",
+     "ewt"
+    ],
+    "muster": [
+     "rule",
+     "rule"
+    ],
+    "outline": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-09"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-02350284-v",
+   "shared_definition": "take illegally; of intellectual property",
+   "a": "loot",
+   "b": "plunder",
+   "related": "rob",
+   "related_synset": "oewn-02326371-v",
+   "random": "pretend",
+   "random_synset": "oewn-00839722-v",
+   "ewt_counts": {
+    "loot": 1,
+    "plunder": 1,
+    "rob": 1,
+    "pretend": 6
+   },
+   "forms": {
+    "loot": [
+     "loot",
+     "looted",
+     "looted"
+    ],
+    "plunder": [
+     "plunder",
+     "plundered",
+     "plundered"
+    ],
+    "rob": [
+     "rob",
+     "robbed",
+     "robbed"
+    ],
+    "pretend": [
+     "pretend",
+     "pretended",
+     "pretended"
+    ]
+   },
+   "form_source": {
+    "loot": [
+     "rule",
+     "rule"
+    ],
+    "plunder": [
+     "rule",
+     "rule"
+    ],
+    "rob": [
+     "ewt",
+     "ewt"
+    ],
+    "pretend": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-10"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01015376-v",
+   "shared_definition": "to stress, single out as important",
+   "a": "accent",
+   "b": "stress",
+   "related": "imply",
+   "related_synset": "oewn-00931801-v",
+   "random": "purchase",
+   "random_synset": "oewn-02211988-v",
+   "ewt_counts": {
+    "accent": 1,
+    "stress": 5,
+    "imply": 5,
+    "purchase": 36
+   },
+   "forms": {
+    "accent": [
+     "accent",
+     "accented",
+     "accented"
+    ],
+    "stress": [
+     "stress",
+     "stressed",
+     "stressed"
+    ],
+    "imply": [
+     "imply",
+     "implied",
+     "implied"
+    ],
+    "purchase": [
+     "purchase",
+     "purchased",
+     "purchased"
+    ]
+   },
+   "form_source": {
+    "accent": [
+     "rule",
+     "rule"
+    ],
+    "stress": [
+     "ewt",
+     "ewt"
+    ],
+    "imply": [
+     "ewt",
+     "ewt"
+    ],
+    "purchase": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-11"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-02453050-v",
+   "shared_definition": "create (as an entity)",
+   "a": "form",
+   "b": "organize",
+   "related": "cause",
+   "related_synset": "oewn-01649143-v",
+   "random": "circle",
+   "random_synset": "oewn-01915332-v",
+   "ewt_counts": {
+    "form": 12,
+    "organize": 5,
+    "cause": 28,
+    "circle": 4
+   },
+   "forms": {
+    "form": [
+     "form",
+     "formed",
+     "formed"
+    ],
+    "organize": [
+     "organize",
+     "organized",
+     "organized"
+    ],
+    "cause": [
+     "cause",
+     "caused",
+     "caused"
+    ],
+    "circle": [
+     "circle",
+     "circled",
+     "circled"
+    ]
+   },
+   "form_source": {
+    "form": [
+     "ewt",
+     "ewt"
+    ],
+    "organize": [
+     "ewt",
+     "ewt"
+    ],
+    "cause": [
+     "ewt",
+     "ewt"
+    ],
+    "circle": [
+     "rule",
+     "rule"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-12"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01634614-v",
+   "shared_definition": "reestablish on a new, usually improved, basis or make new or like new",
+   "a": "regenerate",
+   "b": "renew",
+   "related": "stage",
+   "related_synset": "oewn-01715304-v",
+   "random": "incorporate",
+   "random_synset": "oewn-00467564-v",
+   "ewt_counts": {
+    "regenerate": 1,
+    "renew": 6,
+    "stage": 2,
+    "incorporate": 11
+   },
+   "forms": {
+    "regenerate": [
+     "regenerate",
+     "regenerated",
+     "regenerated"
+    ],
+    "renew": [
+     "renew",
+     "renewed",
+     "renewed"
+    ],
+    "stage": [
+     "stage",
+     "staged",
+     "staged"
+    ],
+    "incorporate": [
+     "incorporate",
+     "incorporated",
+     "incorporated"
+    ]
+   },
+   "form_source": {
+    "regenerate": [
+     "rule",
+     "rule"
+    ],
+    "renew": [
+     "ewt",
+     "ewt"
+    ],
+    "stage": [
+     "ewt",
+     "ewt"
+    ],
+    "incorporate": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_thing-13"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01185006-v",
+   "shared_definition": "give what is desired or needed, especially support, food or sustenance",
+   "a": "cater",
+   "b": "ply",
+   "related": "distribute",
+   "related_synset": "oewn-02299397-v",
+   "random": "recognise",
+   "random_synset": "oewn-02552164-v",
+   "ewt_counts": {
+    "cater": 2,
+    "ply": 1,
+    "distribute": 10,
+    "recognise": 1
+   },
+   "forms": {
+    "cater": [
+     "cater",
+     "catered",
+     "catered"
+    ],
+    "ply": [
+     "ply",
+     "plied",
+     "plied"
+    ],
+    "distribute": [
+     "distribute",
+     "distributed",
+     "distributed"
+    ],
+    "recognise": [
+     "recognise",
+     "recognised",
+     "recognised"
+    ]
+   },
+   "form_source": {
+    "cater": [
+     "rule",
+     "rule"
+    ],
+    "ply": [
+     "oewn",
+     "oewn"
+    ],
+    "distribute": [
+     "ewt",
+     "ewt"
+    ],
+    "recognise": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-14"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00670017-v",
+   "shared_definition": "put up with something or somebody unpleasant",
+   "a": "endure",
+   "b": "tolerate",
+   "related": "authorize",
+   "related_synset": "oewn-00804987-v",
+   "random": "fancy",
+   "random_synset": "oewn-01638974-v",
+   "ewt_counts": {
+    "endure": 1,
+    "tolerate": 4,
+    "authorize": 4,
+    "fancy": 1
+   },
+   "forms": {
+    "endure": [
+     "endure",
+     "endured",
+     "endured"
+    ],
+    "tolerate": [
+     "tolerate",
+     "tolerated",
+     "tolerated"
+    ],
+    "authorize": [
+     "authorize",
+     "authorized",
+     "authorized"
+    ],
+    "fancy": [
+     "fancy",
+     "fancied",
+     "fancied"
+    ]
+   },
+   "form_source": {
+    "endure": [
+     "rule",
+     "rule"
+    ],
+    "tolerate": [
+     "rule",
+     "rule"
+    ],
+    "authorize": [
+     "ewt",
+     "ewt"
+    ],
+    "fancy": [
+     "oewn",
+     "oewn"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-15"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00208618-v",
+   "shared_definition": "make worse",
+   "a": "aggravate",
+   "b": "exacerbate",
+   "related": "kill",
+   "related_synset": "oewn-01326622-v",
+   "random": "export",
+   "random_synset": "oewn-02351405-v",
+   "ewt_counts": {
+    "aggravate": 3,
+    "exacerbate": 2,
+    "kill": 55,
+    "export": 1
+   },
+   "forms": {
+    "aggravate": [
+     "aggravate",
+     "aggravated",
+     "aggravated"
+    ],
+    "exacerbate": [
+     "exacerbate",
+     "exacerbated",
+     "exacerbated"
+    ],
+    "kill": [
+     "kill",
+     "killed",
+     "killed"
+    ],
+    "export": [
+     "export",
+     "exported",
+     "exported"
+    ]
+   },
+   "form_source": {
+    "aggravate": [
+     "ewt",
+     "ewt"
+    ],
+    "exacerbate": [
+     "ewt",
+     "ewt"
+    ],
+    "kill": [
+     "ewt",
+     "ewt"
+    ],
+    "export": [
+     "rule",
+     "rule"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-16"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01979926-v",
+   "shared_definition": "increase",
+   "a": "boost",
+   "b": "hike",
+   "related": "hoist",
+   "related_synset": "oewn-01457813-v",
+   "random": "whack",
+   "random_synset": "oewn-01418461-v",
+   "ewt_counts": {
+    "boost": 1,
+    "hike": 1,
+    "hoist": 1,
+    "whack": 1
+   },
+   "forms": {
+    "boost": [
+     "boost",
+     "boosted",
+     "boosted"
+    ],
+    "hike": [
+     "hike",
+     "hiked",
+     "hiked"
+    ],
+    "hoist": [
+     "hoist",
+     "hoisted",
+     "hoisted"
+    ],
+    "whack": [
+     "whack",
+     "whacked",
+     "whacked"
+    ]
+   },
+   "form_source": {
+    "boost": [
+     "ewt",
+     "ewt"
+    ],
+    "hike": [
+     "rule",
+     "rule"
+    ],
+    "hoist": [
+     "rule",
+     "rule"
+    ],
+    "whack": [
+     "rule",
+     "rule"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-17"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01998474-v",
+   "shared_definition": "pull back or move away or backward",
+   "a": "retreat",
+   "b": "withdraw",
+   "related": "ride",
+   "related_synset": "oewn-01961388-v",
+   "random": "reject",
+   "random_synset": "oewn-00687584-v",
+   "ewt_counts": {
+    "retreat": 1,
+    "withdraw": 10,
+    "ride": 12,
+    "reject": 3
+   },
+   "forms": {
+    "retreat": [
+     "retreat",
+     "retreated",
+     "retreated"
+    ],
+    "withdraw": [
+     "withdraw",
+     "withdrew",
+     "withdrawn"
+    ],
+    "ride": [
+     "ride",
+     "rode",
+     "ridden"
+    ],
+    "reject": [
+     "reject",
+     "rejected",
+     "rejected"
+    ]
+   },
+   "form_source": {
+    "retreat": [
+     "rule",
+     "rule"
+    ],
+    "withdraw": [
+     "ewt",
+     "ewt"
+    ],
+    "ride": [
+     "ewt",
+     "ewt"
+    ],
+    "reject": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-18"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01824240-v",
+   "shared_definition": "derive or receive pleasure from; get enjoyment from; take pleasure in",
+   "a": "bask",
+   "b": "enjoy",
+   "related": "regret",
+   "related_synset": "oewn-01800593-v",
+   "random": "dictate",
+   "random_synset": "oewn-00749139-v",
+   "ewt_counts": {
+    "bask": 2,
+    "enjoy": 71,
+    "regret": 7,
+    "dictate": 1
+   },
+   "forms": {
+    "bask": [
+     "bask",
+     "basked",
+     "basked"
+    ],
+    "enjoy": [
+     "enjoy",
+     "enjoyed",
+     "enjoyed"
+    ],
+    "regret": [
+     "regret",
+     "regreted",
+     "regretted"
+    ],
+    "dictate": [
+     "dictate",
+     "dictated",
+     "dictated"
+    ]
+   },
+   "form_source": {
+    "bask": [
+     "rule",
+     "rule"
+    ],
+    "enjoy": [
+     "ewt",
+     "ewt"
+    ],
+    "regret": [
+     "ewt",
+     "ewt"
+    ],
+    "dictate": [
+     "rule",
+     "rule"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-19"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00609334-v",
+   "shared_definition": "recall knowledge from memory; have a recollection",
+   "a": "recall",
+   "b": "remember",
+   "related": "decide",
+   "related_synset": "oewn-00699355-v",
+   "random": "till",
+   "random_synset": "oewn-01744489-v",
+   "ewt_counts": {
+    "recall": 11,
+    "remember": 60,
+    "decide": 49,
+    "till": 1
+   },
+   "forms": {
+    "recall": [
+     "recall",
+     "recalled",
+     "recalled"
+    ],
+    "remember": [
+     "remember",
+     "remembered",
+     "remembered"
+    ],
+    "decide": [
+     "decide",
+     "decided",
+     "decided"
+    ],
+    "till": [
+     "till",
+     "tilled",
+     "tilled"
+    ]
+   },
+   "form_source": {
+    "recall": [
+     "ewt",
+     "ewt"
+    ],
+    "remember": [
+     "ewt",
+     "ewt"
+    ],
+    "decide": [
+     "ewt",
+     "ewt"
+    ],
+    "till": [
+     "rule",
+     "rule"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-20"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00676526-v",
+   "shared_definition": "pick out, select, or choose from a number of alternatives",
+   "a": "choose",
+   "b": "select",
+   "related": "measure",
+   "related_synset": "oewn-00648747-v",
+   "random": "question",
+   "random_synset": "oewn-00869073-v",
+   "ewt_counts": {
+    "choose": 33,
+    "select": 12,
+    "measure": 7,
+    "question": 6
+   },
+   "forms": {
+    "choose": [
+     "choose",
+     "chose",
+     "chosen"
+    ],
+    "select": [
+     "select",
+     "selected",
+     "selected"
+    ],
+    "measure": [
+     "measure",
+     "measured",
+     "measured"
+    ],
+    "question": [
+     "question",
+     "questioned",
+     "questioned"
+    ]
+   },
+   "form_source": {
+    "choose": [
+     "ewt",
+     "ewt"
+    ],
+    "select": [
+     "ewt",
+     "ewt"
+    ],
+    "measure": [
+     "ewt",
+     "ewt"
+    ],
+    "question": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-21"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01161188-v",
+   "shared_definition": "put into service; make work or employ for a particular purpose or for its inherent or natural purpose",
+   "a": "employ",
+   "b": "utilise",
+   "related": "miss",
+   "related_synset": "oewn-02132318-v",
+   "random": "message",
+   "random_synset": "oewn-01073654-v",
+   "ewt_counts": {
+    "employ": 9,
+    "utilise": 1,
+    "miss": 32,
+    "message": 1
+   },
+   "forms": {
+    "employ": [
+     "employ",
+     "employed",
+     "employed"
+    ],
+    "utilise": [
+     "utilise",
+     "utilised",
+     "utilised"
+    ],
+    "miss": [
+     "miss",
+     "missed",
+     "missed"
+    ],
+    "message": [
+     "message",
+     "messaged",
+     "messaged"
+    ]
+   },
+   "form_source": {
+    "employ": [
+     "ewt",
+     "ewt"
+    ],
+    "utilise": [
+     "rule",
+     "rule"
+    ],
+    "miss": [
+     "ewt",
+     "ewt"
+    ],
+    "message": [
+     "rule",
+     "rule"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-22"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01647199-v",
+   "shared_definition": "put in motion or move to act",
+   "a": "activate",
+   "b": "trigger",
+   "related": "undertake",
+   "related_synset": "oewn-01654835-v",
+   "random": "stir",
+   "random_synset": "oewn-01898313-v",
+   "ewt_counts": {
+    "activate": 1,
+    "trigger": 5,
+    "undertake": 4,
+    "stir": 2
+   },
+   "forms": {
+    "activate": [
+     "activate",
+     "activated",
+     "activated"
+    ],
+    "trigger": [
+     "trigger",
+     "triggered",
+     "triggered"
+    ],
+    "undertake": [
+     "undertake",
+     "undertook",
+     "undertaken"
+    ],
+    "stir": [
+     "stir",
+     "stirred",
+     "stirred"
+    ]
+   },
+   "form_source": {
+    "activate": [
+     "ewt",
+     "ewt"
+    ],
+    "trigger": [
+     "ewt",
+     "ewt"
+    ],
+    "undertake": [
+     "oewn",
+     "ewt"
+    ],
+    "stir": [
+     "oewn",
+     "oewn"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-23"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00721658-v",
+   "shared_definition": "regard something as probable or likely",
+   "a": "anticipate",
+   "b": "expect",
+   "related": "accept",
+   "related_synset": "oewn-00688348-v",
+   "random": "realize",
+   "random_synset": "oewn-00730579-v",
+   "ewt_counts": {
+    "anticipate": 8,
+    "expect": 62,
+    "accept": 36,
+    "realize": 21
+   },
+   "forms": {
+    "anticipate": [
+     "anticipate",
+     "anticipated",
+     "anticipated"
+    ],
+    "expect": [
+     "expect",
+     "expected",
+     "expected"
+    ],
+    "accept": [
+     "accept",
+     "accepted",
+     "accepted"
+    ],
+    "realize": [
+     "realize",
+     "realized",
+     "realized"
+    ]
+   },
+   "form_source": {
+    "anticipate": [
+     "ewt",
+     "ewt"
+    ],
+    "expect": [
+     "ewt",
+     "ewt"
+    ],
+    "accept": [
+     "ewt",
+     "ewt"
+    ],
+    "realize": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-24"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-02539728-v",
+   "shared_definition": "do without or cease to hold or adhere to",
+   "a": "forgo",
+   "b": "waive",
+   "related": "try",
+   "related_synset": "oewn-02535833-v",
+   "random": "arrange",
+   "random_synset": "oewn-01466592-v",
+   "ewt_counts": {
+    "forgo": 1,
+    "waive": 1,
+    "try": 242,
+    "arrange": 9
+   },
+   "forms": {
+    "forgo": [
+     "forgo",
+     "forgone",
+     "forwent"
+    ],
+    "waive": [
+     "waive",
+     "waived",
+     "waived"
+    ],
+    "try": [
+     "try",
+     "tried",
+     "tried"
+    ],
+    "arrange": [
+     "arrange",
+     "arranged",
+     "arranged"
+    ]
+   },
+   "form_source": {
+    "forgo": [
+     "oewn",
+     "oewn"
+    ],
+    "waive": [
+     "ewt",
+     "ewt"
+    ],
+    "try": [
+     "ewt",
+     "ewt"
+    ],
+    "arrange": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-25"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-02153218-v",
+   "shared_definition": "give an exhibition of to an interested audience",
+   "a": "demonstrate",
+   "b": "present",
+   "related": "reveal",
+   "related_synset": "oewn-02147756-v",
+   "random": "resign",
+   "random_synset": "oewn-02372031-v",
+   "ewt_counts": {
+    "demonstrate": 13,
+    "present": 17,
+    "reveal": 7,
+    "resign": 1
+   },
+   "forms": {
+    "demonstrate": [
+     "demonstrate",
+     "demonstrated",
+     "demonstrated"
+    ],
+    "present": [
+     "present",
+     "presented",
+     "presented"
+    ],
+    "reveal": [
+     "reveal",
+     "revealed",
+     "revealed"
+    ],
+    "resign": [
+     "resign",
+     "resigned",
+     "resigned"
+    ]
+   },
+   "form_source": {
+    "demonstrate": [
+     "ewt",
+     "ewt"
+    ],
+    "present": [
+     "ewt",
+     "ewt"
+    ],
+    "reveal": [
+     "ewt",
+     "ewt"
+    ],
+    "resign": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-26"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-02560630-v",
+   "shared_definition": "contribute to the progress or growth of",
+   "a": "encourage",
+   "b": "promote",
+   "related": "frequent",
+   "related_synset": "oewn-02471557-v",
+   "random": "gentrify",
+   "random_synset": "oewn-00163511-v",
+   "ewt_counts": {
+    "encourage": 14,
+    "promote": 9,
+    "frequent": 4,
+    "gentrify": 1
+   },
+   "forms": {
+    "encourage": [
+     "encourage",
+     "encouraged",
+     "encouraged"
+    ],
+    "promote": [
+     "promote",
+     "promoted",
+     "promoted"
+    ],
+    "frequent": [
+     "frequent",
+     "frequented",
+     "frequented"
+    ],
+    "gentrify": [
+     "gentrify",
+     "gentrified",
+     "gentrified"
+    ]
+   },
+   "form_source": {
+    "encourage": [
+     "ewt",
+     "ewt"
+    ],
+    "promote": [
+     "ewt",
+     "ewt"
+    ],
+    "frequent": [
+     "ewt",
+     "ewt"
+    ],
+    "gentrify": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-27"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-02344409-v",
+   "shared_definition": "provide with (something) usually for a specific purpose",
+   "a": "equip",
+   "b": "outfit",
+   "related": "fuel",
+   "related_synset": "oewn-02343382-v",
+   "random": "foster",
+   "random_synset": "oewn-02560130-v",
+   "ewt_counts": {
+    "equip": 6,
+    "outfit": 1,
+    "fuel": 2,
+    "foster": 2
+   },
+   "forms": {
+    "equip": [
+     "equip",
+     "equipped",
+     "equipped"
+    ],
+    "outfit": [
+     "outfit",
+     "outfitted",
+     "outfitted"
+    ],
+    "fuel": [
+     "fuel",
+     "fueled",
+     "fueled"
+    ],
+    "foster": [
+     "foster",
+     "fostered",
+     "fostered"
+    ]
+   },
+   "form_source": {
+    "equip": [
+     "ewt",
+     "ewt"
+    ],
+    "outfit": [
+     "oewn",
+     "oewn"
+    ],
+    "fuel": [
+     "ewt",
+     "ewt"
+    ],
+    "foster": [
+     "rule",
+     "rule"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-28"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01011267-v",
+   "shared_definition": "express in words",
+   "a": "say",
+   "b": "state",
+   "related": "voice",
+   "related_synset": "oewn-00935365-v",
+   "random": "impugn",
+   "random_synset": "oewn-00869673-v",
+   "ewt_counts": {
+    "say": 544,
+    "state": 30,
+    "voice": 3,
+    "impugn": 1
+   },
+   "forms": {
+    "say": [
+     "say",
+     "said",
+     "said"
+    ],
+    "state": [
+     "state",
+     "stated",
+     "stated"
+    ],
+    "voice": [
+     "voice",
+     "voiced",
+     "voiced"
+    ],
+    "impugn": [
+     "impugn",
+     "impugned",
+     "impugned"
+    ]
+   },
+   "form_source": {
+    "say": [
+     "ewt",
+     "ewt"
+    ],
+    "state": [
+     "ewt",
+     "ewt"
+    ],
+    "voice": [
+     "ewt",
+     "ewt"
+    ],
+    "impugn": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-29"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01161188-v",
+   "shared_definition": "put into service; make work or employ for a particular purpose or for its inherent or natural purpose",
+   "a": "apply",
+   "b": "utilize",
+   "related": "lead",
+   "related_synset": "oewn-02003830-v",
+   "random": "redline",
+   "random_synset": "oewn-02518332-v",
+   "ewt_counts": {
+    "apply": 36,
+    "utilize": 3,
+    "lead": 44,
+    "redline": 2
+   },
+   "forms": {
+    "apply": [
+     "apply",
+     "applied",
+     "applied"
+    ],
+    "utilize": [
+     "utilize",
+     "utilized",
+     "utilized"
+    ],
+    "lead": [
+     "lead",
+     "led",
+     "led"
+    ],
+    "redline": [
+     "redline",
+     "redlined",
+     "redlined"
+    ]
+   },
+   "form_source": {
+    "apply": [
+     "ewt",
+     "ewt"
+    ],
+    "utilize": [
+     "ewt",
+     "ewt"
+    ],
+    "lead": [
+     "ewt",
+     "ewt"
+    ],
+    "redline": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-30"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01583316-v",
+   "shared_definition": "enclose or enfold completely with or as if with a covering",
+   "a": "enclose",
+   "b": "envelop",
+   "related": "butter",
+   "related_synset": "oewn-01270562-v",
+   "random": "pickle",
+   "random_synset": "oewn-00213649-v",
+   "ewt_counts": {
+    "enclose": 3,
+    "envelop": 2,
+    "butter": 1,
+    "pickle": 1
+   },
+   "forms": {
+    "enclose": [
+     "enclose",
+     "enclosed",
+     "enclosed"
+    ],
+    "envelop": [
+     "envelop",
+     "enveloped",
+     "enveloped"
+    ],
+    "butter": [
+     "butter",
+     "buttered",
+     "buttered"
+    ],
+    "pickle": [
+     "pickle",
+     "pickled",
+     "pickled"
+    ]
+   },
+   "form_source": {
+    "enclose": [
+     "ewt",
+     "ewt"
+    ],
+    "envelop": [
+     "rule",
+     "rule"
+    ],
+    "butter": [
+     "ewt",
+     "ewt"
+    ],
+    "pickle": [
+     "rule",
+     "rule"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-31"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00808164-v",
+   "shared_definition": "give sanction to",
+   "a": "approve",
+   "b": "sanction",
+   "related": "license",
+   "related_synset": "oewn-02449527-v",
+   "random": "airlift",
+   "random_synset": "oewn-01454668-v",
+   "ewt_counts": {
+    "approve": 34,
+    "sanction": 1,
+    "license": 4,
+    "airlift": 1
+   },
+   "forms": {
+    "approve": [
+     "approve",
+     "approved",
+     "approved"
+    ],
+    "sanction": [
+     "sanction",
+     "sanctioned",
+     "sanctioned"
+    ],
+    "license": [
+     "license",
+     "licensed",
+     "licensed"
+    ],
+    "airlift": [
+     "airlift",
+     "airlifted",
+     "airlifted"
+    ]
+   },
+   "form_source": {
+    "approve": [
+     "ewt",
+     "ewt"
+    ],
+    "sanction": [
+     "ewt",
+     "ewt"
+    ],
+    "license": [
+     "ewt",
+     "ewt"
+    ],
+    "airlift": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-32"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-02563998-v",
+   "shared_definition": "hinder or prevent (the efforts, plans, or desires) of",
+   "a": "frustrate",
+   "b": "thwart",
+   "related": "avert",
+   "related_synset": "oewn-02458770-v",
+   "random": "shed",
+   "random_synset": "oewn-01516062-v",
+   "ewt_counts": {
+    "frustrate": 1,
+    "thwart": 3,
+    "avert": 1,
+    "shed": 4
+   },
+   "forms": {
+    "frustrate": [
+     "frustrate",
+     "frustrated",
+     "frustrated"
+    ],
+    "thwart": [
+     "thwart",
+     "thwarted",
+     "thwarted"
+    ],
+    "avert": [
+     "avert",
+     "averted",
+     "averted"
+    ],
+    "shed": [
+     "shed",
+     "shed",
+     "shed"
+    ]
+   },
+   "form_source": {
+    "frustrate": [
+     "ewt",
+     "ewt"
+    ],
+    "thwart": [
+     "ewt",
+     "ewt"
+    ],
+    "avert": [
+     "ewt",
+     "ewt"
+    ],
+    "shed": [
+     "oewn",
+     "oewn"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-33"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01636885-v",
+   "shared_definition": "have the idea for",
+   "a": "conceive",
+   "b": "conceptualize",
+   "related": "imagine",
+   "related_synset": "oewn-01639939-v",
+   "random": "bite",
+   "random_synset": "oewn-01448551-v",
+   "ewt_counts": {
+    "conceive": 1,
+    "conceptualize": 1,
+    "imagine": 24,
+    "bite": 20
+   },
+   "forms": {
+    "conceive": [
+     "conceive",
+     "conceived",
+     "conceived"
+    ],
+    "conceptualize": [
+     "conceptualize",
+     "conceptualized",
+     "conceptualized"
+    ],
+    "imagine": [
+     "imagine",
+     "imagined",
+     "imagined"
+    ],
+    "bite": [
+     "bite",
+     "bit",
+     "bitten"
+    ]
+   },
+   "form_source": {
+    "conceive": [
+     "ewt",
+     "ewt"
+    ],
+    "conceptualize": [
+     "rule",
+     "rule"
+    ],
+    "imagine": [
+     "ewt",
+     "ewt"
+    ],
+    "bite": [
+     "oewn",
+     "oewn"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-34"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00960366-v",
+   "shared_definition": "to say, state, or perform again",
+   "a": "reiterate",
+   "b": "repeat",
+   "related": "disclose",
+   "related_synset": "oewn-00935783-v",
+   "random": "quit",
+   "random_synset": "oewn-02686624-v",
+   "ewt_counts": {
+    "reiterate": 1,
+    "repeat": 13,
+    "disclose": 6,
+    "quit": 4
+   },
+   "forms": {
+    "reiterate": [
+     "reiterate",
+     "reiterated",
+     "reiterated"
+    ],
+    "repeat": [
+     "repeat",
+     "repeated",
+     "repeated"
+    ],
+    "disclose": [
+     "disclose",
+     "disclosed",
+     "disclosed"
+    ],
+    "quit": [
+     "quit",
+     "quitted",
+     "quitted"
+    ]
+   },
+   "form_source": {
+    "reiterate": [
+     "rule",
+     "rule"
+    ],
+    "repeat": [
+     "ewt",
+     "ewt"
+    ],
+    "disclose": [
+     "ewt",
+     "ewt"
+    ],
+    "quit": [
+     "oewn",
+     "oewn"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-35"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01094777-v",
+   "shared_definition": "battle or contend against in or as if in a battle",
+   "a": "battle",
+   "b": "combat",
+   "related": "attack",
+   "related_synset": "oewn-01121587-v",
+   "random": "overplay",
+   "random_synset": "oewn-01754981-v",
+   "ewt_counts": {
+    "battle": 3,
+    "combat": 1,
+    "attack": 18,
+    "overplay": 1
+   },
+   "forms": {
+    "battle": [
+     "battle",
+     "battled",
+     "battled"
+    ],
+    "combat": [
+     "combat",
+     "combatted",
+     "combatted"
+    ],
+    "attack": [
+     "attack",
+     "attacked",
+     "attacked"
+    ],
+    "overplay": [
+     "overplay",
+     "overplayed",
+     "overplayed"
+    ]
+   },
+   "form_source": {
+    "battle": [
+     "rule",
+     "rule"
+    ],
+    "combat": [
+     "oewn",
+     "oewn"
+    ],
+    "attack": [
+     "ewt",
+     "ewt"
+    ],
+    "overplay": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-36"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00811316-v",
+   "shared_definition": "avoid or try to avoid fulfilling, answering, or performing (duties, questions, or issues)",
+   "a": "hedge",
+   "b": "sidestep",
+   "related": "bypass",
+   "related_synset": "oewn-00812833-v",
+   "random": "even",
+   "random_synset": "oewn-01309802-v",
+   "ewt_counts": {
+    "hedge": 2,
+    "sidestep": 1,
+    "bypass": 2,
+    "even": 2
+   },
+   "forms": {
+    "hedge": [
+     "hedge",
+     "hedged",
+     "hedged"
+    ],
+    "sidestep": [
+     "sidestep",
+     "sidestepped",
+     "sidestepped"
+    ],
+    "bypass": [
+     "bypass",
+     "bypast",
+     "bypast"
+    ],
+    "even": [
+     "even",
+     "evened",
+     "evened"
+    ]
+   },
+   "form_source": {
+    "hedge": [
+     "rule",
+     "rule"
+    ],
+    "sidestep": [
+     "oewn",
+     "oewn"
+    ],
+    "bypass": [
+     "oewn",
+     "oewn"
+    ],
+    "even": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-37"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-02158938-v",
+   "shared_definition": "discover or determine the existence, presence, or fact of by perception with the eyes",
+   "a": "discover",
+   "b": "observe",
+   "related": "spot",
+   "related_synset": "oewn-02158742-v",
+   "random": "weaken",
+   "random_synset": "oewn-00225327-v",
+   "ewt_counts": {
+    "discover": 13,
+    "observe": 6,
+    "spot": 4,
+    "weaken": 7
+   },
+   "forms": {
+    "discover": [
+     "discover",
+     "discovered",
+     "discovered"
+    ],
+    "observe": [
+     "observe",
+     "observed",
+     "observed"
+    ],
+    "spot": [
+     "spot",
+     "spotted",
+     "spotted"
+    ],
+    "weaken": [
+     "weaken",
+     "weakened",
+     "weakened"
+    ]
+   },
+   "form_source": {
+    "discover": [
+     "ewt",
+     "ewt"
+    ],
+    "observe": [
+     "ewt",
+     "ewt"
+    ],
+    "spot": [
+     "ewt",
+     "ewt"
+    ],
+    "weaken": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-38"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00683348-v",
+   "shared_definition": "evaluate or estimate the nature, quality, ability, extent, or significance of",
+   "a": "assess",
+   "b": "evaluate",
+   "related": "figure",
+   "related_synset": "oewn-00713964-v",
+   "random": "overcome",
+   "random_synset": "oewn-01110559-v",
+   "ewt_counts": {
+    "assess": 3,
+    "evaluate": 8,
+    "figure": 28,
+    "overcome": 5
+   },
+   "forms": {
+    "assess": [
+     "assess",
+     "assessed",
+     "assessed"
+    ],
+    "evaluate": [
+     "evaluate",
+     "evaluated",
+     "evaluated"
+    ],
+    "figure": [
+     "figure",
+     "figured",
+     "figured"
+    ],
+    "overcome": [
+     "overcome",
+     "overcame",
+     "overcome"
+    ]
+   },
+   "form_source": {
+    "assess": [
+     "rule",
+     "rule"
+    ],
+    "evaluate": [
+     "ewt",
+     "ewt"
+    ],
+    "figure": [
+     "ewt",
+     "ewt"
+    ],
+    "overcome": [
+     "oewn",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-39"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-00234091-v",
+   "shared_definition": "place limits on (extent or amount or access)",
+   "a": "confine",
+   "b": "limit",
+   "related": "release",
+   "related_synset": "oewn-01477180-v",
+   "random": "rectify",
+   "random_synset": "oewn-00921800-v",
+   "ewt_counts": {
+    "confine": 2,
+    "limit": 8,
+    "release": 35,
+    "rectify": 1
+   },
+   "forms": {
+    "confine": [
+     "confine",
+     "confined",
+     "confined"
+    ],
+    "limit": [
+     "limit",
+     "limited",
+     "limited"
+    ],
+    "release": [
+     "release",
+     "released",
+     "released"
+    ],
+    "rectify": [
+     "rectify",
+     "rectified",
+     "rectified"
+    ]
+   },
+   "form_source": {
+    "confine": [
+     "ewt",
+     "ewt"
+    ],
+    "limit": [
+     "ewt",
+     "ewt"
+    ],
+    "release": [
+     "ewt",
+     "ewt"
+    ],
+    "rectify": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-40"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-02243552-v",
+   "shared_definition": "get by special effort",
+   "a": "procure",
+   "b": "secure",
+   "related": "gain",
+   "related_synset": "oewn-02297086-v",
+   "random": "suggest",
+   "random_synset": "oewn-00876925-v",
+   "ewt_counts": {
+    "procure": 1,
+    "secure": 10,
+    "gain": 13,
+    "suggest": 40
+   },
+   "forms": {
+    "procure": [
+     "procure",
+     "procured",
+     "procured"
+    ],
+    "secure": [
+     "secure",
+     "secured",
+     "secured"
+    ],
+    "gain": [
+     "gain",
+     "gained",
+     "gained"
+    ],
+    "suggest": [
+     "suggest",
+     "suggested",
+     "suggested"
+    ]
+   },
+   "form_source": {
+    "procure": [
+     "rule",
+     "rule"
+    ],
+    "secure": [
+     "ewt",
+     "ewt"
+    ],
+    "gain": [
+     "ewt",
+     "ewt"
+    ],
+    "suggest": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-41"
+  },
+  {
+   "class": "verb_thing",
+   "pos": "v",
+   "shared": "oewn-01022014-v",
+   "shared_definition": "make mention of",
+   "a": "note",
+   "b": "remark",
+   "related": "declare",
+   "related_synset": "oewn-01012145-v",
+   "random": "use",
+   "random_synset": "oewn-01161188-v",
+   "ewt_counts": {
+    "note": 29,
+    "remark": 1,
+    "declare": 8,
+    "use": 349
+   },
+   "forms": {
+    "note": [
+     "note",
+     "noted",
+     "noted"
+    ],
+    "remark": [
+     "remark",
+     "remarked",
+     "remarked"
+    ],
+    "declare": [
+     "declare",
+     "declared",
+     "declared"
+    ],
+    "use": [
+     "use",
+     "used",
+     "used"
+    ]
+   },
+   "form_source": {
+    "note": [
+     "ewt",
+     "ewt"
+    ],
+    "remark": [
+     "rule",
+     "rule"
+    ],
+    "declare": [
+     "ewt",
+     "ewt"
+    ],
+    "use": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_thing-42"
+  },
+  {
+   "class": "verb_person",
+   "pos": "v",
+   "shared": "oewn-00883182-v",
+   "shared_definition": "say something to someone that expresses praise",
+   "a": "compliment",
+   "b": "congratulate",
+   "related": "laud",
+   "related_synset": "oewn-00862284-v",
+   "random": "flog",
+   "random_synset": "oewn-01413739-v",
+   "ewt_counts": {
+    "compliment": 1,
+    "congratulate": 1,
+    "laud": 1,
+    "flog": 1
+   },
+   "forms": {
+    "compliment": [
+     "compliment",
+     "complimented",
+     "complimented"
+    ],
+    "congratulate": [
+     "congratulate",
+     "congratulated",
+     "congratulated"
+    ],
+    "laud": [
+     "laud",
+     "lauded",
+     "lauded"
+    ],
+    "flog": [
+     "flog",
+     "flogged",
+     "flogged"
+    ]
+   },
+   "form_source": {
+    "compliment": [
+     "ewt",
+     "ewt"
+    ],
+    "congratulate": [
+     "ewt",
+     "ewt"
+    ],
+    "laud": [
+     "ewt",
+     "ewt"
+    ],
+    "flog": [
+     "oewn",
+     "oewn"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_person-00"
+  },
+  {
+   "class": "verb_person",
+   "pos": "v",
+   "shared": "oewn-02488014-v",
+   "shared_definition": "kill intentionally and with premeditation",
+   "a": "murder",
+   "b": "slay",
+   "related": "execute",
+   "related_synset": "oewn-02488856-v",
+   "random": "conduct",
+   "random_synset": "oewn-02450374-v",
+   "ewt_counts": {
+    "murder": 4,
+    "slay": 1,
+    "execute": 29,
+    "conduct": 9
+   },
+   "forms": {
+    "murder": [
+     "murder",
+     "murdered",
+     "murdered"
+    ],
+    "slay": [
+     "slay",
+     "slew",
+     "slain"
+    ],
+    "execute": [
+     "execute",
+     "executed",
+     "executed"
+    ],
+    "conduct": [
+     "conduct",
+     "conducted",
+     "conducted"
+    ]
+   },
+   "form_source": {
+    "murder": [
+     "ewt",
+     "ewt"
+    ],
+    "slay": [
+     "oewn",
+     "oewn"
+    ],
+    "execute": [
+     "ewt",
+     "ewt"
+    ],
+    "conduct": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "dev",
+   "id": "verb_person-01"
+  },
+  {
+   "class": "verb_person",
+   "pos": "v",
+   "shared": "oewn-01783082-v",
+   "shared_definition": "cause fear in",
+   "a": "frighten",
+   "b": "scare",
+   "related": "inspire",
+   "related_synset": "oewn-01816687-v",
+   "random": "smell",
+   "random_synset": "oewn-02129213-v",
+   "ewt_counts": {
+    "frighten": 2,
+    "scare": 7,
+    "inspire": 5,
+    "smell": 10
+   },
+   "forms": {
+    "frighten": [
+     "frighten",
+     "frightened",
+     "frightened"
+    ],
+    "scare": [
+     "scare",
+     "scared",
+     "scared"
+    ],
+    "inspire": [
+     "inspire",
+     "inspired",
+     "inspired"
+    ],
+    "smell": [
+     "smell",
+     "smelled",
+     "smelled"
+    ]
+   },
+   "form_source": {
+    "frighten": [
+     "rule",
+     "rule"
+    ],
+    "scare": [
+     "ewt",
+     "ewt"
+    ],
+    "inspire": [
+     "ewt",
+     "ewt"
+    ],
+    "smell": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_person-02"
+  },
+  {
+   "class": "verb_person",
+   "pos": "v",
+   "shared": "oewn-02398228-v",
+   "shared_definition": "transfer somebody to a different position or location of work",
+   "a": "reassign",
+   "b": "transfer",
+   "related": "elevate",
+   "related_synset": "oewn-02402779-v",
+   "random": "misinform",
+   "random_synset": "oewn-00835688-v",
+   "ewt_counts": {
+    "reassign": 1,
+    "transfer": 10,
+    "elevate": 1,
+    "misinform": 1
+   },
+   "forms": {
+    "reassign": [
+     "reassign",
+     "reassigned",
+     "reassigned"
+    ],
+    "transfer": [
+     "transfer",
+     "transferred",
+     "transferred"
+    ],
+    "elevate": [
+     "elevate",
+     "elevated",
+     "elevated"
+    ],
+    "misinform": [
+     "misinform",
+     "misinformed",
+     "misinformed"
+    ]
+   },
+   "form_source": {
+    "reassign": [
+     "rule",
+     "rule"
+    ],
+    "transfer": [
+     "ewt",
+     "ewt"
+    ],
+    "elevate": [
+     "ewt",
+     "ewt"
+    ],
+    "misinform": [
+     "rule",
+     "rule"
+    ]
+   },
+   "split": "test",
+   "id": "verb_person-03"
+  },
+  {
+   "class": "verb_person",
+   "pos": "v",
+   "shared": "oewn-00875364-v",
+   "shared_definition": "inform (somebody) of something",
+   "a": "apprise",
+   "b": "notify",
+   "related": "report",
+   "related_synset": "oewn-00967067-v",
+   "random": "await",
+   "random_synset": "oewn-00721987-v",
+   "ewt_counts": {
+    "apprise": 1,
+    "notify": 14,
+    "report": 41,
+    "await": 4
+   },
+   "forms": {
+    "apprise": [
+     "apprise",
+     "apprised",
+     "apprised"
+    ],
+    "notify": [
+     "notify",
+     "notified",
+     "notified"
+    ],
+    "report": [
+     "report",
+     "reported",
+     "reported"
+    ],
+    "await": [
+     "await",
+     "awaited",
+     "awaited"
+    ]
+   },
+   "form_source": {
+    "apprise": [
+     "ewt",
+     "ewt"
+    ],
+    "notify": [
+     "ewt",
+     "ewt"
+    ],
+    "report": [
+     "ewt",
+     "ewt"
+    ],
+    "await": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_person-04"
+  },
+  {
+   "class": "verb_person",
+   "pos": "v",
+   "shared": "oewn-00830768-v",
+   "shared_definition": "impart skills or knowledge to",
+   "a": "instruct",
+   "b": "teach",
+   "related": "explain",
+   "related_synset": "oewn-00941308-v",
+   "random": "libel",
+   "random_synset": "oewn-00849363-v",
+   "ewt_counts": {
+    "instruct": 4,
+    "teach": 10,
+    "explain": 43,
+    "libel": 1
+   },
+   "forms": {
+    "instruct": [
+     "instruct",
+     "instructed",
+     "instructed"
+    ],
+    "teach": [
+     "teach",
+     "taught",
+     "taught"
+    ],
+    "explain": [
+     "explain",
+     "explained",
+     "explained"
+    ],
+    "libel": [
+     "libel",
+     "libeled",
+     "libeled"
+    ]
+   },
+   "form_source": {
+    "instruct": [
+     "ewt",
+     "ewt"
+    ],
+    "teach": [
+     "ewt",
+     "ewt"
+    ],
+    "explain": [
+     "ewt",
+     "ewt"
+    ],
+    "libel": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_person-05"
+  },
+  {
+   "class": "verb_person",
+   "pos": "v",
+   "shared": "oewn-02500005-v",
+   "shared_definition": "lock up or confine, in or as in a jail",
+   "a": "imprison",
+   "b": "jail",
+   "related": "trap",
+   "related_synset": "oewn-02501834-v",
+   "random": "tempt",
+   "random_synset": "oewn-00795447-v",
+   "ewt_counts": {
+    "imprison": 6,
+    "jail": 1,
+    "trap": 3,
+    "tempt": 1
+   },
+   "forms": {
+    "imprison": [
+     "imprison",
+     "imprisoned",
+     "imprisoned"
+    ],
+    "jail": [
+     "jail",
+     "jailed",
+     "jailed"
+    ],
+    "trap": [
+     "trap",
+     "trapped",
+     "trapped"
+    ],
+    "tempt": [
+     "tempt",
+     "tempted",
+     "tempted"
+    ]
+   },
+   "form_source": {
+    "imprison": [
+     "ewt",
+     "ewt"
+    ],
+    "jail": [
+     "ewt",
+     "ewt"
+    ],
+    "trap": [
+     "ewt",
+     "ewt"
+    ],
+    "tempt": [
+     "ewt",
+     "ewt"
+    ]
+   },
+   "split": "test",
+   "id": "verb_person-06"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10660018-n",
+   "shared_definition": "a person's partner in marriage",
+   "a": "partner",
+   "b": "spouse",
+   "related": "cousin",
+   "related_synset": "oewn-09991540-n",
+   "random": "journalist",
+   "random_synset": "oewn-10244248-n",
+   "ewt_counts": {
+    "partner": 13,
+    "spouse": 1,
+    "cousin": 7,
+    "journalist": 5
+   },
+   "split": "dev",
+   "id": "agent-00"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10003102-n",
+   "shared_definition": "a person authorized to conduct religious worship",
+   "a": "curate",
+   "b": "rector",
+   "related": "cleric",
+   "related_synset": "oewn-09947594-n",
+   "random": "conspirator",
+   "random_synset": "oewn-09978371-n",
+   "ewt_counts": {
+    "curate": 1,
+    "rector": 1,
+    "cleric": 11,
+    "conspirator": 1
+   },
+   "split": "dev",
+   "id": "agent-01"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10335495-n",
+   "shared_definition": "a militant reformer",
+   "a": "activist",
+   "b": "militant",
+   "related": "hippy",
+   "related_synset": "oewn-10196106-n",
+   "random": "spy",
+   "random_synset": "oewn-10661153-n",
+   "ewt_counts": {
+    "activist": 2,
+    "militant": 3,
+    "hippy": 1,
+    "spy": 3
+   },
+   "split": "dev",
+   "id": "agent-02"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10250784-n",
+   "shared_definition": "someone who causes the death of a person or animal",
+   "a": "killer",
+   "b": "slayer",
+   "related": "friend",
+   "related_synset": "oewn-10132360-n",
+   "random": "youngster",
+   "random_synset": "oewn-09937051-n",
+   "ewt_counts": {
+    "killer": 5,
+    "slayer": 1,
+    "friend": 127,
+    "youngster": 3
+   },
+   "split": "dev",
+   "id": "agent-03"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-09780826-n",
+   "shared_definition": "someone who maintains and audits business accounts",
+   "a": "accountant",
+   "b": "controller",
+   "related": "merchant",
+   "related_synset": "oewn-10329563-n",
+   "random": "ma",
+   "random_synset": "oewn-10297825-n",
+   "ewt_counts": {
+    "accountant": 1,
+    "controller": 3,
+    "merchant": 3,
+    "ma": 2
+   },
+   "split": "dev",
+   "id": "agent-04"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10202544-n",
+   "shared_definition": "someone who is sexually attracted to persons of the same sex",
+   "a": "gay",
+   "b": "homosexual",
+   "related": "adult",
+   "related_synset": "oewn-09628463-n",
+   "random": "suspect",
+   "random_synset": "oewn-10700830-n",
+   "ewt_counts": {
+    "gay": 2,
+    "homosexual": 2,
+    "adult": 21,
+    "suspect": 6
+   },
+   "split": "dev",
+   "id": "agent-05"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10203700-n",
+   "shared_definition": "an aggressive and violent young criminal",
+   "a": "hood",
+   "b": "thug",
+   "related": "murderer",
+   "related_synset": "oewn-10358420-n",
+   "random": "deacon",
+   "random_synset": "oewn-10014211-n",
+   "ewt_counts": {
+    "hood": 2,
+    "thug": 1,
+    "murderer": 10,
+    "deacon": 1
+   },
+   "split": "dev",
+   "id": "agent-06"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10060141-n",
+   "shared_definition": "a person who is markedly small",
+   "a": "dwarf",
+   "b": "midget",
+   "related": "shrimp",
+   "related_synset": "oewn-10563101-n",
+   "random": "foe",
+   "random_synset": "oewn-10075655-n",
+   "ewt_counts": {
+    "dwarf": 1,
+    "midget": 1,
+    "shrimp": 8,
+    "foe": 1
+   },
+   "split": "dev",
+   "id": "agent-07"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-09528550-n",
+   "shared_definition": "any supernatural being worshipped as controlling some part of the world or some aspect of life or who is the personification of a force",
+   "a": "divinity",
+   "b": "god",
+   "related": "angel",
+   "related_synset": "oewn-09562026-n",
+   "random": "nerd",
+   "random_synset": "oewn-10704113-n",
+   "ewt_counts": {
+    "divinity": 1,
+    "god": 4,
+    "angel": 4,
+    "nerd": 2
+   },
+   "split": "dev",
+   "id": "agent-08"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10697152-n",
+   "shared_definition": "a person who backs a politician or a team etc.",
+   "a": "booster",
+   "b": "supporter",
+   "related": "fascist",
+   "related_synset": "oewn-10099673-n",
+   "random": "fellow",
+   "random_synset": "oewn-09927483-n",
+   "ewt_counts": {
+    "booster": 4,
+    "supporter": 15,
+    "fascist": 3,
+    "fellow": 2
+   },
+   "split": "dev",
+   "id": "agent-09"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10296461-n",
+   "shared_definition": "an insane person",
+   "a": "lunatic",
+   "b": "maniac",
+   "related": "patient",
+   "related_synset": "oewn-10425439-n",
+   "random": "manikin",
+   "random_synset": "oewn-10311241-n",
+   "ewt_counts": {
+    "lunatic": 1,
+    "maniac": 2,
+    "patient": 13,
+    "manikin": 1
+   },
+   "split": "test",
+   "id": "agent-10"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10217144-n",
+   "shared_definition": "a person of subnormal intelligence",
+   "a": "cretin",
+   "b": "idiot",
+   "related": "fool",
+   "related_synset": "oewn-10120530-n",
+   "random": "thinker",
+   "random_synset": "oewn-10727941-n",
+   "ewt_counts": {
+    "cretin": 1,
+    "idiot": 5,
+    "fool": 2,
+    "thinker": 1
+   },
+   "split": "test",
+   "id": "agent-11"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-09897417-n",
+   "shared_definition": "a close friend who accompanies their buddies in their activities",
+   "a": "buddy",
+   "b": "pal",
+   "related": "girlfriend",
+   "related_synset": "oewn-10150397-n",
+   "random": "stylist",
+   "random_synset": "oewn-10686916-n",
+   "ewt_counts": {
+    "buddy": 2,
+    "pal": 2,
+    "girlfriend": 13,
+    "stylist": 4
+   },
+   "split": "test",
+   "id": "agent-12"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10596736-n",
+   "shared_definition": "someone who promotes or exchanges goods or services for money",
+   "a": "marketer",
+   "b": "seller",
+   "related": "retailer",
+   "related_synset": "oewn-10545011-n",
+   "random": "piranha",
+   "random_synset": "oewn-10312833-n",
+   "ewt_counts": {
+    "marketer": 6,
+    "seller": 6,
+    "retailer": 1,
+    "piranha": 1
+   },
+   "split": "test",
+   "id": "agent-13"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10573233-n",
+   "shared_definition": "a person who rescues you from harm or danger",
+   "a": "rescuer",
+   "b": "saviour",
+   "related": "donor",
+   "related_synset": "oewn-10045455-n",
+   "random": "lender",
+   "random_synset": "oewn-10274089-n",
+   "ewt_counts": {
+    "rescuer": 1,
+    "saviour": 2,
+    "donor": 3,
+    "lender": 1
+   },
+   "split": "test",
+   "id": "agent-14"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10177319-n",
+   "shared_definition": "a man who is a stupid incompetent fool",
+   "a": "bozo",
+   "b": "jackass",
+   "related": "clown",
+   "related_synset": "oewn-09950623-n",
+   "random": "representative",
+   "random_synset": "oewn-10541628-n",
+   "ewt_counts": {
+    "bozo": 1,
+    "jackass": 1,
+    "clown": 2,
+    "representative": 10
+   },
+   "split": "test",
+   "id": "agent-15"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10297825-n",
+   "shared_definition": "informal terms for a mother",
+   "a": "mama",
+   "b": "mommy",
+   "related": "mater",
+   "related_synset": "oewn-10320167-n",
+   "random": "explorer",
+   "random_synset": "oewn-10092496-n",
+   "ewt_counts": {
+    "mama": 10,
+    "mommy": 2,
+    "mater": 1,
+    "explorer": 1
+   },
+   "split": "test",
+   "id": "agent-16"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10080429-n",
+   "shared_definition": "someone who works to protect the environment from destruction or pollution",
+   "a": "conservationist",
+   "b": "environmentalist",
+   "related": "dry",
+   "related_synset": "oewn-10057647-n",
+   "random": "thief",
+   "random_synset": "oewn-10727453-n",
+   "ewt_counts": {
+    "conservationist": 1,
+    "environmentalist": 1,
+    "dry": 4,
+    "thief": 4
+   },
+   "split": "test",
+   "id": "agent-17"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-09835195-n",
+   "shared_definition": "a person who contributes to the fulfillment of a need or furtherance of an effort or purpose",
+   "a": "assistant",
+   "b": "helper",
+   "related": "employee",
+   "related_synset": "oewn-10073616-n",
+   "random": "cuckoo",
+   "random_synset": "oewn-10177319-n",
+   "ewt_counts": {
+    "assistant": 9,
+    "helper": 1,
+    "employee": 39,
+    "cuckoo": 1
+   },
+   "split": "test",
+   "id": "agent-18"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-09958771-n",
+   "shared_definition": "someone who fights (or is fighting)",
+   "a": "combatant",
+   "b": "fighter",
+   "related": "expert",
+   "related_synset": "oewn-09640897-n",
+   "random": "warlord",
+   "random_synset": "oewn-10787505-n",
+   "ewt_counts": {
+    "combatant": 1,
+    "fighter": 10,
+    "expert": 17,
+    "warlord": 3
+   },
+   "split": "test",
+   "id": "agent-19"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10103127-n",
+   "shared_definition": "an informal form of address for a man",
+   "a": "buster",
+   "b": "dude",
+   "related": "guy",
+   "related_synset": "oewn-10172934-n",
+   "random": "subsidiary",
+   "random_synset": "oewn-10689430-n",
+   "ewt_counts": {
+    "buster": 1,
+    "dude": 5,
+    "guy": 118,
+    "subsidiary": 2
+   },
+   "split": "test",
+   "id": "agent-20"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10552570-n",
+   "shared_definition": "the contestant you hope to defeat",
+   "a": "contender",
+   "b": "rival",
+   "related": "player",
+   "related_synset": "oewn-10459618-n",
+   "random": "stranger",
+   "random_synset": "oewn-10680441-n",
+   "ewt_counts": {
+    "contender": 1,
+    "rival": 1,
+    "player": 10,
+    "stranger": 4
+   },
+   "split": "test",
+   "id": "agent-21"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-09794206-n",
+   "shared_definition": "a person who pleads for a cause or propounds an idea",
+   "a": "advocate",
+   "b": "proponent",
+   "related": "leader",
+   "related_synset": "oewn-09646208-n",
+   "random": "sniper",
+   "random_synset": "oewn-10636415-n",
+   "ewt_counts": {
+    "advocate": 3,
+    "proponent": 2,
+    "leader": 72,
+    "sniper": 2
+   },
+   "split": "test",
+   "id": "agent-22"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-09937051-n",
+   "shared_definition": "a young person of either sex",
+   "a": "fry",
+   "b": "kid",
+   "related": "youth",
+   "related_synset": "oewn-10824010-n",
+   "random": "descendant",
+   "random_synset": "oewn-10026173-n",
+   "ewt_counts": {
+    "fry": 14,
+    "kid": 51,
+    "youth": 6,
+    "descendant": 2
+   },
+   "split": "test",
+   "id": "agent-23"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10652848-n",
+   "shared_definition": "a close observer; someone who looks at something (such as an exhibition of some kind)",
+   "a": "viewer",
+   "b": "watcher",
+   "related": "listener",
+   "related_synset": "oewn-10185041-n",
+   "random": "granddaughter",
+   "random_synset": "oewn-10161252-n",
+   "ewt_counts": {
+    "viewer": 1,
+    "watcher": 1,
+    "listener": 1,
+    "granddaughter": 1
+   },
+   "split": "test",
+   "id": "agent-24"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10596736-n",
+   "shared_definition": "someone who promotes or exchanges goods or services for money",
+   "a": "trafficker",
+   "b": "vendor",
+   "related": "grocer",
+   "related_synset": "oewn-10167230-n",
+   "random": "sommelier",
+   "random_synset": "oewn-10643168-n",
+   "ewt_counts": {
+    "trafficker": 1,
+    "vendor": 11,
+    "grocer": 1,
+    "sommelier": 1
+   },
+   "split": "test",
+   "id": "agent-25"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-09927483-n",
+   "shared_definition": "a boy or man",
+   "a": "bloke",
+   "b": "chap",
+   "related": "man",
+   "related_synset": "oewn-10306910-n",
+   "random": "coordinator",
+   "random_synset": "oewn-09983393-n",
+   "ewt_counts": {
+    "bloke": 1,
+    "chap": 1,
+    "man": 73,
+    "coordinator": 11
+   },
+   "split": "test",
+   "id": "agent-26"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-09793689-n",
+   "shared_definition": "an expert who gives advice",
+   "a": "advisor",
+   "b": "consultant",
+   "related": "connoisseur",
+   "related_synset": "oewn-09975866-n",
+   "random": "longshoreman",
+   "random_synset": "oewn-80614089-n",
+   "ewt_counts": {
+    "advisor": 4,
+    "consultant": 3,
+    "connoisseur": 1,
+    "longshoreman": 1
+   },
+   "split": "test",
+   "id": "agent-27"
+  },
+  {
+   "class": "agent",
+   "pos": "n",
+   "shared": "oewn-10542669-n",
+   "shared_definition": "a scientist who devotes themself to doing research",
+   "a": "investigator",
+   "b": "researcher",
+   "related": "biologist",
+   "related_synset": "oewn-09875036-n",
+   "random": "mate",
+   "random_synset": "oewn-10319708-n",
+   "ewt_counts": {
+    "investigator": 2,
+    "researcher": 3,
+    "biologist": 3,
+    "mate": 5
+   },
+   "split": "test",
+   "id": "agent-28"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-07625449-n",
+   "shared_definition": "a dish served as the last course of a meal",
+   "a": "dessert",
+   "b": "sweet",
+   "related": "entree",
+   "related_synset": "oewn-07595140-n",
+   "random": "shovel",
+   "random_synset": "oewn-04215277-n",
+   "ewt_counts": {
+    "dessert": 7,
+    "sweet": 1,
+    "entree": 5,
+    "shovel": 1
+   },
+   "split": "dev",
+   "id": "patient-00"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-15005138-n",
+   "shared_definition": "a dark oil consisting mainly of hydrocarbons",
+   "a": "crude",
+   "b": "petroleum",
+   "related": "coal",
+   "related_synset": "oewn-14838786-n",
+   "random": "scruff",
+   "random_synset": "oewn-05555029-n",
+   "ewt_counts": {
+    "crude": 6,
+    "petroleum": 9,
+    "coal": 4,
+    "scruff": 1
+   },
+   "split": "dev",
+   "id": "patient-01"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-07713570-n",
+   "shared_definition": "a large sandwich made of a long crusty roll split lengthwise and filled with meats and cheese (and tomato and onion and lettuce and condiments); different names are used in different sections of the United States",
+   "a": "grinder",
+   "b": "sub",
+   "related": "burger",
+   "related_synset": "oewn-07712845-n",
+   "random": "barn",
+   "random_synset": "oewn-02796518-n",
+   "ewt_counts": {
+    "grinder": 3,
+    "sub": 1,
+    "burger": 13,
+    "barn": 7
+   },
+   "split": "dev",
+   "id": "patient-02"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-03321351-n",
+   "shared_definition": "a plant consisting of one or more buildings with facilities for manufacturing",
+   "a": "factory",
+   "b": "mill",
+   "related": "refinery",
+   "related_synset": "oewn-04075553-n",
+   "random": "tent",
+   "random_synset": "oewn-04418399-n",
+   "ewt_counts": {
+    "factory": 2,
+    "mill": 1,
+    "refinery": 6,
+    "tent": 6
+   },
+   "split": "dev",
+   "id": "patient-03"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-13133423-n",
+   "shared_definition": "a low woody perennial plant usually having several major stems",
+   "a": "bush",
+   "b": "shrub",
+   "related": "tree",
+   "related_synset": "oewn-13124818-n",
+   "random": "condo",
+   "random_synset": "oewn-03093036-n",
+   "ewt_counts": {
+    "bush": 1,
+    "shrub": 1,
+    "tree": 8,
+    "condo": 4
+   },
+   "split": "dev",
+   "id": "patient-04"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-05541966-n",
+   "shared_definition": "the part of the alimentary canal between the stomach and the anus",
+   "a": "gut",
+   "b": "intestine",
+   "related": "stomach",
+   "related_synset": "oewn-05403033-n",
+   "random": "cocker",
+   "random_synset": "oewn-02104970-n",
+   "ewt_counts": {
+    "gut": 2,
+    "intestine": 1,
+    "stomach": 3,
+    "cocker": 2
+   },
+   "split": "test",
+   "id": "patient-05"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-03551520-n",
+   "shared_definition": "structures collectively in which people are housed",
+   "a": "housing",
+   "b": "lodging",
+   "related": "building",
+   "related_synset": "oewn-02916498-n",
+   "random": "piano",
+   "random_synset": "oewn-03934354-n",
+   "ewt_counts": {
+    "housing": 10,
+    "lodging": 2,
+    "building": 20,
+    "piano": 3
+   },
+   "split": "test",
+   "id": "patient-06"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-14881648-n",
+   "shared_definition": "worthless material that is to be disposed of",
+   "a": "rubbish",
+   "b": "trash",
+   "related": "sewage",
+   "related_synset": "oewn-14881044-n",
+   "random": "embassy",
+   "random_synset": "oewn-03287206-n",
+   "ewt_counts": {
+    "rubbish": 2,
+    "trash": 5,
+    "sewage": 1,
+    "embassy": 5
+   },
+   "split": "test",
+   "id": "patient-07"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-03796045-n",
+   "shared_definition": "a motor vehicle with two wheels and a strong frame",
+   "a": "bike",
+   "b": "motorcycle",
+   "related": "auto",
+   "related_synset": "oewn-02961779-n",
+   "random": "bullfight",
+   "random_synset": "oewn-02920509-n",
+   "ewt_counts": {
+    "bike": 9,
+    "motorcycle": 1,
+    "auto": 7,
+    "bullfight": 1
+   },
+   "split": "test",
+   "id": "patient-08"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-14604877-n",
+   "shared_definition": "the tangible substance that goes into the makeup of a physical object",
+   "a": "material",
+   "b": "stuff",
+   "related": "fluid",
+   "related_synset": "oewn-14964038-n",
+   "random": "yam",
+   "random_synset": "oewn-12108740-n",
+   "ewt_counts": {
+    "material": 21,
+    "stuff": 36,
+    "fluid": 5,
+    "yam": 1
+   },
+   "split": "test",
+   "id": "patient-09"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-14879875-n",
+   "shared_definition": "liquid excretory product",
+   "a": "piss",
+   "b": "urine",
+   "related": "feces",
+   "related_synset": "oewn-14878449-n",
+   "random": "cheek",
+   "random_synset": "oewn-05610590-n",
+   "ewt_counts": {
+    "piss": 1,
+    "urine": 5,
+    "feces": 1,
+    "cheek": 7
+   },
+   "split": "test",
+   "id": "patient-10"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-09489410-n",
+   "shared_definition": "everything that exists anywhere",
+   "a": "macrocosm",
+   "b": "universe",
+   "related": "body",
+   "related_synset": "oewn-05223633-n",
+   "random": "apartment",
+   "random_synset": "oewn-02729230-n",
+   "ewt_counts": {
+    "macrocosm": 1,
+    "universe": 1,
+    "body": 35,
+    "apartment": 21
+   },
+   "split": "test",
+   "id": "patient-11"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-09489410-n",
+   "shared_definition": "everything that exists anywhere",
+   "a": "cosmos",
+   "b": "world",
+   "related": "rock",
+   "related_synset": "oewn-09438954-n",
+   "random": "paste",
+   "random_synset": "oewn-14729448-n",
+   "ewt_counts": {
+    "cosmos": 1,
+    "world": 140,
+    "rock": 14,
+    "paste": 2
+   },
+   "split": "test",
+   "id": "patient-12"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-02730750-n",
+   "shared_definition": "equipment designed to serve a specific function",
+   "a": "apparatus",
+   "b": "setup",
+   "related": "satellite",
+   "related_synset": "oewn-04144527-n",
+   "random": "terminal",
+   "random_synset": "oewn-04420036-n",
+   "ewt_counts": {
+    "apparatus": 1,
+    "setup": 2,
+    "satellite": 5,
+    "terminal": 2
+   },
+   "split": "test",
+   "id": "patient-13"
+  },
+  {
+   "class": "patient",
+   "pos": "n",
+   "shared": "oewn-02800851-n",
+   "shared_definition": "a support or foundation",
+   "a": "pedestal",
+   "b": "stand",
+   "related": "stair",
+   "related_synset": "oewn-04322052-n",
+   "random": "nitrogen",
+   "random_synset": "oewn-14671413-n",
+   "ewt_counts": {
+    "pedestal": 1,
+    "stand": 4,
+    "stair": 3,
+    "nitrogen": 1
+   },
+   "split": "test",
+   "id": "patient-14"
+  }
+ ]
+}

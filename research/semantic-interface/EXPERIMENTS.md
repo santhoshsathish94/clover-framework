@@ -539,6 +539,27 @@ closely related, things, and without losing what it does with structure?
   meanings (3b) are a separate experiment; 3c2's test set is kept so that 3b can also be measured on it (its related
   controls are defined by hypernymy, which a 3b rule built on hypernymy must declare).
 
+**3c2 amended (2026-11-02 08:09 UTC, after reading the generated sentences, before the label audit and before any
+system output).** (1) Verb templates: the thing and person fillers clashed with abstract meanings ("The pilot achieved
+the bag"), which made gold labels unreliable; verb rows now use OEWN's own frame wording as the object - "something"
+for "Somebody ----s something", "somebody" for "Somebody ----s somebody" ("The pilot achieved something." /
+"Something was attained by the pilot."); noun templates are unchanged. (2) Verb forms: OEWN lists archaic and
+adjectival forms (melt -> molten, bypass -> bypast) without marking which is the past, so EWT-attested forms now come
+first (a regular -ed form attested as either serves for both), then OEWN's forms (one ending in -n is the
+participle), then spelling rules; remaining misspellings are left to the audit. (3) The audit also flags slurs,
+disparaging terms for groups of people and vulgar terms (the pool contains, for example, midget, cretin and piss);
+flagged items are removed like the others. (4) The three instances of an item use distinct filler choices. Item
+selection, controls and the dev/test split are unchanged (same seed; selection does not depend on forms or
+templates): 94 items before the audit, 31 dev and 63 test (verbs 43 + 7, agents 29, patients 15).
+
+**3c2 label audit (before any system output; `results/e3c2_audit_sheet.txt`, `e3c2_audit.json`).** The reviewer agent
+flagged 8 of 94 items: earn/realise (not synonyms in natural reading), forgone used as a past and bypast (forms),
+midget, lunatic, cretin, jackass and piss (criterion 4). They are removed: **29 dev items (396 sentence pairs) and 57
+test items (801 pairs)**. The reviewer kept items I consider doubtful (35, listed with reasons in `e3c2_audit.json`,
+for example partner/spouse, bike/motorcycle, voiced/said as a control, and the misspelt control form regreted). I
+wrote that list before any system output; it changes nothing in the criteria and is used only for a reported
+sensitivity analysis on the items neither of us doubted.
+
 ## Experiment 4 = E2: morphology (defined)
 Lemmatisation, inflection and derivation on UD features and OEWN derivation links, including unseen lemma+affix
 combinations; learned vs lookup baselines.

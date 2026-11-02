@@ -6,7 +6,8 @@ import functools
 import os
 
 CSI_SENSES = os.environ.get("CSI_SENSES")  # frozen Dictionary v1.1 checkpoint (Experiment 3c); unset = lemmas only
-CSI_VERSION = "0.2-lexical" if CSI_SENSES else "0.1"
+CSI_CLOSENESS = os.environ.get("CSI_CLOSENESS")  # Experiment 3c2: closeness threshold from dev data, or "record"
+CSI_VERSION = "0.3-lexical" if CSI_SENSES and CSI_CLOSENESS else "0.2-lexical" if CSI_SENSES else "0.1"
 SPACY_MODEL = os.environ.get("CSI_PARSER", "en_core_web_sm")  # Experiment 2 compares parsers; recorded in provenance
 PARSER = f"spacy/{SPACY_MODEL}"
 CSI_MORPH = os.environ.get("CSI_MORPH")  # frozen verb lemmatiser artefact (Experiment 4d); unset = parser lemmas
@@ -48,8 +49,9 @@ def _senses():
 def _sense_of(doc, i):
     t = doc[i]
     r = _senses().choose(doc.text, t.idx, t.idx + len(t.text), t.lemma_.lower(), t.pos_)
-    return {"status": r["status"], "synset": r["senses"][0]["synset"] if r["senses"] else None, "upos": t.pos_,
-            "usage_trained": r["usage_trained"]}
+    top = r["senses"][0] if r["senses"] else {}
+    return {"status": r["status"], "synset": top.get("synset"), "p": top.get("p"), "n_meanings": len(r["senses"]),
+            "upos": t.pos_, "usage_trained": r["usage_trained"]}
 
 
 def _kids(tok, deps):
