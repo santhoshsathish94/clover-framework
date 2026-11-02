@@ -259,6 +259,42 @@ not_allowed = SYS.remember_for(keeper, "s1", 3)
 keeper.perm_modes = {"memory": "ask"}
 check(not_allowed is None and SYS.remember_for(keeper, "s1", 7) is None, "below layer 4, or memory not set to Allow: no save")
 
+# CSI (research/semantic-interface, Experiment 1f): off by default; on, a tool the message declines is not offered and a
+# claim is read from the reply's main clause. Readings: CSI v0.1r3 on k3 (test_csi_readings.json); others read as None.
+import dataclasses  # noqa: E402
+import json  # noqa: E402
+import os  # noqa: E402
+
+READ = json.loads((HERE / "test_csi_readings.json").read_text(encoding="utf-8"))
+csi_rt = dataclasses.replace(phone_runtime(), csi=READ.get)
+check(os.environ.get("CLOVER_CSI_URL") or phone_runtime().csi is None, "CSI is off by default")
+NO_WEB = "Don't search the web, just tell me what you know about the Jaipur forts."
+check(route(frame(NO_WEB), "always") == ["web_search"], "CSI off: a declined search is still offered, as before")
+f = semantics.interpret(NO_WEB, csi_rt)
+check(f.declined == ["web.page", "web.search"] and route(f, "always") == ["python_interpreter"] and route(f, "ask") == []
+      and f.layer()["declined"] == ["web.page", "web.search"], "CSI on: a declined search is not offered")
+f = semantics.interpret("Search the web for why the update did not install.", csi_rt)
+check(f.declined == [] and route(f, "always") == ["web_search"], "CSI on: a negation inside the request keeps the search")
+f = semantics.interpret("Don't use Python, search the web for the Jaipur forts.", csi_rt)
+check(f.declined == ["python"] and route(f, "always") == ["web_search"], "CSI on: one tool declined, another asked")
+f = semantics.interpret("Do not use Python; just estimate 17 * 23.", csi_rt)
+check(f.declined == ["python"] and "python_interpreter" not in route(f, "always"), "CSI on: a declined Python is not offered")
+CLAIM = "I committed the changes, but the log was not updated."
+fr, res, notes = aligned("Commit the changes with git in the terminal", CLAIM)
+check(notes == [], "CSI off: a claim with a negation in its second clause is missed, as before")
+for reply, want, what in ((CLAIM, ["an action that did not run"], "CSI on: the claim is read from the main clause"),
+                          ("I could not commit the changes.", [], "CSI on: 'could not commit' claims nothing")):
+    fr = semantics.interpret("Commit the changes with git in the terminal", csi_rt)
+    check(align_turn(fr, {"reply": reply, "layer_trace": {}}) == want, what)
+try:
+    semantics.csi_reader("http://example.com:8790")
+    remote = True
+except ValueError:
+    remote = False
+check(not remote, "the CSI reader refuses a service on another machine")
+down = dataclasses.replace(phone_runtime(), csi=semantics.csi_reader("http://127.0.0.1:9", timeout=0.5))
+check(route(semantics.interpret(NO_WEB, down), "always") == ["web_search"], "CSI not answering: as without CSI")
+
 # one semantics for every process: the laptop Studio ships this file byte for byte
 laptop = HERE.parents[2] / "scratch-agents" / "lfm3-hybridagent" / "laptop" / "clover" / "semantics.py"
 if laptop.is_file():

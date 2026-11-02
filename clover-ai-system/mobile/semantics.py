@@ -8,7 +8,9 @@ only a promise (non_answer). align() checks the answer (C3) against the frame an
 and labels how it is known.
 
 Every rule and the whole protocol live here. A process passes only what is its own in a Runtime: its tool names for each
-capability, which paths its tools may never touch and which commands it asks about before running them.
+capability, which paths its tools may never touch and which commands it asks about before running them, and - off by
+default - a CSI reader (research/semantic-interface, Experiments 1d-1f): with it, a tool the message declines ("Don't
+search the web, just ...") is not offered, and a reply's claim that an action was done is read from its main clause.
 Canonical file: clover-framework clover-ai-system/mobile/semantics.py. The laptop Studio keeps an identical copy in
 clover/semantics.py; both test suites compare the two.
 State names: AGENTS.md section 9 (proceed, ask, do_not_know, refuse) and 11 (known, inferred, unknown, contested,
@@ -188,11 +190,13 @@ _CTRL_OF = {"t": "\t", "n": "\n", "r": "\r", "f": "\f", "b": "\b", "v": "\v", "a
 @dataclass(frozen=True)
 class Runtime:
     """What is a process's own: its tool names for each capability, the device it runs on (for wording), the paths its
-    tools may never touch and the commands it asks about before running them. Everything else is common."""
+    tools may never touch and the commands it asks about before running them. csi: text -> CSI analysis or None (a
+    local CSI service, csi_reader); None = off, the default. Everything else is common."""
     tools: dict
     device: str = "device"
     blocked: Callable | None = None
     risky: Callable | None = None
+    csi: Callable | None = None
 
     def capability(self, name):
         return next((cap for cap, names in self.tools.items() if name in names), None)
@@ -234,6 +238,7 @@ class Frame:
     knowledge: str = ""
     label: str = ""
     notes: list = field(default_factory=list)
+    declined: list = field(default_factory=list)  # capabilities the message declines, in CSI's reading (CSI on)
     runtime: Runtime | None = field(default=None, repr=False, compare=False)
 
     def understood(self):
@@ -266,7 +271,7 @@ class Frame:
     def layer(self):
         out = {"layer": "semantics", "understood": self.understood(), "act": self.act, "route": self.route,
                "discernment": self.discernment}
-        for key in ("why", "social", "knowledge", "label"):
+        for key in ("why", "social", "knowledge", "label", "declined"):
             if getattr(self, key):
                 out[key] = getattr(self, key)
         if self.notes:
@@ -408,6 +413,8 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
     pleasant = [] if retry or media or attached else social(t, history)
     keep = REMEMBER_ASK.match(t)
     caps = asked_caps(t)
+    declined = _declined(runtime, t) if caps else set()
+    caps = [c for c in caps if c not in declined]
     names = runtime.names(caps)
     typed_paths = user_paths(t)
     creative = bool(CREATIVE.search(t))
@@ -429,7 +436,7 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
                  places=bool(PLACES.search(t)), diet=meal and not creative and not NOT_FOR_ME.search(t), discernment=disc,
                  why=why, retry=retry, remember=keep.group(1).strip() if keep else "",
                  web_cap=8 if "web.search" in caps else 3, social=pleasant,
-                 reply=social_reply(pleasant, t) if pleasant else "", runtime=runtime)
+                 reply=social_reply(pleasant, t) if pleasant else "", declined=sorted(declined), runtime=runtime)
 
 
 def _chose(frame, route, offered):
@@ -439,15 +446,20 @@ def _chose(frame, route, offered):
 
 def route(frame, mode, tools_on, offer=(), said=None, retry_tools=()):
     """Context (frame <-> S3): the tools this answer may use. offer: the tool names this process can offer this turn, in
-    its order. -> (tool names, or None for every one; tools on)"""
+    its order. A capability the message declines in CSI's reading is never offered (CSI on). -> (tool names, or None
+    for every one; tools on)"""
     rt = frame.runtime
+    no = set(frame.declined)
     if frame.act == "social":
         return _chose(frame, "social", []), False
     if not tools_on:
         _chose(frame, "tools off", [])
         return None, False
     if mode == "ask":
-        only = list(dict.fromkeys(rt.names(asked_caps(frame.text if said is None else said)) + list(retry_tools)))
+        text = frame.text if said is None else said
+        if text.strip() != frame.text:  # the words to read differ (a voice note's transcript added)
+            no = _declined(rt, text)
+        only = list(dict.fromkeys(rt.names([c for c in asked_caps(text) if c not in no]) + list(retry_tools)))
         return _chose(frame, "asked" if only else "nothing asked", only), bool(only)
     if frame.asked:
         # Always: offered every tool, the Omni said it had no tool for "check the recent commits" (2026-11-01)
@@ -456,12 +468,15 @@ def route(frame, mode, tools_on, offer=(), said=None, retry_tools=()):
         # a story searched for an existing story; a dinner question listed the home folder for ingredients
         return _chose(frame, "creative writing" if frame.creative else "meal", []), False
     if frame.meal:
-        return _chose(frame, "places", rt.names(["web.search", "web.page"])), True
+        web = rt.names([c for c in ("web.search", "web.page") if c not in no])
+        return _chose(frame, "places", web), True
     if frame.seen:
         return _chose(frame, "about the photo", []), False
     if not FILES_NAMED.search(frame.text):
         # an email request wrote C:\Users\santh.emails.txt and saved a memory nobody asked for (2026-11-01)
-        return _chose(frame, "nothing named", [n for n in offer if rt.capability(n) not in QUIET]), True
+        return _chose(frame, "nothing named", [n for n in offer if rt.capability(n) not in QUIET and rt.capability(n) not in no]), True
+    if no:
+        return _chose(frame, "all", [n for n in offer if rt.capability(n) not in no]), True
     return _chose(frame, "all", None), True
 
 
@@ -515,6 +530,37 @@ def declined_caps(text, analysis):
     return declined - asked
 
 
+def _declined(runtime, text):
+    """The capabilities a message declines in CSI's reading; none when CSI is off or does not answer."""
+    if runtime is None or runtime.csi is None or not text:
+        return set()
+    return declined_caps(text, runtime.csi(text))
+
+
+def csi_reader(url, timeout=2.0):
+    """A Runtime.csi for a CSI service on this machine (research/semantic-interface/prototype/csi_service.py): text ->
+    CSI analysis, or None when it does not answer in time, and Clover then behaves as without CSI. Loopback only: a
+    message never leaves the machine for this."""
+    import json
+    import urllib.parse
+    import urllib.request
+    parts = urllib.parse.urlsplit(url)
+    if parts.scheme != "http" or parts.hostname not in ("127.0.0.1", "localhost", "::1"):
+        raise ValueError("the CSI service must be on this machine (http://127.0.0.1:<port>)")
+    endpoint = url.rstrip("/") + "/analyze"
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))  # never through a proxy
+
+    def read(text):
+        req = urllib.request.Request(endpoint, data=json.dumps({"text": text}).encode("utf-8"),
+                                     headers={"Content-Type": "application/json"})
+        try:
+            with opener.open(req, timeout=timeout) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except (OSError, ValueError):
+            return None
+    return read
+
+
 def _worked(call):
     r = str(call.get("result") or "").lstrip()
     if r.startswith(("Error", "Not run", "Not saved", "[Clover permission]")) or re.match(r"(?:repo_\w+ error|traceback)",
@@ -554,7 +600,7 @@ def _knowledge(frame, res, rounds, reply):
     if done:
         return "verified", "verified · " + done[-1]
     if not worked and any(c.get("ran") for c in rounds):  # "fatal: not a git repository" (2026-11-01)
-        return ("contested", "claimed, but the tool failed") if _claims(reply) else ("known", "the tool failed")
+        return ("contested", "claimed, but the tool failed") if _claims(reply, frame.runtime.csi) else ("known", "the tool failed")
     if CANNOT.search(reply[:300]):
         return "unknown", "not found"
     if frame.seen and not worked:
@@ -619,7 +665,7 @@ def align(frame, res, remember_fn=None):
         if fixed != reply:  # "deleted from C:\Users\santh\CloverAI\mp\sandbox" (2026-11-01)
             reply = fixed
             notes.append("your path as you wrote it")
-    if frame.act == "action" and not any(c.get("ran") and _worked(c) for c in rounds) and _claims(reply):
+    if frame.act == "action" and not any(c.get("ran") and _worked(c) for c in rounds) and _claims(reply, frame.runtime.csi):
         reply = reply.rstrip() + "\n\n(Note: nothing ran successfully for this answer, so this has not actually been done.)"
         notes.append("an action that did not run")
     res["reply"] = reply

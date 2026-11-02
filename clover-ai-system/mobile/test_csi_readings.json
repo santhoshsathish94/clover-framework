@@ -1,0 +1,1468 @@
+{
+ "Don't search the web, just tell me what you know about the Jaipur forts.": {
+  "csi_version": "0.1",
+  "text": "Don't search the web, just tell me what you know about the Jaipur forts.",
+  "readings": [
+   {
+    "confidence": 1.0,
+    "tokens": [
+     {
+      "i": 0,
+      "idx": 0,
+      "text": "Do",
+      "lemma": "do",
+      "upos": "AUX",
+      "tag": "VB",
+      "feats": {
+       "VerbForm": "Inf"
+      },
+      "head": 2,
+      "dep": "aux",
+      "prop": 1
+     },
+     {
+      "i": 1,
+      "idx": 2,
+      "text": "n't",
+      "lemma": "not",
+      "upos": "PART",
+      "tag": "RB",
+      "feats": {
+       "Polarity": "Neg"
+      },
+      "head": 2,
+      "dep": "neg",
+      "prop": 1
+     },
+     {
+      "i": 2,
+      "idx": 6,
+      "text": "search",
+      "lemma": "search",
+      "upos": "VERB",
+      "tag": "VB",
+      "feats": {
+       "VerbForm": "Inf"
+      },
+      "head": 7,
+      "dep": "advcl",
+      "prop": 1
+     },
+     {
+      "i": 3,
+      "idx": 13,
+      "text": "the",
+      "lemma": "the",
+      "upos": "DET",
+      "tag": "DT",
+      "feats": {
+       "Definite": "Def",
+       "PronType": "Art"
+      },
+      "head": 4,
+      "dep": "det",
+      "prop": 1
+     },
+     {
+      "i": 4,
+      "idx": 17,
+      "text": "web",
+      "lemma": "web",
+      "upos": "NOUN",
+      "tag": "NN",
+      "feats": {
+       "Number": "Sing"
+      },
+      "head": 2,
+      "dep": "dobj",
+      "prop": 1
+     },
+     {
+      "i": 5,
+      "idx": 20,
+      "text": ",",
+      "lemma": ",",
+      "upos": "PUNCT",
+      "tag": ",",
+      "feats": {
+       "PunctType": "Comm"
+      },
+      "head": 7,
+      "dep": "punct",
+      "prop": 0
+     },
+     {
+      "i": 6,
+      "idx": 22,
+      "text": "just",
+      "lemma": "just",
+      "upos": "ADV",
+      "tag": "RB",
+      "feats": {},
+      "head": 7,
+      "dep": "advmod",
+      "prop": 0
+     },
+     {
+      "i": 7,
+      "idx": 27,
+      "text": "tell",
+      "lemma": "tell",
+      "upos": "VERB",
+      "tag": "VB",
+      "feats": {
+       "VerbForm": "Inf"
+      },
+      "head": 7,
+      "dep": "ROOT",
+      "prop": 0
+     },
+     {
+      "i": 8,
+      "idx": 32,
+      "text": "me",
+      "lemma": "I",
+      "upos": "PRON",
+      "tag": "PRP",
+      "feats": {
+       "Case": "Acc",
+       "Number": "Sing",
+       "Person": "1",
+       "PronType": "Prs"
+      },
+      "head": 7,
+      "dep": "dobj",
+      "prop": 0
+     },
+     {
+      "i": 9,
+      "idx": 35,
+      "text": "what",
+      "lemma": "what",
+      "upos": "PRON",
+      "tag": "WP",
+      "feats": {},
+      "head": 11,
+      "dep": "dobj",
+      "prop": 0
+     },
+     {
+      "i": 10,
+      "idx": 40,
+      "text": "you",
+      "lemma": "you",
+      "upos": "PRON",
+      "tag": "PRP",
+      "feats": {
+       "Case": "Nom",
+       "Person": "2",
+       "PronType": "Prs"
+      },
+      "head": 11,
+      "dep": "nsubj",
+      "prop": 0
+     },
+     {
+      "i": 11,
+      "idx": 44,
+      "text": "know",
+      "lemma": "know",
+      "upos": "VERB",
+      "tag": "VBP",
+      "feats": {
+       "Tense": "Pres",
+       "VerbForm": "Fin"
+      },
+      "head": 7,
+      "dep": "ccomp",
+      "prop": 0
+     },
+     {
+      "i": 12,
+      "idx": 49,
+      "text": "about",
+      "lemma": "about",
+      "upos": "ADP",
+      "tag": "IN",
+      "feats": {},
+      "head": 11,
+      "dep": "prep",
+      "prop": 0
+     },
+     {
+      "i": 13,
+      "idx": 55,
+      "text": "the",
+      "lemma": "the",
+      "upos": "DET",
+      "tag": "DT",
+      "feats": {
+       "Definite": "Def",
+       "PronType": "Art"
+      },
+      "head": 15,
+      "dep": "det",
+      "prop": 0
+     },
+     {
+      "i": 14,
+      "idx": 59,
+      "text": "Jaipur",
+      "lemma": "Jaipur",
+      "upos": "PROPN",
+      "tag": "NNP",
+      "feats": {
+       "Number": "Sing"
+      },
+      "head": 15,
+      "dep": "compound",
+      "prop": 0
+     },
+     {
+      "i": 15,
+      "idx": 66,
+      "text": "forts",
+      "lemma": "fort",
+      "upos": "NOUN",
+      "tag": "NNS",
+      "feats": {
+       "Number": "Plur"
+      },
+      "head": 12,
+      "dep": "pobj",
+      "prop": 0
+     },
+     {
+      "i": 16,
+      "idx": 71,
+      "text": ".",
+      "lemma": ".",
+      "upos": "PUNCT",
+      "tag": ".",
+      "feats": {
+       "PunctType": "Peri"
+      },
+      "head": 7,
+      "dep": "punct",
+      "prop": 0
+     }
+    ],
+    "propositions": [
+     {
+      "predicate": {
+       "lemma": "tell",
+       "token": 7
+      },
+      "roles": {
+       "ARG1": {
+        "text": "me",
+        "head_lemma": "i",
+        "head": 8,
+        "tokens": [
+         8
+        ]
+       },
+       "ARG0": {
+        "text": "",
+        "head_lemma": "you",
+        "head": null,
+        "tokens": [],
+        "implicit": true
+       }
+      },
+      "polarity": "positive",
+      "tense": "unmarked",
+      "aspect": "simple",
+      "modality": null,
+      "mood": "imperative",
+      "voice": "active",
+      "embedded_under": null,
+      "provenance": {
+       "syntax": "spacy/en_core_web_trf@3.8.0:clearnlp",
+       "structure": "csi.analyze@0.1",
+       "lemmas": "csi.morphology:morph-verb-v1.1+oewn"
+      }
+     },
+     {
+      "predicate": {
+       "lemma": "search",
+       "token": 2
+      },
+      "roles": {
+       "ARG1": {
+        "text": "the web",
+        "head_lemma": "web",
+        "head": 4,
+        "tokens": [
+         3,
+         4
+        ]
+       },
+       "ARG0": {
+        "text": "",
+        "head_lemma": "you",
+        "head": null,
+        "tokens": [],
+        "implicit": true
+       }
+      },
+      "polarity": "negative",
+      "tense": "unmarked",
+      "aspect": "simple",
+      "modality": null,
+      "mood": "imperative",
+      "voice": "active",
+      "embedded_under": null,
+      "provenance": {
+       "syntax": "spacy/en_core_web_trf@3.8.0:clearnlp",
+       "structure": "csi.analyze@0.1",
+       "lemmas": "csi.morphology:morph-verb-v1.1+oewn"
+      }
+     }
+    ],
+    "problems": [],
+    "request_rereads": []
+   }
+  ],
+  "ambiguity": [],
+  "unsupported": [],
+  "confidence_note": "v0.1 confidence is uncalibrated (coverage only)"
+ },
+ "Search the web for why the update did not install.": {
+  "csi_version": "0.1",
+  "text": "Search the web for why the update did not install.",
+  "readings": [
+   {
+    "confidence": 1.0,
+    "tokens": [
+     {
+      "i": 0,
+      "idx": 0,
+      "text": "Search",
+      "lemma": "search",
+      "upos": "VERB",
+      "tag": "VB",
+      "feats": {
+       "VerbForm": "Inf"
+      },
+      "head": 0,
+      "dep": "ROOT",
+      "prop": 0
+     },
+     {
+      "i": 1,
+      "idx": 7,
+      "text": "the",
+      "lemma": "the",
+      "upos": "DET",
+      "tag": "DT",
+      "feats": {
+       "Definite": "Def",
+       "PronType": "Art"
+      },
+      "head": 2,
+      "dep": "det",
+      "prop": 0
+     },
+     {
+      "i": 2,
+      "idx": 11,
+      "text": "web",
+      "lemma": "web",
+      "upos": "NOUN",
+      "tag": "NN",
+      "feats": {
+       "Number": "Sing"
+      },
+      "head": 0,
+      "dep": "dobj",
+      "prop": 0
+     },
+     {
+      "i": 3,
+      "idx": 15,
+      "text": "for",
+      "lemma": "for",
+      "upos": "ADP",
+      "tag": "IN",
+      "feats": {},
+      "head": 0,
+      "dep": "prep",
+      "prop": 0
+     },
+     {
+      "i": 4,
+      "idx": 19,
+      "text": "why",
+      "lemma": "why",
+      "upos": "SCONJ",
+      "tag": "WRB",
+      "feats": {},
+      "head": 9,
+      "dep": "advmod",
+      "prop": 0
+     },
+     {
+      "i": 5,
+      "idx": 23,
+      "text": "the",
+      "lemma": "the",
+      "upos": "DET",
+      "tag": "DT",
+      "feats": {
+       "Definite": "Def",
+       "PronType": "Art"
+      },
+      "head": 6,
+      "dep": "det",
+      "prop": 0
+     },
+     {
+      "i": 6,
+      "idx": 27,
+      "text": "update",
+      "lemma": "update",
+      "upos": "NOUN",
+      "tag": "NN",
+      "feats": {
+       "Number": "Sing"
+      },
+      "head": 9,
+      "dep": "nsubj",
+      "prop": 0
+     },
+     {
+      "i": 7,
+      "idx": 34,
+      "text": "did",
+      "lemma": "do",
+      "upos": "AUX",
+      "tag": "VBD",
+      "feats": {
+       "Tense": "Past",
+       "VerbForm": "Fin"
+      },
+      "head": 9,
+      "dep": "aux",
+      "prop": 0
+     },
+     {
+      "i": 8,
+      "idx": 38,
+      "text": "not",
+      "lemma": "not",
+      "upos": "PART",
+      "tag": "RB",
+      "feats": {
+       "Polarity": "Neg"
+      },
+      "head": 9,
+      "dep": "neg",
+      "prop": 0
+     },
+     {
+      "i": 9,
+      "idx": 42,
+      "text": "install",
+      "lemma": "install",
+      "upos": "VERB",
+      "tag": "VB",
+      "feats": {
+       "VerbForm": "Inf"
+      },
+      "head": 3,
+      "dep": "pcomp",
+      "prop": 0
+     },
+     {
+      "i": 10,
+      "idx": 49,
+      "text": ".",
+      "lemma": ".",
+      "upos": "PUNCT",
+      "tag": ".",
+      "feats": {
+       "PunctType": "Peri"
+      },
+      "head": 0,
+      "dep": "punct",
+      "prop": 0
+     }
+    ],
+    "propositions": [
+     {
+      "predicate": {
+       "lemma": "search",
+       "token": 0
+      },
+      "roles": {
+       "ARG1": {
+        "text": "the web",
+        "head_lemma": "web",
+        "head": 2,
+        "tokens": [
+         1,
+         2
+        ]
+       },
+       "ARG0": {
+        "text": "",
+        "head_lemma": "you",
+        "head": null,
+        "tokens": [],
+        "implicit": true
+       }
+      },
+      "polarity": "positive",
+      "tense": "unmarked",
+      "aspect": "simple",
+      "modality": null,
+      "mood": "imperative",
+      "voice": "active",
+      "embedded_under": null,
+      "provenance": {
+       "syntax": "spacy/en_core_web_trf@3.8.0:clearnlp",
+       "structure": "csi.analyze@0.1",
+       "lemmas": "csi.morphology:morph-verb-v1.1+oewn"
+      }
+     }
+    ],
+    "problems": [],
+    "request_rereads": []
+   }
+  ],
+  "ambiguity": [],
+  "unsupported": [],
+  "confidence_note": "v0.1 confidence is uncalibrated (coverage only)"
+ },
+ "Do not use Python; just estimate 17 * 23.": {
+  "csi_version": "0.1",
+  "text": "Do not use Python; just estimate 17 * 23.",
+  "readings": [
+   {
+    "confidence": 1.0,
+    "tokens": [
+     {
+      "i": 0,
+      "idx": 0,
+      "text": "Do",
+      "lemma": "do",
+      "upos": "AUX",
+      "tag": "VB",
+      "feats": {
+       "VerbForm": "Inf"
+      },
+      "head": 2,
+      "dep": "aux",
+      "prop": 1
+     },
+     {
+      "i": 1,
+      "idx": 3,
+      "text": "not",
+      "lemma": "not",
+      "upos": "PART",
+      "tag": "RB",
+      "feats": {
+       "Polarity": "Neg"
+      },
+      "head": 2,
+      "dep": "neg",
+      "prop": 1
+     },
+     {
+      "i": 2,
+      "idx": 7,
+      "text": "use",
+      "lemma": "use",
+      "upos": "VERB",
+      "tag": "VB",
+      "feats": {
+       "VerbForm": "Inf"
+      },
+      "head": 6,
+      "dep": "advcl",
+      "prop": 1
+     },
+     {
+      "i": 3,
+      "idx": 11,
+      "text": "Python",
+      "lemma": "Python",
+      "upos": "PROPN",
+      "tag": "NNP",
+      "feats": {
+       "Number": "Sing"
+      },
+      "head": 2,
+      "dep": "dobj",
+      "prop": 1
+     },
+     {
+      "i": 4,
+      "idx": 17,
+      "text": ";",
+      "lemma": ";",
+      "upos": "PUNCT",
+      "tag": ":",
+      "feats": {},
+      "head": 6,
+      "dep": "punct",
+      "prop": 0
+     },
+     {
+      "i": 5,
+      "idx": 19,
+      "text": "just",
+      "lemma": "just",
+      "upos": "ADV",
+      "tag": "RB",
+      "feats": {},
+      "head": 6,
+      "dep": "advmod",
+      "prop": 0
+     },
+     {
+      "i": 6,
+      "idx": 24,
+      "text": "estimate",
+      "lemma": "estimate",
+      "upos": "VERB",
+      "tag": "VB",
+      "feats": {
+       "VerbForm": "Inf"
+      },
+      "head": 6,
+      "dep": "ROOT",
+      "prop": 0
+     },
+     {
+      "i": 7,
+      "idx": 33,
+      "text": "17",
+      "lemma": "17",
+      "upos": "NUM",
+      "tag": "CD",
+      "feats": {
+       "NumType": "Card"
+      },
+      "head": 9,
+      "dep": "nummod",
+      "prop": 0
+     },
+     {
+      "i": 8,
+      "idx": 36,
+      "text": "*",
+      "lemma": "*",
+      "upos": "SYM",
+      "tag": "SYM",
+      "feats": {},
+      "head": 9,
+      "dep": "punct",
+      "prop": 0
+     },
+     {
+      "i": 9,
+      "idx": 38,
+      "text": "23",
+      "lemma": "23",
+      "upos": "NUM",
+      "tag": "CD",
+      "feats": {
+       "NumType": "Card"
+      },
+      "head": 6,
+      "dep": "dobj",
+      "prop": 0
+     },
+     {
+      "i": 10,
+      "idx": 40,
+      "text": ".",
+      "lemma": ".",
+      "upos": "PUNCT",
+      "tag": ".",
+      "feats": {
+       "PunctType": "Peri"
+      },
+      "head": 6,
+      "dep": "punct",
+      "prop": 0
+     }
+    ],
+    "propositions": [
+     {
+      "predicate": {
+       "lemma": "estimate",
+       "token": 6
+      },
+      "roles": {
+       "ARG1": {
+        "text": "17 * 23",
+        "head_lemma": "23",
+        "head": 9,
+        "tokens": [
+         7,
+         8,
+         9
+        ]
+       },
+       "ARG0": {
+        "text": "",
+        "head_lemma": "you",
+        "head": null,
+        "tokens": [],
+        "implicit": true
+       }
+      },
+      "polarity": "positive",
+      "tense": "unmarked",
+      "aspect": "simple",
+      "modality": null,
+      "mood": "imperative",
+      "voice": "active",
+      "embedded_under": null,
+      "provenance": {
+       "syntax": "spacy/en_core_web_trf@3.8.0:clearnlp",
+       "structure": "csi.analyze@0.1",
+       "lemmas": "csi.morphology:morph-verb-v1.1+oewn"
+      }
+     },
+     {
+      "predicate": {
+       "lemma": "use",
+       "token": 2
+      },
+      "roles": {
+       "ARG1": {
+        "text": "Python",
+        "head_lemma": "python",
+        "head": 3,
+        "tokens": [
+         3
+        ]
+       },
+       "ARG0": {
+        "text": "",
+        "head_lemma": "you",
+        "head": null,
+        "tokens": [],
+        "implicit": true
+       }
+      },
+      "polarity": "negative",
+      "tense": "unmarked",
+      "aspect": "simple",
+      "modality": null,
+      "mood": "imperative",
+      "voice": "active",
+      "embedded_under": null,
+      "provenance": {
+       "syntax": "spacy/en_core_web_trf@3.8.0:clearnlp",
+       "structure": "csi.analyze@0.1",
+       "lemmas": "csi.morphology:morph-verb-v1.1+oewn"
+      }
+     }
+    ],
+    "problems": [],
+    "request_rereads": []
+   }
+  ],
+  "ambiguity": [],
+  "unsupported": [],
+  "confidence_note": "v0.1 confidence is uncalibrated (coverage only)"
+ },
+ "Don't use Python, search the web for the Jaipur forts.": {
+  "csi_version": "0.1",
+  "text": "Don't use Python, search the web for the Jaipur forts.",
+  "readings": [
+   {
+    "confidence": 1.0,
+    "tokens": [
+     {
+      "i": 0,
+      "idx": 0,
+      "text": "Do",
+      "lemma": "do",
+      "upos": "AUX",
+      "tag": "VB",
+      "feats": {
+       "VerbForm": "Inf"
+      },
+      "head": 2,
+      "dep": "aux",
+      "prop": 1
+     },
+     {
+      "i": 1,
+      "idx": 2,
+      "text": "n't",
+      "lemma": "not",
+      "upos": "PART",
+      "tag": "RB",
+      "feats": {
+       "Polarity": "Neg"
+      },
+      "head": 2,
+      "dep": "neg",
+      "prop": 1
+     },
+     {
+      "i": 2,
+      "idx": 6,
+      "text": "use",
+      "lemma": "use",
+      "upos": "VERB",
+      "tag": "VB",
+      "feats": {
+       "VerbForm": "Inf"
+      },
+      "head": 5,
+      "dep": "advcl",
+      "prop": 1
+     },
+     {
+      "i": 3,
+      "idx": 10,
+      "text": "Python",
+      "lemma": "Python",
+      "upos": "PROPN",
+      "tag": "NNP",
+      "feats": {
+       "Number": "Sing"
+      },
+      "head": 2,
+      "dep": "dobj",
+      "prop": 1
+     },
+     {
+      "i": 4,
+      "idx": 16,
+      "text": ",",
+      "lemma": ",",
+      "upos": "PUNCT",
+      "tag": ",",
+      "feats": {
+       "PunctType": "Comm"
+      },
+      "head": 5,
+      "dep": "punct",
+      "prop": 0
+     },
+     {
+      "i": 5,
+      "idx": 18,
+      "text": "search",
+      "lemma": "search",
+      "upos": "VERB",
+      "tag": "VB",
+      "feats": {
+       "VerbForm": "Inf"
+      },
+      "head": 5,
+      "dep": "ROOT",
+      "prop": 0
+     },
+     {
+      "i": 6,
+      "idx": 25,
+      "text": "the",
+      "lemma": "the",
+      "upos": "DET",
+      "tag": "DT",
+      "feats": {
+       "Definite": "Def",
+       "PronType": "Art"
+      },
+      "head": 7,
+      "dep": "det",
+      "prop": 0
+     },
+     {
+      "i": 7,
+      "idx": 29,
+      "text": "web",
+      "lemma": "web",
+      "upos": "NOUN",
+      "tag": "NN",
+      "feats": {
+       "Number": "Sing"
+      },
+      "head": 5,
+      "dep": "dobj",
+      "prop": 0
+     },
+     {
+      "i": 8,
+      "idx": 33,
+      "text": "for",
+      "lemma": "for",
+      "upos": "ADP",
+      "tag": "IN",
+      "feats": {},
+      "head": 5,
+      "dep": "prep",
+      "prop": 0
+     },
+     {
+      "i": 9,
+      "idx": 37,
+      "text": "the",
+      "lemma": "the",
+      "upos": "DET",
+      "tag": "DT",
+      "feats": {
+       "Definite": "Def",
+       "PronType": "Art"
+      },
+      "head": 11,
+      "dep": "det",
+      "prop": 0
+     },
+     {
+      "i": 10,
+      "idx": 41,
+      "text": "Jaipur",
+      "lemma": "Jaipur",
+      "upos": "PROPN",
+      "tag": "NNP",
+      "feats": {
+       "Number": "Sing"
+      },
+      "head": 11,
+      "dep": "compound",
+      "prop": 0
+     },
+     {
+      "i": 11,
+      "idx": 48,
+      "text": "forts",
+      "lemma": "fort",
+      "upos": "NOUN",
+      "tag": "NNS",
+      "feats": {
+       "Number": "Plur"
+      },
+      "head": 8,
+      "dep": "pobj",
+      "prop": 0
+     },
+     {
+      "i": 12,
+      "idx": 53,
+      "text": ".",
+      "lemma": ".",
+      "upos": "PUNCT",
+      "tag": ".",
+      "feats": {
+       "PunctType": "Peri"
+      },
+      "head": 5,
+      "dep": "punct",
+      "prop": 0
+     }
+    ],
+    "propositions": [
+     {
+      "predicate": {
+       "lemma": "search",
+       "token": 5
+      },
+      "roles": {
+       "ARG1": {
+        "text": "the web",
+        "head_lemma": "web",
+        "head": 7,
+        "tokens": [
+         6,
+         7
+        ]
+       },
+       "ARG0": {
+        "text": "",
+        "head_lemma": "you",
+        "head": null,
+        "tokens": [],
+        "implicit": true
+       }
+      },
+      "polarity": "positive",
+      "tense": "unmarked",
+      "aspect": "simple",
+      "modality": null,
+      "mood": "imperative",
+      "voice": "active",
+      "embedded_under": null,
+      "provenance": {
+       "syntax": "spacy/en_core_web_trf@3.8.0:clearnlp",
+       "structure": "csi.analyze@0.1",
+       "lemmas": "csi.morphology:morph-verb-v1.1+oewn"
+      }
+     },
+     {
+      "predicate": {
+       "lemma": "use",
+       "token": 2
+      },
+      "roles": {
+       "ARG1": {
+        "text": "Python",
+        "head_lemma": "python",
+        "head": 3,
+        "tokens": [
+         3
+        ]
+       },
+       "ARG0": {
+        "text": "",
+        "head_lemma": "you",
+        "head": null,
+        "tokens": [],
+        "implicit": true
+       }
+      },
+      "polarity": "negative",
+      "tense": "unmarked",
+      "aspect": "simple",
+      "modality": null,
+      "mood": "imperative",
+      "voice": "active",
+      "embedded_under": null,
+      "provenance": {
+       "syntax": "spacy/en_core_web_trf@3.8.0:clearnlp",
+       "structure": "csi.analyze@0.1",
+       "lemmas": "csi.morphology:morph-verb-v1.1+oewn"
+      }
+     }
+    ],
+    "problems": [],
+    "request_rereads": []
+   }
+  ],
+  "ambiguity": [],
+  "unsupported": [],
+  "confidence_note": "v0.1 confidence is uncalibrated (coverage only)"
+ },
+ "I committed the changes, but the log was not updated.": {
+  "csi_version": "0.1",
+  "text": "I committed the changes, but the log was not updated.",
+  "readings": [
+   {
+    "confidence": 1.0,
+    "tokens": [
+     {
+      "i": 0,
+      "idx": 0,
+      "text": "I",
+      "lemma": "I",
+      "upos": "PRON",
+      "tag": "PRP",
+      "feats": {
+       "Case": "Nom",
+       "Number": "Sing",
+       "Person": "1",
+       "PronType": "Prs"
+      },
+      "head": 1,
+      "dep": "nsubj",
+      "prop": 0
+     },
+     {
+      "i": 1,
+      "idx": 2,
+      "text": "committed",
+      "lemma": "commit",
+      "upos": "VERB",
+      "tag": "VBD",
+      "feats": {
+       "Tense": "Past",
+       "VerbForm": "Fin"
+      },
+      "head": 1,
+      "dep": "ROOT",
+      "prop": 0
+     },
+     {
+      "i": 2,
+      "idx": 12,
+      "text": "the",
+      "lemma": "the",
+      "upos": "DET",
+      "tag": "DT",
+      "feats": {
+       "Definite": "Def",
+       "PronType": "Art"
+      },
+      "head": 3,
+      "dep": "det",
+      "prop": 0
+     },
+     {
+      "i": 3,
+      "idx": 16,
+      "text": "changes",
+      "lemma": "change",
+      "upos": "NOUN",
+      "tag": "NNS",
+      "feats": {
+       "Number": "Plur"
+      },
+      "head": 1,
+      "dep": "dobj",
+      "prop": 0
+     },
+     {
+      "i": 4,
+      "idx": 23,
+      "text": ",",
+      "lemma": ",",
+      "upos": "PUNCT",
+      "tag": ",",
+      "feats": {
+       "PunctType": "Comm"
+      },
+      "head": 1,
+      "dep": "punct",
+      "prop": 0
+     },
+     {
+      "i": 5,
+      "idx": 25,
+      "text": "but",
+      "lemma": "but",
+      "upos": "CCONJ",
+      "tag": "CC",
+      "feats": {
+       "ConjType": "Cmp"
+      },
+      "head": 1,
+      "dep": "cc",
+      "prop": 0
+     },
+     {
+      "i": 6,
+      "idx": 29,
+      "text": "the",
+      "lemma": "the",
+      "upos": "DET",
+      "tag": "DT",
+      "feats": {
+       "Definite": "Def",
+       "PronType": "Art"
+      },
+      "head": 7,
+      "dep": "det",
+      "prop": 1
+     },
+     {
+      "i": 7,
+      "idx": 33,
+      "text": "log",
+      "lemma": "log",
+      "upos": "NOUN",
+      "tag": "NN",
+      "feats": {
+       "Number": "Sing"
+      },
+      "head": 10,
+      "dep": "nsubjpass",
+      "prop": 1
+     },
+     {
+      "i": 8,
+      "idx": 37,
+      "text": "was",
+      "lemma": "be",
+      "upos": "AUX",
+      "tag": "VBD",
+      "feats": {
+       "Mood": "Ind",
+       "Number": "Sing",
+       "Person": "3",
+       "Tense": "Past",
+       "VerbForm": "Fin"
+      },
+      "head": 10,
+      "dep": "auxpass",
+      "prop": 1
+     },
+     {
+      "i": 9,
+      "idx": 41,
+      "text": "not",
+      "lemma": "not",
+      "upos": "PART",
+      "tag": "RB",
+      "feats": {
+       "Polarity": "Neg"
+      },
+      "head": 10,
+      "dep": "neg",
+      "prop": 1
+     },
+     {
+      "i": 10,
+      "idx": 45,
+      "text": "updated",
+      "lemma": "update",
+      "upos": "VERB",
+      "tag": "VBN",
+      "feats": {
+       "Aspect": "Perf",
+       "Tense": "Past",
+       "VerbForm": "Part"
+      },
+      "head": 1,
+      "dep": "conj",
+      "prop": 1
+     },
+     {
+      "i": 11,
+      "idx": 52,
+      "text": ".",
+      "lemma": ".",
+      "upos": "PUNCT",
+      "tag": ".",
+      "feats": {
+       "PunctType": "Peri"
+      },
+      "head": 10,
+      "dep": "punct",
+      "prop": 1
+     }
+    ],
+    "propositions": [
+     {
+      "predicate": {
+       "lemma": "commit",
+       "token": 1
+      },
+      "roles": {
+       "ARG0": {
+        "text": "I",
+        "head_lemma": "i",
+        "head": 0,
+        "tokens": [
+         0
+        ]
+       },
+       "ARG1": {
+        "text": "the changes",
+        "head_lemma": "change",
+        "head": 3,
+        "tokens": [
+         2,
+         3
+        ]
+       }
+      },
+      "polarity": "positive",
+      "tense": "past",
+      "aspect": "simple",
+      "modality": null,
+      "mood": "indicative",
+      "voice": "active",
+      "embedded_under": null,
+      "provenance": {
+       "syntax": "spacy/en_core_web_trf@3.8.0:clearnlp",
+       "structure": "csi.analyze@0.1",
+       "lemmas": "csi.morphology:morph-verb-v1.1+oewn"
+      }
+     },
+     {
+      "predicate": {
+       "lemma": "update",
+       "token": 10
+      },
+      "roles": {
+       "ARG1": {
+        "text": "the log",
+        "head_lemma": "log",
+        "head": 7,
+        "tokens": [
+         6,
+         7
+        ]
+       }
+      },
+      "polarity": "negative",
+      "tense": "past",
+      "aspect": "simple",
+      "modality": null,
+      "mood": "indicative",
+      "voice": "passive",
+      "embedded_under": null,
+      "provenance": {
+       "syntax": "spacy/en_core_web_trf@3.8.0:clearnlp",
+       "structure": "csi.analyze@0.1",
+       "lemmas": "csi.morphology:morph-verb-v1.1+oewn"
+      }
+     }
+    ],
+    "problems": [],
+    "request_rereads": []
+   }
+  ],
+  "ambiguity": [],
+  "unsupported": [],
+  "confidence_note": "v0.1 confidence is uncalibrated (coverage only)"
+ },
+ "I could not commit the changes.": {
+  "csi_version": "0.1",
+  "text": "I could not commit the changes.",
+  "readings": [
+   {
+    "confidence": 1.0,
+    "tokens": [
+     {
+      "i": 0,
+      "idx": 0,
+      "text": "I",
+      "lemma": "I",
+      "upos": "PRON",
+      "tag": "PRP",
+      "feats": {
+       "Case": "Nom",
+       "Number": "Sing",
+       "Person": "1",
+       "PronType": "Prs"
+      },
+      "head": 3,
+      "dep": "nsubj",
+      "prop": 0
+     },
+     {
+      "i": 1,
+      "idx": 2,
+      "text": "could",
+      "lemma": "could",
+      "upos": "AUX",
+      "tag": "MD",
+      "feats": {
+       "VerbForm": "Fin"
+      },
+      "head": 3,
+      "dep": "aux",
+      "prop": 0
+     },
+     {
+      "i": 2,
+      "idx": 8,
+      "text": "not",
+      "lemma": "not",
+      "upos": "PART",
+      "tag": "RB",
+      "feats": {
+       "Polarity": "Neg"
+      },
+      "head": 3,
+      "dep": "neg",
+      "prop": 0
+     },
+     {
+      "i": 3,
+      "idx": 12,
+      "text": "commit",
+      "lemma": "commit",
+      "upos": "VERB",
+      "tag": "VB",
+      "feats": {
+       "VerbForm": "Inf"
+      },
+      "head": 3,
+      "dep": "ROOT",
+      "prop": 0
+     },
+     {
+      "i": 4,
+      "idx": 19,
+      "text": "the",
+      "lemma": "the",
+      "upos": "DET",
+      "tag": "DT",
+      "feats": {
+       "Definite": "Def",
+       "PronType": "Art"
+      },
+      "head": 5,
+      "dep": "det",
+      "prop": 0
+     },
+     {
+      "i": 5,
+      "idx": 23,
+      "text": "changes",
+      "lemma": "change",
+      "upos": "NOUN",
+      "tag": "NNS",
+      "feats": {
+       "Number": "Plur"
+      },
+      "head": 3,
+      "dep": "dobj",
+      "prop": 0
+     },
+     {
+      "i": 6,
+      "idx": 30,
+      "text": ".",
+      "lemma": ".",
+      "upos": "PUNCT",
+      "tag": ".",
+      "feats": {
+       "PunctType": "Peri"
+      },
+      "head": 3,
+      "dep": "punct",
+      "prop": 0
+     }
+    ],
+    "propositions": [
+     {
+      "predicate": {
+       "lemma": "commit",
+       "token": 3
+      },
+      "roles": {
+       "ARG0": {
+        "text": "I",
+        "head_lemma": "i",
+        "head": 0,
+        "tokens": [
+         0
+        ]
+       },
+       "ARG1": {
+        "text": "the changes",
+        "head_lemma": "change",
+        "head": 5,
+        "tokens": [
+         4,
+         5
+        ]
+       }
+      },
+      "polarity": "negative",
+      "tense": "unmarked",
+      "aspect": "simple",
+      "modality": "could",
+      "mood": "indicative",
+      "voice": "active",
+      "embedded_under": null,
+      "provenance": {
+       "syntax": "spacy/en_core_web_trf@3.8.0:clearnlp",
+       "structure": "csi.analyze@0.1",
+       "lemmas": "csi.morphology:morph-verb-v1.1+oewn"
+      }
+     }
+    ],
+    "problems": [],
+    "request_rereads": []
+   }
+  ],
+  "ambiguity": [],
+  "unsupported": [],
+  "confidence_note": "v0.1 confidence is uncalibrated (coverage only)"
+ }
+}

@@ -117,7 +117,10 @@ PHONE_OFFER = ("web_search", "python_interpreter")  # what a phone turn offers w
 def phone_runtime():
     import local_terminal
     import semantics
-    return semantics.Runtime(tools=PHONE_TOOLS, device="phone", risky=local_terminal.risky)
+    # CSI (research/semantic-interface, Experiment 1f) is off unless CLOVER_CSI_URL names a CSI service on this machine
+    url = os.environ.get("CLOVER_CSI_URL", "").strip()
+    return semantics.Runtime(tools=PHONE_TOOLS, device="phone", risky=local_terminal.risky,
+                             csi=semantics.csi_reader(url) if url else None)
 
 
 def align_turn(frame, res: dict[str, Any], remember_fn=None) -> list[str]:
