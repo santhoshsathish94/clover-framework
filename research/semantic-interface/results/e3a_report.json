@@ -1,0 +1,270 @@
+{
+ "accuracy": {
+  "dev_s": {
+   "D seed 1": 0.6645,
+   "D seed 2": 0.6541,
+   "D seed 3": 0.6549,
+   "shuffled-gloss control": 0.2841,
+   "random": 0.2615,
+   "mfs": 0.3756,
+   "lesk": 0.4222,
+   "untrained_encoder": 0.3957,
+   "n": 1246
+  },
+  "dev_z": {
+   "D seed 1": 0.6453,
+   "D seed 2": 0.6564,
+   "D seed 3": 0.6558,
+   "shuffled-gloss control": 0.2763,
+   "random": 0.2775,
+   "mfs": 0.3357,
+   "lesk": 0.3625,
+   "untrained_encoder": 0.4311,
+   "n": 1531
+  },
+  "test_s": {
+   "D seed 1": 0.6581,
+   "D seed 2": 0.6633,
+   "D seed 3": 0.6577,
+   "shuffled-gloss control": 0.2657,
+   "random": 0.262,
+   "mfs": 0.3648,
+   "lesk": 0.3981,
+   "untrained_encoder": 0.3824,
+   "n": 2492
+  },
+  "test_z": {
+   "D seed 1": 0.6679,
+   "D seed 2": 0.6594,
+   "D seed 3": 0.6577,
+   "shuffled-gloss control": 0.2644,
+   "random": 0.2758,
+   "mfs": 0.3321,
+   "lesk": 0.3609,
+   "untrained_encoder": 0.4022,
+   "n": 3056
+  },
+  "test_l": {
+   "D seed 1": 0.6806,
+   "D seed 2": 0.6846,
+   "D seed 3": 0.6605,
+   "shuffled-gloss control": 0.2671,
+   "random": 0.2789,
+   "mfs": 0.3097,
+   "lesk": 0.3427,
+   "untrained_encoder": 0.436,
+   "n": 1243
+  },
+  "test_n": {
+   "D seed 1": 0.5023,
+   "D seed 2": 0.4971,
+   "D seed 3": 0.4877,
+   "shuffled-gloss control": 0.2378,
+   "random": 0.2294,
+   "mfs": 0.6621,
+   "lesk": 0.5925,
+   "untrained_encoder": 0.3654,
+   "n": 12766
+  }
+ },
+ "criteria": {
+  "D1": {
+   "split": "test_s",
+   "pass": true,
+   "differences_with_95ci": {
+    "seed 1 - mfs": [
+     0.2933,
+     0.2665,
+     0.319
+    ],
+    "seed 1 - lesk": [
+     0.26,
+     0.2339,
+     0.2861
+    ],
+    "seed 1 - untrained_encoder": [
+     0.2757,
+     0.252,
+     0.299
+    ],
+    "seed 2 - mfs": [
+     0.2986,
+     0.2725,
+     0.3238
+    ],
+    "seed 2 - lesk": [
+     0.2652,
+     0.2396,
+     0.2909
+    ],
+    "seed 2 - untrained_encoder": [
+     0.2809,
+     0.2572,
+     0.3042
+    ],
+    "seed 3 - mfs": [
+     0.2929,
+     0.2673,
+     0.319
+    ],
+    "seed 3 - lesk": [
+     0.2596,
+     0.2339,
+     0.2853
+    ],
+    "seed 3 - untrained_encoder": [
+     0.2753,
+     0.252,
+     0.2978
+    ]
+   }
+  },
+  "D2": {
+   "split": "test_z",
+   "pass": true,
+   "differences_with_95ci": {
+    "seed 1 - mfs": [
+     0.3357,
+     0.3132,
+     0.358
+    ],
+    "seed 1 - lesk": [
+     0.3069,
+     0.2844,
+     0.3292
+    ],
+    "seed 1 - untrained_encoder": [
+     0.2657,
+     0.2454,
+     0.2857
+    ],
+    "seed 2 - mfs": [
+     0.3272,
+     0.3046,
+     0.3498
+    ],
+    "seed 2 - lesk": [
+     0.2984,
+     0.2755,
+     0.321
+    ],
+    "seed 2 - untrained_encoder": [
+     0.2572,
+     0.2366,
+     0.2781
+    ],
+    "seed 3 - mfs": [
+     0.3256,
+     0.3027,
+     0.3478
+    ],
+    "seed 3 - lesk": [
+     0.2968,
+     0.2739,
+     0.3194
+    ],
+    "seed 3 - untrained_encoder": [
+     0.2556,
+     0.2353,
+     0.2759
+    ]
+   }
+  },
+  "D3": {
+   "split": "test_l",
+   "pass": true,
+   "differences_with_95ci": {
+    "seed 1 - mfs": [
+     0.3709,
+     0.3355,
+     0.4055
+    ],
+    "seed 1 - lesk": [
+     0.3379,
+     0.3025,
+     0.3733
+    ],
+    "seed 1 - untrained_encoder": [
+     0.2446,
+     0.2108,
+     0.2784
+    ],
+    "seed 2 - mfs": [
+     0.3749,
+     0.3403,
+     0.4095
+    ],
+    "seed 2 - lesk": [
+     0.3419,
+     0.3073,
+     0.3773
+    ],
+    "seed 2 - untrained_encoder": [
+     0.2486,
+     0.2156,
+     0.2816
+    ],
+    "seed 3 - mfs": [
+     0.3508,
+     0.3162,
+     0.3862
+    ],
+    "seed 3 - lesk": [
+     0.3178,
+     0.2832,
+     0.3524
+    ],
+    "seed 3 - untrained_encoder": [
+     0.2245,
+     0.1899,
+     0.2583
+    ]
+   }
+  },
+  "D5": {
+   "split": "test_n",
+   "pass": false,
+   "differences_with_95ci": {
+    "seed 1 - lesk": [
+     -0.0902,
+     -0.1014,
+     -0.0791
+    ],
+    "seed 1 - untrained_encoder": [
+     0.1369,
+     0.1272,
+     0.1469
+    ],
+    "seed 2 - lesk": [
+     -0.0954,
+     -0.1065,
+     -0.0843
+    ],
+    "seed 2 - untrained_encoder": [
+     0.1317,
+     0.1218,
+     0.1417
+    ],
+    "seed 3 - lesk": [
+     -0.1048,
+     -0.1163,
+     -0.0936
+    ],
+    "seed 3 - untrained_encoder": [
+     0.1223,
+     0.1121,
+     0.1326
+    ]
+   }
+  },
+  "D4": {
+   "split": "test_z",
+   "control_minus_random": -0.0114,
+   "pass": true
+  }
+ },
+ "seed_range": {
+  "test_s": 0.0056,
+  "test_z": 0.0102
+ }
+}

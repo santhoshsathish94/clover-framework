@@ -1,0 +1,36 @@
+{
+ "experiment": "E1 = E6+E7 minimal pairs",
+ "csi_version": "0.1",
+ "parser": "spacy/en_core_web_trf",
+ "test_lexicon": "nonce2",
+ "sizes": {
+  "seen": 531,
+  "nonce2": 420
+ },
+ "label_balance": {
+  "seen": 0.226,
+  "nonce2": 0.2143
+ },
+ "csi": {
+  "nonce2": {
+   "balanced_accuracy": 1.0,
+   "coverage": 1.0,
+   "per_phenomenon_accuracy": {
+    "dist:attempt": 1.0,
+    "dist:future": 1.0,
+    "dist:modality": 1.0,
+    "dist:negation": 1.0,
+    "dist:passive_vs_negated_active": 1.0,
+    "dist:predicate": 1.0,
+    "dist:progressive": 1.0,
+    "dist:role_reversal": 1.0,
+    "equiv:negated_passive": 1.0,
+    "equiv:passive": 1.0
+   },
+   "n_errors": 0,
+   "errors": [],
+   "seconds": 20.4
+  }
+ },
+ "baselines": {}
+}

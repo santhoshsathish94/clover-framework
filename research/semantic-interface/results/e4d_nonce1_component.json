@@ -1,0 +1,314 @@
+{
+ "experiment": "E1 = E6+E7 minimal pairs",
+ "csi_version": "0.1",
+ "parser": "spacy/en_core_web_trf",
+ "test_lexicon": "nonce1",
+ "sizes": {
+  "seen": 531,
+  "nonce1": 501
+ },
+ "label_balance": {
+  "seen": 0.226,
+  "nonce1": 0.2156
+ },
+ "csi": {
+  "nonce1": {
+   "balanced_accuracy": 0.9259,
+   "coverage": 1.0,
+   "per_phenomenon_accuracy": {
+    "dist:attempt": 1.0,
+    "dist:future": 1.0,
+    "dist:modality": 1.0,
+    "dist:negation": 1.0,
+    "dist:passive_vs_negated_active": 1.0,
+    "dist:predicate": 1.0,
+    "dist:progressive": 1.0,
+    "dist:role_reversal": 1.0,
+    "equiv:negated_passive": 0.8333,
+    "equiv:passive": 0.8704
+   },
+   "n_errors": 16,
+   "errors": [
+    {
+     "a": "The rancher did not cribe the candle.",
+     "b": "The candle was not cribed by the rancher.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "cribe",
+       "b": "crib"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The usher did not cribe the candle.",
+     "b": "The candle was not cribed by the usher.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "cribe",
+       "b": "crib"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The glazier cribed the satchel.",
+     "b": "The satchel was cribed by the glazier.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG0",
+       "a": "glazi",
+       "b": "glazier"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The glazier did not cribe the satchel.",
+     "b": "The satchel was not cribed by the glazier.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "cribe",
+       "b": "crib"
+      },
+      {
+       "type": "role:ARG0",
+       "a": "glazi",
+       "b": "glazier"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The vicar did not sproch the anchor.",
+     "b": "The anchor was not sproched by the vicar.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "sproch",
+       "b": "sproche"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The porter did not sproch the lantern.",
+     "b": "The lantern was not sproched by the porter.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "sproch",
+       "b": "sproche"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The surgeon did not sproch the funnel.",
+     "b": "The funnel was not sproched by the surgeon.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "sproch",
+       "b": "sproche"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The glazier shretted the vicar.",
+     "b": "The vicar was shretted by the glazier.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG0",
+       "a": "glazi",
+       "b": "glazier"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The glazier frilted the usher.",
+     "b": "The usher was frilted by the glazier.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG0",
+       "a": "glazi",
+       "b": "glazier"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The glazier did not frilt the usher.",
+     "b": "The usher was not frilted by the glazier.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG0",
+       "a": "glazi",
+       "b": "glazier"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The vicar did not chuze the glazier.",
+     "b": "The glazier was not chuzed by the vicar.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "glazier",
+       "b": "glazi"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The glazier snommied the porter.",
+     "b": "The porter was snommied by the glazier.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG0",
+       "a": "glazi",
+       "b": "glazier"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The glazier did not snommy the porter.",
+     "b": "The porter was not snommied by the glazier.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG0",
+       "a": "glazi",
+       "b": "glazier"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The usher snommied the glazier.",
+     "b": "The glazier was snommied by the usher.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG1",
+       "a": "glazier",
+       "b": "glazi"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The glazier sprashed the courier.",
+     "b": "The courier was sprashed by the glazier.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG0",
+       "a": "glazi",
+       "b": "glazier"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The glazier sprashed the porter.",
+     "b": "The porter was sprashed by the glazier.",
+     "label": 1,
+     "phenomenon": "equiv:passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "role:ARG0",
+       "a": "glazi",
+       "b": "glazier"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    }
+   ],
+   "seconds": 23.4
+  }
+ },
+ "baselines": {}
+}

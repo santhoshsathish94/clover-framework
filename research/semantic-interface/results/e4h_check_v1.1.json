@@ -1,0 +1,10 @@
+{
+ "parser": "spacy/en_core_web_trf",
+ "lemmas": "/opt/clover-k3/meaning-core/csi/frozen/morph-verb-v1.1",
+ "lexicon": "nonce2",
+ "sentences_with_inflected_nonce_verb": 231,
+ "nonce_verb_not_the_predicate": 0,
+ "predicate_mismatches": 0,
+ "mismatches": [],
+ "not_predicate_examples": []
+}

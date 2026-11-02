@@ -215,6 +215,62 @@ spaCy sm vs a parser trained by us on EWT train. Failure analysis by constructio
 Senses, definitions, synonyms/antonyms, word forms, POS from OEWN with held-out synsets; learned sense choice in
 context vs most-frequent-sense baseline; relation prediction on held-out synset pairs.
 
+**Experiment 3a = Dictionary layer v1: what a word means in context (pre-registered 2026-11-02 05:40 UTC, before any
+3a code or data; `prototype/dict_meaning.py`).** The human: "The next challenge is teaching the dictionary layer to
+understand what words mean, not merely whether they exist." Question: can a learned dictionary layer choose the
+meaning (OEWN synset) a word has in a sentence, **including meanings it never saw used, by reading their
+definitions**? That is the dictionary's analogue of the morphology's unseen-lemma test: memorised sense-context pairs
+cannot answer it. **Inventory:** OEWN 2025 (CC BY 4.0) nouns, verbs, adjectives (head + satellite). **Data:** OEWN
+usage examples, each belonging to a synset; the target is the first token matching a single-word member lemma of that
+synset (or its listed/inflected form); only polysemous targets (>= 2 synsets for that lemma and part of speech).
+Splits by seed 3101: test-Z = all examples of 10% of synsets (**zero-shot meanings**: never seen used; their glosses
+never shown in training); dev-Z = another 5%; test-L = all examples whose target lemma is among 5% held-out lemmas
+(**unseen words**); for remaining synsets with >= 2 examples, 10% of examples to test-S (**seen meanings, new
+sentence**) and 5% to dev-S; the rest trains. Candidates at test = all synsets of the lemma and part of speech; in
+training only training synsets. **Natural text (N):** SemCor 3.0 (NLTK package; Princeton WordNet licence, permissive),
+sense keys mapped to OEWN ids, 20 Brown documents chosen by seed 3101, the same target filter; never used to train.
+**Learner D:** a bi-encoder after Blevins & Zettlemoyer (2020): a context encoder gives the target word's vector, a
+gloss encoder reads each candidate's definition, score = dot product, cross-entropy over candidates (up to 16 sampled
+in training, all at test); both encoders start from bert-base-uncased (Apache-2.0); trained on OEWN examples only;
+model selection on dev-S + dev-Z only; 3 seeds. **Baselines:** random; most-frequent sense (OEWN sense order); a
+simplified Lesk (content-word overlap of the sentence with each candidate's gloss and its other examples) as the
+hand-written rule; the same encoder untrained (target-word vector vs mean-pooled gloss, cosine); and a
+**shuffled-gloss control** (D trained with definitions permuted among training synsets, tested with the true ones).
+**Criteria, each for every seed, "beats" = the 95% bootstrap interval of the accuracy difference excludes 0:**
+D1 test-S: D beats MFS, Lesk and the untrained encoder. **D2 test-Z (the understanding test): D beats MFS, Lesk and the
+untrained encoder.** D3 test-L: the same. D4: the shuffled-gloss control on test-Z is within 0.05 of random (the
+learner uses what definitions say). D5 natural text: D beats Lesk and the untrained encoder; MFS is reported but is
+not a fair bar there, because WordNet's sense order was derived from SemCor counts. Seed range on D1/D2 reported.
+**Decision:** D1-D4 passing validates Dictionary v1 (choice of meaning) on dictionary contexts and D5 says whether it
+holds on running text; putting senses into CSI's analysis and comparison (e.g. "buy" and "purchase" sharing a
+meaning) is a separate pre-registered experiment. If D2 fails, the learner has memorised uses, not definitions; that
+is analysed before anything else. Relations between meanings (hypernymy, antonymy on held-out synsets) follow as 3b.
+
+**3a results (GPU server; `results/e3a_*.json`, `e3a_report.json`; data sha256 items.jsonl 06d31a02..., synsets.json
+9c221dfa...).** Data: 20,545 training examples; test-S 2,492; test-Z 3,056 (2,092 meanings never seen used); test-L
+1,243 (512 words never seen); SemCor 12,766 tokens from 20 documents (852 SemCor senses had no OEWN id and were
+dropped). Mean candidates per item 6.2-7.4.
+
+| Accuracy | D (seeds 1 / 2 / 3) | shuffled glosses | random | MFS | Lesk | untrained encoder |
+|---|---|---|---|---|---|---|
+| test-S seen meanings, new sentence | 0.658 / 0.663 / 0.658 | 0.266 | 0.262 | 0.365 | 0.398 | 0.382 |
+| **test-Z meanings never seen used** | **0.668 / 0.659 / 0.658** | 0.264 | 0.276 | 0.332 | 0.361 | 0.402 |
+| test-L words never seen | 0.681 / 0.685 / 0.661 | 0.267 | 0.279 | 0.310 | 0.343 | 0.436 |
+| SemCor running text | 0.502 / 0.497 / 0.488 | 0.238 | 0.229 | 0.662 | 0.593 | 0.365 |
+
+**D1, D2, D3 and D4 pass; D5 fails.** For every seed D beats MFS, Lesk and the untrained encoder on test-S, test-Z
+and test-L (smallest difference +0.22, every 95% interval above 0); the shuffled-gloss control is at chance on
+test-Z (-0.011 from random); seed range 0.006 (S) and 0.010 (Z). On SemCor D beats the untrained encoder (+0.12 to
++0.14) but is below Lesk by 0.09-0.10 (intervals entirely below 0) and far below MFS. **Reading.** The dictionary
+layer has learned to read definitions: it picks a meaning it has never seen used as accurately as one it has
+(0.66 vs 0.66), and a meaning of a word it has never seen (0.67); with the definitions shuffled it falls to chance,
+so it is the content of the definitions it uses. It has not learned how meanings are *used*: in running text a few
+senses of each word dominate, OEWN gives roughly one example per meaning, and the learner has no notion of
+frequency. Lesk wins there through its tie-break to WordNet's first sense (most SemCor tokens share no word with any
+gloss), and MFS (0.662) is partly fitted to this test, since WordNet's sense order was derived from SemCor counts. By
+the pre-registered decision, Dictionary v1 is validated for choosing meanings in dictionary-style contexts and is
+not validated for running text.
+
 ## Experiment 4 = E2: morphology (defined)
 Lemmatisation, inflection and derivation on UD features and OEWN derivation links, including unseen lemma+affix
 combinations; learned vs lookup baselines.
@@ -344,6 +400,76 @@ frozen component supplying lemmas for inflected verbs (VBD/VBN/VBG/VBZ), plural 
 adjectives. **Pass:** with the component, zero predicate mismatches between inflected forms of the same nonce verb,
 and balanced accuracy >= 0.95 on covered pairs (coverage reported; trf may not parse every nonce verb as a verb, which
 is a parser limit, not a morphology result). The spaCy-lemma run is reported beside it.
+
+**4d amended (2026-11-02 05:20 UTC, after the human approved the scoped freeze and before the nonce1 data existed).**
+The component is the **frozen layered verb lemmatiser** (Morphology artefact `morph-verb-v1` + OEWN 2025 + the
+three-step composition), applied only inside its scope: VERB tokens tagged VBD/VBN/VBG/VBZ; nouns and adjectives keep
+spaCy's lemmas (not frozen). nonce1 verbs come from the 4c spelling classes with seed 20261104 and are excluded from
+UniMorph, from OEWN lemmas and forms, and from the 4c/4f/4g nonce sets (seeds 19, 107, 113); the 20 nouns are real
+words absent from the earlier lexicons, chosen by hand. **Predicate mismatch** = a sentence whose CSI predicate is an
+inflected form of a nonce1 verb but whose predicate lemma is not that verb's base form. Criteria unchanged.
+Deviation found while generating (before any 4d run): after those exclusions the -ck and vowel+w/y classes had only 1
+and 2 unused invented verbs left (their spelling space is small), so nonce1 has 13 transitive + 5 animate-object
+verbs instead of 14 + 7 (`morph-verb-v1.card.json` lists them).
+
+**Freeze (2026-11-02, human-approved scope).** `morph-verb-v1`: the 4c verb analyser trained on all 95,053 UniMorph
+verb pairs (116 edit classes, 24,882 suffix features; `morphology.json` sha256 21b22e4e..., `morphology.npz` 88004090...,
+4.8 MB), composed with OEWN 2025 (sha256 9ca6d1dc...). Reloaded from disk it reproduces 4g exactly (GUM verbs 0.9878,
+0 of 3,439 predictions differ; nonce seed 113 0.9557). Card: `results/morph-verb-v1.card.json`.
+
+**4d results (k3, trf; `results/e4d_*.json`). 4d fails as pre-registered; the frozen lemmatiser does not enter CSI.**
+
+| Lemmas | Balanced accuracy (coverage 1.0) | equiv:negated_passive | Predicate mismatches (of 275 sentences) |
+|---|---|---|---|
+| parser (trf) | 0.741 | 0.093 | 241, all 16 verbs affected |
+| frozen lemmatiser | **0.926** (< 0.95) | 0.833 | **26** (> 0), 2 verbs |
+
+The 26 mismatches are two verbs. "cribed" -> "crib" (14): the composition preferred a real word, although "crib"
+would inflect as "cribbed" - the known cost seen in 4g, now inside CSI. "sproched" -> "sproche" (12): the Morphology's
+own silent-e error after "ch" (the weakest 4c nonce class). All 16 remaining CSI errors are equivalence pairs: 6
+involve those two verbs' mismatches, and 11 involve a problem outside the frozen scope that occurs in both runs (one
+error has both): the parser's lemmatiser gives the noun "glazier" the lemma "glazi" in active sentences, so the roles
+differ. Without the noun errors the run would score 0.977; without the verb mismatches 0.954; the mismatch criterion
+needs the verbs fixed in any case. **Analysis.** (1) A dictionary word should be accepted as the lemma only if the Morphology,
+generating the observed form type from it, reproduces the observed form (analysis by synthesis: "crib" -> "cribbed",
+not "cribed"); this removes the error class that cost 2.2 points on nonce verbs in 4g. (2) An unseen-word lemma is
+uncertain by nature ("sproch"/"sproche" both inflect as "sproched"); CSI should carry the ranked alternatives rather
+than one lemma. (3) Nouns need the layered lemmatiser as well. Each is a change to a frozen component, so each needs
+its own pre-registered re-validation on data not yet examined.
+
+**Experiment 4h = verb lemmatiser v1.1: analysis by synthesis (pre-registered 2026-11-02 06:10 UTC, after the 4d
+analysis, before any 4h code or data).** One change to the composition, nothing else: in step 2 a candidate the
+Dictionary knows is accepted only if the Morphology, generating the observed form type (from the tag) from that
+candidate, reproduces the observed form; the generators are the 4c verb generators trained on all UniMorph verbs and
+used without their exception lexicon (UniMorph's archaic forms such as "fixt" must not veto "fixed"); listed forms
+(step 1) are unchanged. Artefact `morph-verb-v1.1` = the v1 analyser unchanged + those generators. Data never
+examined: **H1** real text = UD EWT *train* verb tokens (never used to evaluate lemmatisation; same selection as C4):
+v1.1 >= trf and v1.1 >= v1 - 0.002. **H2** nonce verbs, seed 127 (excluded from UniMorph, OEWN and every earlier nonce
+set): v1.1 >= 0.95 overall and >= Morphology alone - 0.005 (the 4g cost removed). **H3** integration: the 4d design on
+a new lexicon nonce2 (seed 20261105, same exclusions plus nonce1; only the five spelling classes that still have
+unused invented verbs - the -ck and vowel+w/y spaces are exhausted - 2 transitive + 1 animate-object verb each), with
+the heldout3 nouns so that the test isolates the verb lemmatiser (trf lemmatised those nouns correctly in 1c): zero
+predicate mismatches and balanced accuracy >= 0.95 with v1.1; v1 and parser lemmas reported beside it. **Decision:**
+H1-H3 passing lets v1.1 enter CSI for inflected verbs; otherwise the failure is analysed.
+
+**4h results (k3; `results/e4h_v11.json`, `e4h_nonce2_*.json`, `e4h_check_*.json`). 4h passes all three criteria;
+v1.1 is the CSI verb lemmatiser from now on.** Artefact `morph-verb-v1.1` (14 MB; `morphology.json` sha256
+3ac4000b..., `morphology.npz` 9e50db6f...; kept on k3 with v1, not in the repository: size, and the weights derive
+from UniMorph, CC BY-SA 3.0).
+
+| Test | v1.1 | v1 | Morphology alone | trf | Criterion |
+|---|---|---|---|---|---|
+| H1 EWT train verbs (n = 11,714) | **0.9925** | 0.9939 | 0.913 | 0.975 | >= trf and >= v1 - 0.002: **pass** (margin 0.0006) |
+| H2 nonce seed 127 (n = 2,000; 5 classes) | **0.972** | 0.942 | 0.972 | - | >= 0.95 and >= Morphology alone - 0.005: **pass** |
+| H3 nonce2 minimal pairs (420; trf) | **1.000, 0 mismatches** | 1.000, 3 mismatches | - | parser lemmas 0.800, 183 mismatches | 0 mismatches, >= 0.95: **pass** |
+
+What the synthesis check does: it removes the known-word errors on invented verbs completely (H2: the 4g/4d cost of
+3 points is gone; H3: v1's "bexing" -> "be" is rejected because "be" would give "being"). What it costs: on real
+text it rejects 19 correct dictionary lemmas where the generator mis-predicts stress-dependent doubling ("vomited",
+"orbiting", "totaling", "libeled" -> "vomitted" etc.) or where the treebank tags a base form as inflected ("follow",
+"save" tagged VBN), and fixes 2 - a net loss of 0.14 points that the pre-registered margin allows by 0.0006. Not
+covered: nouns and adjectives (not in scope), the -ck and vowel+w/y classes in H2/H3 (their invented-word space is
+used up), and H3's nouns were chosen to isolate verbs, so the parser's noun-lemma error of 4d ("glazier") remains.
 
 **Experiment 4e: is the novel-ending failure a property of the learner or of the task? (pre-registered 2026-11-02
 02:50 UTC, after the first 4c results showed C2 = 0.62 and before running 4e; `prototype/char_seq2seq.py`).** A

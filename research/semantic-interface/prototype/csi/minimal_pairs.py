@@ -30,6 +30,20 @@ TRANSITIVE = {
                  ("seal", "sealed", "sealed", "sealing"), ("smash", "smashed", "smashed", "smashing"),
                  ("hold", "held", "held", "holding"), ("lose", "lost", "lost", "losing"),
                  ("find", "found", "found", "finding")],
+    # Experiment 4d: invented verbs (seed 20261104; not in UniMorph, OEWN or the 4c/4f/4g nonce sets)
+    "nonce1": [("smon", "smonned", "smonned", "smonning"), ("snam", "snammed", "snammed", "snamming"),
+               ("thulk", "thulked", "thulked", "thulking"), ("thomp", "thomped", "thomped", "thomping"),
+               ("cribe", "cribed", "cribed", "cribing"), ("bove", "boved", "boved", "boving"),
+               ("shommy", "shommied", "shommied", "shommying"), ("lubby", "lubbied", "lubbied", "lubbying"),
+               ("swesh", "sweshed", "sweshed", "sweshing"), ("sproch", "sproched", "sproched", "sproching"),
+               ("vick", "vicked", "vicked", "vicking"), ("shey", "sheyed", "sheyed", "sheying"),
+               ("broy", "broyed", "broyed", "broying")],
+    # Experiment 4h: seed 20261105, same exclusions plus nonce1 and nonce seed 127 (-ck, vowel+w/y exhausted)
+    "nonce2": [("blig", "bligged", "bligged", "bligging"), ("screm", "scremmed", "scremmed", "scremming"),
+               ("thont", "thonted", "thonted", "thonting"), ("drord", "drorded", "drorded", "drording"),
+               ("vube", "vubed", "vubed", "vubing"), ("scrune", "scruned", "scruned", "scruning"),
+               ("drunny", "drunnied", "drunnied", "drunnying"), ("breggy", "breggied", "breggied", "breggying"),
+               ("bex", "bexed", "bexed", "bexing"), ("trich", "triched", "triched", "triching")],
 }
 ANIMATE_VERBS = {
     "seen": [("thank", "thanked", "thanked", "thanking"), ("help", "helped", "helped", "helping"),
@@ -48,6 +62,12 @@ ANIMATE_VERBS = {
                  ("tease", "teased", "teased", "teasing"), ("obey", "obeyed", "obeyed", "obeying"),
                  ("comfort", "comforted", "comforted", "comforting"), ("phone", "phoned", "phoned", "phoning"),
                  ("fight", "fought", "fought", "fighting")],
+    "nonce1": [("shret", "shretted", "shretted", "shretting"), ("frilt", "frilted", "frilted", "frilting"),
+               ("chuze", "chuzed", "chuzed", "chuzing"), ("snommy", "snommied", "snommied", "snommying"),
+               ("sprash", "sprashed", "sprashed", "sprashing")],
+    "nonce2": [("plep", "plepped", "plepped", "plepping"), ("kost", "kosted", "kosted", "kosting"),
+               ("thrube", "thrubed", "thrubed", "thrubing"), ("dratty", "drattied", "drattied", "drattying"),
+               ("swux", "swuxed", "swuxed", "swuxing")],
 }
 DITRANSITIVE = {
     "seen": [("give", "gave", "given", "giving"), ("send", "sent", "sent", "sending"),
@@ -64,21 +84,26 @@ DITRANSITIVE = {
                  ("hurl", "hurled", "hurled", "hurling"), ("roll", "rolled", "rolled", "rolling"),
                  ("bounce", "bounced", "bounced", "bouncing"), ("flip", "flipped", "flipped", "flipping"),
                  ("forward", "forwarded", "forwarded", "forwarding"), ("sling", "slung", "slung", "slinging")],
+    "nonce1": [],
+    "nonce2": [],
 }
 ANIMATE = {
     "seen": ["child", "teacher", "student", "doctor", "farmer", "girl", "boy", "woman", "nurse", "pilot"],
     "unseen": ["lawyer", "sailor", "painter", "baker", "dancer", "soldier", "driver", "judge", "tourist", "singer"],
     "heldout2": ["miner", "clerk", "chef", "guard", "poet", "banker", "plumber", "actor", "monk", "waiter"],
     "heldout3": ["tailor", "nanny", "butcher", "jockey", "pirate", "senator", "barber", "cashier", "sheriff", "teenager"],
+    "nonce1": ["florist", "surgeon", "janitor", "porter", "rancher", "broker", "glazier", "usher", "vicar", "courier"],
 }
 THINGS = {
     "seen": ["door", "window", "box", "car", "table", "letter", "bottle", "fence", "bag", "chair"],
     "unseen": ["drawer", "gate", "crate", "truck", "desk", "parcel", "jar", "wall", "basket", "bench"],
     "heldout2": ["coin", "rope", "lamp", "shelf", "blanket", "ladder", "kettle", "mirror", "bucket", "carpet"],
     "heldout3": ["ball", "pen", "key", "cup", "plate", "brick", "towel", "hammer", "pillow", "sponge"],
+    "nonce1": ["lantern", "saddle", "funnel", "trowel", "barrel", "anchor", "basin", "candle", "satchel", "goblet"],
 }
-DATIVE_PER_VERB = {"seen": 3, "unseen": 3, "heldout2": 6, "heldout3": 6}
-SEED = {"seen": 1234, "unseen": 1234, "heldout2": 20261102, "heldout3": 20261103}
+DATIVE_PER_VERB = {"seen": 3, "unseen": 3, "heldout2": 6, "heldout3": 6, "nonce1": 0, "nonce2": 0}
+SEED = {"seen": 1234, "unseen": 1234, "heldout2": 20261102, "heldout3": 20261103, "nonce1": 20261104, "nonce2": 20261105}
+ANIMATE["nonce2"], THINGS["nonce2"] = ANIMATE["heldout3"], THINGS["heldout3"]  # isolates the verb lemmatiser (4h H3)
 
 
 def _pairs_for(agent, v, patient, other_v, animate_patient):
@@ -125,7 +150,7 @@ def generate(lexicon, n_per_verb=3, seed=None):
 
 if __name__ == "__main__":
     import collections
-    for lex in ("seen", "unseen", "heldout2", "heldout3"):
+    for lex in ("seen", "unseen", "heldout2", "heldout3", "nonce1", "nonce2"):
         rows = generate(lex)
         print(lex, len(rows), dict(collections.Counter(r["phenomenon"] for r in rows)))
         print("  e.g.", rows[0]["a"], "|", rows[0]["b"])

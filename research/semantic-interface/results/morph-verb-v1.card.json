@@ -1,0 +1,137 @@
+{
+ "artefact": "morph-verb-v1",
+ "files": {
+  "morphology.json": "21b22e4ef47c6a5d1c0b9c9db46cb78af8aa387877f682cb8b741f666a563dd2",
+  "morphology.npz": "8800409ebbc3015ed2ac69db891fc83daf13b7c4b1f0ae4443f9b732d52bfb37"
+ },
+ "sizes": {
+  "morphology.json": 502204,
+  "morphology.npz": 4311258
+ },
+ "oewn_sha256": "9ca6d1dcb75f822fdd66617f7d9da48142ace38dd544d6ad5e2feca1674ad3fe",
+ "unimorph_sha256": "20a191cefdc7cad6fa74b00f49d6f658684f17b14541aae372e5a3d5a8c15c67",
+ "n_training_pairs": 95053,
+ "n_edit_classes": 116,
+ "n_features": 24882,
+ "gum_verbs": {
+  "n": 3439,
+  "layered_trained": 0.9878,
+  "layered_frozen": 0.9878,
+  "predictions_differing": 0
+ },
+ "nonce113_layered_frozen": 0.9557,
+ "nonce1": {
+  "transitive": [
+   [
+    "smon",
+    "smonned",
+    "smonned",
+    "smonning"
+   ],
+   [
+    "snam",
+    "snammed",
+    "snammed",
+    "snamming"
+   ],
+   [
+    "thulk",
+    "thulked",
+    "thulked",
+    "thulking"
+   ],
+   [
+    "thomp",
+    "thomped",
+    "thomped",
+    "thomping"
+   ],
+   [
+    "cribe",
+    "cribed",
+    "cribed",
+    "cribing"
+   ],
+   [
+    "bove",
+    "boved",
+    "boved",
+    "boving"
+   ],
+   [
+    "shommy",
+    "shommied",
+    "shommied",
+    "shommying"
+   ],
+   [
+    "lubby",
+    "lubbied",
+    "lubbied",
+    "lubbying"
+   ],
+   [
+    "swesh",
+    "sweshed",
+    "sweshed",
+    "sweshing"
+   ],
+   [
+    "sproch",
+    "sproched",
+    "sproched",
+    "sproching"
+   ],
+   [
+    "vick",
+    "vicked",
+    "vicked",
+    "vicking"
+   ],
+   [
+    "shey",
+    "sheyed",
+    "sheyed",
+    "sheying"
+   ],
+   [
+    "broy",
+    "broyed",
+    "broyed",
+    "broying"
+   ]
+  ],
+  "animate": [
+   [
+    "shret",
+    "shretted",
+    "shretted",
+    "shretting"
+   ],
+   [
+    "frilt",
+    "frilted",
+    "frilted",
+    "frilting"
+   ],
+   [
+    "chuze",
+    "chuzed",
+    "chuzed",
+    "chuzing"
+   ],
+   [
+    "snommy",
+    "snommied",
+    "snommied",
+    "snommying"
+   ],
+   [
+    "sprash",
+    "sprashed",
+    "sprashed",
+    "sprashing"
+   ]
+  ]
+ }
+}

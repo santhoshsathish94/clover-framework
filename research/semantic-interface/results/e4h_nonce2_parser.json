@@ -1,0 +1,649 @@
+{
+ "experiment": "E1 = E6+E7 minimal pairs",
+ "csi_version": "0.1",
+ "parser": "spacy/en_core_web_trf",
+ "test_lexicon": "nonce2",
+ "sizes": {
+  "seen": 531,
+  "nonce2": 420
+ },
+ "label_balance": {
+  "seen": 0.226,
+  "nonce2": 0.2143
+ },
+ "csi": {
+  "nonce2": {
+   "balanced_accuracy": 0.8,
+   "coverage": 1.0,
+   "per_phenomenon_accuracy": {
+    "dist:attempt": 1.0,
+    "dist:future": 1.0,
+    "dist:modality": 1.0,
+    "dist:negation": 1.0,
+    "dist:passive_vs_negated_active": 1.0,
+    "dist:predicate": 1.0,
+    "dist:progressive": 1.0,
+    "dist:role_reversal": 1.0,
+    "equiv:negated_passive": 0.2,
+    "equiv:passive": 1.0
+   },
+   "n_errors": 36,
+   "errors": [
+    {
+     "a": "The teenager did not blig the key.",
+     "b": "The key was not bligged by the teenager.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "blig",
+       "b": "bligge"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The pirate did not blig the pillow.",
+     "b": "The pillow was not bligged by the pirate.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "blig",
+       "b": "bligge"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The barber did not blig the brick.",
+     "b": "The brick was not bligged by the barber.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "blig",
+       "b": "bligge"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The barber did not screm the cup.",
+     "b": "The cup was not scremmed by the barber.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "screm",
+       "b": "scremme"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The butcher did not screm the brick.",
+     "b": "The brick was not scremmed by the butcher.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "screm",
+       "b": "scremme"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The nanny did not screm the hammer.",
+     "b": "The hammer was not scremmed by the nanny.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "screm",
+       "b": "scremme"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The cashier did not thont the key.",
+     "b": "The key was not thonted by the cashier.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "thont",
+       "b": "thonte"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The cashier did not thont the brick.",
+     "b": "The brick was not thonted by the cashier.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "thont",
+       "b": "thonte"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The jockey did not thont the plate.",
+     "b": "The plate was not thonted by the jockey.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "thont",
+       "b": "thonte"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The jockey did not drord the ball.",
+     "b": "The ball was not drorded by the jockey.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "drord",
+       "b": "drorde"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The sheriff did not drord the ball.",
+     "b": "The ball was not drorded by the sheriff.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "drord",
+       "b": "drorde"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The nanny did not drord the plate.",
+     "b": "The plate was not drorded by the nanny.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "drord",
+       "b": "drorde"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The senator did not drunny the cup.",
+     "b": "The cup was not drunnied by the senator.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "drunny",
+       "b": "drunnie"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The teenager did not drunny the sponge.",
+     "b": "The sponge was not drunnied by the teenager.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "drunny",
+       "b": "drunnie"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The senator did not drunny the cup.",
+     "b": "The cup was not drunnied by the senator.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "drunny",
+       "b": "drunnie"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The tailor did not breggy the plate.",
+     "b": "The plate was not breggied by the tailor.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "breggy",
+       "b": "breggie"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The nanny did not breggy the cup.",
+     "b": "The cup was not breggied by the nanny.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "breggy",
+       "b": "breggie"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The tailor did not breggy the pillow.",
+     "b": "The pillow was not breggied by the tailor.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "breggy",
+       "b": "breggie"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The sheriff did not bex the brick.",
+     "b": "The brick was not bexed by the sheriff.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "bex",
+       "b": "bexe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The teenager did not bex the hammer.",
+     "b": "The hammer was not bexed by the teenager.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "bex",
+       "b": "bexe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The barber did not bex the cup.",
+     "b": "The cup was not bexed by the barber.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "bex",
+       "b": "bexe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The tailor did not trich the key.",
+     "b": "The key was not triched by the tailor.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "trich",
+       "b": "triche"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The cashier did not trich the brick.",
+     "b": "The brick was not triched by the cashier.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "trich",
+       "b": "triche"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The tailor did not trich the pillow.",
+     "b": "The pillow was not triched by the tailor.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "trich",
+       "b": "triche"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The teenager did not plep the tailor.",
+     "b": "The tailor was not plepped by the teenager.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "plep",
+       "b": "pleppe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The sheriff did not plep the butcher.",
+     "b": "The butcher was not plepped by the sheriff.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "plep",
+       "b": "pleppe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The nanny did not plep the tailor.",
+     "b": "The tailor was not plepped by the nanny.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "plep",
+       "b": "pleppe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The pirate did not kost the barber.",
+     "b": "The barber was not kosted by the pirate.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "kost",
+       "b": "koste"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The senator did not kost the barber.",
+     "b": "The barber was not kosted by the senator.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "kost",
+       "b": "koste"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The pirate did not kost the senator.",
+     "b": "The senator was not kosted by the pirate.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "kost",
+       "b": "koste"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The jockey did not dratty the cashier.",
+     "b": "The cashier was not drattied by the jockey.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "dratty",
+       "b": "drattie"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The senator did not dratty the jockey.",
+     "b": "The jockey was not drattied by the senator.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "dratty",
+       "b": "drattie"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The sheriff did not dratty the cashier.",
+     "b": "The cashier was not drattied by the sheriff.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "dratty",
+       "b": "drattie"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The sheriff did not swux the cashier.",
+     "b": "The cashier was not swuxed by the sheriff.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "swux",
+       "b": "swuxe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The sheriff did not swux the barber.",
+     "b": "The barber was not swuxed by the sheriff.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "swux",
+       "b": "swuxe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    },
+    {
+     "a": "The sheriff did not swux the butcher.",
+     "b": "The butcher was not swuxed by the sheriff.",
+     "label": 1,
+     "phenomenon": "equiv:negated_passive",
+     "pred": 0,
+     "differences": [
+      {
+       "type": "predicate",
+       "a": "swux",
+       "b": "swuxe"
+      }
+     ],
+     "notes": [
+      "voice differs (active vs passive): grammatical, not a meaning difference"
+     ]
+    }
+   ],
+   "seconds": 17.6
+  }
+ },
+ "baselines": {}
+}

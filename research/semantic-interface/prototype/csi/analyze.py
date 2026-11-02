@@ -8,6 +8,9 @@ import os
 CSI_VERSION = "0.1"
 SPACY_MODEL = os.environ.get("CSI_PARSER", "en_core_web_sm")  # Experiment 2 compares parsers; recorded in provenance
 PARSER = f"spacy/{SPACY_MODEL}"
+CSI_MORPH = os.environ.get("CSI_MORPH")  # frozen verb lemmatiser artefact (Experiment 4d); unset = parser lemmas
+CSI_DICT = os.environ.get("CSI_DICT")  # OEWN LMF file, the dictionary layer the lemmatiser composes with
+TAG_FORM = {"VBD": "past", "VBN": "past_participle", "VBG": "gerund", "VBZ": "third_singular"}  # frozen scope: inflected VERB tokens
 FUTURE = {"will", "shall"}
 FINITE_TENSE = {"VBD": "past", "VBZ": "present", "VBP": "present"}
 # the same correspondences under the two label schemes (section 3 = ClearNLP, section 3b = UD)
@@ -26,6 +29,13 @@ def _nlp():
     labels = set(nlp.get_pipe("parser").labels)
     scheme = "ud" if "obj" in labels and "dobj" not in labels else "clearnlp"
     return nlp, f"{PARSER}@{nlp.meta.get('version', '?')}:{scheme}", scheme
+
+
+@functools.lru_cache(maxsize=1)
+def _lemmatiser():
+    from .dictionary import Dictionary
+    from .morphology import load
+    return load(CSI_MORPH), Dictionary.load_oewn(CSI_DICT), f"csi.morphology:{os.path.basename(CSI_MORPH.rstrip('/'))}+oewn"
 
 
 def _kids(tok, deps):
@@ -135,9 +145,18 @@ def _proposition(doc, parser_id, scheme="clearnlp"):
 def analyze(text):
     nlp, parser_id, scheme = _nlp()
     doc = nlp(text)
+    lemma_source = parser_id
+    if CSI_MORPH:
+        from .dictionary import lemmatise
+        morph, dic, lemma_source = _lemmatiser()
+        for t in doc:
+            if t.pos_ == "VERB" and t.tag_ in TAG_FORM:
+                t.lemma_ = lemmatise(t.text.lower(), "verb", morph, dic, form_type=TAG_FORM[t.tag_])[0]
     tokens = [{"i": t.i, "text": t.text, "lemma": t.lemma_, "upos": t.pos_, "tag": t.tag_,
                "feats": t.morph.to_dict(), "head": t.head.i, "dep": t.dep_} for t in doc]
     prop, problem = _proposition(doc, parser_id, scheme)
+    if prop:
+        prop["provenance"]["lemmas"] = lemma_source
     unsupported = [problem] if problem else []
     reading = {"confidence": 1.0 if not unsupported else 0.5, "tokens": tokens,
                "propositions": [prop] if prop else []}

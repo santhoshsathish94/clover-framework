@@ -43,13 +43,15 @@ class Dictionary:
         return out
 
 
-def lemmatise(form, cls, morphology, dictionary, n=5):
-    """-> (lemma, source); source is "listed", "known" or "unknown" (no candidate is a dictionary word)."""
+def lemmatise(form, cls, morphology, dictionary, n=5, form_type=None):
+    """-> (lemma, source); source is "listed", "known" or "unknown" (no candidate is a dictionary word). Given the
+    form type and a morphology with generators (v1.1), a known candidate must regenerate the observed form."""
     cands = morphology.candidates(form, cls, n)
     listed = dictionary.listed(form, cls)
     if listed:
         return min(sorted(listed), key=lambda l: cands.index(l) if l in cands else n), "listed"
+    check = form_type is not None and (cls, form_type) in morphology.generators
     for c in cands:
-        if dictionary.knows(c, cls):
+        if dictionary.knows(c, cls) and (not check or morphology.generate(c, cls, form_type, use_exceptions=False) == form):
             return c, "known"
     return (cands[0] if cands else form), "unknown"

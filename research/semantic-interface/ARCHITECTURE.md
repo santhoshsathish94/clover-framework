@@ -17,12 +17,20 @@ tested. Stage 2 (experiential process understanding) is out of scope.
 Principle: written parts stay small, listed and measured; whenever a written part fails measurably, the next experiment
 replaces it with a learned one. Every field records which layer and which component produced it.
 
-Layer model (human, 2026-11-02; **a core CSI design principle**, decided by the human after Experiment 4g): **Dictionary** = what a word means (L4, OEWN; also which words exist and their
+Layer model (human, 2026-11-02; **a core CSI design principle**, decided by the human after Experiment 4g):
+**Dictionary** = what a word means (L4, OEWN; also which words exist and their
 listed irregular forms); **Morphology** = how a word is constructed and changes (the learned component
 `csi/morphology.py`, split out of L1); **Grammar** = how words function together (L2 and the correspondences of L3);
 **Semantics** = what the resulting expression means (L3 propositions, L5, L6). Each layer is validated on its own job,
 and a layer does not absorb another's knowledge: lemmatisation composes Grammar (class), Morphology (ranked
 candidates) and Dictionary (`csi/dictionary.py`, Experiment 4g).
+
+Frozen components (artefact, validated scope, status; details and checksums in EXPERIMENTS.md):
+
+| Component | Validated scope | Documented boundary | Status |
+|---|---|---|---|
+| `morph-verb-v1` (verb lemmatiser: Morphology + OEWN) | inflected verbs (VBD/VBN/VBG/VBZ) inside English ending families: held-out lemmas 0.96, fresh real text 0.988 (trf 0.960) | ending families never seen (0.56-0.76); prefers a known word for unknown verbs | frozen; not in CSI (4d failed) |
+| `morph-verb-v1.1` (v1 + analysis by synthesis) | as v1; real text 0.9925 (trf 0.975), invented verbs 0.972, CSI minimal pairs with invented verbs 1.000 and no predicate mismatch | ending families never seen; stress-dependent doubling in its generator can veto a correct lemma | frozen; **the CSI verb lemmatiser** (4h passed; enabled with `CSI_MORPH` + `CSI_DICT`, recorded in each proposition's provenance) |
 
 ## 2. Interface contract v0.1 (model-independent; JSON)
 

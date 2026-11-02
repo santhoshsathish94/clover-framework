@@ -1,0 +1,203 @@
+{
+ "experiment": "E4h verb lemmatiser v1.1",
+ "artefact": {
+  "morphology.json": "3ac4000bbae06132d4b9d981d242123a79f62fc812fd75f185df6ecf516a1d38",
+  "morphology.npz": "9e50db6fb7001166df1ac4d07dc6fd7ad355205a66dcd8964ec7e98188414e10"
+ },
+ "h1_ewt_train_verbs": {
+  "n": 11714,
+  "accuracy": {
+   "v1.1": 0.9925,
+   "v1": 0.9939,
+   "morphology_alone": 0.9128,
+   "en_core_web_trf": 0.975,
+   "en_core_web_sm": 0.9636
+  },
+  "v1_vs_v1.1": {
+   "v1 right, v1.1 wrong": 19,
+   "both wrong": 3,
+   "v1.1 right, v1 wrong": 2
+  },
+  "changed_examples": [
+   "backpedalling: v1 backpedal, v1.1 backpedall (gold backpedal)",
+   "buring: v1 bur, v1.1 bure (gold burn)",
+   "follow: v1 follow, v1.1 follee (gold follow)",
+   "hear: v1 hear, v1.1 hea (gold hear)",
+   "libeled: v1 libel, v1.1 libelead (gold libel)",
+   "lied: v1 lie, v1.1 ly (gold lie)",
+   "manged: v1 man, v1.1 mang (gold manage)",
+   "name: v1 name, v1.1 num (gold name)",
+   "orbiting: v1 orbit, v1.1 orbite (gold orbit)",
+   "pending: v1 pen, v1.1 pend (gold pend)",
+   "ruined: v1 ruin, v1.1 ruine (gold ruin)",
+   "ruining: v1 ruin, v1.1 ruine (gold ruin)",
+   "save: v1 save, v1.1 sive (gold save)",
+   "sez: v1 see, v1.1 se (gold say)",
+   "suppose: v1 suppose, v1.1 suppise (gold suppose)",
+   "totaling: v1 total, v1.1 totale (gold total)",
+   "tryed: v1 try, v1.1 trye (gold try)",
+   "vomited: v1 vomit, v1.1 vomite (gold vomit)",
+   "vomiting: v1 vomit, v1.1 vomite (gold vomit)"
+  ]
+ },
+ "h2_nonce127": {
+  "doubling": {
+   "n_lemmas": 100,
+   "n": 400,
+   "v1.1": 1.0,
+   "v1": 1.0,
+   "morphology_alone": 1.0,
+   "errors": []
+  },
+  "cluster": {
+   "n_lemmas": 100,
+   "n": 400,
+   "v1.1": 1.0,
+   "v1": 0.96,
+   "morphology_alone": 1.0,
+   "errors": []
+  },
+  "silent_e": {
+   "n_lemmas": 100,
+   "n": 400,
+   "v1.1": 0.92,
+   "v1": 0.8075,
+   "morphology_alone": 0.92,
+   "errors": [
+    "koned -> kon (want kone)",
+    "koned -> kon (want kone)",
+    "koning -> kon (want kone)",
+    "kuving -> kuv (want kuve)",
+    "voning -> von (want vone)"
+   ]
+  },
+  "consonant_y": {
+   "n_lemmas": 100,
+   "n": 400,
+   "v1.1": 1.0,
+   "v1": 1.0,
+   "morphology_alone": 1.0,
+   "errors": []
+  },
+  "sibilant": {
+   "n_lemmas": 100,
+   "n": 400,
+   "v1.1": 0.94,
+   "v1": 0.94,
+   "morphology_alone": 0.94,
+   "errors": [
+    "pliched -> pliche (want plich)",
+    "pliched -> pliche (want plich)",
+    "pliches -> pliche (want plich)",
+    "slussed -> slus (want sluss)",
+    "slussed -> slus (want sluss)"
+   ]
+  },
+  "_all": {
+   "n": 2000,
+   "v1.1": 0.972,
+   "v1": 0.9415,
+   "morphology_alone": 0.972
+  }
+ },
+ "nonce2": {
+  "transitive": [
+   [
+    "blig",
+    "bligged",
+    "bligged",
+    "bligging"
+   ],
+   [
+    "screm",
+    "scremmed",
+    "scremmed",
+    "scremming"
+   ],
+   [
+    "thont",
+    "thonted",
+    "thonted",
+    "thonting"
+   ],
+   [
+    "drord",
+    "drorded",
+    "drorded",
+    "drording"
+   ],
+   [
+    "vube",
+    "vubed",
+    "vubed",
+    "vubing"
+   ],
+   [
+    "scrune",
+    "scruned",
+    "scruned",
+    "scruning"
+   ],
+   [
+    "drunny",
+    "drunnied",
+    "drunnied",
+    "drunnying"
+   ],
+   [
+    "breggy",
+    "breggied",
+    "breggied",
+    "breggying"
+   ],
+   [
+    "bex",
+    "bexed",
+    "bexed",
+    "bexing"
+   ],
+   [
+    "trich",
+    "triched",
+    "triched",
+    "triching"
+   ]
+  ],
+  "animate": [
+   [
+    "plep",
+    "plepped",
+    "plepped",
+    "plepping"
+   ],
+   [
+    "kost",
+    "kosted",
+    "kosted",
+    "kosting"
+   ],
+   [
+    "thrube",
+    "thrubed",
+    "thrubed",
+    "thrubing"
+   ],
+   [
+    "dratty",
+    "drattied",
+    "drattied",
+    "drattying"
+   ],
+   [
+    "swux",
+    "swuxed",
+    "swuxed",
+    "swuxing"
+   ]
+  ],
+  "classes_skipped": [
+   "ck (0 unused)",
+   "vowel_wy (0 unused)"
+  ]
+ }
+}

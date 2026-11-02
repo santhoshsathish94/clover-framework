@@ -101,3 +101,17 @@
   - **Waiting on the human:** scoped freeze of the verb lemmatiser (Morphology validated within English ending
     families, unseen families as the documented boundary, OEWN as the Dictionary) - a post-hoc re-scoping of the 4c
     rule, so their decision; then 4d (integration on nonce minimal pairs) before it enters CSI.
+- 2026-11-02 ~05:00-05:50 UTC: freeze approved by the human and done (`morph-verb-v1`, reproduces 4g exactly); commit
+  af79e7c pushed. **4d fails as pre-registered** (balanced accuracy 0.926 < 0.95, 26 predicate mismatches; parser
+  lemmas 0.741 and 241): two invented verbs ("cribed" -> real word "crib"; "sproched" -> "sproche") and a parser noun
+  lemma ("glazier" -> "glazi"). The frozen lemmatiser stays out of CSI; fixes identified (analysis by synthesis,
+  ranked lemma alternatives, nouns). Experiment 3a (dictionary meaning) pre-registered.
+- 2026-11-02 ~06:10-07:05 UTC: **4h passes** (pre-registered): verb lemmatiser v1.1 = v1 + analysis by synthesis
+  (a dictionary word is the lemma only if generating the observed form from it reproduces that form). EWT train verbs
+  0.9925 (trf 0.975; v1 0.9939), invented verbs 0.972 (the known-word cost removed), nonce2 minimal pairs 1.000 with
+  no predicate mismatch. v1.1 is the CSI verb lemmatiser (artefact on k3, not in the repository).
+- 2026-11-02 ~06:00-07:30 UTC: **Experiment 3a (dictionary layer v1, what a word means in context)**: D1-D4 pass, D5
+  fails. A bi-encoder (bert-base, trained on OEWN examples only) chooses meanings it never saw used as well as seen
+  ones (0.66 vs 0.66; MFS 0.33, Lesk 0.36, untrained 0.40), and meanings of unseen words (0.67); shuffled definitions
+  give chance. On SemCor running text 0.49-0.50 < Lesk 0.59 < MFS 0.66: it reads definitions but knows nothing about
+  how often meanings are used.
