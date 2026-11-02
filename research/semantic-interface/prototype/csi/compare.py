@@ -7,7 +7,7 @@ v0.3-lexical (Experiment 3c2): instead, they agree if the dictionary's vectors o
 proposition. The dictionary supplies meanings and vectors as evidence; the decision is made here."""
 from .analyze import CSI_CLOSENESS, CSI_VERSION, analyze
 
-FIELDS = ("polarity", "tense", "aspect", "modality", "embedded_under")
+FIELDS = ("polarity", "tense", "aspect", "modality", "mood", "embedded_under")
 ROLES = ("ARG0", "ARG1", "ARG2")
 
 

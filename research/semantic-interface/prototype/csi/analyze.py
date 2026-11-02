@@ -1,7 +1,9 @@
 """CSI v0.1 analysis: a learned parser gives tokens, lemmas, tags, morphology and dependencies; the written structural
 correspondences of ARCHITECTURE.md section 3 (and only those) turn them into a proposition. The parser is chosen by
 CSI_PARSER (default spaCy en_core_web_sm, ClearNLP labels); a UD-label parser (e.g. our EWT-trained pipeline) gets the
-same correspondences written for UD labels (ARCHITECTURE.md section 3b). Output follows the JSON contract (section 2)."""
+same correspondences written for UD labels (ARCHITECTURE.md section 3b). Output follows the JSON contract (section 2).
+v0.1r (Experiment 1d, section 3c): every sentence and its coordinated or paratactic clauses, imperatives, and the
+proposition that governs each token."""
 import functools
 import os
 
@@ -15,6 +17,9 @@ CSI_DICT = os.environ.get("CSI_DICT")  # OEWN LMF file, the dictionary layer the
 TAG_FORM = {"VBD": "past", "VBN": "past_participle", "VBG": "gerund", "VBZ": "third_singular"}  # frozen scope: inflected VERB tokens
 FUTURE = {"will", "shall"}
 FINITE_TENSE = {"VBD": "past", "VBZ": "present", "VBP": "present"}
+SUBJECTS = {"nsubj", "nsubjpass", "csubj", "csubjpass", "expl", "nsubj:pass", "csubj:pass"}
+ATTACHED = {"conj", "parataxis"}  # rule 9
+ADDRESSEE = {"text": "", "head_lemma": "you", "head": None, "tokens": [], "implicit": True}  # rule 10
 # the same correspondences under the two label schemes (section 3 = ClearNLP, section 3b = UD)
 SCHEME = {
     "clearnlp": {"aux": {"aux", "auxpass"}, "passive": {"nsubjpass", "auxpass", "csubjpass"}, "subjpass": {"nsubjpass"},
@@ -81,21 +86,22 @@ def _negated(tok, scheme):
     return bool(_kids(tok, {"neg"}))
 
 
-def _proposition(doc, parser_id, scheme="clearnlp"):
+def _clause(head, parser_id, scheme="clearnlp", carried=None):
+    """One proposition for the clause headed by `head`: a sentence's root (rules 1-8, 10) or a verb attached to a clause
+    by conj or parataxis (rule 9). carried: (ARG0, mood) of the clause it is attached to."""
     L = SCHEME[scheme]
-    root = next((t for t in doc if t.dep_ in ("ROOT", "root")), None)
-    if root is None or root.pos_ not in ("VERB", "AUX"):
+    if head.pos_ not in ("VERB", "AUX"):
         return None, "no verbal root"
-    pred, embedded = root, None
-    xcomp = [c for c in root.children if c.dep_ == "xcomp" and c.pos_ == "VERB"]
+    pred, embedded = head, None
+    xcomp = [c for c in head.children if c.dep_ == "xcomp" and c.pos_ == "VERB"]
     if xcomp:  # rule 7: "tried to open" -> proposition about "open", embedded under "try"
-        pred, embedded = xcomp[0], root.lemma_.lower()
-    auxes = _kids(root, L["aux"])
+        pred, embedded = xcomp[0], head.lemma_.lower()
+    auxes = _kids(head, L["aux"])
     aux_lemmas = [a.lemma_.lower() for a in auxes]
     passive = bool(_kids(pred, L["passive"]))
     roles = {}
     if passive:  # rule 2
-        subj = _kids(pred, L["subjpass"]) or _kids(root, L["subjpass"])
+        subj = _kids(pred, L["subjpass"]) or _kids(head, L["subjpass"])
         if subj:
             roles["ARG1"] = _role(subj[0])
         if scheme == "ud":
@@ -107,7 +113,7 @@ def _proposition(doc, parser_id, scheme="clearnlp"):
             if agent and _pobj(agent[0]) is not None:
                 roles["ARG0"] = _role(_pobj(agent[0]))
     else:  # rule 1
-        subj = _kids(root, {"nsubj"})
+        subj = _kids(head, {"nsubj"})
         if subj:
             roles["ARG0"] = _role(subj[0])
         obj = _kids(pred, L["obj"])
@@ -138,25 +144,49 @@ def _proposition(doc, parser_id, scheme="clearnlp"):
         tense = "unmarked"
     else:  # rule 5
         finite = next((a for a in auxes if a.tag_ in FINITE_TENSE), None)
-        if finite is None and root.tag_ in FINITE_TENSE:
-            finite = root
+        if finite is None and head.tag_ in FINITE_TENSE:
+            finite = head
         tense = FINITE_TENSE[finite.tag_] if finite is not None else "unmarked"
     perfect = any(a.lemma_.lower() == "have" and a.dep_ == "aux" for a in auxes)  # rule 4
-    progressive = any(a.lemma_.lower() == "be" and a.dep_ == "aux" for a in auxes) and root.tag_ == "VBG"
+    progressive = any(a.lemma_.lower() == "be" and a.dep_ == "aux" for a in auxes) and head.tag_ == "VBG"
     aspect = ("perfect progressive" if perfect and progressive else "perfect" if perfect
               else "progressive" if progressive else "simple")
-    negative = _negated(root, scheme) or _negated(pred, scheme)  # rule 6
+    negative = _negated(head, scheme) or _negated(pred, scheme)  # rule 6
+    mood = "indicative"
+    if "ARG0" not in roles and not (passive and "ARG1" in roles) and not _kids(head, SUBJECTS):
+        if carried is not None:  # rule 9: the subject of the clause it is attached to
+            roles["ARG0"], mood = dict(carried[0]), carried[1]
+        elif head.tag_ == "VB" and all(a == "do" for a in aux_lemmas):  # rule 10: "(Do not) search the web."
+            roles["ARG0"], mood = dict(ADDRESSEE), "imperative"
+    if mood == "imperative":
+        tense = "unmarked"
     prop = {
         "predicate": {"lemma": pred.lemma_.lower(), "token": pred.i},
         "roles": roles,
         "polarity": "negative" if negative else "positive",
-        "tense": tense, "aspect": aspect, "modality": modal,
+        "tense": tense, "aspect": aspect, "modality": modal, "mood": mood,
         "voice": "passive" if passive else "active",
         "embedded_under": embedded,
         "provenance": {"syntax": parser_id, "structure": f"csi.analyze@{CSI_VERSION}"},
     }
     missing = None if "ARG0" in roles or (passive and "ARG1" in roles) else "no subject"
     return prop, missing
+
+
+def _sentence(root, parser_id, scheme):
+    """Rule 9: the root's clause first, then every clause attached to it by conj or parataxis (also to those), in
+    text order. -> [(head token, proposition or None, problem or None)]"""
+    first, problem = _clause(root, parser_id, scheme)
+    out, todo = [(root, first, problem)], [(root, first)]
+    while todo:
+        head, prop = todo.pop(0)
+        carried = (prop["roles"]["ARG0"], prop["mood"]) if prop and "ARG0" in prop["roles"] else None
+        for c in head.children:
+            if c.dep_ in ATTACHED and c.pos_ in ("VERB", "AUX"):
+                p, why = _clause(c, parser_id, scheme, carried)
+                out.append((c, p, why))
+                todo.append((c, p))
+    return out[:1] + sorted(out[1:], key=lambda x: x[0].i)
 
 
 def analyze(text):
@@ -169,18 +199,32 @@ def analyze(text):
         for t in doc:
             if t.pos_ == "VERB" and t.tag_ in TAG_FORM:
                 t.lemma_ = lemmatise(t.text.lower(), "verb", morph, dic, form_type=TAG_FORM[t.tag_])[0]
-    tokens = [{"i": t.i, "text": t.text, "lemma": t.lemma_, "upos": t.pos_, "tag": t.tag_,
+    tokens = [{"i": t.i, "idx": t.idx, "text": t.text, "lemma": t.lemma_, "upos": t.pos_, "tag": t.tag_,
                "feats": t.morph.to_dict(), "head": t.head.i, "dep": t.dep_} for t in doc]
-    prop, problem = _proposition(doc, parser_id, scheme)
-    if prop:
-        prop["provenance"]["lemmas"] = lemma_source
-        if CSI_SENSES:
-            prop["predicate"]["sense"] = _sense_of(doc, prop["predicate"]["token"])
-            for role in prop["roles"].values():
-                role["head_sense"] = _sense_of(doc, role["head"])
-            prop["provenance"]["senses"] = _senses().provenance["version"]
-    unsupported = [problem] if problem else []
-    reading = {"confidence": 1.0 if not unsupported else 0.5, "tokens": tokens,
-               "propositions": [prop] if prop else []}
+    propositions, problems, unsupported, owner = [], [], [], {}
+    for s_i, sent in enumerate(doc.sents):
+        for head, prop, problem in _sentence(sent.root, parser_id, scheme):
+            if problem:
+                if s_i == 0 and head is sent.root:  # comparison reads the first sentence's main clause, as in v0.1
+                    unsupported = [problem]
+                problems.append({"token": head.i, "why": problem})
+            if prop is None:
+                continue
+            owner[head.i] = owner[prop["predicate"]["token"]] = len(propositions)
+            prop["provenance"]["lemmas"] = lemma_source
+            if CSI_SENSES:
+                prop["predicate"]["sense"] = _sense_of(doc, prop["predicate"]["token"])
+                for role in prop["roles"].values():
+                    if role.get("head") is not None:
+                        role["head_sense"] = _sense_of(doc, role["head"])
+                prop["provenance"]["senses"] = _senses().provenance["version"]
+            propositions.append(prop)
+    for tok in tokens:  # rule 11: the proposition of the nearest ancestor that is a proposition's predicate
+        t = doc[tok["i"]]
+        while t.i not in owner and t.head.i != t.i:
+            t = t.head
+        tok["prop"] = owner.get(t.i)
+    reading = {"confidence": 1.0 if not unsupported else 0.5, "tokens": tokens, "propositions": propositions,
+               "problems": problems}
     return {"csi_version": CSI_VERSION, "text": text, "readings": [reading], "ambiguity": [],
             "unsupported": unsupported, "confidence_note": "v0.1 confidence is uncalibrated (coverage only)"}

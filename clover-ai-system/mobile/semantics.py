@@ -163,6 +163,8 @@ CLAIM = re.compile(r"\b(?:I(?:'ve|\s+have)?|has\s+been|have\s+been|was|were)\s+(
                    r"(?:successfully\s+)?(?:deleted|removed|created|saved|written|wrote|committed|pushed|moved|renamed|"
                    r"installed|cloned|opened|ran|executed)\b", re.I)
 NEGATION = re.compile(r"\b(?:not|never|couldn'?t|can'?t|cannot|wasn'?t|weren'?t|didn'?t|unable|failed|won'?t)\b", re.I)
+CLAIM_LEMMAS = {"delete", "remove", "create", "save", "write", "commit", "push", "move", "rename", "install", "clone",
+                "open", "run", "execute"}  # CLAIM's verbs, for CSI's reading of a claim
 CANNOT = re.compile(r"\bI\s+(?:could|can|was)(?:n'?t|\s+not)(?:\s+able\s+to)?\s+(?:find|retrieve|get|access|determine|check|"
                     r"see|read|locate|open|confirm|verify|look\s+up)\b|\bunable\s+to\s+(?:find|retrieve|get|access|determine|"
                     r"check|read|locate|open|confirm|verify)\b|\bI\s+(?:do\s+not|don'?t)\s+(?:know|have\s+access)\b", re.I)
@@ -469,8 +471,46 @@ def non_answer(text):
     return not t or bool(PROMISE.search(t))
 
 
-def _claims(text):
-    return any(CLAIM.search(s) and not NEGATION.search(s) for s in re.split(r"(?<=[.!?])\s+|\n+", text or ""))
+def _claims(text, read=None):
+    """Does the answer say an action was done? read: a sentence -> CSI analysis (or None); without it, or when CSI does
+    not read a sentence, a negation word anywhere in the sentence means no claim."""
+    for s in re.split(r"(?<=[.!?])\s+|\n+", text or ""):
+        if not CLAIM.search(s):
+            continue
+        said = csi_claim(read(s)) if read is not None else None
+        if said if said is not None else not NEGATION.search(s):
+            return True
+    return False
+
+
+def csi_claim(analysis):
+    """CSI's reading of one sentence as a claim that an action was done (Experiment 1d): its main proposition is a claim
+    verb, positive, past or perfect, neither modal nor embedded ("tried to"), said by I/we or passive. None: not read."""
+    if not analysis or analysis.get("unsupported") or not analysis["readings"][0]["propositions"]:
+        return None
+    p = analysis["readings"][0]["propositions"][0]
+    agent = (p["roles"].get("ARG0") or {}).get("head_lemma")
+    return (p["predicate"]["lemma"] in CLAIM_LEMMAS and p["polarity"] == "positive" and p["modality"] is None
+            and p["embedded_under"] is None and (p["tense"] == "past" or p["aspect"].startswith("perfect"))
+            and (p["voice"] == "passive" or agent in ("i", "we")))
+
+
+def declined_caps(text, analysis):
+    """Capabilities a message names only inside requests it negates ("Don't search the web, just tell me ..."): every
+    match of the capability's pattern lies in a negative proposition of CSI's reading (rule 11). Words CSI did not
+    read count as asking."""
+    if not analysis:
+        return set()
+    reading = analysis["readings"][0]
+    props, tokens = reading["propositions"], reading["tokens"]
+    asked, declined = set(), set()
+    for caps, pattern in ASKS:
+        for m in re.finditer(pattern, text or "", re.I):
+            gov = {t["prop"] for t in tokens if t.get("prop") is not None and "idx" in t
+                   and t["idx"] < m.end() and t["idx"] + len(t["text"]) > m.start()}
+            negative = bool(gov) and all(props[g]["polarity"] == "negative" for g in gov)
+            (declined if negative else asked).update(caps)
+    return declined - asked
 
 
 def _worked(call):
