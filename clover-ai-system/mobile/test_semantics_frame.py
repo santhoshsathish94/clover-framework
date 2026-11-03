@@ -137,6 +137,24 @@ fr, res, notes = aligned("Use Python to make a bar chart of the sales", "The cha
                          {"tool_executed": "python_interpreter",
                           "python_output": "AttributeError: 'dict' object has no attribute 'groupby'\n[exit code 1]"})
 check(notes == ["an action that did not run"], "a chart claimed after Python failed")
+# the laptop's Python tool says "Python exited with code 1", not "[exit code 1]" (Studio regression run 3, 2026-11-03)
+fr, res, notes = aligned("Can you make a bar chart of revenue by region?",
+                         "The bar chart of revenue by region has been generated and saved as **`chart.png`** in the same "
+                         "directory as this conversation.",
+                         {"tool_executed": "python_interpreter",
+                          "python_output": "Python exited with code 1\n\nPartial stderr:\nTraceback (most recent call last):\n"
+                                           "AttributeError: 'numpy.int64' object has no attribute 'sort_values'"},
+                         documents=SHEET)
+check(fr.label == "claimed, but the tool failed", "the laptop's Python failure is a failure, and the chart claim is read")
+check(not any(semantics._worked({"result": r}) for r in (
+          "Execution Timeout: exceeded 60 seconds", "OutputLimitExceeded:\nraw stdout+stderr exceeded 1000 bytes",
+          "MemoryLimitExceeded: Python exceeded its 4294967296 byte address-space limit", "Process terminated by signal 9"))
+      and semantics._worked({"result": "7006652"}), "the laptop's other Python failures too; printed output worked")
+fr, res, notes = aligned("Search the web: when was the first image of a black hole made?",
+                         "The first image of a black hole was produced in 2019 by the Event Horizon Telescope.",
+                         {"tool_executed": "web_search", "observation_preview": "Searched: first black hole image, 2019, "
+                                                                                "Event Horizon Telescope"})
+check(notes == [], "a fact about an image, after a search that worked, is not a claim")
 fr, res, notes = aligned("Search the web: when was the India-Pakistan border drawn?",
                          "The border was drawn in 1947 by Cyril Radcliffe, and the decision was made in August.",
                          {"tool_executed": "web_search", "observation_preview": "[exit code 1] network unreachable"})

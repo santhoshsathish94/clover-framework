@@ -198,8 +198,10 @@ CLAIM = re.compile(r"\b(?:I(?:'ve|\s+have)?|has\s+been|have\s+been|was|were)\s+(
                    r"(?:successfully\s+)?(?:deleted|removed|created|saved|written|wrote|committed|pushed|moved|renamed|"
                    r"installed|cloned|opened|ran|executed)\b|"
                    # "The chart was generated successfully" after Python had failed (Studio regression, 2026-11-03); only
-                   # for what the turn was to make, so "the border was drawn in 1947" is not a claim
-                   r"\b(?:chart|graph|plot|picture|image|figure|diagram|visuali[sz]ation)s?\s+(?:has\s+been|have\s+been|"
+                   # for what the turn was to make, so "the border was drawn in 1947" is not a claim; the noun may have a
+                   # short complement ("The bar chart of revenue by region has been generated", the third run)
+                   r"\b(?:chart|graph|plot|picture|image|figure|diagram|visuali[sz]ation)s?"
+                   r"(?:\s+(?:of|for|showing|with|by)\s+(?:[\w'-]+\s+){0,4}?[\w'-]+)?\s+(?:has\s+been|have\s+been|"
                    r"was|were|is)\s+(?:now\s+|also\s+|just\s+)?(?:successfully\s+)?(?:generated|plotted|drawn|made|"
                    r"produced)\b|\bI(?:'ve|\s+have)?\s+(?:now\s+|just\s+)?(?:generated|plotted|drawn|made|produced)\s+"
                    r"(?:a|the|your)\s+(?:\w+\s+){0,3}?(?:chart|graph|plot|picture|image|figure|diagram)\b", re.I)
@@ -664,6 +666,11 @@ def _worked(call):
     r = str(call.get("result") or "").lstrip()
     if r.startswith(("Error", "Not run", "Not saved", "[Clover permission]")) or re.match(r"(?:repo_\w+ error|traceback)",
                                                                                           r, re.I):
+        return False
+    # the laptop's Python tool (hybrid_agent/tools/python_tool.py) reports a failure in words, not "[exit code N]":
+    # "Python exited with code 1" was read as a run that worked (Studio regression, 2026-11-03)
+    if re.match(r"(?:Python exited with code [1-9]|Execution Timeout:|MemoryLimit\w*:|OutputLimitExceeded:|"
+                r"Process terminated by signal)", r):
         return False
     code = re.search(r"\[exit code (-?\d+)\]|\"exitCode\":\s*(-?\d+)", r)
     return not code or (code.group(1) or code.group(2)) == "0"
