@@ -1,7 +1,8 @@
 """Semantics, the center of Clover: Meaning, Context, Interpretation, Alignment. One module for every process.
 
 input <-> ((S1 <-> S2 <-> S3) <-> (C1 <-> C2 <-> C3)) <-> output. interpret() reads a message into one Frame: what it
-asks for (as capabilities), about what, and whether it changes anything. A message made only of pleasantries ("hi",
+asks for (as capabilities), about what, and whether it changes anything; a question about the figures of a spreadsheet,
+table or JSON file attached in the conversation asks for Python. A message made only of pleasantries ("hi",
 "thanks", "bye") is answered here and never reaches the model. route() picks the tools (S3) and memory (S1) reads the
 frame. The model and its tool rounds (C1, C2) work from what the frame selected and are asked again when an answer is
 only a promise (non_answer). align() checks the answer (C3) against the frame and the evidence, repairs what is certain
@@ -95,6 +96,31 @@ ASKS = (
     (("ssh",), r"\b(?:ssh|remote\s+(?:host|machine|server|box))\b|\bon\s+[a-z0-9._-]+@[a-z0-9._-]+"),
 )
 VSCODE = re.compile(r"\b(?:vs\s?code|visual\s+studio\s+code)\b", re.I)
+# declining a tool without a negated verb, which CSI v0.1r3 reads only in "don't / do not ...": "Without searching the
+# web, explain ..." and "No web search please, just ..." were still offered the web (Studio regression, 2026-11-03)
+_WITHOUT = r"\b(?:without|w/o)\s+(?:(?:searching|googling|browsing|using|running|checking|opening|going)\s+(?:on\s+|to\s+|in\s+)?|" \
+           r"looking\s+(?:it\s+|this\s+|that\s+|anything\s+)?up\s+(?:on\s+|in\s+)?)?(?:the\s+|any\s+|a\s+)?"
+_NO = r"(?:^|[.;!?]\s*|,\s*)(?:please\s+)?(?:no|don'?t\s+use\s+(?:the\s+|any\s+)?)\s*"
+DECLINES = (
+    (("web.search", "web.page"), rf"{_WITHOUT}(?:web|internet|online|google|net|web\s+search(?:es)?|search(?:es|ing)?)\b|"
+                                 rf"{_NO}(?:web|internet|online|googling|browsing)(?:\s+search(?:es|ing)?)?\b|"
+                                 rf"{_NO}search(?:es|ing)?\b(?!\s+(?:for|of|on)\b)"),
+    (("python",), rf"{_WITHOUT}(?:python|code|a\s+program|a\s+script)\b|{_NO}(?:python|code)\b"),
+    (("shell",), rf"{_WITHOUT}(?:terminal|powershell|command\s+line|shell)\b|{_NO}(?:terminal|powershell|commands?)\b"),
+)
+# a spreadsheet, table or JSON file attached in this conversation: a question about its figures needs Python on the whole
+# file (a 2B model adding up numbers it reads gets them wrong, as with the groceries total, 2026-11-01)
+DATA_FILE = re.compile(r"\.(?:xlsx|xlsm|xls|csv|tsv|json)$", re.I)
+DATA_ASK = re.compile(
+    r"\b(?:total|totals|sum|add(?:ed)?\s+up|average|mean|median|max(?:imum)?|min(?:imum)?|highest|lowest|largest|"
+    r"smallest|biggest|most|least|top|bottom|best|worst|rank(?:ed|ing)?|compare[ds]?|comparison|versus|trend|growth|"
+    r"grew|increase[sd]?|decrease[sd]?|drop(?:ped)?|percent(?:age)?|share|ratio|proportion|count|how\s+many|how\s+much|"
+    r"per\s+(?:region|month|year|week|day|product|category|customer|team|person|country|city|store|order|item)|"
+    r"by\s+(?:region|month|year|week|day|product|category|customer|team|person|country|city|store)|group(?:ed)?|"
+    r"pivot|break\s*down|breakdown|distribution|chart|plot|graph|histogram|statistics?|analy[sz]e|analysis|targets?|"
+    r"forecast|correlat\w*|outliers?|duplicates?|missing|filter(?:ed)?|sort(?:ed)?|"
+    r"which\s+(?:region|month|product|customer|item|category|row|column|team|store|day)|"
+    r"who\s+(?:ordered|sold|bought|spent|earned|scored))\b", re.I)
 # a question about a concept is answered, not run: "In one sentence, what does git rebase do?" was offered only the
 # terminal and ran `git rebase -i HEAD~1` (2026-11-01)
 CONCEPT = re.compile(
@@ -146,7 +172,10 @@ SOCIAL = (
     ("goodbye", r"bye(?:\s+bye)?|good\s*bye|see\s+(?:you|ya)(?:\s+(?:later|soon|tomorrow))?|talk\s+(?:to\s+you\s+)?"
                 r"(?:later|soon)|take\s+care|good\s*night"),
     ("ack", r"ok(?:ay)?|okey|k|got\s+it|cool|great|nice|perfect|awesome|alright|all\s+right|sounds\s+good|noted|"
-            r"understood"),
+            r"understood|"
+            # "thanks, that helps" went to the model in the 2026-11-03 regression
+            r"that\s+helps|that(?:'s|\s+is|\s+was)\s+(?:very\s+|really\s+|super\s+)?(?:helpful|useful|great|perfect|clear|"
+            r"good|nice|awesome)|(?:very\s+|really\s+|super\s+)?helpful|good\s+to\s+know|makes\s+sense"),
 )
 _SOCIAL = tuple((kind, re.compile(rf"(?:{pattern})(?=\s|$)")) for kind, pattern in SOCIAL)
 SOCIAL_WORDS = {"greeting": "greeting", "how_are_you": "how are you", "thanks": "thanks", "welcome": "you're welcome",
@@ -167,10 +196,17 @@ PROMISE = re.compile(r"^\W*(?:let\s+me|i'?ll|i\s+will|i\s+am\s+going\s+to|i'?m\s
                      r"(?:search|look|check|find|try|run|fetch|open|get)\b[^\n]{0,160}$", re.I)
 CLAIM = re.compile(r"\b(?:I(?:'ve|\s+have)?|has\s+been|have\s+been|was|were)\s+(?:now\s+|also\s+|just\s+)?"
                    r"(?:successfully\s+)?(?:deleted|removed|created|saved|written|wrote|committed|pushed|moved|renamed|"
-                   r"installed|cloned|opened|ran|executed)\b", re.I)
+                   r"installed|cloned|opened|ran|executed)\b|"
+                   # "The chart was generated successfully" after Python had failed (Studio regression, 2026-11-03); only
+                   # for what the turn was to make, so "the border was drawn in 1947" is not a claim
+                   r"\b(?:chart|graph|plot|picture|image|figure|diagram|visuali[sz]ation)s?\s+(?:has\s+been|have\s+been|"
+                   r"was|were|is)\s+(?:now\s+|also\s+|just\s+)?(?:successfully\s+)?(?:generated|plotted|drawn|made|"
+                   r"produced)\b|\bI(?:'ve|\s+have)?\s+(?:now\s+|just\s+)?(?:generated|plotted|drawn|made|produced)\s+"
+                   r"(?:a|the|your)\s+(?:\w+\s+){0,3}?(?:chart|graph|plot|picture|image|figure|diagram)\b", re.I)
 NEGATION = re.compile(r"\b(?:not|never|couldn'?t|can'?t|cannot|wasn'?t|weren'?t|didn'?t|unable|failed|won'?t)\b", re.I)
 CLAIM_FORMS = {"deleted", "removed", "created", "saved", "written", "wrote", "committed", "pushed", "moved", "renamed",
-               "installed", "cloned", "opened", "ran", "executed"}  # CLAIM's verbs as written: a lemma can be a variant (instal)
+               "installed", "cloned", "opened", "ran", "executed", "generated", "plotted", "drawn", "made",
+               "produced"}  # CLAIM's verbs as written: a lemma can be a variant (instal)
 CANNOT = re.compile(r"\bI\s+(?:could|can|was)(?:n'?t|\s+not)(?:\s+able\s+to)?\s+(?:find|retrieve|get|access|determine|check|"
                     r"see|read|locate|open|confirm|verify|look\s+up)\b|\bunable\s+to\s+(?:find|retrieve|get|access|determine|"
                     r"check|read|locate|open|confirm|verify)\b|\bI\s+(?:do\s+not|don'?t)\s+(?:know|have\s+access)\b", re.I)
@@ -247,6 +283,7 @@ class Frame:
     declined: list = field(default_factory=list)  # capabilities the message declines, in CSI's reading (CSI on)
     personal: dict = field(default_factory=dict)  # the person's reading of this message (personal learning)
     guidance: str = ""  # the person's preferred form of answer, for the model (personal learning)
+    data: bool = False  # a spreadsheet, table or JSON file is attached in this conversation
     runtime: Runtime | None = field(default=None, repr=False, compare=False)
 
     def understood(self):
@@ -312,6 +349,15 @@ def asked_caps(text):
 def asked(text, runtime):
     """The tools a message asks for, in this process's names."""
     return runtime.names(asked_caps(text))
+
+
+def _caps(text, data=False):
+    """What the words ask for, with what the conversation adds: a question about the figures of an attached data file
+    asks for Python."""
+    caps = asked_caps(text)
+    if data and "python" not in caps and DATA_ASK.search(text or ""):
+        caps.append("python")
+    return caps
 
 
 def user_paths(text):
@@ -416,9 +462,10 @@ def _kind(m):
     return str(m.get("kind") or "") if isinstance(m, dict) else str(m or "")
 
 
-def interpret(text, runtime, media=(), history=(), previous_media=(), attached=False):
+def interpret(text, runtime, media=(), history=(), previous_media=(), attached=False, documents=()):
     """Meaning (input <-> frame). media: this message's attachments (dicts with "kind", or kinds); previous_media: kinds
-    on the user's previous message when the history does not carry them."""
+    on the user's previous message when the history does not carry them; documents: the names of the documents attached
+    to this message or earlier in the conversation."""
     t = (text or "").strip()
     kinds = tuple(dict.fromkeys(k for k in (_kind(m) for m in media or ()) if k))
     history = list(history or [])
@@ -426,7 +473,8 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
     retry = C.retry_requested(t, last[0].get("content")) if last else None
     pleasant = [] if retry or media or attached else social(t, history)
     keep = REMEMBER_ASK.match(t)
-    caps = asked_caps(t)
+    data = any(DATA_FILE.search(str(d).strip()) for d in documents or ())
+    caps = _caps(t, data)
     declined = _declined(runtime, t) if caps else set()
     caps = [c for c in caps if c not in declined]
     names = runtime.names(caps)
@@ -450,7 +498,8 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
                   places=bool(PLACES.search(t)), diet=meal and not creative and not NOT_FOR_ME.search(t), discernment=disc,
                   why=why, retry=retry, remember=keep.group(1).strip() if keep else "",
                   web_cap=8 if "web.search" in caps else 3, social=pleasant,
-                  reply=social_reply(pleasant, t) if pleasant else "", declined=sorted(declined), runtime=runtime)
+                  reply=social_reply(pleasant, t) if pleasant else "", declined=sorted(declined), data=data,
+                  runtime=runtime)
     if runtime.personal is not None and act in ("question", "concept", "action") and disc != "refuse":
         _personal(frame, runtime)
     return frame
@@ -500,7 +549,13 @@ def route(frame, mode, tools_on, offer=(), said=None, retry_tools=()):
         text = frame.text if said is None else said
         if text.strip() != frame.text:  # the words to read differ (a voice note's transcript added)
             no = _declined(rt, text)
-        only = list(dict.fromkeys(rt.names([c for c in asked_caps(text) if c not in no]) + list(retry_tools)))
+            caps = _caps(text, frame.data)
+        else:
+            # the frame's reading: what the words ask for, a data question's Python, and - read as this person usually
+            # means these words - their validated habit (it was not offered here before, so habits did nothing in
+            # "When I ask", the Studio's default; found 2026-11-03)
+            caps = frame.caps
+        only = list(dict.fromkeys(rt.names([c for c in caps if c not in no]) + list(retry_tools)))
         return _chose(frame, "asked" if only else "nothing asked", only), bool(only)
     if frame.asked:
         # Always: offered every tool, the Omni said it had no tool for "check the recent commits" (2026-11-01)
@@ -572,10 +627,13 @@ def declined_caps(text, analysis):
 
 
 def _declined(runtime, text):
-    """The capabilities a message declines in CSI's reading; none when CSI is off or does not answer."""
+    """The capabilities a message declines: in CSI's reading (negated requests, "Don't search the web, just ..."; CSI
+    on), and in the phrasings CSI v0.1r3 does not read as declining ("Without searching the web, ...", "No internet,
+    just ..."; found in the 2026-11-03 Studio regression), with CSI on or off."""
+    out = {cap for caps, pattern in DECLINES if re.search(pattern, text or "", re.I) for cap in caps}
     if runtime is None or runtime.csi is None or not text:
-        return set()
-    return declined_caps(text, runtime.csi(text))
+        return out
+    return out | declined_caps(text, runtime.csi(text))
 
 
 def csi_reader(url, timeout=2.0):

@@ -44,6 +44,9 @@
 - 2026-11-03: the human: "please keep the learning on by default as I said this is research we can just give option
   to disable not the other way around". Now on by default with a switch (store flag `.git/ppl-learning-off`, phone
   `POST /api/personal/learning`, laptop Settings `personal`; `CLOVER_PPL=off` for a process); `test_personal.py` 48.
+- 2026-11-03: first runs with the model (laptop Studio, fresh install, natural-conversation regression): habits did
+  nothing in the default "When I ask" mode (route() ignored the frame); fixed, then verified live - a habit learned from
+  two corrections was applied in a new chat and turned off by the switch (EXPERIMENTS.md, Phase 2).
 
 ## Where things are
 - k3 `/opt/clover-k3/meaning-core/ppl/`: `code/` (uploaded LF copies, checked by `manifest.sha256`), `ppl-env.sh`,

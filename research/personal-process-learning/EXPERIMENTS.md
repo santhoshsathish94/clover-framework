@@ -271,3 +271,13 @@ just give option to disable not the other way around". Changed: the phone runtim
 the store, and while it is off nothing is read or recorded (view and delete still work); `CLOVER_PPL=off` turns it
 off for a process. `test_personal.py` 48 checks (on once the store is known, the switch, the process switch); the
 other suites unchanged. Records stay on the person's device; reading them for research is still the consented pilot.
+
+**First end-to-end runs with the model (2026-11-03, laptop Studio, natural-conversation regression).** Found: in the
+Studio's default tool mode ("When I ask"), `semantics.route()` read the words again and ignored the frame, so a
+validated habit changed nothing there (the unit tests had checked the frame, not the route). Fixed: the route uses
+the frame's capabilities (the habit's reading, minus what the message declines); `test_personal.py` 49 checks the
+route too. Verified with the model on a fresh install (LFM3-Omni-2B, product defaults, CSI on): "Dig into the history
+of the bicycle." then "No, look it up online." (web search ran), the same with the telescope, and "Dig into the
+history of the printing press." in a new chat was read as the person usually means it and searched the web, without
+being asked; with learning switched off the same message was read generally (6 of 6 checks, in both runs). These
+are scripted turns by the author on the author's laptop, not real use: the consented pilot is still what tells.

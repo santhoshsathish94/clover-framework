@@ -193,3 +193,16 @@
   - **Not done:** the laptop live check (laptop unreachable on ssh); installing the CSI environment on the laptop is a
     change to the user's machine and needs the laptop online. Open points seen: "Double the N." misread below the
     threshold; "No need to ..." declines are outside CSI's scope; "You don't have to use X" is read as declining.
+- 2026-11-03: **in the laptop Studio, on by default** (human: "the clover studio should fully run ... all the 3 C and
+  3 S and CSI"): the Studio starts `csi_service.py` as a child process (spaCy en_core_web_trf 3.8.0, morph-verb-v1.1,
+  OEWN 2025; byte copies of this prototype), ready in 55 s on the i5-1335U laptop, 1.2 GB; setup downloads the parser
+  (Explosion's release) and OEWN (globalwordnet's release, SHA-256 9ca6d1dc... = the frozen file); the lemmatiser goes
+  to the clover-ai-studio dataset (`csi/morph-verb-v1.1/`) once the human logs in on k3 (for the first test the two
+  files were copied from k3, hashes 3ac4000b... and 9e50db6f...).
+  - **Found in the Studio's natural-conversation regression:** "Without searching the web, explain ..." was still
+    offered the web. Probe of the running service (laptop `tests/csi_probe.py`): "Don't search the web, just ..." and
+    "Do not look it up online; ..." are read as declining; "Without searching the web, ...", "... without using the
+    internet." and "No web search please, just ..." are not (no negated proposition: CSI v0.1r3 reads declines only from
+    negated verbs). The runtime now recognises these phrasings with a narrow rule outside CSI (`semantics.DECLINES`,
+    CSI on or off); CSI stays frozen. Candidate for a later CSI version, to be pre-registered: "without" + gerund and
+    "no" + a nominal request as declining, with "No, look it up online" (a correction) as a must-not-decline case.

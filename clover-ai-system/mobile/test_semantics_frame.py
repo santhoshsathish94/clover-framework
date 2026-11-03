@@ -73,6 +73,38 @@ check(frame("And how much would 45 pens cost?", history=PENS).follow_up, "follow
 check(frame("That's wrong, try again", history=PENS).act == "retry", "try again")
 check(frame("Remember that I'm vegetarian.").remember == "I'm vegetarian", "remember: the user's own words")
 check(semantics.non_answer("Let me search for a recipe.") and not semantics.non_answer("Here is a recipe: dal."), "non-answers")
+# declines CSI v0.1r3 does not read (no negated verb): recognised with CSI on or off (Studio regression, 2026-11-03)
+for text in ("Without searching the web, explain what photosynthesis is in three sentences.",
+             "Explain photosynthesis without using the internet, please search nothing.",
+             "No web search please, just explain photosynthesis and search nothing.",
+             "Search nothing. Don't use the internet for this, explain photosynthesis."):
+    f = frame(text)
+    check("web.search" in f.declined and "web_search" not in route(f, "ask") + route(f, "always"),
+          f"declined without a negated verb: {text[:50]}")
+for text, caps in (("No, look it up online.", ["web.search"]), ("Search the web for heat pumps", ["web.search"]),
+                   ("I searched without success, can you search the web for heat pumps?", ["web.search"]),
+                   ("There's no search engine I trust, can you search the web for heat pumps?", ["web.search"])):
+    f = frame(text)
+    check(not f.declined and all(c in f.caps for c in caps), f"not a decline: {text[:50]}")
+check(frame("Use Python to add these, no web search").declined == ["web.page", "web.search"]
+      and route(frame("Use Python to add these, no web search"), "ask") == ["python_interpreter"],
+      "one tool asked, another declined")
+check(frame("Count the words without running code, use Python if you must").declined == ["python"],
+      "declining code")
+# an attached spreadsheet, table or JSON file: a question about its figures asks for Python (When I ask too)
+SHEET = ["q1-sales.xlsx"]
+f = frame("Which region brought in the most revenue?", documents=SHEET)
+check("python" in f.caps and route(f, "ask") == ["python_interpreter"], "a data question about an attached sheet: Python")
+check(route(frame("Did each region hit its target?", documents=["orders.csv", "notes.pdf"]), "ask") == ["python_interpreter"],
+      "a data file earlier in the chat counts")
+check(route(frame("Write me a short summary I can paste into an email.", documents=SHEET), "ask") == [],
+      "writing about the sheet: no Python")
+check(route(frame("Which region brought in the most revenue?"), "ask") == [], "no data file: no Python")
+check(route(frame("When is the payment due according to this agreement?", documents=["agreement.pdf"]), "ask") == [],
+      "a PDF question: no Python")
+check(route(frame("How many units did we sell in March?", documents=SHEET), "ask")
+      == route(frame("How many units did we sell in March?", documents=SHEET), "always"),
+      "the same tools in both modes for a data question")
 
 
 def aligned(text: str, reply: str, l2: dict | None = None, l4: dict | None = None, **kw):
@@ -101,6 +133,14 @@ fr, res, notes = aligned("Commit the changes with git in the terminal", "I've co
 check(notes == ["an action that did not run"] and fr.label == "claimed, but the tool failed", "a claimed action that failed")
 fr, res, notes = aligned("Commit the changes with git in the terminal", "I've committed the changes.")
 check(notes == ["an action that did not run"], "a claimed action with no tool step")
+fr, res, notes = aligned("Use Python to make a bar chart of the sales", "The chart was generated successfully.",
+                         {"tool_executed": "python_interpreter",
+                          "python_output": "AttributeError: 'dict' object has no attribute 'groupby'\n[exit code 1]"})
+check(notes == ["an action that did not run"], "a chart claimed after Python failed")
+fr, res, notes = aligned("Search the web: when was the India-Pakistan border drawn?",
+                         "The border was drawn in 1947 by Cyril Radcliffe, and the decision was made in August.",
+                         {"tool_executed": "web_search", "observation_preview": "[exit code 1] network unreachable"})
+check(notes == [], "a fact in the past tense is not a claim that something was done")
 fr, res, notes = aligned("Search the web for it", "I couldn't search: [Clover permission] internet is turned off.",
                          {"tool_executed": "web_search", "observation_preview": "[Clover permission] 'Internet' is turned off in Settings."})
 check(fr.label == "the tool failed", "a refused tool is reported as failed")
@@ -132,7 +172,9 @@ check({n for names in phone_runtime().tools.values() for n in names} <= PHONE_NA
 # Social: a message made only of pleasantries is answered by semantics; the model is not called
 for text, reply in (("Hi", "Hello! How can I help?"), ("Good morning", "Good morning! How can I help?"),
                     ("How are you?", "I'm doing well, thanks for asking. How can I help?"), ("Thanks!", "You're welcome!"),
-                    ("You're welcome", "\U0001F642"), ("See you later", "Goodbye, talk soon!"), ("\U0001F44D", "\U0001F44D")):
+                    ("You're welcome", "\U0001F642"), ("See you later", "Goodbye, talk soon!"), ("\U0001F44D", "\U0001F44D"),
+                    ("thanks, that helps", "You're welcome!"), ("Makes sense, thank you", "You're welcome!"),
+                    ("That was really helpful!", "\U0001F44D")):
     f = frame(text, history=PENS)
     check(f.act == "social" and f.reply == reply and route(f, "always") == [] and route(f, "ask") == [],
           f"social: {ascii(text)} answered without the model")
@@ -140,7 +182,8 @@ ASKED = [{"role": "user", "content": "Tidy up /sdcard/sandbox"},
          {"role": "assistant", "content": "Should I delete the three old report files?"}]
 for text, kw in (("Hi What happened to the task", {}), ("Thanks! What's the weather tomorrow?", {}),
                  ("ok", {"history": ASKED}), ("Hi", {"media": ["image"]}), ("", {"media": ["audio"]}),
-                 ("thanks", {"attached": True})):
+                 ("thanks", {"attached": True}), ("That helps, but what about Excel files?", {}),
+                 ("That was helpful. Now explain entropy.", {})):
     check(frame(text, **kw).act != "social", f"not social, the model answers: {text or kw}")
 
 

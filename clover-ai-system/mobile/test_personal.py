@@ -97,6 +97,8 @@ with tempfile.TemporaryDirectory() as tmp:
           "a fresh message: the person's reading replaces the general one")
     check("as you usually mean it" in f.understood() and f.layer().get("personal", {}).get("caps"),
           "the reading is shown as the person's")
+    check(semantics.route(f, "ask", True, offer=["web_search", "python_interpreter"])[0] == ["web_search"],
+          "When I ask (the default): the habit's tool is offered")
     a.say("Thanks!")
     check(len(v[0].support) == 3, "thanks: the applied reading gains support")
     f = a.say("Dig a hole in the garden.")
