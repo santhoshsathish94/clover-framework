@@ -75,12 +75,14 @@ Rather than adding a separate sequential processing layer, `clover_semantics.py`
    - Latent intent and Dharma discernment (`concept_only` vs `safe_tool` vs `risky_ask`) reach **`97.22%` 6-fold CV accuracy at Layer 8 (`sliding_gqa`)** (`94.44%` linear probe at Layer 4) vs `30.56%` for naive keyword triggers.
    - `verify_idat_semantic_encoding()` verifies Distributed-Atoms (`I_DAT`) least fixed-point soundness ($\emptyset \subset \mathcal{M}_N \subseteq \mathcal{M}_L$) and completeness ($\mathcal{M}_N = \mathcal{M}_L$), and `bidirectional_bins_diagnose()` implements `Mode i` (Conflict/Feasibility Rectification) and `Mode ii` (Deductive Deadlock Auxiliary Hypothesis Generation).
 
-## 6. Personal learning (`personal.py`, off by default)
+## 6. Personal learning (`personal.py`, on by default, with a switch)
 
 Clover can learn from one person's own interactions how they mean things and how they like answers
-(research/personal-process-learning, experiment PPL-1). It is **off** unless the person turns it on: the phone runtime
-starts it only when `CLOVER_PPL_DIR` names a folder for the person's store; the laptop Studio has a Settings switch
-(`personal`, staging copy).
+(research/personal-process-learning, experiment PPL-1). It is **on by default** (the human's direction, 2026-11-03:
+"keep the learning on by default ... give option to disable"), on the person's own device only: the phone runtime keeps
+the store in `<base>/personal` (or `CLOVER_PPL_DIR`); the laptop Studio has a Settings switch (`personal`). Turning it
+off (`POST /api/personal/learning` `{"on": false}`, or the Settings switch) stops reading and recording at once;
+viewing and deleting still work. `CLOVER_PPL=off` turns it off for the whole process.
 
 - **What it changes:** a habit validated from the person's corrections (after "Dig into X" was twice followed by "No,
   look it up online", "Dig into Y" is offered web search) replaces the general reading of what is asked for; preferred

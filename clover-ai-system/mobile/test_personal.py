@@ -1,4 +1,5 @@
-"""Personal learning in the runtime (personal.py), without the model: off by default; habits learned from corrections
+"""Personal learning in the runtime (personal.py), without the model: on by default with a switch the person controls
+(human, 2026-11-03); habits learned from corrections
 and applied only when validated; rejected readings switched off; preferred forms; statements as evidence; safety rules
 kept; keep / stop learning / delete; the learner identical to PPL-1's. Usage: python test_personal.py"""
 from __future__ import annotations
@@ -54,16 +55,25 @@ def runtime(store, **kw):
     return semantics.Runtime(tools=PHONE_TOOLS, device="phone", risky=local_terminal.risky, personal=pers)
 
 
-# ---------------------------------------------------------------- off by default
+# ---------------------------------------------------------------- on by default, with a switch
 os.environ.pop("CLOVER_PPL_DIR", None)
-check(phone_runtime().personal is None, "off by default: no CLOVER_PPL_DIR, no personal learning")
+os.environ.pop("CLOVER_PPL", None)
+check(phone_runtime().personal is None, "no store known yet (no system started, no CLOVER_PPL_DIR): nothing personal")
 plain = semantics.Runtime(tools=PHONE_TOOLS, device="phone", risky=local_terminal.risky)
 prompts = ["Dig into rust lifetimes.", "Search the web for heat pumps", "Delete the old report files in C:\\tmp\\x",
            "What time is it?", "Explain photosynthesis.", "thanks"]
 check(all(semantics.interpret(p, plain) == semantics.interpret(p, phone_runtime()) for p in prompts),
-      "off: every frame is what it was")
+      "without a Personal every frame is what it was")
 check(all(not semantics.interpret(p, plain).personal and not semantics.interpret(p, plain).guidance for p in prompts),
-      "off: no personal reading, no guidance")
+      "without a Personal: no personal reading, no guidance")
+with tempfile.TemporaryDirectory() as tmp0:
+    os.environ["CLOVER_PPL_DIR"] = str(Path(tmp0) / "default-store")
+    check(phone_runtime().personal is not None and phone_runtime().personal.learning,
+          "on by default once the process knows the person's store")
+    os.environ["CLOVER_PPL"] = "off"
+    check(personal.for_process(str(Path(tmp0) / "other"), "phone", None) is None, "CLOVER_PPL=off: off for the process")
+    os.environ.pop("CLOVER_PPL")
+    os.environ.pop("CLOVER_PPL_DIR")
 
 with tempfile.TemporaryDirectory() as tmp:
     store = Path(tmp) / "person"
@@ -118,6 +128,15 @@ with tempfile.TemporaryDirectory() as tmp:
     f = b.say("Delete the old log files in C:\\tmp\\y")
     check(rt.personal.learner.preference("confirm", "ask_when_risky") == "just_do" and f.discernment == "ask",
           "a learned 'just do it' is recorded but never removes the question before changing files")
+    n_before = len(rt.personal.store.all_experiences())
+    rt.personal.set_learning(False)
+    f = b.say("Explain entropy again.")
+    b.say("Thanks!")
+    check(not f.personal and not f.guidance and len(rt.personal.store.all_experiences()) == n_before
+          and rt.personal.view()["learning"] is False, "learning switched off: no personal reading, nothing recorded")
+    check(runtime(store, filter_repo=[]).personal.learning is False, "the switch is kept in the store")
+    rt.personal.set_learning(True)
+    check("use bullet points" in b.say("Explain magnetism.").guidance, "switched back on: what was learned applies")
 
     # ------------------------------------------------------------ statements and safety
     c = Chat(rt, "chat-c")

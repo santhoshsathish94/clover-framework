@@ -22,8 +22,9 @@
 
 ## Boundaries
 - CSI stays frozen (v0.1r3, commit a00322e); its outputs are checked unchanged after personal learning.
-- Controlled, simulated persons only; no real conversations are read.
-- Research area only until the experiment decides; runtime integration (off by default) only after it passes.
+- Controlled, simulated persons only in the experiments. In the runtime (on by default since 2026-11-03) a person's
+  experiences stay on their own device for their own use; research reads them only with that person's consent.
+- Research area only until the experiment decides; runtime integration only after it passes (it did; Phase 2).
 - k3: writes only under /opt/clover-k3/meaning-core/ppl; the live K3 server (8765) is not touched.
 - No Qwen-based components.
 
@@ -40,6 +41,9 @@
   integration built, off by default (ARCHITECTURE.md section 8): `clover-ai-system/mobile/personal.py`, the semantics
   hook, the phone runtime's wiring (`CLOVER_PPL_DIR`), the laptop staging tree's wiring (Settings `personal`, not
   deployed). Not enabled anywhere, no real conversation read. The pilot needs the human's explicit consent.
+- 2026-11-03: the human: "please keep the learning on by default as I said this is research we can just give option
+  to disable not the other way around". Now on by default with a switch (store flag `.git/ppl-learning-off`, phone
+  `POST /api/personal/learning`, laptop Settings `personal`; `CLOVER_PPL=off` for a process); `test_personal.py` 48.
 
 ## Where things are
 - k3 `/opt/clover-k3/meaning-core/ppl/`: `code/` (uploaded LF copies, checked by `manifest.sha256`), `ppl-env.sh`,

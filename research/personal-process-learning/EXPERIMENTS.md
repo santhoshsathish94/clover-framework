@@ -264,3 +264,10 @@ semantics 78, mobile 13; laptop staging 110, 129, regression all pass.
 Not done: the consented pilot (it needs the human's consent, a device to run on, and their permission to read the
 pilot's records); end-to-end runs with a model; routines and open items in the runtime; the two failure modes
 (a new experiment, PPL-2, with its own registration).
+
+**On by default (2026-11-03).** The human: "please keep the learning on by default as I said this is research we can
+just give option to disable not the other way around". Changed: the phone runtime keeps the store in
+`<base>/personal` (or `CLOVER_PPL_DIR`); the laptop Settings switch `personal` defaults to on; the switch is kept in
+the store, and while it is off nothing is read or recorded (view and delete still work); `CLOVER_PPL=off` turns it
+off for a process. `test_personal.py` 48 checks (on once the store is known, the switch, the process switch); the
+other suites unchanged. Records stay on the person's device; reading them for research is still the consented pilot.

@@ -11,9 +11,10 @@ Every rule and the whole protocol live here. A process passes only what is its o
 capability, which paths its tools may never touch and which commands it asks about before running them, and - off by
 default - a CSI reader (research/semantic-interface, Experiments 1d-1f): with it, a tool the message declines ("Don't
 search the web, just ...") is not offered, and a reply's claim that an action was done is read from its main clause;
-and - off by default - the person's own learning (personal.py, research/personal-process-learning PPL-1): with it, a
-habit validated from their corrections replaces the general reading of what they ask for, and their preferred form of
-answer goes to the model. Neither ever offers a declined tool or removes a question Clover asks before acting.
+and the person's own learning (personal.py, research/personal-process-learning PPL-1; on by default in the processes,
+the person can switch it off): a habit validated from their corrections replaces the general reading of what they ask
+for, and their preferred form of answer goes to the model. Neither ever offers a declined tool or removes a question
+Clover asks before acting.
 Canonical file: clover-framework clover-ai-system/mobile/semantics.py. The laptop Studio keeps an identical copy in
 clover/semantics.py; both test suites compare the two.
 State names: AGENTS.md section 9 (proceed, ask, do_not_know, refuse) and 11 (known, inferred, unknown, contested,
@@ -195,7 +196,7 @@ class Runtime:
     """What is a process's own: its tool names for each capability, the device it runs on (for wording), the paths its
     tools may never touch and the commands it asks about before running them. csi: text -> CSI analysis or None (a
     local CSI service, csi_reader); None = off, the default. personal: the person's learning (personal.Personal);
-    None = off, the default. Everything else is common."""
+    None = no personal reading (the processes give one by default). Everything else is common."""
     tools: dict
     device: str = "device"
     blocked: Callable | None = None
@@ -244,8 +245,8 @@ class Frame:
     label: str = ""
     notes: list = field(default_factory=list)
     declined: list = field(default_factory=list)  # capabilities the message declines, in CSI's reading (CSI on)
-    personal: dict = field(default_factory=dict)  # the person's reading of this message (personal learning on)
-    guidance: str = ""  # the person's preferred form of answer, for the model (personal learning on)
+    personal: dict = field(default_factory=dict)  # the person's reading of this message (personal learning)
+    guidance: str = ""  # the person's preferred form of answer, for the model (personal learning)
     runtime: Runtime | None = field(default=None, repr=False, compare=False)
 
     def understood(self):
@@ -456,9 +457,9 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
 
 
 def _personal(frame, runtime):
-    """The person's own reading (Runtime.personal, research/personal-process-learning; off by default). A validated habit
-    replaces the general reading of what is asked for; what the message declines stays declined; a learned preference
-    can add a question before acting, never remove one."""
+    """The person's own reading (Runtime.personal, research/personal-process-learning). A validated habit replaces the
+    general reading of what is asked for; what the message declines stays declined; a learned preference can add a
+    question before acting, never remove one."""
     try:
         p = runtime.personal.interpret(frame.text, frame)
     except Exception:  # Clover then works as without personal learning

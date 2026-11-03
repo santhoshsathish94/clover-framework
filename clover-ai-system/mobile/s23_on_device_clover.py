@@ -112,6 +112,9 @@ PHONE_TOOLS = {
     "remember": ("remember",),  # not a model tool: semantics.align saves the user's words (remember_for)
 }
 PHONE_OFFER = ("web_search", "python_interpreter")  # what a phone turn offers when the message names no tool
+# personal learning is on by default (human, 2026-11-03) in <base>/personal once the system starts; CLOVER_PPL_DIR names
+# another store, CLOVER_PPL=off turns it off for the process, POST /api/personal/learning switches it for the person
+PERSONAL_DIR: Path | None = None
 
 
 def phone_runtime():
@@ -121,9 +124,9 @@ def phone_runtime():
     # CSI (research/semantic-interface, Experiment 1f) is off unless CLOVER_CSI_URL names a CSI service on this machine
     url = os.environ.get("CLOVER_CSI_URL", "").strip()
     csi = semantics.csi_reader(url) if url else None
-    # personal learning (research/personal-process-learning, PPL-1) is off unless CLOVER_PPL_DIR names the person's store
+    root = os.environ.get("CLOVER_PPL_DIR", "").strip() or (str(PERSONAL_DIR) if PERSONAL_DIR else "")
     return semantics.Runtime(tools=PHONE_TOOLS, device="phone", risky=local_terminal.risky, csi=csi,
-                             personal=personal.for_process(os.environ.get("CLOVER_PPL_DIR", "").strip(), "phone", csi))
+                             personal=personal.for_process(root, "phone", csi))
 
 
 def personal_call(runtime, method: str, *args: Any) -> Any:
@@ -2031,8 +2034,10 @@ class CloverS23OnDeviceSystem:
     }
 
     def __init__(self, base_dir: Path, load_neural_ncm: bool = True):
+        global PERSONAL_DIR
         t0 = time.perf_counter()
         self.base_dir = Path(base_dir)
+        PERSONAL_DIR = self.base_dir / "personal"
         self.pruned_dir = self.base_dir / "pruned"
         self.ncm_dir = self.base_dir / "ncm"
         self.app_secret = load_or_create_device_app_secret(self.base_dir)
@@ -3324,7 +3329,7 @@ class CloverS23OnDeviceSystem:
             if recall_sys_block:
                 sys_prompt_str = f"{sys_prompt_str}<|im_start|>system\n{recall_sys_block}<|im_end|>\n"
             if getattr(meaning, "guidance", ""):
-                # the person's preferred form of answer (personal.py, off by default): fixed wording, no user text
+                # the person's preferred form of answer (personal.py): fixed wording, no user text
                 sys_prompt_str = f"{sys_prompt_str}<|im_start|>system\n{meaning.guidance}<|im_end|>\n"
 
             if inject_latent_step_before_decode:
@@ -4485,7 +4490,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 pers = phone_runtime().personal
                 self._send(pers.view() if pers is not None else {
                     "enabled": False,
-                    "how": "Personal learning is off. It starts only when CLOVER_PPL_DIR names a folder for your store.",
+                    "how": "Personal learning is off for this process (CLOVER_PPL=off) or has no store yet.",
                 })
             elif self.path.startswith("/api/permissions"):
                 self._send({
@@ -4795,13 +4800,16 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 # the person's choices about their experiences: keep, stop learning, delete; or forget everything
                 pers = phone_runtime().personal
                 if pers is None:
-                    self._send({"error": "personal_learning_off", "message": "Personal learning is off."}, code=409)
+                    self._send({"error": "personal_learning_off", "message": "Personal learning is off for this process."}, code=409)
                     return
                 act_p = self.path.split("/api/personal/", 1)[1].split("?", 1)[0].strip("/")
                 try:
                     if act_p == "retention":
                         ids_p = payload.get("ids") if isinstance(payload.get("ids"), list) else []
                         self._send(dict(pers.retention(ids_p, str(payload.get("choice") or "")), view=pers.view()))
+                    elif act_p == "learning" and isinstance(payload.get("on"), bool):
+                        pers.set_learning(payload["on"])
+                        self._send(pers.view())
                     elif act_p == "forget" and payload.get("confirm") is True:
                         self._send(dict(pers.forget_all(), view=pers.view()))
                     else:

@@ -103,7 +103,12 @@ personalisation; explicit-statement memory (today's "remember"); conversation me
 personal process learning; and ablations (without CSI features, without validation, without context scoping).
 Separation, CSI integrity and all three retention choices are tested directly. Details and criteria: EXPERIMENTS.md.
 
-## 8. In the runtime (Phase 2, off by default)
+## 8. In the runtime (Phase 2; on by default since 2026-11-03, with a switch)
+
+The human's direction (2026-11-03): "keep the learning on by default as I said this is research we can just give option
+to disable not the other way around". The store lives on the person's device (`<base>/personal`); the switch is kept in
+the store (`.git/ppl-learning-off`), and while it is off nothing is read or recorded but viewing and deleting work.
+`CLOVER_PPL=off` turns it off for a process.
 
 `clover-ai-system/mobile/personal.py` (the laptop Studio's staging tree carries an identical copy), reached through
 `semantics.Runtime.personal`: with none, every frame is what it was. What PPL-1 tested, and what it became:

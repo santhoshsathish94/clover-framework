@@ -1,6 +1,7 @@
 """Personal Process Learning in a Clover process (research/personal-process-learning: PPL-1 passed on simulated persons,
-2026-11-03). Off by default: a process turns it on by giving its semantics.Runtime a Personal (the phone: CLOVER_PPL_DIR
-names the person's store). Without one, nothing is recorded and nothing changes.
+2026-11-03). On by default (human, 2026-11-03: "keep the learning on by default ... give option to disable"): a process
+gives its semantics.Runtime a Personal for the person's store; the person can switch learning off (set_learning) and
+back on, and can always see and delete what was kept. A Runtime without one changes and records nothing.
 
 From the person's own interactions only, it learns
 - what they mean: "in messages like these, this person asks for these capabilities". A validated hypothesis replaces
@@ -391,6 +392,11 @@ class Store:
             salt.write_text(os.urandom(16).hex())
         self.salt = salt.read_text().strip()
 
+    @property
+    def learning_off(self):
+        """The person's switch, kept outside history: present = learning is off."""
+        return self.dir / ".git" / "ppl-learning-off"
+
     def _git(self, *args):
         r = subprocess.run(["git", "-C", str(self.dir), "-c", "core.hooksPath=", *args], capture_output=True)
         if r.returncode != 0:
@@ -489,11 +495,14 @@ class Store:
 
     def _rebuild(self):
         """A new repository holding only what remains: no commit, reflog entry or object keeps the deleted experience."""
+        off = self.learning_off.exists()
         _remove_tree(self.dir / ".git")
         self._git("init", "-q")
         for k, v in (("user.name", "Clover"), ("user.email", "clover@localhost"), ("commit.gpgsign", "false")):
             self._git("config", k, v)
         (self.dir / ".git" / "ppl-salt").write_text(self.salt)
+        if off:
+            self.learning_off.write_text("off")
         own = [p for p in ("experiences", "retention.json", "tombstones.json") if (self.dir / p).exists()]
         self._git("add", "-A", "--", *own)
         self._git("commit", "-q", "--allow-empty", "-m", "personal store, rebuilt after a deletion")
@@ -526,6 +535,21 @@ class Personal:
         self.n = max((e["order"] for e in everything), default=-1) + 1
         self.learner.rebuild(self.store.eligible())
 
+    # ---- the person's switch ----
+    @property
+    def learning(self):
+        return not self.store.learning_off.exists()
+
+    def set_learning(self, on):
+        """Learning on or off; what was kept stays viewable and deletable either way."""
+        with self.lock:
+            if on:
+                self.store.learning_off.unlink(missing_ok=True)
+            else:
+                self.store.learning_off.write_text("off")
+                self.pending.clear()
+            return self.learning
+
     # ---- reading a message ----
     def _features(self, text):
         analysis = None
@@ -544,6 +568,8 @@ class Personal:
     def interpret(self, text, frame):
         """semantics.interpret's call: the person's reading of this message, or nothing personal."""
         with self.lock:
+            if not self.learning:
+                return None
             feats = self._features(text)
             general = sorted(frame.caps)
             out = {"general": general, "features": sorted(trigger_features(feats))}
@@ -566,6 +592,8 @@ class Personal:
         if frame is None or frame.act in ("social", "retry") or not frame.text:
             return
         with self.lock:
+            if not self.learning:
+                return
             p = frame.personal or {}
             feats = p.get("features")
             if feats is None:
@@ -584,6 +612,8 @@ class Personal:
     def before_turn(self, session, text, retry=None):
         """A new message in `session`: what it shows about the previous answer, and any statement it makes."""
         with self.lock:
+            if not self.learning:
+                return
             prev = self.pending.pop(session_name(session), None)
             for st in self._statements(text):
                 self._record(session, {"context": self.device, "text": text, "pfeats": [], "general": None,
@@ -618,6 +648,8 @@ class Personal:
     def helpful(self, session, turn=None):
         """The Helpful button on the last answer."""
         with self.lock:
+            if not self.learning:
+                return
             prev = self.pending.get(session_name(session))
             if prev is not None and (turn is None or prev.get("turn") in (None, turn)):
                 self.pending.pop(session_name(session))
@@ -692,7 +724,7 @@ class Personal:
                     prefs.append({"dimension": d, "value": v, "support": list(ids),
                                   "against": list(self.learner.pref_contra.get(d, {}).get(v, [])),
                                   "in_use": self.learner.preference(d, DEFAULTS[d]) == v and v != DEFAULTS[d]})
-            return {"enabled": True, "store": str(self.store.dir),
+            return {"enabled": True, "learning": self.learning, "store": str(self.store.dir),
                     "deletion": "git-filter-repo" if self.store.filter_repo else "rebuild",
                     "experiences": [{"id": e["id"], "time": e.get("time", ""), "text": e["text"], "how": e.get("how", ""),
                                      "meant": e.get("resolved"), "retention": retention.get(e["id"], "keep")}
@@ -742,9 +774,9 @@ KEEP = object()  # for_process: leave the store's CSI reader as it is
 
 
 def for_process(root, device="", csi=KEEP):
-    """The one Personal for a store in this process (None when no store is named, or it cannot be opened: personal
-    learning is then off). csi: the process's current CSI reader (None: CSI off), or KEEP."""
-    if not root:
+    """The one Personal for a store in this process (None when no store is named, CLOVER_PPL is off, or the store
+    cannot be opened). csi: the process's current CSI reader (None: CSI off), or KEEP."""
+    if not root or os.environ.get("CLOVER_PPL", "").strip().lower() in ("0", "off", "false", "no"):
         return None
     key = os.path.abspath(root)
     with _PROCESS_LOCK:
