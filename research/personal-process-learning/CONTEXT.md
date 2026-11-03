@@ -36,6 +36,10 @@
   0.649, conversation memory 0.730; habits 0.885 / 0.302 / 0.571; no over-application of one-offs or habits outside
   their areas; retention behaved as specified. Two failure modes found (a habit tied to its training construction; a
   personal meaning masked by a general cue during training). Phase 2 awaits the human's decision.
+- 2026-11-03: after the hand-back the human said "please continue"; read as going ahead with Phase 2. Runtime
+  integration built, off by default (ARCHITECTURE.md section 8): `clover-ai-system/mobile/personal.py`, the semantics
+  hook, the phone runtime's wiring (`CLOVER_PPL_DIR`), the laptop staging tree's wiring (Settings `personal`, not
+  deployed). Not enabled anywhere, no real conversation read. The pilot needs the human's explicit consent.
 
 ## Where things are
 - k3 `/opt/clover-k3/meaning-core/ppl/`: `code/` (uploaded LF copies, checked by `manifest.sha256`), `ppl-env.sh`,

@@ -102,3 +102,23 @@ must not apply, ordinary requests, routines and open items - are answered with l
 personalisation; explicit-statement memory (today's "remember"); conversation memory (retrieve similar past messages);
 personal process learning; and ablations (without CSI features, without validation, without context scoping).
 Separation, CSI integrity and all three retention choices are tested directly. Details and criteria: EXPERIMENTS.md.
+
+## 8. In the runtime (Phase 2, off by default)
+
+`clover-ai-system/mobile/personal.py` (the laptop Studio's staging tree carries an identical copy), reached through
+`semantics.Runtime.personal`: with none, every frame is what it was. What PPL-1 tested, and what it became:
+
+| PPL-1 (simulation) | runtime |
+|---|---|
+| intents from a closed set of 41 | the capabilities a message asks for (`semantics.asked_caps`), i.e. the tools offered |
+| general interpreter: logistic regression over CSI features, with a confidence | semantics' rules; no confidence, so a learning opportunity is a revealed reading that differs from the general one (PPL-1 chose C = 0, the same rule) |
+| features: CSI lemmas, object kinds from the world's lexicon, area | CSI lemmas when the CSI service is on, else the words as written (PPL-1's surface ablation); object kinds link / path / number; the device as area |
+| revealed meaning: acceptance, correction, answer to a clarifying question | thanks or Helpful; a correction that names what was wanted ("No, look it up online", "That's wrong, search the web"); there are no clarifying questions |
+| six presentation dimensions, applied by the simulator | the same six, given to the model as a second system message; "ask before acting" can only add a question |
+| routines, open items | not integrated |
+| store, three retention choices, deletion through history | the same; knowledge is not stored but recomputed; without git-filter-repo the repository is rebuilt from what remains; deleting a conversation deletes its experiences |
+
+Runtime additions that PPL-1 did not test: a retry right after a personal reading counts against it; corrections are
+recognised by their opening ("No, ...", "I meant ..."); requests for another form by fixed patterns. The learner and
+its registered settings are otherwise PPL-1's, checked identical on shared experiences. Checked without a model only
+(`test_personal.py`); real use is what the consented pilot is for.

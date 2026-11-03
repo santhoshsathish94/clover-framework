@@ -10,7 +10,10 @@ and labels how it is known.
 Every rule and the whole protocol live here. A process passes only what is its own in a Runtime: its tool names for each
 capability, which paths its tools may never touch and which commands it asks about before running them, and - off by
 default - a CSI reader (research/semantic-interface, Experiments 1d-1f): with it, a tool the message declines ("Don't
-search the web, just ...") is not offered, and a reply's claim that an action was done is read from its main clause.
+search the web, just ...") is not offered, and a reply's claim that an action was done is read from its main clause;
+and - off by default - the person's own learning (personal.py, research/personal-process-learning PPL-1): with it, a
+habit validated from their corrections replaces the general reading of what they ask for, and their preferred form of
+answer goes to the model. Neither ever offers a declined tool or removes a question Clover asks before acting.
 Canonical file: clover-framework clover-ai-system/mobile/semantics.py. The laptop Studio keeps an identical copy in
 clover/semantics.py; both test suites compare the two.
 State names: AGENTS.md section 9 (proceed, ask, do_not_know, refuse) and 11 (known, inferred, unknown, contested,
@@ -191,12 +194,14 @@ _CTRL_OF = {"t": "\t", "n": "\n", "r": "\r", "f": "\f", "b": "\b", "v": "\v", "a
 class Runtime:
     """What is a process's own: its tool names for each capability, the device it runs on (for wording), the paths its
     tools may never touch and the commands it asks about before running them. csi: text -> CSI analysis or None (a
-    local CSI service, csi_reader); None = off, the default. Everything else is common."""
+    local CSI service, csi_reader); None = off, the default. personal: the person's learning (personal.Personal);
+    None = off, the default. Everything else is common."""
     tools: dict
     device: str = "device"
     blocked: Callable | None = None
     risky: Callable | None = None
     csi: Callable | None = None
+    personal: object | None = None
 
     def capability(self, name):
         return next((cap for cap, names in self.tools.items() if name in names), None)
@@ -239,6 +244,8 @@ class Frame:
     label: str = ""
     notes: list = field(default_factory=list)
     declined: list = field(default_factory=list)  # capabilities the message declines, in CSI's reading (CSI on)
+    personal: dict = field(default_factory=dict)  # the person's reading of this message (personal learning on)
+    guidance: str = ""  # the person's preferred form of answer, for the model (personal learning on)
     runtime: Runtime | None = field(default=None, repr=False, compare=False)
 
     def understood(self):
@@ -264,6 +271,8 @@ class Frame:
             s = "question"
         if self.follow_up and self.act in ("question", "concept", "action") and not self.seen:
             s = "follow-up · " + s
+        if self.personal.get("hypothesis") is not None:
+            s += " · as you usually mean it"
         s += NO_TOOLS.get(self.route, "")
         s += {"ask": " · asks first", "refuse": " · vault is off-limits"}.get(self.discernment, "")
         return "understood: " + s
@@ -274,6 +283,10 @@ class Frame:
         for key in ("why", "social", "knowledge", "label", "declined"):
             if getattr(self, key):
                 out[key] = getattr(self, key)
+        if self.personal.get("hypothesis") is not None or self.guidance:
+            out["personal"] = {k: self.personal[k] for k in ("hypothesis", "caps", "support") if k in self.personal}
+            if self.guidance:
+                out["personal"]["form"] = self.guidance
         if self.notes:
             out["aligned"] = list(self.notes)
         return out
@@ -431,12 +444,39 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
         disc, why = "refuse", "Clover's vault is never read or changed by tools"
     elif act == "action" and (re.search(CHANGE_FILES, t, re.I) or (runtime.risky is not None and runtime.risky(t))):
         disc, why = "ask", "it changes files or the system, so Clover asks before it runs"
-    return Frame(text=t, act=act, caps=caps, asked=names, paths=typed_paths, media=kinds, seen=tuple(dict.fromkeys(seen)),
-                 follow_up=bool(history) and bool(FOLLOW.search(t)) and not pleasant, creative=creative, meal=meal,
-                 places=bool(PLACES.search(t)), diet=meal and not creative and not NOT_FOR_ME.search(t), discernment=disc,
-                 why=why, retry=retry, remember=keep.group(1).strip() if keep else "",
-                 web_cap=8 if "web.search" in caps else 3, social=pleasant,
-                 reply=social_reply(pleasant, t) if pleasant else "", declined=sorted(declined), runtime=runtime)
+    frame = Frame(text=t, act=act, caps=caps, asked=names, paths=typed_paths, media=kinds, seen=tuple(dict.fromkeys(seen)),
+                  follow_up=bool(history) and bool(FOLLOW.search(t)) and not pleasant, creative=creative, meal=meal,
+                  places=bool(PLACES.search(t)), diet=meal and not creative and not NOT_FOR_ME.search(t), discernment=disc,
+                  why=why, retry=retry, remember=keep.group(1).strip() if keep else "",
+                  web_cap=8 if "web.search" in caps else 3, social=pleasant,
+                  reply=social_reply(pleasant, t) if pleasant else "", declined=sorted(declined), runtime=runtime)
+    if runtime.personal is not None and act in ("question", "concept", "action") and disc != "refuse":
+        _personal(frame, runtime)
+    return frame
+
+
+def _personal(frame, runtime):
+    """The person's own reading (Runtime.personal, research/personal-process-learning; off by default). A validated habit
+    replaces the general reading of what is asked for; what the message declines stays declined; a learned preference
+    can add a question before acting, never remove one."""
+    try:
+        p = runtime.personal.interpret(frame.text, frame)
+    except Exception:  # Clover then works as without personal learning
+        return
+    if not p:
+        return
+    frame.personal = p
+    if p.get("hypothesis") is not None:
+        caps = [c for c in p.get("caps") or [] if c not in frame.declined]
+        frame.caps, frame.asked = caps, runtime.names(caps)
+        frame.web_cap = 8 if "web.search" in caps else 3
+        frame.act = "action" if frame.asked else ("question" if frame.act == "action" else frame.act)
+        if frame.act == "action" and frame.discernment == "proceed" and (
+                re.search(CHANGE_FILES, frame.text, re.I) or (runtime.risky is not None and runtime.risky(frame.text))):
+            frame.discernment, frame.why = "ask", "it changes files or the system, so Clover asks before it runs"
+    frame.guidance = p.get("guidance") or ""
+    if p.get("ask_first") and frame.act == "action" and frame.discernment == "proceed":
+        frame.discernment, frame.why = "ask", "you asked Clover to check with you before it acts"
 
 
 def _chose(frame, route, offered):

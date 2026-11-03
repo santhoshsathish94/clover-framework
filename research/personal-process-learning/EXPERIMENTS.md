@@ -242,3 +242,25 @@ What this does not show, beyond the limitations stated before the test:
    and asking when a known habit word appears in a new construction).
 2. The evidence is about simulated persons written by the learner's author. Nothing here is evidence about real
    people; that needs the consented pilot.
+
+### Phase 2: runtime integration (2026-11-03)
+
+The human said "please continue" after the hand-back that asked whether to proceed with Phase 2. Built, off by
+default (ARCHITECTURE.md section 8): `clover-ai-system/mobile/personal.py`, the hook in `semantics.interpret`, the
+phone runtime's wiring (on only when `CLOVER_PPL_DIR` names the person's store) with `GET /api/personal` and
+`POST /api/personal/retention|forget`, and the same in the laptop Studio's staging tree (a Settings switch; not
+deployed).
+
+Checked without a model: `test_personal.py` 43 checks - off by default and every frame unchanged; a habit learned from
+two corrections, applied only when validated, shown as the person's; two retries switch it off; preferred form and
+stated preferences reach the model; statements are evidence; declined tools stay declined, the question before
+changing files stays, the vault stays off-limits, a failing store changes nothing, a folder holding other files is
+never taken over; keep, stop learning, delete (no
+deleted text left in any object; the habit that depended on it gone), a deleted conversation's experiences and
+preferences gone, bad ids refused; the runtime learner identical to PPL-1's on shared experiences. On k3 the
+runtime store deleted through git-filter-repo and through the rebuild path, leaving nothing. Existing suites unchanged:
+semantics 78, mobile 13; laptop staging 110, 129, regression all pass.
+
+Not done: the consented pilot (it needs the human's consent, a device to run on, and their permission to read the
+pilot's records); end-to-end runs with a model; routines and open items in the runtime; the two failure modes
+(a new experiment, PPL-2, with its own registration).

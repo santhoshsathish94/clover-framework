@@ -74,3 +74,24 @@ Rather than adding a separate sequential processing layer, `clover_semantics.py`
 4. **Interpretation & Bidirectional Neuro-Symbolic Alignment (`I_DAT` + `BiNS` + `DualMemory` + Dharma)** (*Odense & d'Avila Garcez, AIJ 2025; Wang et al., EMNLP 2026; Wen et al., EMNLP 2026; Saglam et al., 2025*):
    - Latent intent and Dharma discernment (`concept_only` vs `safe_tool` vs `risky_ask`) reach **`97.22%` 6-fold CV accuracy at Layer 8 (`sliding_gqa`)** (`94.44%` linear probe at Layer 4) vs `30.56%` for naive keyword triggers.
    - `verify_idat_semantic_encoding()` verifies Distributed-Atoms (`I_DAT`) least fixed-point soundness ($\emptyset \subset \mathcal{M}_N \subseteq \mathcal{M}_L$) and completeness ($\mathcal{M}_N = \mathcal{M}_L$), and `bidirectional_bins_diagnose()` implements `Mode i` (Conflict/Feasibility Rectification) and `Mode ii` (Deductive Deadlock Auxiliary Hypothesis Generation).
+
+## 6. Personal learning (`personal.py`, off by default)
+
+Clover can learn from one person's own interactions how they mean things and how they like answers
+(research/personal-process-learning, experiment PPL-1). It is **off** unless the person turns it on: the phone runtime
+starts it only when `CLOVER_PPL_DIR` names a folder for the person's store; the laptop Studio has a Settings switch
+(`personal`, staging copy).
+
+- **What it changes:** a habit validated from the person's corrections (after "Dig into X" was twice followed by "No,
+  look it up online", "Dig into Y" is offered web search) replaces the general reading of what is asked for; preferred
+  form ("Shorter, please", "I prefer bullet points") goes to the model as a second system message. A capability the
+  message declines is never offered, and a learned preference can add a question before acting but never remove one.
+- **What it learns from:** thanks or the Helpful button, a correction that names what was wanted, a request for another
+  form, a retry right after a personal reading (counts against it), and statements ("When I say X, I mean Y"), which
+  are evidence, not rules. The learner and its settings are PPL-1's.
+- **The person's choices:** `GET /api/personal` lists every experience and what was learned from which ones;
+  `POST /api/personal/retention` `{"ids": [...], "choice": "keep" | "stop" | "delete"}`; `POST /api/personal/forget`
+  `{"confirm": true}`. Deleting removes the experience from the store and its whole git history (git-filter-repo
+  when installed, otherwise the repository is rebuilt from what remains); deleting a conversation deletes its
+  experiences. Knowledge is never stored; it is recomputed from the experiences that remain.
+- **Tests:** `python test_personal.py` (no model needed).

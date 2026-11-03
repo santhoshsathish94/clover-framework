@@ -116,11 +116,26 @@ PHONE_OFFER = ("web_search", "python_interpreter")  # what a phone turn offers w
 
 def phone_runtime():
     import local_terminal
+    import personal
     import semantics
     # CSI (research/semantic-interface, Experiment 1f) is off unless CLOVER_CSI_URL names a CSI service on this machine
     url = os.environ.get("CLOVER_CSI_URL", "").strip()
-    return semantics.Runtime(tools=PHONE_TOOLS, device="phone", risky=local_terminal.risky,
-                             csi=semantics.csi_reader(url) if url else None)
+    csi = semantics.csi_reader(url) if url else None
+    # personal learning (research/personal-process-learning, PPL-1) is off unless CLOVER_PPL_DIR names the person's store
+    return semantics.Runtime(tools=PHONE_TOOLS, device="phone", risky=local_terminal.risky, csi=csi,
+                             personal=personal.for_process(os.environ.get("CLOVER_PPL_DIR", "").strip(), "phone", csi))
+
+
+def personal_call(runtime, method: str, *args: Any) -> Any:
+    """A personal-learning step of a turn; it never breaks the turn (an error is logged and the turn goes on)."""
+    pers = getattr(runtime, "personal", None)
+    if pers is None:
+        return None
+    try:
+        return getattr(pers, method)(*args)
+    except Exception as ex:
+        print(f"[Clover-S23] personal learning: {method} failed: {ex!r}", file=sys.stderr, flush=True)
+        return None
 
 
 def align_turn(frame, res: dict[str, Any], remember_fn=None) -> list[str]:
@@ -3308,6 +3323,9 @@ class CloverS23OnDeviceSystem:
             # F6 Second-System-Message injection for S2 turn-level recall (`exp G5`)
             if recall_sys_block:
                 sys_prompt_str = f"{sys_prompt_str}<|im_start|>system\n{recall_sys_block}<|im_end|>\n"
+            if getattr(meaning, "guidance", ""):
+                # the person's preferred form of answer (personal.py, off by default): fixed wording, no user text
+                sys_prompt_str = f"{sys_prompt_str}<|im_start|>system\n{meaning.guidance}<|im_end|>\n"
 
             if inject_latent_step_before_decode:
                 assistant_open = "<|im_start|>assistant\n<think><latent>"
@@ -4463,6 +4481,12 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     "device_profile": dev_p,
                     "warning": None,
                 })
+            elif self.path.startswith("/api/personal"):
+                pers = phone_runtime().personal
+                self._send(pers.view() if pers is not None else {
+                    "enabled": False,
+                    "how": "Personal learning is off. It starts only when CLOVER_PPL_DIR names a folder for your store.",
+                })
             elif self.path.startswith("/api/permissions"):
                 self._send({
                     "permissions": sys_s23.get_permissions_view(),
@@ -4767,6 +4791,24 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                         pass
                 threading.Thread(target=self.server.shutdown, daemon=True).start()
                 return
+            if self.path.startswith("/api/personal/"):
+                # the person's choices about their experiences: keep, stop learning, delete; or forget everything
+                pers = phone_runtime().personal
+                if pers is None:
+                    self._send({"error": "personal_learning_off", "message": "Personal learning is off."}, code=409)
+                    return
+                act_p = self.path.split("/api/personal/", 1)[1].split("?", 1)[0].strip("/")
+                try:
+                    if act_p == "retention":
+                        ids_p = payload.get("ids") if isinstance(payload.get("ids"), list) else []
+                        self._send(dict(pers.retention(ids_p, str(payload.get("choice") or "")), view=pers.view()))
+                    elif act_p == "forget" and payload.get("confirm") is True:
+                        self._send(dict(pers.forget_all(), view=pers.view()))
+                    else:
+                        self._send({"error": "not_found"}, code=404)
+                except ValueError as ex:
+                    self._send({"error": "bad_request", "message": str(ex)}, code=400)
+                return
             if self.path.startswith("/api/feedback"):
                 try:
                     sid = str(payload.get("session_id") or "s23-studio")
@@ -4779,6 +4821,9 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     )
                     if hasattr(sys_s23, "memory_index"):
                         sys_s23.memory_index.wake()
+                    if fkind == "helpful":
+                        personal_call(phone_runtime(), "helpful", sid,
+                                      int(turn_n) if isinstance(turn_n, int) or (isinstance(turn_n, str) and turn_n.isdigit()) else None)
                     self._send({"ok": True, "outcome": rec, "growth": [f"turn {turn_n or 1}: marked helpful"]})
                 except Exception as ex:
                     self._send({"error": "feedback_failed", "message": str(ex)}, code=400)
@@ -5123,6 +5168,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 try:
                     import semantics
                     phone = phone_runtime()
+                    personal_call(phone, "before_turn", sid, prompt, how_retry)
                     allow_once_list = list(payload.get("allow_once") or [])
                     deny_once_list = list(payload.get("deny_once") or [])
                     if how_retry and prev_q and prev_a and not img_b64_in and not att_files_in:
@@ -5231,6 +5277,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                                 meaning=frame,
                             )
                         align_turn(frame, res, sys_s23.remember_for(sid, max_layer))
+                        personal_call(phone, "after_turn", sid, frame, res)
 
                     if media_errors:
                         res["media_errors"] = media_errors
@@ -5333,6 +5380,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     sys_s23.active_turns.pop(turn_id, None)
                 return
 
+            personal_call(phone_runtime(), "before_turn", str(payload.get("session_id") or "s23-studio"), prompt, how_retry)
             if how_retry and prev_q and prev_a and not img_b64_in and not att_files_in:
                 fb_text = str(payload.get("feedback") or (prompt if how_retry == "said" else "") or "").strip()
                 ctx_before = C.context_before(hist_msgs, last_ex[0]) if (how_retry == "said" and last_ex) else ""
@@ -5390,6 +5438,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
             )
             if not res.get("permission_required"):
                 align_turn(frame, res, sys_s23.remember_for(str(payload.get("session_id") or "s23-studio"), max_layer))
+                personal_call(frame.runtime, "after_turn", str(payload.get("session_id") or "s23-studio"), frame, res)
             if media_errors:
                 res["media_errors"] = media_errors
                 res["reply"] = (str(res.get("reply") or "").rstrip()
@@ -5404,6 +5453,7 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 sid = self.path.split("/api/sessions/", 1)[1].split("?", 1)[0].strip("/")
                 if sid:
                     sys_s23.git_memory_repo.delete_session(sid)
+                    personal_call(phone_runtime(), "delete_session", sid)  # its experiences go with it
                     if hasattr(sys_s23, "memory_index"):
                         sys_s23.memory_index.wake()
                 self._send({"ok": True, "sessions": sys_s23.git_memory_repo.sessions()})
