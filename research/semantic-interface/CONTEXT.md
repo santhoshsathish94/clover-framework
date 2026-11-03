@@ -182,3 +182,14 @@
     "Double the N." below the threshold), declined tools offered 0.000, asked 1.000, scope 1.000, claims 0.985 vs
     0.842, S1 and S2 unchanged, false requests on EWT test 2 of 743 (0.27%). Decision: integrate the routing use and
     the claim check, off by default (framework runtime and laptop Studio, as the human chose after 3c2).
+- 2026-11-02 23:32 - 2026-11-03 00:15 UTC (clock): **integration, off by default** (b4d3f96): `semantics.Runtime.csi`
+  (common semantics.py) - a tool the message declines is not offered in any route, a reply's claim is read from its
+  main clause; `semantics.csi_reader` (loopback only, no proxy, None on any failure = behaviour as without CSI);
+  `prototype/csi_service.py` (127.0.0.1, JSON only, Host check, 4,000 characters, nothing logged). On: framework
+  runtime `CLOVER_CSI_URL=http://127.0.0.1:<port>`; laptop Studio Settings `csi_url` (staged, not deployed); the phone
+  is unchanged. Tests: framework 78 (11 new) and 13; laptop 110 (4 new).
+  - Framework runtime on k3, off vs on (22 messages): routing changed only on the 5 messages that decline a tool with
+    a verbal negation; replies are not repeatable between runs (5 unchanged-route replies also differed).
+  - **Not done:** the laptop live check (laptop unreachable on ssh); installing the CSI environment on the laptop is a
+    change to the user's machine and needs the laptop online. Open points seen: "Double the N." misread below the
+    threshold; "No need to ..." declines are outside CSI's scope; "You don't have to use X" is read as declining.

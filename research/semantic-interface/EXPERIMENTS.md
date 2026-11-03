@@ -315,6 +315,28 @@ template messages are short single requests; P covers only EWT's sentences witho
 for sentences the parser misreads, which none of the 30 core-observation messages were; R and C are unchanged from 1e
 because rule 12 does not touch sentences with a verb.
 
+**Integration, measured in the framework runtime (k3 core-observation sandbox, 2026-11-02 23:48 - 2026-11-03 00:10
+UTC; main b4d3f96 in its own worktree; each arm from an empty memory with the same model files;
+`results/e1f_framework_off_on.txt`, turns `results/e1f_framework_csi_off_turns.jsonl` and `..._on_turns.jsonl`).** The
+15 core-observation messages plus 7 that decline or ask for a tool, with CSI off (`CLOVER_CSI_URL` unset) and on (CSI
+service on 127.0.0.1:8793). Routing changed on 5 of the 22 messages, exactly the 5 that decline a tool with a verbal
+negation: "Don't search the web, just tell me what you know about the population of Jaipur." (off: search offered and
+run, 108.7 s, labelled "from the web"; on: no tool, 36.4 s, labelled "model knowledge"); "Do not use Python; just
+estimate 2**64 + 17 roughly." (off: Python offered, not run; on: none); "Please don't search the web. Just answer from
+memory: ..." (search offered, not run -> none; same answer); "You don't have to use Python: what is 17 * 23?" (off:
+Python ran, "verified - Python"; on: none, 391 from model knowledge); "Don't use Python, search the web for the
+population of Jaipur." (off: search and Python offered; on: search only; same answer). Unchanged: the 15 core
+messages, the negation inside a request ("Search the web for why the Jaipur metro is not running today.": search kept
+and run) and the decline without a verbal negation ("No need to search the web, ...": still offered, outside scope).
+Total turn time 680.6 s off, 605.1 s on (a CSI round trip took 0.06-0.08 s per message that asks for a tool, measured
+separately). Observations, not a verdict: replies also differed on 5 messages whose routing did not change, so this
+runtime's replies are not repeatable between runs and reply differences are not attributable to CSI; for "Do not use
+Python; just estimate 2**64 + 17 roughly." the reply with CSI on had wrong digits where the reply with CSI off said
+1.84 x 10^19; "You don't have to use Python" is read as declining (the pre-registered form D6), so that answer lost its
+Python check. **Laptop Studio: not checked live** - the laptop did not answer on ssh (192.168.29.127:22 timed out); its
+switch (Settings `csi_url`, off by default, loopback only) is in the staging tree and passes its tests (110 checks)
+but is not deployed, and the laptop has no CSI environment (spaCy, en_core_web_trf, lemmatiser artefact, OEWN).
+
 ## Experiment 2 = E3 run plan (pre-registered 2026-11-01)
 **Data.** UD English-EWT r2.18 (tag commit b7711cce, CC BY-SA 4.0): train for our parser, dev for model choice, test
 reported once. Gold word segmentation is given to every system (tokenisation differences do not count).

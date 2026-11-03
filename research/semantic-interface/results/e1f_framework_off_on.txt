@@ -1,0 +1,119 @@
+same    'Hi'
+    routed      off=[]  on=[]
+    ran         off=None  on=None
+    s           off=0.04  on=0.05
+same    'How are you?'
+    routed      off=[]  on=[]
+    ran         off=None  on=None
+    s           off=0.02  on=0.03
+same    'Thanks'
+    routed      off=[]  on=[]
+    ran         off=None  on=None
+    s           off=0.02  on=0.03
+same    'What is the capital of Australia?'
+    routed      off=[]  on=[]
+    ran         off=None  on=None
+    s           off=2.49  on=2.41
+same    'A shop sells pens at 3 for $2. How much do 12 pens cost?'
+    routed      off=[]  on=[]
+    ran         off=None  on=None
+    s           off=6.15  on=6.17
+same    'And how much would 45 pens cost?'
+    routed      off=[]  on=[]
+    ran         off=None  on=None
+    s           off=8.49  on=8.68
+same    "That's wrong, try again"
+    routed      off=None  on=None
+    ran         off=None  on=None
+    s           off=28.23  on=28.44
+same    'Search the web for the population of Jaipur'
+    routed      off=['web_search']  on=['web_search']
+    ran         off='web_search'  on='web_search'
+    s           off=75.39  on=75.32
+same    'Use Python to compute 2**64 + 17'
+    routed      off=['python_interpreter']  on=['python_interpreter']
+    ran         off='python_interpreter'  on='python_interpreter'
+    s           off=12.73  on=12.8
+same    "Remember that I'm vegetarian."
+    routed      off=['remember']  on=['remember']
+    ran         off=None  on=None
+    s           off=43.09  on=43.42
+same    'Suggest a quick dinner I can cook tonight.'
+    routed      off=[]  on=[]
+    ran         off=None  on=None
+    s           off=9.69  on=10.21
+same    'What is in this picture?'
+    routed      off=[]  on=[]
+    ran         off=None  on=None
+    s           off=9.05  on=9.17
+same    'What number is written on it?'
+    routed      off=[]  on=[]
+    ran         off=None  on=None
+    s           off=5.92  on=5.93
+same    'Read the file /opt/clover-k3/core-observe/files/meeting-notes.txt and summarize it.'
+    routed      off=['repo_read']  on=['repo_read']
+    ran         off='repo_read'  on='repo_read'
+    s           off=29.06  on=29.03
+same    'Delete the old report files in /opt/clover-k3/core-observe/files/reports'
+    routed      off=['run_shell', 'repo_read']  on=['run_shell', 'repo_read']
+    ran         off=None  on=None
+    s           off=63.73  on=63.03
+CHANGED "Don't search the web, just tell me what you know about the population of Jaipur."
+    routed      off=['web_search']  on=[]
+    offered_c1  off=['web_search']  on=[]
+    ran         off='web_search'  on=None
+    declined    off=None  on=['web.page', 'web.search']
+    label       off='from the web · not checked'  on='model knowledge · not checked'
+    understood  off='understood: needs the web'  on='understood: question'
+    s           off=108.68  on=36.42
+    reply off: 'According to the latest available data from Wikipedia, Jaipur (the capital city of Rajasthan) had a population of approximately **3.1 million** as of 2011. This makes it the tenth-most populous city in India and one of the largest cities in North India. Located 268 km (167 mi) from the national capi'
+    reply on:  'According to the most recent available data (Wikipedia, 2011 census), Jaipur – the capital city of Rajasthan – had a population of roughly **3.1\u202fmillion** people. It is one of India’s largest cities and ranks tenth in terms of population.'
+CHANGED 'Do not use Python; just estimate 2**64 + 17 roughly.'
+    routed      off=['python_interpreter']  on=[]
+    offered_c1  off=['python_interpreter']  on=[]
+    ran         off=None  on=None
+    declined    off=None  on=['python']
+    understood  off='understood: needs Python'  on='understood: question'
+    s           off=62.62  on=32.47
+    reply off: '2**64 ≈ 1.84 × 10^19'
+    reply on:  '2**64 is about 18,446,744,087,370,55936. Adding 17 gives roughly **18,446,744,087,370,55953**.'
+CHANGED "Please don't search the web. Just answer from memory: what is the tallest mountain in Afri"
+    routed      off=['web_search']  on=[]
+    offered_c1  off=['web_search']  on=[]
+    ran         off=None  on=None
+    declined    off=None  on=['web.page', 'web.search']
+    understood  off='understood: needs the web'  on='understood: question'
+    s           off=32.53  on=27.13
+    reply off: 'Mount Kilimanjaro'
+    reply on:  'Mount Kilimanjaro'
+CHANGED "You don't have to use Python: what is 17 * 23?"
+    routed      off=['python_interpreter']  on=[]
+    offered_c1  off=['python_interpreter']  on=[]
+    ran         off='python_interpreter'  on=None
+    declined    off=None  on=['python']
+    label       off='verified · Python'  on='model knowledge · not checked'
+    understood  off='understood: needs Python'  on='understood: question'
+    s           off=34.38  on=29.56
+    reply off: '17 × 23 = \\boxed{391}'
+    reply on:  '391'
+same    'Search the web for why the Jaipur metro is not running today.'
+    routed      off=['web_search']  on=['web_search']
+    ran         off='web_search'  on='web_search'
+    s           off=74.56  on=114.19
+CHANGED "Don't use Python, search the web for the population of Jaipur."
+    routed      off=['web_search', 'python_interpreter']  on=['web_search']
+    offered_c1  off=['web_search', 'python_interpreter']  on=['web_search']
+    ran         off='web_search'  on='web_search'
+    declined    off=None  on=['python']
+    understood  off='understood: needs the web, Python'  on='understood: needs the web'
+    s           off=36.31  on=35.31
+    reply off: 'According to the latest available data from Wikipedia, Jaipur (the capital city of Rajasthan) had a population of approximately **3.1 million** as of 2011. This makes it the tenth-most populous city in India and one of the largest cities in North India.'
+    reply on:  'According to the latest available data from Wikipedia, Jaipur (the capital city of Rajasthan) had a population of approximately **3.1 million** as of 2011. This makes it the tenth-most populous city in India and one of the largest cities in North India.'
+same    'No need to search the web, just tell me the capital of Australia.'
+    routed      off=['web_search']  on=['web_search']
+    ran         off=None  on=None
+    s           off=37.39  on=35.34
+    reply off: 'Canberra'
+    reply on:  'The capital of Australia is Canberra.'
+
+22 prompts (off), 22 (on); routing unchanged on 17
