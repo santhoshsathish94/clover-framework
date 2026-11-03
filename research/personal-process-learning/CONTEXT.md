@@ -32,6 +32,10 @@
 - 2026-11-03: general interpreter trained (held-out 1.000, in-distribution); development runs 1 (no noise) and 2
   (inattention + one-offs); dry run of the full test procedure on development persons; PPL-1 pre-registered
   (EXPERIMENTS.md) before any test-pool person was run.
+- 2026-11-03: PPL-1 test (12 fresh persons): all eight criteria pass - first-response accuracy PPL 0.950, general only
+  0.649, conversation memory 0.730; habits 0.885 / 0.302 / 0.571; no over-application of one-offs or habits outside
+  their areas; retention behaved as specified. Two failure modes found (a habit tied to its training construction; a
+  personal meaning masked by a general cue during training). Phase 2 awaits the human's decision.
 
 ## Where things are
 - k3 `/opt/clover-k3/meaning-core/ppl/`: `code/` (uploaded LF copies, checked by `manifest.sha256`), `ppl-env.sh`,

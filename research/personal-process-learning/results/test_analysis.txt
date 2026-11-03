@@ -1,0 +1,114 @@
+summary
+  B0           all 0.649 habit 0.302 control 1.000 ctl-over 0.000 oneoff 1.000/0.000 generic 1.000 routine 0.000 open 0.000 openF1 0.000 pres 0.314 (n 385) wrong 0.351 turns 1.82 n 1317
+  B1           all 0.698 habit 0.372 control 1.000 ctl-over 0.000 oneoff 1.000/0.000 generic 1.000 routine 0.000 open 1.000 openF1 1.000 pres 0.400 (n 395) wrong 0.302 turns 1.69 n 1317
+  B2           all 0.730 habit 0.571 control 0.941 ctl-over 0.039 oneoff 0.406/0.552 generic 0.905 routine 1.000 open 0.958 openF1 0.958 pres 0.995 (n 426) wrong 0.270 turns 1.32 n 1317
+  PPL          all 0.950 habit 0.885 control 1.000 ctl-over 0.000 oneoff 1.000/0.000 generic 1.000 routine 1.000 open 1.000 openF1 1.000 pres 0.996 (n 511) wrong 0.050 turns 1.06 n 1317
+  PPL-surface  all 0.854 habit 0.667 control 1.000 ctl-over 0.000 oneoff 1.000/0.000 generic 1.000 routine 1.000 open 1.000 openF1 1.000 pres 0.996 (n 499) wrong 0.146 turns 1.19 n 1317
+  PPL-noval    all 0.863 habit 0.885 control 0.941 ctl-over 0.000 oneoff 0.125/0.875 generic 0.951 routine 1.000 open 1.000 openF1 1.000 pres 0.996 (n 463) wrong 0.137 turns 1.16 n 1317
+  PPL-noctx    all 0.941 habit 0.875 control 0.961 ctl-over 0.039 oneoff 1.000/0.000 generic 1.000 routine 1.000 open 1.000 openF1 1.000 pres 0.996 (n 508) wrong 0.059 turns 1.07 n 1317
+B2 sensitivity {"B2|tau=0.1": {"all": 0.6127562642369021, "habit": 0.6822916666666666, "oneoff_overapplied": 0.6979166666666666, "control_overapplied": 0.06535947712418301}, "B2|tau=0.2": {"all": 0.6909643128321944, "habit": 0.7048611111111112, "oneoff_overapplied": 0.7083333333333334, "control_overapplied": 0.058823529411764705}, "B2|tau=0.3": {"all": 0.7304479878511769, "habit": 0.5711805555555556, "oneoff_overapplied": 0.5520833333333334, "control_overapplied": 0.0392156862745098}, "B2|tau=0.4": {"all": 0.7296886864085042, "habit": 0.4427083333333333, "oneoff_overapplied": 0.2604166666666667, "control_overapplied": 0.006535947712418301}, "B2|tau=0.5": {"all": 0.7038724373576309, "habit": 0.3472222222222222, "oneoff_overapplied": 0.041666666666666664, "control_overapplied": 0.0}, "B2|tau=0.6": {"all": 0.6780561883067577, "habit": 0.3020833333333333, "oneoff_overapplied": 0.0, "control_overapplied": 0.0}, "B2|tau=0.7": {"all": 0.6697038724373576, "habit": 0.3020833333333333, "oneoff_overapplied": 0.0, "control_overapplied": 0.0}}
+per person habit acc
+  B0           0.25 0.25 0.12 0.50 0.50 0.25 0.12 0.25 0.38 0.25 0.38 0.38
+  B2           0.62 0.65 0.46 0.58 0.69 0.56 0.50 0.50 0.62 0.46 0.65 0.56
+  PPL          0.79 0.92 0.79 1.00 1.00 0.92 0.88 0.88 0.92 0.88 0.88 0.79
+  PPL-surface  0.58 0.75 0.62 0.67 0.75 0.75 0.58 0.58 0.67 0.71 0.67 0.67
+per habit (PPL / B0 / B2 / PPL-surface), n
+  answer_email   1.00 1.00 0.93 1.00  n 42
+  arrow_move     1.00 1.00 0.90 1.00  n 42
+  arrow_share    1.00 1.00 1.00 1.00  n 48
+  clean_code     1.00 0.00 0.44 0.67  n 36
+  fyi_docs       1.00 1.00 1.00 1.00  n 42
+  kill_email     1.00 0.00 0.31 0.59  n 54
+  long_docs      1.00 0.00 1.00 0.00  n 42
+  look_code      0.33 0.00 0.72 0.33  n 36
+  polish_docs    1.00 0.00 0.03 0.67  n 30
+  ptal           1.00 0.00 0.55 1.00  n 42
+  red_tests      0.00 0.00 0.62 0.00  n 42
+  ship_docs      1.00 0.00 0.12 0.67  n 42
+  stash          1.00 0.00 0.07 0.67  n 42
+  tidy_files     1.00 0.00 0.08 0.67  n 36
+PPL errors
+  52001 habit        red_tests    | queue.go is red again. | want code.test | got code.refactor (general)
+  52001 habit        look_code    | app.py needs a look. | want code.explain | got code.review (general)
+  52001 habit        red_tests    | Everything in store.js is red. | want code.test | got code.refactor (general)
+  52001 habit        look_code    | Go ahead and look into build.rs. | want code.explain | got code.review (general)
+  52001 habit        red_tests    | lexer.c is red again. | want code.test | got code.refactor (general)
+  52001 habit        red_tests    | Everything in views.py is red. | want code.test | got code.refactor (general)
+  52001 habit        look_code    | store.js needs a look. | want code.explain | got code.review (general)
+  52001 habit        look_code    | Could you look into lexer.c? | want code.explain | got code.review (general)
+  52001 habit        red_tests    | views.py is red again. | want code.test | got code.refactor (general)
+  52001 habit        red_tests    | Everything in views.py is red. | want code.test | got code.refactor (general)
+  52002 habit        look_code    | I'd like you to look into app.py. | want code.explain | got code.review (general)
+  52002 habit        look_code    | views.py needs a look. | want code.explain | got code.review (general)
+  52002 habit        look_code    | store.js needs a look. | want code.explain | got code.review (general)
+  52002 habit        look_code    | When you get a chance, look into store.js. | want code.explain | got code.review (general)
+  52003 habit        red_tests    | Everything in views.py is red. | want code.test | got code.refactor (general)
+  52003 habit        look_code    | When you get a chance, look into client.ts. | want code.explain | got code.review (general)
+  52003 habit        red_tests    | lexer.c is red again. | want code.test | got code.refactor (general)
+  52003 habit        look_code    | server.py needs a look. | want code.explain | got code.review (general)
+  52003 habit        red_tests    | build.rs is red again. | want code.test | got code.refactor (general)
+  52003 habit        red_tests    | Everything in build.rs is red. | want code.test | got code.refactor (general)
+  52003 habit        look_code    | queue.go needs a look. | want code.explain | got code.review (general)
+  52003 habit        look_code    | When you get a chance, look into app.py. | want code.explain | got code.review (general)
+  52003 habit        red_tests    | Everything in lexer.c is red. | want code.test | got code.refactor (general)
+  52003 habit        red_tests    | build.rs is red again. | want code.test | got code.refactor (general)
+  52006 habit        look_code    | Go ahead and look into client.ts. | want code.explain | got code.review (general)
+  52006 habit        look_code    | lexer.c needs a look. | want code.explain | got code.review (general)
+  52006 habit        look_code    | views.py needs a look. | want code.explain | got code.review (general)
+  52006 habit        look_code    | Go ahead and look into index.html. | want code.explain | got code.review (general)
+  52007 habit        red_tests    | build.rs is red again. | want code.test | got code.refactor (general)
+  52007 habit        red_tests    | views.py is red again. | want code.test | got code.refactor (general)
+  52007 habit        red_tests    | Everything in lexer.c is red. | want code.test | got code.refactor (general)
+  52007 habit        red_tests    | Everything in server.py is red. | want code.test | got code.refactor (general)
+  52007 habit        red_tests    | store.js is red again. | want code.test | got code.refactor (general)
+  52007 habit        red_tests    | Everything in queue.go is red. | want code.test | got code.refactor (general)
+  52008 habit        red_tests    | app.py is red again. | want code.test | got code.refactor (general)
+  52008 habit        red_tests    | queue.go is red again. | want code.test | got code.refactor (general)
+  52008 habit        red_tests    | Everything in build.rs is red. | want code.test | got code.refactor (general)
+  52008 habit        red_tests    | Everything in store.js is red. | want code.test | got code.refactor (general)
+  52008 habit        red_tests    | app.py is red again. | want code.test | got code.refactor (general)
+  52008 habit        red_tests    | Everything in lexer.c is red. | want code.test | got code.refactor (general)
+  52009 habit        look_code    | When you get a chance, look into server.py. | want code.explain | got code.review (general)
+  52009 habit        look_code    | lexer.c needs a look. | want code.explain | got code.review (general)
+  52009 habit        look_code    | Could you look into app.py? | want code.explain | got code.review (general)
+  52009 habit        look_code    | app.py needs a look. | want code.explain | got code.review (general)
+  52010 habit        red_tests    | lexer.c is red again. | want code.test | got code.refactor (general)
+  52010 habit        red_tests    | queue.go is red again. | want code.test | got code.refactor (general)
+  52010 habit        red_tests    | app.py is red again. | want code.test | got code.refactor (general)
+  52010 habit        red_tests    | Everything in queue.go is red. | want code.test | got code.refactor (general)
+  52010 habit        red_tests    | Everything in app.py is red. | want code.test | got code.refactor (general)
+  52010 habit        red_tests    | Everything in views.py is red. | want code.test | got code.refactor (general)
+  52011 habit        red_tests    | Everything in views.py is red. | want code.test | got code.refactor (general)
+  52011 habit        red_tests    | Everything in client.ts is red. | want code.test | got code.refactor (general)
+  52011 habit        red_tests    | store.js is red again. | want code.test | got code.refactor (general)
+  52011 habit        red_tests    | Everything in index.html is red. | want code.test | got code.refactor (general)
+  52011 habit        red_tests    | lexer.c is red again. | want code.test | got code.refactor (general)
+  52011 habit        red_tests    | index.html is red again. | want code.test | got code.refactor (general)
+  52012 habit        red_tests    | Everything in app.py is red. | want code.test | got code.refactor (general)
+  52012 habit        red_tests    | store.js is red again. | want code.test | got code.refactor (general)
+  52012 habit        look_code    | I'd like you to look into views.py. | want code.explain | got code.review (general)
+  52012 habit        red_tests    | Everything in views.py is red. | want code.test | got code.refactor (general)
+  52012 habit        look_code    | app.py needs a look. | want code.explain | got code.review (general)
+  52012 habit        red_tests    | store.js is red again. | want code.test | got code.refactor (general)
+  52012 habit        red_tests    | Everything in lexer.c is red. | want code.test | got code.refactor (general)
+  52012 habit        look_code    | index.html needs a look. | want code.explain | got code.review (general)
+  52012 habit        red_tests    | store.js is red again. | want code.test | got code.refactor (general)
+  52012 habit        look_code    | Go ahead and look into queue.go. | want code.explain | got code.review (general)
+presentation misses (PPL)
+   52004 generic Could you find information on marathon training? ['format', 'length', 'sources']
+   52004 generic Could you look up home composting? ['format', 'length', 'sources']
+52001 stop ship_docs 1 7 1.0 | delete look_code 1 7 8 0 8 1.0
+52002 stop stash 2 8 1.0 | delete ptal 1 7 6 0 6 1.0
+52003 stop ptal 2 8 1.0 | delete clean_code 2 7 7 0 7 1.0
+52004 stop polish_docs 2 8 1.0 | delete ship_docs 1 7 9 0 9 1.0
+52005 stop kill_email 2 8 1.0 | delete long_docs 1 7 8 0 8 1.0
+52006 stop ptal 1 7 1.0 | delete clean_code 1 7 8 0 8 1.0
+52007 stop ptal 1 7 1.0 | delete long_docs 1 7 8 0 8 1.0
+52008 stop tidy_files 1 7 1.0 | delete stash 1 7 10 0 10 1.0
+52009 stop clean_code 1 7 1.0 | delete long_docs 1 7 8 0 8 1.0
+52010 stop arrow_share 1 8 1.0 | delete tidy_files 1 7 10 0 10 1.0
+52011 stop long_docs 1 7 1.0 | delete stash 1 7 10 0 10 1.0
+52012 stop polish_docs 1 7 1.0 | delete ship_docs 1 7 8 0 8 1.0
+before {"general": "25913d7e9c5b658ea5bdc9277eabcbff7256132fa7c668dbe42203757cd9a80d", "csi": {"code": "567caad4a45000e5d77b574a621d9bd5c700166056e0cb0374b574143455b932", "frozen": "61847d6bfdaff6b752c1ca26153c35972f6ccc255bef19772abd50383708ecb3", "readings": "6555b317db91af840dde99e26f5ed480efce308ab771d71d459b8ae473a27384", "n_code": 7, "n_frozen": 2}}
+after  {"general": "25913d7e9c5b658ea5bdc9277eabcbff7256132fa7c668dbe42203757cd9a80d", "csi": {"code": "567caad4a45000e5d77b574a621d9bd5c700166056e0cb0374b574143455b932", "frozen": "61847d6bfdaff6b752c1ca26153c35972f6ccc255bef19772abd50383708ecb3", "readings": "6555b317db91af840dde99e26f5ed480efce308ab771d71d459b8ae473a27384", "n_code": 7, "n_frozen": 2}}
+leakage {'52001': 0, '52002': 0, '52003': 0, '52004': 0, '52005': 0, '52006': 0, '52007': 0, '52008': 0, '52009': 0, '52010': 0, '52011': 0, '52012': 0}

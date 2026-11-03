@@ -158,3 +158,87 @@ Known limitations, stated before the test:
 7. The leakage check looks for hidden shared state in one process; stores are separate by construction.
 8. Deletion reaches the person's repository and lists registered copies; it cannot reach copies it was never told
    about.
+
+### Results (test run 2026-11-03, 02:52-02:55 UTC, k3)
+
+Registration commit `8db363b6` was pushed at 02:51:12 UTC. Before the run, the code on k3 matched it by sha256
+(13 files), and `params.json` and the general model matched the registered hashes. Output: `results/test_result.json`
+(sha256 `00176ef5...58456f`), `results/test_knowledge.jsonl` (what PPL learned, per person), `results/test_analysis.txt`
+(every PPL error); per-item records stay on k3 (`runs/test/test_records.jsonl`, sha256 `3e477405...7769baf`).
+
+12 persons, 1,317 fresh evaluation items per condition:
+
+| condition | all | habit | control | control over-applied | one-off probe | one-off over-applied | ordinary | routine | open items | presentation | wrong actions | turns |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| B0 | 0.649 | 0.302 | 1.000 | 0.000 | 1.000 | 0.000 | 1.000 | 0.000 | 0.000 | 0.314 | 0.351 | 1.82 |
+| B1 | 0.698 | 0.372 | 1.000 | 0.000 | 1.000 | 0.000 | 1.000 | 0.000 | 1.000 | 0.400 | 0.302 | 1.69 |
+| B2 | 0.730 | 0.571 | 0.941 | 0.039 | 0.406 | 0.552 | 0.905 | 1.000 | 0.958 | 0.995 | 0.270 | 1.32 |
+| **PPL** | **0.950** | **0.885** | 1.000 | 0.000 | 1.000 | 0.000 | 1.000 | 1.000 | 1.000 | 0.996 | 0.050 | 1.06 |
+| PPL-surface | 0.854 | 0.667 | 1.000 | 0.000 | 1.000 | 0.000 | 1.000 | 1.000 | 1.000 | 0.996 | 0.146 | 1.19 |
+| PPL-noval | 0.863 | 0.885 | 0.941 | 0.000 | 0.125 | 0.875 | 0.951 | 1.000 | 1.000 | 0.996 | 0.137 | 1.16 |
+| PPL-noctx | 0.941 | 0.875 | 0.961 | 0.039 | 1.000 | 0.000 | 1.000 | 1.000 | 1.000 | 0.996 | 0.059 | 1.07 |
+
+(presentation = all applicable dimensions right, where the intent was right; wrong actions = acted on a wrong
+intent; turns = turns to resolution when the same item is played through with learning frozen.)
+
+| | result | |
+|---|---|---|
+| L1 | habits: PPL 0.885, B0 0.302 (+58.3), B2 0.571 (+31.4); p = 0.00049 for both (PPL above B0 and above B2 for all 12 persons) | **pass** |
+| L2 | all items: PPL 0.950, B0 0.649 (+30.1), B2 0.730 (+22.0) | **pass** |
+| L3 | over-application: controls PPL 0.000 (B2 0.039); one-off probes PPL 0.000 (B2 0.552) | **pass** |
+| L4 | ordinary requests: PPL 1.000, B0 1.000 | **pass** |
+| L5 | presentation: PPL 0.996, B0 0.314 (+68.2), B1 0.400 (+59.6) | **pass** |
+| L6 | routines 1.000; open-item F1 1.000 | **pass** |
+| L7 | 0 differences alone vs interleaved (12 persons); general interpreter and CSI (code, frozen artefacts, probe readings) unchanged and equal to the registered values | **pass** |
+| L8 | 12 of 12 persons had validated knowledge on both habits; stop: all records kept, no references, behaviour back to general 1.000; delete: 0 of 100 deleted strings left in any store repository, no references, behaviour back to general 1.000; all other items unchanged; rebuild equalled live knowledge for every person | **pass** |
+
+All eight criteria pass.
+
+Per person, habit accuracy: PPL 0.79-1.00, B2 0.46-0.69, B0 0.12-0.50. Sensitivity (not a criterion): conversation
+memory at the threshold that is best for habits *on this test* (tau 0.2) reaches 0.705 on habits, with one-off
+over-application 0.708 and overall 0.691; PPL is 18 points above even that.
+
+Per habit (PPL / B0 / B2): clean_code 1.00 / 0.00 / 0.44; kill_email 1.00 / 0.00 / 0.31; polish_docs 1.00 / 0.00 /
+0.03; ship_docs 1.00 / 0.00 / 0.12; stash (learned in files and docs, tested in code) 1.00 / 0.00 / 0.07; tidy_files
+1.00 / 0.00 / 0.08; ptal 1.00 / 0.00 / 0.55; long_docs 1.00 / 0.00 / 1.00; answer_email, arrow_move, arrow_share and
+fyi_docs 1.00 for PPL and already 1.00 for B0 (the general reading was right); **look_code 0.33 / 0.00 / 0.72;
+red_tests 0.00 / 0.00 / 0.62**.
+
+**Where PPL failed.** All 66 PPL errors are habit items of two habits, and both are failures of the method, not of
+the run:
+- look_code: every training phrasing ("look at X", "have a look at X") contained *at*, so the learned trigger kept
+  it (`ctx=code, has=code, tok=look, tok=at`). "Take a look at X" was recognised; "look into X" and "X needs a look"
+  were not. Generalisation only drops what varied in training, so a habit seen in one construction stays tied to it.
+- red_tests: in training, "The tests on X are red." was already read as *run the tests* by the general interpreter -
+  because of the word *tests* - so there was no mismatch and nothing personal was learned. At evaluation "X is red
+  again" lacked that cue. Learning only from mismatches cannot learn a personal meaning that the general reading got
+  right for another reason. Conversation memory got 0.62 here by word overlap ("red again").
+- Also two presentation misses (one person, research searches).
+
+**What the ablations show.** CSI lemmas: without them the personal layer reaches 0.667 on habits instead of 0.885
+(inflected forms such as "needs polishing", "can be killed", "get the report shipped"; and "is" is not recognised as a
+light word without its lemma *be*, which is why long_docs drops to 0.00). Validation: applying what was seen once over-applies
+the one-off meanings 87.5% of the time (overall 0.863 instead of 0.950). Context scoping: without it, habits leak
+into controls (3.9%) - a smaller effect than in development (19%).
+
+**Retention in practice.** Stop learning: 7-8 experiences per person kept as records, excluded from learning; the
+knowledge derived from them disappeared on recomputation. Delete: 7 experiences per person removed from the working
+tree, every commit, the reflog and the object store; none of the 100 deleted strings was found anywhere in the
+person's repository afterwards. All 100 were still in the backup clones made before deletion - registered in
+`copies.json` and reported, as designed: copies need their own deletion.
+
+**Decision.** By the registered rule, the question is answered yes *for this controlled setting*: with Personal
+Process Learning on top of CSI and a shared general interpreter, Clover learned each simulated person's habits,
+preferences, routine and open items from interaction, and answered fresh scenarios better - 0.950 first-response
+accuracy against 0.649 with general interpretation only and 0.730 with conversation memory, wrong actions 5.0%
+against 35.1% and 27.0% - without applying one-off meanings or habits outside their areas, without changing CSI or
+the general interpreter, and with stop-learning and deletion behaving as specified. The next step under the rule is
+Phase 2 (runtime integration, off by default, and a consented pilot with real use), which needs the human's approval.
+
+What this does not show, beyond the limitations stated before the test:
+1. Development to test, habit accuracy fell from 0.993 to 0.885, all of it in two habits whose phrasings vary in a
+   way no development habit did. Real people's habits will vary in both ways; the two failure modes above are the
+   first things to address (e.g. learning which word carries the meaning from confirmations as well as mismatches,
+   and asking when a known habit word appears in a new construction).
+2. The evidence is about simulated persons written by the learner's author. Nothing here is evidence about real
+   people; that needs the consented pilot.
