@@ -1,0 +1,52 @@
+{
+ "choice": {
+  "B0": "B0|C=0.0",
+  "B1": "B1|C=0.0",
+  "B2": "B2|C=0.0|tau=0.3",
+  "PPL": "PPL|C=0.0|K=2|P=0.7|prov=False"
+ },
+ "params": {
+  "B0": {
+   "C": 0.0
+  },
+  "B1": {
+   "C": 0.0
+  },
+  "B2": {
+   "C": 0.0,
+   "tau": 0.3
+  },
+  "PPL": {
+   "C": 0.0,
+   "learner": {
+    "K": 2,
+    "P": 0.7,
+    "apply_provisional": false
+   }
+  },
+  "PPL-surface": {
+   "C": 0.0,
+   "learner": {
+    "K": 2,
+    "P": 0.7,
+    "apply_provisional": false
+   }
+  },
+  "PPL-noval": {
+   "C": 0.0,
+   "learner": {
+    "K": 2,
+    "P": 0.7,
+    "apply_provisional": false
+   }
+  },
+  "PPL-noctx": {
+   "C": 0.0,
+   "learner": {
+    "K": 2,
+    "P": 0.7,
+    "apply_provisional": false
+   }
+  }
+ }
+}

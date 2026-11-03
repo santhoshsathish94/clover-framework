@@ -1,0 +1,2702 @@
+{
+ "B0|C=0.0": {
+  "habit": {
+   "n": 288,
+   "acc": 0.4131944444444444,
+   "clarified": 0.0,
+   "wrong_action": 0.5868055555555556
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 0.0,
+   "clarified": 0.0,
+   "wrong_action": 1.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.0,
+   "clarified": 0.0,
+   "wrong_action": 1.0
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "presentation": {
+   "n": 140,
+   "adherence": 0.6142857142857143
+  },
+  "open_f1": 0.0,
+  "turns": 1.6164154103852597
+ },
+ "B1|C=0.0": {
+  "habit": {
+   "n": 288,
+   "acc": 0.5729166666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.4270833333333333
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 0.0,
+   "clarified": 0.0,
+   "wrong_action": 1.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.7571189279731994,
+   "clarified": 0.0,
+   "wrong_action": 0.24288107202680068
+  },
+  "presentation": {
+   "n": 140,
+   "adherence": 0.7357142857142858
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.4204355108877722
+ },
+ "B2|C=0.0|tau=0.3": {
+  "habit": {
+   "n": 288,
+   "acc": 0.5833333333333334,
+   "clarified": 0.0,
+   "wrong_action": 0.4166666666666667
+  },
+  "control": {
+   "n": 63,
+   "acc": 0.9841269841269841,
+   "clarified": 0.0,
+   "wrong_action": 0.015873015873015872,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 0.9490740740740741,
+   "clarified": 0.0,
+   "wrong_action": 0.05092592592592592
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.7721943048576214,
+   "clarified": 0.0,
+   "wrong_action": 0.22780569514237856
+  },
+  "presentation": {
+   "n": 158,
+   "adherence": 0.9810126582278481
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.3031825795644891
+ },
+ "B2|C=0.0|tau=0.4": {
+  "habit": {
+   "n": 288,
+   "acc": 0.4930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.5069444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.7487437185929648,
+   "clarified": 0.0,
+   "wrong_action": 0.25125628140703515
+  },
+  "presentation": {
+   "n": 158,
+   "adherence": 0.9810126582278481
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.3249581239530988
+ },
+ "B2|C=0.0|tau=0.5": {
+  "habit": {
+   "n": 288,
+   "acc": 0.4305555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.5694444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.7185929648241206,
+   "clarified": 0.0,
+   "wrong_action": 0.2814070351758794
+  },
+  "presentation": {
+   "n": 158,
+   "adherence": 0.9810126582278481
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.3601340033500837
+ },
+ "B2|C=0.0|tau=0.6": {
+  "habit": {
+   "n": 288,
+   "acc": 0.4131944444444444,
+   "clarified": 0.0,
+   "wrong_action": 0.5868055555555556
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 0.5555555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.4444444444444444
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.6968174204355109,
+   "clarified": 0.0,
+   "wrong_action": 0.30318257956448913
+  },
+  "presentation": {
+   "n": 150,
+   "adherence": 0.98
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.3886097152428811
+ },
+ "B2|C=0.0|tau=0.7": {
+  "habit": {
+   "n": 288,
+   "acc": 0.4131944444444444,
+   "clarified": 0.0,
+   "wrong_action": 0.5868055555555556
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 0.2777777777777778,
+   "clarified": 0.0,
+   "wrong_action": 0.7222222222222222
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.6884422110552764,
+   "clarified": 0.0,
+   "wrong_action": 0.31155778894472363
+  },
+  "presentation": {
+   "n": 145,
+   "adherence": 0.9793103448275862
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.3969849246231156
+ },
+ "PPL|C=0.0|K=1|P=0.7|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.0|K=1|P=0.7|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.0|K=1|P=0.9|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.0|K=1|P=0.9|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.0|K=2|P=0.7|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.0|K=2|P=0.7|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.0|K=2|P=0.9|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.0|K=2|P=0.9|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.0|K=3|P=0.7|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.0|K=3|P=0.7|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.0|K=3|P=0.9|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.0|K=3|P=0.9|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "B0|C=0.3": {
+  "habit": {
+   "n": 288,
+   "acc": 0.3958333333333333,
+   "clarified": 0.1840277777777778,
+   "wrong_action": 0.4201388888888889
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 0.0,
+   "clarified": 0.7222222222222222,
+   "wrong_action": 0.2777777777777778
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.0,
+   "clarified": 0.0,
+   "wrong_action": 1.0
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.6582914572864321,
+   "clarified": 0.11055276381909548,
+   "wrong_action": 0.23115577889447236
+  },
+  "presentation": {
+   "n": 140,
+   "adherence": 0.6142857142857143
+  },
+  "open_f1": 0.0,
+  "turns": 1.6046901172529313
+ },
+ "B1|C=0.3": {
+  "habit": {
+   "n": 288,
+   "acc": 0.5555555555555556,
+   "clarified": 0.1284722222222222,
+   "wrong_action": 0.3159722222222222
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 0.0,
+   "clarified": 0.7222222222222222,
+   "wrong_action": 0.2777777777777778
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.7487437185929648,
+   "clarified": 0.08375209380234507,
+   "wrong_action": 0.16750418760469013
+  },
+  "presentation": {
+   "n": 140,
+   "adherence": 0.7357142857142858
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.4170854271356783
+ },
+ "B2|C=0.3|tau=0.3": {
+  "habit": {
+   "n": 288,
+   "acc": 0.5729166666666666,
+   "clarified": 0.09375,
+   "wrong_action": 0.3333333333333333
+  },
+  "control": {
+   "n": 63,
+   "acc": 0.9841269841269841,
+   "clarified": 0.0,
+   "wrong_action": 0.015873015873015872,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 0.9490740740740741,
+   "clarified": 0.0,
+   "wrong_action": 0.05092592592592592
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.7671691792294807,
+   "clarified": 0.04522613065326633,
+   "wrong_action": 0.18760469011725292
+  },
+  "presentation": {
+   "n": 158,
+   "adherence": 0.9810126582278481
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.3015075376884422
+ },
+ "B2|C=0.3|tau=0.4": {
+  "habit": {
+   "n": 288,
+   "acc": 0.4791666666666667,
+   "clarified": 0.1111111111111111,
+   "wrong_action": 0.4097222222222222
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.7420435510887772,
+   "clarified": 0.05360134003350084,
+   "wrong_action": 0.20435510887772193
+  },
+  "presentation": {
+   "n": 158,
+   "adherence": 0.9810126582278481
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.323283082077052
+ },
+ "B2|C=0.3|tau=0.5": {
+  "habit": {
+   "n": 288,
+   "acc": 0.4131944444444444,
+   "clarified": 0.16666666666666666,
+   "wrong_action": 0.4201388888888889
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.7102177554438861,
+   "clarified": 0.08040201005025126,
+   "wrong_action": 0.20938023450586266
+  },
+  "presentation": {
+   "n": 158,
+   "adherence": 0.9810126582278481
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.355108877721943
+ },
+ "B2|C=0.3|tau=0.6": {
+  "habit": {
+   "n": 288,
+   "acc": 0.3958333333333333,
+   "clarified": 0.1840277777777778,
+   "wrong_action": 0.4201388888888889
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 0.5555555555555556,
+   "clarified": 0.3333333333333333,
+   "wrong_action": 0.1111111111111111
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.6884422110552764,
+   "clarified": 0.09882747068676717,
+   "wrong_action": 0.21273031825795644
+  },
+  "presentation": {
+   "n": 150,
+   "adherence": 0.98
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.3701842546063652
+ },
+ "B2|C=0.3|tau=0.7": {
+  "habit": {
+   "n": 288,
+   "acc": 0.3958333333333333,
+   "clarified": 0.1840277777777778,
+   "wrong_action": 0.4201388888888889
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 0.2777777777777778,
+   "clarified": 0.4444444444444444,
+   "wrong_action": 0.2777777777777778
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.6800670016750419,
+   "clarified": 0.10217755443886097,
+   "wrong_action": 0.21775544388609716
+  },
+  "presentation": {
+   "n": 145,
+   "adherence": 0.9793103448275862
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.3819095477386936
+ },
+ "PPL|C=0.3|K=1|P=0.7|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.3|K=1|P=0.7|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.3|K=1|P=0.9|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.3|K=1|P=0.9|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.3|K=2|P=0.7|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.3|K=2|P=0.7|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.3|K=2|P=0.9|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.3|K=2|P=0.9|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.3|K=3|P=0.7|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.3|K=3|P=0.7|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.3|K=3|P=0.9|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.3|K=3|P=0.9|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "B0|C=0.5": {
+  "habit": {
+   "n": 288,
+   "acc": 0.3541666666666667,
+   "clarified": 0.3402777777777778,
+   "wrong_action": 0.3055555555555556
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 0.0,
+   "clarified": 1.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.0,
+   "clarified": 0.0,
+   "wrong_action": 1.0
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.6381909547738693,
+   "clarified": 0.19430485762144054,
+   "wrong_action": 0.16750418760469013
+  },
+  "presentation": {
+   "n": 140,
+   "adherence": 0.6142857142857143
+  },
+  "open_f1": 0.0,
+  "turns": 1.6247906197654942
+ },
+ "B1|C=0.5": {
+  "habit": {
+   "n": 288,
+   "acc": 0.5208333333333334,
+   "clarified": 0.2569444444444444,
+   "wrong_action": 0.2222222222222222
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 0.0,
+   "clarified": 1.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.7319932998324958,
+   "clarified": 0.1541038525963149,
+   "wrong_action": 0.11390284757118928
+  },
+  "presentation": {
+   "n": 140,
+   "adherence": 0.7357142857142858
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.423785594639866
+ },
+ "B2|C=0.5|tau=0.3": {
+  "habit": {
+   "n": 288,
+   "acc": 0.5451388888888888,
+   "clarified": 0.21875,
+   "wrong_action": 0.2361111111111111
+  },
+  "control": {
+   "n": 63,
+   "acc": 0.9841269841269841,
+   "clarified": 0.0,
+   "wrong_action": 0.015873015873015872,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 0.9490740740740741,
+   "clarified": 0.0,
+   "wrong_action": 0.05092592592592592
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.7537688442211056,
+   "clarified": 0.10552763819095477,
+   "wrong_action": 0.1407035175879397
+  },
+  "presentation": {
+   "n": 158,
+   "adherence": 0.9810126582278481
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.2931323283082077
+ },
+ "B2|C=0.5|tau=0.4": {
+  "habit": {
+   "n": 288,
+   "acc": 0.4479166666666667,
+   "clarified": 0.25,
+   "wrong_action": 0.3020833333333333
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.7269681742043551,
+   "clarified": 0.12060301507537688,
+   "wrong_action": 0.152428810720268
+  },
+  "presentation": {
+   "n": 158,
+   "adherence": 0.9810126582278481
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.3266331658291457
+ },
+ "B2|C=0.5|tau=0.5": {
+  "habit": {
+   "n": 288,
+   "acc": 0.3715277777777778,
+   "clarified": 0.3229166666666667,
+   "wrong_action": 0.3055555555555556
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.6901172529313233,
+   "clarified": 0.15577889447236182,
+   "wrong_action": 0.1541038525963149
+  },
+  "presentation": {
+   "n": 158,
+   "adherence": 0.9810126582278481
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.3651591289782246
+ },
+ "B2|C=0.5|tau=0.6": {
+  "habit": {
+   "n": 288,
+   "acc": 0.3541666666666667,
+   "clarified": 0.3402777777777778,
+   "wrong_action": 0.3055555555555556
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 0.5555555555555556,
+   "clarified": 0.4444444444444444,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.6683417085427136,
+   "clarified": 0.17755443886097153,
+   "wrong_action": 0.1541038525963149
+  },
+  "presentation": {
+   "n": 150,
+   "adherence": 0.98
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.390284757118928
+ },
+ "B2|C=0.5|tau=0.7": {
+  "habit": {
+   "n": 288,
+   "acc": 0.3541666666666667,
+   "clarified": 0.3402777777777778,
+   "wrong_action": 0.3055555555555556
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 0.2777777777777778,
+   "clarified": 0.7222222222222222,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.6599664991624791,
+   "clarified": 0.18592964824120603,
+   "wrong_action": 0.1541038525963149
+  },
+  "presentation": {
+   "n": 145,
+   "adherence": 0.9793103448275862
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.4020100502512562
+ },
+ "PPL|C=0.5|K=1|P=0.7|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.5|K=1|P=0.7|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.5|K=1|P=0.9|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.5|K=1|P=0.9|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.5|K=2|P=0.7|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.5|K=2|P=0.7|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.5|K=2|P=0.9|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.5|K=2|P=0.9|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.5|K=3|P=0.7|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.5|K=3|P=0.7|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.5|K=3|P=0.9|prov=True": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL|C=0.5|K=3|P=0.9|prov=False": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.006944444444444444,
+   "wrong_action": 0.0
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0033500837520938024,
+   "wrong_action": 0.006700167504187605
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL-surface": {
+  "habit": {
+   "n": 288,
+   "acc": 0.7395833333333334,
+   "clarified": 0.0,
+   "wrong_action": 0.2604166666666667
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.8676716917922948,
+   "clarified": 0.0,
+   "wrong_action": 0.1323283082077052
+  },
+  "presentation": {
+   "n": 164,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.170854271356784
+ },
+ "PPL-noval": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0,
+   "overgen": 0.0
+  },
+  "generic": {
+   "n": 216,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.9899497487437185,
+   "clarified": 0.0,
+   "wrong_action": 0.010050251256281407
+  },
+  "presentation": {
+   "n": 176,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.036850921273032
+ },
+ "PPL-noctx": {
+  "habit": {
+   "n": 288,
+   "acc": 0.9930555555555556,
+   "clarified": 0.0,
+   "wrong_action": 0.006944444444444444
+  },
+  "control": {
+   "n": 63,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333,
+   "overgen": 0.3333333333333333
+  },
+  "generic": {
+   "n": 216,
+   "acc": 0.9861111111111112,
+   "clarified": 0.0,
+   "wrong_action": 0.013888888888888888
+  },
+  "routine": {
+   "n": 18,
+   "acc": 1.0,
+   "clarified": 0.0,
+   "wrong_action": 0.0
+  },
+  "open_query": {
+   "n": 12,
+   "acc": 0.6666666666666666,
+   "clarified": 0.0,
+   "wrong_action": 0.3333333333333333
+  },
+  "all": {
+   "n": 597,
+   "acc": 0.949748743718593,
+   "clarified": 0.0,
+   "wrong_action": 0.05025125628140704
+  },
+  "presentation": {
+   "n": 171,
+   "adherence": 1.0
+  },
+  "open_f1": 0.9333333333333336,
+  "turns": 1.0804020100502512
+ }
+}

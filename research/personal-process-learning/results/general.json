@@ -1,0 +1,8 @@
+{
+ "rows": 3648,
+ "labels": 54,
+ "vocab": 304,
+ "digest": "25913d7e9c5b658ea5bdc9277eabcbff7256132fa7c668dbe42203757cd9a80d",
+ "heldout_acc": 1.0,
+ "heldout_n": 566
+}
