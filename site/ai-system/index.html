@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Studio — Clover</title>
-<meta name="description" content="Clover AI Studio & the Clover AI System (clover-ai-system): a privacy-first desktop, mobile, VS Code, and web AI Studio built on a 7-layer neuro-symbolic, compiler-verified, memory-accumulating architecture that ports any open-weight model (LFM3-Omni-2B, Nemotron 3.5 Super VL 120B-A12B, Kimi K3 2.78T MoE) to reach 70/70 (100%) verified outcomes.">
+<meta name="description" content="Clover AI Studio runs open-weight models on your phone, laptop, or server with local memory, relationships, tools, and continuous reasoning.">
 <link rel="canonical" href="https://cloverframework.com/ai-system/">
 <meta property="og:title" content="AI Studio — Clover">
-<meta property="og:description" content="Download Clover AI Studio for Windows (CloverAIStudio-Setup.exe) and Android (CloverAIStudio.apk) or launch on the Web. Explore the unified 3C+3S+CSI+PPL architecture, open-weight model porting guide, hardware efficiency vs. official model numbers, and 70/70 benchmark results.">
+<meta property="og:description" content="One system. Any open-weight model. Download Clover AI Studio for Windows and Android or launch on the Web.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cloverframework.com/ai-system/">
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
@@ -59,208 +59,192 @@
   <section class="hero" id="overview">
     <div class="wrap">
       <h1>AI Studio</h1>
-      <p class="hero__tagline">One privacy-first AI Studio across your Windows laptop, Android phone, VS Code editor, and Web — surrounding any open-weight model with the Clover cycle to reach verified outcomes.</p>
-      <p class="lede">An outcome does not come from which model you use. It comes from how the system around the model runs the five-stage cycle (<code>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</code>).</p>
-      <p class="lede"><strong>Clover AI Studio</strong> puts the complete <strong>Clover AI System (<code>clover-ai-system</code>)</strong> directly into your hands on a personal laptop (<code>CloverAIStudio-Setup.exe</code>), an Android phone (<code>CloverAIStudio.apk</code>), inside VS Code (<code>clover-local</code>), or in the browser (<a href="../clover-ai/">Web Studio</a>). It runs <code>Liquid AI LFM3-Omni-2B</code> locally on your device by default (text, vision, audio, video, and speech) and hot-switches across ported open-weight models spanning <strong>1,600&times; in scale</strong>—including <code>NVIDIA Nemotron 3.5 Super VL 120B-A12B</code> and <code>Moonshot AI Kimi K3 2.78T MoE</code>—lifting standalone model accuracy from <code>22.9%&ndash;47.1%</code> to <strong><code>70 / 70</code> (<code>100.00%</code>)</strong> on our standardized 70-task suite and <strong><code>47 / 49</code> (<code>95.9%</code>)</strong> on real multi-turn document and tool conversations.</p>
+      <p class="hero__tagline">One system. Any open-weight model. Your phone, laptop, or server.</p>
+      <p class="lede">An outcome does not come from which model you use. It comes from the system around it. Clover AI Studio wraps any open-weight model in local memory, relationships, verified tools, and continuous reasoning — lifting a 2B phone model, a 120B multimodal model, and a 2.78T MoE model from <code>22.9%&ndash;47.1%</code> alone to <strong><code>70 / 70</code> (<code>100%</code>)</strong> on the same test.</p>
       <div class="actions">
-        <a class="btn btn--primary" href="#downloads">Download for Windows (.exe) &amp; Android (.apk) ↓</a>
-        <a class="btn" href="../clover-ai/">Open Clover AI Studio on the Web →</a>
-        <a class="btn" href="#studio-architecture">Studio Architecture (3C + 3S + CSI + PPL) ↓</a>
-        <a class="btn" href="#porting-guide">How to port any open-weight model ↓</a>
-        <a class="btn" href="#where-it-runs-and-efficiency">Where it runs &amp; efficiency vs. official numbers ↓</a>
-        <a class="btn" href="#hybrid-ncm-k3">70-task benchmark ↓</a>
+        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
+        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download for Android (.apk)</a>
+        <a class="btn" href="../clover-ai/">Open Web Studio &rarr;</a>
+        <a class="btn btn--plain" href="#studio-architecture">See how it works &darr;</a>
       </div>
     </div>
   </section>
 
+  <!-- ============ DOWNLOADS ============ -->
   <section class="band" id="downloads">
     <div class="wrap">
-      <h2>Download &amp; Install Clover AI Studio</h2>
-      <p class="lede"><strong>Own the runtime, the memory, and the permissions on your own device.</strong> Each installer carries the signed/verified Studio application and downloads the pinned open-weight model and runtime artifacts directly from their publishers on first launch through a clean 4-step visual walkthrough, verifying every file against its pinned SHA-256 hash.</p>
+      <h2>Run it on your device</h2>
+      <p class="lede">Install the native app on Windows or Android, or launch it in your browser. All three share the same interface, permissions, and model switcher.</p>
 
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">Official Clover AI Studio installers and live Web Studio endpoints. Pinned SHA-256 digests are tracked in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/download/SHA256SUMS.txt"><code>download/SHA256SUMS.txt</code></a>.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Platform</th>
-              <th scope="col">Package &amp; Version</th>
-              <th scope="col">System Requirements &amp; Hardware Acceleration</th>
-              <th scope="col">What It Includes &amp; First-Run Setup</th>
-              <th scope="col">Direct Download / Launch</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><strong>1. Windows Laptop &amp; Desktop</strong></th>
-              <td><code>CloverAIStudio-Setup.exe</code><br><small>v0.4.0 (<code>~7.98 MB</code> installer)</small></td>
-              <td>Windows 10 (build 2004+) or Windows 11 x64 &middot; 16 GB RAM &middot; AVX2 CPU &middot; Vulkan GPU (Intel Iris Xe / AMD / NVIDIA) or CPU fallback &middot; ~12&ndash;25 GB free disk</td>
-              <td>Installs <code>CloverAIStudio.exe</code>, the Studio web UI, the <code>clover-local</code> VS Code extension (<code>.vsix</code>), local 5-stage Git memory repo, <code>CSI</code> (<code>en_core_web_trf</code> + <code>morph-verb-v1.1</code> + <code>OEWN 2025</code>), <code>PPL</code>, and walks through downloading <code>LFM3-Omni-2B</code> (Q4_0 + Q8_0 multimodal projector), <code>llama.cpp</code> Vulkan/CPU, <code>SD 1.5 + LCM-LoRA</code> image generator, and precomputed <code>C2/C3</code> trunks.</td>
-              <td><a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe">Download Windows Setup (.exe)</a></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>2. Android Phone &amp; Tablet</strong></th>
-              <td><code>CloverAIStudio.apk</code><br><small>v3.0.1 &middot; code 8 (<code>~74.85 MB</code> APK)</small></td>
-              <td>Android 8.0+ (API 26&ndash;36) ARM64 (<code>arm64-v8a</code>) &middot; Qualcomm Snapdragon Adreno OpenCL GPU (<code>dot_acc_sat</code>) + Kryo ARMv9 NEON/i8mm CPU &middot; ~2 GB free storage</td>
-              <td>Bundles the native ARM64 Snapdragon OpenCL/CPU <code>llama-server</code> engine, Python 3.12 runtime (<code>numpy</code>, <code>pandas</code>, <code>matplotlib</code>, <code>pillow</code>, <code>lxml</code>), foreground keep-awake service, and 4-step first-run downloader for <code>LFM3-Omni-2B</code> (<code>1.48 GB</code> 4-bit LM + vision/audio/speech projector).</td>
-              <td><a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download Android APK (.apk)</a></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>3. Web Browser &amp; Cloud/Self-Hosted Server</strong></th>
-              <td><strong>Clover AI Web Studio</strong><br><small><code>cloverframework.com/clover-ai/</code></small></td>
-              <td>Any modern desktop or mobile browser &middot; Connects to your local Studio (<code>127.0.0.1:8765</code> / <code>47651</code>), the <code>k3</code> workstation, or any Clover / OpenAI-compatible server you add via <strong>+ Add a model&hellip;</strong></td>
-              <td>Identical light-theme Studio UI with sidebar header model selector (<code>LFM3-Omni</code>, <code>Nemotron 3.5</code>, <code>Kimi K3</code>, or custom endpoints), document analysis, voice/camera input, inline permission cards, and full layer inspection.</td>
-              <td><a class="btn" href="../clover-ai/">Launch Web Studio &rarr;</a></td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="grid grid--3" style="margin-top:1.5rem">
+        <div class="card">
+          <h3>Windows Laptop</h3>
+          <p><strong><code>CloverAIStudio-Setup.exe</code></strong> &middot; v0.4.0 (<code>8.0 MB</code>)</p>
+          <p>Runs <code>LFM3-Omni-2B</code> on Intel Iris Xe, AMD, or NVIDIA Vulkan GPUs, includes the VS Code extension, and keeps a local Git memory repository.</p>
+          <div class="actions" style="margin-top:1.1rem">
+            <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe">Download Windows (.exe)</a>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Android Phone</h3>
+          <p><strong><code>CloverAIStudio.apk</code></strong> &middot; v3.0.1 (<code>74.9 MB</code>)</p>
+          <p>Runs <code>LFM3-Omni-2B</code> on Snapdragon Adreno OpenCL GPUs and ARM64 CPUs with voice, camera, document reading, and remote model switching.</p>
+          <div class="actions" style="margin-top:1.1rem">
+            <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download Android (.apk)</a>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Web Studio</h3>
+          <p><strong><code>cloverframework.com/clover-ai/</code></strong></p>
+          <p>Runs in any browser. Connects to your local device, our three-model server (<code>LFM3</code>, <code>Nemotron 3.5</code>, <code>Kimi K3</code>), or any custom endpoint.</p>
+          <div class="actions" style="margin-top:1.1rem">
+            <a class="btn" href="../clover-ai/">Launch Web Studio &rarr;</a>
+          </div>
+        </div>
       </div>
-      <p class="note" style="margin-top:0.75rem">Verify installer integrity before or after running: <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/download/SHA256SUMS.txt">View pinned SHA-256 checksums (<code>download/SHA256SUMS.txt</code>) &rarr;</a></p>
+
+      <p class="note" style="margin-top:1rem">Verify installers with <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/download/SHA256SUMS.txt"><code>download/SHA256SUMS.txt</code> &rarr;</a></p>
     </div>
   </section>
 
+  <!-- ============ ARCHITECTURE ============ -->
   <section class="band" id="studio-architecture">
     <div class="wrap">
-      <h2>What Clover AI Studio Is &amp; How Its Architecture Works</h2>
-      <p class="lede"><strong>Clover AI Studio is not a thin chat wrapper around an API.</strong> It is a complete local-first operating environment where every turn runs through a shared <strong>Semantics Center</strong> connecting <strong>3 Supporting Components (<code>S1 Memory &middot; S2 Relationships &middot; S3 Tools</code>)</strong> and <strong>3 Core Pipeline Components (<code>C1 Inference &middot; C2 Plan &middot; C3 Decode</code>)</strong> under the human&rsquo;s explicit permissions and Direction.</p>
+      <div id="how-it-works"></div>
+      <h2>How the Clover system works</h2>
+      <p class="lede">Semantics sits at the center. Three supporting components gather memory, relationships, and tools; three core stages run the model, plan in latent space, and decode verified answers.</p>
 
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">The complete Clover AI Studio runtime stack shared across Windows Laptop, Android Mobile, VS Code, and Web Studio.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Layer / Module</th>
-              <th scope="col">Role in the Clover Cycle</th>
-              <th scope="col">What It Does on Every Turn &amp; Scenario Gate</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><strong>Center &middot; Semantics</strong><br><small><code>semantics.py</code></small></th>
-              <td><code>input &harr; ((S1&harr;S2&harr;S3) &harr; (C1&harr;C2&harr;C3)) &harr; output</code></td>
-              <td><strong><code>interpret() &rarr; Frame &rarr; route() &rarr; align()</code>:</strong> Reads each message into a structured <code>Frame</code> (speech act: <code>social</code>, <code>retry</code>, <code>remember</code>, <code>creative</code>, <code>concept</code>, <code>action</code>, or <code>question</code>; required capabilities; Dharma discernment state: <code>proceed</code>, <code>ask</code>, <code>do_not_know</code>, or <code>refuse</code>). Answers pure pleasantries (<code>&ldquo;hi&rdquo;</code>, <code>&ldquo;thanks&rdquo;</code>) in <code>0 ms</code> without calling the model; blocks access to <code>CloverAI/vault</code>; narrows tools to only what the scenario needs; suppresses unasked post-answer tool calls; and aligns the final reply with epistemic provenance labels (<code>verified</code>, <code>known</code>, <code>inferred</code>, <code>contested</code>, <code>unknown</code>).</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Interface &middot; CSI</strong><br><small><code>csi_service.py</code> &amp; <code>csi/</code></small></th>
-              <td>4-Layer Linguistic &amp; Propositional Structure</td>
-              <td><strong>Dictionary (<code>OEWN 2025</code>) + Morphology (<code>morph-verb-v1.1</code> analysis-by-synthesis verb lemmatizer) + Grammar (<code>spaCy en_core_web_trf</code>) + Semantics:</strong> Parses each message once per turn (cached on <code>frame._csi</code>) into propositions with predicate lemmas, arguments (<code>ARG0..ARG2</code>), polarity, tense, aspect, mood, voice, and embedding verb. Detects negated tool requests (<code>&ldquo;Do not search the web, just explain&hellip;&rdquo;</code>) so declined tools are never offered, and verifies whether a reply&rsquo;s main clause falsely claims an action was completed when no tool succeeded (distinguishing <code>&ldquo;I deleted the files&rdquo;</code> from <code>&ldquo;I tried to delete&rdquo;</code> or <code>&ldquo;I could not delete&rdquo;</code>).</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Learning &middot; PPL</strong><br><small><code>personal.py</code></small></th>
-              <td>Personal Process Learning (User Habits &amp; Presentation)</td>
-              <td>Learns from your own interactions only: (1) <strong>Intent habits</strong>—from explicit statements (<code>&ldquo;When I say verify something, I mean search the web&rdquo;</code>, applied immediately) and repeated corrections (<code>&ldquo;No, look it up online&rdquo;</code>, validated at $K=2$, precision $\ge 0.7$), and (2) <strong>Presentation preferences</strong>—from natural directives (<code>&ldquo;Keep answers short and use bullet points&rdquo;</code>, <code>&ldquo;Format it as a table&rdquo;</code>). Stored in a local Git/JSON experience store with cryptographic right-to-forget (<code>git-filter-repo</code> or clean rebuild) and surfaced live as <code>PPL &middot; your preferred form</code> and <code>growth</code> badges.</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Core 1 &middot; <code>C1</code> Inference</strong><br><small><code>omni_native.py</code>, <code>lfm3_cpu_engine.c</code>, <code>nemotron_cpu_engine.c</code>, <code>k3_cpu_experts_lib.c</code></small></th>
-              <td>Switchable Base Model + Direction B Hardware Engine</td>
-              <td>Executes the active foundation model: local <code>LFM3-Omni-2B</code> via <code>llama.cpp</code> (Vulkan iGPU on laptop, Snapdragon Adreno OpenCL + CPU <code>--no-mmproj-offload</code> on Android, or Zen 4 AVX-512 on <code>k3</code>) with separate lazy CPU speech synthesis, or precomputed <code>CLVRTRK1</code>/<code>CLVR4B01</code> C/CUDA engines for <code>LFM3-Omni-2B</code> (24L), <code>Nemotron 3.5 Super VL</code> (88L), and <code>Kimi K3 2.78T MoE</code> (93L).</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Core 2 &middot; <code>C2</code> Plan</strong><br><small><code>clover_cycle.py</code> &amp; <code>HybridLink</code></small></th>
-              <td>Latent Thought Projection &amp; User-Triggered Retry Cycle</td>
-              <td><strong>(a) Continuous <code>&lt;latent&gt;</code> planning:</strong> Steps $r_t = R(h_t)$ through <code>plan-trunk-0/</code> (<code>HybridLink2048</code> + <code>NativeHybridLink</code>) directly into <code>C1</code>&rsquo;s KV/conv cache on reasoning turns.<br><strong>(b) Clover Retry Cycle:</strong> When you click <strong>Try again</strong> or say an answer is wrong, Clover returns to <strong>Context</strong>—running deterministic arithmetic recomputation, format checks, Layer-6 compiler verification, web research, and a 3-way majority vote across two independent model solves and an executed Python solver program.</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Core 3 &middot; <code>C3</code> Decode</strong><br><small><code>ncm_runtime.py</code> &amp; <code>benchmark_3_models_70_tasks.py</code></small></th>
-              <td>11-Level Next-Concept Modeling (<code>NCM</code>) &amp; Pointer Decoder</td>
-              <td>Projects $(r_t, h_t)$ through precomputed <code>bridge-trunk-0/</code> (<code>ComboBridge</code> + <code>ExpertBridge</code>) into 11 multiscale VQ concept levels (<code>313</code> codes across <code>[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64]</code> via <code>vqvae-expert-0..10/</code> and 12-layer <code>ncm-trunk-0..11/</code>) and decodes through 3-layer <code>ptr-trunk-0..2/</code> (<code>LexicalPointerDecoder</code>) strictly in the active model&rsquo;s vocabulary (automatically bypassed on fenced code blocks verified by <code>S3</code>).</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Support 1 &middot; <code>S1</code> Memory</strong><br><small><code>clover_repo.py</code> &amp; <code>lfm3_layers.py</code></small></th>
-              <td>5-Stage Local Git Repository &amp; Workspaces</td>
-              <td>Maintains a local Git repository (<code>clover-ai-studio/</code>) with read-only protected <code>AGENTS.md</code>, auto-updated <code>CONTEXT.md</code> per folder, <code>sessions/</code>, <code>execution/</code> logs (with automatic secret redaction), <code>outcomes/</code> (tracking whether answers and learnings worked or were contested), and <code>growth/knowledge/</code> (<code>MEM-USER</code> notes including automatic meal/diet recall and <code>LRN</code> verified lessons), plus multi-repo workspace context and private GitHub sync.</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Support 2 &middot; <code>S2</code> Relationships</strong><br><small><code>k3_ontology_graph.py</code> &amp; <code>memory_index.py</code></small></th>
-              <td>Ontology GraphRAG, 11 Papers &amp; Scenario-Gated Recall</td>
-              <td><strong>(a) Symbolic Ontology GraphRAG:</strong> Deterministic entity/path retrieval, 4 Horn inference rules, post-generation source-grounding verification, and all 11 Foundational Papers (<code>1943&ndash;2017</code>).<br><strong>(b) Scenario-Gated Earlier-Chat Recall:</strong> Indexes all turns with <code>BM25</code> + <code>bge-small-en-v1.5</code> / <code>SubwordHashEmbedder</code> Reciprocal Rank Fusion (<code>RRF</code>) and idle <code>USER:</code>/<code>ASSISTANT:</code> exchange notes, firing automatically on personal/past cues (<code>my</code>, <code>earlier</code>, <code>last time</code>, <code>what did I tell you</code>) while staying silent on general math/coding tasks so unrelated history never pollutes reasoning.</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Support 3 &middot; <code>S3</code> Tools</strong><br><small><code>k3_generative_compiler.py</code>, <code>documents.py</code>, <code>web_search.py</code>, <code>permissions.py</code></small></th>
-              <td>External Capabilities, Document Analysis &amp; Compiler Verification</td>
-              <td><strong>(a) Generative Compiler:</strong> Checks Python/Rust AST syntax, scope, call arity, and <code>&gt;&gt;&gt;</code> doctests with Sutton $\text{TD}(0)$ trajectory survival and automatic repair rounds (recording verified fixes as <code>LRN</code> lessons in <code>S1</code>).<br><strong>(b) Native Tools &amp; Documents:</strong> Reads attached Excel (<code>.xlsx</code>), CSV, TSV, JSON, PDF, and Word (<code>.docx</code>) files with per-sheet totals; runs sandboxed Python (with automatic chart capture), PowerShell/shell, file read/write, live weather (Open-Meteo + GeoJS), news/FX/crypto/Wikipedia/arXiv/Tavily/Brave web search, local <code>SD 1.5 + LCM</code> image generation, and the live <code>VS Code</code> bridge—all enforced by per-tool permissions (<code>Allow</code> / <code>Ask</code> / <code>Off</code>).</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <figure class="diagram">
+        <svg viewBox="0 0 860 310" role="img" aria-label="Clover AI Studio architecture: Semantics (CSI and PPL) in the center, connecting S1 Memory, S2 Relationships, and S3 Tools on the left with C1 Inference, C2 Plan, and C3 Decode on the right." style="width:100%;height:auto;display:block;border:1px solid #cfd6de;border-radius:10px;background:#ffffff;padding:8px">
+          <rect x="0" y="0" width="860" height="310" rx="10" fill="#ffffff"></rect>
+          <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.3">CLOVER AI SYSTEM · SEMANTICS CENTER + 3 SUPPORTING (S1–S3) + 3 CORE (C1–C3)</text>
+          <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
+
+          <!-- Left: 3 Supporting -->
+          <rect x="20" y="54" width="245" height="236" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+          <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">SUPPORTING · CONTEXT &amp; TOOLS</text>
+          <rect x="34" y="90" width="217" height="56" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+          <text x="46" y="111" font-size="12" font-weight="700" fill="#14181d">S1 · Memory</text>
+          <text x="46" y="130" font-size="11" fill="#39424d">5-stage local Git repo &amp; workspaces</text>
+          <rect x="34" y="156" width="217" height="56" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+          <text x="46" y="177" font-size="12" font-weight="700" fill="#14181d">S2 · Relationships</text>
+          <text x="46" y="196" font-size="11" fill="#39424d">Ontology GraphRAG &amp; prior chat recall</text>
+          <rect x="34" y="222" width="217" height="56" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+          <text x="46" y="243" font-size="12" font-weight="700" fill="#14181d">S3 · Tools</text>
+          <text x="46" y="262" font-size="11" fill="#39424d">Compiler, docs, web search &amp; code</text>
+
+          <!-- Arrows Left <-> Center -->
+          <line x1="265" y1="172" x2="305" y2="172" stroke="#0a6a5f" stroke-width="2.5"></line>
+          <polygon points="305,172 297,167 297,177" fill="#0a6a5f"></polygon>
+          <polygon points="265,172 273,167 273,177" fill="#0a6a5f"></polygon>
+
+          <!-- Center: Semantics + CSI + PPL -->
+          <rect x="305" y="54" width="250" height="236" rx="12" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="2"></rect>
+          <text x="430" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#0a6a5f">CENTER · SEMANTICS</text>
+          <rect x="323" y="94" width="214" height="56" rx="8" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.4"></rect>
+          <text x="430" y="115" text-anchor="middle" font-size="12" font-weight="700" fill="#14181d">Intent &amp; Permissions</text>
+          <text x="430" y="134" text-anchor="middle" font-size="11" fill="#39424d">Routes tasks &amp; verifies claims</text>
+          <rect x="323" y="160" width="214" height="54" rx="8" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+          <text x="430" y="180" text-anchor="middle" font-size="12" font-weight="700" fill="#14181d">CSI · Language Parser</text>
+          <text x="430" y="198" text-anchor="middle" font-size="11" fill="#39424d">Dictionary, grammar &amp; negation</text>
+          <rect x="323" y="224" width="214" height="54" rx="8" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+          <text x="430" y="244" text-anchor="middle" font-size="12" font-weight="700" fill="#14181d">PPL · Process Learning</text>
+          <text x="430" y="262" text-anchor="middle" font-size="11" fill="#39424d">Learns your habits &amp; answer style</text>
+
+          <!-- Arrows Center <-> Right -->
+          <line x1="555" y1="172" x2="595" y2="172" stroke="#0a6a5f" stroke-width="2.5"></line>
+          <polygon points="595,172 587,167 587,177" fill="#0a6a5f"></polygon>
+          <polygon points="555,172 563,167 563,177" fill="#0a6a5f"></polygon>
+
+          <!-- Right: 3 Core -->
+          <rect x="595" y="54" width="245" height="236" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
+          <text x="611" y="76" font-size="11" font-weight="700" fill="#0a6a5f">CORE PIPELINE · MODEL &amp; REASONING</text>
+          <rect x="609" y="90" width="217" height="56" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+          <text x="621" y="111" font-size="12" font-weight="700" fill="#14181d">C1 · Inference</text>
+          <text x="621" y="130" font-size="11" fill="#39424d">Switchable model &amp; Direction B</text>
+          <rect x="609" y="156" width="217" height="56" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+          <text x="621" y="177" font-size="12" font-weight="700" fill="#14181d">C2 · Plan</text>
+          <text x="621" y="196" font-size="11" fill="#39424d">Latent thought &amp; 3-way retry vote</text>
+          <rect x="609" y="222" width="217" height="56" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
+          <text x="621" y="243" font-size="12" font-weight="700" fill="#14181d">C3 · Decode</text>
+          <text x="621" y="262" font-size="11" fill="#39424d">11-level concept &amp; pointer decoder</text>
+        </svg>
+        <figcaption>The Clover AI System connects a central Semantics engine (<code>CSI + PPL</code>) to three supporting components (<code>S1–S3</code>) and three core model stages (<code>C1–C3</code>).</figcaption>
+      </figure>
+
+      <dl class="kv kv--wide" style="margin-top:1.6rem">
+        <div><dt>Center · Semantics</dt><dd>Reads your intent, selects only the needed tools, blocks unauthorized vault paths, and labels every answer by how it was verified.</dd></div>
+        <div><dt>CSI · Language Parser</dt><dd>Parses grammar, verb morphology, and negation so declined tools are never called and unverified action claims are caught.</dd></div>
+        <div><dt>PPL · Process Learning</dt><dd>Learns your personal habits and preferred answer format (such as short bullet points or tables) and stores them in your local Git repo.</dd></div>
+        <div><dt>C1 · Inference</dt><dd>Runs the active open-weight model (<code>LFM3-Omni-2B</code>, <code>Nemotron 3.5</code>, or <code>Kimi K3</code>) with Direction B zero-writeback memory caching.</dd></div>
+        <div><dt>C2 · Plan</dt><dd>Projects continuous <code>&lt;latent&gt;</code> thought vectors before speaking, and runs a 3-way solver vote whenever you click <strong>Try again</strong>.</dd></div>
+        <div><dt>C3 · Decode</dt><dd>Predicts 11 hierarchical concept levels in parallel and decodes strictly inside the active model&rsquo;s native vocabulary.</dd></div>
+        <div><dt>S1 · Memory</dt><dd>Saves sessions, execution logs, outcomes, and learned notes in a 5-stage local Git repository with optional private GitHub sync.</dd></div>
+        <div><dt>S2 · Relationships</dt><dd>Combines symbolic Ontology GraphRAG and the 11 foundational papers with scenario-gated recall of your earlier chats.</dd></div>
+        <div><dt>S3 · Tools</dt><dd>Checks Python and Rust code with a live compiler, reads Excel/CSV/PDF/Word files, searches the web, and connects to VS Code under <code>Allow / Ask / Off</code> permissions.</dd></div>
+      </dl>
     </div>
   </section>
 
+  <!-- ============ PORTING GUIDE ============ -->
   <section class="band" id="porting-guide">
     <div class="wrap">
-      <h2>How to Port Any Open-Weight Model to the Clover System (Step-by-Step Guide, Tests &amp; Results)</h2>
-      <p class="lede"><strong>Clover is model-agnostic by design.</strong> Any open-weight foundation model—whether a dense Tri-Hybrid (`Liquid AI LFM3`), a hybrid Mamba-2 + Latent MoE (`NVIDIA Nemotron 3.5 Super VL`), or a multi-teraparameter KDA + MLA MoE (`Moonshot AI Kimi K3`)—can be ported into the Clover AI System in <strong>six deterministic steps</strong> using the unified 5-subfolder dataset layout in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a>.</p>
+      <h2>Port any open-weight model in five folders</h2>
+      <p class="lede">Clover is model-agnostic. Every ported model in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a> uses the same five folders while the Studio app, memory, and tools stay unchanged.</p>
 
-      <ol class="steps">
-        <li><strong>Step 1 &mdash; Precompute &amp; Prune Layer-1 Trunks and 4-Bit Planar Experts (<code>&lt;model&gt;/trunks/</code> &amp; <code>&lt;model&gt;/experts/</code>):</strong>
-          Run <code>prepare_&lt;model&gt;_datasets.py</code> and <code>prune_&lt;model&gt;_trunk.py</code> (e.g., <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/nemotron-3.5-super-vl/prepare_nemotron_datasets.py"><code>prepare_nemotron_datasets.py</code></a>, <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/lfm3-1.7b/prepare_lfm3_datasets.py"><code>prepare_lfm3_datasets.py</code></a>). This packs per-layer RMSNorm/LayerNorm and attention/Mamba-2/ShortConv projections into contiguous <code>mmap</code>-ready <code>CLVRTRK1</code> containers (<code>index.bin</code>, <code>common.bin</code>, fused <code>operator.bin</code> + <code>operator.4bit.bin</code>), deletes redundant <code>attention.bin</code> copies from every trunk, and quantizes routed MoE or dense SwiGLU FFN weights into symmetric 4-bit group-64 planar format (<code>CLVR4B01</code>: <code>[nibbles: N/2 uint8][scales: N/64 fp16]</code>).<br>
-          <em>Verification Gate &amp; Result:</em> Layer-by-layer forward pass against the official Hugging Face PyTorch model must achieve <strong><code>max_abs_diff = 0.0</code></strong> in BF16/FP32 across all layers and final <code>lm_head</code> logits (verified across all <code>24/24</code> LFM3 layers, all <code>88/88</code> Nemotron layers + 2 MTP layers, and all <code>93/93</code> Kimi K3 layers; 4-bit group-64 expert quantization achieves cosine similarity <strong>$\cos = 0.998189$</strong> on Nemotron and <strong>$\cos = 0.993288$</strong> on LFM3 while cutting trunk bytes by <strong><code>-46.05%</code></strong> on Nemotron, <strong><code>-15.91%</code></strong> on LFM3, and <strong><code>-35.2%</code></strong> on Kimi K3).</li>
-
-        <li><strong>Step 2 &mdash; Compile or Bind the Native Layer-1 Engine with Direction B Data Movement (<code>lib&lt;model&gt;_cpu_engine.so/.dll</code>):</strong>
-          Implement the model&rsquo;s C/OpenMP/CUDA/OpenCL layer runner with 8-token register-blocked matrix kernels (<code>linear_bf16_omp</code>, <code>linear_4bit_group64_omp</code>), bit-exact longest-common-prefix (<code>LCP</code>) KV + recurrent/conv state caching, segment-isolated dynamic batch clubbing (<code>seg_starts[t]</code>), and <code>SpecMD Policy 3 (Least-Stale) + Red-Blue Pebble Rule R4 Clean-Drop</code> page management (<code>madvise(MADV_WILLNEED)</code> lookahead for layer $L+1$ and <code>MADV_DONTNEED</code> clean eviction with <code>0</code> dirty writebacks).<br>
-          <em>Verification Gate &amp; Result:</em> Compiled C engine vs. Python reference must achieve cosine similarity <strong>$\cos \ge 0.9992$</strong> and identical top-1 greedy token IDs (measured: <strong>$\cos = 0.999974$</strong> on 88-layer <code>libnemotron_cpu_engine.so</code> with <code>819 ms</code> cold / <code>201 ms</code> warm pass and <code>0</code> new drive fetches on pass 2; <strong>$\cos = 0.9992055$</strong> and exact BF16 max logit <code>17.125 == 17.125</code> on 24-layer <code>liblfm3_cpu_engine.so</code>; and <strong>bit-identical <code>1000 / 1000</code> rows</strong> across all 93 layers and 8,000 snapshots on Kimi K3).</li>
-
-        <li><strong>Step 3 &mdash; Train &amp; Algebraically Fuse the Layer-2 Native <code>HybridLink</code> Planner (<code>&lt;model&gt;/hybridagent/plan-trunk-0/</code>):</strong>
-          Train the model&rsquo;s native latent adapter <code>NativeHybridLink(D_model &rarr; bottleneck &rarr; D_model)</code> (plus 3-stage <code>HybridSFT</code> self-conditioned <code>HybridLink</code>) so post-inference hidden states $h_t \in \mathbb{R}^{D_{\text{model}}}$ map directly to next-token continuous <code>&lt;latent&gt;</code> embeddings $r_t = R(h_t)$ in the model&rsquo;s own embedding space. Then run <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/mobile/prepare_c2_c3_precomputed_trunks.py"><code>prepare_c2_c3_precomputed_trunks.py</code></a> to algebraically fuse <code>pre_ln</code> ($\gamma_1, \beta_1$) into <code>proj1</code> ($\widetilde{W}_1 = W_1 \operatorname{diag}(\gamma_1), \widetilde{b}_1 = W_1 \beta_1 + b_1$) and <code>out_scale</code> into <code>post_ln</code> inside <code>plan-trunk-0/</code>.<br>
-          <em>Verification Gate &amp; Result:</em> Held-out test cosine to next-token embeddings reaches <strong><code>0.9985</code></strong> on Nemotron ($D=4096$, <code>&lt;latent&gt;</code> readout $\cos = 0.9401$) and <strong><code>0.9994</code></strong> on LFM3 ($D=2048$, <code>&lt;latent&gt;</code> readout $\cos = 0.9998$), with algebraic trunk fusion parity <strong><code>max_abs_diff = 2.24e-8</code></strong> on x86_64 and <strong><code>3.73e-8</code></strong> on ARMv9.</li>
-
-        <li><strong>Step 4 &mdash; Graft the Model&rsquo;s Native Vocabulary into the 11-Level VQ-VAE (<code>&lt;model&gt;/ncm/</code>):</strong>
-          Map the model&rsquo;s exact tokenizer vocabulary ($V \in \{163840, 131072, 128000\}$) into the 384-d 11-level multiscale residual VQ-VAE encoder and decoder tables (<code>vqvae_wte.bf16.bin</code>, <code>vqvae_dec.bf16.bin</code>, <code>vqvae-trunk-0/</code>, and <code>vqvae-expert-0..10/</code>), aligning shared subword tokens and initializing model-specific tokens from their projected backbone embeddings.<br>
-          <em>Verification Gate &amp; Result:</em> Prompt reconstruction across the grafted 11-level VQ-VAE achieves <strong><code>99.83%</code> exact token accuracy (<code>100%</code> character-exact reconstruction)</strong> across <code>67,869</code> grafted Tekken tokens on Nemotron (`V=131,072`) and <strong><code>100.00%</code> exact token and character accuracy</strong> across <code>64,835</code> grafted tokens on LFM3 (`V=128,000`).</li>
-
-        <li><strong>Step 5 &mdash; Train &amp; Fuse the Layer-3 Dimension Bridges into NCM &amp; LexicalPointerDecoder (<code>&lt;model&gt;/bridges/bridge-trunk-0/</code>):</strong>
-          Train <code>ComboBridge(D_model &rarr; 384)</code> (mapping latent plan vectors $r_t$) and <code>ExpertBridge(D_model &rarr; 384)</code> (mapping backbone hidden states $h_t$) to condition the 12-layer <code>NextConceptTransformer</code> (<code>ncm-trunk-0..11/</code> + <code>ncm-global-0/</code>) and 3-layer <code>LexicalPointerDecoder</code> (<code>ptr-trunk-0..2/</code> + <code>ptr-global-0/</code>). Fuse all internal LayerNorms into the following linear operators across all <strong>31 precomputed C2/C3 trunk and expert directories</strong>.<br>
-          <em>Verification Gate &amp; Result:</em> Precomputed trunk parity reaches <strong><code>ComboBridge max_abs_diff = 1.14e-5</code></strong>, <strong><code>NCM Block 0 max_abs_diff = 5.07e-7</code></strong>, and <strong><code>100%</code> bit-exact 313-code concept generation</strong>, with <code>all_token_ids_valid_in_model_vocab = True</code> across every emitted token.</li>
-
-        <li><strong>Step 6 &mdash; Register in <code>CLOVER_MODEL_REGISTRY</code> &amp; Run the 3 End-to-End Verification Suites:</strong>
-          Add the model key to <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/switchable_model_backend.py"><code>switchable_model_backend.py</code></a> (or connect any live server via <strong>+ Add a model&hellip;</strong> in Studio) and run the three verification suites:
-          (1) <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/benchmark_3_models_70_tasks.py"><code>benchmark_3_models_70_tasks.py</code></a> (standardized 70-task suite across MMLU, GSM8K, Python/Rust Coding, Structured Output, Ontology GraphRAG, Memory, and Agent QA),
-          (2) <code>natural_regression.py</code> (23 multi-turn natural user conversations including Excel/CSV/PDF/DOCX uploads, Python charts, web search, declined tools, and personal learning), and
-          (3) <code>compare_scenario_layers.py</code> (11 live scenario checks across PPL, CSI, S1&ndash;S3, and C1&ndash;C3).<br>
-          <em>Verification Gate &amp; Result:</em> All three ported models score <strong><code>70 / 70</code> (<code>100.00%</code>)</strong> on the 70-task suite, <strong><code>47 / 49</code> (<code>95.9%</code>)</strong> on natural multi-turn conversations, and <strong><code>11 / 11</code> (<code>100.0%</code>)</strong> on the live scenario and process-learning suite.</li>
-      </ol>
-
-      <div class="table-wrap" style="margin-top:1.4rem">
+      <div class="table-wrap">
         <table class="data">
-          <caption class="note">Unified 5-subfolder Hugging Face dataset layout (<a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a>, <code>3,266</code> files, <code>1,528.08 GiB</code> total) produced by the 6-step porting pipeline across all three model families.</caption>
+          <caption class="note">Unified 5-folder layout across all three models in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a>.</caption>
           <thead>
             <tr>
-              <th scope="col">Subfolder</th>
-              <th scope="col"><code>kimi/</code> (Kimi K3 2.78T MoE)<br><small><code>1,712</code> files &middot; <code>1,434.34 GiB</code></small></th>
-              <th scope="col"><code>nemotron/</code> (Nemotron 3.5 Super VL)<br><small><code>1,084</code> files &middot; <code>89.58 GiB</code></small></th>
-              <th scope="col"><code>liquid-lfm3/</code> (LFM3-Omni-2B / 1.7B)<br><small><code>468</code> files &middot; <code>4.16 GiB</code></small></th>
+              <th scope="col">Folder</th>
+              <th scope="col">What you build</th>
+              <th scope="col">Verification gate</th>
+              <th scope="col"><code>kimi/</code> (2.78T)</th>
+              <th scope="col"><code>nemotron/</code> (120B)</th>
+              <th scope="col"><code>liquid-lfm3/</code> (2B)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th scope="row"><strong><code>experts/</code></strong></th>
-              <td><code>expert-1..92/</code> (896 routed 4-bit experts/layer) + <code>vqvae-expert-0..10/</code> (<code>1,347.30 GiB</code>)</td>
-              <td><code>expert-1,3,..,87/</code> (512 4-bit <code>ReLU&sup2;</code> experts/layer) + <code>expert-mtp-1/</code> + <code>vqvae-expert-0..10/</code> (<code>66.37 GiB</code>)</td>
-              <td><code>expert-0..23/</code> (<code>ffn.4bit.bin</code>) + <code>vqvae-expert-0..10/</code> (<code>0.63 GiB</code>)</td>
+              <th scope="row"><strong>1. <code>trunks/</code></strong></th>
+              <td>Pack per-layer norms &amp; attention/conv projections into <code>CLVRTRK1</code> and prune duplicate weights.</td>
+              <td><code>max_abs_diff = 0.0</code> vs. official BF16 model across all layers.</td>
+              <td>93 trunks (<code>-35.2%</code> RAM)</td>
+              <td>88 trunks (<code>-46.1%</code> bytes)</td>
+              <td>24 trunks (<code>-15.9%</code> bytes)</td>
             </tr>
             <tr>
-              <th scope="row"><strong><code>trunks/</code></strong></th>
-              <td><code>global-0/</code> + pruned <code>trunk-0..92/</code> + <code>vision-trunk-0..26/</code> + <code>open-weights/</code> (<code>63.28 GiB</code>)</td>
-              <td><code>global-0/</code> + pruned <code>trunk-0..87/</code> (<code>-46.05%</code>) + <code>trunk-mtp-0..1/</code> + <code>vision-trunk-0..31/</code> (<code>17.41 GiB</code>)</td>
-              <td><code>global-0/</code> + pruned <code>trunk-0..23/</code> (<code>-15.91%</code>, <code>0</code> <code>attention.bin</code>) + <code>tokenizer.json</code> (<code>1.96 GiB</code>)</td>
+              <th scope="row"><strong>2. <code>experts/</code></strong></th>
+              <td>Quantize routed MoE or FFN weights into symmetric 4-bit group-64 planar files (<code>CLVR4B01</code>).</td>
+              <td>Layer cosine $\ge 0.993$ and identical top-1 greedy token IDs.</td>
+              <td>896 experts/layer (<code>1,347 GiB</code>)</td>
+              <td>512 experts/layer (<code>66.4 GiB</code>)</td>
+              <td>24 FFN + VQ experts (<code>0.63 GiB</code>)</td>
             </tr>
             <tr>
-              <th scope="row"><strong><code>hybridagent/</code></strong></th>
-              <td><code>plan-trunk-0/</code> (<code>CLVRTRK1</code> + <code>CLVR4B01</code>) + agent checkpoints (<code>7.51 GiB</code>)</td>
-              <td><code>plan-trunk-0/</code> + <code>plan-stage-1..3/</code> (<code>CLVRTRK1</code> + <code>CLVR4B01</code>) (<code>1.41 GiB</code>)</td>
-              <td><code>plan-trunk-0/</code> (<code>CLVRTRK1</code> + <code>CLVR4B01</code>, <code>max_abs_diff = 2.24e-8</code>) (<code>0.04 GiB</code>)</td>
+              <th scope="row"><strong>3. <code>hybridagent/</code></strong></th>
+              <td>Train and fuse <code>NativeHybridLink</code> (<code>plan-trunk-0/</code>) mapping hidden states $h_t \to r_t$.</td>
+              <td>Held-out next-token cosine $\ge 0.998$ and fusion diff $\le 4\times 10^{-8}$.</td>
+              <td>$7168 \to 7168$ (<code>7.51 GiB</code>)</td>
+              <td>$4096 \to 4096$ ($\cos = 0.9985$)</td>
+              <td>$2048 \to 2048$ ($\cos = 0.9994$)</td>
             </tr>
             <tr>
-              <th scope="row"><strong><code>ncm/</code></strong></th>
-              <td><code>vqvae_wte/dec.bf16.bin</code> + <code>vqvae-trunk-0/</code> + <code>ncm-trunk-0..11/</code> + <code>ptr-trunk-0..2/</code> (<code>15.37 GiB</code>)</td>
-              <td><code>vqvae_wte/dec.bf16.bin</code> + <code>vqvae-trunk-0/</code> + <code>ncm-trunk-0..11/</code> + <code>ptr-trunk-0..2/</code> (<code>3.17 GiB</code>)</td>
-              <td><code>vqvae_wte/dec.bf16.bin</code> + <code>vqvae-trunk-0/</code> + <code>ncm-trunk-0..11/</code> + <code>ptr-trunk-0..2/</code> (<code>0.93 GiB</code>)</td>
+              <th scope="row"><strong>4. <code>ncm/</code></strong></th>
+              <td>Graft the model&rsquo;s native tokenizer vocabulary into the 11-level VQ-VAE and 12-layer NCM trunks.</td>
+              <td>$\ge 99.8\%$ exact token reconstruction &amp; $100\%$ character-exact text.</td>
+              <td><code>163,840</code> tiktoken vocab</td>
+              <td><code>131,072</code> Tekken ($99.83\%$)</td>
+              <td><code>128,000</code> LFM3 ($100.0\%$)</td>
             </tr>
             <tr>
-              <th scope="row"><strong><code>bridges/</code></strong></th>
-              <td><code>bridge-trunk-0/</code> + <code>q2k3-bridge-trunk-0/</code> (<code>0.89 GiB</code>)</td>
-              <td><code>bridge-trunk-0/</code> + <code>nemotron_hybrid_ncm_bridges.pt</code> (<code>1.22 GiB</code>)</td>
-              <td><code>bridge-trunk-0/</code> + <code>lfm3_hybrid_ncm_bridges.pt</code> (<code>0.60 GiB</code>)</td>
+              <th scope="row"><strong>5. <code>bridges/</code></strong></th>
+              <td>Train and fuse <code>ComboBridge</code> &amp; <code>ExpertBridge</code> ($D_{\text{model}} \to 384$) into <code>bridge-trunk-0/</code>.</td>
+              <td><code>70 / 70</code> (<code>100%</code>) on the 70-task suite &amp; <code>11 / 11</code> scenario checks.</td>
+              <td><strong><code>70 / 70</code> (100%)</strong></td>
+              <td><strong><code>70 / 70</code> (100%)</strong></td>
+              <td><strong><code>70 / 70</code> (100%)</strong></td>
             </tr>
           </tbody>
         </table>
@@ -268,748 +252,191 @@
     </div>
   </section>
 
+  <!-- ============ WHERE IT RUNS & EFFICIENCY ============ -->
   <section class="band" id="where-it-runs-and-efficiency">
     <div class="wrap">
-      <h2>Where Clover AI Studio Is Running &amp; Efficiency Compared to Each Model&rsquo;s Official Released Numbers</h2>
-      <p class="lede"><strong>We measure every model on real hardware against the official footprint, hardware requirements, and standalone accuracy released by its creators.</strong> By combining offline algebraic trunk fusion and pruning, 4-bit planar group-64 quantization, <code>SpecMD Policy 3 + Red-Blue Pebble R4 Clean-Drop</code> memory hierarchy management, and the 7-layer Clover verification cycle, Clover runs models on consumer phones, laptops, and single workstations that otherwise require multi-GPU data-center clusters—while dramatically improving accuracy.</p>
-
-      <h3>1. Where Clover AI Studio is running today (4 verified hardware environments)</h3>
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">Live hardware environments where Clover AI Studio is deployed and verified end-to-end.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Environment</th>
-              <th scope="col">Hardware Specification</th>
-              <th scope="col">Active Clover Engines &amp; Models</th>
-              <th scope="col">Measured Runtime Performance &amp; Memory Footprint</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><strong>1. Mobile Phone</strong><br><small>Samsung Galaxy S23 (<code>SM-S911B</code>)</small></th>
-              <td>Qualcomm Snapdragon 8 Gen 2 for Galaxy &middot; 8-core Kryo ARMv9 CPU + <code>Adreno 740</code> OpenCL 3.0 GPU &middot; 8 GB LPDDR5X RAM (<code>~7 GB</code> usable) &middot; Android 16</td>
-              <td>On-device <code>LFM3-Omni-2B</code> (Adreno OpenCL GPU + CPU <code>--no-mmproj-offload</code> vision/audio/speech projector) + remote <code>k3</code> selector (<code>LFM3-Omni (k3)</code>, <code>Nemotron 3.5</code>, <code>Kimi K3</code>)</td>
-              <td><strong><code>17.9 tok/s</code></strong> on-device generation &middot; <strong><code>9.9 s</code></strong> camera/photo understanding &middot; <strong><code>4.1 s</code></strong> voice transcription &middot; <strong><code>-0.74 GB</code></strong> less pinned GL memory via CPU projector offload &middot; <code>1.48 GB</code> total on-device model storage (<code>894 MB</code> C1 4-bit core).</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>2. Personal Laptop</strong><br><small>Windows 11 Home (<code>santhosh-pc</code>)</small></th>
-              <td>13th Gen Intel Core i5-1335U (<code>2P + 8E</code> cores, 12 threads, AVX2) &middot; <code>Intel Iris Xe</code> Vulkan iGPU &middot; 15.7 GB LPDDR4X-4267 RAM (<code>68 GB/s</code>)</td>
-              <td>Local <code>LFM3-Omni-2B</code> on Iris Xe Vulkan GPU + separate 10-thread CPU speech instance + <code>SD 1.5 + LCM-LoRA</code> Vulkan image generator + <code>CSI</code> child service + <code>VS Code</code> bridge</td>
-              <td><strong><code>438 tok/s</code></strong> prompt prefill on Iris Xe GPU (<strong><code>4.7&times;</code> faster</strong> than CPU <code>94 tok/s</code>) &middot; <strong><code>26.7&ndash;28.0 tok/s</code></strong> text decoding &middot; <strong><code>1.2&ndash;1.6&times;</code> real-time</strong> speech synthesis &middot; <strong><code>1.28 GB</code></strong> server private RAM &middot; <strong><code>47 / 49</code> (<code>95.9%</code>)</strong> natural conversation regression.</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>3. CPU Workstation &amp; Web Host (<code>k3</code>)</strong><br><small><code>api.cloverframework.com</code></small></th>
-              <td>AMD Ryzen 9 7950X3D (<code>16C / 32T</code>, Zen 4 AVX-512, 128 MB 3D V-Cache) &middot; 124.9 GB DDR5 RAM &middot; Dual KIOXIA CD8 NVMe RAID1 (<code>13.51 GB/s</code>)</td>
-              <td>Resident 3-model worker (<code>LFM3-Omni-2B</code> AVX-512, <code>Nemotron 3.5 Super VL</code> 88L C engine + NCM, <code>Kimi K3 2.78T MoE</code> 93L C/Rust engine + NCM) + <code>CSI</code> (<code>en_core_web_trf</code>, ready in 6 s) + <code>PPL</code></td>
-              <td><strong><code>0 s</code> model switching</strong> &middot; <code>Nemotron 3.5</code>: <strong><code>1.12 s</code></strong> clubbed C / <strong><code>2.12 s</code></strong> single (<code>99.03%</code> expert cache hit rate, <code>0</code> dirty writebacks) &middot; <code>LFM3</code>: <strong><code>3.45 s</code></strong> 24L C &middot; <code>Kimi K3</code>: <strong><code>1.99 s/tok</code></strong> 93L layer stack &middot; <strong><code>11 / 11</code> (<code>100%</code>)</strong> live scenario suite.</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>4. Multi-GPU Server (<code>gpu</code>)</strong><br><small>8 &times; NVIDIA RTX 3090</small></th>
-              <td>8 &times; RTX 3090 (<code>192 GiB</code> VRAM, NVLink pairs <code>0&harr;2, 1&harr;3, 4&harr;6, 5&harr;7</code> @ <code>51.9 GB/s</code>) &middot; 2 &times; Xeon Gold 6248R &middot; 376 GiB RAM</td>
-              <td>All 93 Kimi K3 trunks + 92 MoE layers (<code>2,576</code> permanent VRAM + <code>1,229</code> dynamic <code>CardPool</code> + <code>2,912</code> pinned host slots) across <code>cuda:0..5</code> + <code>HybridAgent</code> &amp; 11-pass NCM on <code>cuda:6..7</code></td>
-              <td><strong><code>148.5 K3 tok/s</code></strong> across all 93 layers &middot; <strong><code>95.29%</code></strong> overall VRAM hit rate &middot; <strong><code>0</code></strong> PCIe D2H dirty writebacks (saving <code>448&ndash;3,522 GB</code> PCIe traffic) &middot; <strong><code>70 / 70</code> (<code>100%</code>)</strong> benchmark accuracy at <strong><code>2.04&times;</code> lower GPU-s per solved task</strong>.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3 style="margin-top:2rem">2. Efficiency &amp; Accuracy in Clover Compared to Each Model&rsquo;s Official Released Numbers</h3>
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">Direct comparison between the official released baseline numbers of each open-weight model family and its measured footprint, hardware requirement, speed, and 70-task accuracy after porting into the Clover AI System.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Model Family</th>
-              <th scope="col">Metric</th>
-              <th scope="col">Official Released Baseline<br><small>(Unmodified Upstream Model)</small></th>
-              <th scope="col">Ported into Clover AI System<br><small>(Precomputed Trunks + Direction B + 7 Layers)</small></th>
-              <th scope="col">Measured Clover Efficiency / Gain</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row" rowspan="4"><strong>1. Moonshot AI<br>Kimi K3</strong><br><small><code>2.78T</code> Total / <code>104B</code> Active MoE<br>(93 layers, 896 experts/layer)</small></th>
-              <td><strong>Hardware Required to Run</strong></td>
-              <td>Multi-node GPU cluster: <code>32&ndash;64 &times; H800/H100 80 GB</code> GPUs (<code>~2.8 TB</code> BF16 / <code>~1.45 TB</code> INT4 VRAM)</td>
-              <td><strong>1 CPU workstation</strong> (<code>124 GB</code> RAM + NVMe) <em>or</em> <strong>1 consumer <code>8 &times; RTX 3090</code> box</strong> (<code>192 GiB</code> VRAM)</td>
-              <td><strong>Runs on <code>11.4&times;</code> less VRAM</strong> (<code>124.9 GiB</code> vs. <code>1.42 TB</code>) or <strong><code>0</code> GPUs</strong> on a single CPU box</td>
-            </tr>
-            <tr>
-              <td><strong>Backbone Trunk RAM Footprint</strong></td>
-              <td><code>51.30 GiB</code> unpruned trunks (<code>70.7 GiB</code> locked RAM)</td>
-              <td><strong><code>33.25 GiB</code> pruned trunks</strong> (<code>52.6 GiB</code> locked RAM; redundant Q/K/V copies pruned)</td>
-              <td><strong><code>-35.2%</code> trunk size</strong> (<code>-18.05 GiB</code> locked RAM saved) with <strong>bit-identical</strong> outputs</td>
-            </tr>
-            <tr>
-              <td><strong>Inference Speed &amp; Data Movement</strong></td>
-              <td><code>23.7 s/tok</code> initial C CPU baseline; naive GPU swap writes back <code>54,132..200,717</code> experts over PCIe</td>
-              <td><strong><code>1.99 s/tok</code></strong> CPU layer stack (<code>2.31 s/tok</code> 4-bit + DSpark); <strong><code>148.5 tok/s</code></strong> on GPU with <code>0</code> D2H writebacks</td>
-              <td><strong><code>5.5&times;&ndash;11.9&times;</code> faster on CPU</strong>; <strong><code>7.0&times;</code> lower Eyeriss data-movement cost</strong> &amp; <code>95.29%</code> VRAM hit rate on GPU</td>
-            </tr>
-            <tr>
-              <td><strong>70-Task Standardized Benchmark</strong></td>
-              <td><strong><code>33 / 70</code> (<code>47.14%</code>)</strong> raw model alone (<code>234.0 GPU-s</code> per solved task)</td>
-              <td><strong><code>70 / 70</code> (<code>100.00%</code>)</strong> with Clover 7-layer cycle (<code>114.5 GPU-s</code> per solved task)</td>
-              <td><strong><code>+37 tasks</code> (<code>+52.86 pp</code> accuracy lift)</strong> at <strong><code>2.04&times;</code> lower GPU-seconds per solved task</strong></td>
-            </tr>
-            <tr>
-              <th scope="row" rowspan="4"><strong>2. NVIDIA<br>Nemotron 3.5 Super VL</strong><br><small><code>124.45B</code> Total / <code>12.77B</code> Active<br>(88 layers: Mamba-2 + Latent MoE + GQA)</small></th>
-              <td><strong>Hardware Required to Run</strong></td>
-              <td><code>2&ndash;4 &times; H100/A100 80 GB</code> GPUs (<code>~248.9 GB</code> BF16 safetensors)</td>
-              <td><strong>Runs 100% on a single CPU (<code>k3</code>) with <code>0</code> GPUs</strong> (<code>mmap</code> + <code>SpecMD Policy 3</code>)</td>
-              <td><strong>Eliminates multi-GPU requirement</strong> while maintaining <code>max_abs_diff = 0.0</code> BF16 stage parity</td>
-            </tr>
-            <tr>
-              <td><strong>Backbone Trunk &amp; Expert Size</strong></td>
-              <td><code>12.919 GiB</code> trunks + BF16 experts (<code>5.25 GiB</code> per active slice)</td>
-              <td><strong><code>6.970 GiB</code> pruned <code>NEMOTRK1</code> trunks</strong> + <strong><code>1.36 GiB</code></strong> 4-bit group-64 <code>CLVR4B01</code> experts</td>
-              <td><strong><code>-46.05%</code> trunk reduction</strong> (<code>-5.95 GiB</code>) &amp; <strong><code>3.86&times;</code> expert compression</strong> ($\cos = 0.998189$)</td>
-            </tr>
-            <tr>
-              <td><strong>CPU Execution Latency &amp; I/O</strong></td>
-              <td><code>3.27 s/task</code> unclubbed C engine; <code>53,023</code> uncoalesced expert streams</td>
-              <td><strong><code>1.12 s/task</code> clubbed C engine</strong> (<code>2.12 s</code> single); <code>4,037</code> streams; <code>99.03%</code> cache hit rate</td>
-              <td><strong><code>2.93&times;</code> faster C execution</strong>, <strong><code>13.1&times;</code> fewer expert streams</strong>, and <strong><code>1.74&times;</code> faster than Kimi K3 on CPU</strong></td>
-            </tr>
-            <tr>
-              <td><strong>70-Task Standardized Benchmark</strong></td>
-              <td><strong><code>16 / 70</code> (<code>22.86%</code>)</strong> standalone stage engine alone</td>
-              <td><strong><code>70 / 70</code> (<code>100.00%</code>)</strong> with Clover 7-layer cycle + 131K Tekken NCM</td>
-              <td><strong><code>+54 tasks</code> (<code>+77.14 pp</code> accuracy lift)</strong> with <code>100%</code> valid Tekken token IDs</td>
-            </tr>
-            <tr>
-              <th scope="row" rowspan="4"><strong>3. Liquid AI<br>LFM3-Omni-2B &amp; LFM3-1.7B</strong><br><small><code>2.17B / 1.73B</code> Dense Tri-Hybrid<br>(24 layers: ShortConv + GQA + SwiGLU)</small></th>
-              <td><strong>Weight &amp; RAM Footprint</strong></td>
-              <td><code>3.46&ndash;4.34 GB</code> BF16 weights; <code>&gt;4.5 GB</code> PyTorch CPU RAM (<code>9.8 GB</code> with torch planner)</td>
-              <td><strong><code>894 MB</code></strong> 4-bit C1 core on S23 (<code>1.48 GB</code> full Omni Q4_0 + Q8_0 projector); <strong><code>1.28 GB</code></strong> private RAM on Laptop</td>
-              <td><strong><code>3.6&times;</code> smaller model footprint</strong> &amp; <strong><code>7.6&times;</code> lower process RAM</strong> on Windows laptops</td>
-            </tr>
-            <tr>
-              <td><strong>Backbone Trunk Size</strong></td>
-              <td><code>2.80 GiB</code> unpruned 24-layer trunks with duplicate <code>attention.bin</code></td>
-              <td><strong><code>2.35 GiB</code> pruned <code>LFM3TRK1</code> trunks</strong> (<code>0</code> <code>attention.bin</code> files remaining)</td>
-              <td><strong><code>-15.91%</code> overall trunk reduction</strong> (<code>-19.69%</code> on ShortConv layers, <code>max_abs_diff = 0.0</code>)</td>
-            </tr>
-            <tr>
-              <td><strong>Laptop &amp; Phone Speed</strong></td>
-              <td><code>53 tok/s</code> prefill / <code>8.1 tok/s</code> decode (BF16 CPU); GPU projector crashes Android OpenCL</td>
-              <td>Laptop Iris Xe: <strong><code>438 tok/s</code> prefill / <code>28.0 tok/s</code> decode</strong>; Galaxy S23: <strong><code>17.9 tok/s</code></strong> + CPU projector (<code>9.9 s</code> photo, <code>4.1 s</code> voice)</td>
-              <td><strong><code>8.3&times;</code> faster prefill &amp; <code>3.5&times;</code> faster decode</strong> on laptop; <strong><code>-0.74 GB</code> GL memory</strong> &amp; zero OpenCL crashes on S23</td>
-            </tr>
-            <tr>
-              <td><strong>Benchmark &amp; Real-User Accuracy</strong></td>
-              <td><strong><code>19 / 70</code> (<code>27.14%</code>)</strong> raw 1.7B model (<code>40 / 65</code> bare Omni GGUF; <code>33 / 47</code> initial Studio baseline)</td>
-              <td><strong><code>70 / 70</code> (<code>100.00%</code>)</strong> 7-layer Clover suite; <strong><code>50 / 65</code></strong> standalone GGUF + Clover cycle; <strong><code>47 / 49</code> (<code>95.9%</code>)</strong> natural regression</td>
-              <td><strong><code>+51 tasks</code> (<code>+72.86 pp</code>)</strong> on 70-task suite &amp; <strong><code>+25.7 pp</code></strong> on natural multi-turn document/tool conversations</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <section class="band" id="clover-kimi-k3">
-    <div class="wrap">
+      <div id="clover-kimi-k3"></div>
       <div id="clover-k3"></div>
-      <h2>Why Clover exists: any model reaches verified outcomes when governed by the Clover cycle</h2>
-      <p class="lede"><strong>An outcome does not come from which model you use. It comes from how the system around the model runs the cycle (<code>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</code>).</strong></p>
-      <p>To test that principle directly, we built the <strong>Clover AI System (<code>clover-ai-system</code>)</strong> so that <strong>Layer 1 (the Foundation Model Backbone)</strong> can be hot-switched across three models that span <strong>1,600&times; in parameter scale</strong> and three distinct neural architectures—while keeping <strong>Layers 2 through 7</strong> (the governing, retrieving, tool-executing, compiler-checking, and memory-accumulating Clover cycle) identical:</p>
-      <p><strong>1. MoonshotAI Kimi K3 (<code>kimi-k3</code> &mdash; 2.78T Total / 104B Active MoE):</strong> 93 layers (<code>68</code> KDA recurrent + <code>24</code> MLA attention trunks, <code>896</code> routed 4-bit experts per layer with top-16 routing, <code>D = 7,168</code>, <code>V = 163,840</code> tiktoken vocabulary, <code>1.4 TB</code> expert store). Built for deep open-world synthesis and multi-GPU execution.</p>
-      <p><strong>2. NVIDIA Nemotron 3.5 Super VL (<code>nemotron-3.5-super-vl</code> &mdash; 124.45B Total / 12.77B Active Hybrid MoE, Default):</strong> 88 single-mixer layers (<code>40</code> Mamba-2 selective state-space layers + <code>40</code> Latent <code>ReLU&sup2;</code> MoE layers with <code>512</code> experts and top-22 routing in compressed <code>1,024</code>-d latent space + <code>8</code> NoPE <code>16:1</code> GQA attention layers, <code>D = 4,096</code>, <code>V = 131,072</code> Tekken vocabulary, native 32-layer <code>C-RADIO</code> vision/video encoder with <code>EVS</code> pruning, and native 2-layer <code>MTP</code> drafter).</p>
-      <p><strong>3. Liquid AI LFM3-1.7B (<code>lfm3-1.7b</code> &mdash; 1.73B Dense Tri-Hybrid):</strong> 24 layers (<code>13</code> width-7 Gated Short Convolutions + <code>5</code> Sliding-Window GQA layers + <code>6</code> Full Global GQA layers with zero-tail partial RoPE <code>0.5</code>, per-head sigmoid gates, sandwich RMSNorm, and SwiGLU FFN, <code>D = 2,048</code>, <code>V = 128,000</code> tied vocabulary, <code>3.24 GiB</code> total weights).</p>
+      <div id="model-comparison"></div>
+      <h2>Faster hardware. Higher accuracy.</h2>
+      <p class="lede">Direction B keeps weights in raw bytes until the processor registers and drops clean pages with zero writebacks. Models that normally need data-center clusters run on phones, laptops, and single workstations.</p>
+
+      <div class="table-wrap">
+        <table class="data">
+          <caption class="note">Four live hardware environments running Clover AI Studio.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Device</th>
+              <th scope="col">Hardware</th>
+              <th scope="col">Active Models</th>
+              <th scope="col">Measured Speed &amp; Footprint</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><strong>1. Android Phone</strong></th>
+              <td>Samsung Galaxy S23 &middot; Snapdragon 8 Gen 2 (Adreno 740 GPU, 8 GB RAM)</td>
+              <td>On-device <code>LFM3-Omni-2B</code> + remote 3-model switcher</td>
+              <td><strong><code>17.9 tok/s</code></strong> text &middot; <strong><code>9.9 s</code></strong> photo &middot; <strong><code>4.1 s</code></strong> voice &middot; <code>1.48 GB</code> storage</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>2. Windows Laptop</strong></th>
+              <td>Intel Core i5-1335U &middot; Intel Iris Xe Vulkan iGPU &middot; 16 GB RAM</td>
+              <td>Local <code>LFM3-Omni-2B</code> + CPU speech + Vulkan image gen</td>
+              <td><strong><code>438 tok/s</code></strong> prefill &middot; <strong><code>28.0 tok/s</code></strong> decode &middot; <strong><code>1.28 GB</code></strong> RAM</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>3. CPU Workstation (<code>k3</code>)</strong></th>
+              <td>AMD Ryzen 9 7950X3D (16C/32T AVX-512) &middot; 124 GB RAM &middot; NVMe RAID1</td>
+              <td>All 3 models hot-switchable (<code>LFM3</code>, <code>Nemotron 3.5</code>, <code>Kimi K3</code>)</td>
+              <td><strong><code>1.12 s</code></strong> Nemotron C &middot; <strong><code>3.45 s</code></strong> LFM3 C &middot; <strong><code>1.99 s/tok</code></strong> Kimi K3</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>4. Multi-GPU Server</strong></th>
+              <td>8 &times; NVIDIA RTX 3090 (<code>192 GiB</code> VRAM, NVLink) &middot; 376 GiB RAM</td>
+              <td>Full 93-layer <code>Kimi K3 2.78T</code> + <code>HybridAgent</code> + 11-level NCM</td>
+              <td><strong><code>148.5 tok/s</code></strong> &middot; <strong><code>95.3%</code></strong> VRAM hit rate &middot; <strong><code>0</code></strong> PCIe writebacks</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:2rem">Official released baseline vs. ported into Clover</h3>
+      <div class="table-wrap">
+        <table class="data">
+          <caption class="note">Comparison against each model&rsquo;s official standalone footprint, speed, and 70-task score.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Model</th>
+              <th scope="col">Official Standalone Baseline</th>
+              <th scope="col">Ported into Clover AI Studio</th>
+              <th scope="col">Measured Gain</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><strong>Moonshot AI Kimi K3</strong><br><small>2.78T Total / 104B Active MoE</small></th>
+              <td>Needs <code>1.45&ndash;2.8 TB</code> cluster VRAM; <code>23.7 s/tok</code> initial CPU C baseline; <strong><code>33 / 70</code> (<code>47.1%</code>)</strong> alone.</td>
+              <td>Runs in <strong><code>124.9 GiB</code> VRAM</strong> (8&times;3090) or <strong>1 CPU box</strong>; <code>1.99 s/tok</code> CPU / <code>148.5 tok/s</code> GPU; <strong><code>70 / 70</code> (<code>100%</code>)</strong>.</td>
+              <td><strong><code>11.4&times;</code> less VRAM</strong> &middot; <strong><code>+52.9 pp</code> accuracy</strong> &middot; <strong><code>2.04&times;</code> lower GPU-s/task</strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>NVIDIA Nemotron 3.5 Super VL</strong><br><small>124.5B Total / 12.8B Active</small></th>
+              <td>Needs <code>~249 GB</code> BF16 VRAM across multiple H100/A100 GPUs; <strong><code>16 / 70</code> (<code>22.9%</code>)</strong> stage baseline alone.</td>
+              <td>Runs on <strong>1 CPU with <code>0</code> GPUs</strong>; <code>6.97 GiB</code> pruned trunks + 4-bit experts; <code>1.12 s/task</code>; <strong><code>70 / 70</code> (<code>100%</code>)</strong>.</td>
+              <td><strong><code>-46.1%</code> trunk bytes</strong> &middot; <strong><code>2.93&times;</code> faster C</strong> &middot; <strong><code>+77.1 pp</code> accuracy</strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Liquid AI LFM3-Omni-2B</strong><br><small>2.17B / 1.73B Tri-Hybrid</small></th>
+              <td><code>3.5&ndash;4.3 GB</code> BF16 weights; <code>8.1 tok/s</code> CPU decode; <strong><code>19 / 70</code> (<code>27.1%</code>)</strong> alone.</td>
+              <td><strong><code>894 MB</code></strong> 4-bit core on phone / <strong><code>1.28 GB</code> RAM</strong> on laptop; <code>28.0 tok/s</code> Iris Xe; <strong><code>70 / 70</code> (<code>100%</code>)</strong>.</td>
+              <td><strong><code>3.5&times;</code> faster laptop decode</strong> &middot; <strong><code>+72.9 pp</code> accuracy</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 
-  <section class="band" id="model-comparison">
-    <div class="wrap">
-      <h2>What all three models do: their differences and similarities</h2>
-        <p>Before wrapping the models in Clover, we downloaded their weights and source code on our server (<code>k3</code>, AMD Ryzen 9 7950X3D, 124 GiB RAM, and <code>gpu</code>, 8 &times; NVIDIA RTX 3090, 192 GiB VRAM) and verified every mathematical stage against the official models to <code>max_abs_diff = 0.0</code> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-ai-system-switchable-models-context.md">clover-ai-system-switchable-models-context.md</a>).</p>
-        <p><strong>What all three models share (Similarities):</strong></p>
-        <ul>
-          <li><strong>Hybrid sequence mixing for long-context efficiency:</strong> None of the three is a pure full-attention Transformer. Each combines linear-state operators (<code>68</code> KDA layers in Kimi K3, <code>40</code> Mamba-2 SSM layers in Nemotron 3.5 Super VL, and <code>13</code> width-7 Gated ShortConv + <code>5</code> Sliding-256 layers in LFM3-1.7B) with a small number of global attention layers (<code>24</code> MLA, <code>8</code> NoPE GQA, and <code>6</code> Full GQA), supporting <strong>1,048,576 (1M) session context tokens</strong> inside Clover.</li>
-          <li><strong>Identical precomputed C/OpenMP &amp; CUDA container discipline:</strong> In Clover, all three models compile their per-layer normalization and attention/mixer projections into contiguous <code>mmap</code>-ready <code>operator.bin</code> streams and pruned trunks (<code>K3TRK001</code>, <code>NEMOTRK1</code> with <strong><code>-46.05%</code></strong> trunk byte reduction, and <code>LFM3TRK1</code> with <strong><code>-15.91%</code></strong> trunk byte reduction and <code>0</code> <code>attention.bin</code> files remaining).</li>
-          <li><strong>Full multimodal support inside Clover AI Studio:</strong> All three models support text, image understanding, video frame analysis, duplex audio/voice conversation, and high-resolution image, video, and audio generation across all standard formats (<code>PNG</code>, <code>JPG</code>, <code>WebP</code>, <code>BMP</code>, <code>SVG</code>, <code>MP4</code>, <code>WebM</code>, <code>GIF</code>, <code>MP3</code>, <code>WAV</code>, <code>OGG</code>, <code>FLAC</code>).</li>
-          <li><strong>The same standalone blind spots without Clover:</strong> On its own, every one of these three models guesses multi-step arithmetic, emits code with syntax or borrow-checker errors when a single token slips, cannot solve 9&times;9 constraint satisfaction grids reliably without a solver, and cannot know private organizational ontology records or prior session memory that are not in its weights.</li>
-        </ul>
-
-        <div class="table-wrap">
-          <table class="data">
-            <caption class="note">Architectural and operational comparison of the three switchable Layer-1 foundation models in <code>clover-ai-system</code>.</caption>
-            <thead>
-              <tr>
-                <th scope="col">Property</th>
-                <th scope="col">1. <code>kimi-k3</code><br><small>(MoonshotAI Kimi K3)</small></th>
-                <th scope="col">2. <code>nemotron-3.5-super-vl</code><br><small>(NVIDIA Nemotron 3.5 Super VL, Default)</small></th>
-                <th scope="col">3. <code>lfm3-1.7b</code><br><small>(Liquid AI LFM3-1.7B)</small></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row"><strong>Total / Active Parameters</strong></th>
-                <td><strong>2.78T total / 104B active</strong></td>
-                <td><strong>124.45B total / 12.77B active</strong></td>
-                <td><strong>1.73B total / 1.73B active</strong> (dense)</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Backbone Layer Schedule</strong></th>
-                <td><strong>93 layers:</strong> Layer 0 dense + 92 MoE layers (<code>69</code> KDA + <code>24</code> MLA attention trunks)</td>
-                <td><strong>88 single-mixer layers:</strong> <code>40</code> Mamba-2 + <code>40</code> Latent <code>ReLU&sup2;</code> MoE + <code>8</code> NoPE 16:1 GQA</td>
-                <td><strong>24 tri-hybrid layers:</strong> <code>13</code> width-7 ShortConv + <code>5</code> Sliding-256 GQA + <code>6</code> Full GQA</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Hidden Size &amp; Vocabulary</strong></th>
-                <td><code>D = 7,168</code> &middot; <code>V = 163,840</code> (tiktoken)</td>
-                <td><code>D = 4,096</code> &middot; <code>V = 131,072</code> (Tekken untied)</td>
-                <td><code>D = 2,048</code> &middot; <code>V = 128,000</code> (tied <code>embed_tokens</code>)</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Feed-Forward / MoE Structure</strong></th>
-                <td><code>896</code> gated SiLU experts/layer (top-16) + shared expert (<code>1.4 TB</code> on disk)</td>
-                <td><code>512</code> non-gated <code>ReLU&sup2;</code> experts/layer (top-22) in <code>4096&rarr;1024</code> latent space + shared expert</td>
-                <td>Dense SwiGLU MLP in all 24 layers (<code>2048 &rarr; 7680 &rarr; 2048</code>) with sandwich RMSNorm</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Context Window &amp; 256K State</strong></th>
-                <td><strong>1M Clover Session</strong> (<code>256K</code> native; 24 MLA KV + 68 KDA recurrent state)</td>
-                <td><strong>1M Native &amp; Clover Session</strong> (only <code>2.16 GiB</code> state at 256K; <code>8.16 GiB</code> at 1M!)</td>
-                <td><strong>1M Clover Session</strong> (<code>256K</code> native; <code>312 KB</code> conv + <code>2.5 MB</code> sliding + <code>3.0 GiB</code> full KV)</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Multimodal &amp; Speculative Drafter</strong></th>
-                <td>27-layer <code>MoonViT3d</code> vision + 5-layer <code>DSpark</code> MLA drafter</td>
-                <td>32-layer <code>C-RADIO</code> vision + <code>EVS</code> video pruning + <code>Mamba</code> audio + native 2-layer <code>MTP</code></td>
-                <td>Width-7 <code>ShortConv</code> vision, video &amp; duplex voice/audio adapters + prompt-lookup draft</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>CPU Engine Latency on <code>k3</code></strong><br><small>(Ryzen 9 7950X3D)</small></th>
-                <td><code>~9.11 s</code> stage (<code>~4.45 s</code> across 93 layers on <code>8 &times; RTX 3090</code> GPU)</td>
-                <td><strong><code>1.12 s</code> C engine</strong> (clubbed <code>B=10</code>) / <code>2.12 s</code> single; <code>4.27 s</code> with 11-level NCM</td>
-                <td><strong><code>3.45 s</code> 24-layer C engine</strong> (clubbed <code>B=10</code>) / <code>3.54 s</code> single; <code>5.96 s</code> with 11-level NCM</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-    </div>
-  </section>
-
-  <section class="band" id="how-it-works">
-    <div class="wrap">
-      <h2>What the Clover AI System is, and how it switches models at runtime</h2>
-        <p>The model can propose; the system decides; the tools enforce; evidence verifies; humans remain accountable. Rather than hard-wiring the reasoning, memory, ontology, and verification logic inside one model&rsquo;s weights, <code>clover-ai-system</code> separates <strong>Layer 1 (the switchable Foundation Model Backbone)</strong> from <strong>Layers 2 through 7 (the shared Clover cycle infrastructure)</strong> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/switchable_model_backend.py">switchable_model_backend.py</a>):</p>
-
-        <ol class="steps">
-          <li><strong>Layer 1 &mdash; Switchable Foundation Model Backbone &amp; Universal Dimension Bridges (<code>libk3_gpu_experts.so</code>, <code>libnemotron_cpu_engine.so</code>, <code>liblfm3_cpu_engine.so</code>):</strong>
-            Each model runs its own native compiled C/OpenMP or CUDA engine over its own exact tokenizer vocabulary (<code>163,840</code> for Kimi K3, <code>131,072</code> for Nemotron 3.5 Super VL, <code>128,000</code> for LFM3-1.7B). When you switch models in the UI or via <code>CloverSwitchableModelLayer1.switch_model(model_key)</code>, Clover hot-swaps three lightweight adapters that map the active model&rsquo;s hidden dimension $D_{\text{model}} \in \{7168, 4096, 2048\}$ into Clover&rsquo;s shared upper layers:
-            (a) a trained <strong>Native <code>HybridLink</code></strong> (<code>K3NativeHybridLink(7168)</code>, <code>NemotronNativeHybridLink(4096)</code> with <code>0.9985</code> test cosine, or <code>Lfm3NativeHybridLink(2048)</code> with <code>0.9994</code> test cosine),
-            (b) a <strong><code>ComboBridge</code> &amp; <code>ExpertBridge</code></strong> projecting $D_{\text{model}} \to 384$ into the 11-level NCM concept space, and
-            (c) a <strong>Vocabulary-Grafted 11-Level <code>VQ-VAE</code></strong> (<code>99.83%</code> exact token reconstruction on Nemotron&rsquo;s 131K Tekken vocab and <code>100.00%</code> on LFM3&rsquo;s 128K vocab).</li>
-          <li><strong>Layer 2 &mdash; HybridAgent Continuous <code>&lt;latent&gt;</code> Reasoning &amp; Live Tools (<code>clover-agent-engine.py</code>):</strong>
-            Runs continuous <code>&lt;latent&gt;</code> reasoning steps and dispatches live <code>&lt;search&gt;</code> (arXiv, Wikipedia, DuckDuckGo, URL fetch) and sandboxed <code>&lt;python&gt;</code> execution (exact arithmetic, constraint solving, unit tests, and charts) before the model commits to surface text.</li>
-          <li><strong>Layer 3 &mdash; 11-Pass Parallel Next-Concept Modeling (NCM) &amp; Lexical Pointer Alignment (<code>benchmark_3_models_70_tasks.py</code>):</strong>
-            <code>NextConceptTransformer</code> (119.96M parameters) and <code>K3LexicalPointerDecoder</code> predict 11 hierarchical vector-quantized concept levels in parallel across 64-token windows and decode strictly inside the active model&rsquo;s own vocabulary (<code>all_emitted_token_ids_valid_in_model_vocab = True</code> across all 70 tasks for all 3 models).</li>
-          <li><strong>Layer 4 &mdash; File-Based Memory Tree &amp; Relational Knowledge Graph (<code>clover-memory-graph.py</code>):</strong>
-            Stores human-readable Markdown entries with YAML front matter across <code>memory_tree/</code> (32 canonical seed entries, 65 typed cross-branch edges such as <code>corrects</code>, <code>refines</code>, <code>challenges</code>, and <code>unresolved_with</code>) with a closed-loop <code>staging/</code> promotion gate and six upgrades from the 11 foundational AI papers (<a href="../origin/">Origin</a>).</li>
-          <li><strong>Layer 5 &mdash; Ontology-Guided Neuro-Symbolic GraphRAG &amp; Symbolic Verifier (<code>clover-ontology-graph.py</code>):</strong>
-            Maintains deterministic ontology graphs, 4 Horn inference rules, and Newell&ndash;Simon <code>CSm</code>/<code>VCt</code> structural signature pruning (`22.5x` fewer DFS steps), supplying structured <code>[E#]</code> entity records and <code>[P#]</code> relationship paths and verifying mathematical, multiple-choice, and source-grounding invariants.</li>
-          <li><strong>Layer 6 &mdash; On-the-Fly Generative Compilation for Python &amp; Rust (<code>clover-generative-compiler.py</code>):</strong>
-            Seals partial Python and Rust code prefixes at statement boundaries during generation, invokes Python AST/doctest checks and <code>rustc --edition=2021</code>, and uses Sutton $\text{TD}(\lambda)$ cliff localization (`6/6` offending statements localized) to roll back and repair broken statements before returning code.</li>
-          <li><strong>Layer 7 &mdash; Direction B Data Movement &amp; SpecMD Policy 3 Slot Caching (<code>libslotcache.so</code>):</strong>
-            Manages 3-tier expert and trunk memory (<code>VRAM / Pool &harr; Pinned Host RAM &harr; NVMe Direct</code>) with <code>SpecMD Least-Stale + Red-Blue Pebble Rule R4 Clean-Drop</code> and <strong>Dynamic Batch Clubbing (<code>B = 10</code> prompts per pass with segment boundary isolation <code>seg_starts[t]</code>)</strong>, achieving a <strong><code>99.03%</code> cache hit rate</strong> and <strong><code>0</code> dirty writebacks</strong> across the 70-task suite.</li>
-        </ol>
-    </div>
-  </section>
-
+  <!-- ============ 70-TASK BENCHMARK ============ -->
   <section class="band" id="hybrid-ncm-k3">
     <div class="wrap">
-      <h2>Benchmarking all three models without Clover vs. with the Clover cycle (70 Tasks)</h2>
-        <p>To prove why Clover exists, we benchmarked <strong>all three models both ways</strong> on the exact same 70-task standardized suite (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/hybrid-ncm-k3/run-standardized-70-task-benchmark.py">run-standardized-70-task-benchmark.py</a> and <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/benchmark_raw_models_without_clover_70_tasks.py">benchmark_raw_models_without_clover_70_tasks.py</a>), scored by the exact same unmodified frozen grading harness (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/clover_3_models_without_vs_with_clover_70_task_report.json">clover_3_models_without_vs_with_clover_70_task_report.json</a>):</p>
-        <ul>
-          <li><strong>Without the Clover System (<code>Arm 0</code> &mdash; Raw Model Alone):</strong> Every Clover layer is switched off (no Memory Graph, no Ontology GraphRAG, no <code>&lt;python&gt;</code> or <code>&lt;search&gt;</code> tools, and no Python/Rust Generative Compiler). Each model relies solely on its own forward pass and weights:
-            <code>kimi-k3</code> alone passes only <strong><code>33 / 70</code> (<code>47.14%</code>)</strong>;
-            <code>lfm3-1.7b</code> alone (all 24 layers standalone) passes only <strong><code>19 / 70</code> (<code>27.14%</code>)</strong>; and
-            <code>nemotron-3.5-super-vl</code>&rsquo;s standalone stage engine passes only <strong><code>16 / 70</code> (<code>22.86%</code>)</strong>.</li>
-          <li><strong>With the Full 7-Layer Clover Cycle (<code>Arm 2</code> &mdash; All 6 Surrounding Layers Active):</strong> When the exact same three models run inside the Clover cycle—where <strong>Context</strong> retrieves verified Ontology <code>[E#]</code>/<code>[P#]</code> and Memory Graph <code>[M#]</code> records, <strong>Direction</strong> enforces symbolic constraints and McCulloch&ndash;Pitts/Minsky&ndash;Papert One-in-a-Box vetoes, <strong>Execution</strong> runs <code>&lt;python&gt;</code>/<code>&lt;search&gt;</code> tools and each model&rsquo;s native C/CUDA engine, <strong>Outcome</strong> verifies every code block with <code>python3</code>/<code>rustc</code> Generative Compilation and source-grounding checks, and <strong>Growth</strong> stages verified outcomes back into memory—<strong>every single model solves all 70 tasks: <code>70 / 70</code> (<code>100.00%</code> pass rate, <code>99.08%</code> mean canonical score)</strong>.</li>
-        </ul>
+      <div id="progress"></div>
+      <h2>70 tasks. Three models. 100%.</h2>
+      <p class="lede">We tested all three models on the same 70 tasks across seven categories — first as raw models alone, then wrapped in the Clover system (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/clover_3_models_without_vs_with_clover_70_task_report.json">full JSON report</a>).</p>
 
-        <div class="table-wrap">
-          <table class="data">
-            <caption class="note">Measured 70-task benchmark across all three switchable models in <code>clover-ai-system</code>: <strong>Without Clover (Arm 0, Raw Model Alone)</strong> vs. <strong>With Clover (Arm 2, Full 7-Layer Clover Cycle)</strong>, scored by the exact same frozen harness (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/clover_3_models_without_vs_with_clover_70_task_report.json">raw JSON report</a>).</caption>
-            <thead>
-              <tr>
-                <th scope="col">Category / Metric (<code>N=70</code>)</th>
-                <th scope="col"><code>kimi-k3</code> Alone<br><small>(Without Clover)</small></th>
-                <th scope="col"><code>nemotron-3.5</code> Alone<br><small>(Without Clover)</small></th>
-                <th scope="col"><code>lfm3-1.7b</code> Alone<br><small>(Without Clover)</small></th>
-                <th scope="col"><strong><code>kimi-k3</code> + Clover</strong><br><small>(Full 7-Layer Cycle)</small></th>
-                <th scope="col"><strong><code>nemotron-3.5</code> + Clover</strong><br><small>(Full 7-Layer Cycle)</small></th>
-                <th scope="col"><strong><code>lfm3-1.7b</code> + Clover</strong><br><small>(Full 7-Layer Cycle)</small></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row"><strong>1. MMLU</strong> (<code>N=10</code>, 5 subjects)</th>
-                <td><code>6 / 10</code> (60.0%)</td>
-                <td><code>2 / 10</code> (20.0%)</td>
-                <td><code>3 / 10</code> (30.0%)</td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>2. GSM8K Math</strong> (<code>N=10</code>, test <code>0..9</code>)</th>
-                <td><code>2 / 10</code> (20.0%)</td>
-                <td><code>0 / 10</code> (0.0%)</td>
-                <td><code>2 / 10</code> (20.0%)</td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>3. Coding</strong> (<code>N=15</code>: HumanEval-10 + Live Rust-5)</th>
-                <td><code>12 / 15</code> (80.0%)</td>
-                <td><code>3 / 15</code> (20.0%)</td>
-                <td><code>3 / 15</code> (20.0%)</td>
-                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>4. Structured Output</strong> (<code>N=15</code>: Sudoku-5, WMT14-5, XSum-5)</th>
-                <td><code>6 / 15</code> (40.0%)</td>
-                <td><code>7 / 15</code> (46.7%)</td>
-                <td><code>7 / 15</code> (46.7%)</td>
-                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>5. Ontology GraphRAG</strong> (<code>N=6</code>: CVEs, internal specs, physics)</th>
-                <td><code>0 / 6</code> (0.0%)</td>
-                <td><code>0 / 6</code> (0.0%)</td>
-                <td><code>0 / 6</code> (0.0%)</td>
-                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
-                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
-                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>6. Persistent Memory &amp; Distractors</strong> (<code>N=6</code>)</th>
-                <td><code>3 / 6</code> (50.0%)</td>
-                <td><code>2 / 6</code> (33.3%)</td>
-                <td><code>3 / 6</code> (50.0%)</td>
-                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
-                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
-                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>7. Agent Multi-Hop &amp; Tool QA</strong> (<code>N=8</code>)</th>
-                <td><code>4 / 8</code> (50.0%)</td>
-                <td><code>2 / 8</code> (25.0%)</td>
-                <td><code>1 / 8</code> (12.5%)</td>
-                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Overall Pass Rate</strong> (All <code>70</code> Tasks)</th>
-                <td><strong><code>33 / 70</code> (47.14%)</strong><br><small>mean score 49.89%</small></td>
-                <td><strong><code>16 / 70</code> (22.86%)</strong><br><small>mean score 23.76%</small></td>
-                <td><strong><code>19 / 70</code> (27.14%)</strong><br><small>mean score 28.85%</small></td>
-                <td><strong><code>70 / 70</code> (100.00%)</strong><br><small>mean score 99.08%</small></td>
-                <td><strong><code>70 / 70</code> (100.00%)</strong><br><small>mean score 99.08%</small></td>
-                <td><strong><code>70 / 70</code> (100.00%)</strong><br><small>mean score 99.08%</small></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Clover Cycle Lift Over Model Alone</strong></th>
-                <td>Baseline (<code>33/70</code>)</td>
-                <td>Baseline (<code>16/70</code>)</td>
-                <td>Baseline (<code>19/70</code>)</td>
-                <td><strong><code>+37 tasks</code> (<code>+52.86 pp</code>)</strong><br><small><code>4.45 s</code> 93L GPU / <code>9.11 s</code> CPU</small></td>
-                <td><strong><code>+54 tasks</code> (<code>+77.14 pp</code>)</strong><br><small><code>1.12 s</code> C / <code>4.27 s</code> with NCM</small></td>
-                <td><strong><code>+51 tasks</code> (<code>+72.86 pp</code>)</strong><br><small><code>3.45 s</code> 24L C / <code>5.96 s</code> with NCM</small></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3>How each stage of the Clover cycle achieves outcomes the model cannot reach alone</h3>
-        <dl class="kv kv--wide" style="margin-top:1rem">
-          <div>
-            <dt>1. Context supplies the private and structural reality missing from every model&rsquo;s weights (<code>0/6 &rarr; 6/6</code> Ontology, <code>2..3/6 &rarr; 6/6</code> Memory)</dt>
-            <dd>Without Clover, all three models score <strong><code>0 / 6</code> (<code>0.0%</code>)</strong> on Category 5 (Ontology GraphRAG) and <code>33.3%&ndash;50.0%</code> on Category 6 (Persistent Memory)—and even standalone frontier models (<strong>GPT-6 Astra</strong> <code>58.3%</code>, <strong>Claude Opus 5.5</strong> <code>66.7%</code>, <strong>Gemini 4 Argon</strong> <code>58.3%</code>) fail those tasks because private records (<code>Harbourside Council Mill Road</code>, <code>Payments Database Postmortem #209</code>, <code>Aurora Distributed Storage v4.2</code>, and prior K3 cache/quantization measurements) do not exist in public pretraining corpora. Clover&rsquo;s <strong>Context</strong> stage retrieves the exact <code>[E#]</code>/<code>[P#]</code> ontology chains and <code>[M#]</code> memory entries before generation begins, lifting every model to <strong><code>6 / 6</code> (<code>100.0%</code>)</strong> on both categories.</dd>
-          </div>
-          <div>
-            <dt>2. Direction enforces domain boundaries and eliminates context pollution (<code>16/16 &rarr; 0/16</code> false positives)</dt>
-            <dd>Using McCulloch &amp; Pitts (1943) inhibitory vetoes and Minsky &amp; Papert (1969) Order-$k$ &ldquo;One-in-a-Box&rdquo; conjunctive predicates, Clover blocks irrelevant memory/ontology injection on look-alike physics, biology, and sports distractors (cutting polluted context tokens from <code>9,244 &rarr; 0</code>) while Rosenblatt&rsquo;s zero-sum $\gamma$-rule and Vaswani/Krizhevsky $h=3$ multi-head LRN guarantee balanced evidence across uneven memory branches.</dd>
-          </div>
-          <div>
-            <dt>3. Execution pairs neural generation with deterministic tools (<code>0..2/10 &rarr; 10/10</code> GSM8K, <code>0/5 &rarr; 5/5</code> Sudoku, <code>1..4/8 &rarr; 8/8</code> Agent QA)</dt>
-            <dd>On their own, the models guess multi-step word problems (`0/10` to `2/10` on GSM8K), fail 9&times;9 Sudoku constraint grids (`0/5`), and miss multi-hop calculations (`1/8` to `4/8`). Inside Clover&rsquo;s <strong>Execution</strong> stage, <code>HybridAgent</code> dispatches <code>&lt;python&gt;</code> and <code>&lt;search&gt;</code> to compute exact numbers and constraint solutions first, and then renders the verified answer through the active model&rsquo;s native C/CUDA engine and vocabulary (`131,072` Tekken, `128,000` LFM3, or `163,840` Kimi K3).</dd>
-          </div>
-          <div>
-            <dt>4. Outcome validates code and source grounding before returning (<code>3..12/15 &rarr; 15/15</code> Coding, <code>6..7/15 &rarr; 15/15</code> Structured Output)</dt>
-            <dd>Standalone models frequently fail executable Python and Rust coding tasks (`3/15` for standalone `LFM3-1.7B` and `Nemotron` stage engine; `12/15` for `Kimi K3` alone due to unclosed brackets or Rust `str` indexing `E0277`). Clover&rsquo;s <strong>Outcome</strong> stage runs statement-boundary Python AST/doctest checks and live <code>rustc --edition=2021</code> compilation (`CloverPython/RustGenerativeCompiler`), rolling back broken statements mid-generation so all three models pass <strong><code>15 / 15</code> (<code>100.0%</code>)</strong> executable coding tests and <strong><code>15 / 15</code> (<code>100.0%</code>)</strong> structured output tasks.</dd>
-          </div>
-          <div>
-            <dt>5. Growth turns each verified cycle into the next cycle&rsquo;s Context</dt>
-            <dd>Validated findings are staged into <code>memory_tree/staging/</code> and promoted with explicit provenance and typed relationships (<code>corrects</code>, <code>refines</code>, <code>challenges</code>), so a mistake corrected once in any model is remembered for every model on the next cycle.</dd>
-          </div>
-        </dl>
-
-        <h3>Head-to-head reference table: Clover 3-arm ablation vs. standalone frontier models (<code>8 &times; RTX 3090</code>)</h3>
-        <p>For completeness, the table below records our controlled 3-arm ablation on <code>kimi-k3</code> (<strong>Arm 0</strong> raw model alone &rarr; <strong>Arm 1</strong> adding Tools &amp; Generative Compilation &rarr; <strong>Arm 2</strong> adding Ontology &amp; Memory) alongside three standalone cloud frontier models (<strong>GPT-6 Astra</strong>, <strong>Claude Opus 5.5</strong>, and <strong>Gemini 4 Argon</strong>, called without attaching Clover&rsquo;s layers) on the exact same 70 prompts (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md">Cycle 10 full report &amp; raw JSON artifacts</a>):</p>
-
-        <div class="table-wrap">
-          <table class="data">
-            <caption class="note">Head-to-head evaluation on the exact same 70 prompts under Clover&rsquo;s frozen scoring harness: (1) Accuracy by category &amp; public/private split, (2) Performance &amp; GPU-seconds per solved task, and (3) Clover-specific value over the same underlying model without Clover&rsquo;s mechanisms.</caption>
-            <thead>
-              <tr>
-                <th scope="col">Category / Metric (<code>N=70</code>)</th>
-                <th scope="col">Arm 0: Underlying Model Alone<br><small>(Clover Layers Off)</small></th>
-                <th scope="col">Arm 1: Underlying + Tools &amp; GC<br><small>(No Mem / Onto)</small></th>
-                <th scope="col">Arm 2: Full 7-Layer Clover<br><small>(All 6 Surrounding Layers)</small></th>
-                <th scope="col">GPT-6 Astra<br><small>(Clover Layers Not Attached)</small></th>
-                <th scope="col">Claude Opus 5.5<br><small>(Clover Layers Not Attached)</small></th>
-                <th scope="col">Gemini 4 Argon<br><small>(Clover Layers Not Attached)</small></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row"><strong>1. MMLU</strong> (<code>N=10</code>, 5 subjects)</th>
-                <td><code>6 / 10</code> (60.0%)</td>
-                <td><code>7 / 10</code> (70.0%)</td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>2. GSM8K</strong> (<code>N=10</code>, test <code>0..9</code>)</th>
-                <td><code>2 / 10</code> (20.0%)</td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-                <td><code>8 / 10</code> (80.0%)*<br><small>(<code>10/10</code> math correct)</small></td>
-                <td><code>4 / 10</code> (40.0%)*<br><small>(<code>10/10</code> math correct)</small></td>
-                <td><strong><code>10 / 10</code> (100.0%)</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>3. Coding</strong> (<code>N=15</code>: HumanEval-10 + Live Rust-5)</th>
-                <td><code>12 / 15</code> (80.0%)</td>
-                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>4. Structured Output</strong> (<code>N=15</code>: Sudoku-5, WMT14-5, XSum-5)</th>
-                <td><code>6 / 15</code> (40.0%)</td>
-                <td><code>11 / 15</code> (73.3%)</td>
-                <td><strong><code>15 / 15</code> (100.0%)</strong></td>
-                <td><code>13 / 15</code> (86.7%)</td>
-                <td><code>14 / 15</code> (93.3%)</td>
-                <td><code>7 / 15</code> (46.7%)&dagger;</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>5. Ontology GraphRAG</strong> (<code>N=6</code>: CVEs, internal specs, physics)</th>
-                <td><code>0 / 6</code> (0.0%)</td>
-                <td><code>2 / 6</code> (33.3%)</td>
-                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
-                <td><code>3 / 6</code> (50.0%)&ddagger;</td>
-                <td><code>4 / 6</code> (66.7%)&ddagger;</td>
-                <td><code>3 / 6</code> (50.0%)&ddagger;</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>6. Persistent Memory &amp; Distractors</strong> (<code>N=6</code>)</th>
-                <td><code>3 / 6</code> (50.0%)</td>
-                <td><code>4 / 6</code> (66.7%)</td>
-                <td><strong><code>6 / 6</code> (100.0%)</strong></td>
-                <td><code>4 / 6</code> (66.7%)&ddagger;</td>
-                <td><code>4 / 6</code> (66.7%)&ddagger;</td>
-                <td><code>4 / 6</code> (66.7%)&ddagger;</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>7. Agent Multi-Hop &amp; Tool QA</strong> (<code>N=8</code>)</th>
-                <td><code>4 / 8</code> (50.0%)</td>
-                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-                <td><strong><code>8 / 8</code> (100.0%)</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Public / General Subset</strong> (<code>58</code> tasks: Cats 1&ndash;4 &amp; 7)</th>
-                <td><code>30 / 58</code> (51.72%)</td>
-                <td><code>51 / 58</code> (87.93%)</td>
-                <td><strong><code>58 / 58</code> (100.00%)</strong></td>
-                <td><code>54 / 58</code> (93.10%)<br><small>(<code>56/58 = 96.55%</code> norm)</small></td>
-                <td><code>51 / 58</code> (87.93%)<br><small>(<code>57/58 = 98.28%</code> norm)</small></td>
-                <td><code>50 / 58</code> (86.21%)</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Ontology + Memory Subset</strong> (<code>12</code> tasks: Cats 5&ndash;6)</th>
-                <td><code>3 / 12</code> (25.00%)</td>
-                <td><code>6 / 12</code> (50.00%)</td>
-                <td><strong><code>12 / 12</code> (100.00%)</strong></td>
-                <td><code>7 / 12</code> (58.33%)&ddagger;</td>
-                <td><code>8 / 12</code> (66.67%)&ddagger;</td>
-                <td><code>7 / 12</code> (58.33%)&ddagger;</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Overall Accuracy</strong> (All <code>70</code> tasks: Strict / GSM8K-Norm)</th>
-                <td><strong><code>33 / 70</code> (47.14%)</strong><br><small>mean score 49.89%</small></td>
-                <td><strong><code>57 / 70</code> (81.43%)</strong><br><small>mean score 83.26%</small></td>
-                <td><strong><code>70 / 70</code> (100.00%)</strong><br><small>mean score 99.08%</small></td>
-                <td><strong><code>61 / 70</code> (87.14%)</strong><br><small><code>63/70 (90.00%)</code> norm</small></td>
-                <td><strong><code>59 / 70</code> (84.29%)</strong><br><small><code>65/70 (92.86%)</code> norm</small></td>
-                <td><strong><code>57 / 70</code> (81.43%)</strong><br><small>mean score 89.92%</small></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Performance &amp; Cost / Solved Task</strong></th>
-                <td><code>965.4 s</code> total<br>(<code>13.79 s/task</code>, <code>234.0 GPU-s/solved</code>)</td>
-                <td><code>1,015.4 s</code> total<br>(<code>14.51 s/task</code>, <code>142.5 GPU-s/solved</code>)</td>
-                <td><strong><code>1,002.3 s</code> total</strong><br>(<code>14.32 s/task</code>, <strong><code>114.5 GPU-s/solved</code></strong>)</td>
-                <td><code>333.6 s</code> (4 slices)<br>(<code>4.77 s/task</code>, Cloud API)</td>
-                <td><code>263.2 s</code> (4 slices)<br>(<code>3.76 s/task</code>, Cloud API)</td>
-                <td><code>206.4 s</code> (4 slices)<br>(<code>2.95 s/task</code>, Cloud API)</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Clover-Specific Value Over Underlying Model</strong></th>
-                <td>Baseline (<code>0</code> mechanisms)</td>
-                <td><strong><code>+24 tasks</code> (<code>+34.29 pp</code>)</strong> from Tools &amp; Generative Compilation</td>
-                <td><strong><code>+37 tasks</code> (<code>+52.86 pp</code>)</strong> total (<code>+13 tasks</code> from Ontology &amp; Memory; <strong>2.04&times; lower GPU-s/solved</strong>)</td>
-                <td colspan="3"><small>*All three frontier models solved <code>10/10</code> GSM8K math correctly; unmodified regex matched intermediate <code>has/takes &lt;num&gt;</code> when <code>#### &lt;num&gt;</code> was omitted. &dagger;Gemini 4 Argon scored <code>0/5</code> on 9&times;9 Sudoku without a solver (<code>55..78/81</code> cells). &ddagger;Standalone models honestly abstained on private ontology/memory records not in the prompt.</small></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-            <h3>How the 8 &times; RTX 3090 GPUs are partitioned</h3>
-            <div class="table-wrap">
-              <table class="data">
-                <caption class="note">Hardware layout on our 8 &times; NVIDIA RTX 3090 server (<code>192 GiB</code> total VRAM, NVLink pairs <code>0&harr;2, 1&harr;3, 4&harr;6, 5&harr;7</code> at <code>51.9 GB/s</code>, <code>2 &times; Intel Xeon Gold 6248R</code>, <code>376 GiB</code> system RAM).</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">GPUs</th>
-                    <th scope="col">VRAM used</th>
-                    <th scope="col">What runs on them</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th scope="row"><code>cuda:0 .. cuda:5</code> (6 GPUs)</th>
-                    <td><strong>124.9 GiB</strong> (20.8 GiB / card)</td>
-                    <td><strong>All 93 Kimi K3 Trunks</strong> (<code>trunk-0..92</code>, 52.7 GiB: 69 KDA + 24 MLA attention layers, 92 routers, 92 shared experts, 8 snapshot aggregators) + <strong>all 92 MoE Expert Layers (896 experts/layer routable:</strong> <code>2,576</code> permanent VRAM experts + <code>1,229</code> dynamic VRAM <code>CardPool</code> slots + <code>2,912</code> pinned RAM slots = 51.1 GB) + Layer-93 Final Tail (<code>libk3_gpu_experts.so</code>).</td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><code>cuda:6</code> (1 GPU)</th>
-                    <td><strong>19.5 GiB</strong> / 24 GiB</td>
-                    <td><strong>CloverK3AgentEngine (<code>e12_clover_k3_true_ha_ncm.pt</code>):</strong> <code>HybridAgent-8B-Agentic</code> planner + <code>LiveWebSearchTool</code> + <code>PythonTool</code> + <code>K3NativeHybridLink(7168&rarr;7168)</code> + <code>NextConceptTransformer (NCM)</code> + <code>K3-Native VQ-VAE</code> &amp; <code>K3LexicalPointerDecoder</code>.</td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><code>cuda:7</code> (1 GPU)</th>
-                    <td><strong>19.3 GiB</strong> / 24 GiB</td>
-                    <td><strong>K3MultimodalChatEngine:</strong> Kimi K3&rsquo;s 27-layer <code>MoonViT3d + PatchMergerMLPV2</code> (<code>225 &times; 7,168</code>-d visual tokens in 42 ms) + <code>Qwen3-VL-8B-Instruct + HybridLink</code> + NCM decoder.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h3>Direction B &mdash; Five Data-Movement Upgrades Across CPU (<code>k3</code>), GPU (<code>8 &times; RTX 3090</code>) &amp; All Three Models</h3>
-            <p>All five Direction B data-movement upgrades and all six mechanisms from the 11 foundational papers (<a href="../origin/#applied-to-clover">Origin</a>) run across <strong>both CPU and GPU servers and all three switchable models</strong> (<code>libk3_gpu_experts.so</code> &amp; <code>libk3_cpu_experts.so</code> for <code>kimi-k3</code>, <code>libnemotron_cpu_engine.so</code> for <code>nemotron-3.5-super-vl</code>, and <code>liblfm3_cpu_engine.so</code> for <code>lfm3-1.7b</code>):</p>
-            <div class="table-wrap">
-              <table class="data">
-                <caption class="note">Measured across real 92-layer Kimi K3 traces, live <code>8 &times; RTX 3090</code> GPU runs (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-data-movement-direction-b-context.md">clover-data-movement-direction-b-context.md</a>), and live <code>k3</code> CPU runs for <code>nemotron-3.5-super-vl</code> and <code>lfm3-1.7b</code> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-ai-system-switchable-models-context.md">clover-ai-system-switchable-models-context.md</a>).</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Study &amp; Mechanism</th>
-                    <th scope="col">Before (Unoptimized Baseline)</th>
-                    <th scope="col">After (Clover Direction B across CPU, GPU &amp; All 3 Models)</th>
-                    <th scope="col">Measured Impact on GPU (<code>8 &times; RTX 3090</code>) &amp; CPU (<code>k3</code> Ryzen 9 7950X3D)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th scope="row"><strong>1. Red-Blue Pebble Game</strong> (Hong &amp; Kung, STOC 1981)<br><code>Clean-Input R4 Host-Shadow Admission</code></th>
-                    <td>Exclusive swap removed <code>HostCache</code> hits and wrote evicted immutable expert weights back (<code>R2_WB = 54,132..200,717</code>).</td>
-                    <td>Host-Shadow admission in Rust <code>libsupply.so</code>, <code>libk3_cpu_experts.so</code>, and <code>libnemotron_cpu_engine.so</code> (<code>r4_clean_drops++</code>, <code>dirty_writebacks = 0</code>).</td>
-                    <td><strong>GPU (<code>kimi-k3</code>):</strong> <code>written_back_R2 = 0</code> on cold/warm reads, <code>25,533</code> <code>R4</code> clean drops saving <code>448.0 GB</code> PCIe D2H (<code>1.95&times;</code> faster).<br><strong>CPU (<code>nemotron-3.5</code>):</strong> <code>45,876</code> <code>R4</code> clean drops (1-by-1) / <code>3,525</code> (clubbed) with <strong><code>0</code> dirty writebacks</strong>.</td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>2. SpecMD</strong> (Hoang et al., arXiv:2602.03921)<br><code>Policy 3 Least-Stale (LS) + Hit-First + Lookahead</code></th>
-                    <td><code>Heat-48</code> pinned Pass-0 prefill experts and evicted upcoming layers ($l_e &gt; l_{\text{cur}}$), causing <code>9.35%&ndash;24.53%</code> pass-collision misses.</td>
-                    <td>3-tier Least-Stale (<code>LS</code>) eviction + two-pass Hit-First ordering in Rust <code>libslotcache.so</code>, <code>libk3_cpu_experts.so</code>, and <code>libnemotron_cpu_engine.so</code>.</td>
-                    <td><strong>GPU (<code>kimi-k3</code>):</strong> Collisions cut <code>11.8&times;&ndash;26.7&times;</code>; <code>95.22%&ndash;95.29%</code> overall VRAM hit rate.<br><strong>CPU (<code>nemotron-3.5</code>):</strong> <strong><code>99.03%</code> cache hit rate</strong> (<code>52,511 / 53,023</code> expert hits, <code>0</code> new NVMe drive fetches after Pass 1).</td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>3. FlashAttention-1 &amp; 2</strong> (Dao et al., 2022/2023) &amp; <strong>Register-Blocked Tiling</strong><br><code>Online-Softmax + 8-Token Register Blocking</code></th>
-                    <td>Materialized <code>sc[count]</code> in dynamic shared memory on GPU; 1-token-per-pass scalar weight streaming on CPU.</td>
-                    <td><code>mla_attention_pos_fa2_part</code> + Split-KV on GPU; 8-token register-blocked <code>linear_bf16_omp</code> &amp; <code>linear_4bit_group64_omp</code> in <code>nemotron_cpu_engine.c</code> &amp; <code>lfm3_cpu_engine.c</code>.</td>
-                    <td><strong>GPU (<code>kimi-k3</code>):</strong> <code>2.57&times;&ndash;6.84&times;</code> faster MLA attention, <code>max_abs_diff &le; 1.12e-7</code>.<br><strong>CPU (<code>nemotron-3.5</code> &amp; <code>lfm3-1.7b</code>):</strong> Cuts DDR5 weight traffic up to <code>8&times;</code> (<code>3.27 s &rarr; 1.12 s</code> C engine on Nemotron; <code>8.73 s &rarr; 3.45 s</code> on 24-layer LFM3).</td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>4. Eyeriss v1</strong> (Chen et al., ISCA 2016 / JSSC 2017)<br><code>4-Tier Storage &amp; Pruned Operator / Trunk Hierarchy</code></th>
-                    <td>No per-tier movement accounting; unpruned trunks duplicated weights already packed in <code>operator.bin</code>.</td>
-                    <td>Live 4-tier movement ledger (<code>k3_full93_dm_stats</code> &amp; <code>nemo_dm_stats</code>) + trunk pruning (<code>prune_nemotron_trunk.py</code>, <code>prune_lfm3_trunk.py</code>) &amp; 4-bit planar group-64 <code>experts.4bit.direct</code>.</td>
-                    <td><strong>GPU (<code>kimi-k3</code>):</strong> Eyeriss cost/req dropped <code>54.205 &rarr; 7.731</code> (<code>7.0&times;</code>).<br><strong>CPU:</strong> Prunes <strong><code>-46.05%</code></strong> (<code>5.95 GiB</code>) from Nemotron trunks, <strong><code>-15.91%</code></strong> (<code>0</code> <code>attention.bin</code> left) from all 24 LFM3 trunks, and <strong><code>3.86&times;</code></strong> (<code>5.25 &rarr; 1.36 GiB</code>) on 4-bit Nemotron experts.</td>
-                  </tr>
-                  <tr>
-                    <th scope="row"><strong>5. Eyeriss v2</strong> (Chen et al., IEEE JETCAS 2019)<br><code>Multi-Token Broadcast Coalescing &amp; Dynamic Batch Clubbing</code></th>
-                    <td>Unicast per-token expert execution fetched <code>920</code> cold experts/pass on GPU and <code>53,023</code> expert streams across 70 tasks on CPU.</td>
-                    <td><code>coalesce_cold_broadcast</code> on GPU + <strong>Dynamic Batch Clubbing (<code>B = 10</code> prompts/pass with <code>seg_starts[t]</code> isolation)</strong> in <code>nemo_forward_pipeline_clubbed</code> and <code>lfm3_forward_24_layers_clubbed</code> on CPU.</td>
-                    <td><strong>GPU (<code>kimi-k3</code>):</strong> Cold expert fetches dropped <code>80.0%</code> (<code>920 &rarr; 184</code>), <code>148.5 tok/s</code>.<br><strong>CPU (<code>nemotron-3.5</code> &amp; <code>lfm3-1.7b</code>):</strong> Cuts Nemotron expert streams by <strong><code>13.1&times;</code></strong> (<code>53,023 &rarr; 4,037</code>), speeding up Nemotron C by <strong><code>2.93&times;</code></strong> (<code>1.12 s/task</code>) and LFM3 C by <strong><code>2.53&times;</code></strong> (<code>3.45 s/task</code>) with <code>0</code> cross-talk.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+      <div class="table-wrap">
+        <table class="data">
+          <caption class="note">Standardized 70-task benchmark: standalone model (Without Clover) vs. full Clover AI System (With Clover).</caption>
+          <thead>
+            <tr>
+              <th scope="col">Category</th>
+              <th scope="col">Tasks</th>
+              <th scope="col"><code>Kimi K3</code><br><small>Alone &rarr; With Clover</small></th>
+              <th scope="col"><code>Nemotron 3.5</code><br><small>Alone &rarr; With Clover</small></th>
+              <th scope="col"><code>LFM3</code><br><small>Alone &rarr; With Clover</small></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><strong>1. MMLU Knowledge</strong></th>
+              <td><code>10</code></td>
+              <td><code>6/10</code> &rarr; <strong><code>10/10</code></strong></td>
+              <td><code>2/10</code> &rarr; <strong><code>10/10</code></strong></td>
+              <td><code>3/10</code> &rarr; <strong><code>10/10</code></strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>2. GSM8K Math</strong></th>
+              <td><code>10</code></td>
+              <td><code>2/10</code> &rarr; <strong><code>10/10</code></strong></td>
+              <td><code>0/10</code> &rarr; <strong><code>10/10</code></strong></td>
+              <td><code>2/10</code> &rarr; <strong><code>10/10</code></strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>3. Python &amp; Rust Coding</strong></th>
+              <td><code>15</code></td>
+              <td><code>12/15</code> &rarr; <strong><code>15/15</code></strong></td>
+              <td><code>3/15</code> &rarr; <strong><code>15/15</code></strong></td>
+              <td><code>3/15</code> &rarr; <strong><code>15/15</code></strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>4. Structured Output &amp; Sudoku</strong></th>
+              <td><code>15</code></td>
+              <td><code>6/15</code> &rarr; <strong><code>15/15</code></strong></td>
+              <td><code>7/15</code> &rarr; <strong><code>15/15</code></strong></td>
+              <td><code>7/15</code> &rarr; <strong><code>15/15</code></strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>5. Ontology GraphRAG</strong></th>
+              <td><code>6</code></td>
+              <td><code>0/6</code> &rarr; <strong><code>6/6</code></strong></td>
+              <td><code>0/6</code> &rarr; <strong><code>6/6</code></strong></td>
+              <td><code>0/6</code> &rarr; <strong><code>6/6</code></strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>6. Persistent Memory</strong></th>
+              <td><code>6</code></td>
+              <td><code>3/6</code> &rarr; <strong><code>6/6</code></strong></td>
+              <td><code>2/6</code> &rarr; <strong><code>6/6</code></strong></td>
+              <td><code>3/6</code> &rarr; <strong><code>6/6</code></strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>7. Multi-Hop Agent &amp; Tools</strong></th>
+              <td><code>8</code></td>
+              <td><code>4/8</code> &rarr; <strong><code>8/8</code></strong></td>
+              <td><code>2/8</code> &rarr; <strong><code>8/8</code></strong></td>
+              <td><code>1/8</code> &rarr; <strong><code>8/8</code></strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Total (70 Tasks)</strong></th>
+              <td><strong><code>70</code></strong></td>
+              <td><code>33/70</code> (47.1%) &rarr; <strong><code>70/70</code> (100%)</strong></td>
+              <td><code>16/70</code> (22.9%) &rarr; <strong><code>70/70</code> (100%)</strong></td>
+              <td><code>19/70</code> (27.1%) &rarr; <strong><code>70/70</code> (100%)</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 
-  <section class="band" id="progress">
-    <div class="wrap">
-      <h2>Where we started, and where it is now</h2>
-            <p>We started from Fareed Khan&rsquo;s <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a>
-              (Apache-2.0) on a single CPU workstation (AMD Ryzen 9 7950X3D, 124 GB RAM, dual NVMe RAID1), optimized the
-              93-layer CPU reference chain bit-identically, and then built the unified 7-layer <strong><code>clover-ai-system</code></strong>
-              architecture running across both our <code>k3</code> CPU workstation and our <code>8 &times; RTX 3090</code> GPU server across all three switchable models.</p>
-
-            <div class="table-wrap">
-              <table class="data">
-                <caption class="note">Progression from the initial single-CPU C baseline to the current 7-layer <code>clover-ai-system</code> across CPU (<code>k3</code>) and GPU (<code>8 &times; RTX 3090</code>).</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Version &amp; hardware</th>
-                    <th scope="col">Input / planning &amp; tools</th>
-                    <th scope="col">Output generation &amp; end-to-end latency</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th scope="row">1. <code>kimi-k3-in-c</code> baseline (1 CPU workstation)</th>
-                    <td>1,344 s for the 34 recorded prompts (416 tokens total)</td>
-                    <td>23.7 s per token over 8 tokens; 12.4 s per token over 128 tokens</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">2. <code>clover-k3</code> first CPU version (September 2026)</th>
-                    <td>394.9 s for the same 34 prompts; 7.25 s for one 5-token prompt</td>
-                    <td>~5.9 s per token (5.1 s after a 5-word prompt, 6.6 s after 10)</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">3. <code>clover-kimi-k3</code> bit-identical CPU engine (October 2026)</th>
-                    <td><strong>~0.3 s per token</strong> (1,000-token prompt in ~300 s; 1,000/1,000 embeddings, layer-92 outputs &amp; 8,000 snapshots bit-identical)</td>
-                    <td><strong>3.1 to 3.5 s per token</strong> plain (<strong>356.3 s</strong> for 120 tokens); <strong>2.7 s/tok</strong> with DSpark speculative decoding</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">4. <strong><code>clover-ai-system</code> (7-Layer Neuro-Symbolic, Compiler-Verified &amp; Memory-Accumulating System on CPU <code>k3</code> &amp; <code>8 &times; RTX 3090</code> GPUs, now)</strong></th>
-                    <td><strong>3 Switchable Layer-1 Engines</strong> (<code>nemotron-3.5-super-vl</code> C/OpenMP + 4-bit experts + Native MTP, <code>lfm3-1.7b</code> 24-layer C/OpenMP, <code>kimi-k3</code> 93-layer GPU &amp; CPU) + <strong>256K session context</strong> + <strong>File-Based Memory Tree &amp; Knowledge Graph</strong> (11-Paper Foundations + 5 Direction B Data-Movement Upgrades) + <strong>Ontology GraphRAG</strong> + <strong>Python &amp; Rust Generative Compilation</strong></td>
-                    <td><strong><code>70 / 70 = 100.0%</code> across all three models</strong> (lifting raw <code>nemotron-3.5-super-vl</code> from <code>16/70</code>, <code>lfm3-1.7b</code> from <code>19/70</code>, and <code>kimi-k3</code> from <code>33/70</code> to <strong><code>70/70</code></strong>; <strong>1.12 s/task</strong> Nemotron C engine &amp; <strong>3.45 s/task</strong> LFM3 C engine on CPU; <strong>1.56 to 11.69 s</strong> on GPU)</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-    </div>
-  </section>
-
+  <!-- ============ CREDIT & REFERENCES ============ -->
   <section class="band" id="credit">
     <div class="wrap">
-      <h2>Credit</h2>
-      <p>The Clover AI System (<code>clover-ai-system</code>) builds directly on the open weights, architectures, and published research of the teams below:</p>
-      <ul>
-        <li><strong>NVIDIA &mdash; Nemotron 3.5 Super VL (<a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16">nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16</a>).</strong>
-          The 124.45-billion-parameter (12.77B active) 88-layer hybrid Mamba-2 + 512-expert Latent <code>ReLU&sup2;</code> MoE + NoPE 16:1 GQA backbone (<code>D = 4,096</code>, <code>V = 131,072</code> Tekken vocabulary, 1M native context), the 32-layer <code>C-RADIO</code> vision/video encoder with <code>PixelShuffle</code> and <code>EVS</code> video token pruning, and the 2-layer Native Multi-Token Prediction (<code>MTP</code>) head.</li>
-        <li><strong>Liquid AI &mdash; LFM3-1.7B (<a href="https://huggingface.co/LiquidAI/LFM3-1.7B">LiquidAI/LFM3-1.7B</a>).</strong>
-          The 1.73-billion-parameter 24-layer tri-hybrid model combining 13 width-7 Gated Short Convolutions (<code>Lfm3ShortConv</code>), 5 Sliding-Window GQA layers, and 6 Full Global GQA layers with zero-tail partial RoPE <code>0.5</code>, per-head sigmoid gates, sandwich RMSNorm, and SwiGLU FFN (<code>D = 2,048</code>, <code>V = 128,000</code> tied vocabulary).</li>
-        <li><strong>Moonshot AI &mdash; Kimi K3 (<a href="https://huggingface.co/moonshotai/Kimi-K3">moonshotai/Kimi-K3</a>).</strong>
-                The 2.78-trillion-parameter 93-layer Mixture-of-Experts model (69 KDA + 24 MLA attention layers, 896 routed
-                experts per layer, <code>d = 7,168</code>), the 27-layer <code>MoonViT3d + PatchMergerMLPV2</code> vision tower,
-                and the 163,840-token <code>tiktoken.model</code> vocabulary. The embedding table, output head, final
-                normalization, vision weights, and tokenizer files are read from the original open weights under their own names.</li>
-              <li><strong>Jiaru Zou, Yunzhe Qi, Sirui Chen, Federico Bianchi, Shang Zhu, Pan Lu, Jingrui He, and James Zou
-                (Stanford University, Together AI, UIUC, Meta) &mdash; HybridAgent
-                (<a href="https://arxiv.org/abs/2610.18861">arXiv:2610.18861</a>,
-                <a href="https://github.com/togethercomputer/HybridAgent">togethercomputer/HybridAgent</a>).</strong>
-                <em>Hybrid Reasoning Agents: LLM Agents that Think in Latent Space, Act through Text.</em> We use their
-                <code>HybridAgent-8B-Agentic</code> model, <code>HybridLink</code> continuous <code>&lt;latent&gt;</code>
-                reasoning mechanism, and <code>&lt;search&gt;</code> / <code>&lt;python&gt;</code> agent architecture, and extend
-                the <code>HybridLink</code> design to Kimi K3&rsquo;s 7,168-dimensional hidden states (<code>K3NativeHybridLink</code>).</li>
-              <li><strong>Hermann Kumbong, Ishan S. Khare, Iddah Mlauzi, Andrew Woen, Charles Ding, E. Kelly Buchanan,
-                Simran Arora, Azalia Mirhoseini, and Christopher R&eacute; (Hazy Research, Stanford University) &mdash;
-                Next-Concept Modeling (<a href="https://arxiv.org/abs/2610.14162">arXiv:2610.14162</a>,
-                <a href="https://github.com/HazyResearch/ncm">HazyResearch/ncm</a>, MIT License).</strong>
-                <em>Next-Concept Modeling: Fast, Parallel Coarse-to-Fine Text Generation.</em> We adapt their 11-level
-                multiscale residual VQ-VAE tokenizer and coarse-to-fine <code>NextConceptTransformer</code> to Kimi K3&rsquo;s
-                163,840-token vocabulary and 7,168-dimensional geometry.</li>
-              <li><strong>Domenico Benfenati and Antonio Maria Rinaldi (University of Naples Federico II) &mdash;
-                Ontology-Guided Neuro-Symbolic GraphRAG (<a href="https://doi.org/10.1007/s00521-026-12495-0">doi:10.1007/s00521-026-12495-0</a>,
-                <a href="https://github.com/CosmoIknosLab/ontology-guided-graphrag">CosmoIknosLab/ontology-guided-graphrag</a>, MIT License).</strong>
-                <em>Ontology-Guided Neuro-Symbolic GraphRAG for Grounded Query Answering (Neural Computing and Applications, 2026).</em>
-                We build on their loosely-coupled neuro-symbolic design keeping deterministic ontology graph materialisation,
-                Horn-rule inference, and edge provenance separate from neural generation, along with the six retrieval and
-                verifier enhancements documented in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-ontology-graphrag-research-context.md">clover-ontology-graphrag-research-context.md</a>.</li>
-              <li><strong>Fareed Khan &mdash; <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a> (Apache-2.0).</strong>
-                The C engine that showed Kimi K3 could be run from C on one workstation, where our CPU measurements started.
-                Five of its tokenizer headers are included unmodified at commit <code>a2ad8e5</code> with its licence and notice.</li>
-              <li><strong>Inferact &mdash; <a href="https://huggingface.co/Inferact/Kimi-K3-DSpark">Kimi-K3-DSpark</a>.</strong>
-                The 5-layer dense MLA draft model used for speculative decoding on the CPU workstation.</li>
-            </ul>
+      <div id="references"></div>
+      <h2>Built on open weights and research</h2>
+      <p class="lede">Clover AI Studio builds on the open models and papers of the teams below.</p>
 
-          <div id="references" style="margin-top:2.2rem">
-            <h3>References</h3>
-            <dl class="kv kv--wide">
-              <div>
-                <dt>The engine and its README</dt>
-                <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/README.md">clover-kimi-k3/README.md</a>:
-                  folder map, every setting, chat mode, and the GPU concept-to-token tools in
-                  <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-kimi-k3/src/tools/hybrid-ncm-k3">clover-kimi-k3/src/tools/hybrid-ncm-k3</a>.</dd>
-              </div>
-              <div>
-                <dt>The set-up script</dt>
-                <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-kimi-k3/src/scripts/set-up-new-machine.sh">set-up-new-machine.sh</a>
-                  and the <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/.github/workflows/set-up-clover-kimi-k3.yml">GitHub Actions workflow</a>
-                  that runs the same steps on a self-hosted machine.</dd>
-              </div>
-              <div>
-                <dt>The dataset</dt>
-                <dd><a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio">Santhoshsathish94/clover-ai-studio</a>
-                  on Hugging Face, where all three model families (<code>kimi/</code>, <code>nemotron/</code>, and <code>liquid-lfm3/</code>) share the identical 5-folder layout
-                  (<code>experts/</code>, <code>trunks/</code>, <code>hybridagent/</code>, <code>ncm/</code>, and <code>bridges/</code>), verified via
-                  <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/scripts/download-hybrid-ncm-datasets.sh">download-hybrid-ncm-datasets.sh</a>,
-                  <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/scripts/dataset-files.tsv">dataset-files.tsv</a>,
-                  and
-                  <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/scripts/open-weights-files.tsv">open-weights-files.tsv</a>.</dd>
-              </div>
-              <div>
-                <dt>Every measurement, and every failure</dt>
-                <dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md">docs/clover-foundations-to-clover-gpu-context.md</a>,
-                  <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-ontology-graphrag-research-context.md">docs/clover-ontology-graphrag-research-context.md</a>,
-                  <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-hybridagent-research-context.md">docs/clover-hybridagent-research-context.md</a>,
-                  <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-kimi-k3-gpu-context.md">docs/clover-kimi-k3-gpu-context.md</a>, and
-                  <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-kimi-k3-cpu-context.md">docs/clover-kimi-k3-cpu-context.md</a>.</dd>
-              </div>
-              <div>
-                <dt>Upstream papers &amp; repositories</dt>
-                <dd><a href="https://huggingface.co/moonshotai/Kimi-K3">moonshotai/Kimi-K3</a>,
-                  <a href="https://arxiv.org/abs/2610.18861">HybridAgent (arXiv:2610.18861)</a> /
-                  <a href="https://github.com/togethercomputer/HybridAgent">togethercomputer/HybridAgent</a>,
-                  <a href="https://arxiv.org/abs/2610.14162">Next-Concept Modeling (arXiv:2610.14162)</a> /
-                  <a href="https://github.com/HazyResearch/ncm">HazyResearch/ncm</a>,
-                  <a href="https://doi.org/10.1007/s00521-026-12495-0">Ontology-Guided GraphRAG (doi:10.1007/s00521-026-12495-0)</a> /
-                  <a href="https://github.com/CosmoIknosLab/ontology-guided-graphrag">CosmoIknosLab/ontology-guided-graphrag</a>,
-                  <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">FareedKhan-dev/kimi-k3-in-c</a>, and
-                  <a href="https://huggingface.co/Inferact/Kimi-K3-DSpark">Inferact/Kimi-K3-DSpark</a>.</dd>
-              </div>
-            </dl>
-          </div>
-            </div>
-  </section>
+      <dl class="kv kv--wide">
+        <div><dt>Open-Weight Models</dt><dd><a href="https://huggingface.co/LiquidAI/LFM3-1.7B">Liquid AI LFM3</a>, <a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16">NVIDIA Nemotron 3.5 Super VL</a>, <a href="https://huggingface.co/moonshotai/Kimi-K3">Moonshot AI Kimi K3</a>, and <a href="https://huggingface.co/Inferact/Kimi-K3-DSpark">Inferact Kimi-K3-DSpark</a>.</dd></div>
+        <div><dt>Research Architecture</dt><dd><a href="https://arxiv.org/abs/2610.18861">HybridAgent</a> (Stanford / Together AI), <a href="https://arxiv.org/abs/2610.14162">Next-Concept Modeling</a> (Hazy Research, Stanford), <a href="https://doi.org/10.1007/s00521-026-12495-0">Ontology-Guided GraphRAG</a> (Univ. of Naples), <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a> (Fareed Khan), and the <a href="../origin/">11 foundational papers (1943&ndash;2017)</a>.</dd></div>
+        <div><dt>Dataset &amp; Source Code</dt><dd>Precomputed trunks and experts in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a> and full source in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system"><code>clover-ai-system/</code></a>.</dd></div>
+      </dl>
 
-  <section class="band">
-    <div class="wrap">
-      <div class="actions">
-        <a class="btn btn--primary" href="../getting-started/">Next Menu: Read AGENTS.md &rarr;</a>
-        <a class="btn" href="#downloads">Download Clover AI Studio (.exe / .apk) &uarr;</a>
-        <a class="btn" href="../clover-ai/">Launch Web Studio &rarr;</a>
-        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system">Explore clover-ai-system in the repository</a>
+      <div class="actions" style="margin-top:2rem">
+        <a class="btn btn--primary" href="../getting-started/">Next: Read AGENTS.md &rarr;</a>
+        <a class="btn" href="#downloads">Download AI Studio (.exe / .apk) &uarr;</a>
+        <a class="btn" href="../origin/">Read the Origin Story &rarr;</a>
       </div>
     </div>
   </section>

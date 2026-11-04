@@ -73,27 +73,29 @@
   <!-- ============ CONNECT THE SYSTEMS ============ -->
   <section class="band" id="setup">
     <div class="wrap">
-      <h2>How to set it up</h2>
-      <p class="lede">Context is the stage that changes everything, and it is the one that takes a
-        setup rather than a decision. Three moves, one system at a time. None of them creates a new
-        credential, and none of them needs a platform to migrate onto first.</p>
+      <h2>Three Moves to Connect Context</h2>
+      <p class="lede">Context is the stage that changes everything. Three moves, one system at a time — no new credentials and no platform migration.</p>
 
-      <h3>1 · Give read-only access to the system that holds the answer</h3>
-      <p>Whatever the system is — a records system, a plant, a ledger, a case history, a
-        codebase — the agent should be able to read it and not change it. Start with the one the
-        work already lives in. For software, a read-only MCP server per system is the usual
-        route.</p>
-
-      <h3>2 · Scope it to the human</h3>
-      <p>Each connection is scoped to what the human already has access to, at the privileges
-        they already hold. No new credential, and no new path into the systems.</p>
-
-      <h3>3 · Start where a mistake is cheap</h3>
-      <p>One setting is enough to begin, and it should be the one where being wrong costs the
-        least: a copy, a test bench, a development environment. Widen as the results hold up.</p>
+      <div class="apple-grid apple-grid--3">
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">Step 1 &middot; Read-Only</span>
+          <h3>Connect the System</h3>
+          <p>Give the agent read-only access to the records, logs, or codebase where the answer actually lives.</p>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">Step 2 &middot; Human Scope</span>
+          <h3>Match Human Access</h3>
+          <p>Scope every connection to the privileges the accountable human already holds. Never widen access for AI.</p>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">Step 3 &middot; Safe Sandbox</span>
+          <h3>Start Where Mistakes Are Cheap</h3>
+          <p>Begin in a local copy, test bench, or dev environment. Widen only as outcomes hold up against reality.</p>
+        </div>
+      </div>
 
       <p class="note" style="margin-top:1.4rem">
-        <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/orchestration-environment.md#building-one">The build sequence in full →</a>
+        <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/orchestration-environment.md#building-one">Read the full environment guide &rarr;</a>
       </p>
     </div>
   </section>
@@ -101,51 +103,38 @@
   <!-- ============ THE AGENT FILE ============ -->
   <section class="band" id="agent">
     <div class="wrap">
-      <h2>One file, and the agent works this way</h2>
-      <p class="lede">The whole framework is one file: <code>AGENTS.md</code>. Give it to an AI agent
-        alongside the work, and the agent runs the system cycle — Context, Direction, Execution,
-        Outcome, Growth — and explains what it is doing while it does.</p>
-
-      <p>The system is the reality the work has to land in. The two actors in it are the human and
-        AI. The human sets Direction and stays accountable for the outcome. The agent supplies
-        capability inside those boundaries, and the boundaries bind both of them.</p>
-
-      <p>Reading the docs takes an afternoon. An agent takes one file, and the human learns the stages
-        by watching them run on their own work. That is the intended route in. Most people will meet
-        Clover through an agent rather than through a specification, because asking is faster and
-        clearer than reading.</p>
+      <h2>One File. Five Stages.</h2>
+      <p class="lede">The whole operating specification is one file: <code>AGENTS.md</code>. Drop it into your workspace and the agent runs <strong>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</strong>.</p>
 
       <h3 id="ag-t1">What it makes an agent do</h3>
       <div id="ag-p1"></div>
       <dl class="kv">
-        <div><dt>Read first</dt><dd>Find the context file before acting. Do not re-derive what is already settled or repeat a dead end someone already ruled out.</dd></div>
-        <div><dt>Reach real evidence</dt><dd>The records the system itself keeps, and the system as it is running — rather than assumptions about them, or a summary written earlier by someone else.</dd></div>
-        <div><dt>Self-check</dt><dd>Test its own work against the known ways AI fails before handing anything back.</dd></div>
-        <div><dt>Say what the evidence was</dt><dd>What was checked, what was observed, and where it stopped. No claim larger than the evidence.</dd></div>
-        <div><dt>Write back</dt><dd>Update the context file with what is settled, what remains, and what was ruled out, so the next cycle starts ahead of this one. That write is Growth, the fifth stage.</dd></div>
+        <div><dt>Read first</dt><dd>Check memory and the context file before acting so settled decisions are never re-argued.</dd></div>
+        <div><dt>Reach real evidence</dt><dd>Inspect running systems, logs, and source directly instead of guessing from summaries.</dd></div>
+        <div><dt>Self-check</dt><dd>Verify work against known failure modes before handing back.</dd></div>
+        <div><dt>Name the evidence</dt><dd>State what was checked, what was observed, and what could not be verified.</dd></div>
+        <div><dt>Write Growth back</dt><dd>Record what held and what failed so the next cycle starts ahead of this one.</dd></div>
       </dl>
 
       <h3 id="ag-t2">What it stops</h3>
       <div id="ag-p2"></div>
       <dl class="kv">
-        <div><dt>Acting beyond its authority</dt><dd>Five things it must refuse outright, and the instruction to say what it refused and why rather than going quiet.</dd></div>
-        <div><dt>Obeying the content it reads</dt><dd>Text found in a record, a page or a file is treated as <strong>data</strong>. The agent never follows instructions embedded in it, which is the defense against prompt injection stated as a rule the agent holds itself to.</dd></div>
-        <div><dt>Leaking what it finds</dt><dd>Secrets and personal data encountered mid-task are treated as defects to report, never as material to use or repeat.</dd></div>
-        <div><dt>Dressing activity up as outcome</dt><dd>"I updated six files" is not a result. The hand-back format makes the difference explicit.</dd></div>
-        <div><dt>Retrying a failed fix</dt><dd>When Outcome fails it returns to Context. A second attempt needs new information rather than more determination.</dd></div>
+        <div><dt>Unapproved authority</dt><dd>Refuses production, irreversible, or out-of-scope actions without human approval.</dd></div>
+        <div><dt>Prompt injection</dt><dd>Treats tickets, logs, and files strictly as evidence — never as instructions.</dd></div>
+        <div><dt>Data leaks</dt><dd>Reports secrets and personal data by location and kind, never by value.</dd></div>
+        <div><dt>Activity as outcome</dt><dd>Separates files touched from verified results in the real system.</dd></div>
+        <div><dt>Blind retries</dt><dd>Two failed attempts without new information means stop and return to Context.</dd></div>
       </dl>
 
-      <h3 id="ag-t3">How it teaches the human using it</h3>
+      <h3 id="ag-t3">How it works with you</h3>
       <div id="ag-p3"></div>
-      <p>The file instructs the agent to treat the human in front of it as the one it is
-        teaching, because for most teams that agent is the only teacher this framework will ever
-        have.</p>
+      <p>The agent teaches the cycle by running it transparently on your real work.</p>
       <dl class="kv">
-        <div><dt>Names the stage</dt><dd>"I am still in Context. I want to see what the system recorded before proposing a fix." The stages get learned by watching them run.</dd></div>
-        <div><dt>Gives the reason</dt><dd>Every request for access, a success standard or an approval comes with what it is for. A reason teaches; a bare request just looks like process.</dd></div>
-        <div><dt>Offers to set it up</dt><dd>Proposes the context file and writes the first version, rather than waiting to be asked.</dd></div>
-        <div><dt>Matches the human</dt><dd>Explains each step the first time, and stops narrating once it is familiar.</dd></div>
-        <div><dt>Humble, and still honest</dt><dd>Courtesy governs how it says something, never whether it says it. If the direction will not work it says so once, with a better option beside it, then respects the call.</dd></div>
+        <div><dt>Names the stage</dt><dd>Makes it clear whether it is gathering Context, proposing Direction, or verifying Outcome.</dd></div>
+        <div><dt>Gives the reason</dt><dd>Every request for access or approval explains why it is needed.</dd></div>
+        <div><dt>Maintains context</dt><dd>Creates and updates the context file beside the work automatically.</dd></div>
+        <div><dt>Adapts to you</dt><dd>Explains steps the first time and stays concise once familiar.</dd></div>
+        <div><dt>Direct &amp; courteous</dt><dd>Flags a flawed direction once with a clear alternative, then respects your call.</dd></div>
       </dl>
     </div>
   </section>
@@ -153,34 +142,29 @@
   <!-- ============ FIRST RUN ============ -->
   <section class="band" id="first-run">
     <div class="wrap">
-      <h2>Three steps, on work you already have</h2>
+      <h2>Run Your First Cycle</h2>
 
-      <h3>1 · Copy the file</h3>
-      <p>Put <code>AGENTS.md</code> where the work happens and point an agent at it. <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md">Get AGENTS.md →</a></p>
-
-      <h3>2 · Give it the evidence</h3>
-      <p>Whatever the system keeps: its records, its history, its measurements, and a setting
-        where a mistake is cheap. Read-only first, one connection at a time, never wider than the
-        accountable human can explain. <a href="#setup">How to set it up →</a></p>
-
-      <h3>3 · Run one real problem</h3>
-      <p>Keep a context file beside the work while it happens. That file is what makes the
-        next cycle cheaper than this one, and what lets any agent pick the job up, so the work
-        stops depending on one session staying open.</p>
-      <p>Write it after each success and each failure. One wrong answer, understood and written
-        down, is Growth. <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/framework/05-context-engineering.md#where-context-lives">Where context lives →</a></p>
-
-      <p class="note" style="margin-top:1.4rem">To run it by hand instead, the
-        <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/QUICKSTART.md">quickstart</a>
-        walks a first cycle through, the
-        <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/templates/orchestration-brief.md">orchestration brief</a>
-        is a one-page working artifact for the five stages, and the
-        <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/docs/examples/production-exception-remediation">example in the repository</a>
-        runs a recurring software failure through the cycle.</p>
+      <div class="apple-grid apple-grid--3">
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">1 &middot; Copy</span>
+          <h3>Place AGENTS.md</h3>
+          <p>Drop <code>AGENTS.md</code> into your repo or agent prompt folder. <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md">Get AGENTS.md &rarr;</a></p>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">2 &middot; Connect</span>
+          <h3>Give Read-Only Evidence</h3>
+          <p>Point the agent at logs, source, and a test environment where mistakes are cheap.</p>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">3 &middot; Run &amp; Grow</span>
+          <h3>Keep a Context File</h3>
+          <p>Record what worked and what failed after each turn so the next session starts smarter.</p>
+        </div>
+      </div>
 
       <div class="actions" style="margin-top:1.8rem">
-        <a class="btn btn--primary" href="../governance/">What a governance review will ask</a>
-        <a class="btn" href="../ai-system/">See AI Studio</a>
+        <a class="btn btn--primary" href="../governance/">Governance Review Guide &rarr;</a>
+        <a class="btn" href="../ai-system/">Explore AI Studio</a>
       </div>
     </div>
   </section>

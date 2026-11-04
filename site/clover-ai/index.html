@@ -246,9 +246,16 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 .att button:hover { color: var(--danger); background: var(--danger-soft); }
 .att .ic { width: 14px; height: 14px; }
 .att img { width: 24px; height: 24px; object-fit: cover; border-radius: 6px; margin-left: -.45rem; }
-.composer { width: min(760px, 100%); margin: 0 auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 26px; box-shadow: var(--shadow);
+@property --beam-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@keyframes beam-clockwise { to { --beam-angle: 360deg; } }
+.composer { position: relative; width: min(760px, 100%); margin: 0 auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 26px; box-shadow: var(--shadow);
   padding: .4rem; display: flex; align-items: flex-end; gap: .25rem; transition: border-color .18s var(--ease), box-shadow .18s var(--ease); }
 .composer:focus-within { border-color: rgba(23, 107, 44, .45); box-shadow: 0 8px 28px rgba(23, 107, 44, .12); }
+.composer.busy { border-color: rgba(23, 107, 44, .22); box-shadow: 0 8px 28px rgba(23, 107, 44, .10); }
+.composer.busy::before { content: ""; position: absolute; inset: -1.5px; border-radius: 27.5px; padding: 2px; pointer-events: none; z-index: 2;
+  background: conic-gradient(from var(--beam-angle, 0deg), transparent 0deg, transparent 270deg, rgba(23, 107, 44, .2) 300deg, var(--leaf) 336deg, var(--accent) 354deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: beam-clockwise 2s linear infinite; }
 .composer textarea { flex: 1; min-width: 0; border: 0; background: none; resize: none; font-size: 1rem; padding: .48rem .3rem; max-height: 220px; min-height: 38px; line-height: 1.45; }
 .composer textarea:focus { outline: none; }
 .composer textarea::placeholder { color: var(--faint); }
@@ -258,14 +265,32 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 .cbtn .ic { width: 22px; height: 22px; }
 .mic.rec { background: var(--accent-soft); color: var(--accent-2); animation: ring 1.3s ease-in-out infinite; }
 @keyframes ring { 50% { box-shadow: 0 0 0 5px rgba(23, 107, 44, .16); } }
-.send { width: 38px; height: 38px; flex: none; border-radius: 50%; border: 0; background: var(--accent); color: #fff; padding: 0;
-  display: inline-flex; align-items: center; justify-content: center; transition: background-color .15s, transform .1s; }
+.send { width: 38px; height: 38px; flex: none; border-radius: 50%; border: 0; background: var(--accent); color: #fff; padding: 0; touch-action: none; user-select: none; -webkit-user-select: none;
+  display: inline-flex; align-items: center; justify-content: center; transition: background-color .15s, color .15s, transform .12s, box-shadow .18s; }
 .send:hover { background: var(--accent-2); }
 .send:active { transform: scale(.94); }
-.send:disabled { background: var(--fill-2); color: var(--faint); cursor: default; transform: none; }
+.send.idle { background: var(--fill-2); color: var(--ink-2); }
+.send.idle:hover { background: var(--accent-soft); color: var(--accent-2); }
+.send.holding { background: var(--accent-2); color: #fff; transform: scale(1.06); box-shadow: 0 0 0 6px rgba(23, 107, 44, .22); transition: box-shadow 1.2s linear, transform .2s; }
+.send.rec { background: var(--accent); color: #fff; transform: scale(1.06); animation: ring 1.2s ease-in-out infinite; }
+.send:disabled { background: var(--fill-2); color: var(--faint); cursor: default; transform: none; box-shadow: none; }
 .send.stop { background: var(--ink); color: #fff; }
-.send .ic { width: 20px; height: 20px; stroke-width: 2.3; }
+.send .ic { width: 20px; height: 20px; stroke-width: 2.3; pointer-events: none; }
 .send.stop .ic { width: 15px; height: 15px; fill: currentColor; stroke-width: 1.4; }
+.auth-gate { position: fixed; inset: 0; z-index: 95; background: rgba(246, 245, 240, .88); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  display: flex; align-items: center; justify-content: center; padding: 1.25rem; }
+.auth-card { width: min(400px, 100%); background: var(--surface); border: 1px solid var(--line-2); border-radius: 22px; box-shadow: var(--shadow-lg);
+  padding: 1.75rem 1.6rem 1.5rem; text-align: center; }
+.auth-card img { width: 64px; height: 64px; border-radius: 16px; margin: 0 auto .85rem; display: block; box-shadow: var(--shadow-sm); }
+.auth-card h2 { margin: 0 0 .4rem; font-size: 1.25rem; font-weight: 680; letter-spacing: -.02em; }
+.auth-card p { margin: 0 0 1.15rem; font-size: .86rem; color: var(--muted); line-height: 1.5; }
+.auth-fields { display: flex; flex-direction: column; gap: .55rem; text-align: left; }
+.auth-fields input { width: 100%; border: 1px solid var(--line-2); background: var(--bg); border-radius: 12px; padding: .62rem .8rem; font-size: .92rem; }
+.auth-fields input:focus { outline: none; border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-tint); }
+.auth-fields .btn.pri { width: 100%; justify-content: center; padding: .65rem 1rem; border-radius: 12px; font-size: .92rem; margin-top: .25rem; }
+.auth-links { margin-top: 1.1rem; padding-top: .9rem; border-top: 1px solid var(--line); font-size: .78rem; color: var(--muted); display: flex; justify-content: center; gap: .85rem; flex-wrap: wrap; }
+.auth-links a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.auth-links a:hover { text-decoration: underline; }
 
 /* settings: one sheet, pages one level after another */
 .scrim { position: fixed; inset: 0; background: rgba(20, 32, 24, .28); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
@@ -490,15 +515,33 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     <div class="dock">
       <div class="notice" id="notice" hidden><svg class="spin" id="notice-spin" aria-hidden="true"><use href="#clover-spin"/></svg><span id="notice-t"></span></div>
       <div class="attachments" id="attachments" hidden></div>
-      <div class="composer">
+      <div class="composer" id="composer">
         <input type="file" id="file-input" multiple hidden>
         <button type="button" class="cbtn" id="attach" title="Add files" aria-label="Add files"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
         <textarea id="prompt" rows="1" placeholder="Message Clover" aria-label="Message"></textarea>
-        <button type="button" class="cbtn mic" id="mic" title="Talk to Clover (tap to start, tap to send)" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
-        <button type="button" class="send" id="send" aria-label="Send" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
+        <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
+        <button type="button" class="send" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
       </div>
     </div>
   </section>
+</div>
+
+<div class="auth-gate" id="auth-gate" hidden role="dialog" aria-modal="true" aria-labelledby="auth-gate-h">
+  <div class="auth-card">
+    <img src="icon.png" alt="Clover" width="64" height="64">
+    <h2 id="auth-gate-h">Sign in to Clover AI Studio</h2>
+    <p>Hosted Web Studio access is restricted to approved accounts only.</p>
+    <form class="auth-fields" id="auth-form">
+      <input type="text" id="auth-acct" placeholder="Approved account (username)" autocomplete="username" required>
+      <input type="password" id="auth-key" placeholder="Access key or GitHub token" autocomplete="current-password" required>
+      <button type="submit" class="btn pri" id="auth-submit">Sign in</button>
+    </form>
+    <p class="note" id="auth-note" hidden></p>
+    <div class="auth-links">
+      <a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
+      <a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download for Android (.apk)</a>
+    </div>
+  </div>
 </div>
 
 <div class="scrim" id="scrim"></div>
@@ -1399,17 +1442,76 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   });
 
   /* ---------- status ---------- */
+  function isMobileView() {
+    return PHONE || (window.matchMedia ? window.matchMedia('(max-width: 760px)').matches : window.innerWidth <= 760);
+  }
+  function updatePlaceholder() {
+    var p = $('prompt');
+    if (!p) return;
+    p.placeholder = (state.omni && !isMobileView()) ? 'Message Clover, or add a photo, sound or video' : 'Message Clover';
+  }
+  window.addEventListener('resize', updatePlaceholder);
+  function showAuthGate(show, msg) {
+    var g = $('auth-gate');
+    if (!g) return;
+    g.hidden = !show;
+    if (msg !== undefined) setNote('auth-note', msg || '');
+    if (show && $('auth-acct') && !$('auth-acct').value) {
+      try { $('auth-acct').value = localStorage.getItem('clover-web-account') || ''; } catch (e) {}
+    }
+  }
+  if ($('auth-form')) {
+    $('auth-form').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var acct = ($('auth-acct') && $('auth-acct').value || '').trim();
+      var key = ($('auth-key') && $('auth-key').value || '').trim();
+      if (!acct || !key) { setNote('auth-note', 'Enter your approved account and access key.'); return; }
+      setNote('auth-note', 'Signing in…', true);
+      fetch(apiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account: acct, key: key })
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+          return j;
+        });
+      }).then(function (r) {
+        try {
+          localStorage.setItem(HOST_KEY_STORE, r.token || key);
+          localStorage.setItem('clover-web-account', r.account || acct);
+        } catch (e) {}
+        if ($('auth-key')) $('auth-key').value = '';
+        setNote('auth-note', '');
+        showAuthGate(false);
+        loadServerSettings(); loadHealth(); load(); loadPerms(); pollStatus();
+      }).catch(function (e) {
+        setNote('auth-note', e.message || 'Sign-in failed.');
+      });
+    });
+  }
+  if (WEB && !hostKey()) showAuthGate(true);
   function setStatus(cls, text, notice) {
     $('status-dot').className = 'dot ' + cls; $('status-text').textContent = text;
     $('notice').hidden = !notice; $('notice').classList.toggle('err', cls === 'err');
     $('notice-spin').style.display = cls === 'err' ? 'none' : ''; $('notice-t').textContent = notice || '';
   }
   function updateSend() {
+    var comp = $('composer') || document.querySelector('.composer');
+    if (comp) comp.classList.toggle('busy', !!state.busy);
     if (state.busy && state.mode === 'lfm3') return;
-    $('send').disabled = !state.ready || state.busy || (!$('prompt').value.trim() && !state.files.length && !state.media.length && !state.docs.length);
+    var hasInput = !!($('prompt').value.trim() || state.files.length || state.media.length || state.docs.length);
+    var canVoice = state.omni && state.inputs.indexOf('audio') >= 0;
+    var b = $('send');
+    b.disabled = !state.ready || state.busy || (!hasInput && !canVoice);
+    b.classList.toggle('idle', !!(state.ready && !state.busy && !hasInput && canVoice));
+    if (!state.busy && !b.classList.contains('rec')) {
+      b.title = canVoice ? 'Tap to send · Hold to speak' : 'Send';
+    }
   }
   function pollStatus() {
     api('GET', '/api/status').then(function (st) {
+      if (WEB) showAuthGate(false);
       if (st.status === 'setup' && !WEB) { location.replace('/'); return; }
       state.ready = st.status === 'ready';
       if (st.model_catalog && st.model_catalog.length) {
@@ -1424,17 +1526,27 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       var isRemote = !info.local && !WEB;
       if (st.status === 'error') setStatus('err', 'Engine error', 'Clover could not start: ' + (st.error || 'unknown error'));
       else if (!state.ready) setStatus('busy', 'Starting · ' + fmtSecs(st.load_elapsed_s), 'Clover is starting · ' + fmtSecs(st.load_elapsed_s));
-      else if (st.busy) setStatus('busy', cap(st.busy.stage || st.busy.kind || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s));
+      else if (st.busy) {
+        if (st.busy.stage && (!state.stageText || state.stageText === 'reading your message')) state.stageText = st.busy.stage;
+        if (!state.busy) {
+          setStatus('busy', cap(st.busy.stage || st.busy.kind || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s));
+          if (state.waitEl) state.waitEl.textContent = (st.busy.stage || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s);
+        }
+      }
       else if (WEB || isRemote) setStatus('ok', 'Ready · ' + info.name + (info.host && info.host !== 'local' ? ' · ' + info.host : ''));
       else setStatus('ok', 'Ready · ' + info.name + ' · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU'));
-      if (state.waitEl && st.busy) state.waitEl.textContent = (st.busy.stage || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s);
       updateSend();
     }).catch(function (e) {
       state.ready = false;
-      var authReq = e && e.body && e.body.auth_required;
-      setStatus('err', authReq ? 'Local / custom host' : 'Not running',
-        authReq ? 'Start Clover AI Studio on this device, or click + Add a model in the top-left menu to connect your own hosted model.'
-                : 'Clover is not running. Start Clover AI Studio to use it, or connect a hosted model in the top-left menu.');
+      var authReq = e && (e.status === 401 || (e.body && e.body.auth_required));
+      if (WEB && authReq) {
+        showAuthGate(true, hostKey() ? (e.message || 'Sign in with an approved account.') : '');
+        setStatus('err', 'Sign in required', 'Sign in with an approved account to use Clover AI Studio.');
+      } else {
+        setStatus('err', authReq ? 'Local / custom host' : 'Not running',
+          authReq ? 'Start Clover AI Studio on this device, or click + Add a model in the top-left menu to connect your own hosted model.'
+                  : 'Clover is not running. Start Clover AI Studio to use it, or connect a hosted model in the top-left menu.');
+      }
       updateSend();
     });
   }
@@ -1451,13 +1563,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var omni = WEB || /omni|nemotron|kimi/i.test(name) || inputs.indexOf('vision') >= 0;
     var changed = omni !== state.omni || inputs.join() !== state.inputs.join();
     state.omni = omni; state.inputs = inputs;
+    updatePlaceholder();
     if (!changed) return;
     if (state.health && state.health.engine && state.health.engine.model !== name) state.health = null;
     $('hero-p').textContent = omni ? 'Clover runs here on your laptop. It can see, hear and speak. Nothing leaves it unless you allow it.'
       : 'Clover runs here on your laptop. Nothing leaves it unless you allow it.';
-    $('mic').hidden = inputs.indexOf('audio') < 0;
-    $('prompt').placeholder = omni && !PHONE ? 'Message Clover, or add a photo, sound or video' : 'Message Clover';
-    renderSettings(); renderHero(); if (!state.busy) renderLog();
+    $('mic').hidden = true;
+    updateSend(); renderSettings(); renderHero(); if (!state.busy) renderLog();
   }
 
   /* ---------- model, engine, tools, Clover layers (server settings) ---------- */
@@ -1880,28 +1992,64 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     });
   }
 
-  /* ---------- voice: record in the browser, send as 16 kHz mono WAV (what the model's audio encoder reads) ---------- */
-  var rec = null;
-  $('mic').addEventListener('click', function () {
-    if (rec) { rec.stop(); return; }
+  /* ---------- voice: hold Send button for 1.2s to speak, release to stop & send (tap is normal Send) ---------- */
+  var rec = null, holdTimer = null, holdActive = false, holdTriggered = false, suppressSendClick = false, HOLD_MS = 1200;
+  function startVoiceHold() {
+    if (!holdActive || rec || state.busy || !state.ready || state.inputs.indexOf('audio') < 0) return;
     if (!navigator.mediaDevices || !window.MediaRecorder) { alert('This window cannot record audio.'); return; }
+    holdTriggered = true; suppressSendClick = true;
+    var b = $('send');
+    b.classList.remove('holding', 'idle'); b.classList.add('rec'); b.innerHTML = ic('mic'); b.title = 'Recording — release to send';
     navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      if (!holdActive) {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        b.classList.remove('rec'); b.innerHTML = SEND_HTML; updateSend();
+        return;
+      }
       var chunks = [], t0 = Date.now(), r = new MediaRecorder(stream);
       rec = r;
       r.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
       r.onstop = function () {
         stream.getTracks().forEach(function (t) { t.stop(); });
-        rec = null; $('mic').classList.remove('rec'); $('mic').title = 'Talk to Clover (tap to start, tap to send)';
+        rec = null; b.classList.remove('rec', 'holding'); b.innerHTML = SEND_HTML; updateSend();
         var secs = Math.max(1, Math.round((Date.now() - t0) / 1000));
+        if (!chunks.length) return;
         new Blob(chunks).arrayBuffer().then(toWav16k).then(function (data) {
           state.media.push({ kind: 'audio', name: 'Voice message · ' + secs + ' s', data: data, voice: true });
           renderAtt(); updateSend();
-          if (!$('prompt').value.trim() && state.ready && !state.busy) send();
+          if (state.ready && !state.busy) send();
         }).catch(function (e) { alert('Could not read the recording: ' + e.message); });
       };
-      r.start(); $('mic').classList.add('rec'); $('mic').title = 'Recording — tap to send';
-    }).catch(function (e) { alert('Microphone not available: ' + e.message); });
+      r.start();
+    }).catch(function (e) {
+      holdActive = false; holdTriggered = false;
+      b.classList.remove('rec', 'holding'); b.innerHTML = SEND_HTML; updateSend();
+      alert('Microphone not available: ' + e.message);
+    });
+  }
+  function endVoiceHold() {
+    if (!holdActive && !rec) return;
+    holdActive = false;
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    $('send').classList.remove('holding');
+    if (holdTriggered) {
+      holdTriggered = false;
+      if (rec && rec.state !== 'inactive') rec.stop();
+    }
+  }
+  $('send').addEventListener('pointerdown', function (ev) {
+    if (ev.button && ev.button !== 0) return;
+    if (state.busy || !state.ready || !state.omni || state.inputs.indexOf('audio') < 0) return;
+    holdActive = true; holdTriggered = false;
+    try { $('send').setPointerCapture(ev.pointerId); } catch (e) {}
+    $('send').classList.add('holding');
+    if (holdTimer) clearTimeout(holdTimer);
+    holdTimer = setTimeout(startVoiceHold, HOLD_MS);
   });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (evName) {
+    $('send').addEventListener(evName, endVoiceHold);
+  });
+  $('send').addEventListener('contextmenu', function (ev) { if (holdActive || holdTriggered || rec) ev.preventDefault(); });
   function toWav16k(buf) {
     var AC = window.AudioContext || window.webkitAudioContext, ac = new AC();
     return ac.decodeAudioData(buf).then(function (audio) {
@@ -1950,11 +2098,22 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function liveTurn() {
     var turn = el('div', 'b');
     var body = el('div', 'b__body'); turn.appendChild(body);
-    var wait = el('div', 'typing', SPIN + '<em>reading your message</em>');
+    var wait = el('div', 'typing', SPIN + '<em>reading your message · 0:00</em>');
     body.appendChild(wait);
     $('log').appendChild(turn); scrollDown();
     state.waitEl = wait.querySelector('em');
+    state.stageText = 'reading your message';
+    state.turnStart = Date.now();
     return { turn: turn, body: body, wait: wait };
+  }
+  function startTurnTicker() {
+    return setInterval(function () {
+      if (!state.busy) return;
+      var elapsed = Math.max(0, Math.floor((Date.now() - (state.turnStart || Date.now())) / 1000));
+      var stg = state.stageText || 'reading your message';
+      if (state.waitEl) state.waitEl.textContent = stg + ' · ' + fmtSecs(elapsed);
+      setStatus('busy', cap(stg) + ' · ' + fmtSecs(elapsed));
+    }, 1000);
   }
 
   function streamSend() {
@@ -1967,8 +2126,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var asks = el('div'); body.insertBefore(asks, live.wait);  // permission cards wait for the person: never folded
     var ans = el('div', 'md live'); body.appendChild(ans);
     state.busy = true; state.turnId = null; setStop(true);
+    var ticker = startTurnTicker();
     var poll = setInterval(pollStatus, 2000);
-    var t0 = Date.now(), tFirst = 0, tLast = 0, words = 0, answer = '', thinking = '', tools = [], cards = {}, finished = false, stale = false;
+    var t0 = state.turnStart, tFirst = 0, tLast = 0, words = 0, answer = '', thinking = '', tools = [], cards = {}, finished = false, stale = false;
     function stepsLabel() {
       var names = [];
       tools.forEach(function (t) { var n = (TOOL_UI[t.name] || [t.name])[0]; if (names.indexOf(n) < 0) names.push(n); });
@@ -1989,6 +2149,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         } else if (ev.kind === 'answer') {
           if (stale) { answer = ''; stale = false; ans.classList.remove('stale'); }
           answer += ev.text; ans.textContent = answer.replace(/^\s+/, ''); live.wait.hidden = true;
+          state.stageText = 'writing';
         }
         scrollDown();
       } else if (ev.type === 'round' && ev.round > 1) {
@@ -1999,7 +2160,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         var t = { name: ev.name, args: fmtArgs(ev.arguments), state: 'run' };
         var card = toolEl(t); toolsBox.appendChild(card.el); work.box.hidden = false;
         tools.push(t); cards[ev.id] = { card: card, t: t }; stepsLabel();
-        if (state.waitEl) state.waitEl.textContent = 'running ' + ((TOOL_UI[ev.name] || [ev.name])[0]);
+        state.stageText = 'running ' + ((TOOL_UI[ev.name] || [ev.name])[0]);
+        if (state.waitEl) state.waitEl.textContent = state.stageText + ' · ' + fmtSecs(Math.floor((Date.now() - t0) / 1000));
         scrollDown();
       } else if (ev.type === 'permission') {
         asks.appendChild(askEl(ev, function (decision) {
@@ -2014,13 +2176,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           cd.card.set(cd.t.state, cd.t.why); cd.card.result(cd.t.result);
         }
       } else if (ev.type === 'cycle') {
-        if (state.waitEl) state.waitEl.textContent = ev.stage === 'check' ? 'checking the earlier answer'
+        state.stageText = ev.stage === 'check' ? 'checking the earlier answer'
           : ev.stage === 'search' ? 'searching the web and reading the best pages'
           : ev.stage === 'python' ? 'writing a Python program to calculate it'
           : ev.stage === 'second' ? 'solving it again on its own (1 of 2)' : ev.stage === 'third' ? 'solving it again another way (2 of 2)'
           : ev.stage === 'rewrite' ? (ev.how === 'recheck' ? 'checking each step of the answer again'
             : ev.how === 'another' ? 'writing a different version' : 'writing a new answer from what you said')
           : 'correcting: ' + String((ev.findings || [''])[0]).slice(0, 90);
+        if (state.waitEl) state.waitEl.textContent = state.stageText + ' · ' + fmtSecs(Math.floor((Date.now() - t0) / 1000));
         live.wait.hidden = false;
         if (ev.stage === 'retry' || ev.stage === 'rewrite') dim();
         scrollDown();
@@ -2029,7 +2192,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     function finish(ev) {
       if (finished) return; finished = true;
-      clearInterval(poll); state.busy = false; state.waitEl = null; setStop(false); updateSend(); pollStatus();
+      clearInterval(ticker); clearInterval(poll); state.busy = false; state.waitEl = null; state.stageText = ''; setStop(false); updateSend(); pollStatus();
       var secs = Math.round((Date.now() - t0) / 1000);
       var gens = ev.generation || [];
       var newTok = gens.reduce(function (s, g) { return s + (g.new_tokens || 0); }, 0);
@@ -2135,9 +2298,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function setStop(on) {
     var b = $('send');
+    var comp = $('composer') || document.querySelector('.composer');
+    if (comp) comp.classList.toggle('busy', !!on);
     b.classList.toggle('stop', on);
+    if (on) b.classList.remove('idle', 'holding', 'rec');
     b.innerHTML = on ? ic('stop') : SEND_HTML;
-    b.setAttribute('aria-label', on ? 'Stop' : 'Send'); b.title = on ? 'Stop' : '';
+    b.setAttribute('aria-label', on ? 'Stop' : 'Send'); b.title = on ? 'Stop' : 'Tap to send · Hold to speak';
     b.disabled = on ? false : true;
     if (!on) updateSend();
   }
@@ -2168,6 +2334,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (!inp) return;
     var live = liveTurn();
     state.busy = true; updateSend();
+    var ticker = startTurnTicker();
     var poll = setInterval(pollStatus, 2000);
     api('POST', '/api/chat', { prompt: inp.prompt, session_id: inp.c.id, attached_files: inp.files, history: inp.hist,
       documents: (inp.docs || []).map(function (d) { return { name: d.name, data: d.data }; }),
@@ -2189,7 +2356,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       live.turn.remove();
       var m = { role: 'bot', text: e.status === 503 ? 'Clover is still starting. Send again when the status says Ready.' : 'Clover could not answer: ' + e.message, isNotice: true };
       inp.c.messages.push(m); save(); $('log').appendChild(botEl(m)); scrollDown();
-    }).then(function () { clearInterval(poll); state.busy = false; state.waitEl = null; updateSend(); pollStatus(); });
+    }).then(function () { clearInterval(ticker); clearInterval(poll); state.busy = false; state.waitEl = null; state.stageText = ''; updateSend(); pollStatus(); });
   }
 
   /* ---------- wiring ---------- */
@@ -2197,6 +2364,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('prompt').addEventListener('input', function () { autosize(); updateSend(); });
   $('prompt').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
   $('send').addEventListener('click', function () {
+    if (suppressSendClick) { suppressSendClick = false; return; }
     if (state.busy && state.mode === 'lfm3') { if (state.turnId) api('POST', '/api/cancel', { turn_id: state.turnId }).catch(function () {}); return; }
     send();
   });
