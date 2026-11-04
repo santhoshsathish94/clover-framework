@@ -36,11 +36,25 @@ import clover_cycle as C
 CHANGE_FILES = (r"^\W*(?:(?:please|can\s+you|could\s+you|would\s+you|now)\s+)?(?:delete|remove|erase|move|rename|copy)\b"
                 r"[^.?!\n]{0,80}(?:\b(?:files?|folders?|director(?:y|ies)|documents?|reports?|\.\w{2,4}\b|[A-Za-z]:\\)|\s/\w)")
 EXTENSIONS = r"\w+\.(?:py|md|txt|json|csv|ya?ml|toml|html|css|ps1)"
+# what changes by the day is never in the model: the phone's "What's the weather" got no tool in When I ask and answered
+# that it had no real-time data (2026-11-04)
+LIVE = (r"\b(?:what(?:'?s|\s+is)|how(?:'?s|\s+is))\s+(?:the\s+)?weather\b|"
+        r"\bweather\s+(?:today|tonight|tomorrow|now|right\s+now|this\s+(?:week(?:end)?|morning|afternoon|evening)|"
+        r"forecast|report|update|like|in|at|for|outside)\b|\b(?:today'?s|tomorrow'?s|current|latest)\s+weather\b|"
+        r"\b(?:will|is)\s+it\s+(?:going\s+to\s+)?(?:rain|snow)(?:ing)?\b|"
+        r"\b(?:rain|snow|temperature|humidity)\b[^.?!\n]{0,30}\b(?:today|tonight|tomorrow|right\s+now|outside)\b|"
+        r"\bforecast\s+for\s+(?:today|tonight|tomorrow|the\s+week(?:end)?|this\s+week(?:end)?)\b|"
+        r"\b(?:latest|today'?s|breaking|top|current|recent)\s+(?:news|headlines)\b|\bwhat(?:'?s|\s+is)\s+(?:in\s+)?the\s+news\b|"
+        r"\bnews\s+(?:today|about|on)\b|\b(?:stock|share)\s+price\b|\bexchange\s+rates?\b|"
+        r"\b(?:price|rate)\s+of\s+(?:bitcoin|btc|ethereum|gold|silver|oil|petrol|diesel)\b|"
+        r"\b(?:bitcoin|btc|ethereum|gold|silver|petrol|diesel)\s+(?:price|rate)\b|"
+        r"\bwho\s+won\b[^.?!\n]{0,30}\b(?:match|game|race|final|yesterday|last\s+night|today)\b")
 # (capabilities, what a message says when it asks for them); the order is the order tools are offered
 ASKS = (
     (("web.search", "web.page"),
      r"\b(?:search|google|look\s+(?:it\s+|that\s+|this\s+)?up|browse|web|internet|online|website|web\s*page|url|arxiv|"
      r"wikipedia)\b|https?://|www\."),
+    (("web.search", "web.page"), LIVE),
     (("python",), r"\b(?:use|using)\s+python\b|\bpython\s+to\s+(?:compute|calculate|check|solve|count|find|test)\b|"
                   r"\b(?:run|execute|test)\s+(?:this|the|my|that|it|some)?\s*(?:code|script|program|python)\b|"
                   # not the phone's old "calculate <number>": it gave a 70-task word problem ("calculate 1000 - 920 and
@@ -345,7 +359,7 @@ class Frame:
 def asked_caps(text):
     """The capabilities a message asks for; empty means it is answered without tools."""
     t = text or ""
-    if CONCEPT.search(t) and not EXPLICIT.search(t):
+    if CONCEPT.search(t) and not EXPLICIT.search(t) and not re.search(LIVE, t, re.I):  # "tell me about the weather in Pune"
         return []
     caps = [cap for caps, pattern in ASKS if re.search(pattern, t, re.I) for cap in caps]
     if VSCODE.search(t):  # "open C:\x.md in VS Code": VS Code's tools, not the hidden ones
@@ -425,6 +439,19 @@ def _asked_user(history):
     return said.endswith("?") and not said.endswith("How can I help?")
 
 
+# a short reply to Clover's own question goes on with the request it asked about: "What's the weather" -> "Which city?"
+# -> "Bengaluru" would have had no tool left to look it up with in When I ask
+NOT_GOING_ON = re.compile(r"^\W*(?:no|nope|nah|not\s+now|never\s*mind|cancel|stop|forget\s+it)\b", re.I)
+
+
+def _request_answered(text, history):
+    """The capabilities of the request a short reply answers Clover's question about; [] when it is not one."""
+    if not history or len(text.split()) > 8 or NOT_GOING_ON.match(text) or not _asked_user(history):
+        return []
+    prev = next((m for m in reversed(history) if m.get("role") == "user"), None) or {}
+    return asked_caps(str(prev.get("content") or ""))
+
+
 def social(text, history=()):
     """The kinds of pleasantry a message is made of when nothing else is in it; [] when it has anything more."""
     raw = (text or "").strip()
@@ -487,6 +514,8 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
     keep = REMEMBER_ASK.match(t)
     data = any(DATA_FILE.search(str(d).strip()) for d in documents or ())
     caps = _caps(t, data)
+    if not caps and not pleasant and not retry and not kinds and not attached:
+        caps = _request_answered(t, history)
     declined = _declined(runtime, t) if caps else set()
     caps = [c for c in caps if c not in declined]
     names = runtime.names(caps)
