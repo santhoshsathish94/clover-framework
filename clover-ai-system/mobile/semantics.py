@@ -76,7 +76,12 @@ ASKS = (
                   r"\brunning\s+process(?:es)?\b|"
                   r"\b(?:memory|ram)\b[^.?!\n]{0,40}\b(?:this|my)\s+(?:laptop|computer|pc|machine|phone)\b|"
                   r"\b(?:using|uses|use)\s+(?:the\s+)?most\s+(?:memory|ram)\b"),
-    (("clock",), r"\bwhat\s+time\b|\b(?:current|exact)\s+time\b|\btime\s+is\s+it\b|\bclock\b"),
+    # "what is time now" got no clock, so the Omni read the laptop's status and gave only the date (2026-11-04)
+    (("clock",), r"\bwhat\s+time\b|\b(?:current|exact)\s+time\b|\btime\s+is\s+it\b|\bclock\b|"
+                 r"\bwhat(?:'?s|\s+is)\s+the\s+time\b(?!\s+(?:complexity|zones?|limits?|signature|series|machine|travel|"
+                 r"frames?|steps?|constant|value|difference))|"
+                 r"\bwhat(?:'?s|\s+is)\s+time\s+(?:now|right\s+now|currently|is\s+it|in\s+\w+)\b|"
+                 r"\btime\s+(?:now|right\s+now)\b|\b(?:tell\s+me|know|have)\s+the\s+time\b"),
     (("shell", "files.list"), CHANGE_FILES),
     (("remember",), r"\b(?:remember|memori[sz]e|note\s+(?:that|this|down)|don'?t\s+forget|keep\s+in\s+mind)\b"),
     (("image",), r"\b(?:generate|create|make|draw|paint|render|design|sketch)\b[^.?!\n]{0,40}"
@@ -228,6 +233,9 @@ NO_TOOLS = {"creative writing": " · no tools", "meal": " · no tools", "about t
 # offered only when a message asks for them; the clock too: in Tools "Always" the Omni answered, called the clock
 # unasked and answered again, so the first answer vanished and the time showed (the date is in the system prompt)
 QUIET = ("files.write", "remember", "image", "clock")
+# and with nothing named, not this device's state or files either: "what is time now" read the laptop's status, a
+# greeting listed the home folder (2026-11-04)
+UNNAMED = QUIET + ("status", "files.read", "files.list")
 _CTRL_OF = {"t": "\t", "n": "\n", "r": "\r", "f": "\f", "b": "\b", "v": "\v", "a": "\a"}
 
 
@@ -574,7 +582,7 @@ def route(frame, mode, tools_on, offer=(), said=None, retry_tools=()):
         return _chose(frame, "about the photo", []), False
     if not FILES_NAMED.search(frame.text):
         # an email request wrote C:\Users\santh.emails.txt and saved a memory nobody asked for (2026-11-01)
-        return _chose(frame, "nothing named", [n for n in offer if rt.capability(n) not in QUIET and rt.capability(n) not in no]), True
+        return _chose(frame, "nothing named", [n for n in offer if rt.capability(n) not in UNNAMED and rt.capability(n) not in no]), True
     if no:
         return _chose(frame, "all", [n for n in offer if rt.capability(n) not in no]), True
     return _chose(frame, "all", None), True
