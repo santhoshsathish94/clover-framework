@@ -31,23 +31,23 @@
 [hidden] { display: none !important; }
 html.phone .laptop-only, html.web .laptop-only { display: none !important; }
 html:not(.web) .web-only { display: none !important; }
-.mpick { position: relative; margin-left: .15rem; }
-.mpick__btn { display: inline-flex; align-items: center; gap: .35rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
-  padding: .32rem .72rem; font-size: .82rem; font-weight: 600; color: var(--ink-2); box-shadow: var(--shadow-sm); white-space: nowrap; max-width: 52vw; }
+.mpick { flex: 1; min-width: 0; display: flex; align-items: center; }
+.mpick__btn { width: 100%; display: inline-flex; align-items: center; justify-content: space-between; gap: .3rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
+  padding: .28rem .58rem; font-size: .8rem; font-weight: 600; color: var(--ink-2); box-shadow: var(--shadow-sm); white-space: nowrap; min-width: 0; }
 .mpick__btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mpick__btn:hover, .mpick.open .mpick__btn { border-color: var(--accent); color: var(--accent-2); background: var(--accent-tint); }
 .mpick__btn .ic { width: 13px; height: 13px; transform: rotate(90deg); transition: transform .15s var(--ease); }
 .mpick.open .mpick__btn .ic { transform: rotate(270deg); }
-.mpick__menu { position: absolute; top: calc(100% + 6px); left: 0; width: min(320px, 88vw); max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--line-2);
-  border-radius: 14px; box-shadow: var(--shadow-lg); padding: .35rem; z-index: 60; display: flex; flex-direction: column; gap: 2px; }
-.mpick__opt { border: 1px solid transparent; background: none; border-radius: 10px; padding: .5rem .65rem; text-align: left; display: flex; flex-direction: column; gap: .15rem; }
+.mpick__menu { position: absolute; top: calc(100% + 2px); left: .5rem; right: .5rem; max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--line-2);
+  border-radius: 12px; box-shadow: var(--shadow-lg); padding: .3rem; z-index: 60; display: flex; flex-direction: column; gap: 2px; }
+.mpick__opt { border: 1px solid transparent; background: none; border-radius: 8px; padding: .46rem .6rem; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: .5rem; font-size: .86rem; font-weight: 550; color: var(--ink); }
 .mpick__opt:hover { background: var(--bg); }
-.mpick__opt.on { background: var(--accent-tint); border-color: rgba(23, 107, 44, .25); }
-.mpick__opt b { font-size: .86rem; font-weight: 650; display: flex; justify-content: space-between; align-items: center; gap: .4rem; }
-.mpick__opt em { font-style: normal; font-size: .68rem; font-weight: 650; color: var(--accent); background: var(--surface); border-radius: 999px; padding: .05rem .45rem; flex: none; }
-.mpick__opt small { font-size: .75rem; color: var(--muted); line-height: 1.35; }
-.mpick__sep { border-top: 1px solid var(--line); margin: .2rem .3rem; }
-.mpick__add b span { color: var(--accent); }
+.mpick__opt.on { background: var(--accent-tint); border-color: rgba(23, 107, 44, .22); color: var(--accent-2); font-weight: 650; }
+.mpick__opt span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mpick__opt em { font-style: normal; font-size: .72rem; font-weight: 500; color: var(--muted); flex: none; }
+.mpick__opt.on em { color: var(--accent); }
+.mpick__sep { border-top: 1px solid var(--line); margin: .2rem .25rem; }
+.mpick__add { color: var(--accent); font-weight: 600; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font);
   -webkit-font-smoothing: antialiased; }
 button, input, textarea { font: inherit; color: inherit; }
@@ -65,9 +65,9 @@ button { cursor: pointer; }
 .app.rail-off { grid-template-columns: 0 1fr; }
 .app.rail-off .rail { visibility: hidden; }
 .rail { background: var(--rail); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
-.rail__top { display: flex; align-items: center; gap: .4rem; padding: .6rem .6rem .4rem 1rem; min-height: 56px; }
-.brand { flex: 1; min-width: 0; display: flex; align-items: center; gap: .55rem; font-weight: 650; font-size: 1.04rem; letter-spacing: -.01em; }
-.brand img { width: 26px; height: 26px; display: block; }
+.rail__top { position: relative; display: flex; align-items: center; gap: .4rem; padding: .6rem .5rem .4rem .85rem; min-height: 56px; }
+.brand { flex: none; display: flex; align-items: center; gap: .45rem; font-weight: 650; font-size: 1rem; letter-spacing: -.01em; }
+.brand img { width: 24px; height: 24px; display: block; }
 .chats { flex: 1; min-height: 0; overflow-y: auto; padding: .2rem .5rem .75rem; display: flex; flex-direction: column; gap: 1px; }
 .chat { display: flex; align-items: center; border-radius: 10px; }
 .chat .open { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: .5rem .65rem; color: var(--ink-2); font-size: .9rem;
@@ -389,7 +389,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
-<body>
+<body class="clover-app-body">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
     <linearGradient id="spin-g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFF078"/><stop offset=".55" stop-color="#F8CF1E"/><stop offset="1" stop-color="#D89606"/></linearGradient>
@@ -449,7 +449,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 <div class="app" id="app">
   <aside class="rail" id="rail" aria-label="Chats">
     <div class="rail__top">
-      <div class="brand"><img src="icon.png" alt="" width="26" height="26"><span>Clover</span></div>
+      <div class="brand"><img src="icon.png" alt="" width="24" height="24"><span>Clover</span></div>
+      <div class="mpick" id="mpick">
+        <button type="button" class="mpick__btn" id="model-btn" aria-haspopup="listbox" aria-expanded="false" title="Select model"><span id="model-btn-t">LFM3-Omni</span><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <div class="mpick__menu" id="model-menu" role="listbox" aria-label="Models" hidden></div>
+      </div>
       <button type="button" class="ibtn" id="new-chat" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
     </div>
     <nav class="chats" id="chats"></nav>
@@ -464,10 +468,6 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="bar__side">
         <button type="button" class="ibtn" id="menu" aria-label="Show or hide chats" title="Chats"><svg class="ic" aria-hidden="true"><use href="#i-sidebar"/></svg></button>
         <button type="button" class="ibtn" id="new-chat-2" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
-        <div class="mpick" id="mpick">
-          <button type="button" class="mpick__btn" id="model-btn" aria-haspopup="listbox" aria-expanded="false" title="Select model"><span id="model-btn-t">LFM3-Omni-2B</span><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-          <div class="mpick__menu" id="model-menu" role="listbox" aria-label="Models" hidden></div>
-        </div>
       </div>
       <div class="bar__title" id="chat-title">New chat</div>
       <div class="bar__side end">
@@ -743,19 +743,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   var SAME_API_HOST = /^(api\.cloverframework\.com|127\.0\.0\.1|localhost)$/i.test(location.hostname || '');
   var savedHostUrl = '';
   try { savedHostUrl = localStorage.getItem(HOST_URL_STORE) || ''; } catch (e) {}
-  var API_BASE = !WEB ? '' : SAME_API_HOST ? '' : (savedHostUrl || (hostKey() ? API_CANDIDATES[0] : 'http://127.0.0.1:8765'));
+  var API_BASE = !WEB ? '' : SAME_API_HOST ? '' : (savedHostUrl || API_CANDIDATES[0]);
   function apiUrl(p) { return API_BASE + p; }
-  if (WEB && !SAME_API_HOST) {
-    var probeList = ['http://127.0.0.1:8765'];
-    if (savedHostUrl && probeList.indexOf(savedHostUrl) < 0) probeList.push(savedHostUrl);
-    if (hostKey()) API_CANDIDATES.forEach(function (u) { if (probeList.indexOf(u) < 0) probeList.push(u); });
-    (function probeApi(i) {
-      if (i >= probeList.length) return;
-      fetch(probeList[i] + '/api/status?passive=1', { headers: hostHeaders() }).then(function (r) {
-        if (r.ok) { API_BASE = probeList[i]; loadServerSettings(); pollStatus(); } else probeApi(i + 1);
-      }).catch(function () { probeApi(i + 1); });
-    })(0);
-  }
   var state = { sessions: { current: '', order: [], map: {} }, files: [], media: [], docs: [], ready: false, busy: false, perms: {}, mode: 'lfm3',
     settings: { model: 'omni', sampling: 'general', thinking: true, budget: 2048, voice: 'female', autospeak: true }, health: null, lastSpeed: 0,
     turnId: null, waitEl: null, omni: false, inputs: ['text'], speakNext: false, memCount: null, openGroups: {}, catalog: null };
@@ -1188,8 +1177,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (cat && cat.length) return cat;
     return [{
       id: 'omni',
-      name: 'LFM3-Omni-2B',
-      badge: PHONE ? 'On this phone' : (WEB ? 'Local' : 'On this laptop'),
+      name: 'LFM3-Omni',
+      badge: PHONE ? 'This phone' : (WEB ? 'k3' : 'This laptop'),
       desc: 'Local · 24-layer Liquid AI Omni · Text, images, audio, video & speech',
       host: 'local',
       local: true
@@ -1225,20 +1214,25 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if ($('model-menu')) {
       var html = cat.map(function (x) {
         return '<button type="button" class="mpick__opt' + (x.id === m ? ' on' : '') + '" role="option" data-v="' + esc(x.id) + '">' +
-          '<b><span>' + esc(x.name) + '</span><em>' + esc(x.badge || 'Hosted') + '</em></b>' +
-          '<small>' + esc(x.desc || '') + '</small></button>';
+          '<span>' + esc(x.name) + '</span>' + (x.badge ? '<em>' + esc(x.badge) + '</em>' : '') + '</button>';
       }).join('');
       html += '<div class="mpick__sep"></div>' +
         '<button type="button" class="mpick__opt mpick__add" data-add-model="1">' +
-        '<b><span>+ Add a model…</span><em>Custom host</em></b>' +
-        '<small>Connect a live model hosted on your own machine</small></button>';
-      $('model-menu').innerHTML = html;
+        '<span>+ Add model…</span></button>';
+      if ($('model-menu').getAttribute('data-sig') !== html) {
+        $('model-menu').setAttribute('data-sig', html);
+        $('model-menu').innerHTML = html;
+      }
     }
     if ($('s-model')) {
       $('s-model').hidden = cat.length <= 1;
-      $('s-model').innerHTML = cat.map(function (x) {
+      var sHtml = cat.map(function (x) {
         return '<button type="button" class="' + (x.id === m ? 'on' : '') + '" data-v="' + esc(x.id) + '">' + esc(x.name) + '</button>';
       }).join('');
+      if ($('s-model').getAttribute('data-sig') !== sHtml) {
+        $('s-model').setAttribute('data-sig', sHtml);
+        $('s-model').innerHTML = sHtml;
+      }
     }
     if ($('rm-list')) {
       var customs = cat.filter(function (x) { return x.custom; });
@@ -1315,11 +1309,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     renderModelPicker();
   }
   function renderEngine() {
-    var h = state.health || {}, e = h.engine || {};
+    var h = state.health || {}, e = h.engine || {}, info = modelInfo(state.settings.model);
     var rows = [
-      ['Model', (e.model || 'LFM3-1.7B') + (state.mode === 'lfm3' ? '' : ' + Clover layers')],
+      ['Model', (e.model || (info && info.name) || 'LFM3-Omni') + (state.mode === 'lfm3' ? '' : ' + Clover layers')],
       ['Runs on', e.engine === 'gpu' ? (e.device || 'GPU') + ' · ' + (e.backend || 'llama.cpp') + ' · ' + (e.weights || '4-bit')
-        : e.mode === 'omni' ? 'CPU · ' + (e.backend || 'llama.cpp') + ' · ' + (e.weights || '4-bit')
+        : e.mode === 'omni' ? ((e.device || 'CPU') + ' · ' + (e.backend || 'llama.cpp') + ' · ' + (e.weights || '4-bit'))
         : 'CPU · C engine' + (e.avx2 ? ' (AVX2)' : '') + (e.threads ? ' · ' + e.threads + ' threads' : '') + ' · ' + (e.weights || 'bf16')],
       ['Understands', (e.inputs || ['text']).join(', ').replace('vision', 'images')],
       ['Answers in', (e.outputs || ['text']).join(' and ')],
@@ -1416,6 +1410,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function pollStatus() {
     api('GET', '/api/status').then(function (st) {
+      if (st.status === 'setup' && !WEB) { location.replace('/'); return; }
       state.ready = st.status === 'ready';
       if (st.model_catalog && st.model_catalog.length) {
         state.catalog = st.model_catalog;
@@ -1430,8 +1425,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       if (st.status === 'error') setStatus('err', 'Engine error', 'Clover could not start: ' + (st.error || 'unknown error'));
       else if (!state.ready) setStatus('busy', 'Starting · ' + fmtSecs(st.load_elapsed_s), 'Clover is starting · ' + fmtSecs(st.load_elapsed_s));
       else if (st.busy) setStatus('busy', cap(st.busy.stage || st.busy.kind || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s));
-      else if (WEB || isRemote) setStatus('ok', 'Ready · ' + info.name + (info.host && info.host !== 'local' ? ' · on ' + info.host : ''));
-      else setStatus('ok', 'Ready · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU') + ' · on this computer');
+      else if (WEB || isRemote) setStatus('ok', 'Ready · ' + info.name + (info.host && info.host !== 'local' ? ' · ' + info.host : ''));
+      else setStatus('ok', 'Ready · ' + info.name + ' · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU'));
       if (state.waitEl && st.busy) state.waitEl.textContent = (st.busy.stage || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s);
       updateSend();
     }).catch(function (e) {
