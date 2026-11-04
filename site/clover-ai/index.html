@@ -31,20 +31,23 @@
 [hidden] { display: none !important; }
 html.phone .laptop-only, html.web .laptop-only { display: none !important; }
 html:not(.web) .web-only { display: none !important; }
-.mpick { position: relative; }
+.mpick { position: relative; margin-left: .15rem; }
 .mpick__btn { display: inline-flex; align-items: center; gap: .35rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
-  padding: .32rem .72rem; font-size: .82rem; font-weight: 600; color: var(--ink-2); box-shadow: var(--shadow-sm); white-space: nowrap; }
+  padding: .32rem .72rem; font-size: .82rem; font-weight: 600; color: var(--ink-2); box-shadow: var(--shadow-sm); white-space: nowrap; max-width: 52vw; }
+.mpick__btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mpick__btn:hover, .mpick.open .mpick__btn { border-color: var(--accent); color: var(--accent-2); background: var(--accent-tint); }
 .mpick__btn .ic { width: 13px; height: 13px; transform: rotate(90deg); transition: transform .15s var(--ease); }
 .mpick.open .mpick__btn .ic { transform: rotate(270deg); }
-.mpick__menu { position: absolute; top: calc(100% + 6px); right: 0; width: min(310px, 88vw); background: var(--surface); border: 1px solid var(--line-2);
+.mpick__menu { position: absolute; top: calc(100% + 6px); left: 0; width: min(320px, 88vw); max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--line-2);
   border-radius: 14px; box-shadow: var(--shadow-lg); padding: .35rem; z-index: 60; display: flex; flex-direction: column; gap: 2px; }
 .mpick__opt { border: 1px solid transparent; background: none; border-radius: 10px; padding: .5rem .65rem; text-align: left; display: flex; flex-direction: column; gap: .15rem; }
 .mpick__opt:hover { background: var(--bg); }
 .mpick__opt.on { background: var(--accent-tint); border-color: rgba(23, 107, 44, .25); }
-.mpick__opt b { font-size: .86rem; font-weight: 650; display: flex; justify-content: space-between; align-items: center; }
-.mpick__opt em { font-style: normal; font-size: .68rem; font-weight: 650; color: var(--accent); background: var(--surface); border-radius: 999px; padding: .05rem .45rem; }
+.mpick__opt b { font-size: .86rem; font-weight: 650; display: flex; justify-content: space-between; align-items: center; gap: .4rem; }
+.mpick__opt em { font-style: normal; font-size: .68rem; font-weight: 650; color: var(--accent); background: var(--surface); border-radius: 999px; padding: .05rem .45rem; flex: none; }
 .mpick__opt small { font-size: .75rem; color: var(--muted); line-height: 1.35; }
+.mpick__sep { border-top: 1px solid var(--line); margin: .2rem .3rem; }
+.mpick__add b span { color: var(--accent); }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font);
   -webkit-font-smoothing: antialiased; }
 button, input, textarea { font: inherit; color: inherit; }
@@ -461,17 +464,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="bar__side">
         <button type="button" class="ibtn" id="menu" aria-label="Show or hide chats" title="Chats"><svg class="ic" aria-hidden="true"><use href="#i-sidebar"/></svg></button>
         <button type="button" class="ibtn" id="new-chat-2" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
+        <div class="mpick" id="mpick">
+          <button type="button" class="mpick__btn" id="model-btn" aria-haspopup="listbox" aria-expanded="false" title="Select model"><span id="model-btn-t">LFM3-Omni-2B</span><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+          <div class="mpick__menu" id="model-menu" role="listbox" aria-label="Models" hidden></div>
+        </div>
       </div>
       <div class="bar__title" id="chat-title">New chat</div>
       <div class="bar__side end">
-        <div class="mpick web-only" id="mpick">
-          <button type="button" class="mpick__btn" id="model-btn" aria-haspopup="listbox" aria-expanded="false" title="Select model hosted on k3"><span id="model-btn-t">LFM3-Omni-2B</span><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-          <div class="mpick__menu" id="model-menu" role="listbox" aria-label="Models hosted on k3" hidden>
-            <button type="button" class="mpick__opt on" role="option" data-v="omni"><b><span>LFM3-Omni-2B</span><em>Fast · Omni</em></b><small>24-layer Liquid AI Omni · Text, images, audio, video &amp; speech</small></button>
-            <button type="button" class="mpick__opt" role="option" data-v="nemotron-3.5-super-vl"><b><span>Nemotron 3.5 Super VL</span><em>120B-A12B</em></b><small>88-layer MoE · 1M context · C-RADIO vision, video &amp; NCM</small></button>
-            <button type="button" class="mpick__opt" role="option" data-v="kimi-k3"><b><span>Kimi K3 2.78T MoE</span><em>93-layer 2.78T</em></b><small>68 KDA + 24 MLA + 896 experts/layer · Deep reasoning &amp; NCM</small></button>
-          </div>
-        </div>
         <button type="button" class="ibtn" id="set-btn" aria-label="Settings" title="Settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></button>
       </div>
     </header>
@@ -581,9 +580,18 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     <section class="page" data-page="model" hidden>
       <div class="glabel">Model</div>
       <div class="group pad">
-        <div class="seg full web-only" id="s-model" style="margin-bottom:.55rem"><button type="button" data-v="omni">LFM3-Omni-2B</button><button type="button" data-v="nemotron-3.5-super-vl">Nemotron 3.5</button><button type="button" data-v="kimi-k3">Kimi K3 2.78T</button></div>
+        <div class="seg full" id="s-model" style="margin-bottom:.55rem;flex-wrap:wrap" hidden></div>
         <p class="fine" id="model-d"><b>LFM3-Omni-2B</b> reads text, images, audio and video, and answers in text or speech.</p>
         <div class="note" id="model-note" hidden></div>
+      </div>
+      <div class="glabel">Hosted models</div>
+      <div class="group" id="rm-list" hidden></div>
+      <div class="group pad">
+        <p class="fine" style="margin-top:0">Host your own model (a Clover server, llama-server, Ollama, vLLM or any OpenAI-compatible server) on any machine and connect it here. By default Clover runs LFM3-Omni-2B locally on this laptop.</p>
+        <div class="keyrow" style="margin-top:.55rem"><input type="text" id="rm-url" autocomplete="off" spellcheck="false" placeholder="Server URL (e.g. http://192.168.1.50:8080)" aria-label="Model server URL"></div>
+        <div class="keyrow" style="margin-top:.45rem"><input type="password" id="rm-key" autocomplete="off" spellcheck="false" placeholder="Access key / API key (optional)" aria-label="Access key or API key"></div>
+        <div class="keyrow" style="margin-top:.45rem"><input type="text" id="rm-model" autocomplete="off" spellcheck="false" placeholder="Model ID (optional, auto-detected)" aria-label="Model ID"><button type="button" class="btn pri" id="rm-add">Add model</button></div>
+        <div class="note" id="rm-note" hidden></div>
       </div>
       <div class="glabel">Runs on</div>
       <div class="group pad">
@@ -716,26 +724,41 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     Object.keys(p).forEach(function (k) { if (skip.indexOf(k) < 0) o[k] = p[k]; });
     return o;
   }
-  var WEB_MODELS = {
-    'omni': { label: 'LFM3-Omni-2B', desc: '<b>LFM3-Omni-2B</b> (24-layer Liquid AI Omni, 4-bit) reads text, images, audio and video, and answers in text or speech.' },
-    'nemotron-3.5-super-vl': { label: 'Nemotron 3.5 Super VL', desc: '<b>Nemotron 3.5 Super VL</b> (88-layer 120B-A12B MoE, 1M context) runs on k3 with C-RADIO vision, video, HybridAgent and 11-level NCM.' },
-    'kimi-k3': { label: 'Kimi K3 2.78T MoE', desc: '<b>Kimi K3 2.78T MoE</b> (93-layer 2.78T MoE, 68 KDA + 24 MLA + 896 experts/layer) runs on k3 with MoonViT3d vision, HybridAgent and 11-level NCM.' }
-  };
+  var HOST_KEY_STORE = 'clover-host-key', HOST_URL_STORE = 'clover-host-url';
+  try {
+    var hm = /(?:[?#&])key=([A-Za-z0-9_\-]+)/.exec((location.search || '') + (location.hash || ''));
+    if (hm && hm[1]) {
+      localStorage.setItem(HOST_KEY_STORE, hm[1]);
+      if (history && history.replaceState) history.replaceState(null, '', location.pathname);
+    }
+  } catch (e) {}
+  function hostKey() { try { return localStorage.getItem(HOST_KEY_STORE) || ''; } catch (e) { return ''; } }
+  function hostHeaders(extra) {
+    var h = extra ? Object.assign({}, extra) : {};
+    var k = hostKey();
+    if (k) h['X-Clover-Key'] = k;
+    return h;
+  }
   var API_CANDIDATES = ['https://api.cloverframework.com', 'https://37-27-114-74.sslip.io', 'https://37.27.114.74.nip.io'];
   var SAME_API_HOST = /^(api\.cloverframework\.com|37-27-114-74\.sslip\.io|37\.27\.114\.74\.nip\.io|127\.0\.0\.1|localhost)$/i.test(location.hostname || '');
-  var API_BASE = (WEB && !SAME_API_HOST) ? API_CANDIDATES[0] : '';
+  var savedHostUrl = '';
+  try { savedHostUrl = localStorage.getItem(HOST_URL_STORE) || ''; } catch (e) {}
+  var API_BASE = !WEB ? '' : SAME_API_HOST ? '' : (savedHostUrl || (hostKey() ? API_CANDIDATES[0] : 'http://127.0.0.1:8765'));
   function apiUrl(p) { return API_BASE + p; }
-  if (WEB && API_BASE) {
+  if (WEB && !SAME_API_HOST) {
+    var probeList = ['http://127.0.0.1:8765'];
+    if (savedHostUrl && probeList.indexOf(savedHostUrl) < 0) probeList.push(savedHostUrl);
+    if (hostKey()) API_CANDIDATES.forEach(function (u) { if (probeList.indexOf(u) < 0) probeList.push(u); });
     (function probeApi(i) {
-      if (i >= API_CANDIDATES.length) return;
-      fetch(API_CANDIDATES[i] + '/api/status?passive=1').then(function (r) {
-        if (r.ok) API_BASE = API_CANDIDATES[i]; else probeApi(i + 1);
+      if (i >= probeList.length) return;
+      fetch(probeList[i] + '/api/status?passive=1', { headers: hostHeaders() }).then(function (r) {
+        if (r.ok) { API_BASE = probeList[i]; loadServerSettings(); pollStatus(); } else probeApi(i + 1);
       }).catch(function () { probeApi(i + 1); });
     })(0);
   }
   var state = { sessions: { current: '', order: [], map: {} }, files: [], media: [], docs: [], ready: false, busy: false, perms: {}, mode: 'lfm3',
     settings: { model: 'omni', sampling: 'general', thinking: true, budget: 2048, voice: 'female', autospeak: true }, health: null, lastSpeed: 0,
-    turnId: null, waitEl: null, omni: false, inputs: ['text'], speakNext: false, memCount: null, openGroups: {} };
+    turnId: null, waitEl: null, omni: false, inputs: ['text'], speakNext: false, memCount: null, openGroups: {}, catalog: null };
   var RECENT_CHATS = 5;
   try { state.openGroups = JSON.parse(localStorage.getItem(KEY + '-groups') || '{}') || {}; } catch (e) {}
   var MEDIA_MB = { image: 15, audio: 30, video: 60 }, MAX_MEDIA = 6;
@@ -784,7 +807,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function setNote(id, text, ok) { var n = $(id); n.hidden = !text; n.textContent = text || ''; n.className = 'note' + (ok ? ' ok' : ''); }
 
   function api(method, path, body) {
-    var opt = { method: method, headers: {} };
+    var opt = { method: method, headers: hostHeaders() };
     if (body !== undefined) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
     return fetch(apiUrl(path), opt).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
@@ -1160,10 +1183,28 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
 
   /* ---------- answer settings (this browser) ---------- */
+  function getCatalog() {
+    var cat = (state.server && state.server.model_catalog) || state.catalog;
+    if (cat && cat.length) return cat;
+    return [{
+      id: 'omni',
+      name: 'LFM3-Omni-2B',
+      badge: PHONE ? 'On this phone' : (WEB ? 'Local' : 'On this laptop'),
+      desc: 'Local · 24-layer Liquid AI Omni · Text, images, audio, video & speech',
+      host: 'local',
+      local: true
+    }];
+  }
+  function modelInfo(id) {
+    var cat = getCatalog();
+    for (var i = 0; i < cat.length; i++) {
+      if (cat[i].id === id || cat[i].remote_model === id) return cat[i];
+    }
+    return cat[0];
+  }
   function loadSettings() {
     try {
       var s = JSON.parse(localStorage.getItem(SKEY) || '{}');
-      if (s.model && WEB_MODELS[s.model]) state.settings.model = s.model;
       if (s.sampling === 'general' || s.sampling === 'math') state.settings.sampling = s.sampling;
       if (typeof s.thinking === 'boolean') state.settings.thinking = s.thinking;
       if (s.budget === 2048 || s.budget === 4096) state.settings.budget = s.budget;
@@ -1173,23 +1214,95 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function saveSettings() { try { localStorage.setItem(SKEY, JSON.stringify(state.settings)); } catch (e) {} renderSettings(); }
   function renderModelPicker() {
-    var m = (WEB && WEB_MODELS[state.settings.model]) ? state.settings.model : 'omni';
-    var info = WEB_MODELS[m] || WEB_MODELS.omni;
-    if ($('model-btn-t')) $('model-btn-t').textContent = info.label;
-    if ($('s-model')) pick('s-model', m);
-    if ($('model-d')) $('model-d').innerHTML = info.desc;
-    if ($('v-model')) $('v-model').textContent = info.label;
+    var cat = getCatalog();
+    var m = (state.server && state.server.settings && state.server.settings.model) || state.settings.model || 'omni';
+    var info = modelInfo(m);
+    m = info.id;
+    state.settings.model = m;
+    if ($('model-btn-t')) $('model-btn-t').textContent = info.name;
+    if ($('model-d')) $('model-d').innerHTML = '<b>' + esc(info.name) + '</b> · ' + esc(info.desc || '');
+    if ($('v-model')) $('v-model').textContent = info.name;
     if ($('model-menu')) {
-      Array.prototype.forEach.call($('model-menu').children, function (b) {
-        b.classList.toggle('on', b.getAttribute('data-v') === m);
-      });
+      var html = cat.map(function (x) {
+        return '<button type="button" class="mpick__opt' + (x.id === m ? ' on' : '') + '" role="option" data-v="' + esc(x.id) + '">' +
+          '<b><span>' + esc(x.name) + '</span><em>' + esc(x.badge || 'Hosted') + '</em></b>' +
+          '<small>' + esc(x.desc || '') + '</small></button>';
+      }).join('');
+      html += '<div class="mpick__sep"></div>' +
+        '<button type="button" class="mpick__opt mpick__add" data-add-model="1">' +
+        '<b><span>+ Add a model…</span><em>Custom host</em></b>' +
+        '<small>Connect a live model hosted on your own machine</small></button>';
+      $('model-menu').innerHTML = html;
+    }
+    if ($('s-model')) {
+      $('s-model').hidden = cat.length <= 1;
+      $('s-model').innerHTML = cat.map(function (x) {
+        return '<button type="button" class="' + (x.id === m ? 'on' : '') + '" data-v="' + esc(x.id) + '">' + esc(x.name) + '</button>';
+      }).join('');
+    }
+    if ($('rm-list')) {
+      var customs = cat.filter(function (x) { return x.custom; });
+      $('rm-list').hidden = !customs.length;
+      $('rm-list').innerHTML = customs.map(function (x) {
+        return '<div class="row static"><span class="row__t">' + esc(x.name) + '<small>' + esc(x.url || x.desc || '') + '</small></span>' +
+          '<button type="button" class="btn sm danger" data-rm-model="' + esc(x.id) + '">Remove</button></div>';
+      }).join('');
     }
   }
   function selectModel(v) {
-    if (!WEB_MODELS[v]) return;
-    state.settings.model = v; saveSettings(); renderModelPicker();
+    state.settings.model = v;
+    if (state.server && state.server.settings) state.server.settings.model = v;
+    saveSettings(); renderModelPicker();
     if ($('mpick')) { $('mpick').classList.remove('open'); $('model-menu').hidden = true; $('model-btn').setAttribute('aria-expanded', 'false'); }
     saveServer({ model: v });
+  }
+  function addRemoteModel() {
+    var url = ($('rm-url') && $('rm-url').value || '').trim();
+    var key = ($('rm-key') && $('rm-key').value || '').trim();
+    var mod = ($('rm-model') && $('rm-model').value || '').trim();
+    if (!url) { setNote('rm-note', 'Enter the server URL first.'); return; }
+    setNote('rm-note', 'Connecting to model server…', true);
+    if (WEB && (!state.ready || url.toLowerCase() === 'k3' || /cloverframework\.com|sslip\.io|nip\.io/i.test(url))) {
+      var target = url.toLowerCase() === 'k3' ? API_CANDIDATES[0] : (/^https?:\/\//i.test(url) ? url.replace(/\/+$/, '') : 'http://' + url.replace(/\/+$/, ''));
+      try {
+        if (key) localStorage.setItem(HOST_KEY_STORE, key);
+        localStorage.setItem(HOST_URL_STORE, target);
+      } catch (e) {}
+      API_BASE = SAME_API_HOST && target === location.origin ? '' : target;
+    }
+    api('POST', '/api/models/add', { url: url, api_key: key, model: mod }).then(function (r) {
+      if ($('rm-url')) $('rm-url').value = '';
+      if ($('rm-key')) $('rm-key').value = '';
+      if ($('rm-model')) $('rm-model').value = '';
+      state.server = state.server || {};
+      state.server.settings = r.settings;
+      state.server.model_catalog = r.model_catalog;
+      state.catalog = r.model_catalog;
+      renderServerSettings(); pollStatus(); loadHealth();
+      setNote('rm-note', 'Connected ' + (r.added || []).map(function (x) { return x.name; }).join(', ') + '.', true);
+    }).catch(function (e) {
+      if (WEB && key) {
+        loadServerSettings().then(function () {
+          pollStatus();
+          if (state.server && state.server.model_catalog) {
+            setNote('rm-note', 'Connected to hosted Clover server.', true);
+          } else {
+            setNote('rm-note', e.message);
+          }
+        });
+        return;
+      }
+      setNote('rm-note', e.message);
+    });
+  }
+  function removeRemoteModel(id) {
+    api('POST', '/api/models/remove', { id: id }).then(function (r) {
+      state.server = state.server || {};
+      state.server.settings = r.settings;
+      state.server.model_catalog = r.model_catalog;
+      state.catalog = r.model_catalog;
+      renderServerSettings(); pollStatus(); loadHealth();
+    }).catch(function (e) { setNote('rm-note', e.message); });
   }
   function renderSettings() {
     var s = state.settings;
@@ -1231,6 +1344,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       $('model-btn').setAttribute('aria-expanded', String(!open));
     });
     $('model-menu').addEventListener('click', function (ev) {
+      var addBtn = ev.target.closest('button[data-add-model]');
+      if (addBtn) {
+        $('model-menu').hidden = true; $('mpick').classList.remove('open'); $('model-btn').setAttribute('aria-expanded', 'false');
+        openSettings('model');
+        setTimeout(function () { if ($('rm-url')) $('rm-url').focus(); }, 120);
+        return;
+      }
       var b = ev.target.closest('button[data-v]');
       if (b) selectModel(b.getAttribute('data-v'));
     });
@@ -1240,6 +1360,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       }
     });
   }
+  if ($('rm-add')) $('rm-add').addEventListener('click', addRemoteModel);
+  if ($('rm-list')) $('rm-list').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button[data-rm-model]');
+    if (b) removeRemoteModel(b.getAttribute('data-rm-model'));
+  });
   $('s-think').addEventListener('change', function () { state.settings.thinking = this.checked; saveSettings(); });
   $('s-autospeak').addEventListener('change', function () { state.settings.autospeak = this.checked; saveSettings(); });
   segClick('s-tools', function (v) { saveServer({ tools: v }); });
@@ -1292,17 +1417,31 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function pollStatus() {
     api('GET', '/api/status').then(function (st) {
       state.ready = st.status === 'ready';
+      if (st.model_catalog && st.model_catalog.length) {
+        state.catalog = st.model_catalog;
+        if (state.server) state.server.model_catalog = st.model_catalog;
+        renderModelPicker();
+      }
       if (st.mode && st.mode !== state.mode) { state.mode = st.mode; applyMode(); }
       if (state.health && st.engine && state.health.engine && state.health.engine.engine !== st.engine) state.health = null;
       if (state.ready && st.model) setModel(st.model, st.inputs || ['text']);
+      var info = modelInfo(st.model_key || state.settings.model);
+      var isRemote = !info.local && !WEB;
       if (st.status === 'error') setStatus('err', 'Engine error', 'Clover could not start: ' + (st.error || 'unknown error'));
       else if (!state.ready) setStatus('busy', 'Starting · ' + fmtSecs(st.load_elapsed_s), 'Clover is starting · ' + fmtSecs(st.load_elapsed_s));
       else if (st.busy) setStatus('busy', cap(st.busy.stage || st.busy.kind || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s));
-      else if (WEB) setStatus('ok', 'Ready · ' + ((WEB_MODELS[state.settings.model] || {}).label || st.model || 'LFM3-Omni-2B') + ' · on k3');
+      else if (WEB || isRemote) setStatus('ok', 'Ready · ' + info.name + (info.host && info.host !== 'local' ? ' · on ' + info.host : ''));
       else setStatus('ok', 'Ready · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU') + ' · on this computer');
       if (state.waitEl && st.busy) state.waitEl.textContent = (st.busy.stage || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s);
       updateSend();
-    }).catch(function () { state.ready = false; setStatus('err', 'Not running', 'Clover is not running. Start Clover AI Studio to use it.'); updateSend(); });
+    }).catch(function (e) {
+      state.ready = false;
+      var authReq = e && e.body && e.body.auth_required;
+      setStatus('err', authReq ? 'Local / custom host' : 'Not running',
+        authReq ? 'Start Clover AI Studio on this device, or click + Add a model in the top-left menu to connect your own hosted model.'
+                : 'Clover is not running. Start Clover AI Studio to use it, or connect a hosted model in the top-left menu.');
+      updateSend();
+    });
   }
   function loadHealth() {
     return api('GET', '/api/health').then(function (h) { state.health = h; if (h.mode) state.mode = h.mode; applyMode(); renderEngine(); renderServerSettings(); }).catch(function () {});
@@ -1314,13 +1453,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function applyMode() { renderSettings(); }
   function setModel(name, inputs) {
-    var omni = WEB || /omni|nemotron|kimi/i.test(name);
+    var omni = WEB || /omni|nemotron|kimi/i.test(name) || inputs.indexOf('vision') >= 0;
     var changed = omni !== state.omni || inputs.join() !== state.inputs.join();
     state.omni = omni; state.inputs = inputs;
     if (!changed) return;
     if (state.health && state.health.engine && state.health.engine.model !== name) state.health = null;
-    $('hero-p').textContent = WEB ? 'Clover runs on k3 with LFM3-Omni-2B, Nemotron 3.5 Super VL and Kimi K3 2.78T MoE. It can see, hear and speak.'
-      : omni ? 'Clover runs here on your laptop. It can see, hear and speak. Nothing leaves it unless you allow it.'
+    $('hero-p').textContent = omni ? 'Clover runs here on your laptop. It can see, hear and speak. Nothing leaves it unless you allow it.'
       : 'Clover runs here on your laptop. Nothing leaves it unless you allow it.';
     $('mic').hidden = inputs.indexOf('audio') < 0;
     $('prompt').placeholder = omni && !PHONE ? 'Message Clover, or add a photo, sound or video' : 'Message Clover';
@@ -1331,15 +1469,18 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function loadServerSettings() {
     return api('GET', '/api/settings').then(function (r) {
       state.server = r;
-      if (WEB && r.settings && r.settings.model && WEB_MODELS[r.settings.model] && !localStorage.getItem(SKEY)) {
-        state.settings.model = r.settings.model;
-      }
+      if (r.model_catalog && r.model_catalog.length) state.catalog = r.model_catalog;
+      if (r.k3_key) { try { localStorage.setItem(HOST_KEY_STORE, r.k3_key); } catch (e) {} }
+      if (r.settings && r.settings.model) state.settings.model = r.settings.model;
       renderServerSettings();
-    }).catch(function () {});
+    }).catch(function () { renderModelPicker(); });
   }
   function saveServer(changes) {
     return api('POST', '/api/settings', changes).then(function (r) {
-      state.server = state.server || {}; state.server.settings = r.settings; renderServerSettings(); pollStatus();
+      state.server = state.server || {};
+      state.server.settings = r.settings;
+      if (r.model_catalog) { state.server.model_catalog = r.model_catalog; state.catalog = r.model_catalog; }
+      renderServerSettings(); pollStatus();
       if (changes.engine || changes.model) { state.health = null; loadHealth(); }
     }).catch(function (e) { alert(e.message); loadServerSettings(); });
   }
@@ -1372,16 +1513,18 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
      does on this laptop now. Switches only where a part can be turned on or off. */
   function renderLayers() {
     var sv = state.server; if (!sv || !sv.settings) return;
-    var st = sv.settings, L = st.layers || {}, omni = st.model === 'omni' || WEB, k3Big = WEB && st.model !== 'omni';
-    var mLabel = WEB ? ((WEB_MODELS[st.model] || WEB_MODELS.omni).label) : (st.model === 'omni' ? 'LFM3-Omni-2B' : 'LFM3-1.7B');
+    var st = sv.settings, L = st.layers || {}, info = modelInfo(st.model);
+    var omni = true, k3Big = /nemotron|kimi/i.test(st.model || '');
+    var mLabel = info ? info.name : 'LFM3-Omni-2B';
     var rec = (state.health && state.health.recall) || null, mc = state.memCount;
     var recallNote = !omni ? ' Works with LFM3-Omni-2B.'
       : !rec || !L.recall ? '' : rec.state === 'ready' ? ' ' + Number(rec.messages || 0).toLocaleString() + ' messages indexed.'
       : rec.state === 'loading' ? ' Getting ready…' : rec.state === 'error' ? ' Could not start: ' + (rec.error || 'error') + '.'
       : /embedder/.test(rec.state) ? ' Needs its embedding model: run Clover AI Studio setup again.' : '';
+    var whereDesc = (info && info.host && info.host !== 'local') ? ('hosted on ' + info.host) : ('the ' + (st.engine === 'gpu' ? gpuName() : 'CPU'));
     var core = [
       { tag: 'C1', name: 'Inference', badge: 'On', on: true,
-        desc: mLabel + ' on ' + (WEB ? 'the k3 server' : ('the ' + (st.engine === 'gpu' ? gpuName() : 'CPU'))) + '. The model itself, running on this computer.',
+        desc: mLabel + ' on ' + whereDesc + '. The model itself.',
         links: [['model', 'Model and voice']] },
       { tag: 'C2', name: 'Plan', badge: k3Big ? 'On' : 'Try again', on: true, part: !k3Big,
         desc: k3Big ? ('HybridAgent planner + Studio tool loop running on k3 for ' + mLabel + ', plus Try again when you say an answer is not right.')
@@ -1881,7 +2024,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       if (speakIt) speakOmni(m.text);
     }
     fetch(apiUrl('/api/chat/stream'), {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: hostHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ prompt: inp.prompt, session_id: c.id, model: state.settings.model, attached_files: inp.files, history: inp.hist,
         media: (inp.media || []).map(function (md) { return { kind: md.kind, name: md.name, data: md.data }; }),
         documents: (inp.docs || []).map(function (d) { return { name: d.name, data: d.data }; }),
