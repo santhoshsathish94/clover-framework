@@ -739,8 +739,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (k) h['X-Clover-Key'] = k;
     return h;
   }
-  var API_CANDIDATES = ['https://api.cloverframework.com', 'https://37-27-114-74.sslip.io', 'https://37.27.114.74.nip.io'];
-  var SAME_API_HOST = /^(api\.cloverframework\.com|37-27-114-74\.sslip\.io|37\.27\.114\.74\.nip\.io|127\.0\.0\.1|localhost)$/i.test(location.hostname || '');
+  var API_CANDIDATES = ['https://api.cloverframework.com'];
+  var SAME_API_HOST = /^(api\.cloverframework\.com|127\.0\.0\.1|localhost)$/i.test(location.hostname || '');
   var savedHostUrl = '';
   try { savedHostUrl = localStorage.getItem(HOST_URL_STORE) || ''; } catch (e) {}
   var API_BASE = !WEB ? '' : SAME_API_HOST ? '' : (savedHostUrl || (hostKey() ? API_CANDIDATES[0] : 'http://127.0.0.1:8765'));
@@ -1785,9 +1785,20 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       if (f.size > MEDIA_MB[kind] * 1024 * 1024) { alert(f.name + ' is larger than ' + MEDIA_MB[kind] + ' MB.'); return; }
       var rd = new FileReader();
       rd.onload = function (e) {
-        var url = String(e.target.result || ''), item = { kind: kind, name: f.name || kind, data: url.slice(url.indexOf(',') + 1) };
+        var url = String(e.target.result || '');
+        if (kind === 'image') {
+          shrinkImage(url, f.type || 'image/jpeg').then(function (sUrl) {
+            var item = { kind: kind, name: f.name || kind, data: sUrl.slice(sUrl.indexOf(',') + 1) };
+            state.media.push(item); renderAtt(); updateSend();
+            thumb(sUrl).then(function (t) { item.thumb = t; renderAtt(); }).catch(function () {});
+          }).catch(function () {
+            var item = { kind: kind, name: f.name || kind, data: url.slice(url.indexOf(',') + 1) };
+            state.media.push(item); renderAtt(); updateSend();
+          });
+          return;
+        }
+        var item = { kind: kind, name: f.name || kind, data: url.slice(url.indexOf(',') + 1) };
         state.media.push(item); renderAtt(); updateSend();
-        if (kind === 'image') thumb(url).then(function (t) { item.thumb = t; renderAtt(); }).catch(function () {});
       };
       rd.readAsDataURL(f);
       return;
@@ -1812,6 +1823,22 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       state.files.push({ name: f.name, content_text: text }); renderAtt(); updateSend();
     };
     r.readAsText(f);
+  }
+  function shrinkImage(url, mime) {
+    return new Promise(function (ok) {
+      var im = new Image();
+      im.onload = function () {
+        var maxSide = 1024, w = im.width, h = im.height;
+        if (!w || !h || (w <= maxSide && h <= maxSide)) { ok(url); return; }
+        var scale = maxSide / Math.max(w, h), cw = Math.round(w * scale), ch = Math.round(h * scale);
+        var c = document.createElement('canvas'); c.width = cw; c.height = ch;
+        c.getContext('2d').drawImage(im, 0, 0, cw, ch);
+        var outMime = /png/i.test(mime || '') ? 'image/png' : 'image/jpeg';
+        ok(c.toDataURL(outMime, 0.88));
+      };
+      im.onerror = function () { ok(url); };
+      im.src = url;
+    });
   }
   function thumb(url) {
     return new Promise(function (ok, bad) {

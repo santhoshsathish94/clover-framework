@@ -39,16 +39,19 @@ EXTENSIONS = r"\w+\.(?:py|md|txt|json|csv|ya?ml|toml|html|css|ps1)"
 # what changes by the day is never in the model: the phone's "What's the weather" got no tool in When I ask and answered
 # that it had no real-time data (2026-11-04)
 LIVE = (r"\b(?:what(?:'?s|\s+is)|how(?:'?s|\s+is))\s+(?:the\s+)?weather\b|"
-        r"\bweather\s+(?:today|tonight|tomorrow|now|right\s+now|this\s+(?:week(?:end)?|morning|afternoon|evening)|"
-        r"forecast|report|update|like|in|at|for|outside)\b|\b(?:today'?s|tomorrow'?s|current|latest)\s+weather\b|"
-        r"\b(?:will|is)\s+it\s+(?:going\s+to\s+)?(?:rain|snow)(?:ing)?\b|"
-        r"\b(?:rain|snow|temperature|humidity)\b[^.?!\n]{0,30}\b(?:today|tonight|tomorrow|right\s+now|outside)\b|"
-        r"\bforecast\s+for\s+(?:today|tonight|tomorrow|the\s+week(?:end)?|this\s+week(?:end)?)\b|"
-        r"\b(?:latest|today'?s|breaking|top|current|recent)\s+(?:news|headlines)\b|\bwhat(?:'?s|\s+is)\s+(?:in\s+)?the\s+news\b|"
-        r"\bnews\s+(?:today|about|on)\b|\b(?:stock|share)\s+price\b|\bexchange\s+rates?\b|"
-        r"\b(?:price|rate)\s+of\s+(?:bitcoin|btc|ethereum|gold|silver|oil|petrol|diesel)\b|"
-        r"\b(?:bitcoin|btc|ethereum|gold|silver|petrol|diesel)\s+(?:price|rate)\b|"
-        r"\bwho\s+won\b[^.?!\n]{0,30}\b(?:match|game|race|final|yesterday|last\s+night|today)\b")
+        r"\bweather\b(?![^.?!\n]{0,25}\b(?:forecasts?\s+work|poem|story|song)\b)|"
+        r"\b(?:will|is)\s+it\s+(?:going\s+to\s+)?(?:rain|snow|hot|cold|sunny|cloudy|storm)(?:ing|y)?\b|"
+        r"\b(?:rain(?:ing)?|snow(?:ing)?|temperature|humidity|aqi|air\s+quality)\b"
+        r"(?:[^.?!\n]{0,30}\b(?:today|tonight|tomorrow|right\s+now|now|outside|in\s+[A-Z]\w+)\b)|"
+        r"\bforecast\b(?![^.?!\n]{0,30}\b(?:work|sales|revenue|budget|demand|table|csv|excel)\b)|"
+        r"\b(?:latest|today'?s|breaking|top|current|recent)\s+(?:news|headlines|updates?|events?|developments?)\b|"
+        r"\bwhat(?:'?s|\s+is)\s+(?:in\s+|the\s+)?news\b|\bnews\s+(?:today|about|on|in|from)\b|"
+        r"\b(?:stock|share)\s+prices?\b|\bexchange\s+rates?\b|"
+        r"\b(?:price|rate|cost|value)\s+of\s+(?:bitcoin|btc|ethereum|eth|solana|gold|silver|oil|petrol|diesel)\b|"
+        r"\b(?:bitcoin|btc|ethereum|eth|solana|gold|silver|petrol|diesel)\s+(?:price|rate|value)\b|"
+        r"\bwho\s+(?:won|is\s+winning)\b[^.?!\n]{0,30}\b(?:match|game|race|final|series|election|yesterday|last\s+night|today)\b|"
+        r"\b(?:live|latest|current)\s+score\b|"
+        r"\bwho\s+is\s+the\s+(?:current|present|new)\s+(?:ceo|president|prime\s+minister|pm|governor|mayor|leader|champion)\b")
 # (capabilities, what a message says when it asks for them); the order is the order tools are offered
 ASKS = (
     (("web.search", "web.page"),
@@ -524,7 +527,7 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
     act = ("social" if pleasant else "retry" if retry else "remember" if keep else "creative" if creative
            else "concept" if CONCEPT.search(t) and not EXPLICIT.search(t) else "action" if names else "question")
     seen = [k for k in kinds if k in VISUAL]
-    if not kinds and not retry and not pleasant and ABOUT_MEDIA.search(t) and not typed_paths and not LINK.search(t):
+    if not kinds and not retry and not pleasant and not caps and ABOUT_MEDIA.search(t) and not typed_paths and not LINK.search(t):
         prev = next((m for m in reversed(history) if m.get("role") == "user"), None) or {}
         before = [_kind(m) for m in prev.get("media") or []] or [_kind(m) for m in previous_media or ()]
         seen = [k for k in before if k in VISUAL]
