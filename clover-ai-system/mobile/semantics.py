@@ -225,7 +225,9 @@ DONE = {"files.write": "file written", "remember": "saved", "image": "picture ma
         "vscode.clone": "cloned", "vscode.install": "installed"}
 NO_TOOLS = {"creative writing": " · no tools", "meal": " · no tools", "about the photo": " · no tools",
             "places": " · web only"}
-QUIET = ("files.write", "remember", "image")  # offered only when a message asks for them
+# offered only when a message asks for them; the clock too: in Tools "Always" the Omni answered, called the clock
+# unasked and answered again, so the first answer vanished and the time showed (the date is in the system prompt)
+QUIET = ("files.write", "remember", "image", "clock")
 _CTRL_OF = {"t": "\t", "n": "\n", "r": "\r", "f": "\f", "b": "\b", "v": "\v", "a": "\a"}
 
 
@@ -582,6 +584,29 @@ def non_answer(text):
     """An answer that says nothing yet: empty, or only a promise to look something up."""
     t = (text or "").strip()
     return not t or bool(PROMISE.search(t))
+
+
+# the start of a message that introduces a tool call rather than answering: "Sure, let me check.", "To answer that, I
+# need today's date.", "First, I'll list the folder:"
+LEAD_IN = re.compile(r"^\W*(?:(?:sure|okay|ok|alright|of\s+course|certainly)\W+)?(?:let\s+me|i'?ll|i\s+will|i\s+need\s+to|"
+                     r"i'?d\s+need\s+to|i\s+should|i\s+must|i\s+am\s+going\s+to|i'?m\s+going\s+to|first\b|"
+                     r"to\s+(?:answer|find|check|get|see|do)\b)", re.I)
+
+
+def answered_unasked(frame, text, names):
+    """A tool call written after a finished answer, for nothing the message asked for: the answer stands and the call
+    does not run. text: what the model wrote before the call; names: the tools it called. In Tools "Always" the Omni
+    answered, then called the clock (2026-11-03) or listed the home folder (2026-11-04) unasked, and its next round
+    replaced the answer with talk about that result."""
+    if frame is None or frame.runtime is None or not names:
+        return False
+    if any(frame.runtime.capability(n) in frame.caps for n in names):
+        return False
+    t = (text or "").strip()
+    words = len(t.split())
+    if non_answer(t) or words < 4 or t.endswith(":") or (words <= 40 and LEAD_IN.match(t)):
+        return False
+    return True
 
 
 def _claims(text, read=None):
