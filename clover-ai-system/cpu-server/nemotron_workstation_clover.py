@@ -240,7 +240,7 @@ def check_outcome_findings(question: str, answer: str) -> list[str]:
 class CloverNemotronWorkstationSystem:
     """
     Coordinates all 7 Clover AI System layers around `nemotron-3.5-super-vl` (`120B-A12B`, `d=4096`, `V=131,072` Tekken)
-    on `k3` (`37.27.114.74`), supporting progressive layer activation `max_active_layer = 1 .. 7` and
+    on `k3`, supporting progressive layer activation `max_active_layer = 1 .. 7` and
     user-triggered Clover Cycle retry (`run_clover_retry_cycle`).
     """
 
@@ -1046,7 +1046,7 @@ def compare_before_vs_after_gpu_training_on_k3() -> dict[str, Any]:
 def run_workstation_7layer_verification() -> dict[str, Any]:
     """
     Runs the complete step-by-step 7-layer progressive verification + before/after GPU training comparison +
-    Clover Cycle retry verification on the `k3` workstation (`37.27.114.74`).
+    Clover Cycle retry verification on the `k3` workstation.
     """
     print("[Nemotron-Workstation-K3] 1/3 Running Before vs After 8-GPU Training Comparison...", flush=True)
     before_vs_after = compare_before_vs_after_gpu_training_on_k3()

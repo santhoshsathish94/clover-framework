@@ -8,7 +8,7 @@ Following Cycle 2 of the Meaning Formation, Grounded Execution, and Developmenta
 Per Clover operating rules ("first download, run them each stage so that we really understand how it works, then we can see if we can replace Kimi K3 with this new LFM3-1.7B — the compact general model"), we do not reason from model cards alone. We download `LiquidAI/LFM3-1.7B`, read its exact source (`configuration_lfm3.py`, `modeling_lfm3.py`, `lfm3_conv.py`), verify every tensor and layer stage on real inputs, and then test `LFM3-1.7B` head-to-head against `Kimi K3` both standalone and inside Clover's surrounding architecture.
 
 ### 2. Target Hardware & Environment (`k3` host — same CPU box where `clover-kimi-k3` runs)
-- **Host:** `k3` (`37.27.114.74`, Ubuntu 24.04 Noble)
+- **Host:** `k3` (Ubuntu 24.04 Noble)
 - **CPU:** AMD Ryzen 9 7950X3D 16-Core / 32-Thread Processor
 - **RAM:** 124 GiB DDR5 (96 GiB available)
 - **Disk:** 1.8 TB NVMe RAID (`/dev/md2`, 839 GiB free)
@@ -71,7 +71,7 @@ Per Clover operating rules ("first download, run them each stage so that we real
 ## Execution & Outcome Log
 
 ### 1. Weight Download & Exact Tensor Inventory (`model.safetensors`, 286 tensors)
-- Downloaded `LiquidAI/LFM3-1.7B` (`sha = ac2586a34f1a1c03329dbdcdefabd8b6478ddaa7`) to `/opt/clover-k3/models/LFM3-1.7B` on `k3` (`37.27.114.74`, AMD Ryzen 9 7950X3D) in `29.65 s` and loaded all 286 `bfloat16` tensors in `0.96 s`.
+- Downloaded `LiquidAI/LFM3-1.7B` (`sha = ac2586a34f1a1c03329dbdcdefabd8b6478ddaa7`) to `/opt/clover-k3/models/LFM3-1.7B` on `k3` (AMD Ryzen 9 7950X3D) in `29.65 s` and loaded all 286 `bfloat16` tensors in `0.96 s`.
 - **Exact Parameter Breakdown across the 286 tensors (`1,728,801,536` parameters, `3,457,603,072` payload bytes):**
   | Stage Category | Parameters | Share of Model | Structure |
   | --- | --- | --- | --- |
@@ -193,7 +193,7 @@ All numbers below come directly from [clover-ai-system/mobile/lfm3_omni_s23_live
 ## 7. Cycle 3: 8x RTX 3090 Training of `LiquidAI/LFM3-Omni-2B` (`HybridSFT` Stages 1–3 + `11-Level NCM`) & S23 Mobile Integration (2026-10-30)
 
 ### 7.1 `LiquidAI/LFM3-Omni-2B` Discovery & 8x RTX 3090 Training Setup
-- On the Finland `8x NVIDIA GeForce RTX 3090` server (`65.109.137.0:60805`, `192 GiB` total VRAM, `472 GiB` RAM, `/dev/shm` `236 GB`), we verified from Hugging Face that **`LiquidAI/LFM3-Omni-2B`** (`2.17B` total parameters, `665` tensors across `model.safetensors` + `audio_tokenizer/model.safetensors`) is Liquid AI's official end-to-end omni-modal model, whose 24-layer language backbone (`model.language_model.*`, `286` tensors) shares the exact tensor shapes (`d = 2048`, `24` layers: `13 ShortConv + 5 Sliding GQA + 6 Full GQA`, `SwiGLU 7680`, `V = 128,000`) of `LFM3-1.7B` with omni-modal post-trained weights (`max_abs_diff = 2.5156`).
+- On the `8x NVIDIA GeForce RTX 3090` server (`192 GiB` total VRAM, `472 GiB` RAM, `/dev/shm` `236 GB`), we verified from Hugging Face that **`LiquidAI/LFM3-Omni-2B`** (`2.17B` total parameters, `665` tensors across `model.safetensors` + `audio_tokenizer/model.safetensors`) is Liquid AI's official end-to-end omni-modal model, whose 24-layer language backbone (`model.language_model.*`, `286` tensors) shares the exact tensor shapes (`d = 2048`, `24` layers: `13 ShortConv + 5 Sliding GQA + 6 Full GQA`, `SwiGLU 7680`, `V = 128,000`) of `LFM3-1.7B` with omni-modal post-trained weights (`max_abs_diff = 2.5156`).
 - Extracted the 286 `model.language_model.*` tensors into `LFM3-Omni-2B-LM`, patched `build_prompt_lfm3` for `LFM3-Omni-2B`'s `<think></think>` chat template, and trained all 3 stages of `HybridSFT` across all 8 RTX 3090 GPUs (`torchrun --nproc_per_node=8`, `CE_CHUNK_SIZE = 512`, non-reentrant gradient checkpointing, fused `AdamW`):
   - **Stage 1 (`format_activation`, 80 global steps, `474.2 s`):** Held-out evaluation loss dropped from **`1.1673` $\to$ `0.5869`** (`-49.7%`).
   - **Stage 2 (`hybridlink_activation`, 120 global steps, `66.2 s`):** Held-out `hybridlink_loss` dropped from **`2.1456` $\to$ `0.9357`** and `cos_loss` dropped from **`0.9260` $\to$ `0.5283`** (mean latent cosine similarity jumped from `0.0740` to `0.4717`).

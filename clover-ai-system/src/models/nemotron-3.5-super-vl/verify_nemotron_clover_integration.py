@@ -3,7 +3,7 @@
 End-to-End Verification & 7-Layer Clover Integration Suite for NVIDIA Nemotron 3.5 Super VL
 (`clover-ai-system/src/models/nemotron-3.5-super-vl/verify_nemotron_clover_integration.py`).
 
-Runs on `k3` (`37.27.114.74`) over the real trained BF16 tensors of `NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16`:
+Runs on `k3` over the real trained BF16 tensors of `NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16`:
   1. Builds the precomputed `NEMOTRK1` trunks, `NEMO_OP1` composed `operator.bin` files, and
      `experts.direct` stores (`trunk-0`, `trunk-1` + `expert-1`, `trunk-7`, `trunk-mtp-0`,
      `trunk-mtp-1` + `expert-mtp-1`, `global-0`) via `prepare_nemotron_datasets.py`.

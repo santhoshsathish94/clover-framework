@@ -92,7 +92,7 @@ In `clover-ai-system/src/code/cpu/` and `clover-ai-system/src/tools/prune-trunk.
    - `clover-ai-system/src/models/nemotron-3.5-super-vl/` (built & verified first in this cycle)
    - `clover-ai-system/src/models/kimi-k3/` (existing Kimi K3 engine & bridges)
    - `clover-ai-system/src/models/lfm3-1.7b/` (LFM3-1.7B tri-hybrid adapter & stage engine, ready for the next cycle)
-3. Implement and run on `k3` (`37.27.114.74`) the complete **Nemotron 3.5 Super VL Precomputed Engine & Optimizer Suite**:
+3. Implement and run on `k3` the complete **Nemotron 3.5 Super VL Precomputed Engine & Optimizer Suite**:
    - `prepare_nemotron_datasets.py`: Builds `trunk-0` (Mamba-2), `trunk-1` + `expert-1/experts.direct` (Latent `ReLU²` MoE), `trunk-7` (NoPE 16:1 GQA), `trunk-mtp-0`, `trunk-mtp-1` + `expert-mtp-1/experts.direct`, `vision-0`, and `global-0` from the downloaded BF16 shards on `k3`.
    - `prune_nemotron_trunk.py`: Prunes redundant records covered by `operator.bin` from Mamba-2 and GQA trunks, verifying exact byte savings and zero loss of needed records.
    - `nemotron_precomputed_engine.py`: Executes every stage (`Stage V1 C-RADIO` $\to$ `Stage V2 PixelShuffle+ReLU²+EVS` $\to$ `Stage L0 Embedding` $\to$ `Stage L1 Mamba-2 from operator.bin + pruned trunk-0` $\to$ `Stage L2 Latent MoE from trunk-1 + expert-1/experts.direct + SpecMD Least-Stale R4 SlotCache + 4-bit trunk/expert quantization` $\to$ `Stage L3 NoPE GQA from operator.bin + pruned trunk-7` $\to$ `Stage L4 Final Norm + Untied LM Head` $\to$ `Stage L5 Native MTP Speculative Draft`) and verifies **`max_abs_diff = 0.0`** against the unpruned Hugging Face reference!
@@ -100,7 +100,7 @@ In `clover-ai-system/src/code/cpu/` and `clover-ai-system/src/tools/prune-trunk.
 
 ---
 
-## Execution & Outcome (Measured on `k3` — `37.27.114.74`)
+## Execution & Outcome (Measured on `k3`)
 
 ### 1. Repository Rename & Structure (`clover-kimi-k3/` $\to$ `clover-ai-system/`)
 - Renamed `clover-kimi-k3/` to `clover-ai-system/` via `git mv` (`121` tracked files moved cleanly with full git history preserved).

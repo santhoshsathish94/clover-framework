@@ -3,7 +3,7 @@
 End-to-End Verification & 7-Layer Clover Integration Suite for Liquid AI LFM3-1.7B
 (`clover-ai-system/src/models/lfm3-1.7b/verify_lfm3_clover_integration.py`).
 
-Runs on `k3` (`37.27.114.74`) over the full 24-layer `LiquidAI/LFM3-1.7B` checkpoint (`/opt/clover-k3/models/LFM3-1.7B`):
+Runs on `k3` over the full 24-layer `LiquidAI/LFM3-1.7B` checkpoint (`/opt/clover-k3/models/LFM3-1.7B`):
   1. Builds all 24 precomputed `LFM3TRK1` trunks (`trunk-0..23`), composed `operator.bin` streams,
      and `global-0/` (`embed_tokens.bf16.bin`, `embedding_norm.bf16.bin`, `rope_inv_freq.bin`) via `prepare_lfm3_datasets.py`.
   2. Prunes all 24 trunks via `prune_lfm3_trunk.py`, deleting `attention.bin` from all 24 / 24 trunks
