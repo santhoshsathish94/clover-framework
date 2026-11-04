@@ -2075,7 +2075,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function layersUsed(ev) {
     var out = [];
     (ev.layers || []).forEach(function (l) {
-      if (l.layer === 'semantics') { if (l.understood) out.push(l.understood); if (l.label) out.push(l.label); }
+      if (l.layer === 'semantics') {
+        if (l.understood) out.push(l.understood);
+        if (l.personal && l.personal.form) out.push('PPL · your preferred form');
+        if (l.label) out.push(l.label);
+      }
       else if (l.layer === 'memory' && (l.entries || []).length) out.push('S1 memory · ' + l.entries.length);
       else if (l.layer === 'records') out.push('S1 records: ' + (l.parts || []).join(', '));
       else if (l.layer === 'recall' && (l.refs || []).length) out.push('S2 earlier chats · ' + l.chats);
