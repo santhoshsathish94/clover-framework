@@ -45,7 +45,7 @@ LIVE = (r"\b(?:what(?:'?s|\s+is)|how(?:'?s|\s+is))\s+(?:the\s+)?weather\b|"
         r"(?:[^.?!\n]{0,30}\b(?:today|tonight|tomorrow|right\s+now|now|outside|in\s+[A-Z]\w+)\b)|"
         r"\bforecast\b(?![^.?!\n]{0,30}\b(?:work|sales|revenue|budget|demand|table|csv|excel)\b)|"
         r"\b(?:latest|today'?s|breaking|top|current|recent)\s+(?:news|headlines|updates?|events?|developments?)\b|"
-        r"\bwhat(?:'?s|\s+is)\s+(?:in\s+|the\s+)?news\b|\bnews\s+(?:today|about|on|in|from)\b|"
+        r"\bwhat(?:'?s|\s+is)\s+(?:in\s+|the\s+)?news\b|\bnews\s+today\b|"
         r"\b(?:stock|share)\s+prices?\b|\bexchange\s+rates?\b|"
         r"\b(?:price|rate|cost|value)\s+of\s+(?:bitcoin|btc|ethereum|eth|solana|gold|silver|oil|petrol|diesel)\b|"
         r"\b(?:bitcoin|btc|ethereum|eth|solana|gold|silver|petrol|diesel)\s+(?:price|rate|value)\b|"
@@ -519,7 +519,7 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
     caps = _caps(t, data)
     if not caps and not pleasant and not retry and not kinds and not attached:
         caps = _request_answered(t, history)
-    declined = _declined(runtime, t) if caps else set()
+    declined, csi_doc = _declined(runtime, t, with_doc=True) if caps else (set(), None)
     caps = [c for c in caps if c not in declined]
     names = runtime.names(caps)
     typed_paths = user_paths(t)
@@ -544,6 +544,7 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
                   web_cap=8 if "web.search" in caps else 3, social=pleasant,
                   reply=social_reply(pleasant, t) if pleasant else "", declined=sorted(declined), data=data,
                   runtime=runtime)
+    frame._csi = csi_doc
     if runtime.personal is not None and act in ("question", "concept", "action") and disc != "refuse":
         _personal(frame, runtime)
     return frame
@@ -693,32 +694,38 @@ def declined_caps(text, analysis):
     return declined - asked
 
 
-def _declined(runtime, text):
+def _declined(runtime, text, with_doc=False):
     """The capabilities a message declines: in CSI's reading (negated requests, "Don't search the web, just ..."; CSI
     on), and in the phrasings CSI v0.1r3 does not read as declining ("Without searching the web, ...", "No internet,
     just ..."; found in the 2026-11-03 Studio regression), with CSI on or off."""
     out = {cap for caps, pattern in DECLINES if re.search(pattern, text or "", re.I) for cap in caps}
     if runtime is None or runtime.csi is None or not text:
-        return out
-    return out | declined_caps(text, runtime.csi(text))
+        return (out, None) if with_doc else out
+    doc = runtime.csi(text)
+    res = out | declined_caps(text, doc)
+    return (res, doc) if with_doc else res
 
 
-def csi_reader(url, timeout=2.0):
-    """A Runtime.csi for a CSI service on this machine (research/semantic-interface/prototype/csi_service.py): text ->
-    CSI analysis, or None when it does not answer in time, and Clover then behaves as without CSI. Loopback only: a
-    message never leaves the machine for this."""
+def csi_reader(url, timeout=2.0, api_key=""):
+    """A Runtime.csi for a CSI service on this machine (research/semantic-interface/prototype/csi_service.py) or the
+    owner's k3 CSI endpoint on mobile: text -> CSI analysis, or None when it does not answer in time, and Clover then
+    behaves as without CSI."""
     import json
     import urllib.parse
     import urllib.request
     parts = urllib.parse.urlsplit(url)
-    if parts.scheme != "http" or parts.hostname not in ("127.0.0.1", "localhost", "::1"):
+    is_local = parts.scheme == "http" and parts.hostname in ("127.0.0.1", "localhost", "::1")
+    is_k3 = parts.scheme == "https" and parts.hostname == "api.cloverframework.com"
+    if not (is_local or is_k3):
         raise ValueError("the CSI service must be on this machine (http://127.0.0.1:<port>)")
-    endpoint = url.rstrip("/") + "/analyze"
+    endpoint = url.rstrip("/") + ("" if url.rstrip("/").endswith("/analyze") else "/analyze")
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))  # never through a proxy
+    hdrs = {"Content-Type": "application/json", "User-Agent": "CloverStudio/1.0"}
+    if api_key:
+        hdrs["X-Clover-Key"] = api_key
 
     def read(text):
-        req = urllib.request.Request(endpoint, data=json.dumps({"text": text}).encode("utf-8"),
-                                     headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(endpoint, data=json.dumps({"text": text}).encode("utf-8"), headers=hdrs)
         try:
             with opener.open(req, timeout=timeout) as r:
                 return json.loads(r.read().decode("utf-8"))

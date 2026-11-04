@@ -3002,7 +3002,7 @@ class CloverS23OnDeviceSystem:
         max_active_layer: int = 7,
         use_ncm_renderer: bool = True,
         enable_thinking: bool = False,
-        inject_latent_step_before_decode: bool = False,
+        inject_latent_step_before_decode: bool | None = None,
         allow_internet: bool = True,
         allow_python: bool = True,
         allow_files: bool = True,
@@ -3331,6 +3331,15 @@ class CloverS23OnDeviceSystem:
             if getattr(meaning, "guidance", ""):
                 # the person's preferred form of answer (personal.py): fixed wording, no user text
                 sys_prompt_str = f"{sys_prompt_str}<|im_start|>system\n{meaning.guidance}<|im_end|>\n"
+
+            if inject_latent_step_before_decode is None:
+                inject_latent_step_before_decode = bool(
+                    active_layer_cap >= 2
+                    and self.hybrid_ncm is not None
+                    and self.settings.get("layers", {}).get("hybridlink", True)
+                    and not offered_tools
+                    and not enable_thinking
+                )
 
             if inject_latent_step_before_decode:
                 assistant_open = "<|im_start|>assistant\n<think><latent>"
@@ -3718,7 +3727,11 @@ class CloverS23OnDeviceSystem:
             if active_media not in ("image", "video", "audio"):
                 active_media = "text"
 
-            if active_layer_cap >= 3 and use_ncm_renderer and self.hybrid_ncm is not None and active_media == "text":
+            is_code_block_reply = (
+                reply_text.lstrip().startswith("```")
+                or bool(compiler_report and compiler_report.get("checked_blocks") and ("def " in reply_text or "```" in reply_text))
+            )
+            if active_layer_cap >= 3 and use_ncm_renderer and self.hybrid_ncm is not None and active_media == "text" and not is_code_block_reply:
                 rendered_ncm, out_ids, ncm_meta = self.hybrid_ncm.render_plan_through_11level_ncm(
                     reply_text,
                     precomputed_h_seq=active_h_seq,
@@ -3731,7 +3744,12 @@ class CloverS23OnDeviceSystem:
                 tools_used.append("layer3_11level_ncm_pointer_decoder")
             else:
                 out_ids = self.tokenizer.encode(reply_text, allow_special=False)
-                layer_trace["layer3_11level_ncm"] = {"enabled": False}
+                layer_trace["layer3_11level_ncm"] = {
+                    "enabled": bool(active_layer_cap >= 3 and use_ncm_renderer),
+                    "ncm_active": False,
+                    "skipped_code_block": bool(is_code_block_reply),
+                    "emitted_tokens": len(out_ids),
+                }
 
             # ------------------------------------------------------------------
             # 7. S2 Post-Generation Grounding Audit (Real Boolean Check, No Regex Rewriting)

@@ -98,8 +98,9 @@ FORMS = (
                         r"paragraphs)\b|\bwritten\s+as\s+prose\b"),
     ("format", "table", r"\b(?:as|in|into)\s+a\s+table\b|\bmake\s+it\s+a\s+table\b|\btables\b|\btabular\b"),
     ("format", "bullets", r"\bbullet(?:ed)?(?:\s+(?:points?|list))?\b|\bbullets\b|\bas\s+a\s+list\b"),
-    ("length", "short", r"\bshorter\b|\btoo\s+long\b|\b(?:brief|briefer|concise)\b|\bkeep\s+it\s+short\b|"
-                        r"\bshort\s+answers?\b|\btl;?\s*dr\b|\btrim\s+it\b"),
+    ("length", "short", r"\bshorter\b|\btoo\s+long\b|\b(?:brief|briefer|concise)\b|"
+                        r"\bkeep\s+(?:(?:your\s+|the\s+|my\s+)?(?:answers?|responses?|replies)|it)\s+short\b|"
+                        r"\bshort\s+(?:answers?|responses?|replies)\b|\btl;?\s*dr\b|\btrim\s+it\b"),
     ("length", "long", r"\bmore\s+detail(?:ed|s)?\b|\blonger\b|\bin\s+(?:more\s+)?depth\b|\bgo\s+into\s+(?:more\s+)?"
                        r"(?:depth|detail)\b|\bdetailed\s+answers?\b|\bthorough(?:\s+answers?)?\b|\belaborate\b"),
     ("confirm", "ask", r"\bask\s+(?:me\s+)?(?:first|before)\b|\bcheck\s+with\s+me\b|\bconfirm\s+(?:first|with\s+me|before)\b"),
@@ -125,8 +126,12 @@ GUIDE = {("format", "bullets"): "use bullet points", ("format", "table"): "use a
          ("options", "several"): "offer a few options", ("options", "one"): "give one recommendation",
          ("confirm", "ask"): "check with them before doing anything that changes files or the system"}
 PREF_INTRO = re.compile(r"^\W*(?:i\s+(?:really\s+)?(?:prefer|like|love|want)|i\s+(?:don'?t|do\s+not)\s+(?:need|want|like)|"
-                        r"always|never|from\s+now\s+on|in\s+(?:the\s+)?future|please\s+always|no\s+need|show\s+me\s+a\s+plan|"
-                        r"just\s+give\s+me|sources\s+aren'?t|you\s+don'?t\s+need)\b", re.I)
+                        r"always|never|from\s+now\s+on|in\s+(?:the\s+)?future|please\s+(?:always|keep|use|be|give|write|show|include|skip|leave)|"
+                        r"no\s+need|show\s+me\s+a\s+plan|just\s+give\s+me|sources\s+aren'?t|you\s+don'?t\s+need|"
+                        r"keep\s+(?:your\s+|the\s+|my\s+)?(?:answers?|responses?|replies|it)\s+(?:short|brief|concise|detailed|long)\b|"
+                        r"use\s+(?:bullet(?:\s+points?)?|bullets|tables?|plain\s+(?:text|sentences)|prose)\b|"
+                        r"be\s+(?:brief|concise|short|thorough|detailed)\b|"
+                        r"give\s+(?:short|brief|concise|detailed|thorough)\s+(?:answers?|responses?)\b)", re.I)
 STATEMENTS = (re.compile(r"^\W*(?:when|if)\s+i\s+(?:just\s+)?say\s+(?P<x>.+?),?\s+i\s+mean\s+(?P<y>.+?)\W*$", re.I),
               re.compile(r"^\W*(?P<x>[^.?!]+?)\s+means\s+(?P<y>[^.?!]+?)\W*$", re.I))
 TYPE_WORDS = {"link": "has=url", "url": "has=url", "website": "has=url", "page": "has=url", "file": "has=path",
@@ -149,7 +154,7 @@ def form_requests(text):
 def form_feedback(text):
     """A short message that only asks for another form of the last answer ("Shorter, please.", "As a table")."""
     t = text or ""
-    if len(WORD.findall(t)) > 12 or semantics.asked_caps(t):
+    if len(WORD.findall(t)) > 20 or semantics.asked_caps(t):
         return {}
     return form_requests(t)
 
@@ -318,6 +323,8 @@ class Learner:
         if not pool and self.p["apply_provisional"]:
             pool = [h for h in matches if h.precision() >= 0.5]
         if not pool:
+            pool = [h for h in matches if h.origin == "statement" and not h.contra and h.precision() >= 0.5]
+        if not pool:
             return None
         return max(pool, key=lambda h: (len(h.trigger), h.precision(), len(h.support), -h.id))
 
@@ -381,7 +388,8 @@ class Store:
 
     def __init__(self, root, filter_repo=None):
         self.dir = Path(root)
-        self.filter_repo = find_filter_repo() if filter_repo is None else (list(filter_repo) or None)
+        self.git = shutil.which("git")
+        self.filter_repo = (find_filter_repo() if filter_repo is None else (list(filter_repo) or None)) if self.git else None
         if not (self.dir / ".git").exists():
             if self.dir.exists() and any(self.dir.iterdir()):
                 raise ValueError(f"{self.dir} is neither empty nor a personal store")
@@ -389,6 +397,7 @@ class Store:
             self._init()
         salt = self.dir / ".git" / "ppl-salt"
         if not salt.exists():
+            salt.parent.mkdir(parents=True, exist_ok=True)
             salt.write_text(os.urandom(16).hex())
         self.salt = salt.read_text().strip()
 
@@ -398,15 +407,20 @@ class Store:
         return self.dir / ".git" / "ppl-learning-off"
 
     def _git(self, *args):
-        r = subprocess.run(["git", "-C", str(self.dir), "-c", "core.hooksPath=", *args], capture_output=True)
+        if not self.git:
+            return b""
+        r = subprocess.run([self.git, "-C", str(self.dir), "-c", "core.hooksPath=", *args], capture_output=True)
         if r.returncode != 0:
             raise RuntimeError(f"git {args[0]}: {r.stderr.decode(errors='replace').strip()}")
         return r.stdout
 
     def _init(self):
-        self._git("init", "-q")
-        for k, v in (("user.name", "Clover"), ("user.email", "clover@localhost"), ("commit.gpgsign", "false")):
-            self._git("config", k, v)
+        if self.git:
+            self._git("init", "-q")
+            for k, v in (("user.name", "Clover"), ("user.email", "clover@localhost"), ("commit.gpgsign", "false")):
+                self._git("config", k, v)
+        else:
+            (self.dir / ".git").mkdir(parents=True, exist_ok=True)
         for name, value in (("retention.json", {}), ("tombstones.json", [])):
             if not (self.dir / name).exists():
                 self._write(name, value)
@@ -422,6 +436,8 @@ class Store:
         return json.loads(path.read_text(encoding="utf-8")) if path.exists() else default
 
     def _commit(self, message, paths):
+        if not self.git:
+            return
         self._git("add", "-A", "--", *paths)
         if self._git("status", "--porcelain", "--", *paths).strip():
             self._git("commit", "-q", "-m", message)
@@ -497,9 +513,12 @@ class Store:
         """A new repository holding only what remains: no commit, reflog entry or object keeps the deleted experience."""
         off = self.learning_off.exists()
         _remove_tree(self.dir / ".git")
-        self._git("init", "-q")
-        for k, v in (("user.name", "Clover"), ("user.email", "clover@localhost"), ("commit.gpgsign", "false")):
-            self._git("config", k, v)
+        if self.git:
+            self._git("init", "-q")
+            for k, v in (("user.name", "Clover"), ("user.email", "clover@localhost"), ("commit.gpgsign", "false")):
+                self._git("config", k, v)
+        else:
+            (self.dir / ".git").mkdir(parents=True, exist_ok=True)
         (self.dir / ".git" / "ppl-salt").write_text(self.salt)
         if off:
             self.learning_off.write_text("off")
@@ -510,8 +529,8 @@ class Store:
     def find(self, strings, where=None):
         """Strings found in any object of a repository (reachable or not), in its other git files or its working tree."""
         root = Path(where) if where else self.dir
-        blob = subprocess.run(["git", "-C", str(root), "cat-file", "--batch-all-objects", "--batch"],
-                              capture_output=True).stdout
+        blob = (subprocess.run([self.git, "-C", str(root), "cat-file", "--batch-all-objects", "--batch"],
+                               capture_output=True).stdout if self.git else b"")
         for p in root.rglob("*"):
             if p.is_file() and p.relative_to(root).parts[:2] != (".git", "objects"):
                 blob += p.read_bytes()
@@ -551,9 +570,8 @@ class Personal:
             return self.learning
 
     # ---- reading a message ----
-    def _features(self, text):
-        analysis = None
-        if self.csi is not None:
+    def _features(self, text, analysis=None):
+        if analysis is None and self.csi is not None:
             try:
                 analysis = self.csi(text)
             except Exception:
@@ -570,7 +588,7 @@ class Personal:
         with self.lock:
             if not self.learning:
                 return None
-            feats = self._features(text)
+            feats = self._features(text, analysis=getattr(frame, "_csi", None))
             general = sorted(frame.caps)
             out = {"general": general, "features": sorted(trigger_features(feats))}
             h = self.learner.interpret(feats)
@@ -597,7 +615,7 @@ class Personal:
             p = frame.personal or {}
             feats = p.get("features")
             if feats is None:
-                feats = sorted(trigger_features(self._features(frame.text)))
+                feats = sorted(trigger_features(self._features(frame.text, analysis=getattr(frame, "_csi", None))))
             self.pending[session_name(session)] = {
                 "session": session_name(session), "time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "context": self.device, "text": frame.text, "pfeats": feats,
@@ -613,26 +631,37 @@ class Personal:
         """A new message in `session`: what it shows about the previous answer, and any statement it makes."""
         with self.lock:
             if not self.learning:
-                return
+                return []
+            changes = []
             prev = self.pending.pop(session_name(session), None)
             for st in self._statements(text):
                 self._record(session, {"context": self.device, "text": text, "pfeats": [], "general": None,
                                        "resolved": None, "statement": st, "how": "statement"})
+                if st.get("pref"):
+                    changes.append(f"personal preference: {st['pref'][0]}={st['pref'][1]}")
+                elif st.get("target"):
+                    words = [a[4:] for a in st.get("anchors") or [] if a.startswith("tok=")]
+                    meant = ", ".join(dict.fromkeys(CAP_WORDS.get(c, c) for c in st["target"]))
+                    changes.append(f"personal habit: {' '.join(words)} -> {meant}")
             if prev is None:
-                return
+                return changes
             if retry == "said":
                 detail = C.user_detail(text)
                 caps = semantics.asked_caps(detail) if detail else []
                 forms = form_requests(detail) if detail else {}
                 if caps:
                     self._resolve(prev, sorted(caps), text, "corrected", forms)
+                    changes.append("personal: learned from correction")
                 elif forms:
                     self._resolve(prev, prev["first"]["target"], text, "another form", forms)
+                    changes.append("personal: learned preferred form")
                 elif prev["first"]["source"] == "personal":
                     self._reject(prev, text)
+                    changes.append("personal: retired contested reading")
             elif retry:
                 if prev["first"]["source"] == "personal":
                     self._reject(prev, text)
+                    changes.append("personal: retired contested reading")
             elif {"thanks", "ack"} & set(semantics.social(text)):
                 self._resolve(prev, prev["first"]["target"], text, "accepted")
             else:
@@ -640,10 +669,13 @@ class Personal:
                 caps = semantics.asked_caps(m.group("rest")) if m else []
                 if caps:
                     self._resolve(prev, sorted(caps), text, "corrected", form_requests(m.group("rest")))
-                    return
+                    changes.append("personal: learned from correction")
+                    return changes
                 forms = form_feedback(text)
                 if forms:
                     self._resolve(prev, prev["first"]["target"], text, "another form", forms)
+                    changes.append("personal: learned preferred form")
+            return changes
 
     def helpful(self, session, turn=None):
         """The Helpful button on the last answer."""
