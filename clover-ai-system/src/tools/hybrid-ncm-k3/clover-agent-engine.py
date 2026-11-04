@@ -1617,6 +1617,10 @@ class CloverK3AgentEngine:
         3. Synthesizes the multi-window plan (`plans`) and checks symbolic constraints.
         """
         ont_enabled = self.enable_ontology if use_ontology is None else bool(use_ontology)
+        if "[VERIFIED_STUDIO_DRAFT]\n" in user_prompt:
+            q_part, draft = user_prompt.split("[VERIFIED_STUDIO_DRAFT]\n", 1)
+            plans = parse_and_split_plans("W1: " + draft.strip(), q_part.strip(), self.k3_tok, max_bpe=32, max_windows=24)
+            return (plans or [draft.strip()[:240]]), 1, "studio_tool_verified", []
         tool_calls_log = []
         tool_obs_parts = []
         no_mem_graph = "[NO_MEMORY_GRAPH]" in user_prompt
@@ -2276,6 +2280,9 @@ class CloverK3AgentEngine:
                             "if you want more technical details", "this should give you a clear understanding",
                             "this is a concise explanation", "i'll use the `w1:`", "i will use the `w1:`",
                             "this sentence is concise", "this sentence captures",
+                            "i am ready to assist", "i'm here to assist", "i am here to assist",
+                            "just let me know how i can help", "let me know if you have any",
+                            "feel free to ask if you", "if you have any more questions",
                         )
                     ):
                         gen_ids = self.ha_tok.encode("\n".join(lines[:-1]), add_special_tokens=False)

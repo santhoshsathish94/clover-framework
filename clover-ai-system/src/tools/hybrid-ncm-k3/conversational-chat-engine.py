@@ -197,6 +197,8 @@ def parse_and_split_plans(raw_text: str, user_prompt: str, k3_tok, max_bpe: int 
         "\nYour message is straightforward, so a single", "\nA single `W1:` line is sufficient",
         "\nwhich aligns with the character description",
         "\nThis sentence is concise", "\nThis sentence captures", "\nThis rewritten sentence",
+        "\nI am ready to assist", "\nI'm here to assist", "\nI am here to assist",
+        "\nJust let me know how I can help", "\nFeel free to ask if you",
     ):
         if stop_marker in raw_text:
             raw_text = raw_text.split(stop_marker)[0]
