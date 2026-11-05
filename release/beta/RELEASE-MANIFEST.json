@@ -9,7 +9,10 @@
   "urls": {
     "website": "https://cloverframework.com/",
     "privacy_policy": "https://cloverframework.com/privacy/",
-    "support": "https://github.com/santhoshsathish94/clover-framework/issues"
+    "support": "https://github.com/santhoshsathish94/clover-framework/issues",
+    "google_play_instant_test": "https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNSPFXvNv9YJ1OJ-XFOu9-yvn426Zr96E5mzhOB_BZu9EuNBqaneLe4O-JmP-vqDpXMW7CVorobgC3AQiGM9",
+    "google_play_closed_beta_web": "https://play.google.com/apps/testing/ai.clover.studio",
+    "google_play_store_listing": "https://play.google.com/store/apps/details?id=ai.clover.studio"
   },
   "android": {
     "store": "Google Play Console (Closed Testing)",
