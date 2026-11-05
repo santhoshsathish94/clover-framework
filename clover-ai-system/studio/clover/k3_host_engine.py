@@ -559,6 +559,7 @@ class K3HostEngine:
             self.omni.turn_images = self.turn_images
             tool_Events = []
             sys_txt = system or self.system_prompt(bool(tools), only_tools)
+            emit({"type": "plan", "round": 1, "stage": "drafting", "model": self.spec["model"]})
             res_omni = self.omni.run_turn(
                 history, user_text, tools=tools, sampling=sampling, thinking=thinking, max_new=max_new,
                 max_rounds=max_rounds, on_event=lambda ev: tool_Events.append(ev) if ev.get("type") == "token" and ev.get("kind") == "answer" else emit(ev),
@@ -571,6 +572,8 @@ class K3HostEngine:
             if omni_reply and not (cancel and cancel.is_set()):
                 try:
                     t0 = time.perf_counter()
+                    emit({"type": "plan", "round": 1, "stage": "k3_synthesis", "model": self.spec["model"],
+                          "full_name": self.spec.get("full_name") or self.spec["model"]})
                     bullet_lines = [ln.strip() for ln in omni_reply.splitlines() if re.match(r"^\s*[-*•]\s+\S", ln)]
                     draft_for_k3 = omni_reply
                     if bullet_lines:
@@ -599,9 +602,11 @@ class K3HostEngine:
                     if plans:
                         emit({"type": "token", "round": 1, "kind": "thinking", "text": "\n".join(plans)})
                     k3_exp = wr.get("k3_experts") or {}
+                    k3_ms = round((time.perf_counter() - t0) * 1000)
+                    emit({"type": "plan", "round": 1, "stage": "k3_done", "model": self.spec["model"], "ms": k3_ms})
                     res_omni.setdefault("layers", []).append({
                         "layer": "ncm", "windows": max(1, len(plans)), "model": self.spec["model"],
-                        "ms": round((time.perf_counter() - t0) * 1000),
+                        "ms": k3_ms,
                         "used_k3_reply": used_k3,
                         "c_engine_ms": k3_exp.get("c_engine_ms") or k3_exp.get("k3_moe_ms"),
                     })
@@ -619,6 +624,7 @@ class K3HostEngine:
                 if block:
                     blocks.append(block)
                     layer_log.append(info)
+                    emit(dict(info, type="layer"))
         before = []
         if "recall" in layers and kit is not None:
             block, info = kit.recall_context(query, sum(1 for m in history or () if m.get("role") == "user"))
@@ -626,15 +632,20 @@ class K3HostEngine:
                 before.append(block)
             if info:
                 layer_log.append(info)
+                if info.get("refs"):
+                    emit(dict(info, type="layer"))
         if meaning is not None and getattr(meaning, "guidance", ""):
             before.append(meaning.guidance)
         full_prompt = "\n\n".join(before + [user_text] + blocks)
 
         emit({"type": "round", "round": 1})
+        emit({"type": "plan", "round": 1, "stage": "k3_synthesis", "model": self.spec["model"],
+              "full_name": self.spec.get("full_name") or self.spec["model"]})
         t0 = time.perf_counter()
         with self.lock:
             wr = self._call_worker("k3-" + uuid.uuid4().hex[:10], full_prompt, history, media=media)
         wall_s = round(time.perf_counter() - t0, 2)
+        emit({"type": "plan", "round": 1, "stage": "k3_done", "model": self.spec["model"], "ms": round(wall_s * 1000)})
         plans = wr.get("plans") or []
         if plans:
             emit({"type": "token", "round": 1, "kind": "thinking", "text": "\n".join(str(p) for p in plans)})
@@ -646,9 +657,12 @@ class K3HostEngine:
             tid = "call_" + uuid.uuid4().hex[:12]
             targs = {"query": tc.get("input")} if tname == "web_search" else {"code": tc.get("input")}
             tres = str(tc.get("result") or "")[:3000]
+            worked, summary = N.tool_worked(tname, True, tres, "k3 agent loop")
             emit({"type": "tool_call", "id": tid, "name": tname, "arguments": targs})
-            emit({"type": "tool_result", "id": tid, "name": tname, "ran": True, "why": "k3 agent loop", "result": tres})
-            rounds.append({"tool": tname, "arguments": targs, "ran": True, "why": "k3 agent loop", "result": tres[:2000]})
+            emit({"type": "tool_result", "id": tid, "name": tname, "ran": True, "worked": worked, "summary": summary,
+                  "why": "k3 agent loop", "result": tres})
+            rounds.append({"tool": tname, "arguments": targs, "ran": True, "worked": worked, "summary": summary,
+                           "why": "k3 agent loop", "result": tres[:2000]})
         self._save_worker_media(wr.get("media"))
         reply = _clean_reply(wr.get("reply") or "")
         if "ontology" in layers and kit is not None:

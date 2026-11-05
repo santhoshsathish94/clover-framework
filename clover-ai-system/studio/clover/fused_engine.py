@@ -196,8 +196,11 @@ class FusedEngine:
         # records after the question; recall and the user's preferred form before it (the runtime takes no system
         # messages). The first regression run had none of them: "When is my sister Anjali's birthday?" after it was
         # remembered got "I don't have access to personal information" (2026-11-03). Not ported: the compiler check.
+        emit = on_event or (lambda e: None)
         query = layer_query or prompt
         after, layer_log = self._context(layers, kit, query)
+        for info in layer_log:
+            emit(dict(info, type="layer"))
         before = []
         if kit is not None and "recall" in layers:
             block, info = kit.recall_context(query, sum(1 for m in hist or () if m.get("role") == "user"))
@@ -205,9 +208,14 @@ class FusedEngine:
                 before.append(block)
             if info:
                 layer_log.append(info)
+                if info.get("refs"):
+                    emit(dict(info, type="layer"))
         if meaning is not None and getattr(meaning, "guidance", ""):
             before.append(meaning.guidance)
+        emit({"type": "plan", "round": 1, "stage": "fused_c1_c2_c3", "model": "LFM3-Omni-2B"})
         ans = self._ask("\n\n".join(before + [prompt] + after), hist, max_new)
+        emit({"type": "plan", "round": 1, "stage": "fused_done", "model": "LFM3-Omni-2B",
+              "ms": round((ans.get("seconds") or 0) * 1000)})
         reply = ans.get("reply") or ""
         if "ontology" in layers and kit is not None:
             reply, changed = kit.grounding_filter(query, reply)

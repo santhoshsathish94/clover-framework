@@ -66,26 +66,42 @@ class FakeEngine:
         return text, False
 
     def run_turn(self, history, user_text, *, on_event=None, ask=None, cancel=None, allow=(), layers=(), **kw):
+        import lfm3_native as N
         emit = on_event or (lambda e: None)
-        self.stage = {"name": "writing", "since": time.time()}
+        self.stage = {"name": "thinking", "since": time.time()}
         log, low = [], user_text.lower()
         if "memory" in layers:
-            log.append({"layer": "memory", "entries": ["m1", "m2"]})
+            info = {"layer": "memory", "entries": ["m1", "m2"]}
+            log.append(info)
+            emit(dict(info, type="layer"))
         if "recall" in layers:
-            log.append({"layer": "recall", "refs": ["sessions/2026-10/c1.jsonl#1:user"], "chats": 1})
+            info = {"layer": "recall", "refs": ["sessions/2026-10/c1.jsonl#1:user"], "chats": 1}
+            log.append(info)
+            emit(dict(info, type="layer"))
+        emit({"type": "plan", "round": 1, "stage": "planning", "tools": kw.get("only_tools") or []})
+        if kw.get("thinking", True):
+            emit({"type": "token", "round": 1, "kind": "thinking",
+                  "text": "Understanding the request and checking which local tools and context notes apply."})
+            time.sleep(0.15)
         reply = "Hello from the harness. You said: " + user_text[:80]
         if "run" in low:
+            emit({"type": "plan", "round": 1, "stage": "preparing_tool", "tool": "run_powershell"})
             emit({"type": "tool_call", "id": "t1", "name": "run_powershell", "arguments": {"command": "Get-Date"}})
             mode = self.perms.get()["shell"]
             ok = "shell" in allow or mode == "allow" or (
                 mode == "ask" and ask is not None and ask("shell", "Get-Date\n(in C:\\Users\\you, up to 60 s)"))
-            emit({"type": "tool_result", "id": "t1", "name": "run_powershell", "ran": ok,
-                  "why": "allowed" if ok else "not allowed", "result": "Saturday 31 October 2026 22:00" if ok else ""})
+            res_txt = "Error: Command failed [exit 1]" if "fail" in low else ("Saturday 31 October 2026 22:00" if ok else "")
+            worked, summary = N.tool_worked("run_powershell", ok, res_txt, "allowed" if ok else "not allowed")
+            emit({"type": "tool_result", "id": "t1", "name": "run_powershell", "ran": ok, "worked": worked,
+                  "summary": summary, "why": "allowed" if ok else "not allowed", "result": res_txt})
             emit({"type": "round", "round": 2})
-            reply = "The date is Saturday, 31 October 2026." if ok else "I could not run the command."
+            emit({"type": "plan", "round": 2, "stage": "reviewing"})
+            reply = "The date is Saturday, 31 October 2026." if (ok and worked) else "I could not run the command."
         if "code" in low:
             reply += "\n\n```python\nprint(2 ** 64)\n```"
-            log.append({"layer": "compiler", "checked": True, "ok": True})
+            c_info = {"layer": "compiler", "checked": True, "ok": True}
+            log.append(c_info)
+            emit(dict(c_info, type="layer"))
         if "picture" in low:  # the real generate_image tool from server.lfm3_turn, under the real permission store
             tool = self._extra.get("generate_image") if hasattr(self, "_extra") else None
             if tool is None:

@@ -336,7 +336,7 @@ class OmniNative(N.LFM3Native):
         super().close()
 
     # ---------------- generation ----------------
-    def _chat(self, msgs, schemas, max_new, by_name, on_delta=None, cancel=None, seed=0, tool_choice=None):
+    def _chat(self, msgs, schemas, max_new, by_name, on_delta=None, cancel=None, seed=0, tool_choice=None, on_plan=None):
         """One assistant message through /v1/chat/completions -> (content, calls, stats)."""
         body = dict(GREEDY, messages=msgs, max_tokens=int(max_new), seed=int(seed), cache_prompt=True)
         if schemas:
@@ -344,10 +344,11 @@ class OmniNative(N.LFM3Native):
             if tool_choice:
                 body["tool_choice"] = tool_choice
         content, acc, finish, tm = "", {}, None, {}
+        planned_tools = set()
         t0 = time.perf_counter()
         t_first = None
         looped, checked, cut = False, 0, None
-        self.stage = {"name": "reading", "since": time.time()}
+        self.stage = {"name": "planning" if tool_choice else "reading", "since": time.time()}
         stream = self.gpu.chat_stream(body, cancel)
         try:
             for ev in stream:
@@ -360,9 +361,17 @@ class OmniNative(N.LFM3Native):
                     if d.get("content") or d.get("tool_calls"):
                         if t_first is None:
                             t_first = time.perf_counter()
-                            self.stage = {"name": "writing", "since": time.time()}
+                            self.stage = {"name": "planning tool call" if (tool_choice or d.get("tool_calls")) else "writing",
+                                          "since": time.time()}
                     if d.get("content"):
                         content += d["content"]
+                        if "<function=" in content and on_plan:
+                            for fm in re.finditer(r"<function=([^>\s]+)>", content):
+                                tname = fm.group(1)
+                                if tname not in planned_tools:
+                                    planned_tools.add(tname)
+                                    self.stage = {"name": f"preparing {tname}", "since": time.time()}
+                                    on_plan(tname)
                         if on_delta:
                             on_delta(d["content"], content)
                         if len(content) - checked >= 200:
@@ -375,6 +384,11 @@ class OmniNative(N.LFM3Native):
                         fn = tc.get("function") or {}
                         slot["name"] += fn.get("name") or ""
                         slot["arguments"] += fn.get("arguments") or ""
+                        if slot["name"] and slot["name"] in by_name and slot["name"] not in planned_tools:
+                            planned_tools.add(slot["name"])
+                            self.stage = {"name": f"preparing {slot['name']}", "since": time.time()}
+                            if on_plan:
+                                on_plan(slot["name"])
                     finish = ch.get("finish_reason") or finish
                 if looped:  # closing the stream stops llama-server; one copy of the repeated text is kept
                     tail = content[-LOOP_TAIL:]
@@ -464,6 +478,7 @@ class OmniNative(N.LFM3Native):
                 if block:
                     blocks.append(block)
                     layer_log.append(info)
+                    emit(dict(info, type="layer"))
         if blocks:  # Clover appends its observations after the question
             user_text = user_text + "\n\n" + "\n\n".join(blocks)
         recall = []
@@ -473,6 +488,8 @@ class OmniNative(N.LFM3Native):
                 recall.append({"role": "system", "content": block})
             if info:
                 layer_log.append(info)
+                if info.get("refs"):
+                    emit(dict(info, type="layer"))
         if meaning is not None and getattr(meaning, "guidance", ""):
             # the user's preferred form of answer (personal.py, off by default): fixed wording, no user text
             recall.append({"role": "system", "content": meaning.guidance})
@@ -490,13 +507,13 @@ class OmniNative(N.LFM3Native):
         rounds, final, stats_all = [], "", []
         done_calls = {}  # (name, args) -> first result: the Omni repeated identical searches 3 times in a test
 
-        def delta_cb(round_no):
+        def delta_cb(round_no, kind="answer"):
             shown = {"n": 0}
 
             def on_delta(delta, text):
                 visible = TOOL_XML.sub("", text)
                 if len(visible) > shown["n"]:
-                    emit({"type": "token", "round": round_no, "kind": "answer", "text": visible[shown["n"]:]})
+                    emit({"type": "token", "round": round_no, "kind": kind, "text": visible[shown["n"]:]})
                     shown["n"] = len(visible)
             return on_delta
 
@@ -508,6 +525,8 @@ class OmniNative(N.LFM3Native):
                         fb, info = kit.compiler_check(query, final)
                         layer_log.append(info)
                         if not fb or (cancel and cancel.is_set()):
+                            if info.get("checked") and not fb:
+                                emit({"type": "layer", "layer": "compiler", "checked": True, "ok": True})
                             if not fb and first_compiler_fb:
                                 layer_log.append({
                                     "layer": "cycle", "action": "compiler_repaired",
@@ -517,7 +536,7 @@ class OmniNative(N.LFM3Native):
                             break
                         if first_compiler_fb is None:
                             first_compiler_fb = fb
-                        emit({"type": "layer", "layer": "compiler", "feedback": fb})
+                        emit({"type": "layer", "layer": "compiler", "checked": True, "ok": False, "feedback": fb})
                         msgs.append({"role": "assistant", "content": final})
                         msgs.append({"role": "user", "content": "The Clover compiler checked the code in your answer and "
                                      "reported:\n" + fb + "\nFix the problem and reply with the complete corrected code."})
@@ -532,10 +551,15 @@ class OmniNative(N.LFM3Native):
                             schemas = []
                         # asked for a tool (only_tools set): told to use it, the Omni still answered from memory
                         forced = "required" if only_tools and schemas and r == 0 and attempt == 0 else None
+                        if r == 0 and attempt == 0 and only_tools:
+                            emit({"type": "plan", "round": r + 1, "stage": "planning", "tools": list(only_tools)})
+                        elif r > 0:
+                            emit({"type": "plan", "round": r + 1, "stage": "reviewing"})
                         content, calls, st = self._chat(
                             msgs, schemas, max_new, by_name,
-                            None if forced else delta_cb(r + 1), cancel,
+                            delta_cb(r + 1, "thinking" if forced else "answer"), cancel,
                             seed + 100 * attempt + r, forced,
+                            on_plan=lambda tname, rn=r + 1: emit({"type": "plan", "round": rn, "stage": "preparing_tool", "tool": tname}),
                         )
                         stats_all.append(st)
                         if forced and calls and ASKS_USER.search(content[-400:]) and any(
@@ -571,10 +595,11 @@ class OmniNative(N.LFM3Native):
                                 else:
                                     ran, result, why = self.execute_tool(c["name"], c["arguments"], ask, allow)
                                     done_calls[key] = result
-                                emit({"type": "tool_result", "id": c["id"], "name": c["name"], "ran": ran, "why": why,
-                                      "result": result[:3000]})
-                                rounds.append({"tool": c["name"], "arguments": c["arguments"], "ran": ran, "why": why,
-                                               "result": result[:2000]})
+                                worked, summary = N.tool_worked(c["name"], ran, result, why)
+                                emit({"type": "tool_result", "id": c["id"], "name": c["name"], "ran": ran, "worked": worked,
+                                      "summary": summary, "why": why, "result": result[:3000]})
+                                rounds.append({"tool": c["name"], "arguments": c["arguments"], "ran": ran, "worked": worked,
+                                               "summary": summary, "why": why, "result": result[:2000]})
                                 msgs.append({"role": "tool", "tool_call_id": c["id"], "content": result})
                             continue
                         final = content.strip()

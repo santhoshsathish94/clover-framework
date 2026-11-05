@@ -5265,6 +5265,8 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                         allow_py_s = allow_py and ("python_interpreter" in req_tools)
                         emit_sse(dict(frame.layer(), type="semantics"))
                         emit_sse({"type": "tools", "offered": req_tools, "mode": tools_mode})
+                        if frame.act != "social":
+                            emit_sse({"type": "plan", "round": 1, "stage": "planning", "tools": req_tools if only is not None else []})
 
                         want_pic = "generate_image" in frame.asked
                         if frame.act == "social":
@@ -5358,13 +5360,20 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     l5 = lt.get("layer5_ontology_and_verifier") or {}
                     l6 = lt.get("layer6_generative_compiler") or {}
 
+                    if l4.get("injected_into_model_prompt") and l4.get("entries"):
+                        emit_sse({"type": "layer", "layer": "memory", "entries": [e.get("id") for e in l4["entries"]]})
+                    if l5.get("injected_into_model_prompt"):
+                        emit_sse({"type": "layer", "layer": "ontology", "n_evidence": l5.get("ontology_hits", 1)})
                     if l2.get("tool_executed"):
                         tex = l2["tool_executed"]
                         t_ui_name = "run_python" if tex == "python_interpreter" else "run_powershell" if tex == "run_shell" else tex
                         t_arg = l2.get("python_code") or l2.get("search_query") or l2.get("shell_command") or ""
                         t_out = l2.get("python_output") or l2.get("observation_preview") or ""
+                        t_s = str(t_out or "").strip()
+                        t_worked = not (t_s.startswith(("Error:", "Not run:")) or "Traceback (most recent call last):" in t_s)
+                        t_sum = (t_s.splitlines()[-1] if "Traceback" in t_s else (t_s.splitlines()[0] if t_s else "Completed"))[:96]
                         emit_sse({"type": "tool_call", "id": "t_exec", "name": t_ui_name, "arguments": {"command": t_arg}})
-                        emit_sse({"type": "tool_result", "id": "t_exec", "name": t_ui_name, "ran": True, "why": "allowed", "result": t_out})
+                        emit_sse({"type": "tool_result", "id": "t_exec", "name": t_ui_name, "ran": True, "worked": t_worked, "summary": t_sum, "why": "allowed", "result": t_out})
                         emit_sse({"type": "round", "round": 2})
 
                     # Stream thinking tokens if thinking / latent steps occurred

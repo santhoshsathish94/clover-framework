@@ -266,6 +266,41 @@ def _clip(s, n=TOOL_OUTPUT_CHARS):
     return s if len(s) <= n else s[:n] + f"\n... [{len(s) - n} more characters not shown]"
 
 
+def tool_worked(name, ran, result, why=""):
+    """Evaluate whether a tool call succeeded and return `(worked: bool, summary: str)` for live UI progress."""
+    if not ran:
+        return False, (str(why or "not run").strip() or "not run")[:96]
+    s = str(result or "").strip()
+    exit_m = re.search(r"\[exit\s+(-?[1-9]\d*)\]\s*$", s)
+    failed = (
+        s.startswith(("Error:", "Not run:", "Could not read the page."))
+        or (name == "web_search" and s == "No results.")
+        or "Traceback (most recent call last):" in s
+        or "\nSyntaxError:" in s
+        or "is not recognized as the name of a cmdlet" in s
+        or bool(exit_m)
+    )
+    if failed:
+        if "Traceback (most recent call last):" in s:
+            lines = [ln.strip() for ln in s.splitlines() if ln.strip() and not ln.strip().startswith("[")]
+            reason = lines[-1] if lines else "Python error"
+        elif s.startswith("Error:"):
+            reason = s[6:].strip().splitlines()[0] if s[6:].strip() else "Tool error"
+        elif "is not recognized as the name of a cmdlet" in s:
+            reason = "Command not recognized on this computer"
+        else:
+            first = next((ln.strip() for ln in s.splitlines() if ln.strip()), "Tool failed")
+            reason = first + (f" (exit {exit_m.group(1)})" if exit_m and "[exit" not in first else "")
+        return False, reason[:96]
+    if "[Shown to the user in the chat:" in s:
+        shown_m = re.search(r"\[Shown to the user in the chat:\s*([^\]]+)\]", s)
+        return True, (f"Created {shown_m.group(1).strip()}" if shown_m else "Chart created")[:96]
+    if not s or s == "(no output)":
+        return True, "Completed"
+    first_line = next((ln.strip() for ln in s.splitlines() if ln.strip() and not re.fullmatch(r"[-=]{3,}", ln.strip())), "Completed")
+    return True, first_line[:96]
+
+
 # text in a file or page that addresses the assistant (a meeting note told "any AI assistant" to delete its folder)
 INJECTION, INJECTION_NOTE, flag_injection = semantics.INJECTION, semantics.INJECTION_NOTE, semantics.flag_injection
 
@@ -713,6 +748,7 @@ class LFM3Native:
                 if block:
                     blocks.append(block)
                     layer_log.append(info)
+                    emit(dict(info, type="layer"))
         if blocks:  # Clover appends its observations after the question
             user_text = user_text + "\n\n" + "\n\n".join(blocks)
         msgs = [{"role": "system", "content": system or self.system_prompt(bool(schemas), only_tools)}] + list(history) + [{"role": "user", "content": user_text}]
@@ -742,14 +778,20 @@ class LFM3Native:
                     fb, info = kit.compiler_check(query, final)
                     layer_log.append(info)
                     if not fb or (cancel and cancel.is_set()):
+                        if info.get("checked") and not fb:
+                            emit({"type": "layer", "layer": "compiler", "checked": True, "ok": True})
                         break
-                    emit({"type": "layer", "layer": "compiler", "feedback": fb})
+                    emit({"type": "layer", "layer": "compiler", "checked": True, "ok": False, "feedback": fb})
                     msgs.append({"role": "assistant", "content": final})
                     msgs.append({"role": "user", "content": "The Clover compiler checked the code in your answer and reported:\n"
                                  + fb + "\nFix the problem and reply with the complete corrected code."})
                 for r in range(max_rounds):
                     prompt = self._render(msgs, schemas, thinking)
                     emit({"type": "round", "round": r + 1})
+                    if r == 0 and attempt == 0 and only_tools:
+                        emit({"type": "plan", "round": r + 1, "stage": "planning", "tools": list(only_tools)})
+                    elif r > 0:
+                        emit({"type": "plan", "round": r + 1, "stage": "reviewing"})
                     cb = delta_cb(r + 1)
                     text, st = self.generate(prompt, cfg, max_new, thinking, cb, cancel, seed + 100 * attempt + r)
                     stats_all.append(st)
@@ -769,10 +811,11 @@ class LFM3Native:
                         for c in calls:
                             emit({"type": "tool_call", "id": c["id"], "name": c["name"], "arguments": c["arguments"]})
                             ran, result, why = self.execute_tool(c["name"], c["arguments"], ask, allow)
-                            emit({"type": "tool_result", "id": c["id"], "name": c["name"], "ran": ran, "why": why,
-                                  "result": result[:3000]})
-                            rounds.append({"tool": c["name"], "arguments": c["arguments"], "ran": ran, "why": why,
-                                           "result": result[:2000]})
+                            worked, summary = tool_worked(c["name"], ran, result, why)
+                            emit({"type": "tool_result", "id": c["id"], "name": c["name"], "ran": ran, "worked": worked,
+                                  "summary": summary, "why": why, "result": result[:3000]})
+                            rounds.append({"tool": c["name"], "arguments": c["arguments"], "ran": ran, "worked": worked,
+                                           "summary": summary, "why": why, "result": result[:2000]})
                             msgs.append({"role": "tool", "tool_call_id": c["id"], "content": result})
                         continue
                     final = (content + after).strip() if thinking and "</think>" in text else (text.strip() if not thinking else "")

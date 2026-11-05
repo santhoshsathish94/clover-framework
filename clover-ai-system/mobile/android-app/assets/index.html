@@ -142,6 +142,39 @@ button { cursor: pointer; }
 .acts button.busy { color: var(--accent); }
 .tags { display: inline-flex; gap: .25rem; flex-wrap: wrap; margin-left: .35rem; }
 .tags span { background: var(--accent-tint); color: var(--accent-2); border-radius: 999px; padding: .05rem .5rem; font-size: .7rem; font-weight: 600; }
+.work { align-self: stretch; margin: 0 0 .65rem; background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: var(--shadow-sm); overflow: hidden; transition: border-color .2s var(--ease), box-shadow .2s var(--ease); }
+.work.live { border-color: rgba(23, 107, 44, .24); box-shadow: 0 4px 18px rgba(23, 107, 44, .06); }
+.work__t { width: 100%; display: flex; align-items: center; gap: .48rem; border: 0; background: none; padding: .48rem .72rem;
+  font-size: .81rem; font-weight: 600; color: var(--ink-2); max-width: 100%; text-align: left; }
+.work__t:hover { color: var(--ink); background: rgba(23, 107, 44, .035); }
+.work__t .ic.chev { width: 14px; height: 14px; flex: none; color: var(--faint); transition: transform .15s var(--ease); margin-left: auto; }
+.work__t[aria-expanded="true"] .ic.chev { transform: rotate(90deg); }
+.work__lead { width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none;
+  background: var(--accent-soft); color: var(--accent-2); }
+.work__lead .ic { width: 12px; height: 12px; stroke-width: 2.4; }
+.work__lead .spin { width: 16px; height: 16px; }
+.work.live .work__lead { background: transparent; }
+.work__title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.work__meta { font-size: .74rem; font-weight: 550; color: var(--muted); white-space: nowrap; flex: none; font-variant-numeric: tabular-nums; }
+.work__b { border-top: 1px solid var(--line); padding: .48rem .62rem .55rem; background: rgba(247, 243, 233, .42);
+  display: flex; flex-direction: column; gap: .34rem; }
+.work__b .tags { margin: .1rem 0 .15rem; }
+.work__b .thinkbox { margin: .1rem 0 .2rem; font-size: .8rem; max-height: 180px; }
+.step-tl { display: flex; flex-direction: column; gap: .3rem; }
+.step-row { display: flex; align-items: center; gap: .5rem; padding: .36rem .56rem; border-radius: 11px;
+  background: var(--surface); border: 1px solid var(--line); font-size: .81rem; line-height: 1.38; animation: rise .18s var(--ease) both; }
+.step-row.click { cursor: pointer; }
+.step-row.click:hover { border-color: var(--line-2); background: #fff; }
+.step-ic { width: 20px; height: 20px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; flex: none;
+  background: var(--accent-tint); color: var(--accent); }
+.step-ic .ic { width: 13px; height: 13px; stroke-width: 2.1; }
+.step-ic .spin { width: 14px; height: 14px; }
+.step-ic.ok { background: var(--accent-soft); color: var(--accent-2); }
+.step-ic.run { background: var(--warn-soft); color: var(--warn); }
+.step-ic.no, .step-ic.fail { background: var(--danger-soft); color: var(--danger); }
+.step-name { font-weight: 600; color: var(--ink); white-space: nowrap; }
+.step-det { flex: 1; min-width: 0; color: var(--muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: .6rem .75rem;
   font: .76rem/1.5 var(--mono); color: var(--muted); max-height: 280px; overflow: auto; margin: .4rem 0 0; }
 .think { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: var(--fill); border-radius: 999px; padding: .25rem .75rem .25rem .6rem;
@@ -149,17 +182,20 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 .think:hover { color: var(--ink-2); }
 .think .ic { width: 15px; height: 15px; color: var(--accent); }
 .think.live .ic { animation: spin 2.2s linear infinite; }
-.thinkbox { font-size: .84rem; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: .65rem .85rem;
-  margin: -.2rem 0 .7rem; max-height: 260px; overflow: auto; white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
-.tool { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; margin: 0 0 .6rem; overflow: hidden; box-shadow: var(--shadow-sm); }
-.tool__head { display: flex; align-items: center; gap: .55rem; padding: .55rem .75rem; cursor: pointer; font-size: .86rem; }
-.tool__head > .ic { color: var(--accent); width: 17px; height: 17px; }
-.tool__name { font-weight: 600; white-space: nowrap; }
-.tool__arg { flex: 1; min-width: 0; color: var(--muted); font: .78rem var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.state { font-size: .72rem; font-weight: 600; border-radius: 999px; padding: .08rem .55rem; background: var(--fill); color: var(--muted); white-space: nowrap; }
+.thinkbox { font-size: .84rem; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: .58rem .78rem;
+  margin: -.1rem 0 .45rem; max-height: 240px; overflow: auto; white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+.tool { border: 1px solid var(--line); background: var(--surface); border-radius: 11px; margin: 0; overflow: hidden; box-shadow: none; animation: rise .18s var(--ease) both; }
+.tool__head { display: flex; align-items: center; gap: .5rem; padding: .38rem .56rem; cursor: pointer; font-size: .81rem; }
+.tool__head:hover { background: #fff; }
+.tool__head > .ic { color: var(--accent); width: 15px; height: 15px; }
+.tool__name { font-weight: 600; white-space: nowrap; color: var(--ink); }
+.tool__arg { flex: 1; min-width: 0; color: var(--muted); font: .76rem var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tool__sum { color: var(--ink-2); font-family: var(--font); font-weight: 500; }
+.state { font-size: .71rem; font-weight: 600; border-radius: 999px; padding: .08rem .52rem; background: var(--fill); color: var(--muted); white-space: nowrap; }
 .state.run { color: var(--warn); background: var(--warn-soft); }
 .state.ok { color: var(--accent-2); background: var(--accent-soft); }
-.state.no { color: var(--danger); background: var(--danger-soft); }
+.state.no, .state.fail { color: var(--danger); background: var(--danger-soft); }
+.state.skip { color: var(--warn); background: var(--warn-soft); }
 .tool__body { border-top: 1px solid var(--line); padding: .6rem .75rem .25rem; }
 .tool__body pre { margin: 0 0 .55rem; white-space: pre-wrap; word-break: break-word; font: .78rem/1.5 var(--mono); background: var(--bg); border-radius: 9px;
   padding: .55rem .65rem; max-height: 240px; overflow: auto; }
@@ -894,13 +930,45 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     return u;
   }
+  function toolName(n) { return (TOOL_UI[n] || [n || 'Tool'])[0]; }
+  function fmtSecs(s) { s = Math.max(0, Math.round(s || 0)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  function cap(s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); }
+  function stepRowEl(s) {
+    var row = el('div', 'step-row' + (s.onClick ? ' click' : ''));
+    var icBox = el('span', 'step-ic ' + (s.state || 'ok'));
+    var nameEl = el('span', 'step-name');
+    var detEl = el('span', 'step-det');
+    var stEl = el('span', 'state ' + (s.state || 'ok'));
+    row.appendChild(icBox); row.appendChild(nameEl); row.appendChild(detEl); row.appendChild(stEl);
+    if (s.onClick) {
+      row.setAttribute('role', 'button'); row.tabIndex = 0;
+      row.addEventListener('click', s.onClick);
+      row.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); s.onClick(); } });
+    }
+    function update(u) {
+      Object.assign(s, u || {});
+      var st = s.state || 'ok';
+      icBox.className = 'step-ic ' + st;
+      icBox.innerHTML = st === 'run' ? SPIN : ic(s.icon || (st === 'no' || st === 'fail' ? 'x' : 'check'));
+      nameEl.textContent = s.name || '';
+      detEl.textContent = s.detail || '';
+      detEl.title = s.detail || '';
+      stEl.className = 'state ' + (st === 'info' ? 'ok' : st);
+      stEl.textContent = s.badge || (st === 'run' ? 'Running\u2026' : (st === 'no' || st === 'fail') ? '\u2715 Failed' : '\u2713 Done');
+    }
+    update(s);
+    return { el: row, update: update, data: s };
+  }
   function toolEl(t) {
     var ui = TOOL_UI[t.name] || [t.name || 'Tool', 'code'];
     var box = el('div', 'tool');
-    var head = el('div', 'tool__head', ic(ui[1]) + '<span class="tool__name"></span><span class="tool__arg"></span><span class="state"></span>');
+    var head = el('div', 'tool__head', '<span class="step-ic"></span><span class="tool__name"></span><span class="tool__arg"></span><span class="state"></span>');
     head.setAttribute('role', 'button'); head.tabIndex = 0;
+    var icBox = head.querySelector('.step-ic');
     head.querySelector('.tool__name').textContent = ui[0];
-    head.querySelector('.tool__arg').textContent = String(t.args || '').split('\n')[0];
+    var argEl = head.querySelector('.tool__arg');
+    var argLine = String(t.args || '').split('\n')[0];
+    argEl.textContent = argLine;
     var st = head.querySelector('.state');
     var body = el('div', 'tool__body'); body.hidden = true;
     body.appendChild(el('div', 'lbl', 'Input'));
@@ -913,28 +981,92 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     box.appendChild(head); box.appendChild(body);
     var api_ = {
       el: box,
-      set: function (s, why) {
-        st.className = 'state ' + s;
-        st.textContent = s === 'run' ? 'running' : s === 'ok' ? 'done' : 'not run';
-        st.title = why || '';
+      set: function (s, why, summary) {
+        var cls = s === 'run' ? 'run' : s === 'ok' ? 'ok' : s === 'fail' ? 'fail' : 'skip';
+        icBox.className = 'step-ic ' + (cls === 'skip' ? 'no' : cls);
+        icBox.innerHTML = s === 'run' ? SPIN : ic(ui[1]);
+        st.className = 'state ' + cls;
+        st.textContent = s === 'run' ? 'Running\u2026' : s === 'ok' ? '\u2713 Worked' : s === 'fail' ? '\u2715 Failed' : 'Skipped';
+        st.title = why || summary || '';
+        var sumTxt = summary || (s === 'no' && why ? why : '');
+        if (sumTxt) {
+          argEl.innerHTML = esc(argLine ? argLine.slice(0, 56) + '  \u2192  ' : '') + '<span class="tool__sum">' + esc(sumTxt) + '</span>';
+          argEl.title = (argLine ? argLine + ' -> ' : '') + sumTxt;
+        } else {
+          argEl.textContent = argLine;
+          argEl.title = argLine;
+        }
       },
       result: function (r) { if (r) { pr.textContent = r; pr.hidden = false; rl.hidden = false; } }
     };
-    api_.set(t.state || 'run', t.why); api_.result(t.result);
+    api_.set(t.state || 'run', t.why, t.summary); api_.result(t.result);
     return api_;
   }
-  function thinkEl(m, live) {
-    var pill = btn('think' + (live ? ' live' : ''), ic('spark') + '<span></span>');
-    var box = el('div', 'thinkbox'); box.hidden = true; box.textContent = m.thinking || '';
-    pill.querySelector('span').textContent = live ? 'Thinking' : ('Thought for ' + Math.max(1, m.thinkSecs || 1) + ' s');
-    pill.addEventListener('click', function () { box.hidden = !box.hidden; pill.setAttribute('aria-expanded', String(!box.hidden)); });
-    return { pill: pill, box: box };
+  function workEl(open, isLive) {
+    var box = el('div', 'work' + (isLive ? ' live' : ''));
+    var head = btn('work__t', '<span class="work__lead">' + (isLive ? SPIN : ic('check')) + '</span><span class="work__title"></span><span class="work__meta"></span>' + CHEV);
+    var inner = el('div', 'work__b');
+    inner.hidden = !open; head.setAttribute('aria-expanded', String(!!open));
+    head.addEventListener('click', function () { inner.hidden = !inner.hidden; head.setAttribute('aria-expanded', String(!inner.hidden)); });
+    box.appendChild(head); box.appendChild(inner);
+    var leadEl = head.querySelector('.work__lead'), titleEl = head.querySelector('.work__title'), metaEl = head.querySelector('.work__meta');
+    return {
+      box: box,
+      inner: inner,
+      label: function (t) { titleEl.textContent = t; },
+      meta: function (t) { metaEl.textContent = t || ''; },
+      done: function () { box.classList.remove('live'); leadEl.innerHTML = ic('check'); }
+    };
+  }
+  function workSummary(m) {
+    var parts = [];
+    if (m.thinking) parts.push('thought ' + Math.max(1, m.thinkSecs || 1) + ' s');
+    var names = [];
+    (m.tools || []).forEach(function (t) {
+      var n = toolName(t.name) + (t.state === 'ok' ? ' (worked)' : t.state === 'fail' ? ' (failed)' : t.state === 'no' ? ' (skipped)' : '');
+      if (names.indexOf(n) < 0) names.push(n);
+    });
+    if (names.length) parts.push(names.join(', '));
+    var stepCnt = (m.steps || []).length + (m.tools || []).length + (m.thinking ? 1 : 0);
+    if (!parts.length && (m.used || []).length) parts.push(m.used.slice(0, 2).join(' \u00b7 '));
+    return (stepCnt > 1 ? stepCnt + ' steps' : 'Steps') + (parts.length ? ' \u00b7 ' + parts.join(' \u00b7 ') : '');
   }
   function botEl(m) {
     var wrap = el('div', 'b');
     var body = el('div', 'b__body');
-    if (m.thinking) { var t = thinkEl(m, false); body.appendChild(t.pill); body.appendChild(t.box); }
-    (m.tools || []).forEach(function (tl) { body.appendChild(toolEl(tl).el); });
+    var hasWork = !!(m.thinking || (m.tools || []).length || (m.used || []).length || (m.steps || []).length);
+    if (hasWork) {
+      var openByDefault = !!((m.tools || []).length || m.thinking);
+      var w = workEl(openByDefault, false); w.label(workSummary(m));
+      var stBox = el('div', 'step-tl');
+      (m.steps || []).forEach(function (s) {
+        stBox.appendChild(stepRowEl({ icon: s.icon || 'check', state: s.state || 'ok', name: s.name, detail: s.detail, badge: s.badge }).el);
+      });
+      if (!(m.steps || []).length && m.used && m.used.length) {
+        stBox.appendChild(stepRowEl({ icon: 'spark', state: 'ok', name: 'Context & routing', detail: m.used.join(' \u00b7 '), badge: '\u2713 Ready' }).el);
+      }
+      var tb = null;
+      if (m.thinking) {
+        tb = el('div', 'thinkbox'); tb.textContent = m.thinking; tb.hidden = true;
+        var thLines = m.thinking.split('\n').map(function (l) { return l.trim(); }).filter(function (l) { return l && !/^[\u2014\-]+\s*after the tool result/i.test(l); });
+        var thWords = (m.thinking.replace(/\u2014 after the tool result \u2014/g, '').match(/\S+/g) || []).length;
+        stBox.appendChild(stepRowEl({
+          icon: 'spark', state: 'ok', name: 'Thinking',
+          detail: thLines[thLines.length - 1] || m.thinking.slice(0, 100),
+          badge: '\u2713 ' + (m.thinkSecs ? m.thinkSecs + ' s \u00b7 ' : '') + thWords + ' words',
+          onClick: function () { tb.hidden = !tb.hidden; }
+        }).el);
+      }
+      if (stBox.children.length) w.inner.appendChild(stBox);
+      if (tb) w.inner.appendChild(tb);
+      if ((m.tools || []).length) {
+        var tlBox = el('div', 'step-tl');
+        (m.tools || []).forEach(function (tl) { tlBox.appendChild(toolEl(tl).el); });
+        w.inner.appendChild(tlBox);
+      }
+      if (m.used && m.used.length) { var tg = el('div', 'tags'); m.used.forEach(function (u) { var s = el('span'); s.textContent = u; tg.appendChild(s); }); w.inner.appendChild(tg); }
+      body.appendChild(w.box);
+    }
     body.appendChild(el('div', 'md' + (m.isNotice ? ' notice' : ''), markdown(m.text)));
     (m.images || []).forEach(function (im) {
       if (!/^[0-9a-f]{24,32}\.png$/.test(im.file || '')) return;
@@ -1739,39 +1871,138 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var inp = takeInput(); if (!inp) return;
     if (state.speakNext && state.settings.autospeak && state.omni) api('POST', '/api/tts/warm', {}).catch(function () {});
     var c = inp.c, live = liveTurn(), body = live.body;
-    var th = thinkEl({}, true); th.pill.hidden = true; body.insertBefore(th.box, live.wait); body.insertBefore(th.pill, th.box);
-    var toolsBox = el('div'); body.insertBefore(toolsBox, live.wait);
+    var work = workEl(true, true); work.label('Understanding your message\u2026'); work.meta('0:00');
+    body.insertBefore(work.box, live.wait);
+    var stepsBox = el('div', 'step-tl'); work.inner.appendChild(stepsBox);
+    var thBox = el('div', 'thinkbox'); thBox.hidden = true; work.inner.appendChild(thBox);
+    var toolsBox = el('div', 'step-tl'); work.inner.appendChild(toolsBox);
     var ans = el('div', 'md live'); body.appendChild(ans);
     state.busy = true; state.turnId = null; setStop(true);
     var poll = setInterval(pollStatus, 2000);
     var t0 = Date.now(), tFirst = 0, tLast = 0, words = 0, answer = '', thinking = '', tools = [], cards = {}, lastCard = null, finished = false;
+    var stepsList = [], stepMap = {};
+    var ticker = setInterval(function () {
+      if (!state.busy) return;
+      var elapsed = Math.max(0, Math.floor((Date.now() - t0) / 1000));
+      if (work && work.meta) work.meta(fmtSecs(elapsed));
+      if (state.waitEl && state.stageText) state.waitEl.textContent = state.stageText + ' \u00b7 ' + fmtSecs(elapsed);
+    }, 1000);
+    function upsertStep(key, cfg) {
+      if (stepMap[key]) { stepMap[key].update(cfg); return stepMap[key]; }
+      var row = stepRowEl(cfg);
+      stepsBox.appendChild(row.el);
+      stepMap[key] = row;
+      if (!cfg.transient) stepsList.push(row.data);
+      return row;
+    }
+    var attDesc = [];
+    if (inp.files && inp.files.length) attDesc.push(inp.files.map(function (f) { return f.name; }).join(', '));
+    if (inp.media && inp.media.length) attDesc.push(inp.media.length + ' media');
+    upsertStep('understand', {
+      icon: 'spark', state: 'run', name: 'Understanding',
+      detail: attDesc.length ? 'Reading message & ' + attDesc.join(', ') : 'Reading message structure & intent\u2026',
+      badge: 'Reading\u2026'
+    });
+    function setStage(txt) {
+      state.stageText = txt;
+      var elp = Math.max(0, Math.floor((Date.now() - t0) / 1000));
+      if (state.waitEl) state.waitEl.textContent = txt + ' \u00b7 ' + fmtSecs(elp);
+      work.label(cap(txt)); work.meta(fmtSecs(elp));
+    }
+    function finishRunningSteps() {
+      ['understand', 'plan', 'review', 'draft', 'synth'].forEach(function (k) {
+        if (stepMap[k] && stepMap[k].data.state === 'run') stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
+      });
+      if (stepMap.think && stepMap.think.data.state === 'run') {
+        var ts = tFirst ? Math.max(1, Math.round((tLast - tFirst) / 1000)) : 1;
+        stepMap.think.update({ state: 'ok', badge: '\u2713 ' + ts + ' s \u00b7 ' + words + ' words' });
+      }
+    }
 
     function onEvent(ev) {
       if (ev.type === 'start') state.turnId = ev.turn_id;
-      else if (ev.type === 'token') {
+      else if (ev.type === 'semantics') {
+        var semBits = [];
+        if (ev.understood) semBits.push(ev.understood);
+        if (!semBits.length && attDesc.length) semBits.push('Attached ' + attDesc.join(', '));
+        if (!semBits.length) semBits.push(ev.act === 'social' ? 'Conversational greeting' : (ev.route ? 'Route: ' + ev.route : 'Analyzed message structure & intent'));
+        upsertStep('understand', { state: 'ok', icon: 'check', detail: semBits.join(' \u00b7 '), badge: '\u2713 Understood' });
+        setStage('checking context & planning');
+        scrollDown();
+      } else if (ev.type === 'tools') {
+        if (Array.isArray(ev.offered) && ev.offered.length) {
+          var tNames = ev.offered.slice(0, 5).map(toolName);
+          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning', detail: 'Selected ' + tNames.join(', '), badge: 'Planning\u2026' });
+          setStage('planning \u00b7 ' + tNames.join(', '));
+        }
+        scrollDown();
+      } else if (ev.type === 'layer') {
+        if (ev.layer === 'memory' && (ev.entries || []).length) {
+          upsertStep('layer_mem', { icon: 'database', state: 'ok', name: 'Memory (S1)',
+            detail: 'Found ' + ev.entries.length + ' saved note(s)', badge: '\u2713 Used' });
+        } else if (ev.layer === 'ontology') {
+          upsertStep('layer_ont', { icon: 'graph', state: 'ok', name: 'Knowledge graph (S2)',
+            detail: 'Grounded in ' + (ev.n_evidence || 'verified') + ' records', badge: '\u2713 Grounded' });
+        } else if (ev.layer === 'compiler') {
+          upsertStep('compiler', { icon: ev.ok || !ev.feedback ? 'code' : 'warning', state: ev.ok || !ev.feedback ? 'ok' : 'run',
+            name: 'Code check (S3)', detail: ev.ok || !ev.feedback ? 'Verified executable code in answer' : ('Fixing: ' + String(ev.feedback).slice(0, 76)),
+            badge: ev.ok || !ev.feedback ? '\u2713 Worked' : 'Fixing\u2026' });
+        }
+        scrollDown();
+      } else if (ev.type === 'plan') {
+        if (stepMap.understand && stepMap.understand.data.state === 'run') stepMap.understand.update({ state: 'ok', icon: 'check', badge: '\u2713 Understood' });
+        if (ev.stage === 'planning') {
+          var plTools = (ev.tools || []).slice(0, 5).map(toolName);
+          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning',
+            detail: plTools.length ? 'Choosing how to use ' + plTools.join(', ') : 'Formulating response plan\u2026', badge: 'Planning\u2026' });
+          setStage(plTools.length ? 'planning \u00b7 ' + plTools.join(', ') : 'planning response');
+        } else if (ev.stage === 'preparing_tool' && ev.tool) {
+          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning', detail: 'Preparing ' + toolName(ev.tool) + ' input\u2026', badge: 'Preparing\u2026' });
+          setStage('preparing ' + toolName(ev.tool));
+        } else if (ev.stage === 'reviewing') {
+          if (stepMap.plan) stepMap.plan.update({ state: 'ok', badge: '\u2713 Planned' });
+          upsertStep('review', { icon: 'spark', state: 'run', name: 'Reviewing results', detail: 'Checking tool output to write the final answer', badge: 'Reviewing\u2026' });
+          setStage('reviewing tool results');
+        }
+        scrollDown();
+      } else if (ev.type === 'token') {
         if (ev.kind === 'thinking') {
           if (!tFirst) tFirst = Date.now();
           tLast = Date.now();
-          th.pill.hidden = false; thinking += ev.text; th.box.textContent = thinking;
+          if (stepMap.understand && stepMap.understand.data.state === 'run') stepMap.understand.update({ state: 'ok', icon: 'check', badge: '\u2713 Understood' });
+          if (stepMap.plan && stepMap.plan.data.state === 'run') stepMap.plan.update({ state: 'ok', badge: '\u2713 Planned' });
+          thBox.hidden = false; thinking += ev.text; thBox.textContent = thinking;
           words += (ev.text.match(/\S+/g) || []).length;
-          th.pill.querySelector('span').textContent = 'Thinking · ' + words + ' words';
-          th.box.scrollTop = th.box.scrollHeight;
+          var tLines = thinking.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+          upsertStep('think', {
+            icon: 'spark', state: 'run', name: 'Thinking', transient: true,
+            detail: tLines[tLines.length - 1] || 'Reasoning through the request\u2026',
+            badge: 'Thinking \u00b7 ' + words + ' words',
+            onClick: function () { thBox.hidden = !thBox.hidden; }
+          });
+          setStage('thinking \u00b7 ' + words + ' words');
+          thBox.scrollTop = thBox.scrollHeight;
         } else if (ev.kind === 'answer') {
+          finishRunningSteps();
+          if (thinking) thBox.hidden = true;
           answer += ev.text; ans.textContent = answer.replace(/^\s+/, ''); live.wait.hidden = true;
-          th.pill.classList.remove('live');
+          setStage('writing answer');
         }
         scrollDown();
       } else if (ev.type === 'round' && ev.round > 1) {
-        if (thinking) { thinking += '\n\n— after the tool result —\n\n'; th.box.textContent = thinking; }
+        if (thinking) { thinking += '\n\n— after the tool result —\n\n'; thBox.textContent = thinking; }
         answer = ''; ans.textContent = '';
-        live.wait.hidden = false; th.pill.classList.add('live');
+        live.wait.hidden = false;
       } else if (ev.type === 'tool_call') {
+        if (stepMap.understand && stepMap.understand.data.state === 'run') stepMap.understand.update({ state: 'ok', icon: 'check', badge: '\u2713 Understood' });
+        if (stepMap.plan) stepMap.plan.update({ state: 'ok', detail: 'Planned to use ' + toolName(ev.name), badge: '\u2713 Planned' });
         var t = { name: ev.name, args: fmtArgs(ev.arguments), state: 'run' };
         var card = toolEl(t); toolsBox.appendChild(card.el);
         tools.push(t); cards[ev.id] = { card: card, t: t }; lastCard = card;
-        if (state.waitEl) state.waitEl.textContent = 'running ' + ((TOOL_UI[ev.name] || [ev.name])[0]);
+        setStage('using ' + toolName(ev.name));
         scrollDown();
       } else if (ev.type === 'permission') {
+        setStage('waiting for your permission');
         var host = lastCard ? lastCard.el : toolsBox;
         host.parentNode.insertBefore(askEl(ev, function (decision) {
           api('POST', '/api/decision', { turn_id: ev.turn_id, request_id: ev.request_id, decision: decision })
@@ -1781,17 +2012,25 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       } else if (ev.type === 'tool_result') {
         var cd = cards[ev.id];
         if (cd) {
-          cd.t.state = ev.ran ? 'ok' : 'no'; cd.t.why = ev.why || ''; cd.t.result = String(ev.result || '').slice(0, 3000);
-          cd.card.set(cd.t.state, cd.t.why); cd.card.result(cd.t.result);
+          var rawRes = String(ev.result || '').slice(0, 3000);
+          var worked = ev.worked !== undefined ? !!ev.worked : (!!ev.ran && !/^(?:Error:|Not run:|Could not )|Traceback \(most recent call last\):/m.test(rawRes.trim()));
+          var sumLine = ev.summary || (rawRes.trim().split('\n')[0] || '').slice(0, 90);
+          cd.t.state = !ev.ran ? 'no' : (worked ? 'ok' : 'fail');
+          cd.t.worked = worked; cd.t.summary = sumLine;
+          cd.t.why = ev.why || ''; cd.t.result = rawRes;
+          cd.card.set(cd.t.state, cd.t.why, cd.t.summary); cd.card.result(cd.t.result);
+          setStage(toolName(ev.name) + (!ev.ran ? ' skipped' : worked ? ' worked' : ' failed'));
         }
       } else if (ev.type === 'cycle') {
-        if (state.waitEl) state.waitEl.textContent = ev.stage === 'check' ? 'checking the earlier answer'
+        var cycText = ev.stage === 'check' ? 'checking the earlier answer'
           : ev.stage === 'search' ? 'searching the web and reading the best pages'
           : ev.stage === 'python' ? 'writing a Python program to calculate it'
           : ev.stage === 'second' ? 'solving it again on its own (1 of 2)' : ev.stage === 'third' ? 'solving it again another way (2 of 2)'
           : ev.stage === 'rewrite' ? (ev.how === 'recheck' ? 'checking each step of the answer again'
             : ev.how === 'another' ? 'writing a different version' : 'writing a new answer from what you said')
           : 'correcting: ' + String((ev.findings || [''])[0]).slice(0, 90);
+        upsertStep('cycle_' + ev.stage, { icon: 'refresh', state: 'run', name: 'Verification cycle', detail: cap(cycText), badge: 'Checking\u2026' });
+        setStage(cycText);
         live.wait.hidden = false;
         if (ev.stage === 'retry' || ev.stage === 'rewrite') { answer = ''; ans.textContent = ''; }
         scrollDown();
@@ -1800,7 +2039,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     function finish(ev) {
       if (finished) return; finished = true;
-      clearInterval(poll); state.busy = false; state.waitEl = null; setStop(false); updateSend(); pollStatus();
+      finishRunningSteps();
+      clearInterval(ticker); clearInterval(poll); state.busy = false; state.waitEl = null; state.stageText = ''; setStop(false); updateSend(); pollStatus();
       var secs = Math.max(1, Math.round((ev.total_cycle_ms || (Date.now() - t0)) / 1000));
       var gens = ev.generation || [];
       var newTok = gens.reduce(function (s, g) { return s + (g.new_tokens || 0); }, 0) || ev.generated_tokens || 0;
@@ -1808,7 +2048,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       var speed = decS ? newTok / decS : 0; if (speed) state.lastSpeed = speed;
       var m = { role: 'bot', text: ev.reply || '', isNotice: !!ev.error, turn: ev.turn || ev.turn_n || 1,
         meta: secs + ' s' + (newTok ? ' · ' + newTok + ' tokens' : '') + (speed ? ' · ' + speed.toFixed(1) + ' tok/s' : ''),
-        thinking: thinking.trim(), thinkSecs: tFirst ? Math.round((tLast - tFirst) / 1000) : 0, tools: tools, used: layersUsed(ev),
+        thinking: thinking.trim(), thinkSecs: tFirst ? Math.round((tLast - tFirst) / 1000) : 0,
+        tools: tools, steps: stepsList, used: layersUsed(ev),
         trace: formatLayerTrace(ev),
         images: (ev.images || []).map(function (x) { return { file: x.file, prompt: x.prompt, model: x.model, seconds: x.seconds }; }) };
       c.messages.push(m); save();

@@ -455,7 +455,8 @@ class Repo:
             if context:
                 self.log(sid, n, "context: " + "; ".join(context))
             tools = [{"tool": c.get("tool"), "ran": bool(c.get("ran")),
-                      "worked": bool(c.get("ran")) and not str(c.get("result") or "").lstrip().startswith("Error")}
+                      "worked": bool(c.get("worked")) if "worked" in c else (
+                          bool(c.get("ran")) and not str(c.get("result") or "").lstrip().startswith("Error"))}
                      for c in res.get("tool_calls") or []]
             changes, lesson = [], None
             cyc = next((x for x in res.get("layers") or [] if x.get("layer") == "cycle"), {})
