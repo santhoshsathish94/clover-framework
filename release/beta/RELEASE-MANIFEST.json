@@ -76,26 +76,26 @@
       {
         "file": "release/beta/windows/clover-ai-studio-beta.msixupload",
         "type": "msixupload",
-        "size_bytes": 4790987,
-        "sha256": "1408dede60b6b24b95c03307647f9d38cce7b3c4bd086f0c1a54f546cc907f5d"
+        "size_bytes": 4791391,
+        "sha256": "4c0e365ac92b87742b0c668f0193696d5b242af2a6358e159e1676e3aa59cede"
       },
       {
         "file": "release/beta/windows/SanthoshNarayanan.CloverAIStudio_0.5.0.0_x64.msix",
         "type": "msix",
-        "size_bytes": 4839470,
-        "sha256": "d9a9269327685d0574a416e766cb5ccfc96d7103037072909b2eb678a63d78b9"
+        "size_bytes": 4839901,
+        "sha256": "ca592814ab09d397044007b70cdc953061b24a4ccc0ab2eaf7db46a70c560017"
       },
       {
         "file": "release/beta/windows/clover-ai-studio-beta.msix",
         "type": "msix",
-        "size_bytes": 4839470,
-        "sha256": "d9a9269327685d0574a416e766cb5ccfc96d7103037072909b2eb678a63d78b9"
+        "size_bytes": 4839901,
+        "sha256": "ca592814ab09d397044007b70cdc953061b24a4ccc0ab2eaf7db46a70c560017"
       },
       {
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "type": "exe",
         "size_bytes": 2453976,
-        "sha256": "45eb978db7d80087aa541a90bdbbd03ac981a9172b6355ac95da8e37a56b9455"
+        "sha256": "b2bc1d0885ec492e210a20529a15dbe8c3ab6027c183978bf7cae1755ca75ac7"
       }
     ],
     "verification": {

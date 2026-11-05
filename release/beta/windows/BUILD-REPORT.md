@@ -17,10 +17,10 @@
 
 | Artifact | Purpose | Size | SHA-256 |
 |---|---|---:|---|
-| `clover-ai-studio-beta.msixupload` | Microsoft Partner Center Store upload bundle | `4.57 MB` (`4,790,987` bytes) | `1408dede60b6b24b95c03307647f9d38cce7b3c4bd086f0c1a54f546cc907f5d` |
-| `SanthoshNarayanan.CloverAIStudio_0.5.0.0_x64.msix` | Store-identity MSIX package (`x64`) | `4.62 MB` (`4,839,470` bytes) | `d9a9269327685d0574a416e766cb5ccfc96d7103037072909b2eb678a63d78b9` |
-| `clover-ai-studio-beta.msix` | Alias copy of Store-identity MSIX package | `4.62 MB` (`4,839,470` bytes) | `d9a9269327685d0574a416e766cb5ccfc96d7103037072909b2eb678a63d78b9` |
-| `clover-ai-studio-beta-setup.exe` | Standalone direct-download Windows x64 installer | `2.34 MB` (`2,453,976` bytes) | `45eb978db7d80087aa541a90bdbbd03ac981a9172b6355ac95da8e37a56b9455` |
+| `clover-ai-studio-beta.msixupload` | Microsoft Partner Center Store upload bundle | `4.52 MB` (`4,738,846` bytes) | `a02dceb392ddb62428d6be7fbd8bd0bc7bde618f5a6f928d6c368d5314779979` |
+| `SanthoshNarayanan.CloverAIStudio_0.5.0.0_x64.msix` | Store-identity MSIX package (`x64`) | `4.57 MB` (`4,787,102` bytes) | `71411e4f509390b616170791ff8ba6754640008155954d9cef59dd336d2e60b3` |
+| `clover-ai-studio-beta.msix` | Alias copy of Store-identity MSIX package | `4.57 MB` (`4,787,102` bytes) | `71411e4f509390b616170791ff8ba6754640008155954d9cef59dd336d2e60b3` |
+| `clover-ai-studio-beta-setup.exe` | Standalone direct-download Windows x64 installer | `2.31 MB` (`2,427,352` bytes) | `40531b4d6b63241211bf1a0ecc05ae8de09b60ac094cf525a71d9786d1a6bfdb` |
 
 ---
 
