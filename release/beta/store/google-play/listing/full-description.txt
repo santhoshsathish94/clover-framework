@@ -25,5 +25,5 @@ PRIVACY & PERMISSIONS BY DESIGN
 
 BETA FEEDBACK & SUPPORT
 - Website & Documentation: https://cloverframework.com/
-- Privacy & Governance: https://cloverframework.com/governance/
+- Privacy Policy: https://cloverframework.com/privacy/
 - Issue Tracker & Beta Feedback: https://github.com/santhoshsathish94/clover-framework/issues

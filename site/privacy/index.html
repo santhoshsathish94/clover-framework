@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Clover AI Studio &amp; Clover Framework</title>
+<meta name="description" content="Privacy Policy for Clover AI Studio (Windows, Android, Web, and VS Code): how data is logged locally on your device, where it is stored, and why nothing leaves your device unless you explicitly allow it.">
+<link rel="canonical" href="https://cloverframework.com/privacy/">
+<meta property="og:title" content="Privacy Policy — Clover AI Studio &amp; Clover Framework">
+<meta property="og:description" content="On-device AI inference, local Git-backed logging, encrypted vault storage, and zero telemetry. Nothing leaves your device unless you allow it.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://cloverframework.com/privacy/">
+<meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a6a5f">
+<link rel="icon" type="image/svg+xml" href="../clover-leaf-favicon.svg">
+<link rel="stylesheet" href="../botanical-design-system.css?v=4.1.2">
+<script>document.documentElement.className = 'js';</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<svg class="clover-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <path id="clover-leaf" d="M50 44C48 35 38 31 38 21C38 12 46 9 50 17C54 9 62 12 62 21C62 31 52 35 50 44Z"/>
+  </defs>
+</svg>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand-icon" href="../clover-ai/" aria-label="Clover">
+      <svg class="clover clover--brand" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
+        <use class="clover__leaf is-filled" href="#clover-leaf"/>
+        <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(72 50 44)"/>
+        <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(144 50 44)"/>
+        <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(216 50 44)"/>
+        <use class="clover__leaf is-filled" href="#clover-leaf" transform="rotate(288 50 44)"/>
+      </svg>
+    </a>
+    <a class="brand" href="../">Clover <span>Framework</span></a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      <span class="nav-toggle__box" aria-hidden="true"><span></span></span>Menu
+    </button>
+    <nav class="site-nav" id="site-nav" aria-label="Primary">
+      <a href="../origin/">Origin</a>
+      <a href="../ai-system/">AI Studio</a>
+      <a href="../getting-started/">AGENTS.md</a>
+      <a href="../governance/">Governance</a>
+      <a href="../glossary/">Glossary</a>
+      <a href="../author/">Author</a>
+      <a href="https://github.com/santhoshsathish94/clover-framework">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+
+  <section class="hero" id="overview">
+    <div class="wrap">
+      <p class="note">Privacy Policy &middot; Clover AI Studio (`ai.clover.studio` &amp; `SanthoshNarayanan.CloverAIStudio`) &middot; Effective November 5, 2026</p>
+      <h1>Nothing leaves your device unless you allow it.</h1>
+      <p class="lede">Clover AI Studio runs its AI models, semantic parser, memory graph, personal learning, and tools directly on your phone or laptop. There are no analytics SDKs, no telemetry servers, no advertising identifiers, and no cloud accounts required.</p>
+      <div class="actions">
+        <a class="btn btn--primary" href="#where-data-lives">Where data is stored ↓</a>
+        <a class="btn" href="#how-data-is-logged">How data is logged ↓</a>
+        <a class="btn btn--plain" href="../governance/">Governance Rules →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="core-promise">
+    <div class="wrap">
+      <p class="note">Section 1 of 6 &middot; Zero Off-Device Collection</p>
+      <h2>100% On-Device by Default</h2>
+      <p class="lede">When you type a message, attach a photo, record your voice, or analyze a document in Clover AI Studio, all processing happens locally on your own hardware over a loopback connection (<code>127.0.0.1</code>).</p>
+
+      <div class="apple-grid apple-grid--3">
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">No Telemetry</span>
+          <h3>Zero Analytics or Tracking</h3>
+          <p>Clover AI Studio contains no third-party analytics, crash reporters, behavioral trackers, or advertising SDKs. We do not know who you are, what you ask Clover, or when you use the app.</p>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">Local Inference</span>
+          <h3>Models Run on Your Hardware</h3>
+          <p>The multimodal language model (<code>LFM3-Omni-2B</code>), semantic interface (<code>CSI</code>), and knowledge graph run on your device's GPU or CPU. Prompts and answers are never sent to external AI servers unless you explicitly add and select a remote model.</p>
+        </div>
+        <div class="apple-card apple-card--accent">
+          <span class="apple-card__eyebrow">Explicit Permissions</span>
+          <h3>You Control Every Capability</h3>
+          <p>Internet search, Python execution, terminal commands, file access, and memory each have an independent <strong>Allow / Ask / Off</strong> switch in <code>Settings &rarr; Advanced &rarr; Permissions</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="where-data-lives">
+    <div class="wrap">
+      <p class="note">Section 2 of 6 &middot; Exact Storage Locations</p>
+      <h2>Where Your Data Is Stored on Your Device</h2>
+      <p class="lede">Clover AI Studio stores all state inside a single base directory on your device. You can view these exact paths at any time in <code>Settings &rarr; Storage</code>.</p>
+
+      <div class="apple-grid apple-grid--2">
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">Windows 10 &amp; 11 (`CloverAIStudio.exe`)</span>
+          <h3><code>%USERPROFILE%\CloverAI\</code></h3>
+          <p>All files reside in your Windows user profile folder (for example, <code>C:\Users\&lt;you&gt;\CloverAI\</code>):</p>
+          <ul>
+            <li><strong><code>clover-ai-studio\</code></strong> — Local Git repository holding conversations, execution logs, outcomes, learned memory, and settings.</li>
+            <li><strong><code>media\</code></strong> — Photos, voice recordings, videos, charts, and attached documents (<code>media\documents\</code>). Kept outside the Git repository.</li>
+            <li><strong><code>vault\</code></strong> — Optional API keys and tokens encrypted with <strong>Windows DPAPI (<code>CryptProtectData</code>)</strong> bound to your Windows user login.</li>
+            <li><strong><code>models\</code></strong> — Local GGUF model weights verified against pinned SHA-256 hashes.</li>
+          </ul>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">Android (`ai.clover.studio`)</span>
+          <h3><code>/data/user/0/ai.clover.studio/files/CloverAI/</code></h3>
+          <p>All files reside inside Android's private application sandbox with <code>android:allowBackup="false"</code> so other apps and cloud backups cannot read them:</p>
+          <ul>
+            <li><strong><code>clover-ai-studio/</code></strong> — Local on-device Git repository holding your chats, execution logs, outcomes, memory graph, and settings.</li>
+            <li><strong><code>media/</code></strong> — Attached images, audio clips, videos, and documents. Kept outside the Git repository so you can clear them in one tap.</li>
+            <li><strong><code>vault/</code></strong> — Optional API keys encrypted at rest with <strong>AES-GCM</strong> using a local device-bound key (<code>0600</code> permissions).</li>
+            <li><strong><code>models/</code></strong> — On-device <code>LFM3-Omni-2B</code> GGUF weights and vision/audio projector.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="how-data-is-logged">
+    <div class="wrap">
+      <p class="note">Section 3 of 6 &middot; Local Logging Architecture</p>
+      <h2>How Data Is Logged Inside Your Local Repository</h2>
+      <p class="lede">To give both you and Clover an auditable memory on your device, Clover logs each turn into plain-text and JSON-Lines files inside your local <code>clover-ai-studio/</code> folder. <strong>Nothing in this repository ever leaves your device</strong> unless you explicitly connect your own private GitHub repository.</p>
+
+      <dl class="kv kv--wide" style="margin-top:1.2rem">
+        <div>
+          <dt><code>sessions/YYYY-MM/&lt;chat_id&gt;.jsonl</code></dt>
+          <dd>Stores only the conversation turns: your message text, attachment filenames, and Clover's final answer (one JSON object per line, with timestamp and turn number).</dd>
+        </div>
+        <div>
+          <dt><code>execution/YYYY-MM-DD.log</code></dt>
+          <dd>Plain-text step-by-step log of how each turn ran on your device: what the semantic layer understood, which context layers (memory, knowledge graph, workspace, earlier chats) were consulted, which tools were offered or called, whether permission was granted or denied, and turn duration. Binary attachments are never written here.</dd>
+        </div>
+        <div>
+          <dt><code>outcomes/YYYY-MM.jsonl</code></dt>
+          <dd>Records whether each turn completed or was stopped, whether each tool call succeeded or failed, whether the S3 code compiler check passed, and your explicit or implicit feedback (such as clicking <em>Helpful</em> or <em>Try again</em>).</dd>
+        </div>
+        <div>
+          <dt><code>growth/knowledge/</code> &amp; <code>growth/notes/</code></dt>
+          <dd>Holds facts you explicitly ask Clover to remember, verified lessons from corrected answers, and short idle-time exchange notes used by Layer S2 to recall earlier conversations on your device.</dd>
+        </div>
+        <div>
+          <dt><code>growth/personal/</code></dt>
+          <dd>Personal Process Learning (<code>PPL</code>) records of how you phrase requests and how you prefer answers formatted. Stored strictly on your device and never exported.</dd>
+        </div>
+        <div>
+          <dt><code>config/&lt;device&gt;/</code></dt>
+          <dd>Stores your non-secret preferences: active model/engine choice (<code>settings.json</code>), tool permission states (<code>permissions.json</code>), search provider name (<code>search.json</code>), and workspace paths (<code>workspaces.json</code>).</dd>
+        </div>
+      </dl>
+
+      <div class="apple-grid apple-grid--2" style="margin-top:1.6rem">
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">Automatic Secret Redaction</span>
+          <h3>Secrets Never Reach the Logs</h3>
+          <p>Before any text is written to <code>sessions/</code>, <code>execution/</code>, <code>outcomes/</code>, or <code>growth/</code>, <code>clover_repo.redact()</code> scans and replaces credential patterns—including GitHub tokens (<code>ghp_...</code>, <code>github_pat_...</code>), API keys (<code>sk-...</code>, <code>tvly-...</code>, <code>AIza...</code>), AWS keys (<code>AKIA...</code>), Slack tokens (<code>xox...</code>), and private keys—with <code>[redacted ...]</code>.</p>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">Code-Enforced Sandboxing</span>
+          <h3>Tools Cannot Read the Vault or Tamper with Logs</h3>
+          <p>In <code>paths.py</code>, <code>read_blocked()</code> and <code>write_blocked()</code> enforce in code that the AI model's file and shell tools cannot read <code>vault/</code> and cannot modify <code>clover-ai-studio/</code> records, settings, or <code>AGENTS.md</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="network-activity">
+    <div class="wrap">
+      <p class="note">Section 4 of 6 &middot; Optional User-Initiated Connections</p>
+      <h2>When Network Connections Happen</h2>
+      <p class="lede">Clover AI Studio makes network connections only when you initiate one of the following actions:</p>
+
+      <div class="apple-grid apple-grid--2">
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">1 &middot; First-Launch Model Setup</span>
+          <h3>Verified Open-Weight Downloads</h3>
+          <p>On first start, Clover downloads the open-weight <code>LFM3-Omni-2B</code> model files directly from Hugging Face (and, on Windows, the standalone Python runtime and dependencies), verifying every file against its pinned SHA-256 checksum before use.</p>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">2 &middot; Web Search &amp; URL Reading</span>
+          <h3>Controlled by Your Internet Permission</h3>
+          <p>When you ask Clover to search the web or open a URL—and your <strong>Internet</strong> permission in <code>Settings &rarr; Advanced &rarr; Permissions</code> is set to <em>Allow</em> or approved via <em>Ask</em>—your search query or URL request is sent over HTTPS directly to your selected search provider (DuckDuckGo, Brave, Tavily, or Serper) or target website.</p>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">3 &middot; Private GitHub Backup (Optional)</span>
+          <h3>Your Own Private Repository</h3>
+          <p>If you choose to sign in under <code>Settings &rarr; GitHub account</code>, Clover syncs your local <code>clover-ai-studio/</code> Git repository over HTTPS to a private <code>clover-memory</code> repository in your own GitHub account. Your <code>vault/</code> and <code>media/</code> folders are never uploaded.</p>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">4 &middot; Collective Problem-Solving Learning (Opt-In)</span>
+          <h3>Off by Default &middot; Zero Verbatim Text</h3>
+          <p>Collective Problem-Solving Learning (<code>CPSL</code>) in <code>Settings &rarr; Advanced &rarr; Clover layers</code> is <strong>off by default</strong>. Even if you opt in, <code>collective.py</code> strips all user text, file paths, numbers, and identifiers locally, keeping only fixed-vocabulary capability tags (such as <code>verb_to_capability</code>) that you can inspect in the on-device Candidate Preview.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="device-permissions">
+    <div class="wrap">
+      <p class="note">Section 5 of 6 &middot; OS Permissions</p>
+      <h2>Android &amp; Windows System Permissions</h2>
+      <dl class="kv kv--wide" style="margin-top:1.2rem">
+        <div>
+          <dt>Microphone (<code>RECORD_AUDIO</code>)</dt>
+          <dd>Used only when you hold the Send button to record a voice message. Audio is converted to 16 kHz WAV in memory and processed by the local model on your device.</dd>
+        </div>
+        <div>
+          <dt>Foreground Service (<code>FOREGROUND_SERVICE_SPECIAL_USE</code>)</dt>
+          <dd>Used on Android to keep the local <code>llama-server</code> inference engine and initial model download alive with a visible status notification (<em>"Clover runs on this phone"</em>) and an immediate <em>Stop</em> button while an answer is being generated.</dd>
+        </div>
+        <div>
+          <dt>Network (<code>INTERNET</code>)</dt>
+          <dd>Used for local loopback communication (<code>127.0.0.1</code>) between the Studio UI and the embedded local server, initial model download from Hugging Face, and optional user-approved web search or GitHub sync. Cleartext traffic to external hosts is disabled in <code>network_security_config.xml</code>.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="band" id="data-deletion">
+    <div class="wrap">
+      <p class="note">Section 6 of 6 &middot; Data Deletion &amp; Contact</p>
+      <h2>How to Delete Your Data at Any Time</h2>
+      <p class="lede">Because all data resides on your own device, you have immediate, permanent control over deleting any or all of it without contacting us:</p>
+
+      <div class="apple-grid apple-grid--2">
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">In-App Controls</span>
+          <h3>Granular One-Tap Deletion</h3>
+          <ul>
+            <li><strong>Delete a single conversation:</strong> Click the trash icon next to any chat in the sidebar.</li>
+            <li><strong>Delete all conversations:</strong> Open <code>Settings &rarr; Storage &rarr; Delete all chats</code>.</li>
+            <li><strong>Delete all photos, audio, video &amp; documents:</strong> Open <code>Settings &rarr; Storage &rarr; Clear attachments</code>.</li>
+            <li><strong>Forget all personal learning (PPL):</strong> Open <code>Settings &rarr; Advanced &rarr; Clover layers &rarr; What Clover learned &rarr; Forget everything Clover learned about you</code>.</li>
+          </ul>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">Full Removal &amp; Contact</span>
+          <h3>Complete Uninstall &amp; Support</h3>
+          <p>Uninstalling Clover AI Studio on Android (or running Uninstall / deleting <code>%USERPROFILE%\CloverAI</code> on Windows) permanently removes the local repository, attachments, encrypted vault, and downloaded models from your device.</p>
+          <p style="margin-top:.8rem"><strong>Questions or Privacy Inquiries:</strong><br>
+            Santhosh Narayanan &middot; <a href="mailto:santhoshsathish94@gmail.com">santhoshsathish94@gmail.com</a><br>
+            Issue Tracker: <a href="https://github.com/santhoshsathish94/clover-framework/issues">github.com/santhoshsathish94/clover-framework/issues</a>
+          </p>
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:1.6rem">
+        <a class="btn btn--primary" href="../ai-system/">Explore Clover AI Studio &rarr;</a>
+        <a class="btn" href="../governance/">Read the Governance Specification &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap site-foot__grid">
+    <div>
+      <h4>Read</h4>
+      <ul>
+        <li><a href="../">The framework</a></li>
+        <li><a href="../origin/">Origin</a></li>
+        <li><a href="../ai-system/">AI Studio</a></li>
+        <li><a href="../getting-started/">AGENTS.md</a></li>
+        <li><a href="../governance/">Governance</a></li>
+        <li><a href="../privacy/">Privacy Policy</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Governance</h4>
+      <ul>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/governance/08-governance.md">Governance in full</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/governance/08-governance.md#access-mirrors-the-human-not-the-ai">How access is held</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/governance/08-governance.md#delegated-execution">Delegated execution</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/orchestration-environment.md">The orchestration environment</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Practical</h4>
+      <ul>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/AGENTS.md">AGENTS.md</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/QUICKSTART.md">Quickstart</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/how-ai-fails.md">How AI fails</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/field-practices.md">Field lessons</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Project</h4>
+      <ul>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework">GitHub repository</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/CONTRIBUTING.md">Contributing</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/CHANGELOG.md">Changelog</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/LICENSE">License</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap site-foot__end">
+    <p style="max-width:none">The website explains; the repository documents. Built from real
+      delivery work and still changing as the evidence does. An open, feedback-driven project by
+      <a href="../author/">Santhosh Narayanan</a>.</p>
+  </div>
+</footer>
+
+<script src="../website-interaction-controllers.js?v=4.1.2" defer></script>
+</body>
+</html>

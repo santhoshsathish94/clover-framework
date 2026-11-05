@@ -37,7 +37,7 @@ import semantics  # noqa: E402
 MODEL_ID = "lfm3-omni-2b"
 STUDIO_VERSION = "0.5.0-beta.1"
 RELEASE_CHANNEL = "beta"
-PRIVACY_URL = "https://cloverframework.com/governance/"
+PRIVACY_URL = "https://cloverframework.com/privacy/"
 SUPPORT_URL = "https://github.com/santhoshsathish94/clover-framework/issues"
 MAX_BODY = 4 * 1024 * 1024
 CHAT_BODY = 100 * 1024 * 1024  # streamed chat carries images, audio and video as base64

@@ -65,7 +65,7 @@ Tested against the unpacked `clover.zip` (`133 files, 749,022 bytes`, including 
 1. **Authentication Gate**: `GET /api/setup` without token returns `403`; with `X-Clover-Token` header or `clover_token` cookie returns `200`.
 2. **Health & Version (`GET /api/health` & `GET /api/settings`)**:
    - `"status": "ready"`, `"version": "0.5.0-beta.1"`, `"channel": "beta"`
-   - `"privacy_policy_url": "https://cloverframework.com/governance/"`
+   - `"privacy_policy_url": "https://cloverframework.com/privacy/"`
    - `"support_url": "https://github.com/santhoshsathish94/clover-framework/issues"`
    - `"owner": false` (no owner credentials exposed)
 3. **Collective Problem-Solving Learning (`GET /api/collective` & `POST /api/collective/consent`)**:
