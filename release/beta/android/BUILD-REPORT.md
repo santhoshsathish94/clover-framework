@@ -12,8 +12,8 @@
 
 | Artifact | Purpose | Size | SHA-256 |
 |---|---|---:|---|
-| `clover-ai-studio-beta.aab` | Google Play Console Closed Testing upload | `71 MB` (`73,827,548` bytes) | `aa3ccc71e91062c880e49330ab9bd32b58f406442a1841d5488c6aa17005e70e` |
-| `clover-ai-studio-beta.apk` | Direct device / ADB installation & testing | `72 MB` (`74,906,729` bytes) | `b5c0c8b3e9d3452ab6ce99efe84b958ad39c8c21e05200a445bdaf23ee62f7d8` |
+| `clover-ai-studio-beta.aab` | Google Play Console Closed Testing upload | `71 MB` (`73,832,870` bytes) | `b9271c7d7245daf2051bcfa2da7ff9252d1fa9f76d08cd4dd1070ac31ff329fe` |
+| `clover-ai-studio-beta.apk` | Direct device / ADB installation & testing | `72 MB` (`74,912,051` bytes) | `f9ddebd66560f717b44973ba5486023b38093b3f374dd963eb83d94b2b2c48e0` |
 
 ---
 
