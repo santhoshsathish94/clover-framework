@@ -3,6 +3,12 @@ assets/peacock-feather.png
 
 __pycache__/
 .pytest_cache/
+node_modules/
+**/test-artifacts/
+**/test-runtime-base-*/
+
+# Local SSH keys and host settings must never be committed.
+/testing/ssh/
 
 # The working context file stays on the machine doing the work. It records where the framework is
 # weak and what has not been verified, which is useful to whoever is working and useful to nobody else.

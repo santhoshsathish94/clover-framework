@@ -9,6 +9,7 @@
 <title>Clover</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="icon" type="image/png" sizes="256x256" href="icon.png">
+<link rel="stylesheet" href="voice-mode.css">
 <style>
 :root {
   /* the Clover icon pack (clover-framework/assets/robo-icon): cream, clover green, deep green, leaf. Light only. */
@@ -545,12 +546,29 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <input type="file" id="file-input" multiple hidden>
         <button type="button" class="cbtn" id="attach" title="Add files" aria-label="Add files"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
         <textarea id="prompt" rows="1" placeholder="Message Clover" aria-label="Message"></textarea>
+        <button type="button" class="cbtn voice-toggle" id="voice-toggle" aria-label="Enable voice mode" aria-pressed="false" title="Enable voice mode">
+          <svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg>
+        </button>
         <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
         <button type="button" class="send" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
       </div>
     </div>
   </section>
 </div>
+
+<section class="voice-companion" id="voice-companion" data-phase="off" aria-label="Clover voice companion" hidden>
+  <div class="voice-companion__scene">
+    <img class="voice-companion__poster" id="robot-poster" src="robo-clover-transparent.webp" alt="" width="210" height="180">
+    <svg class="voice-orbit" viewBox="0 0 200 200" aria-hidden="true">
+      <circle class="voice-orbit__track" cx="100" cy="100" r="94" pathLength="100"/>
+      <circle class="voice-orbit__runner" cx="100" cy="100" r="94" pathLength="100"/>
+    </svg>
+  </div>
+  <div class="voice-companion__status" aria-live="polite">
+    <div class="voice-companion__row"><span class="voice-companion__dot"></span><span id="voice-title">Voice mode off</span></div>
+    <p class="voice-companion__detail" id="voice-detail"></p>
+  </div>
+</section>
 
 <div class="auth-gate" id="auth-gate" hidden role="dialog" aria-modal="true" aria-labelledby="auth-gate-h">
   <div class="auth-card">
@@ -826,7 +844,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function apiUrl(p) { return API_BASE + p; }
   var state = { sessions: { current: '', order: [], map: {} }, files: [], media: [], docs: [], ready: false, busy: false, perms: {}, mode: 'lfm3',
     settings: { model: 'omni', sampling: 'general', thinking: true, budget: 2048, voice: 'female', autospeak: true }, health: null, lastSpeed: 0,
-    turnId: null, waitEl: null, omni: false, inputs: ['text'], speakNext: false, memCount: null, openGroups: {}, catalog: null };
+    turnId: null, waitEl: null, omni: false, inputs: ['text'], speakNext: false, conversationNext: false, memCount: null, openGroups: {}, catalog: null };
   var RECENT_CHATS = 5;
   try { state.openGroups = JSON.parse(localStorage.getItem(KEY + '-groups') || '{}') || {}; } catch (e) {}
   var MEDIA_MB = { image: 15, audio: 30, video: 60 }, MAX_MEDIA = 6;
@@ -1242,9 +1260,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         c.messages = fromRecords(r.messages || []); save(); if (cur() === c) renderLog();
       }).catch(function () {});
     }
-    var empty = !c || !c.messages.length;
+    var visible = c ? c.messages.filter(function (m) { return !m.voiceConversation; }) : [];
+    var empty = !visible.length;
     $('hero').hidden = !empty;
-    if (!empty) c.messages.forEach(function (m) { log.appendChild(m.role === 'user' ? userEl(m) : botEl(m)); });
+    if (!empty) visible.forEach(function (m) { log.appendChild(m.role === 'user' ? userEl(m) : botEl(m)); });
     $('chat-title').textContent = (c && c.title) || 'New chat';
     scrollDown();
   }
@@ -1290,12 +1309,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   // starts after the first, short part. Requesting a part only when the previous one started playing left a 2.4 s
   // silence before a slow part (a list of colours).
   var speech = null;
+  function speechEvent(name, error) { document.dispatchEvent(new CustomEvent('clover:' + name, { detail: { error: error || '' } })); }
+  function speechDone(me, error) { if (!me.ended) { me.ended = true; speechEvent('speech-end', error); } }
   function stopSpeech() { if (speech) { speech.stop(); speech = null; } }
   function speakOmni(text, b) {
     var again = speech && b && speech.button === b; stopSpeech(); if (again) return;
-    var me = { button: b, cancelled: false, audio: null, stop: function () {
-      me.cancelled = true; if (me.audio) me.audio.pause(); if (b) b.classList.remove('busy'); } };
-    speech = me;
+    var me = { button: b, cancelled: false, ended: false, audio: null, stop: function () {
+      me.cancelled = true; if (me.audio) me.audio.pause(); if (b) b.classList.remove('busy'); speechDone(me); } };
+    speech = me; speechEvent('speech-start');
     if (b) { b.classList.add('busy'); b.title = 'Stop'; }
     function wav(part) {
       return fetch(apiUrl('/api/tts'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: part, voice: state.settings.voice }) })
@@ -1315,8 +1336,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       return blobs[i].then(function (blob) {
         if (me.cancelled) return;
         var url = URL.createObjectURL(blob), a = new Audio(url); me.audio = a;
-        return new Promise(function (res, rej) { a.onended = res; a.onerror = function () { rej(new Error('audio playback failed')); }; a.play().catch(rej); })
-          .then(function () { URL.revokeObjectURL(url); return play(blobs, i + 1); },
+        return new Promise(function (res, rej) {
+          a.onended = res; a.onerror = function () { rej(new Error('audio playback failed')); };
+          a.onplaying = function () { speechEvent('speech-play'); };
+          a.play().catch(rej);
+        }).then(function () { URL.revokeObjectURL(url); return play(blobs, i + 1); },
                 function (e) { URL.revokeObjectURL(url); throw e; });
       });
     }
@@ -1327,9 +1351,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }).then(function () {
       if (speech === me) speech = null;
       if (b) { b.classList.remove('busy'); b.title = 'Listen (Clover\'s voice)'; }
+      speechDone(me);
     }, function (e) {
       if (speech === me) speech = null;
       if (b) { b.classList.remove('busy'); b.title = me.cancelled ? 'Listen (Clover\'s voice)' : 'Could not speak: ' + e.message; }
+      speechDone(me, me.cancelled ? '' : e.message);
     });
   }
 
@@ -2257,23 +2283,26 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if ((!prompt && !media.length) || !state.ready || state.busy) return null;
     stopSpeech();
     $('prompt').value = ''; autosize();
-    if (!c.messages.length) c.title = (prompt || media.map(function (m) { return m.name; }).join(', ')).slice(0, 48);
+    state.conversationNext = media.some(function (m) { return m.conversation; });
+    if (!c.messages.length) c.title = state.conversationNext ? 'Voice conversation' : (prompt || media.map(function (m) { return m.name; }).join(', ')).slice(0, 48);
     c.updated = new Date().toISOString();
     var hist = historyFor(c);
-    c.messages.push({ role: 'user', text: prompt, files: files.map(function (f) { return f.name; }).concat(docs.map(function (d) { return d.name; })),
+    c.messages.push({ role: 'user', text: prompt, voiceConversation: state.conversationNext,
+      files: files.map(function (f) { return f.name; }).concat(docs.map(function (d) { return d.name; })),
       media: media.map(function (m) { return { kind: m.kind, name: m.name, thumb: m.thumb }; }) });
     state.speakNext = media.some(function (m) { return m.voice; });
     state.files = []; state.media = []; state.docs = []; renderAtt(); save(); renderChats(); renderLog();
     return { c: c, prompt: prompt, files: files, media: media, docs: docs, hist: hist };
   }
-  function liveTurn() {
+  function liveTurn(conversation) {
     var turn = el('div', 'b');
     var body = el('div', 'b__body'); turn.appendChild(body);
-    var wait = el('div', 'typing', SPIN + '<em>reading your message · 0:00</em>');
+    var stage = conversation ? 'Clover is thinking' : 'reading your message';
+    var wait = el('div', 'typing', SPIN + '<em>' + stage + ' · 0:00</em>');
     body.appendChild(wait);
-    $('log').appendChild(turn); scrollDown();
+    if (!conversation) { $('log').appendChild(turn); scrollDown(); }
     state.waitEl = wait.querySelector('em');
-    state.stageText = 'reading your message';
+    state.stageText = stage;
     state.turnStart = Date.now();
     return { turn: turn, body: body, wait: wait };
   }
@@ -2291,7 +2320,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function streamSend() {
     var inp = takeInput(); if (!inp) return;
     if (state.speakNext && state.settings.autospeak && state.omni) api('POST', '/api/tts/warm', {}).catch(function () {});
-    var c = inp.c, live = liveTurn(), body = live.body;
+    var c = inp.c, live = liveTurn(state.conversationNext), body = live.body;
     var work = workEl(true, true); work.label('Understanding your message\u2026'); work.meta('0:00');
     body.insertBefore(work.box, live.wait);
     var stepsBox = el('div', 'step-tl'); work.inner.appendChild(stepsBox);
@@ -2517,15 +2546,16 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       var newTok = gens.reduce(function (s, g) { return s + (g.new_tokens || 0); }, 0);
       var decS = gens.reduce(function (s, g) { return s + (g.decode_s || 0); }, 0);
       var speed = decS ? newTok / decS : 0; if (speed) state.lastSpeed = speed;
-      var m = { role: 'bot', text: ev.reply || '', isNotice: !!ev.error, turn: ev.turn,
+      var m = { role: 'bot', text: ev.reply || '', isNotice: !!ev.error, turn: ev.turn, voiceConversation: state.conversationNext,
         meta: secs + ' s' + (newTok ? ' · ' + newTok + ' tokens' : '') + (speed ? ' · ' + speed.toFixed(1) + ' tok/s' : ''),
         thinking: thinking.trim(), thinkSecs: tFirst ? Math.round((tLast - tFirst) / 1000) : 0,
         tools: tools, steps: stepsList, used: layersUsed(ev),
         images: (ev.images || []).map(function (x) { return { file: x.file, prompt: x.prompt, model: x.model, seconds: x.seconds }; }) };
       c.messages.push(m); save();
-      live.turn.replaceWith(botEl(m)); scrollDown();
+      if (state.conversationNext) { live.turn.remove(); renderLog(); }
+      else { live.turn.replaceWith(botEl(m)); scrollDown(); }
       var speakIt = state.speakNext && state.settings.autospeak && state.omni && !ev.error && !ev.cancelled;
-      state.speakNext = false;
+      state.speakNext = false; state.conversationNext = false;
       if (speakIt) speakOmni(m.text);
     }
     fetch(apiUrl('/api/chat/stream'), {
@@ -2810,6 +2840,20 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }).catch(function (e) { setNote('acct-note', e.message); });
   });
 
+  // Narrow bridge for the opt-in voice companion; chat and inference remain in the updated Studio runtime.
+  window.CloverVoiceBridge = {
+    getState: function () {
+      return { ready: state.ready, busy: state.busy, omni: state.omni, audio: state.inputs.indexOf('audio') >= 0 };
+    },
+    sendAudio: function (wav, seconds) {
+      if (!state.ready || state.busy || !state.omni || state.inputs.indexOf('audio') < 0) throw new Error('Clover is not ready for audio.');
+      state.media.push({ kind: 'audio', name: 'Voice conversation · ' + seconds + ' s', data: wav, voice: true, conversation: true });
+      renderAtt(); updateSend(); send();
+    },
+    toWav16k: toWav16k,
+    stopSpeaking: stopSpeech
+  };
+
   function tick() {
     if (!state.busy) pollStatus();
     if (state.ready && !state.health) loadHealth();
@@ -2818,5 +2862,6 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   loadSettings(); renderHero(); load(); renderSettings(); loadPerms(); loadWorkspaces(); tick(); $('prompt').focus();
 })();
 </script>
+<script nonce="__CSP_NONCE__" src="voice-mode.js"></script>
 </body>
 </html>

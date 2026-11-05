@@ -1,0 +1,13 @@
+{
+  "name": "clover-ai-studio-voice-companion",
+  "version": "0.4.1",
+  "private": true,
+  "description": "Clover AI Studio local runtime with a static robot and clockwise voice ring",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "test:voice": "node test-voice-mode.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}

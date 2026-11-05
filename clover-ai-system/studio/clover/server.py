@@ -49,7 +49,10 @@ ATTACH_MARKER = "\n\nUsing the attached content / session context above, answer 
 DATA_URL_RE = re.compile(r"^data:image/(?:png|jpeg|gif|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$")
 # files of the Studio page (clover/web, built by studio/build_assets.py from the Clover icon pack)
 STATIC = {"/icon.png": ("icon.png", "image/png"), "/favicon.ico": ("icon.png", "image/png"),
-          "/favicon.svg": ("favicon.svg", "image/svg+xml"), "/robo-clover.webp": ("robo-clover.webp", "image/webp")}
+          "/favicon.svg": ("favicon.svg", "image/svg+xml"), "/robo-clover.webp": ("robo-clover.webp", "image/webp"),
+          "/robo-clover-master.webp": ("robo-clover-master.webp", "image/webp"),
+          "/robo-clover-transparent.webp": ("robo-clover-transparent.webp", "image/webp"),
+          "/voice-mode.css": ("voice-mode.css", "text/css"), "/voice-mode.js": ("voice-mode.js", "text/javascript")}
 
 
 def setup_stdio(log_path):
