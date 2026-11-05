@@ -136,6 +136,59 @@ def _eval(expr):
     return v if isinstance(v, (int, float)) and math.isfinite(v) else None
 
 
+_DIRECT_EXPR = re.compile(
+    r"^\s*(?:(?:what(?:'?s|\s+is|\s+are)|calculate|compute|evaluate)\s+)?([0-9\s(),.+\-*/x\u00d7\u00f7\u2212^]+?)"
+    r"\s*(?:=\s*\?)?[?.!]?(?:\s+(?:return|reply\s+with|output|give|provide|write|respond\s+with)\s+(?:only|just)\b[\s\S]*)?$",
+    re.I,
+)
+
+
+def direct_arithmetic_value(question):
+    """Exact value when `question` is a pure arithmetic expression (e.g. 'What is 137 × 29 + 46? Return only the number.'),
+    or None when it is a word problem or contains anything else."""
+    m = _DIRECT_EXPR.match(normalize(question or "").strip())
+    if not m:
+        return None
+    expr = m.group(1).strip()
+    if not re.search(r"[+\-*/x\u00d7\u00f7^]", expr) or len(re.findall(r"\d+", expr)) < 2:
+        return None
+    return _eval(expr)
+
+
+def trim_only_value(question, reply):
+    """When `question` explicitly asks to return/reply with ONLY a single value (number, year, or code), strips wrapper
+    words like 'The archive code is: **CLOVER-7429**' or 'Augusta Ada King — 1815' down to the exact value."""
+    q, r = (question or "").strip(), (reply or "").strip()
+    if not q or not r or "\n\n" in r or len(r) > 240:
+        return reply
+    if not re.search(
+        r"\b(?:return|reply\s+with|output|respond\s+with|give|provide|write)\s+(?:only|just)\b|\bonly\s+the\s+(?:number|year|code|value|result|answer)\b",
+        q,
+        re.I,
+    ):
+        return reply
+    clean = re.sub(r"[*_`]+", "", r).strip()
+    if re.search(r"\bonly\s+(?:the\s+|a\s+)?(?:[\w'\-]+\s+){0,3}?(?:year|number|result|value|total|sum|product|count)\b", q, re.I):
+        if re.search(r"\byear\b", q, re.I):
+            yrs = re.findall(r"\b(1\d{3}|20\d{2})\b", clean)
+            if len(yrs) == 1:
+                return yrs[0]
+        v = direct_arithmetic_value(q)
+        if v is not None:
+            return f"{int(v)}" if float(v).is_integer() else f"{v:g}"
+        nums = re.findall(r"-?\d[\d,]*(?:\.\d+)?", clean)
+        if len(nums) == 1:
+            return nums[0].replace(",", "")
+    if re.search(r"\bonly\s+(?:the\s+|a\s+)?(?:[\w'\-]+\s+){0,3}?code\b", q, re.I):
+        codes = re.findall(r"\b[A-Z]{2,16}-\d{2,10}\b", clean)
+        if len(codes) == 1:
+            return codes[0]
+        m = re.match(r"^(?:the\s+)?(?:[\w\s]{1,35}?)\s+(?:is|was|:)\s*:?\s*([A-Za-z0-9_\-]+)[.!]?$", clean, re.I)
+        if m:
+            return m.group(1)
+    return reply
+
+
 def arithmetic_findings(answer):
     """'a op b = c' statements in the answer whose c is wrong (allowing the rounding the answer shows)."""
     out = []

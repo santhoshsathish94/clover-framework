@@ -261,13 +261,15 @@ class Runtime:
     """What is a process's own: its tool names for each capability, the device it runs on (for wording), the paths its
     tools may never touch and the commands it asks about before running them. csi: text -> CSI analysis or None (a
     local CSI service, csi_reader); None = off, the default. personal: the person's learning (personal.Personal);
-    None = no personal reading (the processes give one by default). Everything else is common."""
+    None = no personal reading (the processes give one by default). collective: opted-in shared core rules
+    (core_sync.Collective); None = off. Everything else is common."""
     tools: dict
     device: str = "device"
     blocked: Callable | None = None
     risky: Callable | None = None
     csi: Callable | None = None
     personal: object | None = None
+    collective: object | None = None
 
     def capability(self, name):
         return next((cap for cap, names in self.tools.items() if name in names), None)
@@ -311,6 +313,7 @@ class Frame:
     notes: list = field(default_factory=list)
     declined: list = field(default_factory=list)  # capabilities the message declines, in CSI's reading (CSI on)
     personal: dict = field(default_factory=dict)  # the person's reading of this message (personal learning)
+    collective: dict = field(default_factory=dict)  # validated shared-core strategy/reading (collective learning)
     guidance: str = ""  # the person's preferred form of answer, for the model (personal learning)
     data: bool = False  # a spreadsheet, table or JSON file is attached in this conversation
     runtime: Runtime | None = field(default=None, repr=False, compare=False)
@@ -340,6 +343,8 @@ class Frame:
             s = "follow-up · " + s
         if self.personal.get("hypothesis") is not None:
             s += " · as you usually mean it"
+        elif self.collective.get("rule_id") is not None:
+            s += " · from shared core"
         s += NO_TOOLS.get(self.route, "")
         s += {"ask": " · asks first", "refuse": " · vault is off-limits"}.get(self.discernment, "")
         return "understood: " + s
@@ -354,6 +359,12 @@ class Frame:
             out["personal"] = {k: self.personal[k] for k in ("hypothesis", "caps", "support") if k in self.personal}
             if self.guidance:
                 out["personal"]["form"] = self.guidance
+        if self.collective.get("rule_id") is not None:
+            out["collective"] = {
+                k: self.collective[k]
+                for k in ("rule_id", "version", "category", "caps", "strategy", "independent_installations")
+                if k in self.collective
+            }
         if self.notes:
             out["aligned"] = list(self.notes)
         return out
@@ -547,6 +558,9 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
     frame._csi = csi_doc
     if runtime.personal is not None and act in ("question", "concept", "action") and disc != "refuse":
         _personal(frame, runtime)
+    if (runtime.collective is not None and frame.act in ("question", "concept", "action")
+            and frame.discernment != "refuse" and frame.personal.get("hypothesis") is None):
+        _collective(frame, runtime)
     return frame
 
 
@@ -562,6 +576,12 @@ def _personal(frame, runtime):
         return
     frame.personal = p
     if p.get("hypothesis") is not None:
+        if not frame.declined and frame.text:
+            dec, csi_doc = _declined(runtime, frame.text, with_doc=True)
+            if dec:
+                frame.declined = sorted(dec)
+            if getattr(frame, "_csi", None) is None and csi_doc is not None:
+                frame._csi = csi_doc
         caps = [c for c in p.get("caps") or [] if c not in frame.declined]
         frame.caps, frame.asked = caps, runtime.names(caps)
         frame.web_cap = 8 if "web.search" in caps else 3
@@ -572,6 +592,36 @@ def _personal(frame, runtime):
     frame.guidance = p.get("guidance") or ""
     if p.get("ask_first") and frame.act == "action" and frame.discernment == "proceed":
         frame.discernment, frame.why = "ask", "you asked Clover to check with you before it acts"
+
+
+def _collective(frame, runtime):
+    """Validated shared-core reading (Runtime.collective, research/collective-learning). Applies only when no personal
+    habit overrode the message (Personal > Collective > General). Never offers a declined capability and never removes
+    a safety confirmation before changing files or the system."""
+    try:
+        c = runtime.collective.interpret(frame.text, frame)
+    except Exception:
+        return
+    if not c or c.get("rule_id") is None:
+        return
+    if not frame.declined and frame.text:
+        dec, csi_doc = _declined(runtime, frame.text, with_doc=True)
+        if dec:
+            frame.declined = sorted(dec)
+        if getattr(frame, "_csi", None) is None and csi_doc is not None:
+            frame._csi = csi_doc
+    caps = [cap for cap in c.get("caps") or [] if cap not in frame.declined]
+    frame.collective = dict(c, caps=caps)
+    if caps or c.get("caps"):
+        frame.caps, frame.asked = caps, runtime.names(caps)
+        frame.web_cap = 8 if "web.search" in caps else 3
+        frame.act = "action" if frame.asked else ("question" if frame.act == "action" else frame.act)
+        if frame.act == "action" and frame.discernment == "proceed" and (
+                re.search(CHANGE_FILES, frame.text, re.I) or (runtime.risky is not None and runtime.risky(frame.text))):
+            frame.discernment, frame.why = "ask", "it changes files or the system, so Clover asks before it runs"
+    strat = (c.get("strategy") or "").strip()
+    if strat:
+        frame.guidance = (f"{frame.guidance} {strat}".strip() if frame.guidance else strat)
 
 
 def _chose(frame, route, offered):
@@ -846,7 +896,21 @@ def align(frame, res, remember_fn=None):
     if frame.act == "action" and not any(c.get("ran") and _worked(c) for c in rounds) and _claims(reply, frame.runtime.csi):
         reply = reply.rstrip() + "\n\n(Note: nothing ran successfully for this answer, so this has not actually been done.)"
         notes.append("an action that did not run")
+    exact_val = C.direct_arithmetic_value(frame.text) if hasattr(C, "direct_arithmetic_value") else None
+    if exact_val is not None:
+        shown_val = f"{int(exact_val)}" if float(exact_val).is_integer() else f"{exact_val:g}"
+        got_val = C.final_answer(frame.text, reply)
+        if not C.same(got_val, exact_val):
+            reply = shown_val
+            notes.append("verified arithmetic")
+    if hasattr(C, "trim_only_value"):
+        trimmed = C.trim_only_value(frame.text, reply)
+        if trimmed != reply:
+            reply = trimmed
+            notes.append("exact value requested")
     res["reply"] = reply
-    frame.knowledge, frame.label = _knowledge(frame, res, rounds, reply)
+    frame.knowledge, frame.label = (
+        ("verified", "verified · arithmetic") if exact_val is not None else _knowledge(frame, res, rounds, reply)
+    )
     frame.notes = notes
     return notes

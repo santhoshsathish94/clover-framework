@@ -1629,17 +1629,21 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       : rec.state === 'loading' ? ' Getting ready…' : rec.state === 'error' ? ' Could not start: ' + (rec.error || 'error') + '.'
       : /embedder/.test(rec.state) ? ' Needs its embedding model: run Clover AI Studio setup again.' : '';
     var whereDesc = (info && info.host && info.host !== 'local') ? ('hosted on ' + info.host) : ('the ' + (st.engine === 'gpu' ? gpuName() : 'CPU'));
+    var fusedOk = !!sv.fused_available, fusedActive = !k3Big && st.engine === 'fused' && fusedOk;
     var core = [
       { tag: 'C1', name: 'Inference', badge: 'On', on: true,
         desc: mLabel + ' on ' + whereDesc + '. The model itself.',
         links: [['model', 'Model and voice']] },
-      { tag: 'C2', name: 'Plan', badge: k3Big ? 'On' : 'Try again', on: true, part: !k3Big,
+      { tag: 'C2', name: 'Plan', badge: (k3Big || fusedActive) ? 'On' : 'Try again', on: true, part: !(k3Big || fusedActive),
         desc: k3Big ? ('HybridAgent planner + Studio tool loop running on k3 for ' + mLabel + ', plus Try again when you say an answer is not right.')
-          : 'Try again: when you say an answer is not right, Clover checks it with outside evidence and solves it again. ' +
-            'The planner trained for LFM3-Omni-2B is on this laptop (precomputed) and stays off until the combined C1 + C2 + C3 runtime is checked; it is pilot scale and not measured yet.' },
-      { tag: 'C3', name: 'Decode', badge: k3Big ? 'On' : 'Not yet', on: k3Big,
+          : fusedOk ? ('Try again: when you say an answer is not right, Clover checks it with outside evidence and solves it again. ' +
+            'The precomputed C2 planner for LFM3-Omni-2B is installed on this laptop' + (fusedActive ? ' and active in C1 + C2 + C3 mode.' : ' (switch to C1 + C2 + C3 in Model and voice to turn it on).'))
+          : ('Try again: when you say an answer is not right, Clover checks it with outside evidence and solves it again. ' +
+            'The optional precomputed C2 planner for LFM3-Omni-2B is not installed on this laptop (' + (sv.fused_reason || 'optional component c2c3') + ').') },
+      { tag: 'C3', name: 'Decode', badge: (k3Big || fusedActive) ? 'On' : (fusedOk ? 'Installed' : 'Not installed'), on: (k3Big || fusedActive),
         desc: k3Big ? ('11-level Neural Concept Machine (NCM) concept renderer running on k3 for ' + mLabel + '.')
-          : 'The concept renderer (NCM) trained for LFM3-Omni-2B is on this laptop (precomputed). It decodes the planner\'s plan, so it switches on with C2.' }
+          : fusedOk ? ('The precomputed 11-level NCM concept renderer for LFM3-Omni-2B is installed on this laptop' + (fusedActive ? ' and active.' : ' and switches on with C1 + C2 + C3.'))
+          : ('The optional precomputed 11-level NCM concept renderer for LFM3-Omni-2B is not installed on this laptop (' + (sv.fused_reason || 'optional component c2c3') + ').') }
     ];
     var support = [
       { tag: 'S1', name: 'Memory', on: !!L.memory,
