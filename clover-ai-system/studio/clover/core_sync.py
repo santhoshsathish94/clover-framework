@@ -3,15 +3,15 @@
 Manages:
 1. Two independent consent controls (`consent_contribute`, `consent_receive`), persisted locally in
    `<collective_dir>/consent.json` (both default to `False` — strictly opt-in).
-2. Cryptographic verification of signed `clover-collective` releases (`releases/manifest.json` HMAC-SHA256 signature +
-   per-file SHA-256 digests).
+2. Asymmetric public-key verification of signed `clover-collective` releases (`releases/manifest.json` RFC 8032 Ed25519
+   signature against the pinned 32-byte public verification key + per-file SHA-256 digests). Clients hold ONLY the
+   public verification key and can never manufacture or sign shared-core releases.
 3. Runtime interpretation (`Collective.interpret(text, frame)`), hooked into `semantics.Runtime.collective` and called
    ONLY when no validated personal habit overrides the message (`Personal > Collective > General`).
 """
 from __future__ import annotations
 
 import hashlib
-import hmac
 import json
 import os
 import sys
@@ -22,16 +22,134 @@ import collective as C_EXT
 import personal
 import semantics
 
+# Official 32-byte RFC 8032 Ed25519 public verification key for Clover Collective Core releases.
+# The corresponding private signing key is held exclusively in the protected release environment vault.
+DEFAULT_VERIFY_PUBLIC_KEY = "dba3f7e2e969a26c57a24d50e2ecd654249b42e25eecc1f9140a514d7dcedb8a"
+
+_Q = 2**255 - 19
+_L = 2**252 + 27742317777372353535851937790883648493
+_D = (-121665 * pow(121666, _Q - 2, _Q)) % _Q
+_I = pow(2, (_Q - 1) // 4, _Q)
+
+
+def _xrecover(y: int) -> int:
+    xx = (y * y - 1) * pow(_D * y * y + 1, _Q - 2, _Q) % _Q
+    x = pow(xx, (_Q + 3) // 8, _Q)
+    if (x * x - xx) % _Q != 0:
+        x = (x * _I) % _Q
+    return _Q - x if x % 2 != 0 else x
+
+
+_BY = 4 * pow(5, _Q - 2, _Q) % _Q
+_BX = _xrecover(_BY)
+_B_PT = (_BX % _Q, _BY % _Q, 1, (_BX * _BY) % _Q)
+_IDENT = (0, 1, 1, 0)
+
+
+def _edwards_add(P: tuple[int, int, int, int], Q: tuple[int, int, int, int]) -> tuple[int, int, int, int]:
+    x1, y1, z1, t1 = P
+    x2, y2, z2, t2 = Q
+    a = (y1 - x1) * (y2 - x2) % _Q
+    b = (y1 + x1) * (y2 + x2) % _Q
+    c = t1 * 2 * _D * t2 % _Q
+    d = z1 * 2 * z2 % _Q
+    e = (b - a) % _Q
+    f = (d - c) % _Q
+    g = (d + c) % _Q
+    h = (b + a) % _Q
+    return (e * f % _Q, g * h % _Q, f * g % _Q, e * h % _Q)
+
+
+def _scalarmult(P: tuple[int, int, int, int], e: int) -> tuple[int, int, int, int]:
+    Q = _IDENT
+    addend = P
+    while e > 0:
+        if e & 1:
+            Q = _edwards_add(Q, addend)
+        addend = _edwards_add(addend, addend)
+        e >>= 1
+    return Q
+
+
+def _encodepoint(P: tuple[int, int, int, int]) -> bytes:
+    x, y, z, _ = P
+    zi = pow(z, _Q - 2, _Q)
+    x = (x * zi) % _Q
+    y = (y * zi) % _Q
+    res = bytearray(y.to_bytes(32, "little"))
+    res[31] |= (x & 1) << 7
+    return bytes(res)
+
+
+def _decodepoint(s: bytes) -> tuple[int, int, int, int]:
+    if len(s) != 32:
+        raise ValueError("Invalid Ed25519 point length")
+    y = int.from_bytes(s, "little") & ((1 << 255) - 1)
+    if y >= _Q:
+        raise ValueError("Ed25519 point y out of range")
+    x_sign = (s[31] >> 7) & 1
+    u = (y * y - 1) % _Q
+    v = (_D * y * y + 1) % _Q
+    x = (u * pow(v, 3, _Q) * pow(u * pow(v, 7, _Q), (_Q - 5) // 8, _Q)) % _Q
+    vxx = (v * x * x) % _Q
+    if vxx == u:
+        pass
+    elif vxx == (-u) % _Q:
+        x = (x * _I) % _Q
+    else:
+        raise ValueError("Point not on Ed25519 curve")
+    if x == 0 and x_sign == 1:
+        raise ValueError("Invalid Ed25519 x=0 with sign=1")
+    if (x & 1) != x_sign:
+        x = _Q - x
+    return (x, y, 1, (x * y) % _Q)
+
+
+def ed25519_verify(pub_bytes: bytes, msg: bytes, sig_bytes: bytes) -> bool:
+    """Verify a 64-byte RFC 8032 Ed25519 signature against a 32-byte public key."""
+    try:
+        if len(pub_bytes) != 32 or len(sig_bytes) != 64:
+            return False
+        R_bytes, S_bytes = sig_bytes[:32], sig_bytes[32:]
+        S = int.from_bytes(S_bytes, "little")
+        if S >= _L:
+            return False
+        A = _decodepoint(pub_bytes)
+        R = _decodepoint(R_bytes)
+        k = int.from_bytes(hashlib.sha512(R_bytes + pub_bytes + msg).digest(), "little") % _L
+        lhs = _scalarmult(_B_PT, S)
+        rhs = _edwards_add(R, _scalarmult(A, k))
+        return _encodepoint(lhs) == _encodepoint(rhs)
+    except Exception:
+        return False
+
+
+def _normalize_public_key(verify_key: str | bytes | None) -> bytes:
+    if verify_key is None:
+        verify_key = os.environ.get("CLOVER_CPSL_PUBLIC_KEY", "").strip() or DEFAULT_VERIFY_PUBLIC_KEY
+    if isinstance(verify_key, bytes):
+        if len(verify_key) == 32:
+            return verify_key
+        verify_key = verify_key.decode("utf-8").strip()
+    s = str(verify_key).strip()
+    if len(s) == 64:
+        try:
+            return bytes.fromhex(s)
+        except ValueError:
+            pass
+    raise ValueError("Ed25519 verify_key must be a 32-byte raw public key or 64-character hex public key")
+
 
 class CoreSyncError(RuntimeError):
     pass
 
 
 class CoreSync:
-    """Verifies and loads signed releases from a `clover-collective` release directory."""
+    """Verifies and loads Ed25519-signed releases from a `clover-collective` release directory using a public key."""
 
-    def __init__(self, signing_key: str = "clover-collective-core-signing-key-v1"):
-        self.signing_key = signing_key.encode("utf-8")
+    def __init__(self, verify_key: str | bytes | None = None):
+        self.verify_key = _normalize_public_key(verify_key)
+        self.verify_key_hex = self.verify_key.hex()
 
     def verify_and_load(self, registry_root: str | Path, consent_receive: bool = True) -> dict:
         if not consent_receive:
@@ -44,15 +162,25 @@ class CoreSync:
         version = manifest.get("version")
         rules = manifest.get("rules", [])
         file_hashes = manifest.get("file_hashes", {})
-        sig = manifest.get("signature", "")
+        sig_alg = manifest.get("signature_alg", "")
+        sig_hex = manifest.get("signature", "")
+        manifest_pub = manifest.get("public_key", "")
+
+        if sig_alg != "Ed25519":
+            raise CoreSyncError(f"Unsupported or insecure signature_alg {sig_alg!r}; Ed25519 public-key signature required")
+        if manifest_pub and manifest_pub.lower() != self.verify_key_hex.lower():
+            raise CoreSyncError("Release public_key does not match trusted verification public key")
+        try:
+            sig_bytes = bytes.fromhex(sig_hex)
+        except ValueError as exc:
+            raise CoreSyncError("Malformed hex signature in manifest") from exc
 
         payload = json.dumps(
             {"version": version, "rules": rules, "file_hashes": file_hashes},
             sort_keys=True,
         ).encode("utf-8")
-        expected_sig = hmac.new(self.signing_key, payload, hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(sig, expected_sig):
-            raise CoreSyncError("Release signature verification failed (tampered manifest)")
+        if not ed25519_verify(self.verify_key, payload, sig_bytes):
+            raise CoreSyncError("Release signature verification failed (invalid Ed25519 signature or tampered manifest)")
 
         for rel_path, expected_sha in file_hashes.items():
             fpath = root / rel_path
@@ -73,13 +201,13 @@ class Collective:
         root: str | Path,
         device: str = "",
         csi=None,
-        signing_key: str = "clover-collective-core-signing-key-v1",
+        verify_key: str | bytes | None = None,
     ):
         self.dir = Path(root)
         self.dir.mkdir(parents=True, exist_ok=True)
         self.device = device
         self.csi = csi
-        self.syncer = CoreSync(signing_key=signing_key)
+        self.syncer = CoreSync(verify_key=verify_key)
         self.lock = threading.RLock()
         self.version: str | None = None
         self.rules: list[dict] = []

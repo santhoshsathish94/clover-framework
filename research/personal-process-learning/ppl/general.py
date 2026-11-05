@@ -41,7 +41,6 @@ class GeneralInterpreter:
 
     @classmethod
     def train(cls, rows, reader, use_csi=True):
-        from sklearn.linear_model import LogisticRegression
         feats = [F.features(t, c, reader.read(t), use_csi)[0] for t, c, _ in rows]
         vocab = sorted({f for fs in feats for f in fs})
         index = {f: k for k, f in enumerate(vocab)}
@@ -50,8 +49,34 @@ class GeneralInterpreter:
             for f in fs:
                 X[r, index[f]] = 1.0
         y = [lab for _, _, lab in rows]
-        m = LogisticRegression(max_iter=2000, C=4.0).fit(X, y)
-        return cls(m.classes_, vocab, m.coef_, m.intercept_)
+        try:
+            from sklearn.linear_model import LogisticRegression
+            m = LogisticRegression(max_iter=2000, C=4.0).fit(X, y)
+            return cls(m.classes_, vocab, m.coef_, m.intercept_)
+        except ImportError:
+            classes = sorted(set(y))
+            cls_idx = {c: i for i, c in enumerate(classes)}
+            Y = np.zeros((len(rows), len(classes)), dtype=np.float32)
+            for r, lab in enumerate(y):
+                Y[r, cls_idx[lab]] = 1.0
+            W_mat = np.zeros((len(classes), len(vocab)), dtype=np.float32)
+            b_vec = np.zeros(len(classes), dtype=np.float32)
+            n = float(len(rows))
+            reg = 1.0 / (4.0 * n)
+            lr = 1.2
+            for step in range(400):
+                logits = X @ W_mat.T + b_vec
+                logits -= logits.max(axis=1, keepdims=True)
+                probs = np.exp(logits)
+                probs /= probs.sum(axis=1, keepdims=True)
+                diff = (probs - Y) / n
+                grad_W = diff.T @ X + reg * W_mat
+                grad_b = diff.sum(axis=0)
+                W_mat -= lr * grad_W
+                b_vec -= lr * grad_b
+                if step in (150, 280):
+                    lr *= 0.5
+            return cls(classes, vocab, W_mat, b_vec)
 
     def scores(self, feats):
         x = np.zeros(len(self.vocab), dtype=np.float32)

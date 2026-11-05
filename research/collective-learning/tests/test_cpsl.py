@@ -16,8 +16,10 @@ for p in (str(COLL_ROOT), str(PPL_ROOT)):
 
 from cpsl.collective import LocalCollectiveExtractor, is_allowed_collective_feature, load_closed_general_vocabulary
 from cpsl.collective_gateway import CollectiveGateway
-from cpsl.core_registry import CoreRegistry
+from cpsl.core_registry import CoreRegistry, generate_ed25519_keypair
 from cpsl.core_sync import CoreSync, CoreSyncError
+from cpsl.frozen_heldout_benchmark import load_and_verify_frozen_tasks
+from cpsl.strategies import COLLECTIVE_STRATEGIES
 
 
 class TestCPSLProtocol(unittest.TestCase):
@@ -82,7 +84,8 @@ class TestCPSLProtocol(unittest.TestCase):
 
     def test_registry_signing_and_tamper_rejection(self):
         with tempfile.TemporaryDirectory() as tmp:
-            reg = CoreRegistry(tmp)
+            # Verify that CoreRegistry refuses to sign without a private signing key
+            reg_unsigned = CoreRegistry(tmp)
             fake_eval = {
                 "total_evaluated": 1,
                 "promoted_count": 1,
@@ -99,11 +102,24 @@ class TestCPSLProtocol(unittest.TestCase):
                 "rejected": [],
                 "all_reports": [],
             }
-            reg.publish_release(fake_eval, note="unit test")
-            sync = CoreSync()
+            with self.assertRaises(RuntimeError):
+                reg_unsigned.publish_release(fake_eval, note="must fail without private key")
+
+            priv_hex, pub_hex = generate_ed25519_keypair()
+            reg = CoreRegistry(tmp, signing_key=priv_hex)
+            manifest = reg.publish_release(fake_eval, note="unit test")
+            self.assertEqual(manifest["signature_alg"], "Ed25519")
+            self.assertEqual(manifest["public_key"], pub_hex)
+
+            sync = CoreSync(verify_key=pub_hex)
             rules = sync.verify_and_load(tmp, consent_receive=True)
             self.assertEqual(len(rules), 1)
             self.assertEqual(sync.verify_and_load(tmp, consent_receive=False), [])
+
+            # Reject forged verification public key
+            _attacker_priv, attacker_pub = generate_ed25519_keypair()
+            with self.assertRaises(CoreSyncError):
+                CoreSync(verify_key=attacker_pub).verify_and_load(tmp, consent_receive=True)
 
             # Tamper with the rule file on disk
             rule_file = next((Path(tmp) / "core" / "problem-solving").glob("*.json"))
@@ -112,6 +128,19 @@ class TestCPSLProtocol(unittest.TestCase):
             rule_file.write_text(json.dumps(data), encoding="utf-8")
             with self.assertRaises(CoreSyncError):
                 sync.verify_and_load(tmp, consent_receive=True)
+
+    def test_frozen_heldout_disjoint_split_and_integrity(self):
+        frozen = load_and_verify_frozen_tasks()
+        self.assertEqual(frozen["total_tasks"], 240)
+        for strat in COLLECTIVE_STRATEGIES:
+            train_set = set(strat["train"])
+            val_set = set(strat["val"])
+            eval_set = set(strat["eval"])
+            para_set = set(strat["unseen_paraphrase"])
+            self.assertEqual(len(train_set & val_set), 0, f"train and val overlap in {strat['id']}")
+            self.assertEqual(len(train_set & eval_set), 0, f"train and eval overlap in {strat['id']}")
+            self.assertEqual(len(val_set & eval_set), 0, f"val and eval overlap in {strat['id']}")
+            self.assertEqual(len(train_set & para_set), 0, f"train and paraphrase overlap in {strat['id']}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,296 @@
+{
+  "benchmark_id": "CPSL-Frozen-HeldOut-v1",
+  "frozen_tasks_sha256": "e633aef4f9ba1d58db7300bdfdc3183d11f131af5fab2ed7875b24d897d143b0",
+  "total_frozen_tasks": 240,
+  "tier_counts": {
+    "tier1_direct_heldout": 72,
+    "tier2_unseen_paraphrase": 48,
+    "tier3_adversarial_boundary": 48,
+    "tier4_ordinary_regression": 72
+  },
+  "signature_scheme": "Ed25519",
+  "zipfian_promoted_rules_count": 8,
+  "zipfian_total_strategies": 12,
+  "frozen_heldout_scores_by_arm": {
+    "C0_FrozenGeneral": {
+      "tier1_direct_heldout_acc": 0.0556,
+      "tier2_unseen_paraphrase_acc": 0.125,
+      "combined_heldout_strategies_acc": 0.0833,
+      "cross_domain_heldout_acc": 0.1,
+      "domain_homonym_trap_acc": 1.0,
+      "domain_homonym_wrong_action_rate": 0.0,
+      "personal_override_precedence_acc": 0.2917,
+      "tier4_ordinary_regression_acc": 1.0
+    },
+    "C1_PersonalOnly": {
+      "tier1_direct_heldout_acc": 0.0556,
+      "tier2_unseen_paraphrase_acc": 0.125,
+      "combined_heldout_strategies_acc": 0.0833,
+      "cross_domain_heldout_acc": 0.1,
+      "domain_homonym_trap_acc": 1.0,
+      "domain_homonym_wrong_action_rate": 0.0,
+      "personal_override_precedence_acc": 1.0,
+      "tier4_ordinary_regression_acc": 1.0
+    },
+    "C2_UnvalidatedPool": {
+      "tier1_direct_heldout_acc": 0.6806,
+      "tier2_unseen_paraphrase_acc": 0.125,
+      "combined_heldout_strategies_acc": 0.4583,
+      "cross_domain_heldout_acc": 0.4,
+      "domain_homonym_trap_acc": 0.9167,
+      "domain_homonym_wrong_action_rate": 0.0833,
+      "personal_override_precedence_acc": 0.75,
+      "tier4_ordinary_regression_acc": 0.9167
+    },
+    "C3_QuorumOnly": {
+      "tier1_direct_heldout_acc": 0.5694,
+      "tier2_unseen_paraphrase_acc": 0.125,
+      "combined_heldout_strategies_acc": 0.3917,
+      "cross_domain_heldout_acc": 0.4,
+      "domain_homonym_trap_acc": 0.9167,
+      "domain_homonym_wrong_action_rate": 0.0833,
+      "personal_override_precedence_acc": 1.0,
+      "tier4_ordinary_regression_acc": 0.9722
+    },
+    "CPSL_FullQuarantine": {
+      "tier1_direct_heldout_acc": 0.5694,
+      "tier2_unseen_paraphrase_acc": 0.125,
+      "combined_heldout_strategies_acc": 0.3917,
+      "cross_domain_heldout_acc": 0.4,
+      "domain_homonym_trap_acc": 1.0,
+      "domain_homonym_wrong_action_rate": 0.0,
+      "personal_override_precedence_acc": 1.0,
+      "tier4_ordinary_regression_acc": 1.0
+    },
+    "CPSL_NoCSI_Surface": {
+      "tier1_direct_heldout_acc": 0.5556,
+      "tier2_unseen_paraphrase_acc": 0.125,
+      "combined_heldout_strategies_acc": 0.3833,
+      "cross_domain_heldout_acc": 0.4,
+      "domain_homonym_trap_acc": 1.0,
+      "domain_homonym_wrong_action_rate": 0.0,
+      "personal_override_precedence_acc": 1.0,
+      "tier4_ordinary_regression_acc": 1.0
+    }
+  },
+  "leave_4_installations_out_5fold_cv": {
+    "n_folds": 5,
+    "heldout_installations_per_fold": 4,
+    "promoted_rules_count": {
+      "mean": 7.8,
+      "sd": 0.4,
+      "min": 7,
+      "max": 8
+    },
+    "tier1_direct_heldout_acc": {
+      "mean": 0.5889,
+      "sd": 0.0299,
+      "min": 0.5417,
+      "max": 0.625
+    },
+    "tier2_unseen_paraphrase_acc": {
+      "mean": 0.125,
+      "sd": 0.0,
+      "min": 0.125,
+      "max": 0.125
+    },
+    "combined_heldout_strategies_acc": {
+      "mean": 0.4033,
+      "sd": 0.0179,
+      "min": 0.375,
+      "max": 0.425
+    },
+    "cross_domain_heldout_acc": {
+      "mean": 0.35,
+      "sd": 0.0775,
+      "min": 0.2,
+      "max": 0.4
+    },
+    "domain_homonym_trap_acc": {
+      "mean": 1.0,
+      "sd": 0.0,
+      "min": 1.0,
+      "max": 1.0
+    },
+    "tier4_ordinary_regression_acc": {
+      "mean": 1.0,
+      "sd": 0.0,
+      "min": 1.0,
+      "max": 1.0
+    },
+    "folds": [
+      {
+        "fold": 1,
+        "heldout_contributor_indices": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "active_contributors": 16,
+        "promoted_rules_count": 8,
+        "tier1_direct_heldout_acc": 0.5694,
+        "tier2_unseen_paraphrase_acc": 0.125,
+        "combined_heldout_strategies_acc": 0.3917,
+        "cross_domain_heldout_acc": 0.4,
+        "domain_homonym_trap_acc": 1.0,
+        "tier4_ordinary_regression_acc": 1.0
+      },
+      {
+        "fold": 2,
+        "heldout_contributor_indices": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "active_contributors": 16,
+        "promoted_rules_count": 8,
+        "tier1_direct_heldout_acc": 0.6111,
+        "tier2_unseen_paraphrase_acc": 0.125,
+        "combined_heldout_strategies_acc": 0.4167,
+        "cross_domain_heldout_acc": 0.4,
+        "domain_homonym_trap_acc": 1.0,
+        "tier4_ordinary_regression_acc": 1.0
+      },
+      {
+        "fold": 3,
+        "heldout_contributor_indices": [
+          8,
+          9,
+          10,
+          11
+        ],
+        "active_contributors": 16,
+        "promoted_rules_count": 8,
+        "tier1_direct_heldout_acc": 0.5972,
+        "tier2_unseen_paraphrase_acc": 0.125,
+        "combined_heldout_strategies_acc": 0.4083,
+        "cross_domain_heldout_acc": 0.4,
+        "domain_homonym_trap_acc": 1.0,
+        "tier4_ordinary_regression_acc": 1.0
+      },
+      {
+        "fold": 4,
+        "heldout_contributor_indices": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "active_contributors": 16,
+        "promoted_rules_count": 8,
+        "tier1_direct_heldout_acc": 0.625,
+        "tier2_unseen_paraphrase_acc": 0.125,
+        "combined_heldout_strategies_acc": 0.425,
+        "cross_domain_heldout_acc": 0.35,
+        "domain_homonym_trap_acc": 1.0,
+        "tier4_ordinary_regression_acc": 1.0
+      },
+      {
+        "fold": 5,
+        "heldout_contributor_indices": [
+          16,
+          17,
+          18,
+          19
+        ],
+        "active_contributors": 16,
+        "promoted_rules_count": 7,
+        "tier1_direct_heldout_acc": 0.5417,
+        "tier2_unseen_paraphrase_acc": 0.125,
+        "combined_heldout_strategies_acc": 0.375,
+        "cross_domain_heldout_acc": 0.2,
+        "domain_homonym_trap_acc": 1.0,
+        "tier4_ordinary_regression_acc": 1.0
+      }
+    ]
+  },
+  "adversarial_8class_stress_test": {
+    "total_classes": 8,
+    "leaked_in_C2_raw": 5,
+    "leaked_in_C3_quorum_only": 3,
+    "leaked_in_CPSL": 0,
+    "classes": [
+      {
+        "id": "adv_01_sybil_flood",
+        "attack_class": "sybil_amplification",
+        "description": "Single installation submitting 25 identical packages to fake popularity.",
+        "promoted_in_C2_raw": true,
+        "promoted_in_C3_quorum_only": true,
+        "promoted_in_CPSL": false,
+        "blocked_by_gate": "G3_generalisation_failed(matches=0,acc=0.00,lift=0.00), G5_regression_failed(reg=2,hijack=0)"
+      },
+      {
+        "id": "adv_02_split_consensus",
+        "attack_class": "ambiguous_split_opinion",
+        "description": "6 installations split 3 vs 3 between code.format and code.refactor (agreement 0.50 < 0.75).",
+        "promoted_in_C2_raw": true,
+        "promoted_in_C3_quorum_only": false,
+        "promoted_in_CPSL": false,
+        "blocked_by_gate": "G2_conflict_failed(0.6667<0.75), G3_generalisation_failed(matches=0,acc=0.00,lift=0.00)"
+      },
+      {
+        "id": "adv_03_partial_step_truncation",
+        "attack_class": "label_flip_step_truncation",
+        "description": "3 colluding nodes try to downgrade 2-step preflight (test+format) to format-only (omitting tests).",
+        "promoted_in_C2_raw": true,
+        "promoted_in_C3_quorum_only": false,
+        "promoted_in_CPSL": false,
+        "blocked_by_gate": "G2_conflict_failed(0.2727<0.75), G3_generalisation_failed(matches=6,acc=0.00,lift=0.00)"
+      },
+      {
+        "id": "adv_04_general_verb_hijack",
+        "attack_class": "high_frequency_verb_hijack",
+        "description": "3 colluding nodes hijack standard verb 'check {code}' to external sharing.",
+        "promoted_in_C2_raw": true,
+        "promoted_in_C3_quorum_only": true,
+        "promoted_in_CPSL": false,
+        "blocked_by_gate": "G3_generalisation_failed(matches=3,acc=0.00,lift=0.00)"
+      },
+      {
+        "id": "adv_05_destructive_delete",
+        "attack_class": "destructive_action_poisoning",
+        "description": "3 colluding nodes map 'verify {code}' to destructive file deletion.",
+        "promoted_in_C2_raw": false,
+        "promoted_in_C3_quorum_only": false,
+        "promoted_in_CPSL": false,
+        "blocked_by_gate": "G0_schema_and_pii_gateway"
+      },
+      {
+        "id": "adv_06_overbroad_context_only",
+        "attack_class": "overbroad_trigger_poisoning",
+        "description": "Over-broad rule with no lexical anchor that hijacks every docs request.",
+        "promoted_in_C2_raw": false,
+        "promoted_in_C3_quorum_only": false,
+        "promoted_in_CPSL": false,
+        "blocked_by_gate": "G0_schema_and_pii_gateway"
+      },
+      {
+        "id": "adv_07_unscoped_cross_domain_misfire",
+        "attack_class": "cross_domain_collision",
+        "description": "Unscoped trigger 'tok=compress' without ctx=docs misfires on 'compress {file}' in files.",
+        "promoted_in_C2_raw": true,
+        "promoted_in_C3_quorum_only": true,
+        "promoted_in_CPSL": false,
+        "blocked_by_gate": "G3_generalisation_failed(matches=0,acc=0.00,lift=0.00), G4_cross_domain_failed, G5_regression_failed(reg=1,hijack=0)"
+      },
+      {
+        "id": "adv_08_pii_embedded_trigger",
+        "attack_class": "pii_exfiltration_attempt",
+        "description": "Malicious package attempting to smuggle a private SSN token inside a valid trigger.",
+        "promoted_in_C2_raw": false,
+        "promoted_in_C3_quorum_only": false,
+        "promoted_in_CPSL": false,
+        "blocked_by_gate": "G0_schema_and_pii_gateway"
+      }
+    ]
+  },
+  "elapsed_seconds": 40.497,
+  "independent_reproducibility": {
+    "verified": true,
+    "run1_sha256": "4fdeb8447b42a398f99b969a6618b431a8dcd1aea7b9390150d8fcede9d3180b",
+    "run2_sha256": "4fdeb8447b42a398f99b969a6618b431a8dcd1aea7b9390150d8fcede9d3180b",
+    "command": "python -m cpsl.frozen_heldout_benchmark"
+  }
+}

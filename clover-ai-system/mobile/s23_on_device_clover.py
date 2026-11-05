@@ -2168,7 +2168,9 @@ class CloverS23OnDeviceSystem:
                 pass
         self._apply_hardware_settings()
         self.device_profile = self.detect_android_device_profile()
+        self.turns_lock = threading.Lock()
         self.active_turns: dict[str, dict[str, Any]] = {}
+        self.recent_turns: dict[str, dict[str, Any]] = {}
 
         self.permissions_meta: dict[str, dict[str, str]] = {
             "internet": {
@@ -4590,6 +4592,30 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 })
             elif self.path.startswith("/api/repo/onboarding"):
                 self._send(sys_s23.git_memory_repo.get_onboarding_state())
+            elif self.path.startswith("/api/turn/events"):
+                import urllib.parse
+                _, _, q_raw = self.path.partition("?")
+                q_map = {k: v[0] for k, v in urllib.parse.parse_qs(q_raw).items()}
+                tid = str(q_map.get("turn_id") or "").strip()
+                try:
+                    after_s = int(q_map.get("after") or self.headers.get("Last-Event-ID") or 0)
+                except ValueError:
+                    after_s = 0
+                with sys_s23.turns_lock:
+                    t_obj = sys_s23.active_turns.get(tid) or sys_s23.recent_turns.get(tid)
+                    if not t_obj:
+                        self._send({"error": "unknown turn_id"}, code=404)
+                        return
+                    evs = [e for e in t_obj.get("events", []) if int(e.get("seq") or 0) > after_s]
+                    self._send({
+                        "turn_id": tid,
+                        "session_id": t_obj.get("session_id"),
+                        "active": tid in sys_s23.active_turns,
+                        "done": bool(t_obj.get("done")),
+                        "cancelled": t_obj["cancel"].is_set(),
+                        "last_seq": int(t_obj.get("seq") or 0),
+                        "events": evs,
+                    })
             elif self.path.startswith("/api/repo/workspaces"):
                 self._send(sys_s23.git_memory_repo.list_workspace_repos())
             elif self.path.startswith("/api/repo/files"):
@@ -4810,14 +4836,19 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 pend["event"].set()
                 self._send({"ok": True})
                 return
-            if self.path == "/api/cancel":
-                tid = str(payload.get("turn_id") or "")
-                t_obj = sys_s23.active_turns.get(tid)
-                if t_obj:
+            if self.path in ("/api/cancel", "/api/stop"):
+                tid = str(payload.get("turn_id") or "").strip()
+                cancelled_ids = []
+                with sys_s23.turns_lock:
+                    targets = [sys_s23.active_turns[tid]] if (tid and tid != "all" and tid in sys_s23.active_turns) else (
+                        list(sys_s23.active_turns.values()) if not tid or tid == "all" else []
+                    )
+                for t_obj in targets:
                     t_obj["cancel"].set()
-                    for p_ev in t_obj["pending"].values():
+                    for p_ev in list(t_obj["pending"].values()):
                         p_ev["event"].set()
-                self._send({"ok": bool(t_obj)})
+                    cancelled_ids.append(t_obj.get("turn_id") or tid)
+                self._send({"ok": bool(cancelled_ids), "cancelled_turns": cancelled_ids})
                 return
             if self.path == "/api/shutdown":
                 self._send({"shutdown": True})
@@ -5209,9 +5240,20 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
             if self.path.startswith("/api/chat/stream"):
                 sid = re.sub(r"[^A-Za-z0-9_\-]", "_", str(payload.get("session_id") or uuid.uuid4().hex))[:96]
                 turn_id = uuid.uuid4().hex
-                turn_obj: dict[str, Any] = {"cancel": threading.Event(), "pending": {}}
-                sys_s23.active_turns[turn_id] = turn_obj
+                turn_obj: dict[str, Any] = {
+                    "turn_id": turn_id,
+                    "session_id": sid,
+                    "cancel": threading.Event(),
+                    "pending": {},
+                    "seq": 0,
+                    "events": [],
+                    "done": False,
+                    "updated": time.time(),
+                }
+                with sys_s23.turns_lock:
+                    sys_s23.active_turns[turn_id] = turn_obj
                 write_lock = threading.Lock()
+                client_closed = [False]
                 self.send_response(200)
                 self.send_header("Content-Type", "text/event-stream; charset=utf-8")
                 self.send_header("Cache-Control", "no-store")
@@ -5220,18 +5262,37 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 self.end_headers()
 
                 def emit_sse(ev: dict[str, Any]) -> None:
-                    try:
-                        with write_lock:
-                            self.wfile.write(f"data: {json.dumps(ev, ensure_ascii=False, default=str)}\n\n".encode("utf-8"))
+                    with write_lock:
+                        turn_obj["seq"] += 1
+                        seq = turn_obj["seq"]
+                        out_ev = dict(ev, seq=seq, turn_id=turn_id)
+                        turn_obj["events"].append(out_ev)
+                        if len(turn_obj["events"]) > 512:
+                            del turn_obj["events"][:len(turn_obj["events"]) - 512]
+                        if ev.get("type") in ("done", "error"):
+                            turn_obj["done"] = True
+                        turn_obj["updated"] = time.time()
+                        if client_closed[0]:
+                            return
+                        try:
+                            self.wfile.write(f"id: {seq}\ndata: {json.dumps(out_ev, ensure_ascii=False, default=str)}\n\n".encode("utf-8"))
                             self.wfile.flush()
-                    except OSError:
-                        turn_obj["cancel"].set()
+                        except (OSError, BrokenPipeError, ConnectionResetError):
+                            client_closed[0] = True
+                            turn_obj["cancel"].set()
+                            for p_ev in list(turn_obj["pending"].values()):
+                                p_ev["event"].set()
 
                 emit_sse({"type": "start", "turn_id": turn_id, "session_id": sid})
                 if saved_media_items:
                     emit_sse({"type": "media", "items": saved_media_items})
+                if sys_s23._busy_turns > 0:
+                    emit_sse({"type": "plan", "round": 1, "stage": "queued"})
                 try:
                     import semantics
+                    if turn_obj["cancel"].is_set():
+                        emit_sse({"type": "done", "reply": "(Stopped.)", "cancelled": True, "layers": [], "images": [], "generation": []})
+                        return
                     phone = phone_runtime()
                     personal_call(phone, "before_turn", sid, prompt, how_retry)
                     allow_once_list = list(payload.get("allow_once") or [])
@@ -5451,7 +5512,11 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                 except Exception as ex:
                     emit_sse({"type": "error", "error": str(ex)})
                 finally:
-                    sys_s23.active_turns.pop(turn_id, None)
+                    with sys_s23.turns_lock:
+                        sys_s23.active_turns.pop(turn_id, None)
+                        sys_s23.recent_turns[turn_id] = turn_obj
+                        while len(sys_s23.recent_turns) > 32:
+                            sys_s23.recent_turns.pop(next(iter(sys_s23.recent_turns)))
                 return
 
             personal_call(phone_runtime(), "before_turn", str(payload.get("session_id") or "s23-studio"), prompt, how_retry)

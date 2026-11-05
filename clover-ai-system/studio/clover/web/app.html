@@ -2328,8 +2328,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       if (state.waitEl) state.waitEl.textContent = txt + ' \u00b7 ' + fmtSecs(elp);
       work.label(cap(txt)); work.meta(fmtSecs(elp));
     }
+    var lastSeq = 0;
     function finishRunningSteps() {
-      ['understand', 'plan', 'review', 'draft', 'synth'].forEach(function (k) {
+      ['queue', 'understand', 'plan', 'review', 'draft', 'synth'].forEach(function (k) {
         if (stepMap[k] && stepMap[k].data.state === 'run') {
           stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
         }
@@ -2342,6 +2343,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     function dim() { if (answer) { stale = true; ans.classList.add('stale'); } }
 
     function onEvent(ev) {
+      if (!ev || typeof ev !== 'object') return;
+      if (ev.seq) {
+        if (ev.seq <= lastSeq) return;
+        lastSeq = ev.seq;
+      }
+      if (ev.type !== 'plan' && ev.type !== 'start' && stepMap.queue && stepMap.queue.data.state === 'run') {
+        stepMap.queue.update({ state: 'ok', badge: '\u2713 Ready' });
+      }
       if (ev.type === 'start') state.turnId = ev.turn_id;
       else if (ev.type === 'semantics') {
         var semBits = [];
@@ -2390,6 +2399,16 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         }
         scrollDown();
       } else if (ev.type === 'plan') {
+        if (ev.stage === 'queued') {
+          upsertStep('queue', { icon: 'clock', state: 'run', name: 'Queued',
+            detail: 'Waiting for earlier turn to finish\u2026', badge: 'Queued\u2026' });
+          setStage('queued');
+          scrollDown();
+          return;
+        }
+        if (stepMap.queue && stepMap.queue.data.state === 'run') {
+          stepMap.queue.update({ state: 'ok', badge: '\u2713 Ready' });
+        }
         if (stepMap.understand && stepMap.understand.data.state === 'run') {
           stepMap.understand.update({ state: 'ok', icon: 'check', badge: '\u2713 Understood' });
         }
@@ -2529,6 +2548,28 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       state.speakNext = false;
       if (speakIt) speakOmni(m.text);
     }
+    function parseSseChunk(chunk) {
+      var lines = chunk.split(/\r?\n/);
+      for (var i = 0; i < lines.length; i++) {
+        if (lines[i].indexOf('data: ') === 0) {
+          try { onEvent(JSON.parse(lines[i].slice(6))); } catch (e) {}
+        }
+      }
+    }
+    function tryReconnectReplay(fallbackErr) {
+      if (finished || !state.turnId) {
+        if (!finished) finish(fallbackErr || { reply: answer || '(The engine closed the connection.)', error: !answer });
+        return;
+      }
+      api('GET', '/api/turn/events?turn_id=' + encodeURIComponent(state.turnId) + '&after=' + lastSeq).then(function (r) {
+        (r.events || []).forEach(onEvent);
+        if (!finished) {
+          finish(fallbackErr || { reply: answer || (r.cancelled ? '(Stopped.)' : '(The engine closed the connection.)'), cancelled: !!r.cancelled, error: !answer && !r.cancelled });
+        }
+      }).catch(function () {
+        if (!finished) finish(fallbackErr || { reply: answer || '(The engine closed the connection.)', error: !answer });
+      });
+    }
     fetch(apiUrl('/api/chat/stream'), {
       method: 'POST', headers: hostHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ prompt: inp.prompt, session_id: c.id, model: state.settings.model, attached_files: inp.files, history: inp.hist,
@@ -2540,19 +2581,23 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       var reader = resp.body.getReader(), dec = new TextDecoder(), buf = '';
       function pump() {
         return reader.read().then(function (r) {
-          if (r.done) { if (!finished) finish({ reply: answer || '(The engine closed the connection.)', error: !answer }); return; }
+          if (r.done) { if (!finished) tryReconnectReplay(); return; }
           buf += dec.decode(r.value, { stream: true });
           var idx;
           while ((idx = buf.indexOf('\n\n')) >= 0) {
             var chunk = buf.slice(0, idx); buf = buf.slice(idx + 2);
-            if (chunk.indexOf('data: ') === 0) { try { onEvent(JSON.parse(chunk.slice(6))); } catch (e) {} }
+            parseSseChunk(chunk);
           }
           return pump();
         });
       }
       return pump();
     }).catch(function (e) {
-      finish({ reply: /loading/i.test(e.message) ? 'Clover is still starting. Send again when the status says Ready.' : 'Clover could not answer: ' + e.message, error: true });
+      if (!finished && state.turnId) {
+        tryReconnectReplay({ reply: /loading/i.test(e.message) ? 'Clover is still starting. Send again when the status says Ready.' : 'Clover could not answer: ' + e.message, error: true });
+      } else {
+        finish({ reply: /loading/i.test(e.message) ? 'Clover is still starting. Send again when the status says Ready.' : 'Clover could not answer: ' + e.message, error: true });
+      }
     });
   }
   /* what helped this answer, named after the Clover layers page */

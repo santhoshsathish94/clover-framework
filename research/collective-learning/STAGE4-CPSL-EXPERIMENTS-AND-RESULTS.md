@@ -6,6 +6,7 @@
 **Raw Evidence Files:**
 - Run 1 (skewed `step=3` assignment, 6-habit recipient pool): [`cpsl_experiment_results.json`](cpsl_experiment_results.json)
 - Run 2 (uniform `step=5` coprime assignment, standard 8-habit `PPL-1` recipient pool): [`cpsl_experiment_uniform_results.json`](cpsl_experiment_uniform_results.json)
+- Run 3 (`CPSL-Frozen-HeldOut-v1`: 240 frozen held-out tasks across 4 difficulty tiers, 5-fold Leave-4-Installations-Out cross-validation under non-uniform Zipfian contributor exposure, 8-class adversarial quarantine stress test, RFC 8032 Ed25519 asymmetric signing, and bit-exact independent reproducibility): [`frozen_heldout_tasks.json`](frozen_heldout_tasks.json), [`cpsl_frozen_heldout_evaluation.json`](cpsl_frozen_heldout_evaluation.json), [`cpsl/frozen_heldout_benchmark.py`](cpsl/frozen_heldout_benchmark.py)
 
 ---
 
@@ -108,3 +109,48 @@ Across the 20 consenting contributors, the 2 Sybil nodes, and the 3 Byzantine co
    - **This is the collective-level manifestation of `PPL-1`'s `red_tests` failure mode:** when a general cue (`"points"` or `"tests"`) makes the baseline interpreter succeed on a training sentence, a mismatch-only learner does not credit the accompanying verb (`"distill"`). This accounts for the entire `7.75%` error (`1 - 0.9225`) on collective strategies in `CPSL`.
 3. **Why CSI v0.1r3 is essential to Collective Learning (`CPSL 0.9225` vs. `CPSL-NoCSI 0.6204`):**
    - Without CSI's morphological lemmatiser (`morph-verb-v1.1`) and part-of-speech analysis, a strategy learned by contributors from imperative verbs (`"triage {msg}"`, `"corroborate {topic}"`, `"condense {doc}"`, `"relocate {file}"`) fails to match when a recipient writes an inflected or nominal/passive construction (`"{msg} needs triaging."`, `"get {topic} corroborated"`, `"{doc} needs condensing."`, `"get {file} relocated"`). CSI lifts unseen collective strategy transfer by **`+30.21 percentage points` (`0.6204 -> 0.9225`)**.
+
+---
+
+## 6. Frozen Held-Out, Unseen-Installation & Adversarial Benchmark (`CPSL-Frozen-HeldOut-v1`)
+
+To eliminate synthetic benchmark alignment where contributor training, quarantine validation (`G3`), and recipient evaluation share templates or assume uniform contributor coverage, [`cpsl/frozen_heldout_benchmark.py`](cpsl/frozen_heldout_benchmark.py) enforces four additional methodological controls:
+
+1. **Strict 3-Way Disjoint Template Split (`train` $\cap$ `val` $= \emptyset$, `val` $\cap$ `eval` $= \emptyset$, `train` $\cap$ `eval` $= \emptyset$):**
+   - Contributor local learning uses only `strat["train"]` templates and `train` lexicon objects.
+   - Quarantine Gate `G3` (`heldout_validation_suite`) uses only `strat["val"]` templates.
+   - Final evaluation uses the frozen 240-task benchmark [`frozen_heldout_tasks.json`](frozen_heldout_tasks.json) (`SHA-256: e633aef4f9ba1d58db7300bdfdc3183d11f131af5fab2ed7875b24d897d143b0`), verified before every run.
+2. **Non-Uniform Zipfian Contributor Exposure (`2` to `8` installations per strategy) & Unseen Paraphrases:**
+   - Rather than giving every strategy 6–7 contributors, contributor exposure follows a power-law distribution (`ZIPFIAN_CONTRIBUTOR_ASSIGNMENTS`), where head strategies have 7–8 contributors, mid-tier strategies have 4–5, borderline tail strategies have 3, and sub-quorum tail strategies have 2 (`< K_min = 3`).
+   - Under this Zipfian exposure + adversarial conflict stress, **8 of 12** strategies pass all quarantine gates (`zipfian_promoted_rules_count = 8`).
+3. **Multi-Tier Frozen Held-Out Results (`240` Frozen Tasks across 6 Arms):**
+
+| Arm | Tier 1: Direct Held-Out (`72`) | Tier 2: Unseen Lexical Paraphrases (`48`) | Combined Held-Out Strategies (`120`) | Cross-Domain Held-Out (`40`) | Tier 3a: Domain Homonym Traps (`24`) | Homonym Wrong-Action Rate | Tier 3b: Personal > Collective Collision (`24`) | Tier 4: Ordinary Regression (`72`) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **`C0_FrozenGeneral`** | `0.0556` | `0.1250` | `0.0833` | `0.1000` | `1.0000` | `0.0000` | `0.2917` | `1.0000` |
+| **`C1_PersonalOnly`** | `0.0556` | `0.1250` | `0.0833` | `0.1000` | `1.0000` | `0.0000` | **`1.0000`** | `1.0000` |
+| **`C2_UnvalidatedPool`** | `0.6806` | `0.1250` | `0.4583` | `0.4000` | **`0.9167`** | **`0.0833`** | `0.7500` | **`0.9167`** |
+| **`C3_QuorumOnly`** | `0.5694` | `0.1250` | `0.3917` | `0.4000` | **`0.9167`** | **`0.0833`** | `1.0000` | **`0.9722`** |
+| **`CPSL_FullQuarantine`** | **`0.5694`** | **`0.1250`** | **`0.3917`** | **`0.4000`** | **`1.0000`** | **`0.0000`** | **`1.0000`** | **`1.0000`** |
+| **`CPSL_NoCSI_Surface`** | `0.5556` | `0.1250` | `0.3833` | `0.4000` | `1.0000` | `0.0000` | `1.0000` | `1.0000` |
+
+   - **Why Tier 2 (`unseen_paraphrase`) is `12.50%` across all arms:** Tier 2 tests completely novel surface verbs/nouns (`"boil down {doc}"`, `"abridge {doc}"`, `"park {msg} for next week"`, `"save a restore point of {code}"`) that zero contributors ever used. Because symbolic trigger rules require explicit anchor match and quorum $K_{\min}=3$, `CPSL` does not guess or over-trigger on unseen vocabulary (`0.0%` wrong-action rate on homonym traps and `100.0%` on ordinary requests), honestly bounding recall to the vocabulary that has reached collective quorum.
+
+4. **5-Fold Leave-4-Installations-Out Cross-Validation (`16` Active vs `4` Held-Out Installations per Fold):**
+
+| Fold | Held-Out Installations | Promoted Rules | Tier 1 Direct Held-Out | Tier 2 Unseen Paraphrase | Combined Strategies | Cross-Domain Held-Out | Domain Homonym Traps | Ordinary Regression |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|
+| **Fold 1** | `[0, 1, 2, 3]` | `8` | `0.5694` | `0.1250` | `0.3917` | `0.4000` | `1.0000` | `1.0000` |
+| **Fold 2** | `[4, 5, 6, 7]` | `8` | `0.6111` | `0.1250` | `0.4167` | `0.4000` | `1.0000` | `1.0000` |
+| **Fold 3** | `[8, 9, 10, 11]` | `8` | `0.5972` | `0.1250` | `0.4083` | `0.4000` | `1.0000` | `1.0000` |
+| **Fold 4** | `[12, 13, 14, 15]` | `8` | `0.6250` | `0.1250` | `0.4250` | `0.3500` | `1.0000` | `1.0000` |
+| **Fold 5** | `[16, 17, 18, 19]` | `7` | `0.5417` | `0.1250` | `0.3750` | `0.2000` | `1.0000` | `1.0000` |
+| **Mean $\pm$ SD** | — | **`7.8 ± 0.4`** | **`0.5889 ± 0.0299`** | **`0.1250 ± 0.0000`** | **`0.4033 ± 0.0179`** | **`0.3500 ± 0.0775`** | **`1.0000 ± 0.0000`** | **`1.0000 ± 0.0000`** |
+
+5. **8-Class Adversarial Candidate Quarantine Stress Test:**
+   - Tests `adv_01_sybil_flood` (25 duplicate submissions from 1 node), `adv_02_split_consensus` (3 vs 3 split opinion), `adv_03_partial_step_truncation` (label-flipping 2-step preflight to format-only), `adv_04_general_verb_hijack` (`check {code} -> docs.share`), `adv_05_destructive_delete` (`verify {code} -> files.delete`), `adv_06_overbroad_context_only` (`["ctx=docs", "has=doc"] -> email.send`), `adv_07_unscoped_cross_domain_misfire` (`["tok=compress"] -> docs.shorten`), and `adv_08_pii_embedded_trigger` (`tok=ssn_990_01_4412`).
+   - **`C2_UnvalidatedPool` leaks `5 / 8` classes**; **`C3_QuorumOnly` leaks `3 / 8` classes** (`adv_01`, `adv_04`, `adv_07`); **`CPSL_FullQuarantine` leaks `0 / 8` classes (`0.0%`)**.
+
+6. **Asymmetric Ed25519 Release Signing & Standalone Reproducibility:**
+   - Releases are signed with RFC 8032 `Ed25519` asymmetric cryptography (`core_registry.py` requires the private signing seed held only in the protected release environment; `core_sync.py` embeds only the 32-byte public verification key `dba3f7e2e969a26c57a24d50e2ecd654249b42e25eecc1f9140a514d7dcedb8a`).
+   - Running `python -m cpsl.frozen_heldout_benchmark` from `research/collective-learning/` on any machine with Python + NumPy executes two independent passes from scratch and verifies identical canonical SHA-256 output (`4fdeb8447b42a398f99b969a6618b431a8dcd1aea7b9390150d8fcede9d3180b`).

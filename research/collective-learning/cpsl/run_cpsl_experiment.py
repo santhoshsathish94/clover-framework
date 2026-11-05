@@ -36,8 +36,9 @@ from cpsl import strategies as CS
 from cpsl.collective import LocalCollectiveExtractor
 from cpsl.collective_evaluator import CollectiveEvaluator
 from cpsl.collective_gateway import CollectiveGateway
-from cpsl.core_registry import CoreRegistry
+from cpsl.core_registry import CoreRegistry, generate_ed25519_keypair
 from cpsl.core_sync import CollectiveAssistant, CoreSync, CoreSyncError
+from cpsl.frozen_heldout_benchmark import DeterministicLemmaReader, run_and_verify_reproducibility
 
 
 def score_recipient(asst: CollectiveAssistant, spec: dict, items: list[dict], interact: bool = True) -> list[dict]:
@@ -146,7 +147,7 @@ def run_cpsl_experiment(
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1. Initialize CSI Reader (or SurfaceReader when use_csi=False) and GeneralInterpreter
+    # 1. Initialize CSI Reader (or DeterministicLemmaReader / SurfaceReader when offline) and GeneralInterpreter
     if use_csi:
         csi_proto = os.environ.get("CSI_PROTO")
         if csi_proto and csi_proto not in sys.path:
@@ -159,9 +160,12 @@ def run_cpsl_experiment(
             ]
             if os.path.exists(p)
         ]
-        reader = F.CSIReader(str(out_dir / "csi_cache.jsonl"), preload=preload_caches)
+        try:
+            reader = F.CSIReader(str(out_dir / "csi_cache.jsonl"), preload=preload_caches)
+        except ImportError:
+            reader = DeterministicLemmaReader()
     else:
-        reader = F.SurfaceReader()
+        reader = DeterministicLemmaReader()
 
     if general_path and Path(general_path).exists():
         general = G.GeneralInterpreter.load(general_path)
@@ -268,17 +272,18 @@ def run_cpsl_experiment(
     # (d) CPSL-NoCSI: Surface words ablation
     eval_cpsl_nocsi = evaluator_surface.evaluate_all(aggregated_surface, require_quorum=True, require_outer_eval=True)
 
-    # 4. Publish Release v1.0.1 into Git-Backed `clover-collective` Repository
+    # 4. Publish Release v1.0.1 into Git-Backed `clover-collective` Repository using Ed25519 asymmetric signing
     registry_dir = out_dir / "clover-collective"
-    registry = CoreRegistry(registry_dir)
+    priv_hex, pub_hex = generate_ed25519_keypair()
+    registry = CoreRegistry(registry_dir, signing_key=priv_hex)
     manifest_v1 = registry.publish_release(eval_cpsl, note="Initial collective release from 20 isolated installations")
 
-    # Audit Git repository for any leaked PII or object names
-    leaked_pii_in_repo = registry.find_strings_anywhere_in_repo(all_pii_strings)
+    # Audit Git repository for any leaked PII, object names, or private signing keys
+    leaked_pii_in_repo = registry.find_strings_anywhere_in_repo(all_pii_strings + [priv_hex])
     leaked_objs_in_repo = registry.find_strings_anywhere_in_repo(all_object_names)
 
-    # Verify CoreSync cryptographic verification and tamper rejection
-    syncer = CoreSync()
+    # Verify CoreSync Ed25519 public-key verification and tamper rejection
+    syncer = CoreSync(verify_key=pub_hex)
     loaded_cpsl_rules = syncer.verify_and_load(registry_dir, consent_receive=True)
     assert syncer.verify_and_load(registry_dir, consent_receive=False) == [], "Opt-out receive must load 0 rules"
 
@@ -504,9 +509,12 @@ def run_cpsl_experiment(
         },
     }
 
+    frozen_benchmark_report = run_and_verify_reproducibility()
+
     report = {
         "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "use_csi": use_csi,
+        "signature_alg": manifest_v1["signature_alg"],
         "n_contributors": n_contributors,
         "n_recipients": n_recipients,
         "total_exported_candidate_packages": total_exported_pkgs,
@@ -517,6 +525,7 @@ def run_cpsl_experiment(
         "criteria": criteria,
         "all_criteria_passed": all(v["pass"] for v in criteria.values()),
         "promoted_rules_v1": manifest_v1["rules"],
+        "frozen_heldout_and_adversarial_benchmark": frozen_benchmark_report,
         "elapsed_seconds": round(time.time() - t0, 3),
     }
     (out_dir / "cpsl_experiment_results.json").write_text(json.dumps(report, indent=2), encoding="utf-8")

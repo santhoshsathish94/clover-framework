@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#F7F3E9">
+<meta name="clover-platform" content="__CLOVER_PLATFORM__">
 <title>Clover</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="icon" type="image/png" sizes="256x256" href="icon.png">
@@ -28,8 +29,27 @@
 }
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
+html.phone .laptop-only, html.web .laptop-only { display: none !important; }
+html:not(.web) .web-only { display: none !important; }
+.mpick { flex: 1; min-width: 0; display: flex; align-items: center; }
+.mpick__btn { width: 100%; display: inline-flex; align-items: center; justify-content: space-between; gap: .3rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
+  padding: .28rem .58rem; font-size: .8rem; font-weight: 600; color: var(--ink-2); box-shadow: var(--shadow-sm); white-space: nowrap; min-width: 0; }
+.mpick__btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mpick__btn:hover, .mpick.open .mpick__btn { border-color: var(--accent); color: var(--accent-2); background: var(--accent-tint); }
+.mpick__btn .ic { width: 13px; height: 13px; transform: rotate(90deg); transition: transform .15s var(--ease); }
+.mpick.open .mpick__btn .ic { transform: rotate(270deg); }
+.mpick__menu { position: absolute; top: calc(100% + 2px); left: .5rem; right: .5rem; max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--line-2);
+  border-radius: 12px; box-shadow: var(--shadow-lg); padding: .3rem; z-index: 60; display: flex; flex-direction: column; gap: 2px; }
+.mpick__opt { border: 1px solid transparent; background: none; border-radius: 8px; padding: .46rem .6rem; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: .5rem; font-size: .86rem; font-weight: 550; color: var(--ink); }
+.mpick__opt:hover { background: var(--bg); }
+.mpick__opt.on { background: var(--accent-tint); border-color: rgba(23, 107, 44, .22); color: var(--accent-2); font-weight: 650; }
+.mpick__opt span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mpick__opt em { font-style: normal; font-size: .72rem; font-weight: 500; color: var(--muted); flex: none; }
+.mpick__opt.on em { color: var(--accent); }
+.mpick__sep { border-top: 1px solid var(--line); margin: .2rem .25rem; }
+.mpick__add { color: var(--accent); font-weight: 600; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font);
-  -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+  -webkit-font-smoothing: antialiased; }
 button, input, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 ::selection { background: var(--accent-soft); }
@@ -45,9 +65,9 @@ button { cursor: pointer; }
 .app.rail-off { grid-template-columns: 0 1fr; }
 .app.rail-off .rail { visibility: hidden; }
 .rail { background: var(--rail); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
-.rail__top { display: flex; align-items: center; gap: .4rem; padding: .6rem .6rem .4rem 1rem; min-height: 56px; }
-.brand { flex: 1; min-width: 0; display: flex; align-items: center; gap: .55rem; font-weight: 650; font-size: 1.04rem; letter-spacing: -.01em; }
-.brand img { width: 26px; height: 26px; display: block; }
+.rail__top { position: relative; display: flex; align-items: center; gap: .4rem; padding: .6rem .5rem .4rem .85rem; min-height: 56px; }
+.brand { flex: none; display: flex; align-items: center; gap: .45rem; font-weight: 650; font-size: 1rem; letter-spacing: -.01em; }
+.brand img { width: 24px; height: 24px; display: block; }
 .chats { flex: 1; min-height: 0; overflow-y: auto; padding: .2rem .5rem .75rem; display: flex; flex-direction: column; gap: 1px; }
 .chat { display: flex; align-items: center; border-radius: 10px; }
 .chat .open { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: .5rem .65rem; color: var(--ink-2); font-size: .9rem;
@@ -113,11 +133,6 @@ button { cursor: pointer; }
 .md ul, .md ol { margin: .3rem 0 .7rem 1.3rem; padding: 0; } .md li { margin: .2rem 0; }
 .md strong { font-weight: 650; }
 .md h4 { margin: 1rem 0 .35rem; font-size: 1rem; }
-.md table { width: 100%; border-collapse: collapse; margin: .65rem 0 .85rem; font-size: .86rem; background: var(--surface);
-  border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-.md th, .md td { padding: .45rem .65rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
-.md th { background: var(--fill); font-weight: 600; }
-.md tr:last-child td { border-bottom: 0; }
 .md code { font-family: var(--mono); font-size: .86em; background: var(--fill); padding: .05rem .35rem; border-radius: 6px; }
 .code { position: relative; margin: .6rem 0 .8rem; border-radius: 12px; overflow: hidden; }
 .code pre { margin: 0; padding: 2.1rem 1.1rem 1rem; overflow: auto; background: var(--code-bg); color: var(--code-ink); font: .84rem/1.55 var(--mono); }
@@ -175,6 +190,13 @@ button { cursor: pointer; }
 .step-ic.no, .step-ic.fail { background: var(--danger-soft); color: var(--danger); }
 .step-name { font-weight: 600; color: var(--ink); white-space: nowrap; }
 .step-det { flex: 1; min-width: 0; color: var(--muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.md.live.stale { opacity: .45; }
+.chat-group { display: flex; align-items: center; gap: .3rem; border: 0; background: none; width: 100%; text-align: left; padding: .55rem .5rem .3rem;
+  color: var(--faint); font-size: .74rem; font-weight: 600; letter-spacing: .02em; }
+.chat-group:hover { color: var(--ink-2); }
+.chat-group .ic { width: 13px; height: 13px; transition: transform .15s var(--ease); }
+.chat-group[aria-expanded="true"] .ic { transform: rotate(90deg); }
+.chat-group em { font-style: normal; font-weight: 500; margin-left: auto; }
 pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: .6rem .75rem;
   font: .76rem/1.5 var(--mono); color: var(--muted); max-height: 280px; overflow: auto; margin: .4rem 0 0; }
 .think { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: var(--fill); border-radius: 999px; padding: .25rem .75rem .25rem .6rem;
@@ -202,10 +224,13 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 .tool__body .lbl { font-size: .7rem; font-weight: 600; color: var(--faint); margin-bottom: .2rem; }
 .ask { border: 1px solid var(--warn-line); background: var(--warn-soft); border-radius: 16px; padding: .8rem .9rem; margin: 0 0 .65rem; animation: rise .2s var(--ease) both; }
 .ask__t { display: flex; align-items: center; gap: .5rem; font-weight: 600; color: var(--warn); font-size: .92rem; }
-.ask .risk { margin: .3rem 0 0; font-size: .8rem; color: var(--danger); }
 .ask pre { white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow: auto; background: var(--surface); border: 1px solid var(--warn-line);
   border-radius: 10px; padding: .5rem .6rem; font: .78rem/1.5 var(--mono); margin: .55rem 0 0; color: var(--ink-2); }
 .ask__b { display: flex; gap: .45rem; flex-wrap: wrap; align-items: center; margin-top: .65rem; }
+.ask .risk { margin: .45rem 0 0; font-size: .82rem; color: var(--danger); line-height: 1.45; }
+.md table { border-collapse: collapse; margin: .5rem 0; font-size: .86rem; display: block; overflow-x: auto; }
+.md th, .md td { border: 1px solid var(--line); padding: .3rem .55rem; text-align: left; vertical-align: top; }
+.md th { background: var(--fill); font-weight: 600; }
 .typing { display: flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .86rem; min-height: 28px; }
 .typing em { font-style: normal; }
 
@@ -237,7 +262,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 .kv b { color: var(--ink); font-weight: 550; text-align: right; overflow-wrap: anywhere; }
 
 /* composer */
-.dock { padding: .25rem 1.25rem calc(1rem + env(safe-area-inset-bottom, 0px)); }
+.dock { padding: .25rem 1.25rem 1rem; }
 .notice { width: min(760px, 100%); margin: 0 auto .55rem; display: flex; align-items: center; justify-content: center; gap: .5rem; font-size: .84rem; color: var(--muted); }
 .notice.err { color: var(--danger); }
 .attachments { width: min(760px, 100%); margin: 0 auto .5rem; display: flex; gap: .4rem; flex-wrap: wrap; }
@@ -247,9 +272,16 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 .att button:hover { color: var(--danger); background: var(--danger-soft); }
 .att .ic { width: 14px; height: 14px; }
 .att img { width: 24px; height: 24px; object-fit: cover; border-radius: 6px; margin-left: -.45rem; }
-.composer { width: min(760px, 100%); margin: 0 auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 26px; box-shadow: var(--shadow);
+@property --beam-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@keyframes beam-clockwise { to { --beam-angle: 360deg; } }
+.composer { position: relative; width: min(760px, 100%); margin: 0 auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 26px; box-shadow: var(--shadow);
   padding: .4rem; display: flex; align-items: flex-end; gap: .25rem; transition: border-color .18s var(--ease), box-shadow .18s var(--ease); }
 .composer:focus-within { border-color: rgba(23, 107, 44, .45); box-shadow: 0 8px 28px rgba(23, 107, 44, .12); }
+.composer.busy { border-color: rgba(23, 107, 44, .22); box-shadow: 0 8px 28px rgba(23, 107, 44, .10); }
+.composer.busy::before { content: ""; position: absolute; inset: -1.5px; border-radius: 27.5px; padding: 2px; pointer-events: none; z-index: 2;
+  background: conic-gradient(from var(--beam-angle, 0deg), transparent 0deg, transparent 270deg, rgba(23, 107, 44, .2) 300deg, var(--leaf) 336deg, var(--accent) 354deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: beam-clockwise 2s linear infinite; }
 .composer textarea { flex: 1; min-width: 0; border: 0; background: none; resize: none; font-size: 1rem; padding: .48rem .3rem; max-height: 220px; min-height: 38px; line-height: 1.45; }
 .composer textarea:focus { outline: none; }
 .composer textarea::placeholder { color: var(--faint); }
@@ -259,21 +291,39 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 .cbtn .ic { width: 22px; height: 22px; }
 .mic.rec { background: var(--accent-soft); color: var(--accent-2); animation: ring 1.3s ease-in-out infinite; }
 @keyframes ring { 50% { box-shadow: 0 0 0 5px rgba(23, 107, 44, .16); } }
-.send { width: 38px; height: 38px; flex: none; border-radius: 50%; border: 0; background: var(--accent); color: #fff; padding: 0;
-  display: inline-flex; align-items: center; justify-content: center; transition: background-color .15s, transform .1s; }
+.send { width: 38px; height: 38px; flex: none; border-radius: 50%; border: 0; background: var(--accent); color: #fff; padding: 0; touch-action: none; user-select: none; -webkit-user-select: none;
+  display: inline-flex; align-items: center; justify-content: center; transition: background-color .15s, color .15s, transform .12s, box-shadow .18s; }
 .send:hover { background: var(--accent-2); }
 .send:active { transform: scale(.94); }
-.send:disabled { background: var(--fill-2); color: var(--faint); cursor: default; transform: none; }
+.send.idle { background: var(--fill-2); color: var(--ink-2); }
+.send.idle:hover { background: var(--accent-soft); color: var(--accent-2); }
+.send.holding { background: var(--accent-2); color: #fff; transform: scale(1.06); box-shadow: 0 0 0 6px rgba(23, 107, 44, .22); transition: box-shadow 1.2s linear, transform .2s; }
+.send.rec { background: var(--accent); color: #fff; transform: scale(1.06); animation: ring 1.2s ease-in-out infinite; }
+.send:disabled { background: var(--fill-2); color: var(--faint); cursor: default; transform: none; box-shadow: none; }
 .send.stop { background: var(--ink); color: #fff; }
-.send .ic { width: 20px; height: 20px; stroke-width: 2.3; }
+.send .ic { width: 20px; height: 20px; stroke-width: 2.3; pointer-events: none; }
 .send.stop .ic { width: 15px; height: 15px; fill: currentColor; stroke-width: 1.4; }
+.auth-gate { position: fixed; inset: 0; z-index: 95; background: rgba(246, 245, 240, .88); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  display: flex; align-items: center; justify-content: center; padding: 1.25rem; }
+.auth-card { width: min(400px, 100%); background: var(--surface); border: 1px solid var(--line-2); border-radius: 22px; box-shadow: var(--shadow-lg);
+  padding: 1.75rem 1.6rem 1.5rem; text-align: center; }
+.auth-card img { width: 64px; height: 64px; border-radius: 16px; margin: 0 auto .85rem; display: block; box-shadow: var(--shadow-sm); }
+.auth-card h2 { margin: 0 0 .4rem; font-size: 1.25rem; font-weight: 680; letter-spacing: -.02em; }
+.auth-card p { margin: 0 0 1.15rem; font-size: .86rem; color: var(--muted); line-height: 1.5; }
+.auth-fields { display: flex; flex-direction: column; gap: .55rem; text-align: left; }
+.auth-fields input { width: 100%; border: 1px solid var(--line-2); background: var(--bg); border-radius: 12px; padding: .62rem .8rem; font-size: .92rem; }
+.auth-fields input:focus { outline: none; border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-tint); }
+.auth-fields .btn.pri { width: 100%; justify-content: center; padding: .65rem 1rem; border-radius: 12px; font-size: .92rem; margin-top: .25rem; }
+.auth-links { margin-top: 1.1rem; padding-top: .9rem; border-top: 1px solid var(--line); font-size: .78rem; color: var(--muted); display: flex; justify-content: center; gap: .85rem; flex-wrap: wrap; }
+.auth-links a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.auth-links a:hover { text-decoration: underline; }
 
 /* settings: one sheet, pages one level after another */
 .scrim { position: fixed; inset: 0; background: rgba(20, 32, 24, .28); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
 .scrim.on { opacity: 1; pointer-events: auto; }
 .sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100%); background: var(--bg); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg);
-  transform: translateX(104%); transition: transform .3s cubic-bezier(.2, .8, .2, 1); z-index: 50; display: flex; flex-direction: column; }
-.sheet.on { transform: none; }
+  transform: translateX(104%); pointer-events: none; transition: transform .3s cubic-bezier(.2, .8, .2, 1); z-index: 50; display: flex; flex-direction: column; }
+.sheet.on { transform: none; pointer-events: auto; }
 .sheet__head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .3rem; padding: .55rem .6rem .35rem; min-height: 56px; }
 .sheet__head h2 { grid-column: 2; margin: 0; font-size: 1rem; font-weight: 650; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .back { grid-column: 1; justify-self: start; display: inline-flex; align-items: center; border: 0; background: none; color: var(--accent); font-size: .92rem; max-width: 100%;
@@ -367,7 +417,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 .group > .loc + .loc::before { left: 3.6rem; }
 .loc__h { display: flex; align-items: center; gap: .75rem; }
 .loc__t { flex: 1; min-width: 0; font-weight: 600; font-size: .92rem; }
-.loc code, .loc p, .loc .loc__sub { margin-left: calc(30px + .75rem); }
+.loc code, .loc p { margin-left: calc(30px + .75rem); }
 .loc code { display: block; font: .78rem/1.45 var(--mono); color: var(--ink-2); background: var(--bg); border-radius: 8px; padding: .4rem .55rem; margin-top: .45rem;
   overflow-wrap: anywhere; user-select: all; }
 .loc p { margin-top: .35rem; margin-bottom: 0; font-size: .78rem; color: var(--muted); line-height: 1.45; }
@@ -378,9 +428,6 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 .ws__row.open .chev { transform: rotate(90deg); }
 .ws__acts { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0 .95rem .85rem calc(.95rem + 30px + .75rem); }
 .group > .ws + .ws::before { left: 3.6rem; }
-
-.device-code-box { margin: .65rem 0 .2rem; padding: .75rem; background: var(--accent-tint); border: 1px solid rgba(23, 107, 44, .2); border-radius: 12px; text-align: center; }
-.device-code-box b { display: block; font: 700 1.3rem/1.2 var(--mono); letter-spacing: .12em; color: var(--accent-2); margin: .25rem 0; }
 
 @media (max-width: 860px) {
   .app, .app.rail-off { grid-template-columns: 1fr; }
@@ -393,10 +440,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
-<body>
+<body class="clover-app-body">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
-    <linearGradient id="spin-g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8CC63E"/><stop offset="1" stop-color="#0D5422"/></linearGradient>
+    <linearGradient id="spin-g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFF078"/><stop offset=".55" stop-color="#F8CF1E"/><stop offset="1" stop-color="#D89606"/></linearGradient>
     <!-- loading: the icon pack's clover-spin -->
     <symbol id="clover-spin" viewBox="0 0 120 120"><g fill="url(#spin-g)">
       <path id="spin-leaf" d="M60 48 C48 30 29 26 24 40 C18 56 40 68 60 76 C80 68 102 56 96 40 C91 26 72 30 60 48Z"/>
@@ -453,7 +500,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 <div class="app" id="app">
   <aside class="rail" id="rail" aria-label="Chats">
     <div class="rail__top">
-      <div class="brand"><img src="icon.png" alt="" width="26" height="26"><span>Clover</span></div>
+      <div class="brand"><img src="icon.png" alt="" width="24" height="24"><span>Clover</span></div>
+      <div class="mpick" id="mpick">
+        <button type="button" class="mpick__btn" id="model-btn" aria-haspopup="listbox" aria-expanded="false" title="Select model"><span id="model-btn-t">LFM3-Omni</span><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <div class="mpick__menu" id="model-menu" role="listbox" aria-label="Models" hidden></div>
+      </div>
       <button type="button" class="ibtn" id="new-chat" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
     </div>
     <nav class="chats" id="chats"></nav>
@@ -478,9 +529,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     <div class="stream" id="stream">
       <div class="col">
         <div class="hero" id="hero" hidden>
-          <img class="mascot" src="robo-clover.webp" onerror="this.onerror=null;this.src='robo-clover.png'" alt="" width="220" height="188">
+          <img class="mascot" src="robo-clover.webp" alt="" width="220" height="188">
           <h1 id="greet">Hello.</h1>
-          <p id="hero-p">Clover runs here on your device. It can see, hear and speak. Nothing leaves it unless you allow it.</p>
+          <p id="hero-p">Clover runs here on your laptop. Nothing leaves it unless you allow it.</p>
           <div class="sugg" id="sugg"></div>
         </div>
         <div class="log" id="log" aria-live="polite"></div>
@@ -490,15 +541,34 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     <div class="dock">
       <div class="notice" id="notice" hidden><svg class="spin" id="notice-spin" aria-hidden="true"><use href="#clover-spin"/></svg><span id="notice-t"></span></div>
       <div class="attachments" id="attachments" hidden></div>
-      <div class="composer">
+      <div class="composer" id="composer">
         <input type="file" id="file-input" multiple hidden>
         <button type="button" class="cbtn" id="attach" title="Add files" aria-label="Add files"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
-        <textarea id="prompt" rows="1" placeholder="Message Clover, or add a photo, sound or video" aria-label="Message"></textarea>
-        <button type="button" class="cbtn mic" id="mic" title="Talk to Clover (tap to start, tap to send)" aria-label="Record a voice message"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
-        <button type="button" class="send" id="send" aria-label="Send" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
+        <textarea id="prompt" rows="1" placeholder="Message Clover" aria-label="Message"></textarea>
+        <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
+        <button type="button" class="send" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
       </div>
     </div>
   </section>
+</div>
+
+<div class="auth-gate" id="auth-gate" hidden role="dialog" aria-modal="true" aria-labelledby="auth-gate-h">
+  <div class="auth-card">
+    <img src="icon.png" alt="Clover" width="64" height="64">
+    <h2 id="auth-gate-h">Sign in to Clover AI Studio</h2>
+    <p>Hosted Web Studio access is restricted to approved accounts only.</p>
+    <form class="auth-fields" id="auth-form">
+      <input type="text" id="auth-acct" placeholder="Approved account (username)" autocomplete="username" required>
+      <input type="password" id="auth-key" placeholder="Access key or GitHub token" autocomplete="current-password" required>
+      <button type="submit" class="btn pri" id="auth-submit">Sign in</button>
+    </form>
+    <p class="note" id="auth-note" hidden></p>
+    <div class="auth-links">
+      <a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
+      <a href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNSPFXvNv9YJ1OJ-XFOu9-yvn426Zr96E5mzhOB_BZu9EuNBqaneLe4O-JmP-vqDpXMW7CVorobgC3AQiGM9" target="_blank" rel="noopener noreferrer">Test on Google Play</a>
+      <a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download Android (.apk)</a>
+    </div>
+  </div>
 </div>
 
 <div class="scrim" id="scrim"></div>
@@ -512,67 +582,37 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   <div class="sheet__body" id="sheet-body">
 
     <section class="page" data-page="home">
-      <div class="group">
+      <div class="group laptop-only">
         <button type="button" class="row t" data-go="account"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg></span><span class="row__t">GitHub account</span><span class="row__v" id="v-account">Not set up</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
       <div class="group">
-        <button type="button" class="row t" data-go="storage"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Storage</span><span class="row__v" id="v-storage">This device</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="storage"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Storage</span><span class="row__v" id="v-storage">This laptop</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="advanced"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></span><span class="row__t">Advanced</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
-      <p class="gfoot center" id="home-foot">Clover runs on this device with the setup that measured best. Nothing leaves it unless you allow it.</p>
+      <p class="gfoot center">Clover runs on this laptop with the setup that measured best. Nothing leaves it unless you allow it.</p>
       <p class="gfoot center" id="about-foot">Clover AI Studio <b id="v-version">v0.5.0-beta.1 (Beta)</b> · <a href="https://cloverframework.com/privacy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> · <a href="https://github.com/santhoshsathish94/clover-framework/issues" target="_blank" rel="noopener noreferrer">Support</a></p>
     </section>
 
     <section class="page" data-page="account" hidden>
-      <p class="lead">Keep a copy of Clover's memory in a private GitHub repository of yours, so it is backed up and syncs across your phone and laptop.</p>
+      <p class="lead">Keep a copy of Clover's memory in a private GitHub repository of yours, so it is backed up and can come back on another computer.</p>
       <div class="group pad"><div class="kv" id="acct-kv"></div></div>
-      <div class="device-code-box" id="gh-device-box" hidden>
-        <span class="fine">Enter this code at <a id="gh-verify-link" href="https://github.com/login/device" target="_blank" rel="noopener">github.com/login/device</a>:</span>
-        <b id="gh-user-code">--------</b>
-        <span class="fine" id="gh-poll-msg">Waiting for GitHub approval…</span>
-      </div>
-      <div class="btns">
-        <button type="button" class="btn" id="vsc-gh">Sign in to GitHub</button>
-        <button type="button" class="btn pri" id="vsc-repo">Set up private repository</button>
-        <button type="button" class="btn" id="vsc-sync" hidden><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg>Sync now</button>
-        <button type="button" class="btn danger" id="gh-logout" hidden>Sign out</button>
-      </div>
-      <div class="glabel" style="margin-top:1.2rem">Or sign in with a GitHub token</div>
-      <div class="group pad">
-        <div class="keyrow" style="margin-top:0">
-          <input type="text" id="gh-repo-inp" placeholder="username/clover-memory-repo (optional)" aria-label="GitHub repository">
-        </div>
-        <div class="keyrow">
-          <input type="password" id="gh-token-inp" autocomplete="off" spellcheck="false" placeholder="ghp_... or github_pat_..." aria-label="GitHub token">
-          <button type="button" class="btn pri" id="gh-token-btn">Sign in</button>
-        </div>
-        <p class="fine">Clover uses only your GitHub account for signed-in sessions and keeps your repository strictly private (<code>"private": true</code>).</p>
-      </div>
+      <div class="btns"><button type="button" class="btn" id="vsc-gh">Sign in to GitHub</button><button type="button" class="btn pri" id="vsc-repo">Set up private repository</button><button type="button" class="btn" id="vsc-sync" hidden><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg>Sync now</button></div>
+      <p class="fine">You sign in through VS Code on this laptop, and the GitHub token stays in VS Code.</p>
       <div class="note" id="acct-note" hidden></div>
     </section>
 
     <section class="page" data-page="storage" hidden>
-      <p class="lead">Where Clover keeps things on this device. Open them in your File Manager to look inside or back them up.</p>
+      <p class="lead">Where Clover keeps things on this laptop. Open them in File Explorer to look inside or back them up.</p>
       <div class="group">
         <div class="loc"><div class="loc__h"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg></span><span class="loc__t">Chats and memory</span><button type="button" class="btn sm" data-copy-loc="loc-repo">Copy</button></div><code id="loc-repo">…</code><p>Clover's repository: your conversations, notes and what Clover learned, with their history.</p></div>
-        <div class="loc">
-          <div class="loc__h"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></span><span class="loc__t">Attachments</span><button type="button" class="btn sm" data-copy-loc="loc-media">Copy</button></div>
-          <code id="loc-media">…</code>
-          <p id="media-d">Images, audio and video you send.</p>
-          <div class="loc__sub" style="margin-top:.55rem">
-            <div class="seg sm" id="s-mediakind"><button type="button" data-v="local" class="on">Local folder</button><button type="button" data-v="cloud">Cloud folder</button></div>
-            <div class="keyrow"><input type="text" id="media-loc-inp" placeholder="Custom local or cloud folder path (or default)" aria-label="Media folder path"><button type="button" class="btn sm pri" id="media-save-btn">Save</button></div>
-          </div>
-        </div>
-        <div class="loc"><div class="loc__h"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-model"/></svg></span><span class="loc__t">Models</span><button type="button" class="btn sm" data-copy-loc="loc-models">Copy</button></div><code id="loc-models">…</code><p>Precomputed <code>CLVRTRK1</code> &amp; <code>CLVR4B01</code> trunks and experts.</p></div>
+        <div class="loc"><div class="loc__h"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></span><span class="loc__t">Attachments</span><button type="button" class="btn sm" data-copy-loc="loc-media">Copy</button></div><code id="loc-media">…</code><p id="media-d">Images, audio and video you send.</p></div>
+        <div class="loc"><div class="loc__h"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-model"/></svg></span><span class="loc__t">Models</span><button type="button" class="btn sm" data-copy-loc="loc-models">Copy</button></div><code id="loc-models">…</code><p>The model files Clover runs.</p></div>
       </div>
-      <div class="glabel">Precomputed datasets &amp; app size</div>
-      <div class="group pad"><div class="kv" id="dataset-sizes-kv"></div></div>
       <div class="group">
         <button type="button" class="row danger" id="clear-media">Clear attachments</button>
         <button type="button" class="row danger" id="clear-chats">Delete all chats</button>
       </div>
-      <p class="gfoot">Deleted chats leave this app and Clover's repository; its git history keeps them.</p>
+      <p class="gfoot">Deleted chats leave this browser and Clover's repository; its git history keeps them.</p>
     </section>
 
     <section class="page" data-page="advanced" hidden>
@@ -584,9 +624,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <button type="button" class="row t" data-go="perms"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></span><span class="row__t">Permissions</span><span class="row__v" id="v-perms"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="tools"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg></span><span class="row__t">Tools and search</span><span class="row__v" id="v-tools"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
-      <div class="group">
+      <div class="group laptop-only">
         <button type="button" class="row t" data-go="workspaces"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Workspaces</span><span class="row__v" id="v-ws">None</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t" data-go="vscode"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">Hosts &amp; VS Code</span><span class="row__v" id="v-vsc"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="vscode"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">VS Code</span><span class="row__v" id="v-vsc"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
     </section>
 
@@ -601,8 +641,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     </section>
 
     <section class="page" data-page="personal" hidden>
-      <p class="lead">What Clover learned from your corrections and requests, and the experiences it learned from. It stays on this device. Deleting a chat deletes its experiences.</p>
+      <p class="lead">What Clover learned from your corrections and requests, and the experiences it learned from. It stays on this computer. Deleting a chat deletes its experiences.</p>
       <div class="group pad" id="personal-list"></div>
+      <div class="group">
+        <button type="button" class="row t danger" id="personal-forget"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></span><span class="row__t">Forget everything Clover learned about you</span></button>
+      </div>
     </section>
 
     <section class="page" data-page="collective" hidden>
@@ -616,16 +659,26 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     <section class="page" data-page="model" hidden>
       <div class="glabel">Model</div>
       <div class="group pad">
-        <p class="fine"><b>LFM3-Omni-2B</b> reads text, images, audio and video, and answers in text or speech.</p>
+        <div class="seg full" id="s-model" style="margin-bottom:.55rem;flex-wrap:wrap" hidden></div>
+        <p class="fine" id="model-d"><b>LFM3-Omni-2B</b> reads text, images, audio and video, and answers in text or speech.</p>
         <div class="note" id="model-note" hidden></div>
+      </div>
+      <div class="glabel">Hosted models</div>
+      <div class="group" id="rm-list" hidden></div>
+      <div class="group pad">
+        <p class="fine" style="margin-top:0">Host your own model (a Clover server, llama-server, Ollama, vLLM or any OpenAI-compatible server) on any machine and connect it here. By default Clover runs LFM3-Omni-2B locally on this laptop.</p>
+        <div class="keyrow" style="margin-top:.55rem"><input type="text" id="rm-url" autocomplete="off" spellcheck="false" placeholder="Server URL (e.g. http://192.168.1.50:8080)" aria-label="Model server URL"></div>
+        <div class="keyrow" style="margin-top:.45rem"><input type="password" id="rm-key" autocomplete="off" spellcheck="false" placeholder="Access key / API key (optional)" aria-label="Access key or API key"></div>
+        <div class="keyrow" style="margin-top:.45rem"><input type="text" id="rm-model" autocomplete="off" spellcheck="false" placeholder="Model ID (optional, auto-detected)" aria-label="Model ID"><button type="button" class="btn pri" id="rm-add">Add model</button></div>
+        <div class="note" id="rm-note" hidden></div>
       </div>
       <div class="glabel">Runs on</div>
       <div class="group pad">
-        <div class="seg full" id="s-engine"><button type="button" data-v="gpu" id="btn-eng-gpu">Mobile GPU + CPU</button><button type="button" data-v="cpu">CPU</button></div>
+        <div class="seg full" id="s-engine"><button type="button" data-v="gpu">GPU</button><button type="button" data-v="cpu">CPU</button><button type="button" data-v="fused" class="laptop-only">C1 + C2 + C3</button></div>
         <p class="fine" id="engine-d"></p>
         <div class="note" id="engine-note" hidden></div>
       </div>
-      <div id="omni-settings">
+      <div id="omni-settings" hidden>
         <div class="glabel">Voice</div>
         <div class="group">
           <div class="row static"><span class="row__t">Clover's voice</span><div class="seg sm" id="s-voice"><button type="button" data-v="female">Female</button><button type="button" data-v="male">Male</button></div></div>
@@ -643,9 +696,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="glabel">Engine</div>
       <div class="group pad"><div class="kv" id="engine-kv"></div></div>
       <div class="group">
-        <label class="row static"><span class="row__t">SpecMD Policy 3 OS lookahead (<code>madvise</code>)<small>Prefetches layer N+1 pages into RAM and reuses longest-common-prefix KV state.</small></span><span class="switch"><input type="checkbox" id="s-kv" checked><span></span></span></label>
+        <label class="row static"><span class="row__t">Keep each chat's state on disk<small>GPU engine: saves the model's state when you switch chats. Measured: no time saved yet.</small></span><span class="switch"><input type="checkbox" id="s-kv"><span></span></span></label>
       </div>
-      <div class="group"><button type="button" class="row danger" id="stop-engine">Stop engine</button></div>
+      <div class="group laptop-only"><button type="button" class="row danger" id="stop-engine">Stop engine</button></div>
     </section>
 
     <section class="page" data-page="perms" hidden>
@@ -656,7 +709,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <button type="button" id="q-off"><svg class="ic" aria-hidden="true"><use href="#i-off"/></svg>All off</button>
       </div>
       <div class="confirm" id="confirm-all" hidden>
-        <b>Allow everything?</b> Clover will search the web, run code and terminal commands, and read and change your files without asking first.
+        <b>Allow everything?</b> Clover will search the web, run code and PowerShell commands, and read and change your files without asking first.
         <div class="ask__b"><button type="button" class="btn warn" id="confirm-yes">Allow all</button><button type="button" class="btn" id="confirm-no">Cancel</button></div>
       </div>
       <div class="group" id="perm-list"></div>
@@ -667,7 +720,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="glabel">Tools</div>
       <div class="group pad">
         <div class="seg full" id="s-tools"><button type="button" data-v="ask">When I ask</button><button type="button" data-v="always">Always</button></div>
-        <p class="fine">Clover searches the web, runs code or opens files only when your message asks for it ("search the web for…", "use Python to…", "read /sdcard/…"). With Always, it decides by itself. Each tool still follows Permissions.</p>
+        <p class="fine">Clover searches the web, runs code or opens files only when your message asks for it ("search the web for…", "use Python to…", "read C:\…"). With Always, it decides by itself. Each tool still follows Permissions.</p>
       </div>
       <div class="glabel">Web search</div>
       <div class="group pad">
@@ -680,13 +733,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <div class="btns"><button type="button" class="btn" id="search-test">Test search</button><button type="button" class="btn danger" id="search-forget" hidden>Remove key</button></div>
         <div class="note" id="search-note" hidden></div>
       </div>
-      <p class="gfoot">The search text goes to the service you pick. Keys stay encrypted on this device.</p>
+      <p class="gfoot">The search text goes to the service you pick. Keys stay on this laptop.</p>
     </section>
 
     <section class="page" data-page="workspaces" hidden>
       <p class="lead">Folders and GitHub repositories you work on with Clover. In the one in use, Clover keeps a short context file in each folder and reads them when you ask about the project. It never commits them.</p>
       <div class="group" id="ws-list" hidden></div>
-      <div class="keyrow"><input type="text" id="ws-src" autocomplete="off" spellcheck="false" placeholder="/sdcard/my-project  or  owner/repo" aria-label="Folder path or GitHub repository"><button type="button" class="btn pri" id="ws-add">Add</button></div>
+      <div class="keyrow"><input type="text" id="ws-src" autocomplete="off" spellcheck="false" placeholder="C:\path\to\project  or  owner/repo" aria-label="Folder path or GitHub repository"><button type="button" class="btn pri" id="ws-add">Add</button></div>
       <div class="note" id="ws-note" hidden></div>
       <div class="glabel" style="margin-top:1.4rem">Private repositories</div>
       <div class="group pad">
@@ -697,60 +750,118 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     </section>
 
     <section class="page" data-page="vscode" hidden>
-      <p class="lead">Connect to remote SSH hosts or VS Code. Add this device's Ed25519 public key to your server's <code>~/.ssh/authorized_keys</code> (the private key never leaves this device).</p>
+      <p class="lead">Clover uses VS Code on this laptop for what VS Code already does: it opens files and web pages, clones repositories, installs an extension when you need one, and runs commands in a terminal you can watch. Each asks under Permissions first.</p>
       <div class="group pad"><div class="kv" id="vsc-kv"></div></div>
-      <div class="group">
-        <div class="loc">
-          <div class="loc__h"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg></span><span class="loc__t">Device SSH public key (Ed25519)</span><button type="button" class="btn sm" data-copy-loc="ssh-pubkey-box">Copy</button></div>
-          <code id="ssh-pubkey-box">Generating Ed25519 key…</code>
-          <p>Used by Clover's SSH tool when you allow remote host commands.</p>
-        </div>
-      </div>
-      <div class="btns"><button type="button" class="btn" id="vsc-open">Check connection</button></div>
+      <div class="btns"><button type="button" class="btn" id="vsc-open">Open VS Code</button></div>
       <div class="note" id="vsc-note" hidden></div>
     </section>
 
   </div>
 </aside>
 
-<script>
+<script nonce="__CSP_NONCE__">
 (function () {
   'use strict';
   var KEY = 'clover_studio_sessions_v1', SKEY = 'clover_studio_settings_v1';
   var MAX_FILES = 2, MAX_CHARS = 2400;
+  // documents go whole to the server, which reads them (tables: exact totals; text: pages) and saves them for Python
+  var DOC_EXT = /\.(xlsx|xlsm|xls|csv|tsv|pdf|docx|pptx|json)$/i, MAX_DOCS = 3, DOC_MB = 25;
   var $ = function (id) { return document.getElementById(id); };
-  var state = { sessions: { current: '', order: [], map: {} }, files: [], media: [], ready: false, busy: false, perms: {}, mode: 'lfm3',
-    settings: { sampling: 'general', thinking: false, budget: 2048, voice: 'female', autospeak: true }, health: null, lastSpeed: 0,
-    turnId: null, waitEl: null, omni: true, inputs: ['text', 'vision', 'audio', 'video'], speakNext: false, memCount: null, deviceLabel: 'on this device' };
+  // the same page on Laptop (windows), in the Android app (android), and on the Web (web, hosted on k3)
+  var PLATFORM = (document.querySelector('meta[name="clover-platform"]') || {}).content || '';
+  var PHONE = PLATFORM === 'android', WEB = PLATFORM === 'web';
+  if (PHONE || WEB) {
+    document.documentElement.classList.add(PHONE ? 'phone' : 'web');
+    var WORDS = PHONE
+      ? [[/\b(this|your|the|This|Your|The) laptop\b/g, '$1 phone'], [/\bLaptop status\b/g, 'Phone status'],
+         [/\bon this computer\b/g, 'on this phone'], [/\bthis computer\b/g, 'this phone'],
+         [/File Explorer/g, 'a file manager'], [/\bthis browser\b/g, 'this app']]
+      : [[/\b(this|your|the|This|Your|The) laptop\b/g, 'Clover\'s server'], [/\bThis laptop\b/g, 'Clover\'s server (k3)'],
+         [/\bon this computer\b/g, 'on k3'], [/Open them in File Explorer[^.]*\./g, 'Managed on the k3 server.']];
+    var inChat = function (n) { var e = n && (n.nodeType === 1 ? n : n.parentNode); return !!(e && e.closest && e.closest('#log')); };
+    var phoneText = function (root) {
+      if (!root || inChat(root)) return;
+      var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), n;
+      while ((n = w.nextNode())) {
+        if (inChat(n)) continue;
+        var t = n.nodeValue, u = t;
+        WORDS.forEach(function (r) { u = u.replace(r[0], r[1]); });
+        if (u !== t) n.nodeValue = u;
+      }
+    };
+    phoneText(document.body);
+    new MutationObserver(function (ms) {
+      ms.forEach(function (m) {
+        if (m.type === 'characterData') phoneText(m.target.parentNode);
+        else m.addedNodes.forEach(function (a) { phoneText(a.nodeType === 1 ? a : a.parentNode); });
+      });
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+  function phonePerms(p) {  // the phone and web have no terminal, VS Code or local picture CLI
+    if (!PHONE && !WEB) return p;
+    var skip = WEB ? ['shell', 'vscode', 'media', 'files', 'edit_files'] : ['shell', 'vscode', 'media'];
+    var o = {};
+    Object.keys(p).forEach(function (k) { if (skip.indexOf(k) < 0) o[k] = p[k]; });
+    return o;
+  }
+  var HOST_KEY_STORE = 'clover-host-key', HOST_URL_STORE = 'clover-host-url';
+  try {
+    var hm = /(?:[?#&])key=([A-Za-z0-9_\-]+)/.exec((location.search || '') + (location.hash || ''));
+    if (hm && hm[1]) {
+      localStorage.setItem(HOST_KEY_STORE, hm[1]);
+      if (history && history.replaceState) history.replaceState(null, '', location.pathname);
+    }
+  } catch (e) {}
+  function hostKey() { try { return localStorage.getItem(HOST_KEY_STORE) || ''; } catch (e) { return ''; } }
+  function hostHeaders(extra) {
+    var h = extra ? Object.assign({}, extra) : {};
+    var k = hostKey();
+    if (k) h['X-Clover-Key'] = k;
+    return h;
+  }
+  var API_CANDIDATES = ['https://api.cloverframework.com'];
+  var SAME_API_HOST = /^(api\.cloverframework\.com|127\.0\.0\.1|localhost)$/i.test(location.hostname || '');
+  var savedHostUrl = '';
+  try { savedHostUrl = localStorage.getItem(HOST_URL_STORE) || ''; } catch (e) {}
+  var API_BASE = !WEB ? '' : SAME_API_HOST ? '' : (savedHostUrl || API_CANDIDATES[0]);
+  function apiUrl(p) { return API_BASE + p; }
+  var state = { sessions: { current: '', order: [], map: {} }, files: [], media: [], docs: [], ready: false, busy: false, perms: {}, mode: 'lfm3',
+    settings: { model: 'omni', sampling: 'general', thinking: true, budget: 2048, voice: 'female', autospeak: true }, health: null, lastSpeed: 0,
+    turnId: null, waitEl: null, omni: false, inputs: ['text'], speakNext: false, memCount: null, openGroups: {}, catalog: null };
+  var RECENT_CHATS = 5;
+  try { state.openGroups = JSON.parse(localStorage.getItem(KEY + '-groups') || '{}') || {}; } catch (e) {}
   var MEDIA_MB = { image: 15, audio: 30, video: 60 }, MAX_MEDIA = 6;
   var PERM_UI = {
     internet: { name: 'Internet', icon: 'globe', verb: 'use the internet' },
     code: { name: 'Run code', icon: 'code', verb: 'run code' },
-    shell: { name: 'Terminal', icon: 'terminal', verb: 'run a terminal command' },
-    ssh: { name: 'Remote SSH', icon: 'branch', verb: 'connect to an SSH host' },
-    files: { name: 'Read files', icon: 'folder', verb: 'read files on this device' },
-    edit_files: { name: 'Edit files', icon: 'pencil', verb: 'change files on this device' },
+    shell: { name: 'Terminal', icon: 'terminal', verb: 'run a PowerShell command' },
+    files: { name: 'Read files', icon: 'folder', verb: 'read files on this laptop' },
+    edit_files: { name: 'Edit files', icon: 'pencil', verb: 'change files on this laptop' },
     memory: { name: 'Memory', icon: 'database', verb: 'remember this' },
-    vscode: { name: 'GitHub & VS Code', icon: 'code', verb: 'sync with GitHub / VS Code' },
-    media: { name: 'Pictures & Media', icon: 'image', verb: 'create a picture' },
-    voice_camera: { name: 'Voice & Camera', icon: 'mic', verb: 'use microphone or voice synthesis' }
+    vscode: { name: 'VS Code', icon: 'code', verb: 'use VS Code' },
+    media: { name: 'Pictures', icon: 'image', verb: 'create a picture' }
   };
   var TOOL_UI = {
-    run_python: ['Python', 'code'], python_interpreter: ['Python', 'code'], web_search: ['Web search', 'search'], fetch_url: ['Open web page', 'globe'],
-    run_powershell: ['Terminal', 'terminal'], run_shell: ['Terminal', 'terminal'], run_ssh: ['Remote SSH', 'branch'],
-    read_file: ['Read file', 'file'], list_directory: ['List folder', 'folder'],
-    write_file: ['Write file', 'pencil'], get_current_time: ['Clock', 'clock'], remember: ['Remember', 'database'],
+    run_python: ['Python', 'code'], web_search: ['Web search', 'search'], fetch_url: ['Open web page', 'globe'],
+    run_powershell: ['PowerShell', 'terminal'], read_file: ['Read file', 'file'], list_directory: ['List folder', 'folder'],
+    write_file: ['Write file', 'pencil'], get_current_time: ['Clock', 'clock'], laptop_status: ['Laptop status', 'power'],
+    calculate: ['Calculator', 'code'], convert_units: ['Unit converter', 'clock'], search_files: ['Search files', 'search'],
+    file_info: ['File info', 'file'], git_inspect: ['Git inspect', 'branch'], read_document: ['Read document', 'file'],
+    analyze_table: ['Analyze table', 'database'], chart_table: ['Chart table', 'image'],
+    media_info: ['Media info', 'file'], extract_frame: ['Extract frame', 'image'],
+    remember: ['Remember', 'database'],
     vscode_open: ['VS Code: open', 'code'], vscode_clone: ['VS Code: clone', 'branch'], vscode_install: ['VS Code: install', 'download'],
     vscode_run: ['VS Code: run', 'terminal'], generate_image: ['Create picture', 'image']
   };
   var SUGGEST = [
-    ['code', 'Calculate with Python', 'Compute 17**4 + 29*13 using Python.'],
-    ['search', 'Search the web', 'Search the web for recent research papers on foundation models.'],
-    ['graph', 'Knowledge graph (S2)', 'What is CVE-2024-6387 (RegreSSHion), which CWE weakness causes it, and which CAPEC attack pattern exploits it?'],
-    ['image', 'Look at a photo', 'What is in this picture?', true]
+    ['code', 'Calculate with Python', 'Use Python to compute 2^64 and the 50th Fibonacci number.'],
+    ['search', 'Search the web', 'Search the web for the latest news about Liquid AI and summarize it in three bullets.'],
+    ['folder', 'Look at my files', 'List the files in my Documents folder.'],
+    ['pencil', 'Write an email', 'Write a short, friendly email inviting my team to lunch on Friday.']
   ];
+  if (PHONE || WEB) SUGGEST[2] = ['clock', 'Plan my day', 'Help me plan a calm, productive day with three priorities.'];
   var PAGES = { home: 'Settings', account: 'GitHub account', storage: 'Storage', advanced: 'Advanced', layers: 'Clover layers',
-    model: 'Model and voice', perms: 'Permissions', tools: 'Tools and search', workspaces: 'Workspaces', vscode: 'Hosts & VS Code',
+    model: 'Model and voice', perms: 'Permissions', tools: 'Tools and search', workspaces: 'Workspaces', vscode: 'VS Code',
     personal: 'What Clover learned', collective: 'Collective learning' };
   var PARENT = { account: 'home', storage: 'home', advanced: 'home', layers: 'advanced', model: 'advanced', perms: 'advanced',
     tools: 'advanced', workspaces: 'advanced', vscode: 'advanced', personal: 'layers', collective: 'layers' };
@@ -766,54 +877,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function newId() { return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
   function btn(cls, html, title) { var b = el('button', cls, html); b.type = 'button'; if (title) { b.title = title; b.setAttribute('aria-label', title); } return b; }
   function pick(segId, value) { Array.prototype.forEach.call($(segId).children, function (b) { b.classList.toggle('on', b.getAttribute('data-v') === String(value)); }); }
-  function setNote(id, text, ok) { var n = $(id); if (!n) return; n.hidden = !text; n.textContent = text || ''; n.className = 'note' + (ok ? ' ok' : ''); }
-
-  /* ---------- Universal Transport (HTTP/SSE + Android WebView Bridge + Emulator 10.0.2.2 Fallback) ---------- */
-  var _bridgeCbs = {};
-  window.__cloverOnBridgeReply = function (cbId, b64) {
-    var fn = _bridgeCbs[cbId];
-    if (!fn) return;
-    delete _bridgeCbs[cbId];
-    try {
-      var bin = atob(b64), bytes = new Uint8Array(bin.length);
-      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      var txt = new TextDecoder('utf-8').decode(bytes);
-      fn(null, JSON.parse(txt || '{}'));
-    } catch (e) { fn(e, null); }
-  };
-
-  function resolveBaseUrl() {
-    if (window.__CLOVER_BASE_URL) return window.__CLOVER_BASE_URL;
-    if (location.protocol === 'http:' || location.protocol === 'https:') return '';
-    return 'http://127.0.0.1:8765';
-  }
-
-  function authHeaders(extra) {
-    var h = extra || {};
-    h['X-Clover-App-Package'] = 'ai.clover.studio';
-    if (window.__CLOVER_LOCAL_TOKEN) h['X-Clover-App-Token'] = window.__CLOVER_LOCAL_TOKEN;
-    return h;
-  }
+  function setNote(id, text, ok) { var n = $(id); n.hidden = !text; n.textContent = text || ''; n.className = 'note' + (ok ? ' ok' : ''); }
 
   function api(method, path, body) {
-    var jsonStr = body !== undefined ? JSON.stringify(body) : null;
-    if (location.protocol === 'file:' && window.CloverAndroidBridge && typeof window.CloverAndroidBridge.callLocalS23ApiAsync === 'function') {
-      return new Promise(function (resolve, reject) {
-        var cbId = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-        _bridgeCbs[cbId] = function (err, res) {
-          if (err) reject(err);
-          else if (res && res.error) { var e = new Error(res.message || res.error); e.body = res; reject(e); }
-          else resolve(res || {});
-        };
-        window.CloverAndroidBridge.callLocalS23ApiAsync(cbId, method, path, jsonStr);
-      });
-    }
-    var opt = { method: method, headers: authHeaders() };
-    if (body !== undefined) { opt.headers['Content-Type'] = 'application/json'; opt.body = jsonStr; }
-    var url = path.indexOf('http') === 0 ? path : (resolveBaseUrl() + path);
-    return fetch(url, opt).then(function (r) {
+    var opt = { method: method, headers: hostHeaders() };
+    if (body !== undefined) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
+    return fetch(apiUrl(path), opt).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
-        if (!r.ok) { var e = new Error(j.message || j.error || ('HTTP ' + r.status)); e.status = r.status; e.body = j; throw e; }
+        if (!r.ok) { var e = new Error(j.error || ('HTTP ' + r.status)); e.status = r.status; e.body = j; throw e; }
         return j;
       });
     });
@@ -826,11 +897,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (!s || !s.map || !s.order) state.sessions = s = { current: '', order: [], map: {} };
     if (!s.current || !s.map[s.current]) newChat(true);
     renderChats(); renderLog();
-    api('GET', '/api/sessions').then(function (r) {
+    api('GET', '/api/sessions').then(function (r) {  // conversations in the repository that this browser has not seen
       var added = 0;
       (r.sessions || []).forEach(function (x) {
-        if (s.map[x.id]) return;
-        s.map[x.id] = { id: x.id, title: x.title || 'Chat', messages: null }; s.order.push(x.id); added++;
+        if (s.map[x.id]) { if (x.updated && !s.map[x.id].updated) { s.map[x.id].updated = x.updated; added++; } return; }
+        s.map[x.id] = { id: x.id, title: x.title || 'Chat', messages: null, updated: x.updated || '' }; s.order.push(x.id); added++;
       });
       if (added) { save(); renderChats(); }
     }).catch(function () {});
@@ -856,26 +927,68 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function renderChats() {
     var box = $('chats'); box.innerHTML = '';
-    state.sessions.order.forEach(function (id) {
-      var s = state.sessions.map[id]; if (!s) return;
-      var row = el('div', 'chat' + (id === state.sessions.current ? ' on' : ''));
-      var open = btn('open'); open.textContent = s.title || 'New chat';
-      open.addEventListener('click', function () { if (state.busy) return; state.sessions.current = id; save(); renderChats(); renderLog(); closeRail(); });
-      var del = btn('del', ic('trash'), 'Delete chat');
-      del.addEventListener('click', function (ev) {
-        ev.stopPropagation(); if (state.busy) return;
-        if ((s.messages === null || (s.messages || []).length) &&
-            !confirm('Delete this conversation? It is removed from this app and from Clover\'s repository (its git history keeps it).')) return;
-        delete state.sessions.map[id];
-        state.sessions.order = state.sessions.order.filter(function (x) { return x !== id; });
-        api('POST', '/api/session/forget', { session_id: id, delete: true }).catch(function () {});
-        if (!state.sessions.order.length) newChat(true);
-        else if (state.sessions.current === id) state.sessions.current = state.sessions.order[0];
-        save(); renderChats(); renderLog();
+    var now = Date.now(), ids = state.sessions.order.filter(function (id) { return state.sessions.map[id]; });
+    ids.sort(function (a, b) { return chatTime(b) - chatTime(a); });
+    // the five most recent, then older chats folded by day (this month) and by month (human, 2026-11-03)
+    var groups = [], byLabel = {};
+    ids.forEach(function (id, i) {
+      if (i < RECENT_CHATS) { box.appendChild(chatRow(id)); return; }
+      var label = chatGroup(chatTime(id), now);
+      if (!byLabel[label]) { byLabel[label] = []; groups.push(label); }
+      byLabel[label].push(id);
+    });
+    groups.forEach(function (label) {
+      var list = byLabel[label];
+      var open = !!state.openGroups[label] || list.indexOf(state.sessions.current) >= 0;
+      var head = btn('chat-group', ic('chev-r') + '<span></span><em></em>');
+      head.querySelector('span').textContent = label; head.querySelector('em').textContent = list.length;
+      head.setAttribute('aria-expanded', String(open));
+      var rows = el('div'); rows.hidden = !open;
+      list.forEach(function (id) { rows.appendChild(chatRow(id)); });
+      head.addEventListener('click', function () {
+        rows.hidden = !rows.hidden; head.setAttribute('aria-expanded', String(!rows.hidden));
+        state.openGroups[label] = !rows.hidden;
+        try { localStorage.setItem(KEY + '-groups', JSON.stringify(state.openGroups)); } catch (e) {}
       });
-      row.appendChild(open); row.appendChild(del); box.appendChild(row);
+      box.appendChild(head); box.appendChild(rows);
     });
     $('chat-title').textContent = (cur() && cur().title) || 'New chat';
+  }
+  function chatTime(id) {
+    var s = state.sessions.map[id], t = s && s.updated ? Date.parse(s.updated) : NaN;
+    if (!isNaN(t)) return t;
+    var m = /^c([0-9a-z]{8})/.exec(id || '');  // newId(): 'c' + Date.now() in base 36
+    return m ? parseInt(m[1], 36) : 0;
+  }
+  function chatGroup(t, now) {
+    if (!t) return 'Earlier';  // a chat saved without a time (older versions, other ids)
+    var d = new Date(t), today = new Date(now), day = new Date(t);
+    today.setHours(0, 0, 0, 0); day.setHours(0, 0, 0, 0);
+    if (d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth()) {
+      var diff = Math.round((today - day) / 86400000);
+      return diff <= 0 ? 'Today' : diff === 1 ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+    }
+    return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  }
+  function chatRow(id) {
+    var s = state.sessions.map[id];
+    var row = el('div', 'chat' + (id === state.sessions.current ? ' on' : ''));
+    var open = btn('open'); open.textContent = s.title || 'New chat';
+    open.addEventListener('click', function () { if (state.busy) return; state.sessions.current = id; save(); renderChats(); renderLog(); closeRail(); });
+    var del = btn('del', ic('trash'), 'Delete chat');
+    del.addEventListener('click', function (ev) {
+      ev.stopPropagation(); if (state.busy) return;
+      if ((s.messages === null || (s.messages || []).length) &&
+          !confirm('Delete this conversation? It is removed from this browser and from Clover\'s repository (its git history keeps it).')) return;
+      delete state.sessions.map[id];
+      state.sessions.order = state.sessions.order.filter(function (x) { return x !== id; });
+      api('POST', '/api/session/forget', { session_id: id, delete: true }).catch(function () {});
+      if (!state.sessions.order.length) newChat(true);
+      else if (state.sessions.current === id) state.sessions.current = state.sessions.order[0];
+      save(); renderChats(); renderLog();
+    });
+    row.appendChild(open); row.appendChild(del);
+    return row;
   }
 
   /* ---------- rendering ---------- */
@@ -888,23 +1001,21 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         out.push('<div class="code"><button type="button" data-copy="code">Copy</button><pre><code>' + esc(code.replace(/\n$/, '')) + '</code></pre></div>');
         return;
       }
-      var list = [], ordered = false, tbl = [];
+      var list = [], ordered = false, rows = [];
       function flush() { if (list.length) { out.push((ordered ? '<ol>' : '<ul>') + list.join('') + (ordered ? '</ol>' : '</ul>')); list = []; } }
+      function cells(ln) { return ln.replace(/^\|/, '').replace(/\|$/, '').split('|').map(function (c) { return inline(c.trim()); }); }
       function flushTable() {
-        if (!tbl.length) return;
-        function cells(r) { return r.replace(/^\||\|$/g, '').split('|').map(function (c) { return c.trim(); }); }
-        if (tbl.length >= 2 && /^[\s|:\-]+$/.test(tbl[1]) && tbl[1].indexOf('-') >= 0) {
-          var head = cells(tbl[0]).map(function (c) { return '<th>' + inline(c) + '</th>'; }).join('');
-          var body = tbl.slice(2).map(function (r) {
-            return '<tr>' + cells(r).map(function (c) { return '<td>' + inline(c) + '</td>'; }).join('') + '</tr>';
-          }).join('');
-          out.push('<table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>');
-        } else tbl.forEach(function (r) { out.push('<p>' + inline(r) + '</p>'); });
-        tbl = [];
+        if (!rows.length) return;
+        var head = rows.length > 1 && /^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$/.test(rows[1]);
+        if (!head) { rows.forEach(function (r) { out.push('<p>' + inline(r) + '</p>'); }); rows = []; return; }
+        var html = '<table><thead><tr>' + cells(rows[0]).map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+        rows.slice(2).forEach(function (r) { html += '<tr>' + cells(r).map(function (c) { return '<td>' + c + '</td>'; }).join('') + '</tr>'; });
+        out.push(html + '</tbody></table>'); rows = [];
       }
       esc(part).split('\n').forEach(function (ln) {
         var t = ln.trim();
-        if (/^\|.+\|$/.test(t)) { flush(); tbl.push(t); return; }
+        if (/^\|.*\|$/.test(t)) { flush(); rows.push(t); return; }
+        if (rows.length && !t) return;  // the model leaves blank lines between table rows
         flushTable();
         var h = t.match(/^#{1,4}\s+(.*)$/);
         var m = t.match(/^([-*•]|\d+[.)])\s+(.*)$/);
@@ -913,7 +1024,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         if (h) out.push('<h4>' + inline(h[1]) + '</h4>');
         else if (t) out.push('<p>' + inline(t) + '</p>');
       });
-      flush(); flushTable();
+      flushTable();
+      flush();
     });
     return out.join('') || '<p>(empty reply)</p>';
   }
@@ -923,7 +1035,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (m.media && m.media.length) {
       var box = el('div', 'media');
       m.media.forEach(function (md) {
-        if (md.thumb && /^data:image\/(jpeg|png|webp);base64,/.test(md.thumb)) { var im = document.createElement('img'); im.src = md.thumb; im.alt = md.name || 'image'; box.appendChild(im); return; }
+        if (md.thumb && /^data:image\/jpeg;base64,/.test(md.thumb)) { var im = document.createElement('img'); im.src = md.thumb; im.alt = md.name || 'image'; box.appendChild(im); return; }
         var s = el('span', '', ic(md.kind === 'video' ? 'video' : md.kind === 'audio' ? 'wave' : 'image')); s.appendChild(document.createTextNode(md.name || md.kind)); box.appendChild(s);
       });
       u.appendChild(box);
@@ -931,8 +1043,6 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     return u;
   }
   function toolName(n) { return (TOOL_UI[n] || [n || 'Tool'])[0]; }
-  function fmtSecs(s) { s = Math.max(0, Math.round(s || 0)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
-  function cap(s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); }
   function stepRowEl(s) {
     var row = el('div', 'step-row' + (s.onClick ? ' click' : ''));
     var icBox = el('span', 'step-ic ' + (s.state || 'ok'));
@@ -1002,6 +1112,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     api_.set(t.state || 'run', t.why, t.summary); api_.result(t.result);
     return api_;
   }
+  /* Clover's behind-the-scenes activity timeline (understanding, context, thinking, planning, tools & whether each worked) */
   function workEl(open, isLive) {
     var box = el('div', 'work' + (isLive ? ' live' : ''));
     var head = btn('work__t', '<span class="work__lead">' + (isLive ? SPIN : ic('check')) + '</span><span class="work__title"></span><span class="work__meta"></span>' + CHEV);
@@ -1069,12 +1180,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     body.appendChild(el('div', 'md' + (m.isNotice ? ' notice' : ''), markdown(m.text)));
     (m.images || []).forEach(function (im) {
-      if (!/^[0-9a-f]{24,32}\.png$/.test(im.file || '')) return;
+      if (!/^[0-9a-f]{32}\.png$/.test(im.file || '')) return;
       var fig = el('figure', 'figure'), img = document.createElement('img');
-      img.src = resolveBaseUrl() + '/api/media/file/' + im.file; img.alt = im.prompt || 'Picture Clover made'; img.loading = 'lazy';
+      img.src = apiUrl('/api/media/file/' + im.file); img.alt = im.prompt || 'Picture Clover made'; img.loading = 'lazy';
       fig.appendChild(img);
-      var capEl = el('figcaption'); capEl.textContent = [im.model, im.seconds ? im.seconds + ' s' : ''].filter(Boolean).join(' · ');
-      fig.appendChild(capEl); body.appendChild(fig);
+      var cap = el('figcaption'); cap.textContent = [im.model, im.seconds ? im.seconds + ' s' : ''].filter(Boolean).join(' · ');
+      fig.appendChild(cap); body.appendChild(fig);
     });
     (m.media || []).forEach(function (md) {
       if (!/^data:image\/(png|jpeg|gif|webp);base64,/.test(md.data_url || '')) return;
@@ -1087,20 +1198,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var cp = btn('', ic('copy'), 'Copy');
     cp.addEventListener('click', function () { copyText(m.text || '', cp); });
     acts.appendChild(cp);
-    var sv = btn('', ic('speaker'), 'Listen (Clover\'s voice)');
-    sv.addEventListener('click', function () { speakOmni(m.text, sv); });
-    acts.appendChild(sv);
-    if (!m.isNotice) {
+    if (state.omni) { var sv = btn('', ic('speaker'), 'Listen (Clover\'s voice)'); sv.addEventListener('click', function () { speakOmni(m.text, sv); }); acts.appendChild(sv); }
+    else if (localVoice()) { var sp = btn('', ic('speaker'), 'Read aloud (offline voice)'); sp.addEventListener('click', function () { speak(m.text); }); acts.appendChild(sp); }
+    if (state.mode === 'lfm3' && !m.isNotice) {  // the Outcome is not right: the user starts the Clover cycle
       var rd = btn('redo', ic('refresh') + '<span>Try again</span>', 'Not right? Clover checks this answer again');
       rd.addEventListener('click', function () {
         if (state.busy || !state.ready) return;
-        var draft = $('prompt').value, files = state.files, media = state.media;
-        state.files = []; state.media = []; $('prompt').value = 'Try again';
+        var draft = $('prompt').value, files = state.files, media = state.media, docs = state.docs;
+        state.files = []; state.media = []; state.docs = []; $('prompt').value = 'Try again';
         streamSend();
-        $('prompt').value = draft; state.files = files; state.media = media; renderAtt(); autosize(); updateSend();
+        $('prompt').value = draft; state.files = files; state.media = media; state.docs = docs; renderAtt(); autosize(); updateSend();
       });
       acts.appendChild(rd);
-      if (m.turn) {
+      if (m.turn) {  // the Outcome worked: the user says so (a new message counts too)
         var gd = btn('good' + (m.helpful ? ' on' : ''), ic('check') + '<span>' + (m.helpful ? 'Marked helpful' : 'Helpful') + '</span>',
           'This answer worked for you');
         gd.addEventListener('click', function () {
@@ -1119,7 +1229,6 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       db.addEventListener('click', function () { trace.hidden = !trace.hidden; });
     }
     if (m.meta) { var mt = el('span', 'meta'); mt.textContent = m.meta; acts.appendChild(mt); }
-    if (m.used && m.used.length) { var tg = el('span', 'tags'); m.used.forEach(function (u) { var s = el('span'); s.textContent = u; tg.appendChild(s); }); acts.appendChild(tg); }
     body.appendChild(acts);
     if (trace) body.appendChild(trace);
     wrap.appendChild(body);
@@ -1128,7 +1237,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function renderLog() {
     var log = $('log'); log.innerHTML = '';
     var c = cur();
-    if (c && c.messages === null) {
+    if (c && c.messages === null) {  // a conversation from the repository: its messages arrive once opened
       c.messages = [];
       api('GET', '/api/sessions/' + encodeURIComponent(c.id)).then(function (r) {
         c.messages = fromRecords(r.messages || []); save(); if (cur() === c) renderLog();
@@ -1142,61 +1251,58 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function scrollDown() { var s = $('stream'); s.scrollTop = s.scrollHeight; }
   function copyText(text, b) {
-    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.copyToClipboard === 'function') {
-      window.CloverAndroidBridge.copyToClipboard(text);
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).catch(function () {});
-    }
-    if (b) { var old = b.innerHTML; b.innerHTML = ic('check'); setTimeout(function () { b.innerHTML = old; }, 1100); }
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(text).then(function () { var old = b.innerHTML; b.innerHTML = ic('check'); setTimeout(function () { b.innerHTML = old; }, 1100); });
   }
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('button[data-copy="code"]');
     if (!b) return;
     var code = b.parentNode.querySelector('code');
-    if (code) copyText(code.textContent);
+    if (code && navigator.clipboard) navigator.clipboard.writeText(code.textContent);
     b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1100);
   });
   function renderHero() {
     var h = new Date().getHours();
     $('greet').textContent = h < 5 ? 'Up late?' : h < 12 ? 'Good morning.' : h < 18 ? 'Good afternoon.' : 'Good evening.';
     var box = $('sugg'); box.innerHTML = '';
-    SUGGEST.forEach(function (s) {
+    (state.omni ? SUGGEST.slice(0, 3).concat([['image', 'Look at a photo', 'What is in this picture?', true]]) : SUGGEST).forEach(function (s) {
       var b = btn('', ic(s[0]) + '<span></span>'); b.querySelector('span').textContent = s[1]; b.title = s[2];
       b.addEventListener('click', function () { $('prompt').value = s[2]; autosize(); $('prompt').focus(); updateSend(); if (s[3]) $('file-input').click(); });
       box.appendChild(b);
     });
   }
 
-  /* ---------- Voice & Speech Playback (Android Native TTS + On-Device WAV Synthesis) ---------- */
-  var speech = null;
-  function stopSpeech() {
-    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.stopSpeaking === 'function') {
-      window.CloverAndroidBridge.stopSpeaking();
-    }
-    if (window.speechSynthesis) speechSynthesis.cancel();
-    if (speech) { speech.stop(); speech = null; }
+  /* ---------- offline voice (Windows voices only; no audio leaves the laptop) ---------- */
+  function localVoice() {
+    if (!window.speechSynthesis) return null;
+    var vs = speechSynthesis.getVoices().filter(function (v) { return v.localService && /^en/i.test(v.lang); });
+    return vs[0] || null;
   }
+  function speak(text) {
+    var v = localVoice(); if (!v) return;
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text || '').replace(/```[\s\S]*?```/g, ' code block ').slice(0, 4000));
+    u.voice = v; speechSynthesis.speak(u);
+  }
+  if (window.speechSynthesis) speechSynthesis.onvoiceschanged = function () { if (!state.busy) renderLog(); };
+
+  /* ---------- LFM3-Omni's own voice (llama.cpp /tts on this laptop) ---------- */
+  // Sentence parts, requested back to back (the CPU instance never waits for playback) and played in order, so speech
+  // starts after the first, short part. Requesting a part only when the previous one started playing left a 2.4 s
+  // silence before a slow part (a list of colours).
+  var speech = null;
+  function stopSpeech() { if (speech) { speech.stop(); speech = null; } }
   function speakOmni(text, b) {
     var again = speech && b && speech.button === b; stopSpeech(); if (again) return;
-    var clean = String(text || '').replace(/```[\s\S]*?```/g, ' code block ').slice(0, 2400);
-    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.speakText === 'function') {
-      if (b) b.classList.add('busy');
-      window.k3OnTtsFinished = function () { if (b) b.classList.remove('busy'); };
-      window.CloverAndroidBridge.speakText(clean);
-      return;
-    }
     var me = { button: b, cancelled: false, audio: null, stop: function () {
       me.cancelled = true; if (me.audio) me.audio.pause(); if (b) b.classList.remove('busy'); } };
     speech = me;
     if (b) { b.classList.add('busy'); b.title = 'Stop'; }
     function wav(part) {
-      return fetch(resolveBaseUrl() + '/api/tts', {
-        method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ text: part, voice: state.settings.voice })
-      }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); });
+      return fetch(apiUrl('/api/tts'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: part, voice: state.settings.voice }) })
+        .then(function (r) { if (!r.ok) return r.json().catch(function () { return {}; }).then(function (j) { throw new Error(j.error || ('HTTP ' + r.status)); }); return r.blob(); });
     }
-    function synthAll(parts) {
+    function synthAll(parts) {  // one request at a time; a failed part stops the ones after it
       var prev = Promise.resolve();
       return parts.map(function (p) {
         var cur = prev.then(function () { if (me.cancelled) throw new Error('stopped'); return wav(p); });
@@ -1215,24 +1321,39 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
                 function (e) { URL.revokeObjectURL(url); throw e; });
       });
     }
-    api('POST', '/api/tts/parts', { text: clean }).then(function (r) {
+    api('POST', '/api/tts/parts', { text: text }).then(function (r) {
       var parts = r.parts || [];
       if (!parts.length) throw new Error('nothing to speak');
       return play(synthAll(parts), 0);
     }).then(function () {
       if (speech === me) speech = null;
       if (b) { b.classList.remove('busy'); b.title = 'Listen (Clover\'s voice)'; }
-    }, function () {
+    }, function (e) {
       if (speech === me) speech = null;
-      if (b) b.classList.remove('busy');
-      if (window.speechSynthesis) {
-        var u = new SpeechSynthesisUtterance(clean);
-        speechSynthesis.speak(u);
-      }
+      if (b) { b.classList.remove('busy'); b.title = me.cancelled ? 'Listen (Clover\'s voice)' : 'Could not speak: ' + e.message; }
     });
   }
 
-  /* ---------- answer settings ---------- */
+  /* ---------- answer settings (this browser) ---------- */
+  function getCatalog() {
+    var cat = (state.server && state.server.model_catalog) || state.catalog;
+    if (cat && cat.length) return cat;
+    return [{
+      id: 'omni',
+      name: 'LFM3-Omni',
+      badge: PHONE ? 'This phone' : (WEB ? 'k3' : 'This laptop'),
+      desc: 'Local · 24-layer Liquid AI Omni · Text, images, audio, video & speech',
+      host: 'local',
+      local: true
+    }];
+  }
+  function modelInfo(id) {
+    var cat = getCatalog();
+    for (var i = 0; i < cat.length; i++) {
+      if (cat[i].id === id || cat[i].remote_model === id) return cat[i];
+    }
+    return cat[0];
+  }
   function loadSettings() {
     try {
       var s = JSON.parse(localStorage.getItem(SKEY) || '{}');
@@ -1244,24 +1365,123 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     } catch (e) {}
   }
   function saveSettings() { try { localStorage.setItem(SKEY, JSON.stringify(state.settings)); } catch (e) {} renderSettings(); }
+  function renderModelPicker() {
+    var cat = getCatalog();
+    var m = (state.server && state.server.settings && state.server.settings.model) || state.settings.model || 'omni';
+    var info = modelInfo(m);
+    m = info.id;
+    state.settings.model = m;
+    if ($('model-btn-t')) $('model-btn-t').textContent = info.name;
+    if ($('model-d')) $('model-d').innerHTML = '<b>' + esc(info.name) + '</b> · ' + esc(info.desc || '');
+    if ($('v-model')) $('v-model').textContent = info.name;
+    if ($('model-menu')) {
+      var html = cat.map(function (x) {
+        return '<button type="button" class="mpick__opt' + (x.id === m ? ' on' : '') + '" role="option" data-v="' + esc(x.id) + '">' +
+          '<span>' + esc(x.name) + '</span>' + (x.badge ? '<em>' + esc(x.badge) + '</em>' : '') + '</button>';
+      }).join('');
+      html += '<div class="mpick__sep"></div>' +
+        '<button type="button" class="mpick__opt mpick__add" data-add-model="1">' +
+        '<span>+ Add model…</span></button>';
+      if ($('model-menu').getAttribute('data-sig') !== html) {
+        $('model-menu').setAttribute('data-sig', html);
+        $('model-menu').innerHTML = html;
+      }
+    }
+    if ($('s-model')) {
+      $('s-model').hidden = cat.length <= 1;
+      var sHtml = cat.map(function (x) {
+        return '<button type="button" class="' + (x.id === m ? 'on' : '') + '" data-v="' + esc(x.id) + '">' + esc(x.name) + '</button>';
+      }).join('');
+      if ($('s-model').getAttribute('data-sig') !== sHtml) {
+        $('s-model').setAttribute('data-sig', sHtml);
+        $('s-model').innerHTML = sHtml;
+      }
+    }
+    if ($('rm-list')) {
+      var customs = cat.filter(function (x) { return x.custom; });
+      $('rm-list').hidden = !customs.length;
+      $('rm-list').innerHTML = customs.map(function (x) {
+        return '<div class="row static"><span class="row__t">' + esc(x.name) + '<small>' + esc(x.url || x.desc || '') + '</small></span>' +
+          '<button type="button" class="btn sm danger" data-rm-model="' + esc(x.id) + '">Remove</button></div>';
+      }).join('');
+    }
+  }
+  function selectModel(v) {
+    state.settings.model = v;
+    if (state.server && state.server.settings) state.server.settings.model = v;
+    saveSettings(); renderModelPicker();
+    if ($('mpick')) { $('mpick').classList.remove('open'); $('model-menu').hidden = true; $('model-btn').setAttribute('aria-expanded', 'false'); }
+    saveServer({ model: v });
+  }
+  function addRemoteModel() {
+    var url = ($('rm-url') && $('rm-url').value || '').trim();
+    var key = ($('rm-key') && $('rm-key').value || '').trim();
+    var mod = ($('rm-model') && $('rm-model').value || '').trim();
+    if (!url) { setNote('rm-note', 'Enter the server URL first.'); return; }
+    setNote('rm-note', 'Connecting to model server…', true);
+    if (WEB && (!state.ready || url.toLowerCase() === 'k3' || /cloverframework\.com|sslip\.io|nip\.io/i.test(url))) {
+      var target = url.toLowerCase() === 'k3' ? API_CANDIDATES[0] : (/^https?:\/\//i.test(url) ? url.replace(/\/+$/, '') : 'http://' + url.replace(/\/+$/, ''));
+      try {
+        if (key) localStorage.setItem(HOST_KEY_STORE, key);
+        localStorage.setItem(HOST_URL_STORE, target);
+      } catch (e) {}
+      API_BASE = SAME_API_HOST && target === location.origin ? '' : target;
+    }
+    api('POST', '/api/models/add', { url: url, api_key: key, model: mod }).then(function (r) {
+      if ($('rm-url')) $('rm-url').value = '';
+      if ($('rm-key')) $('rm-key').value = '';
+      if ($('rm-model')) $('rm-model').value = '';
+      state.server = state.server || {};
+      state.server.settings = r.settings;
+      state.server.model_catalog = r.model_catalog;
+      state.catalog = r.model_catalog;
+      renderServerSettings(); pollStatus(); loadHealth();
+      setNote('rm-note', 'Connected ' + (r.added || []).map(function (x) { return x.name; }).join(', ') + '.', true);
+    }).catch(function (e) {
+      if (WEB && key) {
+        loadServerSettings().then(function () {
+          pollStatus();
+          if (state.server && state.server.model_catalog) {
+            setNote('rm-note', 'Connected to hosted Clover server.', true);
+          } else {
+            setNote('rm-note', e.message);
+          }
+        });
+        return;
+      }
+      setNote('rm-note', e.message);
+    });
+  }
+  function removeRemoteModel(id) {
+    api('POST', '/api/models/remove', { id: id }).then(function (r) {
+      state.server = state.server || {};
+      state.server.settings = r.settings;
+      state.server.model_catalog = r.model_catalog;
+      state.catalog = r.model_catalog;
+      renderServerSettings(); pollStatus(); loadHealth();
+    }).catch(function (e) { setNote('rm-note', e.message); });
+  }
   function renderSettings() {
     var s = state.settings;
     pick('s-style', s.sampling); pick('s-room', s.budget); pick('s-voice', s.voice);
     $('s-think').checked = s.thinking;
     $('s-room-row').hidden = !s.thinking;
     $('s-autospeak').checked = s.autospeak;
-    $('omni-settings').hidden = false;
+    $('lfm3-settings').hidden = state.mode !== 'lfm3' || state.omni;
+    $('omni-settings').hidden = !state.omni;
+    renderModelPicker();
   }
   function renderEngine() {
-    var h = state.health || {}, e = h.engine || {}, dp = h.device_profile || {};
+    var h = state.health || {}, e = h.engine || {}, info = modelInfo(state.settings.model);
     var rows = [
-      ['Model', (e.model || 'LFM3-Omni-2B') + ' (Precomputed Trunks & Experts)'],
-      ['Device', dp.device_name || e.device || 'Android / Linux Device'],
-      ['SoC & Compute', (dp.soc ? dp.soc + ' · ' : '') + (dp.gpu_label || 'GPU') + ' + ' + (dp.cpu_label || 'CPU') + (e.threads ? ' (' + e.threads + ' threads)' : '')],
-      ['Precomputed C2/C3', (h.c2_c3_precomputed_dirs || 31) + ' CLVRTRK1/CLVR4B01 dirs active'],
-      ['Understands', (e.inputs || ['text', 'vision', 'audio', 'video']).join(', ').replace('vision', 'images')],
-      ['Answers in', (e.outputs || ['text', 'speech', 'image', 'video']).join(', ')],
-      ['Context', e.max_tokens ? Number(e.max_tokens).toLocaleString() + ' tokens' : '1,536 tokens'],
+      ['Model', (e.model || (info && info.name) || 'LFM3-Omni') + (state.mode === 'lfm3' ? '' : ' + Clover layers')],
+      ['Runs on', e.engine === 'gpu' ? (e.device || 'GPU') + ' · ' + (e.backend || 'llama.cpp') + ' · ' + (e.weights || '4-bit')
+        : e.mode === 'omni' ? ((e.device || 'CPU') + ' · ' + (e.backend || 'llama.cpp') + ' · ' + (e.weights || '4-bit'))
+        : 'CPU · C engine' + (e.avx2 ? ' (AVX2)' : '') + (e.threads ? ' · ' + e.threads + ' threads' : '') + ' · ' + (e.weights || 'bf16')],
+      ['Understands', (e.inputs || ['text']).join(', ').replace('vision', 'images')],
+      ['Answers in', (e.outputs || ['text']).join(' and ')],
+      ['Speaks on', e.speech ? e.speech + (e.speech_error ? ' · could not start: ' + e.speech_error : '') : null],
+      ['Context', e.max_tokens ? Number(e.max_tokens).toLocaleString() + ' tokens' : '—'],
       ['Started in', e.setup_s ? Math.round(e.setup_s) + ' s' : '—'],
       ['Last speed', state.lastSpeed ? state.lastSpeed.toFixed(1) + ' tokens/s' : '—']
     ];
@@ -1271,79 +1491,70 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   segClick('s-style', function (v) { state.settings.sampling = v; saveSettings(); });
   segClick('s-room', function (v) { state.settings.budget = +v; saveSettings(); });
   segClick('s-voice', function (v) { state.settings.voice = v; saveSettings(); });
+  if ($('s-model')) segClick('s-model', selectModel);
+  if ($('model-btn')) {
+    $('model-btn').addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var open = !$('model-menu').hidden;
+      $('model-menu').hidden = open;
+      $('mpick').classList.toggle('open', !open);
+      $('model-btn').setAttribute('aria-expanded', String(!open));
+    });
+    $('model-menu').addEventListener('click', function (ev) {
+      var addBtn = ev.target.closest('button[data-add-model]');
+      if (addBtn) {
+        $('model-menu').hidden = true; $('mpick').classList.remove('open'); $('model-btn').setAttribute('aria-expanded', 'false');
+        openSettings('model');
+        setTimeout(function () { if ($('rm-url')) $('rm-url').focus(); }, 120);
+        return;
+      }
+      var b = ev.target.closest('button[data-v]');
+      if (b) selectModel(b.getAttribute('data-v'));
+    });
+    document.addEventListener('click', function (ev) {
+      if ($('mpick') && !$('mpick').contains(ev.target)) {
+        $('model-menu').hidden = true; $('mpick').classList.remove('open'); $('model-btn').setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+  if ($('rm-add')) $('rm-add').addEventListener('click', addRemoteModel);
+  if ($('rm-list')) $('rm-list').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button[data-rm-model]');
+    if (b) removeRemoteModel(b.getAttribute('data-rm-model'));
+  });
   $('s-think').addEventListener('change', function () { state.settings.thinking = this.checked; saveSettings(); });
   $('s-autospeak').addEventListener('change', function () { state.settings.autospeak = this.checked; saveSettings(); });
   segClick('s-tools', function (v) { saveServer({ tools: v }); });
-  $('s-kv').addEventListener('change', function () { saveServer({ layers: { specmd_madvise: this.checked, kv_slots: this.checked } }); });
+  $('s-kv').addEventListener('change', function () { saveServer({ layers: { kv_slots: this.checked } }); });
   segClick('s-engine', function (v) {
     if (state.server && state.server.settings.engine === v) return;
     if (state.busy) { alert('Clover is answering; switch the engine when it is done.'); return; }
     saveServer({ engine: v });
   });
   $('stop-engine').addEventListener('click', function () {
-    if (!confirm('Stop the Clover engine?')) return;
-    api('POST', '/api/shutdown', {}).then(function () { state.ready = false; setStatus('err', 'Stopped', 'Clover is stopped.'); updateSend(); }).catch(function () {});
+    if (!confirm('Stop the Clover engine? VS Code also loses Clover until you start Clover AI Studio again.')) return;
+    api('POST', '/api/shutdown', {}).then(function () { state.ready = false; setStatus('err', 'Stopped', 'Clover is stopped. Start Clover AI Studio to use it again.'); updateSend(); }).catch(function () {});
   });
   $('clear-chats').addEventListener('click', function () {
-    if (state.busy || !confirm('Delete all chats? They are removed from this app and from Clover\'s repository (its git history keeps them).')) return;
+    if (state.busy || !confirm('Delete all chats? They are removed from this browser and from Clover\'s repository (its git history keeps them).')) return;
     state.sessions.order.forEach(function (id) { api('POST', '/api/session/forget', { session_id: id, delete: true }).catch(function () {}); });
     state.sessions = { current: '', order: [], map: {} }; newChat(true); renderChats(); renderLog(); closeSheet();
   });
 
-  /* ---------- storage: locations & precomputed dataset breakdown ---------- */
-  function mb(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.ceil((n || 0) / 1024) + ' KB'; }
+  /* ---------- storage: locations only (File Explorer shows what is inside) ---------- */
+  function mb(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.ceil(n / 1024) + ' KB'; }
   function loadStorage() {
     api('GET', '/api/storage').then(function (r) {
-      $('loc-repo').textContent = r.repository || r.memory_dir || '…';
-      $('loc-media').textContent = r.media || r.media_dir || '…';
-      $('loc-models').textContent = r.models || '…';
-      var mKind = r.media_kind || 'local';
-      pick('s-mediakind', mKind);
-      var fCnt = r.media_files || 0;
-      $('media-d').textContent = 'Images, audio and video you send (' + (mKind === 'cloud' ? 'Cloud-synced folder' : 'Local folder') + '). Now ' + fCnt + ' file' + (fCnt === 1 ? '' : 's') + ', ' + mb(r.media_bytes || 0) + '.';
-      var pd = r.precomputed_datasets || {};
-      if (pd.total_on_device_gib) {
-        $('v-storage').textContent = pd.total_on_device_gib + ' GiB · ' + (mKind === 'cloud' ? 'Cloud media' : 'Local');
-        var dsRows = [
-          ['App APK (CloverAIStudio.apk)', pd.app_apk_mib + ' MiB'],
-          ['Tokenizer + C Engine (.so)', pd.tokenizer_and_c_engine_mib + ' MiB'],
-          ['C1 Base Model (24 Trunks)', pd.c1_trunks_24_bf16_mib + ' MiB BF16 + ' + pd.c1_trunks_24_4bit_mib + ' MiB Q4'],
-          ['C1 Base Model (24 Experts)', pd.c1_experts_24_swiglu_4bit_mib + ' MiB (ffn.4bit.bin)'],
-          ['C1 Global-0 (Embed + LM-Head)', pd.c1_global_0_embed_and_lmhead_mib + ' MiB'],
-          ['C2 HybridAgent (plan-trunk-0)', pd.c2_hybridagent_plan_trunk_0_mib + ' MiB'],
-          ['C3 Bridges (bridge-trunk-0)', pd.c3_bridges_trunk_0_mib + ' MiB'],
-          ['C3 VQ-VAE (Trunk + 11 Experts)', pd.c3_vqvae_trunk_and_11_experts_mib + ' MiB'],
-          ['C3 NCM (12 Trunks + Global)', pd.c3_ncm_12_trunks_and_global_mib + ' MiB'],
-          ['C3 Pointer Decoder (3 Trunks)', pd.c3_pointer_decoder_trunks_mib + ' MiB'],
-          ['C3 VQ-VAE Shared Vocab Maps', pd.c3_vqvae_shared_vocab_maps_mib + ' MiB'],
-          ['S1/S2 Memory & Ontology Repo', pd.s1_s2_memory_and_ontology_mib + ' MiB'],
-          ['Total App + Datasets', pd.total_on_device_mib + ' MiB (' + pd.total_on_device_gib + ' GiB)']
-        ];
-        $('dataset-sizes-kv').innerHTML = dsRows.map(function (x) { return '<span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b>'; }).join('');
-      }
+      $('loc-repo').textContent = r.repository; $('loc-media').textContent = r.media; $('loc-models').textContent = r.models;
+      $('media-d').textContent = 'Images, audio and video you send. Now ' + r.media_files + ' file' + (r.media_files === 1 ? '' : 's') + ', ' + mb(r.media_bytes) + '.';
     }).catch(function () {});
   }
-  segClick('s-mediakind', function (v) {
-    pick('s-mediakind', v);
-    $('media-loc-inp').placeholder = v === 'cloud'
-      ? 'Cloud folder path (e.g. /sdcard/DriveSync/CloverMedia or ~/OneDrive/CloverMedia)'
-      : 'Local folder path (or leave blank for default)';
-  });
-  $('media-save-btn').addEventListener('click', function () {
-    var onBtn = $('s-mediakind').querySelector('button.on');
-    var k = onBtn ? onBtn.getAttribute('data-v') : 'local';
-    var p = $('media-loc-inp').value.trim() || 'default';
-    api('POST', '/api/storage', { media_dir: p, media_kind: k }).then(function () {
-      $('media-loc-inp').value = '';
-      loadStorage();
-    }).catch(function (e) { alert(e.message); });
-  });
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('[data-copy-loc]');
-    if (!b) return;
-    var targetEl = $(b.getAttribute('data-copy-loc'));
-    if (targetEl) copyText(targetEl.textContent);
-    b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1100);
+    if (!b || !navigator.clipboard) return;
+    navigator.clipboard.writeText($(b.getAttribute('data-copy-loc')).textContent).then(function () {
+      b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1100);
+    });
   });
   $('clear-media').addEventListener('click', function () {
     if (!confirm('Delete all attachments? Your chats keep their names, but the images, audio and video files are gone.')) return;
@@ -1351,57 +1562,153 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   });
 
   /* ---------- status ---------- */
+  function isMobileView() {
+    return PHONE || (window.matchMedia ? window.matchMedia('(max-width: 760px)').matches : window.innerWidth <= 760);
+  }
+  function updatePlaceholder() {
+    var p = $('prompt');
+    if (!p) return;
+    p.placeholder = (state.omni && !isMobileView()) ? 'Message Clover, or add a photo, sound or video' : 'Message Clover';
+  }
+  window.addEventListener('resize', updatePlaceholder);
+  function showAuthGate(show, msg) {
+    var g = $('auth-gate');
+    if (!g) return;
+    g.hidden = !show;
+    if (msg !== undefined) setNote('auth-note', msg || '');
+    if (show && $('auth-acct') && !$('auth-acct').value) {
+      try { $('auth-acct').value = localStorage.getItem('clover-web-account') || ''; } catch (e) {}
+    }
+  }
+  if ($('auth-form')) {
+    $('auth-form').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var acct = ($('auth-acct') && $('auth-acct').value || '').trim();
+      var key = ($('auth-key') && $('auth-key').value || '').trim();
+      if (!acct || !key) { setNote('auth-note', 'Enter your approved account and access key.'); return; }
+      setNote('auth-note', 'Signing in…', true);
+      fetch(apiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account: acct, key: key })
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+          return j;
+        });
+      }).then(function (r) {
+        try {
+          localStorage.setItem(HOST_KEY_STORE, r.token || key);
+          localStorage.setItem('clover-web-account', r.account || acct);
+        } catch (e) {}
+        if ($('auth-key')) $('auth-key').value = '';
+        setNote('auth-note', '');
+        showAuthGate(false);
+        loadServerSettings(); loadHealth(); load(); loadPerms(); pollStatus();
+      }).catch(function (e) {
+        setNote('auth-note', e.message || 'Sign-in failed.');
+      });
+    });
+  }
+  if (WEB && !hostKey()) showAuthGate(true);
   function setStatus(cls, text, notice) {
     $('status-dot').className = 'dot ' + cls; $('status-text').textContent = text;
     $('notice').hidden = !notice; $('notice').classList.toggle('err', cls === 'err');
     $('notice-spin').style.display = cls === 'err' ? 'none' : ''; $('notice-t').textContent = notice || '';
   }
   function updateSend() {
+    var comp = $('composer') || document.querySelector('.composer');
+    if (comp) comp.classList.toggle('busy', !!state.busy);
     if (state.busy && state.mode === 'lfm3') return;
-    $('send').disabled = !state.ready || state.busy || (!$('prompt').value.trim() && !state.files.length && !state.media.length);
+    var hasInput = !!($('prompt').value.trim() || state.files.length || state.media.length || state.docs.length);
+    var canVoice = state.omni && state.inputs.indexOf('audio') >= 0;
+    var b = $('send');
+    b.disabled = !state.ready || state.busy || (!hasInput && !canVoice);
+    b.classList.toggle('idle', !!(state.ready && !state.busy && !hasInput && canVoice));
+    if (!state.busy && !b.classList.contains('rec')) {
+      b.title = canVoice ? 'Tap to send · Hold to speak' : 'Send';
+    }
   }
   function pollStatus() {
-    api('GET', '/api/status?passive=1').then(function (st) {
+    api('GET', '/api/status').then(function (st) {
+      if (WEB) showAuthGate(false);
+      if (st.status === 'setup' && !WEB) { location.replace('/'); return; }
       state.ready = st.status === 'ready';
-      if (st.mode && st.mode !== state.mode) { state.mode = st.mode; applyMode(); }
-      if (st.ready && st.model) setModel(st.model, st.inputs || ['text', 'vision', 'audio', 'video']);
-      var devLbl = st.device_label || (st.engine === 'gpu' ? 'Mobile GPU + CPU' : 'CPU');
-      if (st.device_name) {
-        $('hero-p').textContent = 'Clover runs here on ' + st.device_name + '. It can see, hear and speak. Nothing leaves it unless you allow it.';
-        $('home-foot').textContent = 'Clover runs on ' + st.device_name + ' with the setup that measured best. Nothing leaves it unless you allow it.';
+      if (st.model_catalog && st.model_catalog.length) {
+        state.catalog = st.model_catalog;
+        if (state.server) state.server.model_catalog = st.model_catalog;
+        renderModelPicker();
       }
+      if (st.mode && st.mode !== state.mode) { state.mode = st.mode; applyMode(); }
+      if (state.health && st.engine && state.health.engine && state.health.engine.engine !== st.engine) state.health = null;
+      if (state.ready && st.model) setModel(st.model, st.inputs || ['text']);
+      var info = modelInfo(st.model_key || state.settings.model);
+      var isRemote = !info.local && !WEB;
       if (st.status === 'error') setStatus('err', 'Engine error', 'Clover could not start: ' + (st.error || 'unknown error'));
       else if (!state.ready) setStatus('busy', 'Starting · ' + fmtSecs(st.load_elapsed_s), 'Clover is starting · ' + fmtSecs(st.load_elapsed_s));
-      else if (st.busy) setStatus('busy', cap(st.busy.stage || st.busy.kind || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s));
-      else setStatus('ok', 'Ready · ' + devLbl);
-      if (state.waitEl && st.busy) state.waitEl.textContent = (st.busy.stage || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s);
+      else if (st.busy) {
+        if (st.busy.stage && (!state.stageText || state.stageText === 'reading your message')) state.stageText = st.busy.stage;
+        if (!state.busy) {
+          setStatus('busy', cap(st.busy.stage || st.busy.kind || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s));
+          if (state.waitEl) state.waitEl.textContent = (st.busy.stage || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s);
+        }
+      }
+      else if (WEB || isRemote) setStatus('ok', 'Ready · ' + info.name + (info.host && info.host !== 'local' ? ' · ' + info.host : ''));
+      else setStatus('ok', 'Ready · ' + info.name + ' · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU'));
       updateSend();
-    }).catch(function () { state.ready = false; setStatus('err', 'Not running', 'Clover is not running. Start the local Clover server to use it.'); updateSend(); });
+    }).catch(function (e) {
+      state.ready = false;
+      var authReq = e && (e.status === 401 || (e.body && e.body.auth_required));
+      if (WEB && authReq) {
+        showAuthGate(true, hostKey() ? (e.message || 'Sign in with an approved account.') : '');
+        setStatus('err', 'Sign in required', 'Sign in with an approved account to use Clover AI Studio.');
+      } else {
+        setStatus('err', authReq ? 'Local / custom host' : 'Not running',
+          authReq ? 'Start Clover AI Studio on this device, or click + Add a model in the top-left menu to connect your own hosted model.'
+                  : 'Clover is not running. Start Clover AI Studio to use it, or connect a hosted model in the top-left menu.');
+      }
+      updateSend();
+    });
   }
   function loadHealth() {
-    return api('GET', '/api/health').then(function (h) {
-      state.health = h;
-      if (h.mode) state.mode = h.mode;
-      var dp = h.device_profile || {};
-      if (dp.gpu_label && $('btn-eng-gpu')) $('btn-eng-gpu').textContent = dp.gpu_label + ' + CPU';
-      applyMode(); renderEngine(); renderServerSettings();
-    }).catch(function () {});
+    return api('GET', '/api/health').then(function (h) { state.health = h; if (h.mode) state.mode = h.mode; applyMode(); renderEngine(); renderServerSettings(); }).catch(function () {});
+  }
+  /* the GPU this computer has (hardware probe), or the one llama.cpp runs on */
+  function gpuName() {
+    var e = state.health && state.health.engine, hw = (state.health && state.health.hardware) || (state.server && state.server.hardware);
+    return (e && e.engine === 'gpu' && e.device) || (hw && hw.chosen && hw.chosen.gpu) || 'GPU';
   }
   function applyMode() { renderSettings(); }
   function setModel(name, inputs) {
-    var omni = /omni/i.test(name);
+    var omni = WEB || /omni|nemotron|kimi/i.test(name) || inputs.indexOf('vision') >= 0;
+    var changed = omni !== state.omni || inputs.join() !== state.inputs.join();
     state.omni = omni; state.inputs = inputs;
-    $('mic').hidden = false;
+    updatePlaceholder();
+    if (!changed) return;
+    if (state.health && state.health.engine && state.health.engine.model !== name) state.health = null;
+    $('hero-p').textContent = omni ? 'Clover runs here on your laptop. It can see, hear and speak. Nothing leaves it unless you allow it.'
+      : 'Clover runs here on your laptop. Nothing leaves it unless you allow it.';
+    $('mic').hidden = true;
+    updateSend(); renderSettings(); renderHero(); if (!state.busy) renderLog();
   }
 
   /* ---------- model, engine, tools, Clover layers (server settings) ---------- */
   function loadServerSettings() {
-    return api('GET', '/api/settings').then(function (r) { state.server = r; renderServerSettings(); }).catch(function () {});
+    return api('GET', '/api/settings').then(function (r) {
+      state.server = r;
+      if (r.model_catalog && r.model_catalog.length) state.catalog = r.model_catalog;
+      if (r.k3_key) { try { localStorage.setItem(HOST_KEY_STORE, r.k3_key); } catch (e) {} }
+      if (r.settings && r.settings.model) state.settings.model = r.settings.model;
+      renderServerSettings();
+    }).catch(function () { renderModelPicker(); });
   }
   function saveServer(changes) {
     return api('POST', '/api/settings', changes).then(function (r) {
-      state.server = state.server || {}; state.server.settings = r.settings; renderServerSettings(); pollStatus();
-      if (changes.engine || changes.model) state.health = null;
+      state.server = state.server || {};
+      state.server.settings = r.settings;
+      if (r.model_catalog) { state.server.model_catalog = r.model_catalog; state.catalog = r.model_catalog; }
+      renderServerSettings(); pollStatus();
+      if (changes.engine || changes.model) { state.health = null; loadHealth(); }
     }).catch(function (e) { alert(e.message); loadServerSettings(); });
   }
   function toolsValue() {
@@ -1410,68 +1717,93 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function renderServerSettings() {
     var sv = state.server; if (!sv || !sv.settings) return;
-    var st = sv.settings, dp = sv.device_profile || {};
-    var gpuLbl = dp.gpu_label || 'Mobile GPU';
-    if ($('btn-eng-gpu')) $('btn-eng-gpu').textContent = gpuLbl + ' + CPU';
-    $('engine-d').textContent = 'Runs LFM3-Omni-2B with precomputed 4-bit FFN & LM-Head trunks across ' + gpuLbl + ' and ' + (dp.cpu_label || 'CPU') + '.';
+    var st = sv.settings, running = (state.health && state.health.engine && state.health.engine.engine) || st.engine;
+    setNote('model-note', sv.omni_available === false ? 'LFM3-Omni-2B not installed: ' + sv.omni_reason : '');
+    $('engine-d').textContent = WEB
+      ? 'Runs on the k3 server (AMD Ryzen 9 7950X3D, 124 GB RAM): LFM3-Omni-2B in llama.cpp (Zen 4 AVX-512), Nemotron 3.5 Super VL (88-layer C engine + NCM) and Kimi K3.1 Pro 2.8T MoE (93-layer C/Rust engine + Gated DSA + NCM).'
+      : 'GPU and CPU run LFM3-Omni-2B with 4-bit weights in llama.cpp; the GPU (' + gpuName() + ') reads your message several times faster. ' +
+        'C1 + C2 + C3 runs our trained model with its planner (HybridLink) and decoder (NCM) together on the CPU: text only, no tools, slower; being measured.';
+    $('s-engine').children[0].textContent = gpuName();
     Array.prototype.forEach.call($('s-engine').children, function (b) {
       var v = b.getAttribute('data-v'); b.classList.toggle('on', v === st.engine);
+      b.disabled = (v === 'gpu' && !sv.gpu_available) || (v === 'fused' && !sv.fused_available);
     });
+    setNote('engine-note', sv.warning || (sv.gpu_available === false && !WEB ? 'GPU engine not installed: ' + sv.gpu_reason : '') ||
+      (st.engine !== 'fused' && !sv.fused_available ? '' : '') || (running && st.engine && running !== st.engine ? 'Switching engine…' : ''));
     pick('s-tools', st.tools || 'ask');
-    $('s-kv').checked = st.layers.specmd_madvise !== false;
-    $('v-model').textContent = 'LFM3-Omni-2B';
+    $('s-kv').checked = !!(st.layers && st.layers.kv_slots);
+    renderModelPicker();
     toolsValue(); renderLayers();
   }
 
+  /* Clover layers: 3 core (inference, plan, decode) and 3 supporting (memory, relationships, tools), each with what it
+     does on this laptop now. Switches only where a part can be turned on or off. */
   function renderLayers() {
     var sv = state.server; if (!sv || !sv.settings) return;
-    var st = sv.settings, L = st.layers, dp = sv.device_profile || {};
+    var st = sv.settings, L = st.layers || {}, info = modelInfo(st.model);
+    var omni = true, k3Big = /nemotron|kimi/i.test(st.model || '');
+    var mLabel = info ? info.name : 'LFM3-Omni-2B';
     var rec = (state.health && state.health.recall) || null, mc = state.memCount;
-    var recallNote = !rec ? '' : rec.state === 'ready' ? ' ' + Number(rec.messages || 0).toLocaleString() + ' messages indexed.' : '';
+    var recallNote = !omni ? ' Works with LFM3-Omni-2B.'
+      : !rec || !L.recall ? '' : rec.state === 'ready' ? ' ' + Number(rec.messages || 0).toLocaleString() + ' messages indexed.'
+      : rec.state === 'loading' ? ' Getting ready…' : rec.state === 'error' ? ' Could not start: ' + (rec.error || 'error') + '.'
+      : /embedder/.test(rec.state) ? ' Needs its embedding model: run Clover AI Studio setup again.' : '';
+    var whereDesc = (info && info.host && info.host !== 'local') ? ('hosted on ' + info.host) : ('the ' + (st.engine === 'gpu' ? gpuName() : 'CPU'));
+    var fusedOk = !!sv.fused_available, fusedActive = !k3Big && st.engine === 'fused' && fusedOk;
     var core = [
       { tag: 'C1', name: 'Inference', badge: 'On', on: true,
-        desc: 'LFM3-Omni-2B (24 precomputed trunks & SwiGLU experts) on ' + (st.engine === 'gpu' ? (dp.gpu_label || 'Mobile GPU') + ' + ' + (dp.cpu_label || 'CPU') : (dp.cpu_label || 'CPU')) + ' with 1-pass FlashAttention-2 and SpecMD Policy 3 madvise.',
+        desc: mLabel + ' on ' + whereDesc + '. The model itself.',
         links: [['model', 'Model and voice']] },
-      { tag: 'C2', name: 'Plan', badge: L.hybridlink !== false ? 'On · Try again' : 'Try again', on: true,
-        subs: [{ key: 'hybridlink', name: 'Precomputed HybridAgent (plan-trunk-0)', desc: 'Continuous <latent> thought projection r_t = R(h_t) with fused pre_ln -> proj1 & out_scale -> post_ln.' }],
-        desc: 'Try again: when you say an answer is not right, Clover checks it with outside evidence and solves it again (3-way independent majority vote).' },
-      { tag: 'C3', name: 'Decode', badge: L.ncm ? 'On (Unified 1-Pass)' : 'Off', on: !!L.ncm,
-        subs: [{ key: 'ncm', name: '11-Level NCM Concept Renderer', desc: 'Unified single-pass C1 -> C2 -> C3 decoding via precomputed bridge-trunk-0, vqvae-expert-0..10, ncm-trunk-0..11 & ptr-trunk-0..2 (0 ms redundant C1 re-run).' }] }
+      { tag: 'C2', name: 'Plan', badge: (k3Big || fusedActive) ? 'On' : 'Try again', on: true, part: !(k3Big || fusedActive),
+        desc: k3Big ? ('HybridAgent planner + Studio tool loop running on k3 for ' + mLabel + ', plus Try again when you say an answer is not right.')
+          : fusedOk ? ('Try again: when you say an answer is not right, Clover checks it with outside evidence and solves it again. ' +
+            'The precomputed C2 planner for LFM3-Omni-2B is installed on this laptop' + (fusedActive ? ' and active in C1 + C2 + C3 mode.' : ' (switch to C1 + C2 + C3 in Model and voice to turn it on).'))
+          : ('Try again: when you say an answer is not right, Clover checks it with outside evidence and solves it again. ' +
+            'The optional precomputed C2 planner for LFM3-Omni-2B is not installed on this laptop (' + (sv.fused_reason || 'optional component c2c3') + ').') },
+      { tag: 'C3', name: 'Decode', badge: (k3Big || fusedActive) ? 'On' : (fusedOk ? 'Installed' : 'Not installed'), on: (k3Big || fusedActive),
+        desc: k3Big ? ('11-level Neural Concept Machine (NCM) concept renderer running on k3 for ' + mLabel + '.')
+          : fusedOk ? ('The precomputed 11-level NCM concept renderer for LFM3-Omni-2B is installed on this laptop' + (fusedActive ? ' and active.' : ' and switches on with C1 + C2 + C3.'))
+          : ('The optional precomputed 11-level NCM concept renderer for LFM3-Omni-2B is not installed on this laptop (' + (sv.fused_reason || 'optional component c2c3') + ').') }
     ];
     var support = [
       { tag: 'S1', name: 'Memory', on: !!L.memory,
-        subs: [{ key: 'memory', name: 'Remember (5-Stage Git Repo)', desc: 'Tracks sessions/, execution/, outcomes/, growth/ & config/ in clover-memory-repo/ and syncs with your private GitHub repository.' +
+        subs: [{ key: 'memory', name: 'Remember', desc: 'What you ask Clover to remember, and what it learned when you said an answer was not right.' +
           (mc == null ? '' : ' Now ' + mc + (mc === 1 ? ' item.' : ' items.')) }],
-        desc: 'Your chats are always kept in Clover\'s local repository.', links: [['storage', 'Where it is kept'], ['account', 'GitHub account']] },
-      { tag: 'S2', name: 'Relationships', on: !!(L.recall || L.ontology), part: !(L.recall && L.ontology),
-        subs: [{ key: 'recall', name: 'Earlier chats (Turn-level RRF)',
-                 desc: 'BM25 + dense vector RRF over single messages and background v3 notes, injected as a dated second system message (exp G5).' + recallNote },
-               { key: 'ontology', name: 'Knowledge graph & 11 Papers', desc: 'Multi-hop causal/entity GraphRAG, Horn rules, grounding audit, and all 11 Foundational Papers (1943–2017).' }] },
+        desc: 'Your chats are always kept on this laptop.', links: [['storage', 'Where it is kept']] },
+      { tag: 'S2', name: 'Relationships', on: !!((L.recall && omni) || L.ontology), part: !(L.recall && omni && L.ontology),
+        subs: [{ key: 'recall', name: 'Earlier chats', disabled: !omni,
+                 desc: 'Brings back what you said in earlier conversations. Off by default: with unrelated earlier chats it lowered Clover\'s test score (40 instead of 47 of 65).' + recallNote },
+               { key: 'ontology', name: 'Knowledge graph', desc: 'Grounds answers about Clover in its verified records.' }] },
       { tag: 'S3', name: 'Tools', on: true,
-        desc: 'Web search, Python, terminal, SSH and workspaces, ' + (st.tools === 'always' ? 'when Clover decides to use them.' : 'when you ask for them.') + ' Each follows Permissions.',
-        subs: [{ key: 'compiler', name: 'Code check', desc: 'Checks Python in answers (AST/doctest/assert + Sutton TD(0)) and lets the model fix it.' }],
+        desc: 'Web search, Python, PowerShell, files and VS Code, ' + (st.tools === 'always' ? 'when Clover decides to use them.' : 'when you ask for them.') + ' Each follows Permissions.',
+        subs: [{ key: 'compiler', name: 'Code check', desc: 'Checks Python in answers and lets the model fix it.' }],
         links: [['tools', 'Tools and search'], ['perms', 'Permissions']] }
     ];
     fillLayers($('layers-core'), core, L); fillLayers($('layers-support'), support, L);
-    var pv = state.personal || {}, cv = state.collective || {};
+    var cs = sv.csi_status || {}, pv = state.personal || {}, cv = state.collective || {};
+    var csiNote = !st.csi ? '' : cs.state === 'ready' ? ' Ready (' + (cs.parser || 'parser') + ', ' + (cs.lemmatiser || '') + ').'
+      : cs.state === 'starting' ? ' Starting: ' + (cs.detail || '') + '.' : cs.state === 'missing' ? ' ' + cs.detail + '.'
+      : cs.state === 'failed' ? ' Could not start: ' + (cs.detail || '') + '.' : '';
     var learned = (pv.learned || []).filter(function (h) { return h.status === 'validated'; }).length +
       (pv.preferences || []).filter(function (p) { return p.in_use; }).length, exps = (pv.experiences || []).length;
-    var collOn = !!(cv.consent_contribute || cv.consent_receive);
-    var collPart = !!(cv.consent_contribute) !== !!(cv.consent_receive);
+    var collOn = !!(st.collective_contribute || st.collective_receive);
+    var collPart = !!(st.collective_contribute) !== !!(st.collective_receive);
     var candN = (cv.candidate_preview || []).length, actN = (cv.active_rules || []).length + (cv.active_defaults || []).length;
     var sem = [
-      { tag: 'CSI', name: 'Structure of what you say', on: true,
-        desc: 'Reads which tools you turn down ("don\'t search the web") and whether an answer claims something was done.' },
-      { tag: 'PPL', name: 'How you usually mean things', on: pv.learning !== false, links: exps ? [['personal', 'What Clover learned']] : null,
-        desc: 'When you correct Clover ("No, look it up online", "Shorter, please") it learns how you usually mean things and how you like answers.' +
-          (exps ? ' ' + exps + (exps === 1 ? ' experience, ' : ' experiences, ') + learned + ' learned.' : '') },
+      { tag: 'CSI', name: 'Structure of what you say', on: !!st.csi && cs.state === 'ready', part: !!st.csi && cs.state !== 'ready',
+        subs: [{ key: 'csi', top: true, name: 'Read each message\'s structure',
+                 desc: 'A parser and dictionary on this computer read which tools you turn down ("don\'t search the web") and whether an answer claims something was done.' + csiNote }] },
+      { tag: 'PPL', name: 'How you usually mean things', on: !!st.personal, links: exps ? [['personal', 'What Clover learned']] : null,
+        subs: [{ key: 'personal', top: true, name: 'Learn from my corrections',
+                 desc: 'When you correct Clover ("No, look it up online", "Shorter, please") it learns how you usually mean things and how you like answers. Kept only on this computer; turn it off any time.' +
+                   (exps ? ' ' + exps + (exps === 1 ? ' experience, ' : ' experiences, ') + learned + ' learned.' : '') }] },
       { tag: 'CPSL', name: 'Collective problem-solving', on: collOn, part: collPart,
         links: [['collective', 'Shared core & candidate preview']],
         subs: [
-          { key: 'collective_contribute', cConsent: 'contribute', checked: !!cv.consent_contribute, name: 'Contribute candidate strategies',
+          { key: 'collective_contribute', top: true, name: 'Contribute candidate strategies',
             desc: 'Extracts stripped, zero-verbatim structural strategies from validated problem-solving episodes (never raw prompts or paths).' +
               (candN ? ' ' + candN + (candN === 1 ? ' candidate ready.' : ' candidates ready.') : '') },
-          { key: 'collective_receive', cConsent: 'receive', checked: !!cv.consent_receive, name: 'Receive validated shared-core updates',
+          { key: 'collective_receive', top: true, name: 'Receive validated shared-core updates',
             desc: 'Applies signed shared-core improvements that passed the 5-gate evaluator without overriding your personal rules.' +
               (actN ? ' ' + actN + (actN === 1 ? ' shared rule active.' : ' shared rules active.') : '') }
         ] }
@@ -1479,7 +1811,6 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     fillLayers($('layers-semantics'), sem, L);
   }
   function fillLayers(box, list, L) {
-    if (!box) return;
     box.innerHTML = '';
     list.forEach(function (x) {
       var row = el('div', 'layer' + (x.on ? (x.part ? ' part' : ' on') : ''),
@@ -1490,15 +1821,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       (x.subs || []).forEach(function (s) {
         var sub = el('label', 'sub', '<span class="sub__t"><span></span><small></small></span><span class="switch"><input type="checkbox"><span></span></span>');
         sub.querySelector('.sub__t > span').textContent = s.name; sub.querySelector('small').textContent = s.desc;
-        var inp = sub.querySelector('input');
-        inp.checked = (s.cConsent ? !!s.checked : L[s.key] !== false) && !s.disabled; inp.disabled = !!s.disabled; inp.setAttribute('aria-label', s.name);
+        var inp = sub.querySelector('input'), top = state.server && state.server.settings;
+        inp.checked = (s.top ? !!(top && top[s.key]) : !!L[s.key]) && !s.disabled; inp.disabled = !!s.disabled; inp.setAttribute('aria-label', s.name);
         inp.addEventListener('change', function () {
-          if (s.cConsent) {
-            var body = {}; body[s.cConsent] = this.checked;
-            api('POST', '/api/collective/consent', body).then(function (r) { state.collective = r; renderLayers(); renderCollective(); }).catch(function () {});
-            return;
-          }
-          var ch = { layers: {} }; ch.layers[s.key] = this.checked; saveServer(ch).then(loadHealth);
+          var ch = { layers: {} };
+          if (s.top) { ch = {}; ch[s.key] = this.checked; } else ch.layers[s.key] = this.checked;
+          saveServer(ch).then(loadHealth).then(loadPersonal).then(loadCollective);
         });
         row.appendChild(sub);
       });
@@ -1518,22 +1846,6 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function loadCollective() {
     return api('GET', '/api/collective').then(function (r) { state.collective = r; renderLayers(); renderCollective(); }).catch(function () {});
-  }
-  function renderPersonal() {
-    var box = $('personal-list'); if (!box) return;
-    var pv = state.personal || {}; box.innerHTML = '';
-    var kn = pv.learned || [], pr = (pv.preferences || []).filter(function (p) { return p.in_use; }), ex = pv.experiences || [];
-    if (!kn.length && !pr.length && !ex.length) { box.appendChild(el('p', 'fine', 'Nothing learned yet.')); return; }
-    kn.forEach(function (h) {
-      var r = el('div', 'row static'); var t = el('span', 'row__t');
-      t.textContent = 'When you say \u201c' + (h.when_you_say || []).join(' ') + '\u201d you usually mean ' + (h.you_mean || []).join(', ') +
-        (h.status === 'validated' ? '' : ' (still checking)');
-      r.appendChild(t); box.appendChild(r);
-    });
-    pr.forEach(function (p) {
-      var r = el('div', 'row static'); var t = el('span', 'row__t');
-      t.textContent = 'You prefer ' + String(p.value).replace(/_/g, ' ') + ' (' + p.dimension + ')'; r.appendChild(t); box.appendChild(r);
-    });
   }
   function renderCollective() {
     var actBox = $('collective-active'), candBox = $('collective-candidates');
@@ -1566,12 +1878,35 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       });
     }
   }
+  $('personal-forget').addEventListener('click', function () {
+    if (!confirm('Forget everything Clover learned about you? The experiences and what was learned from them are deleted from this computer.')) return;
+    api('POST', '/api/personal/forget', { confirm: true }).then(function (r) { state.personal = r.view || {}; renderPersonal(); renderLayers(); })
+      .catch(function (e) { alert('Could not forget: ' + e.message); });
+  });
+  /* what personal learning holds: what was learned and the experiences behind it; forget all of it */
+  function renderPersonal() {
+    var box = $('personal-list'); if (!box) return;
+    var pv = state.personal || {}; box.innerHTML = '';
+    var kn = pv.learned || [], pr = (pv.preferences || []).filter(function (p) { return p.in_use; }), ex = pv.experiences || [];
+    if (!kn.length && !pr.length && !ex.length) { box.appendChild(el('p', 'fine', 'Nothing learned yet.')); return; }
+    kn.forEach(function (h) {
+      var r = el('div', 'row static'); var t = el('span', 'row__t');
+      t.textContent = 'When you say “' + (h.when_you_say || []).join(' ') + '” you usually mean ' + (h.you_mean || []).join(', ') +
+        (h.status === 'validated' ? '' : ' (still checking)');
+      r.appendChild(t); box.appendChild(r);
+    });
+    pr.forEach(function (p) {
+      var r = el('div', 'row static'); var t = el('span', 'row__t');
+      t.textContent = 'You prefer ' + String(p.value).replace(/_/g, ' ') + ' (' + p.dimension + ')'; r.appendChild(t); box.appendChild(r);
+    });
+    var n = el('p', 'fine'); n.textContent = ex.length + (ex.length === 1 ? ' experience' : ' experiences') + ' from your chats are kept on this computer.'; box.appendChild(n);
+  }
 
-  /* ---------- web search provider ---------- */
+  /* ---------- web search provider (the key goes to this laptop's server and is never shown again) ---------- */
   function loadSearch() { return api('GET', '/api/search').then(function (r) { state.search = r; renderSearch(); }).catch(function () {}); }
   function renderSearch(sel) {
     var s = state.search; if (!s) return;
-    sel = sel || s.provider; var p = (s.providers && s.providers[sel]) || {};
+    sel = sel || s.provider; var p = s.providers[sel] || {};
     state.searchPick = sel;
     pick('s-search', sel);
     var help = $('search-help');
@@ -1583,7 +1918,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     $('search-key-row').hidden = !p.key;
     $('search-key').value = '';
-    $('search-key').placeholder = p.key_set ? 'Key saved. Paste a new one to replace it' : 'Paste your ' + (p.label || sel) + ' API key';
+    $('search-key').placeholder = p.key_set ? 'Key saved. Paste a new one to replace it' : 'Paste your ' + p.label + ' API key';
     $('search-forget').hidden = !p.key_set;
     toolsValue();
   }
@@ -1611,25 +1946,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   });
 
   /* ---------- permissions ---------- */
-  function loadPerms() { return api('GET', '/api/permissions').then(function (r) { state.perms = r.permissions || {}; renderPerms(); }).catch(function () {}); }
-  function setPerms(changes) { return api('POST', '/api/permissions', { permissions: changes }).then(function (r) { state.perms = r.permissions || state.perms; renderPerms(); }); }
-  function setAll(mode) {
-    var ch = {}; Object.keys(state.perms).forEach(function (k) { ch[k] = mode; });
-    if (mode === 'allow' && window.CloverAndroidBridge && typeof window.CloverAndroidBridge.requestOsPermission === 'function') {
-      window.CloverAndroidBridge.requestOsPermission('all');
-    }
-    return setPerms(ch);
-  }
+  function loadPerms() { return api('GET', '/api/permissions').then(function (r) { state.perms = phonePerms(r.permissions || {}); renderPerms(); }).catch(function () {}); }
+  function setPerms(changes) { return api('POST', '/api/permissions', { permissions: changes }).then(function (r) { state.perms = r.permissions ? phonePerms(r.permissions) : state.perms; renderPerms(); }); }
+  function setAll(mode) { var ch = {}; Object.keys(state.perms).forEach(function (k) { ch[k] = mode; }); return setPerms(ch); }
   function permSummary() {
     var keys = Object.keys(state.perms), n = { allow: 0, ask: 0, deny: 0 };
     keys.forEach(function (k) { n[state.perms[k].mode] = (n[state.perms[k].mode] || 0) + 1; });
-    var risky = ['shell', 'edit_files', 'ssh'].some(function (k) { return state.perms[k] && state.perms[k].mode === 'allow'; });
+    var risky = ['shell', 'edit_files'].some(function (k) { return state.perms[k] && state.perms[k].mode === 'allow'; });
     if (!keys.length) return { chip: '', cls: '', title: 'Loading…', sub: '', icon: 'shield' };
     if (n.allow === keys.length) return { chip: 'All allowed', cls: 'warn', icon: 'shield', title: 'Every tool is allowed', sub: 'Clover runs commands and changes files without asking.' };
     if (n.deny === keys.length) return { chip: 'All off', cls: '', icon: 'off', title: 'All tools are off', sub: 'Clover answers from what it knows.' };
     if (n.ask === keys.length) return { chip: 'Asks first', cls: '', icon: 'hand', title: 'Clover asks before every tool', sub: 'You decide each time, right in the chat.' };
     return { chip: n.allow + ' allowed', cls: risky ? 'warn' : 'ok', icon: 'shield', title: n.allow + ' allowed · ' + n.ask + ' ask · ' + n.deny + ' off',
-      sub: risky ? 'Includes tools that can change files or run commands.' : 'Everything else asks first or stays off.' };
+      sub: risky ? 'Includes tools that can change this laptop.' : 'Everything else asks first or stays off.' };
   }
   function renderPerms() {
     var s = permSummary();
@@ -1710,27 +2039,58 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('sheet-x').addEventListener('click', closeSheet);
   $('scrim').addEventListener('click', function () { closeSheet(); closeRail(); });
   $('set-btn').addEventListener('click', function () { openSettings('home'); });
-  $('menu').addEventListener('click', function () {
+  $('menu').addEventListener('click', function () {  // collapses on wide screens, slides in on narrow ones
     if (window.matchMedia('(max-width: 860px)').matches) { $('rail').classList.toggle('on'); $('scrim').classList.toggle('on', $('rail').classList.contains('on')); }
     else $('app').classList.toggle('rail-off');
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeSheet(); closeRail(); $('scrim').classList.remove('on'); } });
+  // the phone's back gesture (the Android app asks here first): a settings page back, the sheet or the chat list closed;
+  // false when there is nothing to close, and the app goes to the background
+  window.cloverBack = function () {
+    if ($('sheet').classList.contains('on')) { if (stack.length > 1) back(); else closeSheet(); return true; }
+    if ($('rail').classList.contains('on')) { closeRail(); $('scrim').classList.remove('on'); return true; }
+    return false;
+  };
 
-  /* ---------- attachments ---------- */
+  /* ---------- attachments: text and code; photos, audio and video with LFM3-Omni ---------- */
   $('attach').addEventListener('click', function () { $('file-input').click(); });
   function mediaKind(f) { var m = /^(image|video|audio)\//.exec(f.type || ''); return m ? m[1] : null; }
   function addFile(f) {
     var kind = mediaKind(f);
     if (kind) {
+      var need = kind === 'image' ? 'vision' : kind;
+      if (!state.omni || state.inputs.indexOf(need) < 0) { alert(f.name + ': switch the model to LFM3-Omni-2B (Settings > Advanced > Model and voice) to send ' + (kind === 'image' ? 'photos' : kind) + '.'); return; }
       if (state.media.length >= MAX_MEDIA) { alert('Up to ' + MAX_MEDIA + ' photos, sounds or videos per message.'); return; }
       if (f.size > MEDIA_MB[kind] * 1024 * 1024) { alert(f.name + ' is larger than ' + MEDIA_MB[kind] + ' MB.'); return; }
       var rd = new FileReader();
       rd.onload = function (e) {
-        var url = String(e.target.result || ''), item = { kind: kind, name: f.name || kind, data: url.slice(url.indexOf(',') + 1) };
+        var url = String(e.target.result || '');
+        if (kind === 'image') {
+          shrinkImage(url, f.type || 'image/jpeg').then(function (sUrl) {
+            var item = { kind: kind, name: f.name || kind, data: sUrl.slice(sUrl.indexOf(',') + 1) };
+            state.media.push(item); renderAtt(); updateSend();
+            thumb(sUrl).then(function (t) { item.thumb = t; renderAtt(); }).catch(function () {});
+          }).catch(function () {
+            var item = { kind: kind, name: f.name || kind, data: url.slice(url.indexOf(',') + 1) };
+            state.media.push(item); renderAtt(); updateSend();
+          });
+          return;
+        }
+        var item = { kind: kind, name: f.name || kind, data: url.slice(url.indexOf(',') + 1) };
         state.media.push(item); renderAtt(); updateSend();
-        if (kind === 'image') thumb(url).then(function (t) { item.thumb = t; renderAtt(); }).catch(function () {});
       };
       rd.readAsDataURL(f);
+      return;
+    }
+    if (DOC_EXT.test(f.name || '')) {
+      if (state.docs.length >= MAX_DOCS) { alert('Up to ' + MAX_DOCS + ' documents per message.'); return; }
+      if (f.size > DOC_MB * 1024 * 1024) { alert(f.name + ' is larger than ' + DOC_MB + ' MB.'); return; }
+      var dr = new FileReader();
+      dr.onload = function (e) {
+        var url = String(e.target.result || '');
+        state.docs.push({ name: f.name, data: url.slice(url.indexOf(',') + 1) }); renderAtt(); updateSend();
+      };
+      dr.readAsDataURL(f);
       return;
     }
     if (state.files.length >= MAX_FILES) { alert('Up to ' + MAX_FILES + ' text files per message.'); return; }
@@ -1738,10 +2098,26 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var r = new FileReader();
     r.onload = function (e) {
       var text = String(e.target.result || '');
-      if (/\u0000/.test(text.slice(0, 2000))) { alert(f.name + ' looks like a binary file; attach text, code, photos, audio or video.'); return; }
+      if (/\u0000/.test(text.slice(0, 2000))) { alert(f.name + ' looks like a binary file; attach text, code, documents (Excel, CSV, PDF, Word, PowerPoint, JSON), photos, audio or video.'); return; }
       state.files.push({ name: f.name, content_text: text }); renderAtt(); updateSend();
     };
     r.readAsText(f);
+  }
+  function shrinkImage(url, mime) {
+    return new Promise(function (ok) {
+      var im = new Image();
+      im.onload = function () {
+        var maxSide = 1024, w = im.width, h = im.height;
+        if (!w || !h || (w <= maxSide && h <= maxSide)) { ok(url); return; }
+        var scale = maxSide / Math.max(w, h), cw = Math.round(w * scale), ch = Math.round(h * scale);
+        var c = document.createElement('canvas'); c.width = cw; c.height = ch;
+        c.getContext('2d').drawImage(im, 0, 0, cw, ch);
+        var outMime = /png/i.test(mime || '') ? 'image/png' : 'image/jpeg';
+        ok(c.toDataURL(outMime, 0.88));
+      };
+      im.onerror = function () { ok(url); };
+      im.src = url;
+    });
   }
   function thumb(url) {
     return new Promise(function (ok, bad) {
@@ -1763,7 +2139,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   document.querySelector('.dock').addEventListener('dragover', function (ev) { ev.preventDefault(); });
   document.querySelector('.dock').addEventListener('drop', function (ev) { ev.preventDefault(); Array.prototype.forEach.call((ev.dataTransfer && ev.dataTransfer.files) || [], addFile); });
   function renderAtt() {
-    var box = $('attachments'); box.innerHTML = ''; box.hidden = !state.files.length && !state.media.length;
+    var box = $('attachments'); box.innerHTML = ''; box.hidden = !state.files.length && !state.media.length && !state.docs.length;
+    state.docs.forEach(function (d, i) {
+      var c = el('span', 'att'); c.appendChild(el('span', '', ic('file')));
+      var t = el('span'); t.textContent = d.name; c.appendChild(t);
+      var x = btn('', ic('x'), 'Remove ' + d.name);
+      x.addEventListener('click', function () { state.docs.splice(i, 1); renderAtt(); updateSend(); });
+      c.appendChild(x); box.appendChild(c);
+    });
     state.media.forEach(function (m, i) {
       var c = el('span', 'att');
       if (m.thumb) { var im = document.createElement('img'); im.src = m.thumb; im.alt = ''; c.appendChild(im); }
@@ -1781,39 +2164,64 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     });
   }
 
-  /* ---------- voice: Android Native Speech Recognizer or Web MediaRecorder 16 kHz WAV ---------- */
-  var rec = null;
-  $('mic').addEventListener('click', function () {
-    if (rec) { rec.stop(); return; }
-    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.startNativeVoiceRecognition === 'function') {
-      window.CloverAndroidBridge.startNativeVoiceRecognition();
-      return;
-    }
+  /* ---------- voice: hold Send button for 1.2s to speak, release to stop & send (tap is normal Send) ---------- */
+  var rec = null, holdTimer = null, holdActive = false, holdTriggered = false, suppressSendClick = false, HOLD_MS = 1200;
+  function startVoiceHold() {
+    if (!holdActive || rec || state.busy || !state.ready || state.inputs.indexOf('audio') < 0) return;
     if (!navigator.mediaDevices || !window.MediaRecorder) { alert('This window cannot record audio.'); return; }
+    holdTriggered = true; suppressSendClick = true;
+    var b = $('send');
+    b.classList.remove('holding', 'idle'); b.classList.add('rec'); b.innerHTML = ic('mic'); b.title = 'Recording — release to send';
     navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      if (!holdActive) {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        b.classList.remove('rec'); b.innerHTML = SEND_HTML; updateSend();
+        return;
+      }
       var chunks = [], t0 = Date.now(), r = new MediaRecorder(stream);
       rec = r;
       r.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
       r.onstop = function () {
         stream.getTracks().forEach(function (t) { t.stop(); });
-        rec = null; $('mic').classList.remove('rec'); $('mic').title = 'Talk to Clover (tap to start, tap to send)';
+        rec = null; b.classList.remove('rec', 'holding'); b.innerHTML = SEND_HTML; updateSend();
         var secs = Math.max(1, Math.round((Date.now() - t0) / 1000));
+        if (!chunks.length) return;
         new Blob(chunks).arrayBuffer().then(toWav16k).then(function (data) {
           state.media.push({ kind: 'audio', name: 'Voice message · ' + secs + ' s', data: data, voice: true });
           renderAtt(); updateSend();
-          if (!$('prompt').value.trim() && state.ready && !state.busy) send();
+          if (state.ready && !state.busy) send();
         }).catch(function (e) { alert('Could not read the recording: ' + e.message); });
       };
-      r.start(); $('mic').classList.add('rec'); $('mic').title = 'Recording — tap to send';
-    }).catch(function (e) { alert('Microphone not available: ' + e.message); });
+      r.start();
+    }).catch(function (e) {
+      holdActive = false; holdTriggered = false;
+      b.classList.remove('rec', 'holding'); b.innerHTML = SEND_HTML; updateSend();
+      alert('Microphone not available: ' + e.message);
+    });
+  }
+  function endVoiceHold() {
+    if (!holdActive && !rec) return;
+    holdActive = false;
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    $('send').classList.remove('holding');
+    if (holdTriggered) {
+      holdTriggered = false;
+      if (rec && rec.state !== 'inactive') rec.stop();
+    }
+  }
+  $('send').addEventListener('pointerdown', function (ev) {
+    if (ev.button && ev.button !== 0) return;
+    if (state.busy || !state.ready || !state.omni || state.inputs.indexOf('audio') < 0) return;
+    holdActive = true; holdTriggered = false;
+    try { $('send').setPointerCapture(ev.pointerId); } catch (e) {}
+    $('send').classList.add('holding');
+    if (holdTimer) clearTimeout(holdTimer);
+    holdTimer = setTimeout(startVoiceHold, HOLD_MS);
   });
-  window.k3OnNativeVoiceResult = function (spokenText) {
-    if (!spokenText) return;
-    $('prompt').value = spokenText;
-    state.speakNext = true;
-    autosize(); updateSend();
-    send();
-  };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (evName) {
+    $('send').addEventListener(evName, endVoiceHold);
+  });
+  $('send').addEventListener('contextmenu', function (ev) { if (holdActive || holdTriggered || rec) ev.preventDefault(); });
   function toWav16k(buf) {
     var AC = window.AudioContext || window.webkitAudioContext, ac = new AC();
     return ac.decodeAudioData(buf).then(function (audio) {
@@ -1844,27 +2252,41 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     return h.slice(-6);
   }
   function takeInput() {
-    var c = cur(), prompt = $('prompt').value.trim(), files = state.files.slice(), media = state.media.slice();
+    var c = cur(), prompt = $('prompt').value.trim(), files = state.files.slice(), media = state.media.slice(), docs = state.docs.slice();
     if (!prompt && files.length && !media.length) prompt = 'Explain the attached file.';
+    if (!prompt && docs.length && !media.length) prompt = 'What is in the attached document?';
     if ((!prompt && !media.length) || !state.ready || state.busy) return null;
     stopSpeech();
     $('prompt').value = ''; autosize();
     if (!c.messages.length) c.title = (prompt || media.map(function (m) { return m.name; }).join(', ')).slice(0, 48);
+    c.updated = new Date().toISOString();
     var hist = historyFor(c);
-    c.messages.push({ role: 'user', text: prompt, files: files.map(function (f) { return f.name; }),
+    c.messages.push({ role: 'user', text: prompt, files: files.map(function (f) { return f.name; }).concat(docs.map(function (d) { return d.name; })),
       media: media.map(function (m) { return { kind: m.kind, name: m.name, thumb: m.thumb }; }) });
-    state.speakNext = state.speakNext || media.some(function (m) { return m.voice; });
-    state.files = []; state.media = []; renderAtt(); save(); renderChats(); renderLog();
-    return { c: c, prompt: prompt, files: files, media: media, hist: hist };
+    state.speakNext = media.some(function (m) { return m.voice; });
+    state.files = []; state.media = []; state.docs = []; renderAtt(); save(); renderChats(); renderLog();
+    return { c: c, prompt: prompt, files: files, media: media, docs: docs, hist: hist };
   }
   function liveTurn() {
     var turn = el('div', 'b');
     var body = el('div', 'b__body'); turn.appendChild(body);
-    var wait = el('div', 'typing', SPIN + '<em>reading your message</em>');
+    var wait = el('div', 'typing', SPIN + '<em>reading your message · 0:00</em>');
     body.appendChild(wait);
     $('log').appendChild(turn); scrollDown();
     state.waitEl = wait.querySelector('em');
+    state.stageText = 'reading your message';
+    state.turnStart = Date.now();
     return { turn: turn, body: body, wait: wait };
+  }
+  function startTurnTicker(work) {
+    return setInterval(function () {
+      if (!state.busy) return;
+      var elapsed = Math.max(0, Math.floor((Date.now() - (state.turnStart || Date.now())) / 1000));
+      var stg = state.stageText || 'reading your message';
+      if (state.waitEl) state.waitEl.textContent = stg + ' · ' + fmtSecs(elapsed);
+      if (work && work.meta) work.meta(fmtSecs(elapsed));
+      setStatus('busy', cap(stg) + ' · ' + fmtSecs(elapsed));
+    }, 1000);
   }
 
   function streamSend() {
@@ -1876,17 +2298,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var stepsBox = el('div', 'step-tl'); work.inner.appendChild(stepsBox);
     var thBox = el('div', 'thinkbox'); thBox.hidden = true; work.inner.appendChild(thBox);
     var toolsBox = el('div', 'step-tl'); work.inner.appendChild(toolsBox);
+    var asks = el('div'); body.insertBefore(asks, live.wait);  // permission cards wait for the person: never folded
     var ans = el('div', 'md live'); body.appendChild(ans);
     state.busy = true; state.turnId = null; setStop(true);
+    var ticker = startTurnTicker(work);
     var poll = setInterval(pollStatus, 2000);
-    var t0 = Date.now(), tFirst = 0, tLast = 0, words = 0, answer = '', thinking = '', tools = [], cards = {}, lastCard = null, finished = false;
+    var t0 = state.turnStart, tFirst = 0, tLast = 0, words = 0, answer = '', thinking = '', tools = [], cards = {}, finished = false, stale = false;
     var stepsList = [], stepMap = {};
-    var ticker = setInterval(function () {
-      if (!state.busy) return;
-      var elapsed = Math.max(0, Math.floor((Date.now() - t0) / 1000));
-      if (work && work.meta) work.meta(fmtSecs(elapsed));
-      if (state.waitEl && state.stageText) state.waitEl.textContent = state.stageText + ' \u00b7 ' + fmtSecs(elapsed);
-    }, 1000);
     function upsertStep(key, cfg) {
       if (stepMap[key]) { stepMap[key].update(cfg); return stepMap[key]; }
       var row = stepRowEl(cfg);
@@ -1896,8 +2314,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       return row;
     }
     var attDesc = [];
+    if (inp.docs && inp.docs.length) attDesc.push(inp.docs.map(function (d) { return d.name; }).join(', '));
     if (inp.files && inp.files.length) attDesc.push(inp.files.map(function (f) { return f.name; }).join(', '));
-    if (inp.media && inp.media.length) attDesc.push(inp.media.length + ' media');
+    if (inp.media && inp.media.length) attDesc.push(inp.media.length + (inp.media.length === 1 ? ' media file' : ' media files'));
     upsertStep('understand', {
       icon: 'spark', state: 'run', name: 'Understanding',
       detail: attDesc.length ? 'Reading message & ' + attDesc.join(', ') : 'Reading message structure & intent\u2026',
@@ -1909,21 +2328,35 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       if (state.waitEl) state.waitEl.textContent = txt + ' \u00b7 ' + fmtSecs(elp);
       work.label(cap(txt)); work.meta(fmtSecs(elp));
     }
+    var lastSeq = 0;
     function finishRunningSteps() {
-      ['understand', 'plan', 'review', 'draft', 'synth'].forEach(function (k) {
-        if (stepMap[k] && stepMap[k].data.state === 'run') stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
+      ['queue', 'understand', 'plan', 'review', 'draft', 'synth'].forEach(function (k) {
+        if (stepMap[k] && stepMap[k].data.state === 'run') {
+          stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
+        }
       });
       if (stepMap.think && stepMap.think.data.state === 'run') {
         var ts = tFirst ? Math.max(1, Math.round((tLast - tFirst) / 1000)) : 1;
         stepMap.think.update({ state: 'ok', badge: '\u2713 ' + ts + ' s \u00b7 ' + words + ' words' });
       }
     }
+    function dim() { if (answer) { stale = true; ans.classList.add('stale'); } }
 
     function onEvent(ev) {
+      if (!ev || typeof ev !== 'object') return;
+      if (ev.seq) {
+        if (ev.seq <= lastSeq) return;
+        lastSeq = ev.seq;
+      }
+      if (ev.type !== 'plan' && ev.type !== 'start' && stepMap.queue && stepMap.queue.data.state === 'run') {
+        stepMap.queue.update({ state: 'ok', badge: '\u2713 Ready' });
+      }
       if (ev.type === 'start') state.turnId = ev.turn_id;
       else if (ev.type === 'semantics') {
         var semBits = [];
         if (ev.understood) semBits.push(ev.understood);
+        if (ev.personal && ev.personal.form) semBits.push('PPL \u00b7 your preferred form');
+        if (ev.collective && (ev.collective.form || (ev.collective.added || []).length)) semBits.push('CPSL \u00b7 shared core');
         if (!semBits.length && attDesc.length) semBits.push('Attached ' + attDesc.join(', '));
         if (!semBits.length) semBits.push(ev.act === 'social' ? 'Conversational greeting' : (ev.route ? 'Route: ' + ev.route : 'Analyzed message structure & intent'));
         upsertStep('understand', { state: 'ok', icon: 'check', detail: semBits.join(' \u00b7 '), badge: '\u2713 Understood' });
@@ -1934,35 +2367,81 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           var tNames = ev.offered.slice(0, 5).map(toolName);
           upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning', detail: 'Selected ' + tNames.join(', '), badge: 'Planning\u2026' });
           setStage('planning \u00b7 ' + tNames.join(', '));
+        } else if (ev.offered === 'all') {
+          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning', detail: 'Deciding approach & whether tools are needed', badge: 'Planning\u2026' });
         }
         scrollDown();
       } else if (ev.type === 'layer') {
         if (ev.layer === 'memory' && (ev.entries || []).length) {
           upsertStep('layer_mem', { icon: 'database', state: 'ok', name: 'Memory (S1)',
-            detail: 'Found ' + ev.entries.length + ' saved note(s)', badge: '\u2713 Used' });
+            detail: 'Found ' + ev.entries.length + (ev.entries.length === 1 ? ' saved note' : ' saved notes'), badge: '\u2713 Used' });
         } else if (ev.layer === 'ontology') {
           upsertStep('layer_ont', { icon: 'graph', state: 'ok', name: 'Knowledge graph (S2)',
             detail: 'Grounded in ' + (ev.n_evidence || 'verified') + ' records', badge: '\u2713 Grounded' });
+        } else if (ev.layer === 'workspace' && ev.workspace) {
+          upsertStep('layer_ws', { icon: 'folder', state: 'ok', name: 'Workspace',
+            detail: 'Loaded context from ' + ev.workspace, badge: '\u2713 Loaded' });
+        } else if (ev.layer === 'recall' && (ev.refs || []).length) {
+          upsertStep('layer_rec', { icon: 'clock', state: 'ok', name: 'Earlier chats (S2)',
+            detail: 'Recalled ' + ev.refs.length + ' notes from ' + (ev.chats || 1) + ' chat(s)', badge: '\u2713 Recalled' });
+        } else if (ev.layer === 'records' && (ev.parts || []).length) {
+          upsertStep('layer_records', { icon: 'database', state: 'ok', name: 'Records (S1)',
+            detail: 'Checked ' + ev.parts.join(', '), badge: '\u2713 Checked' });
         } else if (ev.layer === 'compiler') {
-          upsertStep('compiler', { icon: ev.ok || !ev.feedback ? 'code' : 'warning', state: ev.ok || !ev.feedback ? 'ok' : 'run',
-            name: 'Code check (S3)', detail: ev.ok || !ev.feedback ? 'Verified executable code in answer' : ('Fixing: ' + String(ev.feedback).slice(0, 76)),
-            badge: ev.ok || !ev.feedback ? '\u2713 Worked' : 'Fixing\u2026' });
+          if (ev.ok || !ev.feedback) {
+            upsertStep('compiler', { icon: 'code', state: 'ok', name: 'Code check (S3)',
+              detail: 'Verified executable code in answer', badge: '\u2713 Worked' });
+          } else {
+            upsertStep('compiler', { icon: 'warning', state: 'run', name: 'Code check (S3)',
+              detail: 'Fixing issue: ' + String(ev.feedback).slice(0, 76), badge: 'Fixing\u2026' });
+            setStage('fixing code issue');
+          }
         }
         scrollDown();
       } else if (ev.type === 'plan') {
-        if (stepMap.understand && stepMap.understand.data.state === 'run') stepMap.understand.update({ state: 'ok', icon: 'check', badge: '\u2713 Understood' });
+        if (ev.stage === 'queued') {
+          upsertStep('queue', { icon: 'clock', state: 'run', name: 'Queued',
+            detail: 'Waiting for earlier turn to finish\u2026', badge: 'Queued\u2026' });
+          setStage('queued');
+          scrollDown();
+          return;
+        }
+        if (stepMap.queue && stepMap.queue.data.state === 'run') {
+          stepMap.queue.update({ state: 'ok', badge: '\u2713 Ready' });
+        }
+        if (stepMap.understand && stepMap.understand.data.state === 'run') {
+          stepMap.understand.update({ state: 'ok', icon: 'check', badge: '\u2713 Understood' });
+        }
         if (ev.stage === 'planning') {
           var plTools = (ev.tools || []).slice(0, 5).map(toolName);
           upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning',
             detail: plTools.length ? 'Choosing how to use ' + plTools.join(', ') : 'Formulating response plan\u2026', badge: 'Planning\u2026' });
           setStage(plTools.length ? 'planning \u00b7 ' + plTools.join(', ') : 'planning response');
         } else if (ev.stage === 'preparing_tool' && ev.tool) {
-          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning', detail: 'Preparing ' + toolName(ev.tool) + ' input\u2026', badge: 'Preparing\u2026' });
-          setStage('preparing ' + toolName(ev.tool));
+          var prepName = toolName(ev.tool);
+          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning',
+            detail: 'Preparing ' + prepName + ' input\u2026', badge: 'Preparing\u2026' });
+          setStage('preparing ' + prepName);
         } else if (ev.stage === 'reviewing') {
           if (stepMap.plan) stepMap.plan.update({ state: 'ok', badge: '\u2713 Planned' });
-          upsertStep('review', { icon: 'spark', state: 'run', name: 'Reviewing results', detail: 'Checking tool output to write the final answer', badge: 'Reviewing\u2026' });
+          upsertStep('review', { icon: 'spark', state: 'run', name: 'Reviewing results',
+            detail: 'Checking tool output to write the final answer', badge: 'Reviewing\u2026' });
           setStage('reviewing tool results');
+        } else if (ev.stage === 'drafting') {
+          upsertStep('draft', { icon: 'models', state: 'run', name: 'Verifying facts & tools',
+            detail: 'Checking local tools & context before ' + (ev.model || 'synthesis'), badge: 'Checking\u2026' });
+          setStage('verifying facts & tools');
+        } else if (ev.stage === 'k3_synthesis' || ev.stage === 'fused_c1_c2_c3') {
+          if (stepMap.draft) stepMap.draft.update({ state: 'ok', badge: '\u2713 Verified' });
+          if (stepMap.plan) stepMap.plan.update({ state: 'ok', badge: '\u2713 Planned' });
+          var mTitle = ev.model || 'C1 + C2 + C3';
+          upsertStep('synth', { icon: 'model', state: 'run', name: mTitle + ' synthesis',
+            detail: 'Running ' + (ev.full_name || mTitle) + ' + C2 HybridAgent + C3 11-level NCM', badge: 'Synthesizing\u2026' });
+          setStage('synthesizing with ' + mTitle);
+        } else if (ev.stage === 'k3_done' || ev.stage === 'fused_done') {
+          if (stepMap.synth) {
+            stepMap.synth.update({ state: 'ok', badge: '\u2713 Worked' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(1) + 's' : '') });
+          }
         }
         scrollDown();
       } else if (ev.type === 'token') {
@@ -1983,6 +2462,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           setStage('thinking \u00b7 ' + words + ' words');
           thBox.scrollTop = thBox.scrollHeight;
         } else if (ev.kind === 'answer') {
+          if (stale) { answer = ''; stale = false; ans.classList.remove('stale'); }
           finishRunningSteps();
           if (thinking) thBox.hidden = true;
           answer += ev.text; ans.textContent = answer.replace(/^\s+/, ''); live.wait.hidden = true;
@@ -1990,24 +2470,26 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         }
         scrollDown();
       } else if (ev.type === 'round' && ev.round > 1) {
-        if (thinking) { thinking += '\n\n— after the tool result —\n\n'; thBox.textContent = thinking; }
-        answer = ''; ans.textContent = '';
+        if (thinking) { thinking += '\n\n\u2014 after the tool result \u2014\n\n'; thBox.textContent = thinking; }
+        dim();
         live.wait.hidden = false;
       } else if (ev.type === 'tool_call') {
         if (stepMap.understand && stepMap.understand.data.state === 'run') stepMap.understand.update({ state: 'ok', icon: 'check', badge: '\u2713 Understood' });
         if (stepMap.plan) stepMap.plan.update({ state: 'ok', detail: 'Planned to use ' + toolName(ev.name), badge: '\u2713 Planned' });
+        if (stepMap.think && stepMap.think.data.state === 'run') {
+          stepMap.think.update({ state: 'ok', badge: '\u2713 ' + words + ' words' });
+        }
         var t = { name: ev.name, args: fmtArgs(ev.arguments), state: 'run' };
         var card = toolEl(t); toolsBox.appendChild(card.el);
-        tools.push(t); cards[ev.id] = { card: card, t: t }; lastCard = card;
+        tools.push(t); cards[ev.id] = { card: card, t: t };
         setStage('using ' + toolName(ev.name));
         scrollDown();
       } else if (ev.type === 'permission') {
         setStage('waiting for your permission');
-        var host = lastCard ? lastCard.el : toolsBox;
-        host.parentNode.insertBefore(askEl(ev, function (decision) {
+        asks.appendChild(askEl(ev, function (decision) {
           api('POST', '/api/decision', { turn_id: ev.turn_id, request_id: ev.request_id, decision: decision })
             .then(function () { if (decision === 'always') loadPerms(); }).catch(function () {});
-        }), host.nextSibling);
+        }));
         scrollDown();
       } else if (ev.type === 'tool_result') {
         var cd = cards[ev.id];
@@ -2021,6 +2503,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           cd.card.set(cd.t.state, cd.t.why, cd.t.summary); cd.card.result(cd.t.result);
           setStage(toolName(ev.name) + (!ev.ran ? ' skipped' : worked ? ' worked' : ' failed'));
         }
+        scrollDown();
       } else if (ev.type === 'cycle') {
         var cycText = ev.stage === 'check' ? 'checking the earlier answer'
           : ev.stage === 'search' ? 'searching the web and reading the best pages'
@@ -2030,9 +2513,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             : ev.how === 'another' ? 'writing a different version' : 'writing a new answer from what you said')
           : 'correcting: ' + String((ev.findings || [''])[0]).slice(0, 90);
         upsertStep('cycle_' + ev.stage, { icon: 'refresh', state: 'run', name: 'Verification cycle', detail: cap(cycText), badge: 'Checking\u2026' });
+        Object.keys(stepMap).forEach(function (k) {
+          if (k.indexOf('cycle_') === 0 && k !== 'cycle_' + ev.stage && stepMap[k].data.state === 'run') {
+            stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
+          }
+        });
         setStage(cycText);
         live.wait.hidden = false;
-        if (ev.stage === 'retry' || ev.stage === 'rewrite') { answer = ''; ans.textContent = ''; }
+        if (ev.stage === 'retry' || ev.stage === 'rewrite') dim();
         scrollDown();
       } else if (ev.type === 'done') finish(ev);
       else if (ev.type === 'error') finish({ reply: 'Clover stopped with an error: ' + ev.error, error: true });
@@ -2040,17 +2528,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     function finish(ev) {
       if (finished) return; finished = true;
       finishRunningSteps();
+      Object.keys(stepMap).forEach(function (k) {
+        if (stepMap[k].data.state === 'run') stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
+      });
       clearInterval(ticker); clearInterval(poll); state.busy = false; state.waitEl = null; state.stageText = ''; setStop(false); updateSend(); pollStatus();
-      var secs = Math.max(1, Math.round((ev.total_cycle_ms || (Date.now() - t0)) / 1000));
+      var secs = Math.round((Date.now() - t0) / 1000);
       var gens = ev.generation || [];
-      var newTok = gens.reduce(function (s, g) { return s + (g.new_tokens || 0); }, 0) || ev.generated_tokens || 0;
+      var newTok = gens.reduce(function (s, g) { return s + (g.new_tokens || 0); }, 0);
       var decS = gens.reduce(function (s, g) { return s + (g.decode_s || 0); }, 0);
       var speed = decS ? newTok / decS : 0; if (speed) state.lastSpeed = speed;
-      var m = { role: 'bot', text: ev.reply || '', isNotice: !!ev.error, turn: ev.turn || ev.turn_n || 1,
+      var m = { role: 'bot', text: ev.reply || '', isNotice: !!ev.error, turn: ev.turn,
         meta: secs + ' s' + (newTok ? ' · ' + newTok + ' tokens' : '') + (speed ? ' · ' + speed.toFixed(1) + ' tok/s' : ''),
         thinking: thinking.trim(), thinkSecs: tFirst ? Math.round((tLast - tFirst) / 1000) : 0,
         tools: tools, steps: stepsList, used: layersUsed(ev),
-        trace: formatLayerTrace(ev),
         images: (ev.images || []).map(function (x) { return { file: x.file, prompt: x.prompt, model: x.model, seconds: x.seconds }; }) };
       c.messages.push(m); save();
       live.turn.replaceWith(botEl(m)); scrollDown();
@@ -2058,91 +2548,75 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       state.speakNext = false;
       if (speakIt) speakOmni(m.text);
     }
-
-    var lastUser = inp.c.messages.slice(0, -1).filter(function (m) { return m.role === 'user'; }).pop();
-    var reqPayload = {
-      prompt: inp.prompt, session_id: c.id, attached_files: inp.files, history: inp.hist,
-      previous_media: lastUser && lastUser.media ? lastUser.media.map(function (md) { return md.kind; }) : [],
-      media: (inp.media || []).map(function (md) { return { kind: md.kind, name: md.name, data: md.data, voice: !!md.voice }; }),
-      sampling: state.settings.sampling, thinking: state.settings.thinking, enable_thinking: state.settings.thinking, max_new_tokens: state.settings.budget
-    };
-
-    if (location.protocol === 'file:' && window.CloverAndroidBridge && typeof window.CloverAndroidBridge.callLocalS23ApiAsync === 'function') {
-      api('POST', '/api/chat', reqPayload).then(function (r) {
-        if (r.permission_required) {
-          var pr = r.permission_required;
-          onEvent({ type: 'tool_call', id: 'tc1', name: pr.tool || pr.permission, arguments: { query: pr.detail || '' } });
-          var host = lastCard ? lastCard.el : toolsBox;
-          host.parentNode.insertBefore(askEl({ tool: pr.permission, detail: pr.detail, risky: pr.risky }, function (decision) {
-            if (decision === 'always' && !pr.risky) setPerms((function () { var ch = {}; ch[pr.permission] = 'allow'; return ch; })());
-            var req2 = Object.assign({}, reqPayload, {
-              allow_once: decision in { once: 1, always: 1 } ? [pr.permission] : [],
-              deny_once: decision === 'deny' ? [pr.permission] : []
-            });
-            api('POST', '/api/chat', req2).then(function (r2) { finish(r2); }).catch(function (e2) { finish({ reply: 'Clover could not answer: ' + e2.message, error: true }); });
-          }), host.nextSibling);
-          return;
+    function parseSseChunk(chunk) {
+      var lines = chunk.split(/\r?\n/);
+      for (var i = 0; i < lines.length; i++) {
+        if (lines[i].indexOf('data: ') === 0) {
+          try { onEvent(JSON.parse(lines[i].slice(6))); } catch (e) {}
         }
-        finish(r);
-      }).catch(function (e) {
-        finish({ reply: 'Clover could not answer: ' + e.message, error: true });
-      });
-      return;
+      }
     }
-
-    fetch(resolveBaseUrl() + '/api/chat/stream', {
-      method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(reqPayload)
+    function tryReconnectReplay(fallbackErr) {
+      if (finished || !state.turnId) {
+        if (!finished) finish(fallbackErr || { reply: answer || '(The engine closed the connection.)', error: !answer });
+        return;
+      }
+      api('GET', '/api/turn/events?turn_id=' + encodeURIComponent(state.turnId) + '&after=' + lastSeq).then(function (r) {
+        (r.events || []).forEach(onEvent);
+        if (!finished) {
+          finish(fallbackErr || { reply: answer || (r.cancelled ? '(Stopped.)' : '(The engine closed the connection.)'), cancelled: !!r.cancelled, error: !answer && !r.cancelled });
+        }
+      }).catch(function () {
+        if (!finished) finish(fallbackErr || { reply: answer || '(The engine closed the connection.)', error: !answer });
+      });
+    }
+    fetch(apiUrl('/api/chat/stream'), {
+      method: 'POST', headers: hostHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ prompt: inp.prompt, session_id: c.id, model: state.settings.model, attached_files: inp.files, history: inp.hist,
+        media: (inp.media || []).map(function (md) { return { kind: md.kind, name: md.name, data: md.data }; }),
+        documents: (inp.docs || []).map(function (d) { return { name: d.name, data: d.data }; }),
+        sampling: state.settings.sampling, thinking: state.settings.thinking, max_new_tokens: state.settings.budget })
     }).then(function (resp) {
       if (!resp.ok) return resp.json().catch(function () { return {}; }).then(function (j) { throw new Error(j.error || ('HTTP ' + resp.status)); });
       var reader = resp.body.getReader(), dec = new TextDecoder(), buf = '';
       function pump() {
         return reader.read().then(function (r) {
-          if (r.done) { if (!finished) finish({ reply: answer || '(The engine closed the connection.)', error: !answer }); return; }
+          if (r.done) { if (!finished) tryReconnectReplay(); return; }
           buf += dec.decode(r.value, { stream: true });
           var idx;
           while ((idx = buf.indexOf('\n\n')) >= 0) {
             var chunk = buf.slice(0, idx); buf = buf.slice(idx + 2);
-            if (chunk.indexOf('data: ') === 0) { try { onEvent(JSON.parse(chunk.slice(6))); } catch (e) {} }
+            parseSseChunk(chunk);
           }
           return pump();
         });
       }
       return pump();
     }).catch(function (e) {
-      finish({ reply: /loading/i.test(e.message) ? 'Clover is still starting. Send again when the status says Ready.' : 'Clover could not answer: ' + e.message, error: true });
+      if (!finished && state.turnId) {
+        tryReconnectReplay({ reply: /loading/i.test(e.message) ? 'Clover is still starting. Send again when the status says Ready.' : 'Clover could not answer: ' + e.message, error: true });
+      } else {
+        finish({ reply: /loading/i.test(e.message) ? 'Clover is still starting. Send again when the status says Ready.' : 'Clover could not answer: ' + e.message, error: true });
+      }
     });
   }
-
-  function formatLayerTrace(ev) {
-    var lt = ev.layer_trace || {};
-    var l1 = lt.layer1_lfm3_omni || {}, l2 = lt.layer2_hybrid_agent || {}, l3 = lt.layer3_11level_ncm || {};
-    if (!l1.enabled && !l2.enabled && !l3.ncm_active) return '';
-    var lines = [
-      '=== Unified C1 -> C2 -> C3 (1-Pass Precomputed Trunks & Experts) ===',
-      'C1 Inference: prefill=' + (l1.turn1_prefill_ms || 0) + ' ms + decode=' + (l1.turn1_decode_ms || 0) + ' ms',
-      'C2 Plan (plan-trunk-0): ' + (l2.hybridlink_ms || 0) + ' ms | cos=' + (l2.stage3_hybridlink_2048_cos || l2.hybridlink_latent_to_next_embed_cos || 0)
-    ];
-    if (l3.ncm_active) {
-      lines.push('C3 Decode (bridge-trunk-0 + vqvae + ncm-trunk-0..11 + ptr-trunk-0..2): ' + (l3.ncm_total_ms || 0) + ' ms (redundant C1 re-run=' + (l3.c_backbone_ms || 0) + ' ms, single_pass=' + !!l3.unified_c1_c2_c3_single_pass + ')');
-    }
-    return lines.join('\n');
-  }
-
   /* what helped this answer, named after the Clover layers page */
   function layersUsed(ev) {
     var out = [];
     (ev.layers || []).forEach(function (l) {
-      if (l.layer === 'semantics') { if (l.understood) out.push(l.understood); if (l.label) out.push(l.label); }
-      else if (l.layer === 'c1' && l.ms != null) out.push('C1 Inference · ' + (l.ms / 1000).toFixed(2) + 's');
-      else if (l.layer === 'c2' && l.ms != null) out.push('C2 Plan · ' + Math.round(l.ms) + 'ms');
+      if (l.layer === 'semantics') {
+        if (l.understood) out.push(l.understood);
+        if (l.personal && l.personal.form) out.push('PPL · your preferred form');
+        if (l.collective && (l.collective.form || (l.collective.added || []).length)) out.push('CPSL · shared core');
+        if (l.label) out.push(l.label);
+      }
       else if (l.layer === 'memory' && (l.entries || []).length) out.push('S1 memory · ' + l.entries.length);
       else if (l.layer === 'records') out.push('S1 records: ' + (l.parts || []).join(', '));
       else if (l.layer === 'recall' && (l.refs || []).length) out.push('S2 earlier chats · ' + l.chats);
       else if (l.layer === 'ontology') out.push('S2 knowledge graph');
       else if (l.layer === 'ontology_grounding' && l.changed) out.push('S2 grounding fix');
       else if (l.layer === 'compiler' && l.checked) out.push(l.ok ? 'S3 code checked' : 'S3 code issue');
-      else if (l.layer === 'ncm' && l.windows) out.push('C3 NCM' + (l.ms != null ? ' · ' + (l.ms >= 1000 ? (l.ms / 1000).toFixed(2) + 's' : Math.round(l.ms) + 'ms') : ''));
+      else if (l.layer === 'ncm' && l.windows) out.push('C3 NCM');
       else if (l.layer === 'workspace') out.push('workspace ' + l.workspace);
       else if (l.layer === 'cycle' && l.trigger === 'user') {
         out.push({
@@ -2153,18 +2627,6 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         (l.tools || []).forEach(function (t) { out.push(t === 'a web search' ? 'searched the web' : t === 'a Python calculation' ? 'calculated in Python' : t); });
       }
     });
-    var lt = ev.layer_trace || {};
-    if (!out.length && lt.semantics_frame) {
-      if (lt.semantics_frame.understood) out.push(lt.semantics_frame.understood);
-      if (lt.semantics_frame.label) out.push(lt.semantics_frame.label);
-    }
-    if (out.length <= 2 && lt.layer1_lfm3_omni && !(ev.layers || []).length) {
-      var l1 = lt.layer1_lfm3_omni || {}, l2 = lt.layer2_hybrid_agent || {}, l3 = lt.layer3_11level_ncm || {};
-      var c1Ms = (l1.turn1_prefill_ms || 0) + (l1.turn1_decode_ms || 0);
-      if (l1.enabled) out.push('C1 Inference · ' + (c1Ms / 1000).toFixed(2) + 's');
-      if (l2.enabled) out.push('C2 Plan · ' + Math.round(l2.hybridlink_ms || 0) + 'ms');
-      if (l3.ncm_active) out.push('C3 NCM · ' + (l3.ncm_total_ms >= 1000 ? (l3.ncm_total_ms / 1000).toFixed(2) + 's' : Math.round(l3.ncm_total_ms || 0) + 'ms'));
-    }
     if (ev.growth && ev.growth.length) out.push('growth · ' + ev.growth.length + (ev.growth.length === 1 ? ' update' : ' updates'));
     if (ev.kv_slot && ev.kv_slot.restored) out.push('chat state restored');
     return out.filter(function (x, i) { return out.indexOf(x) === i; });
@@ -2172,13 +2634,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function askEl(ev, onDecide) {
     var ui = PERM_UI[ev.tool] || { icon: 'shield', verb: 'use a tool' };
     var box = el('div', 'ask', '<div class="ask__t">' + ic(ui.icon) + '<span></span></div>');
-    box.querySelector('span').textContent = ev.risky ? 'Allow Clover to run this command?' : ('Allow Clover to ' + ui.verb + '?');
-    if (ev.risky) { var w = el('p', 'risk'); w.textContent = 'Clover asks first because ' + (ev.risky.indexOf('it ') === 0 ? ev.risky : 'it ' + ev.risky) + '.'; box.appendChild(w); }
+    box.querySelector('span').textContent = ev.risky ? 'Allow Clover to run this command?' : 'Allow Clover to ' + ui.verb + '?';
+    if (ev.risky) { var rk = el('p', 'risk'); rk.textContent = 'Clover asks first because ' + ev.risky + '.'; box.appendChild(rk); }
     if (ev.detail) { var pre = el('pre'); pre.textContent = ev.detail; box.appendChild(pre); }
     var row = el('div', 'ask__b');
-    var opts = ev.risky ? [['Allow once', 'once', 'pri'], ["Don't allow", 'deny', '']]
-      : [['Allow once', 'once', 'pri'], ['Always allow', 'always', ''], ["Don't allow", 'deny', '']];
-    opts.forEach(function (b) {
+    [['Allow once', 'once', 'pri'], ['Always allow', 'always', ''], ["Don't allow", 'deny', '']].forEach(function (b) {
+      if (ev.risky && b[1] === 'always') return;  // such a command asks every time
       var x = btn('btn ' + b[2], esc(b[0]));
       x.addEventListener('click', function () { box.remove(); onDecide(b[1]); });
       row.appendChild(x);
@@ -2189,31 +2650,85 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function fmtArgs(a) {
     if (!a) return '';
+    if (a.expression) return a.expression;
+    if (a.value != null && a.from_unit && a.to_unit) return a.value + ' ' + a.from_unit + ' \u2192 ' + a.to_unit;
+    if (a.pattern) return a.pattern + (a.path ? ' in ' + a.path : '');
+    if (a.action) return a.action + (a.target ? ' ' + a.target : '') + (a.path ? ' (' + a.path + ')' : '');
+    if (a.chart_type && a.path) return a.chart_type + ' chart of ' + a.path + (a.y ? ' (' + (a.x ? a.x + ' vs ' : '') + a.y + ')' : '');
     if (a.code) return a.code;
-    if (a.target && a.command) return a.target + ' $ ' + a.command;
     if (a.command) return a.command;
     if (a.query) return a.query;
     if (a.prompt) return a.prompt;
     if (a.url) return a.url;
+    if (a.path && a.content != null) return a.path + '\n---\n' + String(a.content).slice(0, 1500);
+    if (a.path) return a.path + (a.start_line ? ' (lines ' + a.start_line + '-' + (a.end_line || 'end') + ')' : '') + (a.timestamp_s != null ? ' @ ' + a.timestamp_s + 's' : '');
+    if (a.target) return a.target;
     if (a.repository) return a.repository;
     if (a.extension) return a.extension;
-    if (a.text && a.title) return a.title + ' — ' + a.text;
     if (a.text) return a.text;
-    if (a.path && a.content != null) return a.path + '\n---\n' + String(a.content).slice(0, 1500);
-    if (a.path) return a.path + (a.start_line ? ' (lines ' + a.start_line + '-' + (a.end_line || 'end') + ')' : '');
     return JSON.stringify(a);
   }
   function setStop(on) {
     var b = $('send');
+    var comp = $('composer') || document.querySelector('.composer');
+    if (comp) comp.classList.toggle('busy', !!on);
     b.classList.toggle('stop', on);
+    if (on) b.classList.remove('idle', 'holding', 'rec');
     b.innerHTML = on ? ic('stop') : SEND_HTML;
-    b.setAttribute('aria-label', on ? 'Stop' : 'Send'); b.title = on ? 'Stop' : '';
+    b.setAttribute('aria-label', on ? 'Stop' : 'Send'); b.title = on ? 'Stop' : 'Tap to send · Hold to speak';
     b.disabled = on ? false : true;
     if (!on) updateSend();
   }
 
-  function send() {
-    return streamSend();
+  /* ---------- Clover-layers mode (non-streamed, permission retry) ---------- */
+  function describeResult(r) {
+    var bits = [];
+    if (r.plan_lat_ms != null) bits.push('plan ' + Math.round(r.plan_lat_ms / 1000) + ' s');
+    if (r.k3_moe_plus_ncm_ms != null) bits.push('render ' + Math.round(r.k3_moe_plus_ncm_ms / 1000) + ' s');
+    var tl = (r.tool_calls || []).map(function (t) { return t.tool; }).filter(Boolean);
+    if (tl.length) bits.push('tools: ' + tl.join(', '));
+    return bits.join(' · ');
+  }
+  function traceText(r) {
+    var lines = ['Planner exit: ' + (r.exit_reason || '-') + '   latent steps: ' + (r.latent_steps == null ? '-' : r.latent_steps)];
+    (r.tool_calls || []).forEach(function (t, i) {
+      lines.push('\nTool ' + (i + 1) + ': ' + (t.tool || '?'));
+      if (t.input) lines.push('  input:  ' + String(t.input).slice(0, 1200));
+      if (t.result) lines.push('  result: ' + String(t.result).slice(0, 1200));
+    });
+    if (r.plans && r.plans.length) lines.push('\nPlan windows:\n' + r.plans.map(function (p, i) { return '  W' + (i + 1) + ': ' + String(p).slice(0, 400); }).join('\n'));
+    return lines.join('\n');
+  }
+  function send(opts) {
+    opts = opts || {};
+    if (state.mode === 'lfm3' && !opts.retry) return streamSend();
+    var inp = opts.retry ? { c: cur(), prompt: opts.prompt, files: opts.files, docs: opts.docs, hist: historyFor(cur()) } : takeInput();
+    if (!inp) return;
+    var live = liveTurn();
+    state.busy = true; updateSend();
+    var ticker = startTurnTicker();
+    var poll = setInterval(pollStatus, 2000);
+    api('POST', '/api/chat', { prompt: inp.prompt, session_id: inp.c.id, attached_files: inp.files, history: inp.hist,
+      documents: (inp.docs || []).map(function (d) { return { name: d.name, data: d.data }; }),
+      allow_once: opts.allow_once || [], deny_once: opts.deny_once || [] }).then(function (r) {
+      live.turn.remove();
+      if (r.permission_request) {
+        var pr = r.permission_request;
+        var holder = el('div', 'b'); var hb = el('div', 'b__body'); holder.appendChild(hb);
+        hb.appendChild(askEl({ tool: pr.tool, detail: pr.detail }, function (decision) {
+          holder.remove();
+          if (decision === 'always') setPerms((function () { var ch = {}; ch[pr.tool] = 'allow'; return ch; })()).then(function () { send({ prompt: inp.prompt, files: inp.files, docs: inp.docs, retry: true }); });
+          else send({ prompt: inp.prompt, files: inp.files, docs: inp.docs, retry: true, allow_once: decision === 'once' ? [pr.tool] : [], deny_once: decision === 'deny' ? [pr.tool] : [] });
+        }));
+        $('log').appendChild(holder); scrollDown(); return;
+      }
+      var m = { role: 'bot', text: r.reply || '', media: r.media || [], meta: describeResult(r), trace: traceText(r) };
+      inp.c.messages.push(m); save(); $('log').appendChild(botEl(m)); scrollDown();
+    }).catch(function (e) {
+      live.turn.remove();
+      var m = { role: 'bot', text: e.status === 503 ? 'Clover is still starting. Send again when the status says Ready.' : 'Clover could not answer: ' + e.message, isNotice: true };
+      inp.c.messages.push(m); save(); $('log').appendChild(botEl(m)); scrollDown();
+    }).then(function () { clearInterval(ticker); clearInterval(poll); state.busy = false; state.waitEl = null; state.stageText = ''; updateSend(); pollStatus(); });
   }
 
   /* ---------- wiring ---------- */
@@ -2221,6 +2736,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('prompt').addEventListener('input', function () { autosize(); updateSend(); });
   $('prompt').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
   $('send').addEventListener('click', function () {
+    if (suppressSendClick) { suppressSendClick = false; return; }
     if (state.busy && state.mode === 'lfm3') { if (state.turnId) api('POST', '/api/cancel', { turn_id: state.turnId }).catch(function () {}); return; }
     send();
   });
@@ -2228,7 +2744,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('new-chat').addEventListener('click', startChat);
   $('new-chat-2').addEventListener('click', startChat);
 
-  /* ---------- workspaces ---------- */
+  /* ---------- workspaces: folders and GitHub repositories, and the context files Clover keeps in them ---------- */
   function loadWorkspaces() { return api('GET', '/api/workspaces').then(renderWorkspaces).catch(function () {}); }
   function ctxSummary(c) {
     var s = c.written.length ? 'wrote or updated ' + c.written.length + ' context file' + (c.written.length > 1 ? 's' : '') : 'context files up to date';
@@ -2269,13 +2785,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         if (confirm('Delete the ' + (n + (w.index ? 1 : 0)) + ' context files Clover wrote in ' + w.name + '? Notes in them are deleted too. Your other files are not touched.')) wsAct('clean', { name: w.name });
       }, 'danger');
       b('Remove from list', function () {
-        if (confirm('Remove ' + w.name + ' from the list? Its folder and files stay on this device.')) wsAct('remove', { name: w.name });
+        if (confirm('Remove ' + w.name + ' from the list? Its folder and files stay on this laptop.')) wsAct('remove', { name: w.name });
       }, 'danger');
       it.appendChild(head); it.appendChild(acts); box.appendChild(it);
     });
     var gh = r.github || {}, help = $('gh-help');
-    help.textContent = 'A GitHub token with read access lets Clover clone your private repositories. It stays encrypted on this device and goes only to GitHub. ';
-    var a = document.createElement('a'); a.href = gh.create_url || 'https://github.com/settings/personal-access-tokens/new'; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    help.textContent = 'A GitHub token with read access lets Clover clone your private repositories. It stays on this laptop and goes only to GitHub. ';
+    var a = document.createElement('a'); a.href = gh.create_url; a.target = '_blank'; a.rel = 'noopener noreferrer';
     a.textContent = gh.token_set ? 'Manage tokens' : 'Create a token'; help.appendChild(a);
     $('gh-token').value = '';
     $('gh-token').placeholder = gh.token_set ? 'Token saved. Paste a new one to replace it' : 'GitHub token';
@@ -2283,14 +2799,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   $('ws-add').addEventListener('click', function () {
     var src = $('ws-src').value.trim(); if (!src) { $('ws-src').focus(); return; }
-    var local = /^[A-Za-z]:[\\/]|^~|^\/|^\\\\/.test(src);
+    var local = /^[A-Za-z]:[\\/]|^~|^\\\\/.test(src);
     wsAct('add', { source: src }, local ? 'Adding the folder and writing context files…' : 'Cloning from GitHub…')
       .then(function (ok) { if (ok) $('ws-src').value = ''; });
   });
   $('ws-src').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('ws-add').click(); } });
   $('gh-save').addEventListener('click', function () {
     var t = $('gh-token').value.trim(); if (!t) { $('gh-token').focus(); return; }
-    api('POST', '/api/github', { token: t }).then(function (r) { renderWorkspaces(r); setNote('ws-note', 'GitHub token saved on this device.', true); })
+    api('POST', '/api/github', { token: t }).then(function (r) { renderWorkspaces(r); setNote('ws-note', 'GitHub token saved on this laptop.', true); })
       .catch(function (e) { setNote('ws-note', e.message); });
   });
   $('gh-forget').addEventListener('click', function () {
@@ -2298,105 +2814,46 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       .catch(function (e) { setNote('ws-note', e.message); });
   });
 
-  /* ---------- GitHub Account & SSH / VS Code ---------- */
-  var _devicePollTimer = null;
+  /* ---------- VS Code, and the GitHub account it signs in to (the token stays in VS Code) ---------- */
   function kvHtml(rows) { return rows.map(function (x) { return '<span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b>'; }).join(''); }
   function renderVscode(r) {
     if (!r) return;
-    var c = r.connected, repo = r.repo || {}, gh = r.github_session || {}, ssh = r.ssh || {};
-    var logged = !!(gh.logged_in || repo.logged_in);
-    var login = gh.login || repo.login || '';
-    var repoName = gh.repo || repo.repo || (login ? login + '/clover-memory' : '');
-    var status = c ? 'Connected' : 'Ready (local SSH & Git)';
-    $('vsc-kv').innerHTML = kvHtml([
-      ['Status', status],
-      ['GitHub Account', logged ? ('@' + login) : 'Not signed in']
-    ]);
-    if (ssh.public_key && $('ssh-pubkey-box')) $('ssh-pubkey-box').textContent = ssh.public_key;
-    $('v-vsc').textContent = logged ? ('@' + login) : 'Ready';
-    $('acct-kv').innerHTML = kvHtml([
-      ['GitHub account', logged ? ('@' + login + (gh.name ? ' (' + gh.name + ')' : '')) : 'Not signed in'],
-      ['Private repository', repoName || 'Not set up'],
-      ['Memory synced', repo.last_sync || (gh.last_sync ? gh.last_sync.replace('T', ' ').replace('Z', ' UTC') : '—')]
-    ]);
-    if (repoName && $('gh-repo-inp') && !$('gh-repo-inp').value) $('gh-repo-inp').value = repoName;
-    $('v-account').textContent = logged ? ('@' + login) : (repoName || 'Not set up');
-    $('vsc-sync').hidden = !(logged || repoName);
-    $('gh-logout').hidden = !logged;
-    $('vsc-repo').textContent = repoName ? 'Sync private repository' : 'Set up private repository';
+    var c = r.connected, repo = r.repo || {};
+    var status = c ? 'Connected' + (c.title ? ' (' + c.title + ')' : '') : r.installed === false ? 'Not installed' : 'Not open';
+    var rows = [['Status', status]];
+    if (c && c.version) rows.push(['Version', c.version]);
+    $('vsc-kv').innerHTML = kvHtml(rows);
+    $('v-vsc').textContent = c ? 'Connected' : r.installed === false ? 'Not installed' : 'Not open';
+    $('acct-kv').innerHTML = kvHtml([['Private repository', repo.repo || 'Not set up'],
+      ['Memory synced', repo.last_sync ? repo.last_sync + (repo.notes != null ? ' · ' + repo.notes + ' notes' : '') : '—']]);
+    $('v-account').textContent = repo.repo || 'Not set up';
+    $('vsc-sync').hidden = !repo.repo;
+    $('vsc-repo').textContent = repo.repo ? 'Set up again' : 'Set up private repository';
   }
   function loadVscode() { return api('GET', '/api/vscode').then(renderVscode).catch(function () {}); }
+  function vscAct(noteId, action, busy, done) {
+    setNote(noteId, busy, true);
+    return api('POST', '/api/vscode/do', { action: action }).then(function (r) { renderVscode(r); setNote(noteId, done(r.result || {}), true); })
+      .catch(function (e) { setNote(noteId, e.message); loadVscode(); });
+  }
   $('vsc-open').addEventListener('click', function () {
-    setNote('vsc-note', 'Checking connection…', true);
-    api('POST', '/api/vscode/do', { action: 'status' }).then(function (r) { renderVscode(r); setNote('vsc-note', 'SSH & Git memory bridge ready.', true); })
-      .catch(function (e) { setNote('vsc-note', e.message); });
+    vscAct('vsc-note', 'status', 'Opening VS Code…', function () { return 'VS Code is connected.'; });
   });
   $('vsc-gh').addEventListener('click', function () {
-    if (_devicePollTimer) { clearInterval(_devicePollTimer); _devicePollTimer = null; }
-    setNote('acct-note', 'Starting GitHub Device Sign-In…', true);
-    api('POST', '/api/github/device-start', {}).then(function (r) {
-      $('gh-device-box').hidden = false;
-      $('gh-user-code').textContent = r.user_code || '--------';
-      var vUrl = r.verification_uri || 'https://github.com/login/device';
-      $('gh-verify-link').href = vUrl;
-      $('gh-poll-msg').textContent = 'Code copied! Approve at github.com/login/device…';
-      copyText(r.user_code || '');
-      try { window.open(vUrl, '_blank'); } catch (e) {}
-      var dCode = r.device_code;
-      var iv = Math.max(5, Number(r.interval || 5)) * 1000;
-      _devicePollTimer = setInterval(function () {
-        api('POST', '/api/github/device-poll', {
-          device_code: dCode,
-          repo: ($('gh-repo-inp') && $('gh-repo-inp').value.trim()) || ''
-        }).then(function (pr) {
-          if (pr.ok && pr.logged_in) {
-            clearInterval(_devicePollTimer); _devicePollTimer = null;
-            $('gh-device-box').hidden = true;
-            setNote('acct-note', 'Signed in as @' + pr.login + ' and synced private repo ' + pr.repo + '.', true);
-            loadVscode(); load();
-          } else {
-            $('gh-poll-msg').textContent = pr.message || 'Waiting for GitHub approval…';
-          }
-        }).catch(function (e) {
-          clearInterval(_devicePollTimer); _devicePollTimer = null;
-          setNote('acct-note', e.message);
-        });
-      }, iv);
-    }).catch(function (e) { setNote('acct-note', e.message); });
-  });
-  $('gh-token-btn').addEventListener('click', function () {
-    var tok = $('gh-token-inp').value.trim();
-    var repo = $('gh-repo-inp').value.trim();
-    if (!tok) { $('gh-token-inp').focus(); return; }
-    setNote('acct-note', 'Signing in to GitHub & syncing private memory repository…', true);
-    api('POST', '/api/github/login', { token: tok, repo: repo }).then(function (r) {
-      $('gh-token-inp').value = '';
-      setNote('acct-note', 'Signed in as @' + r.login + ' and synced private repository ' + r.repo + '.', true);
-      loadVscode(); load();
-    }).catch(function (e) { setNote('acct-note', e.message); });
+    vscAct('acct-note', 'githubSignIn', 'Continue in VS Code: it asks you to sign in to GitHub…', function (x) { return 'Signed in to GitHub as ' + x.login + '.'; });
   });
   $('vsc-repo').addEventListener('click', function () {
-    var repo = ($('gh-repo-inp') && $('gh-repo-inp').value.trim()) || '';
-    setNote('acct-note', 'Setting up & syncing private GitHub repository…', true);
-    api('POST', '/api/github/sync', { repo: repo, action: 'sync' }).then(function (r) {
-      setNote('acct-note', 'Synced private repository ' + (r.repo || repo) + '.', true);
-      loadVscode(); load();
-    }).catch(function (e) { setNote('acct-note', e.message); });
+    vscAct('acct-note', 'githubSetupRepo', 'Continue in VS Code: sign in if it asks, then confirm the private repository…', function (x) {
+      return (x.created ? 'Created ' : 'Using ') + x.repo + ' (private), cloned to ' + x.path + '.';
+    });
   });
   $('vsc-sync').addEventListener('click', function () {
-    var repo = ($('gh-repo-inp') && $('gh-repo-inp').value.trim()) || '';
-    setNote('acct-note', 'Syncing memory with private GitHub repository…', true);
-    api('POST', '/api/github/sync', { repo: repo, action: 'sync' }).then(function (r) {
-      setNote('acct-note', 'Memory synced with ' + (r.repo || 'GitHub') + '.', true);
-      loadVscode(); load();
-    }).catch(function (e) { setNote('acct-note', e.message); });
-  });
-  $('gh-logout').addEventListener('click', function () {
-    if (_devicePollTimer) { clearInterval(_devicePollTimer); _devicePollTimer = null; }
-    api('POST', '/api/github/logout', {}).then(function () {
-      setNote('acct-note', 'Signed out of GitHub on this device.', true);
+    setNote('acct-note', 'Syncing memory…', true);
+    api('POST', '/api/vscode/sync', {}).then(function (r) {
+      var x = r.result || {};
+      setNote('acct-note', x.notes + ' notes in ' + x.repo + (x.committed ? ', changes pushed' : ', no changes') + (x.imported ? '; ' + x.imported + ' new from GitHub' : '') + '.', true);
       loadVscode();
-    }).catch(function () {});
+    }).catch(function (e) { setNote('acct-note', e.message); });
   });
 
   function tick() {

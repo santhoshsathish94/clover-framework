@@ -91,7 +91,9 @@ class S:
     chat_dirs = {}  # chat id -> the folder its commands run in (the last repository cloned in that chat)
     sess_lock = threading.Lock()
     turn_lock = threading.Lock()
-    active = {}  # turn_id -> {"cancel": Event, "pending": {request_id: {"event": Event, "decision": str}}}
+    turns_lock = threading.Lock()
+    active = {}  # turn_id -> {"cancel": Event, "pending": {request_id: {"event": Event, "decision": str}}, "seq": int, "events": list}
+    recent_turns = {}  # turn_id -> completed turn state for SSE reconnection replay (bounded to 32)
     busy = None
     port = 8765
     started = time.time()
@@ -1142,7 +1144,38 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
     if (Path(S.args.base) / "tools" / "sd.cpp" / "vulkan" / "sd-cli.exe").is_file():
         extra.append(image_tool(sid, cancel, made))
     t0 = time.perf_counter()
-    with S.turn_lock:
+    if S.turn_lock.locked() and on_event:
+        on_event({"type": "plan", "round": 1, "stage": "queued"})
+    while not S.turn_lock.acquire(timeout=0.05):
+        if cancel is not None and cancel.is_set():
+            m_id = getattr(eng, "model_key", None) or MODEL_ID
+            return {
+                "reply": "(Stopped.)",
+                "cancelled": True,
+                "tool_calls": [],
+                "rounds": 0,
+                "generation": [],
+                "layers": [],
+                "session_id": sid,
+                "model": m_id,
+                "mode": "lfm3",
+                "wall_ms": round((time.perf_counter() - t0) * 1000.0, 1),
+            }
+    try:
+        if cancel is not None and cancel.is_set():
+            m_id = getattr(eng, "model_key", None) or MODEL_ID
+            return {
+                "reply": "(Stopped.)",
+                "cancelled": True,
+                "tool_calls": [],
+                "rounds": 0,
+                "generation": [],
+                "layers": [],
+                "session_id": sid,
+                "model": m_id,
+                "mode": "lfm3",
+                "wall_ms": round((time.perf_counter() - t0) * 1000.0, 1),
+            }
         files = [str(f.get("name") or "file") for f in body.get("attached_files") or [] if isinstance(f, dict)]
         files += [d["name"] for d in docs]
         n, growth = S.repo.turn_start(sid, typed, how, files, media) if S.repo else (0, [])
@@ -1234,6 +1267,8 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                 kit.meaning = None
             if gate is not None:
                 gate.release()
+    finally:
+        S.turn_lock.release()
     reply = str(res.get("reply") or "")
     # a stopped answer that already has text stays in the conversation: "Summarize that story" after Stop got "I don't
     # have access to the story" (2026-11-01)
@@ -1736,6 +1771,28 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/vscode":
             return self._send(200, {"connected": S.vscode.connected(), "repo": github_repo(),
                                     "local": str(S.repo.dir), "installed": vscode_exe() is not None})
+        if path == "/api/turn/events":
+            from urllib.parse import parse_qs
+            q = {k: v[0] for k, v in parse_qs(query).items()}
+            tid = str(q.get("turn_id") or "").strip()
+            try:
+                after = int(q.get("after") or self.headers.get("Last-Event-ID") or 0)
+            except ValueError:
+                after = 0
+            with S.turns_lock:
+                t_obj = S.active.get(tid) or S.recent_turns.get(tid)
+                if not t_obj:
+                    return self._send(404, {"error": "unknown turn_id"})
+                evs = [e for e in t_obj["events"] if int(e.get("seq") or 0) > after]
+                return self._send(200, {
+                    "turn_id": tid,
+                    "session_id": t_obj.get("session_id"),
+                    "active": tid in S.active,
+                    "done": bool(t_obj.get("done")),
+                    "cancelled": t_obj["cancel"].is_set(),
+                    "last_seq": int(t_obj.get("seq") or 0),
+                    "events": evs,
+                })
         if path in ("/v1/models", "/models"):
             return self._send(200, {"object": "list", "data": [{"id": MODEL_ID, "object": "model", "owned_by": "clover-local"}]})
         self._send(404, {"error": "not found"})
@@ -1891,13 +1948,19 @@ class Handler(BaseHTTPRequestHandler):
                 pend["decision"] = decision if decision in ("once", "always", "deny") else "deny"
                 pend["event"].set()
                 return self._send(200, {"ok": True})
-            if path == "/api/cancel":
-                turn = S.active.get(str(body.get("turn_id") or ""))
-                if turn:
-                    turn["cancel"].set()
-                    for pend in turn["pending"].values():
+            if path in ("/api/cancel", "/api/stop"):
+                tid = str(body.get("turn_id") or "").strip()
+                cancelled_ids = []
+                with S.turns_lock:
+                    targets = [S.active[tid]] if (tid and tid != "all" and tid in S.active) else (
+                        list(S.active.values()) if not tid or tid == "all" else []
+                    )
+                for t_obj in targets:
+                    t_obj["cancel"].set()
+                    for pend in list(t_obj["pending"].values()):
                         pend["event"].set()
-                return self._send(200, {"ok": bool(turn)})
+                    cancelled_ids.append(t_obj.get("turn_id") or tid)
+                return self._send(200, {"ok": bool(cancelled_ids), "cancelled_turns": cancelled_ids})
             if path == "/api/chat":
                 prompt = str(body.get("prompt") or "").strip()
                 if not prompt:
@@ -2083,16 +2146,49 @@ class Handler(BaseHTTPRequestHandler):
     # ---------------- LFM3 mode: streamed turn ----------------
     def _lfm3_stream(self, body):
         prompt = str(body.get("prompt") or "").strip()
-        if not prompt and not body.get("media") and not body.get("documents"):
+        resume_tid = str(body.get("resume_turn_id") or "").strip()
+        if not prompt and not body.get("media") and not body.get("documents") and not resume_tid:
             return self._send(400, {"error": "prompt is required"})
         eng = engine_for(body.get("model"))
         if eng is None:
             raise EngineNotReady(S.load.get("error") or f"engine is loading ({S.load.get('step')})")
         sid = re.sub(r"[^A-Za-z0-9_\-]", "_", str(body.get("session_id") or uuid.uuid4().hex))[:96]
+        if resume_tid:
+            try:
+                after_seq = int(body.get("after_seq") or self.headers.get("Last-Event-ID") or 0)
+            except ValueError:
+                after_seq = 0
+            with S.turns_lock:
+                prev_turn = S.active.get(resume_tid) or S.recent_turns.get(resume_tid)
+                replay_evs = [e for e in (prev_turn["events"] if prev_turn else []) if int(e.get("seq") or 0) > after_seq]
+            if prev_turn is not None:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                for k, v in self._cors_headers().items():
+                    self.send_header(k, v)
+                self.end_headers()
+                for ev in replay_evs:
+                    self.wfile.write(f"id: {ev['seq']}\ndata: {json.dumps(ev, ensure_ascii=False, default=str)}\n\n".encode("utf-8"))
+                self.wfile.flush()
+                return None
+
         turn_id = uuid.uuid4().hex
-        turn = {"cancel": threading.Event(), "pending": {}}
-        S.active[turn_id] = turn
+        turn = {
+            "turn_id": turn_id,
+            "session_id": sid,
+            "cancel": threading.Event(),
+            "pending": {},
+            "seq": 0,
+            "events": [],
+            "done": False,
+            "updated": time.time(),
+        }
+        with S.turns_lock:
+            S.active[turn_id] = turn
         write_lock = threading.Lock()
+        client_closed = [False]
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
@@ -2102,12 +2198,26 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
         def emit(ev):
-            try:
-                with write_lock:
-                    self.wfile.write(f"data: {json.dumps(ev, ensure_ascii=False, default=str)}\n\n".encode("utf-8"))
+            with write_lock:
+                turn["seq"] += 1
+                seq = turn["seq"]
+                out_ev = dict(ev, seq=seq, turn_id=turn_id)
+                turn["events"].append(out_ev)
+                if len(turn["events"]) > 512:
+                    del turn["events"][:len(turn["events"]) - 512]
+                if ev.get("type") in ("done", "error"):
+                    turn["done"] = True
+                turn["updated"] = time.time()
+                if client_closed[0]:
+                    return
+                try:
+                    self.wfile.write(f"id: {seq}\ndata: {json.dumps(out_ev, ensure_ascii=False, default=str)}\n\n".encode("utf-8"))
                     self.wfile.flush()
-            except OSError:  # the window was closed: stop generating
-                turn["cancel"].set()
+                except (OSError, BrokenPipeError, ConnectionResetError):  # the window was closed: stop generating
+                    client_closed[0] = True
+                    turn["cancel"].set()
+                    for pend in list(turn["pending"].values()):
+                        pend["event"].set()
 
         def ask(perm, detail, risk=None):
             import permissions as P
@@ -2137,12 +2247,17 @@ class Handler(BaseHTTPRequestHandler):
 
         def heartbeat():
             while not done_ev.wait(timeout=15):
+                if client_closed[0]:
+                    break
                 try:
                     with write_lock:
                         self.wfile.write(b": keepalive\n\n")
                         self.wfile.flush()
-                except OSError:
+                except (OSError, BrokenPipeError, ConnectionResetError):
+                    client_closed[0] = True
                     turn["cancel"].set()
+                    for pend in list(turn["pending"].values()):
+                        pend["event"].set()
                     break
 
         threading.Thread(target=heartbeat, daemon=True, name="sse-heartbeat").start()
@@ -2161,7 +2276,11 @@ class Handler(BaseHTTPRequestHandler):
             emit({"type": "error", "error": f"{type(exc).__name__}: {exc}"})
         finally:
             done_ev.set()
-            S.active.pop(turn_id, None)
+            with S.turns_lock:
+                S.active.pop(turn_id, None)
+                S.recent_turns[turn_id] = turn
+                while len(S.recent_turns) > 32:
+                    S.recent_turns.pop(next(iter(S.recent_turns)))
         return None
 
     # ---------- OpenAI-compatible ----------
