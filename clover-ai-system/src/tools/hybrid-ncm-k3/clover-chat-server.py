@@ -3636,6 +3636,20 @@ class ChatRequestHandler(BaseHTTPRequestHandler):
                         user_id=req_uid,
                         team_id=req_tid,
                     )
+                try:
+                    import clover_cycle as _cc
+                    raw_q = str(val_req.prompt or "").split("[VERIFIED_STUDIO_DRAFT]", 1)[0].strip()
+                    rep_s = str(r.get("reply") or "")
+                    ev_num = _cc.direct_arithmetic_value(raw_q) if hasattr(_cc, "direct_arithmetic_value") else None
+                    if ev_num is not None:
+                        shown_n = f"{int(ev_num)}" if float(ev_num).is_integer() else f"{ev_num:g}"
+                        if not _cc.same(_cc.final_answer(raw_q, rep_s), ev_num):
+                            rep_s = shown_n
+                    if hasattr(_cc, "trim_only_value"):
+                        rep_s = _cc.trim_only_value(raw_q, rep_s)
+                    r["reply"] = rep_s
+                except Exception:
+                    pass
                 self._send_json(r)
             except Exception as e:
                 self._send_json({"error": str(e)}, code=500)

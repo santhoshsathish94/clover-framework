@@ -828,12 +828,13 @@ def needs_agent_python_tool(user_prompt: str, history=None) -> str | None:
             f"print(f'{pct1:g}% of {base_val:g} = {{res:g}}')"
         )
 
-    # 5. Direct arithmetic expression (e.g. 'What is 25 * 4?', '17**4 + 29*13', '144 / 12 + 7')
+    # 5. Direct arithmetic expression (e.g. 'What is 25 * 4?', '137 × 29 + 46', '17**4 + 29*13', '144 / 12 + 7')
     #    Require whitespace around '-' or '/' (or explicit arithmetic operator '**', '^', '*', '+') and ensure the match
     #    is not embedded inside a UUID/hex/date/hyphenated token (e.g. '39b9643d-b772-4239-8652-ee538247ee4f' or '2026-10-25')
+    p_arith = p.replace("\u00d7", "*").replace("\u00f7", "/").replace("\u2212", "-")
     m_arith = re.search(
         r"(?<![a-zA-Z0-9_\-])(\d+(?:\.\d+)?(?:\s*(?:\*\*|\^|\+|\*)\s*\d+(?:\.\d+)?|\s+[\-\/]\s+\d+(?:\.\d+)?)+)(?![a-zA-Z0-9_\-])",
-        p,
+        p_arith,
     )
     if m_arith and not any(w in p for w in ("http", "year", "years", "version", "group")) and "def " not in p and ">>>" not in p:
         expr_s = m_arith.group(1).strip().replace("^", "**")
