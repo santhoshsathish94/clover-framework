@@ -484,6 +484,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <button type="button" class="row t" data-go="advanced"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></span><span class="row__t">Advanced</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
       <p class="gfoot center" id="home-foot">Clover runs on this device with the setup that measured best. Nothing leaves it unless you allow it.</p>
+      <p class="gfoot center" id="about-foot">Clover AI Studio <b id="v-version">v0.5.0-beta.1 (Beta)</b> · <a href="https://cloverframework.com/governance/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> · <a href="https://github.com/santhoshsathish94/clover-framework/issues" target="_blank" rel="noopener noreferrer">Support</a></p>
     </section>
 
     <section class="page" data-page="account" hidden>
@@ -559,6 +560,21 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="group" id="layers-core"></div>
       <div class="glabel">Supporting</div>
       <div class="group" id="layers-support"></div>
+      <div class="glabel">Semantics</div>
+      <div class="group" id="layers-semantics"></div>
+    </section>
+
+    <section class="page" data-page="personal" hidden>
+      <p class="lead">What Clover learned from your corrections and requests, and the experiences it learned from. It stays on this device. Deleting a chat deletes its experiences.</p>
+      <div class="group pad" id="personal-list"></div>
+    </section>
+
+    <section class="page" data-page="collective" hidden>
+      <p class="lead">Collective problem-solving (CPSL) extracts stripped, zero-verbatim structural strategies from validated problem-solving episodes and applies signed shared-core improvements when you opt in.</p>
+      <div class="glabel">Active shared-core rules</div>
+      <div class="group pad" id="collective-active"></div>
+      <div class="glabel">Candidate preview (stripped, zero user text)</div>
+      <div class="group pad" id="collective-candidates"></div>
     </section>
 
     <section class="page" data-page="model" hidden>
@@ -698,9 +714,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     ['image', 'Look at a photo', 'What is in this picture?', true]
   ];
   var PAGES = { home: 'Settings', account: 'GitHub account', storage: 'Storage', advanced: 'Advanced', layers: 'Clover layers',
-    model: 'Model and voice', perms: 'Permissions', tools: 'Tools and search', workspaces: 'Workspaces', vscode: 'Hosts & VS Code' };
+    model: 'Model and voice', perms: 'Permissions', tools: 'Tools and search', workspaces: 'Workspaces', vscode: 'Hosts & VS Code',
+    personal: 'What Clover learned', collective: 'Collective learning' };
   var PARENT = { account: 'home', storage: 'home', advanced: 'home', layers: 'advanced', model: 'advanced', perms: 'advanced',
-    tools: 'advanced', workspaces: 'advanced', vscode: 'advanced' };
+    tools: 'advanced', workspaces: 'advanced', vscode: 'advanced', personal: 'layers', collective: 'layers' };
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
@@ -1304,8 +1321,33 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         links: [['tools', 'Tools and search'], ['perms', 'Permissions']] }
     ];
     fillLayers($('layers-core'), core, L); fillLayers($('layers-support'), support, L);
+    var pv = state.personal || {}, cv = state.collective || {};
+    var learned = (pv.learned || []).filter(function (h) { return h.status === 'validated'; }).length +
+      (pv.preferences || []).filter(function (p) { return p.in_use; }).length, exps = (pv.experiences || []).length;
+    var collOn = !!(cv.consent_contribute || cv.consent_receive);
+    var collPart = !!(cv.consent_contribute) !== !!(cv.consent_receive);
+    var candN = (cv.candidate_preview || []).length, actN = (cv.active_rules || []).length + (cv.active_defaults || []).length;
+    var sem = [
+      { tag: 'CSI', name: 'Structure of what you say', on: true,
+        desc: 'Reads which tools you turn down ("don\'t search the web") and whether an answer claims something was done.' },
+      { tag: 'PPL', name: 'How you usually mean things', on: pv.learning !== false, links: exps ? [['personal', 'What Clover learned']] : null,
+        desc: 'When you correct Clover ("No, look it up online", "Shorter, please") it learns how you usually mean things and how you like answers.' +
+          (exps ? ' ' + exps + (exps === 1 ? ' experience, ' : ' experiences, ') + learned + ' learned.' : '') },
+      { tag: 'CPSL', name: 'Collective problem-solving', on: collOn, part: collPart,
+        links: [['collective', 'Shared core & candidate preview']],
+        subs: [
+          { key: 'collective_contribute', cConsent: 'contribute', checked: !!cv.consent_contribute, name: 'Contribute candidate strategies',
+            desc: 'Extracts stripped, zero-verbatim structural strategies from validated problem-solving episodes (never raw prompts or paths).' +
+              (candN ? ' ' + candN + (candN === 1 ? ' candidate ready.' : ' candidates ready.') : '') },
+          { key: 'collective_receive', cConsent: 'receive', checked: !!cv.consent_receive, name: 'Receive validated shared-core updates',
+            desc: 'Applies signed shared-core improvements that passed the 5-gate evaluator without overriding your personal rules.' +
+              (actN ? ' ' + actN + (actN === 1 ? ' shared rule active.' : ' shared rules active.') : '') }
+        ] }
+    ];
+    fillLayers($('layers-semantics'), sem, L);
   }
   function fillLayers(box, list, L) {
+    if (!box) return;
     box.innerHTML = '';
     list.forEach(function (x) {
       var row = el('div', 'layer' + (x.on ? (x.part ? ' part' : ' on') : ''),
@@ -1316,8 +1358,16 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       (x.subs || []).forEach(function (s) {
         var sub = el('label', 'sub', '<span class="sub__t"><span></span><small></small></span><span class="switch"><input type="checkbox"><span></span></span>');
         sub.querySelector('.sub__t > span').textContent = s.name; sub.querySelector('small').textContent = s.desc;
-        var inp = sub.querySelector('input'); inp.checked = L[s.key] !== false && !s.disabled; inp.disabled = !!s.disabled; inp.setAttribute('aria-label', s.name);
-        inp.addEventListener('change', function () { var ch = { layers: {} }; ch.layers[s.key] = this.checked; saveServer(ch).then(loadHealth); });
+        var inp = sub.querySelector('input');
+        inp.checked = (s.cConsent ? !!s.checked : L[s.key] !== false) && !s.disabled; inp.disabled = !!s.disabled; inp.setAttribute('aria-label', s.name);
+        inp.addEventListener('change', function () {
+          if (s.cConsent) {
+            var body = {}; body[s.cConsent] = this.checked;
+            api('POST', '/api/collective/consent', body).then(function (r) { state.collective = r; renderLayers(); renderCollective(); }).catch(function () {});
+            return;
+          }
+          var ch = { layers: {} }; ch.layers[s.key] = this.checked; saveServer(ch).then(loadHealth);
+        });
         row.appendChild(sub);
       });
       if (x.links) {
@@ -1330,6 +1380,59 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function loadMemoryCount() {
     return api('GET', '/api/memory').then(function (r) { state.memCount = (r.memories || []).length; renderLayers(); }).catch(function () {});
+  }
+  function loadPersonal() {
+    return api('GET', '/api/personal').then(function (r) { state.personal = r; renderLayers(); renderPersonal(); }).catch(function () {});
+  }
+  function loadCollective() {
+    return api('GET', '/api/collective').then(function (r) { state.collective = r; renderLayers(); renderCollective(); }).catch(function () {});
+  }
+  function renderPersonal() {
+    var box = $('personal-list'); if (!box) return;
+    var pv = state.personal || {}; box.innerHTML = '';
+    var kn = pv.learned || [], pr = (pv.preferences || []).filter(function (p) { return p.in_use; }), ex = pv.experiences || [];
+    if (!kn.length && !pr.length && !ex.length) { box.appendChild(el('p', 'fine', 'Nothing learned yet.')); return; }
+    kn.forEach(function (h) {
+      var r = el('div', 'row static'); var t = el('span', 'row__t');
+      t.textContent = 'When you say \u201c' + (h.when_you_say || []).join(' ') + '\u201d you usually mean ' + (h.you_mean || []).join(', ') +
+        (h.status === 'validated' ? '' : ' (still checking)');
+      r.appendChild(t); box.appendChild(r);
+    });
+    pr.forEach(function (p) {
+      var r = el('div', 'row static'); var t = el('span', 'row__t');
+      t.textContent = 'You prefer ' + String(p.value).replace(/_/g, ' ') + ' (' + p.dimension + ')'; r.appendChild(t); box.appendChild(r);
+    });
+  }
+  function renderCollective() {
+    var actBox = $('collective-active'), candBox = $('collective-candidates');
+    if (!actBox || !candBox) return;
+    var cv = state.collective || {};
+    actBox.innerHTML = ''; candBox.innerHTML = '';
+    var rules = cv.active_rules || [], defs = cv.active_defaults || [];
+    if (!rules.length && !defs.length) {
+      actBox.appendChild(el('p', 'fine', cv.consent_receive ? 'No shared-core rules installed yet.' : 'Turn on "Receive validated shared-core updates" in Clover layers to apply verified shared rules.'));
+    } else {
+      rules.forEach(function (h) {
+        var r = el('div', 'row static'); var t = el('span', 'row__t');
+        t.textContent = 'Shared strategy (' + (h.kind || 'verb_to_capability') + '): ' + (h.key || []).join(' ') + ' \u2192 ' + (h.target || []).join(', ');
+        r.appendChild(t); actBox.appendChild(r);
+      });
+      defs.forEach(function (d) {
+        var r = el('div', 'row static'); var t = el('span', 'row__t');
+        t.textContent = 'Shared default (' + d.dimension + '): ' + String(d.value).replace(/_/g, ' ');
+        r.appendChild(t); actBox.appendChild(r);
+      });
+    }
+    var cands = cv.candidate_preview || [];
+    if (!cands.length) {
+      candBox.appendChild(el('p', 'fine', 'No candidate strategies extracted yet. Candidates are built only from validated problem-solving episodes and stripped of all user text.'));
+    } else {
+      cands.forEach(function (c) {
+        var r = el('div', 'row static'); var t = el('span', 'row__t');
+        t.textContent = (c.kind || 'strategy') + ': [' + (c.key || []).join(', ') + '] \u2192 [' + (c.target || []).join(', ') + '] (validated ' + (c.validated || 0) + ')';
+        r.appendChild(t); candBox.appendChild(r);
+      });
+    }
   }
 
   /* ---------- web search provider ---------- */
@@ -1461,7 +1564,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     else if (name === 'account' || name === 'vscode') loadVscode();
     else if (name === 'storage') loadStorage();
     else if (name === 'advanced') { loadServerSettings(); loadPerms(); loadSearch(); loadWorkspaces(); loadVscode(); }
-    else if (name === 'layers') { loadServerSettings(); loadHealth(); loadMemoryCount(); }
+    else if (name === 'layers') { loadServerSettings(); loadHealth(); loadMemoryCount(); loadPersonal(); loadCollective(); }
+    else if (name === 'personal') loadPersonal();
+    else if (name === 'collective') loadCollective();
     else if (name === 'model') { renderEngine(); renderSettings(); loadServerSettings(); loadHealth(); }
     else if (name === 'perms') loadPerms();
     else if (name === 'tools') { loadServerSettings(); loadSearch(); }

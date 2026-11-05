@@ -115,9 +115,12 @@ PHONE_OFFER = ("web_search", "python_interpreter")  # what a phone turn offers w
 # personal learning is on by default (human, 2026-11-03) in <base>/personal once the system starts; CLOVER_PPL_DIR names
 # another store, CLOVER_PPL=off turns it off for the process, POST /api/personal/learning switches it for the person
 PERSONAL_DIR: Path | None = None
+# collective learning (research/collective-learning): opt-in consent switches + verified shared-core sync in <base>/collective
+COLLECTIVE_DIR: Path | None = None
 
 
 def phone_runtime():
+    import core_sync
     import local_terminal
     import personal
     import semantics
@@ -125,8 +128,10 @@ def phone_runtime():
     url = os.environ.get("CLOVER_CSI_URL", "").strip()
     csi = semantics.csi_reader(url) if url else None
     root = os.environ.get("CLOVER_PPL_DIR", "").strip() or (str(PERSONAL_DIR) if PERSONAL_DIR else "")
+    c_root = os.environ.get("CLOVER_COLLECTIVE_DIR", "").strip() or (str(COLLECTIVE_DIR) if COLLECTIVE_DIR else "")
     return semantics.Runtime(tools=PHONE_TOOLS, device="phone", risky=local_terminal.risky, csi=csi,
-                             personal=personal.for_process(root, "phone", csi))
+                             personal=personal.for_process(root, "phone", csi),
+                             collective=core_sync.for_process(c_root, "phone", csi))
 
 
 def personal_call(runtime, method: str, *args: Any) -> Any:
@@ -2034,10 +2039,11 @@ class CloverS23OnDeviceSystem:
     }
 
     def __init__(self, base_dir: Path, load_neural_ncm: bool = True):
-        global PERSONAL_DIR
+        global PERSONAL_DIR, COLLECTIVE_DIR
         t0 = time.perf_counter()
         self.base_dir = Path(base_dir)
         PERSONAL_DIR = self.base_dir / "personal"
+        COLLECTIVE_DIR = self.base_dir / "collective"
         self.pruned_dir = self.base_dir / "pruned"
         self.ncm_dir = self.base_dir / "ncm"
         self.app_secret = load_or_create_device_app_secret(self.base_dir)
@@ -3258,7 +3264,8 @@ class CloverS23OnDeviceSystem:
             #    (unless the prompt explicitly mentions a CVE/CWE/CAPEC identifier).
             # ------------------------------------------------------------------
             explicit_cve_query = bool(re.search(r"\b(?:CVE-\d{4}-\d+|CWE-\d+|CAPEC-\d+)\b", prompt or "", re.I))
-            tool_request_only = bool(self.asked_tools(prompt)) and not explicit_cve_query
+            routed_asked = list(getattr(meaning, "asked", None) or []) if meaning is not None else self.asked_tools(prompt)
+            tool_request_only = bool(routed_asked) and not explicit_cve_query
             if active_layer_cap >= 5 and self.settings.get("layers", {}).get("ontology", True) and not tool_request_only:
                 t_l5 = time.perf_counter()
                 clean_ont_q = self._LINKS_AND_PATHS.sub(" ", prompt or "")
@@ -4510,6 +4517,13 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     "enabled": False,
                     "how": "Personal learning is off for this process (CLOVER_PPL=off) or has no store yet.",
                 })
+            elif self.path.startswith("/api/collective"):
+                rt_c = phone_runtime()
+                coll = rt_c.collective
+                self._send(coll.view(rt_c.personal) if coll is not None else {
+                    "enabled": False,
+                    "how": "Collective learning is off for this process (CLOVER_COLLECTIVE=off) or has no store yet.",
+                })
             elif self.path.startswith("/api/permissions"):
                 self._send({
                     "permissions": sys_s23.get_permissions_view(),
@@ -4833,6 +4847,31 @@ def serve_s23_http(base_dir: Path, host: str = "127.0.0.1", port: int = 8765) ->
                     else:
                         self._send({"error": "not_found"}, code=404)
                 except ValueError as ex:
+                    self._send({"error": "bad_request", "message": str(ex)}, code=400)
+                return
+            if self.path.startswith("/api/collective/"):
+                rt_c = phone_runtime()
+                coll = rt_c.collective
+                if coll is None:
+                    self._send({"error": "collective_learning_off",
+                                "message": "Collective learning is off for this process."}, code=409)
+                    return
+                act_c = self.path.split("/api/collective/", 1)[1].split("?", 1)[0].strip("/")
+                try:
+                    if act_c == "consent":
+                        c_in = payload.get("contribute") if isinstance(payload.get("contribute"), bool) else None
+                        r_in = payload.get("receive") if isinstance(payload.get("receive"), bool) else None
+                        coll.set_consent(contribute=c_in, receive=r_in)
+                        self._send(coll.view(rt_c.personal))
+                    elif act_c == "sync":
+                        reg_dir = str(payload.get("registry_dir") or "").strip()
+                        sync_res = coll.sync_from_registry(reg_dir)
+                        self._send(dict(sync_res, view=coll.view(rt_c.personal)))
+                    elif act_c == "preview":
+                        self._send({"candidates": coll.preview_candidates(rt_c.personal)})
+                    else:
+                        self._send({"error": "not_found"}, code=404)
+                except Exception as ex:
                     self._send({"error": "bad_request", "message": str(ex)}, code=400)
                 return
             if self.path.startswith("/api/feedback"):

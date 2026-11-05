@@ -1,0 +1,640 @@
+{
+  "timestamp_utc": "2026-11-05T01:29:52Z",
+  "use_csi": true,
+  "n_contributors": 20,
+  "n_recipients": 12,
+  "total_exported_candidate_packages": 96,
+  "aggregated_unique_candidates": 33,
+  "promotion_audit": {
+    "C2_unvalidated_raw": {
+      "total_promoted": 33,
+      "genuine_strategies": 10,
+      "personal_or_sybil_leaked": 21,
+      "byzantine_poison_leaked": 2
+    },
+    "C3_quorum_only": {
+      "total_promoted": 14,
+      "genuine_strategies": 10,
+      "personal_or_sybil_leaked": 2,
+      "byzantine_poison_leaked": 2
+    },
+    "CPSL_full": {
+      "total_promoted": 10,
+      "genuine_strategies": 10,
+      "personal_or_sybil_leaked": 0,
+      "byzantine_poison_leaked": 0
+    },
+    "CPSL_NoCSI": {
+      "total_promoted": 10,
+      "genuine_strategies": 10,
+      "personal_or_sybil_leaked": 0,
+      "byzantine_poison_leaked": 0
+    }
+  },
+  "summaries_by_arm": {
+    "C0": {
+      "collective_strategy": {
+        "n": 864,
+        "acc": 0.0926,
+        "wrong_action": 0.9074
+      },
+      "habit": {
+        "n": 576,
+        "acc": 0.3021,
+        "wrong_action": 0.6979
+      },
+      "control": {
+        "n": 153,
+        "acc": 1.0,
+        "wrong_action": 0.0,
+        "overgen": 0.0
+      },
+      "generic": {
+        "n": 432,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "routine": {
+        "n": 36,
+        "acc": 0.0,
+        "wrong_action": 1.0
+      },
+      "open_query": {
+        "n": 24,
+        "acc": 0.0,
+        "wrong_action": 1.0
+      },
+      "oneoff_probe": {
+        "n": 96,
+        "acc": 1.0,
+        "wrong_action": 0.0,
+        "overgen": 0.0
+      },
+      "cross_domain_strategy": {
+        "n": 288,
+        "acc": 0.2222
+      },
+      "multistep_problem_solving": {
+        "n": 432,
+        "acc": 0.0
+      },
+      "all": {
+        "n": 2181,
+        "acc": 0.4287,
+        "wrong_action": 0.5713
+      },
+      "presentation": {
+        "n": 401,
+        "adherence": 0.3117
+      },
+      "open_f1": 0.0,
+      "turns": 2.0894
+    },
+    "C1": {
+      "collective_strategy": {
+        "n": 864,
+        "acc": 0.0926,
+        "wrong_action": 0.9074
+      },
+      "habit": {
+        "n": 576,
+        "acc": 0.8854,
+        "wrong_action": 0.1146
+      },
+      "control": {
+        "n": 153,
+        "acc": 1.0,
+        "wrong_action": 0.0,
+        "overgen": 0.0
+      },
+      "generic": {
+        "n": 432,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "routine": {
+        "n": 36,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "open_query": {
+        "n": 24,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "oneoff_probe": {
+        "n": 96,
+        "acc": 1.0,
+        "wrong_action": 0.0,
+        "overgen": 0.0
+      },
+      "cross_domain_strategy": {
+        "n": 288,
+        "acc": 0.2222
+      },
+      "multistep_problem_solving": {
+        "n": 432,
+        "acc": 0.0
+      },
+      "all": {
+        "n": 2181,
+        "acc": 0.6103,
+        "wrong_action": 0.3897
+      },
+      "presentation": {
+        "n": 527,
+        "adherence": 0.9962
+      },
+      "open_f1": 1.0,
+      "turns": 1.4539
+    },
+    "C2": {
+      "collective_strategy": {
+        "n": 864,
+        "acc": 0.978,
+        "wrong_action": 0.022
+      },
+      "habit": {
+        "n": 576,
+        "acc": 0.9271,
+        "wrong_action": 0.0729
+      },
+      "control": {
+        "n": 153,
+        "acc": 0.7451,
+        "wrong_action": 0.2549,
+        "overgen": 0.0
+      },
+      "generic": {
+        "n": 432,
+        "acc": 0.9259,
+        "wrong_action": 0.0741
+      },
+      "routine": {
+        "n": 36,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "open_query": {
+        "n": 24,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "oneoff_probe": {
+        "n": 96,
+        "acc": 0.9375,
+        "wrong_action": 0.0625,
+        "overgen": 0.0208
+      },
+      "cross_domain_strategy": {
+        "n": 288,
+        "acc": 0.9722
+      },
+      "multistep_problem_solving": {
+        "n": 432,
+        "acc": 0.9931
+      },
+      "all": {
+        "n": 2181,
+        "acc": 0.9367,
+        "wrong_action": 0.0633
+      },
+      "presentation": {
+        "n": 989,
+        "adherence": 0.998
+      },
+      "open_f1": 1.0,
+      "turns": 1.0734
+    },
+    "C3": {
+      "collective_strategy": {
+        "n": 864,
+        "acc": 0.9225,
+        "wrong_action": 0.0775
+      },
+      "habit": {
+        "n": 576,
+        "acc": 0.8854,
+        "wrong_action": 0.1146
+      },
+      "control": {
+        "n": 153,
+        "acc": 1.0,
+        "wrong_action": 0.0,
+        "overgen": 0.0
+      },
+      "generic": {
+        "n": 432,
+        "acc": 0.9722,
+        "wrong_action": 0.0278
+      },
+      "routine": {
+        "n": 36,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "open_query": {
+        "n": 24,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "oneoff_probe": {
+        "n": 96,
+        "acc": 1.0,
+        "wrong_action": 0.0,
+        "overgen": 0.0
+      },
+      "cross_domain_strategy": {
+        "n": 288,
+        "acc": 0.9722
+      },
+      "multistep_problem_solving": {
+        "n": 432,
+        "acc": 0.9931
+      },
+      "all": {
+        "n": 2181,
+        "acc": 0.9335,
+        "wrong_action": 0.0665
+      },
+      "presentation": {
+        "n": 951,
+        "adherence": 0.9979
+      },
+      "open_f1": 1.0,
+      "turns": 1.0816
+    },
+    "CPSL": {
+      "collective_strategy": {
+        "n": 864,
+        "acc": 0.9225,
+        "wrong_action": 0.0775
+      },
+      "habit": {
+        "n": 576,
+        "acc": 0.8854,
+        "wrong_action": 0.1146
+      },
+      "control": {
+        "n": 153,
+        "acc": 1.0,
+        "wrong_action": 0.0,
+        "overgen": 0.0
+      },
+      "generic": {
+        "n": 432,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "routine": {
+        "n": 36,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "open_query": {
+        "n": 24,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "oneoff_probe": {
+        "n": 96,
+        "acc": 1.0,
+        "wrong_action": 0.0,
+        "overgen": 0.0
+      },
+      "cross_domain_strategy": {
+        "n": 288,
+        "acc": 0.9722
+      },
+      "multistep_problem_solving": {
+        "n": 432,
+        "acc": 0.9931
+      },
+      "all": {
+        "n": 2181,
+        "acc": 0.939,
+        "wrong_action": 0.061
+      },
+      "presentation": {
+        "n": 956,
+        "adherence": 0.9979
+      },
+      "open_f1": 1.0,
+      "turns": 1.0747
+    },
+    "CPSL-NoCSI": {
+      "collective_strategy": {
+        "n": 864,
+        "acc": 0.6204,
+        "wrong_action": 0.3796
+      },
+      "habit": {
+        "n": 576,
+        "acc": 0.6667,
+        "wrong_action": 0.3333
+      },
+      "control": {
+        "n": 153,
+        "acc": 1.0,
+        "wrong_action": 0.0,
+        "overgen": 0.0
+      },
+      "generic": {
+        "n": 432,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "routine": {
+        "n": 36,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "open_query": {
+        "n": 24,
+        "acc": 1.0,
+        "wrong_action": 0.0
+      },
+      "oneoff_probe": {
+        "n": 96,
+        "acc": 1.0,
+        "wrong_action": 0.0,
+        "overgen": 0.0
+      },
+      "cross_domain_strategy": {
+        "n": 288,
+        "acc": 0.7222
+      },
+      "multistep_problem_solving": {
+        "n": 432,
+        "acc": 0.6667
+      },
+      "all": {
+        "n": 2181,
+        "acc": 0.7616,
+        "wrong_action": 0.2384
+      },
+      "presentation": {
+        "n": 803,
+        "adherence": 0.9975
+      },
+      "open_f1": 1.0,
+      "turns": 1.2902
+    }
+  },
+  "statistical_tests": {
+    "collective_strategy_CPSL_vs_C0_p": 0.000488,
+    "collective_strategy_CPSL_vs_C1_p": 0.000488,
+    "collective_strategy_CPSL_vs_C2_p": 0.000488,
+    "all_items_CPSL_vs_C0_p": 0.000488,
+    "all_items_CPSL_vs_C1_p": 0.000488
+  },
+  "criteria": {
+    "K1_unseen_collective_strategy_lift": {
+      "pass": true,
+      "CPSL": 0.9225,
+      "C0": 0.0926,
+      "C1": 0.0926,
+      "p_vs_C0": 0.000488,
+      "p_vs_C1": 0.000488
+    },
+    "K2_cross_domain_transfer": {
+      "pass": true,
+      "CPSL_cross_domain_acc": 0.9722,
+      "C0_cross_domain_acc": 0.2222
+    },
+    "K3_zero_harmful_personal_sybil_byzantine": {
+      "pass": true,
+      "CPSL_audit": {
+        "total_promoted": 10,
+        "genuine_strategies": 10,
+        "personal_or_sybil_leaked": 0,
+        "byzantine_poison_leaked": 0
+      },
+      "C2_unvalidated_audit": {
+        "total_promoted": 33,
+        "genuine_strategies": 10,
+        "personal_or_sybil_leaked": 21,
+        "byzantine_poison_leaked": 2
+      },
+      "C3_quorum_only_audit": {
+        "total_promoted": 14,
+        "genuine_strategies": 10,
+        "personal_or_sybil_leaked": 2,
+        "byzantine_poison_leaked": 2
+      }
+    },
+    "K4_personal_coexistence_and_no_ordinary_regression": {
+      "pass": true,
+      "CPSL_personal_habit_acc": 0.8854,
+      "C1_personal_habit_acc": 0.8854,
+      "CPSL_ordinary_acc": 1.0,
+      "C0_ordinary_acc": 1.0,
+      "CPSL_control_overgen": 0.0
+    },
+    "K5_zero_privacy_leakage": {
+      "pass": true,
+      "pii_strings_tested": 200,
+      "pii_leaked_in_repo": 0,
+      "object_names_tested": 208,
+      "object_names_leaked_in_repo": 0
+    },
+    "K6_independent_consent_preview_and_signature": {
+      "pass": true,
+      "preview_equals_export": true,
+      "optout_contribute_bytes": 0,
+      "optout_receive_rules": 0,
+      "tampered_manifest_rejected": true
+    },
+    "K7_consent_withdrawal_and_zero_ripple": {
+      "pass": true,
+      "withdrawn_installations_partial": 2,
+      "withdrawn_installations_quorum_drop": 2,
+      "removed_packages": 23,
+      "rules_v1_initial": 10,
+      "rules_v2_partial_withdrawal": 10,
+      "rules_v3_quorum_drop_demoted": 9,
+      "unvalidated_shadow_rules_exposed": 0,
+      "pii_leaked_after_withdrawal": 0
+    },
+    "K8_csi_and_general_core_integrity": {
+      "pass": true,
+      "general_digest_before": "25913d7e9c5b658ea5bdc9277eabcbff7256132fa7c668dbe42203757cd9a80d",
+      "general_digest_after": "25913d7e9c5b658ea5bdc9277eabcbff7256132fa7c668dbe42203757cd9a80d"
+    }
+  },
+  "all_criteria_passed": true,
+  "promoted_rules_v1": [
+    {
+      "rule_id": "core_a752211417e4d2bc",
+      "version": "1.0.1",
+      "category": "problem-solving",
+      "trigger": [
+        "ctx=code",
+        "has=code",
+        "tok=audit"
+      ],
+      "target": [
+        "code.review",
+        "code.test"
+      ],
+      "independent_installations": 8,
+      "heldout_accuracy": 1.0,
+      "heldout_lift": 1.0,
+      "regressions": 0
+    },
+    {
+      "rule_id": "core_1fde4d44f0fef915",
+      "version": "1.0.1",
+      "category": "problem-solving",
+      "trigger": [
+        "ctx=code",
+        "has=code",
+        "tok=preflight"
+      ],
+      "target": [
+        "code.test",
+        "code.format"
+      ],
+      "independent_installations": 7,
+      "heldout_accuracy": 1.0,
+      "heldout_lift": 1.0,
+      "regressions": 0
+    },
+    {
+      "rule_id": "core_a1136c0d2d8a9d2a",
+      "version": "1.0.1",
+      "category": "problem-solving",
+      "trigger": [
+        "ctx=docs",
+        "has=doc",
+        "tok=briefing"
+      ],
+      "target": [
+        "docs.summarize",
+        "docs.export"
+      ],
+      "independent_installations": 6,
+      "heldout_accuracy": 1.0,
+      "heldout_lift": 1.0,
+      "regressions": 0
+    },
+    {
+      "rule_id": "core_440a3805fbac410c",
+      "version": "1.0.1",
+      "category": "semantics",
+      "trigger": [
+        "ctx=docs",
+        "has=doc",
+        "tok=condense"
+      ],
+      "target": [
+        "docs.shorten"
+      ],
+      "independent_installations": 7,
+      "heldout_accuracy": 1.0,
+      "heldout_lift": 1.0,
+      "regressions": 0
+    },
+    {
+      "rule_id": "core_259a4a9e1fdfbe09",
+      "version": "1.0.1",
+      "category": "problem-solving",
+      "trigger": [
+        "ctx=email",
+        "has=msg",
+        "tok=triage"
+      ],
+      "target": [
+        "email.flag",
+        "email.archive"
+      ],
+      "independent_installations": 6,
+      "heldout_accuracy": 1.0,
+      "heldout_lift": 1.0,
+      "regressions": 0
+    },
+    {
+      "rule_id": "core_f194613cc14283e5",
+      "version": "1.0.1",
+      "category": "problem-solving",
+      "trigger": [
+        "ctx=files",
+        "has=file",
+        "has=folder",
+        "tok=relocate"
+      ],
+      "target": [
+        "files.backup",
+        "files.move"
+      ],
+      "independent_installations": 7,
+      "heldout_accuracy": 1.0,
+      "heldout_lift": 1.0,
+      "regressions": 0
+    },
+    {
+      "rule_id": "core_ed6974a049a2ef70",
+      "version": "1.0.1",
+      "category": "problem-solving",
+      "trigger": [
+        "ctx=research",
+        "has=topic",
+        "tok=corroborate"
+      ],
+      "target": [
+        "research.search",
+        "research.compare"
+      ],
+      "independent_installations": 5,
+      "heldout_accuracy": 1.0,
+      "heldout_lift": 1.0,
+      "regressions": 0
+    },
+    {
+      "rule_id": "core_a78dd5511dbcc41b",
+      "version": "1.0.1",
+      "category": "tool-use-patterns",
+      "trigger": [
+        "tok=bookmark"
+      ],
+      "target": [
+        "notes.todo"
+      ],
+      "independent_installations": 7,
+      "heldout_accuracy": 1.0,
+      "heldout_lift": 1.0,
+      "regressions": 0
+    },
+    {
+      "rule_id": "core_30c92c3c2a55caa4",
+      "version": "1.0.1",
+      "category": "reasoning-patterns",
+      "trigger": [
+        "tok=shelve"
+      ],
+      "target": [
+        "notes.later"
+      ],
+      "independent_installations": 6,
+      "heldout_accuracy": 1.0,
+      "heldout_lift": 1.0,
+      "regressions": 0
+    },
+    {
+      "rule_id": "core_c77fb853197d3e82",
+      "version": "1.0.1",
+      "category": "tool-use-patterns",
+      "trigger": [
+        "tok=snapshot"
+      ],
+      "target": [
+        "files.backup"
+      ],
+      "independent_installations": 6,
+      "heldout_accuracy": 1.0,
+      "heldout_lift": 1.0,
+      "regressions": 0
+    }
+  ],
+  "elapsed_seconds": 18.439
+}

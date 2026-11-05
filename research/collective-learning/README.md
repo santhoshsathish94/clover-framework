@@ -1,0 +1,12 @@
+# Collective Problem-Solving Learning (`research/collective-learning`)
+
+Start with **[`CONTEXT.md`](CONTEXT.md)** for the complete summary of the research, how the 10 papers connect, what was built and executed on `k3`, and how it helps Clover.
+
+## Stage Documentation & Artifacts
+
+1. **[`STAGE1-LITERATURE-AND-REPO-AUDIT.md`](STAGE1-LITERATURE-AND-REPO-AUDIT.md)** — Primary-source verification of all 10 papers and line-by-line source code audit of the 5 cloned repositories (`MineDojo/Voyager`, `noahshinn/reflexion`, `cbfinn/maml`, `HewlettPackard/swarm-learning`, `jaydeepborkar/Assisted-Memorization`) on `k3` ([`stage1_audit.json`](stage1_audit.json)).
+2. **[`STAGE2-MECHANISM-REPRODUCTIONS.md`](STAGE2-MECHANISM-REPRODUCTIONS.md)** — Executable reproductions and stress-tests (`M1`–`M5`) of `FedAvg` vs. `KD-FL` vs. `Federated Analytics`, `Voyager` skill library overwrite, `Reflexion` verbal RL & CSI abstraction, `MAML` + `Swarm` quorum gates, and `ACL 2025` privacy ripple effects ([`scripts/stage2_paper_mechanisms.py`](scripts/stage2_paper_mechanisms.py), [`stage2_mechanisms_results.json`](stage2_mechanisms_results.json)).
+3. **[`STAGE3-CPSL-ARCHITECTURE.md`](STAGE3-CPSL-ARCHITECTURE.md)** — The 6-module Clover Collective Problem-Solving Learning architecture ([`cpsl/`](cpsl/): `collective.py`, `collective_gateway.py`, `collective_evaluator.py`, `core_registry.py`, `core_sync.py`, `strategies.py`) and unit tests ([`tests/test_cpsl.py`](tests/test_cpsl.py)).
+4. **[`STAGE4-CPSL-EXPERIMENTS-AND-RESULTS.md`](STAGE4-CPSL-EXPERIMENTS-AND-RESULTS.md)** — Pre-registered 20-contributor, 12-recipient `CPSL-1` experiment on `k3` with frozen `CSI v0.1r3` and frozen `GeneralInterpreter` ([`cpsl/run_cpsl_experiment.py`](cpsl/run_cpsl_experiment.py), [`cpsl_experiment_results.json`](cpsl_experiment_results.json), [`cpsl_experiment_uniform_results.json`](cpsl_experiment_uniform_results.json)).
+5. **[`STAGE5-CLOVER-SYSTEM-INTEGRATION-AND-ABLATIONS.md`](STAGE5-CLOVER-SYSTEM-INTEGRATION-AND-ABLATIONS.md)** — Implementation in `clover-ai-system/mobile/`, 15-step one-by-one component and mechanism ablation study, and live 7-layer `CloverS23OnDeviceSystem` (`LFM3-Omni-2B` + `HybridLink` + `11-Level NCM` + `CSI v0.1r3`) evaluation on `k3` ([`scripts/stage5_clover_system_evaluation.py`](scripts/stage5_clover_system_evaluation.py), [`stage5_one_by_one_results.json`](stage5_one_by_one_results.json)).
+6. **[`CONTEXT.md`](CONTEXT.md)** — Final synthesized context file detailing what this research is, what every stage taught us, and how it helps Clover.

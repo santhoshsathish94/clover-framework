@@ -116,6 +116,36 @@ ASKS = (
      r"\b(?:github|repo|repository|records|memory)\b|"
      r"\bset\s*up\s+(?:my|a|the|our)\s+(?:private\s+)?(?:github\s+)?repo(?:sitory)?\b"),
     (("ssh",), r"\b(?:ssh|remote\s+(?:host|machine|server|box))\b|\bon\s+[a-z0-9._-]+@[a-z0-9._-]+"),
+    (("calc",),
+     r"\b(?:use\s+(?:the\s+)?calculator|with\s+calculate)\b|"
+     r"\b(?:calculate|compute|evaluate)\s+\(?-?\d[\d,.]*\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*|"
+     r"^\s*(?:(?:what(?:'?s|\s+is|\s+are)|calculate|compute|evaluate)\s+)?\(?-?\d[\d,.]*\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*(?:\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*)*\)?\s*[?.!]*(?:\s+(?:and\s+)?(?:return|reply\s+with|output|give|provide|write|respond\s+with)\s+(?:only|just)\b[\s\S]*)?$"),
+    (("units",),
+     r"\bconvert_units\b|\bconvert\s+-?\d[\d.,]*\s*[a-z\u00b0/\u00b2\u00b3]+\s+(?:to|into|in)\s+[a-z\u00b0/\u00b2\u00b3]+\b|"
+     r"\bhow\s+many\s+(?:km|kilometers?|kilometres?|miles?|meters?|metres?|cm|mm|feet|ft|inches|yards?|kg|kilograms?|grams?|"
+     r"pounds?|lbs?|ounces?|oz|celsius|fahrenheit|kelvin|liters?|litres?|ml|gallons?|cups?|tbsp|tsp|mb|gb|tb|kb|mib|gib|tib|kib)\s+"
+     r"(?:are\s+)?in\s+-?\d"),
+    (("files.search",),
+     r"\bsearch_files\b|\b(?:search|grep)\s+(?:for\s+)?(?:['\"][^'\"]+['\"]|[\w.\-]+)\s+(?:in|inside|within|across|under)\s+"
+     r"(?:the\s+|my\s+|this\s+)?(?:files?|folders?|director(?:y|ies)|workspace|repo(?:sitory)?|project|codebase|[A-Za-z]:\\)|"
+     r"\bfind\s+all\s+files\b[^.?!\n]{0,40}\b(?:named|matching|containing|with)\b"),
+    (("files.info",),
+     r"\bfile_info\b|\b(?:sha256|sha-256|checksum|file\s+size|file\s+info(?:rmation)?|file\s+metadata)\b"),
+    (("git.inspect",),
+     r"\bgit_inspect\b|\b(?:inspect|check)\s+(?:the\s+)?git\s+(?:status|diff|repo(?:sitory)?)\b|"
+     r"\bgit\s+(?:diff|status)\b(?![^.?!\n]{0,30}\b(?:in\s+(?:the\s+)?terminal|with\s+powershell|in\s+vs\s*code)\b)|"
+     r"\b(?:uncommitted|staged|unstaged)\s+changes\b"),
+    (("doc.read",),
+     r"\bread_document\b|\bread\s+(?:page|pages|slide|slides|sheet)\s+\d*\b[^.?!\n]{0,50}\.(?:pdf|pptx|xlsx|xlsm|xls|docx|csv|tsv)\b"),
+    (("table.analyze",),
+     r"\banalyze_table\b|\b(?:group\s+by|filter\s+by|aggregate)\b[^.?!\n]{0,60}\.(?:xlsx|xlsm|xls|csv|tsv|json)\b"),
+    (("table.chart",),
+     r"\bchart_table\b|\b(?:plot|chart|graph)\b[^.?!\n]{0,60}\.(?:xlsx|xlsm|xls|csv|tsv|json)\b"),
+    (("media.info",),
+     r"\bmedia_info\b|\b(?:ffprobe|codec|bitrate|bit\s+rate|frame\s+rate|sample\s+rate|resolution|duration)\b"
+     r"[^.?!\n]{0,60}\.(?:mp4|webm|mkv|avi|mov|wav|mp3|flac|ogg|m4a|png|jpg|jpeg|webp)\b"),
+    (("media.frame",),
+     r"\bextract_frame\b|\bextract\s+(?:a\s+|the\s+)?frame\b[^.?!\n]{0,60}\.(?:mp4|webm|mkv|avi|mov)\b"),
 )
 VSCODE = re.compile(r"\b(?:vs\s?code|visual\s+studio\s+code)\b", re.I)
 # declining a tool without a negated verb, which CSI v0.1r3 reads only in "don't / do not ...": "Without searching the
@@ -129,6 +159,8 @@ DECLINES = (
                                  rf"{_NO}search(?:es|ing)?\b(?!\s+(?:for|of|on)\b)"),
     (("python",), rf"{_WITHOUT}(?:python|code|a\s+program|a\s+script)\b|{_NO}(?:python|code)\b"),
     (("shell",), rf"{_WITHOUT}(?:terminal|powershell|command\s+line|shell)\b|{_NO}(?:terminal|powershell|commands?)\b"),
+    (("calc",), rf"{_WITHOUT}(?:calculator|calculate|calculating)\b|{_NO}(?:calculator|calculate)\b"),
+    (("files.search",), rf"{_WITHOUT}(?:searching\s+files|file\s+search|search_files)\b|{_NO}(?:file\s+search|search_files)\b"),
 )
 # a spreadsheet, table or JSON file attached in this conversation: a question about its figures needs Python on the whole
 # file (a 2B model adding up numbers it reads gets them wrong, as with the groceries total, 2026-11-01)
@@ -239,20 +271,29 @@ CAP_WORDS = {"web.search": "the web", "web.page": "the web", "python": "Python",
              "files.list": "files", "files.write": "files", "shell": "the terminal", "status": "device status",
              "clock": "the clock", "remember": "memory", "image": "a picture", "vscode.open": "VS Code",
              "vscode.clone": "VS Code", "vscode.install": "VS Code", "vscode.run": "VS Code", "github.setup": "GitHub",
-             "github.sync": "GitHub", "ssh": "SSH", "memory.search": "memory"}
-READS = {"files.read": "the file", "files.list": "the folder", "web.page": "the web page", "memory.search": "your memory"}
+             "github.sync": "GitHub", "ssh": "SSH", "memory.search": "memory",
+             "calc": "the calculator", "units": "unit conversion", "files.search": "file search",
+             "files.info": "file info", "git.inspect": "Git", "doc.read": "the document",
+             "table.analyze": "table analysis", "table.chart": "a chart", "media.info": "media info",
+             "media.frame": "a video frame"}
+READS = {"files.read": "the file", "files.list": "the folder", "web.page": "the web page", "memory.search": "your memory",
+         "files.search": "the folder", "files.info": "the file", "git.inspect": "Git", "doc.read": "the document",
+         "media.info": "the media file"}
 OBSERVES = dict(READS, python="Python", shell="the terminal", status="device status", clock="the clock",
-                ssh="SSH", **{"vscode.run": "VS Code"})
+                ssh="SSH", calc="the calculator", units="unit conversion",
+                **{"vscode.run": "VS Code", "table.analyze": "table analysis"})
 DONE = {"files.write": "file written", "remember": "saved", "image": "picture made", "vscode.open": "opened in VS Code",
-        "vscode.clone": "cloned", "vscode.install": "installed"}
+        "vscode.clone": "cloned", "vscode.install": "installed", "table.chart": "chart made",
+        "media.frame": "frame extracted"}
 NO_TOOLS = {"creative writing": " · no tools", "meal": " · no tools", "about the photo": " · no tools",
             "places": " · web only"}
 # offered only when a message asks for them; the clock too: in Tools "Always" the Omni answered, called the clock
 # unasked and answered again, so the first answer vanished and the time showed (the date is in the system prompt)
-QUIET = ("files.write", "remember", "image", "clock")
+QUIET = ("files.write", "remember", "image", "clock", "table.chart", "media.frame")
 # and with nothing named, not this device's state or files either: "what is time now" read the laptop's status, a
 # greeting listed the home folder (2026-11-04)
-UNNAMED = QUIET + ("status", "files.read", "files.list")
+UNNAMED = QUIET + ("status", "files.read", "files.list", "files.search", "files.info", "git.inspect",
+                   "doc.read", "table.analyze", "media.info")
 _CTRL_OF = {"t": "\t", "n": "\n", "r": "\r", "f": "\f", "b": "\b", "v": "\v", "a": "\a"}
 
 
@@ -261,13 +302,15 @@ class Runtime:
     """What is a process's own: its tool names for each capability, the device it runs on (for wording), the paths its
     tools may never touch and the commands it asks about before running them. csi: text -> CSI analysis or None (a
     local CSI service, csi_reader); None = off, the default. personal: the person's learning (personal.Personal);
-    None = no personal reading (the processes give one by default). Everything else is common."""
+    None = no personal reading (the processes give one by default). collective: opted-in shared core rules
+    (core_sync.Collective); None = off. Everything else is common."""
     tools: dict
     device: str = "device"
     blocked: Callable | None = None
     risky: Callable | None = None
     csi: Callable | None = None
     personal: object | None = None
+    collective: object | None = None
 
     def capability(self, name):
         return next((cap for cap, names in self.tools.items() if name in names), None)
@@ -311,6 +354,7 @@ class Frame:
     notes: list = field(default_factory=list)
     declined: list = field(default_factory=list)  # capabilities the message declines, in CSI's reading (CSI on)
     personal: dict = field(default_factory=dict)  # the person's reading of this message (personal learning)
+    collective: dict = field(default_factory=dict)  # validated shared-core strategy/reading (collective learning)
     guidance: str = ""  # the person's preferred form of answer, for the model (personal learning)
     data: bool = False  # a spreadsheet, table or JSON file is attached in this conversation
     runtime: Runtime | None = field(default=None, repr=False, compare=False)
@@ -340,6 +384,8 @@ class Frame:
             s = "follow-up · " + s
         if self.personal.get("hypothesis") is not None:
             s += " · as you usually mean it"
+        elif self.collective.get("rule_id") is not None:
+            s += " · from shared core"
         s += NO_TOOLS.get(self.route, "")
         s += {"ask": " · asks first", "refuse": " · vault is off-limits"}.get(self.discernment, "")
         return "understood: " + s
@@ -354,6 +400,12 @@ class Frame:
             out["personal"] = {k: self.personal[k] for k in ("hypothesis", "caps", "support") if k in self.personal}
             if self.guidance:
                 out["personal"]["form"] = self.guidance
+        if self.collective.get("rule_id") is not None:
+            out["collective"] = {
+                k: self.collective[k]
+                for k in ("rule_id", "version", "category", "caps", "strategy", "independent_installations")
+                if k in self.collective
+            }
         if self.notes:
             out["aligned"] = list(self.notes)
         return out
@@ -365,6 +417,8 @@ def asked_caps(text):
     if CONCEPT.search(t) and not EXPLICIT.search(t) and not re.search(LIVE, t, re.I):  # "tell me about the weather in Pune"
         return []
     caps = [cap for caps, pattern in ASKS if re.search(pattern, t, re.I) for cap in caps]
+    if "files.search" in caps and not re.search(r"\b(?:web|internet|online|google|website|url|arxiv|wikipedia)\b|https?://|www\.", t, re.I):
+        caps = [c for c in caps if c not in ("web.search", "web.page")]
     if VSCODE.search(t):  # "open C:\x.md in VS Code": VS Code's tools, not the hidden ones
         caps = [c for c in caps if c not in ("files.read", "files.list", "shell")]
         # "In VS Code, run git log ... in C:\x\repo" opened the folder in a new window instead (2026-11-01)
@@ -547,6 +601,9 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
     frame._csi = csi_doc
     if runtime.personal is not None and act in ("question", "concept", "action") and disc != "refuse":
         _personal(frame, runtime)
+    if (runtime.collective is not None and frame.act in ("question", "concept", "action")
+            and frame.discernment != "refuse" and frame.personal.get("hypothesis") is None):
+        _collective(frame, runtime)
     return frame
 
 
@@ -562,6 +619,12 @@ def _personal(frame, runtime):
         return
     frame.personal = p
     if p.get("hypothesis") is not None:
+        if not frame.declined and frame.text:
+            dec, csi_doc = _declined(runtime, frame.text, with_doc=True)
+            if dec:
+                frame.declined = sorted(dec)
+            if getattr(frame, "_csi", None) is None and csi_doc is not None:
+                frame._csi = csi_doc
         caps = [c for c in p.get("caps") or [] if c not in frame.declined]
         frame.caps, frame.asked = caps, runtime.names(caps)
         frame.web_cap = 8 if "web.search" in caps else 3
@@ -572,6 +635,36 @@ def _personal(frame, runtime):
     frame.guidance = p.get("guidance") or ""
     if p.get("ask_first") and frame.act == "action" and frame.discernment == "proceed":
         frame.discernment, frame.why = "ask", "you asked Clover to check with you before it acts"
+
+
+def _collective(frame, runtime):
+    """Validated shared-core reading (Runtime.collective, research/collective-learning). Applies only when no personal
+    habit overrode the message (Personal > Collective > General). Never offers a declined capability and never removes
+    a safety confirmation before changing files or the system."""
+    try:
+        c = runtime.collective.interpret(frame.text, frame)
+    except Exception:
+        return
+    if not c or c.get("rule_id") is None:
+        return
+    if not frame.declined and frame.text:
+        dec, csi_doc = _declined(runtime, frame.text, with_doc=True)
+        if dec:
+            frame.declined = sorted(dec)
+        if getattr(frame, "_csi", None) is None and csi_doc is not None:
+            frame._csi = csi_doc
+    caps = [cap for cap in c.get("caps") or [] if cap not in frame.declined]
+    frame.collective = dict(c, caps=caps)
+    if caps or c.get("caps"):
+        frame.caps, frame.asked = caps, runtime.names(caps)
+        frame.web_cap = 8 if "web.search" in caps else 3
+        frame.act = "action" if frame.asked else ("question" if frame.act == "action" else frame.act)
+        if frame.act == "action" and frame.discernment == "proceed" and (
+                re.search(CHANGE_FILES, frame.text, re.I) or (runtime.risky is not None and runtime.risky(frame.text))):
+            frame.discernment, frame.why = "ask", "it changes files or the system, so Clover asks before it runs"
+    strat = (c.get("strategy") or "").strip()
+    if strat:
+        frame.guidance = (f"{frame.guidance} {strat}".strip() if frame.guidance else strat)
 
 
 def _chose(frame, route, offered):
@@ -846,7 +939,21 @@ def align(frame, res, remember_fn=None):
     if frame.act == "action" and not any(c.get("ran") and _worked(c) for c in rounds) and _claims(reply, frame.runtime.csi):
         reply = reply.rstrip() + "\n\n(Note: nothing ran successfully for this answer, so this has not actually been done.)"
         notes.append("an action that did not run")
+    exact_val = C.direct_arithmetic_value(frame.text) if hasattr(C, "direct_arithmetic_value") else None
+    if exact_val is not None:
+        shown_val = f"{int(exact_val)}" if float(exact_val).is_integer() else f"{exact_val:g}"
+        got_val = C.final_answer(frame.text, reply)
+        if not C.same(got_val, exact_val):
+            reply = shown_val
+            notes.append("verified arithmetic")
+    if hasattr(C, "trim_only_value"):
+        trimmed = C.trim_only_value(frame.text, reply)
+        if trimmed != reply:
+            reply = trimmed
+            notes.append("exact value requested")
     res["reply"] = reply
-    frame.knowledge, frame.label = _knowledge(frame, res, rounds, reply)
+    frame.knowledge, frame.label = (
+        ("verified", "verified · arithmetic") if exact_val is not None else _knowledge(frame, res, rounds, reply)
+    )
     frame.notes = notes
     return notes
