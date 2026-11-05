@@ -1,0 +1,29 @@
+Clover AI Studio (Beta) is a local-first, multimodal AI assistant that runs directly on your Android phone. Powered by Liquid AI's 24-layer LFM3-Omni-2B model and the Clover 7-layer architecture, Clover processes text, photos, audio, video, and documents on your device—keeping your conversations, files, and learned preferences under your control.
+
+KEY CAPABILITIES
+
+• On-Device Multimodal Intelligence (C1–C3)
+Run LFM3-Omni-2B locally on Snapdragon 8-series devices (Adreno OpenCL + CPU) with 4-bit quantized weights and multimodal vision/audio projection. Understands text, photos, voice recordings, video clips, and office documents (PDF, Word, Excel, PowerPoint, CSV, JSON), and answers in text or natural speech.
+
+• 7-Layer Clover Architecture (C1–C3 Core + S1–S3 Supporting + Semantics)
+- C1 Inference: On-device LFM3-Omni-2B engine (or optional user-configured hosted endpoints).
+- C2 Plan: Iterative verification and 3-way independent check when you ask Clover to re-verify an answer ("Try again").
+- C3 Decode: Structured concept alignment and grounded output verification.
+- S1 Memory: Local Git-backed memory repository storing your notes and verified lessons on your device, with optional encrypted sync to your own private GitHub repository.
+- S2 Relationships: Symbolic knowledge graph and optional turn-level recall across earlier conversations.
+- S3 Tools: Local Python execution, web search, web page reading, and file inspection—governed by per-tool permissions (Allow / Ask / Off).
+
+• Semantics, Personal Process Learning (PPL) & Collective Learning (CPSL)
+- Clover Semantic Interface (CSI): Parses message structure so negated instructions ("don't search the web") are respected and unexecuted actions are never claimed as completed.
+- Personal Process Learning (PPL): Learns how you phrase requests and how you prefer answers from your corrections—stored strictly on your phone and deletable at any time.
+- Collective Problem-Solving Learning (CPSL): Opt-in (off by default) mechanism that extracts stripped, zero-verbatim structural strategies from validated problem-solving episodes and applies cryptographically signed (HMAC-SHA256) shared-core improvements without overriding your personal rules.
+
+PRIVACY & PERMISSIONS BY DESIGN
+- Nothing leaves your phone unless you explicitly ask for web search, connect your own private GitHub repository, or opt in.
+- Every tool (Internet, Run code, Read files, Edit files, Memory) has an explicit Allow / Ask / Off control in Settings → Advanced → Permissions.
+- First-launch setup downloads the verified LFM3-Omni-2B model files (~1.8 GB) directly from Hugging Face and verifies every file against its published SHA-256 hash before use.
+
+BETA FEEDBACK & SUPPORT
+- Website & Documentation: https://cloverframework.com/
+- Privacy & Governance: https://cloverframework.com/governance/
+- Issue Tracker & Beta Feedback: https://github.com/santhoshsathish94/clover-framework/issues

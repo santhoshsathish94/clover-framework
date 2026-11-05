@@ -1,0 +1,4 @@
+21f25affa416ba117c693d7f0e96dc2b41dd1e9fd0de2fbb7bbc514d899cdbec  clover-ai-studio-beta-setup.exe
+fc15777f97576f27e67f2d4a14345cd59568fc932d639f4f6d11740f8d6e5709  clover-ai-studio-beta.msix
+1bf19f82490022099d52157bf478fecaa99cc9cbc77eac7600976bdf37287949  clover-ai-studio-beta.msixupload
+fc15777f97576f27e67f2d4a14345cd59568fc932d639f4f6d11740f8d6e5709  SanthoshNarayanan.CloverAIStudio_0.5.0.0_x64.msix

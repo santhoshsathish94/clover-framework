@@ -1,0 +1,125 @@
+{
+  "timestamp_utc": "2026-11-05T01:00:36Z",
+  "M1_fedavg_kd_federated_analytics": {
+    "description": "FedAvg vs. KD-FL vs. Federated Analytics across 20 non-IID clients (5 seeds)",
+    "fedavg_e1_sync_sgd": {
+      "mean_rounds_to_85pct": 17.4,
+      "mean_test_accuracy": 1.0,
+      "supports_heterogeneous_models": false
+    },
+    "fedavg_e5": {
+      "mean_rounds_to_85pct": 8.4,
+      "round_reduction_factor_vs_e1": 2.07,
+      "mean_test_accuracy": 1.0,
+      "private_token_gradient_leak_rate": 1.0,
+      "mean_communication_bytes": 1679360,
+      "supports_heterogeneous_models": false
+    },
+    "kd_fl_distillation": {
+      "mean_test_accuracy": 1.0,
+      "private_token_gradient_leak_rate": 0.0,
+      "supports_heterogeneous_models": true
+    },
+    "federated_analytics_closed_vocab": {
+      "mean_test_accuracy": 1.0,
+      "private_token_leak_rate": 0.0,
+      "mean_communication_bytes": 3964,
+      "byte_reduction_factor_vs_fedavg": 423.6,
+      "supports_heterogeneous_models": true
+    }
+  },
+  "M2_voyager_skill_library": {
+    "description": "Voyager SkillManager (voyager/agents/skill.py) compositional reuse vs. lines 65-72 unvalidated overwrite",
+    "no_skill_library": {
+      "mean_solve_rate": 0.2,
+      "mean_primitive_calls_per_task": 4.0
+    },
+    "voyager_single_agent_clean": {
+      "mean_solve_rate": 0.8333,
+      "mean_calls_per_task": 2.0,
+      "step_efficiency_gain": 2.0
+    },
+    "voyager_multi_user_unvalidated_overwrite": {
+      "mean_solve_rate": 0.1667,
+      "defect_source": "voyager/agents/skill.py lines 65-72 overwrites existing skill on single local CriticAgent pass"
+    },
+    "clover_heldout_verified_registry": {
+      "mean_solve_rate": 0.8333,
+      "poisoned_or_idiosyncratic_overwrites": 0
+    }
+  },
+  "M3_reflexion_verbal_rl": {
+    "description": "Reflexion verbal reinforcement (reflexion.py & generate_reflections.py) within-user vs. cross-user transfer",
+    "trial_1_no_reflection": 0.515,
+    "blind_retry_no_reflection": 0.615,
+    "reflexion_weak_self_tests_line36_defect": 0.8,
+    "reflexion_external_verified_oracle": 0.915,
+    "cross_user_transfer_raw_reflection": {
+      "trial_1_unseen_accuracy": 0.63,
+      "private_entity_leak_rate": 0.925
+    },
+    "cross_user_transfer_csi_abstracted_strategy": {
+      "trial_1_unseen_accuracy": 0.83,
+      "private_entity_leak_rate": 0.0
+    }
+  },
+  "M4_maml_and_robust_quorum": {
+    "description": "Comparison of 4 collective promotion gates across 40 candidates (genuine, personal, Sybil, Byzantine)",
+    "policies": {
+      "naive_report_count_ge_3": {
+        "genuine_promoted_of_10": 10,
+        "personal_promoted_of_10": 0,
+        "sybil_promoted_of_10": 10,
+        "byzantine_promoted_of_10": 10,
+        "single_user_spurious_promoted_of_5": 0,
+        "precision": 0.3333,
+        "recall": 1.0
+      },
+      "swarm_quorum_distinct_inst_ge_3": {
+        "genuine_promoted_of_10": 10,
+        "personal_promoted_of_10": 0,
+        "sybil_promoted_of_10": 0,
+        "byzantine_promoted_of_10": 10,
+        "single_user_spurious_promoted_of_5": 0,
+        "precision": 0.5,
+        "recall": 1.0
+      },
+      "maml_outer_query_only_no_quorum": {
+        "genuine_promoted_of_10": 10,
+        "personal_promoted_of_10": 0,
+        "sybil_promoted_of_10": 0,
+        "byzantine_promoted_of_10": 0,
+        "single_user_spurious_promoted_of_5": 5,
+        "precision": 0.6667,
+        "recall": 1.0
+      },
+      "clover_cpsl_quorum_plus_maml_outer_eval": {
+        "genuine_promoted_of_10": 10,
+        "personal_promoted_of_10": 0,
+        "sybil_promoted_of_10": 0,
+        "byzantine_promoted_of_10": 0,
+        "single_user_spurious_promoted_of_5": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    }
+  },
+  "M5_privacy_ripple_effects": {
+    "description": "Borkar et al. (ACL 2025) taxonomy.py continual memorization & Symbolic Unlearning Ripple Effect",
+    "borkar_taxonomy_continual_10_stages": {
+      "total_immediate_memorized": 136,
+      "total_assisted_memorized": 54,
+      "total_retained_memorized": 713,
+      "total_forgotten": 207,
+      "assisted_share_of_new_extractions": 0.2842,
+      "newly_exposed_pii_after_unlearning_removal": 3
+    },
+    "symbolic_unlearning_ripple_on_personal_py": {
+      "trials": 20,
+      "private_token_hidden_while_both_experiences_present": "20/20 (100%)",
+      "unfiltered_private_token_unmasked_after_deleting_second_experience": "20/20 (100%)",
+      "clover_closed_vocab_gated_private_token_unmasked_after_delete": "0/20 (0%)"
+    }
+  },
+  "elapsed_seconds": 1.043
+}

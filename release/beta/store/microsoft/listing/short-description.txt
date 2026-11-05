@@ -1,0 +1,1 @@
+Local-first multimodal AI assistant and developer workspace powered by the Clover 7-layer architecture.

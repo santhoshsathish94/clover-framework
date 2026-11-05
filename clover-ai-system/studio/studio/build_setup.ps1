@@ -33,6 +33,11 @@ if (Test-Path (Join-Path $fw 'clover-ai-system\mobile')) {
         clover-ai-system/mobile/memory_index.py `
         clover-ai-system/mobile/mobile_vault.py `
         clover-ai-system/mobile/personal.py `
+        clover-ai-system/mobile/collective.py `
+        clover-ai-system/mobile/collective_gateway.py `
+        clover-ai-system/mobile/collective_evaluator.py `
+        clover-ai-system/mobile/core_registry.py `
+        clover-ai-system/mobile/core_sync.py `
         clover-ai-system/mobile/semantics.py `
         clover-ai-system/mobile/web_search.py `
         clover-ai-system/src/models/lfm3-1.7b `

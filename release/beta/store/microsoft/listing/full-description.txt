@@ -1,0 +1,30 @@
+Clover AI Studio (Beta) is a local-first multimodal AI assistant and developer workspace for Windows 10 and Windows 11. Powered by Liquid AI's 24-layer LFM3-Omni-2B model and the Clover 7-layer architecture, Clover runs directly on your PC's GPU or CPU—keeping your code, documents, conversations, and learned preferences on your computer.
+
+KEY FEATURES
+
+• Local Multimodal Engine (C1–C3)
+- Runs LFM3-Omni-2B locally via Vulkan GPU acceleration or AVX2 CPU execution, with optional C1 + C2 (HybridAgent planner) + C3 (11-level Neural Concept Machine) fused execution and optional connection to user-configured hosted endpoints.
+- Understands text, code, images, audio, video, and office documents (PDF, Word, Excel, PowerPoint, CSV, JSON), and replies in text or natural speech.
+
+• 7-Layer Clover Architecture (C1–C3 Core + S1–S3 Supporting + Semantics)
+- C1 Inference: Local LFM3-Omni-2B engine on GPU or CPU.
+- C2 Plan: Iterative verification with outside evidence when you click "Try again".
+- C3 Decode: Grounded concept rendering and alignment verification.
+- S1 Memory: Local Git-backed memory repository (`%USERPROFILE%\CloverAI\clover-ai-studio`) with full commit history and optional private GitHub repository sync through VS Code.
+- S2 Relationships: Symbolic knowledge graph and optional semantic recall across earlier chats.
+- S3 Tools: Local Python, PowerShell, file system, web search, image generation, and VS Code integration—each governed by explicit per-tool permissions (Allow / Ask / Off).
+
+• Semantics, Personal Process Learning (PPL) & Collective Learning (CPSL)
+- Clover Semantic Interface (CSI): Local parser and WordNet 2025 dictionary (`en_core_web_trf` + `morph-verb-v1.1`) that reads negated instructions ("without Python", "don't search the web") and verifies action claims.
+- Personal Process Learning (PPL): Learns how you phrase requests and your preferred response style from your corrections, stored locally in `%USERPROFILE%\CloverAI\personal`.
+- Collective Problem-Solving Learning (CPSL): Opt-in (off by default) shared-core learning under Settings → Advanced → Clover layers → Semantics, with independent switches for contributing stripped zero-verbatim strategy candidates and receiving HMAC-SHA256-verified shared-core improvements.
+
+• Deep VS Code & Workspace Integration
+- Ships with the `clover-local` VS Code extension and an OpenAI-compatible loopback endpoint (`http://127.0.0.1:8765/v1/chat/completions`).
+- Manage local folders and GitHub workspaces directly from Settings → Advanced → Workspaces.
+
+PRIVACY & CONTROL
+- Nothing leaves your PC unless you explicitly allow a tool or sync with your own private GitHub repository.
+- Website: https://cloverframework.com/
+- Privacy Policy: https://cloverframework.com/governance/
+- Support & Issue Tracker: https://github.com/santhoshsathish94/clover-framework/issues

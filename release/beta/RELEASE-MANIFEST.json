@@ -1,0 +1,108 @@
+{
+  "product": "Clover AI Studio",
+  "publisher": "Santhosh Narayanan",
+  "release_version": "0.5.0-beta.1",
+  "release_channel": "beta",
+  "release_date": "2026-11-05",
+  "git_worktree": "C:\\personal\\oss\\clover-collective-wt",
+  "git_branch": "experiment/collective-learning",
+  "urls": {
+    "website": "https://cloverframework.com/",
+    "privacy_policy": "https://cloverframework.com/governance/",
+    "support": "https://github.com/santhoshsathish94/clover-framework/issues"
+  },
+  "android": {
+    "store": "Google Play Console (Closed Testing)",
+    "package_name": "ai.clover.studio",
+    "version_code": 9,
+    "version_name": "0.5.0-beta.1",
+    "min_sdk": 26,
+    "target_sdk": 34,
+    "compile_sdk": 34,
+    "abi": "arm64-v8a",
+    "signing": {
+      "keystore_env_on_k3": "/opt/clover-k3/studio-android/keystore.env",
+      "key_alias": "cloverstudio",
+      "certificate_dn": "CN=Clover AI Studio, OU=Clover Framework, O=Clover AI, L=Bengaluru, ST=KA, C=IN",
+      "sha256_fingerprint": "88:C0:E8:32:66:FF:ED:34:73:F5:1A:A1:02:C0:D5:EC:98:CA:4E:85:F4:D9:5F:FE:70:68:46:57:E1:9C:40:F7",
+      "sha1_fingerprint": "CB:D4:BF:0E:FC:81:1F:18:DB:52:A7:26:C2:46:67:0B:44:B0:1A:A3",
+      "apk_schemes_verified": [
+        "v2",
+        "v3"
+      ],
+      "aab_jarsigner_verified": true
+    },
+    "artifacts": [
+      {
+        "file": "release/beta/android/clover-ai-studio-beta.aab",
+        "type": "aab",
+        "size_bytes": 73827548,
+        "sha256": "aa3ccc71e91062c880e49330ab9bd32b58f406442a1841d5488c6aa17005e70e"
+      },
+      {
+        "file": "release/beta/android/clover-ai-studio-beta.apk",
+        "type": "apk",
+        "size_bytes": 74906729,
+        "sha256": "b5c0c8b3e9d3452ab6ce99efe84b958ad39c8c21e05200a445bdaf23ee62f7d8"
+      }
+    ],
+    "verification": {
+      "collective_tests": "33/33 passed",
+      "live_simulated_server_smoke_test": "passed (http://127.0.0.1:47651, /api/health, /api/settings, /api/collective, /api/chat/stream)",
+      "ready_for_closed_testing_upload": true
+    }
+  },
+  "windows": {
+    "store": "Microsoft Partner Center (Private Audience / Beta)",
+    "packaging_route": "Option A (MSIX / .msixupload Store-Signed Package) + Standalone Win32 Setup EXE",
+    "package_identity_name": "SanthoshNarayanan.CloverAIStudio",
+    "publisher_dn": "CN=A0DCEEB8-49DB-4CD8-8D07-BC439E69B9AF",
+    "publisher_display_name": "Santhosh Narayanan",
+    "store_id": "9P2KP2XGF5LG",
+    "package_family_name": "SanthoshNarayanan.CloverAIStudio_ffvna78masvs2",
+    "manifest_version": "0.5.0.0",
+    "display_version": "0.5.0-beta.1",
+    "architecture": "x64",
+    "min_windows_version": "10.0.19041.0",
+    "max_windows_version_tested": "10.0.26100.0",
+    "signing": {
+      "msix_store_signing": "Signed by Microsoft Store upon Partner Center ingestion; locally signed with test cert CN=A0DCEEB8-49DB-4CD8-8D07-BC439E69B9AF (Thumbprint B6551BA01FD1C8B7D4BB103BB027A1203EB69FFC) for local validation",
+      "standalone_exe_signing": "Signed with CN=Clover Framework, O=Clover Framework (Thumbprint 843BC8476BFCAD1EE2FABE82CDB403994CCE3F99)"
+    },
+    "artifacts": [
+      {
+        "file": "release/beta/windows/clover-ai-studio-beta.msixupload",
+        "type": "msixupload",
+        "size_bytes": 4779424,
+        "sha256": "1bf19f82490022099d52157bf478fecaa99cc9cbc77eac7600976bdf37287949"
+      },
+      {
+        "file": "release/beta/windows/SanthoshNarayanan.CloverAIStudio_0.5.0.0_x64.msix",
+        "type": "msix",
+        "size_bytes": 4828578,
+        "sha256": "fc15777f97576f27e67f2d4a14345cd59568fc932d639f4f6d11740f8d6e5709"
+      },
+      {
+        "file": "release/beta/windows/clover-ai-studio-beta.msix",
+        "type": "msix",
+        "size_bytes": 4828578,
+        "sha256": "fc15777f97576f27e67f2d4a14345cd59568fc932d639f4f6d11740f8d6e5709"
+      },
+      {
+        "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
+        "type": "exe",
+        "size_bytes": 2448344,
+        "sha256": "21f25affa416ba117c693d7f0e96dc2b41dd1e9fd0de2fbb7bbc514d899cdbec"
+      }
+    ],
+    "verification": {
+      "semantics_tests": "155/155 passed",
+      "collective_tests": "33/33 passed",
+      "repo_tests": "27/27 passed",
+      "tool_routing_tests": "129/129 passed",
+      "regression_fixes_tests": "29/29 passed",
+      "live_ui_and_api_smoke_test": "passed (http://127.0.0.1:8799)",
+      "ready_for_partner_center_upload": true
+    }
+  }
+}

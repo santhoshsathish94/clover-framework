@@ -1,0 +1,724 @@
+{
+  "timestamp_utc": "2026-11-05T02:52:01Z",
+  "part_a_one_by_one_ablations": {
+    "steps": [
+      {
+        "step": "Step 0: Baseline semantics.py only",
+        "promoted_rules_count": 0,
+        "overall_accuracy": 0.4062,
+        "by_category": {
+          "unseen_collective": 0.0,
+          "masked_cue_strategy": 0.0,
+          "preposition_shift_strategy": 0.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 1.0,
+          "personal_habit": 0.0,
+          "personal_override_conflict": 0.0,
+          "ordinary_and_safety": 1.0
+        }
+      },
+      {
+        "step": "Step 1: + Personal Learning (personal.py) only",
+        "promoted_rules_count": 0,
+        "overall_accuracy": 0.5,
+        "by_category": {
+          "unseen_collective": 0.0,
+          "masked_cue_strategy": 0.0,
+          "preposition_shift_strategy": 0.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 1.0,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 1.0
+        }
+      },
+      {
+        "step": "Step 2: + Raw Unvalidated Collective Sync (No G1..G5)",
+        "promoted_rules_count": 13,
+        "overall_accuracy": 0.75,
+        "by_category": {
+          "unseen_collective": 1.0,
+          "masked_cue_strategy": 1.0,
+          "preposition_shift_strategy": 0.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 0.5,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 0.4444
+        }
+      },
+      {
+        "step": "Step 3: + Gate G1 (Independent Quorum >= 3 only)",
+        "promoted_rules_count": 10,
+        "overall_accuracy": 0.7188,
+        "by_category": {
+          "unseen_collective": 1.0,
+          "masked_cue_strategy": 0.0,
+          "preposition_shift_strategy": 0.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 0.5,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 0.5556
+        }
+      },
+      {
+        "step": "Step 4: + Gate G1 + G2 (Cross-User Consistency >= 0.75)",
+        "promoted_rules_count": 10,
+        "overall_accuracy": 0.7188,
+        "by_category": {
+          "unseen_collective": 1.0,
+          "masked_cue_strategy": 0.0,
+          "preposition_shift_strategy": 0.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 0.5,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 0.5556
+        }
+      },
+      {
+        "step": "Step 5: + Gate G1 + G2 + G3 + G4 (Held-Out Eval, No G5)",
+        "promoted_rules_count": 5,
+        "overall_accuracy": 0.875,
+        "by_category": {
+          "unseen_collective": 1.0,
+          "masked_cue_strategy": 0.0,
+          "preposition_shift_strategy": 0.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 1.0,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 1.0
+        }
+      },
+      {
+        "step": "Step 6a: Full CPSL (G1..G5 + CSI v0.1r3, without gerund normalization)",
+        "promoted_rules_count": 5,
+        "overall_accuracy": 0.7812,
+        "by_category": {
+          "unseen_collective": 0.75,
+          "masked_cue_strategy": 0.0,
+          "preposition_shift_strategy": 0.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 1.0,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 1.0
+        }
+      },
+      {
+        "step": "Step 6b: Full CPSL (+ Deverbal Gerund Normalization)",
+        "promoted_rules_count": 5,
+        "overall_accuracy": 0.875,
+        "by_category": {
+          "unseen_collective": 1.0,
+          "masked_cue_strategy": 0.0,
+          "preposition_shift_strategy": 0.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 1.0,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 1.0
+        }
+      },
+      {
+        "step": "Step 7: Ablation \u2014 Without CSI (Surface words only)",
+        "promoted_rules_count": 5,
+        "overall_accuracy": 0.6875,
+        "by_category": {
+          "unseen_collective": 0.5,
+          "masked_cue_strategy": 0.0,
+          "preposition_shift_strategy": 0.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 1.0,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 1.0
+        }
+      },
+      {
+        "step": "Step 8a: Ablation \u2014 drop_prepositions (without G5 regression check)",
+        "promoted_rules_count": 6,
+        "overall_accuracy": 0.9375,
+        "by_category": {
+          "unseen_collective": 1.0,
+          "masked_cue_strategy": 0.0,
+          "preposition_shift_strategy": 1.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 1.0,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 1.0
+        }
+      },
+      {
+        "step": "Step 8b: Ablation \u2014 drop_prepositions (with G5 regression check)",
+        "promoted_rules_count": 6,
+        "overall_accuracy": 0.9375,
+        "by_category": {
+          "unseen_collective": 1.0,
+          "masked_cue_strategy": 0.0,
+          "preposition_shift_strategy": 1.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 1.0,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 1.0
+        }
+      },
+      {
+        "step": "Step 9a: Ablation \u2014 residual_cue (Quorum G1+G2 only, no G3/G5)",
+        "promoted_rules_count": 12,
+        "overall_accuracy": 0.7812,
+        "by_category": {
+          "unseen_collective": 1.0,
+          "masked_cue_strategy": 1.0,
+          "preposition_shift_strategy": 0.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 0.5,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 0.5556
+        }
+      },
+      {
+        "step": "Step 9b: Ablation \u2014 residual_cue (with G3+G5 validation)",
+        "promoted_rules_count": 6,
+        "overall_accuracy": 0.9375,
+        "by_category": {
+          "unseen_collective": 1.0,
+          "masked_cue_strategy": 1.0,
+          "preposition_shift_strategy": 0.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 1.0,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 1.0
+        }
+      },
+      {
+        "step": "Step 9c: Combined Best (CPSL + Gerund Norm + Gated Drop-Prep + Gated Residual-Cue)",
+        "promoted_rules_count": 7,
+        "overall_accuracy": 1.0,
+        "by_category": {
+          "unseen_collective": 1.0,
+          "masked_cue_strategy": 1.0,
+          "preposition_shift_strategy": 1.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 1.0,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 1.0,
+          "ordinary_and_safety": 1.0
+        }
+      },
+      {
+        "step": "Step 10: Ablation \u2014 Inverted Priority (Collective > Personal)",
+        "promoted_rules_count": 5,
+        "overall_accuracy": 0.8438,
+        "by_category": {
+          "unseen_collective": 1.0,
+          "masked_cue_strategy": 0.0,
+          "preposition_shift_strategy": 0.0,
+          "particle_verb_control": 1.0,
+          "incidental_adverb_control": 1.0,
+          "personal_habit": 1.0,
+          "personal_override_conflict": 0.0,
+          "ordinary_and_safety": 1.0
+        }
+      }
+    ],
+    "quorum_sweep": [
+      {
+        "min_installations": 1,
+        "promoted_count": 6,
+        "overall_accuracy": 0.9375,
+        "unseen_collective_acc": 1.0,
+        "ordinary_and_safety_acc": 1.0
+      },
+      {
+        "min_installations": 2,
+        "promoted_count": 6,
+        "overall_accuracy": 0.9375,
+        "unseen_collective_acc": 1.0,
+        "ordinary_and_safety_acc": 1.0
+      },
+      {
+        "min_installations": 3,
+        "promoted_count": 5,
+        "overall_accuracy": 0.875,
+        "unseen_collective_acc": 1.0,
+        "ordinary_and_safety_acc": 1.0
+      },
+      {
+        "min_installations": 4,
+        "promoted_count": 4,
+        "overall_accuracy": 0.8125,
+        "unseen_collective_acc": 0.8333,
+        "ordinary_and_safety_acc": 1.0
+      },
+      {
+        "min_installations": 5,
+        "promoted_count": 0,
+        "overall_accuracy": 0.5,
+        "unseen_collective_acc": 0.0,
+        "ordinary_and_safety_acc": 1.0
+      }
+    ],
+    "promoted_in_step6": [
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=number",
+          "tok=check",
+          "tok=cross"
+        ],
+        "target": [
+          "python"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=path",
+          "tok=audit"
+        ],
+        "target": [
+          "files.list",
+          "files.read",
+          "python"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=path",
+          "tok=triage"
+        ],
+        "target": [
+          "files.list",
+          "files.read"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "tok=benchmark"
+        ],
+        "target": [
+          "python"
+        ],
+        "insts": 3
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "tok=corroborate"
+        ],
+        "target": [
+          "web.page",
+          "web.search"
+        ],
+        "insts": 4
+      }
+    ],
+    "promoted_in_step8b_drop_prep": [
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=number",
+          "tok=check",
+          "tok=cross"
+        ],
+        "target": [
+          "python"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=path",
+          "tok=audit"
+        ],
+        "target": [
+          "files.list",
+          "files.read",
+          "python"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=path",
+          "tok=poke"
+        ],
+        "target": [
+          "files.list",
+          "files.read"
+        ],
+        "insts": 3
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=path",
+          "tok=triage"
+        ],
+        "target": [
+          "files.list",
+          "files.read"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "tok=benchmark"
+        ],
+        "target": [
+          "python"
+        ],
+        "insts": 3
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "tok=corroborate"
+        ],
+        "target": [
+          "web.page",
+          "web.search"
+        ],
+        "insts": 4
+      }
+    ],
+    "promoted_in_step9b_residual_cue": [
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=number",
+          "tok=check",
+          "tok=cross"
+        ],
+        "target": [
+          "python"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=path",
+          "tok=audit"
+        ],
+        "target": [
+          "files.list",
+          "files.read",
+          "python"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=path",
+          "tok=distill"
+        ],
+        "target": [
+          "files.list",
+          "files.read"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=path",
+          "tok=triage"
+        ],
+        "target": [
+          "files.list",
+          "files.read"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "tok=benchmark"
+        ],
+        "target": [
+          "python"
+        ],
+        "insts": 3
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "tok=corroborate"
+        ],
+        "target": [
+          "web.page",
+          "web.search"
+        ],
+        "insts": 4
+      }
+    ],
+    "promoted_in_step9c_combined": [
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=number",
+          "tok=check",
+          "tok=cross"
+        ],
+        "target": [
+          "python"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=path",
+          "tok=audit"
+        ],
+        "target": [
+          "files.list",
+          "files.read",
+          "python"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=path",
+          "tok=distill"
+        ],
+        "target": [
+          "files.list",
+          "files.read"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=path",
+          "tok=poke"
+        ],
+        "target": [
+          "files.list",
+          "files.read"
+        ],
+        "insts": 3
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "has=path",
+          "tok=triage"
+        ],
+        "target": [
+          "files.list",
+          "files.read"
+        ],
+        "insts": 4
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "tok=benchmark"
+        ],
+        "target": [
+          "python"
+        ],
+        "insts": 3
+      },
+      {
+        "trigger": [
+          "ctx=phone",
+          "tok=corroborate"
+        ],
+        "target": [
+          "web.page",
+          "web.search"
+        ],
+        "insts": 4
+      }
+    ]
+  },
+  "part_b_live_clover_ai_system": {
+    "before_collective": {
+      "pass_count": 2,
+      "total": 6,
+      "tasks": [
+        {
+          "id": "L1_crosscheck_math",
+          "prompt": "Cross-check what 37 * 43 is and give the exact product.",
+          "understood": "understood: question",
+          "routed_tools": [],
+          "knowledge_state": "inferred",
+          "knowledge_label": "model knowledge \u00b7 not checked",
+          "tool_executed": null,
+          "reply_excerpt": "1597",
+          "passed": false,
+          "elapsed_s": 2.887
+        },
+        {
+          "id": "L2_inflected_gerund_math",
+          "prompt": "The calculation 29 * 53 needs cross-checking: what is the exact value?",
+          "understood": "understood: question",
+          "routed_tools": [],
+          "knowledge_state": "inferred",
+          "knowledge_label": "model knowledge \u00b7 not checked",
+          "tool_executed": null,
+          "reply_excerpt": "The exact value of 29 \u00d7 53 is 1537.",
+          "passed": false,
+          "elapsed_s": 4.254
+        },
+        {
+          "id": "L3_benchmark_code",
+          "prompt": "Benchmark 2**16 + 1 and state the exact number.",
+          "understood": "understood: question",
+          "routed_tools": [],
+          "knowledge_state": "inferred",
+          "knowledge_label": "model knowledge \u00b7 not checked",
+          "tool_executed": null,
+          "reply_excerpt": "2**16 + 1 = 65537",
+          "passed": false,
+          "elapsed_s": 3.734
+        },
+        {
+          "id": "L4_corroborate_web",
+          "prompt": "Corroborate the scientific fact: what is the chemical symbol of Tungsten?",
+          "understood": "understood: question",
+          "routed_tools": [],
+          "knowledge_state": "inferred",
+          "knowledge_label": "model knowledge \u00b7 not checked",
+          "tool_executed": null,
+          "reply_excerpt": "W",
+          "passed": false,
+          "elapsed_s": 2.89
+        },
+        {
+          "id": "L5_declined_tool_boundary",
+          "prompt": "Without using Python, cross-check what 12 * 12 is.",
+          "understood": "understood: question",
+          "routed_tools": [],
+          "knowledge_state": "inferred",
+          "knowledge_label": "model knowledge \u00b7 not checked",
+          "tool_executed": null,
+          "reply_excerpt": "144",
+          "passed": true,
+          "elapsed_s": 2.725
+        },
+        {
+          "id": "L6_concept_question_control",
+          "prompt": "In one sentence, what does git rebase do?",
+          "understood": "understood: explain a concept",
+          "routed_tools": [],
+          "knowledge_state": "inferred",
+          "knowledge_label": "model knowledge \u00b7 not checked",
+          "tool_executed": null,
+          "reply_excerpt": "git rebase rewrites the history of a set of commits.",
+          "passed": true,
+          "elapsed_s": 3.433
+        }
+      ]
+    },
+    "after_collective": {
+      "pass_count": 6,
+      "total": 6,
+      "tasks": [
+        {
+          "id": "L1_crosscheck_math",
+          "prompt": "Cross-check what 37 * 43 is and give the exact product.",
+          "understood": "understood: needs Python \u00b7 from shared core",
+          "routed_tools": [
+            "python_interpreter"
+          ],
+          "knowledge_state": "verified",
+          "knowledge_label": "verified \u00b7 Python",
+          "tool_executed": "python_interpreter",
+          "reply_excerpt": "37 * 43 = 15,91",
+          "passed": true,
+          "elapsed_s": 58.047
+        },
+        {
+          "id": "L2_inflected_gerund_math",
+          "prompt": "The calculation 29 * 53 needs cross-checking: what is the exact value?",
+          "understood": "understood: needs Python \u00b7 from shared core",
+          "routed_tools": [
+            "python_interpreter"
+          ],
+          "knowledge_state": "verified",
+          "knowledge_label": "verified \u00b7 Python",
+          "tool_executed": "python_interpreter",
+          "reply_excerpt": "15,37",
+          "passed": true,
+          "elapsed_s": 8.383
+        },
+        {
+          "id": "L3_benchmark_code",
+          "prompt": "Benchmark 2**16 + 1 and state the exact number.",
+          "understood": "understood: needs Python \u00b7 from shared core",
+          "routed_tools": [
+            "python_interpreter"
+          ],
+          "knowledge_state": "verified",
+          "knowledge_label": "verified \u00b7 Python",
+          "tool_executed": "python_interpreter",
+          "reply_excerpt": "65537",
+          "passed": true,
+          "elapsed_s": 10.313
+        },
+        {
+          "id": "L4_corroborate_web",
+          "prompt": "Corroborate the scientific fact: what is the chemical symbol of Tungsten?",
+          "understood": "understood: needs the web \u00b7 from shared core",
+          "routed_tools": [
+            "web_search"
+          ],
+          "knowledge_state": "inferred",
+          "knowledge_label": "from the web \u00b7 not checked",
+          "tool_executed": "web_search",
+          "reply_excerpt": "According to the search results, the chemical symbol for Tungsten is **W**. This is confirmed by multiple sources including Wikipedia and WEST (formerly Tore Supra). Therefore, the answer is \\boxed{W}.",
+          "passed": true,
+          "elapsed_s": 28.459
+        },
+        {
+          "id": "L5_declined_tool_boundary",
+          "prompt": "Without using Python, cross-check what 12 * 12 is.",
+          "understood": "understood: question \u00b7 from shared core",
+          "routed_tools": [],
+          "knowledge_state": "inferred",
+          "knowledge_label": "model knowledge \u00b7 not checked",
+          "tool_executed": null,
+          "reply_excerpt": "144",
+          "passed": true,
+          "elapsed_s": 4.356
+        },
+        {
+          "id": "L6_concept_question_control",
+          "prompt": "In one sentence, what does git rebase do?",
+          "understood": "understood: explain a concept",
+          "routed_tools": [],
+          "knowledge_state": "inferred",
+          "knowledge_label": "model knowledge \u00b7 not checked",
+          "tool_executed": null,
+          "reply_excerpt": "git rebase rewrites the history of a set of commits.",
+          "passed": true,
+          "elapsed_s": 3.477
+        }
+      ]
+    }
+  },
+  "elapsed_seconds": 147.785
+}
