@@ -1,0 +1,803 @@
+"""Layer 1 as LFM3-Omni-2B (LiquidAI): text, images, audio and video in; text and speech out; on llama.cpp.
+
+The Omni's language model has LFM3-1.7B's layout but its own weights; it is a non-reasoning model (its card:
+`enable_thinking` unsupported; llama-server runs it with `--reasoning off`). llama-server applies the chat template
+stored in the GGUF, turns media parts into the model's media tokens (the projector holds the vision and audio
+encoders; video needs ffmpeg) and speaks text through /tts. The Studio keeps its own tool loop, permissions and
+Clover layers on top, the same way as for LFM3-1.7B (lfm3_native.LFM3Native, whose tools this class reuses).
+Media files live in CloverAI\\media (the user clears or backs them up) and reach llama-server as file:// names inside
+--media-path.
+"""
+import datetime
+import json
+import re
+import threading
+import time
+import uuid
+from pathlib import Path
+
+import llamacpp_engine as L
+import lfm3_native as N
+import clover_cycle as C
+import paths
+import semantics
+
+QUANTS = {"q4_0": "LFM3-Omni-2B-Q4_0.gguf", "q4_k_m": "LFM3-Omni-2B-Q4_K_M.gguf"}
+MMPROJ = "mmproj-LFM3-Omni-2B-Q8_0.gguf"
+PART = {"image": "image_url", "audio": "input_audio", "video": "input_video"}
+GREEDY = {"temperature": 0.0, "top_k": 0, "top_p": 1.0, "min_p": 0.0, "repeat_penalty": 1.0, "dry_multiplier": 0.0,
+          "xtc_probability": 0.0, "presence_penalty": 0.0, "frequency_penalty": 0.0}  # the card: greedy for text output
+TOOL_XML = re.compile(r"<tool_call>[\s\S]*?(?:</tool_call>|$)")
+LOOP_TAIL = 160
+# a forced round (tool_choice required) writes its text first: "which application would you like to install? Could you
+# please tell me:" came with a run_powershell call (tests/tool_choice_probe.py)
+ASKS_USER = re.compile(r"\?\s*(?:\n|$)|\b(?:could|can|would) you (?:please )?(?:tell|provide|confirm|clarify|share|specify)\b"
+                       r"|\bplease (?:tell|provide|confirm|clarify|specify)\b", re.I)
+PROMISE = semantics.PROMISE
+ANDROID = paths.ANDROID
+PLATFORM = "Android phone" if ANDROID else "Windows laptop"
+
+
+def looping(text):
+    """The last 160 characters appeared twice before: greedy decoding is repeating itself (a user's request ran to the
+    2,048-token limit in 89 s that way)."""
+    return len(text) >= 4 * LOOP_TAIL and text.count(text[-LOOP_TAIL:], 0, len(text) - LOOP_TAIL) >= 2
+
+
+# a paragraph that closes an answer: "Just let me know what you'd like to do!", "I'm here to help!"
+SIGN_OFF = re.compile(r"\blet\s+me\s+know\b|\bfeel\s+free\s+to\b|\bi'?m\s+(?:here|ready)\s+to\s+help\b|\bhappy\s+to\s+help\b|"
+                      r"\banything\s+else\b|\bwhat\s+would\s+you\s+like\s+to\s+(?:do|work\s+on)\b|\bready\s+when\s+you\s+are\b", re.I)
+TRAILING_Q = re.compile(
+    r"\n\n+(?:(?:Would|Do)\s+you\s+(?:like|want|need)\b|What\s+(?:else\s+)?would\s+you\s+like\b|"
+    r"Is\s+there\s+anything\s+else\b|Shall\s+I\b|If\s+you(?:'d|\s+would)\s+like[^\n]*\?)"
+    r"[\s\S]*\?\s*$", re.I)
+
+
+def rambling(text):
+    """-> where the answer ends, or None. Past its sign-off the Omni wrote one variation after another (\"If you'd like
+    me to ..., I can do that too. Just let me know ...!\" six times, 37 s, 2026-11-04), each different enough for
+    looping(). Three sign-off paragraphs with a sign-off said twice end the answer after the first; an email's own
+    \"let me know\" and the closing line after it are different sentences."""
+    offs = [m for m in re.finditer(r"[^\n]+(?:\n(?!\n)[^\n]+)*", text) if SIGN_OFF.search(m.group(0))]
+    if len(offs) < 3:
+        return None
+    seen = set()
+    for m in offs:
+        for s in re.split(r"(?<=[.!?])\s+", m.group(0)):
+            if SIGN_OFF.search(s):
+                key = re.sub(r"[^a-z' ]+", "", s.lower()).strip()
+                if key in seen:
+                    return offs[0].end()
+                seen.add(key)
+    return None
+# Speech runs on a CPU llama.cpp instance when chat has the Iris Xe. Measured on the i5-1335U (tests/omni_resource_probe,
+# omni_prefill_probe): speech 1.4-1.6x real time on 10 CPU threads against 0.8x on the GPU, while the GPU reads a
+# 2,700-token Studio prompt at 438 tok/s against 94 on the CPU (writing about equal, 26-28 tok/s). The instance holds
+# about 1.6 GB, so it starts on first use and stops after VOICE_IDLE_S without speech.
+VOICE_IDLE_S = 600
+VOICE_THREADS = 10
+
+
+def omni_files(base_dir, quant="q4_0"):
+    """-> (paths, missing names) for the Omni on llama.cpp."""
+    base_dir = Path(base_dir)
+    g = base_dir / "data" / "omni" / "gguf"
+    paths = {"model": g / QUANTS[quant], "mmproj": g / MMPROJ}
+    missing = [p.name for p in paths.values() if not p.is_file()]
+    return paths, missing
+
+
+def media_part(m):
+    kind = m["kind"]
+    url = "file://" + m["file"]
+    if kind == "image":
+        return {"type": "image_url", "image_url": {"url": url}}
+    return {"type": PART[kind], PART[kind]: {"url": url}}
+
+
+def user_content(text, media, media_dir):
+    """OpenAI content for a user message: media first (llama.cpp's advice), then the text."""
+    parts = [media_part(m) for m in media or () if (Path(media_dir) / m["file"]).is_file()]
+    return parts + [{"type": "text", "text": text}] if parts else text
+
+
+def speakable(text, limit=1200):
+    """Answer text for speech: no code blocks, links or markdown marks."""
+    t = re.sub(r"```[\s\S]*?```", " (code shown on screen) ", text or "")
+    t = re.sub(r"`([^`]*)`", r"\1", t)
+    t = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", t)
+    t = re.sub(r"[*_#>|]+", " ", t)
+    t = re.sub(r"\s+", " ", t).strip()
+    return t[:limit]
+
+
+def speech_parts(text, max_chars=240, first_chars=80, grow=1.25, limit=4000):
+    """Speakable text in sentence groups; the next part is synthesized while the current one plays. The first part is
+    short so speech starts soon (a 237-character part took 14.6 s before any sound, with the instance start), and each
+    part is at most `grow` x the previous one: the CPU speaks 1.2-1.6x faster than real time, so a part longer than
+    that is not ready when the previous one ends (45 then 214 characters: 3.9 s of sound, then 9.7 s to make the next)."""
+    parts, cur = [], ""
+    for s in re.split(r"(?<=[.!?;:])\s+", speakable(text, limit)):
+        while True:
+            cap = min(max_chars, max(first_chars, int(grow * len(parts[-1])))) if parts else first_chars
+            if cur and len(cur) + 1 + len(s) > cap:
+                parts.append(cur)
+                cur = ""
+                continue
+            if len(s) <= cap:
+                cur = (cur + " " + s).strip()
+                break
+            # a sentence longer than the part: cut at a late comma, else at the last space before the limit
+            cut = s.rfind(", ", 0, cap)
+            if cut < cap // 2:
+                cut = s.rfind(" ", 0, cap)
+            cut = cut if cut > cap // 3 else cap
+            parts.append(s[:cut + 1].strip())
+            s = s[cut + 1:].strip()
+            if not s:
+                break
+    return [p for p in parts + [cur] if p]
+
+
+class SideGate:
+    """Held while a turn or speech needs the hardware; a side completion (an exchange note) stops when it is held.
+    Works as chat_stream's `cancel`."""
+
+    def __init__(self):
+        self.n, self.lock = 0, threading.Lock()
+
+    def is_set(self):
+        return self.n > 0
+
+    def hold(self):
+        with self.lock:
+            self.n += 1
+
+    def release(self):
+        with self.lock:
+            self.n = max(0, self.n - 1)
+
+
+class OmniNative(N.LFM3Native):
+    def __init__(self, base_dir, perms, max_tokens=32768, progress=None, engine="gpu", quant="q4_0",
+                 voice_threads=VOICE_THREADS, gpu_name="GPU", threads=None):
+        """max_tokens (context), voice_threads, gpu_name and (on a phone) threads come from this machine (hardware.choose)."""
+        t0 = time.perf_counter()
+        progress = progress or (lambda m: None)
+        base_dir = Path(base_dir)
+        self.base_dir, self.perms, self.quant = base_dir, perms, quant
+        self.voice_threads = int(voice_threads)
+        paths, missing = omni_files(base_dir, quant)
+        if missing:
+            raise FileNotFoundError("missing " + ", ".join(missing) + " (run Clover AI Studio setup again)")
+        self.media_dir = base_dir / "media"
+        self.media_dir.mkdir(parents=True, exist_ok=True)
+        ff_txt = base_dir / "tools" / "ffmpeg" / "BIN.txt"
+        self.ffmpeg_dir = ff_txt.read_text(encoding="utf-8").strip() if ff_txt.is_file() else ""
+        extra = ["--reasoning", "off", "--media-path", str(self.media_dir), "--video-fps", "2"]
+        if ANDROID:
+            # Adreno's OpenCL backend lacks ops of the projector's graph: a picture ended llama-server (S23, b12012); on
+            # the CPU a picture took 8 s and a voice clip 3 s, and 0.74 GB less GPU memory stays pinned
+            extra += ["--no-mmproj-offload"]
+        if self.ffmpeg_dir:
+            extra += ["--video-ffmpeg-dir", self.ffmpeg_dir]
+        kind = "vulkan" if engine == "gpu" else "cpu"
+        progress("LFM3-Omni-2B on the " + (gpu_name if engine == "gpu" else "CPU") + " (llama.cpp, 4-bit)")
+        self.engine_kind, self.max_tokens, self.cache = engine, int(max_tokens), None
+        # speech on its own CPU instance while chat has the laptop's GPU; a phone has no memory for a second copy
+        self.separate_voice = engine == "gpu" and not ANDROID
+        self.gpu = L.LlamaServer(base_dir, kind, max_tokens, model=paths["model"], mmproj=paths["mmproj"],
+                                 extra_args=extra, name=f"omni-{kind}", timeout_s=300, threads=threads)
+        props = self.gpu.props()
+        mods = props.get("modalities") or {}
+        self.inputs = ["text"] + [k for k in ("vision", "audio") if mods.get(k)] + (["video"] if self.ffmpeg_dir and mods.get("vision") else [])
+        self.lock = threading.Lock()
+        self.stage = {"name": "idle", "since": time.time()}
+        self._paths = paths
+        self._voice, self._voice_busy, self._voice_used, self._voice_error = None, 0, 0.0, None
+        self._voice_lock = threading.Lock()
+        self.side_gate = SideGate()
+        self._py = None
+        self._web = None
+        self._extra = {}
+        self.workdir, self.workname, self.after_write = None, "", None  # the active workspace (server sets them)
+        self.setup_s = round(time.perf_counter() - t0, 2)
+
+    def describe(self):
+        return {"mode": "omni", "model": "LFM3-Omni-2B", "engine": self.engine_kind, "max_tokens": self.max_tokens,
+                "setup_s": self.setup_s, "tools": [t["function"]["name"] for t in N.STUDIO_TOOLS],
+                "layers": [f"L1 LFM3-Omni-2B (llama.cpp {self.gpu.kind}, {self.quant.upper()})", "native tools"],
+                "device": self.gpu.device, "weights": f"4-bit ({self.quant.upper()}) + projector Q8_0",
+                "backend": "llama.cpp " + self.gpu.kind, "inputs": self.inputs, "outputs": ["text", "speech"],
+                "speech": (f"CPU, own llama.cpp instance ({self.voice_threads} threads; "
+                           + ("running)" if self._voice is not None else "starts when Clover first speaks)")
+                           if self.separate_voice else "same instance as chat"),
+                "speech_error": self._voice_error,
+                "reasoning": False}
+
+    def system_prompt(self, tools_on=True, asked=None):
+        now = datetime.datetime.now().astimezone()
+        return (f"You are Clover, an assistant running entirely on the user's {PLATFORM} (model: LFM3-Omni-2B). "
+                f"You can see images, hear audio and watch videos the user attaches. "
+                f"Today is {now.strftime('%A %d %B %Y')}. The user's home folder is {Path.home()}. "
+                "Answer directly and completely without asking unnecessary follow-up or clarifying questions. "
+                + self.workspace_sentence() + N.tools_sentence(tools_on, asked))
+
+    def transcribe(self, media):
+        """The words of the voice messages in `media`, to see whether the user asked for a tool."""
+        parts = [media_part(m) for m in media or () if m["kind"] == "audio" and (self.media_dir / m["file"]).is_file()]
+        if not parts:
+            return ""
+        # the probe's ASR form; an instruction after the audio made the Omni answer the question instead
+        msgs = [{"role": "system", "content": "Perform ASR in English."}, {"role": "user", "content": parts}]
+        with self.lock:
+            try:
+                return self._chat(msgs, [], 200, {})[0].strip()
+            finally:
+                self.stage = {"name": "idle", "since": time.time()}
+
+    def tts(self, text, voice="female", lang="en"):
+        t = speakable(text)
+        if not t:
+            raise ValueError("nothing to speak")
+        self.side_gate.hold()
+        try:
+            srv = self._voice_server() if self.separate_voice else None
+            if srv is not None:
+                try:
+                    return srv.tts(t, voice=voice, lang=lang)
+                finally:
+                    self._voice_done()
+            with self.lock:  # one llama-server slot: speech waits for a running answer
+                self.stage = {"name": "speaking", "since": time.time()}
+                try:
+                    return self.gpu.tts(t, voice=voice, lang=lang)
+                finally:
+                    self.stage = {"name": "idle", "since": time.time()}
+        finally:
+            self.side_gate.release()
+
+    def side_complete(self, msgs, max_new):
+        """A short greedy completion (an exchange note) on the CPU instance, never on the chat's slot, so the chat keeps
+        its cached prompt. -> text, or None when there is no CPU instance (CPU engine) or a turn or speech started."""
+        if not self.separate_voice or self.side_gate.is_set():
+            return None
+        srv = self._voice_server()
+        if srv is None:
+            return None
+        try:
+            text = ""
+            for ev in srv.chat_stream(dict(GREEDY, messages=msgs, max_tokens=int(max_new), cache_prompt=False),
+                                      self.side_gate):
+                if ev.get("cancelled"):
+                    return None
+                for ch in ev.get("choices") or []:
+                    text += (ch.get("delta") or {}).get("content") or ""
+            return text
+        finally:
+            self._voice_done()
+
+    def warm_voice(self):
+        """Start the speech instance in the background (a reply that will be spoken is being written)."""
+        def run():
+            if self._voice_server() is not None:
+                self._voice_done()
+        if self.separate_voice and self._voice is None:
+            threading.Thread(target=run, daemon=True).start()
+
+    def _voice_done(self):
+        with self._voice_lock:
+            self._voice_busy -= 1
+            self._voice_used = time.time()
+
+    def _voice_server(self):
+        """The CPU speech instance (started here on first use), marked busy; None -> speak on the main instance."""
+        with self._voice_lock:
+            if self._voice is not None and self._voice.proc.poll() is not None:
+                self._voice = None
+            if self._voice is None:
+                try:
+                    self._voice = L.LlamaServer(self.base_dir, "cpu", 8192, model=self._paths["model"],
+                                                mmproj=self._paths["mmproj"], name="omni-voice", timeout_s=120,
+                                                extra_args=["--reasoning", "off", "-t", str(self.voice_threads)])
+                    self._voice_error = None
+                    threading.Thread(target=self._voice_reaper, daemon=True).start()
+                except (OSError, RuntimeError, TimeoutError) as exc:
+                    self._voice_error = str(exc)
+                    return None
+            self._voice_busy += 1
+            return self._voice
+
+    def _voice_reaper(self):
+        while True:
+            time.sleep(30)
+            with self._voice_lock:
+                if self._voice is None:
+                    return
+                if not self._voice_busy and time.time() - self._voice_used > VOICE_IDLE_S:
+                    self._voice.close()
+                    self._voice = None
+                    return
+
+    def free_voice(self):
+        """Stops the voice instance when it is idle (it starts again on the next Listen): ~1.6 GB for a picture."""
+        with self._voice_lock:
+            if self._voice is None or self._voice_busy:
+                return False
+            self._voice.close()
+            self._voice = None
+            return True
+
+    def close(self):
+        with self._voice_lock:
+            if self._voice is not None:
+                self._voice.close()
+                self._voice = None
+        super().close()
+
+    # ---------------- generation ----------------
+    def _chat(self, msgs, schemas, max_new, by_name, on_delta=None, cancel=None, seed=0, tool_choice=None):
+        """One assistant message through /v1/chat/completions -> (content, calls, stats)."""
+        body = dict(GREEDY, messages=msgs, max_tokens=int(max_new), seed=int(seed), cache_prompt=True)
+        if schemas:
+            body["tools"] = schemas
+            if tool_choice:
+                body["tool_choice"] = tool_choice
+        content, acc, finish, tm = "", {}, None, {}
+        t0 = time.perf_counter()
+        t_first = None
+        looped, checked, cut = False, 0, None
+        self.stage = {"name": "reading", "since": time.time()}
+        stream = self.gpu.chat_stream(body, cancel)
+        try:
+            for ev in stream:
+                if ev.get("cancelled"):
+                    finish = "cancelled"
+                    break
+                tm = ev.get("timings") or tm
+                for ch in ev.get("choices") or []:
+                    d = ch.get("delta") or {}
+                    if d.get("content") or d.get("tool_calls"):
+                        if t_first is None:
+                            t_first = time.perf_counter()
+                            self.stage = {"name": "writing", "since": time.time()}
+                    if d.get("content"):
+                        content += d["content"]
+                        if on_delta:
+                            on_delta(d["content"], content)
+                        if len(content) - checked >= 200:
+                            checked = len(content)
+                            looped = looping(content)
+                            cut = rambling(content)
+                    for tc in d.get("tool_calls") or []:
+                        slot = acc.setdefault(tc.get("index", 0), {"id": None, "name": "", "arguments": ""})
+                        slot["id"] = tc.get("id") or slot["id"]
+                        fn = tc.get("function") or {}
+                        slot["name"] += fn.get("name") or ""
+                        slot["arguments"] += fn.get("arguments") or ""
+                    finish = ch.get("finish_reason") or finish
+                if looped:  # closing the stream stops llama-server; one copy of the repeated text is kept
+                    tail = content[-LOOP_TAIL:]
+                    content, finish = content[:content.find(tail) + LOOP_TAIL], "stop"
+                    break
+                if cut is not None:
+                    content, finish = content[:cut], "stop"
+                    break
+        finally:
+            stream.close()
+        calls = []
+        for s in acc.values():
+            try:
+                args = json.loads(s["arguments"] or "{}")
+            except ValueError:
+                args = {"_raw": s["arguments"]}
+            calls.append({"id": s["id"] or "call_" + uuid.uuid4().hex[:16], "name": s["name"], "arguments": args})
+        if not calls and "<tool_call>" in content:  # template parser did not split the call out: parse it here
+            calls = N.parse_tool_calls(content, by_name)
+            content = TOOL_XML.sub("", content)
+        t_end = time.perf_counter()
+        reason = {"stop": "stop", "tool_calls": "stop", "length": "length", "cancelled": "cancelled"}.get(finish, "stop")
+        if cancel is not None and cancel.is_set():
+            reason = "cancelled"
+        prompt_ms, pred_ms = tm.get("prompt_ms"), tm.get("predicted_ms")
+        prefill_s = (prompt_ms / 1000) if prompt_ms is not None else ((t_first or t_end) - t0)
+        decode_s = (pred_ms / 1000) if pred_ms is not None else (t_end - (t_first or t_end))
+        n_new = int(tm.get("predicted_n") or 0)
+        return content, calls, {"prompt_tokens": int(tm.get("prompt_n") or 0) + int(tm.get("cache_n") or 0),
+                                "reused_tokens": int(tm.get("cache_n") or 0), "new_tokens": n_new,
+                                "prefill_s": round(prefill_s, 2), "decode_s": round(decode_s, 2),
+                                "decode_tok_s": round(n_new / decode_s, 2) if decode_s > 0 and n_new else None,
+                                "finish": reason, **({"looped": True} if looped else {}),
+                                **({"rambling": True} if cut is not None else {})}
+
+    def _history(self, history, keep_last_media=False, strip_attached=False):
+        out = []
+        last_media_idx = -1
+        if keep_last_media:
+            for idx in range(len(history) - 1, -1, -1):
+                if history[idx].get("role") == "user" and history[idx].get("media"):
+                    last_media_idx = idx
+                    break
+        for idx, m in enumerate(history):
+            if idx == last_media_idx and m.get("role") == "user" and m.get("media"):
+                out.append({"role": "user", "content": user_content(m.get("content") or "", m["media"], self.media_dir)})
+            elif m.get("role") == "user" and m.get("media"):
+                names = ", ".join(str(x.get("name") or x.get("kind") or "attachment") for x in m["media"] if isinstance(x, dict))
+                txt = str(m.get("content") or "").strip()
+                out.append({"role": "user", "content": (f"[Attached: {names}]\n{txt}" if names else txt).strip()})
+            else:
+                item = {k: v for k, v in m.items() if k in ("role", "content", "tool_calls", "tool_call_id")}
+                if strip_attached and item.get("role") == "user" and isinstance(item.get("content"), str):
+                    marker = "\n\nUsing the attached content / session context above, answer the user's request clearly and thoroughly:\n"
+                    if marker in item["content"]:
+                        item["content"] = "[Earlier file attachment omitted]\n" + item["content"].split(marker, 1)[1]
+                out.append(item)
+        return out
+
+    # ---------------- one Studio turn ----------------
+    def run_turn(self, history, user_text, *, tools=True, sampling="general", thinking=True, max_new=2048,
+                 max_rounds=8, on_event=None, ask=None, allow=(), cancel=None, seed=0, system=None,
+                 layers=(), kit=None, layer_query=None, final_on_limit=False, force_answer=False, extra_tools=(),
+                 media=(), only_tools=None, meaning=None):
+        """Same contract as LFM3Native.run_turn. `thinking`, `sampling` and `force_answer` do not apply: the Omni
+        does not reason and its card asks for greedy text decoding. media: [{"kind", "file"}] for this message.
+        meaning: the turn's semantics.Frame (the user's paths, the search limit); None works it out from user_text."""
+        emit = on_event or (lambda e: None)
+        self.turn_cancel = cancel  # a running command stops when the user stops the turn
+        self.turn_paths = list(meaning.paths) if meaning is not None else N.user_paths(user_text)
+        self.turn_unknown = set()
+        self.turn_ran = set()
+        self.turn_web, self.turn_web_cap = 0, (meaning.web_cap if meaning is not None else
+                                               8 if "web_search" in N.asked_tools(user_text) else 3)
+        base = [t for t in N.STUDIO_TOOLS if only_tools is None or t["function"]["name"] in only_tools]
+        extra_tools = [t for t in extra_tools if only_tools is None or t["schema"]["function"]["name"] in only_tools]
+        tools = tools and bool(base or extra_tools)
+        self._extra = {t["schema"]["function"]["name"]: t for t in extra_tools} if tools else {}
+        schemas = (base + [t["schema"] for t in extra_tools]) if tools else []
+        by_name = {t["function"]["name"]: t["function"] for t in schemas}
+        query = layer_query or user_text
+        layer_log, blocks = [], []
+        for name, fn in (("memory", "memory_context"), ("ontology", "ontology_context"), ("workspace", "workspace_context"),
+                         ("records", "records_context")):
+            if name in layers:
+                block, info = getattr(kit, fn)(query)
+                if block:
+                    blocks.append(block)
+                    layer_log.append(info)
+        if blocks:  # Clover appends its observations after the question
+            user_text = user_text + "\n\n" + "\n\n".join(blocks)
+        recall = []
+        if "recall" in layers and kit is not None:  # background right before the message (memory-research exp G5)
+            block, info = kit.recall_context(query, sum(1 for m in history if m.get("role") == "user"))
+            if block:
+                recall.append({"role": "system", "content": block})
+            if info:
+                layer_log.append(info)
+        if meaning is not None and getattr(meaning, "guidance", ""):
+            # the user's preferred form of answer (personal.py, off by default): fixed wording, no user text
+            recall.append({"role": "system", "content": meaning.guidance})
+        sys_txt = system or self.system_prompt(bool(schemas), only_tools)
+        keep_last_media = bool(meaning is not None and getattr(meaning, "seen", ()) and not media)
+        has_new_visual = any(m.get("kind") in ("image", "video") for m in media or () if isinstance(m, dict))
+        not_comparing_prior = not re.search(r"\b(?:previous|earlier|first|prior|other|both|compare|same\s+as)\b", query or "", re.I)
+        if has_new_visual and not_comparing_prior:
+            past_msgs = []
+            user_text = (user_text or "").rstrip() + "\n(Answer strictly from the image/video attached to this message.)"
+        else:
+            past_msgs = self._history(history, keep_last_media=keep_last_media, strip_attached=bool(media))
+        msgs = ([{"role": "system", "content": sys_txt}] + past_msgs + recall
+                + [{"role": "user", "content": user_content(user_text, media, self.media_dir)}])
+        rounds, final, stats_all = [], "", []
+        done_calls = {}  # (name, args) -> first result: the Omni repeated identical searches 3 times in a test
+
+        def delta_cb(round_no):
+            shown = {"n": 0}
+
+            def on_delta(delta, text):
+                visible = TOOL_XML.sub("", text)
+                if len(visible) > shown["n"]:
+                    emit({"type": "token", "round": round_no, "kind": "answer", "text": visible[shown["n"]:]})
+                    shown["n"] = len(visible)
+            return on_delta
+
+        with self.lock:
+            try:
+                first_compiler_fb = None
+                for attempt in range(3 if "compiler" in layers else 1):
+                    if attempt:
+                        fb, info = kit.compiler_check(query, final)
+                        layer_log.append(info)
+                        if not fb or (cancel and cancel.is_set()):
+                            if not fb and first_compiler_fb:
+                                layer_log.append({
+                                    "layer": "cycle", "action": "compiler_repaired",
+                                    "lesson": C.lesson_text(query, ["Code: " + first_compiler_fb.strip()[:240]], "", passed=True),
+                                    "lesson_kind": "verified",
+                                })
+                            break
+                        if first_compiler_fb is None:
+                            first_compiler_fb = fb
+                        emit({"type": "layer", "layer": "compiler", "feedback": fb})
+                        msgs.append({"role": "assistant", "content": final})
+                        msgs.append({"role": "user", "content": "The Clover compiler checked the code in your answer and "
+                                     "reported:\n" + fb + "\nFix the problem and reply with the complete corrected code."})
+                    for r in range(max_rounds):
+                        emit({"type": "round", "round": r + 1})
+                        if schemas and getattr(self, "turn_web", 0) >= getattr(self, "turn_web_cap", 99):
+                            # past the search limit the Omni kept calling refused searches, then wrote a Python scraper of
+                            # invented URLs for 5 minutes (2026-11-01): no tools for the rest of this answer
+                            schemas = []
+                        if schemas and sum(1 for rd in rounds if rd["why"] == "same call already made in this answer") >= 2:
+                            # "good vegetarian restaurants in Jaipur" repeated two searches six times, to the round limit
+                            schemas = []
+                        # asked for a tool (only_tools set): told to use it, the Omni still answered from memory
+                        forced = "required" if only_tools and schemas and r == 0 and attempt == 0 else None
+                        content, calls, st = self._chat(
+                            msgs, schemas, max_new, by_name,
+                            None if forced else delta_cb(r + 1), cancel,
+                            seed + 100 * attempt + r, forced,
+                        )
+                        stats_all.append(st)
+                        if forced and calls and ASKS_USER.search(content[-400:]) and any(
+                            c["name"] in ("run_powershell", "write_file", "vscode_run", "vscode_install", "vscode_clone", "vscode_open")
+                            for c in calls
+                        ):
+                            calls = []  # the model asks the user which command/app to run: its question is the answer
+                        if r == 0 and attempt == 0 and not calls and "web_search" in by_name and (
+                            "web_search" in (only_tools or ()) or semantics.CANNOT.search(content)
+                        ):
+                            calls = [{"id": "call_" + uuid.uuid4().hex[:16], "name": "web_search", "arguments": {"query": query}}]
+                            content = ""
+                        names = [c["name"] for c in calls]
+                        if calls and semantics.answered_unasked(meaning, TOOL_XML.sub("", content), names):
+                            rt = meaning.runtime
+                            used = ", ".join(dict.fromkeys(rt.word(rt.capability(n)) for n in names))
+                            layer_log.append({"layer": "semantics", "label": f"answer kept · {used} not used (not asked)"})
+                            content, calls = TOOL_XML.sub("", content), []
+                        if forced and not calls and content.strip():
+                            emit({"type": "token", "round": r + 1, "kind": "answer", "text": TOOL_XML.sub("", content)})
+                        if calls and tools and schemas and st["finish"] != "cancelled":
+                            kept_c = "" if (forced or semantics.CANNOT.search(content)) else content
+                            msgs.append({"role": "assistant", "content": kept_c, "tool_calls": [
+                                {"id": c["id"], "type": "function",
+                                 "function": {"name": c["name"], "arguments": json.dumps(c["arguments"])}} for c in calls]})
+                            for c in calls:
+                                emit({"type": "tool_call", "id": c["id"], "name": c["name"], "arguments": c["arguments"]})
+                                key = (c["name"], json.dumps(c["arguments"], sort_keys=True))
+                                if key in done_calls:
+                                    ran, why = False, "same call already made in this answer"
+                                    result = ("You already made this exact call in this answer; its result is above. Do not "
+                                              "repeat it: answer from the results you have, or try something different.")
+                                else:
+                                    ran, result, why = self.execute_tool(c["name"], c["arguments"], ask, allow)
+                                    done_calls[key] = result
+                                emit({"type": "tool_result", "id": c["id"], "name": c["name"], "ran": ran, "why": why,
+                                      "result": result[:3000]})
+                                rounds.append({"tool": c["name"], "arguments": c["arguments"], "ran": ran, "why": why,
+                                               "result": result[:2000]})
+                                msgs.append({"role": "tool", "tool_call_id": c["id"], "content": result})
+                            continue
+                        final = content.strip()
+                        web_ok = any(rd["tool"] == "web_search" and rd["ran"] and not rd["result"].startswith("No results") for rd in rounds)
+                        refused_after_web = web_ok and (semantics.CANNOT.search(final) or "don't know where you are" in final.lower())
+                        if (semantics.non_answer(final) or refused_after_web) and rounds and \
+                                st["finish"] not in ("length", "cancelled") and not (cancel and cancel.is_set()):
+                            # with its tools gone the Omni still wrote a call, which is stripped, and the answer was
+                            # empty: "(Clover finished without writing an answer.)" in a trip-planning chat (2026-11-01)
+                            msgs.append({"role": "user", "content": "Answer now in plain text directly from the tool "
+                                         "results above; do not ask for location or call tools."})
+                            lead = "Here is what I can tell you: "
+                            msgs.append({"role": "assistant", "content": lead})
+                            emit({"type": "round", "round": r + 2})
+                            emit({"type": "token", "round": r + 2, "kind": "answer", "text": lead})
+                            content, _, st = self._chat(msgs, [], max_new, by_name, delta_cb(r + 2), cancel,
+                                                        seed + 100 * attempt + r + 1)
+                            stats_all.append(st)
+                            final = (lead + content.strip()) if content.strip() else ""
+                        if not final:
+                            final = {"length": "(Clover ran out of room before answering. Ask for a shorter answer.)",
+                                     "cancelled": "(Stopped.)"}.get(st["finish"], "(Clover finished without writing an answer.)")
+                        break
+                    else:
+                        if final_on_limit and not (cancel and cancel.is_set()):
+                            msgs.append({"role": "user", "content": "The tool budget for this question is used up. Answer "
+                                         "now from the results you already have; do not call more tools."})
+                            # an assistant message last is continued by llama-server, so the answer starts as text
+                            lead = "From what I found so far: "
+                            msgs.append({"role": "assistant", "content": lead})
+                            emit({"type": "round", "round": max_rounds + 1})
+                            emit({"type": "token", "round": max_rounds + 1, "kind": "answer", "text": lead})
+                            content, _, st = self._chat(msgs, [], max_new, by_name, delta_cb(max_rounds + 1), cancel,
+                                                        seed + 100 * attempt + max_rounds)
+                            stats_all.append(st)
+                            final = (lead + content.strip()) if content.strip() else ""
+                        last = next((rd for rd in reversed(rounds) if rd["ran"]), None)
+                        final = final or (f"(Clover used all {max_rounds} tool rounds without finishing an answer."
+                                          + (f" Last {last['tool']} result: {last['result'][:400]}" if last else "") + ")")
+                if "ncm" in layers:  # the NCM checkpoint reads LFM3-1.7B's hidden states, not the Omni's
+                    layer_log.append({"layer": "ncm", "skipped": "needs an NCM trained for LFM3-Omni-2B"})
+                if "ontology" in layers:
+                    final, changed = kit.grounding_filter(query, final)
+                    layer_log.append({"layer": "ontology_grounding", "changed": changed})
+                mq = TRAILING_Q.search(final) if len(final) > 60 else None
+                if mq and mq.start() >= 40:
+                    final = final[:mq.start()].strip()
+            finally:
+                self.stage = {"name": "idle", "since": time.time()}
+        return {"reply": final, "tool_calls": rounds, "rounds": len(stats_all), "generation": stats_all,
+                "reasoning": "", "cancelled": bool(cancel and cancel.is_set()), "layers": layer_log}
+
+    # ---------------- the Clover cycle, when the user says the answer is not right ----------------
+    def retry_turn(self, history, question, previous, feedback, *, media=(), layers=(), kit=None, on_event=None,
+                   cancel=None, seed=0, max_new=2048, system=None, ask=None, allow=(), context=""):
+        """clover_cycle.retry_cycle on this engine. history: the conversation, ending with `previous` (the answer the
+        user says is not right); question: the message that answer is about, media: that message's attachments;
+        feedback: what the user said; context: the exchange before a follow-up question (clover_cycle.context_before),
+        put before the question in the independent solutions. Tools (web research, Python) go through the user's
+        permissions (`ask` pauses for a decision). Returns the run_turn result shape."""
+        emit = on_event or (lambda e: None)
+        layer_log, blocks, stats_all, rounds, used = [], [], [], [], []
+        for name, fn in (("memory", "memory_context"), ("ontology", "ontology_context"), ("workspace", "workspace_context"),
+                         ("records", "records_context")):
+            if name in layers and kit is not None:  # Context gathered again for the question
+                block, info = getattr(kit, fn)(question)
+                if block:
+                    blocks.append(block)
+                    layer_log.append(info)
+        sys_txt = system or self.system_prompt(False)
+        convo = [{"role": "system", "content": sys_txt}] + self._history(history)
+        start = len(convo)
+        notes = web = ""
+
+        def tool(name, args, run):
+            cid = "call_" + uuid.uuid4().hex[:16]
+            emit({"type": "tool_call", "id": cid, "name": name, "arguments": args})
+            ran, result, why = run()
+            emit({"type": "tool_result", "id": cid, "name": name, "ran": ran, "why": why, "result": result[:3000]})
+            rounds.append({"tool": name, "arguments": args, "ran": ran, "why": why, "result": result[:2000]})
+            return ran, result
+
+        def rewrite(instruction):  # the model sees the conversation and each earlier attempt of this retry
+            if cancel and cancel.is_set():
+                return previous
+            convo.append({"role": "user", "content": instruction + (notes + web if len(convo) == start else "")})
+            shown = {"n": 0}
+
+            def on_delta(delta, text):
+                visible = TOOL_XML.sub("", text)
+                if len(visible) > shown["n"]:
+                    emit({"type": "token", "round": 1, "kind": "answer", "text": visible[shown["n"]:]})
+                    shown["n"] = len(visible)
+            content, _, st = self._chat(convo, [], max_new, {}, on_delta, cancel, seed + 500 + len(convo))
+            stats_all.append(st)
+            new = TOOL_XML.sub("", content).strip() or previous
+            convo.append({"role": "assistant", "content": new})
+            return new
+
+        def solve(k, note=None):  # the question alone: the earlier answer is not shown; web results reach solve 2 only
+            if cancel and cancel.is_set():
+                return ""
+            ctx = notes + (web if k == 2 else "")
+            m2 = [{"role": "system", "content": sys_txt},
+                  {"role": "user", "content": user_content(C.second_solve_prompt(context + question + ctx, question, k, note),
+                                                           media, self.media_dir)}]
+            content, _, st = self._chat(m2, [], max_new, {}, None, cancel, seed + 900 + k)
+            stats_all.append(st)
+            return content
+
+        def python_solve(note):
+            """A third solution for a number, as a program Clover runs: '' when code may not run, the program only
+            writes down a value (no calculation), or it gives no value."""
+            if self.perms.get()["code"] == "deny" or (cancel and cancel.is_set()):
+                return ""
+            emit({"type": "cycle", "stage": "python"})
+            m2 = [{"role": "system", "content": sys_txt},
+                  {"role": "user", "content": user_content(C.python_solve_prompt(context + question + notes, note), media,
+                                                           self.media_dir)}]
+            content, _, st = self._chat(m2, [], max_new, {}, None, cancel, seed + 950)
+            stats_all.append(st)
+            import lfm3_layers
+            code = lfm3_layers.extract_python(content)
+            if not code or not C.computes(code) or (cancel and cancel.is_set()):
+                return ""
+            ran, out = tool("run_python", {"code": code}, lambda: self.execute_tool("run_python", {"code": code}, ask, allow))
+            value = C.python_answer(out) if ran else None
+            if value is None:
+                return ""
+            used.append("a Python calculation")
+            shown = f"{int(value)}" if float(value).is_integer() else f"{value:g}"
+            return f"Clover ran this Python program:\n```python\n{code.strip()}\n```\nIt printed: {out.strip()[-300:]}\n\nANSWER: {shown}"
+
+        def code_check(ans):
+            fb, info = kit.compiler_check(question, ans)
+            layer_log.append(info)
+            return fb
+
+        with self.lock:
+            try:
+                notes = ("\n\n" + "\n\n".join(blocks)) if blocks else ""  # Clover's records, after the request
+                if not blocks and C.needs_web(context + question) and not (cancel and cancel.is_set()):
+                    q = C.web_query(question)  # Context it did not have: search the web, read the best pages
+                    emit({"type": "cycle", "stage": "search"})
+                    ran, found = tool("web_search", {"query": q}, lambda: self.research_web(q, ask, allow))
+                    if ran and found.startswith("Searched "):  # one vote at most: a page can mislead (measured)
+                        web = ("\n\nClover searched the web for this question. Use these results only where they "
+                               "answer it; they can be incomplete or wrong:\n" + found)
+                        layer_log.append({"layer": "web", "query": q, "chars": len(found)})
+                        used.append("a web search")
+                answer, info = C.retry_cycle(question, previous, feedback, rewrite, solve=solve, emit=emit, used=used,
+                                             program=python_solve,
+                                             code_check=code_check if "compiler" in layers and kit is not None else None)
+                info["tools"] = list(dict.fromkeys(used))
+                layer_log.append(info)
+                if "ontology" in layers and kit is not None:
+                    answer, changed = kit.grounding_filter(question, answer)
+                    layer_log.append({"layer": "ontology_grounding", "changed": changed})
+            finally:
+                self.stage = {"name": "idle", "since": time.time()}
+        cancelled = bool(cancel and cancel.is_set())
+        return {"reply": "(Stopped.)" if cancelled else answer, "tool_calls": rounds, "rounds": len(stats_all),
+                "generation": stats_all, "reasoning": "", "cancelled": cancelled, "layers": layer_log}
+
+    # ---------------- VS Code (OpenAI messages + VS Code's tools) ----------------
+    def vscode_step(self, user_prompt, workspace_info, prior_turns, tool_rounds, vs_tools, thinking=True, max_new=1024,
+                    media=()):
+        schemas, by_name = [], {}
+        used = {rd.get("name") for rd in tool_rounds}
+        for t in vs_tools:
+            fn = t.get("function") if isinstance(t.get("function"), dict) else t
+            name = str(fn.get("name") or "").strip()
+            if not name or name in ("vscode_askQuestions", "manage_todo_list") or name in by_name:
+                continue
+            f = {"name": name, "description": str(fn.get("description") or "").split("\n")[0][:240],
+                 "parameters": fn.get("parameters") or fn.get("inputSchema") or {"type": "object", "properties": {}}}
+            by_name[name] = f
+            entry = {"type": "function", "function": f}
+            if name not in N.VSCODE_CORE and name not in used:
+                entry["defer_loading"] = True
+            schemas.append(entry)
+        deferred = [s["function"] for s in schemas if s.get("defer_loading")]
+        if deferred:
+            st = N._fn("search_tools", "Search the catalog of more VS Code tools by keywords. Returns tools you can then call.",
+                       {"query": {"type": "string"}}, ["query"])
+            schemas.insert(0, st)
+            by_name["search_tools"] = st["function"]
+        m_root = re.search(r"-\s*([A-Za-z]:\\[^\r\n]+|/[^\r\n]+)", workspace_info or "")
+        root = m_root.group(1).strip() if m_root else ""
+        sys_txt = ("You are Clover, a coding assistant inside VS Code, running on the user's laptop (model: LFM3-Omni-2B). "
+                   "Inspect the workspace with the tools before answering; never guess file contents. "
+                   + (f"The workspace root is {root}; use absolute paths. " if root else "")
+                   + ("If none of your tools fits, call search_tools to find one. " if deferred else ""))
+        msgs = [{"role": "system", "content": sys_txt}]
+        for h in prior_turns[-3:]:
+            msgs += [{"role": "user", "content": str(h["user"])[:1500]}, {"role": "assistant", "content": str(h["reply"])[:1500]}]
+        ws = f"<workspace_info>\n{workspace_info[:1500]}\n</workspace_info>\n" if workspace_info else ""
+        msgs.append({"role": "user", "content": user_content(ws + user_prompt[:6000], media, self.media_dir)})
+        for rd in tool_rounds[-8:]:
+            cid = rd.get("id") or ("call_" + uuid.uuid4().hex[:12])
+            msgs.append({"role": "assistant", "content": "", "tool_calls": [
+                {"id": cid, "type": "function", "function": {"name": rd["name"], "arguments": rd.get("arguments") or "{}"}}]})
+            msgs.append({"role": "tool", "tool_call_id": cid, "content": N._clip(rd.get("output") or "", 5000)})
+        trace = []
+        with self.lock:
+            try:
+                for _ in range(4):
+                    content, calls, st = self._chat(msgs, schemas, max_new, by_name)
+                    trace.append({"generation": st, "calls": [c["name"] for c in calls], "text": content[-400:]})
+                    if calls and calls[0]["name"] == "search_tools":
+                        q = str(calls[0]["arguments"].get("query") or "").lower().split()
+                        scored = sorted(deferred, key=lambda f: -sum(w in (f["name"] + " " + f["description"]).lower() for w in q))
+                        found = [f["name"] for f in scored[:3] if any(w in (f["name"] + " " + f["description"]).lower() for w in q)]
+                        msgs.append({"role": "assistant", "content": content, "tool_calls": [
+                            {"id": calls[0]["id"], "type": "function",
+                             "function": {"name": "search_tools", "arguments": json.dumps(calls[0]["arguments"])}}]})
+                        msgs.append({"role": "tool", "tool_call_id": calls[0]["id"], "content":
+                                     f"Found {len(found)} tools:\n" + "\n".join(json.dumps(by_name[n]) for n in found)})
+                        continue
+                    if calls:
+                        c = calls[0]
+                        return {"tool_call": {"name": c["name"], "arguments": json.dumps(c["arguments"])}, "trace": trace}
+                    return {"content": content.strip() or "(Clover did not finish an answer in time.)", "trace": trace}
+                return {"content": "(Clover kept searching for tools without choosing one.)", "trace": trace}
+            finally:
+                self.stage = {"name": "idle", "since": time.time()}

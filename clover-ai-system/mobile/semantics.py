@@ -116,6 +116,36 @@ ASKS = (
      r"\b(?:github|repo|repository|records|memory)\b|"
      r"\bset\s*up\s+(?:my|a|the|our)\s+(?:private\s+)?(?:github\s+)?repo(?:sitory)?\b"),
     (("ssh",), r"\b(?:ssh|remote\s+(?:host|machine|server|box))\b|\bon\s+[a-z0-9._-]+@[a-z0-9._-]+"),
+    (("calc",),
+     r"\b(?:use\s+(?:the\s+)?calculator|with\s+calculate)\b|"
+     r"\b(?:calculate|compute|evaluate)\s+\(?-?\d[\d,.]*\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*|"
+     r"^\s*(?:(?:what(?:'?s|\s+is|\s+are)|calculate|compute|evaluate)\s+)?\(?-?\d[\d,.]*\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*(?:\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*)*\)?\s*[?.!]*(?:\s+(?:and\s+)?(?:return|reply\s+with|output|give|provide|write|respond\s+with)\s+(?:only|just)\b[\s\S]*)?$"),
+    (("units",),
+     r"\bconvert_units\b|\bconvert\s+-?\d[\d.,]*\s*[a-z\u00b0/\u00b2\u00b3]+\s+(?:to|into|in)\s+[a-z\u00b0/\u00b2\u00b3]+\b|"
+     r"\bhow\s+many\s+(?:km|kilometers?|kilometres?|miles?|meters?|metres?|cm|mm|feet|ft|inches|yards?|kg|kilograms?|grams?|"
+     r"pounds?|lbs?|ounces?|oz|celsius|fahrenheit|kelvin|liters?|litres?|ml|gallons?|cups?|tbsp|tsp|mb|gb|tb|kb|mib|gib|tib|kib)\s+"
+     r"(?:are\s+)?in\s+-?\d"),
+    (("files.search",),
+     r"\bsearch_files\b|\b(?:search|grep)\s+(?:for\s+)?(?:['\"][^'\"]+['\"]|[\w.\-]+)\s+(?:in|inside|within|across|under)\s+"
+     r"(?:the\s+|my\s+|this\s+)?(?:files?|folders?|director(?:y|ies)|workspace|repo(?:sitory)?|project|codebase|[A-Za-z]:\\)|"
+     r"\bfind\s+all\s+files\b[^.?!\n]{0,40}\b(?:named|matching|containing|with)\b"),
+    (("files.info",),
+     r"\bfile_info\b|\b(?:sha256|sha-256|checksum|file\s+size|file\s+info(?:rmation)?|file\s+metadata)\b"),
+    (("git.inspect",),
+     r"\bgit_inspect\b|\b(?:inspect|check)\s+(?:the\s+)?git\s+(?:status|diff|repo(?:sitory)?)\b|"
+     r"\bgit\s+(?:diff|status)\b(?![^.?!\n]{0,30}\b(?:in\s+(?:the\s+)?terminal|with\s+powershell|in\s+vs\s*code)\b)|"
+     r"\b(?:uncommitted|staged|unstaged)\s+changes\b"),
+    (("doc.read",),
+     r"\bread_document\b|\bread\s+(?:page|pages|slide|slides|sheet)\s+\d*\b[^.?!\n]{0,50}\.(?:pdf|pptx|xlsx|xlsm|xls|docx|csv|tsv)\b"),
+    (("table.analyze",),
+     r"\banalyze_table\b|\b(?:group\s+by|filter\s+by|aggregate)\b[^.?!\n]{0,60}\.(?:xlsx|xlsm|xls|csv|tsv|json)\b"),
+    (("table.chart",),
+     r"\bchart_table\b|\b(?:plot|chart|graph)\b[^.?!\n]{0,60}\.(?:xlsx|xlsm|xls|csv|tsv|json)\b"),
+    (("media.info",),
+     r"\bmedia_info\b|\b(?:ffprobe|codec|bitrate|bit\s+rate|frame\s+rate|sample\s+rate|resolution|duration)\b"
+     r"[^.?!\n]{0,60}\.(?:mp4|webm|mkv|avi|mov|wav|mp3|flac|ogg|m4a|png|jpg|jpeg|webp)\b"),
+    (("media.frame",),
+     r"\bextract_frame\b|\bextract\s+(?:a\s+|the\s+)?frame\b[^.?!\n]{0,60}\.(?:mp4|webm|mkv|avi|mov)\b"),
 )
 VSCODE = re.compile(r"\b(?:vs\s?code|visual\s+studio\s+code)\b", re.I)
 # declining a tool without a negated verb, which CSI v0.1r3 reads only in "don't / do not ...": "Without searching the
@@ -129,6 +159,8 @@ DECLINES = (
                                  rf"{_NO}search(?:es|ing)?\b(?!\s+(?:for|of|on)\b)"),
     (("python",), rf"{_WITHOUT}(?:python|code|a\s+program|a\s+script)\b|{_NO}(?:python|code)\b"),
     (("shell",), rf"{_WITHOUT}(?:terminal|powershell|command\s+line|shell)\b|{_NO}(?:terminal|powershell|commands?)\b"),
+    (("calc",), rf"{_WITHOUT}(?:calculator|calculate|calculating)\b|{_NO}(?:calculator|calculate)\b"),
+    (("files.search",), rf"{_WITHOUT}(?:searching\s+files|file\s+search|search_files)\b|{_NO}(?:file\s+search|search_files)\b"),
 )
 # a spreadsheet, table or JSON file attached in this conversation: a question about its figures needs Python on the whole
 # file (a 2B model adding up numbers it reads gets them wrong, as with the groceries total, 2026-11-01)
@@ -239,20 +271,29 @@ CAP_WORDS = {"web.search": "the web", "web.page": "the web", "python": "Python",
              "files.list": "files", "files.write": "files", "shell": "the terminal", "status": "device status",
              "clock": "the clock", "remember": "memory", "image": "a picture", "vscode.open": "VS Code",
              "vscode.clone": "VS Code", "vscode.install": "VS Code", "vscode.run": "VS Code", "github.setup": "GitHub",
-             "github.sync": "GitHub", "ssh": "SSH", "memory.search": "memory"}
-READS = {"files.read": "the file", "files.list": "the folder", "web.page": "the web page", "memory.search": "your memory"}
+             "github.sync": "GitHub", "ssh": "SSH", "memory.search": "memory",
+             "calc": "the calculator", "units": "unit conversion", "files.search": "file search",
+             "files.info": "file info", "git.inspect": "Git", "doc.read": "the document",
+             "table.analyze": "table analysis", "table.chart": "a chart", "media.info": "media info",
+             "media.frame": "a video frame"}
+READS = {"files.read": "the file", "files.list": "the folder", "web.page": "the web page", "memory.search": "your memory",
+         "files.search": "the folder", "files.info": "the file", "git.inspect": "Git", "doc.read": "the document",
+         "media.info": "the media file"}
 OBSERVES = dict(READS, python="Python", shell="the terminal", status="device status", clock="the clock",
-                ssh="SSH", **{"vscode.run": "VS Code"})
+                ssh="SSH", calc="the calculator", units="unit conversion",
+                **{"vscode.run": "VS Code", "table.analyze": "table analysis"})
 DONE = {"files.write": "file written", "remember": "saved", "image": "picture made", "vscode.open": "opened in VS Code",
-        "vscode.clone": "cloned", "vscode.install": "installed"}
+        "vscode.clone": "cloned", "vscode.install": "installed", "table.chart": "chart made",
+        "media.frame": "frame extracted"}
 NO_TOOLS = {"creative writing": " · no tools", "meal": " · no tools", "about the photo": " · no tools",
             "places": " · web only"}
 # offered only when a message asks for them; the clock too: in Tools "Always" the Omni answered, called the clock
 # unasked and answered again, so the first answer vanished and the time showed (the date is in the system prompt)
-QUIET = ("files.write", "remember", "image", "clock")
+QUIET = ("files.write", "remember", "image", "clock", "table.chart", "media.frame")
 # and with nothing named, not this device's state or files either: "what is time now" read the laptop's status, a
 # greeting listed the home folder (2026-11-04)
-UNNAMED = QUIET + ("status", "files.read", "files.list")
+UNNAMED = QUIET + ("status", "files.read", "files.list", "files.search", "files.info", "git.inspect",
+                   "doc.read", "table.analyze", "media.info")
 _CTRL_OF = {"t": "\t", "n": "\n", "r": "\r", "f": "\f", "b": "\b", "v": "\v", "a": "\a"}
 
 
@@ -376,6 +417,8 @@ def asked_caps(text):
     if CONCEPT.search(t) and not EXPLICIT.search(t) and not re.search(LIVE, t, re.I):  # "tell me about the weather in Pune"
         return []
     caps = [cap for caps, pattern in ASKS if re.search(pattern, t, re.I) for cap in caps]
+    if "files.search" in caps and not re.search(r"\b(?:web|internet|online|google|website|url|arxiv|wikipedia)\b|https?://|www\.", t, re.I):
+        caps = [c for c in caps if c not in ("web.search", "web.page")]
     if VSCODE.search(t):  # "open C:\x.md in VS Code": VS Code's tools, not the hidden ones
         caps = [c for c in caps if c not in ("files.read", "files.list", "shell")]
         # "In VS Code, run git log ... in C:\x\repo" opened the folder in a new window instead (2026-11-01)

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Setting up Clover AI Studio</title>
+<link rel="icon" href="/icon.png">
+<style>
+/* the look of the laptop's setup window and of the app (app.html): cream, clover green, deep green */
+:root {
+  --cream: #F7F3E9; --surface: #FFFDF8; --fill: #ECE6D7; --green: #176B2C; --deep: #0D4D20;
+  --ink: #1B271F; --ink-2: #39473D; --muted: #687469; --faint: #98A198; --warn: #85540F; --warn-soft: #FBF2DF;
+  --line: rgba(27, 39, 31, .09); --ease: cubic-bezier(.22, 1, .36, 1);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; min-height: 100%; background: var(--cream); color: var(--ink); font: 16px/1.5 var(--font);
+  -webkit-text-size-adjust: 100%; }
+main { max-width: 540px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+  min-height: 100vh; display: flex; flex-direction: column; }
+.head { display: flex; gap: 14px; align-items: center; margin: 8px 0 6px; }
+.head img { width: 52px; height: 52px; flex: none; }
+h1 { font-size: 1.45rem; line-height: 1.25; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+h1.warn { color: var(--warn); }
+.sub { color: var(--muted); font-size: .93rem; margin: 6px 0 22px; }
+ol.steps { list-style: none; margin: 0 0 26px; padding: 0; }
+ol.steps li { display: flex; gap: 12px; align-items: baseline; padding: 7px 0; color: var(--faint); font-size: 1.02rem;
+  transition: color .3s var(--ease); }
+ol.steps li .m { width: 18px; flex: none; text-align: center; font-size: 1rem; }
+ol.steps li.done { color: var(--ink-2); }
+ol.steps li.done .m { color: var(--green); }
+ol.steps li.now { color: var(--ink); font-weight: 600; }
+ol.steps li.now .m { color: var(--green); }
+ol.steps li.stop, ol.steps li.stop .m { color: var(--warn); font-weight: 600; }
+ol.steps li small { display: block; font-weight: 400; color: var(--muted); font-size: .82rem; }
+.row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.row .l { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .r { flex: none; text-align: right; font-variant-numeric: tabular-nums; }
+.big { font-weight: 600; color: var(--ink-2); }
+.small { font-size: .88rem; color: var(--ink-2); }
+.fine { font-size: .82rem; color: var(--muted); }
+.bar { position: relative; height: 10px; background: var(--fill); border-radius: 999px; overflow: hidden; margin: 8px 0 14px; }
+.bar.thin { height: 6px; margin: 6px 0 8px; }
+.bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--green); border-radius: 999px; }
+.bar.indet i { width: 26%; animation: slide 1.5s var(--ease) infinite; }
+@keyframes slide { from { left: -26%; } to { left: 100%; } }
+.msg { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; color: var(--ink-2);
+  font-size: .95rem; margin: 0 0 18px; white-space: pre-line; }
+.msg.warn { background: var(--warn-soft); border-color: #E9D2A6; color: var(--warn); }
+.grow { flex: 1; }
+.btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+button { font: inherit; border: 1px solid var(--fill); background: var(--surface); color: var(--ink); border-radius: 12px;
+  padding: 12px 18px; font-weight: 600; min-height: 48px; cursor: pointer; }
+button.pri { background: var(--green); border-color: var(--green); color: #fff; }
+button:disabled { opacity: .5; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="head"><img src="/icon.png" alt="" width="52" height="52"><h1 id="title">Setting up Clover AI Studio</h1></div>
+  <p class="sub" id="sub">Clover runs here on your phone. It needs its model once: downloaded from its publisher and checked before it is used.</p>
+
+  <ol class="steps" id="steps">
+    <li data-step="1"><span class="m">○</span><span>Checking this phone</span></li>
+    <li data-step="2"><span class="m">○</span><span>LFM3-Omni-2B, the model<small id="s2">about 1.0 GB</small></span></li>
+    <li data-step="3"><span class="m">○</span><span>Its projector: sight, hearing and voice<small id="s3">about 0.5 GB</small></span></li>
+    <li data-step="4"><span class="m">○</span><span>Starting Clover</span></li>
+  </ol>
+
+  <div id="intro" class="msg" hidden></div>
+
+  <div id="progress" hidden>
+    <div class="row"><span class="l big" id="o-l">Downloading</span><span class="r big" id="o-r"></span></div>
+    <div class="bar" id="bar1"><i id="fill1"></i></div>
+    <div class="row"><span class="l small" id="i-l"></span><span class="r small" id="i-r"></span></div>
+    <div class="bar thin" id="bar2"><i id="fill2"></i></div>
+    <div class="row"><span class="l fine" id="d-l"></span><span class="r fine" id="d-r"></span></div>
+  </div>
+
+  <div id="final" class="msg" hidden></div>
+  <div class="grow"></div>
+  <p class="fine" id="foot">Downloads continue while Clover is in the background; Android shows the progress in a notification.</p>
+  <div class="btns">
+    <button type="button" id="b2" hidden></button>
+    <button type="button" class="pri" id="b1" hidden></button>
+  </div>
+</main>
+<script nonce="__CSP_NONCE__">
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var MARK = { done: '\u2713', now: '\u25CF', stop: '\u25CF', todo: '\u25CB' };
+  var view = { p1: 0, p2: 0, item: null }, last = null, samples = [], auto = true, leaving = false;
+
+  function size(b) { return b >= 1073741824 ? (b / 1073741824).toFixed(1) + ' GB' : Math.round(b / 1048576) + ' MB'; }
+  function api(method, path) {
+    return fetch(path, { method: method, headers: method === 'POST' ? { 'Content-Type': 'application/json' } : {},
+                         body: method === 'POST' ? '{}' : undefined, credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.json(); });
+  }
+  function steps(cur, state) {
+    Array.prototype.forEach.call(document.querySelectorAll('#steps li'), function (li) {
+      var n = +li.dataset.step, k = state === 'done' || n < cur ? 'done' : n === cur ? (state === 'running' || state === 'loading' ? 'now' : 'stop') : 'todo';
+      li.className = k; li.querySelector('.m').textContent = MARK[k];
+    });
+  }
+  function button(el, text, fn) { el.hidden = !text; el.textContent = text || ''; el.onclick = fn || null; el.disabled = false; }
+  function cellular() { var c = navigator.connection; return !!(c && (c.type === 'cellular' || c.saveData)); }
+
+  function applyPlatform(isAndroid) {
+    var dev = isAndroid ? 'phone' : 'laptop';
+    $('sub').textContent = 'Clover runs here on your ' + dev + '. It needs its model once: downloaded from its publisher and checked before it is used.';
+    var s1 = document.querySelector('#steps li[data-step="1"] span:last-child');
+    if (s1) s1.textContent = 'Checking this ' + dev;
+    $('foot').textContent = isAndroid
+      ? 'Downloads continue while Clover is in the background; Android shows the progress in a notification.'
+      : 'Everything comes from its publisher and is checked against its published SHA-256 hash before it is used.';
+  }
+
+  function idle(s) {
+    applyPlatform(!!s.android);
+    var dev = s.android ? 'phone' : 'laptop';
+    var need = s.plan || (s.android ? 1556460448 : 1960000000), free = s.free_bytes;
+    var lines = ['Clover downloads ' + size(need) + ' once, from Hugging Face (LiquidAI), and checks every file against its published hash.'];
+    if (free != null) lines.push(size(free) + ' free on this ' + dev + '.');
+    if (cellular()) lines.push('You are on mobile data: Wi-Fi is better for a download this size.');
+    $('intro').textContent = lines.join('\n'); $('intro').hidden = false;
+    $('intro').className = 'msg' + (free != null && free < need * 1.15 ? ' warn' : '');
+    $('progress').hidden = true; $('final').hidden = true;
+    steps(1, 'idle');
+    button($('b1'), 'Download and set up', start); button($('b2'), '');
+    if (auto && !cellular() && (free == null || free >= need * 1.15)) start();
+    auto = false;
+  }
+  function start() {
+    $('b1').disabled = true;
+    api('POST', '/api/setup/start').then(poll, poll);
+  }
+  function stop() { $('b2').disabled = true; api('POST', '/api/setup/stop').then(poll, poll); }
+
+  function running(s) {
+    applyPlatform(!!s.android);
+    $('intro').hidden = true; $('final').hidden = true; $('progress').hidden = false;
+    var cur = (s.items && s.items > 2)
+      ? (/projector|mmproj|bge-small/i.test(s.item || '') ? 3 : 2)
+      : (s.index ? s.index + 1 : 1);
+    steps(Math.min(cur, 3), 'running');
+    var now = Date.now(), done = s.done || 0, plan = s.plan || 0;
+    samples.push([now, done]);
+    while (samples.length > 2 && now - samples[0][0] > 8000) samples.shift();
+    var span = (now - samples[0][0]) / 1000, rate = span >= 1.5 ? (done - samples[0][1]) / span : 0;
+    $('o-l').textContent = 'Downloading';
+    $('o-r').textContent = plan ? Math.floor(100 * done / plan) + '%  \u00b7  ' + size(done) + ' of ' + size(plan) : '';
+    view.target1 = plan ? 0.04 + 0.92 * Math.min(1, done / plan) : 0.04;
+    if (view.item !== s.item) { view.item = s.item; view.p2 = 0; }
+    $('i-l').textContent = s.item_state === 'checking' ? 'Checking ' + (s.item || '') : (s.item || '');
+    $('i-r').textContent = s.item_total ? size(s.item_done || 0) + ' of ' + size(s.item_total) : '';
+    $('bar2').classList.toggle('indet', s.item_state !== 'getting' || !s.item_total);
+    view.target2 = s.item_total ? Math.min(1, (s.item_done || 0) / s.item_total) : 0;
+    $('d-l').textContent = s.items ? 'Item ' + s.index + ' of ' + s.items : '';
+    var eta = '';
+    if (rate > 51200 && plan) {
+      var left = (plan - done) / rate;
+      eta = (rate / 1048576).toFixed(1) + ' MB/s  \u00b7  ' + (left < 60 ? 'under a minute left' : left < 3600 ? 'about ' + Math.ceil(left / 60) + ' min left' : 'about ' + (left / 3600).toFixed(1) + ' h left');
+    }
+    $('d-r').textContent = eta;
+    button($('b1'), ''); button($('b2'), 'Pause', stop);
+  }
+  function finished(s) {
+    steps(4, 'loading');
+    $('progress').hidden = false; $('bar2').classList.add('indet');
+    view.target1 = 1; $('o-l').textContent = 'Starting Clover'; $('o-r').textContent = '100%';
+    $('i-l').textContent = 'Loading the model'; $('i-r').textContent = ''; $('d-l').textContent = ''; $('d-r').textContent = '';
+    button($('b1'), ''); button($('b2'), '');
+    if (!leaving) { leaving = true; setTimeout(function () { location.replace('/'); }, 900); }
+  }
+  function stopped(s, failed) {
+    $('progress').hidden = true; $('intro').hidden = true;
+    var cur = s.index ? Math.min(s.index + 1, 3) : 1;
+    steps(cur, 'stopped');
+    $('title').textContent = failed ? 'Setup stopped' : 'Setup paused'; $('title').className = failed ? 'warn' : '';
+    $('final').className = 'msg' + (failed ? ' warn' : '');
+    $('final').textContent = (failed ? (s.error || 'The download did not finish.') + '\n\n' : '') +
+      'Nothing is lost: it continues where it stopped.';
+    $('final').hidden = false;
+    button($('b1'), failed ? 'Try again' : 'Resume', function () { $('title').textContent = 'Setting up Clover AI Studio'; $('title').className = ''; start(); });
+    button($('b2'), '');
+  }
+
+  function render(s) {
+    last = s;
+    if (!s.needed && (s.state === 'done' || s.state === 'idle')) return finished(s);
+    if (s.state === 'running') return running(s);
+    if (s.state === 'failed') return stopped(s, true);
+    if (s.state === 'stopped') return stopped(s, false);
+    return idle(s);
+  }
+  var timer = null;
+  function poll() {
+    clearTimeout(timer);
+    api('GET', '/api/setup').then(function (s) { render(s); timer = setTimeout(poll, s.state === 'running' ? 400 : 1500); },
+      function () { timer = setTimeout(poll, 1500); });
+  }
+  function frame() {  // the bars glide toward the measured values
+    if (view.target1 != null) { view.p1 += (view.target1 - view.p1) * 0.12; $('fill1').style.width = (100 * view.p1).toFixed(2) + '%'; }
+    if (view.target2 != null) {
+      if ($('bar2').classList.contains('indet')) $('fill2').style.width = '';
+      else { view.p2 += (view.target2 - view.p2) * 0.25; $('fill2').style.width = (100 * view.p2).toFixed(2) + '%'; }
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  poll();
+})();
+</script>
+</body>
+</html>

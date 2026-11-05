@@ -1,0 +1,2562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F7F3E9">
+<meta name="clover-platform" content="__CLOVER_PLATFORM__">
+<title>Clover</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="256x256" href="icon.png">
+<style>
+:root {
+  /* the Clover icon pack (clover-framework/assets/robo-icon): cream, clover green, deep green, leaf. Light only. */
+  color-scheme: light;
+  --cream: #F7F3E9; --green: #176B2C; --deep: #0D4D20; --leaf: #83B83D;
+  --bg: var(--cream); --rail: #F1ECDF; --surface: #FFFDF8; --fill: #ECE6D7; --fill-2: #E2DBCA;
+  --ink: #1B271F; --ink-2: #39473D; --muted: #687469; --faint: #98A198;
+  --line: rgba(27, 39, 31, .09); --line-2: rgba(27, 39, 31, .16);
+  --accent: var(--green); --accent-2: var(--deep); --accent-soft: #E3EEDA; --accent-tint: #EEF4E6;
+  --warn: #85540F; --warn-soft: #FBF2DF; --warn-line: #E9D2A6; --danger: #B3261E; --danger-soft: #FBEAE7;
+  --code-bg: #15201A; --code-ink: #EDF1E9;
+  --shadow-sm: 0 1px 2px rgba(22, 38, 26, .07);
+  --shadow: 0 6px 24px rgba(22, 38, 26, .07), 0 1px 3px rgba(22, 38, 26, .05);
+  --shadow-lg: 0 28px 70px rgba(22, 38, 26, .18), 0 8px 22px rgba(22, 38, 26, .08);
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html.phone .laptop-only, html.web .laptop-only { display: none !important; }
+html:not(.web) .web-only { display: none !important; }
+.mpick { flex: 1; min-width: 0; display: flex; align-items: center; }
+.mpick__btn { width: 100%; display: inline-flex; align-items: center; justify-content: space-between; gap: .3rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
+  padding: .28rem .58rem; font-size: .8rem; font-weight: 600; color: var(--ink-2); box-shadow: var(--shadow-sm); white-space: nowrap; min-width: 0; }
+.mpick__btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mpick__btn:hover, .mpick.open .mpick__btn { border-color: var(--accent); color: var(--accent-2); background: var(--accent-tint); }
+.mpick__btn .ic { width: 13px; height: 13px; transform: rotate(90deg); transition: transform .15s var(--ease); }
+.mpick.open .mpick__btn .ic { transform: rotate(270deg); }
+.mpick__menu { position: absolute; top: calc(100% + 2px); left: .5rem; right: .5rem; max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--line-2);
+  border-radius: 12px; box-shadow: var(--shadow-lg); padding: .3rem; z-index: 60; display: flex; flex-direction: column; gap: 2px; }
+.mpick__opt { border: 1px solid transparent; background: none; border-radius: 8px; padding: .46rem .6rem; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: .5rem; font-size: .86rem; font-weight: 550; color: var(--ink); }
+.mpick__opt:hover { background: var(--bg); }
+.mpick__opt.on { background: var(--accent-tint); border-color: rgba(23, 107, 44, .22); color: var(--accent-2); font-weight: 650; }
+.mpick__opt span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mpick__opt em { font-style: normal; font-size: .72rem; font-weight: 500; color: var(--muted); flex: none; }
+.mpick__opt.on em { color: var(--accent); }
+.mpick__sep { border-top: 1px solid var(--line); margin: .2rem .25rem; }
+.mpick__add { color: var(--accent); font-weight: 600; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font);
+  -webkit-font-smoothing: antialiased; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+::selection { background: var(--accent-soft); }
+.chats, .stream, .sheet__body, .thinkbox, pre { scrollbar-width: thin; scrollbar-color: var(--fill-2) transparent; }
+:focus-visible { outline: 2px solid var(--leaf); outline-offset: 2px; }
+.ic { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.spin { width: 18px; height: 18px; flex: none; animation: spin 2.4s linear infinite; }
+@keyframes spin { to { transform: rotate(-360deg); } }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+/* layout */
+.app { display: grid; grid-template-columns: 264px 1fr; height: 100%; transition: grid-template-columns .25s var(--ease); }
+.app.rail-off { grid-template-columns: 0 1fr; }
+.app.rail-off .rail { visibility: hidden; }
+.rail { background: var(--rail); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
+.rail__top { position: relative; display: flex; align-items: center; gap: .4rem; padding: .6rem .5rem .4rem .85rem; min-height: 56px; }
+.brand { flex: none; display: flex; align-items: center; gap: .45rem; font-weight: 650; font-size: 1rem; letter-spacing: -.01em; }
+.brand img { width: 24px; height: 24px; display: block; }
+.chats { flex: 1; min-height: 0; overflow-y: auto; padding: .2rem .5rem .75rem; display: flex; flex-direction: column; gap: 1px; }
+.chat { display: flex; align-items: center; border-radius: 10px; }
+.chat .open { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: .5rem .65rem; color: var(--ink-2); font-size: .9rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat:hover { background: rgba(255, 253, 248, .7); }
+.chat.on { background: var(--surface); box-shadow: var(--shadow-sm); }
+.chat.on .open { color: var(--ink); font-weight: 600; }
+.chat .del { width: 28px; height: 28px; flex: none; opacity: 0; border: 0; background: none; color: var(--faint); border-radius: 8px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center; margin-right: .2rem; }
+.chat:hover .del, .chat.on .del, .chat .del:focus-visible { opacity: 1; }
+.chat .del:hover { background: var(--danger-soft); color: var(--danger); }
+.chat .del .ic { width: 15px; height: 15px; }
+.rail__foot { padding: .75rem 1rem .9rem; border-top: 1px solid var(--line); font-size: .78rem; color: var(--muted); display: flex; flex-direction: column; gap: .3rem; }
+.status, .rail__ws { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.status span:last-child, .rail__ws span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rail__ws { color: var(--faint); }
+.rail__ws .ic { width: 14px; height: 14px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); flex: none; }
+.dot.ok { background: var(--leaf); }
+.dot.busy { background: #C9A227; animation: pulse 1.4s ease-in-out infinite; }
+.dot.err { background: var(--danger); }
+@keyframes pulse { 50% { opacity: .35; } }
+
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.bar { display: grid; grid-template-columns: 1fr minmax(0, 2.2fr) 1fr; align-items: center; padding: .5rem .7rem; min-height: 56px; }
+.bar__side { display: flex; align-items: center; gap: .2rem; }
+.bar__side.end { justify-content: flex-end; }
+.bar__title { min-width: 0; text-align: center; font-weight: 600; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ibtn { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 0; background: none;
+  color: var(--ink-2); flex: none; padding: 0; transition: background-color .15s var(--ease); }
+.ibtn:hover { background: var(--fill); color: var(--ink); }
+
+.stream { flex: 1; min-height: 0; overflow-y: auto; }
+.col { width: min(760px, 100%); margin: 0 auto; padding: .75rem 1.25rem 1.5rem; }
+.log { display: flex; flex-direction: column; gap: 1.4rem; }
+.hero { text-align: center; padding: 5vh .5rem 1rem; max-width: 560px; margin: 0 auto; animation: rise .5s var(--ease) both; }
+.mascot { width: 220px; height: auto; display: block; margin: 0 auto .4rem; }
+.hero h1 { font-size: 1.75rem; line-height: 1.2; letter-spacing: -.02em; font-weight: 650; margin: 0 0 .45rem; }
+.hero p { margin: 0 auto 1.5rem; color: var(--muted); max-width: 420px; }
+.sugg { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
+.sugg button { display: inline-flex; align-items: center; gap: .45rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
+  padding: .5rem .95rem; font-size: .88rem; color: var(--ink-2); box-shadow: var(--shadow-sm); transition: border-color .15s, color .15s; }
+.sugg button:hover { border-color: var(--accent); color: var(--accent-2); }
+.sugg .ic { width: 17px; height: 17px; color: var(--accent); }
+
+/* messages */
+.u { align-self: flex-end; max-width: 78%; background: var(--accent); color: #fff; border-radius: 20px 20px 6px 20px; padding: .65rem 1rem;
+  white-space: pre-wrap; word-wrap: break-word; animation: rise .25s var(--ease) both; }
+.u .files { font-size: .78rem; opacity: .85; margin-top: .3rem; display: flex; align-items: center; gap: .3rem; }
+.u .files .ic { width: 14px; height: 14px; }
+.u .media { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .4rem; }
+.u .media span { display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; opacity: .9; }
+.u .media img { width: 76px; height: 76px; object-fit: cover; border-radius: 12px; }
+.u .media .ic { width: 15px; height: 15px; }
+.b { min-width: 0; animation: rise .25s var(--ease) both; }
+.b__body { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.b__body > .tool, .b__body > .thinkbox, .b__body > .ask, .b__body > pre.trace { align-self: stretch; }
+.md { word-wrap: break-word; max-width: 100%; line-height: 1.65; }
+.md.notice { color: var(--muted); }
+.md.live { white-space: pre-wrap; }
+.md.live:empty { display: none; }
+.md p { margin: 0 0 .7rem; } .md p:last-child { margin-bottom: 0; }
+.md ul, .md ol { margin: .3rem 0 .7rem 1.3rem; padding: 0; } .md li { margin: .2rem 0; }
+.md strong { font-weight: 650; }
+.md h4 { margin: 1rem 0 .35rem; font-size: 1rem; }
+.md code { font-family: var(--mono); font-size: .86em; background: var(--fill); padding: .05rem .35rem; border-radius: 6px; }
+.code { position: relative; margin: .6rem 0 .8rem; border-radius: 12px; overflow: hidden; }
+.code pre { margin: 0; padding: 2.1rem 1.1rem 1rem; overflow: auto; background: var(--code-bg); color: var(--code-ink); font: .84rem/1.55 var(--mono); }
+.code pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+.code button { position: absolute; top: .45rem; right: .55rem; border: 0; background: rgba(255, 255, 255, .12); color: #E5EADF; border-radius: 7px;
+  font-size: .74rem; font-weight: 600; padding: .2rem .6rem; }
+.code button:hover { background: rgba(255, 255, 255, .22); color: #fff; }
+.figure { margin: .65rem 0 .2rem; padding: .6rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.figure img { display: block; max-width: 100%; margin: 0 auto; border-radius: 9px; }
+.figure figcaption { font-size: .8rem; color: var(--muted); margin-top: .45rem; }
+.acts { display: flex; align-items: center; flex-wrap: wrap; gap: .15rem; margin: .35rem 0 0 -.35rem; color: var(--muted); font-size: .76rem; min-height: 30px; }
+.acts button { border: 0; background: none; color: inherit; border-radius: 8px; padding: .32rem; display: inline-flex; align-items: center; gap: .3rem; font-size: .76rem; }
+.acts button:hover { color: var(--ink); background: var(--fill); }
+.acts .ic { width: 16px; height: 16px; }
+.acts .meta { margin-left: .35rem; color: var(--faint); }
+.b .acts > button { opacity: 0; transition: opacity .15s; }
+.b:hover .acts > button, .acts > button:focus-visible, #log > .b:last-child .acts > button { opacity: 1; }
+.acts .redo, .acts .good { display: none; }
+#log > .b:last-child .acts > button.redo { display: inline-flex; color: var(--accent); font-weight: 600; }
+#log > .b:last-child .acts > button.good, .acts > button.good.on { display: inline-flex; opacity: 1; }
+.acts > button.good.on { color: var(--accent); }
+.acts button.busy { color: var(--accent); }
+.tags { display: inline-flex; gap: .25rem; flex-wrap: wrap; margin-left: .35rem; }
+.tags span { background: var(--accent-tint); color: var(--accent-2); border-radius: 999px; padding: .05rem .5rem; font-size: .7rem; font-weight: 600; }
+.work { align-self: stretch; margin: 0 0 .55rem; }
+.work__t { display: inline-flex; align-items: center; gap: .35rem; border: 0; background: none; border-radius: 999px; padding: .2rem .55rem .2rem .3rem;
+  font-size: .78rem; color: var(--faint); max-width: 100%; text-align: left; }
+.work__t:hover { color: var(--ink-2); background: var(--fill); }
+.work__t .ic { width: 14px; height: 14px; flex: none; transition: transform .15s var(--ease); }
+.work__t[aria-expanded="true"] .ic { transform: rotate(90deg); }
+.work__t span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.work__b { margin-top: .45rem; padding-left: .7rem; border-left: 2px solid var(--line); }
+.work__b .tags { margin: 0 0 .5rem; }
+.work__b .thinkbox { margin: 0 0 .6rem; }
+.md.live.stale { opacity: .45; }
+.chat-group { display: flex; align-items: center; gap: .3rem; border: 0; background: none; width: 100%; text-align: left; padding: .55rem .5rem .3rem;
+  color: var(--faint); font-size: .74rem; font-weight: 600; letter-spacing: .02em; }
+.chat-group:hover { color: var(--ink-2); }
+.chat-group .ic { width: 13px; height: 13px; transition: transform .15s var(--ease); }
+.chat-group[aria-expanded="true"] .ic { transform: rotate(90deg); }
+.chat-group em { font-style: normal; font-weight: 500; margin-left: auto; }
+pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: .6rem .75rem;
+  font: .76rem/1.5 var(--mono); color: var(--muted); max-height: 280px; overflow: auto; margin: .4rem 0 0; }
+.think { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: var(--fill); border-radius: 999px; padding: .25rem .75rem .25rem .6rem;
+  font-size: .8rem; color: var(--muted); margin-bottom: .6rem; }
+.think:hover { color: var(--ink-2); }
+.think .ic { width: 15px; height: 15px; color: var(--accent); }
+.think.live .ic { animation: spin 2.2s linear infinite; }
+.thinkbox { font-size: .84rem; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: .65rem .85rem;
+  margin: -.2rem 0 .7rem; max-height: 260px; overflow: auto; white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+.tool { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; margin: 0 0 .6rem; overflow: hidden; box-shadow: var(--shadow-sm); }
+.tool__head { display: flex; align-items: center; gap: .55rem; padding: .55rem .75rem; cursor: pointer; font-size: .86rem; }
+.tool__head > .ic { color: var(--accent); width: 17px; height: 17px; }
+.tool__name { font-weight: 600; white-space: nowrap; }
+.tool__arg { flex: 1; min-width: 0; color: var(--muted); font: .78rem var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.state { font-size: .72rem; font-weight: 600; border-radius: 999px; padding: .08rem .55rem; background: var(--fill); color: var(--muted); white-space: nowrap; }
+.state.run { color: var(--warn); background: var(--warn-soft); }
+.state.ok { color: var(--accent-2); background: var(--accent-soft); }
+.state.no { color: var(--danger); background: var(--danger-soft); }
+.tool__body { border-top: 1px solid var(--line); padding: .6rem .75rem .25rem; }
+.tool__body pre { margin: 0 0 .55rem; white-space: pre-wrap; word-break: break-word; font: .78rem/1.5 var(--mono); background: var(--bg); border-radius: 9px;
+  padding: .55rem .65rem; max-height: 240px; overflow: auto; }
+.tool__body .lbl { font-size: .7rem; font-weight: 600; color: var(--faint); margin-bottom: .2rem; }
+.ask { border: 1px solid var(--warn-line); background: var(--warn-soft); border-radius: 16px; padding: .8rem .9rem; margin: 0 0 .65rem; animation: rise .2s var(--ease) both; }
+.ask__t { display: flex; align-items: center; gap: .5rem; font-weight: 600; color: var(--warn); font-size: .92rem; }
+.ask pre { white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow: auto; background: var(--surface); border: 1px solid var(--warn-line);
+  border-radius: 10px; padding: .5rem .6rem; font: .78rem/1.5 var(--mono); margin: .55rem 0 0; color: var(--ink-2); }
+.ask__b { display: flex; gap: .45rem; flex-wrap: wrap; align-items: center; margin-top: .65rem; }
+.ask .risk { margin: .45rem 0 0; font-size: .82rem; color: var(--danger); line-height: 1.45; }
+.md table { border-collapse: collapse; margin: .5rem 0; font-size: .86rem; display: block; overflow-x: auto; }
+.md th, .md td { border: 1px solid var(--line); padding: .3rem .55rem; text-align: left; vertical-align: top; }
+.md th { background: var(--fill); font-weight: 600; }
+.typing { display: flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .86rem; min-height: 28px; }
+.typing em { font-style: normal; }
+
+/* buttons and inputs */
+.btn { border: 0; background: var(--fill); color: var(--ink); border-radius: 10px; padding: .45rem .9rem; font-size: .86rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: .4rem; transition: background-color .15s var(--ease); }
+.btn:hover { background: var(--fill-2); }
+.btn.pri { background: var(--accent); color: #fff; }
+.btn.pri:hover { background: var(--accent-2); }
+.btn.warn { background: var(--warn); color: #fff; }
+.btn.danger { color: var(--danger); }
+.btn.sm { padding: .25rem .65rem; font-size: .78rem; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn .ic { width: 16px; height: 16px; }
+.linkish { border: 0; background: none; color: var(--accent); font-size: .84rem; font-weight: 600; padding: .3rem .2rem; display: inline-flex; align-items: center; gap: .1rem; }
+.linkish:hover { color: var(--accent-2); }
+.linkish .ic { width: 15px; height: 15px; stroke-width: 2.2; }
+.keyrow { display: flex; gap: .45rem; margin: .65rem 0 .2rem; }
+.keyrow input { flex: 1; min-width: 0; border: 1px solid var(--line-2); background: var(--surface); border-radius: 10px; padding: .45rem .7rem; font: .86rem var(--mono); }
+.keyrow input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint); }
+.keyrow input::placeholder { color: var(--faint); font-family: var(--font); }
+.fine { font-size: .8rem; color: var(--muted); line-height: 1.5; margin: .55rem 0 0; }
+.fine a { color: var(--accent); font-weight: 600; }
+.fine code { font-family: var(--mono); font-size: .9em; }
+.note { font-size: .8rem; color: var(--warn); margin-top: .5rem; line-height: 1.45; }
+.note.ok { color: var(--accent); }
+.btns { display: flex; gap: .45rem; flex-wrap: wrap; margin-top: .75rem; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: .4rem 1rem; font-size: .84rem; color: var(--muted); }
+.kv b { color: var(--ink); font-weight: 550; text-align: right; overflow-wrap: anywhere; }
+
+/* composer */
+.dock { padding: .25rem 1.25rem 1rem; }
+.notice { width: min(760px, 100%); margin: 0 auto .55rem; display: flex; align-items: center; justify-content: center; gap: .5rem; font-size: .84rem; color: var(--muted); }
+.notice.err { color: var(--danger); }
+.attachments { width: min(760px, 100%); margin: 0 auto .5rem; display: flex; gap: .4rem; flex-wrap: wrap; }
+.att { display: inline-flex; align-items: center; gap: .4rem; background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px;
+  padding: .2rem .3rem .2rem .7rem; font-size: .8rem; box-shadow: var(--shadow-sm); }
+.att button { border: 0; background: none; color: var(--muted); display: flex; padding: .15rem; border-radius: 50%; }
+.att button:hover { color: var(--danger); background: var(--danger-soft); }
+.att .ic { width: 14px; height: 14px; }
+.att img { width: 24px; height: 24px; object-fit: cover; border-radius: 6px; margin-left: -.45rem; }
+@property --beam-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@keyframes beam-clockwise { to { --beam-angle: 360deg; } }
+.composer { position: relative; width: min(760px, 100%); margin: 0 auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 26px; box-shadow: var(--shadow);
+  padding: .4rem; display: flex; align-items: flex-end; gap: .25rem; transition: border-color .18s var(--ease), box-shadow .18s var(--ease); }
+.composer:focus-within { border-color: rgba(23, 107, 44, .45); box-shadow: 0 8px 28px rgba(23, 107, 44, .12); }
+.composer.busy { border-color: rgba(23, 107, 44, .22); box-shadow: 0 8px 28px rgba(23, 107, 44, .10); }
+.composer.busy::before { content: ""; position: absolute; inset: -1.5px; border-radius: 27.5px; padding: 2px; pointer-events: none; z-index: 2;
+  background: conic-gradient(from var(--beam-angle, 0deg), transparent 0deg, transparent 270deg, rgba(23, 107, 44, .2) 300deg, var(--leaf) 336deg, var(--accent) 354deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: beam-clockwise 2s linear infinite; }
+.composer textarea { flex: 1; min-width: 0; border: 0; background: none; resize: none; font-size: 1rem; padding: .48rem .3rem; max-height: 220px; min-height: 38px; line-height: 1.45; }
+.composer textarea:focus { outline: none; }
+.composer textarea::placeholder { color: var(--faint); }
+.cbtn { width: 38px; height: 38px; flex: none; border-radius: 50%; border: 0; background: none; color: var(--muted); padding: 0;
+  display: inline-flex; align-items: center; justify-content: center; transition: background-color .15s, color .15s; }
+.cbtn:hover { background: var(--fill); color: var(--ink); }
+.cbtn .ic { width: 22px; height: 22px; }
+.mic.rec { background: var(--accent-soft); color: var(--accent-2); animation: ring 1.3s ease-in-out infinite; }
+@keyframes ring { 50% { box-shadow: 0 0 0 5px rgba(23, 107, 44, .16); } }
+.send { width: 38px; height: 38px; flex: none; border-radius: 50%; border: 0; background: var(--accent); color: #fff; padding: 0; touch-action: none; user-select: none; -webkit-user-select: none;
+  display: inline-flex; align-items: center; justify-content: center; transition: background-color .15s, color .15s, transform .12s, box-shadow .18s; }
+.send:hover { background: var(--accent-2); }
+.send:active { transform: scale(.94); }
+.send.idle { background: var(--fill-2); color: var(--ink-2); }
+.send.idle:hover { background: var(--accent-soft); color: var(--accent-2); }
+.send.holding { background: var(--accent-2); color: #fff; transform: scale(1.06); box-shadow: 0 0 0 6px rgba(23, 107, 44, .22); transition: box-shadow 1.2s linear, transform .2s; }
+.send.rec { background: var(--accent); color: #fff; transform: scale(1.06); animation: ring 1.2s ease-in-out infinite; }
+.send:disabled { background: var(--fill-2); color: var(--faint); cursor: default; transform: none; box-shadow: none; }
+.send.stop { background: var(--ink); color: #fff; }
+.send .ic { width: 20px; height: 20px; stroke-width: 2.3; pointer-events: none; }
+.send.stop .ic { width: 15px; height: 15px; fill: currentColor; stroke-width: 1.4; }
+.auth-gate { position: fixed; inset: 0; z-index: 95; background: rgba(246, 245, 240, .88); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  display: flex; align-items: center; justify-content: center; padding: 1.25rem; }
+.auth-card { width: min(400px, 100%); background: var(--surface); border: 1px solid var(--line-2); border-radius: 22px; box-shadow: var(--shadow-lg);
+  padding: 1.75rem 1.6rem 1.5rem; text-align: center; }
+.auth-card img { width: 64px; height: 64px; border-radius: 16px; margin: 0 auto .85rem; display: block; box-shadow: var(--shadow-sm); }
+.auth-card h2 { margin: 0 0 .4rem; font-size: 1.25rem; font-weight: 680; letter-spacing: -.02em; }
+.auth-card p { margin: 0 0 1.15rem; font-size: .86rem; color: var(--muted); line-height: 1.5; }
+.auth-fields { display: flex; flex-direction: column; gap: .55rem; text-align: left; }
+.auth-fields input { width: 100%; border: 1px solid var(--line-2); background: var(--bg); border-radius: 12px; padding: .62rem .8rem; font-size: .92rem; }
+.auth-fields input:focus { outline: none; border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-tint); }
+.auth-fields .btn.pri { width: 100%; justify-content: center; padding: .65rem 1rem; border-radius: 12px; font-size: .92rem; margin-top: .25rem; }
+.auth-links { margin-top: 1.1rem; padding-top: .9rem; border-top: 1px solid var(--line); font-size: .78rem; color: var(--muted); display: flex; justify-content: center; gap: .85rem; flex-wrap: wrap; }
+.auth-links a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.auth-links a:hover { text-decoration: underline; }
+
+/* settings: one sheet, pages one level after another */
+.scrim { position: fixed; inset: 0; background: rgba(20, 32, 24, .28); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
+.scrim.on { opacity: 1; pointer-events: auto; }
+.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100%); background: var(--bg); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg);
+  transform: translateX(104%); pointer-events: none; transition: transform .3s cubic-bezier(.2, .8, .2, 1); z-index: 50; display: flex; flex-direction: column; }
+.sheet.on { transform: none; pointer-events: auto; }
+.sheet__head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .3rem; padding: .55rem .6rem .35rem; min-height: 56px; }
+.sheet__head h2 { grid-column: 2; margin: 0; font-size: 1rem; font-weight: 650; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.back { grid-column: 1; justify-self: start; display: inline-flex; align-items: center; border: 0; background: none; color: var(--accent); font-size: .92rem; max-width: 100%;
+  padding: .35rem .5rem .35rem .15rem; border-radius: 9px; }
+.back:hover { background: var(--fill); }
+.back span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.back .ic { stroke-width: 2.2; }
+.sheet__head .x { grid-column: 3; justify-self: end; }
+.sheet__body { flex: 1; min-height: 0; overflow-y: auto; padding: .4rem 1rem 2rem; }
+.page { animation: push .28s var(--ease) both; }
+.page.from-left { animation-name: pop; }
+@keyframes push { from { opacity: 0; transform: translateX(18px); } }
+@keyframes pop { from { opacity: 0; transform: translateX(-18px); } }
+.lead { font-size: .86rem; color: var(--muted); margin: .1rem .3rem 1.1rem; line-height: 1.5; }
+.glabel { font-size: .74rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 0 .9rem .45rem; }
+.gfoot { font-size: .78rem; color: var(--muted); margin: -.8rem .9rem 1.3rem; line-height: 1.5; }
+.gfoot.center { text-align: center; margin-top: 0; }
+.group { background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-sm); margin: 0 0 1.3rem; overflow: hidden; }
+.group.pad { padding: .85rem .95rem; }
+.group > * { position: relative; }
+.group:not(.pad) > * + *::before { content: ""; position: absolute; top: 0; left: .95rem; right: 0; border-top: 1px solid var(--line); }
+.group > .t + .t::before { left: 3.6rem; }
+.row { width: 100%; display: flex; align-items: center; gap: .75rem; border: 0; background: none; text-align: left; padding: .65rem .95rem; min-height: 50px; font-size: .94rem; }
+button.row:hover { background: rgba(23, 107, 44, .045); }
+.row.static { cursor: default; }
+.row.danger { color: var(--danger); justify-content: center; }
+.tile { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.tile .ic { width: 18px; height: 18px; }
+.tile.leaf { background: var(--leaf); }
+.tile.mute { background: var(--fill-2); color: var(--muted); }
+.row__t { flex: 1; min-width: 0; }
+.row__t small { display: block; color: var(--muted); font-size: .78rem; line-height: 1.4; margin-top: .1rem; overflow-wrap: anywhere; }
+.row__v { color: var(--muted); font-size: .88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%; }
+.chev { width: 16px; height: 16px; color: var(--faint); stroke-width: 2.2; transition: transform .2s var(--ease); }
+.seg { display: inline-flex; background: var(--fill); border-radius: 10px; padding: 2px; gap: 2px; flex: none; max-width: 100%; }
+.seg button { border: 0; background: none; border-radius: 8px; padding: .32rem .8rem; font-size: .84rem; font-weight: 550; color: var(--ink-2); line-height: 1.3;
+  white-space: nowrap; transition: background-color .15s, box-shadow .15s; }
+.seg button:hover:not(.on):not(:disabled) { color: var(--ink); }
+.seg button.on { background: var(--surface); color: var(--ink); font-weight: 650; box-shadow: 0 1px 3px rgba(22, 38, 26, .16), 0 0 0 .5px rgba(22, 38, 26, .06); }
+.seg button:disabled { opacity: .4; cursor: default; }
+.seg.full { display: flex; } .seg.full button { flex: 1; }
+.seg.sm button { padding: .25rem .65rem; font-size: .8rem; }
+.switch { position: relative; width: 46px; height: 28px; flex: none; }
+.switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 1; }
+.switch input:disabled { cursor: default; }
+.switch span { position: absolute; inset: 0; border-radius: 999px; background: var(--fill-2); transition: background .2s; }
+.switch span::after { content: ""; position: absolute; width: 24px; height: 24px; left: 2px; top: 2px; border-radius: 50%; background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .2), 0 0 1px rgba(0, 0, 0, .2); transition: transform .2s var(--ease); }
+.switch input:checked + span { background: var(--accent); }
+.switch input:checked + span::after { transform: translateX(18px); }
+.switch input:disabled + span { opacity: .45; }
+.switch input:focus-visible + span { outline: 2px solid var(--leaf); outline-offset: 2px; }
+
+.layer { padding: .8rem .95rem .85rem; }
+.layer__h { display: flex; align-items: center; gap: .65rem; }
+.tag { min-width: 32px; height: 22px; border-radius: 6px; background: var(--fill); color: var(--muted); font-size: .72rem; font-weight: 700; padding: 0 .3rem;
+  display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.layer.on .tag { background: var(--accent); color: #fff; }
+.layer.part .tag { background: var(--accent-soft); color: var(--accent-2); }
+.layer__n { flex: 1; min-width: 0; font-weight: 650; font-size: .94rem; }
+.badge { font-size: .76rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.badge.on { color: var(--accent); }
+.layer__d, .layer .sub, .layer .links { margin-left: calc(32px + .65rem); }
+.layer__d { font-size: .8rem; color: var(--muted); line-height: 1.45; margin-top: .3rem; }
+.sub { display: flex; align-items: center; gap: .7rem; margin-top: .6rem; }
+.sub__t { flex: 1; min-width: 0; font-size: .89rem; font-weight: 550; }
+.sub__t small { display: block; color: var(--muted); font-size: .78rem; font-weight: 400; line-height: 1.45; margin-top: .1rem; }
+.links { display: flex; flex-wrap: wrap; gap: .1rem .9rem; margin-top: .35rem; }
+
+.summary { display: flex; align-items: center; gap: .8rem; padding: .85rem .95rem; }
+.summary .big { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--fill); color: var(--ink-2); flex: none; }
+.summary.ok .big { background: var(--accent-soft); color: var(--accent-2); }
+.summary.warn .big { background: var(--warn-soft); color: var(--warn); }
+.summary b { display: block; font-size: .94rem; } .summary span { font-size: .8rem; color: var(--muted); }
+.quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin: 0 0 1.3rem; }
+.quick button { border: 0; background: var(--surface); box-shadow: var(--shadow-sm); border-radius: 12px; padding: .6rem .3rem; font-size: .82rem; font-weight: 600;
+  color: var(--ink-2); display: flex; flex-direction: column; align-items: center; gap: .25rem; }
+.quick button:hover { color: var(--accent-2); }
+.quick .ic { width: 18px; height: 18px; }
+.confirm { border: 1px solid var(--warn-line); background: var(--warn-soft); border-radius: 14px; padding: .8rem .9rem; margin: -.6rem 0 1.3rem; font-size: .84rem; }
+.confirm b { color: var(--warn); }
+.perm { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: .75rem; padding: .8rem .95rem; }
+.group > .perm + .perm::before { left: 3.6rem; }
+.perm.m-ask .tile { background: var(--leaf); }
+.perm.m-deny .tile { background: var(--fill-2); color: var(--muted); }
+.perm__t { display: flex; align-items: center; justify-content: space-between; gap: .5rem; flex-wrap: wrap; min-height: 30px; }
+.perm__name { font-weight: 600; font-size: .92rem; }
+.perm__d { font-size: .78rem; color: var(--muted); line-height: 1.45; margin-top: .25rem; }
+
+.loc { padding: .8rem .95rem; }
+.group > .loc + .loc::before { left: 3.6rem; }
+.loc__h { display: flex; align-items: center; gap: .75rem; }
+.loc__t { flex: 1; min-width: 0; font-weight: 600; font-size: .92rem; }
+.loc code, .loc p { margin-left: calc(30px + .75rem); }
+.loc code { display: block; font: .78rem/1.45 var(--mono); color: var(--ink-2); background: var(--bg); border-radius: 8px; padding: .4rem .55rem; margin-top: .45rem;
+  overflow-wrap: anywhere; user-select: all; }
+.loc p { margin-top: .35rem; margin-bottom: 0; font-size: .78rem; color: var(--muted); line-height: 1.45; }
+
+.ws__row { width: 100%; display: flex; align-items: center; gap: .75rem; border: 0; background: none; text-align: left; padding: .65rem .95rem; min-height: 52px; }
+.ws__row:hover { background: rgba(23, 107, 44, .045); }
+.ws__row b { font-weight: 600; font-size: .92rem; }
+.ws__row.open .chev { transform: rotate(90deg); }
+.ws__acts { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0 .95rem .85rem calc(.95rem + 30px + .75rem); }
+.group > .ws + .ws::before { left: 3.6rem; }
+
+@media (max-width: 860px) {
+  .app, .app.rail-off { grid-template-columns: 1fr; }
+  .app.rail-off .rail { visibility: visible; }
+  .rail { position: fixed; inset: 0 auto 0 0; width: min(290px, 84vw); z-index: 45; transform: translateX(-104%); transition: transform .25s var(--ease); }
+  .rail.on { transform: none; box-shadow: var(--shadow-lg); }
+  .u { max-width: 88%; }
+}
+@media (min-width: 861px) { .app:not(.rail-off) #new-chat-2 { display: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body class="clover-app-body">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="spin-g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFF078"/><stop offset=".55" stop-color="#F8CF1E"/><stop offset="1" stop-color="#D89606"/></linearGradient>
+    <!-- loading: the icon pack's clover-spin -->
+    <symbol id="clover-spin" viewBox="0 0 120 120"><g fill="url(#spin-g)">
+      <path id="spin-leaf" d="M60 48 C48 30 29 26 24 40 C18 56 40 68 60 76 C80 68 102 56 96 40 C91 26 72 30 60 48Z"/>
+      <use href="#spin-leaf" transform="rotate(72 60 60)"/><use href="#spin-leaf" transform="rotate(144 60 60)"/>
+      <use href="#spin-leaf" transform="rotate(216 60 60)"/><use href="#spin-leaf" transform="rotate(288 60 60)"/></g></symbol>
+    <!-- interface icons from the icon pack (icons/*.svg) -->
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 13.5a7 7 0 0 0 0-3l2-1.5-2-3.5-2.4 1a8 8 0 0 0-2.6-1.5L13.5 2h-4L9 5a8 8 0 0 0-2.6 1.5l-2.4-1-2 3.5L4 10.5a7 7 0 0 0 0 3l-2 1.5 2 3.5 2.4-1A8 8 0 0 0 9 19l.5 3h4l.5-3a8 8 0 0 0 2.6-1.5l2.4 1 2-3.5z"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v12H9l-5 4z"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-2-13-4 16"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3z"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6zM14 3v5h5M9 13h7M9 17h7"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m4 18 6-5 3 3 3-4 4 4"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-profile" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-success" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m7 12 3 3 7-7"/></symbol>
+    <symbol id="i-warning" viewBox="0 0 24 24"><path d="m12 3 10 18H2z"/><path d="M12 9v5m0 3h.01"/></symbol>
+    <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9A7 7 0 0 1 18 6l2 1M4 17l2 1a7 7 0 0 0 12.5-3"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12m-5-5 5 5 5-5M4 20h16"/></symbol>
+    <symbol id="i-model" viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></symbol>
+    <symbol id="i-models" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5zM3 12l9 5 9-5M3 16l9 5 9-5"/></symbol>
+    <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/></symbol>
+    <symbol id="i-graph" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="12" cy="18" r="2"/><path d="m7 6 9-1M6 8l5 8m6-9-4 9"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5 9a7 7 0 0 1 12-3l3 3M4 15l3 3a7 7 0 0 0 12-3"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
+    <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 7v10a2 2 0 0 0 2 2h8m2-2V9a4 4 0 0 0-4-4h-2"/></symbol>
+    <!-- drawn in the same style where the pack has no icon -->
+    <symbol id="i-sidebar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9.5 4v16"/></symbol>
+    <symbol id="i-compose" viewBox="0 0 24 24"><path d="M12 4H6.5A2.5 2.5 0 0 0 4 6.5v11A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5V12"/><path d="M17.6 3.6a2 2 0 0 1 2.8 2.8L12 14.8l-3.6.8.8-3.6z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+    <symbol id="i-clip" viewBox="0 0 24 24"><path d="M20 11.5l-8.4 8.4a5 5 0 0 1-7.1-7.1l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.8a9 9 0 0 1 0 12.4"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3v8M6.3 6.3a8 8 0 1 0 11.4 0"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></symbol>
+    <symbol id="i-hand" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4V16h0A1.5 1.5 0 0 1 4 14.5z"/><path d="M10 8.6a2 2 0 1 1 3 1.7c-.6.4-1 .8-1 1.4M12 13.6h.01"/></symbol>
+    <symbol id="i-off" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M7 9.5l3 2.5-3 2.5M12.5 15H17"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20l1-4.2L15.6 5.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.2 19 4 20z"/><path d="M14 7l3 3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-wave" viewBox="0 0 24 24"><path d="M4 12h1.5M8 8.5v7M12 5v14M16 8.5v7M19.5 12H20"/></symbol>
+  </defs>
+</svg>
+
+<div class="app" id="app">
+  <aside class="rail" id="rail" aria-label="Chats">
+    <div class="rail__top">
+      <div class="brand"><img src="icon.png" alt="" width="24" height="24"><span>Clover</span></div>
+      <div class="mpick" id="mpick">
+        <button type="button" class="mpick__btn" id="model-btn" aria-haspopup="listbox" aria-expanded="false" title="Select model"><span id="model-btn-t">LFM3-Omni</span><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <div class="mpick__menu" id="model-menu" role="listbox" aria-label="Models" hidden></div>
+      </div>
+      <button type="button" class="ibtn" id="new-chat" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
+    </div>
+    <nav class="chats" id="chats"></nav>
+    <div class="rail__foot">
+      <div class="status"><span class="dot" id="status-dot"></span><span id="status-text">Connecting…</span></div>
+      <div class="rail__ws" id="rail-ws" hidden><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span id="rail-ws-t"></span></div>
+    </div>
+  </aside>
+
+  <section class="main">
+    <header class="bar">
+      <div class="bar__side">
+        <button type="button" class="ibtn" id="menu" aria-label="Show or hide chats" title="Chats"><svg class="ic" aria-hidden="true"><use href="#i-sidebar"/></svg></button>
+        <button type="button" class="ibtn" id="new-chat-2" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
+      </div>
+      <div class="bar__title" id="chat-title">New chat</div>
+      <div class="bar__side end">
+        <button type="button" class="ibtn" id="set-btn" aria-label="Settings" title="Settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></button>
+      </div>
+    </header>
+
+    <div class="stream" id="stream">
+      <div class="col">
+        <div class="hero" id="hero" hidden>
+          <img class="mascot" src="robo-clover.webp" alt="" width="220" height="188">
+          <h1 id="greet">Hello.</h1>
+          <p id="hero-p">Clover runs here on your laptop. Nothing leaves it unless you allow it.</p>
+          <div class="sugg" id="sugg"></div>
+        </div>
+        <div class="log" id="log" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="dock">
+      <div class="notice" id="notice" hidden><svg class="spin" id="notice-spin" aria-hidden="true"><use href="#clover-spin"/></svg><span id="notice-t"></span></div>
+      <div class="attachments" id="attachments" hidden></div>
+      <div class="composer" id="composer">
+        <input type="file" id="file-input" multiple hidden>
+        <button type="button" class="cbtn" id="attach" title="Add files" aria-label="Add files"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+        <textarea id="prompt" rows="1" placeholder="Message Clover" aria-label="Message"></textarea>
+        <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
+        <button type="button" class="send" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="auth-gate" id="auth-gate" hidden role="dialog" aria-modal="true" aria-labelledby="auth-gate-h">
+  <div class="auth-card">
+    <img src="icon.png" alt="Clover" width="64" height="64">
+    <h2 id="auth-gate-h">Sign in to Clover AI Studio</h2>
+    <p>Hosted Web Studio access is restricted to approved accounts only.</p>
+    <form class="auth-fields" id="auth-form">
+      <input type="text" id="auth-acct" placeholder="Approved account (username)" autocomplete="username" required>
+      <input type="password" id="auth-key" placeholder="Access key or GitHub token" autocomplete="current-password" required>
+      <button type="submit" class="btn pri" id="auth-submit">Sign in</button>
+    </form>
+    <p class="note" id="auth-note" hidden></p>
+    <div class="auth-links">
+      <a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
+      <a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download for Android (.apk)</a>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h" inert>
+  <div class="sheet__head">
+    <button type="button" class="back" id="sheet-back" hidden><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg><span id="back-t">Settings</span></button>
+    <h2 id="sheet-h">Settings</h2>
+    <button type="button" class="ibtn x" id="sheet-x" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="sheet__body" id="sheet-body">
+
+    <section class="page" data-page="home">
+      <div class="group laptop-only">
+        <button type="button" class="row t" data-go="account"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg></span><span class="row__t">GitHub account</span><span class="row__v" id="v-account">Not set up</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      </div>
+      <div class="group">
+        <button type="button" class="row t" data-go="storage"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Storage</span><span class="row__v" id="v-storage">This laptop</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="advanced"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></span><span class="row__t">Advanced</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      </div>
+      <p class="gfoot center">Clover runs on this laptop with the setup that measured best. Nothing leaves it unless you allow it.</p>
+      <p class="gfoot center" id="about-foot">Clover AI Studio <b id="v-version">v0.5.0-beta.1 (Beta)</b> · <a href="https://cloverframework.com/governance/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> · <a href="https://github.com/santhoshsathish94/clover-framework/issues" target="_blank" rel="noopener noreferrer">Support</a></p>
+    </section>
+
+    <section class="page" data-page="account" hidden>
+      <p class="lead">Keep a copy of Clover's memory in a private GitHub repository of yours, so it is backed up and can come back on another computer.</p>
+      <div class="group pad"><div class="kv" id="acct-kv"></div></div>
+      <div class="btns"><button type="button" class="btn" id="vsc-gh">Sign in to GitHub</button><button type="button" class="btn pri" id="vsc-repo">Set up private repository</button><button type="button" class="btn" id="vsc-sync" hidden><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg>Sync now</button></div>
+      <p class="fine">You sign in through VS Code on this laptop, and the GitHub token stays in VS Code.</p>
+      <div class="note" id="acct-note" hidden></div>
+    </section>
+
+    <section class="page" data-page="storage" hidden>
+      <p class="lead">Where Clover keeps things on this laptop. Open them in File Explorer to look inside or back them up.</p>
+      <div class="group">
+        <div class="loc"><div class="loc__h"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg></span><span class="loc__t">Chats and memory</span><button type="button" class="btn sm" data-copy-loc="loc-repo">Copy</button></div><code id="loc-repo">…</code><p>Clover's repository: your conversations, notes and what Clover learned, with their history.</p></div>
+        <div class="loc"><div class="loc__h"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></span><span class="loc__t">Attachments</span><button type="button" class="btn sm" data-copy-loc="loc-media">Copy</button></div><code id="loc-media">…</code><p id="media-d">Images, audio and video you send.</p></div>
+        <div class="loc"><div class="loc__h"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-model"/></svg></span><span class="loc__t">Models</span><button type="button" class="btn sm" data-copy-loc="loc-models">Copy</button></div><code id="loc-models">…</code><p>The model files Clover runs.</p></div>
+      </div>
+      <div class="group">
+        <button type="button" class="row danger" id="clear-media">Clear attachments</button>
+        <button type="button" class="row danger" id="clear-chats">Delete all chats</button>
+      </div>
+      <p class="gfoot">Deleted chats leave this browser and Clover's repository; its git history keeps them.</p>
+    </section>
+
+    <section class="page" data-page="advanced" hidden>
+      <div class="group">
+        <button type="button" class="row t" data-go="layers"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg></span><span class="row__t">Clover layers</span><span class="row__v">3 core · 3 supporting</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="model"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-model"/></svg></span><span class="row__t">Model and voice</span><span class="row__v" id="v-model"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      </div>
+      <div class="group">
+        <button type="button" class="row t" data-go="perms"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></span><span class="row__t">Permissions</span><span class="row__v" id="v-perms"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="tools"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg></span><span class="row__t">Tools and search</span><span class="row__v" id="v-tools"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      </div>
+      <div class="group laptop-only">
+        <button type="button" class="row t" data-go="workspaces"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Workspaces</span><span class="row__v" id="v-ws">None</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="vscode"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">VS Code</span><span class="row__v" id="v-vsc"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      </div>
+    </section>
+
+    <section class="page" data-page="layers" hidden>
+      <p class="lead">Clover is three core stages, inference, plan and decode, with three supporting layers that serve them. What is on is the setup that measured best on Clover's tasks.</p>
+      <div class="glabel">Core</div>
+      <div class="group" id="layers-core"></div>
+      <div class="glabel">Supporting</div>
+      <div class="group" id="layers-support"></div>
+      <div class="glabel">Semantics</div>
+      <div class="group" id="layers-semantics"></div>
+    </section>
+
+    <section class="page" data-page="personal" hidden>
+      <p class="lead">What Clover learned from your corrections and requests, and the experiences it learned from. It stays on this computer. Deleting a chat deletes its experiences.</p>
+      <div class="group pad" id="personal-list"></div>
+      <div class="group">
+        <button type="button" class="row t danger" id="personal-forget"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></span><span class="row__t">Forget everything Clover learned about you</span></button>
+      </div>
+    </section>
+
+    <section class="page" data-page="collective" hidden>
+      <p class="lead">Collective problem-solving (CPSL) extracts stripped, zero-verbatim structural strategies from validated problem-solving episodes and applies signed shared-core improvements when you opt in.</p>
+      <div class="glabel">Active shared-core rules</div>
+      <div class="group pad" id="collective-active"></div>
+      <div class="glabel">Candidate preview (stripped, zero user text)</div>
+      <div class="group pad" id="collective-candidates"></div>
+    </section>
+
+    <section class="page" data-page="model" hidden>
+      <div class="glabel">Model</div>
+      <div class="group pad">
+        <div class="seg full" id="s-model" style="margin-bottom:.55rem;flex-wrap:wrap" hidden></div>
+        <p class="fine" id="model-d"><b>LFM3-Omni-2B</b> reads text, images, audio and video, and answers in text or speech.</p>
+        <div class="note" id="model-note" hidden></div>
+      </div>
+      <div class="glabel">Hosted models</div>
+      <div class="group" id="rm-list" hidden></div>
+      <div class="group pad">
+        <p class="fine" style="margin-top:0">Host your own model (a Clover server, llama-server, Ollama, vLLM or any OpenAI-compatible server) on any machine and connect it here. By default Clover runs LFM3-Omni-2B locally on this laptop.</p>
+        <div class="keyrow" style="margin-top:.55rem"><input type="text" id="rm-url" autocomplete="off" spellcheck="false" placeholder="Server URL (e.g. http://192.168.1.50:8080)" aria-label="Model server URL"></div>
+        <div class="keyrow" style="margin-top:.45rem"><input type="password" id="rm-key" autocomplete="off" spellcheck="false" placeholder="Access key / API key (optional)" aria-label="Access key or API key"></div>
+        <div class="keyrow" style="margin-top:.45rem"><input type="text" id="rm-model" autocomplete="off" spellcheck="false" placeholder="Model ID (optional, auto-detected)" aria-label="Model ID"><button type="button" class="btn pri" id="rm-add">Add model</button></div>
+        <div class="note" id="rm-note" hidden></div>
+      </div>
+      <div class="glabel">Runs on</div>
+      <div class="group pad">
+        <div class="seg full" id="s-engine"><button type="button" data-v="gpu">GPU</button><button type="button" data-v="cpu">CPU</button><button type="button" data-v="fused" class="laptop-only">C1 + C2 + C3</button></div>
+        <p class="fine" id="engine-d"></p>
+        <div class="note" id="engine-note" hidden></div>
+      </div>
+      <div id="omni-settings" hidden>
+        <div class="glabel">Voice</div>
+        <div class="group">
+          <div class="row static"><span class="row__t">Clover's voice</span><div class="seg sm" id="s-voice"><button type="button" data-v="female">Female</button><button type="button" data-v="male">Male</button></div></div>
+          <label class="row static"><span class="row__t">Speak replies to voice messages</span><span class="switch"><input type="checkbox" id="s-autospeak"><span></span></span></label>
+        </div>
+      </div>
+      <div id="lfm3-settings">
+        <div class="glabel">Answers</div>
+        <div class="group">
+          <div class="row static"><span class="row__t">Style<small>The sampling LFM3's makers recommend for each kind of question.</small></span><div class="seg sm" id="s-style"><button type="button" data-v="general">General</button><button type="button" data-v="math">Math</button></div></div>
+          <label class="row static"><span class="row__t">Think before answering<small>Better on harder questions; slower.</small></span><span class="switch"><input type="checkbox" id="s-think"><span></span></span></label>
+          <div class="row static" id="s-room-row"><span class="row__t">Thinking room<small>When it is full, Clover answers with what it has.</small></span><div class="seg sm" id="s-room"><button type="button" data-v="2048">Normal</button><button type="button" data-v="4096">Long</button></div></div>
+        </div>
+      </div>
+      <div class="glabel">Engine</div>
+      <div class="group pad"><div class="kv" id="engine-kv"></div></div>
+      <div class="group">
+        <label class="row static"><span class="row__t">Keep each chat's state on disk<small>GPU engine: saves the model's state when you switch chats. Measured: no time saved yet.</small></span><span class="switch"><input type="checkbox" id="s-kv"><span></span></span></label>
+      </div>
+      <div class="group laptop-only"><button type="button" class="row danger" id="stop-engine">Stop engine</button></div>
+    </section>
+
+    <section class="page" data-page="perms" hidden>
+      <div class="group"><div class="summary" id="perm-summary"></div></div>
+      <div class="quick">
+        <button type="button" id="q-allow"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Allow all</button>
+        <button type="button" id="q-ask"><svg class="ic" aria-hidden="true"><use href="#i-hand"/></svg>Ask for all</button>
+        <button type="button" id="q-off"><svg class="ic" aria-hidden="true"><use href="#i-off"/></svg>All off</button>
+      </div>
+      <div class="confirm" id="confirm-all" hidden>
+        <b>Allow everything?</b> Clover will search the web, run code and PowerShell commands, and read and change your files without asking first.
+        <div class="ask__b"><button type="button" class="btn warn" id="confirm-yes">Allow all</button><button type="button" class="btn" id="confirm-no">Cancel</button></div>
+      </div>
+      <div class="group" id="perm-list"></div>
+      <p class="gfoot">Allow runs without asking. Ask pauses the answer and asks you in the chat. Off means Clover answers without that tool.</p>
+    </section>
+
+    <section class="page" data-page="tools" hidden>
+      <div class="glabel">Tools</div>
+      <div class="group pad">
+        <div class="seg full" id="s-tools"><button type="button" data-v="ask">When I ask</button><button type="button" data-v="always">Always</button></div>
+        <p class="fine">Clover searches the web, runs code or opens files only when your message asks for it ("search the web for…", "use Python to…", "read C:\…"). With Always, it decides by itself. Each tool still follows Permissions.</p>
+      </div>
+      <div class="glabel">Web search</div>
+      <div class="group pad">
+        <div class="seg full" id="s-search"><button type="button" data-v="wikipedia">Wikipedia</button><button type="button" data-v="tavily">Tavily</button><button type="button" data-v="brave">Brave</button></div>
+        <p class="fine" id="search-help"></p>
+        <div class="keyrow" id="search-key-row" hidden>
+          <input type="password" id="search-key" autocomplete="off" spellcheck="false" aria-label="API key">
+          <button type="button" class="btn pri" id="search-save">Save key</button>
+        </div>
+        <div class="btns"><button type="button" class="btn" id="search-test">Test search</button><button type="button" class="btn danger" id="search-forget" hidden>Remove key</button></div>
+        <div class="note" id="search-note" hidden></div>
+      </div>
+      <p class="gfoot">The search text goes to the service you pick. Keys stay on this laptop.</p>
+    </section>
+
+    <section class="page" data-page="workspaces" hidden>
+      <p class="lead">Folders and GitHub repositories you work on with Clover. In the one in use, Clover keeps a short context file in each folder and reads them when you ask about the project. It never commits them.</p>
+      <div class="group" id="ws-list" hidden></div>
+      <div class="keyrow"><input type="text" id="ws-src" autocomplete="off" spellcheck="false" placeholder="C:\path\to\project  or  owner/repo" aria-label="Folder path or GitHub repository"><button type="button" class="btn pri" id="ws-add">Add</button></div>
+      <div class="note" id="ws-note" hidden></div>
+      <div class="glabel" style="margin-top:1.4rem">Private repositories</div>
+      <div class="group pad">
+        <p class="fine" id="gh-help" style="margin-top:0"></p>
+        <div class="keyrow"><input type="password" id="gh-token" autocomplete="off" spellcheck="false" aria-label="GitHub token"><button type="button" class="btn" id="gh-save">Save</button></div>
+        <div class="btns" style="margin-top:.4rem"><button type="button" class="btn danger sm" id="gh-forget" hidden>Remove token</button></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="vscode" hidden>
+      <p class="lead">Clover uses VS Code on this laptop for what VS Code already does: it opens files and web pages, clones repositories, installs an extension when you need one, and runs commands in a terminal you can watch. Each asks under Permissions first.</p>
+      <div class="group pad"><div class="kv" id="vsc-kv"></div></div>
+      <div class="btns"><button type="button" class="btn" id="vsc-open">Open VS Code</button></div>
+      <div class="note" id="vsc-note" hidden></div>
+    </section>
+
+  </div>
+</aside>
+
+<script nonce="__CSP_NONCE__">
+(function () {
+  'use strict';
+  var KEY = 'clover_studio_sessions_v1', SKEY = 'clover_studio_settings_v1';
+  var MAX_FILES = 2, MAX_CHARS = 2400;
+  // documents go whole to the server, which reads them (tables: exact totals; text: pages) and saves them for Python
+  var DOC_EXT = /\.(xlsx|xlsm|xls|csv|tsv|pdf|docx|pptx|json)$/i, MAX_DOCS = 3, DOC_MB = 25;
+  var $ = function (id) { return document.getElementById(id); };
+  // the same page on Laptop (windows), in the Android app (android), and on the Web (web, hosted on k3)
+  var PLATFORM = (document.querySelector('meta[name="clover-platform"]') || {}).content || '';
+  var PHONE = PLATFORM === 'android', WEB = PLATFORM === 'web';
+  if (PHONE || WEB) {
+    document.documentElement.classList.add(PHONE ? 'phone' : 'web');
+    var WORDS = PHONE
+      ? [[/\b(this|your|the|This|Your|The) laptop\b/g, '$1 phone'], [/\bLaptop status\b/g, 'Phone status'],
+         [/File Explorer/g, 'a file manager'], [/\bthis browser\b/g, 'this app']]
+      : [[/\b(this|your|the|This|Your|The) laptop\b/g, 'Clover\'s server'], [/\bThis laptop\b/g, 'Clover\'s server (k3)'],
+         [/\bon this computer\b/g, 'on k3'], [/Open them in File Explorer[^.]*\./g, 'Managed on the k3 server.']];
+    var inChat = function (n) { var e = n && (n.nodeType === 1 ? n : n.parentNode); return !!(e && e.closest && e.closest('#log')); };
+    var phoneText = function (root) {
+      if (!root || inChat(root)) return;
+      var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), n;
+      while ((n = w.nextNode())) {
+        if (inChat(n)) continue;
+        var t = n.nodeValue, u = t;
+        WORDS.forEach(function (r) { u = u.replace(r[0], r[1]); });
+        if (u !== t) n.nodeValue = u;
+      }
+    };
+    phoneText(document.body);
+    new MutationObserver(function (ms) {
+      ms.forEach(function (m) {
+        if (m.type === 'characterData') phoneText(m.target.parentNode);
+        else m.addedNodes.forEach(function (a) { phoneText(a.nodeType === 1 ? a : a.parentNode); });
+      });
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+  function phonePerms(p) {  // the phone and web have no terminal, VS Code or local picture CLI
+    if (!PHONE && !WEB) return p;
+    var skip = WEB ? ['shell', 'vscode', 'media', 'files', 'edit_files'] : ['shell', 'vscode', 'media'];
+    var o = {};
+    Object.keys(p).forEach(function (k) { if (skip.indexOf(k) < 0) o[k] = p[k]; });
+    return o;
+  }
+  var HOST_KEY_STORE = 'clover-host-key', HOST_URL_STORE = 'clover-host-url';
+  try {
+    var hm = /(?:[?#&])key=([A-Za-z0-9_\-]+)/.exec((location.search || '') + (location.hash || ''));
+    if (hm && hm[1]) {
+      localStorage.setItem(HOST_KEY_STORE, hm[1]);
+      if (history && history.replaceState) history.replaceState(null, '', location.pathname);
+    }
+  } catch (e) {}
+  function hostKey() { try { return localStorage.getItem(HOST_KEY_STORE) || ''; } catch (e) { return ''; } }
+  function hostHeaders(extra) {
+    var h = extra ? Object.assign({}, extra) : {};
+    var k = hostKey();
+    if (k) h['X-Clover-Key'] = k;
+    return h;
+  }
+  var API_CANDIDATES = ['https://api.cloverframework.com'];
+  var SAME_API_HOST = /^(api\.cloverframework\.com|127\.0\.0\.1|localhost)$/i.test(location.hostname || '');
+  var savedHostUrl = '';
+  try { savedHostUrl = localStorage.getItem(HOST_URL_STORE) || ''; } catch (e) {}
+  var API_BASE = !WEB ? '' : SAME_API_HOST ? '' : (savedHostUrl || API_CANDIDATES[0]);
+  function apiUrl(p) { return API_BASE + p; }
+  var state = { sessions: { current: '', order: [], map: {} }, files: [], media: [], docs: [], ready: false, busy: false, perms: {}, mode: 'lfm3',
+    settings: { model: 'omni', sampling: 'general', thinking: true, budget: 2048, voice: 'female', autospeak: true }, health: null, lastSpeed: 0,
+    turnId: null, waitEl: null, omni: false, inputs: ['text'], speakNext: false, memCount: null, openGroups: {}, catalog: null };
+  var RECENT_CHATS = 5;
+  try { state.openGroups = JSON.parse(localStorage.getItem(KEY + '-groups') || '{}') || {}; } catch (e) {}
+  var MEDIA_MB = { image: 15, audio: 30, video: 60 }, MAX_MEDIA = 6;
+  var PERM_UI = {
+    internet: { name: 'Internet', icon: 'globe', verb: 'use the internet' },
+    code: { name: 'Run code', icon: 'code', verb: 'run code' },
+    shell: { name: 'Terminal', icon: 'terminal', verb: 'run a PowerShell command' },
+    files: { name: 'Read files', icon: 'folder', verb: 'read files on this laptop' },
+    edit_files: { name: 'Edit files', icon: 'pencil', verb: 'change files on this laptop' },
+    memory: { name: 'Memory', icon: 'database', verb: 'remember this' },
+    vscode: { name: 'VS Code', icon: 'code', verb: 'use VS Code' },
+    media: { name: 'Pictures', icon: 'image', verb: 'create a picture' }
+  };
+  var TOOL_UI = {
+    run_python: ['Python', 'code'], web_search: ['Web search', 'search'], fetch_url: ['Open web page', 'globe'],
+    run_powershell: ['PowerShell', 'terminal'], read_file: ['Read file', 'file'], list_directory: ['List folder', 'folder'],
+    write_file: ['Write file', 'pencil'], get_current_time: ['Clock', 'clock'], laptop_status: ['Laptop status', 'power'],
+    calculate: ['Calculator', 'code'], convert_units: ['Unit converter', 'clock'], search_files: ['Search files', 'search'],
+    file_info: ['File info', 'file'], git_inspect: ['Git inspect', 'branch'], read_document: ['Read document', 'file'],
+    analyze_table: ['Analyze table', 'database'], chart_table: ['Chart table', 'image'],
+    media_info: ['Media info', 'file'], extract_frame: ['Extract frame', 'image'],
+    remember: ['Remember', 'database'],
+    vscode_open: ['VS Code: open', 'code'], vscode_clone: ['VS Code: clone', 'branch'], vscode_install: ['VS Code: install', 'download'],
+    vscode_run: ['VS Code: run', 'terminal'], generate_image: ['Create picture', 'image']
+  };
+  var SUGGEST = [
+    ['code', 'Calculate with Python', 'Use Python to compute 2^64 and the 50th Fibonacci number.'],
+    ['search', 'Search the web', 'Search the web for the latest news about Liquid AI and summarize it in three bullets.'],
+    ['folder', 'Look at my files', 'List the files in my Documents folder.'],
+    ['pencil', 'Write an email', 'Write a short, friendly email inviting my team to lunch on Friday.']
+  ];
+  if (PHONE || WEB) SUGGEST[2] = ['clock', 'Plan my day', 'Help me plan a calm, productive day with three priorities.'];
+  var PAGES = { home: 'Settings', account: 'GitHub account', storage: 'Storage', advanced: 'Advanced', layers: 'Clover layers',
+    model: 'Model and voice', perms: 'Permissions', tools: 'Tools and search', workspaces: 'Workspaces', vscode: 'VS Code',
+    personal: 'What Clover learned', collective: 'Collective learning' };
+  var PARENT = { account: 'home', storage: 'home', advanced: 'home', layers: 'advanced', model: 'advanced', perms: 'advanced',
+    tools: 'advanced', workspaces: 'advanced', vscode: 'advanced', personal: 'layers', collective: 'layers' };
+
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function ic(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
+  var CHEV = '<svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>';
+  var SPIN = '<svg class="spin" aria-hidden="true"><use href="#clover-spin"/></svg>';
+  var SEND_HTML = ic('up');
+  function fmtSecs(s) { s = Math.max(0, Math.round(s || 0)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  function cap(s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); }
+  function newId() { return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function btn(cls, html, title) { var b = el('button', cls, html); b.type = 'button'; if (title) { b.title = title; b.setAttribute('aria-label', title); } return b; }
+  function pick(segId, value) { Array.prototype.forEach.call($(segId).children, function (b) { b.classList.toggle('on', b.getAttribute('data-v') === String(value)); }); }
+  function setNote(id, text, ok) { var n = $(id); n.hidden = !text; n.textContent = text || ''; n.className = 'note' + (ok ? ' ok' : ''); }
+
+  function api(method, path, body) {
+    var opt = { method: method, headers: hostHeaders() };
+    if (body !== undefined) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
+    return fetch(apiUrl(path), opt).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok) { var e = new Error(j.error || ('HTTP ' + r.status)); e.status = r.status; e.body = j; throw e; }
+        return j;
+      });
+    });
+  }
+
+  /* ---------- chats ---------- */
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw) state.sessions = JSON.parse(raw); } catch (e) {}
+    var s = state.sessions;
+    if (!s || !s.map || !s.order) state.sessions = s = { current: '', order: [], map: {} };
+    if (!s.current || !s.map[s.current]) newChat(true);
+    renderChats(); renderLog();
+    api('GET', '/api/sessions').then(function (r) {  // conversations in the repository that this browser has not seen
+      var added = 0;
+      (r.sessions || []).forEach(function (x) {
+        if (s.map[x.id]) { if (x.updated && !s.map[x.id].updated) { s.map[x.id].updated = x.updated; added++; } return; }
+        s.map[x.id] = { id: x.id, title: x.title || 'Chat', messages: null, updated: x.updated || '' }; s.order.push(x.id); added++;
+      });
+      if (added) { save(); renderChats(); }
+    }).catch(function () {});
+  }
+  function fromRecords(list) {
+    return list.map(function (m) {
+      if (m.role === 'user') return { role: 'user', text: m.text || '', files: m.files || [],
+        media: (m.media || []).map(function (x) { return { kind: x.kind, name: x.name || x.file }; }) };
+      return { role: 'bot', text: m.text || '', turn: m.n };
+    });
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state.sessions)); } catch (e) {} }
+  function cur() { return state.sessions.map[state.sessions.current]; }
+  function newChat(silent) {
+    var c = cur();
+    if (c && !(c.messages || []).length && !silent) { renderLog(); $('prompt').focus(); return; }
+    var id = newId();
+    state.sessions.map[id] = { id: id, title: 'New chat', messages: [] };
+    state.sessions.order.unshift(id);
+    state.sessions.current = id;
+    save();
+    if (!silent) { renderChats(); renderLog(); $('prompt').focus(); }
+  }
+  function renderChats() {
+    var box = $('chats'); box.innerHTML = '';
+    var now = Date.now(), ids = state.sessions.order.filter(function (id) { return state.sessions.map[id]; });
+    ids.sort(function (a, b) { return chatTime(b) - chatTime(a); });
+    // the five most recent, then older chats folded by day (this month) and by month (human, 2026-11-03)
+    var groups = [], byLabel = {};
+    ids.forEach(function (id, i) {
+      if (i < RECENT_CHATS) { box.appendChild(chatRow(id)); return; }
+      var label = chatGroup(chatTime(id), now);
+      if (!byLabel[label]) { byLabel[label] = []; groups.push(label); }
+      byLabel[label].push(id);
+    });
+    groups.forEach(function (label) {
+      var list = byLabel[label];
+      var open = !!state.openGroups[label] || list.indexOf(state.sessions.current) >= 0;
+      var head = btn('chat-group', ic('chev-r') + '<span></span><em></em>');
+      head.querySelector('span').textContent = label; head.querySelector('em').textContent = list.length;
+      head.setAttribute('aria-expanded', String(open));
+      var rows = el('div'); rows.hidden = !open;
+      list.forEach(function (id) { rows.appendChild(chatRow(id)); });
+      head.addEventListener('click', function () {
+        rows.hidden = !rows.hidden; head.setAttribute('aria-expanded', String(!rows.hidden));
+        state.openGroups[label] = !rows.hidden;
+        try { localStorage.setItem(KEY + '-groups', JSON.stringify(state.openGroups)); } catch (e) {}
+      });
+      box.appendChild(head); box.appendChild(rows);
+    });
+    $('chat-title').textContent = (cur() && cur().title) || 'New chat';
+  }
+  function chatTime(id) {
+    var s = state.sessions.map[id], t = s && s.updated ? Date.parse(s.updated) : NaN;
+    if (!isNaN(t)) return t;
+    var m = /^c([0-9a-z]{8})/.exec(id || '');  // newId(): 'c' + Date.now() in base 36
+    return m ? parseInt(m[1], 36) : 0;
+  }
+  function chatGroup(t, now) {
+    if (!t) return 'Earlier';  // a chat saved without a time (older versions, other ids)
+    var d = new Date(t), today = new Date(now), day = new Date(t);
+    today.setHours(0, 0, 0, 0); day.setHours(0, 0, 0, 0);
+    if (d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth()) {
+      var diff = Math.round((today - day) / 86400000);
+      return diff <= 0 ? 'Today' : diff === 1 ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+    }
+    return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  }
+  function chatRow(id) {
+    var s = state.sessions.map[id];
+    var row = el('div', 'chat' + (id === state.sessions.current ? ' on' : ''));
+    var open = btn('open'); open.textContent = s.title || 'New chat';
+    open.addEventListener('click', function () { if (state.busy) return; state.sessions.current = id; save(); renderChats(); renderLog(); closeRail(); });
+    var del = btn('del', ic('trash'), 'Delete chat');
+    del.addEventListener('click', function (ev) {
+      ev.stopPropagation(); if (state.busy) return;
+      if ((s.messages === null || (s.messages || []).length) &&
+          !confirm('Delete this conversation? It is removed from this browser and from Clover\'s repository (its git history keeps it).')) return;
+      delete state.sessions.map[id];
+      state.sessions.order = state.sessions.order.filter(function (x) { return x !== id; });
+      api('POST', '/api/session/forget', { session_id: id, delete: true }).catch(function () {});
+      if (!state.sessions.order.length) newChat(true);
+      else if (state.sessions.current === id) state.sessions.current = state.sessions.order[0];
+      save(); renderChats(); renderLog();
+    });
+    row.appendChild(open); row.appendChild(del);
+    return row;
+  }
+
+  /* ---------- rendering ---------- */
+  function inline(t) { return t.replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'); }
+  function markdown(text) {
+    var out = [];
+    String(text || '').split(/```/).forEach(function (part, i) {
+      if (i % 2 === 1) {
+        var nl = part.indexOf('\n'); var code = nl >= 0 ? part.slice(nl + 1) : part;
+        out.push('<div class="code"><button type="button" data-copy="code">Copy</button><pre><code>' + esc(code.replace(/\n$/, '')) + '</code></pre></div>');
+        return;
+      }
+      var list = [], ordered = false, rows = [];
+      function flush() { if (list.length) { out.push((ordered ? '<ol>' : '<ul>') + list.join('') + (ordered ? '</ol>' : '</ul>')); list = []; } }
+      function cells(ln) { return ln.replace(/^\|/, '').replace(/\|$/, '').split('|').map(function (c) { return inline(c.trim()); }); }
+      function flushTable() {
+        if (!rows.length) return;
+        var head = rows.length > 1 && /^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$/.test(rows[1]);
+        if (!head) { rows.forEach(function (r) { out.push('<p>' + inline(r) + '</p>'); }); rows = []; return; }
+        var html = '<table><thead><tr>' + cells(rows[0]).map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+        rows.slice(2).forEach(function (r) { html += '<tr>' + cells(r).map(function (c) { return '<td>' + c + '</td>'; }).join('') + '</tr>'; });
+        out.push(html + '</tbody></table>'); rows = [];
+      }
+      esc(part).split('\n').forEach(function (ln) {
+        var t = ln.trim();
+        if (/^\|.*\|$/.test(t)) { flush(); rows.push(t); return; }
+        if (rows.length && !t) return;  // the model leaves blank lines between table rows
+        flushTable();
+        var h = t.match(/^#{1,4}\s+(.*)$/);
+        var m = t.match(/^([-*•]|\d+[.)])\s+(.*)$/);
+        if (m) { var o = /\d/.test(m[1]); if (list.length && o !== ordered) flush(); ordered = o; list.push('<li>' + inline(m[2]) + '</li>'); return; }
+        flush();
+        if (h) out.push('<h4>' + inline(h[1]) + '</h4>');
+        else if (t) out.push('<p>' + inline(t) + '</p>');
+      });
+      flushTable();
+      flush();
+    });
+    return out.join('') || '<p>(empty reply)</p>';
+  }
+  function userEl(m) {
+    var u = el('div', 'u'); u.textContent = m.text;
+    if (m.files && m.files.length) { var f = el('div', 'files', ic('clip')); f.appendChild(document.createTextNode(m.files.join(', '))); u.appendChild(f); }
+    if (m.media && m.media.length) {
+      var box = el('div', 'media');
+      m.media.forEach(function (md) {
+        if (md.thumb && /^data:image\/jpeg;base64,/.test(md.thumb)) { var im = document.createElement('img'); im.src = md.thumb; im.alt = md.name || 'image'; box.appendChild(im); return; }
+        var s = el('span', '', ic(md.kind === 'video' ? 'video' : md.kind === 'audio' ? 'wave' : 'image')); s.appendChild(document.createTextNode(md.name || md.kind)); box.appendChild(s);
+      });
+      u.appendChild(box);
+    }
+    return u;
+  }
+  function toolEl(t) {
+    var ui = TOOL_UI[t.name] || [t.name || 'Tool', 'code'];
+    var box = el('div', 'tool');
+    var head = el('div', 'tool__head', ic(ui[1]) + '<span class="tool__name"></span><span class="tool__arg"></span><span class="state"></span>');
+    head.setAttribute('role', 'button'); head.tabIndex = 0;
+    head.querySelector('.tool__name').textContent = ui[0];
+    head.querySelector('.tool__arg').textContent = String(t.args || '').split('\n')[0];
+    var st = head.querySelector('.state');
+    var body = el('div', 'tool__body'); body.hidden = true;
+    body.appendChild(el('div', 'lbl', 'Input'));
+    var pa = el('pre'); pa.textContent = t.args || ''; body.appendChild(pa);
+    var rl = el('div', 'lbl', 'Result'); rl.hidden = true; body.appendChild(rl);
+    var pr = el('pre'); pr.hidden = true; body.appendChild(pr);
+    function toggle() { body.hidden = !body.hidden; }
+    head.addEventListener('click', toggle);
+    head.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    box.appendChild(head); box.appendChild(body);
+    var api_ = {
+      el: box,
+      set: function (s, why) {
+        st.className = 'state ' + s;
+        st.textContent = s === 'run' ? 'running' : s === 'ok' ? 'done' : 'not run';
+        st.title = why || '';
+      },
+      result: function (r) { if (r) { pr.textContent = r; pr.hidden = false; rl.hidden = false; } }
+    };
+    api_.set(t.state || 'run', t.why); api_.result(t.result);
+    return api_;
+  }
+  /* Clover's steps for one answer (thinking, tools, the layers it used), folded under one line: the conversation shows
+     the person's messages and Clover's answers; the steps open on a click (human, 2026-11-03) */
+  function workEl(open) {
+    var box = el('div', 'work'), head = btn('work__t', ic('chev-r') + '<span></span>'), inner = el('div', 'work__b');
+    inner.hidden = !open; head.setAttribute('aria-expanded', String(!!open));
+    head.addEventListener('click', function () { inner.hidden = !inner.hidden; head.setAttribute('aria-expanded', String(!inner.hidden)); });
+    box.appendChild(head); box.appendChild(inner);
+    return { box: box, inner: inner, label: function (t) { head.querySelector('span').textContent = t; } };
+  }
+  function workSummary(m) {
+    var parts = [];
+    if (m.thinking) parts.push('thought ' + Math.max(1, m.thinkSecs || 1) + ' s');
+    var names = [];
+    (m.tools || []).forEach(function (t) { var n = (TOOL_UI[t.name] || [t.name || 'a tool'])[0]; if (names.indexOf(n) < 0) names.push(n); });
+    if (names.length) parts.push(names.join(', '));
+    if ((m.used || []).length) parts.push((m.used || []).length + ((m.used || []).length === 1 ? ' note' : ' notes'));
+    return 'Steps' + (parts.length ? ' · ' + parts.join(' · ') : '');
+  }
+  function botEl(m) {
+    var wrap = el('div', 'b');
+    var body = el('div', 'b__body');
+    if (m.thinking || (m.tools || []).length || (m.used || []).length) {
+      var w = workEl(false); w.label(workSummary(m));
+      if (m.used && m.used.length) { var tg = el('div', 'tags'); m.used.forEach(function (u) { var s = el('span'); s.textContent = u; tg.appendChild(s); }); w.inner.appendChild(tg); }
+      if (m.thinking) { var tb = el('div', 'thinkbox'); tb.textContent = m.thinking; w.inner.appendChild(tb); }
+      (m.tools || []).forEach(function (tl) { w.inner.appendChild(toolEl(tl).el); });
+      body.appendChild(w.box);
+    }
+    body.appendChild(el('div', 'md' + (m.isNotice ? ' notice' : ''), markdown(m.text)));
+    (m.images || []).forEach(function (im) {
+      if (!/^[0-9a-f]{32}\.png$/.test(im.file || '')) return;
+      var fig = el('figure', 'figure'), img = document.createElement('img');
+      img.src = apiUrl('/api/media/file/' + im.file); img.alt = im.prompt || 'Picture Clover made'; img.loading = 'lazy';
+      fig.appendChild(img);
+      var cap = el('figcaption'); cap.textContent = [im.model, im.seconds ? im.seconds + ' s' : ''].filter(Boolean).join(' · ');
+      fig.appendChild(cap); body.appendChild(fig);
+    });
+    (m.media || []).forEach(function (md) {
+      if (!/^data:image\/(png|jpeg|gif|webp);base64,/.test(md.data_url || '')) return;
+      var fig = el('figure', 'figure'); var img = document.createElement('img');
+      img.src = md.data_url; img.alt = md.title || 'Clover visual'; fig.appendChild(img);
+      if (md.caption) { var c = el('figcaption'); c.textContent = md.caption; fig.appendChild(c); }
+      body.appendChild(fig);
+    });
+    var acts = el('div', 'acts');
+    var cp = btn('', ic('copy'), 'Copy');
+    cp.addEventListener('click', function () { copyText(m.text || '', cp); });
+    acts.appendChild(cp);
+    if (state.omni) { var sv = btn('', ic('speaker'), 'Listen (Clover\'s voice)'); sv.addEventListener('click', function () { speakOmni(m.text, sv); }); acts.appendChild(sv); }
+    else if (localVoice()) { var sp = btn('', ic('speaker'), 'Read aloud (offline voice)'); sp.addEventListener('click', function () { speak(m.text); }); acts.appendChild(sp); }
+    if (state.mode === 'lfm3' && !m.isNotice) {  // the Outcome is not right: the user starts the Clover cycle
+      var rd = btn('redo', ic('refresh') + '<span>Try again</span>', 'Not right? Clover checks this answer again');
+      rd.addEventListener('click', function () {
+        if (state.busy || !state.ready) return;
+        var draft = $('prompt').value, files = state.files, media = state.media, docs = state.docs;
+        state.files = []; state.media = []; state.docs = []; $('prompt').value = 'Try again';
+        streamSend();
+        $('prompt').value = draft; state.files = files; state.media = media; state.docs = docs; renderAtt(); autosize(); updateSend();
+      });
+      acts.appendChild(rd);
+      if (m.turn) {  // the Outcome worked: the user says so (a new message counts too)
+        var gd = btn('good' + (m.helpful ? ' on' : ''), ic('check') + '<span>' + (m.helpful ? 'Marked helpful' : 'Helpful') + '</span>',
+          'This answer worked for you');
+        gd.addEventListener('click', function () {
+          if (m.helpful) return;
+          api('POST', '/api/feedback', { session_id: state.sessions.current, turn: m.turn }).then(function () {
+            m.helpful = true; save(); gd.classList.add('on'); gd.querySelector('span').textContent = 'Marked helpful';
+          }).catch(function () {});
+        });
+        acts.appendChild(gd);
+      }
+    }
+    var trace;
+    if (m.trace) {
+      var db = btn('', 'Details'); acts.appendChild(db);
+      trace = el('pre', 'trace'); trace.textContent = m.trace; trace.hidden = true;
+      db.addEventListener('click', function () { trace.hidden = !trace.hidden; });
+    }
+    if (m.meta) { var mt = el('span', 'meta'); mt.textContent = m.meta; acts.appendChild(mt); }
+    body.appendChild(acts);
+    if (trace) body.appendChild(trace);
+    wrap.appendChild(body);
+    return wrap;
+  }
+  function renderLog() {
+    var log = $('log'); log.innerHTML = '';
+    var c = cur();
+    if (c && c.messages === null) {  // a conversation from the repository: its messages arrive once opened
+      c.messages = [];
+      api('GET', '/api/sessions/' + encodeURIComponent(c.id)).then(function (r) {
+        c.messages = fromRecords(r.messages || []); save(); if (cur() === c) renderLog();
+      }).catch(function () {});
+    }
+    var empty = !c || !c.messages.length;
+    $('hero').hidden = !empty;
+    if (!empty) c.messages.forEach(function (m) { log.appendChild(m.role === 'user' ? userEl(m) : botEl(m)); });
+    $('chat-title').textContent = (c && c.title) || 'New chat';
+    scrollDown();
+  }
+  function scrollDown() { var s = $('stream'); s.scrollTop = s.scrollHeight; }
+  function copyText(text, b) {
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(text).then(function () { var old = b.innerHTML; b.innerHTML = ic('check'); setTimeout(function () { b.innerHTML = old; }, 1100); });
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('button[data-copy="code"]');
+    if (!b) return;
+    var code = b.parentNode.querySelector('code');
+    if (code && navigator.clipboard) navigator.clipboard.writeText(code.textContent);
+    b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1100);
+  });
+  function renderHero() {
+    var h = new Date().getHours();
+    $('greet').textContent = h < 5 ? 'Up late?' : h < 12 ? 'Good morning.' : h < 18 ? 'Good afternoon.' : 'Good evening.';
+    var box = $('sugg'); box.innerHTML = '';
+    (state.omni ? SUGGEST.slice(0, 3).concat([['image', 'Look at a photo', 'What is in this picture?', true]]) : SUGGEST).forEach(function (s) {
+      var b = btn('', ic(s[0]) + '<span></span>'); b.querySelector('span').textContent = s[1]; b.title = s[2];
+      b.addEventListener('click', function () { $('prompt').value = s[2]; autosize(); $('prompt').focus(); updateSend(); if (s[3]) $('file-input').click(); });
+      box.appendChild(b);
+    });
+  }
+
+  /* ---------- offline voice (Windows voices only; no audio leaves the laptop) ---------- */
+  function localVoice() {
+    if (!window.speechSynthesis) return null;
+    var vs = speechSynthesis.getVoices().filter(function (v) { return v.localService && /^en/i.test(v.lang); });
+    return vs[0] || null;
+  }
+  function speak(text) {
+    var v = localVoice(); if (!v) return;
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text || '').replace(/```[\s\S]*?```/g, ' code block ').slice(0, 4000));
+    u.voice = v; speechSynthesis.speak(u);
+  }
+  if (window.speechSynthesis) speechSynthesis.onvoiceschanged = function () { if (!state.busy) renderLog(); };
+
+  /* ---------- LFM3-Omni's own voice (llama.cpp /tts on this laptop) ---------- */
+  // Sentence parts, requested back to back (the CPU instance never waits for playback) and played in order, so speech
+  // starts after the first, short part. Requesting a part only when the previous one started playing left a 2.4 s
+  // silence before a slow part (a list of colours).
+  var speech = null;
+  function stopSpeech() { if (speech) { speech.stop(); speech = null; } }
+  function speakOmni(text, b) {
+    var again = speech && b && speech.button === b; stopSpeech(); if (again) return;
+    var me = { button: b, cancelled: false, audio: null, stop: function () {
+      me.cancelled = true; if (me.audio) me.audio.pause(); if (b) b.classList.remove('busy'); } };
+    speech = me;
+    if (b) { b.classList.add('busy'); b.title = 'Stop'; }
+    function wav(part) {
+      return fetch(apiUrl('/api/tts'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: part, voice: state.settings.voice }) })
+        .then(function (r) { if (!r.ok) return r.json().catch(function () { return {}; }).then(function (j) { throw new Error(j.error || ('HTTP ' + r.status)); }); return r.blob(); });
+    }
+    function synthAll(parts) {  // one request at a time; a failed part stops the ones after it
+      var prev = Promise.resolve();
+      return parts.map(function (p) {
+        var cur = prev.then(function () { if (me.cancelled) throw new Error('stopped'); return wav(p); });
+        cur.catch(function () {});
+        prev = cur;
+        return cur;
+      });
+    }
+    function play(blobs, i) {
+      if (i >= blobs.length || me.cancelled) return Promise.resolve();
+      return blobs[i].then(function (blob) {
+        if (me.cancelled) return;
+        var url = URL.createObjectURL(blob), a = new Audio(url); me.audio = a;
+        return new Promise(function (res, rej) { a.onended = res; a.onerror = function () { rej(new Error('audio playback failed')); }; a.play().catch(rej); })
+          .then(function () { URL.revokeObjectURL(url); return play(blobs, i + 1); },
+                function (e) { URL.revokeObjectURL(url); throw e; });
+      });
+    }
+    api('POST', '/api/tts/parts', { text: text }).then(function (r) {
+      var parts = r.parts || [];
+      if (!parts.length) throw new Error('nothing to speak');
+      return play(synthAll(parts), 0);
+    }).then(function () {
+      if (speech === me) speech = null;
+      if (b) { b.classList.remove('busy'); b.title = 'Listen (Clover\'s voice)'; }
+    }, function (e) {
+      if (speech === me) speech = null;
+      if (b) { b.classList.remove('busy'); b.title = me.cancelled ? 'Listen (Clover\'s voice)' : 'Could not speak: ' + e.message; }
+    });
+  }
+
+  /* ---------- answer settings (this browser) ---------- */
+  function getCatalog() {
+    var cat = (state.server && state.server.model_catalog) || state.catalog;
+    if (cat && cat.length) return cat;
+    return [{
+      id: 'omni',
+      name: 'LFM3-Omni',
+      badge: PHONE ? 'This phone' : (WEB ? 'k3' : 'This laptop'),
+      desc: 'Local · 24-layer Liquid AI Omni · Text, images, audio, video & speech',
+      host: 'local',
+      local: true
+    }];
+  }
+  function modelInfo(id) {
+    var cat = getCatalog();
+    for (var i = 0; i < cat.length; i++) {
+      if (cat[i].id === id || cat[i].remote_model === id) return cat[i];
+    }
+    return cat[0];
+  }
+  function loadSettings() {
+    try {
+      var s = JSON.parse(localStorage.getItem(SKEY) || '{}');
+      if (s.sampling === 'general' || s.sampling === 'math') state.settings.sampling = s.sampling;
+      if (typeof s.thinking === 'boolean') state.settings.thinking = s.thinking;
+      if (s.budget === 2048 || s.budget === 4096) state.settings.budget = s.budget;
+      if (s.voice === 'female' || s.voice === 'male') state.settings.voice = s.voice;
+      if (typeof s.autospeak === 'boolean') state.settings.autospeak = s.autospeak;
+    } catch (e) {}
+  }
+  function saveSettings() { try { localStorage.setItem(SKEY, JSON.stringify(state.settings)); } catch (e) {} renderSettings(); }
+  function renderModelPicker() {
+    var cat = getCatalog();
+    var m = (state.server && state.server.settings && state.server.settings.model) || state.settings.model || 'omni';
+    var info = modelInfo(m);
+    m = info.id;
+    state.settings.model = m;
+    if ($('model-btn-t')) $('model-btn-t').textContent = info.name;
+    if ($('model-d')) $('model-d').innerHTML = '<b>' + esc(info.name) + '</b> · ' + esc(info.desc || '');
+    if ($('v-model')) $('v-model').textContent = info.name;
+    if ($('model-menu')) {
+      var html = cat.map(function (x) {
+        return '<button type="button" class="mpick__opt' + (x.id === m ? ' on' : '') + '" role="option" data-v="' + esc(x.id) + '">' +
+          '<span>' + esc(x.name) + '</span>' + (x.badge ? '<em>' + esc(x.badge) + '</em>' : '') + '</button>';
+      }).join('');
+      html += '<div class="mpick__sep"></div>' +
+        '<button type="button" class="mpick__opt mpick__add" data-add-model="1">' +
+        '<span>+ Add model…</span></button>';
+      if ($('model-menu').getAttribute('data-sig') !== html) {
+        $('model-menu').setAttribute('data-sig', html);
+        $('model-menu').innerHTML = html;
+      }
+    }
+    if ($('s-model')) {
+      $('s-model').hidden = cat.length <= 1;
+      var sHtml = cat.map(function (x) {
+        return '<button type="button" class="' + (x.id === m ? 'on' : '') + '" data-v="' + esc(x.id) + '">' + esc(x.name) + '</button>';
+      }).join('');
+      if ($('s-model').getAttribute('data-sig') !== sHtml) {
+        $('s-model').setAttribute('data-sig', sHtml);
+        $('s-model').innerHTML = sHtml;
+      }
+    }
+    if ($('rm-list')) {
+      var customs = cat.filter(function (x) { return x.custom; });
+      $('rm-list').hidden = !customs.length;
+      $('rm-list').innerHTML = customs.map(function (x) {
+        return '<div class="row static"><span class="row__t">' + esc(x.name) + '<small>' + esc(x.url || x.desc || '') + '</small></span>' +
+          '<button type="button" class="btn sm danger" data-rm-model="' + esc(x.id) + '">Remove</button></div>';
+      }).join('');
+    }
+  }
+  function selectModel(v) {
+    state.settings.model = v;
+    if (state.server && state.server.settings) state.server.settings.model = v;
+    saveSettings(); renderModelPicker();
+    if ($('mpick')) { $('mpick').classList.remove('open'); $('model-menu').hidden = true; $('model-btn').setAttribute('aria-expanded', 'false'); }
+    saveServer({ model: v });
+  }
+  function addRemoteModel() {
+    var url = ($('rm-url') && $('rm-url').value || '').trim();
+    var key = ($('rm-key') && $('rm-key').value || '').trim();
+    var mod = ($('rm-model') && $('rm-model').value || '').trim();
+    if (!url) { setNote('rm-note', 'Enter the server URL first.'); return; }
+    setNote('rm-note', 'Connecting to model server…', true);
+    if (WEB && (!state.ready || url.toLowerCase() === 'k3' || /cloverframework\.com|sslip\.io|nip\.io/i.test(url))) {
+      var target = url.toLowerCase() === 'k3' ? API_CANDIDATES[0] : (/^https?:\/\//i.test(url) ? url.replace(/\/+$/, '') : 'http://' + url.replace(/\/+$/, ''));
+      try {
+        if (key) localStorage.setItem(HOST_KEY_STORE, key);
+        localStorage.setItem(HOST_URL_STORE, target);
+      } catch (e) {}
+      API_BASE = SAME_API_HOST && target === location.origin ? '' : target;
+    }
+    api('POST', '/api/models/add', { url: url, api_key: key, model: mod }).then(function (r) {
+      if ($('rm-url')) $('rm-url').value = '';
+      if ($('rm-key')) $('rm-key').value = '';
+      if ($('rm-model')) $('rm-model').value = '';
+      state.server = state.server || {};
+      state.server.settings = r.settings;
+      state.server.model_catalog = r.model_catalog;
+      state.catalog = r.model_catalog;
+      renderServerSettings(); pollStatus(); loadHealth();
+      setNote('rm-note', 'Connected ' + (r.added || []).map(function (x) { return x.name; }).join(', ') + '.', true);
+    }).catch(function (e) {
+      if (WEB && key) {
+        loadServerSettings().then(function () {
+          pollStatus();
+          if (state.server && state.server.model_catalog) {
+            setNote('rm-note', 'Connected to hosted Clover server.', true);
+          } else {
+            setNote('rm-note', e.message);
+          }
+        });
+        return;
+      }
+      setNote('rm-note', e.message);
+    });
+  }
+  function removeRemoteModel(id) {
+    api('POST', '/api/models/remove', { id: id }).then(function (r) {
+      state.server = state.server || {};
+      state.server.settings = r.settings;
+      state.server.model_catalog = r.model_catalog;
+      state.catalog = r.model_catalog;
+      renderServerSettings(); pollStatus(); loadHealth();
+    }).catch(function (e) { setNote('rm-note', e.message); });
+  }
+  function renderSettings() {
+    var s = state.settings;
+    pick('s-style', s.sampling); pick('s-room', s.budget); pick('s-voice', s.voice);
+    $('s-think').checked = s.thinking;
+    $('s-room-row').hidden = !s.thinking;
+    $('s-autospeak').checked = s.autospeak;
+    $('lfm3-settings').hidden = state.mode !== 'lfm3' || state.omni;
+    $('omni-settings').hidden = !state.omni;
+    renderModelPicker();
+  }
+  function renderEngine() {
+    var h = state.health || {}, e = h.engine || {}, info = modelInfo(state.settings.model);
+    var rows = [
+      ['Model', (e.model || (info && info.name) || 'LFM3-Omni') + (state.mode === 'lfm3' ? '' : ' + Clover layers')],
+      ['Runs on', e.engine === 'gpu' ? (e.device || 'GPU') + ' · ' + (e.backend || 'llama.cpp') + ' · ' + (e.weights || '4-bit')
+        : e.mode === 'omni' ? ((e.device || 'CPU') + ' · ' + (e.backend || 'llama.cpp') + ' · ' + (e.weights || '4-bit'))
+        : 'CPU · C engine' + (e.avx2 ? ' (AVX2)' : '') + (e.threads ? ' · ' + e.threads + ' threads' : '') + ' · ' + (e.weights || 'bf16')],
+      ['Understands', (e.inputs || ['text']).join(', ').replace('vision', 'images')],
+      ['Answers in', (e.outputs || ['text']).join(' and ')],
+      ['Speaks on', e.speech ? e.speech + (e.speech_error ? ' · could not start: ' + e.speech_error : '') : null],
+      ['Context', e.max_tokens ? Number(e.max_tokens).toLocaleString() + ' tokens' : '—'],
+      ['Started in', e.setup_s ? Math.round(e.setup_s) + ' s' : '—'],
+      ['Last speed', state.lastSpeed ? state.lastSpeed.toFixed(1) + ' tokens/s' : '—']
+    ];
+    $('engine-kv').innerHTML = rows.filter(function (r) { return r[1] !== null; }).map(function (r) { return '<span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b>'; }).join('');
+  }
+  function segClick(id, fn) { $(id).addEventListener('click', function (ev) { var b = ev.target.closest('button'); if (b && !b.disabled) fn(b.getAttribute('data-v')); }); }
+  segClick('s-style', function (v) { state.settings.sampling = v; saveSettings(); });
+  segClick('s-room', function (v) { state.settings.budget = +v; saveSettings(); });
+  segClick('s-voice', function (v) { state.settings.voice = v; saveSettings(); });
+  if ($('s-model')) segClick('s-model', selectModel);
+  if ($('model-btn')) {
+    $('model-btn').addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var open = !$('model-menu').hidden;
+      $('model-menu').hidden = open;
+      $('mpick').classList.toggle('open', !open);
+      $('model-btn').setAttribute('aria-expanded', String(!open));
+    });
+    $('model-menu').addEventListener('click', function (ev) {
+      var addBtn = ev.target.closest('button[data-add-model]');
+      if (addBtn) {
+        $('model-menu').hidden = true; $('mpick').classList.remove('open'); $('model-btn').setAttribute('aria-expanded', 'false');
+        openSettings('model');
+        setTimeout(function () { if ($('rm-url')) $('rm-url').focus(); }, 120);
+        return;
+      }
+      var b = ev.target.closest('button[data-v]');
+      if (b) selectModel(b.getAttribute('data-v'));
+    });
+    document.addEventListener('click', function (ev) {
+      if ($('mpick') && !$('mpick').contains(ev.target)) {
+        $('model-menu').hidden = true; $('mpick').classList.remove('open'); $('model-btn').setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+  if ($('rm-add')) $('rm-add').addEventListener('click', addRemoteModel);
+  if ($('rm-list')) $('rm-list').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button[data-rm-model]');
+    if (b) removeRemoteModel(b.getAttribute('data-rm-model'));
+  });
+  $('s-think').addEventListener('change', function () { state.settings.thinking = this.checked; saveSettings(); });
+  $('s-autospeak').addEventListener('change', function () { state.settings.autospeak = this.checked; saveSettings(); });
+  segClick('s-tools', function (v) { saveServer({ tools: v }); });
+  $('s-kv').addEventListener('change', function () { saveServer({ layers: { kv_slots: this.checked } }); });
+  segClick('s-engine', function (v) {
+    if (state.server && state.server.settings.engine === v) return;
+    if (state.busy) { alert('Clover is answering; switch the engine when it is done.'); return; }
+    saveServer({ engine: v });
+  });
+  $('stop-engine').addEventListener('click', function () {
+    if (!confirm('Stop the Clover engine? VS Code also loses Clover until you start Clover AI Studio again.')) return;
+    api('POST', '/api/shutdown', {}).then(function () { state.ready = false; setStatus('err', 'Stopped', 'Clover is stopped. Start Clover AI Studio to use it again.'); updateSend(); }).catch(function () {});
+  });
+  $('clear-chats').addEventListener('click', function () {
+    if (state.busy || !confirm('Delete all chats? They are removed from this browser and from Clover\'s repository (its git history keeps them).')) return;
+    state.sessions.order.forEach(function (id) { api('POST', '/api/session/forget', { session_id: id, delete: true }).catch(function () {}); });
+    state.sessions = { current: '', order: [], map: {} }; newChat(true); renderChats(); renderLog(); closeSheet();
+  });
+
+  /* ---------- storage: locations only (File Explorer shows what is inside) ---------- */
+  function mb(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.ceil(n / 1024) + ' KB'; }
+  function loadStorage() {
+    api('GET', '/api/storage').then(function (r) {
+      $('loc-repo').textContent = r.repository; $('loc-media').textContent = r.media; $('loc-models').textContent = r.models;
+      $('media-d').textContent = 'Images, audio and video you send. Now ' + r.media_files + ' file' + (r.media_files === 1 ? '' : 's') + ', ' + mb(r.media_bytes) + '.';
+    }).catch(function () {});
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-copy-loc]');
+    if (!b || !navigator.clipboard) return;
+    navigator.clipboard.writeText($(b.getAttribute('data-copy-loc')).textContent).then(function () {
+      b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1100);
+    });
+  });
+  $('clear-media').addEventListener('click', function () {
+    if (!confirm('Delete all attachments? Your chats keep their names, but the images, audio and video files are gone.')) return;
+    api('POST', '/api/media/clear', {}).then(loadStorage).catch(function () {});
+  });
+
+  /* ---------- status ---------- */
+  function isMobileView() {
+    return PHONE || (window.matchMedia ? window.matchMedia('(max-width: 760px)').matches : window.innerWidth <= 760);
+  }
+  function updatePlaceholder() {
+    var p = $('prompt');
+    if (!p) return;
+    p.placeholder = (state.omni && !isMobileView()) ? 'Message Clover, or add a photo, sound or video' : 'Message Clover';
+  }
+  window.addEventListener('resize', updatePlaceholder);
+  function showAuthGate(show, msg) {
+    var g = $('auth-gate');
+    if (!g) return;
+    g.hidden = !show;
+    if (msg !== undefined) setNote('auth-note', msg || '');
+    if (show && $('auth-acct') && !$('auth-acct').value) {
+      try { $('auth-acct').value = localStorage.getItem('clover-web-account') || ''; } catch (e) {}
+    }
+  }
+  if ($('auth-form')) {
+    $('auth-form').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var acct = ($('auth-acct') && $('auth-acct').value || '').trim();
+      var key = ($('auth-key') && $('auth-key').value || '').trim();
+      if (!acct || !key) { setNote('auth-note', 'Enter your approved account and access key.'); return; }
+      setNote('auth-note', 'Signing in…', true);
+      fetch(apiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account: acct, key: key })
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+          return j;
+        });
+      }).then(function (r) {
+        try {
+          localStorage.setItem(HOST_KEY_STORE, r.token || key);
+          localStorage.setItem('clover-web-account', r.account || acct);
+        } catch (e) {}
+        if ($('auth-key')) $('auth-key').value = '';
+        setNote('auth-note', '');
+        showAuthGate(false);
+        loadServerSettings(); loadHealth(); load(); loadPerms(); pollStatus();
+      }).catch(function (e) {
+        setNote('auth-note', e.message || 'Sign-in failed.');
+      });
+    });
+  }
+  if (WEB && !hostKey()) showAuthGate(true);
+  function setStatus(cls, text, notice) {
+    $('status-dot').className = 'dot ' + cls; $('status-text').textContent = text;
+    $('notice').hidden = !notice; $('notice').classList.toggle('err', cls === 'err');
+    $('notice-spin').style.display = cls === 'err' ? 'none' : ''; $('notice-t').textContent = notice || '';
+  }
+  function updateSend() {
+    var comp = $('composer') || document.querySelector('.composer');
+    if (comp) comp.classList.toggle('busy', !!state.busy);
+    if (state.busy && state.mode === 'lfm3') return;
+    var hasInput = !!($('prompt').value.trim() || state.files.length || state.media.length || state.docs.length);
+    var canVoice = state.omni && state.inputs.indexOf('audio') >= 0;
+    var b = $('send');
+    b.disabled = !state.ready || state.busy || (!hasInput && !canVoice);
+    b.classList.toggle('idle', !!(state.ready && !state.busy && !hasInput && canVoice));
+    if (!state.busy && !b.classList.contains('rec')) {
+      b.title = canVoice ? 'Tap to send · Hold to speak' : 'Send';
+    }
+  }
+  function pollStatus() {
+    api('GET', '/api/status').then(function (st) {
+      if (WEB) showAuthGate(false);
+      if (st.status === 'setup' && !WEB) { location.replace('/'); return; }
+      state.ready = st.status === 'ready';
+      if (st.model_catalog && st.model_catalog.length) {
+        state.catalog = st.model_catalog;
+        if (state.server) state.server.model_catalog = st.model_catalog;
+        renderModelPicker();
+      }
+      if (st.mode && st.mode !== state.mode) { state.mode = st.mode; applyMode(); }
+      if (state.health && st.engine && state.health.engine && state.health.engine.engine !== st.engine) state.health = null;
+      if (state.ready && st.model) setModel(st.model, st.inputs || ['text']);
+      var info = modelInfo(st.model_key || state.settings.model);
+      var isRemote = !info.local && !WEB;
+      if (st.status === 'error') setStatus('err', 'Engine error', 'Clover could not start: ' + (st.error || 'unknown error'));
+      else if (!state.ready) setStatus('busy', 'Starting · ' + fmtSecs(st.load_elapsed_s), 'Clover is starting · ' + fmtSecs(st.load_elapsed_s));
+      else if (st.busy) {
+        if (st.busy.stage && (!state.stageText || state.stageText === 'reading your message')) state.stageText = st.busy.stage;
+        if (!state.busy) {
+          setStatus('busy', cap(st.busy.stage || st.busy.kind || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s));
+          if (state.waitEl) state.waitEl.textContent = (st.busy.stage || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s);
+        }
+      }
+      else if (WEB || isRemote) setStatus('ok', 'Ready · ' + info.name + (info.host && info.host !== 'local' ? ' · ' + info.host : ''));
+      else setStatus('ok', 'Ready · ' + info.name + ' · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU'));
+      updateSend();
+    }).catch(function (e) {
+      state.ready = false;
+      var authReq = e && (e.status === 401 || (e.body && e.body.auth_required));
+      if (WEB && authReq) {
+        showAuthGate(true, hostKey() ? (e.message || 'Sign in with an approved account.') : '');
+        setStatus('err', 'Sign in required', 'Sign in with an approved account to use Clover AI Studio.');
+      } else {
+        setStatus('err', authReq ? 'Local / custom host' : 'Not running',
+          authReq ? 'Start Clover AI Studio on this device, or click + Add a model in the top-left menu to connect your own hosted model.'
+                  : 'Clover is not running. Start Clover AI Studio to use it, or connect a hosted model in the top-left menu.');
+      }
+      updateSend();
+    });
+  }
+  function loadHealth() {
+    return api('GET', '/api/health').then(function (h) { state.health = h; if (h.mode) state.mode = h.mode; applyMode(); renderEngine(); renderServerSettings(); }).catch(function () {});
+  }
+  /* the GPU this computer has (hardware probe), or the one llama.cpp runs on */
+  function gpuName() {
+    var e = state.health && state.health.engine, hw = (state.health && state.health.hardware) || (state.server && state.server.hardware);
+    return (e && e.engine === 'gpu' && e.device) || (hw && hw.chosen && hw.chosen.gpu) || 'GPU';
+  }
+  function applyMode() { renderSettings(); }
+  function setModel(name, inputs) {
+    var omni = WEB || /omni|nemotron|kimi/i.test(name) || inputs.indexOf('vision') >= 0;
+    var changed = omni !== state.omni || inputs.join() !== state.inputs.join();
+    state.omni = omni; state.inputs = inputs;
+    updatePlaceholder();
+    if (!changed) return;
+    if (state.health && state.health.engine && state.health.engine.model !== name) state.health = null;
+    $('hero-p').textContent = omni ? 'Clover runs here on your laptop. It can see, hear and speak. Nothing leaves it unless you allow it.'
+      : 'Clover runs here on your laptop. Nothing leaves it unless you allow it.';
+    $('mic').hidden = true;
+    updateSend(); renderSettings(); renderHero(); if (!state.busy) renderLog();
+  }
+
+  /* ---------- model, engine, tools, Clover layers (server settings) ---------- */
+  function loadServerSettings() {
+    return api('GET', '/api/settings').then(function (r) {
+      state.server = r;
+      if (r.model_catalog && r.model_catalog.length) state.catalog = r.model_catalog;
+      if (r.k3_key) { try { localStorage.setItem(HOST_KEY_STORE, r.k3_key); } catch (e) {} }
+      if (r.settings && r.settings.model) state.settings.model = r.settings.model;
+      renderServerSettings();
+    }).catch(function () { renderModelPicker(); });
+  }
+  function saveServer(changes) {
+    return api('POST', '/api/settings', changes).then(function (r) {
+      state.server = state.server || {};
+      state.server.settings = r.settings;
+      if (r.model_catalog) { state.server.model_catalog = r.model_catalog; state.catalog = r.model_catalog; }
+      renderServerSettings(); pollStatus();
+      if (changes.engine || changes.model) { state.health = null; loadHealth(); }
+    }).catch(function (e) { alert(e.message); loadServerSettings(); });
+  }
+  function toolsValue() {
+    var st = state.server && state.server.settings;
+    if (st) $('v-tools').textContent = st.tools === 'always' ? 'Always' : 'When you ask';
+  }
+  function renderServerSettings() {
+    var sv = state.server; if (!sv || !sv.settings) return;
+    var st = sv.settings, running = (state.health && state.health.engine && state.health.engine.engine) || st.engine;
+    setNote('model-note', sv.omni_available === false ? 'LFM3-Omni-2B not installed: ' + sv.omni_reason : '');
+    $('engine-d').textContent = WEB
+      ? 'Runs on the k3 server (AMD Ryzen 9 7950X3D, 124 GB RAM): LFM3-Omni-2B in llama.cpp (Zen 4 AVX-512), Nemotron 3.5 Super VL (88-layer C engine + NCM) and Kimi K3.1 Pro 2.8T MoE (93-layer C/Rust engine + Gated DSA + NCM).'
+      : 'GPU and CPU run LFM3-Omni-2B with 4-bit weights in llama.cpp; the GPU (' + gpuName() + ') reads your message several times faster. ' +
+        'C1 + C2 + C3 runs our trained model with its planner (HybridLink) and decoder (NCM) together on the CPU: text only, no tools, slower; being measured.';
+    $('s-engine').children[0].textContent = gpuName();
+    Array.prototype.forEach.call($('s-engine').children, function (b) {
+      var v = b.getAttribute('data-v'); b.classList.toggle('on', v === st.engine);
+      b.disabled = (v === 'gpu' && !sv.gpu_available) || (v === 'fused' && !sv.fused_available);
+    });
+    setNote('engine-note', sv.warning || (sv.gpu_available === false && !WEB ? 'GPU engine not installed: ' + sv.gpu_reason : '') ||
+      (st.engine !== 'fused' && !sv.fused_available ? '' : '') || (running && st.engine && running !== st.engine ? 'Switching engine…' : ''));
+    pick('s-tools', st.tools || 'ask');
+    $('s-kv').checked = !!(st.layers && st.layers.kv_slots);
+    renderModelPicker();
+    toolsValue(); renderLayers();
+  }
+
+  /* Clover layers: 3 core (inference, plan, decode) and 3 supporting (memory, relationships, tools), each with what it
+     does on this laptop now. Switches only where a part can be turned on or off. */
+  function renderLayers() {
+    var sv = state.server; if (!sv || !sv.settings) return;
+    var st = sv.settings, L = st.layers || {}, info = modelInfo(st.model);
+    var omni = true, k3Big = /nemotron|kimi/i.test(st.model || '');
+    var mLabel = info ? info.name : 'LFM3-Omni-2B';
+    var rec = (state.health && state.health.recall) || null, mc = state.memCount;
+    var recallNote = !omni ? ' Works with LFM3-Omni-2B.'
+      : !rec || !L.recall ? '' : rec.state === 'ready' ? ' ' + Number(rec.messages || 0).toLocaleString() + ' messages indexed.'
+      : rec.state === 'loading' ? ' Getting ready…' : rec.state === 'error' ? ' Could not start: ' + (rec.error || 'error') + '.'
+      : /embedder/.test(rec.state) ? ' Needs its embedding model: run Clover AI Studio setup again.' : '';
+    var whereDesc = (info && info.host && info.host !== 'local') ? ('hosted on ' + info.host) : ('the ' + (st.engine === 'gpu' ? gpuName() : 'CPU'));
+    var fusedOk = !!sv.fused_available, fusedActive = !k3Big && st.engine === 'fused' && fusedOk;
+    var core = [
+      { tag: 'C1', name: 'Inference', badge: 'On', on: true,
+        desc: mLabel + ' on ' + whereDesc + '. The model itself.',
+        links: [['model', 'Model and voice']] },
+      { tag: 'C2', name: 'Plan', badge: (k3Big || fusedActive) ? 'On' : 'Try again', on: true, part: !(k3Big || fusedActive),
+        desc: k3Big ? ('HybridAgent planner + Studio tool loop running on k3 for ' + mLabel + ', plus Try again when you say an answer is not right.')
+          : fusedOk ? ('Try again: when you say an answer is not right, Clover checks it with outside evidence and solves it again. ' +
+            'The precomputed C2 planner for LFM3-Omni-2B is installed on this laptop' + (fusedActive ? ' and active in C1 + C2 + C3 mode.' : ' (switch to C1 + C2 + C3 in Model and voice to turn it on).'))
+          : ('Try again: when you say an answer is not right, Clover checks it with outside evidence and solves it again. ' +
+            'The optional precomputed C2 planner for LFM3-Omni-2B is not installed on this laptop (' + (sv.fused_reason || 'optional component c2c3') + ').') },
+      { tag: 'C3', name: 'Decode', badge: (k3Big || fusedActive) ? 'On' : (fusedOk ? 'Installed' : 'Not installed'), on: (k3Big || fusedActive),
+        desc: k3Big ? ('11-level Neural Concept Machine (NCM) concept renderer running on k3 for ' + mLabel + '.')
+          : fusedOk ? ('The precomputed 11-level NCM concept renderer for LFM3-Omni-2B is installed on this laptop' + (fusedActive ? ' and active.' : ' and switches on with C1 + C2 + C3.'))
+          : ('The optional precomputed 11-level NCM concept renderer for LFM3-Omni-2B is not installed on this laptop (' + (sv.fused_reason || 'optional component c2c3') + ').') }
+    ];
+    var support = [
+      { tag: 'S1', name: 'Memory', on: !!L.memory,
+        subs: [{ key: 'memory', name: 'Remember', desc: 'What you ask Clover to remember, and what it learned when you said an answer was not right.' +
+          (mc == null ? '' : ' Now ' + mc + (mc === 1 ? ' item.' : ' items.')) }],
+        desc: 'Your chats are always kept on this laptop.', links: [['storage', 'Where it is kept']] },
+      { tag: 'S2', name: 'Relationships', on: !!((L.recall && omni) || L.ontology), part: !(L.recall && omni && L.ontology),
+        subs: [{ key: 'recall', name: 'Earlier chats', disabled: !omni,
+                 desc: 'Brings back what you said in earlier conversations. Off by default: with unrelated earlier chats it lowered Clover\'s test score (40 instead of 47 of 65).' + recallNote },
+               { key: 'ontology', name: 'Knowledge graph', desc: 'Grounds answers about Clover in its verified records.' }] },
+      { tag: 'S3', name: 'Tools', on: true,
+        desc: 'Web search, Python, PowerShell, files and VS Code, ' + (st.tools === 'always' ? 'when Clover decides to use them.' : 'when you ask for them.') + ' Each follows Permissions.',
+        subs: [{ key: 'compiler', name: 'Code check', desc: 'Checks Python in answers and lets the model fix it.' }],
+        links: [['tools', 'Tools and search'], ['perms', 'Permissions']] }
+    ];
+    fillLayers($('layers-core'), core, L); fillLayers($('layers-support'), support, L);
+    var cs = sv.csi_status || {}, pv = state.personal || {}, cv = state.collective || {};
+    var csiNote = !st.csi ? '' : cs.state === 'ready' ? ' Ready (' + (cs.parser || 'parser') + ', ' + (cs.lemmatiser || '') + ').'
+      : cs.state === 'starting' ? ' Starting: ' + (cs.detail || '') + '.' : cs.state === 'missing' ? ' ' + cs.detail + '.'
+      : cs.state === 'failed' ? ' Could not start: ' + (cs.detail || '') + '.' : '';
+    var learned = (pv.learned || []).filter(function (h) { return h.status === 'validated'; }).length +
+      (pv.preferences || []).filter(function (p) { return p.in_use; }).length, exps = (pv.experiences || []).length;
+    var collOn = !!(st.collective_contribute || st.collective_receive);
+    var collPart = !!(st.collective_contribute) !== !!(st.collective_receive);
+    var candN = (cv.candidate_preview || []).length, actN = (cv.active_rules || []).length + (cv.active_defaults || []).length;
+    var sem = [
+      { tag: 'CSI', name: 'Structure of what you say', on: !!st.csi && cs.state === 'ready', part: !!st.csi && cs.state !== 'ready',
+        subs: [{ key: 'csi', top: true, name: 'Read each message\'s structure',
+                 desc: 'A parser and dictionary on this computer read which tools you turn down ("don\'t search the web") and whether an answer claims something was done.' + csiNote }] },
+      { tag: 'PPL', name: 'How you usually mean things', on: !!st.personal, links: exps ? [['personal', 'What Clover learned']] : null,
+        subs: [{ key: 'personal', top: true, name: 'Learn from my corrections',
+                 desc: 'When you correct Clover ("No, look it up online", "Shorter, please") it learns how you usually mean things and how you like answers. Kept only on this computer; turn it off any time.' +
+                   (exps ? ' ' + exps + (exps === 1 ? ' experience, ' : ' experiences, ') + learned + ' learned.' : '') }] },
+      { tag: 'CPSL', name: 'Collective problem-solving', on: collOn, part: collPart,
+        links: [['collective', 'Shared core & candidate preview']],
+        subs: [
+          { key: 'collective_contribute', top: true, name: 'Contribute candidate strategies',
+            desc: 'Extracts stripped, zero-verbatim structural strategies from validated problem-solving episodes (never raw prompts or paths).' +
+              (candN ? ' ' + candN + (candN === 1 ? ' candidate ready.' : ' candidates ready.') : '') },
+          { key: 'collective_receive', top: true, name: 'Receive validated shared-core updates',
+            desc: 'Applies signed shared-core improvements that passed the 5-gate evaluator without overriding your personal rules.' +
+              (actN ? ' ' + actN + (actN === 1 ? ' shared rule active.' : ' shared rules active.') : '') }
+        ] }
+    ];
+    fillLayers($('layers-semantics'), sem, L);
+  }
+  function fillLayers(box, list, L) {
+    box.innerHTML = '';
+    list.forEach(function (x) {
+      var row = el('div', 'layer' + (x.on ? (x.part ? ' part' : ' on') : ''),
+        '<div class="layer__h"><span class="tag"></span><span class="layer__n"></span></div>');
+      row.querySelector('.tag').textContent = x.tag; row.querySelector('.layer__n').textContent = x.name;
+      if (x.badge) { var bd = el('span', 'badge' + (x.on ? ' on' : '')); bd.textContent = x.badge; row.querySelector('.layer__h').appendChild(bd); }
+      if (x.desc) { var d = el('div', 'layer__d'); d.textContent = x.desc; row.appendChild(d); }
+      (x.subs || []).forEach(function (s) {
+        var sub = el('label', 'sub', '<span class="sub__t"><span></span><small></small></span><span class="switch"><input type="checkbox"><span></span></span>');
+        sub.querySelector('.sub__t > span').textContent = s.name; sub.querySelector('small').textContent = s.desc;
+        var inp = sub.querySelector('input'), top = state.server && state.server.settings;
+        inp.checked = (s.top ? !!(top && top[s.key]) : !!L[s.key]) && !s.disabled; inp.disabled = !!s.disabled; inp.setAttribute('aria-label', s.name);
+        inp.addEventListener('change', function () {
+          var ch = { layers: {} };
+          if (s.top) { ch = {}; ch[s.key] = this.checked; } else ch.layers[s.key] = this.checked;
+          saveServer(ch).then(loadHealth).then(loadPersonal).then(loadCollective);
+        });
+        row.appendChild(sub);
+      });
+      if (x.links) {
+        var ln = el('div', 'links');
+        x.links.forEach(function (k) { var a = btn('linkish', '<span></span>' + ic('chev-r')); a.querySelector('span').textContent = k[1]; a.setAttribute('data-go', k[0]); ln.appendChild(a); });
+        row.appendChild(ln);
+      }
+      box.appendChild(row);
+    });
+  }
+  function loadMemoryCount() {
+    return api('GET', '/api/memory').then(function (r) { state.memCount = (r.memories || []).length; renderLayers(); }).catch(function () {});
+  }
+  function loadPersonal() {
+    return api('GET', '/api/personal').then(function (r) { state.personal = r; renderLayers(); renderPersonal(); }).catch(function () {});
+  }
+  function loadCollective() {
+    return api('GET', '/api/collective').then(function (r) { state.collective = r; renderLayers(); renderCollective(); }).catch(function () {});
+  }
+  function renderCollective() {
+    var actBox = $('collective-active'), candBox = $('collective-candidates');
+    if (!actBox || !candBox) return;
+    var cv = state.collective || {};
+    actBox.innerHTML = ''; candBox.innerHTML = '';
+    var rules = cv.active_rules || [], defs = cv.active_defaults || [];
+    if (!rules.length && !defs.length) {
+      actBox.appendChild(el('p', 'fine', cv.consent_receive ? 'No shared-core rules installed yet.' : 'Turn on "Receive validated shared-core updates" in Clover layers to apply verified shared rules.'));
+    } else {
+      rules.forEach(function (h) {
+        var r = el('div', 'row static'); var t = el('span', 'row__t');
+        t.textContent = 'Shared strategy (' + (h.kind || 'verb_to_capability') + '): ' + (h.key || []).join(' ') + ' \u2192 ' + (h.target || []).join(', ');
+        r.appendChild(t); actBox.appendChild(r);
+      });
+      defs.forEach(function (d) {
+        var r = el('div', 'row static'); var t = el('span', 'row__t');
+        t.textContent = 'Shared default (' + d.dimension + '): ' + String(d.value).replace(/_/g, ' ');
+        r.appendChild(t); actBox.appendChild(r);
+      });
+    }
+    var cands = cv.candidate_preview || [];
+    if (!cands.length) {
+      candBox.appendChild(el('p', 'fine', 'No candidate strategies extracted yet. Candidates are built only from validated problem-solving episodes and stripped of all user text.'));
+    } else {
+      cands.forEach(function (c) {
+        var r = el('div', 'row static'); var t = el('span', 'row__t');
+        t.textContent = (c.kind || 'strategy') + ': [' + (c.key || []).join(', ') + '] \u2192 [' + (c.target || []).join(', ') + '] (validated ' + (c.validated || 0) + ')';
+        r.appendChild(t); candBox.appendChild(r);
+      });
+    }
+  }
+  $('personal-forget').addEventListener('click', function () {
+    if (!confirm('Forget everything Clover learned about you? The experiences and what was learned from them are deleted from this computer.')) return;
+    api('POST', '/api/personal/forget', { confirm: true }).then(function (r) { state.personal = r.view || {}; renderPersonal(); renderLayers(); })
+      .catch(function (e) { alert('Could not forget: ' + e.message); });
+  });
+  /* what personal learning holds: what was learned and the experiences behind it; forget all of it */
+  function renderPersonal() {
+    var box = $('personal-list'); if (!box) return;
+    var pv = state.personal || {}; box.innerHTML = '';
+    var kn = pv.learned || [], pr = (pv.preferences || []).filter(function (p) { return p.in_use; }), ex = pv.experiences || [];
+    if (!kn.length && !pr.length && !ex.length) { box.appendChild(el('p', 'fine', 'Nothing learned yet.')); return; }
+    kn.forEach(function (h) {
+      var r = el('div', 'row static'); var t = el('span', 'row__t');
+      t.textContent = 'When you say “' + (h.when_you_say || []).join(' ') + '” you usually mean ' + (h.you_mean || []).join(', ') +
+        (h.status === 'validated' ? '' : ' (still checking)');
+      r.appendChild(t); box.appendChild(r);
+    });
+    pr.forEach(function (p) {
+      var r = el('div', 'row static'); var t = el('span', 'row__t');
+      t.textContent = 'You prefer ' + String(p.value).replace(/_/g, ' ') + ' (' + p.dimension + ')'; r.appendChild(t); box.appendChild(r);
+    });
+    var n = el('p', 'fine'); n.textContent = ex.length + (ex.length === 1 ? ' experience' : ' experiences') + ' from your chats are kept on this computer.'; box.appendChild(n);
+  }
+
+  /* ---------- web search provider (the key goes to this laptop's server and is never shown again) ---------- */
+  function loadSearch() { return api('GET', '/api/search').then(function (r) { state.search = r; renderSearch(); }).catch(function () {}); }
+  function renderSearch(sel) {
+    var s = state.search; if (!s) return;
+    sel = sel || s.provider; var p = s.providers[sel] || {};
+    state.searchPick = sel;
+    pick('s-search', sel);
+    var help = $('search-help');
+    help.textContent = (p.detail || '') + (sel === s.provider ? ' In use now.' : ' Not in use yet.');
+    if (p.signup) {
+      var a = document.createElement('a'); a.href = p.signup; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.textContent = p.key_set ? 'Manage your key' : 'Get a free key';
+      help.appendChild(document.createTextNode(' ')); help.appendChild(a);
+    }
+    $('search-key-row').hidden = !p.key;
+    $('search-key').value = '';
+    $('search-key').placeholder = p.key_set ? 'Key saved. Paste a new one to replace it' : 'Paste your ' + p.label + ' API key';
+    $('search-forget').hidden = !p.key_set;
+    toolsValue();
+  }
+  function saveSearch(body) {
+    return api('POST', '/api/search', body).then(function (r) {
+      state.search = r; renderSearch(); setNote('search-note', r.providers[r.provider].label + ' is in use.', true);
+    }).catch(function (e) { setNote('search-note', e.message); });
+  }
+  segClick('s-search', function (v) {
+    if (!state.search) return;
+    var p = state.search.providers[v];
+    setNote('search-note', '');
+    if (!p.key || p.key_set) saveSearch({ provider: v }); else { renderSearch(v); $('search-key').focus(); }
+  });
+  $('search-save').addEventListener('click', function () {
+    var key = $('search-key').value.trim(); if (!key) { $('search-key').focus(); return; }
+    saveSearch({ provider: state.searchPick, key: key });
+  });
+  $('search-key').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('search-save').click(); } });
+  $('search-forget').addEventListener('click', function () { saveSearch({ forget: state.searchPick }); });
+  $('search-test').addEventListener('click', function () {
+    setNote('search-note', 'Searching…', true);
+    api('POST', '/api/search/test', {}).then(function (r) { setNote('search-note', (r.ok ? 'Works: ' : 'Did not work: ') + r.message, r.ok); })
+      .catch(function (e) { setNote('search-note', e.message); });
+  });
+
+  /* ---------- permissions ---------- */
+  function loadPerms() { return api('GET', '/api/permissions').then(function (r) { state.perms = phonePerms(r.permissions || {}); renderPerms(); }).catch(function () {}); }
+  function setPerms(changes) { return api('POST', '/api/permissions', { permissions: changes }).then(function (r) { state.perms = r.permissions ? phonePerms(r.permissions) : state.perms; renderPerms(); }); }
+  function setAll(mode) { var ch = {}; Object.keys(state.perms).forEach(function (k) { ch[k] = mode; }); return setPerms(ch); }
+  function permSummary() {
+    var keys = Object.keys(state.perms), n = { allow: 0, ask: 0, deny: 0 };
+    keys.forEach(function (k) { n[state.perms[k].mode] = (n[state.perms[k].mode] || 0) + 1; });
+    var risky = ['shell', 'edit_files'].some(function (k) { return state.perms[k] && state.perms[k].mode === 'allow'; });
+    if (!keys.length) return { chip: '', cls: '', title: 'Loading…', sub: '', icon: 'shield' };
+    if (n.allow === keys.length) return { chip: 'All allowed', cls: 'warn', icon: 'shield', title: 'Every tool is allowed', sub: 'Clover runs commands and changes files without asking.' };
+    if (n.deny === keys.length) return { chip: 'All off', cls: '', icon: 'off', title: 'All tools are off', sub: 'Clover answers from what it knows.' };
+    if (n.ask === keys.length) return { chip: 'Asks first', cls: '', icon: 'hand', title: 'Clover asks before every tool', sub: 'You decide each time, right in the chat.' };
+    return { chip: n.allow + ' allowed', cls: risky ? 'warn' : 'ok', icon: 'shield', title: n.allow + ' allowed · ' + n.ask + ' ask · ' + n.deny + ' off',
+      sub: risky ? 'Includes tools that can change this laptop.' : 'Everything else asks first or stays off.' };
+  }
+  function renderPerms() {
+    var s = permSummary();
+    $('v-perms').textContent = s.chip;
+    var sum = $('perm-summary');
+    sum.className = 'summary' + (s.cls ? ' ' + s.cls : '');
+    sum.innerHTML = '<div class="big">' + ic(s.icon) + '</div><div><b></b><span></span></div>';
+    sum.querySelector('b').textContent = s.title; sum.querySelector('span').textContent = s.sub;
+    var list = $('perm-list'); list.innerHTML = '';
+    Object.keys(state.perms).forEach(function (k) {
+      var p = state.perms[k], ui = PERM_UI[k] || { name: p.label, icon: 'shield' };
+      var row = el('div', 'perm m-' + p.mode, '<span class="tile">' + ic(ui.icon) + '</span><div><div class="perm__t"><span class="perm__name"></span></div><div class="perm__d"></div></div>');
+      row.querySelector('.perm__name').textContent = ui.name;
+      row.querySelector('.perm__d').textContent = p.detail || p.label || '';
+      var seg = el('div', 'seg sm'); seg.setAttribute('role', 'radiogroup'); seg.setAttribute('aria-label', ui.name);
+      [['allow', 'Allow'], ['ask', 'Ask'], ['deny', 'Off']].forEach(function (mm) {
+        var b = btn(p.mode === mm[0] ? 'on' : '', mm[1]); b.setAttribute('data-v', mm[0]);
+        b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(p.mode === mm[0]));
+        b.addEventListener('click', function () { var ch = {}; ch[k] = mm[0]; setPerms(ch).catch(function () {}); });
+        seg.appendChild(b);
+      });
+      row.querySelector('.perm__t').appendChild(seg);
+      list.appendChild(row);
+    });
+  }
+  $('q-allow').addEventListener('click', function () { $('confirm-all').hidden = false; $('confirm-yes').focus(); });
+  $('confirm-no').addEventListener('click', function () { $('confirm-all').hidden = true; });
+  $('confirm-yes').addEventListener('click', function () { $('confirm-all').hidden = true; setAll('allow').catch(function () {}); });
+  $('q-ask').addEventListener('click', function () { $('confirm-all').hidden = true; setAll('ask').catch(function () {}); });
+  $('q-off').addEventListener('click', function () { $('confirm-all').hidden = true; setAll('deny').catch(function () {}); });
+
+  /* ---------- settings sheet: a home page and pages one level after another ---------- */
+  var stack = ['home'];
+  function showPage(name, dir) {
+    Array.prototype.forEach.call(document.querySelectorAll('.page'), function (p) {
+      var on = p.getAttribute('data-page') === name;
+      p.hidden = !on;
+      if (on) { p.classList.remove('from-left'); p.style.animation = 'none'; void p.offsetWidth; p.style.animation = ''; if (dir < 0) p.classList.add('from-left'); }
+    });
+    $('sheet-h').textContent = PAGES[name];
+    var prev = stack.length > 1 ? stack[stack.length - 2] : null;
+    $('sheet-back').hidden = !prev; $('back-t').textContent = prev ? PAGES[prev] : '';
+    $('sheet-body').scrollTop = 0;
+    loadPage(name);
+  }
+  function go(name) { if (!PAGES[name]) return; stack.push(name); showPage(name, 1); $('sheet-back').focus(); }
+  function back() { if (stack.length > 1) { stack.pop(); showPage(stack[stack.length - 1], -1); (stack.length > 1 ? $('sheet-back') : $('sheet-x')).focus(); } }
+  function openSettings(page) {
+    closeRail();
+    stack = ['home'];
+    var chain = [], p = page;
+    while (p && p !== 'home' && PAGES[p]) { chain.unshift(p); p = PARENT[p]; }
+    stack = stack.concat(chain);
+    var sh = $('sheet'); sh.classList.add('on'); sh.inert = false; $('scrim').classList.add('on');
+    showPage(stack[stack.length - 1], 0);
+    setTimeout(function () { (stack.length > 1 ? $('sheet-back') : $('sheet-x')).focus(); }, 60);
+  }
+  function closeSheet() {
+    var sh = $('sheet'); sh.classList.remove('on'); sh.inert = true;
+    $('scrim').classList.remove('on'); $('confirm-all').hidden = true;
+  }
+  function loadPage(name) {
+    if (name === 'home') { loadVscode(); loadStorage(); }
+    else if (name === 'account' || name === 'vscode') loadVscode();
+    else if (name === 'storage') loadStorage();
+    else if (name === 'advanced') { loadServerSettings(); loadPerms(); loadSearch(); loadWorkspaces(); loadVscode(); }
+    else if (name === 'layers') { loadServerSettings(); loadHealth(); loadMemoryCount(); loadPersonal(); loadCollective(); }
+    else if (name === 'personal') loadPersonal();
+    else if (name === 'collective') loadCollective();
+    else if (name === 'model') { renderEngine(); renderSettings(); loadServerSettings(); loadHealth(); }
+    else if (name === 'perms') loadPerms();
+    else if (name === 'tools') { loadServerSettings(); loadSearch(); }
+    else if (name === 'workspaces') loadWorkspaces();
+  }
+  function closeRail() { $('rail').classList.remove('on'); }
+  document.addEventListener('click', function (ev) { var r = ev.target.closest && ev.target.closest('[data-go]'); if (r) go(r.getAttribute('data-go')); });
+  $('sheet-back').addEventListener('click', back);
+  $('sheet-x').addEventListener('click', closeSheet);
+  $('scrim').addEventListener('click', function () { closeSheet(); closeRail(); });
+  $('set-btn').addEventListener('click', function () { openSettings('home'); });
+  $('menu').addEventListener('click', function () {  // collapses on wide screens, slides in on narrow ones
+    if (window.matchMedia('(max-width: 860px)').matches) { $('rail').classList.toggle('on'); $('scrim').classList.toggle('on', $('rail').classList.contains('on')); }
+    else $('app').classList.toggle('rail-off');
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeSheet(); closeRail(); $('scrim').classList.remove('on'); } });
+  // the phone's back gesture (the Android app asks here first): a settings page back, the sheet or the chat list closed;
+  // false when there is nothing to close, and the app goes to the background
+  window.cloverBack = function () {
+    if ($('sheet').classList.contains('on')) { if (stack.length > 1) back(); else closeSheet(); return true; }
+    if ($('rail').classList.contains('on')) { closeRail(); $('scrim').classList.remove('on'); return true; }
+    return false;
+  };
+
+  /* ---------- attachments: text and code; photos, audio and video with LFM3-Omni ---------- */
+  $('attach').addEventListener('click', function () { $('file-input').click(); });
+  function mediaKind(f) { var m = /^(image|video|audio)\//.exec(f.type || ''); return m ? m[1] : null; }
+  function addFile(f) {
+    var kind = mediaKind(f);
+    if (kind) {
+      var need = kind === 'image' ? 'vision' : kind;
+      if (!state.omni || state.inputs.indexOf(need) < 0) { alert(f.name + ': switch the model to LFM3-Omni-2B (Settings > Advanced > Model and voice) to send ' + (kind === 'image' ? 'photos' : kind) + '.'); return; }
+      if (state.media.length >= MAX_MEDIA) { alert('Up to ' + MAX_MEDIA + ' photos, sounds or videos per message.'); return; }
+      if (f.size > MEDIA_MB[kind] * 1024 * 1024) { alert(f.name + ' is larger than ' + MEDIA_MB[kind] + ' MB.'); return; }
+      var rd = new FileReader();
+      rd.onload = function (e) {
+        var url = String(e.target.result || '');
+        if (kind === 'image') {
+          shrinkImage(url, f.type || 'image/jpeg').then(function (sUrl) {
+            var item = { kind: kind, name: f.name || kind, data: sUrl.slice(sUrl.indexOf(',') + 1) };
+            state.media.push(item); renderAtt(); updateSend();
+            thumb(sUrl).then(function (t) { item.thumb = t; renderAtt(); }).catch(function () {});
+          }).catch(function () {
+            var item = { kind: kind, name: f.name || kind, data: url.slice(url.indexOf(',') + 1) };
+            state.media.push(item); renderAtt(); updateSend();
+          });
+          return;
+        }
+        var item = { kind: kind, name: f.name || kind, data: url.slice(url.indexOf(',') + 1) };
+        state.media.push(item); renderAtt(); updateSend();
+      };
+      rd.readAsDataURL(f);
+      return;
+    }
+    if (DOC_EXT.test(f.name || '')) {
+      if (state.docs.length >= MAX_DOCS) { alert('Up to ' + MAX_DOCS + ' documents per message.'); return; }
+      if (f.size > DOC_MB * 1024 * 1024) { alert(f.name + ' is larger than ' + DOC_MB + ' MB.'); return; }
+      var dr = new FileReader();
+      dr.onload = function (e) {
+        var url = String(e.target.result || '');
+        state.docs.push({ name: f.name, data: url.slice(url.indexOf(',') + 1) }); renderAtt(); updateSend();
+      };
+      dr.readAsDataURL(f);
+      return;
+    }
+    if (state.files.length >= MAX_FILES) { alert('Up to ' + MAX_FILES + ' text files per message.'); return; }
+    if (f.size > 2 * 1024 * 1024) { alert(f.name + ' is larger than 2 MB.'); return; }
+    var r = new FileReader();
+    r.onload = function (e) {
+      var text = String(e.target.result || '');
+      if (/\u0000/.test(text.slice(0, 2000))) { alert(f.name + ' looks like a binary file; attach text, code, documents (Excel, CSV, PDF, Word, PowerPoint, JSON), photos, audio or video.'); return; }
+      state.files.push({ name: f.name, content_text: text }); renderAtt(); updateSend();
+    };
+    r.readAsText(f);
+  }
+  function shrinkImage(url, mime) {
+    return new Promise(function (ok) {
+      var im = new Image();
+      im.onload = function () {
+        var maxSide = 1024, w = im.width, h = im.height;
+        if (!w || !h || (w <= maxSide && h <= maxSide)) { ok(url); return; }
+        var scale = maxSide / Math.max(w, h), cw = Math.round(w * scale), ch = Math.round(h * scale);
+        var c = document.createElement('canvas'); c.width = cw; c.height = ch;
+        c.getContext('2d').drawImage(im, 0, 0, cw, ch);
+        var outMime = /png/i.test(mime || '') ? 'image/png' : 'image/jpeg';
+        ok(c.toDataURL(outMime, 0.88));
+      };
+      im.onerror = function () { ok(url); };
+      im.src = url;
+    });
+  }
+  function thumb(url) {
+    return new Promise(function (ok, bad) {
+      var im = new Image();
+      im.onload = function () {
+        var s = 96, c = document.createElement('canvas'), k = Math.max(s / im.width, s / im.height);
+        c.width = s; c.height = s;
+        c.getContext('2d').drawImage(im, (s - im.width * k) / 2, (s - im.height * k) / 2, im.width * k, im.height * k);
+        ok(c.toDataURL('image/jpeg', 0.7));
+      };
+      im.onerror = bad; im.src = url;
+    });
+  }
+  $('file-input').addEventListener('change', function (ev) { Array.prototype.forEach.call(ev.target.files || [], addFile); ev.target.value = ''; });
+  $('prompt').addEventListener('paste', function (ev) {
+    var fl = ev.clipboardData && ev.clipboardData.files;
+    if (fl && fl.length) { ev.preventDefault(); Array.prototype.forEach.call(fl, addFile); }
+  });
+  document.querySelector('.dock').addEventListener('dragover', function (ev) { ev.preventDefault(); });
+  document.querySelector('.dock').addEventListener('drop', function (ev) { ev.preventDefault(); Array.prototype.forEach.call((ev.dataTransfer && ev.dataTransfer.files) || [], addFile); });
+  function renderAtt() {
+    var box = $('attachments'); box.innerHTML = ''; box.hidden = !state.files.length && !state.media.length && !state.docs.length;
+    state.docs.forEach(function (d, i) {
+      var c = el('span', 'att'); c.appendChild(el('span', '', ic('file')));
+      var t = el('span'); t.textContent = d.name; c.appendChild(t);
+      var x = btn('', ic('x'), 'Remove ' + d.name);
+      x.addEventListener('click', function () { state.docs.splice(i, 1); renderAtt(); updateSend(); });
+      c.appendChild(x); box.appendChild(c);
+    });
+    state.media.forEach(function (m, i) {
+      var c = el('span', 'att');
+      if (m.thumb) { var im = document.createElement('img'); im.src = m.thumb; im.alt = ''; c.appendChild(im); }
+      else c.appendChild(el('span', '', ic(m.kind === 'video' ? 'video' : m.kind === 'audio' ? 'wave' : 'image')));
+      var t = el('span'); t.textContent = m.name; c.appendChild(t);
+      var x = btn('', ic('x'), 'Remove ' + m.name);
+      x.addEventListener('click', function () { state.media.splice(i, 1); renderAtt(); updateSend(); });
+      c.appendChild(x); box.appendChild(c);
+    });
+    state.files.forEach(function (f, i) {
+      var c = el('span', 'att'); var t = el('span'); t.textContent = f.name + (f.content_text.length > MAX_CHARS ? ' · first 2,400 characters' : '');
+      var x = btn('', ic('x'), 'Remove ' + f.name);
+      x.addEventListener('click', function () { state.files.splice(i, 1); renderAtt(); updateSend(); });
+      c.appendChild(t); c.appendChild(x); box.appendChild(c);
+    });
+  }
+
+  /* ---------- voice: hold Send button for 1.2s to speak, release to stop & send (tap is normal Send) ---------- */
+  var rec = null, holdTimer = null, holdActive = false, holdTriggered = false, suppressSendClick = false, HOLD_MS = 1200;
+  function startVoiceHold() {
+    if (!holdActive || rec || state.busy || !state.ready || state.inputs.indexOf('audio') < 0) return;
+    if (!navigator.mediaDevices || !window.MediaRecorder) { alert('This window cannot record audio.'); return; }
+    holdTriggered = true; suppressSendClick = true;
+    var b = $('send');
+    b.classList.remove('holding', 'idle'); b.classList.add('rec'); b.innerHTML = ic('mic'); b.title = 'Recording — release to send';
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      if (!holdActive) {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        b.classList.remove('rec'); b.innerHTML = SEND_HTML; updateSend();
+        return;
+      }
+      var chunks = [], t0 = Date.now(), r = new MediaRecorder(stream);
+      rec = r;
+      r.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+      r.onstop = function () {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        rec = null; b.classList.remove('rec', 'holding'); b.innerHTML = SEND_HTML; updateSend();
+        var secs = Math.max(1, Math.round((Date.now() - t0) / 1000));
+        if (!chunks.length) return;
+        new Blob(chunks).arrayBuffer().then(toWav16k).then(function (data) {
+          state.media.push({ kind: 'audio', name: 'Voice message · ' + secs + ' s', data: data, voice: true });
+          renderAtt(); updateSend();
+          if (state.ready && !state.busy) send();
+        }).catch(function (e) { alert('Could not read the recording: ' + e.message); });
+      };
+      r.start();
+    }).catch(function (e) {
+      holdActive = false; holdTriggered = false;
+      b.classList.remove('rec', 'holding'); b.innerHTML = SEND_HTML; updateSend();
+      alert('Microphone not available: ' + e.message);
+    });
+  }
+  function endVoiceHold() {
+    if (!holdActive && !rec) return;
+    holdActive = false;
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    $('send').classList.remove('holding');
+    if (holdTriggered) {
+      holdTriggered = false;
+      if (rec && rec.state !== 'inactive') rec.stop();
+    }
+  }
+  $('send').addEventListener('pointerdown', function (ev) {
+    if (ev.button && ev.button !== 0) return;
+    if (state.busy || !state.ready || !state.omni || state.inputs.indexOf('audio') < 0) return;
+    holdActive = true; holdTriggered = false;
+    try { $('send').setPointerCapture(ev.pointerId); } catch (e) {}
+    $('send').classList.add('holding');
+    if (holdTimer) clearTimeout(holdTimer);
+    holdTimer = setTimeout(startVoiceHold, HOLD_MS);
+  });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (evName) {
+    $('send').addEventListener(evName, endVoiceHold);
+  });
+  $('send').addEventListener('contextmenu', function (ev) { if (holdActive || holdTriggered || rec) ev.preventDefault(); });
+  function toWav16k(buf) {
+    var AC = window.AudioContext || window.webkitAudioContext, ac = new AC();
+    return ac.decodeAudioData(buf).then(function (audio) {
+      ac.close();
+      var off = new OfflineAudioContext(1, Math.max(1, Math.ceil(audio.duration * 16000)), 16000);
+      var src = off.createBufferSource(); src.buffer = audio; src.connect(off.destination); src.start();
+      return off.startRendering();
+    }).then(function (rb) {
+      var d = rb.getChannelData(0), v = new DataView(new ArrayBuffer(44 + d.length * 2));
+      function w(o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
+      w(0, 'RIFF'); v.setUint32(4, 36 + d.length * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true);
+      v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 16000, true); v.setUint32(28, 32000, true);
+      v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, d.length * 2, true);
+      for (var i = 0; i < d.length; i++) { var x = Math.max(-1, Math.min(1, d[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7fff, true); }
+      var bytes = new Uint8Array(v.buffer), s = '';
+      for (var j = 0; j < bytes.length; j += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(j, j + 0x8000));
+      return btoa(s);
+    });
+  }
+
+  /* ---------- sending ---------- */
+  function historyFor(c) {
+    var h = [], pend = null;
+    c.messages.forEach(function (m) {
+      if (m.role === 'user') pend = m.text;
+      else if (pend && m.text && !m.isNotice) { h.push({ user: pend, reply: m.text }); pend = null; }
+    });
+    return h.slice(-6);
+  }
+  function takeInput() {
+    var c = cur(), prompt = $('prompt').value.trim(), files = state.files.slice(), media = state.media.slice(), docs = state.docs.slice();
+    if (!prompt && files.length && !media.length) prompt = 'Explain the attached file.';
+    if (!prompt && docs.length && !media.length) prompt = 'What is in the attached document?';
+    if ((!prompt && !media.length) || !state.ready || state.busy) return null;
+    stopSpeech();
+    $('prompt').value = ''; autosize();
+    if (!c.messages.length) c.title = (prompt || media.map(function (m) { return m.name; }).join(', ')).slice(0, 48);
+    c.updated = new Date().toISOString();
+    var hist = historyFor(c);
+    c.messages.push({ role: 'user', text: prompt, files: files.map(function (f) { return f.name; }).concat(docs.map(function (d) { return d.name; })),
+      media: media.map(function (m) { return { kind: m.kind, name: m.name, thumb: m.thumb }; }) });
+    state.speakNext = media.some(function (m) { return m.voice; });
+    state.files = []; state.media = []; state.docs = []; renderAtt(); save(); renderChats(); renderLog();
+    return { c: c, prompt: prompt, files: files, media: media, docs: docs, hist: hist };
+  }
+  function liveTurn() {
+    var turn = el('div', 'b');
+    var body = el('div', 'b__body'); turn.appendChild(body);
+    var wait = el('div', 'typing', SPIN + '<em>reading your message · 0:00</em>');
+    body.appendChild(wait);
+    $('log').appendChild(turn); scrollDown();
+    state.waitEl = wait.querySelector('em');
+    state.stageText = 'reading your message';
+    state.turnStart = Date.now();
+    return { turn: turn, body: body, wait: wait };
+  }
+  function startTurnTicker() {
+    return setInterval(function () {
+      if (!state.busy) return;
+      var elapsed = Math.max(0, Math.floor((Date.now() - (state.turnStart || Date.now())) / 1000));
+      var stg = state.stageText || 'reading your message';
+      if (state.waitEl) state.waitEl.textContent = stg + ' · ' + fmtSecs(elapsed);
+      setStatus('busy', cap(stg) + ' · ' + fmtSecs(elapsed));
+    }, 1000);
+  }
+
+  function streamSend() {
+    var inp = takeInput(); if (!inp) return;
+    if (state.speakNext && state.settings.autospeak && state.omni) api('POST', '/api/tts/warm', {}).catch(function () {});
+    var c = inp.c, live = liveTurn(), body = live.body;
+    var work = workEl(false); work.label('Steps'); work.box.hidden = true; body.insertBefore(work.box, live.wait);
+    var thBox = el('div', 'thinkbox'); thBox.hidden = true; work.inner.appendChild(thBox);
+    var toolsBox = el('div'); work.inner.appendChild(toolsBox);
+    var asks = el('div'); body.insertBefore(asks, live.wait);  // permission cards wait for the person: never folded
+    var ans = el('div', 'md live'); body.appendChild(ans);
+    state.busy = true; state.turnId = null; setStop(true);
+    var ticker = startTurnTicker();
+    var poll = setInterval(pollStatus, 2000);
+    var t0 = state.turnStart, tFirst = 0, tLast = 0, words = 0, answer = '', thinking = '', tools = [], cards = {}, finished = false, stale = false;
+    function stepsLabel() {
+      var names = [];
+      tools.forEach(function (t) { var n = (TOOL_UI[t.name] || [t.name])[0]; if (names.indexOf(n) < 0) names.push(n); });
+      work.label('Steps' + (words ? ' \u00b7 thinking \u00b7 ' + words + ' words' : '') + (names.length ? ' \u00b7 ' + names.join(', ') : ''));
+    }
+    function dim() { if (answer) { stale = true; ans.classList.add('stale'); } }
+
+    function onEvent(ev) {
+      if (ev.type === 'start') state.turnId = ev.turn_id;
+      else if (ev.type === 'token') {
+        if (ev.kind === 'thinking') {
+          if (!tFirst) tFirst = Date.now();
+          tLast = Date.now();
+          work.box.hidden = false; thBox.hidden = false; thinking += ev.text; thBox.textContent = thinking;
+          words += (ev.text.match(/\S+/g) || []).length;
+          stepsLabel();
+          thBox.scrollTop = thBox.scrollHeight;
+        } else if (ev.kind === 'answer') {
+          if (stale) { answer = ''; stale = false; ans.classList.remove('stale'); }
+          answer += ev.text; ans.textContent = answer.replace(/^\s+/, ''); live.wait.hidden = true;
+          state.stageText = 'writing';
+        }
+        scrollDown();
+      } else if (ev.type === 'round' && ev.round > 1) {
+        if (thinking) { thinking += '\n\n\u2014 after the tool result \u2014\n\n'; thBox.textContent = thinking; }  // not a thought of its own
+        dim();  // the answer stays readable until the next round's words replace it
+        live.wait.hidden = false;
+      } else if (ev.type === 'tool_call') {
+        var t = { name: ev.name, args: fmtArgs(ev.arguments), state: 'run' };
+        var card = toolEl(t); toolsBox.appendChild(card.el); work.box.hidden = false;
+        tools.push(t); cards[ev.id] = { card: card, t: t }; stepsLabel();
+        state.stageText = 'running ' + ((TOOL_UI[ev.name] || [ev.name])[0]);
+        if (state.waitEl) state.waitEl.textContent = state.stageText + ' · ' + fmtSecs(Math.floor((Date.now() - t0) / 1000));
+        scrollDown();
+      } else if (ev.type === 'permission') {
+        asks.appendChild(askEl(ev, function (decision) {
+          api('POST', '/api/decision', { turn_id: ev.turn_id, request_id: ev.request_id, decision: decision })
+            .then(function () { if (decision === 'always') loadPerms(); }).catch(function () {});
+        }));
+        scrollDown();
+      } else if (ev.type === 'tool_result') {
+        var cd = cards[ev.id];
+        if (cd) {
+          cd.t.state = ev.ran ? 'ok' : 'no'; cd.t.why = ev.why || ''; cd.t.result = String(ev.result || '').slice(0, 3000);
+          cd.card.set(cd.t.state, cd.t.why); cd.card.result(cd.t.result);
+        }
+      } else if (ev.type === 'cycle') {
+        state.stageText = ev.stage === 'check' ? 'checking the earlier answer'
+          : ev.stage === 'search' ? 'searching the web and reading the best pages'
+          : ev.stage === 'python' ? 'writing a Python program to calculate it'
+          : ev.stage === 'second' ? 'solving it again on its own (1 of 2)' : ev.stage === 'third' ? 'solving it again another way (2 of 2)'
+          : ev.stage === 'rewrite' ? (ev.how === 'recheck' ? 'checking each step of the answer again'
+            : ev.how === 'another' ? 'writing a different version' : 'writing a new answer from what you said')
+          : 'correcting: ' + String((ev.findings || [''])[0]).slice(0, 90);
+        if (state.waitEl) state.waitEl.textContent = state.stageText + ' · ' + fmtSecs(Math.floor((Date.now() - t0) / 1000));
+        live.wait.hidden = false;
+        if (ev.stage === 'retry' || ev.stage === 'rewrite') dim();
+        scrollDown();
+      } else if (ev.type === 'done') finish(ev);
+      else if (ev.type === 'error') finish({ reply: 'Clover stopped with an error: ' + ev.error, error: true });
+    }
+    function finish(ev) {
+      if (finished) return; finished = true;
+      clearInterval(ticker); clearInterval(poll); state.busy = false; state.waitEl = null; state.stageText = ''; setStop(false); updateSend(); pollStatus();
+      var secs = Math.round((Date.now() - t0) / 1000);
+      var gens = ev.generation || [];
+      var newTok = gens.reduce(function (s, g) { return s + (g.new_tokens || 0); }, 0);
+      var decS = gens.reduce(function (s, g) { return s + (g.decode_s || 0); }, 0);
+      var speed = decS ? newTok / decS : 0; if (speed) state.lastSpeed = speed;
+      var m = { role: 'bot', text: ev.reply || '', isNotice: !!ev.error, turn: ev.turn,
+        meta: secs + ' s' + (newTok ? ' · ' + newTok + ' tokens' : '') + (speed ? ' · ' + speed.toFixed(1) + ' tok/s' : ''),
+        thinking: thinking.trim(), thinkSecs: tFirst ? Math.round((tLast - tFirst) / 1000) : 0, tools: tools, used: layersUsed(ev),
+        images: (ev.images || []).map(function (x) { return { file: x.file, prompt: x.prompt, model: x.model, seconds: x.seconds }; }) };
+      c.messages.push(m); save();
+      live.turn.replaceWith(botEl(m)); scrollDown();
+      var speakIt = state.speakNext && state.settings.autospeak && state.omni && !ev.error && !ev.cancelled;
+      state.speakNext = false;
+      if (speakIt) speakOmni(m.text);
+    }
+    fetch(apiUrl('/api/chat/stream'), {
+      method: 'POST', headers: hostHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ prompt: inp.prompt, session_id: c.id, model: state.settings.model, attached_files: inp.files, history: inp.hist,
+        media: (inp.media || []).map(function (md) { return { kind: md.kind, name: md.name, data: md.data }; }),
+        documents: (inp.docs || []).map(function (d) { return { name: d.name, data: d.data }; }),
+        sampling: state.settings.sampling, thinking: state.settings.thinking, max_new_tokens: state.settings.budget })
+    }).then(function (resp) {
+      if (!resp.ok) return resp.json().catch(function () { return {}; }).then(function (j) { throw new Error(j.error || ('HTTP ' + resp.status)); });
+      var reader = resp.body.getReader(), dec = new TextDecoder(), buf = '';
+      function pump() {
+        return reader.read().then(function (r) {
+          if (r.done) { if (!finished) finish({ reply: answer || '(The engine closed the connection.)', error: !answer }); return; }
+          buf += dec.decode(r.value, { stream: true });
+          var idx;
+          while ((idx = buf.indexOf('\n\n')) >= 0) {
+            var chunk = buf.slice(0, idx); buf = buf.slice(idx + 2);
+            if (chunk.indexOf('data: ') === 0) { try { onEvent(JSON.parse(chunk.slice(6))); } catch (e) {} }
+          }
+          return pump();
+        });
+      }
+      return pump();
+    }).catch(function (e) {
+      finish({ reply: /loading/i.test(e.message) ? 'Clover is still starting. Send again when the status says Ready.' : 'Clover could not answer: ' + e.message, error: true });
+    });
+  }
+  /* what helped this answer, named after the Clover layers page */
+  function layersUsed(ev) {
+    var out = [];
+    (ev.layers || []).forEach(function (l) {
+      if (l.layer === 'semantics') {
+        if (l.understood) out.push(l.understood);
+        if (l.personal && l.personal.form) out.push('PPL · your preferred form');
+        if (l.collective && (l.collective.form || (l.collective.added || []).length)) out.push('CPSL · shared core');
+        if (l.label) out.push(l.label);
+      }
+      else if (l.layer === 'memory' && (l.entries || []).length) out.push('S1 memory · ' + l.entries.length);
+      else if (l.layer === 'records') out.push('S1 records: ' + (l.parts || []).join(', '));
+      else if (l.layer === 'recall' && (l.refs || []).length) out.push('S2 earlier chats · ' + l.chats);
+      else if (l.layer === 'ontology') out.push('S2 knowledge graph');
+      else if (l.layer === 'ontology_grounding' && l.changed) out.push('S2 grounding fix');
+      else if (l.layer === 'compiler' && l.checked) out.push(l.ok ? 'S3 code checked' : 'S3 code issue');
+      else if (l.layer === 'ncm' && l.windows) out.push('C3 NCM');
+      else if (l.layer === 'workspace') out.push('workspace ' + l.workspace);
+      else if (l.layer === 'cycle' && l.trigger === 'user') {
+        out.push({
+          overturned: 'Checked again · changed', answered: 'Checked again', kept: 'Checked again · same result',
+          corrected: 'Checked again · corrected',
+          rewritten: 'Answered again', unconfirmed: 'Answered again · not confirmed', redone: 'Answered again with tools'
+        }[l.action] || 'Answered again');
+        (l.tools || []).forEach(function (t) { out.push(t === 'a web search' ? 'searched the web' : t === 'a Python calculation' ? 'calculated in Python' : t); });
+      }
+    });
+    if (ev.growth && ev.growth.length) out.push('growth · ' + ev.growth.length + (ev.growth.length === 1 ? ' update' : ' updates'));
+    if (ev.kv_slot && ev.kv_slot.restored) out.push('chat state restored');
+    return out.filter(function (x, i) { return out.indexOf(x) === i; });
+  }
+  function askEl(ev, onDecide) {
+    var ui = PERM_UI[ev.tool] || { icon: 'shield', verb: 'use a tool' };
+    var box = el('div', 'ask', '<div class="ask__t">' + ic(ui.icon) + '<span></span></div>');
+    box.querySelector('span').textContent = ev.risky ? 'Allow Clover to run this command?' : 'Allow Clover to ' + ui.verb + '?';
+    if (ev.risky) { var rk = el('p', 'risk'); rk.textContent = 'Clover asks first because ' + ev.risky + '.'; box.appendChild(rk); }
+    if (ev.detail) { var pre = el('pre'); pre.textContent = ev.detail; box.appendChild(pre); }
+    var row = el('div', 'ask__b');
+    [['Allow once', 'once', 'pri'], ['Always allow', 'always', ''], ["Don't allow", 'deny', '']].forEach(function (b) {
+      if (ev.risky && b[1] === 'always') return;  // such a command asks every time
+      var x = btn('btn ' + b[2], esc(b[0]));
+      x.addEventListener('click', function () { box.remove(); onDecide(b[1]); });
+      row.appendChild(x);
+    });
+    var mg = btn('linkish', 'Permissions'); mg.addEventListener('click', function () { openSettings('perms'); }); row.appendChild(mg);
+    box.appendChild(row);
+    return box;
+  }
+  function fmtArgs(a) {
+    if (!a) return '';
+    if (a.code) return a.code;
+    if (a.command) return a.command;
+    if (a.query) return a.query;
+    if (a.prompt) return a.prompt;
+    if (a.url) return a.url;
+    if (a.path && a.content != null) return a.path + '\n---\n' + String(a.content).slice(0, 1500);
+    if (a.path) return a.path + (a.start_line ? ' (lines ' + a.start_line + '-' + (a.end_line || 'end') + ')' : '');
+    if (a.target) return a.target;
+    if (a.repository) return a.repository;
+    if (a.extension) return a.extension;
+    if (a.text) return a.text;
+    return JSON.stringify(a);
+  }
+  function setStop(on) {
+    var b = $('send');
+    var comp = $('composer') || document.querySelector('.composer');
+    if (comp) comp.classList.toggle('busy', !!on);
+    b.classList.toggle('stop', on);
+    if (on) b.classList.remove('idle', 'holding', 'rec');
+    b.innerHTML = on ? ic('stop') : SEND_HTML;
+    b.setAttribute('aria-label', on ? 'Stop' : 'Send'); b.title = on ? 'Stop' : 'Tap to send · Hold to speak';
+    b.disabled = on ? false : true;
+    if (!on) updateSend();
+  }
+
+  /* ---------- Clover-layers mode (non-streamed, permission retry) ---------- */
+  function describeResult(r) {
+    var bits = [];
+    if (r.plan_lat_ms != null) bits.push('plan ' + Math.round(r.plan_lat_ms / 1000) + ' s');
+    if (r.k3_moe_plus_ncm_ms != null) bits.push('render ' + Math.round(r.k3_moe_plus_ncm_ms / 1000) + ' s');
+    var tl = (r.tool_calls || []).map(function (t) { return t.tool; }).filter(Boolean);
+    if (tl.length) bits.push('tools: ' + tl.join(', '));
+    return bits.join(' · ');
+  }
+  function traceText(r) {
+    var lines = ['Planner exit: ' + (r.exit_reason || '-') + '   latent steps: ' + (r.latent_steps == null ? '-' : r.latent_steps)];
+    (r.tool_calls || []).forEach(function (t, i) {
+      lines.push('\nTool ' + (i + 1) + ': ' + (t.tool || '?'));
+      if (t.input) lines.push('  input:  ' + String(t.input).slice(0, 1200));
+      if (t.result) lines.push('  result: ' + String(t.result).slice(0, 1200));
+    });
+    if (r.plans && r.plans.length) lines.push('\nPlan windows:\n' + r.plans.map(function (p, i) { return '  W' + (i + 1) + ': ' + String(p).slice(0, 400); }).join('\n'));
+    return lines.join('\n');
+  }
+  function send(opts) {
+    opts = opts || {};
+    if (state.mode === 'lfm3' && !opts.retry) return streamSend();
+    var inp = opts.retry ? { c: cur(), prompt: opts.prompt, files: opts.files, docs: opts.docs, hist: historyFor(cur()) } : takeInput();
+    if (!inp) return;
+    var live = liveTurn();
+    state.busy = true; updateSend();
+    var ticker = startTurnTicker();
+    var poll = setInterval(pollStatus, 2000);
+    api('POST', '/api/chat', { prompt: inp.prompt, session_id: inp.c.id, attached_files: inp.files, history: inp.hist,
+      documents: (inp.docs || []).map(function (d) { return { name: d.name, data: d.data }; }),
+      allow_once: opts.allow_once || [], deny_once: opts.deny_once || [] }).then(function (r) {
+      live.turn.remove();
+      if (r.permission_request) {
+        var pr = r.permission_request;
+        var holder = el('div', 'b'); var hb = el('div', 'b__body'); holder.appendChild(hb);
+        hb.appendChild(askEl({ tool: pr.tool, detail: pr.detail }, function (decision) {
+          holder.remove();
+          if (decision === 'always') setPerms((function () { var ch = {}; ch[pr.tool] = 'allow'; return ch; })()).then(function () { send({ prompt: inp.prompt, files: inp.files, docs: inp.docs, retry: true }); });
+          else send({ prompt: inp.prompt, files: inp.files, docs: inp.docs, retry: true, allow_once: decision === 'once' ? [pr.tool] : [], deny_once: decision === 'deny' ? [pr.tool] : [] });
+        }));
+        $('log').appendChild(holder); scrollDown(); return;
+      }
+      var m = { role: 'bot', text: r.reply || '', media: r.media || [], meta: describeResult(r), trace: traceText(r) };
+      inp.c.messages.push(m); save(); $('log').appendChild(botEl(m)); scrollDown();
+    }).catch(function (e) {
+      live.turn.remove();
+      var m = { role: 'bot', text: e.status === 503 ? 'Clover is still starting. Send again when the status says Ready.' : 'Clover could not answer: ' + e.message, isNotice: true };
+      inp.c.messages.push(m); save(); $('log').appendChild(botEl(m)); scrollDown();
+    }).then(function () { clearInterval(ticker); clearInterval(poll); state.busy = false; state.waitEl = null; state.stageText = ''; updateSend(); pollStatus(); });
+  }
+
+  /* ---------- wiring ---------- */
+  function autosize() { var t = $('prompt'); t.style.height = 'auto'; t.style.height = Math.min(220, t.scrollHeight) + 'px'; }
+  $('prompt').addEventListener('input', function () { autosize(); updateSend(); });
+  $('prompt').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
+  $('send').addEventListener('click', function () {
+    if (suppressSendClick) { suppressSendClick = false; return; }
+    if (state.busy && state.mode === 'lfm3') { if (state.turnId) api('POST', '/api/cancel', { turn_id: state.turnId }).catch(function () {}); return; }
+    send();
+  });
+  function startChat() { if (!state.busy) { newChat(); closeRail(); $('scrim').classList.remove('on'); } }
+  $('new-chat').addEventListener('click', startChat);
+  $('new-chat-2').addEventListener('click', startChat);
+
+  /* ---------- workspaces: folders and GitHub repositories, and the context files Clover keeps in them ---------- */
+  function loadWorkspaces() { return api('GET', '/api/workspaces').then(renderWorkspaces).catch(function () {}); }
+  function ctxSummary(c) {
+    var s = c.written.length ? 'wrote or updated ' + c.written.length + ' context file' + (c.written.length > 1 ? 's' : '') : 'context files up to date';
+    if (c.skipped && c.skipped.length) s += '; left alone: ' + c.skipped.join(', ');
+    if (c.limit_hit) s += '; only the first 80 folders were indexed';
+    return c.workspace + ': ' + s + ' (' + c.path + ').';
+  }
+  function wsAct(action, body, busyText) {
+    setNote('ws-note', busyText || 'Working…', true);
+    return api('POST', '/api/workspaces/' + action, body).then(function (r) {
+      renderWorkspaces(r);
+      setNote('ws-note', r.context ? ctxSummary(r.context) : r.removed ? 'Deleted ' + r.removed.length + ' context files Clover wrote.' : '', true);
+      return true;
+    }).catch(function (e) { setNote('ws-note', e.message); return false; });
+  }
+  function renderWorkspaces(r) {
+    state.ws = r; if (!r) return;
+    var list = r.workspaces || [], active = list.filter(function (w) { return w.active; })[0];
+    $('v-ws').textContent = active ? active.name : list.length ? list.length + ' added' : 'None';
+    $('rail-ws').hidden = !active; $('rail-ws-t').textContent = active ? 'Workspace: ' + active.name : '';
+    var box = $('ws-list'); box.innerHTML = ''; box.hidden = !list.length;
+    list.forEach(function (w) {
+      var n = (w.folders || []).length, it = el('div', 'ws');
+      var head = btn('ws__row', '<span class="tile' + (w.active ? '' : ' mute') + '">' + ic(w.source === 'github' ? 'branch' : 'folder') + '</span>' +
+        '<span class="row__t"><b></b><small></small><small></small></span>' + (w.active ? '<span class="badge on">In use</span>' : '') + CHEV);
+      head.querySelector('b').textContent = w.name + (w.exists ? '' : ' · folder missing');
+      var sm = head.querySelectorAll('small');
+      sm[0].textContent = (w.source === 'github' ? 'GitHub ' + w.repo + ' · ' : '') + w.path;
+      sm[1].textContent = w.context_at ? n + ' context file' + (n === 1 ? '' : 's') + (w.index ? ' + index' : '') + ' · updated ' + w.context_at : 'No context files yet';
+      var acts = el('div', 'ws__acts'); acts.hidden = true; head.setAttribute('aria-expanded', 'false');
+      head.addEventListener('click', function () { acts.hidden = !acts.hidden; head.classList.toggle('open', !acts.hidden); head.setAttribute('aria-expanded', String(!acts.hidden)); });
+      function b(label, fn, cls) { var x = btn('btn sm ' + (cls || ''), esc(label)); x.addEventListener('click', fn); acts.appendChild(x); }
+      if (w.active) b('Stop using', function () { wsAct('activate', { name: null }); });
+      else if (w.exists) b('Use', function () { wsAct('activate', { name: w.name }); }, 'pri');
+      if (w.exists) b('Refresh context', function () { wsAct('refresh', { name: w.name }, 'Updating the context files…'); });
+      if (w.exists && w.source === 'github') b('Pull updates', function () { wsAct('pull', { name: w.name }, 'Pulling (fast-forward only)…'); });
+      if (w.exists && (n || w.index)) b('Delete context files', function () {
+        if (confirm('Delete the ' + (n + (w.index ? 1 : 0)) + ' context files Clover wrote in ' + w.name + '? Notes in them are deleted too. Your other files are not touched.')) wsAct('clean', { name: w.name });
+      }, 'danger');
+      b('Remove from list', function () {
+        if (confirm('Remove ' + w.name + ' from the list? Its folder and files stay on this laptop.')) wsAct('remove', { name: w.name });
+      }, 'danger');
+      it.appendChild(head); it.appendChild(acts); box.appendChild(it);
+    });
+    var gh = r.github || {}, help = $('gh-help');
+    help.textContent = 'A GitHub token with read access lets Clover clone your private repositories. It stays on this laptop and goes only to GitHub. ';
+    var a = document.createElement('a'); a.href = gh.create_url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    a.textContent = gh.token_set ? 'Manage tokens' : 'Create a token'; help.appendChild(a);
+    $('gh-token').value = '';
+    $('gh-token').placeholder = gh.token_set ? 'Token saved. Paste a new one to replace it' : 'GitHub token';
+    $('gh-forget').hidden = !gh.token_set;
+  }
+  $('ws-add').addEventListener('click', function () {
+    var src = $('ws-src').value.trim(); if (!src) { $('ws-src').focus(); return; }
+    var local = /^[A-Za-z]:[\\/]|^~|^\\\\/.test(src);
+    wsAct('add', { source: src }, local ? 'Adding the folder and writing context files…' : 'Cloning from GitHub…')
+      .then(function (ok) { if (ok) $('ws-src').value = ''; });
+  });
+  $('ws-src').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('ws-add').click(); } });
+  $('gh-save').addEventListener('click', function () {
+    var t = $('gh-token').value.trim(); if (!t) { $('gh-token').focus(); return; }
+    api('POST', '/api/github', { token: t }).then(function (r) { renderWorkspaces(r); setNote('ws-note', 'GitHub token saved on this laptop.', true); })
+      .catch(function (e) { setNote('ws-note', e.message); });
+  });
+  $('gh-forget').addEventListener('click', function () {
+    api('POST', '/api/github', { forget: true }).then(function (r) { renderWorkspaces(r); setNote('ws-note', 'GitHub token removed.', true); })
+      .catch(function (e) { setNote('ws-note', e.message); });
+  });
+
+  /* ---------- VS Code, and the GitHub account it signs in to (the token stays in VS Code) ---------- */
+  function kvHtml(rows) { return rows.map(function (x) { return '<span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b>'; }).join(''); }
+  function renderVscode(r) {
+    if (!r) return;
+    var c = r.connected, repo = r.repo || {};
+    var status = c ? 'Connected' + (c.title ? ' (' + c.title + ')' : '') : r.installed === false ? 'Not installed' : 'Not open';
+    var rows = [['Status', status]];
+    if (c && c.version) rows.push(['Version', c.version]);
+    $('vsc-kv').innerHTML = kvHtml(rows);
+    $('v-vsc').textContent = c ? 'Connected' : r.installed === false ? 'Not installed' : 'Not open';
+    $('acct-kv').innerHTML = kvHtml([['Private repository', repo.repo || 'Not set up'],
+      ['Memory synced', repo.last_sync ? repo.last_sync + (repo.notes != null ? ' · ' + repo.notes + ' notes' : '') : '—']]);
+    $('v-account').textContent = repo.repo || 'Not set up';
+    $('vsc-sync').hidden = !repo.repo;
+    $('vsc-repo').textContent = repo.repo ? 'Set up again' : 'Set up private repository';
+  }
+  function loadVscode() { return api('GET', '/api/vscode').then(renderVscode).catch(function () {}); }
+  function vscAct(noteId, action, busy, done) {
+    setNote(noteId, busy, true);
+    return api('POST', '/api/vscode/do', { action: action }).then(function (r) { renderVscode(r); setNote(noteId, done(r.result || {}), true); })
+      .catch(function (e) { setNote(noteId, e.message); loadVscode(); });
+  }
+  $('vsc-open').addEventListener('click', function () {
+    vscAct('vsc-note', 'status', 'Opening VS Code…', function () { return 'VS Code is connected.'; });
+  });
+  $('vsc-gh').addEventListener('click', function () {
+    vscAct('acct-note', 'githubSignIn', 'Continue in VS Code: it asks you to sign in to GitHub…', function (x) { return 'Signed in to GitHub as ' + x.login + '.'; });
+  });
+  $('vsc-repo').addEventListener('click', function () {
+    vscAct('acct-note', 'githubSetupRepo', 'Continue in VS Code: sign in if it asks, then confirm the private repository…', function (x) {
+      return (x.created ? 'Created ' : 'Using ') + x.repo + ' (private), cloned to ' + x.path + '.';
+    });
+  });
+  $('vsc-sync').addEventListener('click', function () {
+    setNote('acct-note', 'Syncing memory…', true);
+    api('POST', '/api/vscode/sync', {}).then(function (r) {
+      var x = r.result || {};
+      setNote('acct-note', x.notes + ' notes in ' + x.repo + (x.committed ? ', changes pushed' : ', no changes') + (x.imported ? '; ' + x.imported + ' new from GitHub' : '') + '.', true);
+      loadVscode();
+    }).catch(function (e) { setNote('acct-note', e.message); });
+  });
+
+  function tick() {
+    if (!state.busy) pollStatus();
+    if (state.ready && !state.health) loadHealth();
+    setTimeout(tick, state.ready ? 15000 : 3000);
+  }
+  loadSettings(); renderHero(); load(); renderSettings(); loadPerms(); loadWorkspaces(); tick(); $('prompt').focus();
+})();
+</script>
+</body>
+</html>

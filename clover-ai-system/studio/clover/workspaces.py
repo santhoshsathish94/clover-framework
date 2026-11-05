@@ -1,0 +1,597 @@
+"""Folders and GitHub repositories the user works on with Clover, and a context file in each folder.
+
+The user adds a local folder or a GitHub repository (cloned into CloverAI\\workspaces). In a workspace Clover keeps
+`<folder>-context.md` in each folder (two levels deep) and `<repo>-context-index.md` at the top, the names the phone
+app uses. A context record is offered, not imposed (AGENTS.md), so:
+- Clover never runs git add, commit or push in a user's repository: the files stay for the user to keep or delete.
+- Context files describe structure (names, sizes, Markdown headings, Python docstrings and definitions) and never copy
+  other file contents; files that commonly hold secrets are listed by name only.
+- The Notes section of each file is kept when Clover refreshes the lists: the place for what the human and Clover
+  learn about that folder. A file of the same name that Clover did not write is left alone.
+"""
+import ast
+import base64
+import datetime
+import json
+import os
+import re
+import shutil
+import stat
+import subprocess
+import threading
+from pathlib import Path
+
+MARK = "<!-- clover:context v1 - Clover AI Studio keeps the lists up to date; edit the Notes freely -->"
+NOTES = "## Notes"
+NOTES_HINT = ("_What the human and Clover learn about this folder: decisions, constraints, what was tried. Clover keeps "
+              "this section when it refreshes the lists above._")
+PHONE_NOTES = "## User & Agent Notes"
+PHONE_TITLE = re.compile(r"^# `[^`]*` — (?:Folder Context|Overall Repository Context Index)")
+SKIP_DIRS = {"node_modules", "__pycache__", "venv", "env", "target", "build", "dist", "out", "bin", "obj",
+             "site-packages", "vendor"}
+SECRETISH = re.compile(r"(?i)(?:^\.?env(?:\..*)?$|\.(?:pem|key|p12|pfx|kdbx|keystore|jks)$|^id_(?:rsa|dsa|ecdsa|ed25519)"
+                       r"|credential|secret|token|passw)")
+BACKUP = re.compile(r"\.clover-\d{8}-\d{6}\.bak$")
+KINDS = {".py": "Python", ".md": "Markdown", ".js": "JavaScript", ".jsx": "JavaScript", ".ts": "TypeScript",
+         ".tsx": "TypeScript", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML", ".toml": "TOML", ".ini": "settings",
+         ".cfg": "settings", ".html": "HTML", ".css": "CSS", ".rs": "Rust", ".go": "Go", ".java": "Java", ".kt": "Kotlin",
+         ".c": "C", ".h": "C header", ".cpp": "C++", ".hpp": "C++ header", ".cs": "C#", ".ps1": "PowerShell",
+         ".sh": "shell script", ".bat": "batch script", ".sql": "SQL", ".txt": "text", ".csv": "CSV", ".ipynb": "notebook",
+         ".png": "image", ".jpg": "image", ".jpeg": "image", ".svg": "image", ".pdf": "PDF"}
+MAX_FOLDERS, MAX_FILES, DEPTH = 80, 60, 2
+PROJECT_WORDS = re.compile(r"\b(?:repo|repository|project|codebase|workspace|this code|the code)\b", re.I)
+GH_URL = re.compile(r"^(?:https?://github\.com/|git@github\.com:)([A-Za-z0-9][A-Za-z0-9-]{0,38})/([A-Za-z0-9._-]{1,100}?)"
+                    r"(?:\.git)?/?$")
+GH_SHORT = re.compile(r"^([A-Za-z0-9][A-Za-z0-9-]{0,38})/([A-Za-z0-9._-]{1,100}?)(?:\.git)?$")
+TOKEN = re.compile(r"^[\x21-\x7e]{20,255}$")
+STOP = set("""the and for are was were this that with from its into about what which how does can could would should your
+our their there then than them they you not but all any has have had will shall may might must just only also use""".split())
+
+
+def _now():
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+
+def slug(text, n=32):
+    return re.sub(r"[^a-zA-Z0-9]+", "-", (text or "").strip().lower()).strip("-")[:n].strip("-") or "folder"
+
+
+def _size(n):
+    return f"{n} B" if n < 1024 else f"{n / 1024:.1f} KB" if n < 1024 ** 2 else f"{n / 1024 ** 2:.1f} MB"
+
+
+def _terms(text):
+    return {w for w in re.findall(r"[a-z0-9][a-z0-9_\-]{2,}", (text or "").lower()) if w not in STOP}
+
+
+def describe_file(p, size):
+    """What a file is, from its structure: never its other contents (a settings file's first line held a secret)."""
+    kind = KINDS.get(p.suffix.lower(), "")
+    if SECRETISH.search(p.name):
+        return ", ".join(x for x in (kind, "not read: may hold secrets") if x)
+    if p.is_symlink() or size > 1_000_000 or p.suffix.lower() not in (".md", ".py"):
+        return kind
+    try:
+        raw = p.read_bytes()[:300_000]
+    except OSError:
+        return kind
+    if b"\x00" in raw[:4096]:
+        return "binary"
+    text = raw.decode("utf-8", errors="replace")
+    if p.suffix.lower() == ".md":
+        head = next((ln.lstrip("#").strip() for ln in text.splitlines() if ln.startswith("#")), "")
+        return f"{kind}: {head[:100]}" if head else kind
+    try:
+        tree = ast.parse(text)
+    except (SyntaxError, ValueError):
+        return kind
+    doc = (ast.get_docstring(tree) or "").strip().splitlines()
+    defs = [n.name for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))]
+    out = kind + (f": {doc[0].strip()[:100].rstrip('.')}" if doc else "")
+    return out + (f". Defines {', '.join(defs[:6])}{', ...' if len(defs) > 6 else ''}" if defs else "")
+
+
+def _file_lines(files):
+    lines = [f"- [`{n}`](<{n}>) ({_size(s)}){' - ' + d if d else ''}" for n, s, d in files[:MAX_FILES]]
+    if len(files) > MAX_FILES:
+        lines.append(f"- ... and {len(files) - MAX_FILES} more")
+    return lines or ["- (none)"]
+
+
+def _existing(fp):
+    """(ours, notes): ours = missing or written by Clover (this app or the phone app); notes = its Notes section."""
+    try:
+        text = fp.read_text(encoding="utf-8", errors="replace")
+    except FileNotFoundError:
+        return True, ""
+    except OSError:
+        return False, ""
+    sep = "\n" + NOTES + "\n"
+    if MARK in text:
+        notes = text.split(sep, 1)[1].strip() if sep in text else ""
+        return True, "" if notes == NOTES_HINT else notes
+    first = text.lstrip().splitlines()[0] if text.strip() else ""
+    if PHONE_TITLE.match(first):
+        notes = text.split(PHONE_NOTES, 1)[1].strip() if PHONE_NOTES in text else ""
+        return True, "" if notes.startswith("Add folder-specific architecture notes") else notes
+    return False, ""
+
+
+def _plain(text):
+    """A context file as the model reads it: no marker, no Markdown links (the model copied them into its answer)."""
+    text = re.sub(r"\[`([^`]+)`\]\(<[^>]*>\)", r"\1", text.replace(MARK, ""))
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
+EXCLUDE_START, EXCLUDE_END = "# clover:context - files Clover AI Studio keeps (not part of the project)", "# clover:context end"
+
+
+def _git_exclude(root, rels):
+    """Lists Clover's context files in the repository's own .git/info/exclude (local, never committed), so `git status`
+    stays as the user left it; rels=[] removes the list. Exact paths only: no pattern can hide a file of the user's."""
+    git = Path(root) / ".git"
+    if not git.is_dir():
+        return
+    fp = git / "info" / "exclude"
+    try:
+        text = fp.read_text(encoding="utf-8")
+    except OSError:
+        text = ""
+    text = re.sub(re.escape(EXCLUDE_START) + r"[\s\S]*?" + re.escape(EXCLUDE_END) + r"\n?", "", text)
+    if rels:
+        text = text.rstrip("\n") + ("\n" if text.strip() else "") + "\n".join(
+            [EXCLUDE_START] + ["/" + r.replace("\\", "/") for r in sorted(rels)] + [EXCLUDE_END]) + "\n"
+    fp.parent.mkdir(parents=True, exist_ok=True)
+    fp.write_text(text, encoding="utf-8")
+
+
+def _write_if_changed(fp, body):
+    try:
+        if fp.read_text(encoding="utf-8") == body:
+            return False
+    except (OSError, ValueError):
+        pass
+    fp.write_text(body, encoding="utf-8")
+    return True
+
+
+def _git_env(token=None):
+    """No prompts (a hidden server cannot answer them); a token travels as a header in the environment, never in the
+    command line or in .git/config."""
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GCM_INTERACTIVE="never")
+    if token:
+        basic = base64.b64encode(f"x-access-token:{token}".encode("utf-8")).decode("ascii")
+        env.update(GIT_CONFIG_COUNT="1", GIT_CONFIG_KEY_0="http.https://github.com/.extraheader",
+                   GIT_CONFIG_VALUE_0=f"AUTHORIZATION: basic {basic}")
+    return env
+
+
+def _redact(text, token):
+    if token:
+        text = text.replace(token, "***").replace(base64.b64encode(f"x-access-token:{token}".encode()).decode(), "***")
+    return text
+
+
+def _rmtree(p):
+    def unlock(fn, path, _):  # git marks its object files read-only
+        os.chmod(path, stat.S_IWRITE)
+        fn(path)
+    shutil.rmtree(p, onexc=unlock)
+
+
+def _dpapi(data, protect):
+    """Windows data protection for the current user: only this Windows account can decrypt what it encrypted."""
+    import vault
+    return vault.dpapi(data, protect)
+
+
+class GitHubAuth:
+    """CloverAI\\vault\\github.json: the user's GitHub token for private repositories, typed into Settings on this laptop
+    and kept encrypted for this Windows account (DPAPI). describe() says whether one is set, never the token."""
+
+    def __init__(self, path):
+        self.path, self.lock, self.token = Path(path), threading.Lock(), None
+        try:
+            raw = json.loads(self.path.read_text(encoding="utf-8"))
+            t = (_dpapi(base64.b64decode(raw["token_dpapi"]), False).decode("utf-8") if raw.get("token_dpapi")
+                 else raw.get("token"))
+            self.token = t if isinstance(t, str) and TOKEN.match(t) else None
+        except (OSError, ValueError, KeyError):
+            pass
+
+    def describe(self):
+        return {"token_set": self.token is not None,
+                "create_url": "https://github.com/settings/personal-access-tokens/new"}
+
+    def update(self, token=None, forget=False):
+        with self.lock:
+            if forget:
+                self.token = None
+            elif token is not None:
+                token = str(token).strip()
+                if not TOKEN.match(token):
+                    raise ValueError("that does not look like a GitHub token (20-255 visible characters, no spaces)")
+                self.token = token
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = self.path.with_suffix(".tmp")
+            blob = (base64.b64encode(_dpapi(self.token.encode("utf-8"), True)).decode("ascii") if self.token else None)
+            tmp.write_text(json.dumps({"token_dpapi": blob}), encoding="utf-8")
+            tmp.replace(self.path)
+        return self.describe()
+
+
+class Workspaces:
+    """config/workspaces.json: the folders the user added, which one is in use, and the context files Clover wrote."""
+
+    def __init__(self, config_path, clone_root, app_dir, auth=None):
+        self.path, self.clone_root, self.app_dir = Path(config_path), Path(clone_root), Path(app_dir).resolve()
+        self.auth, self.lock = auth, threading.RLock()
+        self.items, self.active_name = [], None
+        try:
+            raw = json.loads(self.path.read_text(encoding="utf-8"))
+            self.items = [w for w in raw.get("workspaces") or [] if isinstance(w, dict) and w.get("name") and w.get("path")]
+            self.active_name = raw.get("active") if any(w["name"] == raw.get("active") for w in self.items) else None
+        except (OSError, ValueError):
+            pass
+
+    # ---------------- registry ----------------
+    def _save(self):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = self.path.with_suffix(".tmp")
+        tmp.write_text(json.dumps({"active": self.active_name, "workspaces": self.items}, indent=2), encoding="utf-8")
+        tmp.replace(self.path)
+
+    def _find(self, name):
+        for w in self.items:
+            if w["name"] == name:
+                return w
+        raise ValueError(f"no workspace named {name!r}")
+
+    def describe(self):
+        with self.lock:
+            out = []
+            for w in self.items:
+                out.append(dict(w, exists=Path(w["path"]).is_dir(), active=w["name"] == self.active_name))
+            return {"active": self.active_name, "workspaces": out, "clone_root": str(self.clone_root),
+                    "github": self.auth.describe() if self.auth else {"token_set": False}}
+
+    def active(self):
+        with self.lock:
+            if self.active_name is None:
+                return None
+            w = next((w for w in self.items if w["name"] == self.active_name), None)
+            return dict(w) if w and Path(w["path"]).is_dir() else None
+
+    def activate(self, name):
+        with self.lock:
+            if name is not None:
+                self._find(name)
+            self.active_name = name
+            self._save()
+        return self.describe()
+
+    def remove(self, name):
+        """Takes the workspace off the list; its files, and the context files in it, stay where they are."""
+        with self.lock:
+            self._find(name)
+            self.items = [w for w in self.items if w["name"] != name]
+            if self.active_name == name:
+                self.active_name = None
+            self._save()
+        return self.describe()
+
+    def _unique(self, name):
+        base, n, names = slug(name, 40), 2, {w["name"] for w in self.items}
+        out = base
+        while out in names:
+            out, n = f"{base}-{n}", n + 1
+        return out
+
+    def _too_broad(self, p):
+        home = Path.home().resolve()
+        if p == Path(p.anchor):
+            return "a whole drive"
+        if p == home or p in [home / d for d in ("Desktop", "Documents", "Downloads", "Pictures", "Music", "Videos",
+                                                  "OneDrive")]:
+            return "a whole personal folder; choose a project folder inside it"
+        win = Path(os.environ.get("WINDIR", r"C:\Windows")).resolve()
+        if p == win or win in p.parents or "program files" in str(p).lower():
+            return "a Windows or program folder"
+        clones = self.clone_root.resolve()
+        if (p == self.app_dir or self.app_dir in p.parents) and clones not in p.parents:
+            return "Clover's own folder"
+        if p in self.app_dir.parents:
+            return "a folder that contains Clover's own files"
+        return None
+
+    def add(self, source, name=None):
+        """source: an absolute folder path (or ~\\...), a GitHub URL, or owner/repo. Returns describe() + the context
+        summary of the new workspace, which becomes the active one."""
+        src = str(source or "").strip().strip('"')
+        if not src:
+            raise ValueError("enter a folder path or a GitHub repository (owner/repo or its URL)")
+        expanded = os.path.expandvars(os.path.expanduser(src))
+        if os.path.isabs(expanded) or src.startswith("~"):
+            p = Path(expanded).resolve()
+            if not p.is_dir():
+                raise ValueError(f"{p} is not a folder on this laptop")
+            why = self._too_broad(p)
+            if why:
+                raise ValueError(f"{p} is {why}")
+            entry = {"source": "folder", "repo": None}
+        else:
+            m = GH_URL.match(src) or GH_SHORT.match(src)
+            if not m:
+                raise ValueError("use a full folder path (C:\\...) or a GitHub repository (owner/repo or https://github.com/owner/repo)")
+            owner, repo = m.group(1), m.group(2)
+            p = self._clone(owner, repo, name or repo)
+            entry = {"source": "github", "repo": f"{owner}/{repo}"}
+        with self.lock:
+            same = next((w for w in self.items if Path(w["path"]).resolve() == p), None)
+            if same is None:
+                same = dict(entry, name=self._unique(name or p.name), path=str(p), added_at=_now(), folders=[],
+                            index=None, context_at=None)
+                self.items.append(same)
+            self.active_name = same["name"]
+            self._save()
+        summary = self.refresh(same["name"])
+        return dict(self.describe(), context=summary)
+
+    def _clone(self, owner, repo, name):
+        dest = self.clone_root / slug(name, 40)
+        token = self.auth.token if self.auth else None
+        if dest.exists():
+            r = subprocess.run(["git", "-C", str(dest), "remote", "get-url", "origin"], capture_output=True, text=True,
+                               timeout=30)
+            url = r.stdout.strip().lower().removesuffix(".git").rstrip("/")
+            if r.returncode == 0 and url.endswith(f"github.com/{owner}/{repo}".lower()):
+                return dest.resolve()
+            raise ValueError(f"{dest} already exists and is not a clone of {owner}/{repo}")
+        self.clone_root.mkdir(parents=True, exist_ok=True)
+        try:
+            r = subprocess.run(["git", "clone", "--filter=blob:none", "--", f"https://github.com/{owner}/{repo}.git",
+                                str(dest)], capture_output=True, text=True, timeout=600, env=_git_env(token),
+                               creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        except subprocess.TimeoutExpired:
+            if dest.exists():
+                _rmtree(dest)
+            raise ValueError(f"cloning {owner}/{repo} took longer than 10 minutes and was stopped") from None
+        if r.returncode != 0:
+            if dest.exists():
+                _rmtree(dest)
+            err = (r.stderr or r.stdout or "").strip()
+            if re.search(r"could not read Username|Authentication failed|terminal prompts disabled|Repository not found", err):
+                raise ValueError(f"GitHub did not give access to {owner}/{repo}: it does not exist, or it is private"
+                                 + (" and the saved token cannot read it." if token else
+                                    ". For a private repository, add a GitHub token in Settings first."))
+            why = [ln.strip() for ln in err.splitlines() if ln.strip().startswith(("fatal:", "remote:", "error:"))]
+            msg = _redact(" ".join(why) or err, token)[-300:]
+            hint = "" if token else " If it is a private repository, add a GitHub token in Settings first."
+            raise ValueError(f"could not clone {owner}/{repo}: {msg}{hint}")
+        return dest.resolve()
+
+    def pull(self, name):
+        """Updates a cloned GitHub workspace (fast-forward only: never a merge, never a push)."""
+        with self.lock:
+            w = dict(self._find(name))
+        if w.get("source") != "github":
+            raise ValueError("only workspaces cloned from GitHub are updated here")
+        token = self.auth.token if self.auth else None
+        r = subprocess.run(["git", "-C", w["path"], "pull", "--ff-only"], capture_output=True, text=True, timeout=600,
+                           env=_git_env(token), creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        out = _redact((r.stdout + "\n" + r.stderr).strip(), token)[-400:]
+        if r.returncode != 0:
+            raise ValueError(f"git pull --ff-only failed: {out}")
+        return dict(self.describe(), message=out, context=self.refresh(name))
+
+    # ---------------- context files ----------------
+    def _scan(self, root, index_name):
+        root_files, top, folders, limit_hit = [], [], {}, False
+        for cur, dirs, files in os.walk(root):
+            cur_p = Path(cur)
+            rel = cur_p.relative_to(root).as_posix()
+            depth = 0 if rel == "." else rel.count("/") + 1
+            dirs[:] = sorted((d for d in dirs if not d.startswith(".") and d.lower() not in SKIP_DIRS), key=str.lower)
+            own = index_name if depth == 0 else f"{slug(cur_p.name)}-context.md"
+            entries = []
+            for f in sorted(files, key=str.lower):
+                if f.startswith(".") or f == own or BACKUP.search(f):
+                    continue
+                fp = cur_p / f
+                try:
+                    size = fp.stat().st_size
+                except OSError:
+                    continue
+                entries.append((f, size, describe_file(fp, size)))
+            if depth == 0:
+                root_files, top = entries, list(dirs)
+                continue
+            if len(folders) >= MAX_FOLDERS:
+                limit_hit, dirs[:] = True, []
+                continue
+            if entries or dirs:
+                folders[rel] = {"files": entries, "subdirs": list(dirs), "depth": depth}
+            if depth >= DEPTH:
+                dirs[:] = []
+        return root_files, top, folders, limit_hit
+
+    def refresh(self, name):
+        """Writes or updates the context files of a workspace. Returns what was written, unchanged and skipped."""
+        with self.lock:
+            w = self._find(name)
+            root = Path(w["path"])
+        if not root.is_dir():
+            raise ValueError(f"{root} no longer exists")
+        index_name = f"{slug(root.name, 36)}-context-index.md"
+        root_files, top, folders, limit_hit = self._scan(root, index_name)
+        written, unchanged, skipped, known = [], [], [], []
+
+        def put(fp, rel, render):
+            ours, notes = _existing(fp)
+            if not ours:
+                skipped.append(f"{rel} (a file of that name exists that Clover did not write)")
+                return
+            (written if _write_if_changed(fp, render(notes)) else unchanged).append(rel)
+            known.append(rel)
+
+        for rel, f in folders.items():
+            ctx_rel = f"{rel}/{slug(rel.rsplit('/', 1)[-1])}-context.md"
+
+            def render(notes, rel=rel, f=f):
+                lines = [f"# `{rel}/` - folder context", MARK, "",
+                         f"Part of the workspace `{w['name']}`. Clover reads this file when a question is about this "
+                         "folder.", "", "## Files", *_file_lines(f["files"])]
+                if f["subdirs"]:
+                    lines += ["", "## Subfolders"]
+                    for d in f["subdirs"]:
+                        sub = f"{rel}/{d}"
+                        lines.append(f"- [`{d}/`](<{d}/{slug(d)}-context.md>)" if sub in folders else f"- `{d}/`")
+                return "\n".join(lines + ["", NOTES, notes or NOTES_HINT, ""])
+            put(root / ctx_rel, ctx_rel, render)
+
+        def render_index(notes):
+            lines = [f"# `{root.name}` - context index", MARK, "",
+                     "Clover keeps a context file in each folder (two levels deep) and this index at the top. They "
+                     "describe structure only; read the files themselves for details.", "", "## Top-level files",
+                     *_file_lines(root_files), "", "## Folders"]
+            for d in top:
+                if d not in folders:
+                    continue
+                lines.append(f"- [`{d}/`](<{d}/{slug(d)}-context.md>) - {len(folders[d]['files'])} files")
+                for c in folders[d]["subdirs"]:
+                    sub = f"{d}/{c}"
+                    if sub in folders:
+                        lines.append(f"  - [`{sub}/`](<{sub}/{slug(c)}-context.md>) - {len(folders[sub]['files'])} files")
+            if limit_hit:
+                lines.append(f"- ... more folders not indexed (limit {MAX_FOLDERS})")
+            return "\n".join(lines + ["", NOTES, notes or NOTES_HINT, ""])
+        put(root / index_name, index_name, render_index)
+        _git_exclude(root, known)
+
+        with self.lock:
+            w = self._find(name)
+            w["folders"] = [k for k in known if k != index_name]
+            w["index"] = index_name if index_name in known else None
+            w["context_at"] = _now()
+            self._save()
+        return {"workspace": name, "path": str(root), "written": written, "unchanged": len(unchanged),
+                "skipped": skipped, "folders": len(folders), "limit_hit": limit_hit}
+
+    def touch(self, path):
+        """After Clover writes a file inside the active workspace, its folder's file list is refreshed."""
+        w = self.active()
+        if not w:
+            return None
+        try:
+            Path(path).resolve().relative_to(Path(w["path"]).resolve())
+        except (ValueError, OSError):
+            return None
+        return self.refresh(w["name"])
+
+    def clean(self, name):
+        """Deletes the context files Clover wrote in a workspace (the ones with its marker line)."""
+        with self.lock:
+            w = self._find(name)
+            root = Path(w["path"]).resolve()
+        removed = []
+        for rel in list(w.get("folders") or []) + ([w["index"]] if w.get("index") else []):
+            fp = (root / rel).resolve()
+            try:
+                fp.relative_to(root)
+                if MARK in fp.read_text(encoding="utf-8", errors="replace"):
+                    fp.unlink()
+                    removed.append(rel)
+            except (ValueError, OSError):
+                continue
+        _git_exclude(root, [])
+        with self.lock:
+            w = self._find(name)
+            w["folders"], w["index"] = [], None
+            self._save()
+        return dict(self.describe(), removed=removed)
+
+    # ---------------- Context for a question; notes where they belong ----------------
+    def note_target(self, text):
+        """The context file a note belongs in: the deepest folder of the active workspace that the note names, or the
+        index when it is about the project as a whole. None: not about the workspace (it goes to Clover's memory)."""
+        w = self.active()
+        if not w:
+            return None
+        low, best = (text or "").lower(), None
+        for ctx_rel in w.get("folders") or []:
+            folder = ctx_rel.rsplit("/", 1)[0]
+            last = folder.rsplit("/", 1)[-1].lower()
+            if len(last) >= 3 and re.search(r"(?<![\w-])" + re.escape(last) + r"(?![\w-])", low):
+                if best is None or folder.count("/") > best[0].count("/"):
+                    best = (folder, ctx_rel)
+        if best:
+            return best[1]
+        if w.get("index") and (PROJECT_WORDS.search(text or "") or w["name"].lower() in low
+                               or Path(w["path"]).name.lower() in low):
+            return w["index"]
+        return None
+
+    def add_note(self, ctx_rel, text):
+        w = self.active()
+        if not w:
+            raise ValueError("no workspace is in use")
+        root = Path(w["path"]).resolve()
+        fp = (root / ctx_rel).resolve()
+        fp.relative_to(root)
+        body = fp.read_text(encoding="utf-8", errors="replace")
+        ours, notes = _existing(fp)
+        if not ours or MARK not in body:
+            raise ValueError(f"{ctx_rel} is not a context file Clover keeps; refresh the workspace first")
+        head = body.split("\n" + NOTES + "\n", 1)[0].rstrip("\n")
+        entry = f"- {datetime.date.today().isoformat()}: {' '.join(str(text).split())[:600]}"
+        fp.write_text(head + "\n\n" + NOTES + "\n" + (notes + "\n" + entry if notes else entry) + "\n", encoding="utf-8")
+        return str(fp)
+
+    def context_block(self, query, budget=1800):
+        """(block, info) for a question about the active workspace: up to two folder context files that match it and
+        the index's folder list. None when the question does not concern the workspace (a 2B model cites whatever
+        context it is given, so unrelated context is left out)."""
+        w = self.active()
+        if not w or not (w.get("folders") or w.get("index")):
+            return None, None
+        root, q = Path(w["path"]), _terms(query)
+        sep, scored = "\n" + NOTES + "\n", []
+        for ctx_rel in w.get("folders") or []:
+            try:
+                text = (root / ctx_rel).read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            folder = ctx_rel.rsplit("/", 1)[0]
+            files = re.findall(r"^- \[`([^`]+)`\]", text, re.M)
+            names = _terms(folder.replace("/", " ")) | {folder.rsplit("/", 1)[-1].lower()}
+            fterms = _terms(" ".join(files)) | {f.lower() for f in files}
+            notes = text.split(sep, 1)[1] if sep in text else ""
+            s = 3 * len(q & names) + 2 * len(q & fterms) + len(q & _terms(notes))
+            if s:
+                scored.append((s, ctx_rel, text))
+        scored.sort(key=lambda x: -x[0])
+        low = (query or "").lower()
+        asked = bool(PROJECT_WORDS.search(query or "")) or w["name"].lower() in low or root.name.lower() in low
+        if not asked and (not scored or scored[0][0] < 3):
+            return None, None
+        head = (f'The user is working in the workspace "{w["name"]}" ({root}); relative file paths refer to it. From '
+                "its context files (Clover's index of folders and files; read a file for details). Files named "
+                "*-context.md and *-context-index.md are Clover's own notes, not part of the project:")
+        parts, used, room = [head], [], budget - len(head)
+        for _, ctx_rel, text in scored[:2]:
+            chunk = f"[{ctx_rel}]\n" + _plain(text)[:min(900, max(0, room - 40))]
+            parts.append(chunk)
+            used.append(ctx_rel)
+            room -= len(chunk)
+            if room < 250:
+                break
+        if room >= 250 and w.get("index"):
+            try:
+                idx = (root / w["index"]).read_text(encoding="utf-8", errors="replace")
+                tail = idx.split("## Folders", 1)[1].split(sep, 1)[0].strip() if "## Folders" in idx else ""
+                if tail:
+                    parts.append(f"[{w['index']}: folders]\n{_plain(tail)[:room - 60]}")
+                    used.append(w["index"])
+            except OSError:
+                pass
+        return "\n\n".join(parts), {"layer": "workspace", "workspace": w["name"], "files": used}

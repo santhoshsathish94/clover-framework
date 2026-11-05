@@ -1,0 +1,412 @@
+"""Clover layers 3-6 as add-ons to LFM3 alone (Layer 1 + native tools), each one switchable on its own.
+
+Each layer is Clover's own component, unchanged; only the glue to LFM3's chat loop is new:
+  memory   (L4) retrieve_relevant_memory_package (its own precision gate) + render_for_k3(compact=True), appended
+                after the question with Clover's instruction, as run_agent_planning appends tool observations.
+  ontology (L5) CloverOntologyRetriever.retrieve(q, max_entities=4, max_paths=6) + render_evidence, appended the same
+                way; CloverSymbolicVerifier.verify_source_grounding on the final reply, as agent_reply does.
+                Not used: solve_symbolic_math_constraints and verify_mcq_with_ontology. Their rules match specific test
+                questions (house flip, lemon tree, round trip, thin film 600 nm, carrying capacity...): answer keys.
+  compiler (L6) CloverPythonGenerativeCompiler.check_prefix(code, end_marker=True, spec_prompt=q) on the Python in the
+                final reply (syntax, names, call arity, the prompt's own >>> examples). Its feedback goes back to LFM3
+                for up to two repair rounds. Clover checks prefixes while decoding; LFM3's loop checks the finished code.
+  ncm      (L3) Lfm3NCMRenderer.render_plans_in_model_vocab(windows of the final reply, cands=1), the renderer Clover's
+                chat server uses for LFM3; code blocks pass through unchanged, as in the renderer.
+App mode (memory_root given): the user's knowledge is growth/knowledge in Clover's repository: notes they asked Clover
+to remember and learnings from outcomes, retrieved with a general gate (Clover's gate also keys on the memory
+benchmark's wording); the ontology leaves out the records that were written for benchmark questions (STEM_CONCEPT,
+FORMULA, DOC_RECORD).
+"""
+import hashlib
+import re
+import threading
+import time
+from pathlib import Path
+
+from semantics import FOOD_ASK, FOOD_NOTE, NOT_FOR_ME  # noqa: F401 (the meaning rules are common)
+
+LAYERS = ("memory", "ontology", "compiler", "ncm")
+BENCHMARK_ONLY_COLLECTIONS = ("STEM_CONCEPT/", "FORMULA/", "DOC_RECORD/")
+LINKS_AND_PATHS = re.compile(r"https?://\S+|www\.\S+|\b[A-Za-z]:\\\S*|(?:~|\.{1,2})?/[\w.-]+(?:/[\w.-]+)+")
+MEMORY_CUES = ("remember", "earlier", "last time", "you told me", "i told you", "i said", "my ", "we decided",
+               "correction", "recorded", "note")
+RECALL_CUE = re.compile(
+    r"\b(?:my|mine|i\s+(?:told|said|mentioned|asked|have|own|live|work|like|prefer|adopted|bought|moved)|"
+    r"earlier|last\s+time|previous(?:ly)?|before|remember|we\s+(?:talked|discussed|spoke|decided)|"
+    r"what\s+did\s+i|where\s+do\s+i|who\s+is\s+my)\b", re.I
+)
+
+
+def needs_recall(text):
+    return bool(RECALL_CUE.search(text or ""))
+STOP = set("the a an and or of to in on for with is are was were be been it this that these those my your our their "
+           "i you we they he she me us them what which who when where why how about from at by as into than then".split())
+# words that say nothing about a topic: "much" alone pulled a lesson on pens into "how much free disk space" (2026-11-01)
+FILLER = STOP | set("much many would could should does did have has had like just also only some any more most very "
+                    "really there here question answer clover checks check found gave give solutions solution "
+                    "independent first said user right wrong not".split())
+LESSON_TOPIC = re.compile(r'On a question like "([^"]+)"')
+
+
+def topic_terms(text):
+    """Content words of a question or memory item; for a learning, of the question it is about."""
+    m = LESSON_TOPIC.search(text or "")
+    words = re.findall(r"[a-z][a-z0-9\-]{2,}", (m.group(1) if m else text or "").lower())
+    return {w[:-1] if len(w) > 3 and w.endswith("s") else w for w in words if w not in FILLER}
+
+
+# who says it does not change a note: "I'm vegetarian and allergic to peanuts." and "The user is vegetarian and allergic
+# to peanuts." are one note; "not", "no" and "never" are kept, so a correction is a new note
+SPEAKER = STOP | {"user", "user's", "i'm", "im", "am", "i've", "has", "have", "remember", "that"}
+
+
+def note_words(text):
+    words = re.findall(r"[a-z0-9][a-z0-9'\-]*", str(text or "").lower().replace("\u2019", "'"))
+    return tuple(w for w in words if w not in SPEAKER)  # in order: "Priya reports to Arun" is not "Arun ... Priya"
+MEMORY_INSTRUCTION = (
+    "Instruction: Use the persistent memory records [M#], their provenance, and their correction/evolution chains "
+    "above. Explicitly present both any superseded initial interpretation and the superseding correction, distinguish "
+    "user_stated_belief/hypothesis/unresolved from externally_verified facts, and preserve any unresolved contradictions.")
+ONTOLOGY_INSTRUCTION = (
+    "Instruction: Ground your reasoning and answer strictly in the verified entity records [E#], relationship paths "
+    "[P#], and mathematical/domain constraints above.")
+APP_ONTOLOGY_INSTRUCTION = (
+    "Instruction: Answer from these records in plain words. Do not mention the records themselves, labels or IDs.")
+APP_MEMORY_INSTRUCTION = (
+    "Instruction: Use these notes where they answer the question. They record what the user told you and what earlier "
+    "answers taught (with how often that worked), not verified facts; if one was superseded, use the newer one and say "
+    "so, and do not repeat what did not work.")
+
+
+PY_HINT = re.compile(r"^\s*(?:def|class|import|from|for|while|if|elif|try|with|return|print\(|[A-Za-z_]\w*\s*=(?!=))",
+                     re.M)
+
+
+def extract_python(reply):
+    """The Python to check in a reply: ```python / ```py fences, or bare fences that read like Python. A solved Sudoku
+    grid in a bare fence was compiled as Python, reported as a syntax error, and the repair turn replaced a correct
+    answer with code (Omni ladder step 4)."""
+    blocks = re.findall(r"```(python|py)?[ \t]*\n([\s\S]*?)```", reply)
+    code = [b for tag, b in blocks if tag or PY_HINT.search(b)]
+    if code:
+        return max(code, key=len)
+    if blocks:  # fenced text, none of it Python
+        return ""
+    return reply if re.search(r"^\s*def\s+\w+\s*\(", reply, flags=re.M) else ""
+
+
+def answer_windows(reply):
+    """Plan windows for the NCM renderer: code fences stay whole, other non-empty lines are one window each."""
+    windows, i, lines = [], 0, reply.splitlines()
+    while i < len(lines):
+        ln = lines[i]
+        if ln.strip().startswith("```"):
+            j = i + 1
+            while j < len(lines) and not lines[j].strip().startswith("```"):
+                j += 1
+            windows.append("\n".join(lines[i:j + 1]))
+            i = j + 1
+            continue
+        if ln.strip():
+            windows.append(ln.strip())
+        i += 1
+    return windows
+
+
+class LayerKit:
+    def __init__(self, base_dir, memory_root=None):
+        self.base_dir = Path(base_dir)
+        self.memory_root = Path(memory_root) if memory_root else None
+        self._cl = None
+        self._memory = None
+        self._ontology = None
+        self._verifier = None
+        self._gc = None
+        self._ncm = None
+        self._store_lock = threading.Lock()
+        self.workspaces = None  # workspaces.Workspaces (app mode): the folder the user works in
+        self.records = None  # clover_repo.Repo (app mode): conversations, outcomes and summaries
+        self.recall = None  # memory_index.MemoryIndex (app mode): Layer 2 over the conversations
+        self.meaning = None  # semantics.Frame of the turn being answered (app mode)
+
+    def workspace_context(self, q):
+        if self.workspaces is None or self._skip(q):
+            return None, None
+        return self.workspaces.context_block(q)
+
+    def records_context(self, q):
+        # questions about the conversation itself are where the records matter, so only greetings are skipped
+        if self.records is None or self.cl.is_short_greeting_or_ack(q):
+            return None, None
+        return self.records.context_block(q)
+
+    def recall_context(self, q, history_turns=0):
+        """Earlier messages for the current turn (Layer 2); history_turns: this chat's turns already in the prompt."""
+        if self.recall is None or self.records is None or self.records.current is None:
+            return None, None
+        if self.cl.is_short_greeting_or_ack(q):
+            return None, None
+        cued = needs_recall(q)
+        if not getattr(self.recall, "want_recall", False) and not cued:
+            return None, None
+        sid, n = self.records.current
+        try:
+            return self.recall.recall(sid, n, q, history_turns, force=cued)
+        except TypeError:
+            return self.recall.recall(sid, n, q, history_turns)
+
+    @property
+    def cl(self):
+        if self._cl is None:
+            import clover_loop
+            self._cl = clover_loop
+        return self._cl
+
+    def _skip(self, q):
+        return self.cl.is_short_greeting_or_ack(q) or self.cl.is_conversational_meta_or_confirmation(q)
+
+    def store(self):
+        with self._store_lock:
+            if self._memory is None:
+                if self.memory_root is None:
+                    self._memory = self.cl.ensure_default_memory_tree()
+                else:
+                    self.memory_root.mkdir(parents=True, exist_ok=True)
+                    self._memory = self.cl.CloverMemoryGraphStore(self.memory_root, auto_load=True)
+            return self._memory
+
+    def _user_memory_package(self, q):
+        st = self.store()
+        if not st.entries:
+            return None
+        seeds = st._score_seed_entries(q)
+        if not seeds:
+            return self._food_notes(q, st)
+        score, _, reason = seeds[0]
+        strong = any(k in reason for k in ("direct_id(", "concept_exact(", "phrase_match(", "evidence_phrase("))
+        cued = any(c in q.lower() for c in MEMORY_CUES)
+        if not (strong and score >= 12.0) and not (cued and score >= 8.0) and score < 18.0:
+            return self._food_notes(q, st)
+        pkg = st.retrieve_context_package(query=q, max_seeds=3, max_depth=2, max_entries=6, token_budget=1100)
+        qt = topic_terms(q)
+        pkg.items = [it for it in pkg.items if "learning" not in it.entry.tags
+                     or len(qt & topic_terms(it.entry.summary)) >= 2]
+        return pkg if pkg.items else self._food_notes(q, st)
+
+    def _food_notes(self, q, st):
+        """The user's diet and allergy notes for a question about food (they share no word with it)."""
+        if not (self.meaning.diet if self.meaning is not None else FOOD_ASK.search(q or "") and not NOT_FOR_ME.search(q or "")):
+            return None
+        ids = [e.id for e in st.entries.values() if "learning" not in e.tags and e.status == "active"
+               and FOOD_NOTE.search(e.summary or "")]
+        if not ids:
+            return None
+        pkg = st.retrieve_context_package(query=" ".join(st.entries[i].summary for i in ids[:3]), max_seeds=3,
+                                          max_depth=0, max_entries=4, token_budget=600)
+        pkg.items = [it for it in pkg.items if it.entry.id in ids]
+        return pkg if pkg.items else None
+
+    def memory_context(self, q):
+        if self._skip(q):
+            return None, None
+        t0 = time.perf_counter()
+        if self.memory_root is not None:  # "C:\Users\..." matched the word "user" in every note (2026-11-01)
+            q = LINKS_AND_PATHS.sub(" ", q)
+        pkg = self.cl.retrieve_relevant_memory_package(self.store(), q) if self.memory_root is None else self._user_memory_package(q)
+        if pkg is None or not pkg.items:
+            return None, None
+        info = {"layer": "memory", "entries": [it.entry.id for it in pkg.items], "ms": round((time.perf_counter() - t0) * 1000, 1)}
+        if self.memory_root is not None:
+            # the K3 rendering lists file paths, and LFM3 then went looking for the files (8 tool calls in a test)
+            lines = ["Notes from this user's memory, already retrieved for you (answer from them; no tools needed):"]
+            for i, it in enumerate(pkg.items[:4], start=1):
+                e = it.entry
+                late = f" (superseded by {it.superseded_by_id})" if it.superseded_by_id else ""
+                w, d = self.tally(e)
+                used = f"; used before: worked {w}, did not work {d}" if w or d else ""
+                lines.append(f"[M{i}] {e.summary} — {e.epistemic_status.replace('_', ' ')}, recorded {e.created_at[:10]}"
+                             f"{used}{late}")
+            return "\n".join(lines) + "\n" + APP_MEMORY_INSTRUCTION, info
+        return pkg.render_for_k3(compact=True) + "\n" + MEMORY_INSTRUCTION, info
+
+    # ---- the user's memory (app mode): what they asked Clover to remember, with provenance ----
+    def remember(self, text, kind="observation", conversation_id=None):
+        import k3_memory_graph as M
+        text = " ".join(str(text or "").split())[:2000]
+        if len(text) < 3:
+            raise ValueError("nothing to remember")
+        same = next((e for e in self.store().entries.values() if "learning" not in e.tags and e.status == "active"
+                     and note_words(e.content or e.summary) == note_words(text)), None)
+        if same is not None:  # "Remember that I'm vegetarian..." twice made two notes that say the same (2026-11-01)
+            return same.id
+        words = [w for w in re.findall(r"[a-z][a-z0-9\-]{3,}", text.lower()) if w not in STOP]
+        tags = list(dict.fromkeys(words))[:8]
+        eid = "MEM-USER-" + time.strftime("%Y%m%d-%H%M%S") + "-" + hashlib.sha1(text.encode("utf-8")).hexdigest()[:6]
+        entry = M.MemoryEntry(
+            id=eid, title=text[:80], entry_type=kind if kind in M.VALID_ENTRY_TYPES else "observation",
+            epistemic_status="user_stated_belief", summary=text[:400], content=text,
+            source_evidence="Stated by the user in a Clover AI Studio chat.",
+            provenance=M.MemoryProvenance(source_type="conversation", source_ref=f"studio-chat:{conversation_id or 'unknown'}",
+                                          conversation_id=conversation_id, actor="user"),
+            concepts=tags[:4], tags=tags)
+        self.store().create_entry(entry)
+        return eid
+
+    def memories(self):
+        out = []
+        for e in self.store().entries.values():
+            w, d = self.tally(e)
+            out.append({"id": e.id, "title": e.title, "summary": e.summary, "created_at": e.created_at,
+                        "status": e.status, "type": e.entry_type, "epistemic": e.epistemic_status,
+                        "kind": "learning" if "learning" in e.tags else "note", "worked": w, "did_not_work": d})
+        return sorted(out, key=lambda d: d["created_at"], reverse=True)
+
+    def forget(self, entry_id):
+        st = self.store()
+        e = st.entries.get(str(entry_id))
+        if e is None or self.memory_root is None:
+            return False
+        fp = (st.root_dir / e.rel_path).resolve()
+        if fp.is_file() and str(fp).startswith(str(st.root_dir)):
+            fp.unlink()
+        st.rebuild_index()
+        return True
+
+    # ---- Growth: learnings from outcomes, recorded at once, then confirmed, contested or superseded by what follows ----
+    @staticmethod
+    def tally(entry):
+        """-> (worked, did not work): outcomes of the answers this entry was used in."""
+        acts = [r.action for r in entry.revisions]
+        return acts.count("worked"), acts.count("did_not_work")
+
+    def _similar_learning(self, text):
+        st = self.store()
+        for score, eid, _ in st._score_seed_entries(text) if st.entries else []:
+            e = st.entries.get(eid)
+            if score >= 18.0 and e is not None and "learning" in e.tags and e.status != "superseded":
+                return e
+        return None
+
+    def learn(self, text, sid, n, kind="user"):
+        """A learning from a correction (the user said an answer was not right; Clover's checks). Related to an
+        earlier learning on the same question: it corrects (and supersedes) one that did not work, else refines it.
+        -> (id, [changes])"""
+        import k3_memory_graph as M
+        st = self.store()
+        tags = sorted(topic_terms(text))[:6]
+        eid = "LRN-" + time.strftime("%Y%m%d-%H%M%S") + "-" + hashlib.sha1(text.encode("utf-8")).hexdigest()[:6]
+        ref = f"sessions:{sid}#{n}"
+        old = self._similar_learning(text)
+        rels, rel = [], None
+        if old is not None:
+            w, d = self.tally(old)
+            rel = "corrects" if d > w else "refines"
+            rels.append(M.MemoryRelationship(type=rel, target=old.id, source=eid, provenance=ref, confidence=0.6,
+                                             note="a later correction on a similar question"))
+        entry = M.MemoryEntry(
+            id=eid, title=text[:80], entry_type="correction",
+            epistemic_status="observed" if kind == "verified" else "user_stated_belief", summary=text[:400],
+            content=text,
+            source_evidence=("Clover's checks: the answer the user said was not right failed them; the corrected answer "
+                             "passed them.") if kind == "verified" else "The user said Clover's answer was not right.",
+            provenance=M.MemoryProvenance(source_type="conversation", source_ref=ref, conversation_id=sid,
+                                          turn_range=str(n), actor="clover-growth"),
+            concepts=tags[:4], tags=tags + ["learning"], relationships=rels)
+        st.create_entry(entry)
+        changes = [f"learned {eid}"]
+        if rel == "corrects":
+            st.mark_superseded(old.id, eid, "a later correction on a similar question", actor="clover-growth")
+            changes.append(f"{eid} corrects {old.id}, which did not work (superseded)")
+        elif rel:
+            changes.append(f"{eid} refines {old.id}")
+        return eid, changes
+
+    def score_learning(self, eid, worked, ref):
+        """An outcome of an answer that used this learning: contested once it fails more often than it works (at least
+        twice), holding again when it works as often as it fails. Notes the user stated are not scored. -> change"""
+        import k3_memory_graph as M
+        st = self.store()
+        e = st.entries.get(eid)
+        if e is None or "learning" not in e.tags or e.status == "superseded":
+            return None
+        stamp = M.utc_now_iso()
+        e.revisions.append(M.MemoryRevision(timestamp=stamp, actor="clover-growth",
+                                            action="worked" if worked else "did_not_work", reason=ref))
+        w, d = self.tally(e)
+        before = e.status
+        if d >= 2 and d > w:
+            e.status = "contested"
+        elif e.status == "contested" and w >= d:
+            e.status = "active"
+        if w >= 2 and d == 0 and e.epistemic_status == "user_stated_belief":
+            e.epistemic_status = "observed"
+        e.updated_at = stamp
+        st._save_entry_in_place(e)
+        st.rebuild_index()
+        return (f"{eid} {'worked' if worked else 'did not work'} (worked {w}, did not work {d})"
+                + (f", now {'holding' if e.status == 'active' else e.status}" if e.status != before else ""))
+
+    def ontology_context(self, q):
+        if self.memory_root is not None:  # app: a link or path is not a topic (github.com/.../clover-framework matched)
+            q = LINKS_AND_PATHS.sub(" ", q)
+            if not re.search(r"[A-Za-z]{3}", q):
+                return None, None
+        if self._skip(q):
+            return None, None
+        if self._ontology is None:
+            self._ontology = self.cl.CloverOntologyRetriever()
+            self._verifier = self.cl.CloverSymbolicVerifier(self._ontology)
+        t0 = time.perf_counter()
+        ev = self._ontology.retrieve(q, max_entities=4, max_paths=6)
+        if self.memory_root is not None:
+            ev = [e for e in ev if not any(str(x).startswith(BENCHMARK_ONLY_COLLECTIONS) for x in e.entities)]
+        if not ev:
+            return None, None
+        info = {"layer": "ontology", "entities": [e for item in ev for e in item.entities], "n_evidence": len(ev),
+                "ms": round((time.perf_counter() - t0) * 1000, 1)}
+        rendered = self.cl.render_evidence(ev)
+        if self.memory_root is None:
+            return "Ontology-Guided Symbolic Evidence & Provenance Paths:\n" + rendered + "\n" + ONTOLOGY_INSTRUCTION, info
+        # app: told not to, LFM3-Omni still quoted [E2]/[P5] and raw IDs, so the labels, IDs and paths are left out
+        notes = []
+        for blk in rendered.split("\n\n"):
+            lines = blk.strip().splitlines()
+            if not lines or not re.match(r"\[E\d+\]", lines[0]):
+                continue
+            body = [re.sub(r"^[A-Z_]+:[^:]+:\s*", "", ln).replace("Verified Constraints:", "Key points:") for ln in lines[1:]]
+            notes.append("- " + "\n  ".join(b for b in body if b.strip()))
+        if not notes:
+            return None, None
+        return ("Clover's own records on this topic (already retrieved; no tools needed):\n" + "\n".join(notes) + "\n"
+                + APP_ONTOLOGY_INSTRUCTION), info
+
+    def grounding_filter(self, q, reply):
+        if self._verifier is None:
+            self._ontology = self._ontology or self.cl.CloverOntologyRetriever()
+            self._verifier = self.cl.CloverSymbolicVerifier(self._ontology)
+        out = self._verifier.verify_source_grounding(q, reply)
+        return out, out != reply
+
+    def compiler_check(self, q, reply):
+        """-> (feedback or None, info). No code in the reply -> nothing to check."""
+        code = extract_python(reply)
+        if not code.strip():
+            return None, {"layer": "compiler", "checked": False}
+        if self._gc is None:
+            self._gc = self.cl.CloverPythonGenerativeCompiler(allow_undefined=True)
+        v = self._gc.check_prefix(code, end_marker=True, spec_prompt=q)
+        info = {"layer": "compiler", "checked": True, "ok": bool(v.ok), "ms": v.elapsed_ms,
+                "diagnostics": [d.format_concise() for d in v.diagnostics[:3]]}
+        return (None if v.ok else v.format_feedback()), info
+
+    def ncm_render(self, reply):
+        windows = answer_windows(reply)
+        if not windows:
+            return reply, {"layer": "ncm", "windows": 0}
+        if self._ncm is None:
+            import lfm3_clover
+            self._ncm = lfm3_clover.Lfm3NCMRenderer(self.base_dir / "data", self.base_dir / "engine")
+        t0 = time.perf_counter()
+        text, ids, meta = self._ncm.render_plans_in_model_vocab(windows, cands=1)
+        return text, {"layer": "ncm", "windows": len(windows), "s": round(time.perf_counter() - t0, 1),
+                      "c_engine_ms": meta.get("c_engine_ms")}

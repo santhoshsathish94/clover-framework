@@ -138,7 +138,7 @@ def _eval(expr):
 
 _DIRECT_EXPR = re.compile(
     r"^\s*(?:(?:what(?:'?s|\s+is|\s+are)|calculate|compute|evaluate)\s+)?([0-9\s(),.+\-*/x\u00d7\u00f7\u2212^]+?)"
-    r"\s*(?:=\s*\?)?[?.!]?(?:\s+(?:return|reply\s+with|output|give|provide|write|respond\s+with)\s+(?:only|just)\b[\s\S]*)?$",
+    r"\s*(?:=\s*\?)?[?.!]?(?:\s+(?:and\s+)?(?:return|reply\s+with|output|give|provide|write|respond\s+with)\s+(?:only|just)\b[\s\S]*)?$",
     re.I,
 )
 

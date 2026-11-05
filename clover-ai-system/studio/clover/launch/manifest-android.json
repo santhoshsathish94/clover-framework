@@ -1,0 +1,14 @@
+{
+  "about": "What the Clover AI Studio Android app downloads on first start, pinned like the laptop's manifest.json: each file is checked against the SHA-256 Hugging Face lists for it before it is used. llama.cpp is inside the app. Read by clover/setup_fetch.py.",
+  "version": "0.4.0-android",
+  "archives": [],
+  "files": [
+    {"component": "core", "name": "LFM3-Omni-2B (Q4_0)", "dest": "data/omni/gguf/LFM3-Omni-2B-Q4_0.gguf",
+     "url": "https://huggingface.co/LiquidAI/LFM3-Omni-2B-GGUF/resolve/3d29af2ad166f8299c2d820937e47dc0add20ffc/LFM3-Omni-2B-Q4_0.gguf",
+     "sha256": "6d2273a383b92dd7c5db0eb4c8dfeae13e805b485a6621c4b391ae179c2b5f28", "size": 1049617920},
+    {"component": "core", "name": "LFM3-Omni-2B projector (vision, audio, speech; Q8_0)", "dest": "data/omni/gguf/mmproj-LFM3-Omni-2B-Q8_0.gguf",
+     "url": "https://huggingface.co/LiquidAI/LFM3-Omni-2B-GGUF/resolve/3d29af2ad166f8299c2d820937e47dc0add20ffc/mmproj-LFM3-Omni-2B-Q8_0.gguf",
+     "sha256": "8a25f9d1931244429de404fccacfb7fb933970a36aa5688d2f5069f29c6b27b1", "size": 506842528}
+  ],
+  "datasets": []
+}
