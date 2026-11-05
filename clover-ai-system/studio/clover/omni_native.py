@@ -546,6 +546,16 @@ class OmniNative(N.LFM3Native):
                             # past the search limit the Omni kept calling refused searches, then wrote a Python scraper of
                             # invented URLs for 5 minutes (2026-11-01): no tools for the rest of this answer
                             schemas = []
+                        if (
+                            schemas
+                            and r >= 1
+                            and set(by_name) <= {"web_search", "fetch_url"}
+                            and any(rd["tool"] == "web_search" and rd["ran"] and rd.get("worked") for rd in rounds)
+                            and not re.search(r"https?://|www\.|\b(?:compare|corroborate|both|each)\b", query or "", re.I)
+                        ):
+                            # A single successful web_search already returned the top 5 snippets/headlines; removing
+                            # schemas in Round 1 prevents the 2B model from looping across 8 rounds of fetch_url calls.
+                            schemas = []
                         if schemas and sum(1 for rd in rounds if rd["why"] == "same call already made in this answer") >= 2:
                             # "good vegetarian restaurants in Jaipur" repeated two searches six times, to the round limit
                             schemas = []
@@ -567,11 +577,25 @@ class OmniNative(N.LFM3Native):
                             for c in calls
                         ):
                             calls = []  # the model asks the user which command/app to run: its question is the answer
-                        if r == 0 and attempt == 0 and not calls and "web_search" in by_name and (
-                            "web_search" in (only_tools or ()) or semantics.CANNOT.search(content)
-                        ):
-                            calls = [{"id": "call_" + uuid.uuid4().hex[:16], "name": "web_search", "arguments": {"query": query}}]
-                            content = ""
+                        if r == 0 and attempt == 0 and not calls:
+                            if "web_search" in by_name and ("web_search" in (only_tools or ()) or semantics.CANNOT.search(content)):
+                                calls = [{"id": "call_" + uuid.uuid4().hex[:16], "name": "web_search", "arguments": {"query": query}}]
+                                content = ""
+                            elif (
+                                semantics.CANNOT.search(content)
+                                and "web.search" not in getattr(meaning, "declined", ())
+                                and not media
+                                and not getattr(meaning, "seen", ())
+                                and getattr(meaning, "act", "") not in ("creative", "social")
+                                and not blocks
+                            ):
+                                ws_t = next((t for t in N.STUDIO_TOOLS if t["function"]["name"] == "web_search"), None)
+                                if ws_t is not None:
+                                    schemas.append(ws_t)
+                                    by_name["web_search"] = ws_t["function"]
+                                    tools = True
+                                    calls = [{"id": "call_" + uuid.uuid4().hex[:16], "name": "web_search", "arguments": {"query": query}}]
+                                    content = ""
                         names = [c["name"] for c in calls]
                         if calls and semantics.answered_unasked(meaning, TOOL_XML.sub("", content), names):
                             rt = meaning.runtime
@@ -604,13 +628,17 @@ class OmniNative(N.LFM3Native):
                             continue
                         final = content.strip()
                         web_ok = any(rd["tool"] == "web_search" and rd["ran"] and not rd["result"].startswith("No results") for rd in rounds)
-                        refused_after_web = web_ok and (semantics.CANNOT.search(final) or "don't know where you are" in final.lower())
+                        refused_after_web = web_ok and (
+                            semantics.CANNOT.search(final)
+                            or bool(re.search(r"don'?t know where you are|need to know which city|tell me your city|your city or location", final, re.I))
+                        )
                         if (semantics.non_answer(final) or refused_after_web) and rounds and \
                                 st["finish"] not in ("length", "cancelled") and not (cancel and cancel.is_set()):
                             # with its tools gone the Omni still wrote a call, which is stripped, and the answer was
                             # empty: "(Clover finished without writing an answer.)" in a trip-planning chat (2026-11-01)
-                            msgs.append({"role": "user", "content": "Answer now in plain text directly from the tool "
-                                         "results above; do not ask for location or call tools."})
+                            msgs.append({"role": "user", "content": "Answer now in plain text directly using the exact "
+                                         "facts and numbers in the tool results above; do not ask for the user's "
+                                         "location or call tools."})
                             lead = "Here is what I can tell you: "
                             msgs.append({"role": "assistant", "content": lead})
                             emit({"type": "round", "round": r + 2})

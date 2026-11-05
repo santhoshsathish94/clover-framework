@@ -597,14 +597,15 @@ def image_tool(sid, cancel, made):
     gen = image_gen.ImageGen(S.args.base, S.settings.get().get("image_model", "sd15-lcm"))
 
     def run(a):
-        free = image_gen.free_mb()
-        if free is not None and free < image_gen.NEED_FREE_MB and hasattr(S.engine, "free_voice") and S.engine.free_voice():
-            time.sleep(1.5)
+        if gen.available()[0]:
             free = image_gen.free_mb()
-        if free is not None and free < image_gen.NEED_FREE_MB:
-            return (f"Error: no picture was made: this laptop has {free / 1024:.1f} GB of memory free and making a picture "
-                    f"needs about {image_gen.NEED_FREE_MB / 1024:.1f} GB. Tell the user to close some programs (browser "
-                    "tabs, other apps) and ask again. Do not try again now.")
+            if free is not None and free < image_gen.NEED_FREE_MB and hasattr(S.engine, "free_voice") and S.engine.free_voice():
+                time.sleep(1.5)
+                free = image_gen.free_mb()
+            if free is not None and free < image_gen.NEED_FREE_MB:
+                return (f"Error: no picture was made: this laptop has {free / 1024:.1f} GB of memory free and making a picture "
+                        f"needs about {image_gen.NEED_FREE_MB / 1024:.1f} GB. Tell the user to close some programs (browser "
+                        "tabs, other apps) and ask again. Do not try again now.")
         try:
             r = gen.generate(a.get("prompt") or "", media_dir(), cancel=cancel)
         except (RuntimeError, ValueError, TypeError) as exc:
@@ -613,7 +614,7 @@ def image_tool(sid, cancel, made):
         return (f"Made the picture ({r['width']}x{r['height']}, {r['model']}, {r['seconds']} s); the user sees it in the chat "
                 "now. Reply with one short sentence; do not describe details you cannot see.")
     return {"schema": lfm3_native._fn(
-        "generate_image", "Make a picture from a text description with the image model on this laptop. Use when the "
+        "generate_image", "Make a picture or illustration from a text description. Use when the "
         "user asks for an image, picture, drawing or illustration.",
         {"prompt": {"type": "string", "description": "what the picture shows, in English, with style details"}}, ["prompt"]),
         "permission": "media", "detail": lambda a: "Create a picture: " + str(a.get("prompt") or "")[:300], "run": run}
@@ -1141,8 +1142,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
         extra += vscode_tools(sid)
     made = []
     eng.turn_images = made  # pictures and charts made in this turn (image tool, Python's PNG files)
-    if (Path(S.args.base) / "tools" / "sd.cpp" / "vulkan" / "sd-cli.exe").is_file():
-        extra.append(image_tool(sid, cancel, made))
+    extra.append(image_tool(sid, cancel, made))
     t0 = time.perf_counter()
     if S.turn_lock.locked() and on_event:
         on_event({"type": "plan", "round": 1, "stage": "queued"})

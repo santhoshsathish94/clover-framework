@@ -71,14 +71,14 @@ def generate_all() -> dict:
             "privacy_policy": "https://cloverframework.com/privacy/",
             "support": "https://github.com/santhoshsathish94/clover-framework/issues",
             "windows_direct_installer": "https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe",
-            "google_play_instant_test": "https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNSPFXvNv9YJ1OJ-XFOu9-yvn426Zr96E5mzhOB_BZu9EuNBqaneLe4O-JmP-vqDpXMW7CVorobgC3AQiGM9",
+            "google_play_instant_test": "https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNRoJQ1q2vSWcsS_HamuIOmmlbmpz4YZmTRB6qoomiOmSj5pK7Qz75RY537EnOpdUc1h4mT_pQkTYd3smKNS",
             "google_play_closed_beta_web": "https://play.google.com/apps/testing/ai.clover.studio",
             "google_play_store_listing": "https://play.google.com/store/apps/details?id=ai.clover.studio"
         },
         "android": {
             "store": "Google Play Console (Closed Testing & Internal App Sharing)",
             "package_name": "ai.clover.studio",
-            "version_code": 10,
+            "version_code": 11,
             "version_name": "0.5.0-beta.1",
             "min_sdk": 26,
             "target_sdk": 36,
@@ -220,7 +220,7 @@ def generate_all() -> dict:
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
 **Release Version**: `0.5.0-beta.1`  
-**Version Code**: `10`  
+**Version Code**: `11`  
 **Package Name**: `ai.clover.studio`  
 **Build Date**: `2026-11-05`  
 **Build Environment**: `k3` (`/opt/clover-k3/studio-android`), OpenJDK `17.0.20`, Gradle `8.9`, Android Gradle Plugin `8.5.2`, Chaquopy `17.2.0` (CPython `3.12`), Android SDK `36` (`minSdk 26`, `targetSdk 36`, `compileSdk 36`), Android NDK `llvm-strip`.
@@ -231,8 +231,8 @@ def generate_all() -> dict:
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console Closed Testing upload (`versionCode 10`, `targetSdk 36`) | `{aab_size:,}` bytes (`{aab_size / (1024*1024):.2f} MB`) | `{aab_sha}` |
-| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 10`, `targetSdk 36`) | `{apk_size:,}` bytes (`{apk_size / (1024*1024):.2f} MB`) | `{apk_sha}` |
+| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console Closed Testing upload (`versionCode 11`, `targetSdk 36`) | `{aab_size:,}` bytes (`{aab_size / (1024*1024):.2f} MB`) | `{aab_sha}` |
+| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 11`, `targetSdk 36`) | `{apk_size:,}` bytes (`{apk_size / (1024*1024):.2f} MB`) | `{apk_sha}` |
 
 ---
 
@@ -255,7 +255,7 @@ def generate_all() -> dict:
 ## 3. Package & Manifest Audit (`build.gradle`)
 
 ```text
-package: name='ai.clover.studio' versionCode='10' versionName='0.5.0-beta.1'
+package: name='ai.clover.studio' versionCode='11' versionName='0.5.0-beta.1'
 sdkVersion:'26'
 targetSdkVersion:'36'
 compileSdkVersion:'36'
@@ -270,7 +270,7 @@ launchable-activity: name='ai.clover.studio.MainActivity'
 1. **Collective Problem-Solving Learning (`test_collective.py`)**: **`35/35` checks passed** (RFC 8032 Ed25519 public-key verification, unauthenticated-publish refusal, forged-key rejection, PII stripping, Sybil deduplication, Byzantine poison rejection, `Personal > Collective > General` priority).
 2. **Live Activity SSE Timeline (`test_live_activity_sse.py`)**: **`18/18` checks passed** (monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
 3. **Google Play Console Links**:
-   - Instant Test (Internal App Sharing): `https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNSPFXvNv9YJ1OJ-XFOu9-yvn426Zr96E5mzhOB_BZu9EuNBqaneLe4O-JmP-vqDpXMW7CVorobgC3AQiGM9`
+   - Instant Test (Internal App Sharing): `https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNRoJQ1q2vSWcsS_HamuIOmmlbmpz4YZmTRB6qoomiOmSj5pK7Qz75RY537EnOpdUc1h4mT_pQkTYd3smKNS`
    - Closed Testing Opt-In: `https://play.google.com/apps/testing/ai.clover.studio`
 """
     (BETA_DIR / "android" / "BUILD-REPORT.md").write_text(and_report, encoding="utf-8")
@@ -288,7 +288,7 @@ launchable-activity: name='ai.clover.studio.MainActivity'
         f"  {setup_sha}\n"
         f"laptop/CloverFramework-CodeSign.cer  Clover Framework Authenticode certificate  {cer_size} bytes\n"
         f"  {cer_sha}\n"
-        f"mobile/CloverAIStudio.apk  0.5.0-beta.1 (code 10, targetSdk 36)  Android 8+ arm64, Snapdragon GPU via OpenCL, about 2 GB free  {apk_size} bytes\n"
+        f"mobile/CloverAIStudio.apk  0.5.0-beta.1 (code 11, targetSdk 36)  Android 8+ arm64, Snapdragon GPU via OpenCL, about 2 GB free  {apk_size} bytes\n"
         f"  {apk_sha}\n"
     )
     (REPO_ROOT / "download" / "SHA256SUMS.txt").write_text(dl_sums, encoding="utf-8")

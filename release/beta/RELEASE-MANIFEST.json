@@ -15,14 +15,14 @@
     "privacy_policy": "https://cloverframework.com/privacy/",
     "support": "https://github.com/santhoshsathish94/clover-framework/issues",
     "windows_direct_installer": "https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe",
-    "google_play_instant_test": "https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNSPFXvNv9YJ1OJ-XFOu9-yvn426Zr96E5mzhOB_BZu9EuNBqaneLe4O-JmP-vqDpXMW7CVorobgC3AQiGM9",
+    "google_play_instant_test": "https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNRoJQ1q2vSWcsS_HamuIOmmlbmpz4YZmTRB6qoomiOmSj5pK7Qz75RY537EnOpdUc1h4mT_pQkTYd3smKNS",
     "google_play_closed_beta_web": "https://play.google.com/apps/testing/ai.clover.studio",
     "google_play_store_listing": "https://play.google.com/store/apps/details?id=ai.clover.studio"
   },
   "android": {
     "store": "Google Play Console (Closed Testing & Internal App Sharing)",
     "package_name": "ai.clover.studio",
-    "version_code": 10,
+    "version_code": 11,
     "version_name": "0.5.0-beta.1",
     "min_sdk": 26,
     "target_sdk": 36,
@@ -46,15 +46,15 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 73843837,
-        "sha256": "78fd84efa6d8941d8b322666dd8e6e0fa8772240411779719fa0482f4ad90bb1"
+        "size_bytes": 73847994,
+        "sha256": "7f186a955e3a30cc1e5aaddff990854b770ab224a46481ccac49924ab3749b6d"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "mirror": "download/mobile/CloverAIStudio.apk",
         "type": "apk",
-        "size_bytes": 74923003,
-        "sha256": "062f1988a376f22f512d298baa9db4ceaa3a3a0514ab7d641eb89c8251892d03"
+        "size_bytes": 74927154,
+        "sha256": "7c2d9b5431d00b58e392d78f7620df041c7a613a49b8de2fbd2cbdb1fdadc09e"
       }
     ],
     "verification": {
@@ -83,8 +83,8 @@
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "mirror": "download/laptop/CloverAIStudio-Setup.exe",
         "type": "exe",
-        "size_bytes": 2469848,
-        "sha256": "b809eef78b8c360c798a423c6c93f9f7167ae317fee3c9438f125952c779be6e"
+        "size_bytes": 2477528,
+        "sha256": "9d3b44b0e76f5f2ce6dbf778342b41e06477fa5cf85694fc4eaae4f3a7395e8d"
       },
       {
         "file": "release/beta/windows/CloverFramework-CodeSign.cer",

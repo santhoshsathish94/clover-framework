@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,7 +17,10 @@ import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
@@ -25,6 +29,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -69,9 +74,23 @@ public class MainActivity extends Activity {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             window.setStatusBarColor(Color.parseColor("#F7F3E9"));
             window.setNavigationBarColor(Color.parseColor("#F7F3E9"));
-            if (Build.VERSION.SDK_INT >= 23) {
+            if (Build.VERSION.SDK_INT >= 30) {
+                WindowInsetsController ic = window.getInsetsController();
+                if (ic != null) {
+                    ic.setSystemBarsAppearance(
+                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                                    | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                                    | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+                    );
+                }
+            } else if (Build.VERSION.SDK_INT >= 23) {
                 View decor = window.getDecorView();
-                decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                int flags = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                if (Build.VERSION.SDK_INT >= 26) {
+                    flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                }
+                decor.setSystemUiVisibility(flags);
             }
         }
 
@@ -108,8 +127,41 @@ public class MainActivity extends Activity {
             }
         });
 
+        final FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(Color.parseColor("#F7F3E9"));
         webView = new WebView(this);
-        setContentView(webView);
+        webView.setBackgroundColor(Color.parseColor("#F7F3E9"));
+        root.addView(webView, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+        if (Build.VERSION.SDK_INT >= 20) {
+            root.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+                @Override
+                public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                    int left = 0, top = 0, right = 0, bottom = 0;
+                    if (Build.VERSION.SDK_INT >= 30) {
+                        Insets sys = insets.getInsets(
+                                WindowInsets.Type.systemBars()
+                                        | WindowInsets.Type.displayCutout()
+                                        | WindowInsets.Type.ime()
+                        );
+                        left = sys.left;
+                        top = sys.top;
+                        right = sys.right;
+                        bottom = sys.bottom;
+                    } else {
+                        left = insets.getSystemWindowInsetLeft();
+                        top = insets.getSystemWindowInsetTop();
+                        right = insets.getSystemWindowInsetRight();
+                        bottom = insets.getSystemWindowInsetBottom();
+                    }
+                    v.setPadding(left, top, right, bottom);
+                    return insets;
+                }
+            });
+        }
+        setContentView(root);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);

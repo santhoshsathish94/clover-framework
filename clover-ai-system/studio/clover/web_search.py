@@ -351,9 +351,25 @@ class WebSearch:
                     pass
         return out
 
-    def _news_rss_rows(self, q, max_items=3):
+    def _news_rss_rows(self, q, max_items=4):
         import xml.etree.ElementTree as ET
-        url = "https://news.google.com/rss/search?q=" + urllib.parse.quote(q) + "&hl=en-US&gl=US&ceid=US:en"
+        clean_q = re.sub(
+            r"\b(?:202[567]|january|february|march|april|may|june|july|august|september|october|november|december)\b",
+            " ",
+            q or "",
+            flags=re.I,
+        )
+        clean_q = " ".join(clean_q.split()).strip()
+        topic_left = re.sub(
+            r"\b(?:top|latest|current|recent|breaking|today'?s?|today|news|headlines|updates?|summary|summari[sz]e|world|in|the|of|for)\b",
+            " ",
+            clean_q,
+            flags=re.I,
+        ).strip()
+        if not topic_left:
+            url = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"
+        else:
+            url = "https://news.google.com/rss/search?q=" + urllib.parse.quote(clean_q or q) + "&hl=en-US&gl=US&ceid=US:en"
         out = []
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
@@ -361,12 +377,10 @@ class WebSearch:
                 root = ET.fromstring(r.read(1_500_000))
             for it in root.findall(".//item")[:max_items]:
                 title = _text(it.findtext("title") or "")
-                link = (it.findtext("link") or "").strip()
-                pub = (it.findtext("pubDate") or "").strip()
                 desc = _text(it.findtext("description") or "")
                 if title:
-                    snip = (f"[{pub}] {desc}" if pub else desc)[:500]
-                    out.append({"title": title, "url": link, "snippet": snip or title})
+                    snip = f"[Live News] {desc}" if desc and desc != title else f"[Live News] {title}"
+                    out.append({"title": title, "url": "", "snippet": snip[:500]})
         except Exception:
             pass
         return out
@@ -386,7 +400,9 @@ class WebSearch:
             q, re.I,
         ))
         if want_news:
-            rows.extend(self._news_rss_rows(q, max_items=3))
+            rows.extend(self._news_rss_rows(q, max_items=4))
+            if len(rows) >= 3 and re.search(r"\b(?:news|headlines|latest|today|yesterday|current|recent|won|match|score)\b", q, re.I):
+                return rows
         if re.search(r"\b(?:research|paper|papers|arxiv|study|studies|preprint|publication)\b", q, re.I):
             for line in t._search_arxiv(q, max_items=3):
                 m = re.search(r"Link: (\S+)", line)
@@ -438,7 +454,10 @@ class WebSearch:
         return out
 
     def fetch_url_content(self, url, max_chars=5000):
-        return self.public().fetch_url_content(url, max_chars=max_chars)
+        u = str(url or "").strip().rstrip(").,]\"'")
+        if "news.google.com/rss/articles/" in u:
+            return "The headline and summary are already provided in the web_search result above; answer directly from those results."
+        return self.public().fetch_url_content(u, max_chars=max_chars)
 
     def research(self, query, pages=2, max_chars=3000):
         """Search, keep the results that match the query, read the top pages and keep the sentences that bear on it.

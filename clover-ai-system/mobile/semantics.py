@@ -46,7 +46,11 @@ LIVE = (r"\b(?:what(?:'?s|\s+is)|how(?:'?s|\s+is))\s+(?:the\s+)?weather\b|"
         r"\bforecast\b(?![^.?!\n]{0,30}\b(?:work|sales|revenue|budget|demand|table|csv|excel)\b)|"
         r"\b(?:latest|today'?s|breaking|top|current|recent)\s+(?:news|headlines|updates?|events?|developments?)\b|"
         r"\bwhat(?:'?s|\s+is)\s+(?:in\s+|the\s+)?news\b|\bnews\s+today\b|"
+        r"\b(?:summari[sz]e|tell\s+me|what\s+are|give\s+me|check|show(?:\s+me)?)\s+(?:the\s+|today'?s\s+|latest\s+|some\s+|any\s+)?(?:news|headlines)\b|"
+        r"\b(?:world|tech|technology|science|business|sports|local|india|us|global|ai)\s+(?:news|headlines)\b|"
         r"\b(?:stock|share)\s+prices?\b|\bexchange\s+rates?\b|"
+        r"\b\d[\d,.]*\s*(?:usd|eur|gbp|inr|jpy|cad|aud|chf|cny|sgd|aed)\s+(?:to|in|into|as)\s+(?:usd|eur|gbp|inr|jpy|cad|aud|chf|cny|sgd|aed)\b|"
+        r"\b(?:usd|eur|gbp|inr|jpy|cad|aud|chf|cny|sgd|aed|dollars?|rupees?|euros?|pounds?|yen)\s+(?:to|in|into|vs\.?|rate)\s+(?:usd|eur|gbp|inr|jpy|cad|aud|chf|cny|sgd|aed|dollars?|rupees?|euros?|pounds?|yen)\b|"
         r"\b(?:price|rate|cost|value)\s+of\s+(?:bitcoin|btc|ethereum|eth|solana|gold|silver|oil|petrol|diesel)\b|"
         r"\b(?:bitcoin|btc|ethereum|eth|solana|gold|silver|petrol|diesel)\s+(?:price|rate|value)\b|"
         r"\bwho\s+(?:won|is\s+winning)\b[^.?!\n]{0,30}\b(?:match|game|race|final|series|election|yesterday|last\s+night|today)\b|"
@@ -60,6 +64,7 @@ ASKS = (
     (("web.search", "web.page"), LIVE),
     (("python",), r"\b(?:use|using)\s+python\b|\bpython\s+to\s+(?:compute|calculate|check|solve|count|find|test)\b|"
                   r"\b(?:run|execute|test)\s+(?:this|the|my|that|it|some)?\s*(?:code|script|program|python)\b|"
+                  r"\b(?:write|create|make)\b[^.?!\n]{0,60}\b(?:python|script|program|code)\b[^.?!\n]{0,60}\band\s+(?:run|execute|test)\s+it\b|"
                   # not the phone's old "calculate <number>": it gave a 70-task word problem ("calculate 1000 - 920 and
                   # state whether the bead floats") a tool, and unasked tools cost the laptop's model 6 of 65 (ladder 8-9)
                   # "How much did I spend on groceries? The file is ...expenses.csv" read the right amounts and added
@@ -101,8 +106,11 @@ ASKS = (
                  r"\btime\s+(?:now|right\s+now)\b|\b(?:tell\s+me|know|have)\s+the\s+time\b"),
     (("shell", "files.list"), CHANGE_FILES),
     (("remember",), r"\b(?:remember|memori[sz]e|note\s+(?:that|this|down)|don'?t\s+forget|keep\s+in\s+mind)\b"),
-    (("image",), r"\b(?:generate|create|make|draw|paint|render|design|sketch)\b[^.?!\n]{0,40}"
-                 r"\b(?:image|picture|photo|drawing|painting|illustration|artwork|logo|icon|portrait|wallpaper)s?\b"),
+    (("image",), r"\b(?:generate|create|make|draw|paint|render|design|sketch|illustrate)\b[^.?!\n]{0,40}"
+                 r"\b(?:image|picture|photo|drawing|painting|illustration|artwork|logo|icon|portrait|wallpaper|poster)s?\b|"
+                 r"\b(?:show|give)\s+me\s+(?:a|an)\s+(?:image|picture|drawing|painting|illustration)\s+of\b|"
+                 r"^\W*(?:(?:please|can\s+you|could\s+you|would\s+you)\s+)?(?:draw|sketch|paint|illustrate)\s+(?:me\s+)?(?:a|an|the)\s+"
+                 r"(?!(?:conclusion|line\b|comparison|parallel|distinction|blank|inference|graph\b|chart\b|table\b))[a-z]"),
     (("vscode.open", "vscode.clone", "vscode.install", "vscode.run"),
      r"\b(?:vs\s?code|visual\s+studio\s+code|terminal)\b|"
      r"^\s*(?:(?:please|can\s+you|could\s+you|would\s+you)\s+)?(?:clone|install)\b|"
@@ -263,9 +271,13 @@ NEGATION = re.compile(r"\b(?:not|never|couldn'?t|can'?t|cannot|wasn'?t|weren'?t|
 CLAIM_FORMS = {"deleted", "removed", "created", "saved", "written", "wrote", "committed", "pushed", "moved", "renamed",
                "installed", "cloned", "opened", "ran", "executed", "generated", "plotted", "drawn", "made",
                "produced"}  # CLAIM's verbs as written: a lemma can be a variant (instal)
-CANNOT = re.compile(r"\bI\s+(?:could|can|was)(?:n'?t|\s+not)(?:\s+able\s+to)?\s+(?:find|retrieve|get|access|determine|check|"
-                    r"see|read|locate|open|confirm|verify|look\s+up)\b|\bunable\s+to\s+(?:find|retrieve|get|access|determine|"
-                    r"check|read|locate|open|confirm|verify)\b|\bI\s+(?:do\s+not|don'?t)\s+(?:know|have\s+access)\b", re.I)
+CANNOT = re.compile(
+    r"\bI\s+(?:could|can|was)(?:n'?t|\s+not)(?:\s+able\s+to)?\s+(?:find|retrieve|get|access|determine|check|"
+    r"see|read|locate|open|confirm|verify|look\s+up|provide|give|fetch|summari[sz]e)\b|"
+    r"\bunable\s+to\s+(?:find|retrieve|get|access|determine|check|read|locate|open|confirm|verify|provide|fetch)\b|"
+    r"\bI\s+(?:do\s+not|don'?t)\s+(?:know|have\s+(?:[\w\-]+\s+){0,3}?(?:access|information|data|updates?|rates?|prices?|scores?|results?))\b",
+    re.I,
+)
 NUMBER = re.compile(r"(?<![\w.])\d[\d,]*(?:\.\d+)?")
 CAP_WORDS = {"web.search": "the web", "web.page": "the web", "python": "Python", "files.read": "files",
              "files.list": "files", "files.write": "files", "shell": "the terminal", "status": "device status",

@@ -3,7 +3,7 @@
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
 **Release Version**: `0.5.0-beta.1`  
-**Version Code**: `10`  
+**Version Code**: `11`  
 **Package Name**: `ai.clover.studio`  
 **Build Date**: `2026-11-05`  
 **Build Environment**: `k3` (`/opt/clover-k3/studio-android`), OpenJDK `17.0.20`, Gradle `8.9`, Android Gradle Plugin `8.5.2`, Chaquopy `17.2.0` (CPython `3.12`), Android SDK `36` (`minSdk 26`, `targetSdk 36`, `compileSdk 36`), Android NDK `llvm-strip`.
@@ -14,8 +14,8 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console Closed Testing upload (`versionCode 10`, `targetSdk 36`) | `73,843,837` bytes (`70.42 MB`) | `78fd84efa6d8941d8b322666dd8e6e0fa8772240411779719fa0482f4ad90bb1` |
-| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 10`, `targetSdk 36`) | `74,923,003` bytes (`71.45 MB`) | `062f1988a376f22f512d298baa9db4ceaa3a3a0514ab7d641eb89c8251892d03` |
+| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console Closed Testing upload (`versionCode 11`, `targetSdk 36`) | `73,847,994` bytes (`70.43 MB`) | `7f186a955e3a30cc1e5aaddff990854b770ab224a46481ccac49924ab3749b6d` |
+| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 11`, `targetSdk 36`) | `74,927,154` bytes (`71.46 MB`) | `7c2d9b5431d00b58e392d78f7620df041c7a613a49b8de2fbd2cbdb1fdadc09e` |
 
 ---
 
@@ -38,7 +38,7 @@
 ## 3. Package & Manifest Audit (`build.gradle`)
 
 ```text
-package: name='ai.clover.studio' versionCode='10' versionName='0.5.0-beta.1'
+package: name='ai.clover.studio' versionCode='11' versionName='0.5.0-beta.1'
 sdkVersion:'26'
 targetSdkVersion:'36'
 compileSdkVersion:'36'
@@ -53,5 +53,5 @@ launchable-activity: name='ai.clover.studio.MainActivity'
 1. **Collective Problem-Solving Learning (`test_collective.py`)**: **`35/35` checks passed** (RFC 8032 Ed25519 public-key verification, unauthenticated-publish refusal, forged-key rejection, PII stripping, Sybil deduplication, Byzantine poison rejection, `Personal > Collective > General` priority).
 2. **Live Activity SSE Timeline (`test_live_activity_sse.py`)**: **`18/18` checks passed** (monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
 3. **Google Play Console Links**:
-   - Instant Test (Internal App Sharing): `https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNSPFXvNv9YJ1OJ-XFOu9-yvn426Zr96E5mzhOB_BZu9EuNBqaneLe4O-JmP-vqDpXMW7CVorobgC3AQiGM9`
+   - Instant Test (Internal App Sharing): `https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNRoJQ1q2vSWcsS_HamuIOmmlbmpz4YZmTRB6qoomiOmSj5pK7Qz75RY537EnOpdUc1h4mT_pQkTYd3smKNS`
    - Closed Testing Opt-In: `https://play.google.com/apps/testing/ai.clover.studio`

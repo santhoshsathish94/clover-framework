@@ -115,8 +115,7 @@ TOOLS_ON = ("Use the tools when they help; their results are real. Answer direct
             "for weather, recent events, live information or facts you are not sure of. Never say you lack real-time "
             "access when web_search is available—call web_search instead. If a tool is not allowed, answer without it "
             "and say what you could not check.")
-TOOLS_OFF = ("Answer from what you know. If the answer needs a web search, a file on this " + paths.DEVICE_WORD + " or running "
-             "code, say so: the user can ask you to search, look or run it.")
+TOOLS_OFF = "Answer helpfully, clearly, and thoroughly from your knowledge."
 
 
 def tools_sentence(tools_on, asked=None):
