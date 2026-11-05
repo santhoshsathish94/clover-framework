@@ -14,11 +14,11 @@
   "android": {
     "store": "Google Play Console (Closed Testing)",
     "package_name": "ai.clover.studio",
-    "version_code": 9,
+    "version_code": 10,
     "version_name": "0.5.0-beta.1",
     "min_sdk": 26,
-    "target_sdk": 34,
-    "compile_sdk": 34,
+    "target_sdk": 36,
+    "compile_sdk": 36,
     "abi": "arm64-v8a",
     "signing": {
       "keystore_env_on_k3": "/opt/clover-k3/studio-android/keystore.env",
@@ -36,14 +36,14 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 73832650,
-        "sha256": "b9271c7d7245daf2051bcfa2da7ff9252d1fa9f76d08cd4dd1070ac31ff329fe"
+        "size_bytes": 73832647,
+        "sha256": "18b0dd6299e722a113d5bce945fcb60067adda831d1d166ed3c0a75a3358bf5c"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "type": "apk",
-        "size_bytes": 74911809,
-        "sha256": "f9ddebd66560f717b44973ba5486023b38093b3f374dd963eb83d94b2b2c48e0"
+        "size_bytes": 74911803,
+        "sha256": "825ec10af790fcde116c8e8c9e52cddd0e68ce13b7f3881b0beed75ac62e06e6"
       }
     ],
     "verification": {
