@@ -25,7 +25,7 @@ The next pack should improve the app's existing strengths: paginated document re
 
 ## 2. Evidence standard and boundaries
 
-This assessment follows the repository's [AGENTS.md](AGENTS.md):
+This assessment follows the repository's [AGENTS.md](../AGENTS.md):
 
 - **Observed:** read from the installed runtime, the current repository, health/settings evidence, or regression results.
 - **Repository claim:** documented or implemented for another surface, but not established for this Windows installation.
@@ -38,7 +38,7 @@ The requested direction is local-first expansion on this laptop. This report doe
 
 ### 3.1 Base structured tools
 
-The installed `/api/health` inventory and [lfm3_native.py](testing/runtime-src/lfm3_native.py) lines 48–82 agree on nine base tools for Windows.
+The installed `/api/health` inventory and [lfm3_native.py](studio/clover/lfm3_native.py) lines 48–82 agree on nine base tools for Windows.
 
 | Tool | Current behavior | Permission | Important bounds |
 |---|---|---|---|
@@ -52,7 +52,7 @@ The installed `/api/health` inventory and [lfm3_native.py](testing/runtime-src/l
 | `get_current_time` | Returns local date/time and UTC offset | None | Pure local read |
 | `laptop_status` | Reports disk, battery, memory, and top memory-using apps | `shell` | Fixed status report rather than arbitrary status commands |
 
-Tool results are clipped to 6,000 characters before being returned to the model. The UI event receives a 3,000-character preview and the turn record retains 2,000 characters. The normal loop permits up to eight rounds, suppresses repeated identical calls, and can force a final answer after the tool budget is exhausted. See [lfm3_native.py](testing/runtime-src/lfm3_native.py) lines 256–258 and 496–657, and [omni_native.py](testing/runtime-src/omni_native.py) lines 433–616.
+Tool results are clipped to 6,000 characters before being returned to the model. The UI event receives a 3,000-character preview and the turn record retains 2,000 characters. The normal loop permits up to eight rounds, suppresses repeated identical calls, and can force a final answer after the tool budget is exhausted. See [lfm3_native.py](studio/clover/lfm3_native.py) lines 256–258 and 496–657, and [omni_native.py](studio/clover/omni_native.py) lines 433–616.
 
 ### 3.2 Conditional tools built by the server
 
@@ -69,7 +69,7 @@ These do not appear in the base health list, but the installed server can regist
 | `vscode_github_sync` | Same | `vscode` |
 | `generate_image` | `tools/sd.cpp/vulkan/sd-cli.exe` exists | `media` |
 
-On this laptop, `sd-cli.exe` is absent, so local picture generation is **not currently installed**. The optional picture implementation supports 256–768 px output, requires about 3.5 GB free RAM, and has a 600 s limit. See [server.py](testing/runtime-src/server.py) lines 519–545 and 676–730, and [image_gen.py](testing/runtime-src/image_gen.py).
+On this laptop, `sd-cli.exe` is absent, so local picture generation is **not currently installed**. The optional picture implementation supports 256–768 px output, requires about 3.5 GB free RAM, and has a 600 s limit. See [server.py](studio/clover/server.py) lines 519–545 and 676–730, and [image_gen.py](studio/clover/image_gen.py).
 
 ### 3.3 Adjacent capabilities that are not separate model tools
 
@@ -85,7 +85,7 @@ On this laptop, `sd-cli.exe` is absent, so local picture generation is **not cur
 | VS Code workspace tools | The VS Code path has core file/search/edit/diagnostic tools and deferred `search_tools`; these are not equivalent native Studio tools. |
 | Execution history | Tool offers, calls, permission decisions, results, and errors are written to local execution logs. |
 
-Document behavior is implemented in [documents.py](testing/runtime-src/documents.py), media ingestion in [server.py](testing/runtime-src/server.py) lines 466–516, and execution records in [clover_repo.py](testing/runtime-src/clover_repo.py) lines 215–246.
+Document behavior is implemented in [documents.py](studio/clover/documents.py), media ingestion in [server.py](studio/clover/server.py) lines 466–516, and execution records in [clover_repo.py](studio/clover/clover_repo.py) lines 215–246.
 
 ### 3.4 What is not established as current Windows support
 
@@ -101,7 +101,7 @@ Document behavior is implemented in [documents.py](testing/runtime-src/documents
 
 ### 4.1 Routing is part of the tool
 
-The default **When I ask** mode does not offer every schema on every turn. [semantics.py](testing/runtime-src/semantics.py) maps message intent to capabilities, and [lfm3_native.py](testing/runtime-src/lfm3_native.py) maps capabilities to tool names. A new schema without corresponding routing rules will often never reach the model.
+The default **When I ask** mode does not offer every schema on every turn. [semantics.py](studio/clover/semantics.py) maps message intent to capabilities, and [lfm3_native.py](studio/clover/lfm3_native.py) maps capabilities to tool names. A new schema without corresponding routing rules will often never reach the model.
 
 This gating is intentional: source comments record that always exposing tools degraded 6 of 65 ladder tasks and worsened arithmetic. Expansion should therefore add a small number of clear capabilities, not a large undifferentiated tool catalogue.
 
@@ -115,7 +115,7 @@ This gating is intentional: source comments record that always exposing tools de
 - Tool-originated text is passed through prompt-injection flagging.
 - `write_file` makes a backup and protects Clover's own repository and vault.
 
-These are strong reusable mechanisms. However, existing general file tools can operate outside the active workspace when the user names another path, and Python is not network-isolated. New fixed tools should be **more narrowly scoped**, not inherit broad authority merely because a general tool already has it. See [permissions.py](testing/runtime-src/permissions.py), [local_terminal.py](testing/runtime-src/local_terminal.py), [windows_python_tool.py](testing/runtime-src/windows_python_tool.py), and [paths.py](testing/runtime-src/paths.py).
+These are strong reusable mechanisms. However, existing general file tools can operate outside the active workspace when the user names another path, and Python is not network-isolated. New fixed tools should be **more narrowly scoped**, not inherit broad authority merely because a general tool already has it. See [permissions.py](studio/clover/permissions.py), [local_terminal.py](studio/clover/local_terminal.py), [windows_python_tool.py](studio/clover/windows_python_tool.py), and [paths.py](studio/clover/paths.py).
 
 ### 4.3 Laptop fit
 
@@ -232,20 +232,20 @@ Minimum design requirements:
 The following are implementation targets in the copied installed source, not instructions to patch only the installed copy.
 
 1. **Tool pack module:** put deterministic implementations in a focused module such as `local_tool_packs.py`; keep parsing/execution separate from model code.
-2. **Registration:** build entries with `schema`, `permission`, `detail(args)`, and `run(args)` and append them to `extra` in [server.py](testing/runtime-src/server.py) `lfm3_turn`, lines 1040–1054. This reuses the existing dynamic-tool seam.
-3. **Schemas:** use [lfm3_native.py](testing/runtime-src/lfm3_native.py) `_fn`, lines 43–45. Base tools may instead be added to `STUDIO_TOOLS`, but the server extra-tool path is cleaner for an optional pack.
-4. **Dispatch and permission:** keep [lfm3_native.py](testing/runtime-src/lfm3_native.py) `execute_tool`, lines 496–546, as the single dispatch path. Do not call pack runners directly from routing.
-5. **Capability routing:** extend `RUNTIME.tools` and the relevant `ASKS`/`DECLINES` rules in [semantics.py](testing/runtime-src/semantics.py). Add only intent patterns with positive and negative tests.
-6. **Path enforcement:** add reusable authorized-root resolution beside [paths.py](testing/runtime-src/paths.py), including post-resolution containment and symlink/reparse-point behavior.
-7. **Subprocesses:** reuse [local_terminal.py](testing/runtime-src/local_terminal.py) for FFmpeg and read-only Git; use argument arrays and fixed flags.
-8. **Documents/artifacts:** reuse [documents.py](testing/runtime-src/documents.py) and the existing `media/out` artifact flow in [lfm3_native.py](testing/runtime-src/lfm3_native.py) lines 548–576.
-9. **UI:** add labels/icons to `TOOL_UI` in [web/app.html](testing/runtime-src/web/app.html) lines 807–814. Add new permission categories to [permissions.py](testing/runtime-src/permissions.py) only when an existing category would misrepresent the action.
-10. **Audit:** preserve the existing `tool_call`, `tool_result`, and permission events emitted through the server and recorded by [clover_repo.py](testing/runtime-src/clover_repo.py).
+2. **Registration:** build entries with `schema`, `permission`, `detail(args)`, and `run(args)` and append them to `extra` in [server.py](studio/clover/server.py) `lfm3_turn`, lines 1040–1054. This reuses the existing dynamic-tool seam.
+3. **Schemas:** use [lfm3_native.py](studio/clover/lfm3_native.py) `_fn`, lines 43–45. Base tools may instead be added to `STUDIO_TOOLS`, but the server extra-tool path is cleaner for an optional pack.
+4. **Dispatch and permission:** keep [lfm3_native.py](studio/clover/lfm3_native.py) `execute_tool`, lines 496–546, as the single dispatch path. Do not call pack runners directly from routing.
+5. **Capability routing:** extend `RUNTIME.tools` and the relevant `ASKS`/`DECLINES` rules in [semantics.py](studio/clover/semantics.py). Add only intent patterns with positive and negative tests.
+6. **Path enforcement:** add reusable authorized-root resolution beside [paths.py](studio/clover/paths.py), including post-resolution containment and symlink/reparse-point behavior.
+7. **Subprocesses:** reuse [local_terminal.py](studio/clover/local_terminal.py) for FFmpeg and read-only Git; use argument arrays and fixed flags.
+8. **Documents/artifacts:** reuse [documents.py](studio/clover/documents.py) and the existing `media/out` artifact flow in [lfm3_native.py](studio/clover/lfm3_native.py) lines 548–576.
+9. **UI:** add labels/icons to `TOOL_UI` in [web/app.html](studio/clover/web/app.html) lines 807–814. Add new permission categories to [permissions.py](studio/clover/permissions.py) only when an existing category would misrepresent the action.
+10. **Audit:** preserve the existing `tool_call`, `tool_result`, and permission events emitted through the server and recorded by [clover_repo.py](studio/clover/clover_repo.py).
 11. **Health/status:** expose base, conditional, installed, and unavailable tools distinctly. The current engine description lists only `STUDIO_TOOLS`, so it is not a complete conditional-tool inventory.
 
 ### Source/deployment blocker
 
-The checked-out repository does not contain the installed Windows `server.py`, `lfm3_native.py`, or `omni_native.py`. No tracked history for the two native modules was found in the locally available branches. The mobile [local_terminal.py](clover-ai-system/mobile/local_terminal.py) says it was ported from `laptop/clover/local_terminal.py`, but that laptop source directory is absent.
+The checked-out repository does not contain the installed Windows `server.py`, `lfm3_native.py`, or `omni_native.py`. No tracked history for the two native modules was found in the locally available branches. The mobile [local_terminal.py](mobile/local_terminal.py) says it was ported from `laptop/clover/local_terminal.py`, but that laptop source directory is absent.
 
 Therefore `testing/runtime-src/` is **analysis evidence, not an authoritative upstream edit target**. A production implementation should wait until the Windows source and installer build path are identified. Patching only `C:\Users\santh\CloverAI` would create an untracked local fork and would not produce a reproducible release.
 

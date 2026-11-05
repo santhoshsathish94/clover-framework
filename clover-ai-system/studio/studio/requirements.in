@@ -1,0 +1,37 @@
+# Clover AI Studio runtime: Python 3.12 on Windows x64. The lock (requirements.lock, every file pinned by SHA-256) is
+# made from this list with uv 0.13.6:
+#   uv pip compile requirements.in --python-version 3.12 --python-platform x86_64-pc-windows-msvc --generate-hashes
+#      --only-binary :all: --no-header -o requirements.lock
+# Versions of what the Studio already ran are the laptop's (2026-11-03 freeze); CSI's are the frozen CSI's on k3.
+
+# C1 engine helpers, S1/S2 memory (bge embedder), S3 compiler, C2/C3 (HybridLink, NCM)
+numpy==2.5.4
+torch==2.11.0
+transformers==5.20.2
+tokenizers==0.23.3
+safetensors==0.8.0
+huggingface_hub==2.2.0
+hf-xet==1.7.1
+PyYAML==6.0.3
+hydra-core==1.3.7
+omegaconf==2.3.1
+truststore==0.10.5
+
+# CSI (research/semantic-interface v0.1r3: spaCy 3.8 with en_core_web_trf 3.8.0, as on k3)
+spacy==3.8.18
+spacy-curated-transformers==0.3.1
+curated-transformers==0.1.1
+curated-tokenizers==0.0.10
+en_core_web_trf @ https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.8.0/en_core_web_trf-3.8.0-py3-none-any.whl --hash=sha256:272a31e9d8530d1e075351d30a462d7e80e31da23574f1b274e200f3fff35bf5
+
+# documents the user attaches (documents.py) and Python's analysis of them
+openpyxl
+pandas
+xlrd
+pypdf
+python-docx
+python-pptx
+matplotlib
+
+# personal learning: deleting an experience through the store's git history
+git-filter-repo

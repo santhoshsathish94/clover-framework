@@ -74,7 +74,16 @@ _SIGN_OFF_PARA = re.compile(
 
 
 def k3_host_key():
-    return (os.environ.get("CLOVER_K3_KEY") or "").strip()
+    env = (os.environ.get("CLOVER_K3_KEY") or os.environ.get("CLOVER_HOST_KEY") or "").strip()
+    if env:
+        return env
+    key_file = Path("/opt/clover-k3/web-studio/vault/k3_host.key")
+    if key_file.is_file():
+        try:
+            return key_file.read_text(encoding="utf-8").strip()
+        except OSError:
+            pass
+    return ""
 
 
 def _android_model():

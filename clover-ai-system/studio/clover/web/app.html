@@ -747,6 +747,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     document.documentElement.classList.add(PHONE ? 'phone' : 'web');
     var WORDS = PHONE
       ? [[/\b(this|your|the|This|Your|The) laptop\b/g, '$1 phone'], [/\bLaptop status\b/g, 'Phone status'],
+         [/\bon this computer\b/g, 'on this phone'], [/\bthis computer\b/g, 'this phone'],
          [/File Explorer/g, 'a file manager'], [/\bthis browser\b/g, 'this app']]
       : [[/\b(this|your|the|This|Your|The) laptop\b/g, 'Clover\'s server'], [/\bThis laptop\b/g, 'Clover\'s server (k3)'],
          [/\bon this computer\b/g, 'on k3'], [/Open them in File Explorer[^.]*\./g, 'Managed on the k3 server.']];

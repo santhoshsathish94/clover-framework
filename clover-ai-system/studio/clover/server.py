@@ -1382,9 +1382,10 @@ WEB_HOSTS = {
 }
 WEB_ORIGINS = {
     "https://cloverframework.com", "https://www.cloverframework.com",
-    "https://api.cloverframework.com", "https://santhoshsathish94.github.io", "null",
+    "https://api.cloverframework.com",
 }
 DEFAULT_ALLOWED_ACCOUNTS = ("santhoshsathish94",)
+_FALLBACK_AUTH_SECRET = secrets.token_hex(32).encode("utf-8")
 
 
 def allowed_accounts(base=None):
@@ -1412,7 +1413,8 @@ def allowed_accounts(base=None):
 
 def _auth_secret():
     import k3_host_engine
-    return (S.token or k3_host_engine.k3_host_key()).encode("utf-8")
+    s = S.token or k3_host_engine.k3_host_key()
+    return s.encode("utf-8") if s else _FALLBACK_AUTH_SECRET
 
 
 def make_account_token(account):
@@ -1452,7 +1454,7 @@ def authenticate_web_account(account, key, base=None):
     owner_key = k3_host_engine.k3_host_key()
     if (
         (S.token and secrets.compare_digest(secret_in.encode("utf-8"), S.token.encode("utf-8")))
-        or secrets.compare_digest(secret_in.encode("utf-8"), owner_key.encode("utf-8"))
+        or (owner_key and secrets.compare_digest(secret_in.encode("utf-8"), owner_key.encode("utf-8")))
         or secrets.compare_digest(secret_in.encode("utf-8"), make_account_token(acct).encode("utf-8"))
     ):
         return True, acct, 200
@@ -1541,7 +1543,7 @@ class Handler(BaseHTTPRequestHandler):
         """The phone app's WebView carries the per-launch token as a cookie; on k3 Web, only signed-in approved
         accounts and owner devices with X-Clover-Key are allowed (no public anonymous access)."""
         self._authed_account = None
-        if not S.token:
+        if not paths.WEB and not S.token:
             return True
         m = re.search(r"(?:^|;\s*)clover_token=([A-Za-z0-9_:\-.@]+)", self.headers.get("Cookie") or "")
         auth = (self.headers.get("Authorization") or "").strip()
@@ -1558,11 +1560,12 @@ class Handler(BaseHTTPRequestHandler):
         if acct:
             self._authed_account = acct
             return True
-        if secrets.compare_digest(got.encode("utf-8"), S.token.encode("utf-8")):
+        if S.token and secrets.compare_digest(got.encode("utf-8"), S.token.encode("utf-8")):
             self._authed_account = DEFAULT_ALLOWED_ACCOUNTS[0]
             return True
         import k3_host_engine
-        if secrets.compare_digest(got.encode("utf-8"), k3_host_engine.k3_host_key().encode("utf-8")):
+        owner_key = k3_host_engine.k3_host_key()
+        if owner_key and secrets.compare_digest(got.encode("utf-8"), owner_key.encode("utf-8")):
             self._authed_account = DEFAULT_ALLOWED_ACCOUNTS[0]
             return True
         return False
