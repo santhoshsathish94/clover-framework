@@ -1,0 +1,8 @@
+{
+  "model_repo": "moonshotai/Kimi-K3.1-Pro",
+  "drafter_repo": "LithosAI/Kimi-K3.1-Pro-DSpark",
+  "work_dir": "/dev/shm/clover-port/kimi-k3.1-pro",
+  "cached_experts_per_stage": 16,
+  "dsa_indexers_extracted": 24,
+  "elapsed_seconds": 918.44
+}

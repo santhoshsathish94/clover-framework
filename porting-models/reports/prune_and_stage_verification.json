@@ -1,0 +1,27 @@
+{
+  "device": "cuda:0",
+  "pruned_vs_raw_cosine_similarity": 1.0,
+  "pruned_vs_raw_max_abs_diff": 0.0,
+  "hidden_state_shape": [
+    1,
+    8,
+    7168
+  ],
+  "routed_moe_shape": [
+    1,
+    8,
+    7168
+  ],
+  "logits_shape": [
+    1,
+    8,
+    163840
+  ],
+  "dsa_lightning_indexer_scores_shape": [
+    1,
+    8,
+    8
+  ],
+  "dsa_24_indexers_verified": 24,
+  "all_finite": true
+}

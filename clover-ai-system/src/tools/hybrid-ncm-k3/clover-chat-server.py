@@ -39,12 +39,14 @@ MAX_SESSION_CONTEXT_TOKENS = 1_048_576  # 1M (1,048,576) tokens per session (nat
 MODEL_NATIVE_BACKBONE_CONTEXT_TOKENS = {
     "nemotron-3.5-super-vl": 1_048_576,
     "lfm3-1.7b": 262_144,
-    "kimi-k3": 262_144,
+    "kimi-k3": 1_048_576,
+    "kimi-k3.1-pro": 1_048_576,
 }
 MODEL_VOICE_PROFILES = {
     "nemotron-3.5-super-vl": "en-US-AriaNeural",
     "lfm3-1.7b": "en-US-JennyNeural",
     "kimi-k3": "en-US-AnaNeural",
+    "kimi-k3.1-pro": "en-US-AnaNeural",
 }
 MODEL_CAPABILITIES_CATALOG = {
     "nemotron-3.5-super-vl": {
@@ -81,10 +83,10 @@ MODEL_CAPABILITIES_CATALOG = {
     },
     "kimi-k3": {
         "model_key": "kimi-k3",
-        "label": "Kimi K3 2.78T MoE",
+        "label": "Kimi K3.1 Pro 2.8T MoE",
         "modalities": ["text", "vision", "video", "audio", "voice-conversation", "image-generation"],
-        "vision_encoder": "27-Layer MoonViT3d + PatchMergerMLPV2 (7168-d)",
-        "video_engine": "3D Spatio-Temporal MoonViT3d Patch Grid",
+        "vision_encoder": "MoonViT-V2 (401M) + PatchMergerMLPV2 (7168-d)",
+        "video_engine": "3D Spatio-Temporal MoonViT-V2 Patch Grid",
         "audio_voice_engine": "Waveform Inspection + Neural Voice Synthesis (en-US-AnaNeural)",
         "supported_input_formats": {
             "image": ["png", "jpg", "jpeg", "webp", "bmp", "tiff", "gif"],
@@ -1766,7 +1768,7 @@ class MultiGPUCloverCoordinator:
         )
 
         # Layer 4: Multi-User Organization Git Memory Repository (`clover-org-memory-repo/`)
-        for rel_d in ("../../cpu-server", "../../models/nemotron-3.5-super-vl"):
+        for rel_d in ("../../../cpu-server", "../../cpu-server", "../../models/nemotron-3.5-super-vl"):
             cand_d = os.path.abspath(os.path.join(TOOLS_DIR, rel_d))
             if os.path.isdir(cand_d) and cand_d not in sys.path:
                 sys.path.insert(0, cand_d)

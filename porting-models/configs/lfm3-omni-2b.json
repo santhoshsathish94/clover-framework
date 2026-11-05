@@ -1,0 +1,20 @@
+{
+  "model_key": "lfm3-omni-2b",
+  "display_name": "Liquid AI LFM3-Omni-2B (24 Layers, Tri-Hybrid ShortConv + GQA + Audio/Vision)",
+  "hf_repo_id": "LiquidAI/LFM3-Omni-2B",
+  "drafter_hf_repo_id": null,
+  "architecture": "Lfm3ForCausalLM",
+  "model_type": "lfm3",
+  "total_layers": 24,
+  "hidden_size": 2048,
+  "vocab_size": 128000,
+  "rms_norm_eps": 1e-5,
+  "routed_experts_per_moe_layer": 0,
+  "active_experts_per_token": 0,
+  "moe_latent_size": 2048,
+  "max_context_tokens": 1048576,
+  "native_backbone_context_tokens": 262144,
+  "has_native_vision": true,
+  "vision_encoder": "SigLIP2-NaFlex + Conformer Audio",
+  "speculative_drafter_kind": "prompt-lookup"
+}

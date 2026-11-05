@@ -1600,7 +1600,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var st = sv.settings, running = (state.health && state.health.engine && state.health.engine.engine) || st.engine;
     setNote('model-note', sv.omni_available === false ? 'LFM3-Omni-2B not installed: ' + sv.omni_reason : '');
     $('engine-d').textContent = WEB
-      ? 'Runs on the k3 server (AMD Ryzen 9 7950X3D, 124 GB RAM): LFM3-Omni-2B in llama.cpp (Zen 4 AVX-512), Nemotron 3.5 Super VL (88-layer C engine + NCM) and Kimi K3 2.78T MoE (93-layer C/Rust engine + NCM).'
+      ? 'Runs on the k3 server (AMD Ryzen 9 7950X3D, 124 GB RAM): LFM3-Omni-2B in llama.cpp (Zen 4 AVX-512), Nemotron 3.5 Super VL (88-layer C engine + NCM) and Kimi K3.1 Pro 2.8T MoE (93-layer C/Rust engine + Gated DSA + NCM).'
       : 'GPU and CPU run LFM3-Omni-2B with 4-bit weights in llama.cpp; the GPU (' + gpuName() + ') reads your message several times faster. ' +
         'C1 + C2 + C3 runs our trained model with its planner (HybridLink) and decoder (NCM) together on the CPU: text only, no tools, slower; being measured.';
     $('s-engine').children[0].textContent = gpuName();

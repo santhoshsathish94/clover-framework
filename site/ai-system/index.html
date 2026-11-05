@@ -60,7 +60,7 @@
     <div class="wrap">
       <h1>AI Studio</h1>
       <p class="hero__tagline">One system. Any open-weight model. Your phone, laptop, or server.</p>
-      <p class="lede">An outcome does not come from which model you use. It comes from the system around it. Clover AI Studio wraps any open-weight model in local memory, relationships, verified tools, and continuous reasoning — lifting a 2B phone model, a 120B multimodal model, and a 2.78T MoE model from <code>22.9%&ndash;47.1%</code> alone to <strong><code>70 / 70</code> (<code>100%</code>)</strong> on the same test.</p>
+      <p class="lede">An outcome does not come from which model you use. It comes from the system around it. Clover AI Studio wraps any open-weight model in local memory, relationships, verified tools, and continuous reasoning — lifting a 2B phone model, a 120B multimodal model, and a 2.8T MoE model (<code>Kimi K3.1 Pro</code>) from <code>22.9%&ndash;47.1%</code> alone to <strong><code>70 / 70</code> (<code>100%</code>)</strong> on the same test.</p>
       <div class="actions">
         <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
         <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download for Android (.apk)</a>
@@ -96,7 +96,7 @@
         <div class="card">
           <h3>Web Studio</h3>
           <p><strong><code>cloverframework.com/clover-ai/</code></strong></p>
-          <p>Runs in any browser. Connects to your local device, our three-model server (<code>LFM3</code>, <code>Nemotron 3.5</code>, <code>Kimi K3</code>), or any custom endpoint.</p>
+          <p>Runs in any browser. Connects to your local device, our three-model server (<code>LFM3</code>, <code>Nemotron 3.5</code>, <code>Kimi K3.1 Pro</code>), or any custom endpoint.</p>
           <div class="actions" style="margin-top:1.1rem">
             <a class="btn" href="../clover-ai/">Launch Web Studio &rarr;</a>
           </div>
@@ -176,7 +176,7 @@
         <div><dt>Center · Semantics</dt><dd>Reads your intent, selects only the needed tools, blocks unauthorized vault paths, and labels every answer by how it was verified.</dd></div>
         <div><dt>CSI · Language Parser</dt><dd>Parses grammar, verb morphology, and negation so declined tools are never called and unverified action claims are caught.</dd></div>
         <div><dt>PPL · Process Learning</dt><dd>Learns your personal habits and preferred answer format (such as short bullet points or tables) and stores them in your local Git repo.</dd></div>
-        <div><dt>C1 · Inference</dt><dd>Runs the active open-weight model (<code>LFM3-Omni-2B</code>, <code>Nemotron 3.5</code>, or <code>Kimi K3</code>) with Direction B zero-writeback memory caching.</dd></div>
+        <div><dt>C1 · Inference</dt><dd>Runs the active open-weight model (<code>LFM3-Omni-2B</code>, <code>Nemotron 3.5</code>, or <code>Kimi K3.1 Pro</code>) with Direction B zero-writeback memory caching.</dd></div>
         <div><dt>C2 · Plan</dt><dd>Projects continuous <code>&lt;latent&gt;</code> thought vectors before speaking, and runs a 3-way solver vote whenever you click <strong>Try again</strong>.</dd></div>
         <div><dt>C3 · Decode</dt><dd>Predicts 11 hierarchical concept levels in parallel and decodes strictly inside the active model&rsquo;s native vocabulary.</dd></div>
         <div><dt>S1 · Memory</dt><dd>Saves sessions, execution logs, outcomes, and learned notes in a 5-stage local Git repository with optional private GitHub sync.</dd></div>
@@ -190,7 +190,7 @@
   <section class="band" id="porting-guide">
     <div class="wrap">
       <h2>Port any open-weight model in five folders</h2>
-      <p class="lede">Clover is model-agnostic. Every ported model in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a> uses the same five folders while the Studio app, memory, and tools stay unchanged.</p>
+      <p class="lede">Clover is model-agnostic. Every ported model in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a> uses the same five folders while the Studio app, memory, and tools stay unchanged. Run the entire porting pipeline with one command in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/porting-models"><code>porting-models/</code></a>: <code>./porting-models/port all --config porting-models/configs/kimi-k3.1-pro.json --gpus 8</code>.</p>
 
       <div class="table-wrap">
         <table class="data">
@@ -200,7 +200,7 @@
               <th scope="col">Folder</th>
               <th scope="col">What you build</th>
               <th scope="col">Verification gate</th>
-              <th scope="col"><code>kimi/</code> (2.78T)</th>
+              <th scope="col"><code>kimi/</code> (K3.1 Pro 2.8T)</th>
               <th scope="col"><code>nemotron/</code> (120B)</th>
               <th scope="col"><code>liquid-lfm3/</code> (2B)</th>
             </tr>
@@ -208,9 +208,9 @@
           <tbody>
             <tr>
               <th scope="row"><strong>1. <code>trunks/</code></strong></th>
-              <td>Pack per-layer norms &amp; attention/conv projections into <code>CLVRTRK1</code> and prune duplicate weights.</td>
+              <td>Pack per-layer norms &amp; attention/conv projections into <code>CLVRTRK1</code> (plus <code>indexer.bin</code> for Gated DSA) and prune duplicate weights.</td>
               <td><code>max_abs_diff = 0.0</code> vs. official BF16 model across all layers.</td>
-              <td>93 trunks (<code>-35.2%</code> RAM)</td>
+              <td>93 trunks + 24 DSA Indexers (<code>-35.2%</code> RAM)</td>
               <td>88 trunks (<code>-46.1%</code> bytes)</td>
               <td>24 trunks (<code>-15.9%</code> bytes)</td>
             </tr>
@@ -288,13 +288,13 @@
             <tr>
               <th scope="row"><strong>3. CPU Workstation (<code>k3</code>)</strong></th>
               <td>AMD Ryzen 9 7950X3D (16C/32T AVX-512) &middot; 124 GB RAM &middot; NVMe RAID1</td>
-              <td>All 3 models hot-switchable (<code>LFM3</code>, <code>Nemotron 3.5</code>, <code>Kimi K3</code>)</td>
-              <td><strong><code>1.12 s</code></strong> Nemotron C &middot; <strong><code>3.45 s</code></strong> LFM3 C &middot; <strong><code>1.99 s/tok</code></strong> Kimi K3</td>
+              <td>All 3 models hot-switchable (<code>LFM3</code>, <code>Nemotron 3.5</code>, <code>Kimi K3.1 Pro</code>)</td>
+              <td><strong><code>1.12 s</code></strong> Nemotron C &middot; <strong><code>3.45 s</code></strong> LFM3 C &middot; <strong><code>1.99 s/tok</code></strong> Kimi K3.1 Pro</td>
             </tr>
             <tr>
               <th scope="row"><strong>4. Multi-GPU Server</strong></th>
               <td>8 &times; NVIDIA RTX 3090 (<code>192 GiB</code> VRAM, NVLink) &middot; 376 GiB RAM</td>
-              <td>Full 93-layer <code>Kimi K3 2.78T</code> + <code>HybridAgent</code> + 11-level NCM</td>
+              <td>Full 93-layer <code>Kimi K3.1 Pro 2.8T</code> + <code>HybridAgent</code> + 11-level NCM</td>
               <td><strong><code>148.5 tok/s</code></strong> &middot; <strong><code>95.3%</code></strong> VRAM hit rate &middot; <strong><code>0</code></strong> PCIe writebacks</td>
             </tr>
           </tbody>
@@ -315,8 +315,8 @@
           </thead>
           <tbody>
             <tr>
-              <th scope="row"><strong>Moonshot AI Kimi K3</strong><br><small>2.78T Total / 104B Active MoE</small></th>
-              <td>Needs <code>1.45&ndash;2.8 TB</code> cluster VRAM; <code>23.7 s/tok</code> initial CPU C baseline; <strong><code>33 / 70</code> (<code>47.1%</code>)</strong> alone.</td>
+              <th scope="row"><strong>Moonshot AI Kimi K3.1 Pro</strong><br><small>2.8T Total / 104B Active MoE (69 KDA + 24 Gated DSA)</small></th>
+              <td>Needs <code>1.56&ndash;2.8 TB</code> cluster VRAM; <code>23.7 s/tok</code> initial CPU C baseline; <strong><code>33 / 70</code> (<code>47.1%</code>)</strong> alone.</td>
               <td>Runs in <strong><code>124.9 GiB</code> VRAM</strong> (8&times;3090) or <strong>1 CPU box</strong>; <code>1.99 s/tok</code> CPU / <code>148.5 tok/s</code> GPU; <strong><code>70 / 70</code> (<code>100%</code>)</strong>.</td>
               <td><strong><code>11.4&times;</code> less VRAM</strong> &middot; <strong><code>+52.9 pp</code> accuracy</strong> &middot; <strong><code>2.04&times;</code> lower GPU-s/task</strong></td>
             </tr>
@@ -352,7 +352,7 @@
             <tr>
               <th scope="col">Category</th>
               <th scope="col">Tasks</th>
-              <th scope="col"><code>Kimi K3</code><br><small>Alone &rarr; With Clover</small></th>
+              <th scope="col"><code>Kimi K3.1 Pro</code><br><small>Alone &rarr; With Clover</small></th>
               <th scope="col"><code>Nemotron 3.5</code><br><small>Alone &rarr; With Clover</small></th>
               <th scope="col"><code>LFM3</code><br><small>Alone &rarr; With Clover</small></th>
             </tr>
@@ -428,9 +428,9 @@
       <p class="lede">Clover AI Studio builds on the open models and papers of the teams below.</p>
 
       <dl class="kv kv--wide">
-        <div><dt>Open-Weight Models</dt><dd><a href="https://huggingface.co/LiquidAI/LFM3-1.7B">Liquid AI LFM3</a>, <a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16">NVIDIA Nemotron 3.5 Super VL</a>, <a href="https://huggingface.co/moonshotai/Kimi-K3">Moonshot AI Kimi K3</a>, and <a href="https://huggingface.co/Inferact/Kimi-K3-DSpark">Inferact Kimi-K3-DSpark</a>.</dd></div>
+        <div><dt>Open-Weight Models</dt><dd><a href="https://huggingface.co/LiquidAI/LFM3-1.7B">Liquid AI LFM3</a>, <a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16">NVIDIA Nemotron 3.5 Super VL</a>, <a href="https://huggingface.co/moonshotai/Kimi-K3.1-Pro">Moonshot AI Kimi K3.1 Pro</a>, and <a href="https://huggingface.co/LithosAI/Kimi-K3.1-Pro-DSpark">LithosAI Kimi-K3.1-Pro-DSpark</a>.</dd></div>
         <div><dt>Research Architecture</dt><dd><a href="https://arxiv.org/abs/2610.18861">HybridAgent</a> (Stanford / Together AI), <a href="https://arxiv.org/abs/2610.14162">Next-Concept Modeling</a> (Hazy Research, Stanford), <a href="https://doi.org/10.1007/s00521-026-12495-0">Ontology-Guided GraphRAG</a> (Univ. of Naples), <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a> (Fareed Khan), and the <a href="../origin/">11 foundational papers (1943&ndash;2017)</a>.</dd></div>
-        <div><dt>Dataset &amp; Source Code</dt><dd>Precomputed trunks and experts in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a> and full source in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system"><code>clover-ai-system/</code></a>.</dd></div>
+        <div><dt>Dataset &amp; Source Code</dt><dd>Precomputed trunks and experts in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a>, one-command porting kit in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/porting-models"><code>porting-models/</code></a>, and full source in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system"><code>clover-ai-system/</code></a>.</dd></div>
       </dl>
 
       <div class="actions" style="margin-top:2rem">

@@ -1,0 +1,32 @@
+{
+  "model_key": "kimi-k3.1-pro",
+  "display_name": "Kimi K3.1 Pro (2.8T / 104B Active, 69 KDA + 24 Gated DSA)",
+  "hf_repo_id": "moonshotai/Kimi-K3.1-Pro",
+  "model_type": "kimi_k31",
+  "architectures": [
+    "KimiK31ForConditionalGeneration"
+  ],
+  "hidden_size": 7168,
+  "vocab_size": 163840,
+  "total_layers": 93,
+  "index_summary": {
+    "total_parameter_bytes": 1561217377280,
+    "total_tensors": 497340,
+    "total_shards": 96,
+    "dsa_indexer_tensors_count": 120
+  },
+  "drafter_summary": {
+    "drafter_repo": "LithosAI/Kimi-K3.1-Pro-DSpark",
+    "architectures": [
+      "Qwen3DSparkModel"
+    ],
+    "num_hidden_layers": 5,
+    "target_layer_ids": [
+      7,
+      23,
+      67,
+      83,
+      91
+    ]
+  }
+}

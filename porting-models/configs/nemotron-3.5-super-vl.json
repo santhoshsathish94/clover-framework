@@ -1,0 +1,23 @@
+{
+  "model_key": "nemotron-3.5-super-vl",
+  "display_name": "NVIDIA Nemotron 3.5 Super VL (120B / 12B Active, Mamba-2 + Latent ReLU^2 MoE + NoPE GQA)",
+  "hf_repo_id": "nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+  "drafter_hf_repo_id": null,
+  "architecture": "NemotronHForConditionalGeneration",
+  "model_type": "nemotron_h",
+  "total_layers": 88,
+  "hidden_size": 4096,
+  "vocab_size": 131072,
+  "rms_norm_eps": 1e-5,
+  "routed_experts_per_moe_layer": 512,
+  "active_experts_per_token": 22,
+  "routed_scaling_factor": 5.0,
+  "moe_latent_size": 1024,
+  "moe_intermediate_size": 2688,
+  "shared_expert_intermediate_size": 5376,
+  "max_context_tokens": 1048576,
+  "native_backbone_context_tokens": 1048576,
+  "has_native_vision": true,
+  "vision_encoder": "C-RADIO 32-layer + EVS Video Pruning",
+  "speculative_drafter_kind": "native-mtp-2-layer"
+}

@@ -5,9 +5,9 @@ Switchable Layer-1 Foundation Model Backend & 7-Layer Clover Bridge
 
 In Clover's 7-layer architecture:
   - **Layer 1 (Switchable Foundation Model Backbone):**
-      1. `kimi-k3`: MoonshotAI Kimi K3 (93 layers, `D_model = 7168`, `V = 163840`, 68 KDA + 24 MLA + 896 MXFP4 experts/layer, DSpark 5-layer drafter, MoonViT3d vision)
+      1. `kimi-k3` / `kimi-k3.1-pro`: MoonshotAI Kimi K3.1 Pro (`moonshotai/Kimi-K3.1-Pro`, 93 layers, `2.8T` total / `104B` active, `D_model = 7168`, `V = 163840`, 69 KDA + 24 Gated DSA with 5-tensor Lightning Indexer, 896 MXFP4 `SiTU-GLU` experts/layer, `LithosAI/Kimi-K3.1-Pro-DSpark` 5-layer drafter, `MoonViT-V2` vision)
       2. `nemotron-3.5-super-vl`: NVIDIA Nemotron 3.5 Super VL (88 single-mixer layers, `D_model = 4096`, `V = 131072`, 40 Mamba-2 + 40 Latent `ReLU^2` MoE [512 experts/layer, top-22] + 8 NoPE 16:1 GQA, Native 2-layer MTP drafter, C-RADIO 32-layer vision + EVS video pruning)
-      3. `lfm3-1.7b`: Liquid AI LFM3-1.7B (24 tri-hybrid layers, `D_model = 2048`, `V = 128000` tied, 13 width-7 `Lfm3ShortConv` + 5 Sliding GQA + 6 Full GQA + sandwich RMSNorm + SwiGLU)
+      3. `lfm3-1.7b`: Liquid AI LFM3-1.7B / LFM3-Omni-2B (24 tri-hybrid layers, `D_model = 2048`, `V = 128000` tied, 13 width-7 `Lfm3ShortConv` + 5 Sliding GQA + 6 Full GQA + sandwich RMSNorm + SwiGLU)
   - **Layers 2..7 (Shared Surrounding Clover Architecture):**
       - Layer 2: `HybridAgent` continuous `<latent>` reasoning & live tools (`<python>`, `<search>`) via `CloverUniversalHybridLink(D_model -> 4096)`
       - Layer 3: `NextConceptTransformer (NCM)` 11-pass hierarchical VQ concept decoder via `CloverUniversalConceptBridge(D_model -> 384)`
@@ -53,7 +53,7 @@ class CloverModelSpec:
 CLOVER_MODEL_REGISTRY: dict[str, CloverModelSpec] = {
     "kimi-k3": CloverModelSpec(
         model_key="kimi-k3",
-        hf_repo_id="moonshotai/Kimi-K3",
+        hf_repo_id="moonshotai/Kimi-K3.1-Pro",
         total_layers=93,
         hidden_size=7168,
         vocab_size=163840,
@@ -61,7 +61,28 @@ CLOVER_MODEL_REGISTRY: dict[str, CloverModelSpec] = {
         active_experts_per_token=16,
         moe_latent_size=3584,
         max_context_tokens=1048576,
-        native_backbone_context_tokens=262144,
+        native_backbone_context_tokens=1048576,
+        has_native_vision=True,
+        speculative_drafter_kind="dspark-5-layer",
+        model_subdir="kimi-k3",
+        supports_audio_voice=True,
+        supports_video=True,
+        supports_image_generation=True,
+        supports_video_generation=False,
+        voice_profile="en-US-AnaNeural",
+        supported_modalities=("text", "vision", "video", "audio", "voice-conversation", "image-generation"),
+    ),
+    "kimi-k3.1-pro": CloverModelSpec(
+        model_key="kimi-k3.1-pro",
+        hf_repo_id="moonshotai/Kimi-K3.1-Pro",
+        total_layers=93,
+        hidden_size=7168,
+        vocab_size=163840,
+        routed_experts_per_moe_layer=896,
+        active_experts_per_token=16,
+        moe_latent_size=3584,
+        max_context_tokens=1048576,
+        native_backbone_context_tokens=1048576,
         has_native_vision=True,
         speculative_drafter_kind="dspark-5-layer",
         model_subdir="kimi-k3",

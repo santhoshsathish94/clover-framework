@@ -204,19 +204,29 @@ class CloverServerOrgGitMemoryRepo:
         self.github_cfg_file = self.base_dir / ".github_org_private_sync.json"
         self.canonical_agents_md_path = canonical_agents_md_path
         self._thread_lock = threading.RLock()
+        self._lock_depth = 0
         self._ensure_initialized()
 
     @contextlib.contextmanager
     def _repo_lock(self):
-        """Acquires both in-process RLock and OS file lock so concurrent server threads/workers never race on Git."""
+        """Acquires both in-process RLock and OS file lock (reentrant within the same thread)."""
         with self._thread_lock:
+            if self._lock_depth > 0:
+                self._lock_depth += 1
+                try:
+                    yield
+                finally:
+                    self._lock_depth -= 1
+                return
             self.base_dir.mkdir(parents=True, exist_ok=True)
             f_lock = open(self.lock_file, "a+", encoding="utf-8")
+            self._lock_depth = 1
             try:
                 if fcntl is not None:
                     fcntl.flock(f_lock.fileno(), fcntl.LOCK_EX)
                 yield
             finally:
+                self._lock_depth = 0
                 if fcntl is not None:
                     try:
                         fcntl.flock(f_lock.fileno(), fcntl.LOCK_UN)

@@ -1,0 +1,67 @@
+{
+  "model_key": "kimi-k3.1-pro",
+  "display_name": "Kimi K3.1 Pro (2.8T / 104B Active, 69 KDA + 24 Gated DSA)",
+  "hf_repo_id": "moonshotai/Kimi-K3.1-Pro",
+  "drafter_hf_repo_id": "LithosAI/Kimi-K3.1-Pro-DSpark",
+  "architecture": "KimiK31ForConditionalGeneration",
+  "model_type": "kimi_k31",
+  "total_layers": 93,
+  "hidden_size": 7168,
+  "vocab_size": 163840,
+  "rms_norm_eps": 1e-5,
+  "routed_experts_per_moe_layer": 896,
+  "active_experts_per_token": 16,
+  "routed_scaling_factor": 2.827,
+  "moe_latent_size": 3584,
+  "moe_intermediate_size": 3072,
+  "shared_expert_intermediate_size": 6144,
+  "dense_intermediate_size": 33792,
+  "max_context_tokens": 1048576,
+  "native_backbone_context_tokens": 1048576,
+  "has_native_vision": true,
+  "vision_encoder": "MoonViT-V2 (401M)",
+  "speculative_drafter_kind": "dspark-5-layer",
+  "attention_layout": {
+    "linear_attention_kind": "KDA",
+    "linear_attention_layers_count": 69,
+    "sparse_attention_kind": "Gated DSA (Lightning Indexer + MLA)",
+    "sparse_attention_layers_1indexed": [
+      4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48,
+      52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 93
+    ],
+    "dsa_config": {
+      "index_topk": 2048,
+      "index_head_dim": 128,
+      "index_num_heads": 32,
+      "index_rope_dim": 0,
+      "index_k_norm_type": "layernorm",
+      "index_topk_freq": 1,
+      "index_skip_topk_offset": 1
+    }
+  },
+  "representative_stage_shards": {
+    "layer_0_kda_dense": "model-00001-of-000096.safetensors",
+    "layer_1_kda_moe": "model-00002-of-000096.safetensors",
+    "layer_3_gated_dsa_moe": "model-00004-of-000096.safetensors",
+    "global_embed_norm_lmhead": "model-00094-of-000096.safetensors",
+    "vision_moonvit_v2_a": "model-00095-of-000096.safetensors",
+    "vision_moonvit_v2_b": "model-00096-of-000096.safetensors"
+  },
+  "special_tokens": {
+    "bos_id": 163584,
+    "eos_id": 163586,
+    "pad_id": 163585,
+    "think_open_id": 163606,
+    "think_close_id": 163607,
+    "latent_open_id": 163608,
+    "latent_close_id": 163609
+  },
+  "training_defaults": {
+    "hybridsft_stage1_steps": 40,
+    "hybridsft_stage2_steps": 60,
+    "hybridsft_stage3_steps": 60,
+    "ncm_windows": 1024,
+    "vqvae_steps": 400,
+    "ncm_bridge_steps": 500
+  }
+}
