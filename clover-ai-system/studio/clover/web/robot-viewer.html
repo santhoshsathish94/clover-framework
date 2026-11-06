@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clover voice robot</title>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: transparent; }
+    body { position: relative; }
+    canvas { position: fixed; inset: 0; display: block; width: 100%; height: 100%; }
+    #status-text { display: none; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    #fallback {
+      position: fixed; inset: 0; display: grid; place-items: center;
+      color: #52755e; font: 12px/1.4 sans-serif; background: transparent;
+    }
+  </style>
+  <script type="module" src="clover-robo.js"></script>
+</head>
+<body>
+  <div id="fallback" aria-hidden="true">Loading Clover…</div>
+  <span id="status-text">Walking with you</span>
+  <p class="sr-only" id="announcement" aria-live="polite">Your Clover buddy is ready.</p>
+</body>
+</html>

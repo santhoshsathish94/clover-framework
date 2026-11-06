@@ -527,6 +527,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       </div>
       <div class="bar__title" id="chat-title">New chat</div>
       <div class="bar__side end">
+        <button type="button" class="ibtn voice-toggle" id="voice-toggle" aria-label="Start Clover conversation" aria-pressed="false" title="Talk with Clover">
+          <img class="voice-toggle__clover" src="favicon.svg" alt="" width="22" height="22">
+        </button>
         <button type="button" class="ibtn" id="set-btn" aria-label="Settings" title="Settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></button>
       </div>
     </header>
@@ -551,9 +554,6 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <input type="file" id="file-input" multiple hidden>
         <button type="button" class="cbtn" id="attach" title="Add files" aria-label="Add files"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
         <textarea id="prompt" rows="1" placeholder="Message Clover" aria-label="Message"></textarea>
-        <button type="button" class="cbtn voice-toggle" id="voice-toggle" aria-label="Enable voice mode" aria-pressed="false" title="Enable voice mode">
-          <svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg>
-        </button>
         <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
         <button type="button" class="send" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
       </div>
@@ -561,18 +561,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   </section>
 </div>
 
-<section class="voice-companion" id="voice-companion" data-phase="off" aria-label="Clover voice companion" hidden>
+<section class="voice-companion" id="voice-companion" data-phase="off" role="dialog" aria-modal="true" aria-label="Clover conversation. Press Escape or double-click the robot to return to chat." hidden>
   <div class="voice-companion__scene">
-    <img class="voice-companion__poster" id="robot-poster" src="robo-clover-transparent.webp" alt="" width="210" height="180">
-    <svg class="voice-orbit" viewBox="0 0 200 200" aria-hidden="true">
-      <circle class="voice-orbit__track" cx="100" cy="100" r="94" pathLength="100"/>
-      <circle class="voice-orbit__runner" cx="100" cy="100" r="94" pathLength="100"/>
-    </svg>
+    <iframe class="voice-companion__robot" id="robot-frame" data-src="robot-viewer.html" src="about:blank" title="Interactive Clover robot. Double-click to return to chat." tabindex="-1"></iframe>
   </div>
   <div class="voice-companion__status" aria-live="polite">
-    <div class="voice-companion__row"><span class="voice-companion__dot"></span><span id="voice-title">Voice mode off</span></div>
+    <div class="voice-companion__row"><span class="voice-companion__dot"></span><span id="voice-title">Conversation off</span></div>
     <p class="voice-companion__detail" id="voice-detail"></p>
   </div>
+  <div class="voice-companion__results" id="voice-results" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Conversation transcript"></div>
 </section>
 
 <div class="auth-gate" id="auth-gate" hidden role="dialog" aria-modal="true" aria-labelledby="auth-gate-h">
@@ -1351,7 +1348,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         c.messages = fromRecords(r.messages || []); save(); if (cur() === c) renderLog();
       }).catch(function () {});
     }
-    var visible = c ? c.messages.filter(function (m) { return !m.voiceConversation; }) : [];
+    var visible = c ? c.messages : [];
     var empty = !visible.length;
     $('hero').hidden = !empty;
     if (!empty) visible.forEach(function (m) { log.appendChild(m.role === 'user' ? userEl(m) : botEl(m)); });
@@ -1401,16 +1398,18 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   // silence before a slow part (a list of colours).
   var speech = null;
   function speechEvent(name, error) { document.dispatchEvent(new CustomEvent('clover:' + name, { detail: { error: error || '' } })); }
+  function voiceEvent(name, detail) { document.dispatchEvent(new CustomEvent('clover:' + name, { detail: detail || {} })); }
   function speechDone(me, error) { if (!me.ended) { me.ended = true; speechEvent('speech-end', error); } }
   function stopSpeech() { if (speech) { speech.stop(); speech = null; } }
-  function speakOmni(text, b) {
+  function speakOmni(text, b, conversation) {
     var again = speech && b && speech.button === b; stopSpeech(); if (again) return;
     var me = { button: b, cancelled: false, ended: false, audio: null, stop: function () {
       me.cancelled = true; if (me.audio) me.audio.pause(); if (b) b.classList.remove('busy'); speechDone(me); } };
     speech = me; speechEvent('speech-start');
     if (b) { b.classList.add('busy'); b.title = 'Stop'; }
     function wav(part) {
-      return fetch(apiUrl('/api/tts'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: part, voice: state.settings.voice }) })
+      return fetch(apiUrl('/api/tts'), { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: part, voice: state.settings.voice, conversation: !!conversation }) })
         .then(function (r) { if (!r.ok) return r.json().catch(function () { return {}; }).then(function (j) { throw new Error(j.error || ('HTTP ' + r.status)); }); return r.blob(); });
     }
     function synthAll(parts) {  // one request at a time; a failed part stops the ones after it
@@ -2757,7 +2756,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
   function streamSend() {
     var inp = takeInput(); if (!inp) return;
-    if (state.speakNext && state.settings.autospeak && state.omni) api('POST', '/api/tts/warm', {}).catch(function () {});
+    // Conversation mode keeps speech resident between turns; starting the CPU speech engine here competes with C3.
+    if (state.speakNext && !state.conversationNext && state.settings.autospeak && state.omni) api('POST', '/api/tts/warm', {}).catch(function () {});
     var c = inp.c, live = liveTurn(state.conversationNext), body = live.body;
     var work = workEl(true, true); work.label('Understanding your message\u2026'); work.meta('0:00');
     body.insertBefore(work.box, live.wait);
@@ -2974,6 +2974,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           finishRunningSteps();
           if (thinking) thBox.hidden = true;
           answer += ev.text; ans.textContent = answer.replace(/^\s+/, ''); live.wait.hidden = true;
+          if (state.conversationNext) voiceEvent('voice-answer', { text: answer.replace(/^\s+/, ''), done: false });
           setStage('writing answer');
         }
         scrollDown();
@@ -3051,11 +3052,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         tools: tools, steps: stepsList, used: layersUsed(ev),
         images: (ev.images || []).map(function (x) { return { file: x.file, prompt: x.prompt, model: x.model, seconds: x.seconds }; }) };
       c.messages.push(m); save();
-      if (state.conversationNext) { live.turn.remove(); renderLog(); }
-      else { live.turn.replaceWith(botEl(m)); scrollDown(); }
-      var speakIt = state.speakNext && state.settings.autospeak && state.omni && !ev.error && !ev.cancelled;
+      if (state.conversationNext) {
+        voiceEvent('voice-answer', { text: m.text, done: true, error: !!ev.error });
+        live.turn.remove(); renderLog();
+      } else { live.turn.replaceWith(botEl(m)); scrollDown(); }
+      // Entering conversation mode is explicit consent to spoken replies, independent of voice-message autoplay.
+      var conversationTurn = state.conversationNext;
+      var speakIt = state.speakNext && (conversationTurn || state.settings.autospeak) && state.omni && !ev.error && !ev.cancelled;
       state.speakNext = false; state.conversationNext = false;
-      if (speakIt) speakOmni(m.text);
+      if (speakIt) speakOmni(m.text, null, conversationTurn);
     }
     function parseSseChunk(chunk) {
       var lines = chunk.split(/\r?\n/);
@@ -3084,7 +3089,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       body: JSON.stringify({ prompt: inp.prompt, session_id: c.id, model: state.settings.model, attached_files: inp.files, history: inp.hist,
         media: (inp.media || []).map(function (md) { return { kind: md.kind, name: md.name, data: md.data }; }),
         documents: (inp.docs || []).map(function (d) { return { name: d.name, data: d.data }; }),
-        sampling: state.settings.sampling, thinking: state.settings.thinking, max_new_tokens: state.settings.budget })
+        conversation: state.conversationNext, sampling: state.settings.sampling, thinking: state.settings.thinking,
+        max_new_tokens: state.conversationNext ? 256 : state.settings.budget })
     }).then(function (resp) {
       if (!resp.ok) return resp.json().catch(function () { return {}; }).then(function (j) { throw new Error(j.error || ('HTTP ' + resp.status)); });
       var reader = resp.body.getReader(), dec = new TextDecoder(), buf = '';
@@ -3376,6 +3382,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     sendAudio: function (wav, seconds) {
       if (!state.ready || state.busy || !state.omni || state.inputs.indexOf('audio') < 0) throw new Error('Clover is not ready for audio.');
       state.media.push({ kind: 'audio', name: 'Voice conversation · ' + seconds + ' s', data: wav, voice: true, conversation: true });
+      voiceEvent('voice-user', { text: 'Voice message · ' + seconds + ' s' });
       renderAtt(); updateSend(); send();
     },
     toWav16k: toWav16k,

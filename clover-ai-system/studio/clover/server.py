@@ -52,7 +52,8 @@ STATIC = {"/icon.png": ("icon.png", "image/png"), "/favicon.ico": ("icon.png", "
           "/favicon.svg": ("favicon.svg", "image/svg+xml"), "/robo-clover.webp": ("robo-clover.webp", "image/webp"),
           "/robo-clover-master.webp": ("robo-clover-master.webp", "image/webp"),
           "/robo-clover-transparent.webp": ("robo-clover-transparent.webp", "image/webp"),
-          "/voice-mode.css": ("voice-mode.css", "text/css"), "/voice-mode.js": ("voice-mode.js", "text/javascript")}
+          "/voice-mode.css": ("voice-mode.css", "text/css"), "/voice-mode.js": ("voice-mode.js", "text/javascript"),
+          "/robot-viewer.html": ("robot-viewer.html", "text/html"), "/clover-robo.js": ("clover-robo.js", "text/javascript")}
 
 
 def setup_stdio(log_path):
@@ -1281,7 +1282,10 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                 offer=[t["function"]["name"] for t in lfm3_native.STUDIO_TOOLS] + [t["schema"]["function"]["name"] for t in extra])
             if kit is not None:
                 kit.meaning = frame
+            conversation = bool(body.get("conversation")) and omni
             max_new = int(min(4096, max(64, int(body.get("max_new_tokens") or 2048))))
+            if conversation:
+                max_new = min(max_new, 256)
             kv = kv_switch(sid) if frame.act != "social" else None
             if frame.act == "social":
                 # only pleasantries ("hi", "thanks", "bye"): semantics answers and the model is not called
@@ -1311,7 +1315,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                                    on_event=emit, ask=ask, cancel=cancel, final_on_limit=True, force_answer=True,
                                    allow=[str(x) for x in body.get("allow_once") or []],
                                    layers=turn_layers, kit=kit, layer_query=prompt, extra_tools=extra, only_tools=only,
-                                   **({"media": list(media), "meaning": frame} if omni else {}))
+                                   **({"media": list(media), "meaning": frame, "conversation": conversation} if omni else {}))
                 if retry:
                     res["layers"].append({"layer": "cycle", "trigger": "user", "action": "redone", "tools": only or "all"})
             if retry:
@@ -1869,7 +1873,7 @@ class Handler(BaseHTTPRequestHandler):
             conn = "'self' https: http:"
             csp = (f"default-src 'none'; script-src 'nonce-{nonce}'; style-src 'self' 'unsafe-inline'; "
                    f"img-src 'self' data: blob:; connect-src {conn}; media-src 'self' data: blob:; base-uri 'none'; "
-                   "form-action 'none'; frame-ancestors 'none'")
+                   "form-action 'none'; frame-src 'self'; frame-ancestors 'none'")
             return self._send(200, html.encode("utf-8"), "text/html",
                               {"Content-Security-Policy": csp, "X-Frame-Options": "DENY"})
         if path in STATIC:
@@ -2199,7 +2203,9 @@ class Handler(BaseHTTPRequestHandler):
                 if eng is None or not hasattr(eng, "tts"):
                     return self._send(400, {"error": "speech needs LFM3-Omni-2B (Settings -> Model)"})
                 voice = "male" if body.get("voice") == "male" else "female"
-                return self._send(200, eng.tts(str(body.get("text") or ""), voice=voice), "audio/wav")
+                conversation = bool(body.get("conversation")) and hasattr(eng, "separate_voice")
+                extra = {"conversation": True} if conversation else {}
+                return self._send(200, eng.tts(str(body.get("text") or ""), voice=voice, **extra), "audio/wav")
             if path == "/api/decision":
                 turn = S.active.get(str(body.get("turn_id") or ""))
                 pend = turn and turn["pending"].get(str(body.get("request_id") or ""))

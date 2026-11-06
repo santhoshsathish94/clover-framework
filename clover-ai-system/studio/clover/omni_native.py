@@ -243,13 +243,15 @@ class OmniNative(N.LFM3Native):
             finally:
                 self.stage = {"name": "idle", "since": time.time()}
 
-    def tts(self, text, voice="female", lang="en"):
+    def tts(self, text, voice="female", lang="en", conversation=False):
         t = speakable(text)
         if not t:
             raise ValueError("nothing to speak")
         self.side_gate.hold()
         try:
-            srv = self._voice_server() if self.separate_voice else None
+            # Live conversation speaks after C3 has finished: reuse the resident GPU model instead of retaining a
+            # second 2+ GB CPU model that leaves C3 paging on smaller laptops. Ordinary voice messages keep warm-up.
+            srv = self._voice_server() if self.separate_voice and not conversation else None
             if srv is not None:
                 try:
                     return srv.tts(t, voice=voice, lang=lang)
@@ -486,10 +488,11 @@ class OmniNative(N.LFM3Native):
     def run_turn(self, history, user_text, *, tools=True, sampling="general", thinking=True, max_new=2048,
                  max_rounds=8, on_event=None, ask=None, allow=(), cancel=None, seed=0, system=None,
                  layers=(), kit=None, layer_query=None, final_on_limit=False, force_answer=False, extra_tools=(),
-                 media=(), only_tools=None, meaning=None):
+                 media=(), only_tools=None, meaning=None, conversation=False):
         """Same contract as LFM3Native.run_turn. `thinking`, `sampling` and `force_answer` do not apply: the Omni
         does not reason and its card asks for greedy text decoding. media: [{"kind", "file"}] for this message.
-        meaning: the turn's semantics.Frame (the user's paths, the search limit); None works it out from user_text."""
+        meaning: the turn's semantics.Frame (the user's paths, the search limit); None works it out from user_text.
+        conversation: a live spoken turn; keep its answer concise without skipping any Clover stage."""
         emit = on_event or (lambda e: None)
         self.turn_cancel = cancel  # a running command stops when the user stops the turn
         self.turn_paths = list(meaning.paths) if meaning is not None else N.user_paths(user_text)
@@ -529,6 +532,9 @@ class OmniNative(N.LFM3Native):
             # the user's preferred form of answer (personal.py): fixed wording, no user text
             recall.append({"role": "system", "content": meaning.guidance})
         sys_txt = system or self.system_prompt(bool(schemas), only_tools)
+        if conversation:
+            sys_txt += (" This is a live spoken conversation. Answer naturally in one or two short sentences "
+                        "unless the user asks for detail.")
         keep_last_media = bool(meaning is not None and getattr(meaning, "seen", ()) and not media)
         has_new_visual = any(m.get("kind") in ("image", "video") for m in media or () if isinstance(m, dict))
         not_comparing_prior = not re.search(r"\b(?:previous|earlier|first|prior|other|both|compare|same\s+as)\b", query or "", re.I)

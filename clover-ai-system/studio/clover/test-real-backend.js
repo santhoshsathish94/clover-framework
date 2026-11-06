@@ -78,13 +78,14 @@ async function audioChat(wav) {
     body: JSON.stringify({
       prompt: '', session_id: sessionId, model: 'omni', history: [],
       media: [{ kind: 'audio', name: 'real-tts-question.wav', data: wav.toString('base64') }],
-      sampling: 'general', thinking: false, max_new_tokens: 128
+      conversation: true, sampling: 'general', thinking: false, max_new_tokens: 256
     }),
     signal: AbortSignal.timeout(240000)
   });
   if (response.status !== 200) throw new Error(`Real audio chat HTTP ${response.status}: ${await response.text()}`);
   const sse = await response.text();
-  const events = sse.split(/\r?\n\r?\n/).filter(line => line.startsWith('data: ')).map(line => JSON.parse(line.slice(6)));
+  // Main's replayable SSE frames include an `id:` line before `data:`; parse data lines independently.
+  const events = sse.split(/\r?\n/).filter(line => line.startsWith('data: ')).map(line => JSON.parse(line.slice(6)));
   const error = events.find(event => event.type === 'error');
   if (error) throw new Error(`Real audio chat: ${error.error}`);
   const done = events.find(event => event.type === 'done');
@@ -125,6 +126,13 @@ async function audioChat(wav) {
     pass(`Real LFM3-Omni synthesized a nonempty WAV (${wav.length.toLocaleString()} bytes)`);
 
     await audioChat(wav);
+
+    const conversationSpeechStarted = Date.now();
+    const conversationWav = await request('/api/tts', { text: 'Hello!', voice: 'female', conversation: true });
+    validateWav(conversationWav);
+    results.conversationTtsBytes = conversationWav.length;
+    results.conversationTtsSeconds = (Date.now() - conversationSpeechStarted) / 1000;
+    pass('Conversation speech reuses the real resident model and returns a nonempty WAV');
     saveResults();
     console.log('ALL REAL BACKEND CHECKS PASSED');
   } catch (error) {

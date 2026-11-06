@@ -43,7 +43,7 @@ async function waitServer() {
   }
   throw new Error('Clover test server did not start');
 }
-async function mockApi(page) {
+async function mockApi(page, options = {}) {
   await page.route('**/api/**', async route => {
     const req = route.request(), url = new URL(req.url()), p = url.pathname;
     const json = value => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(value) });
@@ -61,9 +61,12 @@ async function mockApi(page) {
       return route.fulfill({ status: 200, contentType: 'text/event-stream', body: events.map(e => `data: ${JSON.stringify(e)}\n\n`).join('') });
     }
     if (p === '/api/tts/parts') return json({ parts: ['I heard your voice.'] });
+    if (p === '/api/tts/warm') { results.ttsWarmRequests = (results.ttsWarmRequests || 0) + 1; return json({}); }
     if (p === '/api/tts') {
+      results.ttsBodies = results.ttsBodies || [];
+      results.ttsBodies.push(JSON.parse(req.postData() || '{}'));
       await new Promise(resolve => setTimeout(resolve, 650));
-      return route.fulfill({ status: 200, contentType: 'audio/wav', body: spokenWav });
+      return route.fulfill({ status: 200, contentType: 'audio/wav', body: options.invalidSpeech ? 'invalid audio fixture' : spokenWav });
     }
     return json({});
   });
@@ -95,47 +98,74 @@ async function instrumentTracks(page) {
     browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', `--use-file-for-fake-audio-capture=${captureWav}%noloop`, '--enable-unsafe-swiftshader'] });
     const context = await browser.newContext({ viewport: { width: 1440, height: 960 }, permissions: ['microphone'] });
     const page = await context.newPage(); observe(page); await mockApi(page);
+    await page.addInitScript(() => localStorage.setItem('clover_studio_settings_v1', JSON.stringify({ autospeak: false })));
     await page.goto(origin, { waitUntil: 'networkidle' });
     await page.waitForFunction(() => window.CloverVoiceBridge && CloverVoiceBridge.getState().ready);
     assert.equal(await page.locator('#voice-toggle').getAttribute('aria-pressed'), 'false');
-    assert.equal(await page.locator('#composer #voice-toggle').count(), 1);
-    assert.equal((await page.locator('#voice-toggle').textContent()).trim(), '');
-    assert.equal(await page.locator('#voice-toggle use').getAttribute('href'), '#i-mic'); pass('Icon-only microphone control is inside the composer beside Send');
-    assert.equal(await page.locator('#voice-companion').isVisible(), false); pass('Voice mode and microphone default to off');
+    assert.equal(await page.locator('#composer #voice-toggle').count(), 0);
+    assert.equal(await page.locator('.bar__side.end #voice-toggle').count(), 1);
+    assert.equal(await page.locator('#voice-toggle').evaluate(button => button.nextElementSibling.id), 'set-btn');
+    assert.equal(await page.locator('#voice-toggle img').getAttribute('src'), 'favicon.svg'); pass('Clover flower opens conversation mode immediately beside Settings');
+    assert.equal(await page.locator('#app').isVisible(), true);
+    assert.equal(await page.locator('#voice-companion').isVisible(), false); pass('Chat is the default and conversation capture defaults to off');
     await instrumentTracks(page);
     await page.locator('#voice-toggle').click();
     await page.waitForFunction(() => CloverVoiceMode.getState().capturing && CloverVoiceMode.getState().phase === 'listening', null, { timeout: 10000 });
-    await page.waitForFunction(() => document.querySelector('#robot-poster').complete && document.querySelector('#robot-poster').naturalWidth > 0);
-    assert.equal(await page.locator('#robot-canvas').count(), 0);
-    assert.equal(await page.evaluate(() => typeof window.CloverRobot), 'undefined');
+    await page.waitForFunction(() => {
+      const frame = document.querySelector('#robot-frame');
+      return frame.contentWindow && frame.contentWindow.__SCENE_READY__ === true;
+    }, null, { timeout: 15000 });
     results.listeningVisual = await page.evaluate(() => {
-      const poster = document.querySelector('#robot-poster');
-      const status = document.querySelector('.voice-companion__status');
-      const canvas = document.createElement('canvas');
-      canvas.width = poster.naturalWidth; canvas.height = poster.naturalHeight;
-      const ctx = canvas.getContext('2d'); ctx.drawImage(poster, 0, 0);
-      const corners = [[0, 0], [canvas.width - 1, 0], [0, canvas.height - 1], [canvas.width - 1, canvas.height - 1]];
+      const frame = document.querySelector('#robot-frame');
+      const robot = frame.contentWindow;
+      const panel = document.querySelector('#voice-companion');
+      const rect = panel.getBoundingClientRect();
       return {
-        robotOpacity: getComputedStyle(poster).opacity,
-        robotAnimation: getComputedStyle(poster).animationName,
-        robotSource: poster.getAttribute('src'),
-        transparentCorners: corners.map(([x, y]) => ctx.getImageData(x, y, 1, 1).data[3]),
-        panelBackground: getComputedStyle(document.querySelector('#voice-companion')).backgroundColor,
-        statusBackground: getComputedStyle(status).backgroundColor,
-        statusBackdrop: getComputedStyle(status).backdropFilter,
-        orbitAnimation: getComputedStyle(document.querySelector('.voice-orbit__runner')).animationName,
+        ...robot.__getSceneState(),
+        robotOpacity: getComputedStyle(frame).opacity,
+        robotSource: frame.getAttribute('src'),
+        robotResources: robot.performance.getEntriesByType('resource').map(entry => entry.name),
+        panelBackground: getComputedStyle(panel).backgroundColor,
+        panelWidth: rect.width,
+        panelHeight: rect.height,
+        appVisibility: getComputedStyle(document.querySelector('#app')).visibility,
+        appInert: document.querySelector('#app').inert,
+        statusPointer: getComputedStyle(document.querySelector('.voice-companion__status')).pointerEvents,
+        resultsPointer: getComputedStyle(document.querySelector('#voice-results')).pointerEvents,
+        resultsBackground: getComputedStyle(document.querySelector('#voice-results')).backgroundColor,
+        toggleParent: document.querySelector('#voice-toggle').parentElement.id,
+        toggleVisible: !!document.querySelector('#voice-toggle').offsetParent,
+        toggleSymbol: document.querySelector('#voice-toggle img').getAttribute('src'),
+        orbitCount: document.querySelectorAll('.voice-orbit').length,
         pauseMs: CloverVoiceMode.getState().pauseMs
       };
     });
-    assert.equal(results.listeningVisual.robotOpacity, '0.58');
-    assert.equal(results.listeningVisual.robotAnimation, 'none');
-    assert.equal(results.listeningVisual.robotSource, 'robo-clover-transparent.webp');
-    assert.ok(results.listeningVisual.transparentCorners.every(alpha => alpha === 0));
+    assert.equal(results.listeningVisual.ready, true);
+    assert.equal(results.listeningVisual.robotSource, 'robot-viewer.html');
+    assert.ok(results.listeningVisual.robotResources.some(url => url === `${origin}/clover-robo.js`));
+    assert.ok(results.listeningVisual.robotResources.every(url => new URL(url).origin === origin));
+    assert.equal(results.listeningVisual.canvasWidth, 1440);
+    assert.equal(results.listeningVisual.canvasHeight, 960);
+    assert.equal(results.listeningVisual.panelWidth, 1440);
+    assert.equal(results.listeningVisual.panelHeight, 960);
+    assert.ok(results.listeningVisual.calls > 0 && results.listeningVisual.triangles > 0);
+    assert.equal(results.listeningVisual.canvasAlpha, true);
+    assert.equal(results.listeningVisual.backgroundTransparent, true);
+    assert.equal(results.listeningVisual.groundVisible, false);
+    assert.equal(results.listeningVisual.distantVisible, false);
+    assert.equal(results.listeningVisual.contactShadowVisible, false);
+    assert.equal(results.listeningVisual.robotOpacity, '1');
     assert.equal(results.listeningVisual.panelBackground, 'rgba(0, 0, 0, 0)');
-    assert.equal(results.listeningVisual.statusBackground, 'rgba(0, 0, 0, 0)');
-    assert.equal(results.listeningVisual.statusBackdrop, 'none');
-    assert.equal(results.listeningVisual.pauseMs, 3000);
-    assert.equal(results.listeningVisual.orbitAnimation, 'voice-orbit-clockwise'); pass('Transparent static robot and status retain only the clockwise voice ring');
+    assert.equal(results.listeningVisual.appVisibility, 'hidden');
+    assert.equal(results.listeningVisual.appInert, true);
+    assert.equal(results.listeningVisual.statusPointer, 'none');
+    assert.equal(results.listeningVisual.resultsPointer, 'none');
+    assert.equal(results.listeningVisual.resultsBackground, 'rgba(0, 0, 0, 0)');
+    assert.equal(results.listeningVisual.toggleParent, 'voice-companion');
+    assert.equal(results.listeningVisual.toggleVisible, true);
+    assert.equal(results.listeningVisual.toggleSymbol, 'favicon.svg');
+    assert.equal(results.listeningVisual.orbitCount, 0);
+    assert.equal(results.listeningVisual.pauseMs, 3000); pass('Full-screen robot keeps a visible Clover toggle and transparent, non-blocking status/results overlays');
     await page.screenshot({ path: path.join(artifacts, 'voice-desktop.png'), fullPage: true });
     await page.waitForFunction(() => CloverVoiceMode.getState().elapsed >= 3200, null, { timeout: 10000 });
     assert.equal(await page.evaluate(() => CloverVoiceMode.getState().capturing), true);
@@ -143,37 +173,60 @@ async function instrumentTracks(page) {
     const audioResponse = page.waitForResponse('**/api/chat/stream', { timeout: 20000 });
     await page.waitForFunction(() => CloverVoiceMode.getState().phase === 'thinking', null, { timeout: 20000 });
     await audioResponse;
+    results.thinkingReaction = await page.evaluate(() => document.querySelector('#robot-frame').contentWindow.__getSceneState().reaction);
+    assert.equal(results.thinkingReaction, 'thinking'); pass('Thinking state selects the supplied robot’s thinking reaction');
     assert.equal(results.chatBodies.length, 1);
     assert.equal(results.chatBodies[0].media.length, 1);
     assert.equal(results.chatBodies[0].media[0].kind, 'audio');
     assert.equal(results.chatBodies[0].media[0].name.startsWith('Voice conversation'), true);
     assert.ok(results.chatBodies[0].media[0].data.length > 1000); pass('The completed utterance still becomes a real WAV audio request');
+    assert.equal(results.chatBodies[0].conversation, true);
+    assert.equal(results.chatBodies[0].max_new_tokens, 256);
+    assert.equal(results.ttsWarmRequests || 0, 0); pass('Conversation requests concise replies without competing speech-engine warm-up');
     await page.waitForFunction(() => CloverVoiceMode.getState().speaking, null, { timeout: 10000 });
-    assert.equal(await page.locator('#log .u').count(), 0);
-    assert.equal(await page.locator('#log .b').count(), 0);
-    assert.equal(await page.locator('#hero').isVisible(), true);
+    await page.waitForFunction(() => document.querySelector('#voice-results').textContent.includes('I heard your voice. Clover is listening and talking back.'));
+    assert.equal(await page.locator('#voice-results .voice-companion__turn--user').count(), 1);
+    assert.equal(await page.locator('#voice-results .voice-companion__turn--assistant').count(), 1);
+    assert.match(await page.locator('#voice-results .voice-companion__turn--user').textContent(), /Voice message/);
+    assert.equal(await page.locator('#log .u').count(), 1);
+    assert.equal(await page.locator('#log .b').count(), 1);
+    assert.equal(await page.locator('#hero').getAttribute('hidden'), '');
     assert.equal(await page.locator('#chat-title').textContent(), 'Voice conversation');
-    assert.equal((await page.locator('#log').textContent()).includes('reading your message'), false); pass('Continuous Voice hides transcript and read-aloud turns while retaining the session');
+    assert.equal((await page.locator('#log').textContent()).includes('reading your message'), false); pass('Voice turn and streaming reply appear over the robot and remain in the session transcript');
     await page.waitForFunction(() => CloverVoiceMode.getState().speaking && CloverVoiceMode.getState().phase === 'thinking', null, { timeout: 10000 });
-    results.preparingVisual = await page.evaluate(() => getComputedStyle(document.querySelector('.voice-orbit__runner')).animationName);
-    assert.equal(results.preparingVisual, 'none'); pass('Ring and robot stay still while speech audio is being prepared');
-    await page.waitForFunction(() => CloverVoiceMode.getState().phase === 'speaking' && getComputedStyle(document.querySelector('.voice-orbit__runner')).animationName === 'voice-orbit-clockwise', null, { timeout: 10000 });
+    results.preparingVisual = await page.evaluate(() => document.querySelector('#robot-frame').contentWindow.__getSceneState().reaction);
+    assert.equal(results.preparingVisual, 'thinking'); pass('Robot keeps its thinking reaction while speech audio is prepared');
+    await page.waitForFunction(() => CloverVoiceMode.getState().phase === 'speaking', null, { timeout: 10000 });
     assert.equal(await page.locator('#voice-title').textContent(), 'Speaking…');
-    results.speakingVisual = await page.evaluate(() => {
-      const animation = document.querySelector('.voice-orbit__runner').getAnimations()[0];
-      return animation ? animation.effect.getKeyframes().map(frame => frame.transform) : [];
-    });
-    assert.ok(results.speakingVisual.some(value => /rotate\(360deg\)/.test(value))); pass('Only the white ring moves, clockwise through 360 degrees during playback');
+    assert.equal(results.ttsBodies[0].conversation, true); pass('Conversation speech asks the backend to reuse the resident model');
+    assert.equal(await page.locator('#s-autospeak').isChecked(), false);
+    results.speakingVisual = await page.evaluate(() => document.querySelector('#robot-frame').contentWindow.__getSceneState().reaction);
+    assert.equal(results.speakingVisual, 'answering'); pass('Conversation speaks even when ordinary voice-message autoplay is off and selects the answering reaction');
     await page.screenshot({ path: path.join(artifacts, 'voice-speaking.png'), fullPage: true });
     await page.locator('#voice-companion').screenshot({ path: path.join(artifacts, 'robot-panel.png') });
     await page.waitForFunction(() => CloverVoiceMode.getState().capturing && CloverVoiceMode.getState().phase === 'listening', null, { timeout: 15000 });
-    results.finishedVisual = await page.evaluate(() => getComputedStyle(document.querySelector('.voice-orbit__runner')).animationName);
-    assert.equal(results.finishedVisual, 'voice-orbit-clockwise'); pass('Listening and the clockwise voice ring resume after spoken playback');
+    pass('Listening resumes after spoken playback');
     await page.locator('#voice-toggle').click();
+    await page.waitForFunction(() => !CloverVoiceMode.getState().active);
+    assert.equal(await page.locator('#app').isVisible(), true);
+    assert.equal(await page.locator('#app').evaluate(app => app.inert), false);
+    assert.equal(await page.locator('#log .u').count(), 1);
+    assert.equal(await page.locator('#log .b').count(), 1);
+    assert.equal(await page.locator('#voice-toggle').evaluate(button => button.nextElementSibling.id), 'set-btn');
+    assert.equal(await page.locator('#robot-frame').getAttribute('src'), 'about:blank');
+    assert.equal(await page.locator('#voice-companion').isVisible(), false); pass('The same Clover symbol returns to chat, restores the transcript, and releases the robot');
+    await page.locator('#voice-toggle').click();
+    await page.waitForFunction(() => document.querySelector('#robot-frame').contentWindow.__SCENE_READY__ === true, null, { timeout: 15000 });
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => !CloverVoiceMode.getState().active);
+    assert.equal(await page.locator('#app').isVisible(), true); pass('Escape still returns to chat after toggling conversation back on');
+    await page.locator('#voice-toggle').click();
+    await page.waitForFunction(() => document.querySelector('#robot-frame').contentWindow.__SCENE_READY__ === true, null, { timeout: 15000 });
+    await page.frameLocator('#robot-frame').locator('canvas').dispatchEvent('dblclick');
     await page.waitForFunction(() => !CloverVoiceMode.getState().active);
     const trackStates = await page.evaluate(() => window.__voiceTracks.map(t => t.readyState));
     assert.ok(trackStates.length > 0 && trackStates.every(s => s === 'ended'));
-    assert.equal(await page.locator('#voice-companion').isVisible(), false); pass('Disabling Voice stops every microphone track and hides the robot');
+    assert.equal(await page.locator('#app').isVisible(), true); pass('Double-clicking the interactive robot also returns to chat and stops every microphone track');
     await context.close();
 
     const textContext = await browser.newContext({ viewport: { width: 1200, height: 850 }, permissions: ['microphone'] });
@@ -187,13 +240,19 @@ async function instrumentTracks(page) {
     assert.match(await tp.locator('#log .u').textContent(), /Hello in text/);
     assert.equal(await tp.locator('#hero').isVisible(), false);
     assert.equal(await tp.locator('#chat-title').textContent(), 'Hello in text'); pass('Ordinary text chat still renders its user and assistant turns normally');
+    assert.equal(results.chatBodies[1].conversation, false);
+    assert.equal(results.chatBodies[1].max_new_tokens, 2048);
+    assert.equal(results.ttsWarmRequests || 0, 0); pass('Ordinary text chat keeps its full response budget');
     const sendBox = await tp.locator('#send').boundingBox();
     await tp.mouse.move(sendBox.x + sendBox.width / 2, sendBox.y + sendBox.height / 2);
     await tp.mouse.down(); await tp.waitForTimeout(1800); await tp.mouse.up();
     await tp.waitForSelector('#log .u .media', { timeout: 10000 });
     await tp.waitForFunction(() => document.querySelectorAll('#log .b').length === 2, null, { timeout: 10000 });
     assert.equal(await tp.locator('#log .u').count(), 2);
-    assert.equal(await tp.locator('#log .b').count(), 2); pass('Hold-to-speak remains a visible voice message, separate from continuous Voice');
+    assert.equal(await tp.locator('#log .b').count(), 2);
+    assert.equal(results.chatBodies[2].conversation, false);
+    assert.equal(results.chatBodies[2].max_new_tokens, 2048);
+    assert.equal(results.ttsWarmRequests, 1); pass('Hold-to-speak remains a visible voice message with its existing warm-up, separate from continuous Voice');
     await textContext.close();
 
     const mobile = await browser.newContext({ viewport: { width: 375, height: 812 }, permissions: ['microphone'], isMobile: true, hasTouch: true });
@@ -202,10 +261,34 @@ async function instrumentTracks(page) {
     await mp.waitForFunction(() => window.CloverVoiceBridge && CloverVoiceBridge.getState().ready);
     await mp.locator('#voice-toggle').click();
     await mp.waitForFunction(() => CloverVoiceMode.getState().capturing, null, { timeout: 10000 });
-    const overflow = await mp.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
-    assert.equal(overflow, false);
-    await mp.screenshot({ path: path.join(artifacts, 'voice-mobile.png'), fullPage: true }); pass('375 px layout has no horizontal overflow and keeps Voice accessible');
-    await mp.locator('#voice-toggle').click(); await mobile.close();
+    await mp.waitForFunction(() => document.querySelector('#robot-frame').contentWindow.__SCENE_READY__ === true, null, { timeout: 15000 });
+    const mobileLayout = await mp.evaluate(() => ({
+      overflow: document.documentElement.scrollWidth > window.innerWidth,
+      width: document.querySelector('#robot-frame').contentWindow.__getSceneState().canvasWidth,
+      height: document.querySelector('#robot-frame').contentWindow.__getSceneState().canvasHeight,
+      appVisibility: getComputedStyle(document.querySelector('#app')).visibility
+    }));
+    assert.equal(mobileLayout.overflow, false);
+    assert.equal(mobileLayout.width, 375);
+    assert.equal(mobileLayout.height, 812);
+    assert.equal(mobileLayout.appVisibility, 'hidden');
+    await mp.screenshot({ path: path.join(artifacts, 'voice-mobile.png'), fullPage: true }); pass('375 px conversation keeps the robot, Clover toggle, and transparent status without overflow');
+    await mp.frameLocator('#robot-frame').locator('canvas').dispatchEvent('dblclick');
+    await mp.waitForFunction(() => !CloverVoiceMode.getState().active); await mobile.close();
+
+    const speechFailure = await browser.newContext({ viewport: { width: 1100, height: 800 }, permissions: ['microphone'] });
+    const sp = await speechFailure.newPage(); observe(sp); await mockApi(sp, { invalidSpeech: true });
+    await sp.goto(origin, { waitUntil: 'networkidle' });
+    await sp.waitForFunction(() => window.CloverVoiceBridge && CloverVoiceBridge.getState().ready);
+    await sp.locator('#voice-toggle').click();
+    await sp.waitForFunction(() => document.querySelector('#voice-results').textContent.includes('Speech unavailable:'), null, { timeout: 25000 });
+    await sp.waitForFunction(() => CloverVoiceMode.getState().capturing && CloverVoiceMode.getState().phase === 'listening', null, { timeout: 10000 });
+    assert.equal(await sp.evaluate(() => CloverVoiceMode.getState().failed), false);
+    assert.equal(await sp.locator('#voice-toggle').isVisible(), true);
+    assert.match(await sp.locator('#voice-results').textContent(), /Speech unavailable:.*Listening again/);
+    await sp.locator('#voice-toggle').click();
+    await sp.waitForFunction(() => !CloverVoiceMode.getState().active); pass('Speech playback failure is visible and automatically returns to listening without trapping conversation mode');
+    await speechFailure.close();
 
     const denied = await browser.newContext({ viewport: { width: 1100, height: 800 } });
     const dp = await denied.newPage(); observe(dp); await mockApi(dp);
@@ -218,8 +301,11 @@ async function instrumentTracks(page) {
     await dp.locator('#voice-toggle').click();
     await dp.waitForFunction(() => CloverVoiceMode.getState().failed);
     assert.match(await dp.locator('#voice-detail').textContent(), /permission was not granted/i);
-    await dp.locator('#voice-toggle').click();
-    assert.equal(await dp.locator('#voice-companion').isVisible(), false); pass('Microphone denial is explained and can be dismissed without breaking chat');
+    await dp.waitForFunction(() => document.querySelector('#robot-frame').contentWindow.__SCENE_READY__ === true, null, { timeout: 15000 });
+    await dp.keyboard.press('Escape');
+    await dp.waitForFunction(() => !CloverVoiceMode.getState().active);
+    assert.equal(await dp.locator('#app').isVisible(), true);
+    assert.equal(await dp.locator('#voice-companion').isVisible(), false); pass('Microphone denial is announced accessibly and Escape restores chat');
     await denied.close();
 
     assert.deepEqual(results.pageErrors, []);

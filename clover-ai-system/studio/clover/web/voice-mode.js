@@ -5,9 +5,47 @@
   'use strict';
   var active = false, speaking = false, failed = false, processing = false, phase = 'off';
   var capture = null, serial = 0, monitor = null;
-  var button, panel, title, detail;
+  var button, panel, title, detail, robotFrame, results, answerLine, robotReaction = '';
 
   function bridge() { return window.CloverVoiceBridge || null; }
+  function syncRobot(force) {
+    if (!active || !robotFrame) return;
+    var reactions = { starting: 'wave', waiting: 'sleepy', thinking: 'thinking', speaking: 'answering' };
+    var reaction = reactions[phase];
+    if (!reaction) { robotReaction = ''; return; }
+    if (!force && reaction === robotReaction) return;
+    try {
+      var robot = robotFrame.contentWindow;
+      if (robot && robot.__SCENE_READY__ === true && typeof robot.__triggerReaction === 'function') {
+        robot.__triggerReaction(reaction);
+        robotReaction = reaction;
+      }
+    } catch (e) { robotReaction = ''; }
+  }
+  function loadRobot() {
+    if (!robotFrame || robotFrame.getAttribute('src') !== 'about:blank') return;
+    robotReaction = '';
+    robotFrame.src = robotFrame.dataset.src;
+  }
+  function addTurn(role, text) {
+    if (!results) return null;
+    var line = document.createElement('p');
+    line.className = 'voice-companion__turn voice-companion__turn--' + role;
+    var label = document.createElement('span');
+    label.className = 'voice-companion__turn-label';
+    label.textContent = role === 'user' ? 'You' : 'Clover';
+    var content = document.createElement('span');
+    content.className = 'voice-companion__turn-text';
+    content.textContent = text || '';
+    line.appendChild(label); line.appendChild(content); results.appendChild(line);
+    while (results.children.length > 8) results.removeChild(results.firstChild);
+    return line;
+  }
+  function showUser(text) { answerLine = null; addTurn('user', text); }
+  function showAnswer(text) {
+    if (!answerLine || !answerLine.isConnected) answerLine = addTurn('assistant', '');
+    if (answerLine) answerLine.querySelector('.voice-companion__turn-text').textContent = text || '';
+  }
   function setPhase(next, text) {
     phase = next;
     if (!button || !panel) return;
@@ -22,11 +60,12 @@
       error: text || 'Microphone access failed. Toggle Voice off and try again.'
     };
     button.dataset.phase = next;
-    button.setAttribute('aria-label', (active ? 'Disable ' : 'Enable ') + (labels[next] || 'voice mode'));
-    button.title = active ? (labels[next] || 'Voice mode') + ' · click to turn off' : 'Enable voice mode';
+    button.setAttribute('aria-label', active ? 'Leave Clover conversation' : 'Start Clover conversation');
+    button.title = active ? 'Return to chat' : 'Talk with Clover';
     panel.dataset.phase = next;
     title.textContent = labels[next] || 'Voice mode';
-    detail.textContent = details[next] || text || '';
+    detail.textContent = text || details[next] || '';
+    syncRobot(false);
   }
 
   function stopTracks(stream) {
@@ -171,23 +210,39 @@
     if (!b) return;
     var st = b.getState();
     if (!st.omni || !st.audio) {
-      alert('Voice mode needs LFM3-Omni with audio input. Select LFM3-Omni from the model menu and try again.'); return;
+      alert('Conversation mode needs LFM3-Omni with audio input. Select LFM3-Omni from the model menu and try again.'); return;
     }
     active = true; failed = false; speaking = false; processing = false;
+    var app = document.getElementById('app');
     panel.hidden = false;
+    panel.appendChild(button);  // Keep the same Clover control outside the inert chat application.
+    if (results) results.replaceChildren();
+    answerLine = null;
+    document.body.classList.add('clover-conversation');
+    if (app) { app.inert = true; app.setAttribute('aria-hidden', 'true'); }
     button.setAttribute('aria-pressed', 'true');
+    loadRobot();
     setPhase(st.busy ? 'thinking' : st.ready ? 'starting' : 'waiting');
     monitorState();
   }
 
   function disable() {
+    var wasActive = active;
     active = false; failed = false; speaking = false; processing = false;
     cancelCapture();
     var b = bridge(); if (b) b.stopSpeaking();
     if (window.speechSynthesis) speechSynthesis.cancel();
+    var settings = document.getElementById('set-btn');
+    if (settings) settings.parentNode.insertBefore(button, settings);
     panel.hidden = true;
     button.setAttribute('aria-pressed', 'false');
+    document.body.classList.remove('clover-conversation');
+    var app = document.getElementById('app');
+    if (app) { app.inert = false; app.removeAttribute('aria-hidden'); }
+    if (robotFrame) { robotFrame.src = 'about:blank'; robotReaction = ''; }
+    answerLine = null;
     setPhase('off');
+    if (wasActive) button.focus();
   }
 
   function init() {
@@ -195,8 +250,26 @@
     panel = document.getElementById('voice-companion');
     title = document.getElementById('voice-title');
     detail = document.getElementById('voice-detail');
-    if (!button || !panel || !title || !detail) return;
+    robotFrame = document.getElementById('robot-frame');
+    results = document.getElementById('voice-results');
+    if (!button || !panel || !title || !detail || !robotFrame || !results) return;
+    robotFrame.addEventListener('load', function () {
+      robotReaction = ''; syncRobot(true);
+      if (active) robotFrame.focus();
+    });
     button.addEventListener('click', function () { if (active) disable(); else enable(); });
+    document.addEventListener('clover:conversation-exit', function () { if (active) disable(); });
+    document.addEventListener('clover:voice-user', function (event) {
+      if (active) showUser(event.detail && event.detail.text);
+    });
+    document.addEventListener('clover:voice-answer', function (event) {
+      if (!active) return;
+      showAnswer(event.detail && event.detail.text);
+      if (event.detail && event.detail.done) answerLine = null;
+    });
+    document.addEventListener('keydown', function (event) {
+      if (active && event.key === 'Escape') { event.preventDefault(); disable(); }
+    });
     document.addEventListener('clover:speech-start', function () {
       if (!active) return;
       speaking = true; processing = false; cancelCapture(); setPhase('thinking');
@@ -205,10 +278,13 @@
       if (!active) return;
       speaking = true; setPhase('speaking');
     });
-    document.addEventListener('clover:speech-end', function () {
+    document.addEventListener('clover:speech-end', function (event) {
       if (!active) return;
       speaking = false;
-      setPhase('listening'); monitorState();
+      var error = event.detail && event.detail.error;
+      if (error) { answerLine = null; addTurn('assistant', 'Speech unavailable: ' + error + '. Listening again.'); }
+      setPhase('listening');
+      monitorState();
     });
     document.addEventListener('visibilitychange', function () {
       if (!active) return;
