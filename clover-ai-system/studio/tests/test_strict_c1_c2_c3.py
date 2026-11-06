@@ -205,4 +205,64 @@ only_rest, on_rest = M.route(fr_rest, "ask", True, offer=["web_search", "fetch_u
 check("semantics routes 'What are some good vegetarian restaurants in Jaipur?' to web_search in default 'ask' mode",
       on_rest and "web_search" in (only_rest or []) and not M.answered_unasked(fr_rest, "Here are some options.", ["web_search"]))
 
+# 4. Verify Playwright-grade Image Inspector (S3) & UI hold-to-speak / GitHub direct sync
+import image_inspector
+from PIL import Image, ImageDraw
+
+img_tmp = base_tmp / "ui_test_screen.png"
+im = Image.new("RGB", (640, 360), (247, 243, 233))
+dr = ImageDraw.Draw(im)
+dr.rectangle([0, 0, 640, 52], fill=(23, 107, 44))
+dr.text((20, 18), "Clover AI Studio Dashboard", fill=(255, 255, 255))
+dr.rectangle([40, 100, 220, 148], fill=(16, 185, 129), outline=(11, 20, 16), width=2)
+dr.text((65, 118), "Sign in with Google", fill=(255, 255, 255))
+dr.rectangle([260, 100, 480, 148], fill=(37, 99, 235), outline=(11, 20, 16), width=2)
+dr.text((280, 118), "Sync GitHub Memory", fill=(255, 255, 255))
+im.save(img_tmp, format="PNG")
+
+rep_img = image_inspector.inspect_image(img_tmp, annotate_dir=base_tmp)
+check(
+    "image_inspector extracts geometry, palette, [e1..eN] elements, and annotated PNG",
+    rep_img["width"] == 640
+    and rep_img["height"] == 360
+    and len(rep_img["palette"]) >= 2
+    and len(rep_img["elements"]) >= 1
+    and bool(rep_img.get("annotated_file"))
+    and (base_tmp / rep_img["annotated_file"]).is_file(),
+)
+
+seen_img_snap = []
+def fake_c1_vision(msgs, schemas, max_new, by_name, on_delta=None, cancel=None, seed=0, tool_choice=None, **kw):
+    sys_texts = " ".join(str(m.get("content") or "") for m in msgs if m.get("role") == "system")
+    seen_img_snap.append("Playwright-Style Visual & UI Snapshot" in sys_texts)
+    return "The dashboard has a green header bar and two action buttons at [e1] and [e2].", [], {
+        "prompt_tokens": 96, "reused_tokens": 0, "new_tokens": 18, "prefill_s": 0.05, "decode_s": 0.09, "finish": "stop"
+    }
+
+eng._chat = fake_c1_vision
+img_ev = []
+res_img = eng.run_turn(
+    [],
+    "Inspect the UI elements in this screenshot.",
+    tools=False,
+    media=[{"kind": "image", "file": "ui_test_screen.png", "name": "ui_test_screen.png"}],
+    layers=("ncm",),
+    kit=kit,
+    on_event=img_ev.append,
+    system="SYS",
+)
+check(
+    "OmniNative.run_turn runs S3 Visual Inspector before C1 and injects Playwright snapshot",
+    seen_img_snap == [True] and any(e.get("type") == "layer" and e.get("layer") == "image_analysis" for e in img_ev),
+)
+
+app_html = (CLOVER / "web" / "app.html").read_text(encoding="utf-8")
+check(
+    "web/app.html keeps separate #mic hidden and uses #send hold-to-speak + #img-inspector + direct GitHub token sync",
+    "if ($('mic')) $('mic').hidden = true;" in app_html
+    and "HOLD_MS = 450" in app_html
+    and 'id="img-inspector"' in app_html
+    and 'id="acct-gh-token"' in app_html,
+)
+
 print("ALL STRICT C1/C2/C3 AND S1/S2/S3 CHECKS PASSED")

@@ -1113,18 +1113,33 @@ def media_info(raw_path: str | Path | None, *, base_dir: Path, workdir: Path | N
     if not path.is_file():
         return f"Error: file {path} does not exist."
 
+    is_img = path.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp")
+    img_rep = None
+    if is_img:
+        try:
+            import image_inspector
+            img_rep = image_inspector.inspect_image(path)
+        except Exception:
+            img_rep = None
+
     ffprobe = _ffmpeg_tool_path(base_dir, "ffprobe")
     if not ffprobe:
+        if img_rep is not None:
+            return json.dumps(img_rep, indent=2, ensure_ascii=False)
         return "Error: media_info needs ffprobe (run Clover AI Studio setup again)."
 
     cmd = [ffprobe, "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", str(path)]
     out, code, how = local_terminal.run(cmd, timeout_s=20, cancel=cancel)
     if how != "exit" or code != 0:
+        if img_rep is not None:
+            return json.dumps(img_rep, indent=2, ensure_ascii=False)
         return f"Error: ffprobe failed ({how}, code={code}): {out[:400]}"
     try:
         raw = json.loads(out)
     except ValueError:
-        return f"Error: ffprobe returned invalid JSON."
+        if img_rep is not None:
+            return json.dumps(img_rep, indent=2, ensure_ascii=False)
+        return "Error: ffprobe returned invalid JSON."
 
     fmt = raw.get("format") or {}
     streams = []
@@ -1143,6 +1158,16 @@ def media_info(raw_path: str | Path | None, *, base_dir: Path, workdir: Path | N
         "bit_rate": int(fmt["bit_rate"]) if fmt.get("bit_rate") else None,
         "streams": streams,
     }
+    if img_rep is not None:
+        summary["visual_inspection"] = {
+            "width": img_rep["width"],
+            "height": img_rep["height"],
+            "aspect_ratio": img_rep["aspect_ratio"],
+            "palette": img_rep["palette"],
+            "elements": img_rep["elements"],
+            "ocr_text": img_rep["ocr_text"],
+            "low_contrast_refs": img_rep["low_contrast_refs"],
+        }
     return json.dumps(summary, indent=2, ensure_ascii=False)
 
 

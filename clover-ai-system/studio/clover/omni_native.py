@@ -533,6 +533,39 @@ class OmniNative(N.LFM3Native):
         keep_last_media = bool(meaning is not None and getattr(meaning, "seen", ()) and not media)
         has_new_visual = any(m.get("kind") in ("image", "video") for m in media or () if isinstance(m, dict))
         not_comparing_prior = not re.search(r"\b(?:previous|earlier|first|prior|other|both|compare|same\s+as)\b", query or "", re.I)
+        if has_new_visual:
+            try:
+                import image_inspector
+                snap_blocks = []
+                for m in media or ():
+                    if isinstance(m, dict) and m.get("kind") == "image" and m.get("file"):
+                        img_fp = Path(self.media_dir) / m["file"]
+                        if img_fp.is_file():
+                            rep = image_inspector.inspect_image(img_fp, annotate_dir=Path(self.media_dir))
+                            snap_blocks.append(image_inspector.format_snapshot_for_prompt(rep))
+                            info_img = {
+                                "layer": "image_analysis",
+                                "file": m["file"],
+                                "annotated_file": rep.get("annotated_file"),
+                                "width": rep["width"],
+                                "height": rep["height"],
+                                "elements": len(rep.get("elements") or []),
+                                "ocr_lines": len(rep.get("ocr_lines") or []),
+                                "ms": rep.get("ms", 0),
+                            }
+                            layer_log.append(info_img)
+                            emit(dict(info_img, type="layer"))
+                if snap_blocks:
+                    recall.append({
+                        "role": "system",
+                        "content": (
+                            "S3 Playwright-Style Visual & UI Inspection of attached image(s) "
+                            "(use these exact OCR texts, [e1..eN] bounding boxes, dimensions, and hex colors together with what you see in the image):\n"
+                            + "\n\n".join(snap_blocks)
+                        ),
+                    })
+            except Exception:
+                pass
         if has_new_visual and not_comparing_prior:
             past_msgs = []
             user_text = (user_text or "").rstrip() + "\n(Answer strictly from the image/video attached to this message.)"

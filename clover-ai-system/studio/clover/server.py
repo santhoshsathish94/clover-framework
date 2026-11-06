@@ -918,12 +918,125 @@ def _git_with_vscode(action, args):
         S.repo.protect_agents()
 
 
+def _github_api(method: str, api_path: str, token: str, payload: dict | None = None) -> tuple[int, dict]:
+    import urllib.error
+    import urllib.request
+    data = json.dumps(payload).encode("utf-8") if payload is not None else None
+    req = urllib.request.Request(
+        f"https://api.github.com{api_path}",
+        data=data,
+        method=method,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "CloverAIStudio/5.0",
+            **({"Content-Type": "application/json"} if data is not None else {}),
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+            return resp.status, (json.loads(raw) if raw.strip() else {})
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace") if exc.fp else ""
+        try:
+            doc = json.loads(raw) if raw.strip() else {}
+        except ValueError:
+            doc = {"message": raw[:200]}
+        return exc.code, doc
+
+
+def _direct_github_sync(token: str, full_repo: str) -> dict:
+    """Sync `S.repo.dir` with `https://github.com/<full_repo>` directly using `token` (via `git` or GitHub Git Data API)."""
+    import workspaces
+    S.repo.flush()
+    notes_cnt = len(list((S.repo.dir / "growth" / "knowledge").glob("*.json")))
+    if S.repo.git:
+        env = workspaces._git_env(token)
+        url = f"https://github.com/{full_repo}.git"
+        S.repo.agents_writable()
+        try:
+            subprocess.run([S.repo.git, "remote", "remove", "origin"], cwd=S.repo.dir, capture_output=True)
+            subprocess.run([S.repo.git, "remote", "add", "origin", url], cwd=S.repo.dir, capture_output=True)
+            f_res = subprocess.run([S.repo.git, "fetch", "origin", "main"], cwd=S.repo.dir, env=env,
+                                   capture_output=True, text=True, timeout=120)
+            merged = False
+            if f_res.returncode == 0:
+                m_res = subprocess.run(
+                    [S.repo.git, "merge", "origin/main", "--allow-unrelated-histories", "-X", "ours", "-m", "Sync memory from GitHub"],
+                    cwd=S.repo.dir, env=env, capture_output=True, text=True, timeout=120,
+                )
+                merged = m_res.returncode == 0 and "Already up to date" not in (m_res.stdout or "")
+            p_res = subprocess.run([S.repo.git, "push", "-u", "origin", "HEAD:main"], cwd=S.repo.dir, env=env,
+                                   capture_output=True, text=True, timeout=120)
+            if p_res.returncode != 0:
+                err = workspaces._redact((p_res.stderr or p_res.stdout or "git push failed").strip(), token)
+                raise RuntimeError(f"GitHub sync push failed: {err}")
+            return {"repo": full_repo, "path": str(S.repo.dir), "notes": notes_cnt, "committed": True, "merged": merged}
+        finally:
+            S.repo.protect_agents()
+    # Pure-REST fallback when git binary is not present (e.g. Android): push tracked files via GitHub Contents API
+    pushed = 0
+    for rel_dir in ("growth/knowledge", "sessions", f"outcomes/{S.repo.device}"):
+        d = S.repo.dir / rel_dir
+        if not d.is_dir():
+            continue
+        for fp in sorted(d.rglob("*")):
+            if not fp.is_file() or fp.suffix == ".tmp" or "_index" in fp.parts:
+                continue
+            rel = fp.relative_to(S.repo.dir).as_posix()
+            st_code, cur = _github_api("GET", f"/repos/{full_repo}/contents/{rel}", token)
+            b64 = base64.b64encode(fp.read_bytes()).decode("ascii")
+            body = {"message": f"Sync {rel}", "content": b64}
+            if st_code == 200 and isinstance(cur, dict) and cur.get("sha"):
+                body["sha"] = cur["sha"]
+            _github_api("PUT", f"/repos/{full_repo}/contents/{rel}", token, body)
+            pushed += 1
+    return {"repo": full_repo, "path": str(S.repo.dir), "notes": notes_cnt, "committed": pushed > 0, "merged": False}
+
+
+def _direct_github_setup(token: str, name: str | None = None) -> dict:
+    repo_name = (name or paths.REPO_NAME).strip()
+    if "/" in repo_name:
+        full_repo = repo_name
+        created = False
+    else:
+        code, user_doc = _github_api("GET", "/user", token)
+        if code != 200 or not user_doc.get("login"):
+            raise RuntimeError("GitHub rejected the token (check that it has 'repo' scope).")
+        login = user_doc["login"]
+        full_repo = f"{login}/{repo_name}"
+        rc, rdoc = _github_api("GET", f"/repos/{full_repo}", token)
+        created = False
+        if rc == 404:
+            cc, cdoc = _github_api(
+                "POST",
+                "/user/repos",
+                token,
+                {"name": repo_name, "private": True, "auto_init": True,
+                 "description": "Clover AI Studio private memory repository"},
+            )
+            if cc not in (200, 201):
+                raise RuntimeError(f"Could not create private repository {full_repo}: {cdoc.get('message') or cc}")
+            created = True
+        elif rc != 200:
+            raise RuntimeError(f"Could not access repository {full_repo}: {rdoc.get('message') or rc}")
+    sync_res = _direct_github_sync(token, full_repo)
+    return dict(sync_res, repo=full_repo, private=True, created=created)
+
+
 def github_setup(name=None):
-    """Creates (after the user confirms in VS Code) or connects the user's private GitHub repository and pushes the
-    records to it."""
-    res = _git_with_vscode("githubSetupRepo", {"name": name or paths.REPO_NAME, "path": str(S.repo.dir)})
+    """Creates or connects the user's private GitHub repository and pushes the records to it (via saved GitHub token
+    or VS Code GitHub sign-in)."""
+    tok = getattr(S.github, "token", None)
+    if tok:
+        res = _direct_github_setup(tok, name=name)
+    else:
+        res = _git_with_vscode("githubSetupRepo", {"name": name or paths.REPO_NAME, "path": str(S.repo.dir)})
     if isinstance(res, dict) and res.get("repo"):
-        github_repo({"repo": res["repo"], "private": bool(res.get("private")), "last_sync": time.strftime("%Y-%m-%d %H:%M")})
+        notes_cnt = len(list((S.repo.dir / "growth" / "knowledge").glob("*.json")))
+        github_repo({"repo": res["repo"], "private": bool(res.get("private", True)),
+                     "notes": notes_cnt, "last_sync": time.strftime("%Y-%m-%d %H:%M")})
         S.repo.reindex()
         layer_kit().store().rebuild_index()
         S.repo.note(f"GitHub: records pushed to {res['repo']} (private)" + (", created" if res.get("created") else ""))
@@ -933,13 +1046,18 @@ def github_setup(name=None):
 def sync_repo():
     st = github_repo()
     if not st or not st.get("repo"):
-        raise ValueError("set up the private GitHub repository first (Settings -> VS Code)")
-    res = _git_with_vscode("githubSyncFolder", {"path": str(S.repo.dir), "repo": st["repo"]})
+        raise ValueError("set up the private GitHub repository first (Settings -> GitHub account)")
+    tok = getattr(S.github, "token", None)
+    if tok:
+        res = _direct_github_sync(tok, st["repo"])
+    else:
+        res = _git_with_vscode("githubSyncFolder", {"path": str(S.repo.dir), "repo": st["repo"]})
     S.repo.reindex()
     layer_kit().store().rebuild_index()
-    github_repo({"last_sync": time.strftime("%Y-%m-%d %H:%M")})
+    notes_cnt = len(list((S.repo.dir / "growth" / "knowledge").glob("*.json")))
+    github_repo({"last_sync": time.strftime("%Y-%m-%d %H:%M"), "notes": notes_cnt})
     S.repo.note(f"GitHub: synced with {st['repo']}" + (" (other devices' records merged)" if (res or {}).get("merged") else ""))
-    return dict(res or {}, repo=st["repo"])
+    return dict(res or {}, repo=st["repo"], notes=notes_cnt)
 
 
 def _tell_phone(text, percent):
@@ -1965,12 +2083,28 @@ class Handler(BaseHTTPRequestHandler):
             if not re.fullmatch(r"[A-Za-z0-9_\-]{1,96}", sid):
                 return self._send(400, {"error": "bad conversation id"})
             return self._send(200, {"id": sid, "messages": S.repo.messages(sid)})
-        if path.startswith("/api/media/file/"):  # pictures Clover made: content-named files in the media folder only
+        if path.startswith("/api/media/file/"):  # pictures Clover made or user attached: content-named files in media folder
             name = path.rsplit("/", 1)[1]
-            if not re.fullmatch(r"[0-9a-f]{32}\.png", name):
+            if not re.fullmatch(r"(?:[0-9a-f]{32}|annotated_[0-9a-f]{16})\.(?:png|jpg|jpeg|gif|webp)", name):
                 return self._send(400, {"error": "bad file name"})
             f = media_dir() / name
-            return self._send(200, f.read_bytes(), "image/png") if f.is_file() else self._send(404, {"error": "not found"})
+            if not f.is_file():
+                return self._send(404, {"error": "not found"})
+            ext = f.suffix.lower().lstrip(".")
+            mime = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg", "gif": "image/gif", "webp": "image/webp"}.get(ext, "image/png")
+            return self._send(200, f.read_bytes(), mime)
+        if path == "/api/media/inspect":
+            from urllib.parse import parse_qs
+            import image_inspector
+            q = {k: v[0] for k, v in parse_qs(query).items()}
+            fname = str(q.get("file") or "").strip()
+            if not re.fullmatch(r"(?:[0-9a-f]{32}|annotated_[0-9a-f]{16})\.(?:png|jpg|jpeg|gif|webp)", fname):
+                return self._send(400, {"error": "valid media file name required"})
+            f = media_dir() / fname
+            if not f.is_file():
+                return self._send(404, {"error": "media file not found"})
+            rep = image_inspector.inspect_image(f, annotate_dir=media_dir())
+            return self._send(200, rep)
         if path == "/api/media":
             files = [p for p in media_dir().iterdir() if p.is_file()]
             return self._send(200, {"path": str(media_dir()), "files": len(files),
@@ -1999,6 +2133,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"job": job})
         if path == "/api/vscode":
             return self._send(200, {"connected": S.vscode.connected(), "repo": github_repo(),
+                                    "github": S.github.describe() if S.github else {"token_set": False},
                                     "local": str(S.repo.dir), "installed": vscode_exe() is not None})
         if path == "/api/turn/events":
             from urllib.parse import parse_qs
@@ -2460,6 +2595,23 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(200, {"candidates": coll.preview_candidates(pers)})
                 except core_sync.CoreSyncError as exc:
                     return self._send(400, {"error": str(exc), "view": dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)})
+            if path == "/api/media/inspect":
+                import image_inspector
+                fname = str(body.get("file") or "").strip()
+                raw_data = str(body.get("data") or "").strip()
+                crop = body.get("crop_bbox") if isinstance(body.get("crop_bbox"), list) and len(body.get("crop_bbox")) == 4 else None
+                if raw_data:
+                    if "," in raw_data and raw_data.startswith("data:"):
+                        raw_data = raw_data.split(",", 1)[1]
+                    saved = save_media([{"kind": "image", "name": body.get("name") or "image.png", "data": raw_data}])
+                    fname = saved[0]["file"]
+                if not re.fullmatch(r"(?:[0-9a-f]{32}|annotated_[0-9a-f]{16})\.(?:png|jpg|jpeg|gif|webp)", fname):
+                    return self._send(400, {"error": "valid media file or image data required"})
+                f = media_dir() / fname
+                if not f.is_file():
+                    return self._send(404, {"error": "media file not found"})
+                rep = image_inspector.inspect_image(f, annotate_dir=media_dir(), crop_bbox=crop)
+                return self._send(200, rep)
             if path == "/api/media/clear":
                 gone = 0
                 for p in media_dir().iterdir():  # only files Clover named (by content): the folder may be the user's
