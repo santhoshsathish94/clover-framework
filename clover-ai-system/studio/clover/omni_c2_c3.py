@@ -477,37 +477,185 @@ class OmniC2C3Runtime:
 
     def plan_turn(self, prompt_text: str, offered_tools: list[str] | None = None, latent_steps: int = 3) -> dict[str, Any]:
         """Execute C2 HybridAgent continuous `<latent>` planning over the prompt tokens (`plan-trunk-0`)."""
+        _, c2_info = self.c2_plan(prompt_text, c1_state=None, offered_tools=offered_tools, latent_steps=latent_steps)
+        return c2_info
+
+    # ---------------- Strict Stage 1: C1 · Inference ONLY ----------------
+
+    def c1_infer(
+        self,
+        raw_inference_text: str,
+        generation_stats: list[dict[str, Any]] | None = None,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Execute strictly C1 (Model Inference representation extraction ONLY).
+        Extracts 2048-d C1 hidden/token representations (`h_valid`) for each window of `raw_inference_text`.
+        Performs zero C2 planning (`HybridLink`) and zero C3 decoding (`Bridges` / `11-Level NCM`).
+        """
         t0 = time.perf_counter()
-        pids = self.tok.encode(prompt_text or "Hello", allow_special=False)[:128]
-        if not pids:
-            pids = [self.tok.bos_token_id]
-        h_seq = self.token_embeddings_2048(pids)
-        h_cur = h_seq.mean(axis=0, keepdims=True)
-        norms = []
-        cos_list = []
-        for _ in range(max(1, int(latent_steps))):
-            r_native = self.forward_hybridlink(h_cur)
-            r_s3 = self.forward_hybridlink_2048(h_cur)
-            denom = float(np.linalg.norm(h_cur) * np.linalg.norm(r_native)) + 1e-8
-            cos_list.append(float(np.sum(h_cur * r_native) / denom))
-            norms.append(float(np.linalg.norm(r_native)))
-            h_cur = h_cur + 0.5 * (r_native + r_s3)
+        raw = str(raw_inference_text or "")
+        lines = raw.splitlines()
+        in_code = False
+        windows: list[dict[str, Any]] = []
+        total_tokens = 0
+        all_active_pids: list[int] = []
+
+        for ln in lines:
+            s = ln.strip()
+            if s.startswith("```"):
+                in_code = not in_code
+                windows.append({"passthrough": True, "raw": ln})
+                continue
+            if in_code or not s or s.startswith("|"):
+                windows.append({"passthrough": True, "raw": ln})
+                continue
+            m_pfx = re.match(r"^(\s*(?:[-*•]|\d+[.)]|#{1,4})\s+)(.+)$", ln)
+            if m_pfx:
+                pfx, body = m_pfx.group(1), m_pfx.group(2)
+                lead_ws = ""
+            else:
+                pfx = ""
+                lead_ws = ln[: len(ln) - len(ln.lstrip())]
+                body = s
+            clean = body.strip()
+            all_pids = self.tok.encode(clean, allow_special=False)
+            if not all_pids:
+                windows.append({"passthrough": True, "raw": ln})
+                continue
+            pids = all_pids[:P_BPE]
+            tail_ids = all_pids[P_BPE:]
+            h_valid = self.token_embeddings_2048(pids)[None, :, :]  # [1, L_val, 2048]
+            total_tokens += len(all_pids)
+            if len(all_active_pids) < P_BPE:
+                need = P_BPE - len(all_active_pids)
+                all_active_pids.extend(pids[:need])
+            windows.append({
+                "passthrough": False,
+                "raw": ln,
+                "prefix": pfx,
+                "lead_ws": lead_ws,
+                "clean": clean,
+                "pids": pids,
+                "tail_ids": tail_ids,
+                "h_valid": h_valid,
+            })
+
+        if not all_active_pids:
+            all_active_pids = self.tok.encode(raw.strip() or "Hello", allow_special=False)[:P_BPE] or [self.tok.bos_token_id]
+        h_primary = self.token_embeddings_2048(all_active_pids)[None, :, :]  # [1, L_prim, 2048]
+
+        tensor_ms = (time.perf_counter() - t0) * 1000.0
+        gen_ms = 0.0
+        gen_tokens = 0
+        for st in generation_stats or ():
+            if isinstance(st, dict):
+                gen_ms += float(st.get("prefill_s") or 0.0) * 1000.0 + float(st.get("decode_s") or 0.0) * 1000.0
+                gen_tokens += int(st.get("new_tokens") or 0)
+        total_ms = round(gen_ms + tensor_ms, 2)
+        n_active = sum(1 for w in windows if not w.get("passthrough"))
+
+        c1_state = {
+            "stage": "c1_inference",
+            "raw_text": raw,
+            "windows": windows,
+            "pids_primary": all_active_pids,
+            "h_primary": h_primary,
+            "tokens": gen_tokens or total_tokens,
+            "ms": total_ms,
+        }
+        c1_info = {
+            "layer": "c1_inference",
+            "model": "LFM3-Omni-2B",
+            "windows": n_active,
+            "tokens": gen_tokens or total_tokens,
+            "ms": total_ms,
+        }
+        return c1_state, c1_info
+
+    # ---------------- Strict Stage 2: C2 · HybridAgent Planning ONLY ----------------
+
+    def c2_plan(
+        self,
+        prompt_text: str,
+        c1_state: dict[str, Any] | None = None,
+        offered_tools: list[str] | None = None,
+        latent_steps: int = 3,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Execute strictly C2 (`HybridAgent` continuous `<latent>` planning on `plan-trunk-0` ONLY).
+        Takes C1's `2048`-d inference state (`c1_state`) and computes `r_valid` (`[1, L_val, 2048]`) via
+        `Lfm3NativeHybridLink(d=2048, bottleneck=512)` + `HybridLink2048(d=2048 -> 2048 -> 2048)`.
+        Performs zero C3 decoding (`Bridges` / `11-Level NCM`).
+        """
+        t0 = time.perf_counter()
+        if c1_state is None or c1_state.get("stage") != "c1_inference":
+            c1_state, _ = self.c1_infer(prompt_text or "Hello")
+
+        with self.lock:
+            h_primary = c1_state["h_primary"]  # [1, L_prim, 2048]
+            h_cur = h_primary.mean(axis=1)     # [1, 2048]
+            norms: list[float] = []
+            cos_list: list[float] = []
+            for _ in range(max(1, int(latent_steps))):
+                r_native = self.forward_hybridlink(h_cur)
+                r_s3 = self.forward_hybridlink_2048(h_cur)
+                denom = float(np.linalg.norm(h_cur) * np.linalg.norm(r_native)) + 1e-8
+                cos_list.append(float(np.sum(h_cur * r_native) / denom))
+                norms.append(float(np.linalg.norm(r_native)))
+                h_cur = h_cur + 0.5 * (r_native + r_s3)
+
+            r_primary = self.forward_hybridlink(h_primary) + self.forward_hybridlink_2048(h_primary)
+            planned_windows: list[dict[str, Any]] = []
+            n_active = 0
+            for w in c1_state.get("windows") or ():
+                if w.get("passthrough"):
+                    planned_windows.append(dict(w))
+                    continue
+                h_valid = w["h_valid"]
+                r_valid = self.forward_hybridlink(h_valid) + self.forward_hybridlink_2048(h_valid)
+                n_active += 1
+                planned_windows.append({
+                    "passthrough": False,
+                    "raw": w["raw"],
+                    "prefix": w["prefix"],
+                    "lead_ws": w["lead_ws"],
+                    "clean": w["clean"],
+                    "pids": w["pids"],
+                    "tail_ids": w["tail_ids"],
+                    "h_valid": h_valid,
+                    "r_valid": r_valid,
+                })
+
         ms = round((time.perf_counter() - t0) * 1000.0, 2)
         if isinstance(offered_tools, str):
             tools_list = [offered_tools] if offered_tools.strip() else []
         else:
             tools_list = list(offered_tools or [])
-        return {
-            "layer": "c2_hybridagent",
-            "module": "HybridLink2048 + Lfm3NativeHybridLink(d=2048, bottleneck=512)",
-            "trunk": "plan-trunk-0",
-            "prompt_tokens": len(pids),
+
+        c2_state = {
+            "stage": "c2_plan",
+            "raw_text": c1_state.get("raw_text") or "",
+            "windows": planned_windows,
+            "pids_primary": c1_state["pids_primary"],
+            "h_primary": h_primary,
+            "r_primary": r_primary,
             "latent_steps": int(latent_steps),
             "latent_norm": round(norms[-1], 4),
             "hybridlink_cos": round(cos_list[-1], 4),
             "planned_tools": tools_list,
             "ms": ms,
         }
+        c2_info = {
+            "layer": "c2_hybridagent",
+            "module": "HybridLink2048 + Lfm3NativeHybridLink(d=2048, bottleneck=512)",
+            "trunk": "plan-trunk-0",
+            "windows": n_active,
+            "prompt_tokens": int(c1_state.get("tokens") or len(c1_state["pids_primary"])),
+            "latent_steps": int(latent_steps),
+            "latent_norm": round(norms[-1], 4),
+            "hybridlink_cos": round(cos_list[-1], 4),
+            "planned_tools": tools_list,
+            "ms": ms,
+        }
+        return c2_state, c2_info
 
     # ---------------- Bridges (`ComboBridge` + `ExpertBridge`) ----------------
 
@@ -723,35 +871,13 @@ class OmniC2C3Runtime:
             return self.tok.decode(valid_p), list(valid_p), True
         return decoded_str, clean_ids, False
 
-    def render_window(self, window_text: str) -> tuple[str, dict[str, Any]]:
-        """Run C2 (`plan-trunk-0`) -> Bridges (`bridge-trunk-0`) -> C3 (`11-level NCM` + `LexicalPointerDecoder`) on one window."""
-        t0 = time.perf_counter()
-        raw = str(window_text or "")
-        lead_ws = raw[: len(raw) - len(raw.lstrip())]
-        clean = raw.strip()
-        if not clean or clean.startswith("```") or clean.startswith("|"):
-            return window_text, {"codes": 0, "levels": 0, "ms": 0.0, "passthrough": True}
-
-        all_pids = self.tok.encode(clean, allow_special=False)
-        if not all_pids:
-            return window_text, {"codes": 0, "levels": 0, "ms": 0.0, "passthrough": True}
-        pids = all_pids[:P_BPE]
-        tail_ids = all_pids[P_BPE:]
-        L_val = len(pids)
-
-        # 1. C1 token embeddings -> C2 HybridAgent (`plan-trunk-0`) -> Bridges (`bridge-trunk-0`)
-        h_valid = self.token_embeddings_2048(pids)[None, :, :]  # [1, L_val, 2048]
-        r_valid = self.forward_hybridlink(h_valid)              # [1, L_val, 2048]
-        z_rh_v = self.forward_combo_bridge(r_valid)             # [1, L_val, 384]
-        z_exp_v = self.forward_expert_bridge(h_valid)           # [1, L_val, 384]
-        z_bpe_v = bf16_rows_to_f32(self.vq_wte_mm, pids)[None, :, :] + z_exp_v
-        z_pref_v = np.concatenate([z_rh_v, z_bpe_v], axis=1)    # [1, 2*L_val, 384]
+    def _run_ncm_multiscale_levels(self, z_pref_v: np.ndarray, target_len: int) -> tuple[np.ndarray, int, int]:
+        """Run C3 12-Layer NextConceptTransformer (`ncm-trunk-0..11` + `ncm-global-0`) + `vqvae-expert-0..10`
+        across the multiscale VQ levels (`[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64]`) to produce `z_hat` (`[1, 64, 384]`)."""
         P_v = z_pref_v.shape[1]
-
-        # 2. C3 12-Layer NextConceptTransformer (`ncm-trunk-0..11` + `ncm-global-0`) + `vqvae-expert-0..10`
         max_lvl = 2
         for li, l_res in enumerate(VQ_LEVELS):
-            if li >= 2 and l_res >= L_val:
+            if li >= 2 and l_res >= target_len:
                 max_lvl = li
                 break
         else:
@@ -795,8 +921,19 @@ class OmniC2C3Runtime:
 
         z_q_last = self.vq_experts[max_lvl]["codebook.weight"][idx_next]
         z_hat, _ = self._vq_next_autoregressive_input(max_lvl, z_hat, z_q_last)
+        return z_hat, codes_emitted, max_lvl + 1
 
-        # 3. C3 3-Layer LexicalPointerDecoder (`ptr-trunk-0..2` + `ptr-global-0`) + `vqvae-trunk-0`
+    def _pointer_decode_from_zhat(
+        self,
+        z_hat: np.ndarray,
+        z_rh_v: np.ndarray,
+        z_bpe_v: np.ndarray,
+        pids: list[int],
+        tail_ids: list[int],
+        clean: str,
+    ) -> tuple[str, bool]:
+        """Run C3 3-Layer LexicalPointerDecoder (`ptr-trunk-0..2` + `ptr-global-0`) + `vqvae-trunk-0` on one planned window."""
+        L_val = len(pids)
         dpg = self.ptr_global
         t_pos = dpg["tgt_pos.weight"][:L_val][None, :, :]
         p_pos = dpg["plan_pos.weight"][:L_val][None, :, :]
@@ -845,59 +982,98 @@ class OmniC2C3Runtime:
         rendered_first, _, used_fallback = self._decode_window_aligned(sub_logits, allowed_ids, pids)
         if tail_ids:
             rendered_first = (rendered_first + self.tok.decode(tail_ids)).strip()
+        return rendered_first, used_fallback
 
-        ms = round((time.perf_counter() - t0) * 1000.0, 2)
-        return lead_ws + rendered_first, {
-            "codes": codes_emitted,
-            "levels": max_lvl + 1,
-            "used_fallback": used_fallback,
-            "ms": ms,
-        }
+    # ---------------- Strict Stage 3: C3 · Bridges + 11-Level NCM Decoding ONLY ----------------
 
-    def render_reply(self, reply: str, windows: list[str] | None = None) -> tuple[str, dict[str, Any]]:
-        """Render a full reply through the unified C2 HybridAgent -> Bridges -> C3 11-Level NCM pipeline."""
+    def c3_decode(self, c2_state: dict[str, Any], on_window: Any = None) -> tuple[str, dict[str, Any]]:
+        """Execute strictly C3 (Bridges + 11-Level VQ-VAE + 12-Layer NextConceptTransformer + 3-Layer LexicalPointerDecoder).
+        Requires `c2_state` produced by `c2_plan` (which already contains `h_valid` from C1 and `r_valid` from C2).
+        Never calls C1 (`token_embeddings_2048`) or C2 (`forward_hybridlink`).
+        """
+        if not isinstance(c2_state, dict) or c2_state.get("stage") != "c2_plan":
+            raise ValueError("c3_decode requires a c2_state dict with stage='c2_plan' from c2_plan()")
         t0 = time.perf_counter()
-        if not (reply or "").strip():
-            return reply, {"layer": "ncm", "windows": 0, "codes": 0, "s": 0.0}
+        raw_text = str(c2_state.get("raw_text") or "")
+        if not raw_text.strip():
+            return raw_text, {"layer": "ncm", "windows": 0, "codes": 0, "s": 0.0}
+
         with self.lock:
-            lines = (reply or "").splitlines()
-            out_lines = []
-            in_code = False
+            pids_prim = c2_state["pids_primary"]
+            h_prim = c2_state["h_primary"]
+            r_prim = c2_state["r_primary"]
+
+            # 1. Bridges (`bridge-trunk-0`) on primary plan trajectory
+            z_rh_p = self.forward_combo_bridge(r_prim)
+            z_exp_p = self.forward_expert_bridge(h_prim)
+            z_bpe_p = bf16_rows_to_f32(self.vq_wte_mm, pids_prim)[None, :, :] + z_exp_p
+            z_pref_p = np.concatenate([z_rh_p, z_bpe_p], axis=1)
+
+            # 2. C3 12-Layer NextConceptTransformer + 11-Level Multiscale VQ-VAE
+            z_hat, codes_emitted, levels_run = self._run_ncm_multiscale_levels(z_pref_p, len(pids_prim))
+
+            # 3. C3 Bridges + 3-Layer LexicalPointerDecoder + VQ-VAE Decoder across each planned window
+            out_lines: list[str] = []
             n_win = 0
-            total_codes = 0
-            max_levels = 0
-            for ln in lines:
-                s = ln.strip()
-                if s.startswith("```"):
-                    in_code = not in_code
-                    out_lines.append(ln)
+            for w in c2_state.get("windows") or ():
+                if w.get("passthrough"):
+                    line_out = str(w.get("raw") or "")
+                    out_lines.append(line_out)
+                    if on_window is not None:
+                        on_window(line_out)
                     continue
-                if in_code or not s or s.startswith("|"):
-                    out_lines.append(ln)
-                    continue
-                # Preserve markdown bullet/numbered prefix while rendering the proposition body through C2->Bridges->C3
-                m_pfx = re.match(r"^(\s*(?:[-*•]|\d+[.)]|#{1,4})\s+)(.+)$", ln)
-                if m_pfx:
-                    pfx, body = m_pfx.group(1), m_pfx.group(2)
-                    r_body, w_meta = self.render_window(body)
-                    out_lines.append(pfx + r_body.lstrip())
+                pids = w["pids"]
+                tail_ids = w["tail_ids"]
+                h_valid = w["h_valid"]
+                r_valid = w["r_valid"]
+                z_rh_v = self.forward_combo_bridge(r_valid)
+                z_exp_v = self.forward_expert_bridge(h_valid)
+                z_bpe_v = bf16_rows_to_f32(self.vq_wte_mm, pids)[None, :, :] + z_exp_v
+                rendered_body, _ = self._pointer_decode_from_zhat(z_hat, z_rh_v, z_bpe_v, pids, tail_ids, w["clean"])
+                if w.get("prefix"):
+                    line_out = str(w["prefix"]) + rendered_body.lstrip()
                 else:
-                    r_ln, w_meta = self.render_window(ln)
-                    out_lines.append(r_ln)
-                if not w_meta.get("passthrough"):
-                    n_win += 1
-                    total_codes += int(w_meta.get("codes") or 0)
-                    max_levels = max(max_levels, int(w_meta.get("levels") or 0))
+                    line_out = str(w.get("lead_ws") or "") + rendered_body
+                out_lines.append(line_out)
+                n_win += 1
+                if on_window is not None:
+                    on_window(line_out)
+
             elapsed_s = round(time.perf_counter() - t0, 2)
             return "\n".join(out_lines), {
                 "layer": "ncm",
                 "windows": n_win,
-                "codes": total_codes,
-                "levels": max_levels or 11,
+                "codes": codes_emitted,
+                "levels": levels_run or 11,
                 "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
                 "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
                 "s": elapsed_s,
             }
+
+    def render_window(self, window_text: str) -> tuple[str, dict[str, Any]]:
+        """Standalone helper for single-window tests: runs strict C1 -> C2 -> C3 in order."""
+        t0 = time.perf_counter()
+        raw = str(window_text or "")
+        clean = raw.strip()
+        if not clean or clean.startswith("```") or clean.startswith("|"):
+            return window_text, {"codes": 0, "levels": 0, "ms": 0.0, "passthrough": True}
+        c1_state, _ = self.c1_infer(window_text)
+        c2_state, _ = self.c2_plan(window_text, c1_state=c1_state)
+        decoded, meta = self.c3_decode(c2_state)
+        return decoded, {
+            "codes": int(meta.get("codes") or 0),
+            "levels": int(meta.get("levels") or 0),
+            "used_fallback": False,
+            "ms": round((time.perf_counter() - t0) * 1000.0, 2),
+        }
+
+    def render_reply(self, reply: str, windows: list[str] | None = None) -> tuple[str, dict[str, Any]]:
+        """Standalone helper: runs strict C1 (infer) -> C2 (plan) -> C3 (decode) pipeline."""
+        if not (reply or "").strip():
+            return reply, {"layer": "ncm", "windows": 0, "codes": 0, "s": 0.0}
+        c1_state, _ = self.c1_infer(reply)
+        c2_state, _ = self.c2_plan(reply, c1_state=c1_state)
+        return self.c3_decode(c2_state)
 
 
 _RUNTIMES: dict[str, OmniC2C3Runtime] = {}

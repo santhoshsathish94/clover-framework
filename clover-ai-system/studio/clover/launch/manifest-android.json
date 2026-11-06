@@ -42,7 +42,7 @@
      "repo": "Santhoshsathish94/clover-ai-studio", "revision": "5f886993d7259b0179294c36761f94e802ea8188",
      "prefix": "liquid-lfm3/", "dest": "data/omni/precomputed",
      "include_prefixes": ["hybridagent/plan-trunk-0/", "bridges/bridge-trunk-0/", "ncm/", "trunks/tokenizer.json"],
-     "exclude_suffixes": [".pt"],
-     "bytes": 698211041}
+     "exclude_suffixes": [".pt", ".4bit.bin", ".py", ".yaml"],
+     "bytes": 586000000}
   ]
 }

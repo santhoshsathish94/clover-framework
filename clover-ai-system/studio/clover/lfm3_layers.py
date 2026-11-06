@@ -35,10 +35,12 @@ RECALL_CUE = re.compile(
     r"earlier|last\s+time|previous(?:ly)?|before|remember|we\s+(?:talked|discussed|spoke|decided)|"
     r"what\s+did\s+i|where\s+do\s+i|who\s+is\s+my)\b", re.I
 )
+DEVICE_PHRASE = re.compile(r"\b(?:on|in|with|from|to|for)\s+my\s+(?:phone|mobile|laptop|computer|pc|device|screen)\b", re.I)
 
 
 def needs_recall(text):
-    return bool(RECALL_CUE.search(text or ""))
+    cleaned = DEVICE_PHRASE.sub(" ", text or "")
+    return bool(RECALL_CUE.search(cleaned))
 STOP = set("the a an and or of to in on for with is are was were be been it this that these those my your our their "
            "i you we they he she me us them what which who when where why how about from at by as into than then".split())
 # words that say nothing about a topic: "much" alone pulled a lesson on pens into "how much free disk space" (2026-11-01)
@@ -144,11 +146,18 @@ class LayerKit:
         """Earlier messages for the current turn (Layer 2); history_turns: this chat's turns already in the prompt."""
         if self.recall is None or self.records is None or self.records.current is None:
             return None, None
-        if self.cl.is_short_greeting_or_ack(q):
+        if self._skip(q):
             return None, None
         cued = needs_recall(q)
         if not getattr(self.recall, "want_recall", False) and not cued:
             return None, None
+        if not cued:
+            if self.meaning is not None and (getattr(self.meaning, "retry", None) or getattr(self.meaning, "asked", None)):
+                return None, None
+            fmt_words = {"shorter", "longer", "brief", "briefly", "concise", "sentence", "bullet", "paragraph",
+                         "detail", "detailed", "simple", "plain", "word", "line", "again", "rewrite", "summarize", "please"}
+            if not (topic_terms(q) - fmt_words):
+                return None, None
         sid, n = self.records.current
         try:
             return self.recall.recall(sid, n, q, history_turns, force=cued)
@@ -158,6 +167,8 @@ class LayerKit:
     @property
     def cl(self):
         if self._cl is None:
+            import stand_ins
+            stand_ins.install(Path(__file__).resolve().parent)
             import clover_loop
             self._cl = clover_loop
         return self._cl
@@ -195,6 +206,8 @@ class LayerKit:
 
     def _food_notes(self, q, st):
         """The user's diet and allergy notes for a question about food (they share no word with it)."""
+        if re.search(r"\b(?:bill|tip|gst|tax|split|pays?|cost)\b", q or "", re.I):
+            return None
         if not (self.meaning.diet if self.meaning is not None else FOOD_ASK.search(q or "") and not NOT_FOR_ME.search(q or "")):
             return None
         ids = [e.id for e in st.entries.values() if "learning" not in e.tags and e.status == "active"
@@ -399,22 +412,56 @@ class LayerKit:
                 "diagnostics": [d.format_concise() for d in v.diagnostics[:3]]}
         return (None if v.ok else v.format_feedback()), info
 
-    def c2_plan(self, q, offered_tools=None):
-        """Run C2 HybridAgent continuous `<latent>` planning (`plan-trunk-0` / `HybridLink2048` + `Lfm3NativeHybridLink`)."""
+    def c1_infer(self, raw_reply, stats=None):
+        """Strictly C1: extract 2048-d C1 inference representations (`c1_state`, `c1_info`) without planning or decoding."""
         import omni_c2_c3
         rt = omni_c2_c3.for_base(self.base_dir)
         if rt is not None:
-            return rt.plan_turn(q, offered_tools=list(offered_tools or []))
-        return {
+            return rt.c1_infer(raw_reply, generation_stats=stats)
+        windows = answer_windows(raw_reply)
+        gen_ms = sum((float(s.get("prefill_s") or 0) + float(s.get("decode_s") or 0)) * 1000.0 for s in (stats or ()) if isinstance(s, dict))
+        gen_tok = sum(int(s.get("new_tokens") or 0) for s in (stats or ()) if isinstance(s, dict))
+        state = {"stage": "c1_inference", "raw_text": str(raw_reply or ""), "windows": windows, "tokens": gen_tok, "ms": round(gen_ms, 2)}
+        info = {"layer": "c1_inference", "model": "LFM3-Omni-2B", "windows": len(windows), "tokens": gen_tok, "ms": round(gen_ms, 2)}
+        return state, info
+
+    def c2_plan_state(self, q, c1_state=None, offered_tools=None):
+        """Strictly C2: run HybridAgent continuous `<latent>` planning (`plan-trunk-0`) on `c1_state` -> (`c2_state`, `c2_info`)."""
+        import omni_c2_c3
+        rt = omni_c2_c3.for_base(self.base_dir)
+        if rt is not None:
+            return rt.c2_plan(q, c1_state=c1_state, offered_tools=list(offered_tools or []))
+        raw = str((c1_state or {}).get("raw_text") or "")
+        windows = answer_windows(raw)
+        info = {
             "layer": "c2_hybridagent",
             "module": "HybridLink2048 + Lfm3NativeHybridLink(d=2048, bottleneck=512)",
             "trunk": "plan-trunk-0",
+            "windows": len(windows),
             "latent_steps": 3,
             "planned_tools": list(offered_tools or []),
             "ms": 0.1,
         }
+        state = {"stage": "c2_plan", "raw_text": raw, "windows": windows}
+        return state, info
+
+    def c2_plan(self, q, offered_tools=None, c1_state=None):
+        """Run C2 HybridAgent continuous `<latent>` planning (`plan-trunk-0` / `HybridLink2048` + `Lfm3NativeHybridLink`)."""
+        _, info = self.c2_plan_state(q, c1_state=c1_state, offered_tools=offered_tools)
+        return info
+
+    def c3_decode(self, c2_state, on_window=None):
+        """Strictly C3: decode `c2_state` through Bridges + 11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder."""
+        import omni_c2_c3
+        rt = omni_c2_c3.for_base(self.base_dir)
+        if rt is not None and isinstance(c2_state, dict) and c2_state.get("stage") == "c2_plan" and "pids_primary" in c2_state:
+            return rt.c3_decode(c2_state, on_window=on_window)
+        raw = str(c2_state.get("raw_text") if isinstance(c2_state, dict) else (c2_state or ""))
+        return self.ncm_render(raw)
 
     def ncm_render(self, reply):
+        if isinstance(reply, dict) and reply.get("stage") == "c2_plan":
+            return self.c3_decode(reply)
         windows = answer_windows(reply)
         if not windows:
             return reply, {"layer": "ncm", "windows": 0}

@@ -46,7 +46,8 @@ himself his how i if in into is it its itself just me more most my myself no nor
 ours ourselves out over own same she should so some such than that the their theirs them themselves then there these they
 this those through to too under until up very was we were what when where which while who whom why will with would you
 your yours yourself yourselves user assistant also could may might must shall like get got one two us let s t don ll re
-ve m d im""".split())
+ve m d im please tell explain sentence sentences short shorter brief briefly concise search web use using python
+calculate compute help phone laptop computer device quick suggest""".split())
 
 
 def toks(text):
@@ -148,6 +149,98 @@ class SubwordHashEmbedder:
         return out
 
 
+class NumpyBgeEmbedder:
+    """Pure-NumPy 12-layer BERT (`bge-small-en-v1.5`) embedder loaded directly from `model.safetensors` and `vocab.txt`
+    for Android (`Chaquopy`) and Python environments without `torch` / `transformers`."""
+
+    def __init__(self, model_dir):
+        import struct
+        d = Path(model_dir)
+        with open(d / "model.safetensors", "rb") as f:
+            n = struct.unpack("<Q", f.read(8))[0]
+            hdr = json.loads(f.read(n))
+            buf = f.read()
+        self.w = {}
+        for k, info in hdr.items():
+            if k == "__metadata__":
+                continue
+            s, e = info["data_offsets"]
+            dt = np.float32 if info["dtype"] == "F32" else np.int64
+            self.w[k] = np.frombuffer(buf, dtype=dt, count=(e - s) // np.dtype(dt).itemsize, offset=s).reshape(info["shape"])
+        self.vocab = {ln.strip(): i for i, ln in enumerate((d / "vocab.txt").read_text(encoding="utf-8").splitlines())}
+        self.unk_id = self.vocab.get("[UNK]", 100)
+        self.cls_id = self.vocab.get("[CLS]", 101)
+        self.sep_id = self.vocab.get("[SEP]", 102)
+        self._tok_rx = re.compile(r"[a-z0-9]+|[^\s\w]")
+
+    def _tokenize(self, text, max_len=256):
+        ids = [self.cls_id]
+        for tok in self._tok_rx.findall(str(text or "").lower()):
+            if tok in self.vocab:
+                ids.append(self.vocab[tok])
+            else:
+                start = 0
+                sub = []
+                while start < len(tok):
+                    end = len(tok)
+                    cur = None
+                    while start < end:
+                        cand = tok[start:end] if start == 0 else "##" + tok[start:end]
+                        if cand in self.vocab:
+                            cur = self.vocab[cand]
+                            break
+                        end -= 1
+                    if cur is None:
+                        sub = [self.unk_id]
+                        break
+                    sub.append(cur)
+                    start = end
+                ids.extend(sub)
+            if len(ids) >= max_len - 1:
+                break
+        return ids[:max_len - 1] + [self.sep_id]
+
+    @staticmethod
+    def _ln(x, gw, gb):
+        m = x.mean(axis=-1, keepdims=True)
+        v = ((x - m) ** 2).mean(axis=-1, keepdims=True)
+        return (x - m) / np.sqrt(v + 1e-12) * gw + gb
+
+    def _encode_one(self, text, max_len=256):
+        w = self.w
+        ids = np.array(self._tokenize(text, max_len=max_len), dtype=np.int64)
+        L = len(ids)
+        x = (
+            w["embeddings.word_embeddings.weight"][ids]
+            + w["embeddings.position_embeddings.weight"][:L]
+            + w["embeddings.token_type_embeddings.weight"][0]
+        )
+        x = self._ln(x, w["embeddings.LayerNorm.weight"], w["embeddings.LayerNorm.bias"])
+        for i in range(12):
+            p = f"encoder.layer.{i}."
+            q = (x @ w[p + "attention.self.query.weight"].T + w[p + "attention.self.query.bias"]).reshape(L, 12, 32).transpose(1, 0, 2)
+            k = (x @ w[p + "attention.self.key.weight"].T + w[p + "attention.self.key.bias"]).reshape(L, 12, 32).transpose(1, 0, 2)
+            v = (x @ w[p + "attention.self.value.weight"].T + w[p + "attention.self.value.bias"]).reshape(L, 12, 32).transpose(1, 0, 2)
+            att = (q @ k.transpose(0, 2, 1)) / math.sqrt(32.0)
+            att = np.exp(att - att.max(axis=-1, keepdims=True))
+            att /= att.sum(axis=-1, keepdims=True)
+            ao = (att @ v).transpose(1, 0, 2).reshape(L, 384)
+            ao = ao @ w[p + "attention.output.dense.weight"].T + w[p + "attention.output.dense.bias"]
+            x = self._ln(x + ao, w[p + "attention.output.LayerNorm.weight"], w[p + "attention.output.LayerNorm.bias"])
+            inter = x @ w[p + "intermediate.dense.weight"].T + w[p + "intermediate.dense.bias"]
+            inter = 0.5 * inter * (1.0 + np.tanh(math.sqrt(2.0 / math.pi) * (inter + 0.044715 * (inter ** 3))))
+            mo = inter @ w[p + "output.dense.weight"].T + w[p + "output.dense.bias"]
+            x = self._ln(x + mo, w[p + "output.LayerNorm.weight"], w[p + "output.LayerNorm.bias"])
+        cls = x[0].astype(np.float32)
+        return cls / (float(np.linalg.norm(cls)) + 1e-12)
+
+    def encode(self, texts, query=False, bs=32, max_len=256):
+        if not texts:
+            return np.zeros((0, 384), dtype=np.float32)
+        pre = QUERY_PREFIX if query else ""
+        return np.stack([self._encode_one(pre + t, max_len=max_len) for t in texts])
+
+
 class Embedder:
     """exp_a.Embedder for bge-small-en-v1.5 (CLS pooling, normalized, fp32 on the CPU), from a local folder."""
 
@@ -213,26 +306,35 @@ class MemoryIndex:
         if not (self.model_dir / "model.safetensors").is_file():
             if paths.ANDROID or paths.WEB:
                 self.emb = SubwordHashEmbedder()
-                self._load_cache()
                 self.state = "ready"
                 return
             self.state = "needs the embedder: run Clover AI Studio setup again"
             return
+        was_hash = isinstance(self.emb, SubwordHashEmbedder)
         self.state = "loading"
         try:
             self.emb = Embedder(self.model_dir)
-            self._load_cache()
-            self.state = "ready"
-        except Exception as exc:  # fallback to SubwordHashEmbedder when torch/transformers is unavailable
-            self.emb = SubwordHashEmbedder()
+            if was_hash:
+                self.vec.clear()
             self._load_cache()
             self.state, self.error = "ready", None
+        except Exception:
+            try:
+                self.emb = NumpyBgeEmbedder(self.model_dir)
+                if was_hash:
+                    self.vec.clear()
+                self._load_cache()
+                self.state, self.error = "ready", None
+            except Exception:
+                self.emb = SubwordHashEmbedder()
+                self.state, self.error = "ready", None
 
     def _run(self):
         while True:
             try:
-                if self.want_recall and self.emb is None and self.state != "error":
-                    self._load_embedder()
+                if self.want_recall and self.state != "error":
+                    if self.emb is None or (isinstance(self.emb, SubwordHashEmbedder) and (self.model_dir / "model.safetensors").is_file()):
+                        self._load_embedder()
                 self.refresh()
                 self.write_notes()
             except Exception as exc:
@@ -350,7 +452,7 @@ class MemoryIndex:
             cos_txt = e @ qv
             best_cos = float(cos_txt.max()) if len(cos_txt) else 0.0
             best_bm25 = float(bm25_txt.max()) if len(bm25_txt) else 0.0
-            if not force and (best_bm25 < 2.5 or best_cos < 0.62):
+            if not force and isinstance(self.emb, (Embedder, NumpyBgeEmbedder, SubwordHashEmbedder)) and best_bm25 < 1.2 and best_cos < 0.62:
                 return None, {"layer": "recall", "refs": [], "chats": 0, "candidates": len(cands),
                               "best_cosine": round(best_cos, 4), "ms": round((time.perf_counter() - t0) * 1000, 1)}
             lists = [bm25_txt, cos_txt]

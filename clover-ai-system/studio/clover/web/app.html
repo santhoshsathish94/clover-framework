@@ -2767,7 +2767,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     var lastSeq = 0;
     function finishRunningSteps() {
-      ['queue', 'understand', 'plan', 'review', 'draft', 'synth'].forEach(function (k) {
+      ['queue', 'understand', 'plan', 'review', 'draft', 'synth', 'layer_c1', 'layer_c2', 'layer_c3'].forEach(function (k) {
         if (stepMap[k] && stepMap[k].data.state === 'run') {
           stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
         }
@@ -2824,10 +2824,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         } else if (ev.layer === 'records' && (ev.parts || []).length) {
           upsertStep('layer_records', { icon: 'database', state: 'ok', name: 'Records (S1)',
             detail: 'Checked ' + ev.parts.join(', '), badge: '\u2713 Checked' });
+        } else if (ev.layer === 'c1_inference') {
+          upsertStep('layer_c1', { icon: 'model', state: 'ok', name: 'C1 Inference (' + (ev.model || 'LFM3-Omni-2B') + ')',
+            detail: (ev.tokens ? ev.tokens + ' tokens' : '24-layer inference') + (ev.windows ? ' \u00b7 ' + ev.windows + (ev.windows === 1 ? ' window' : ' windows') : ''),
+            badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(1) + 's' : '') });
         } else if (ev.layer === 'c2_hybridagent') {
           upsertStep('layer_c2', { icon: 'models', state: 'ok', name: 'C2 Plan (HybridAgent)',
             detail: (ev.module || 'HybridLink') + ' \u00b7 ' + (ev.latent_steps || 3) + ' latent steps' + (ev.hybridlink_cos ? ' \u00b7 cos ' + ev.hybridlink_cos : ''),
-            badge: '\u2713 Planned' });
+            badge: '\u2713 Planned' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
         } else if (ev.layer === 'ncm') {
           upsertStep('layer_c3', { icon: 'spark', state: 'ok', name: 'C3 Decode (Bridges + 11L NCM)',
             detail: (ev.bridges || 'ComboBridge + ExpertBridge') + (ev.codes ? ' \u2192 ' + ev.codes + ' VQ codes' : '') + ' (' + (ev.windows || 1) + ' win)',
@@ -2876,10 +2880,32 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           upsertStep('draft', { icon: 'models', state: 'run', name: 'Verifying facts & tools',
             detail: 'Checking local tools & context before ' + (ev.model || 'synthesis'), badge: 'Checking\u2026' });
           setStage('verifying facts & tools');
+        } else if (ev.stage === 'c1_inference') {
+          upsertStep('layer_c1', { icon: 'model', state: 'run', name: 'C1 Inference (' + (ev.model || 'LFM3-Omni-2B') + ')',
+            detail: 'Running 24-layer model inference (no direct decoding)\u2026', badge: 'Inferring\u2026' });
+          setStage('C1 inference \u00b7 ' + (ev.model || 'LFM3-Omni-2B'));
+        } else if (ev.stage === 'c1_done') {
+          if (stepMap.layer_c1 && stepMap.layer_c1.data.state === 'run') {
+            stepMap.layer_c1.update({ state: 'ok', badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(1) + 's' : '') });
+          }
+        } else if (ev.stage === 'c2_plan') {
+          if (stepMap.layer_c1 && stepMap.layer_c1.data.state === 'run') {
+            stepMap.layer_c1.update({ state: 'ok', badge: '\u2713 Inferred' });
+          }
+          upsertStep('layer_c2', { icon: 'models', state: 'run', name: 'C2 Plan (HybridAgent)',
+            detail: 'Running HybridLink2048 + Lfm3NativeHybridLink continuous latent planning\u2026', badge: 'Planning\u2026' });
+          setStage('planning with C2 HybridAgent');
+        } else if (ev.stage === 'c2_done') {
+          if (stepMap.layer_c2 && stepMap.layer_c2.data.state === 'run') {
+            stepMap.layer_c2.update({ state: 'ok', badge: '\u2713 Planned' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
+          }
         } else if (ev.stage === 'ncm_decode') {
+          if (stepMap.layer_c2 && stepMap.layer_c2.data.state === 'run') {
+            stepMap.layer_c2.update({ state: 'ok', badge: '\u2713 Planned' });
+          }
           upsertStep('layer_c3', { icon: 'spark', state: 'run', name: 'C3 Decode (Bridges + 11L NCM)',
             detail: 'Running ComboBridge + ExpertBridge \u2192 11-level VQ-VAE & NextConceptTransformer\u2026', badge: 'Decoding\u2026' });
-          setStage('decoding with 11-level NCM');
+          setStage('decoding with C3 (11-level NCM)');
         } else if (ev.stage === 'ncm_done') {
           if (stepMap.layer_c3 && stepMap.layer_c3.data.state === 'run') {
             stepMap.layer_c3.update({ state: 'ok', badge: '\u2713 Decoded' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(1) + 's' : '') });
@@ -3069,6 +3095,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       else if (l.layer === 'ontology') out.push('S2 knowledge graph');
       else if (l.layer === 'ontology_grounding' && l.changed) out.push('S2 grounding fix');
       else if (l.layer === 'compiler' && l.checked) out.push(l.ok ? 'S3 code checked' : 'S3 code issue');
+      else if (l.layer === 'c1_inference') out.push('C1 Inference');
       else if (l.layer === 'c2_hybridagent') out.push('C2 HybridAgent');
       else if (l.layer === 'ncm' && l.windows) out.push('C3 11L NCM');
       else if (l.layer === 'workspace') out.push('workspace ' + l.workspace);

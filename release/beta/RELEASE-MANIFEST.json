@@ -46,15 +46,14 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 73918641,
-        "sha256": "877612b52f0c37e550513b7fcd83fe527cbeb84aee98f486b8095693963b884f"
+        "size_bytes": 73923953,
+        "sha256": "a801bae9adc75ac582070be0a75ebf83e75e783af37ac077b4c53b17739c3edf"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
-        "mirror": "download/mobile/CloverAIStudio.apk",
         "type": "apk",
-        "size_bytes": 74997803,
-        "sha256": "f490f1d12653153c21ce77b494ada5046e0b30a625c49db60a6ca250617070a4"
+        "size_bytes": 75003108,
+        "sha256": "ca74484be0a944cc7275cfeb8e93736128ca3d7be5028e5fb1aea982bb50574a"
       }
     ],
     "verification": {
@@ -82,18 +81,28 @@
     },
     "artifacts": [
       {
-        "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
-        "mirror": "download/laptop/CloverAIStudio-Setup.exe",
-        "type": "exe",
-        "size_bytes": 2630104,
-        "sha256": "38faa0d3cd49a46ee1c63196bfd24dcc95ab3f20efd7708795cbebc10f859079"
+        "file": "release/beta/windows/clover-ai-studio-beta.msixupload",
+        "type": "msixupload",
+        "size_bytes": 5079423,
+        "sha256": "a92953ff77c1c8a7540932f762ac16ba5cfc69edfe7651033bf6cd9815309a98"
       },
       {
-        "file": "release/beta/windows/CloverFramework-CodeSign.cer",
-        "mirror": "download/laptop/CloverFramework-CodeSign.cer",
-        "type": "cer",
-        "size_bytes": 832,
-        "sha256": "9365ec5d455b0ef8179ccf1c061cf481c86dad234b9f3dc62244e487c659072d"
+        "file": "release/beta/windows/SanthoshNarayanan.CloverAIStudio_5.0.0.0_x64.msix",
+        "type": "msix",
+        "size_bytes": 5128537,
+        "sha256": "3d9f409adaa719f75503a31ae19b474853a5571751eeb4b86bad1208fef5572d"
+      },
+      {
+        "file": "release/beta/windows/clover-ai-studio-beta.msix",
+        "type": "msix",
+        "size_bytes": 5128537,
+        "sha256": "3d9f409adaa719f75503a31ae19b474853a5571751eeb4b86bad1208fef5572d"
+      },
+      {
+        "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
+        "type": "exe",
+        "size_bytes": 2634712,
+        "sha256": "1a7a847962a9a103e2dc7f66f71390ece9138dda23210753771482085e6d652a"
       }
     ],
     "verification": {

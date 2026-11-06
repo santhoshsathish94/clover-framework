@@ -344,7 +344,8 @@ class OmniNative(N.LFM3Native):
 
     # ---------------- generation ----------------
     def _chat(self, msgs, schemas, max_new, by_name, on_delta=None, cancel=None, seed=0, tool_choice=None, on_plan=None):
-        """One assistant message through /v1/chat/completions -> (content, calls, stats)."""
+        """One C1 inference pass through /v1/chat/completions -> (content, calls, stats).
+        C1 is strictly for inference only; C2 plans and C3 (11-Level NCM) decodes the final answer."""
         body = dict(GREEDY, messages=msgs, max_tokens=int(max_new), seed=int(seed), cache_prompt=True)
         if schemas:
             body["tools"] = schemas
@@ -355,7 +356,7 @@ class OmniNative(N.LFM3Native):
         t0 = time.perf_counter()
         t_first = None
         looped, checked, cut = False, 0, None
-        self.stage = {"name": "planning" if tool_choice else "reading", "since": time.time()}
+        self.stage = {"name": "planning" if tool_choice else "C1 inference", "since": time.time()}
         stream = self.gpu.chat_stream(body, cancel)
         try:
             for ev in stream:
@@ -368,7 +369,7 @@ class OmniNative(N.LFM3Native):
                     if d.get("content") or d.get("tool_calls"):
                         if t_first is None:
                             t_first = time.perf_counter()
-                            self.stage = {"name": "planning tool call" if (tool_choice or d.get("tool_calls")) else "writing",
+                            self.stage = {"name": "planning tool call" if (tool_choice or d.get("tool_calls")) else "C1 inference",
                                           "since": time.time()}
                     if d.get("content"):
                         content += d["content"]
@@ -381,6 +382,9 @@ class OmniNative(N.LFM3Native):
                                     on_plan(tname)
                         if on_delta:
                             on_delta(d["content"], content)
+                        if "</tool_call>" in content:
+                            finish = "tool_calls"
+                            break
                         if len(content) - checked >= 200:
                             checked = len(content)
                             looped = looping(content)
@@ -397,6 +401,8 @@ class OmniNative(N.LFM3Native):
                             if on_plan:
                                 on_plan(slot["name"])
                     finish = ch.get("finish_reason") or finish
+                if finish == "tool_calls" and "</tool_call>" in content:
+                    break
                 if looped:  # closing the stream stops llama-server; one copy of the repeated text is kept
                     tail = content[-LOOP_TAIL:]
                     content, finish = content[:content.find(tail) + LOOP_TAIL], "stop"
@@ -501,10 +507,6 @@ class OmniNative(N.LFM3Native):
         if meaning is not None and getattr(meaning, "guidance", ""):
             # the user's preferred form of answer (personal.py): fixed wording, no user text
             recall.append({"role": "system", "content": meaning.guidance})
-        if kit is not None and hasattr(kit, "c2_plan"):
-            c2_info = kit.c2_plan(query, offered_tools=only_tools if only_tools is not None else [t["function"]["name"] for t in schemas[:5]])
-            layer_log.append(c2_info)
-            emit(dict(c2_info, type="layer"))
         sys_txt = system or self.system_prompt(bool(schemas), only_tools)
         keep_last_media = bool(meaning is not None and getattr(meaning, "seen", ()) and not media)
         has_new_visual = any(m.get("kind") in ("image", "video") for m in media or () if isinstance(m, dict))
@@ -519,7 +521,7 @@ class OmniNative(N.LFM3Native):
         rounds, final, stats_all = [], "", []
         done_calls = {}  # (name, args) -> first result: the Omni repeated identical searches 3 times in a test
 
-        def delta_cb(round_no, kind="answer"):
+        def delta_cb(round_no, kind="thinking"):
             shown = {"n": 0}
 
             def on_delta(delta, text):
@@ -577,12 +579,23 @@ class OmniNative(N.LFM3Native):
                             emit({"type": "plan", "round": r + 1, "stage": "planning", "tools": list(only_tools)})
                         elif r > 0:
                             emit({"type": "plan", "round": r + 1, "stage": "reviewing"})
-                        content, calls, st = self._chat(
-                            msgs, schemas, max_new, by_name,
-                            delta_cb(r + 1, "thinking" if forced else "answer"), cancel,
-                            seed + 100 * attempt + r, forced,
-                            on_plan=lambda tname, rn=r + 1: emit({"type": "plan", "round": rn, "stage": "preparing_tool", "tool": tname}),
-                        )
+                        emit({"type": "plan", "round": r + 1, "stage": "c1_inference", "model": "LFM3-Omni-2B"})
+                        # C1 is strictly for inference only: never emit final answer tokens (`kind="answer"`) from C1
+                        chat_kw = ({"on_plan": lambda tname, rn=r + 1: emit({"type": "plan", "round": rn, "stage": "preparing_tool", "tool": tname})}
+                                   if schemas else {})
+                        try:
+                            content, calls, st = self._chat(
+                                msgs, schemas, max_new, by_name,
+                                None, cancel,
+                                seed + 100 * attempt + r, forced,
+                                **chat_kw,
+                            )
+                        except TypeError:
+                            content, calls, st = self._chat(
+                                msgs, schemas, max_new, by_name,
+                                None, cancel,
+                                seed + 100 * attempt + r, forced,
+                            )
                         stats_all.append(st)
                         if forced and calls and ASKS_USER.search(content[-400:]) and any(
                             c["name"] in ("run_powershell", "write_file", "vscode_run", "vscode_install", "vscode_clone", "vscode_open")
@@ -614,8 +627,6 @@ class OmniNative(N.LFM3Native):
                             used = ", ".join(dict.fromkeys(rt.word(rt.capability(n)) for n in names))
                             layer_log.append({"layer": "semantics", "label": f"answer kept · {used} not used (not asked)"})
                             content, calls = TOOL_XML.sub("", content), []
-                        if forced and not calls and content.strip():
-                            emit({"type": "token", "round": r + 1, "kind": "answer", "text": TOOL_XML.sub("", content)})
                         if calls and tools and schemas and st["finish"] != "cancelled":
                             kept_c = "" if (forced or semantics.CANNOT.search(content)) else content
                             msgs.append({"role": "assistant", "content": kept_c, "tool_calls": [
@@ -638,7 +649,7 @@ class OmniNative(N.LFM3Native):
                                                "summary": summary, "why": why, "result": result[:2000]})
                                 msgs.append({"role": "tool", "tool_call_id": c["id"], "content": result})
                             continue
-                        final = content.strip()
+                        final = TOOL_XML.sub("", content).strip() if forced else content.strip()
                         web_ok = any(rd["tool"] == "web_search" and rd["ran"] and not rd["result"].startswith("No results") for rd in rounds)
                         refused_after_web = web_ok and (
                             semantics.CANNOT.search(final)
@@ -654,8 +665,8 @@ class OmniNative(N.LFM3Native):
                             lead = "Here is what I can tell you: "
                             msgs.append({"role": "assistant", "content": lead})
                             emit({"type": "round", "round": r + 2})
-                            emit({"type": "token", "round": r + 2, "kind": "answer", "text": lead})
-                            content, _, st = self._chat(msgs, [], max_new, by_name, delta_cb(r + 2), cancel,
+                            emit({"type": "plan", "round": r + 2, "stage": "c1_inference", "model": "LFM3-Omni-2B"})
+                            content, _, st = self._chat(msgs, [], max_new, by_name, None, cancel,
                                                         seed + 100 * attempt + r + 1)
                             stats_all.append(st)
                             final = (lead + content.strip()) if content.strip() else ""
@@ -671,27 +682,52 @@ class OmniNative(N.LFM3Native):
                             lead = "From what I found so far: "
                             msgs.append({"role": "assistant", "content": lead})
                             emit({"type": "round", "round": max_rounds + 1})
-                            emit({"type": "token", "round": max_rounds + 1, "kind": "answer", "text": lead})
-                            content, _, st = self._chat(msgs, [], max_new, by_name, delta_cb(max_rounds + 1), cancel,
+                            emit({"type": "plan", "round": max_rounds + 1, "stage": "c1_inference", "model": "LFM3-Omni-2B"})
+                            content, _, st = self._chat(msgs, [], max_new, by_name, None, cancel,
                                                         seed + 100 * attempt + max_rounds)
                             stats_all.append(st)
                             final = (lead + content.strip()) if content.strip() else ""
                         last = next((rd for rd in reversed(rounds) if rd["ran"]), None)
                         final = final or (f"(Clover used all {max_rounds} tool rounds without finishing an answer."
                                           + (f" Last {last['tool']} result: {last['result'][:400]}" if last else "") + ")")
-                if "ncm" in layers and kit is not None and not (cancel and cancel.is_set()):
-                    emit({"type": "plan", "round": len(stats_all) or 1, "stage": "ncm_decode", "model": "11-Level NCM"})
-                    final, ncm_info = kit.ncm_render(final)
-                    layer_log.append(ncm_info)
-                    emit(dict(ncm_info, type="layer"))
-                    emit({"type": "plan", "round": len(stats_all) or 1, "stage": "ncm_done",
-                          "ms": round((ncm_info.get("s") or 0) * 1000)})
-                if "ontology" in layers:
+                rnd_n = len(stats_all) or 1
+                if kit is not None and not (cancel and cancel.is_set()):
+                    # 1. Strict Stage C1: Inference ONLY (`c1_infer`)
+                    if hasattr(kit, "c1_infer"):
+                        c1_state, c1_info = kit.c1_infer(final, stats=stats_all)
+                        layer_log.append(c1_info)
+                        emit(dict(c1_info, type="layer"))
+                        emit({"type": "plan", "round": rnd_n, "stage": "c1_done", "ms": c1_info.get("ms")})
+                    else:
+                        c1_state = None
+                    # 2. Strict Stage C2: Planning ONLY (`HybridAgent` `plan-trunk-0`)
+                    if hasattr(kit, "c2_plan_state"):
+                        emit({"type": "plan", "round": rnd_n, "stage": "c2_plan", "model": "HybridAgent"})
+                        planned_t = [rd["tool"] for rd in rounds if rd.get("ran")] or (
+                            list(only_tools) if only_tools is not None else [t["function"]["name"] for t in schemas[:5]]
+                        )
+                        c2_state, c2_info = kit.c2_plan_state(query, c1_state=c1_state, offered_tools=planned_t)
+                        layer_log.append(c2_info)
+                        emit(dict(c2_info, type="layer"))
+                        emit({"type": "plan", "round": rnd_n, "stage": "c2_done", "ms": c2_info.get("ms")})
+                    else:
+                        c2_state = final
+                    # 3. Strict Stage C3: Decoding ONLY (`Bridges + 11-Level NCM`)
+                    if "ncm" in layers and (hasattr(kit, "c3_decode") or hasattr(kit, "ncm_render")):
+                        emit({"type": "plan", "round": rnd_n, "stage": "ncm_decode", "model": "11-Level NCM"})
+                        final, ncm_info = kit.c3_decode(c2_state) if hasattr(kit, "c3_decode") else kit.ncm_render(final)
+                        layer_log.append(ncm_info)
+                        emit(dict(ncm_info, type="layer"))
+                        emit({"type": "plan", "round": rnd_n, "stage": "ncm_done",
+                              "ms": round((ncm_info.get("s") or 0) * 1000)})
+                if "ontology" in layers and kit is not None:
                     final, changed = kit.grounding_filter(query, final)
                     layer_log.append({"layer": "ontology_grounding", "changed": changed})
                 mq = TRAILING_Q.search(final) if len(final) > 60 else None
                 if mq and mq.start() >= 40:
                     final = final[:mq.start()].strip()
+                if not (cancel and cancel.is_set()):
+                    emit({"type": "token", "round": rnd_n, "kind": "answer", "text": final})
             finally:
                 self.stage = {"name": "idle", "since": time.time()}
         return {"reply": final, "tool_calls": rounds, "rounds": len(stats_all), "generation": stats_all,
@@ -731,14 +767,8 @@ class OmniNative(N.LFM3Native):
             if cancel and cancel.is_set():
                 return previous
             convo.append({"role": "user", "content": instruction + (notes + web if len(convo) == start else "")})
-            shown = {"n": 0}
-
-            def on_delta(delta, text):
-                visible = TOOL_XML.sub("", text)
-                if len(visible) > shown["n"]:
-                    emit({"type": "token", "round": 1, "kind": "answer", "text": visible[shown["n"]:]})
-                    shown["n"] = len(visible)
-            content, _, st = self._chat(convo, [], max_new, {}, on_delta, cancel, seed + 500 + len(convo))
+            emit({"type": "plan", "round": 1, "stage": "c1_inference", "model": "LFM3-Omni-2B"})
+            content, _, st = self._chat(convo, [], max_new, {}, None, cancel, seed + 500 + len(convo))
             stats_all.append(st)
             new = TOOL_XML.sub("", content).strip() or previous
             convo.append({"role": "assistant", "content": new})
@@ -800,9 +830,35 @@ class OmniNative(N.LFM3Native):
                                              code_check=code_check if "compiler" in layers and kit is not None else None)
                 info["tools"] = list(dict.fromkeys(used))
                 layer_log.append(info)
+                rnd_n = len(stats_all) or 1
+                if kit is not None and not (cancel and cancel.is_set()):
+                    if hasattr(kit, "c1_infer"):
+                        c1_state, c1_info = kit.c1_infer(answer, stats=stats_all)
+                        layer_log.append(c1_info)
+                        emit(dict(c1_info, type="layer"))
+                        emit({"type": "plan", "round": rnd_n, "stage": "c1_done", "ms": c1_info.get("ms")})
+                    else:
+                        c1_state = None
+                    if hasattr(kit, "c2_plan_state"):
+                        emit({"type": "plan", "round": rnd_n, "stage": "c2_plan", "model": "HybridAgent"})
+                        c2_state, c2_info = kit.c2_plan_state(question, c1_state=c1_state, offered_tools=info["tools"])
+                        layer_log.append(c2_info)
+                        emit(dict(c2_info, type="layer"))
+                        emit({"type": "plan", "round": rnd_n, "stage": "c2_done", "ms": c2_info.get("ms")})
+                    else:
+                        c2_state = answer
+                    if "ncm" in layers and (hasattr(kit, "c3_decode") or hasattr(kit, "ncm_render")):
+                        emit({"type": "plan", "round": rnd_n, "stage": "ncm_decode", "model": "11-Level NCM"})
+                        answer, ncm_info = kit.c3_decode(c2_state) if hasattr(kit, "c3_decode") else kit.ncm_render(answer)
+                        layer_log.append(ncm_info)
+                        emit(dict(ncm_info, type="layer"))
+                        emit({"type": "plan", "round": rnd_n, "stage": "ncm_done",
+                              "ms": round((ncm_info.get("s") or 0) * 1000)})
                 if "ontology" in layers and kit is not None:
                     answer, changed = kit.grounding_filter(question, answer)
                     layer_log.append({"layer": "ontology_grounding", "changed": changed})
+                if not (cancel and cancel.is_set()):
+                    emit({"type": "token", "round": rnd_n, "kind": "answer", "text": answer})
             finally:
                 self.stage = {"name": "idle", "since": time.time()}
         cancelled = bool(cancel and cancel.is_set())

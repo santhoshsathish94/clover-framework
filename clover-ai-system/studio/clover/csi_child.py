@@ -106,9 +106,10 @@ class CSIService:
         self.port = L._free_port()
         if paths.ANDROID:
             try:
+                import importlib
                 from http.server import ThreadingHTTPServer
-                import csi.analyze as csi_an
                 import csi_service
+                csi_an = importlib.import_module("csi.analyze")
                 csi_an.CSI_MORPH = str(d / MORPH[0])
                 csi_an.CSI_DICT = str(d / OEWN)
                 csi_an.analyze("Please search the web.")

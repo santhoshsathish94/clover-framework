@@ -85,38 +85,33 @@ with tempfile.TemporaryDirectory() as d:
     check("clean removes Clover's files and their list", W.EXCLUDE_START not in after
           and not any(p.name.endswith("-context-index.md") for p in repo.iterdir()))
 
-# memory: a learning joins a question only when they share at least two topic words (needs clover_loop -> torch)
-try:
-    import torch  # noqa: F401
-except ImportError:
-    print("SKIP memory relevance: needs the laptop's Python (torch)")
-else:
-    import lfm3_layers as L
-    d = Path(tempfile.mkdtemp())
-    kit = L.LayerKit(d, memory_root=d / "mem")
-    kit.learn('On a question like "And how much would 30 pens cost?"; Clover\'s checks found: two independent '
-              'solutions gave 20, not 20.1.', "s1", 3)
-    kit.remember("My favourite colour is teal.")
-    got = lambda q: kit.memory_context(q)[0] or ""  # noqa: E731
-    check("the pens lesson stays out of disk space", "pens" not in got("How much free disk space does this laptop have?"))
-    check("...and out of an unrelated price", "pens" not in got("How much does a coffee cost?"))
-    check("...but joins a question about pens", "pens" in got("How much would 45 pens cost at 3 for $2?"))
-    check("a note the user asked to remember is still found", "teal" in got("What is my favourite colour?"))
-    kit.remember("I'm vegetarian and allergic to peanuts.")
-    n_before = len(kit.memories())
-    kit.remember("I'm  vegetarian and allergic to peanuts.")
-    check("the same note twice is kept once", len(kit.memories()) == n_before)
-    kit.remember("The user is vegetarian and allergic to peanuts.")
-    check("...also when it is said about the user", len(kit.memories()) == n_before)
-    kit.remember("I'm not vegetarian any more.")
-    check("a correction is a new note", len(kit.memories()) == n_before + 1)
-    check("word order matters", L.note_words("Priya reports to Arun") != L.note_words("Arun reports to Priya"))
-    check("a diet note joins a dinner question", "vegetarian" in got("Suggest a quick dinner I can cook tonight."))
-    check("...and a recipe question", "peanuts" in got("Give me a recipe for a cake"))
-    check("...but not an unrelated one", "vegetarian" not in got("How much free disk space does this laptop have?"))
-    check("...nor a story about baking", "vegetarian" not in got("Tell me a story about a dragon who learns to bake bread"))
-    check("...nor a VS Code request with a path", "vegetarian" not in got(
-        r"In VS Code, run git log --oneline -3 in C:\Users\santh\CloverAI\tmp\sandbox\demo-repo"))
+# memory: a learning joins a question only when they share at least two topic words
+import lfm3_layers as L  # noqa: E402
+d = Path(tempfile.mkdtemp())
+kit = L.LayerKit(d, memory_root=d / "mem")
+kit.learn('On a question like "And how much would 30 pens cost?"; Clover\'s checks found: two independent '
+          'solutions gave 20, not 20.1.', "s1", 3)
+kit.remember("My favourite colour is teal.")
+got = lambda q: kit.memory_context(q)[0] or ""  # noqa: E731
+check("the pens lesson stays out of disk space", "pens" not in got("How much free disk space does this laptop have?"))
+check("...and out of an unrelated price", "pens" not in got("How much does a coffee cost?"))
+check("...but joins a question about pens", "pens" in got("How much would 45 pens cost at 3 for $2?"))
+check("a note the user asked to remember is still found", "teal" in got("What is my favourite colour?"))
+kit.remember("I'm vegetarian and allergic to peanuts.")
+n_before = len(kit.memories())
+kit.remember("I'm  vegetarian and allergic to peanuts.")
+check("the same note twice is kept once", len(kit.memories()) == n_before)
+kit.remember("The user is vegetarian and allergic to peanuts.")
+check("...also when it is said about the user", len(kit.memories()) == n_before)
+kit.remember("I'm not vegetarian any more.")
+check("a correction is a new note", len(kit.memories()) == n_before + 1)
+check("word order matters", L.note_words("Priya reports to Arun") != L.note_words("Arun reports to Priya"))
+check("a diet note joins a dinner question", "vegetarian" in got("Suggest a quick dinner I can cook tonight."))
+check("...and a recipe question", "peanuts" in got("Give me a recipe for a cake"))
+check("...but not an unrelated one", "vegetarian" not in got("How much free disk space does this laptop have?"))
+check("...nor a story about baking", "vegetarian" not in got("Tell me a story about a dragon who learns to bake bread"))
+check("...nor a VS Code request with a path", "vegetarian" not in got(
+    r"In VS Code, run git log --oneline -3 in C:\Users\santh\CloverAI\tmp\sandbox\demo-repo"))
 
 # the user said "remember ..." and the model only answered: the server saves it
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "clover"))

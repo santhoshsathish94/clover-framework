@@ -354,12 +354,14 @@ def _walkthrough_flag(base):
 
 
 def setup_needed():
-    """The phone and laptop apps show the clean setup screen when the model is not downloaded yet, or right after
-    Setup.exe launches the Studio for its first-run walkthrough."""
+    """The phone and laptop apps show the clean setup screen when the model is not downloaded yet, while first-start
+    setup is still running, or right after Setup.exe launches the Studio for its first-run walkthrough."""
     if paths.WEB or S.args is None:
         return False
     base = Path(S.args.base)
     if _walkthrough_flag(base).is_file():
+        return True
+    if S.load.get("status") == "setup" and S.setup is not None and S.setup.state in ("running", "stopped", "failed"):
         return True
     return not omni_available(base)[0]
 
@@ -447,13 +449,15 @@ class Setup:
                 traceback.print_exc()
             if S.csi is not None and S.settings is not None and S.settings.get().get("csi", True):
                 S.csi.start()
+            if S.memidx is not None:
+                S.memidx.wake()
             try:
                 import omni_c2_c3
                 omni_c2_c3.for_base(self.base)
             except Exception:
                 pass
         with self.lock:
-            if rc == 0 and not setup_needed():
+            if rc == 0 and not _walkthrough_flag(self.base).is_file() and omni_available(self.base)[0]:
                 self.state = "done"
             else:
                 self.state = "stopped" if rc == 3 else "failed"

@@ -82,6 +82,9 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         current = this;
+        if (Build.VERSION.SDK_INT >= 30) {
+            getWindow().setDecorFitsSystemWindows(false);
+        }
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.parseColor("#F7F3E9"));
         web = new WebView(this);

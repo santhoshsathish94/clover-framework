@@ -770,16 +770,19 @@ class LFM3Native:
             shown = {"thinking": 0, "answer": 0}
 
             def on_delta(delta, text):
-                # visible parts only: reasoning, and the answer without the tool-call XML
+                # C1 is strictly for inference: emit thinking tokens only; C3 (NCM) decodes the final answer
                 if thinking:
                     think_part, tail = text.split("</think>", 1) if "</think>" in text else (text, "")
                 else:
                     think_part, tail = "", text
-                answer = re.sub(r"<tool_call>[\s\S]*?(?:</tool_call>|$)", "", tail)
-                for kind, part in (("thinking", think_part), ("answer", answer)):
-                    if len(part) > shown[kind]:
-                        emit({"type": "token", "round": round_no, "kind": kind, "text": part[shown[kind]:]})
-                        shown[kind] = len(part)
+                if len(think_part) > shown["thinking"]:
+                    emit({"type": "token", "round": round_no, "kind": "thinking", "text": think_part[shown["thinking"]:]})
+                    shown["thinking"] = len(think_part)
+                if "ncm" not in layers and kit is None:
+                    answer = re.sub(r"<tool_call>[\s\S]*?(?:</tool_call>|$)", "", tail)
+                    if len(answer) > shown["answer"]:
+                        emit({"type": "token", "round": round_no, "kind": "answer", "text": answer[shown["answer"]:]})
+                        shown["answer"] = len(answer)
             return on_delta
 
         with self.lock:
@@ -849,12 +852,34 @@ class LFM3Native:
                         tail = (content + after) if thinking and "</think>" in text else ("" if thinking else text)
                         final = re.sub(r"<tool_call>[\s\S]*?(?:</tool_call>|$)", "", tail).strip()
                     final = final or "(Stopped after the maximum number of tool rounds.)"
-            if "ncm" in layers and not (cancel and cancel.is_set()):
-                final, info = kit.ncm_render(final)
-                layer_log.append(info)
-            if "ontology" in layers:
+            rnd_n = len(stats_all) or 1
+            if kit is not None and not (cancel and cancel.is_set()):
+                if hasattr(kit, "c1_infer"):
+                    c1_state, c1_info = kit.c1_infer(final, stats=stats_all)
+                    layer_log.append(c1_info)
+                    emit(dict(c1_info, type="layer"))
+                    emit({"type": "plan", "round": rnd_n, "stage": "c1_done", "ms": c1_info.get("ms")})
+                else:
+                    c1_state = None
+                if hasattr(kit, "c2_plan_state"):
+                    emit({"type": "plan", "round": rnd_n, "stage": "c2_plan", "model": "HybridAgent"})
+                    c2_state, c2_info = kit.c2_plan_state(query, c1_state=c1_state, offered_tools=[rd["tool"] for rd in rounds if rd.get("ran")])
+                    layer_log.append(c2_info)
+                    emit(dict(c2_info, type="layer"))
+                    emit({"type": "plan", "round": rnd_n, "stage": "c2_done", "ms": c2_info.get("ms")})
+                else:
+                    c2_state = final
+                if "ncm" in layers and (hasattr(kit, "c3_decode") or hasattr(kit, "ncm_render")):
+                    emit({"type": "plan", "round": rnd_n, "stage": "ncm_decode", "model": "11-Level NCM"})
+                    final, info = kit.c3_decode(c2_state) if hasattr(kit, "c3_decode") else kit.ncm_render(final)
+                    layer_log.append(info)
+                    emit(dict(info, type="layer"))
+                    emit({"type": "plan", "round": rnd_n, "stage": "ncm_done", "ms": round((info.get("s") or 0) * 1000)})
+            if "ontology" in layers and kit is not None:
                 final, changed = kit.grounding_filter(query, final)
                 layer_log.append({"layer": "ontology_grounding", "changed": changed})
+            if ("ncm" in layers or kit is not None) and not (cancel and cancel.is_set()):
+                emit({"type": "token", "round": rnd_n, "kind": "answer", "text": final})
           finally:
             self.stage = {"name": "idle", "since": time.time()}
         return {"reply": final, "tool_calls": rounds, "rounds": len(stats_all), "generation": stats_all,
