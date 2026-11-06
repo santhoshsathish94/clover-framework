@@ -14,8 +14,13 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import secrets
 import sys
 import threading
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 import collective as C_EXT
@@ -25,6 +30,7 @@ import semantics
 # Official 32-byte RFC 8032 Ed25519 public verification key for Clover Collective Core releases.
 # The corresponding private signing key is held exclusively in the protected release environment vault.
 DEFAULT_VERIFY_PUBLIC_KEY = "dba3f7e2e969a26c57a24d50e2ecd654249b42e25eecc1f9140a514d7dcedb8a"
+DEFAULT_GATEWAY_URL = "https://api.cloverframework.com"
 
 _Q = 2**255 - 19
 _L = 2**252 + 27742317777372353535851937790883648493
@@ -151,7 +157,12 @@ class CoreSync:
         self.verify_key = _normalize_public_key(verify_key)
         self.verify_key_hex = self.verify_key.hex()
 
-    def verify_and_load(self, registry_root: str | Path, consent_receive: bool = True) -> dict:
+    def verify_and_load(
+        self,
+        registry_root: str | Path,
+        consent_receive: bool = True,
+        now_utc: str | None = None,
+    ) -> dict:
         if not consent_receive:
             return {"version": None, "rules": []}
         root = Path(registry_root)
@@ -175,12 +186,34 @@ class CoreSync:
         except ValueError as exc:
             raise CoreSyncError("Malformed hex signature in manifest") from exc
 
-        payload = json.dumps(
+        signed_obj = {"version": version, "rules": rules, "file_hashes": file_hashes}
+        if "expires_utc" in manifest and manifest["expires_utc"]:
+            signed_obj["expires_utc"] = manifest["expires_utc"]
+        if "revoked_versions" in manifest and manifest["revoked_versions"]:
+            signed_obj["revoked_versions"] = manifest["revoked_versions"]
+        if manifest.get("revoked"):
+            signed_obj["revoked"] = True
+        payload = json.dumps(signed_obj, sort_keys=True).encode("utf-8")
+        base_payload = json.dumps(
             {"version": version, "rules": rules, "file_hashes": file_hashes},
             sort_keys=True,
         ).encode("utf-8")
-        if not ed25519_verify(self.verify_key, payload, sig_bytes):
+        if not ed25519_verify(self.verify_key, payload, sig_bytes) and not ed25519_verify(
+            self.verify_key, base_payload, sig_bytes
+        ):
             raise CoreSyncError("Release signature verification failed (invalid Ed25519 signature or tampered manifest)")
+
+        # Reject revoked releases
+        revoked_set = {str(x) for x in (manifest.get("revoked_versions") or ())}
+        if manifest.get("revoked") is True or (version and str(version) in revoked_set):
+            raise CoreSyncError(f"Release version {version!r} has been revoked")
+
+        # Reject expired releases
+        expires_utc = manifest.get("expires_utc")
+        if expires_utc:
+            now_iso = str(now_utc or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
+            if str(expires_utc) <= now_iso:
+                raise CoreSyncError(f"Release version {version!r} expired at {expires_utc}")
 
         for rel_path, expected_sha in file_hashes.items():
             fpath = root / rel_path
@@ -194,7 +227,8 @@ class CoreSync:
 
 
 class Collective:
-    """One installation's collective learning state: consent switches, verified shared core rules, and candidate preview."""
+    """One installation's collective learning state: consent switches, verified shared core rules, candidate preview,
+    and remote gateway synchronization."""
 
     def __init__(
         self,
@@ -202,16 +236,26 @@ class Collective:
         device: str = "",
         csi=None,
         verify_key: str | bytes | None = None,
+        gateway_url: str | None = None,
     ):
         self.dir = Path(root)
         self.dir.mkdir(parents=True, exist_ok=True)
         self.device = device
         self.csi = csi
         self.syncer = CoreSync(verify_key=verify_key)
+        self.gateway_url = (
+            gateway_url
+            or os.environ.get("CLOVER_COLLECTIVE_GATEWAY_URL", "").strip()
+            or DEFAULT_GATEWAY_URL
+        ).rstrip("/")
         self.lock = threading.RLock()
         self.version: str | None = None
         self.rules: list[dict] = []
         self.normalize_gerunds: bool = True
+        self.submitted_packages: list[dict] = []
+        self.last_sync_utc: str | None = None
+        self.last_sync_error: str = ""
+        self.consent_withdrawn_utc: str | None = None
         self._load_state()
 
     @property
@@ -221,6 +265,14 @@ class Collective:
     @property
     def _applied_path(self) -> Path:
         return self.dir / "applied_release.json"
+
+    @property
+    def _sync_state_path(self) -> Path:
+        return self.dir / "sync_state.json"
+
+    @property
+    def _mirror_dir(self) -> Path:
+        return self.dir / "remote_mirror"
 
     def _load_state(self):
         if self._consent_path.exists():
@@ -234,6 +286,18 @@ class Collective:
         self.consent_receive = bool(data.get("consent_receive", False))
         self.installation_id = str(data.get("installation_id") or os.urandom(8).hex())
         self._save_consent()
+
+        if self._sync_state_path.exists():
+            try:
+                sdata = json.loads(self._sync_state_path.read_text(encoding="utf-8"))
+                self.submitted_packages = list(sdata.get("submitted_packages") or [])
+                self.last_sync_utc = sdata.get("last_sync_utc")
+                self.last_sync_error = str(sdata.get("last_sync_error") or "")
+                self.consent_withdrawn_utc = sdata.get("consent_withdrawn_utc")
+                if sdata.get("gateway_url"):
+                    self.gateway_url = str(sdata["gateway_url"]).rstrip("/")
+            except Exception:
+                pass
 
         if self.consent_receive and self._applied_path.exists():
             try:
@@ -257,10 +321,37 @@ class Collective:
             encoding="utf-8",
         )
 
-    def set_consent(self, contribute: bool | None = None, receive: bool | None = None) -> dict:
+    def _save_sync_state(self):
+        self._sync_state_path.write_text(
+            json.dumps(
+                {
+                    "gateway_url": self.gateway_url,
+                    "submitted_packages": self.submitted_packages,
+                    "last_sync_utc": self.last_sync_utc,
+                    "last_sync_error": self.last_sync_error,
+                    "consent_withdrawn_utc": self.consent_withdrawn_utc,
+                },
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+
+    def set_consent(
+        self,
+        contribute: bool | None = None,
+        receive: bool | None = None,
+        *,
+        google_connected: bool | None = None,
+        require_identity: bool = False,
+    ) -> dict:
         with self.lock:
+            if require_identity and (contribute is True or receive is True) and not google_connected:
+                raise CoreSyncError("Sign in with Google first to enable collective learning.")
             if contribute is not None:
                 self.consent_contribute = bool(contribute)
+                if self.consent_contribute:
+                    self.consent_withdrawn_utc = None
             if receive is not None:
                 self.consent_receive = bool(receive)
                 if not self.consent_receive:
@@ -271,17 +362,247 @@ class Collective:
                     self.version = applied.get("version")
                     self.rules = list(applied.get("rules") or [])
             self._save_consent()
+            self._save_sync_state()
             return {"consent_contribute": self.consent_contribute, "consent_receive": self.consent_receive}
 
-    def sync_from_registry(self, registry_root: str | Path) -> dict:
+    def sync_from_registry(self, registry_root: str | Path, now_utc: str | None = None) -> dict:
         """Verify and apply a signed release from `registry_root` when `consent_receive` is True."""
         with self.lock:
-            res = self.syncer.verify_and_load(registry_root, consent_receive=self.consent_receive)
+            try:
+                res = self.syncer.verify_and_load(
+                    registry_root, consent_receive=self.consent_receive, now_utc=now_utc
+                )
+            except CoreSyncError as exc:
+                self.last_sync_error = str(exc)
+                self._save_sync_state()
+                raise
             self.version = res["version"]
             self.rules = res["rules"]
             if self.consent_receive and self.version is not None:
                 self._applied_path.write_text(json.dumps(res, indent=2, sort_keys=True), encoding="utf-8")
+                self.last_sync_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                self.last_sync_error = ""
+                self._save_sync_state()
             return {"synced": self.consent_receive, "version": self.version, "rules_count": len(self.rules)}
+
+    def _http_call(
+        self,
+        method: str,
+        url: str,
+        *,
+        id_token: str | None = None,
+        body: dict | None = None,
+        transport_fn=None,
+    ) -> dict:
+        if transport_fn is not None:
+            return transport_fn(method, url, id_token=id_token, body=body)
+        headers = {"Accept": "application/json", "User-Agent": "CloverAIStudio/5.0"}
+        if id_token:
+            headers["Authorization"] = f"Bearer {id_token}"
+        data = None
+        if body is not None:
+            headers["Content-Type"] = "application/json; charset=utf-8"
+            data = json.dumps(body).encode("utf-8")
+        req = urllib.request.Request(url, data=data, headers=headers, method=method.upper())
+        try:
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            raw_err = exc.read().decode("utf-8", errors="replace")
+            try:
+                err_obj = json.loads(raw_err)
+                msg = err_obj.get("error") or err_obj.get("message") or raw_err[:240]
+            except Exception:
+                msg = raw_err[:240] or f"HTTP {exc.code}"
+            raise CoreSyncError(msg) from exc
+        except Exception as exc:
+            raise CoreSyncError(f"Gateway request failed: {exc}") from exc
+
+    def contribute_to_gateway(
+        self,
+        *,
+        id_token: str | None,
+        packages: list[dict],
+        confirmed: bool = False,
+        gateway_url: str | None = None,
+        transport_fn=None,
+    ) -> dict:
+        """Upload explicitly confirmed, privacy-scrubbed candidate packages to the remote Collective Gateway."""
+        with self.lock:
+            if not self.consent_contribute:
+                err = "Contribution consent is disabled. Enable 'Contribute to Collective Learning' first."
+                self.last_sync_error = err
+                self._save_sync_state()
+                raise CoreSyncError(err)
+            if not id_token or not str(id_token).strip():
+                err = "Google sign-in is required to contribute candidate knowledge."
+                self.last_sync_error = err
+                self._save_sync_state()
+                raise CoreSyncError(err)
+            if not confirmed:
+                err = "Candidate upload requires explicit user confirmation after reviewing the package."
+                self.last_sync_error = err
+                self._save_sync_state()
+                raise CoreSyncError(err)
+            if not isinstance(packages, list) or not packages:
+                raise CoreSyncError("No candidate packages selected for contribution.")
+
+            # Validate every candidate locally before transmission so unapproved/personal data can never leave
+            import collective_gateway
+            local_validator = collective_gateway.CollectiveGateway()
+            clean_packages = []
+            for p in packages:
+                if not isinstance(p, dict):
+                    raise CoreSyncError("Invalid candidate package structure")
+                ok, reason = local_validator.validate_package(p, consent_verified=True)
+                if not ok:
+                    err = f"Candidate {p.get('package_id')!r} blocked by local privacy/schema gate: {reason}"
+                    self.last_sync_error = err
+                    self._save_sync_state()
+                    raise CoreSyncError(err)
+                clean_packages.append(p)
+
+            gw = (gateway_url or self.gateway_url).rstrip("/")
+            payload = {
+                "confirmed": True,
+                "consent_contribute": True,
+                "nonce": secrets.token_urlsafe(18),
+                "timestamp": time.time(),
+                "packages": clean_packages,
+            }
+            try:
+                resp = self._http_call(
+                    "POST",
+                    f"{gw}/api/collective/gateway/contribute",
+                    id_token=id_token,
+                    body=payload,
+                    transport_fn=transport_fn,
+                )
+            except CoreSyncError as exc:
+                self.last_sync_error = str(exc)
+                self._save_sync_state()
+                raise
+
+            now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            accepted_set = set(resp.get("accepted_package_ids") or ())
+            existing_ids = {x["package_id"] for x in self.submitted_packages}
+            for p in clean_packages:
+                if p["package_id"] in accepted_set and p["package_id"] not in existing_ids:
+                    self.submitted_packages.append({
+                        "package_id": p["package_id"],
+                        "category": p["category"],
+                        "trigger": list(p["trigger"]),
+                        "target": list(p["target"]),
+                        "submitted_utc": now_iso,
+                    })
+            self.last_sync_utc = now_iso
+            self.last_sync_error = ""
+            self._save_sync_state()
+            return resp
+
+    def sync_from_gateway(
+        self,
+        *,
+        id_token: str | None = None,
+        require_identity: bool = True,
+        gateway_url: str | None = None,
+        transport_fn=None,
+        now_utc: str | None = None,
+    ) -> dict:
+        """Fetch an incremental or full Ed25519-signed collective release from the remote gateway, verify its
+        cryptographic signature, file hashes, expiry, and revocation status, and apply it locally."""
+        with self.lock:
+            if not self.consent_receive:
+                err = "Receive consent is disabled. Enable 'Receive Collective Learning' first."
+                self.last_sync_error = err
+                self._save_sync_state()
+                raise CoreSyncError(err)
+            if require_identity and (not id_token or not str(id_token).strip()):
+                err = "Google sign-in is required to receive collective learning releases."
+                self.last_sync_error = err
+                self._save_sync_state()
+                raise CoreSyncError(err)
+
+            gw = (gateway_url or self.gateway_url).rstrip("/")
+            mirror = self._mirror_dir
+            since = self.version if (self.version and (mirror / "releases" / "manifest.json").is_file()) else ""
+            q = f"?{urllib.parse.urlencode({'since_version': since})}" if since else ""
+            try:
+                bundle = self._http_call(
+                    "GET",
+                    f"{gw}/api/collective/gateway/releases{q}",
+                    id_token=id_token,
+                    transport_fn=transport_fn,
+                )
+            except CoreSyncError as exc:
+                self.last_sync_error = str(exc)
+                self._save_sync_state()
+                raise
+
+            if not bundle.get("available") or not bundle.get("manifest"):
+                self.last_sync_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                self.last_sync_error = ""
+                self._save_sync_state()
+                return {"synced": True, "up_to_date": True, "version": self.version, "rules_count": len(self.rules)}
+
+            # Stage files in a temporary directory or mirror, then verify before activating
+            (mirror / "releases").mkdir(parents=True, exist_ok=True)
+            for rel_rm in bundle.get("removed_files") or []:
+                rm_path = (mirror / rel_rm).resolve()
+                if str(rm_path).startswith(str(mirror.resolve())) and rm_path.is_file():
+                    rm_path.unlink()
+            for rel_path, content in (bundle.get("files") or {}).items():
+                dest = (mirror / rel_path).resolve()
+                if not str(dest).startswith(str(mirror.resolve())):
+                    raise CoreSyncError(f"Unsafe file path in release bundle: {rel_path!r}")
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(str(content), encoding="utf-8")
+            (mirror / "releases" / "manifest.json").write_text(
+                json.dumps(bundle["manifest"], indent=2, sort_keys=True),
+                encoding="utf-8",
+            )
+
+            res = self.sync_from_registry(mirror, now_utc=now_utc)
+            res["up_to_date"] = bool(bundle.get("up_to_date"))
+            res["incremental"] = bool(bundle.get("incremental"))
+            return res
+
+    def withdraw_from_gateway(
+        self,
+        *,
+        id_token: str | None,
+        gateway_url: str | None = None,
+        transport_fn=None,
+    ) -> dict:
+        """Withdraw future contribution consent and remove previously contributed candidates on the remote gateway."""
+        with self.lock:
+            now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            gw_resp = {}
+            if id_token and str(id_token).strip():
+                gw = (gateway_url or self.gateway_url).rstrip("/")
+                payload = {
+                    "nonce": secrets.token_urlsafe(18),
+                    "timestamp": time.time(),
+                }
+                gw_resp = self._http_call(
+                    "POST",
+                    f"{gw}/api/collective/gateway/withdraw",
+                    id_token=id_token,
+                    body=payload,
+                    transport_fn=transport_fn,
+                )
+            self.consent_contribute = False
+            self.submitted_packages = []
+            self.consent_withdrawn_utc = now_iso
+            self.last_sync_error = ""
+            self._save_consent()
+            self._save_sync_state()
+            return {
+                "ok": True,
+                "consent_contribute": False,
+                "consent_withdrawn_utc": now_iso,
+                "gateway": gw_resp,
+            }
 
     def preview_candidates(self, personal_obj, extraction_mode: str = "mismatch_only") -> list[dict]:
         with self.lock:
@@ -356,17 +677,34 @@ class Collective:
                 out["strategy"] = best["strategy"]
             return out
 
-    def view(self, personal_obj=None) -> dict:
+    def view(self, personal_obj=None, google_status: dict | None = None) -> dict:
         with self.lock:
+            cands = self.preview_candidates(personal_obj) if personal_obj is not None else []
+            submitted_ids = {x["package_id"] for x in self.submitted_packages}
+            pending_cands = [c for c in cands if c.get("package_id") not in submitted_ids]
             return {
                 "enabled": True,
                 "store": str(self.dir),
+                "gateway_url": self.gateway_url,
+                "google_identity": google_status or {"connected": False, "status_text": "Not connected"},
                 "consent_contribute": self.consent_contribute,
                 "consent_receive": self.consent_receive,
+                "consent_withdrawn_utc": self.consent_withdrawn_utc,
                 "version": self.version,
                 "active_rules_count": len(self.rules),
                 "rules": list(self.rules),
-                "candidate_preview": self.preview_candidates(personal_obj) if personal_obj is not None else [],
+                "active_rules": [
+                    {"rule_id": r.get("rule_id"), "kind": r.get("category", "semantics"),
+                     "key": r.get("trigger", []), "target": r.get("target", []), "strategy": r.get("strategy", "")}
+                    for r in self.rules
+                ],
+                "active_defaults": [],
+                "candidate_preview": cands,
+                "pending_candidates": pending_cands,
+                "submitted_packages": list(self.submitted_packages),
+                "submitted_count": len(self.submitted_packages),
+                "last_sync_utc": self.last_sync_utc,
+                "last_sync_error": self.last_sync_error,
             }
 
 

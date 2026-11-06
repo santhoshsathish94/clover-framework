@@ -2,12 +2,12 @@
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `0.5.0-beta.1` (`0.5.0.0` Win32 PE `AssemblyVersion`)  
+**Release Version**: `5.0.0` (`5.0.0.0` Win32 PE `AssemblyVersion`)  
 **Product Name**: `Clover AI Studio`  
 **Publisher**: `Santhosh Narayanan`  
 **Distribution Model**: Standalone Native C# Win32 Per-User Installer (`CloverAIStudio-Setup.exe` / `clover-ai-studio-beta-setup.exe`)  
 **Target Architecture**: `x64` (`Windows.Desktop`, `MinVersion="10.0.19041.0"`, `MaxVersionTested="10.0.26100.0"`)  
-**Build Date**: `2026-11-05`  
+**Build Date**: `2026-11-06`  
 **Build Environment**: Windows 11 x64 (`10.0.26200`), `.NET Framework 4.8` `csc.exe` (`v4.0.30319`).
 
 ---
@@ -16,7 +16,7 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/windows/clover-ai-studio-beta-setup.exe` | `download/laptop/CloverAIStudio-Setup.exe` | Standalone direct-download Windows x64 installer | `2,477,528` bytes (`2.36 MB`) | `9d3b44b0e76f5f2ce6dbf778342b41e06477fa5cf85694fc4eaae4f3a7395e8d` |
+| `release/beta/windows/clover-ai-studio-beta-setup.exe` | `download/laptop/CloverAIStudio-Setup.exe` | Standalone direct-download Windows x64 installer | `1,881,048` bytes (`1.79 MB`) | `afc2f2179122ab22543356e8b840d377e2869ee09e83b41a6eb94343a2877ea6` |
 | `release/beta/windows/CloverFramework-CodeSign.cer` | `download/laptop/CloverFramework-CodeSign.cer` | Authenticode code-signing public certificate | `832` bytes | `9365ec5d455b0ef8179ccf1c061cf481c86dad234b9f3dc62244e487c659072d` |
 
 ---
@@ -38,6 +38,8 @@
 
 - `python tests/test_semantics.py`: **`155/155` checks passed**.
 - `python clover/test_collective.py`: **`35/35` checks passed** (Ed25519 public-key verification, unauthenticated-publish refusal, forged-key rejection, PII stripping, Sybil deduplication, Byzantine poison rejection, `Personal > Collective > General` priority).
+- `python clover/test_google_identity_collective.py`: **`32/32` checks passed** (Google OIDC RS256 JWKS verification, Windows OAuth PKCE loopback, Android OIDC token flow, two-installation HTTP E2E synchronization, expiry & revocation rejection, and consent withdrawal).
+- `python clover/test_human_usefulness.py`: **`18/18` checks passed** (first-turn zero-refusal human usefulness benchmark).
 - `python clover/test_live_activity_sse.py`: **`18/18` checks passed** (strictly monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
 - `python tests/test_clover_repo.py`: **`27/27` checks passed**.
 - `python tests/test_tool_routing.py`: **`129/129` checks passed**.

@@ -57,9 +57,9 @@ def generate_all() -> dict:
     manifest = {
         "product": "Clover AI Studio",
         "publisher": "Santhosh Narayanan",
-        "release_version": "0.5.0-beta.1",
-        "release_channel": "beta",
-        "release_date": "2026-11-05",
+        "release_version": "5.0.0",
+        "release_channel": "release",
+        "release_date": "2026-11-06",
         "generated_by": "release/beta/generate_release_reports.py",
         "cpsl_release_signing": {
             "algorithm": "Ed25519 (RFC 8032)",
@@ -71,15 +71,15 @@ def generate_all() -> dict:
             "privacy_policy": "https://cloverframework.com/privacy/",
             "support": "https://github.com/santhoshsathish94/clover-framework/issues",
             "windows_direct_installer": "https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe",
-            "google_play_instant_test": "https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNRoJQ1q2vSWcsS_HamuIOmmlbmpz4YZmTRB6qoomiOmSj5pK7Qz75RY537EnOpdUc1h4mT_pQkTYd3smKNS",
+            "google_play_instant_test": "https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNST0mwN2vPTOPN7ZLs_CGVqSbOh8hZpSj7ww63CuXdasv0pCuEsU62FEbMlHuEjx5yEE5m-ApIJBwp2ZF12",
             "google_play_closed_beta_web": "https://play.google.com/apps/testing/ai.clover.studio",
             "google_play_store_listing": "https://play.google.com/store/apps/details?id=ai.clover.studio"
         },
         "android": {
             "store": "Google Play Console (Closed Testing & Internal App Sharing)",
             "package_name": "ai.clover.studio",
-            "version_code": 11,
-            "version_name": "0.5.0-beta.1",
+            "version_code": 12,
+            "version_name": "5.0.0",
             "min_sdk": 26,
             "target_sdk": 36,
             "compile_sdk": 36,
@@ -112,8 +112,10 @@ def generate_all() -> dict:
             ],
             "verification": {
                 "collective_tests": "35/35 passed (Ed25519 asymmetric release verification)",
+                "google_identity_collective_tests": "32/32 passed (Google OIDC RS256 JWKS, PKCE loopback, 2-installation HTTP E2E sync, expiry/revocation)",
+                "human_usefulness_tests": "18/18 passed (first-turn zero-refusal human usefulness benchmark)",
                 "live_activity_sse_tests": "18/18 passed (monotonic seq, cancellation, disconnect, reconnection, concurrency)",
-                "live_simulated_server_smoke_test": "passed (/api/health, /api/settings, /api/collective, /api/chat/stream, /api/turn/events)",
+                "live_simulated_server_smoke_test": "passed (/api/health, /api/settings, /api/collective, /api/identity/google, /api/chat/stream, /api/turn/events)",
                 "ready_for_closed_testing_upload": True
             }
         },
@@ -121,8 +123,8 @@ def generate_all() -> dict:
             "distribution": "Standalone Native C# Win32 Per-User Installer (CloverAIStudio-Setup.exe)",
             "packaging_route": "Native .NET Framework 4.8 x64 GUI Setup & Launcher (csc.exe) with embedded asInvoker manifest, automatic Zone.Identifier unblocking, and embedded TrustedPublisher certificate registration",
             "publisher_display_name": "Santhosh Narayanan",
-            "manifest_version": "0.5.0.0",
-            "display_version": "0.5.0-beta.1",
+            "manifest_version": "5.0.0.0",
+            "display_version": "5.0.0",
             "architecture": "x64",
             "min_windows_version": "10.0.19041.0",
             "max_windows_version_tested": "10.0.26100.0",
@@ -150,6 +152,8 @@ def generate_all() -> dict:
             "verification": {
                 "semantics_tests": "155/155 passed",
                 "collective_tests": "35/35 passed (Ed25519 asymmetric release verification)",
+                "google_identity_collective_tests": "32/32 passed (Google OIDC RS256 JWKS, PKCE loopback, 2-installation HTTP E2E sync, expiry/revocation)",
+                "human_usefulness_tests": "18/18 passed (first-turn zero-refusal human usefulness benchmark)",
                 "live_activity_sse_tests": "18/18 passed (monotonic seq, cancellation, disconnect, reconnection, concurrency)",
                 "repo_tests": "27/27 passed",
                 "tool_routing_tests": "129/129 passed",
@@ -165,12 +169,12 @@ def generate_all() -> dict:
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `0.5.0-beta.1` (`0.5.0.0` Win32 PE `AssemblyVersion`)  
+**Release Version**: `5.0.0` (`5.0.0.0` Win32 PE `AssemblyVersion`)  
 **Product Name**: `Clover AI Studio`  
 **Publisher**: `Santhosh Narayanan`  
 **Distribution Model**: Standalone Native C# Win32 Per-User Installer (`CloverAIStudio-Setup.exe` / `clover-ai-studio-beta-setup.exe`)  
 **Target Architecture**: `x64` (`Windows.Desktop`, `MinVersion="10.0.19041.0"`, `MaxVersionTested="10.0.26100.0"`)  
-**Build Date**: `2026-11-05`  
+**Build Date**: `2026-11-06`  
 **Build Environment**: Windows 11 x64 (`10.0.26200`), `.NET Framework 4.8` `csc.exe` (`v4.0.30319`).
 
 ---
@@ -201,6 +205,8 @@ def generate_all() -> dict:
 
 - `python tests/test_semantics.py`: **`155/155` checks passed**.
 - `python clover/test_collective.py`: **`35/35` checks passed** (Ed25519 public-key verification, unauthenticated-publish refusal, forged-key rejection, PII stripping, Sybil deduplication, Byzantine poison rejection, `Personal > Collective > General` priority).
+- `python clover/test_google_identity_collective.py`: **`32/32` checks passed** (Google OIDC RS256 JWKS verification, Windows OAuth PKCE loopback, Android OIDC token flow, two-installation HTTP E2E synchronization, expiry & revocation rejection, and consent withdrawal).
+- `python clover/test_human_usefulness.py`: **`18/18` checks passed** (first-turn zero-refusal human usefulness benchmark).
 - `python clover/test_live_activity_sse.py`: **`18/18` checks passed** (strictly monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
 - `python tests/test_clover_repo.py`: **`27/27` checks passed**.
 - `python tests/test_tool_routing.py`: **`129/129` checks passed**.
@@ -215,14 +221,14 @@ def generate_all() -> dict:
     (BETA_DIR / "windows" / "SHA256SUMS.txt").write_text(win_sums, encoding="utf-8")
 
     # Write Android BUILD-REPORT.md
-    and_report = f"""# Clover AI Studio — Android Google Play Closed Beta Build & Verification Report
+    and_report = f"""# Clover AI Studio — Android Google Play Release Build & Verification Report
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `0.5.0-beta.1`  
-**Version Code**: `11`  
+**Release Version**: `5.0.0`  
+**Version Code**: `12`  
 **Package Name**: `ai.clover.studio`  
-**Build Date**: `2026-11-05`  
+**Build Date**: `2026-11-06`  
 **Build Environment**: `k3` (`/opt/clover-k3/studio-android`), OpenJDK `17.0.20`, Gradle `8.9`, Android Gradle Plugin `8.5.2`, Chaquopy `17.2.0` (CPython `3.12`), Android SDK `36` (`minSdk 26`, `targetSdk 36`, `compileSdk 36`), Android NDK `llvm-strip`.
 
 ---
@@ -231,8 +237,8 @@ def generate_all() -> dict:
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console Closed Testing upload (`versionCode 11`, `targetSdk 36`) | `{aab_size:,}` bytes (`{aab_size / (1024*1024):.2f} MB`) | `{aab_sha}` |
-| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 11`, `targetSdk 36`) | `{apk_size:,}` bytes (`{apk_size / (1024*1024):.2f} MB`) | `{apk_sha}` |
+| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 12`, `targetSdk 36`) | `{aab_size:,}` bytes (`{aab_size / (1024*1024):.2f} MB`) | `{aab_sha}` |
+| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 12`, `targetSdk 36`) | `{apk_size:,}` bytes (`{apk_size / (1024*1024):.2f} MB`) | `{apk_sha}` |
 
 ---
 
@@ -255,7 +261,7 @@ def generate_all() -> dict:
 ## 3. Package & Manifest Audit (`build.gradle`)
 
 ```text
-package: name='ai.clover.studio' versionCode='11' versionName='0.5.0-beta.1'
+package: name='ai.clover.studio' versionCode='12' versionName='5.0.0'
 sdkVersion:'26'
 targetSdkVersion:'36'
 compileSdkVersion:'36'
@@ -268,9 +274,10 @@ launchable-activity: name='ai.clover.studio.MainActivity'
 ## 4. Functional Smoke Test, Live Activity SSE & Collective Learning Verification
 
 1. **Collective Problem-Solving Learning (`test_collective.py`)**: **`35/35` checks passed** (RFC 8032 Ed25519 public-key verification, unauthenticated-publish refusal, forged-key rejection, PII stripping, Sybil deduplication, Byzantine poison rejection, `Personal > Collective > General` priority).
-2. **Live Activity SSE Timeline (`test_live_activity_sse.py`)**: **`18/18` checks passed** (monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
-3. **Google Play Console Links**:
-   - Instant Test (Internal App Sharing): `https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNRoJQ1q2vSWcsS_HamuIOmmlbmpz4YZmTRB6qoomiOmSj5pK7Qz75RY537EnOpdUc1h4mT_pQkTYd3smKNS`
+2. **Google OIDC Identity & E2E Collective Sync (`test_google_identity_collective.py`)**: **`32/32` checks passed** (RS256 JWKS verification, OAuth PKCE, Android OIDC token flow, two-installation HTTP E2E synchronization, expiry/revocation rejection, and consent withdrawal).
+3. **Live Activity SSE Timeline (`test_live_activity_sse.py`)**: **`18/18` checks passed** (monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
+4. **Google Play Console Links**:
+   - Instant Test (Internal App Sharing): `https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNST0mwN2vPTOPN7ZLs_CGVqSbOh8hZpSj7ww63CuXdasv0pCuEsU62FEbMlHuEjx5yEE5m-ApIJBwp2ZF12`
    - Closed Testing Opt-In: `https://play.google.com/apps/testing/ai.clover.studio`
 """
     (BETA_DIR / "android" / "BUILD-REPORT.md").write_text(and_report, encoding="utf-8")
@@ -284,11 +291,11 @@ launchable-activity: name='ai.clover.studio.MainActivity'
     # Write download/SHA256SUMS.txt
     dl_sums = (
         "Clover AI Studio installers (SHA-256). Each downloads what it needs on first run, from the publishers, checked against pinned hashes.\n\n"
-        f"laptop/CloverAIStudio-Setup.exe  0.5.0-beta.1  Windows 10 2004+ x64, 16 GB RAM, AVX2, 25 GB free  {setup_size} bytes\n"
+        f"laptop/CloverAIStudio-Setup.exe  5.0.0  Windows 10 2004+ x64, 16 GB RAM, AVX2, 25 GB free  {setup_size} bytes\n"
         f"  {setup_sha}\n"
         f"laptop/CloverFramework-CodeSign.cer  Clover Framework Authenticode certificate  {cer_size} bytes\n"
         f"  {cer_sha}\n"
-        f"mobile/CloverAIStudio.apk  0.5.0-beta.1 (code 11, targetSdk 36)  Android 8+ arm64, Snapdragon GPU via OpenCL, about 2 GB free  {apk_size} bytes\n"
+        f"mobile/CloverAIStudio.apk  5.0.0 (code 12, targetSdk 36)  Android 8+ arm64, Snapdragon GPU via OpenCL, about 2 GB free  {apk_size} bytes\n"
         f"  {apk_sha}\n"
     )
     (REPO_ROOT / "download" / "SHA256SUMS.txt").write_text(dl_sums, encoding="utf-8")

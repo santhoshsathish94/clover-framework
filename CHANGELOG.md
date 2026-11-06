@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## v5.0.0 — 2026-11-06
+
+**Clover v5.0.0 — Universal Clover AI Studio (`Windows`, `Android`, & `Web`), Local-First Personal Process Learning (`PPL`), Google OIDC Identity, and End-to-End Collective Problem-Solving Learning (`CPSL`).** `VERSION` is `5.0.0` and all site `?v=5.0.0` asset cache strings match it.
+
+- **Google OpenID Connect Identity & End-to-End Collective Learning Synchronization (`google_identity.py`, `collective_gateway.py`, `collective_evaluator.py`, `core_registry.py`, `core_sync.py`, `test_google_identity_collective.py`):**
+  - Implemented stateless Google OpenID Connect authentication (`RS256` JWKS verification, `iss`, `aud`, `exp`, `iat`, `nonce`, and `sub` claim validation) supporting Windows system-browser OAuth 2.0 + PKCE (`S256`) loopback and Android OIDC sign-in without creating any separate Clover account, password, email verification, or profile store (`32/32` checks in `test_google_identity_collective.py`, `35/35` checks in `test_collective.py`).
+  - Built the **Settings → Learning & Growth** section in `web/app.html` with three independent controls: **Personal Learning** (enabled by default, local-only, offline-ready), **Contribute to Collective Learning** (disabled by default, requires Google OIDC + explicit per-package confirmation), and **Receive Collective Learning** (disabled by default, requires Google OIDC + explicit consent).
+  - Implemented the remote Collective Learning Gateway and signed Registry endpoints (`/api/collective/gateway/{contribute,releases,withdraw}`) with HMAC-derived pseudonymous contributor IDs (`contrib_<hmac>`), replay/nonce/rate-limit protection, 5-gate quarantine evaluation (`G1` Quorum .. `G5` Zero-Regression), RFC 8032 Ed25519 release signing, incremental synchronization (`since_version`), expiry and revocation enforcement, and contributor withdrawal.
+- **Android 15/16 (`targetSdk 36`) Edge-to-Edge WindowInsets, Native 16 kHz Audio Capture & First-Turn Conversational Quality (`MainActivity.java`, `server.py`, `omni_native.py`, `semantics.py`, `image_gen.py`, `test_human_usefulness.py`):**
+  - Fixed Android `targetSdk 36` status/battery/navigation bar overlap via dynamic `WindowInsets.Type.systemBars() | displayCutout() | ime()` padding (`[0,98][1080,2295]` on Samsung Galaxy S23) and dark status/nav bar appearance.
+  - Added `MODIFY_AUDIO_SETTINGS` permission and native `CloverAndroidBridge` 16 kHz mono PCM WAV `AudioRecord` capture (`startAudioCapture` / `stopAudioCapture`) plus visible `#mic` composer button for one-tap voice recording.
+  - Resolved first-turn tool-permission roadblocks and model self-refusals, added cross-platform procedural PNG canvas rendering (`generate_image`), and verified **`18/18`** real-world human tasks on Turn 1 (`test_human_usefulness.py`).
+
 ## v4.1.2 — 2026-10-29
 
 **Meaning Formation, Grounded Execution & Developmental Growth Pilot, Held-Out SWE-Bench Pro V2 `HARD-51` Verification (`NodeBB-8168c6c4` & `flipt-2ca5dfb3`), Complete-English OOP Reduction (`398 → 5`), and 6-Directory Repository Architecture.** `VERSION` is `4.1.2` and all site `?v=4.1.2` asset cache strings match it.

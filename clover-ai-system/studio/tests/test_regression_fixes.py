@@ -217,5 +217,31 @@ check("app.html has compact model dropdown in rail__top that fits mobile screens
 check("CLV-004: app.html checks sv.fused_available before claiming C2/C3 are installed",
       "var fusedOk = !!sv.fused_available" in app_html and "not installed on this laptop" in app_html)
 
+# a public website must not drive the laptop's local server (Windows sets no token): observed 2026-11-06 on a scratch
+# harness, Origin https://cloverframework.com changed permissions (shell -> allow) and read chat sessions
+import paths as PT  # noqa: E402
+
+
+def handler_for(origin, sec_fetch_site="cross-site"):
+    h = object.__new__(SV.Handler)
+    h.headers = {"Origin": origin, "Sec-Fetch-Site": sec_fetch_site} if origin else {}
+    return h
+
+
+web_before, port_before = PT.WEB, SV.S.port
+try:
+    PT.WEB, SV.S.port = False, 8765
+    for site in ("https://cloverframework.com", "https://www.cloverframework.com", "https://evil.example"):
+        check(f"local server: a POST from {site} is cross-site", handler_for(site)._cross_site())
+        check(f"local server: no CORS read access for {site}", handler_for(site)._cors_headers() == {})
+    check("local server: its own page is not cross-site", not handler_for("http://127.0.0.1:8765", "same-origin")._cross_site())
+    check("local server: a local program without Origin is not cross-site", not handler_for("", None)._cross_site())
+    PT.WEB = True
+    check("Web server: the public site keeps CORS access",
+          handler_for("https://cloverframework.com")._cors_headers().get("Access-Control-Allow-Origin") == "https://cloverframework.com")
+    check("Web server: the public site is not cross-site", not handler_for("https://cloverframework.com")._cross_site())
+finally:
+    PT.WEB, SV.S.port = web_before, port_before
+
 print("ALL PASS" if ok else "SOME FAILED")
 sys.exit(0 if ok else 1)

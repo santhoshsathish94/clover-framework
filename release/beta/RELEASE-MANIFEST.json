@@ -1,9 +1,9 @@
 {
   "product": "Clover AI Studio",
   "publisher": "Santhosh Narayanan",
-  "release_version": "0.5.0-beta.1",
-  "release_channel": "beta",
-  "release_date": "2026-11-05",
+  "release_version": "5.0.0",
+  "release_channel": "release",
+  "release_date": "2026-11-06",
   "generated_by": "release/beta/generate_release_reports.py",
   "cpsl_release_signing": {
     "algorithm": "Ed25519 (RFC 8032)",
@@ -15,15 +15,15 @@
     "privacy_policy": "https://cloverframework.com/privacy/",
     "support": "https://github.com/santhoshsathish94/clover-framework/issues",
     "windows_direct_installer": "https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe",
-    "google_play_instant_test": "https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNRoJQ1q2vSWcsS_HamuIOmmlbmpz4YZmTRB6qoomiOmSj5pK7Qz75RY537EnOpdUc1h4mT_pQkTYd3smKNS",
+    "google_play_instant_test": "https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNST0mwN2vPTOPN7ZLs_CGVqSbOh8hZpSj7ww63CuXdasv0pCuEsU62FEbMlHuEjx5yEE5m-ApIJBwp2ZF12",
     "google_play_closed_beta_web": "https://play.google.com/apps/testing/ai.clover.studio",
     "google_play_store_listing": "https://play.google.com/store/apps/details?id=ai.clover.studio"
   },
   "android": {
     "store": "Google Play Console (Closed Testing & Internal App Sharing)",
     "package_name": "ai.clover.studio",
-    "version_code": 11,
-    "version_name": "0.5.0-beta.1",
+    "version_code": 12,
+    "version_name": "5.0.0",
     "min_sdk": 26,
     "target_sdk": 36,
     "compile_sdk": 36,
@@ -46,21 +46,23 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 73847994,
-        "sha256": "7f186a955e3a30cc1e5aaddff990854b770ab224a46481ccac49924ab3749b6d"
+        "size_bytes": 73878329,
+        "sha256": "cd20189fc456666035190e0dea0d8060ff8f8523fb41b0d02cb585c9725a0c02"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "mirror": "download/mobile/CloverAIStudio.apk",
         "type": "apk",
-        "size_bytes": 74927154,
-        "sha256": "7c2d9b5431d00b58e392d78f7620df041c7a613a49b8de2fbd2cbdb1fdadc09e"
+        "size_bytes": 74957501,
+        "sha256": "af1340cff9ac799556c2bb419c87b540841c61b5e5ab3dab459381dfb2874e4e"
       }
     ],
     "verification": {
       "collective_tests": "35/35 passed (Ed25519 asymmetric release verification)",
+      "google_identity_collective_tests": "32/32 passed (Google OIDC RS256 JWKS, PKCE loopback, 2-installation HTTP E2E sync, expiry/revocation)",
+      "human_usefulness_tests": "18/18 passed (first-turn zero-refusal human usefulness benchmark)",
       "live_activity_sse_tests": "18/18 passed (monotonic seq, cancellation, disconnect, reconnection, concurrency)",
-      "live_simulated_server_smoke_test": "passed (/api/health, /api/settings, /api/collective, /api/chat/stream, /api/turn/events)",
+      "live_simulated_server_smoke_test": "passed (/api/health, /api/settings, /api/collective, /api/identity/google, /api/chat/stream, /api/turn/events)",
       "ready_for_closed_testing_upload": true
     }
   },
@@ -68,8 +70,8 @@
     "distribution": "Standalone Native C# Win32 Per-User Installer (CloverAIStudio-Setup.exe)",
     "packaging_route": "Native .NET Framework 4.8 x64 GUI Setup & Launcher (csc.exe) with embedded asInvoker manifest, automatic Zone.Identifier unblocking, and embedded TrustedPublisher certificate registration",
     "publisher_display_name": "Santhosh Narayanan",
-    "manifest_version": "0.5.0.0",
-    "display_version": "0.5.0-beta.1",
+    "manifest_version": "5.0.0.0",
+    "display_version": "5.0.0",
     "architecture": "x64",
     "min_windows_version": "10.0.19041.0",
     "max_windows_version_tested": "10.0.26100.0",
@@ -83,8 +85,8 @@
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "mirror": "download/laptop/CloverAIStudio-Setup.exe",
         "type": "exe",
-        "size_bytes": 2477528,
-        "sha256": "9d3b44b0e76f5f2ce6dbf778342b41e06477fa5cf85694fc4eaae4f3a7395e8d"
+        "size_bytes": 1881048,
+        "sha256": "afc2f2179122ab22543356e8b840d377e2869ee09e83b41a6eb94343a2877ea6"
       },
       {
         "file": "release/beta/windows/CloverFramework-CodeSign.cer",
@@ -97,6 +99,8 @@
     "verification": {
       "semantics_tests": "155/155 passed",
       "collective_tests": "35/35 passed (Ed25519 asymmetric release verification)",
+      "google_identity_collective_tests": "32/32 passed (Google OIDC RS256 JWKS, PKCE loopback, 2-installation HTTP E2E sync, expiry/revocation)",
+      "human_usefulness_tests": "18/18 passed (first-turn zero-refusal human usefulness benchmark)",
       "live_activity_sse_tests": "18/18 passed (monotonic seq, cancellation, disconnect, reconnection, concurrency)",
       "repo_tests": "27/27 passed",
       "tool_routing_tests": "129/129 passed",

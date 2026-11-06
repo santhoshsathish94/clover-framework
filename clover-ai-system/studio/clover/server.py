@@ -35,8 +35,8 @@ import paths  # noqa: E402
 import semantics  # noqa: E402
 
 MODEL_ID = "lfm3-omni-2b"
-STUDIO_VERSION = "0.5.0-beta.1"
-RELEASE_CHANNEL = "beta"
+STUDIO_VERSION = "5.0.0"
+RELEASE_CHANNEL = "release"
 PRIVACY_URL = "https://cloverframework.com/privacy/"
 SUPPORT_URL = "https://github.com/santhoshsathish94/clover-framework/issues"
 MAX_BODY = 4 * 1024 * 1024
@@ -83,6 +83,8 @@ class S:
     kit = None
     memidx = None
     csi = None  # csi_child.CSIService
+    google_identity = None  # google_identity.GoogleIdentityManager
+    gateway_runtime = None  # {"gateway": CollectiveGateway, "evaluator": CollectiveEvaluator, "registry": CoreRegistry}
     hardware = None  # hardware.probe(): this machine and the settings chosen for it
     last_turn_end = time.time()
     kv_sid = None
@@ -695,6 +697,29 @@ def collective_store(csi=None, keep_csi=True):
             coll.set_consent(contribute=bool(st.get("collective_contribute", False)),
                              receive=bool(st.get("collective_receive", False)))
     return coll
+
+
+def google_identity_manager():
+    """Stateless Google OpenID Connect identity manager for this installation (<base>/vault)."""
+    import google_identity
+    if S.google_identity is None and S.args is not None:
+        S.google_identity = google_identity.GoogleIdentityManager(Path(S.args.base))
+    return S.google_identity
+
+
+def collective_gateway_runtime():
+    """Remote Collective Learning Gateway & Signed Registry runtime (hosted on k3 or local gateway mode)."""
+    import collective_evaluator
+    import collective_gateway
+    import core_registry
+    if S.gateway_runtime is None and S.args is not None:
+        base = Path(S.args.base)
+        gw = collective_gateway.CollectiveGateway(state_dir=base / "collective-gateway")
+        min_inst = int(os.environ.get("CLOVER_CPSL_MIN_INSTALLATIONS") or 2)
+        ev = collective_evaluator.CollectiveEvaluator(min_installations=min_inst, min_agreement=0.75)
+        reg = core_registry.CoreRegistry(base / "clover-collective")
+        S.gateway_runtime = {"gateway": gw, "evaluator": ev, "registry": reg, "lock": threading.RLock()}
+    return S.gateway_runtime
 
 
 def personal_step(pers, method, *args):
@@ -1530,13 +1555,7 @@ class Handler(BaseHTTPRequestHandler):
     def _cors_headers(self):
         origin = (self.headers.get("Origin") or "").strip()
         if not paths.WEB:
-            if origin in ("https://cloverframework.com", "https://www.cloverframework.com"):
-                return {
-                    "Access-Control-Allow-Origin": origin,
-                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-                    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Clover-Key, X-Clover-Token, X-Clover-Bridge, X-Clover-User, X-Clover-Team",
-                    "Vary": "Origin",
-                }
+            # a public website must not read a laptop's local server (Windows sets no token)
             return {}
         if origin not in WEB_ORIGINS and not origin.startswith(("http://127.0.0.1:", "http://localhost:")):
             origin = "https://cloverframework.com"
@@ -1611,8 +1630,6 @@ class Handler(BaseHTTPRequestHandler):
             if not origin or origin in WEB_ORIGINS or origin.startswith(("http://127.0.0.1:", "http://localhost:")):
                 return False
             return True
-        if origin in ("https://cloverframework.com", "https://www.cloverframework.com"):
-            return False
         if origin and origin not in (f"http://127.0.0.1:{S.port}", f"http://localhost:{S.port}"):
             return True
         return self.headers.get("Sec-Fetch-Site") not in (None, "same-origin", "none")
@@ -1628,6 +1645,10 @@ class Handler(BaseHTTPRequestHandler):
             raise ValueError("JSON object expected")
         return body
 
+    def _bearer_token(self) -> str:
+        auth = (self.headers.get("Authorization") or "").strip()
+        return auth[7:].strip() if auth.lower().startswith("bearer ") else ""
+
     # ---------- GET ----------
     def do_GET(self):
         path, _, query = self.path.partition("?")
@@ -1635,6 +1656,50 @@ class Handler(BaseHTTPRequestHandler):
             S.last_request = time.time()
         if not self._host_ok():
             return self._send(403, {"error": "forbidden host"})
+        if path == "/api/identity/google/callback":
+            from urllib.parse import parse_qs
+            import google_identity
+            q = {k: v[0] for k, v in parse_qs(query).items()}
+            mgr = google_identity_manager()
+            if mgr is None:
+                return self._send(500, {"error": "Google identity manager unavailable"})
+            if q.get("error"):
+                html_err = (
+                    "<!doctype html><meta charset=utf-8><title>Google Sign-In Cancelled</title>"
+                    "<body style='font:15px system-ui,sans-serif;background:#F7F3E9;color:#39473D;padding:2rem;text-align:center'>"
+                    f"<h3>Google sign-in was not completed ({re.sub(r'[^A-Za-z0-9_ -]', '', str(q.get('error'))[:60])})</h3>"
+                    "<p>You can close this window and return to Clover AI Studio.</p></body>"
+                )
+                return self._send(400, html_err.encode("utf-8"), "text/html")
+            try:
+                mgr.complete_pkce_callback(state=str(q.get("state") or ""), code=str(q.get("code") or ""))
+                if S.repo is not None:
+                    S.repo.note("Google identity connected via OIDC PKCE")
+                html_ok = (
+                    "<!doctype html><meta charset=utf-8><title>Connected to Clover AI Studio</title>"
+                    "<body style='font:15px system-ui,sans-serif;background:#F7F3E9;color:#39473D;padding:2rem;text-align:center'>"
+                    "<h3>Google identity connected to Clover AI Studio</h3>"
+                    "<p>Collective learning remains off until you explicitly enable it in Settings &rarr; Learning &amp; Growth.</p>"
+                    "<p>You can close this tab and return to Clover AI Studio.</p></body>"
+                )
+                return self._send(200, html_ok.encode("utf-8"), "text/html")
+            except google_identity.GoogleIdentityError as exc:
+                return self._send(400, {"error": str(exc)})
+        if path == "/api/collective/gateway/releases":
+            from urllib.parse import parse_qs
+            import collective_gateway
+            q = {k: v[0] for k, v in parse_qs(query).items()}
+            gw_rt = collective_gateway_runtime()
+            if gw_rt is None:
+                return self._send(503, {"error": "Collective gateway runtime unavailable"})
+            bearer = self._bearer_token()
+            try:
+                gw_rt["gateway"].authenticate_contributor(bearer)
+            except collective_gateway.GatewaySecurityError as exc:
+                return self._send(exc.status, {"error": exc.message, "code": exc.code})
+            with gw_rt["lock"]:
+                bundle = gw_rt["registry"].get_release_bundle(since_version=q.get("since_version"))
+            return self._send(200, bundle)
         if not paths.WEB and not self._token_ok():
             return self._send(403, {"error": "token required"})
         if path in ("/", "/index.html") and setup_needed():
@@ -1722,14 +1787,21 @@ class Handler(BaseHTTPRequestHandler):
                                     "hardware": S.hardware})
         if path == "/api/memory":
             return self._send(200, {"memories": layer_kit().memories()})
+        if path == "/api/identity/google":
+            mgr = google_identity_manager()
+            return self._send(200, mgr.status() if mgr else {"connected": False, "status_text": "Not connected"})
         if path == "/api/personal":  # what Clover learned about the user, from which experiences
             pers = personal_store()
             return self._send(200, pers.view() if pers else
                               {"enabled": False, "how": "Personal learning is off for this process (CLOVER_PPL=off)."})
         if path == "/api/collective":  # collective learning: consent switches, candidate preview, active shared-core rules
             coll = collective_store()
-            return self._send(200, coll.view(personal_store()) if coll else
-                              {"enabled": False, "how": "Collective learning is off for this process (CLOVER_COLLECTIVE=off)."})
+            mgr = google_identity_manager()
+            g_stat = mgr.status() if mgr else {"connected": False, "status_text": "Not connected"}
+            p_on = bool(S.settings.get().get("personal", True)) if S.settings else True
+            return self._send(200, dict(coll.view(personal_store(), google_status=g_stat), personal_enabled=p_on) if coll else
+                              {"enabled": False, "google_identity": g_stat, "personal_enabled": p_on,
+                               "how": "Collective learning is off for this process (CLOVER_COLLECTIVE=off)."})
         if path == "/api/sessions":  # conversations in the repository, newest first (titles, not contents)
             return self._send(200, {"sessions": [{k: s[k] for k in ("id", "title", "turns", "started", "updated")}
                                                  for s in S.repo.sessions()[:300]]})
@@ -1803,6 +1875,35 @@ class Handler(BaseHTTPRequestHandler):
         if not self._host_ok() or self._cross_site():
             return self._send(403, {"error": "cross-site requests are not accepted"})
         path = self.path.split("?", 1)[0]
+        if path in ("/api/collective/gateway/contribute", "/api/collective/gateway/withdraw"):
+            import collective_gateway
+            try:
+                body = self._read_json(MAX_BODY)
+            except Exception as exc:
+                return self._send(400, {"error": str(exc)})
+            gw_rt = collective_gateway_runtime()
+            if gw_rt is None:
+                return self._send(503, {"error": "Collective gateway runtime unavailable"})
+            bearer = self._bearer_token()
+            try:
+                with gw_rt["lock"]:
+                    if path.endswith("/contribute"):
+                        res = gw_rt["gateway"].submit_authenticated_contribution(id_token=bearer, payload=body)
+                    else:
+                        res = gw_rt["gateway"].withdraw_authenticated_contributor(id_token=bearer, payload=body)
+                    agg = gw_rt["gateway"].aggregate_candidates()
+                    eval_res = gw_rt["evaluator"].evaluate_all(agg)
+                    res["evaluated_count"] = eval_res["total_evaluated"]
+                    res["promoted_count"] = eval_res["promoted_count"]
+                    if gw_rt["registry"]._seed is not None:
+                        note = "Collective gateway evaluation" if path.endswith("/contribute") else "Contributor withdrawal re-evaluation"
+                        manifest = gw_rt["registry"].publish_release(eval_res, note=note)
+                        res["release_version"] = manifest["version"]
+                return self._send(200, res)
+            except collective_gateway.GatewaySecurityError as exc:
+                return self._send(exc.status, {"error": exc.message, "code": exc.code})
+            except Exception as exc:
+                return self._send(500, {"error": f"{type(exc).__name__}: {exc}"})
         if path == "/api/auth/login":
             try:
                 body = self._read_json(MAX_BODY)
@@ -2024,7 +2125,49 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(200, {"result": sync_repo(), "repo": github_repo()})
                 except RuntimeError as exc:
                     return self._send(409, {"error": str(exc)})
+            if path in ("/api/identity/google/start", "/api/identity/google/token", "/api/identity/google/disconnect"):
+                import google_identity
+                mgr = google_identity_manager()
+                if mgr is None:
+                    return self._send(500, {"error": "Google identity manager unavailable"})
+                if path.endswith("/start"):
+                    redir = str(body.get("redirect_uri") or f"http://127.0.0.1:{S.port}/api/identity/google/callback").strip()
+                    res = mgr.start_pkce_flow(redirect_uri=redir, client_id=body.get("client_id"))
+                    if body.get("open_browser") is True and os.name == "nt":
+                        import webbrowser
+                        try:
+                            webbrowser.open(res["auth_url"])
+                        except Exception:
+                            pass
+                    return self._send(200, res)
+                if path.endswith("/token"):
+                    id_tok = str(body.get("id_token") or "").strip()
+                    nonce = body.get("nonce")
+                    try:
+                        st = mgr.connect_with_id_token(id_tok, expected_nonce=nonce if nonce else None)
+                    except google_identity.GoogleIdentityError as exc:
+                        return self._send(400, {"error": str(exc)})
+                    if S.repo is not None:
+                        S.repo.note("Google identity connected via OIDC ID token")
+                    coll = collective_store()
+                    return self._send(200, {"ok": True, "google_identity": st,
+                                            "collective": coll.view(personal_store(), google_status=st) if coll else None})
+                st = mgr.disconnect()
+                coll = collective_store()
+                if coll is not None:
+                    coll.set_consent(contribute=False, receive=False)
+                if S.settings is not None:
+                    S.settings.update({"collective_contribute": False, "collective_receive": False})
+                if S.repo is not None:
+                    S.repo.note("Google identity disconnected; collective learning disabled")
+                return self._send(200, {"ok": True, "google_identity": st,
+                                        "collective": coll.view(personal_store(), google_status=st) if coll else None})
             if path == "/api/settings":
+                if isinstance(body, dict) and (body.get("collective_contribute") is True or body.get("collective_receive") is True):
+                    mgr = google_identity_manager()
+                    g_ok = bool(mgr and mgr.status().get("connected"))
+                    if not g_ok:
+                        raise ValueError("Sign in with Google first to enable collective learning.")
                 before = S.settings.get()
                 new = S.settings.update(body if isinstance(body, dict) else {})
                 if S.mode == "lfm3" and new["engine"] != before["engine"]:
@@ -2081,28 +2224,69 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(200, dict(pers.forget_all(), view=pers.view()))
                 ids = body.get("ids") if isinstance(body.get("ids"), list) else []
                 return self._send(200, dict(pers.retention(ids, str(body.get("choice") or "")), view=pers.view()))
-            if path in ("/api/collective/consent", "/api/collective/sync", "/api/collective/preview"):
+            if path in ("/api/collective/consent", "/api/collective/contribute", "/api/collective/sync",
+                        "/api/collective/withdraw", "/api/collective/preview"):
+                import core_sync
                 coll = collective_store()
                 if coll is None:
                     return self._send(409, {"error": "collective learning is off for this process (CLOVER_COLLECTIVE=off)"})
                 pers = personal_store()
-                if path.endswith("/consent"):
-                    c_in = body.get("contribute") if isinstance(body.get("contribute"), bool) else None
-                    r_in = body.get("receive") if isinstance(body.get("receive"), bool) else None
-                    coll.set_consent(contribute=c_in, receive=r_in)
-                    upd = {}
-                    if c_in is not None:
-                        upd["collective_contribute"] = c_in
-                    if r_in is not None:
-                        upd["collective_receive"] = r_in
-                    if upd and S.settings is not None:
-                        S.settings.update(upd)
-                    return self._send(200, coll.view(pers))
-                if path.endswith("/sync"):
-                    reg_dir = str(body.get("registry_dir") or (Path(S.args.base) / "clover-collective")).strip()
-                    sync_res = coll.sync_from_registry(reg_dir)
-                    return self._send(200, dict(sync_res, view=coll.view(pers)))
-                return self._send(200, {"candidates": coll.preview_candidates(pers)})
+                mgr = google_identity_manager()
+                g_stat = mgr.status() if mgr else {"connected": False, "status_text": "Not connected"}
+                p_on = bool(S.settings.get().get("personal", True)) if S.settings else True
+                try:
+                    if path.endswith("/consent"):
+                        c_in = body.get("contribute") if isinstance(body.get("contribute"), bool) else None
+                        r_in = body.get("receive") if isinstance(body.get("receive"), bool) else None
+                        coll.set_consent(
+                            contribute=c_in,
+                            receive=r_in,
+                            google_connected=bool(g_stat.get("connected")),
+                            require_identity=True,
+                        )
+                        upd = {}
+                        if c_in is not None:
+                            upd["collective_contribute"] = c_in
+                        if r_in is not None:
+                            upd["collective_receive"] = r_in
+                        if upd and S.settings is not None:
+                            S.settings.update(upd)
+                        return self._send(200, dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on))
+                    if path.endswith("/contribute"):
+                        id_tok = mgr.get_valid_id_token() if mgr else None
+                        pkgs = body.get("packages")
+                        if pkgs is None:
+                            pkgs = coll.preview_candidates(pers)
+                        resp = coll.contribute_to_gateway(
+                            id_token=id_tok,
+                            packages=pkgs,
+                            confirmed=bool(body.get("confirmed")),
+                            gateway_url=body.get("gateway_url"),
+                        )
+                        return self._send(200, dict(resp, view=dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)))
+                    if path.endswith("/sync"):
+                        if body.get("registry_dir"):
+                            sync_res = coll.sync_from_registry(str(body["registry_dir"]).strip())
+                        else:
+                            id_tok = mgr.get_valid_id_token() if mgr else None
+                            sync_res = coll.sync_from_gateway(
+                                id_token=id_tok,
+                                require_identity=True,
+                                gateway_url=body.get("gateway_url"),
+                            )
+                        return self._send(200, dict(sync_res, view=dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)))
+                    if path.endswith("/withdraw"):
+                        id_tok = mgr.get_valid_id_token() if mgr else None
+                        w_res = coll.withdraw_from_gateway(
+                            id_token=id_tok,
+                            gateway_url=body.get("gateway_url"),
+                        )
+                        if S.settings is not None:
+                            S.settings.update({"collective_contribute": False})
+                        return self._send(200, dict(w_res, view=dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)))
+                    return self._send(200, {"candidates": coll.preview_candidates(pers)})
+                except core_sync.CoreSyncError as exc:
+                    return self._send(400, {"error": str(exc), "view": dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)})
             if path == "/api/media/clear":
                 gone = 0
                 for p in media_dir().iterdir():  # only files Clover named (by content): the folder may be the user's

@@ -223,8 +223,20 @@ class CoreRegistry:
             "evaluations/generalisation",
             "evaluations/cross-domain",
             "releases",
+            "releases/history",
         ]:
             (self.root / sub).mkdir(parents=True, exist_ok=True)
+        self.revoked_versions: set[str] = set()
+        manifest_file = self.root / "releases" / "manifest.json"
+        if manifest_file.is_file():
+            try:
+                cur_m = json.loads(manifest_file.read_text(encoding="utf-8"))
+                v_str = str(cur_m.get("version") or "")
+                if v_str.startswith("1.0.") and v_str[4:].isdigit():
+                    self.version_num = int(v_str[4:])
+                self.revoked_versions.update(str(x) for x in (cur_m.get("revoked_versions") or ()))
+            except Exception:
+                pass
 
         if self.git and not (self.root / ".git").exists():
             self._git("init", "-q")
@@ -247,9 +259,18 @@ class CoreRegistry:
         if self._git("status", "--porcelain").strip():
             self._git("commit", "-q", "-m", msg)
 
-    def publish_release(self, eval_summary: dict, note: str = "Automated evaluation & promotion") -> dict:
+    def publish_release(
+        self,
+        eval_summary: dict,
+        note: str = "Automated evaluation & promotion",
+        *,
+        expires_utc: str | None = None,
+        revoked_versions: list[str] | set[str] | None = None,
+    ) -> dict:
         self.version_num += 1
         version = f"1.0.{self.version_num}"
+        if revoked_versions is not None:
+            self.revoked_versions.update(str(x) for x in revoked_versions if x)
 
         for cat in ("semantics", "reasoning-patterns", "problem-solving", "tool-use-patterns"):
             cat_dir = self.root / "core" / cat
@@ -293,6 +314,7 @@ class CoreRegistry:
 
         promoted_rules = []
         file_hashes = {}
+        files_content = {}
         for r in eval_summary["promoted"]:
             rule_id = f"core_{r['candidate_id'][4:]}"
             rule_obj = {
@@ -311,6 +333,7 @@ class CoreRegistry:
             self._write_json(rel_path, rule_obj)
             raw_bytes = (self.root / rel_path).read_bytes()
             file_hashes[rel_path] = hashlib.sha256(raw_bytes).hexdigest()
+            files_content[rel_path] = raw_bytes.decode("utf-8")
             promoted_rules.append(rule_obj)
 
         if self._seed is None:
@@ -318,10 +341,12 @@ class CoreRegistry:
                 "CoreRegistry.publish_release requires an Ed25519 private signing key "
                 "(pass signing_key=... or set CLOVER_CPSL_PRIVATE_KEY); client builds only ship the public key."
             )
-        payload_to_sign = json.dumps(
-            {"version": version, "rules": promoted_rules, "file_hashes": file_hashes},
-            sort_keys=True,
-        ).encode("utf-8")
+        signed_obj = {"version": version, "rules": promoted_rules, "file_hashes": file_hashes}
+        if expires_utc:
+            signed_obj["expires_utc"] = str(expires_utc)
+        if self.revoked_versions:
+            signed_obj["revoked_versions"] = sorted(self.revoked_versions)
+        payload_to_sign = json.dumps(signed_obj, sort_keys=True).encode("utf-8")
         signature = ed25519_sign(self._seed, payload_to_sign).hex()
 
         manifest = {
@@ -335,7 +360,16 @@ class CoreRegistry:
             "public_key": self.public_key_hex,
             "signature": signature,
         }
+        if expires_utc:
+            manifest["expires_utc"] = str(expires_utc)
+        if self.revoked_versions:
+            manifest["revoked_versions"] = sorted(self.revoked_versions)
+
         self._write_json("releases/manifest.json", manifest)
+        self._write_json(
+            f"releases/history/v{version}.json",
+            {"manifest": manifest, "files": files_content},
+        )
 
         changelog = self.root / "CHANGELOG.md"
         prev_log = changelog.read_text(encoding="utf-8")
@@ -348,6 +382,84 @@ class CoreRegistry:
         changelog.write_text(prev_log + entry, encoding="utf-8")
         self._commit(f"Release v{version}: {len(promoted_rules)} validated collective rules ({note})")
         return manifest
+
+    def revoke_version(self, version_to_revoke: str) -> dict:
+        """Mark a release version as revoked and re-sign the current manifest."""
+        if self._seed is None:
+            raise RuntimeError("CoreRegistry.revoke_version requires an Ed25519 private signing key")
+        self.revoked_versions.add(str(version_to_revoke))
+        manifest_path = self.root / "releases" / "manifest.json"
+        if not manifest_path.is_file():
+            raise RuntimeError("No manifest.json exists to update revocation list")
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["revoked_versions"] = sorted(self.revoked_versions)
+        if manifest.get("version") == str(version_to_revoke):
+            manifest["revoked"] = True
+        signed_obj = {
+            "version": manifest["version"],
+            "rules": manifest.get("rules", []),
+            "file_hashes": manifest.get("file_hashes", {}),
+            "revoked_versions": manifest["revoked_versions"],
+        }
+        if manifest.get("expires_utc"):
+            signed_obj["expires_utc"] = manifest["expires_utc"]
+        if manifest.get("revoked"):
+            signed_obj["revoked"] = True
+        manifest["signature"] = ed25519_sign(self._seed, json.dumps(signed_obj, sort_keys=True).encode("utf-8")).hex()
+        self._write_json("releases/manifest.json", manifest)
+        self._commit(f"Revoke collective release v{version_to_revoke}")
+        return manifest
+
+    def get_release_bundle(self, since_version: str | None = None) -> dict:
+        """Return a signed release distribution bundle supporting incremental synchronization from `since_version`."""
+        manifest_path = self.root / "releases" / "manifest.json"
+        if not manifest_path.is_file():
+            return {"available": False, "version": None, "manifest": None, "files": {}, "removed_files": []}
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        cur_ver = manifest.get("version")
+        revoked = set(manifest.get("revoked_versions") or ())
+        if since_version and since_version == cur_ver and cur_ver not in revoked and not manifest.get("revoked"):
+            return {
+                "available": True,
+                "up_to_date": True,
+                "incremental": True,
+                "version": cur_ver,
+                "since_version": since_version,
+                "manifest": manifest,
+                "files": {},
+                "removed_files": [],
+            }
+
+        prev_hashes = {}
+        if since_version:
+            hist_file = self.root / "releases" / "history" / f"v{since_version}.json"
+            if hist_file.is_file():
+                try:
+                    prev_doc = json.loads(hist_file.read_text(encoding="utf-8"))
+                    prev_hashes = dict((prev_doc.get("manifest") or {}).get("file_hashes") or {})
+                except Exception:
+                    prev_hashes = {}
+
+        cur_hashes = dict(manifest.get("file_hashes") or {})
+        changed_files = {}
+        for rel_path, sha in cur_hashes.items():
+            if prev_hashes.get(rel_path) == sha:
+                continue
+            fpath = self.root / rel_path
+            if fpath.is_file():
+                changed_files[rel_path] = fpath.read_text(encoding="utf-8")
+
+        removed_files = sorted(set(prev_hashes.keys()) - set(cur_hashes.keys()))
+        return {
+            "available": True,
+            "up_to_date": False,
+            "incremental": bool(prev_hashes),
+            "version": cur_ver,
+            "since_version": since_version,
+            "manifest": manifest,
+            "files": changed_files,
+            "removed_files": removed_files,
+        }
 
     def find_strings_anywhere_in_repo(self, strings: list[str]) -> list[str]:
         blob = (
