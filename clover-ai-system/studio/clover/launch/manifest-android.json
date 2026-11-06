@@ -1,6 +1,6 @@
 {
   "about": "What the Clover AI Studio Android app downloads on first start, pinned like the laptop's manifest.json: each file is checked against the SHA-256 Hugging Face lists for it before it is used. llama.cpp is inside the app. Read by clover/setup_fetch.py.",
-  "version": "0.4.0-android",
+  "version": "5.0.0-android",
   "archives": [],
   "files": [
     {"component": "core", "name": "LFM3-Omni-2B (Q4_0)", "dest": "data/omni/gguf/LFM3-Omni-2B-Q4_0.gguf",
@@ -8,7 +8,41 @@
      "sha256": "6d2273a383b92dd7c5db0eb4c8dfeae13e805b485a6621c4b391ae179c2b5f28", "size": 1049617920},
     {"component": "core", "name": "LFM3-Omni-2B projector (vision, audio, speech; Q8_0)", "dest": "data/omni/gguf/mmproj-LFM3-Omni-2B-Q8_0.gguf",
      "url": "https://huggingface.co/LiquidAI/LFM3-Omni-2B-GGUF/resolve/3d29af2ad166f8299c2d820937e47dc0add20ffc/mmproj-LFM3-Omni-2B-Q8_0.gguf",
-     "sha256": "8a25f9d1931244429de404fccacfb7fb933970a36aa5688d2f5069f29c6b27b1", "size": 506842528}
+     "sha256": "8a25f9d1931244429de404fccacfb7fb933970a36aa5688d2f5069f29c6b27b1", "size": 506842528},
+    {"component": "core", "name": "bge-small-en-v1.5 (S2 memory recall)", "dest": "data/embed/bge-small-en-v1.5/model.safetensors",
+     "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/model.safetensors",
+     "sha256": "3c9f31665447c8911517620762200d2245a2518d6e7208acc78cd9db317e21ad", "size": 133466304},
+    {"component": "core", "name": "bge-small-en-v1.5 config", "dest": "data/embed/bge-small-en-v1.5/config.json",
+     "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/config.json",
+     "sha256": "094f8e891b932f2000c92cfc663bac4c62069f5d8af5b5278c4306aef3084750", "size": 743},
+    {"component": "core", "name": "bge-small-en-v1.5 special tokens", "dest": "data/embed/bge-small-en-v1.5/special_tokens_map.json",
+     "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/special_tokens_map.json",
+     "sha256": "b6d346be366a7d1d48332dbc9fdf3bf8960b5d879522b7799ddba59e76237ee3", "size": 125},
+    {"component": "core", "name": "bge-small-en-v1.5 tokenizer", "dest": "data/embed/bge-small-en-v1.5/tokenizer.json",
+     "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/tokenizer.json",
+     "sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66", "size": 711396},
+    {"component": "core", "name": "bge-small-en-v1.5 tokenizer config", "dest": "data/embed/bge-small-en-v1.5/tokenizer_config.json",
+     "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/tokenizer_config.json",
+     "sha256": "9261e7d79b44c8195c1cada2b453e55b00aeb81e907a6664974b4d7776172ab3", "size": 366},
+    {"component": "core", "name": "bge-small-en-v1.5 vocabulary", "dest": "data/embed/bge-small-en-v1.5/vocab.txt",
+     "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/vocab.txt",
+     "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3", "size": 231508},
+    {"component": "csi", "name": "Open English WordNet 2025 (CC BY 4.0)", "dest": "data/csi/english-wordnet-2025.xml.gz",
+     "url": "https://github.com/globalwordnet/english-wordnet/releases/download/2025-edition/english-wordnet-2025.xml.gz",
+     "sha256": "9ca6d1dcb75f822fdd66617f7d9da48142ace38dd544d6ad5e2feca1674ad3fe", "size": 11363503},
+    {"component": "csi", "name": "CSI verb lemmatiser (frozen morph-verb-v1.1)", "dest": "data/csi/morph-verb-v1.1/morphology.json",
+     "url": "https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio/resolve/de436b47b18ce56b072c385c4344ad0f3bb07ed7/csi/morph-verb-v1.1/morphology.json",
+     "sha256": "3ac4000bbae06132d4b9d981d242123a79f62fc812fd75f185df6ecf516a1d38", "size": 2283279},
+    {"component": "csi", "name": "CSI verb lemmatiser weights", "dest": "data/csi/morph-verb-v1.1/morphology.npz",
+     "url": "https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio/resolve/de436b47b18ce56b072c385c4344ad0f3bb07ed7/csi/morph-verb-v1.1/morphology.npz",
+     "sha256": "9e50db6fb7001166df1ac4d07dc6fd7ad355205a66dcd8964ec7e98188414e10", "size": 11780148}
   ],
-  "datasets": []
+  "datasets": [
+    {"component": "c2c3", "name": "Clover C2 HybridAgent, Bridges & C3 11-Level NCM (LFM3-Omni-2B)",
+     "repo": "Santhoshsathish94/clover-ai-studio", "revision": "5f886993d7259b0179294c36761f94e802ea8188",
+     "prefix": "liquid-lfm3/", "dest": "data/omni/precomputed",
+     "include_prefixes": ["hybridagent/plan-trunk-0/", "bridges/bridge-trunk-0/", "ncm/", "trunks/tokenizer.json"],
+     "exclude_suffixes": [".pt", ".4bit.bin", ".py", ".yaml"],
+     "bytes": 586000000}
+  ]
 }

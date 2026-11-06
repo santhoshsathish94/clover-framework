@@ -1,4 +1,4 @@
-param([switch]$Quiet, [string]$Base = '', [string]$Components = 'core', [string]$Reuse = '',
+param([switch]$Quiet, [string]$Base = '', [string]$Components = 'core,csi,c2c3', [string]$Reuse = '',
       [switch]$NoShortcuts)
 # Clover AI Studio setup. Installs everything on this computer from the publishers, each file checked against the
 # SHA-256 its publisher lists (clover\launch\manifest.json, studio\requirements.lock):
@@ -16,7 +16,7 @@ $ProgressPreference = 'SilentlyContinue'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $Base) { $Base = Join-Path $env:USERPROFILE 'CloverAI' }
 $Base = [IO.Path]::GetFullPath($Base)
-$version = '0.4.0'
+$version = '5.0.0'
 $log = Join-Path $env:TEMP 'CloverAIStudio-setup.log'
 function Log([string]$m) { Add-Content -Path $log -Value ((Get-Date -Format 's') + ' ' + $m) }
 function Remove-Tree([string]$p) {  # PS 5.1's Remove-Item -Recurse can stop halfway; rmdir does not (nor follow junctions)

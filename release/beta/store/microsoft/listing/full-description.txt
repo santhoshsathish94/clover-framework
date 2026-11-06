@@ -26,5 +26,5 @@ KEY FEATURES
 PRIVACY & CONTROL
 - Nothing leaves your PC unless you explicitly allow a tool or sync with your own private GitHub repository.
 - Website: https://cloverframework.com/
-- Privacy Policy: https://cloverframework.com/governance/
+- Privacy Policy: https://cloverframework.com/privacy/
 - Support & Issue Tracker: https://github.com/santhoshsathish94/clover-framework/issues

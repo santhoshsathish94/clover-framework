@@ -14,7 +14,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a6a5f">
 <link rel="icon" type="image/svg+xml" href="../clover-leaf-favicon.svg">
-<link rel="stylesheet" href="../botanical-design-system.css?v=4.1.2">
+<link rel="stylesheet" href="../botanical-design-system.css?v=5.0.0">
 <script>document.documentElement.className = 'js';</script>
 </head>
 <body>
@@ -47,6 +47,7 @@
       <a href="../ai-system/">AI Studio</a>
       <a href="../getting-started/">AGENTS.md</a>
       <a href="../governance/" aria-current="page">Governance</a>
+      <a href="../privacy/">Privacy</a>
       <a href="../glossary/">Glossary</a>
       <a href="../author/">Author</a>
       <a href="https://github.com/santhoshsathish94/clover-framework">GitHub</a>
@@ -260,6 +261,32 @@
     </div>
   </section>
 
+  <section class="band" id="privacy">
+    <div class="wrap">
+      <p class="note">Chapter 7 of 7 &middot; Clover AI Studio Privacy &amp; Local Data Logging</p>
+      <h2>How Clover AI Studio Logs Data — and Why Nothing Leaves Your Device</h2>
+      <p class="lede"><strong>Clover AI Studio runs its models, semantic parser, memory repository, and tools on your own laptop or phone over <code>127.0.0.1</code>. There is zero telemetry, zero analytics, and zero off-device data collection.</strong></p>
+
+      <div class="apple-grid apple-grid--2" style="margin-top:1.2rem">
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">Where Data Lives Locally</span>
+          <h3>On-Device Storage Paths</h3>
+          <p>On Windows, all state lives in <code>%USERPROFILE%\CloverAI\</code>. On Android, all state lives inside the private app sandbox <code>/data/user/0/ai.clover.studio/files/CloverAI/</code> (<code>allowBackup="false"</code>). Media attachments stay in <code>media/</code>, and optional API keys stay in <code>vault/</code> encrypted with Windows DPAPI or Android AES-GCM.</p>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">How Data Is Logged</span>
+          <h3>Local Git Repository &amp; Secret Redaction</h3>
+          <p>Inside <code>clover-ai-studio/</code>, conversations are logged to <code>sessions/</code>, turn step traces to <code>execution/</code>, outcomes to <code>outcomes/</code>, and learned notes to <code>growth/</code>. Every write passes through <code>clover_repo.redact()</code> to scrub tokens and API keys before touching disk, and model tools are blocked in code from reading <code>vault/</code> or altering <code>clover-ai-studio/</code>.</p>
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:1.6rem">
+        <a class="btn btn--primary" href="../privacy/">Read the Full Privacy Policy &rarr;</a>
+        <a class="btn" href="../ai-system/">Explore Clover AI Studio &rarr;</a>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <footer class="site-foot">
@@ -272,6 +299,7 @@
         <li><a href="../ai-system/">AI Studio</a></li>
         <li><a href="../getting-started/">AGENTS.md</a></li>
         <li><a href="./">Governance</a></li>
+        <li><a href="../privacy/">Privacy</a></li>
         <li><a href="../glossary/">Glossary</a></li>
       </ul>
     </div>
@@ -310,6 +338,6 @@
   </div>
 </footer>
 
-<script src="../website-interaction-controllers.js?v=4.1.2" defer></script>
+<script src="../website-interaction-controllers.js?v=5.0.0" defer></script>
 </body>
 </html>

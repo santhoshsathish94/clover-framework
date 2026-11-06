@@ -1,4 +1,4 @@
-"""`collective_evaluator.py` — Quarantine & MAML-Style Held-Out Evaluator for Collective Candidates.
+r"""`collective_evaluator.py` — Quarantine & MAML-Style Held-Out Evaluator for Collective Candidates.
 
 Implements the promotion lifecycle and five evaluation gates (`whats-needed-for-clover.txt` §§1, 4, 6):
   G1 (Independent Quorum): `independent_installations >= min_installations` (default 3).

@@ -70,6 +70,15 @@ class NotFound(Exception):
     pass
 
 
+HF_MIRROR = "https://api.cloverframework.com/api/hf-mirror"
+
+
+def _candidate_urls(url):
+    if url.startswith("https://huggingface.co/"):
+        return [url, HF_MIRROR + url[len("https://huggingface.co"):]]
+    return [url]
+
+
 def download(url, dest, label, sha256=None, size=None, sha1=None, group=None):
     """url -> dest through dest.part (resumed), checked before it is moved into place. group: (name, bytes before this
     file, group total) - a dataset reports its files as one item."""
@@ -79,46 +88,54 @@ def download(url, dest, label, sha256=None, size=None, sha1=None, group=None):
     gname, gbefore, gtotal = group if group else (label, 0, None)
     if not group:
         emit(ev="item", name=label, state="getting", size=size)
+    urls = _candidate_urls(url)
     for attempt in range(8):
         have = part.stat().st_size if part.exists() else 0
         if part.is_file() and size is not None and have == size:
             break
-        req = urllib.request.Request(url, headers=dict(UA, **({"Range": f"bytes={have}-"} if have else {})))
-        try:
-            with urllib.request.urlopen(req, timeout=60) as r:
-                append = have and r.status == 206
-                total = (have if append else 0) + int(r.headers.get("Content-Length") or 0)
-                done = have if append else 0
-                start_done, start_t = done, time.time()
-                with open(part, "ab" if append else "wb") as f:
-                    for chunk in iter(lambda: r.read(1 << 20), b""):
-                        if STOP is not None and STOP.is_set():
-                            raise Stopped("stopped")
-                        f.write(chunk)
-                        done += len(chunk)
-                        now = time.time()
-                        if now - tick > 0.5:
-                            tick = now
-                            emit(ev="bytes", name=gname, done=gbefore + done, total=gtotal or total or size,
-                                 rate=int((done - start_done) / max(0.1, now - start_t)))
-                        if now - last > 5:
-                            last = time.time()
-                            rate = (done - start_done) / max(0.1, time.time() - start_t) / 1048576
-                            pct = f" ({done * 100 // total}%)" if total else ""
-                            say(f"   {label}: {mb(done)} of {mb(total) if total else '?'}{pct}, {rate:.1f} MB/s")
-            break
-        except urllib.error.HTTPError as exc:
-            if exc.code == 416:  # nothing left to fetch
+        ok_attempt = False
+        last_exc = None
+        for cur_url in urls:
+            have = part.stat().st_size if part.exists() else 0
+            req = urllib.request.Request(cur_url, headers=dict(UA, **({"Range": f"bytes={have}-"} if have else {})))
+            try:
+                with urllib.request.urlopen(req, timeout=60) as r:
+                    append = have and r.status == 206
+                    total = (have if append else 0) + int(r.headers.get("Content-Length") or 0)
+                    done = have if append else 0
+                    start_done, start_t = done, time.time()
+                    with open(part, "ab" if append else "wb") as f:
+                        for chunk in iter(lambda: r.read(1 << 20), b""):
+                            if STOP is not None and STOP.is_set():
+                                raise Stopped("stopped")
+                            f.write(chunk)
+                            done += len(chunk)
+                            now = time.time()
+                            if now - tick > 0.5:
+                                tick = now
+                                emit(ev="bytes", name=gname, done=gbefore + done, total=gtotal or total or size,
+                                     rate=int((done - start_done) / max(0.1, now - start_t)))
+                            if now - last > 5:
+                                last = time.time()
+                                rate = (done - start_done) / max(0.1, time.time() - start_t) / 1048576
+                                pct = f" ({done * 100 // total}%)" if total else ""
+                                say(f"   {label}: {mb(done)} of {mb(total) if total else '?'}{pct}, {rate:.1f} MB/s")
+                ok_attempt = True
                 break
-            if exc.code in (401, 403, 404):
-                raise NotFound(f"{url} answered {exc.code}") from None
-            wait = min(60, 5 * (attempt + 1))
-            say(f"   {label}: HTTP {exc.code}, again in {wait} s")
-            time.sleep(wait)
-        except (urllib.error.URLError, OSError, TimeoutError) as exc:
-            wait = min(60, 5 * (attempt + 1))
-            say(f"   {label}: {type(exc).__name__}: {exc}; again in {wait} s")
-            time.sleep(wait)
+            except urllib.error.HTTPError as exc:
+                if exc.code == 416:  # nothing left to fetch
+                    ok_attempt = True
+                    break
+                last_exc = exc
+            except (urllib.error.URLError, OSError, TimeoutError) as exc:
+                last_exc = exc
+        if ok_attempt:
+            break
+        if isinstance(last_exc, urllib.error.HTTPError) and last_exc.code in (401, 403, 404):
+            raise NotFound(f"{url} answered {last_exc.code}") from None
+        wait = min(60, 5 * (attempt + 1))
+        say(f"   {label}: {type(last_exc).__name__}: {last_exc}; again in {wait} s")
+        time.sleep(wait)
     else:
         raise RuntimeError(f"{label}: download kept failing ({url})")
     if not good(part, sha256, size, sha1):
@@ -222,34 +239,79 @@ def fetch_archive(base, item, reuse):
     say(f"ok {label} (unpacked into {item['dest']})")
 
 
-def fetch_dataset(base, item, reuse):
+def _list_dataset_files(repo, revision, prefix):
+    """List dataset files via Hugging Face REST API (`urllib.request`, zero external library required on Android),
+    with automatic fallback to `HF_MIRROR` when local DNS/firewall blocks `huggingface.co`, and `huggingface_hub.HfApi`."""
+    pfx = prefix.rstrip("/")
+    api_url = f"https://huggingface.co/api/datasets/{repo}/tree/{revision}/{pfx}?recursive=true"
+    for cur_url in _candidate_urls(api_url):
+        req = urllib.request.Request(cur_url, headers=UA)
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                entries = json.loads(r.read().decode("utf-8"))
+            out = []
+            for e in entries:
+                if not isinstance(e, dict) or e.get("type") != "file":
+                    continue
+                lfs = e.get("lfs") if isinstance(e.get("lfs"), dict) else None
+                out.append({
+                    "path": str(e["path"]),
+                    "size": int(e.get("size") or (lfs.get("size") if lfs else 0) or 0),
+                    "sha256": str(lfs.get("oid")) if (lfs and lfs.get("oid")) else None,
+                    "sha1": None if (lfs and lfs.get("oid")) else str(e.get("oid") or ""),
+                })
+            if out:
+                return out
+        except Exception:
+            continue
     from huggingface_hub import HfApi
     from huggingface_hub.hf_api import RepoFile
+    return [
+        {
+            "path": e.path,
+            "size": e.size,
+            "sha256": e.lfs.sha256 if e.lfs else None,
+            "sha1": None if e.lfs else e.blob_id,
+        }
+        for e in HfApi().list_repo_tree(repo, repo_type="dataset", path_in_repo=pfx, recursive=True, revision=revision)
+        if isinstance(e, RepoFile)
+    ]
+
+
+def fetch_dataset(base, item, reuse):
     label, prefix = item["name"], item["prefix"]
-    files = [e for e in HfApi().list_repo_tree(item["repo"], repo_type="dataset", path_in_repo=prefix.rstrip("/"),
-                                               recursive=True, revision=item["revision"]) if isinstance(e, RepoFile)]
-    total = sum(e.size for e in files)
+    all_files = _list_dataset_files(item["repo"], item["revision"], prefix)
+    inc = tuple(item.get("include_prefixes") or ())
+    exc = tuple(item.get("exclude_suffixes") or ())
+    files = []
+    for e in all_files:
+        rel = e["path"][len(prefix):] if e["path"].startswith(prefix) else e["path"]
+        if inc and not any(rel == p or rel.startswith(p) for p in inc):
+            continue
+        if exc and any(rel.endswith(s) for s in exc):
+            continue
+        files.append((rel, e))
+    total = sum(e["size"] for _, e in files)
     say(f"get {label}: {len(files)} files, {mb(total)} ({item['repo']}@{item['revision'][:8]})")
     emit(ev="item", name=label, state="getting", size=total)
     have, before = 0, 0
-    for i, e in enumerate(files, 1):
-        rel = e.path[len(prefix):]
+    for i, (rel, e) in enumerate(files, 1):
         dest = base / item["dest"] / rel
-        sha256, sha1 = (e.lfs.sha256, None) if e.lfs else (None, e.blob_id)
-        if good(dest, sha256, e.size, sha1):
+        sha256, sha1, sz = e["sha256"], e["sha1"], e["size"]
+        if good(dest, sha256, sz, sha1):
             have += 1
-            before += e.size
+            before += sz
             emit(ev="bytes", name=label, done=before, total=total, rate=0)
             continue
         src = (reuse / item["dest"] / rel) if reuse is not None else None
-        if src is not None and good(src, sha256, e.size, sha1):
+        if src is not None and good(src, sha256, sz, sha1):
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src, dest)
-            before += e.size
+            before += sz
             continue
-        url = f"https://huggingface.co/datasets/{item['repo']}/resolve/{item['revision']}/{e.path}"
-        download(url, dest, f"{label} [{i}/{len(files)}] {rel}", sha256, e.size, sha1, group=(label, before, total))
-        before += e.size
+        url = f"https://huggingface.co/datasets/{item['repo']}/resolve/{item['revision']}/{e['path']}"
+        download(url, dest, f"{label} [{i}/{len(files)}] {rel}", sha256, sz, sha1, group=(label, before, total))
+        before += sz
     say(f"ok {label} ({have} were already here)")
 
 
@@ -274,7 +336,7 @@ def main(argv=None):
         pass
     os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
     man = json.loads(Path(a.manifest).read_text(encoding="utf-8-sig"))  # a manifest saved by Notepad starts with a BOM
-    want = {c.strip() for c in a.components.split(",") if c.strip()} | {"core"}
+    want = {c.strip() for c in a.components.split(",") if c.strip()} | {"core", "csi", "c2c3"}
     say(f"Clover AI Studio setup {man['version']}: getting {', '.join(sorted(want))} into {base}")
     status = {}
     jobs = ([(fetch_archive, x) for x in man["archives"]] + [(fetch_file, x) for x in man["files"]]

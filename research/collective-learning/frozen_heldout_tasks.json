@@ -1,0 +1,6632 @@
+{
+  "benchmark_id": "CPSL-Frozen-HeldOut-v1",
+  "seed": 99401,
+  "total_tasks": 240,
+  "tier_counts": {
+    "tier1_direct_heldout": 72,
+    "tier2_unseen_paraphrase": 48,
+    "tier3_adversarial_boundary": 48,
+    "tier4_ordinary_regression": 72
+  },
+  "tasks": [
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_preflight_code",
+      "habit": "strat_preflight_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "lexer.c",
+      "text": "Could you do a preflight on lexer.c?",
+      "intent": "routine",
+      "slots": {
+        "code": "lexer.c"
+      },
+      "steps": [
+        [
+          "code.test",
+          {
+            "code": "lexer.c"
+          }
+        ],
+        [
+          "code.format",
+          {
+            "code": "lexer.c"
+          }
+        ]
+      ],
+      "target": [
+        "code.test",
+        "code.format"
+      ],
+      "objects": [
+        [
+          "code",
+          "lexer.c"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_preflight_code_00"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_preflight_code",
+      "habit": "strat_preflight_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "queue.go",
+      "text": "Go ahead and give queue.go a preflight.",
+      "intent": "routine",
+      "slots": {
+        "code": "queue.go"
+      },
+      "steps": [
+        [
+          "code.test",
+          {
+            "code": "queue.go"
+          }
+        ],
+        [
+          "code.format",
+          {
+            "code": "queue.go"
+          }
+        ]
+      ],
+      "target": [
+        "code.test",
+        "code.format"
+      ],
+      "objects": [
+        [
+          "code",
+          "queue.go"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_preflight_code_01"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_preflight_code",
+      "habit": "strat_preflight_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "client.ts",
+      "text": "I'd like you to preflight client.ts before merging.",
+      "intent": "routine",
+      "slots": {
+        "code": "client.ts"
+      },
+      "steps": [
+        [
+          "code.test",
+          {
+            "code": "client.ts"
+          }
+        ],
+        [
+          "code.format",
+          {
+            "code": "client.ts"
+          }
+        ]
+      ],
+      "target": [
+        "code.test",
+        "code.format"
+      ],
+      "objects": [
+        [
+          "code",
+          "client.ts"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_preflight_code_02"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_preflight_code",
+      "habit": "strat_preflight_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "lexer.c",
+      "text": "lexer.c needs a preflight.",
+      "intent": "routine",
+      "slots": {
+        "code": "lexer.c"
+      },
+      "steps": [
+        [
+          "code.test",
+          {
+            "code": "lexer.c"
+          }
+        ],
+        [
+          "code.format",
+          {
+            "code": "lexer.c"
+          }
+        ]
+      ],
+      "target": [
+        "code.test",
+        "code.format"
+      ],
+      "objects": [
+        [
+          "code",
+          "lexer.c"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_preflight_code_03"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_preflight_code",
+      "habit": "strat_preflight_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "queue.go",
+      "text": "I need you to do a preflight on queue.go.",
+      "intent": "routine",
+      "slots": {
+        "code": "queue.go"
+      },
+      "steps": [
+        [
+          "code.test",
+          {
+            "code": "queue.go"
+          }
+        ],
+        [
+          "code.format",
+          {
+            "code": "queue.go"
+          }
+        ]
+      ],
+      "target": [
+        "code.test",
+        "code.format"
+      ],
+      "objects": [
+        [
+          "code",
+          "queue.go"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_preflight_code_04"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_preflight_code",
+      "habit": "strat_preflight_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "queue.go",
+      "text": "I'd like you to give queue.go a preflight.",
+      "intent": "routine",
+      "slots": {
+        "code": "queue.go"
+      },
+      "steps": [
+        [
+          "code.test",
+          {
+            "code": "queue.go"
+          }
+        ],
+        [
+          "code.format",
+          {
+            "code": "queue.go"
+          }
+        ]
+      ],
+      "target": [
+        "code.test",
+        "code.format"
+      ],
+      "objects": [
+        [
+          "code",
+          "queue.go"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_preflight_code_05"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "app.py",
+      "text": "Go ahead and do an audit of app.py.",
+      "intent": "routine",
+      "slots": {
+        "code": "app.py"
+      },
+      "steps": [
+        [
+          "code.review",
+          {
+            "code": "app.py"
+          }
+        ],
+        [
+          "code.test",
+          {
+            "code": "app.py"
+          }
+        ]
+      ],
+      "target": [
+        "code.review",
+        "code.test"
+      ],
+      "objects": [
+        [
+          "code",
+          "app.py"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_audit_code_00"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "build.rs",
+      "text": "Go ahead and give build.rs an audit.",
+      "intent": "routine",
+      "slots": {
+        "code": "build.rs"
+      },
+      "steps": [
+        [
+          "code.review",
+          {
+            "code": "build.rs"
+          }
+        ],
+        [
+          "code.test",
+          {
+            "code": "build.rs"
+          }
+        ]
+      ],
+      "target": [
+        "code.review",
+        "code.test"
+      ],
+      "objects": [
+        [
+          "code",
+          "build.rs"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_audit_code_01"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "app.py",
+      "text": "app.py needs an audit.",
+      "intent": "routine",
+      "slots": {
+        "code": "app.py"
+      },
+      "steps": [
+        [
+          "code.review",
+          {
+            "code": "app.py"
+          }
+        ],
+        [
+          "code.test",
+          {
+            "code": "app.py"
+          }
+        ]
+      ],
+      "target": [
+        "code.review",
+        "code.test"
+      ],
+      "objects": [
+        [
+          "code",
+          "app.py"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_audit_code_02"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "server.py",
+      "text": "I'd like you to do an audit of server.py.",
+      "intent": "routine",
+      "slots": {
+        "code": "server.py"
+      },
+      "steps": [
+        [
+          "code.review",
+          {
+            "code": "server.py"
+          }
+        ],
+        [
+          "code.test",
+          {
+            "code": "server.py"
+          }
+        ]
+      ],
+      "target": [
+        "code.review",
+        "code.test"
+      ],
+      "objects": [
+        [
+          "code",
+          "server.py"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_audit_code_03"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "index.html",
+      "text": "I need you to give index.html an audit.",
+      "intent": "routine",
+      "slots": {
+        "code": "index.html"
+      },
+      "steps": [
+        [
+          "code.review",
+          {
+            "code": "index.html"
+          }
+        ],
+        [
+          "code.test",
+          {
+            "code": "index.html"
+          }
+        ]
+      ],
+      "target": [
+        "code.review",
+        "code.test"
+      ],
+      "objects": [
+        [
+          "code",
+          "index.html"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_audit_code_04"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "views.py",
+      "text": "views.py needs an audit.",
+      "intent": "routine",
+      "slots": {
+        "code": "views.py"
+      },
+      "steps": [
+        [
+          "code.review",
+          {
+            "code": "views.py"
+          }
+        ],
+        [
+          "code.test",
+          {
+            "code": "views.py"
+          }
+        ]
+      ],
+      "target": [
+        "code.review",
+        "code.test"
+      ],
+      "objects": [
+        [
+          "code",
+          "views.py"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_audit_code_05"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "files",
+      "focus": "build.rs",
+      "text": "I'd like you to relocate readme_old.md into the backup drive.",
+      "intent": "routine",
+      "slots": {
+        "file": "readme_old.md",
+        "folder": "the backup drive"
+      },
+      "steps": [
+        [
+          "files.backup",
+          {
+            "file": "readme_old.md",
+            "folder": "the backup drive"
+          }
+        ],
+        [
+          "files.move",
+          {
+            "file": "readme_old.md",
+            "folder": "the backup drive"
+          }
+        ]
+      ],
+      "target": [
+        "files.backup",
+        "files.move"
+      ],
+      "objects": [
+        [
+          "file",
+          "readme_old.md"
+        ],
+        [
+          "folder",
+          "the backup drive"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_safe_relocate_00"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "files",
+      "focus": "build.rs",
+      "text": "Could you get temp.json relocated to the finance folder?",
+      "intent": "routine",
+      "slots": {
+        "file": "temp.json",
+        "folder": "the finance folder"
+      },
+      "steps": [
+        [
+          "files.backup",
+          {
+            "file": "temp.json",
+            "folder": "the finance folder"
+          }
+        ],
+        [
+          "files.move",
+          {
+            "file": "temp.json",
+            "folder": "the finance folder"
+          }
+        ]
+      ],
+      "target": [
+        "files.backup",
+        "files.move"
+      ],
+      "objects": [
+        [
+          "file",
+          "temp.json"
+        ],
+        [
+          "folder",
+          "the finance folder"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_safe_relocate_01"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "files",
+      "focus": "build.rs",
+      "text": "archive_2023.zip should be relocated to the backup drive.",
+      "intent": "routine",
+      "slots": {
+        "file": "archive_2023.zip",
+        "folder": "the backup drive"
+      },
+      "steps": [
+        [
+          "files.backup",
+          {
+            "file": "archive_2023.zip",
+            "folder": "the backup drive"
+          }
+        ],
+        [
+          "files.move",
+          {
+            "file": "archive_2023.zip",
+            "folder": "the backup drive"
+          }
+        ]
+      ],
+      "target": [
+        "files.backup",
+        "files.move"
+      ],
+      "objects": [
+        [
+          "file",
+          "archive_2023.zip"
+        ],
+        [
+          "folder",
+          "the backup drive"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_safe_relocate_02"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "files",
+      "focus": "client.ts",
+      "text": "When you get a chance, relocate budget.ods into the team folder.",
+      "intent": "routine",
+      "slots": {
+        "file": "budget.ods",
+        "folder": "the team folder"
+      },
+      "steps": [
+        [
+          "files.backup",
+          {
+            "file": "budget.ods",
+            "folder": "the team folder"
+          }
+        ],
+        [
+          "files.move",
+          {
+            "file": "budget.ods",
+            "folder": "the team folder"
+          }
+        ]
+      ],
+      "target": [
+        "files.backup",
+        "files.move"
+      ],
+      "objects": [
+        [
+          "file",
+          "budget.ods"
+        ],
+        [
+          "folder",
+          "the team folder"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_safe_relocate_03"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "files",
+      "focus": "store.js",
+      "text": "I'd like you to get scan01.png relocated to the team folder.",
+      "intent": "routine",
+      "slots": {
+        "file": "scan01.png",
+        "folder": "the team folder"
+      },
+      "steps": [
+        [
+          "files.backup",
+          {
+            "file": "scan01.png",
+            "folder": "the team folder"
+          }
+        ],
+        [
+          "files.move",
+          {
+            "file": "scan01.png",
+            "folder": "the team folder"
+          }
+        ]
+      ],
+      "target": [
+        "files.backup",
+        "files.move"
+      ],
+      "objects": [
+        [
+          "file",
+          "scan01.png"
+        ],
+        [
+          "folder",
+          "the team folder"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_safe_relocate_04"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "files",
+      "focus": "store.js",
+      "text": "export.xlsx should be relocated to the cold storage folder.",
+      "intent": "routine",
+      "slots": {
+        "file": "export.xlsx",
+        "folder": "the cold storage folder"
+      },
+      "steps": [
+        [
+          "files.backup",
+          {
+            "file": "export.xlsx",
+            "folder": "the cold storage folder"
+          }
+        ],
+        [
+          "files.move",
+          {
+            "file": "export.xlsx",
+            "folder": "the cold storage folder"
+          }
+        ]
+      ],
+      "target": [
+        "files.backup",
+        "files.move"
+      ],
+      "objects": [
+        [
+          "file",
+          "export.xlsx"
+        ],
+        [
+          "folder",
+          "the cold storage folder"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_safe_relocate_05"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "queue.go",
+      "text": "I need you to build a briefing from the user manual.",
+      "intent": "routine",
+      "slots": {
+        "doc": "the user manual"
+      },
+      "steps": [
+        [
+          "docs.summarize",
+          {
+            "doc": "the user manual"
+          }
+        ],
+        [
+          "docs.export",
+          {
+            "doc": "the user manual",
+            "fmt": "plain text"
+          }
+        ]
+      ],
+      "target": [
+        "docs.summarize",
+        "docs.export"
+      ],
+      "objects": [
+        [
+          "doc",
+          "the user manual"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_briefing_pack_00"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "lexer.c",
+      "text": "I'd like you to put together a briefing on the pitch deck.",
+      "intent": "routine",
+      "slots": {
+        "doc": "the pitch deck"
+      },
+      "steps": [
+        [
+          "docs.summarize",
+          {
+            "doc": "the pitch deck"
+          }
+        ],
+        [
+          "docs.export",
+          {
+            "doc": "the pitch deck",
+            "fmt": "JSON"
+          }
+        ]
+      ],
+      "target": [
+        "docs.summarize",
+        "docs.export"
+      ],
+      "objects": [
+        [
+          "doc",
+          "the pitch deck"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_briefing_pack_01"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "server.py",
+      "text": "the hiring plan needs a briefing.",
+      "intent": "routine",
+      "slots": {
+        "doc": "the hiring plan"
+      },
+      "steps": [
+        [
+          "docs.summarize",
+          {
+            "doc": "the hiring plan"
+          }
+        ],
+        [
+          "docs.export",
+          {
+            "doc": "the hiring plan",
+            "fmt": "plain text"
+          }
+        ]
+      ],
+      "target": [
+        "docs.summarize",
+        "docs.export"
+      ],
+      "objects": [
+        [
+          "doc",
+          "the hiring plan"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_briefing_pack_02"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "lexer.c",
+      "text": "I'd like you to build a briefing from the policy draft.",
+      "intent": "routine",
+      "slots": {
+        "doc": "the policy draft"
+      },
+      "steps": [
+        [
+          "docs.summarize",
+          {
+            "doc": "the policy draft"
+          }
+        ],
+        [
+          "docs.export",
+          {
+            "doc": "the policy draft",
+            "fmt": "JSON"
+          }
+        ]
+      ],
+      "target": [
+        "docs.summarize",
+        "docs.export"
+      ],
+      "objects": [
+        [
+          "doc",
+          "the policy draft"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_briefing_pack_03"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "app.py",
+      "text": "I'd like you to put together a briefing on the travel plan.",
+      "intent": "routine",
+      "slots": {
+        "doc": "the travel plan"
+      },
+      "steps": [
+        [
+          "docs.summarize",
+          {
+            "doc": "the travel plan"
+          }
+        ],
+        [
+          "docs.export",
+          {
+            "doc": "the travel plan",
+            "fmt": "LaTeX"
+          }
+        ]
+      ],
+      "target": [
+        "docs.summarize",
+        "docs.export"
+      ],
+      "objects": [
+        [
+          "doc",
+          "the travel plan"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_briefing_pack_04"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "store.js",
+      "text": "the research summary needs a briefing.",
+      "intent": "routine",
+      "slots": {
+        "doc": "the research summary"
+      },
+      "steps": [
+        [
+          "docs.summarize",
+          {
+            "doc": "the research summary"
+          }
+        ],
+        [
+          "docs.export",
+          {
+            "doc": "the research summary",
+            "fmt": "LaTeX"
+          }
+        ]
+      ],
+      "target": [
+        "docs.summarize",
+        "docs.export"
+      ],
+      "objects": [
+        [
+          "doc",
+          "the research summary"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_briefing_pack_05"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "email",
+      "focus": "store.js",
+      "text": "I need you to do a triage on Omar's update.",
+      "intent": "routine",
+      "slots": {
+        "msg": "Omar's update"
+      },
+      "steps": [
+        [
+          "email.flag",
+          {
+            "msg": "Omar's update"
+          }
+        ],
+        [
+          "email.archive",
+          {
+            "msg": "Omar's update"
+          }
+        ]
+      ],
+      "target": [
+        "email.flag",
+        "email.archive"
+      ],
+      "objects": [
+        [
+          "msg",
+          "Omar's update"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_triage_email_00"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "email",
+      "focus": "lexer.c",
+      "text": "Could you get the bank email triaged?",
+      "intent": "routine",
+      "slots": {
+        "msg": "the bank email"
+      },
+      "steps": [
+        [
+          "email.flag",
+          {
+            "msg": "the bank email"
+          }
+        ],
+        [
+          "email.archive",
+          {
+            "msg": "the bank email"
+          }
+        ]
+      ],
+      "target": [
+        "email.flag",
+        "email.archive"
+      ],
+      "objects": [
+        [
+          "msg",
+          "the bank email"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_triage_email_01"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "email",
+      "focus": "app.py",
+      "text": "the security alert needs triaging.",
+      "intent": "routine",
+      "slots": {
+        "msg": "the security alert"
+      },
+      "steps": [
+        [
+          "email.flag",
+          {
+            "msg": "the security alert"
+          }
+        ],
+        [
+          "email.archive",
+          {
+            "msg": "the security alert"
+          }
+        ]
+      ],
+      "target": [
+        "email.flag",
+        "email.archive"
+      ],
+      "objects": [
+        [
+          "msg",
+          "the security alert"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_triage_email_02"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "email",
+      "focus": "client.ts",
+      "text": "I'd like you to do a triage on Omar's update.",
+      "intent": "routine",
+      "slots": {
+        "msg": "Omar's update"
+      },
+      "steps": [
+        [
+          "email.flag",
+          {
+            "msg": "Omar's update"
+          }
+        ],
+        [
+          "email.archive",
+          {
+            "msg": "Omar's update"
+          }
+        ]
+      ],
+      "target": [
+        "email.flag",
+        "email.archive"
+      ],
+      "objects": [
+        [
+          "msg",
+          "Omar's update"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_triage_email_03"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "email",
+      "focus": "server.py",
+      "text": "I need you to get the shipping notice triaged.",
+      "intent": "routine",
+      "slots": {
+        "msg": "the shipping notice"
+      },
+      "steps": [
+        [
+          "email.flag",
+          {
+            "msg": "the shipping notice"
+          }
+        ],
+        [
+          "email.archive",
+          {
+            "msg": "the shipping notice"
+          }
+        ]
+      ],
+      "target": [
+        "email.flag",
+        "email.archive"
+      ],
+      "objects": [
+        [
+          "msg",
+          "the shipping notice"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_triage_email_04"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "email",
+      "focus": "queue.go",
+      "text": "Leo's question needs triaging.",
+      "intent": "routine",
+      "slots": {
+        "msg": "Leo's question"
+      },
+      "steps": [
+        [
+          "email.flag",
+          {
+            "msg": "Leo's question"
+          }
+        ],
+        [
+          "email.archive",
+          {
+            "msg": "Leo's question"
+          }
+        ]
+      ],
+      "target": [
+        "email.flag",
+        "email.archive"
+      ],
+      "objects": [
+        [
+          "msg",
+          "Leo's question"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_triage_email_05"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_fact_check",
+      "habit": "strat_fact_check",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "research",
+      "focus": "lexer.c",
+      "text": "When you get a chance, corroborate index funds with sources.",
+      "intent": "routine",
+      "slots": {
+        "topic": "index funds"
+      },
+      "steps": [
+        [
+          "research.search",
+          {
+            "topic": "index funds"
+          }
+        ],
+        [
+          "research.compare",
+          {
+            "topic": "index funds",
+            "topic2": "graph databases"
+          }
+        ]
+      ],
+      "target": [
+        "research.search",
+        "research.compare"
+      ],
+      "objects": [
+        [
+          "topic",
+          "index funds"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_fact_check_00"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_fact_check",
+      "habit": "strat_fact_check",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "research",
+      "focus": "index.html",
+      "text": "Could you get film photography corroborated?",
+      "intent": "routine",
+      "slots": {
+        "topic": "film photography"
+      },
+      "steps": [
+        [
+          "research.search",
+          {
+            "topic": "film photography"
+          }
+        ],
+        [
+          "research.compare",
+          {
+            "topic": "film photography",
+            "topic2": "wind power"
+          }
+        ]
+      ],
+      "target": [
+        "research.search",
+        "research.compare"
+      ],
+      "objects": [
+        [
+          "topic",
+          "film photography"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_fact_check_01"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_fact_check",
+      "habit": "strat_fact_check",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "research",
+      "focus": "build.rs",
+      "text": "index funds needs corroborating.",
+      "intent": "routine",
+      "slots": {
+        "topic": "index funds"
+      },
+      "steps": [
+        [
+          "research.search",
+          {
+            "topic": "index funds"
+          }
+        ],
+        [
+          "research.compare",
+          {
+            "topic": "index funds",
+            "topic2": "rye bread"
+          }
+        ]
+      ],
+      "target": [
+        "research.search",
+        "research.compare"
+      ],
+      "objects": [
+        [
+          "topic",
+          "index funds"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_fact_check_02"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_fact_check",
+      "habit": "strat_fact_check",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "research",
+      "focus": "server.py",
+      "text": "Could you corroborate remote work with sources?",
+      "intent": "routine",
+      "slots": {
+        "topic": "remote work"
+      },
+      "steps": [
+        [
+          "research.search",
+          {
+            "topic": "remote work"
+          }
+        ],
+        [
+          "research.compare",
+          {
+            "topic": "remote work",
+            "topic2": "earplugs"
+          }
+        ]
+      ],
+      "target": [
+        "research.search",
+        "research.compare"
+      ],
+      "objects": [
+        [
+          "topic",
+          "remote work"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_fact_check_03"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_fact_check",
+      "habit": "strat_fact_check",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "research",
+      "focus": "index.html",
+      "text": "Could you get film photography corroborated?",
+      "intent": "routine",
+      "slots": {
+        "topic": "film photography"
+      },
+      "steps": [
+        [
+          "research.search",
+          {
+            "topic": "film photography"
+          }
+        ],
+        [
+          "research.compare",
+          {
+            "topic": "film photography",
+            "topic2": "gas boilers"
+          }
+        ]
+      ],
+      "target": [
+        "research.search",
+        "research.compare"
+      ],
+      "objects": [
+        [
+          "topic",
+          "film photography"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_fact_check_04"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_fact_check",
+      "habit": "strat_fact_check",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "research",
+      "focus": "app.py",
+      "text": "home composting needs corroborating.",
+      "intent": "routine",
+      "slots": {
+        "topic": "home composting"
+      },
+      "steps": [
+        [
+          "research.search",
+          {
+            "topic": "home composting"
+          }
+        ],
+        [
+          "research.compare",
+          {
+            "topic": "home composting",
+            "topic2": "earplugs"
+          }
+        ]
+      ],
+      "target": [
+        "research.search",
+        "research.compare"
+      ],
+      "objects": [
+        [
+          "topic",
+          "home composting"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_fact_check_05"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "strat_cross_bookmark",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "app.py",
+      "text": "I need you to bookmark app.py.",
+      "intent": "notes.todo",
+      "slots": {
+        "code": "app.py",
+        "text": "file the taxes"
+      },
+      "steps": null,
+      "target": "notes.todo",
+      "objects": [
+        [
+          "code",
+          "app.py"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_bookmark_00"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "strat_cross_bookmark",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "store.js",
+      "text": "Could you bookmark store.js on my list?",
+      "intent": "notes.todo",
+      "slots": {
+        "code": "store.js",
+        "text": "call mum"
+      },
+      "steps": null,
+      "target": "notes.todo",
+      "objects": [
+        [
+          "code",
+          "store.js"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_bookmark_01"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "strat_cross_bookmark",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "lexer.c",
+      "text": "lexer.c should be bookmarked.",
+      "intent": "notes.todo",
+      "slots": {
+        "code": "lexer.c",
+        "text": "call mum"
+      },
+      "steps": null,
+      "target": "notes.todo",
+      "objects": [
+        [
+          "code",
+          "lexer.c"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_bookmark_02"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "strat_cross_bookmark",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "store.js",
+      "text": "When you get a chance, bookmark store.js.",
+      "intent": "notes.todo",
+      "slots": {
+        "code": "store.js",
+        "text": "file the taxes"
+      },
+      "steps": null,
+      "target": "notes.todo",
+      "objects": [
+        [
+          "code",
+          "store.js"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_bookmark_03"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "strat_cross_bookmark",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "build.rs",
+      "text": "When you get a chance, bookmark build.rs on my list.",
+      "intent": "notes.todo",
+      "slots": {
+        "code": "build.rs",
+        "text": "cancel the old subscription"
+      },
+      "steps": null,
+      "target": "notes.todo",
+      "objects": [
+        [
+          "code",
+          "build.rs"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_bookmark_04"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "strat_cross_bookmark",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "client.ts",
+      "text": "client.ts should be bookmarked.",
+      "intent": "notes.todo",
+      "slots": {
+        "code": "client.ts",
+        "text": "cancel the old subscription"
+      },
+      "steps": null,
+      "target": "notes.todo",
+      "objects": [
+        [
+          "code",
+          "client.ts"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_bookmark_05"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_defer",
+      "habit": "strat_cross_defer",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "email",
+      "focus": "store.js",
+      "text": "Go ahead and shelve the bank email.",
+      "intent": "notes.later",
+      "slots": {
+        "msg": "the bank email",
+        "topic": "coral reefs"
+      },
+      "steps": null,
+      "target": "notes.later",
+      "objects": [
+        [
+          "msg",
+          "the bank email"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_defer_00"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_defer",
+      "habit": "strat_cross_defer",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "email",
+      "focus": "server.py",
+      "text": "Go ahead and get Leo's question shelved.",
+      "intent": "notes.later",
+      "slots": {
+        "msg": "Leo's question",
+        "topic": "marathon training"
+      },
+      "steps": null,
+      "target": "notes.later",
+      "objects": [
+        [
+          "msg",
+          "Leo's question"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_defer_01"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_defer",
+      "habit": "strat_cross_defer",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "email",
+      "focus": "server.py",
+      "text": "the security alert can be shelved.",
+      "intent": "notes.later",
+      "slots": {
+        "msg": "the security alert",
+        "topic": "ancient Rome"
+      },
+      "steps": null,
+      "target": "notes.later",
+      "objects": [
+        [
+          "msg",
+          "the security alert"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_defer_02"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_defer",
+      "habit": "strat_cross_defer",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "email",
+      "focus": "client.ts",
+      "text": "When you get a chance, shelve the shipping notice.",
+      "intent": "notes.later",
+      "slots": {
+        "msg": "the shipping notice",
+        "topic": "remote work"
+      },
+      "steps": null,
+      "target": "notes.later",
+      "objects": [
+        [
+          "msg",
+          "the shipping notice"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_defer_03"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_defer",
+      "habit": "strat_cross_defer",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "email",
+      "focus": "views.py",
+      "text": "I'd like you to get the support ticket shelved.",
+      "intent": "notes.later",
+      "slots": {
+        "msg": "the support ticket",
+        "topic": "remote work"
+      },
+      "steps": null,
+      "target": "notes.later",
+      "objects": [
+        [
+          "msg",
+          "the support ticket"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_defer_04"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_defer",
+      "habit": "strat_cross_defer",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "email",
+      "focus": "index.html",
+      "text": "the security alert can be shelved.",
+      "intent": "notes.later",
+      "slots": {
+        "msg": "the security alert",
+        "topic": "remote work"
+      },
+      "steps": null,
+      "target": "notes.later",
+      "objects": [
+        [
+          "msg",
+          "the security alert"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_defer_05"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_retire_item",
+      "habit": "strat_cross_retire_item",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "docs",
+      "focus": "lexer.c",
+      "text": "We wrapped up home composting today.",
+      "intent": "notes.done",
+      "slots": {
+        "topic": "home composting"
+      },
+      "steps": null,
+      "target": "notes.done",
+      "objects": [
+        [
+          "topic",
+          "home composting"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_retire_item_00"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_retire_item",
+      "habit": "strat_cross_retire_item",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "docs",
+      "focus": "build.rs",
+      "text": "ancient Rome is all wrapped up.",
+      "intent": "notes.done",
+      "slots": {
+        "topic": "ancient Rome"
+      },
+      "steps": null,
+      "target": "notes.done",
+      "objects": [
+        [
+          "topic",
+          "ancient Rome"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_retire_item_01"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_retire_item",
+      "habit": "strat_cross_retire_item",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "docs",
+      "focus": "app.py",
+      "text": "We wrapped up film photography today.",
+      "intent": "notes.done",
+      "slots": {
+        "topic": "film photography"
+      },
+      "steps": null,
+      "target": "notes.done",
+      "objects": [
+        [
+          "topic",
+          "film photography"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_retire_item_02"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_retire_item",
+      "habit": "strat_cross_retire_item",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "docs",
+      "focus": "index.html",
+      "text": "film photography is all wrapped up.",
+      "intent": "notes.done",
+      "slots": {
+        "topic": "film photography"
+      },
+      "steps": null,
+      "target": "notes.done",
+      "objects": [
+        [
+          "topic",
+          "film photography"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_retire_item_03"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_retire_item",
+      "habit": "strat_cross_retire_item",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "docs",
+      "focus": "app.py",
+      "text": "We wrapped up remote work today.",
+      "intent": "notes.done",
+      "slots": {
+        "topic": "remote work"
+      },
+      "steps": null,
+      "target": "notes.done",
+      "objects": [
+        [
+          "topic",
+          "remote work"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_retire_item_04"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_retire_item",
+      "habit": "strat_cross_retire_item",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "docs",
+      "focus": "lexer.c",
+      "text": "language learning is all wrapped up.",
+      "intent": "notes.done",
+      "slots": {
+        "topic": "language learning"
+      },
+      "steps": null,
+      "target": "notes.done",
+      "objects": [
+        [
+          "topic",
+          "language learning"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_retire_item_05"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_preserve",
+      "habit": "strat_cross_preserve",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "client.ts",
+      "text": "I need you to snapshot client.ts.",
+      "intent": "files.backup",
+      "slots": {
+        "code": "client.ts",
+        "file": "budget.ods"
+      },
+      "steps": null,
+      "target": "files.backup",
+      "objects": [
+        [
+          "code",
+          "client.ts"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_preserve_00"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_preserve",
+      "habit": "strat_cross_preserve",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "store.js",
+      "text": "Go ahead and take a snapshot of store.js.",
+      "intent": "files.backup",
+      "slots": {
+        "code": "store.js",
+        "file": "debug.log"
+      },
+      "steps": null,
+      "target": "files.backup",
+      "objects": [
+        [
+          "code",
+          "store.js"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_preserve_01"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_preserve",
+      "habit": "strat_cross_preserve",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "build.rs",
+      "text": "build.rs needs a snapshot.",
+      "intent": "files.backup",
+      "slots": {
+        "code": "build.rs",
+        "file": "budget.ods"
+      },
+      "steps": null,
+      "target": "files.backup",
+      "objects": [
+        [
+          "code",
+          "build.rs"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_preserve_02"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_preserve",
+      "habit": "strat_cross_preserve",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "lexer.c",
+      "text": "When you get a chance, snapshot lexer.c.",
+      "intent": "files.backup",
+      "slots": {
+        "code": "lexer.c",
+        "file": "temp.json"
+      },
+      "steps": null,
+      "target": "files.backup",
+      "objects": [
+        [
+          "code",
+          "lexer.c"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_preserve_03"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_preserve",
+      "habit": "strat_cross_preserve",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "app.py",
+      "text": "Go ahead and take a snapshot of app.py.",
+      "intent": "files.backup",
+      "slots": {
+        "code": "app.py",
+        "file": "dump.sql"
+      },
+      "steps": null,
+      "target": "files.backup",
+      "objects": [
+        [
+          "code",
+          "app.py"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_preserve_04"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_cross_preserve",
+      "habit": "strat_cross_preserve",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "views.py",
+      "text": "views.py needs a snapshot.",
+      "intent": "files.backup",
+      "slots": {
+        "code": "views.py",
+        "file": "export.xlsx"
+      },
+      "steps": null,
+      "target": "files.backup",
+      "objects": [
+        [
+          "code",
+          "views.py"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_cross_preserve_05"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "strat_semantic_digest",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "app.py",
+      "text": "I need you to distill the hiring plan down.",
+      "intent": "docs.summarize",
+      "slots": {
+        "doc": "the hiring plan"
+      },
+      "steps": null,
+      "target": "docs.summarize",
+      "objects": [
+        [
+          "doc",
+          "the hiring plan"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_semantic_digest_00"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "strat_semantic_digest",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "queue.go",
+      "text": "I need you to give me a distilled reading of the policy draft.",
+      "intent": "docs.summarize",
+      "slots": {
+        "doc": "the policy draft"
+      },
+      "steps": null,
+      "target": "docs.summarize",
+      "objects": [
+        [
+          "doc",
+          "the policy draft"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_semantic_digest_01"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "strat_semantic_digest",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "client.ts",
+      "text": "the roadmap needs distilling.",
+      "intent": "docs.summarize",
+      "slots": {
+        "doc": "the roadmap"
+      },
+      "steps": null,
+      "target": "docs.summarize",
+      "objects": [
+        [
+          "doc",
+          "the roadmap"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_semantic_digest_02"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "strat_semantic_digest",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "lexer.c",
+      "text": "When you get a chance, distill the hiring plan down.",
+      "intent": "docs.summarize",
+      "slots": {
+        "doc": "the hiring plan"
+      },
+      "steps": null,
+      "target": "docs.summarize",
+      "objects": [
+        [
+          "doc",
+          "the hiring plan"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_semantic_digest_03"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "strat_semantic_digest",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "index.html",
+      "text": "I need you to give me a distilled reading of the travel plan.",
+      "intent": "docs.summarize",
+      "slots": {
+        "doc": "the travel plan"
+      },
+      "steps": null,
+      "target": "docs.summarize",
+      "objects": [
+        [
+          "doc",
+          "the travel plan"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_semantic_digest_04"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "strat_semantic_digest",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "queue.go",
+      "text": "the research summary needs distilling.",
+      "intent": "docs.summarize",
+      "slots": {
+        "doc": "the research summary"
+      },
+      "steps": null,
+      "target": "docs.summarize",
+      "objects": [
+        [
+          "doc",
+          "the research summary"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_semantic_digest_05"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "index.html",
+      "text": "I'd like you to get the research summary condensed.",
+      "intent": "docs.shorten",
+      "slots": {
+        "doc": "the research summary"
+      },
+      "steps": null,
+      "target": "docs.shorten",
+      "objects": [
+        [
+          "doc",
+          "the research summary"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_semantic_prune_00"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "store.js",
+      "text": "Could you condense the research summary for the reader?",
+      "intent": "docs.shorten",
+      "slots": {
+        "doc": "the research summary"
+      },
+      "steps": null,
+      "target": "docs.shorten",
+      "objects": [
+        [
+          "doc",
+          "the research summary"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_semantic_prune_01"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "queue.go",
+      "text": "the weekly update needs condensing.",
+      "intent": "docs.shorten",
+      "slots": {
+        "doc": "the weekly update"
+      },
+      "steps": null,
+      "target": "docs.shorten",
+      "objects": [
+        [
+          "doc",
+          "the weekly update"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_semantic_prune_02"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "app.py",
+      "text": "When you get a chance, get the travel plan condensed.",
+      "intent": "docs.shorten",
+      "slots": {
+        "doc": "the travel plan"
+      },
+      "steps": null,
+      "target": "docs.shorten",
+      "objects": [
+        [
+          "doc",
+          "the travel plan"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_semantic_prune_03"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "app.py",
+      "text": "When you get a chance, condense the research summary for the reader.",
+      "intent": "docs.shorten",
+      "slots": {
+        "doc": "the research summary"
+      },
+      "steps": null,
+      "target": "docs.shorten",
+      "objects": [
+        [
+          "doc",
+          "the research summary"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_semantic_prune_04"
+    },
+    {
+      "kind": "collective_strategy",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "store.js",
+      "text": "the travel plan needs condensing.",
+      "intent": "docs.shorten",
+      "slots": {
+        "doc": "the travel plan"
+      },
+      "steps": null,
+      "target": "docs.shorten",
+      "objects": [
+        [
+          "doc",
+          "the travel plan"
+        ]
+      ],
+      "tier": "tier1_direct_heldout",
+      "task_id": "T1_strat_semantic_prune_05"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_preflight_code",
+      "habit": "strat_preflight_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "client.ts",
+      "text": "I'd like you to run pre-merge checks on client.ts.",
+      "intent": "routine",
+      "slots": {
+        "code": "client.ts"
+      },
+      "steps": [
+        [
+          "code.test",
+          {
+            "code": "client.ts"
+          }
+        ],
+        [
+          "code.format",
+          {
+            "code": "client.ts"
+          }
+        ]
+      ],
+      "target": [
+        "code.test",
+        "code.format"
+      ],
+      "objects": [
+        [
+          "code",
+          "client.ts"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_preflight_code_00"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_preflight_code",
+      "habit": "strat_preflight_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "index.html",
+      "text": "I'd like you to prepare index.html with tests and formatting.",
+      "intent": "routine",
+      "slots": {
+        "code": "index.html"
+      },
+      "steps": [
+        [
+          "code.test",
+          {
+            "code": "index.html"
+          }
+        ],
+        [
+          "code.format",
+          {
+            "code": "index.html"
+          }
+        ]
+      ],
+      "target": [
+        "code.test",
+        "code.format"
+      ],
+      "objects": [
+        [
+          "code",
+          "index.html"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_preflight_code_01"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_preflight_code",
+      "habit": "strat_preflight_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "store.js",
+      "text": "Go ahead and run pre-merge checks on store.js.",
+      "intent": "routine",
+      "slots": {
+        "code": "store.js"
+      },
+      "steps": [
+        [
+          "code.test",
+          {
+            "code": "store.js"
+          }
+        ],
+        [
+          "code.format",
+          {
+            "code": "store.js"
+          }
+        ]
+      ],
+      "target": [
+        "code.test",
+        "code.format"
+      ],
+      "objects": [
+        [
+          "code",
+          "store.js"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_preflight_code_02"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_preflight_code",
+      "habit": "strat_preflight_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "views.py",
+      "text": "I need you to prepare views.py with tests and formatting.",
+      "intent": "routine",
+      "slots": {
+        "code": "views.py"
+      },
+      "steps": [
+        [
+          "code.test",
+          {
+            "code": "views.py"
+          }
+        ],
+        [
+          "code.format",
+          {
+            "code": "views.py"
+          }
+        ]
+      ],
+      "target": [
+        "code.test",
+        "code.format"
+      ],
+      "objects": [
+        [
+          "code",
+          "views.py"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_preflight_code_03"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "client.ts",
+      "text": "I'd like you to inspect and test client.ts.",
+      "intent": "routine",
+      "slots": {
+        "code": "client.ts"
+      },
+      "steps": [
+        [
+          "code.review",
+          {
+            "code": "client.ts"
+          }
+        ],
+        [
+          "code.test",
+          {
+            "code": "client.ts"
+          }
+        ]
+      ],
+      "target": [
+        "code.review",
+        "code.test"
+      ],
+      "objects": [
+        [
+          "code",
+          "client.ts"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_audit_code_00"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "client.ts",
+      "text": "Could you do a code quality inspection on client.ts?",
+      "intent": "routine",
+      "slots": {
+        "code": "client.ts"
+      },
+      "steps": [
+        [
+          "code.review",
+          {
+            "code": "client.ts"
+          }
+        ],
+        [
+          "code.test",
+          {
+            "code": "client.ts"
+          }
+        ]
+      ],
+      "target": [
+        "code.review",
+        "code.test"
+      ],
+      "objects": [
+        [
+          "code",
+          "client.ts"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_audit_code_01"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "server.py",
+      "text": "Could you inspect and test server.py?",
+      "intent": "routine",
+      "slots": {
+        "code": "server.py"
+      },
+      "steps": [
+        [
+          "code.review",
+          {
+            "code": "server.py"
+          }
+        ],
+        [
+          "code.test",
+          {
+            "code": "server.py"
+          }
+        ]
+      ],
+      "target": [
+        "code.review",
+        "code.test"
+      ],
+      "objects": [
+        [
+          "code",
+          "server.py"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_audit_code_02"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "code",
+      "focus": "store.js",
+      "text": "When you get a chance, do a code quality inspection on store.js.",
+      "intent": "routine",
+      "slots": {
+        "code": "store.js"
+      },
+      "steps": [
+        [
+          "code.review",
+          {
+            "code": "store.js"
+          }
+        ],
+        [
+          "code.test",
+          {
+            "code": "store.js"
+          }
+        ]
+      ],
+      "target": [
+        "code.review",
+        "code.test"
+      ],
+      "objects": [
+        [
+          "code",
+          "store.js"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_audit_code_03"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "files",
+      "focus": "build.rs",
+      "text": "I'd like you to back up and move dump.sql to the backup drive.",
+      "intent": "routine",
+      "slots": {
+        "file": "dump.sql",
+        "folder": "the backup drive"
+      },
+      "steps": [
+        [
+          "files.backup",
+          {
+            "file": "dump.sql",
+            "folder": "the backup drive"
+          }
+        ],
+        [
+          "files.move",
+          {
+            "file": "dump.sql",
+            "folder": "the backup drive"
+          }
+        ]
+      ],
+      "target": [
+        "files.backup",
+        "files.move"
+      ],
+      "objects": [
+        [
+          "file",
+          "dump.sql"
+        ],
+        [
+          "folder",
+          "the backup drive"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_safe_relocate_00"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "files",
+      "focus": "index.html",
+      "text": "I need you to migrate scan01.png safely into the cold storage folder.",
+      "intent": "routine",
+      "slots": {
+        "file": "scan01.png",
+        "folder": "the cold storage folder"
+      },
+      "steps": [
+        [
+          "files.backup",
+          {
+            "file": "scan01.png",
+            "folder": "the cold storage folder"
+          }
+        ],
+        [
+          "files.move",
+          {
+            "file": "scan01.png",
+            "folder": "the cold storage folder"
+          }
+        ]
+      ],
+      "target": [
+        "files.backup",
+        "files.move"
+      ],
+      "objects": [
+        [
+          "file",
+          "scan01.png"
+        ],
+        [
+          "folder",
+          "the cold storage folder"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_safe_relocate_01"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "files",
+      "focus": "app.py",
+      "text": "Go ahead and back up and move temp.json to the team folder.",
+      "intent": "routine",
+      "slots": {
+        "file": "temp.json",
+        "folder": "the team folder"
+      },
+      "steps": [
+        [
+          "files.backup",
+          {
+            "file": "temp.json",
+            "folder": "the team folder"
+          }
+        ],
+        [
+          "files.move",
+          {
+            "file": "temp.json",
+            "folder": "the team folder"
+          }
+        ]
+      ],
+      "target": [
+        "files.backup",
+        "files.move"
+      ],
+      "objects": [
+        [
+          "file",
+          "temp.json"
+        ],
+        [
+          "folder",
+          "the team folder"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_safe_relocate_02"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "files",
+      "focus": "app.py",
+      "text": "Could you migrate archive_2023.zip safely into the backup drive?",
+      "intent": "routine",
+      "slots": {
+        "file": "archive_2023.zip",
+        "folder": "the backup drive"
+      },
+      "steps": [
+        [
+          "files.backup",
+          {
+            "file": "archive_2023.zip",
+            "folder": "the backup drive"
+          }
+        ],
+        [
+          "files.move",
+          {
+            "file": "archive_2023.zip",
+            "folder": "the backup drive"
+          }
+        ]
+      ],
+      "target": [
+        "files.backup",
+        "files.move"
+      ],
+      "objects": [
+        [
+          "file",
+          "archive_2023.zip"
+        ],
+        [
+          "folder",
+          "the backup drive"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_safe_relocate_03"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "queue.go",
+      "text": "I'd like you to summarize and export the roadmap.",
+      "intent": "routine",
+      "slots": {
+        "doc": "the roadmap"
+      },
+      "steps": [
+        [
+          "docs.summarize",
+          {
+            "doc": "the roadmap"
+          }
+        ],
+        [
+          "docs.export",
+          {
+            "doc": "the roadmap",
+            "fmt": "CSV"
+          }
+        ]
+      ],
+      "target": [
+        "docs.summarize",
+        "docs.export"
+      ],
+      "objects": [
+        [
+          "doc",
+          "the roadmap"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_briefing_pack_00"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "store.js",
+      "text": "Could you compile an executive digest of the weekly update?",
+      "intent": "routine",
+      "slots": {
+        "doc": "the weekly update"
+      },
+      "steps": [
+        [
+          "docs.summarize",
+          {
+            "doc": "the weekly update"
+          }
+        ],
+        [
+          "docs.export",
+          {
+            "doc": "the weekly update",
+            "fmt": "RTF"
+          }
+        ]
+      ],
+      "target": [
+        "docs.summarize",
+        "docs.export"
+      ],
+      "objects": [
+        [
+          "doc",
+          "the weekly update"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_briefing_pack_01"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "index.html",
+      "text": "I need you to summarize and export the travel plan.",
+      "intent": "routine",
+      "slots": {
+        "doc": "the travel plan"
+      },
+      "steps": [
+        [
+          "docs.summarize",
+          {
+            "doc": "the travel plan"
+          }
+        ],
+        [
+          "docs.export",
+          {
+            "doc": "the travel plan",
+            "fmt": "OpenDocument"
+          }
+        ]
+      ],
+      "target": [
+        "docs.summarize",
+        "docs.export"
+      ],
+      "objects": [
+        [
+          "doc",
+          "the travel plan"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_briefing_pack_02"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "store.js",
+      "text": "Go ahead and compile an executive digest of the research summary.",
+      "intent": "routine",
+      "slots": {
+        "doc": "the research summary"
+      },
+      "steps": [
+        [
+          "docs.summarize",
+          {
+            "doc": "the research summary"
+          }
+        ],
+        [
+          "docs.export",
+          {
+            "doc": "the research summary",
+            "fmt": "HTML"
+          }
+        ]
+      ],
+      "target": [
+        "docs.summarize",
+        "docs.export"
+      ],
+      "objects": [
+        [
+          "doc",
+          "the research summary"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_briefing_pack_03"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "email",
+      "focus": "client.ts",
+      "text": "I need you to flag and archive the survey email.",
+      "intent": "routine",
+      "slots": {
+        "msg": "the survey email"
+      },
+      "steps": [
+        [
+          "email.flag",
+          {
+            "msg": "the survey email"
+          }
+        ],
+        [
+          "email.archive",
+          {
+            "msg": "the survey email"
+          }
+        ]
+      ],
+      "target": [
+        "email.flag",
+        "email.archive"
+      ],
+      "objects": [
+        [
+          "msg",
+          "the survey email"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_triage_email_00"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "email",
+      "focus": "index.html",
+      "text": "I need you to process and file away Omar's update.",
+      "intent": "routine",
+      "slots": {
+        "msg": "Omar's update"
+      },
+      "steps": [
+        [
+          "email.flag",
+          {
+            "msg": "Omar's update"
+          }
+        ],
+        [
+          "email.archive",
+          {
+            "msg": "Omar's update"
+          }
+        ]
+      ],
+      "target": [
+        "email.flag",
+        "email.archive"
+      ],
+      "objects": [
+        [
+          "msg",
+          "Omar's update"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_triage_email_01"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "email",
+      "focus": "index.html",
+      "text": "I'd like you to flag and archive the security alert.",
+      "intent": "routine",
+      "slots": {
+        "msg": "the security alert"
+      },
+      "steps": [
+        [
+          "email.flag",
+          {
+            "msg": "the security alert"
+          }
+        ],
+        [
+          "email.archive",
+          {
+            "msg": "the security alert"
+          }
+        ]
+      ],
+      "target": [
+        "email.flag",
+        "email.archive"
+      ],
+      "objects": [
+        [
+          "msg",
+          "the security alert"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_triage_email_02"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "email",
+      "focus": "lexer.c",
+      "text": "I need you to process and file away the bank email.",
+      "intent": "routine",
+      "slots": {
+        "msg": "the bank email"
+      },
+      "steps": [
+        [
+          "email.flag",
+          {
+            "msg": "the bank email"
+          }
+        ],
+        [
+          "email.archive",
+          {
+            "msg": "the bank email"
+          }
+        ]
+      ],
+      "target": [
+        "email.flag",
+        "email.archive"
+      ],
+      "objects": [
+        [
+          "msg",
+          "the bank email"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_triage_email_03"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_fact_check",
+      "habit": "strat_fact_check",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "research",
+      "focus": "server.py",
+      "text": "I'd like you to cross-verify noise-cancelling headphones across sources.",
+      "intent": "routine",
+      "slots": {
+        "topic": "noise-cancelling headphones"
+      },
+      "steps": [
+        [
+          "research.search",
+          {
+            "topic": "noise-cancelling headphones"
+          }
+        ],
+        [
+          "research.compare",
+          {
+            "topic": "noise-cancelling headphones",
+            "topic2": "kelp forests"
+          }
+        ]
+      ],
+      "target": [
+        "research.search",
+        "research.compare"
+      ],
+      "objects": [
+        [
+          "topic",
+          "noise-cancelling headphones"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_fact_check_00"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_fact_check",
+      "habit": "strat_fact_check",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "research",
+      "focus": "client.ts",
+      "text": "I'd like you to search and compare sources for remote work.",
+      "intent": "routine",
+      "slots": {
+        "topic": "remote work"
+      },
+      "steps": [
+        [
+          "research.search",
+          {
+            "topic": "remote work"
+          }
+        ],
+        [
+          "research.compare",
+          {
+            "topic": "remote work",
+            "topic2": "office work"
+          }
+        ]
+      ],
+      "target": [
+        "research.search",
+        "research.compare"
+      ],
+      "objects": [
+        [
+          "topic",
+          "remote work"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_fact_check_01"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_fact_check",
+      "habit": "strat_fact_check",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "research",
+      "focus": "index.html",
+      "text": "Go ahead and cross-verify noise-cancelling headphones across sources.",
+      "intent": "routine",
+      "slots": {
+        "topic": "noise-cancelling headphones"
+      },
+      "steps": [
+        [
+          "research.search",
+          {
+            "topic": "noise-cancelling headphones"
+          }
+        ],
+        [
+          "research.compare",
+          {
+            "topic": "noise-cancelling headphones",
+            "topic2": "rye bread"
+          }
+        ]
+      ],
+      "target": [
+        "research.search",
+        "research.compare"
+      ],
+      "objects": [
+        [
+          "topic",
+          "noise-cancelling headphones"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_fact_check_02"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_fact_check",
+      "habit": "strat_fact_check",
+      "category": "problem-solving",
+      "cross_domain": false,
+      "context": "research",
+      "focus": "views.py",
+      "text": "When you get a chance, search and compare sources for index funds.",
+      "intent": "routine",
+      "slots": {
+        "topic": "index funds"
+      },
+      "steps": [
+        [
+          "research.search",
+          {
+            "topic": "index funds"
+          }
+        ],
+        [
+          "research.compare",
+          {
+            "topic": "index funds",
+            "topic2": "the history of Delhi"
+          }
+        ]
+      ],
+      "target": [
+        "research.search",
+        "research.compare"
+      ],
+      "objects": [
+        [
+          "topic",
+          "index funds"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_fact_check_03"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "strat_cross_bookmark",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "client.ts",
+      "text": "When you get a chance, pin client.ts to my reading list.",
+      "intent": "notes.todo",
+      "slots": {
+        "code": "client.ts",
+        "text": "call mum"
+      },
+      "steps": null,
+      "target": "notes.todo",
+      "objects": [
+        [
+          "code",
+          "client.ts"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_bookmark_00"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "strat_cross_bookmark",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "index.html",
+      "text": "I need you to save index.html as a todo item.",
+      "intent": "notes.todo",
+      "slots": {
+        "code": "index.html",
+        "text": "pick up the parcel"
+      },
+      "steps": null,
+      "target": "notes.todo",
+      "objects": [
+        [
+          "code",
+          "index.html"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_bookmark_01"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "strat_cross_bookmark",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "client.ts",
+      "text": "When you get a chance, pin client.ts to my reading list.",
+      "intent": "notes.todo",
+      "slots": {
+        "code": "client.ts",
+        "text": "update my CV"
+      },
+      "steps": null,
+      "target": "notes.todo",
+      "objects": [
+        [
+          "code",
+          "client.ts"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_bookmark_02"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "strat_cross_bookmark",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "views.py",
+      "text": "I need you to save views.py as a todo item.",
+      "intent": "notes.todo",
+      "slots": {
+        "code": "views.py",
+        "text": "update my CV"
+      },
+      "steps": null,
+      "target": "notes.todo",
+      "objects": [
+        [
+          "code",
+          "views.py"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_bookmark_03"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_defer",
+      "habit": "strat_cross_defer",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "email",
+      "focus": "client.ts",
+      "text": "I need you to park the survey email for next week.",
+      "intent": "notes.later",
+      "slots": {
+        "msg": "the survey email",
+        "topic": "coral reefs"
+      },
+      "steps": null,
+      "target": "notes.later",
+      "objects": [
+        [
+          "msg",
+          "the survey email"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_defer_00"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_defer",
+      "habit": "strat_cross_defer",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "email",
+      "focus": "store.js",
+      "text": "When you get a chance, postpone Omar's update to open items.",
+      "intent": "notes.later",
+      "slots": {
+        "msg": "Omar's update",
+        "topic": "noise-cancelling headphones"
+      },
+      "steps": null,
+      "target": "notes.later",
+      "objects": [
+        [
+          "msg",
+          "Omar's update"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_defer_01"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_defer",
+      "habit": "strat_cross_defer",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "email",
+      "focus": "views.py",
+      "text": "I need you to park Ana's invite for next week.",
+      "intent": "notes.later",
+      "slots": {
+        "msg": "Ana's invite",
+        "topic": "index funds"
+      },
+      "steps": null,
+      "target": "notes.later",
+      "objects": [
+        [
+          "msg",
+          "Ana's invite"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_defer_02"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_defer",
+      "habit": "strat_cross_defer",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "email",
+      "focus": "server.py",
+      "text": "I'd like you to postpone the client email to open items.",
+      "intent": "notes.later",
+      "slots": {
+        "msg": "the client email",
+        "topic": "ancient Rome"
+      },
+      "steps": null,
+      "target": "notes.later",
+      "objects": [
+        [
+          "msg",
+          "the client email"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_defer_03"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_retire_item",
+      "habit": "strat_cross_retire_item",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "docs",
+      "focus": "views.py",
+      "text": "We signed off on language learning today.",
+      "intent": "notes.done",
+      "slots": {
+        "topic": "language learning"
+      },
+      "steps": null,
+      "target": "notes.done",
+      "objects": [
+        [
+          "topic",
+          "language learning"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_retire_item_00"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_retire_item",
+      "habit": "strat_cross_retire_item",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "docs",
+      "focus": "server.py",
+      "text": "home composting has been finalized and closed.",
+      "intent": "notes.done",
+      "slots": {
+        "topic": "home composting"
+      },
+      "steps": null,
+      "target": "notes.done",
+      "objects": [
+        [
+          "topic",
+          "home composting"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_retire_item_01"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_retire_item",
+      "habit": "strat_cross_retire_item",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "docs",
+      "focus": "server.py",
+      "text": "We signed off on ancient Rome today.",
+      "intent": "notes.done",
+      "slots": {
+        "topic": "ancient Rome"
+      },
+      "steps": null,
+      "target": "notes.done",
+      "objects": [
+        [
+          "topic",
+          "ancient Rome"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_retire_item_02"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_retire_item",
+      "habit": "strat_cross_retire_item",
+      "category": "reasoning-patterns",
+      "cross_domain": true,
+      "context": "docs",
+      "focus": "store.js",
+      "text": "ancient Rome has been finalized and closed.",
+      "intent": "notes.done",
+      "slots": {
+        "topic": "ancient Rome"
+      },
+      "steps": null,
+      "target": "notes.done",
+      "objects": [
+        [
+          "topic",
+          "ancient Rome"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_retire_item_03"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_preserve",
+      "habit": "strat_cross_preserve",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "queue.go",
+      "text": "When you get a chance, save a restore point of queue.go.",
+      "intent": "files.backup",
+      "slots": {
+        "code": "queue.go",
+        "file": "budget.ods"
+      },
+      "steps": null,
+      "target": "files.backup",
+      "objects": [
+        [
+          "code",
+          "queue.go"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_preserve_00"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_preserve",
+      "habit": "strat_cross_preserve",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "app.py",
+      "text": "Go ahead and keep a safety copy of app.py.",
+      "intent": "files.backup",
+      "slots": {
+        "code": "app.py",
+        "file": "archive_2023.zip"
+      },
+      "steps": null,
+      "target": "files.backup",
+      "objects": [
+        [
+          "code",
+          "app.py"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_preserve_01"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_preserve",
+      "habit": "strat_cross_preserve",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "app.py",
+      "text": "I'd like you to save a restore point of app.py.",
+      "intent": "files.backup",
+      "slots": {
+        "code": "app.py",
+        "file": "video.mp4"
+      },
+      "steps": null,
+      "target": "files.backup",
+      "objects": [
+        [
+          "code",
+          "app.py"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_preserve_02"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_cross_preserve",
+      "habit": "strat_cross_preserve",
+      "category": "tool-use-patterns",
+      "cross_domain": true,
+      "context": "code",
+      "focus": "build.rs",
+      "text": "I need you to keep a safety copy of build.rs.",
+      "intent": "files.backup",
+      "slots": {
+        "code": "build.rs",
+        "file": "dump.sql"
+      },
+      "steps": null,
+      "target": "files.backup",
+      "objects": [
+        [
+          "code",
+          "build.rs"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_cross_preserve_03"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "strat_semantic_digest",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "server.py",
+      "text": "Could you boil down the roadmap to key takeaways?",
+      "intent": "docs.summarize",
+      "slots": {
+        "doc": "the roadmap"
+      },
+      "steps": null,
+      "target": "docs.summarize",
+      "objects": [
+        [
+          "doc",
+          "the roadmap"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_semantic_digest_00"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "strat_semantic_digest",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "build.rs",
+      "text": "I'd like you to give me the gist of the policy draft.",
+      "intent": "docs.summarize",
+      "slots": {
+        "doc": "the policy draft"
+      },
+      "steps": null,
+      "target": "docs.summarize",
+      "objects": [
+        [
+          "doc",
+          "the policy draft"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_semantic_digest_01"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "strat_semantic_digest",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "build.rs",
+      "text": "Could you boil down the travel plan to key takeaways?",
+      "intent": "docs.summarize",
+      "slots": {
+        "doc": "the travel plan"
+      },
+      "steps": null,
+      "target": "docs.summarize",
+      "objects": [
+        [
+          "doc",
+          "the travel plan"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_semantic_digest_02"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "strat_semantic_digest",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "client.ts",
+      "text": "I'd like you to give me the gist of the research summary.",
+      "intent": "docs.summarize",
+      "slots": {
+        "doc": "the research summary"
+      },
+      "steps": null,
+      "target": "docs.summarize",
+      "objects": [
+        [
+          "doc",
+          "the research summary"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_semantic_digest_03"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "lexer.c",
+      "text": "When you get a chance, trim the word count of the weekly update.",
+      "intent": "docs.shorten",
+      "slots": {
+        "doc": "the weekly update"
+      },
+      "steps": null,
+      "target": "docs.shorten",
+      "objects": [
+        [
+          "doc",
+          "the weekly update"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_semantic_prune_00"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "app.py",
+      "text": "Go ahead and abridge the roadmap to make it tighter.",
+      "intent": "docs.shorten",
+      "slots": {
+        "doc": "the roadmap"
+      },
+      "steps": null,
+      "target": "docs.shorten",
+      "objects": [
+        [
+          "doc",
+          "the roadmap"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_semantic_prune_01"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "client.ts",
+      "text": "Go ahead and trim the word count of the policy draft.",
+      "intent": "docs.shorten",
+      "slots": {
+        "doc": "the policy draft"
+      },
+      "steps": null,
+      "target": "docs.shorten",
+      "objects": [
+        [
+          "doc",
+          "the policy draft"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_semantic_prune_02"
+    },
+    {
+      "kind": "unseen_paraphrase",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "category": "semantics",
+      "cross_domain": false,
+      "context": "docs",
+      "focus": "build.rs",
+      "text": "I'd like you to abridge the weekly update to make it tighter.",
+      "intent": "docs.shorten",
+      "slots": {
+        "doc": "the weekly update"
+      },
+      "steps": null,
+      "target": "docs.shorten",
+      "objects": [
+        [
+          "doc",
+          "the weekly update"
+        ]
+      ],
+      "tier": "tier2_unseen_paraphrase",
+      "task_id": "T2_strat_semantic_prune_03"
+    },
+    {
+      "task_id": "T3_homonym_00_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "context": "files",
+      "focus": "client.ts",
+      "text": "I need you to compress debug.log.",
+      "intent": "files.compress",
+      "target": "files.compress",
+      "slots": {
+        "file": "debug.log"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "debug.log"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_00_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "context": "files",
+      "focus": "index.html",
+      "text": "Could you compress readme_old.md?",
+      "intent": "files.compress",
+      "target": "files.compress",
+      "slots": {
+        "file": "readme_old.md"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "readme_old.md"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_01_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "context": "files",
+      "focus": "build.rs",
+      "text": "I'd like you to archive archive_2023.zip.",
+      "intent": "files.archive",
+      "target": "files.archive",
+      "slots": {
+        "file": "archive_2023.zip"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "archive_2023.zip"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_01_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "context": "files",
+      "focus": "client.ts",
+      "text": "I'd like you to archive temp.json.",
+      "intent": "files.archive",
+      "target": "files.archive",
+      "slots": {
+        "file": "temp.json"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "temp.json"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_02_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "context": "files",
+      "focus": "store.js",
+      "text": "I need you to move temp.json to the team folder.",
+      "intent": "files.move",
+      "target": "files.move",
+      "slots": {
+        "file": "temp.json",
+        "folder": "the team folder"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "temp.json"
+        ],
+        [
+          "folder",
+          "the team folder"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_02_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "context": "files",
+      "focus": "store.js",
+      "text": "When you get a chance, move export.xlsx to the cold storage folder.",
+      "intent": "files.move",
+      "target": "files.move",
+      "slots": {
+        "file": "export.xlsx",
+        "folder": "the cold storage folder"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "export.xlsx"
+        ],
+        [
+          "folder",
+          "the cold storage folder"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_03_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "context": "files",
+      "focus": "build.rs",
+      "text": "Go ahead and back up temp.json.",
+      "intent": "files.backup",
+      "target": "files.backup",
+      "slots": {
+        "file": "temp.json"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "temp.json"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_03_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_safe_relocate",
+      "habit": "strat_safe_relocate",
+      "context": "files",
+      "focus": "client.ts",
+      "text": "Could you back up export.xlsx?",
+      "intent": "files.backup",
+      "target": "files.backup",
+      "slots": {
+        "file": "export.xlsx"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "export.xlsx"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_04_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_preflight_code",
+      "habit": "strat_preflight_code",
+      "context": "code",
+      "focus": "views.py",
+      "text": "I need you to format views.py.",
+      "intent": "code.format",
+      "target": "code.format",
+      "slots": {
+        "code": "views.py"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "views.py"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_04_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_preflight_code",
+      "habit": "strat_preflight_code",
+      "context": "code",
+      "focus": "lexer.c",
+      "text": "Go ahead and format lexer.c.",
+      "intent": "code.format",
+      "target": "code.format",
+      "slots": {
+        "code": "lexer.c"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "lexer.c"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_05_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "context": "code",
+      "focus": "server.py",
+      "text": "When you get a chance, run tests on server.py.",
+      "intent": "code.test",
+      "target": "code.test",
+      "slots": {
+        "code": "server.py"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "server.py"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_05_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "context": "code",
+      "focus": "server.py",
+      "text": "Go ahead and run tests on server.py.",
+      "intent": "code.test",
+      "target": "code.test",
+      "slots": {
+        "code": "server.py"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "server.py"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_06_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "context": "code",
+      "focus": "store.js",
+      "text": "Go ahead and review store.js.",
+      "intent": "code.review",
+      "target": "code.review",
+      "slots": {
+        "code": "store.js"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "store.js"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_06_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_audit_code",
+      "habit": "strat_audit_code",
+      "context": "code",
+      "focus": "build.rs",
+      "text": "I need you to review build.rs.",
+      "intent": "code.review",
+      "target": "code.review",
+      "slots": {
+        "code": "build.rs"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "build.rs"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_07_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "context": "docs",
+      "focus": "server.py",
+      "text": "Could you summarize the hiring plan?",
+      "intent": "docs.summarize",
+      "target": "docs.summarize",
+      "slots": {
+        "doc": "the hiring plan"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the hiring plan"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_07_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "context": "docs",
+      "focus": "lexer.c",
+      "text": "When you get a chance, summarize the research summary.",
+      "intent": "docs.summarize",
+      "target": "docs.summarize",
+      "slots": {
+        "doc": "the research summary"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the research summary"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_08_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "context": "docs",
+      "focus": "server.py",
+      "text": "Could you export the travel plan as Markdown?",
+      "intent": "docs.export",
+      "target": "docs.export",
+      "slots": {
+        "doc": "the travel plan",
+        "fmt": "Markdown"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the travel plan"
+        ],
+        [
+          "fmt",
+          "Markdown"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_08_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_briefing_pack",
+      "habit": "strat_briefing_pack",
+      "context": "docs",
+      "focus": "store.js",
+      "text": "When you get a chance, export the user manual as RTF.",
+      "intent": "docs.export",
+      "target": "docs.export",
+      "slots": {
+        "doc": "the user manual",
+        "fmt": "RTF"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the user manual"
+        ],
+        [
+          "fmt",
+          "RTF"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_09_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "context": "docs",
+      "focus": "index.html",
+      "text": "I'd like you to shorten the policy draft.",
+      "intent": "docs.shorten",
+      "target": "docs.shorten",
+      "slots": {
+        "doc": "the policy draft"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the policy draft"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_09_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "strat_semantic_prune",
+      "context": "docs",
+      "focus": "build.rs",
+      "text": "I need you to shorten the travel plan.",
+      "intent": "docs.shorten",
+      "target": "docs.shorten",
+      "slots": {
+        "doc": "the travel plan"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the travel plan"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_10_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "context": "email",
+      "focus": "server.py",
+      "text": "When you get a chance, archive Omar's update.",
+      "intent": "email.archive",
+      "target": "email.archive",
+      "slots": {
+        "msg": "Omar's update"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "Omar's update"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_10_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_triage_email",
+      "habit": "strat_triage_email",
+      "context": "email",
+      "focus": "queue.go",
+      "text": "When you get a chance, archive the support ticket.",
+      "intent": "email.archive",
+      "target": "email.archive",
+      "slots": {
+        "msg": "the support ticket"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "the support ticket"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_11_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_fact_check",
+      "habit": "strat_fact_check",
+      "context": "research",
+      "focus": "index.html",
+      "text": "I'd like you to search for index funds.",
+      "intent": "research.search",
+      "target": "research.search",
+      "slots": {
+        "topic": "index funds"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "topic",
+          "index funds"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_homonym_11_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "adversarial_boundary",
+      "subkind": "domain_homonym_trap",
+      "strategy_id": "strat_fact_check",
+      "habit": "strat_fact_check",
+      "context": "research",
+      "focus": "lexer.c",
+      "text": "I need you to search for coral reefs.",
+      "intent": "research.search",
+      "target": "research.search",
+      "slots": {
+        "topic": "coral reefs"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "topic",
+          "coral reefs"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_00_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "personal_override_strat_semantic_digest",
+      "context": "docs",
+      "focus": "queue.go",
+      "text": "Go ahead and distill the roadmap.",
+      "intent": "docs.export",
+      "target": "docs.export",
+      "collective_default_target": "docs.summarize",
+      "slots": {
+        "doc": "the roadmap",
+        "fmt": "JSON"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the roadmap"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_00_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "personal_override_strat_semantic_digest",
+      "context": "docs",
+      "focus": "build.rs",
+      "text": "I'd like you to distill the roadmap.",
+      "intent": "docs.export",
+      "target": "docs.export",
+      "collective_default_target": "docs.summarize",
+      "slots": {
+        "doc": "the roadmap",
+        "fmt": "CSV"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the roadmap"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_00_2",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "personal_override_strat_semantic_digest",
+      "context": "docs",
+      "focus": "lexer.c",
+      "text": "I need you to distill the user manual.",
+      "intent": "docs.export",
+      "target": "docs.export",
+      "collective_default_target": "docs.summarize",
+      "slots": {
+        "doc": "the user manual",
+        "fmt": "PDF"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the user manual"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_00_3",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "personal_override_strat_semantic_digest",
+      "context": "docs",
+      "focus": "queue.go",
+      "text": "Go ahead and distill the weekly update.",
+      "intent": "docs.export",
+      "target": "docs.export",
+      "collective_default_target": "docs.summarize",
+      "slots": {
+        "doc": "the weekly update",
+        "fmt": "Word"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the weekly update"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_00_4",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "personal_override_strat_semantic_digest",
+      "context": "docs",
+      "focus": "views.py",
+      "text": "Go ahead and distill the hiring plan.",
+      "intent": "docs.export",
+      "target": "docs.export",
+      "collective_default_target": "docs.summarize",
+      "slots": {
+        "doc": "the hiring plan",
+        "fmt": "OpenDocument"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the hiring plan"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_00_5",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_semantic_digest",
+      "habit": "personal_override_strat_semantic_digest",
+      "context": "docs",
+      "focus": "index.html",
+      "text": "I need you to distill the policy draft.",
+      "intent": "docs.export",
+      "target": "docs.export",
+      "collective_default_target": "docs.summarize",
+      "slots": {
+        "doc": "the policy draft",
+        "fmt": "RTF"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the policy draft"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_01_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "personal_override_strat_semantic_prune",
+      "context": "docs",
+      "focus": "views.py",
+      "text": "Go ahead and condense the roadmap.",
+      "intent": "docs.summarize",
+      "target": "docs.summarize",
+      "collective_default_target": "docs.shorten",
+      "slots": {
+        "doc": "the roadmap"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the roadmap"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_01_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "personal_override_strat_semantic_prune",
+      "context": "docs",
+      "focus": "views.py",
+      "text": "Could you condense the case study?",
+      "intent": "docs.summarize",
+      "target": "docs.summarize",
+      "collective_default_target": "docs.shorten",
+      "slots": {
+        "doc": "the case study"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the case study"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_01_2",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "personal_override_strat_semantic_prune",
+      "context": "docs",
+      "focus": "store.js",
+      "text": "Could you condense the policy draft?",
+      "intent": "docs.summarize",
+      "target": "docs.summarize",
+      "collective_default_target": "docs.shorten",
+      "slots": {
+        "doc": "the policy draft"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the policy draft"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_01_3",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "personal_override_strat_semantic_prune",
+      "context": "docs",
+      "focus": "build.rs",
+      "text": "I need you to condense the policy draft.",
+      "intent": "docs.summarize",
+      "target": "docs.summarize",
+      "collective_default_target": "docs.shorten",
+      "slots": {
+        "doc": "the policy draft"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the policy draft"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_01_4",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "personal_override_strat_semantic_prune",
+      "context": "docs",
+      "focus": "store.js",
+      "text": "I need you to condense the policy draft.",
+      "intent": "docs.summarize",
+      "target": "docs.summarize",
+      "collective_default_target": "docs.shorten",
+      "slots": {
+        "doc": "the policy draft"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the policy draft"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_01_5",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_semantic_prune",
+      "habit": "personal_override_strat_semantic_prune",
+      "context": "docs",
+      "focus": "build.rs",
+      "text": "Go ahead and condense the weekly update.",
+      "intent": "docs.summarize",
+      "target": "docs.summarize",
+      "collective_default_target": "docs.shorten",
+      "slots": {
+        "doc": "the weekly update"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the weekly update"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_02_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "personal_override_strat_cross_bookmark",
+      "context": "code",
+      "focus": "index.html",
+      "text": "When you get a chance, bookmark index.html.",
+      "intent": "code.review",
+      "target": "code.review",
+      "collective_default_target": "notes.todo",
+      "slots": {
+        "code": "index.html"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "index.html"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_02_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "personal_override_strat_cross_bookmark",
+      "context": "code",
+      "focus": "app.py",
+      "text": "I'd like you to bookmark app.py.",
+      "intent": "code.review",
+      "target": "code.review",
+      "collective_default_target": "notes.todo",
+      "slots": {
+        "code": "app.py"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "app.py"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_02_2",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "personal_override_strat_cross_bookmark",
+      "context": "code",
+      "focus": "store.js",
+      "text": "Go ahead and bookmark store.js.",
+      "intent": "code.review",
+      "target": "code.review",
+      "collective_default_target": "notes.todo",
+      "slots": {
+        "code": "store.js"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "store.js"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_02_3",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "personal_override_strat_cross_bookmark",
+      "context": "code",
+      "focus": "app.py",
+      "text": "I need you to bookmark app.py.",
+      "intent": "code.review",
+      "target": "code.review",
+      "collective_default_target": "notes.todo",
+      "slots": {
+        "code": "app.py"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "app.py"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_02_4",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "personal_override_strat_cross_bookmark",
+      "context": "code",
+      "focus": "queue.go",
+      "text": "When you get a chance, bookmark queue.go.",
+      "intent": "code.review",
+      "target": "code.review",
+      "collective_default_target": "notes.todo",
+      "slots": {
+        "code": "queue.go"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "queue.go"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_02_5",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_cross_bookmark",
+      "habit": "personal_override_strat_cross_bookmark",
+      "context": "code",
+      "focus": "views.py",
+      "text": "Could you bookmark views.py?",
+      "intent": "code.review",
+      "target": "code.review",
+      "collective_default_target": "notes.todo",
+      "slots": {
+        "code": "views.py"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "views.py"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_03_0",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_cross_defer",
+      "habit": "personal_override_strat_cross_defer",
+      "context": "email",
+      "focus": "queue.go",
+      "text": "When you get a chance, shelve the support ticket.",
+      "intent": "email.archive",
+      "target": "email.archive",
+      "collective_default_target": "notes.later",
+      "slots": {
+        "msg": "the support ticket"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "the support ticket"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_03_1",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_cross_defer",
+      "habit": "personal_override_strat_cross_defer",
+      "context": "email",
+      "focus": "server.py",
+      "text": "I need you to shelve the support ticket.",
+      "intent": "email.archive",
+      "target": "email.archive",
+      "collective_default_target": "notes.later",
+      "slots": {
+        "msg": "the support ticket"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "the support ticket"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_03_2",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_cross_defer",
+      "habit": "personal_override_strat_cross_defer",
+      "context": "email",
+      "focus": "client.ts",
+      "text": "I need you to shelve Ana's invite.",
+      "intent": "email.archive",
+      "target": "email.archive",
+      "collective_default_target": "notes.later",
+      "slots": {
+        "msg": "Ana's invite"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "Ana's invite"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_03_3",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_cross_defer",
+      "habit": "personal_override_strat_cross_defer",
+      "context": "email",
+      "focus": "queue.go",
+      "text": "When you get a chance, shelve Ana's invite.",
+      "intent": "email.archive",
+      "target": "email.archive",
+      "collective_default_target": "notes.later",
+      "slots": {
+        "msg": "Ana's invite"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "Ana's invite"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_03_4",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_cross_defer",
+      "habit": "personal_override_strat_cross_defer",
+      "context": "email",
+      "focus": "index.html",
+      "text": "When you get a chance, shelve the security alert.",
+      "intent": "email.archive",
+      "target": "email.archive",
+      "collective_default_target": "notes.later",
+      "slots": {
+        "msg": "the security alert"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "the security alert"
+        ]
+      ]
+    },
+    {
+      "task_id": "T3_collision_03_5",
+      "tier": "tier3_adversarial_boundary",
+      "kind": "personal_collective_collision",
+      "subkind": "personal_override_precedence",
+      "strategy_id": "strat_cross_defer",
+      "habit": "personal_override_strat_cross_defer",
+      "context": "email",
+      "focus": "store.js",
+      "text": "I need you to shelve Ana's invite.",
+      "intent": "email.archive",
+      "target": "email.archive",
+      "collective_default_target": "notes.later",
+      "slots": {
+        "msg": "Ana's invite"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "Ana's invite"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_000",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "app.py",
+      "text": "When you get a chance, format app.py.",
+      "intent": "code.format",
+      "target": "code.format",
+      "slots": {
+        "code": "app.py"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "app.py"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_001",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "index.html",
+      "text": "Could you run the tests for index.html?",
+      "intent": "code.test",
+      "target": "code.test",
+      "slots": {
+        "code": "index.html"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "index.html"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_002",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "store.js",
+      "text": "When you get a chance, commit and push the changes.",
+      "intent": "code.commit_push",
+      "target": "code.commit_push",
+      "slots": {},
+      "steps": null,
+      "objects": []
+    },
+    {
+      "task_id": "T4_ordinary_003",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "lexer.c",
+      "text": "When you get a chance, deploy to staging.",
+      "intent": "code.deploy",
+      "target": "code.deploy",
+      "slots": {
+        "env": "staging"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "env",
+          "staging"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_004",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "build.rs",
+      "text": "When you get a chance, revert build.rs.",
+      "intent": "code.revert",
+      "target": "code.revert",
+      "slots": {
+        "code": "build.rs"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "build.rs"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_005",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "views.py",
+      "text": "I need you to review views.py.",
+      "intent": "code.review",
+      "target": "code.review",
+      "slots": {
+        "code": "views.py"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "views.py"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_006",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "store.js",
+      "text": "Could you explain store.js?",
+      "intent": "code.explain",
+      "target": "code.explain",
+      "slots": {
+        "code": "store.js"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "store.js"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_007",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "build.rs",
+      "text": "I'd like you to refactor build.rs.",
+      "intent": "code.refactor",
+      "target": "code.refactor",
+      "slots": {
+        "code": "build.rs"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "build.rs"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_008",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "views.py",
+      "text": "I'd like you to summarize the pitch deck.",
+      "intent": "docs.summarize",
+      "target": "docs.summarize",
+      "slots": {
+        "doc": "the pitch deck"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the pitch deck"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_009",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "server.py",
+      "text": "I'd like you to proofread the travel plan.",
+      "intent": "docs.proofread",
+      "target": "docs.proofread",
+      "slots": {
+        "doc": "the travel plan"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the travel plan"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_010",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "client.ts",
+      "text": "I'd like you to shorten the research summary.",
+      "intent": "docs.shorten",
+      "target": "docs.shorten",
+      "slots": {
+        "doc": "the research summary"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the research summary"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_011",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "server.py",
+      "text": "When you get a chance, expand the case study.",
+      "intent": "docs.expand",
+      "target": "docs.expand",
+      "slots": {
+        "doc": "the case study"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the case study"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_012",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "store.js",
+      "text": "I'd like you to translate the travel plan into Korean.",
+      "intent": "docs.translate",
+      "target": "docs.translate",
+      "slots": {
+        "doc": "the travel plan",
+        "lang": "Korean"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the travel plan"
+        ],
+        [
+          "lang",
+          "Korean"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_013",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "queue.go",
+      "text": "Go ahead and export the hiring plan as EPUB.",
+      "intent": "docs.export",
+      "target": "docs.export",
+      "slots": {
+        "doc": "the hiring plan",
+        "fmt": "EPUB"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the hiring plan"
+        ],
+        [
+          "fmt",
+          "EPUB"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_014",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "build.rs",
+      "text": "I'd like you to share the case study with Sam.",
+      "intent": "docs.share",
+      "target": "docs.share",
+      "slots": {
+        "doc": "the case study",
+        "person": "Sam"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the case study"
+        ],
+        [
+          "person",
+          "Sam"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_015",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "email",
+      "focus": "lexer.c",
+      "text": "I need you to reply to the support ticket.",
+      "intent": "email.reply",
+      "target": "email.reply",
+      "slots": {
+        "msg": "the support ticket"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "the support ticket"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_016",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "email",
+      "focus": "queue.go",
+      "text": "When you get a chance, send the shipping notice.",
+      "intent": "email.send",
+      "target": "email.send",
+      "slots": {
+        "msg": "the shipping notice"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "the shipping notice"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_017",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "email",
+      "focus": "views.py",
+      "text": "Go ahead and archive Omar's update.",
+      "intent": "email.archive",
+      "target": "email.archive",
+      "slots": {
+        "msg": "Omar's update"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "Omar's update"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_018",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "email",
+      "focus": "lexer.c",
+      "text": "Go ahead and flag the support ticket.",
+      "intent": "email.flag",
+      "target": "email.flag",
+      "slots": {
+        "msg": "the support ticket"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "the support ticket"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_019",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "email",
+      "focus": "views.py",
+      "text": "I'd like you to forward Leo's question to Sam.",
+      "intent": "email.forward",
+      "target": "email.forward",
+      "slots": {
+        "msg": "Leo's question",
+        "person": "Sam"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "Leo's question"
+        ],
+        [
+          "person",
+          "Sam"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_020",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "calendar",
+      "focus": "app.py",
+      "text": "Go ahead and schedule the gym session for the 14th.",
+      "intent": "calendar.create",
+      "target": "calendar.create",
+      "slots": {
+        "event": "the gym session",
+        "time": "the 14th"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "event",
+          "the gym session"
+        ],
+        [
+          "time",
+          "the 14th"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_021",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "calendar",
+      "focus": "server.py",
+      "text": "Go ahead and move the parent meeting to Saturday.",
+      "intent": "calendar.move",
+      "target": "calendar.move",
+      "slots": {
+        "event": "the parent meeting",
+        "time": "Saturday"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "event",
+          "the parent meeting"
+        ],
+        [
+          "time",
+          "Saturday"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_022",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "calendar",
+      "focus": "server.py",
+      "text": "I'd like you to cancel the workshop.",
+      "intent": "calendar.cancel",
+      "target": "calendar.cancel",
+      "slots": {
+        "event": "the workshop"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "event",
+          "the workshop"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_023",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "calendar",
+      "focus": "store.js",
+      "text": "When you get a chance, find me a free slot Saturday.",
+      "intent": "calendar.find_slot",
+      "target": "calendar.find_slot",
+      "slots": {
+        "time": "Saturday"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "time",
+          "Saturday"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_024",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "calendar",
+      "focus": "client.ts",
+      "text": "I need you to remind me about the demo.",
+      "intent": "calendar.remind",
+      "target": "calendar.remind",
+      "slots": {
+        "event": "the demo"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "event",
+          "the demo"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_025",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "views.py",
+      "text": "I'd like you to open archive_2023.zip.",
+      "intent": "files.open",
+      "target": "files.open",
+      "slots": {
+        "file": "archive_2023.zip"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "archive_2023.zip"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_026",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "views.py",
+      "text": "Go ahead and rename budget.ods to final.docx.",
+      "intent": "files.rename",
+      "target": "files.rename",
+      "slots": {
+        "file": "budget.ods",
+        "name": "final.docx"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "budget.ods"
+        ],
+        [
+          "name",
+          "final.docx"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_027",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "server.py",
+      "text": "Go ahead and move archive_2023.zip to Desktop.",
+      "intent": "files.move",
+      "target": "files.move",
+      "slots": {
+        "file": "archive_2023.zip",
+        "folder": "Desktop"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "archive_2023.zip"
+        ],
+        [
+          "folder",
+          "Desktop"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_028",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "store.js",
+      "text": "When you get a chance, archive readme_old.md.",
+      "intent": "files.archive",
+      "target": "files.archive",
+      "slots": {
+        "file": "readme_old.md"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "readme_old.md"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_029",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "app.py",
+      "text": "When you get a chance, delete scan01.png.",
+      "intent": "files.delete",
+      "target": "files.delete",
+      "slots": {
+        "file": "scan01.png"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "scan01.png"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_030",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "client.ts",
+      "text": "Go ahead and zip export.xlsx.",
+      "intent": "files.compress",
+      "target": "files.compress",
+      "slots": {
+        "file": "export.xlsx"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "export.xlsx"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_031",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "store.js",
+      "text": "When you get a chance, back up dump.sql.",
+      "intent": "files.backup",
+      "target": "files.backup",
+      "slots": {
+        "file": "dump.sql"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "dump.sql"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_032",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "research",
+      "focus": "app.py",
+      "text": "Go ahead and search for language learning.",
+      "intent": "research.search",
+      "target": "research.search",
+      "slots": {
+        "topic": "language learning"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "topic",
+          "language learning"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_033",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "research",
+      "focus": "server.py",
+      "text": "I need you to define polymorphism.",
+      "intent": "research.define",
+      "target": "research.define",
+      "slots": {
+        "term": "polymorphism"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "term",
+          "polymorphism"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_034",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "research",
+      "focus": "client.ts",
+      "text": "Go ahead and compare film photography and graph databases.",
+      "intent": "research.compare",
+      "target": "research.compare",
+      "slots": {
+        "topic": "film photography",
+        "topic2": "graph databases"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "topic",
+          "film photography"
+        ],
+        [
+          "topic2",
+          "graph databases"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_035",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "notes",
+      "focus": "index.html",
+      "text": "I need you to note down pick up the parcel.",
+      "intent": "notes.save",
+      "target": "notes.save",
+      "slots": {
+        "text": "pick up the parcel"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "text",
+          "pick up the parcel"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_036",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "notes",
+      "focus": "client.ts",
+      "text": "Could you find my notes on index funds?",
+      "intent": "notes.find",
+      "target": "notes.find",
+      "slots": {
+        "topic": "index funds"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "topic",
+          "index funds"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_037",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "notes",
+      "focus": "index.html",
+      "text": "I'd like you to add a todo to update my CV.",
+      "intent": "notes.todo",
+      "target": "notes.todo",
+      "slots": {
+        "text": "update my CV"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "text",
+          "update my CV"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_038",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "notes",
+      "focus": "queue.go",
+      "text": "I'd like you to remind me later about index funds.",
+      "intent": "notes.later",
+      "target": "notes.later",
+      "slots": {
+        "topic": "index funds"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "topic",
+          "index funds"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_039",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "notes",
+      "focus": "index.html",
+      "text": "Could you index funds is done?",
+      "intent": "notes.done",
+      "target": "notes.done",
+      "slots": {
+        "topic": "index funds"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "topic",
+          "index funds"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_040",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "notes",
+      "focus": "app.py",
+      "text": "I'd like you to tell me what's still open.",
+      "intent": "notes.open",
+      "target": "notes.open",
+      "slots": {},
+      "steps": null,
+      "objects": []
+    },
+    {
+      "task_id": "T4_ordinary_041",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "server.py",
+      "text": "When you get a chance, reformat server.py.",
+      "intent": "code.format",
+      "target": "code.format",
+      "slots": {
+        "code": "server.py"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "server.py"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_042",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "views.py",
+      "text": "When you get a chance, test views.py.",
+      "intent": "code.test",
+      "target": "code.test",
+      "slots": {
+        "code": "views.py"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "views.py"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_043",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "views.py",
+      "text": "I'd like you to commit and push my work.",
+      "intent": "code.commit_push",
+      "target": "code.commit_push",
+      "slots": {},
+      "steps": null,
+      "objects": []
+    },
+    {
+      "task_id": "T4_ordinary_044",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "lexer.c",
+      "text": "I'd like you to ship it to production.",
+      "intent": "code.deploy",
+      "target": "code.deploy",
+      "slots": {
+        "env": "production"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "env",
+          "production"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_045",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "lexer.c",
+      "text": "Could you roll back lexer.c?",
+      "intent": "code.revert",
+      "target": "code.revert",
+      "slots": {
+        "code": "lexer.c"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "lexer.c"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_046",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "index.html",
+      "text": "Go ahead and look over index.html.",
+      "intent": "code.review",
+      "target": "code.review",
+      "slots": {
+        "code": "index.html"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "index.html"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_047",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "app.py",
+      "text": "I need you to walk me through app.py.",
+      "intent": "code.explain",
+      "target": "code.explain",
+      "slots": {
+        "code": "app.py"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "app.py"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_048",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "code",
+      "focus": "app.py",
+      "text": "I'd like you to clean up app.py.",
+      "intent": "code.refactor",
+      "target": "code.refactor",
+      "slots": {
+        "code": "app.py"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "code",
+          "app.py"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_049",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "server.py",
+      "text": "When you get a chance, give me the gist of the pitch deck.",
+      "intent": "docs.summarize",
+      "target": "docs.summarize",
+      "slots": {
+        "doc": "the pitch deck"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the pitch deck"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_050",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "app.py",
+      "text": "Could you check the case study for typos?",
+      "intent": "docs.proofread",
+      "target": "docs.proofread",
+      "slots": {
+        "doc": "the case study"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the case study"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_051",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "index.html",
+      "text": "When you get a chance, trim the policy draft.",
+      "intent": "docs.shorten",
+      "target": "docs.shorten",
+      "slots": {
+        "doc": "the policy draft"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the policy draft"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_052",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "build.rs",
+      "text": "Could you flesh out the research summary?",
+      "intent": "docs.expand",
+      "target": "docs.expand",
+      "slots": {
+        "doc": "the research summary"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the research summary"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_053",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "views.py",
+      "text": "When you get a chance, put the hiring plan into Dutch.",
+      "intent": "docs.translate",
+      "target": "docs.translate",
+      "slots": {
+        "doc": "the hiring plan",
+        "lang": "Dutch"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the hiring plan"
+        ],
+        [
+          "lang",
+          "Dutch"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_054",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "lexer.c",
+      "text": "I need you to convert the case study to RTF.",
+      "intent": "docs.export",
+      "target": "docs.export",
+      "slots": {
+        "doc": "the case study",
+        "fmt": "RTF"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the case study"
+        ],
+        [
+          "fmt",
+          "RTF"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_055",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "docs",
+      "focus": "views.py",
+      "text": "Go ahead and send the weekly update to Eva.",
+      "intent": "docs.share",
+      "target": "docs.share",
+      "slots": {
+        "doc": "the weekly update",
+        "person": "Eva"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "doc",
+          "the weekly update"
+        ],
+        [
+          "person",
+          "Eva"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_056",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "email",
+      "focus": "build.rs",
+      "text": "Could you answer Omar's update?",
+      "intent": "email.reply",
+      "target": "email.reply",
+      "slots": {
+        "msg": "Omar's update"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "Omar's update"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_057",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "email",
+      "focus": "build.rs",
+      "text": "Could you send off Omar's update?",
+      "intent": "email.send",
+      "target": "email.send",
+      "slots": {
+        "msg": "Omar's update"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "Omar's update"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_058",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "email",
+      "focus": "index.html",
+      "text": "I'd like you to file away the client email.",
+      "intent": "email.archive",
+      "target": "email.archive",
+      "slots": {
+        "msg": "the client email"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "the client email"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_059",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "email",
+      "focus": "build.rs",
+      "text": "Go ahead and mark the client email as important.",
+      "intent": "email.flag",
+      "target": "email.flag",
+      "slots": {
+        "msg": "the client email"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "the client email"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_060",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "email",
+      "focus": "build.rs",
+      "text": "Could you pass the security alert on to Nina?",
+      "intent": "email.forward",
+      "target": "email.forward",
+      "slots": {
+        "msg": "the security alert",
+        "person": "Nina"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "msg",
+          "the security alert"
+        ],
+        [
+          "person",
+          "Nina"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_061",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "calendar",
+      "focus": "build.rs",
+      "text": "Go ahead and set up the retro at this evening.",
+      "intent": "calendar.create",
+      "target": "calendar.create",
+      "slots": {
+        "event": "the retro",
+        "time": "this evening"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "event",
+          "the retro"
+        ],
+        [
+          "time",
+          "this evening"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_062",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "calendar",
+      "focus": "views.py",
+      "text": "Could you reschedule the gym session to Tuesday morning?",
+      "intent": "calendar.move",
+      "target": "calendar.move",
+      "slots": {
+        "event": "the gym session",
+        "time": "Tuesday morning"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "event",
+          "the gym session"
+        ],
+        [
+          "time",
+          "Tuesday morning"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_063",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "calendar",
+      "focus": "lexer.c",
+      "text": "Could you call off the workshop?",
+      "intent": "calendar.cancel",
+      "target": "calendar.cancel",
+      "slots": {
+        "event": "the workshop"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "event",
+          "the workshop"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_064",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "calendar",
+      "focus": "lexer.c",
+      "text": "I'd like you to when am I free Monday at 11.",
+      "intent": "calendar.find_slot",
+      "target": "calendar.find_slot",
+      "slots": {
+        "time": "Monday at 11"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "time",
+          "Monday at 11"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_065",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "calendar",
+      "focus": "index.html",
+      "text": "Could you set a reminder for the interview?",
+      "intent": "calendar.remind",
+      "target": "calendar.remind",
+      "slots": {
+        "event": "the interview"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "event",
+          "the interview"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_066",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "client.ts",
+      "text": "When you get a chance, pull up export.xlsx.",
+      "intent": "files.open",
+      "target": "files.open",
+      "slots": {
+        "file": "export.xlsx"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "export.xlsx"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_067",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "index.html",
+      "text": "Go ahead and rename dump.sql to final.docx.",
+      "intent": "files.rename",
+      "target": "files.rename",
+      "slots": {
+        "file": "dump.sql",
+        "name": "final.docx"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "dump.sql"
+        ],
+        [
+          "name",
+          "final.docx"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_068",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "lexer.c",
+      "text": "I need you to put scan01.png in the finance folder.",
+      "intent": "files.move",
+      "target": "files.move",
+      "slots": {
+        "file": "scan01.png",
+        "folder": "the finance folder"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "scan01.png"
+        ],
+        [
+          "folder",
+          "the finance folder"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_069",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "app.py",
+      "text": "I need you to tidy away debug.log.",
+      "intent": "files.archive",
+      "target": "files.archive",
+      "slots": {
+        "file": "debug.log"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "debug.log"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_070",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "server.py",
+      "text": "I'd like you to remove dump.sql.",
+      "intent": "files.delete",
+      "target": "files.delete",
+      "slots": {
+        "file": "dump.sql"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "dump.sql"
+        ]
+      ]
+    },
+    {
+      "task_id": "T4_ordinary_071",
+      "tier": "tier4_ordinary_regression",
+      "kind": "generic",
+      "context": "files",
+      "focus": "views.py",
+      "text": "I need you to compress readme_old.md.",
+      "intent": "files.compress",
+      "target": "files.compress",
+      "slots": {
+        "file": "readme_old.md"
+      },
+      "steps": null,
+      "objects": [
+        [
+          "file",
+          "readme_old.md"
+        ]
+      ]
+    }
+  ],
+  "sha256": "e633aef4f9ba1d58db7300bdfdc3183d11f131af5fab2ed7875b24d897d143b0"
+}

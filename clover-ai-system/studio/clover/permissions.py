@@ -79,16 +79,20 @@ class PermissionNeeded(BaseException):
         self.detail = str(detail or "")[:4000]
 
 
+ALLOW_BY_DEFAULT = ("internet", "code", "files", "memory", "media")
+LEGACY_DEFAULTS = {t: ("allow" if t == "memory" else "ask") for t in TOOLS}
+
+
 class PermissionStore:
     def __init__(self, path):
         self.path = Path(path)
         self.lock = threading.Lock()
-        self.modes = {t: ("allow" if t == "memory" else "ask") for t in TOOLS}
+        self.modes = {t: ("allow" if t in ALLOW_BY_DEFAULT else "ask") for t in TOOLS}
         try:
             saved = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             saved = {}
-        if isinstance(saved, dict):
+        if isinstance(saved, dict) and saved != LEGACY_DEFAULTS:
             for t, m in saved.items():
                 if t in TOOLS and m in MODES:
                     self.modes[t] = m

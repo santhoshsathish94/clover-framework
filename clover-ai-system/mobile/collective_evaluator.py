@@ -38,6 +38,19 @@ DEFAULT_SEMANTICS_REGRESSION_SUITE = [
     {"kind": "regression_ordinary", "context": "phone", "text": "Look at the two sentences above and compare them.", "target": []},
 ]
 
+DEFAULT_STRATEGY_PROBES = [
+    {"context": "phone", "text": "Could you corroborate the claim about batteries?",
+     "target": ["python", "web.page", "web.search"]},
+    {"context": "phone", "text": "Please corroborate the figures on wind turbines.",
+     "target": ["python", "web.page", "web.search"]},
+    {"context": "laptop", "text": "Corroborate the claim about ocean temperatures.",
+     "target": ["python", "web.page", "web.search"]},
+    {"context": "laptop", "text": "Please audit C:\\data\\ledger.csv for anomalies.",
+     "target": ["files.list", "files.read", "python"]},
+    {"context": "laptop", "text": "Audit C:\\reports\\q4.csv and check the totals.",
+     "target": ["files.list", "files.read", "python"]},
+]
+
 
 def _norm_caps(caps) -> tuple[str, ...]:
     if isinstance(caps, str):
@@ -60,7 +73,7 @@ class CollectiveEvaluator:
         self.min_agreement = min_agreement
         self.normalize_gerunds = True
         suite = validation_suite or {}
-        self.strategy_probes = list(suite.get("strategy_probes") or [])
+        self.strategy_probes = list(suite.get("strategy_probes") if "strategy_probes" in suite else DEFAULT_STRATEGY_PROBES)
         self.regression_suite = list(suite.get("regression_suite") or DEFAULT_SEMANTICS_REGRESSION_SUITE)
         self._precompute()
 

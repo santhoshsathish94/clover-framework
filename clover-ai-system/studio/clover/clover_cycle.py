@@ -41,8 +41,9 @@ RECHECK = ("The user says your answer above is not right ({said}) but did not sa
            "you find nothing wrong, start with one sentence saying what you checked, then give the complete answer "
            "again (all of its code, if it has code). Reply with the complete answer only.")
 _CREATIVE = re.compile(r"\b(?:write|compose|draft|create|make\s+up|come\s+up\s+with|suggest|generate|brainstorm|describe|"
-                       r"rewrite|rephrase|paraphrase|invent|imagine|poem|haiku|story|joke|slogan|tagline|lyrics|caption|"
-                       r"names?\s+for|title\s+for)\b", re.I)
+                       r"rewrite|rephrase|paraphrase|invent|imagine|draw|paint|sketch|illustrate|render|"
+                       r"poem|haiku|story|joke|slogan|tagline|lyrics|caption|names?\s+for|title\s+for|"
+                       r"(?:image|picture|drawing|illustration|photo)\s+of)\b", re.I)
 # code that is "not right" has a bug to find, not a style to change
 _CODE = re.compile(r"\b(?:code|function|program|script|class|method|query|regex|sql|python|javascript|typescript|"
                    r"java|rust|c\+\+|html|css|bash|powershell|algorithm|def|return)\b|```", re.I)

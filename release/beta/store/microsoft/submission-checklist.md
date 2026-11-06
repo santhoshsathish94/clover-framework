@@ -36,7 +36,7 @@
 - **Description** (`listing/full-description.txt`): See `listing/full-description.txt`
 - **Release Notes** (`release-notes.md`): See `release-notes.md`
 - **Category & Subcategory**: `Developer tools` (or `Productivity`)
-- **Privacy Policy URL**: `https://cloverframework.com/governance/`
+- **Privacy Policy URL**: `https://cloverframework.com/privacy/`
 - **Website URL**: `https://cloverframework.com/`
 - **Support Contact / URL**: `https://github.com/santhoshsathish94/clover-framework/issues`
 - **Screenshots & Logos (`screenshots/`)**:
@@ -88,7 +88,7 @@
 1. Sign in to **Microsoft Partner Center** → **Apps and games** → select **Clover AI Studio** (`Store ID: 9P2KP2XGF5LG`).
 2. Click **Start your submission** (or create a **New package flight** for beta testers).
 3. Open **Pricing and availability** → set Price to **Free** and Visibility to **Private audience** (or **Direct link only — hidden in Store**).
-4. Open **Properties** → select Category **Developer tools**, enter Privacy Policy URL (`https://cloverframework.com/governance/`) and Support URL (`https://github.com/santhoshsathish94/clover-framework/issues`), and provide the `runFullTrust` declaration above.
+4. Open **Properties** → select Category **Developer tools**, enter Privacy Policy URL (`https://cloverframework.com/privacy/`) and Support URL (`https://github.com/santhoshsathish94/clover-framework/issues`), and provide the `runFullTrust` declaration above.
 5. Open **Age ratings** → complete the IARC questionnaire and save.
 6. Open **Packages** → drag and drop `release/beta/windows/clover-ai-studio-beta.msixupload` (or `SanthoshNarayanan.CloverAIStudio_0.5.0.0_x64.msix`), verify Partner Center parses `SanthoshNarayanan.CloverAIStudio` `0.5.0.0` (`x64`), and click **Save**.
 7. Open **Store listings → English (United States)** → paste the contents of `listing/short-description.txt`, `listing/full-description.txt`, and `release-notes.md`, and upload the 4 desktop screenshots (`1920x1080`) and `app-icon-300x300.png` from `screenshots/`.

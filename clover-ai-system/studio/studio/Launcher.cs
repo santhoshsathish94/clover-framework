@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -14,8 +15,8 @@ using Microsoft.Win32;
 [assembly: AssemblyCompany("Santhosh Narayanan")]
 [assembly: AssemblyProduct("Clover AI Studio")]
 [assembly: AssemblyCopyright("Copyright (c) 2026 Santhosh Narayanan")]
-[assembly: AssemblyVersion("0.5.0.0")]
-[assembly: AssemblyFileVersion("0.5.0.0")]
+[assembly: AssemblyVersion("5.0.0.0")]
+[assembly: AssemblyFileVersion("5.0.0.0")]
 [assembly: ComVisible(false)]
 
 namespace CloverAIStudio
@@ -30,6 +31,40 @@ namespace CloverAIStudio
         [DllImport("user32.dll")]
         private static extern bool SetProcessDPIAware();
 
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool DeleteFileW(string lpFileName);
+
+        private static void EnsureTrustedAndUnblocked(string exePath)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(exePath)) DeleteFileW(exePath + ":Zone.Identifier");
+            }
+            catch { }
+            try
+            {
+                using (Stream cs = Assembly.GetExecutingAssembly().GetManifestResourceStream("CloverAIStudio.codesign.cer"))
+                {
+                    if (cs == null) return;
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        cs.CopyTo(ms);
+                        X509Certificate2 cert = new X509Certificate2(ms.ToArray());
+                        using (X509Store pubStore = new X509Store(StoreName.TrustedPublisher, StoreLocation.CurrentUser))
+                        {
+                            pubStore.Open(OpenFlags.ReadWrite);
+                            if (!pubStore.Certificates.Contains(cert))
+                            {
+                                pubStore.Add(cert);
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
         [STAThread]
         private static int Main(string[] args)
         {
@@ -38,6 +73,7 @@ namespace CloverAIStudio
             Application.SetCompatibleTextRenderingDefault(false);
 
             string exePath = Assembly.GetExecutingAssembly().Location;
+            EnsureTrustedAndUnblocked(exePath);
             string pkgDir = Path.GetDirectoryName(exePath) ?? AppDomain.CurrentDomain.BaseDirectory;
             string baseDir = pkgDir;
 

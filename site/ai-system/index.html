@@ -14,7 +14,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a6a5f">
 <link rel="icon" type="image/svg+xml" href="../clover-leaf-favicon.svg">
-<link rel="stylesheet" href="../botanical-design-system.css?v=4.1.2">
+<link rel="stylesheet" href="../botanical-design-system.css?v=5.0.0">
 <script>document.documentElement.className = 'js';</script>
 </head>
 <body>
@@ -47,6 +47,7 @@
       <a href="../ai-system/" aria-current="page">AI Studio</a>
       <a href="../getting-started/">AGENTS.md</a>
       <a href="../governance/">Governance</a>
+      <a href="../privacy/">Privacy</a>
       <a href="../glossary/">Glossary</a>
       <a href="../author/">Author</a>
       <a href="https://github.com/santhoshsathish94/clover-framework">GitHub</a>
@@ -63,7 +64,8 @@
       <p class="lede">An outcome does not come from which model you use. It comes from the system around it. Clover AI Studio wraps any open-weight model in local memory, relationships, verified tools, and continuous reasoning — lifting a 2B phone model, a 120B multimodal model, and a 2.8T MoE model (<code>Kimi K3.1 Pro</code>) from <code>22.9%&ndash;47.1%</code> alone to <strong><code>70 / 70</code> (<code>100%</code>)</strong> on the same test.</p>
       <div class="actions">
         <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
-        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download for Android (.apk)</a>
+        <a class="btn btn--primary" href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Test on Google Play (Android)</a>
+        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download Android (.apk)</a>
         <a class="btn" href="../clover-ai/">Open Web Studio &rarr;</a>
         <a class="btn btn--plain" href="#studio-architecture">See how it works &darr;</a>
       </div>
@@ -74,23 +76,25 @@
   <section class="band" id="downloads">
     <div class="wrap">
       <h2>Run it on your device</h2>
-      <p class="lede">Install the native app on Windows or Android, or launch it in your browser. All three share the same interface, permissions, and model switcher.</p>
+      <p class="lede">Install the native app on Windows or Android, join the Google Play beta, or launch it in your browser. All three share the same interface, permissions, and model switcher.</p>
 
       <div class="grid grid--3" style="margin-top:1.5rem">
         <div class="card">
           <h3>Windows Laptop</h3>
-          <p><strong><code>CloverAIStudio-Setup.exe</code></strong> &middot; v0.4.2 (<code>2.4 MB</code>)</p>
-          <p>Runs <code>LFM3-Omni-2B</code> on Intel Iris Xe, AMD, or NVIDIA Vulkan GPUs, includes the VS Code extension, and keeps a local Git memory repository.</p>
+          <p><strong><code>CloverAIStudio-Setup.exe</code></strong> &middot; v5.0.0 (<code>2.5 MB</code>)</p>
+          <p>Runs <code>LFM3-Omni-2B</code> (C1) with <code>HybridAgent</code> (C2) &amp; <code>11-Level NCM</code> (C3), <code>S1&ndash;S3</code>, <code>CSI</code>, and <code>PPL</code> on Intel Iris Xe, AMD, or NVIDIA Vulkan GPUs.</p>
           <div class="actions" style="margin-top:1.1rem">
             <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe">Download Windows (.exe)</a>
           </div>
         </div>
         <div class="card">
           <h3>Android Phone</h3>
-          <p><strong><code>CloverAIStudio.apk</code></strong> &middot; v0.5.0-beta.1 (<code>74.9 MB</code>)</p>
-          <p>Runs <code>LFM3-Omni-2B</code> on Snapdragon Adreno OpenCL GPUs and ARM64 CPUs with voice, camera, document reading, and remote model switching.</p>
-          <div class="actions" style="margin-top:1.1rem">
-            <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download Android (.apk)</a>
+          <p><strong><code>ai.clover.studio</code></strong> &middot; v5.0.0 (<code>71.5 MB</code>)</p>
+          <p>Runs the full Clover system (<code>C1&ndash;C3</code>, <code>S1&ndash;S3</code>, <code>CSI</code>, <code>PPL</code>) on Snapdragon Adreno OpenCL GPUs and ARM64 CPUs with voice, camera, and documents.</p>
+          <div class="actions" style="margin-top:1.1rem;flex-wrap:wrap;gap:.5rem">
+            <a class="btn btn--primary" href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Google Play Instant Test</a>
+            <a class="btn" href="https://play.google.com/apps/testing/ai.clover.studio" target="_blank" rel="noopener noreferrer">Join Closed Beta</a>
+            <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Direct .apk</a>
           </div>
         </div>
         <div class="card">
@@ -103,7 +107,7 @@
         </div>
       </div>
 
-      <p class="note" style="margin-top:1rem">Verify installers with <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/download/SHA256SUMS.txt"><code>download/SHA256SUMS.txt</code> &rarr;</a></p>
+      <p class="note" style="margin-top:1rem">Verify installers with <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/download/SHA256SUMS.txt"><code>download/SHA256SUMS.txt</code> &rarr;</a> &middot; Google Play store listing: <a href="https://play.google.com/store/apps/details?id=ai.clover.studio" target="_blank" rel="noopener noreferrer"><code>play.google.com/store/apps/details?id=ai.clover.studio</code></a></p>
     </div>
   </section>
 
@@ -453,6 +457,7 @@
         <li><a href="./">AI Studio</a></li>
         <li><a href="../getting-started/">AGENTS.md</a></li>
         <li><a href="../governance/">Governance</a></li>
+        <li><a href="../privacy/">Privacy</a></li>
         <li><a href="../glossary/">Glossary</a></li>
       </ul>
     </div>
@@ -460,6 +465,8 @@
       <h4>AI Studio</h4>
       <ul>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe">Download for Windows (.exe)</a></li>
+        <li><a href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Test on Google Play (Instant)</a></li>
+        <li><a href="https://play.google.com/apps/testing/ai.clover.studio" target="_blank" rel="noopener noreferrer">Join Google Play Closed Beta</a></li>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download for Android (.apk)</a></li>
         <li><a href="../clover-ai/">Launch Clover AI Web Studio</a></li>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/README.md">Clover AI System README</a></li>
@@ -492,6 +499,6 @@
   </div>
 </footer>
 
-<script src="../website-interaction-controllers.js?v=4.1.2" defer></script>
+<script src="../website-interaction-controllers.js?v=5.0.0" defer></script>
 </body>
 </html>

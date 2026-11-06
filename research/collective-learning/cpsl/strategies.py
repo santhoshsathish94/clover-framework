@@ -44,7 +44,9 @@ COLLECTIVE_STRATEGIES = [
         target=("code.test", "code.format"),
         vp=True,
         train=("run preflight on {code}", "preflight {code}"),
+        val=("do a preflight check on {code}", "run a preflight pass on {code}"),
         eval=("do a preflight on {code}", "give {code} a preflight", "preflight {code} before merging"),
+        unseen_paraphrase=("run pre-merge checks on {code}", "prepare {code} with tests and formatting"),
         eval_msgs=("{code} needs a preflight.",),
         controls=(("docs", "review {doc}", "docs.proofread"),),
         description="Run tests and format code before release (2-step problem-solving decomposition).",
@@ -58,7 +60,9 @@ COLLECTIVE_STRATEGIES = [
         target=("code.review", "code.test"),
         vp=True,
         train=("audit {code}", "run an audit on {code}"),
+        val=("perform an audit on {code}", "audit {code} thoroughly"),
         eval=("do an audit of {code}", "give {code} an audit"),
+        unseen_paraphrase=("inspect and test {code}", "do a code quality inspection on {code}"),
         eval_msgs=("{code} needs an audit.",),
         controls=(("files", "open {file}", "files.open"),),
         description="Inspect code and run its test suite to verify behavior (2-step audit strategy).",
@@ -72,7 +76,9 @@ COLLECTIVE_STRATEGIES = [
         target=("files.backup", "files.move"),
         vp=True,
         train=("relocate {file} to {folder}", "safely relocate {file} to {folder}"),
+        val=("relocate {file} over to {folder}", "do a safe relocate of {file} to {folder}"),
         eval=("relocate {file} into {folder}", "get {file} relocated to {folder}"),
+        unseen_paraphrase=("back up and move {file} to {folder}", "migrate {file} safely into {folder}"),
         eval_msgs=("{file} should be relocated to {folder}.",),
         controls=(("files", "delete {file}", "files.delete"),),
         description="Back up a file before moving it to a new destination (2-step safe file migration).",
@@ -86,7 +92,9 @@ COLLECTIVE_STRATEGIES = [
         target=("docs.summarize", "docs.export"),
         vp=True,
         train=("prepare a briefing from {doc}", "make a briefing from {doc}"),
+        val=("create a briefing from {doc}", "draft a briefing pack for {doc}"),
         eval=("build a briefing from {doc}", "put together a briefing on {doc}"),
+        unseen_paraphrase=("summarize and export {doc}", "compile an executive digest of {doc}"),
         eval_msgs=("{doc} needs a briefing.",),
         controls=(("docs", "translate {doc} into {lang}", "docs.translate"),),
         description="Summarize a document and export the summary artifact (2-step briefing workflow).",
@@ -100,7 +108,9 @@ COLLECTIVE_STRATEGIES = [
         target=("email.flag", "email.archive"),
         vp=True,
         train=("triage {msg}", "triage and file {msg}"),
+        val=("run triage on {msg}", "triage {msg} in my inbox"),
         eval=("do a triage on {msg}", "get {msg} triaged"),
+        unseen_paraphrase=("flag and archive {msg}", "process and file away {msg}"),
         eval_msgs=("{msg} needs triaging.",),
         controls=(("email", "reply to {msg}", "email.reply"),),
         description="Flag important message metadata and archive it out of the inbox (2-step inbox triage).",
@@ -114,7 +124,9 @@ COLLECTIVE_STRATEGIES = [
         target=("research.search", "research.compare"),
         vp=True,
         train=("corroborate {topic}", "corroborate the claim about {topic}"),
+        val=("corroborate evidence on {topic}", "check and corroborate {topic}"),
         eval=("corroborate {topic} with sources", "get {topic} corroborated"),
+        unseen_paraphrase=("cross-verify {topic} across sources", "search and compare sources for {topic}"),
         eval_msgs=("{topic} needs corroborating.",),
         controls=(("research", "define {term}", "research.define"),),
         description="Search primary sources and compare competing evidence (2-step verification strategy).",
@@ -129,7 +141,9 @@ COLLECTIVE_STRATEGIES = [
         target="notes.todo",
         vp=True,
         train=("bookmark {doc}", "bookmark {msg} for later"),
+        val=("bookmark {doc} on my todo list", "bookmark {msg}"),
         eval=("bookmark {code}", "bookmark {code} on my list"),
+        unseen_paraphrase=("pin {code} to my reading list", "save {code} as a todo item"),
         eval_msgs=("{code} should be bookmarked.",),
         controls=(),
         description="Cross-domain tool pattern: 'bookmark X' across docs/email/code means add X to todo list.",
@@ -143,7 +157,9 @@ COLLECTIVE_STRATEGIES = [
         target="notes.later",
         vp=True,
         train=("shelve {doc}", "shelve {file} for now"),
+        val=("shelve {doc} for later", "put {file} on the shelf and shelve it"),
         eval=("shelve {msg}", "get {msg} shelved"),
+        unseen_paraphrase=("park {msg} for next week", "postpone {msg} to open items"),
         eval_msgs=("{msg} can be shelved.",),
         controls=(),
         description="Cross-domain reasoning pattern: 'shelve X' means defer X to open items for later.",
@@ -157,7 +173,9 @@ COLLECTIVE_STRATEGIES = [
         target="notes.done",
         vp=False,
         train=("We wrapped up {topic}.", "I wrapped up {topic}."),
+        val=("They wrapped up {topic}.", "We have wrapped up {topic}."),
         eval=("We wrapped up {topic} today.", "{topic} is all wrapped up."),
+        unseen_paraphrase=("We signed off on {topic} today.", "{topic} has been finalized and closed."),
         eval_msgs=(),
         controls=(),
         description="Cross-domain completion pattern: 'wrapped up X' marks open item X as resolved.",
@@ -171,7 +189,9 @@ COLLECTIVE_STRATEGIES = [
         target="files.backup",
         vp=True,
         train=("snapshot {file}", "take a snapshot of {doc}"),
+        val=("make a snapshot of {file}", "snapshot {doc} before editing"),
         eval=("snapshot {code}", "take a snapshot of {code}"),
+        unseen_paraphrase=("save a restore point of {code}", "keep a safety copy of {code}"),
         eval_msgs=("{code} needs a snapshot.",),
         controls=(),
         description="Cross-domain safety tool pattern: 'snapshot X' creates a backup copy.",
@@ -185,7 +205,9 @@ COLLECTIVE_STRATEGIES = [
         target="docs.summarize",
         vp=True,
         train=("distill {doc}", "distill the key points of {doc}"),
+        val=("distill {doc} into a summary", "distill the main ideas of {doc}"),
         eval=("distill {doc} down", "give me a distilled reading of {doc}"),
+        unseen_paraphrase=("boil down {doc} to key takeaways", "give me the gist of {doc}"),
         eval_msgs=("{doc} needs distilling.",),
         controls=(("docs", "export {doc} as {fmt}", "docs.export"),),
         description="General semantic synonym: 'distill a document' means summarize it.",
@@ -199,7 +221,9 @@ COLLECTIVE_STRATEGIES = [
         target="docs.shorten",
         vp=True,
         train=("condense {doc}", "condense {doc} a bit"),
+        val=("condense the text of {doc}", "condense {doc} into fewer words"),
         eval=("get {doc} condensed", "condense {doc} for the reader"),
+        unseen_paraphrase=("trim the word count of {doc}", "abridge {doc} to make it tighter"),
         eval_msgs=("{doc} needs condensing.",),
         controls=(("files", "compress {file}", "files.compress"),),
         description="General semantic synonym: 'condense a document' means shorten it.",
@@ -440,20 +464,19 @@ def contributor_training_items(spec: dict) -> list[dict]:
 
 
 def heldout_validation_suite(seed: int = 88001) -> dict:
-    """Independent validation suite used by `collective_evaluator.py` in quarantine (built from held-out validation
-    frames and objects, disjoint from both contributor training and recipient final evaluation):
-    - `strategy_probes`: unseen validation items for testing whether a candidate genuinely solves new phrasings,
-    - `cross_domain_probes`: probes across all contexts to check whether an unscoped candidate over-applies in other domains,
+    """Independent validation suite used by `collective_evaluator.py` in quarantine (built from `strat["val"]` templates
+    and `train`-split objects, strictly disjoint from both `strat["train"]` and the final recipient `strat["eval"]` /
+    `strat["unseen_paraphrase"]` held-out benchmark):
+    - `strategy_probes`: validation items for testing whether a candidate generalises beyond contributor training phrases,
     - `regression_suite`: 120 standard general requests + controls where standard language meaning must not regress.
     """
     rng = random.Random(seed)
     strategy_probes = []
     for strat in COLLECTIVE_STRATEGIES:
-        for idx, tmpl in enumerate(strat["eval"]):
+        val_tmpls = strat.get("val") or strat["eval"]
+        for idx, tmpl in enumerate(val_tmpls):
             for k in range(3):
                 strategy_probes.append(_fill_strategy_msg(strat, tmpl, "train", rng, ctx_index=idx + k))
-        for idx, msg_tmpl in enumerate(strat["eval_msgs"]):
-            strategy_probes.append(_fill_strategy_msg(dict(strat, vp=False), msg_tmpl, "train", rng, ctx_index=idx))
 
     regression_suite = []
     for intent, (slots, _, phrases) in W.INTENTS.items():

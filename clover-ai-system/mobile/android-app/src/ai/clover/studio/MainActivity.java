@@ -4,471 +4,496 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Insets;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.speech.RecognizerIntent;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.UtteranceProgressListener;
-import android.view.View;
-import android.view.Window;
+import android.text.TextUtils;
+import android.util.Base64;
+import android.util.Log;
+import android.view.ViewGroup;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import android.webkit.ConsoleMessage;
+import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Toast;
+import android.widget.FrameLayout;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Locale;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
+/**
+ * The Studio's window on the phone: the same page as on the laptop (clover/web/app.html, or setup.html on the first
+ * start), served by the app's own server on 127.0.0.1 and opened with that launch's token as a cookie.
+ */
 public class MainActivity extends Activity {
+    private static final int PICK_FILES = 1;
+    private static final int ASK_MIC = 2;
+    private static final int ASK_NOTES = 3;
+    private static volatile MainActivity current;
+    private static volatile boolean awake;
 
-    private static final String EXCLUSIVE_APP_PACKAGE = "ai.clover.studio";
-    private static final String EXCLUSIVE_APP_TOKEN = "__CLOVER_S23_DEVICE_SECRET__";
-    private static final String[] CANDIDATE_BASE_URLS = new String[]{
-            "http://127.0.0.1:8765",
-            "http://127.0.0.1:8766",
-            "http://10.0.2.2:8765",
-            "http://10.0.2.2:8766"
-    };
-    private volatile String activeBaseUrl = "http://127.0.0.1:8765";
+    private FrameLayout root;
+    private WebView web;
+    private ValueCallback<Uri[]> picked;
+    private PermissionRequest micRequest;
+    private boolean opened;
+    private String origin;
+    private boolean clearHistory;
 
-    private static final int REQ_FILE_CHOOSER = 1001;
-    private static final int REQ_SPEECH_INPUT = 1002;
-    private static final int REQ_PERMISSIONS = 1003;
+    private final Object audioLock = new Object();
+    private volatile boolean recordingAudio = false;
+    private AudioRecord audioRecord = null;
+    private Thread audioThread = null;
+    private ByteArrayOutputStream audioBuffer = null;
 
-    private WebView webView;
-    private ValueCallback<Uri[]> filePathCallback;
-    private TextToSpeech tts;
-    private boolean ttsReady = false;
+    private static final String SPLASH = "<!doctype html><meta name=viewport content='width=device-width,initial-scale=1'>"
+            + "<style>html,body{margin:0;height:100%;background:#F7F3E9;color:#39473D;font:16px system-ui,Roboto,sans-serif}"
+            + "main{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}"
+            + "svg.c{width:64px;height:64px;animation:s 2.4s linear infinite;transform-origin:50% 50%}"
+            + "@keyframes s{to{transform:rotate(360deg)}}</style>"
+            + "<main><svg class=c viewBox='0 0 24 24'><defs><linearGradient id=lg x1=0 y1=0 x2=1 y2=1>"
+            + "<stop offset='0%' stop-color='#FFF078'/><stop offset='55%' stop-color='#F8CF1E'/><stop offset='100%' stop-color='#D89606'/></linearGradient>"
+            + "<path id=lf fill='url(#lg)' d='M12 11.4 C9.6 8.8 9.2 5.4 10.9 4.3 C11.6 3.8 12 4.5 12 5.1 C12 4.5 12.4 3.8 13.1 4.3 C14.8 5.4 14.4 8.8 12 11.4 Z'/></defs>"
+            + "<use href='#lf'/><use href='#lf' transform='rotate(72 12 12)' opacity='.92'/>"
+            + "<use href='#lf' transform='rotate(144 12 12)' opacity='.84'/><use href='#lf' transform='rotate(216 12 12)' opacity='.76'/>"
+            + "<use href='#lf' transform='rotate(288 12 12)' opacity='.68'/><circle cx=12 cy=12 r='1.3' fill='#39473D'/></svg>"
+            + "<div>{text}</div></main>";
 
-    @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        Window window = getWindow();
-        if (window != null) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            window.setStatusBarColor(Color.parseColor("#F7F3E9"));
-            window.setNavigationBarColor(Color.parseColor("#F7F3E9"));
-            if (Build.VERSION.SDK_INT >= 23) {
-                View decor = window.getDecorView();
-                decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+    protected void onCreate(Bundle state) {
+        super.onCreate(state);
+        current = this;
+        if (Build.VERSION.SDK_INT >= 30) {
+            getWindow().setDecorFitsSystemWindows(false);
+        }
+        root = new FrameLayout(this);
+        root.setBackgroundColor(Color.parseColor("#F7F3E9"));
+        web = new WebView(this);
+        root.addView(web, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        root.setOnApplyWindowInsetsListener((v, windowInsets) -> {
+            if (Build.VERSION.SDK_INT >= 30) {
+                Insets bars = windowInsets.getInsets(
+                        WindowInsets.Type.systemBars()
+                                | WindowInsets.Type.displayCutout()
+                                | WindowInsets.Type.ime());
+                v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+                return WindowInsets.CONSUMED;
+            } else {
+                v.setPadding(
+                        windowInsets.getSystemWindowInsetLeft(),
+                        windowInsets.getSystemWindowInsetTop(),
+                        windowInsets.getSystemWindowInsetRight(),
+                        windowInsets.getSystemWindowInsetBottom());
+                return windowInsets.consumeSystemWindowInsets();
+            }
+        });
+        setContentView(root);
+        if (Build.VERSION.SDK_INT >= 30) {
+            WindowInsetsController ic = getWindow().getInsetsController();
+            if (ic != null) {
+                int mask = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                        | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                ic.setSystemBarsAppearance(mask, mask);
             }
         }
-
-        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+        root.requestApplyInsets();
+        applyAwake();
+        WebSettings s = web.getSettings();
+        s.setJavaScriptEnabled(true);
+        s.setDomStorageEnabled(true);
+        s.setMediaPlaybackRequiresUserGesture(false);  // Clover's spoken answers start by themselves, as on the laptop
+        s.setAllowFileAccess(false);
+        s.setAllowContentAccess(false);
+        s.setTextZoom(100);
+        web.addJavascriptInterface(new CloverAndroidBridge(), "CloverAndroidBridge");
+        web.setWebViewClient(new WebViewClient() {
             @Override
-            public void onInit(int status) {
-                if (status == TextToSpeech.SUCCESS) {
-                    tts.setLanguage(Locale.US);
-                    tts.setSpeechRate(0.98f);
-                    tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-                        @Override
-                        public void onStart(String utteranceId) {}
-
-                        @Override
-                        public void onDone(String utteranceId) {
-                            if (webView != null) {
-                                webView.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        webView.evaluateJavascript(
-                                                "if(window.k3OnTtsFinished){window.k3OnTtsFinished();}",
-                                                null
-                                        );
-                                    }
-                                });
-                            }
-                        }
-
-                        @Override
-                        public void onError(String utteranceId) {}
-                    });
-                    ttsReady = true;
+            public void onPageFinished(WebView view, String url) {
+                if (clearHistory && origin != null && url != null && url.startsWith(origin)) {
+                    clearHistory = false;
+                    view.clearHistory();  // the start screen is not a page to go back to
                 }
             }
-        });
-
-        webView = new WebView(this);
-        setContentView(webView);
-
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
-        settings.setAllowFileAccess(true);
-        settings.setAllowContentAccess(true);
-        settings.setAllowFileAccessFromFileURLs(false);
-        settings.setAllowUniversalAccessFromFileURLs(false);
-        settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        String devTag = (Build.MANUFACTURER + " " + Build.MODEL + "; " + Build.HARDWARE).replace("\"", "");
-        settings.setUserAgentString(
-                "CloverAIStudio-Android/2.0 (" + devTag + "; Android " + Build.VERSION.RELEASE + "; ai.clover.studio)"
-        );
-
-        webView.addJavascriptInterface(new CloverAndroidBridge(), "CloverAndroidBridge");
-
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
-                    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    startActivity(i);
-                    return true;
-                }
-                return false;
-            }
-        });
-
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onPermissionRequest(final PermissionRequest request) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        request.grant(request.getResources());
-                    }
-                });
-            }
 
             @Override
-            public boolean onShowFileChooser(
-                    WebView webView,
-                    ValueCallback<Uri[]> filePathCallbackParam,
-                    FileChooserParams fileChooserParams
-            ) {
-                if (filePathCallback != null) {
-                    filePathCallback.onReceiveValue(null);
-                }
-                filePathCallback = filePathCallbackParam;
-                try {
-                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                    intent.addCategory(Intent.CATEGORY_OPENABLE);
-                    intent.setType("*/*");
-                    intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-                    startActivityForResult(Intent.createChooser(intent, "Attach files to Clover AI Studio"), REQ_FILE_CHOOSER);
-                } catch (Exception e) {
-                    filePathCallback = null;
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                Uri u = request.getUrl();
+                if ("127.0.0.1".equals(u.getHost())) {
                     return false;
+                }
+                try {  // links in answers open in the phone's browser
+                    startActivity(new Intent(Intent.ACTION_VIEW, u));
+                } catch (Exception ignored) {
+                    // no browser
                 }
                 return true;
             }
         });
-
-        webView.loadUrl("file:///android_asset/index.html");
-    }
-
-    private boolean hasPerm(String perm) {
-        if (Build.VERSION.SDK_INT < 23) return true;
-        return checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    public class CloverAndroidBridge {
-
-        @JavascriptInterface
-        public String getAppPackage() {
-            return EXCLUSIVE_APP_PACKAGE;
-        }
-
-        @JavascriptInterface
-        public String getDeviceInfo() {
-            String abi = (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) ? Build.SUPPORTED_ABIS[0] : "unknown";
-            return "{\"manufacturer\":\"" + Build.MANUFACTURER.replace("\"", "") + "\","
-                    + "\"model\":\"" + Build.MODEL.replace("\"", "") + "\","
-                    + "\"hardware\":\"" + Build.HARDWARE.replace("\"", "") + "\","
-                    + "\"abi\":\"" + abi + "\","
-                    + "\"sdk\":" + Build.VERSION.SDK_INT + ","
-                    + "\"release\":\"" + Build.VERSION.RELEASE + "\"}";
-        }
-
-        private String executeRequestAgainstBase(String baseUrl, String method, String endpoint, String jsonBody) throws Exception {
-            HttpURLConnection conn = null;
-            try {
-                String path = endpoint.startsWith("/") ? endpoint : ("/" + endpoint);
-                URL url = new URL(baseUrl + path);
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod(method != null ? method.toUpperCase(Locale.US) : "GET");
-                conn.setConnectTimeout(3500);
-                conn.setReadTimeout(240000);
-                conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                conn.setRequestProperty("X-Clover-App-Package", EXCLUSIVE_APP_PACKAGE);
-                conn.setRequestProperty("X-Clover-App-Token", EXCLUSIVE_APP_TOKEN);
-                conn.setRequestProperty(
-                        "User-Agent",
-                        "CloverAIStudio-Android/2.0 (" + Build.MANUFACTURER + " " + Build.MODEL + "; " + Build.HARDWARE + "; ai.clover.studio)"
-                );
-
-                if ("POST".equalsIgnoreCase(method) && jsonBody != null) {
-                    conn.setDoOutput(true);
-                    byte[] outBytes = jsonBody.getBytes(StandardCharsets.UTF_8);
-                    conn.setFixedLengthStreamingMode(outBytes.length);
-                    OutputStream os = conn.getOutputStream();
-                    os.write(outBytes);
-                    os.flush();
-                    os.close();
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                if (picked != null) {
+                    picked.onReceiveValue(null);
                 }
+                picked = callback;
+                Intent i = new Intent(Intent.ACTION_GET_CONTENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
+                i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE);
+                try {
+                    startActivityForResult(Intent.createChooser(i, "Add files"), PICK_FILES);
+                } catch (Exception e) {
+                    picked = null;
+                    return false;
+                }
+                return true;
+            }
 
-                int code = conn.getResponseCode();
-                InputStream is = (code >= 200 && code < 400) ? conn.getInputStream() : conn.getErrorStream();
-                if (is == null) {
-                    throw new java.io.IOException("HTTP " + code + " empty response");
+            @Override
+            public void onPermissionRequest(PermissionRequest request) {
+                // the microphone for voice messages; only the app's own page may ask
+                if (!"127.0.0.1".equals(request.getOrigin().getHost())) {
+                    request.deny();
+                    return;
                 }
-                BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line).append('\n');
-                }
-                reader.close();
-                String bodyStr = sb.toString().trim();
-                if (code >= 400 && !bodyStr.startsWith("{")) {
-                    throw new java.io.IOException("HTTP " + code + " non-JSON error from " + baseUrl);
-                }
-                return bodyStr;
-            } finally {
-                if (conn != null) {
-                    conn.disconnect();
+                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    request.grant(request.getResources());
+                } else {
+                    micRequest = request;
+                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, ASK_MIC);
                 }
             }
-        }
 
-        @JavascriptInterface
-        public String callLocalS23Api(String method, String endpoint, String jsonBody) {
-            try {
-                return executeRequestAgainstBase(activeBaseUrl, method, endpoint, jsonBody);
-            } catch (Exception firstEx) {
-                for (String candidate : CANDIDATE_BASE_URLS) {
-                    if (candidate.equals(activeBaseUrl)) continue;
-                    try {
-                        String resp = executeRequestAgainstBase(candidate, method, endpoint, jsonBody);
-                        activeBaseUrl = candidate;
-                        return resp;
-                    } catch (Exception ignored) {
-                    }
-                }
-                String msg = firstEx.getMessage() != null ? firstEx.getMessage().replace("\"", "'") : "connection_failed";
-                return "{\"error\":\"clover_local_unreachable\",\"message\":\"" + msg + "\"}";
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage m) {
+                Log.i(StudioService.TAG, "page: " + m.message() + " (" + m.sourceId() + ":" + m.lineNumber() + ")");
+                return true;
             }
+        });
+        if (Build.VERSION.SDK_INT >= 33
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, ASK_NOTES);
         }
+        startForegroundService(new Intent(this, StudioService.class));
+        page(SPLASH.replace("{text}", "Starting Clover"));
+        waitForServer();
+    }
 
-        @JavascriptInterface
-        public void callLocalS23ApiAsync(final String cbId, final String method, final String endpoint, final String jsonBody) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    final String resp = callLocalS23Api(method, endpoint, jsonBody);
-                    if (webView != null) {
-                        webView.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                String b64 = android.util.Base64.encodeToString(
-                                        resp.getBytes(StandardCharsets.UTF_8),
-                                        android.util.Base64.NO_WRAP
-                                );
-                                webView.evaluateJavascript(
-                                        "if(window.__cloverOnBridgeReply){window.__cloverOnBridgeReply('" + cbId + "','" + b64 + "');}",
-                                        null
-                                );
-                            }
-                        });
-                    }
+    private void page(String html) {
+        web.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+    }
+
+    private void waitForServer() {
+        new Thread(() -> {
+            long t0 = System.currentTimeMillis();
+            while (!isFinishing()) {
+                if (StudioService.error != null) {
+                    fail("Clover could not start: " + StudioService.error);
+                    return;
                 }
-            }).start();
-        }
-
-        @JavascriptInterface
-        public String getOsPermissionsStatus() {
-            boolean mic = hasPerm(Manifest.permission.RECORD_AUDIO);
-            boolean cam = hasPerm(Manifest.permission.CAMERA);
-            boolean files = hasPerm(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    || hasPerm("android.permission.READ_MEDIA_IMAGES")
-                    || hasPerm("android.permission.READ_MEDIA_VIDEO")
-                    || hasPerm("android.permission.READ_MEDIA_AUDIO");
-            return "{\"microphone\":" + mic + ",\"camera_vision\":" + cam + ",\"files\":" + files + ",\"internet\":true}";
-        }
-
-        @JavascriptInterface
-        public void requestOsPermission(final String group) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (Build.VERSION.SDK_INT < 23) return;
-                    ArrayList<String> perms = new ArrayList<String>();
-                    if ("microphone".equalsIgnoreCase(group) || "all".equalsIgnoreCase(group)) {
-                        perms.add(Manifest.permission.RECORD_AUDIO);
-                    }
-                    if ("camera_vision".equalsIgnoreCase(group) || "all".equalsIgnoreCase(group)) {
-                        perms.add(Manifest.permission.CAMERA);
-                    }
-                    if ("files".equalsIgnoreCase(group) || "all".equalsIgnoreCase(group)) {
-                        if (Build.VERSION.SDK_INT >= 33) {
-                            perms.add("android.permission.READ_MEDIA_IMAGES");
-                            perms.add("android.permission.READ_MEDIA_VIDEO");
-                            perms.add("android.permission.READ_MEDIA_AUDIO");
-                        } else {
-                            perms.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-                            perms.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                        }
-                    }
-                    if (!perms.isEmpty()) {
-                        requestPermissions(perms.toArray(new String[0]), REQ_PERMISSIONS);
-                    }
+                int p = StudioService.port;
+                String t = StudioService.token;
+                if (p > 0 && t != null && ping(p, t)) {
+                    runOnUiThread(() -> open(p, t));
+                    return;
                 }
-            });
-        }
-
-        @JavascriptInterface
-        public void startNativeVoiceRecognition() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (!hasPerm(Manifest.permission.RECORD_AUDIO)) {
-                        if (Build.VERSION.SDK_INT >= 23) {
-                            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_PERMISSIONS);
-                        }
-                        return;
-                    }
-                    try {
-                        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-                        intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
-                        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to Clover AI Studio");
-                        startActivityForResult(intent, REQ_SPEECH_INPUT);
-                    } catch (Exception ex) {
-                        Toast.makeText(MainActivity.this, "Voice input unavailable on this device", Toast.LENGTH_SHORT).show();
-                    }
+                if (System.currentTimeMillis() - t0 > 180_000) {
+                    fail("Clover's server did not start. Close Clover from its notification and open it again.");
+                    return;
                 }
-            });
-        }
-
-        @JavascriptInterface
-        public void speakText(final String text) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (ttsReady && tts != null && text != null && !text.isEmpty()) {
-                        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "clover-s23-utt");
-                    }
+                try {
+                    Thread.sleep(250);
+                } catch (InterruptedException e) {
+                    return;
                 }
-            });
-        }
+            }
+        }, "clover-wait").start();
+    }
 
-        @JavascriptInterface
-        public void stopSpeaking() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (tts != null) {
-                        tts.stop();
-                    }
-                }
-            });
-        }
-
-        @JavascriptInterface
-        public void copyToClipboard(final String text) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    if (cm != null) {
-                        cm.setPrimaryClip(ClipData.newPlainText("Clover AI Studio", text));
-                        Toast.makeText(MainActivity.this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
+    private static boolean ping(int port, String token) {
+        try {
+            HttpURLConnection c = (HttpURLConnection) new URL("http://127.0.0.1:" + port + "/api/setup").openConnection();
+            c.setConnectTimeout(1000);
+            c.setReadTimeout(3000);
+            c.setRequestProperty("X-Clover-Token", token);
+            int code = c.getResponseCode();
+            c.disconnect();
+            return code == 200;
+        } catch (IOException e) {
+            return false;
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (webView != null) {
-            webView.post(new Runnable() {
-                @Override
-                public void run() {
-                    webView.evaluateJavascript(
-                            "if(window.k3RefreshOsPermissionBadges){window.k3RefreshOsPermissionBadges();}",
-                            null
-                    );
-                }
-            });
-        }
+    private void fail(String why) {
+        runOnUiThread(() -> page(SPLASH.replace("animation:s 2.4s linear infinite", "")
+                .replace("{text}", TextUtils.htmlEncode(why))));
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQ_FILE_CHOOSER) {
-            if (filePathCallback == null) return;
-            Uri[] results = null;
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                if (data.getClipData() != null) {
-                    ClipData clipData = data.getClipData();
-                    int count = clipData.getItemCount();
-                    results = new Uri[count];
-                    for (int i = 0; i < count; i++) {
-                        results[i] = clipData.getItemAt(i).getUri();
-                    }
-                } else if (data.getData() != null) {
-                    results = new Uri[]{data.getData()};
-                }
-            }
-            filePathCallback.onReceiveValue(results);
-            filePathCallback = null;
-        } else if (requestCode == REQ_SPEECH_INPUT && resultCode == Activity.RESULT_OK && data != null) {
-            ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            if (matches != null && !matches.isEmpty() && webView != null) {
-                final String spoken = matches.get(0).replace("\\", "\\\\").replace("'", "\\'").replace("\n", " ");
-                webView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        webView.evaluateJavascript(
-                                "if(window.k3OnNativeVoiceResult){window.k3OnNativeVoiceResult('" + spoken + "');}",
-                                null
-                        );
-                    }
-                });
-            }
+    private void open(int port, String token) {
+        if (opened) {
+            return;
         }
+        opened = true;
+        origin = "http://127.0.0.1:" + port;
+        CookieManager cm = CookieManager.getInstance();
+        cm.setAcceptCookie(true);
+        cm.setCookie(origin, "clover_token=" + token + "; Path=/; HttpOnly; SameSite=Strict", ok -> {
+            cm.flush();
+            clearHistory = true;
+            web.loadUrl(origin + "/");
+        });
     }
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
+        // the page first closes what it has open (a settings page, the chat list); else Clover goes to the background
+        // and keeps running (Stop in its notification ends it)
+        String url = web != null ? web.getUrl() : null;
+        if (origin == null || url == null || !url.startsWith(origin)) {
+            moveTaskToBack(true);
+            return;
+        }
+        web.evaluateJavascript("window.cloverBack ? window.cloverBack() : false", handled -> {
+            if (!"true".equals(handled)) {
+                moveTaskToBack(true);
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int request, int result, Intent data) {
+        super.onActivityResult(request, result, data);
+        if (request != PICK_FILES || picked == null) {
+            return;
+        }
+        Uri[] uris = null;
+        if (result == RESULT_OK && data != null) {
+            ClipData clip = data.getClipData();
+            if (clip != null) {
+                uris = new Uri[clip.getItemCount()];
+                for (int i = 0; i < clip.getItemCount(); i++) {
+                    uris[i] = clip.getItemAt(i).getUri();
+                }
+            } else if (data.getData() != null) {
+                uris = new Uri[]{data.getData()};
+            }
+        }
+        picked.onReceiveValue(uris);
+        picked = null;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int request, String[] permissions, int[] results) {
+        if (request == ASK_MIC && micRequest != null) {
+            if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) {
+                micRequest.grant(micRequest.getResources());
+            } else {
+                micRequest.deny();
+            }
+            micRequest = null;
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (root != null) {
+            root.requestApplyInsets();
         }
     }
 
     @Override
     protected void onDestroy() {
-        if (tts != null) {
-            tts.stop();
-            tts.shutdown();
+        if (current == this) {
+            current = null;
         }
         super.onDestroy();
+    }
+
+    static void finishAll() {
+        MainActivity a = current;
+        if (a != null) {
+            a.runOnUiThread(a::finishAndRemoveTask);
+        }
+    }
+
+    /** On while the first download or the model's load runs: with the screen off, Android ranked Clover below the apps
+     *  it closed for memory during the S23's first load and closed Clover too (2026-11-04). */
+    static void keepScreenOn(boolean on) {
+        awake = on;
+        MainActivity a = current;
+        if (a != null) {
+            a.runOnUiThread(a::applyAwake);
+        }
+    }
+
+    private void applyAwake() {
+        if (awake) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
+    }
+
+    private static byte[] pcm16ToWav(byte[] pcm, int sampleRate) {
+        ByteBuffer hdr = ByteBuffer.allocate(44).order(ByteOrder.LITTLE_ENDIAN);
+        hdr.put(new byte[]{'R', 'I', 'F', 'F'});
+        hdr.putInt(36 + pcm.length);
+        hdr.put(new byte[]{'W', 'A', 'V', 'E', 'f', 'm', 't', ' '});
+        hdr.putInt(16);
+        hdr.putShort((short) 1);
+        hdr.putShort((short) 1);
+        hdr.putInt(sampleRate);
+        hdr.putInt(sampleRate * 2);
+        hdr.putShort((short) 2);
+        hdr.putShort((short) 16);
+        hdr.put(new byte[]{'d', 'a', 't', 'a'});
+        hdr.putInt(pcm.length);
+        byte[] out = new byte[44 + pcm.length];
+        System.arraycopy(hdr.array(), 0, out, 0, 44);
+        System.arraycopy(pcm, 0, out, 44, pcm.length);
+        return out;
+    }
+
+    public final class CloverAndroidBridge {
+        @SuppressLint("MissingPermission")
+        @JavascriptInterface
+        public String startAudioCapture() {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                runOnUiThread(() -> requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, ASK_MIC));
+                return "PERMISSION_REQUESTED";
+            }
+            synchronized (audioLock) {
+                if (recordingAudio) {
+                    return "OK";
+                }
+                int rate = 16000;
+                int minBuf = AudioRecord.getMinBufferSize(
+                        rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
+                if (minBuf <= 0) {
+                    minBuf = rate * 2;
+                }
+                try {
+                    audioRecord = new AudioRecord(
+                            MediaRecorder.AudioSource.MIC,
+                            rate,
+                            AudioFormat.CHANNEL_IN_MONO,
+                            AudioFormat.ENCODING_PCM_16BIT,
+                            Math.max(minBuf * 2, rate * 2));
+                    if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+                        audioRecord.release();
+                        audioRecord = null;
+                        return "ERROR:UNINITIALIZED";
+                    }
+                    audioBuffer = new ByteArrayOutputStream(rate * 10);
+                    recordingAudio = true;
+                    audioRecord.startRecording();
+                } catch (Throwable e) {
+                    recordingAudio = false;
+                    if (audioRecord != null) {
+                        try {
+                            audioRecord.release();
+                        } catch (Throwable ignored) {
+                        }
+                        audioRecord = null;
+                    }
+                    return "ERROR:" + e.getMessage();
+                }
+                final int bufSize = Math.max(minBuf, 2048);
+                audioThread = new Thread(() -> {
+                    byte[] buf = new byte[bufSize];
+                    while (recordingAudio) {
+                        AudioRecord ar = audioRecord;
+                        if (ar == null) {
+                            break;
+                        }
+                        int n = ar.read(buf, 0, buf.length);
+                        if (n > 0) {
+                            synchronized (audioLock) {
+                                if (audioBuffer != null) {
+                                    audioBuffer.write(buf, 0, n);
+                                }
+                            }
+                        }
+                    }
+                }, "clover-mic-pcm");
+                audioThread.start();
+                return "OK";
+            }
+        }
+
+        @JavascriptInterface
+        public String stopAudioCapture() {
+            Thread t;
+            AudioRecord ar;
+            synchronized (audioLock) {
+                if (!recordingAudio) {
+                    return "";
+                }
+                recordingAudio = false;
+                t = audioThread;
+                audioThread = null;
+                ar = audioRecord;
+                audioRecord = null;
+            }
+            if (ar != null) {
+                try {
+                    ar.stop();
+                } catch (Throwable ignored) {
+                }
+                try {
+                    ar.release();
+                } catch (Throwable ignored) {
+                }
+            }
+            if (t != null) {
+                try {
+                    t.join(600);
+                } catch (InterruptedException ignored) {
+                }
+            }
+            byte[] pcm;
+            synchronized (audioLock) {
+                pcm = audioBuffer != null ? audioBuffer.toByteArray() : new byte[0];
+                audioBuffer = null;
+            }
+            if (pcm.length == 0) {
+                return "";
+            }
+            return Base64.encodeToString(pcm16ToWav(pcm, 16000), Base64.NO_WRAP);
+        }
+
+        @JavascriptInterface
+        public void startGoogleSignIn(String authUrl, String nonce) {
+            if (authUrl == null || authUrl.isEmpty()) {
+                return;
+            }
+            runOnUiThread(() -> {
+                try {
+                    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(authUrl));
+                    startActivity(i);
+                } catch (Exception ignored) {
+                }
+            });
+        }
     }
 }

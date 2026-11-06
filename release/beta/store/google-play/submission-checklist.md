@@ -30,7 +30,7 @@
 - **App Category**: `Productivity` (or `Tools`)
 - **Contact Details**:
   - Website: `https://cloverframework.com/`
-  - Privacy Policy URL: `https://cloverframework.com/governance/`
+  - Privacy Policy URL: `https://cloverframework.com/privacy/`
   - Support URL: `https://github.com/santhoshsathish94/clover-framework/issues`
 - **Visual Assets (`screenshots/`)**:
   - App Icon (`512x512` 32-bit PNG): `screenshots/app-icon-512x512.png`
@@ -46,7 +46,7 @@
 ## 3. App Content & Policy Declarations (Play Console → Policy → App content)
 
 ### A. Privacy Policy
-- URL: `https://cloverframework.com/governance/`
+- URL: `https://cloverframework.com/privacy/`
 
 ### B. Data Safety Questionnaire
 - **Does your app collect or share any of the required user data types?** → **No** (by default all inference, chats, files, voice recordings, and Personal Process Learning stay strictly on the user's device).

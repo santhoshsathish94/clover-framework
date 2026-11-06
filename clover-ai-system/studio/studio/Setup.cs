@@ -9,6 +9,7 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Web.Script.Serialization;
@@ -20,8 +21,8 @@ using Microsoft.Win32;
 [assembly: AssemblyCompany("Santhosh Narayanan")]
 [assembly: AssemblyProduct("Clover AI Studio")]
 [assembly: AssemblyCopyright("Copyright (c) 2026 Santhosh Narayanan")]
-[assembly: AssemblyVersion("0.5.0.0")]
-[assembly: AssemblyFileVersion("0.5.0.0")]
+[assembly: AssemblyVersion("5.0.0.0")]
+[assembly: AssemblyFileVersion("5.0.0.0")]
 [assembly: ComVisible(false)]
 
 namespace CloverAIStudioSetup
@@ -58,7 +59,7 @@ namespace CloverAIStudioSetup
 
     internal static class Program
     {
-        private const string VersionString = "0.5.0-beta.1";
+        private const string VersionString = "5.0.0";
         private static string LogPath;
         private static readonly object LogLock = new object();
 
@@ -86,6 +87,80 @@ namespace CloverAIStudioSetup
         [DllImport("kernel32.dll")]
         private static extern bool IsProcessorFeaturePresent(uint processorFeature);
 
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool DeleteFileW(string lpFileName);
+
+        private static void UnblockFile(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath)) return;
+            try { DeleteFileW(filePath + ":Zone.Identifier"); } catch { }
+        }
+
+        private static void EnsureTrustedPublisher(bool includeRoot, string saveCerDir)
+        {
+            try
+            {
+                UnblockFile(Assembly.GetExecutingAssembly().Location);
+            }
+            catch { }
+            try
+            {
+                using (Stream cs = Assembly.GetExecutingAssembly().GetManifestResourceStream("CloverAIStudio.codesign.cer"))
+                {
+                    if (cs == null) return;
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        cs.CopyTo(ms);
+                        byte[] rawCert = ms.ToArray();
+                        if (!string.IsNullOrEmpty(saveCerDir))
+                        {
+                            try
+                            {
+                                Directory.CreateDirectory(saveCerDir);
+                                File.WriteAllBytes(Path.Combine(saveCerDir, "CloverFramework-CodeSign.cer"), rawCert);
+                            }
+                            catch { }
+                        }
+                        X509Certificate2 cert = new X509Certificate2(rawCert);
+                        using (X509Store pubStore = new X509Store(StoreName.TrustedPublisher, StoreLocation.CurrentUser))
+                        {
+                            pubStore.Open(OpenFlags.ReadWrite);
+                            if (!pubStore.Certificates.Contains(cert))
+                            {
+                                pubStore.Add(cert);
+                            }
+                        }
+                        if (includeRoot)
+                        {
+                            using (X509Store rootStore = new X509Store(StoreName.Root, StoreLocation.CurrentUser))
+                            {
+                                rootStore.Open(OpenFlags.ReadWrite);
+                                if (!rootStore.Certificates.Contains(cert))
+                                {
+                                    rootStore.Add(cert);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private static void UnblockDirectory(string dirPath)
+        {
+            if (string.IsNullOrEmpty(dirPath) || !Directory.Exists(dirPath)) return;
+            try
+            {
+                foreach (string f in Directory.GetFiles(dirPath, "*", SearchOption.AllDirectories))
+                {
+                    UnblockFile(f);
+                }
+            }
+            catch { }
+        }
+
         [STAThread]
         private static int Main(string[] args)
         {
@@ -96,8 +171,9 @@ namespace CloverAIStudioSetup
 
             bool quiet = false;
             bool noShortcuts = false;
+            bool trustOnly = false;
             string baseDir = "";
-            string components = "core,csi";
+            string components = "core,csi,c2c3";
             string reuseDir = "";
 
             if (args != null)
@@ -107,10 +183,17 @@ namespace CloverAIStudioSetup
                     string a = args[i] ?? "";
                     if (Eq(a, "-Quiet") || Eq(a, "--quiet") || Eq(a, "/Quiet") || Eq(a, "/Q")) quiet = true;
                     else if (Eq(a, "-NoShortcuts") || Eq(a, "--no-shortcuts")) noShortcuts = true;
+                    else if (Eq(a, "-Trust") || Eq(a, "--trust")) trustOnly = true;
                     else if ((Eq(a, "-Base") || Eq(a, "--base")) && i + 1 < args.Length) baseDir = args[++i];
                     else if ((Eq(a, "-Components") || Eq(a, "--components")) && i + 1 < args.Length) components = args[++i];
                     else if ((Eq(a, "-Reuse") || Eq(a, "--reuse")) && i + 1 < args.Length) reuseDir = args[++i];
                 }
+            }
+
+            EnsureTrustedPublisher(trustOnly, null);
+            if (trustOnly)
+            {
+                return 0;
             }
 
             if (string.IsNullOrWhiteSpace(baseDir))
@@ -284,7 +367,7 @@ namespace CloverAIStudioSetup
                     File.Delete(tmpZip);
                 }
 
-                foreach (string sub in new[] { "clover", "studio" })
+                foreach (string sub in new[] { "clover", "studio", "browser-extension" })
                 {
                     string dstSub = Path.Combine(baseDir, sub);
                     string srcSub = Path.Combine(newDir, sub);
@@ -296,6 +379,8 @@ namespace CloverAIStudioSetup
                     File.Copy(f, Path.Combine(baseDir, Path.GetFileName(f)), true);
                 }
                 RemoveTree(newDir);
+                EnsureTrustedPublisher(false, Path.Combine(baseDir, "studio"));
+                UnblockDirectory(baseDir);
 
                 JavaScriptSerializer jss = new JavaScriptSerializer { MaxJsonLength = int.MaxValue };
                 string manJson = File.ReadAllText(Path.Combine(baseDir, @"clover\launch\manifest.json"), Encoding.UTF8);

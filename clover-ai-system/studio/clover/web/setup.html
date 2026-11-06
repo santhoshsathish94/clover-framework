@@ -65,8 +65,8 @@ button:disabled { opacity: .5; }
 
   <ol class="steps" id="steps">
     <li data-step="1"><span class="m">○</span><span>Checking this phone</span></li>
-    <li data-step="2"><span class="m">○</span><span>LFM3-Omni-2B, the model<small id="s2">about 1.0 GB</small></span></li>
-    <li data-step="3"><span class="m">○</span><span>Its projector: sight, hearing and voice<small id="s3">about 0.5 GB</small></span></li>
+    <li data-step="2"><span class="m">○</span><span>C1 · LFM3-Omni-2B &amp; multimodal projector<small id="s2">inference, sight, hearing and voice · about 1.5 GB</small></span></li>
+    <li data-step="3"><span class="m">○</span><span>C2 · HybridAgent, Bridges, C3 · 11-Level NCM, S1–S3 &amp; CSI<small id="s3">planning, concept decoding, memory recall &amp; semantics · about 0.8 GB</small></span></li>
     <li data-step="4"><span class="m">○</span><span>Starting Clover</span></li>
   </ol>
 
@@ -123,8 +123,8 @@ button:disabled { opacity: .5; }
   function idle(s) {
     applyPlatform(!!s.android);
     var dev = s.android ? 'phone' : 'laptop';
-    var need = s.plan || (s.android ? 1556460448 : 1960000000), free = s.free_bytes;
-    var lines = ['Clover downloads ' + size(need) + ' once, from Hugging Face (LiquidAI), and checks every file against its published hash.'];
+    var need = s.plan || (s.android ? 2414328496 : 3180000000), free = s.free_bytes;
+    var lines = ['Clover downloads the complete system (' + size(need) + ' once: C1 LFM3-Omni-2B, C2 HybridAgent, Bridges, C3 11-Level NCM, S2 Recall & CSI) and checks every file against its published SHA-256 hash.'];
     if (free != null) lines.push(size(free) + ' free on this ' + dev + '.');
     if (cellular()) lines.push('You are on mobile data: Wi-Fi is better for a download this size.');
     $('intro').textContent = lines.join('\n'); $('intro').hidden = false;
@@ -145,7 +145,7 @@ button:disabled { opacity: .5; }
     applyPlatform(!!s.android);
     $('intro').hidden = true; $('final').hidden = true; $('progress').hidden = false;
     var cur = (s.items && s.items > 2)
-      ? (/projector|mmproj|bge-small/i.test(s.item || '') ? 3 : 2)
+      ? (/HybridAgent|NCM|bge-small|WordNet|CSI/i.test(s.item || '') ? 3 : 2)
       : (s.index ? s.index + 1 : 1);
     steps(Math.min(cur, 3), 'running');
     var now = Date.now(), done = s.done || 0, plan = s.plan || 0;

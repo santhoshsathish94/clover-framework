@@ -27,6 +27,7 @@ import numpy as np  # noqa: E402
 
 import local_terminal  # noqa: E402
 import local_tool_packs  # noqa: E402
+import page_fetch  # noqa: E402
 import paths  # noqa: E402
 import permissions as P  # noqa: E402
 import semantics  # noqa: E402
@@ -115,8 +116,7 @@ TOOLS_ON = ("Use the tools when they help; their results are real. Answer direct
             "for weather, recent events, live information or facts you are not sure of. Never say you lack real-time "
             "access when web_search is available—call web_search instead. If a tool is not allowed, answer without it "
             "and say what you could not check.")
-TOOLS_OFF = ("Answer from what you know. If the answer needs a web search, a file on this " + paths.DEVICE_WORD + " or running "
-             "code, say so: the user can ask you to search, look or run it.")
+TOOLS_OFF = "Answer helpfully, clearly, and thoroughly from your knowledge."
 
 
 def tools_sentence(tools_on, asked=None):
@@ -273,7 +273,7 @@ def tool_worked(name, ran, result, why=""):
     s = str(result or "").strip()
     exit_m = re.search(r"\[exit\s+(-?[1-9]\d*)\]\s*$", s)
     failed = (
-        s.startswith(("Error:", "Not run:", "Could not read the page."))
+        s.startswith(("Error:", "Not run:", "Could not read the page.", "[URL Fetch Error"))
         or (name == "web_search" and s == "No results.")
         or "Traceback (most recent call last):" in s
         or "\nSyntaxError:" in s
@@ -349,6 +349,14 @@ def repair_args(args, user_paths=()):
 
 
 USER_PATH, user_paths, restore_paths = semantics.USER_PATH, semantics.user_paths, semantics.restore_paths
+# server.build_prompt puts attached files before this line and the user's own words after it
+ATTACHED = "Using the attached content / session context above, answer the user's request clearly and thoroughly:\n"
+
+
+def typed_hosts(user_text):
+    """Hosts the user typed in this message, not those inside attached files: only these may be private addresses
+    for web_search and fetch_url (page_fetch)."""
+    return page_fetch.typed_hosts(str(user_text or "").rsplit(ATTACHED, 1)[-1])
 
 
 class LFM3Native:
@@ -633,9 +641,11 @@ class LFM3Native:
                 self._py = PythonTool(python_path=sys.executable, timeout=60, max_output_chars=50_000, memory_limit_gb=mem_gb)
             return self._python(str(a.get("code") or ""))
         if name in ("web_search", "fetch_url"):
+            typed = getattr(self, "turn_hosts", frozenset())
             if name == "web_search":
-                return self._web_tool().execute(str(a.get("query") or "")) or "No results."
-            return self._web_tool().fetch_url_content(str(a.get("url") or ""), max_chars=5000) or "Could not read the page."
+                return self._web_tool().execute(str(a.get("query") or ""), typed=typed) or "No results."
+            return (self._web_tool().fetch_url_content(str(a.get("url") or ""), max_chars=5000, typed=typed)
+                    or "Could not read the page.")
         if name == "run_powershell":
             import local_terminal
             cwd, err = local_terminal.resolve_cwd(a.get("cwd"), self.workdir)
@@ -732,6 +742,7 @@ class LFM3Native:
         emit = on_event or (lambda e: None)
         self.turn_cancel = cancel  # a running command stops when the user stops the turn
         self.turn_unknown, self.turn_ran, self.turn_web = set(), set(), 0  # per answer, as in OmniNative.run_turn
+        self.turn_hosts = typed_hosts(user_text)
         cfg = SAMPLING[sampling]
         base = [t for t in STUDIO_TOOLS if only_tools is None or t["function"]["name"] in only_tools]
         extra_tools = [t for t in extra_tools if only_tools is None or t["schema"]["function"]["name"] in only_tools]
@@ -759,16 +770,19 @@ class LFM3Native:
             shown = {"thinking": 0, "answer": 0}
 
             def on_delta(delta, text):
-                # visible parts only: reasoning, and the answer without the tool-call XML
+                # C1 is strictly for inference: emit thinking tokens only; C3 (NCM) decodes the final answer
                 if thinking:
                     think_part, tail = text.split("</think>", 1) if "</think>" in text else (text, "")
                 else:
                     think_part, tail = "", text
-                answer = re.sub(r"<tool_call>[\s\S]*?(?:</tool_call>|$)", "", tail)
-                for kind, part in (("thinking", think_part), ("answer", answer)):
-                    if len(part) > shown[kind]:
-                        emit({"type": "token", "round": round_no, "kind": kind, "text": part[shown[kind]:]})
-                        shown[kind] = len(part)
+                if len(think_part) > shown["thinking"]:
+                    emit({"type": "token", "round": round_no, "kind": "thinking", "text": think_part[shown["thinking"]:]})
+                    shown["thinking"] = len(think_part)
+                if "ncm" not in layers and kit is None:
+                    answer = re.sub(r"<tool_call>[\s\S]*?(?:</tool_call>|$)", "", tail)
+                    if len(answer) > shown["answer"]:
+                        emit({"type": "token", "round": round_no, "kind": "answer", "text": answer[shown["answer"]:]})
+                        shown["answer"] = len(answer)
             return on_delta
 
         with self.lock:
@@ -838,12 +852,34 @@ class LFM3Native:
                         tail = (content + after) if thinking and "</think>" in text else ("" if thinking else text)
                         final = re.sub(r"<tool_call>[\s\S]*?(?:</tool_call>|$)", "", tail).strip()
                     final = final or "(Stopped after the maximum number of tool rounds.)"
-            if "ncm" in layers and not (cancel and cancel.is_set()):
-                final, info = kit.ncm_render(final)
-                layer_log.append(info)
-            if "ontology" in layers:
+            rnd_n = len(stats_all) or 1
+            if kit is not None and not (cancel and cancel.is_set()):
+                if hasattr(kit, "c1_infer"):
+                    c1_state, c1_info = kit.c1_infer(final, stats=stats_all)
+                    layer_log.append(c1_info)
+                    emit(dict(c1_info, type="layer"))
+                    emit({"type": "plan", "round": rnd_n, "stage": "c1_done", "ms": c1_info.get("ms")})
+                else:
+                    c1_state = None
+                if hasattr(kit, "c2_plan_state"):
+                    emit({"type": "plan", "round": rnd_n, "stage": "c2_plan", "model": "HybridAgent"})
+                    c2_state, c2_info = kit.c2_plan_state(query, c1_state=c1_state, offered_tools=[rd["tool"] for rd in rounds if rd.get("ran")])
+                    layer_log.append(c2_info)
+                    emit(dict(c2_info, type="layer"))
+                    emit({"type": "plan", "round": rnd_n, "stage": "c2_done", "ms": c2_info.get("ms")})
+                else:
+                    c2_state = final
+                if "ncm" in layers and (hasattr(kit, "c3_decode") or hasattr(kit, "ncm_render")):
+                    emit({"type": "plan", "round": rnd_n, "stage": "ncm_decode", "model": "11-Level NCM"})
+                    final, info = kit.c3_decode(c2_state) if hasattr(kit, "c3_decode") else kit.ncm_render(final)
+                    layer_log.append(info)
+                    emit(dict(info, type="layer"))
+                    emit({"type": "plan", "round": rnd_n, "stage": "ncm_done", "ms": round((info.get("s") or 0) * 1000)})
+            if "ontology" in layers and kit is not None:
                 final, changed = kit.grounding_filter(query, final)
                 layer_log.append({"layer": "ontology_grounding", "changed": changed})
+            if ("ncm" in layers or kit is not None) and not (cancel and cancel.is_set()):
+                emit({"type": "token", "round": rnd_n, "kind": "answer", "text": final})
           finally:
             self.stage = {"name": "idle", "since": time.time()}
         return {"reply": final, "tool_calls": rounds, "rounds": len(stats_all), "generation": stats_all,

@@ -5,6 +5,8 @@ Web search; kept in config/search.json on this laptop), otherwise Wikipedia and 
 DuckDuckGo is not used: it answers automated requests with an anomaly page (HTTP 202), and working around that block
 is not appropriate. research() is the browsing step of the Clover cycle: search, open the best pages, keep the
 sentences that bear on the question. Results keep the tools' format (one "Reference Source" line per result).
+Pages are read on this device by page_fetch: public addresses only unless the user typed the host, robots.txt honoured
+when Clover reads on its own.
 """
 import html
 import json
@@ -24,6 +26,22 @@ PROVIDERS = {
               "detail": "Brave's own web index. $5 of free searches a month (about 1,000); a card is needed to sign up."},
 }
 UA = "CloverAIStudio/0.3 (local assistant on the user's laptop; +https://cloverframework.com)"
+# the user's own browser does the whole-web searching (browser-first, 2026-11-06): Clover only opens the search there,
+# with the engine the user picks; the user sends back the pages that matter
+BROWSERS = {
+    "google": ("Google", "https://www.google.com/search?q="),
+    "bing": ("Bing", "https://www.bing.com/search?q="),
+    "duckduckgo": ("DuckDuckGo", "https://duckduckgo.com/?q="),
+    "brave": ("Brave Search", "https://search.brave.com/search?q="),
+    "startpage": ("Startpage", "https://www.startpage.com/do/search?q="),
+    "ecosia": ("Ecosia", "https://www.ecosia.org/search?q="),
+}
+
+
+def browser_search_url(query, engine="google"):
+    """The address that shows `query` on the search engine the user picked, for the user's own browser."""
+    return BROWSERS.get(engine, BROWSERS["google"])[1] + urllib.parse.quote_plus(" ".join(str(query or "").split())[:400])
+
 _KEY = re.compile(r"^[\x21-\x7e]{8,200}$")
 _STOP = set("""a an the of to in on at by for with from and or but is are was were be been being it its this that these
 those what which who whom whose how many much does do did can could would should will shall may might must than then
@@ -62,6 +80,7 @@ class SearchConfig:
             saved = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             saved = {}
+        self.browser = saved.get("browser") if saved.get("browser") in BROWSERS else "google"
         found = dict(saved.get("keys") or {})  # earlier versions kept keys beside the provider
         if self.keys_path is not None:
             try:
@@ -75,22 +94,33 @@ class SearchConfig:
         if saved.get("provider") in PROVIDERS and (not PROVIDERS[saved["provider"]]["key"] or saved["provider"] in self.keys):
             self.provider = saved["provider"]
         if saved.get("keys") and self.keys_path is not None:
-            self._save(self.provider, self.keys)
+            self._save(self.provider, self.keys, self.browser)
 
     def get(self):
         with self.lock:
             return self.provider, dict(self.keys)
 
+    def browser_engine(self):
+        with self.lock:
+            return self.browser
+
     def describe(self):
         provider, keys = self.get()
         return {"provider": provider,
-                "providers": {n: dict(p, key_set=n in keys) for n, p in PROVIDERS.items()}}
+                "providers": {n: dict(p, key_set=n in keys) for n, p in PROVIDERS.items()},
+                "browser": self.browser_engine(),
+                "browsers": {n: {"label": label, "url": url} for n, (label, url) in BROWSERS.items()}}
 
-    def update(self, provider=None, key=None, forget=None):
+    def update(self, provider=None, key=None, forget=None, browser=None):
         """provider: switch to it (a provider that needs a key needs one, given now or saved before);
-        key: the key for `provider`; forget: a provider whose key is removed (falls back to Wikipedia if in use)."""
+        key: the key for `provider`; forget: a provider whose key is removed (falls back to Wikipedia if in use);
+        browser: the search engine Clover opens searches with in the user's own browser (BROWSERS)."""
         with self.lock:
-            keys, chosen = dict(self.keys), self.provider
+            keys, chosen, engine = dict(self.keys), self.provider, self.browser
+            if browser is not None:
+                if browser not in BROWSERS:
+                    raise ValueError(f"unknown search engine {browser!r}")
+                engine = browser
             if forget is not None:
                 keys.pop(str(forget), None)
                 if chosen == forget:
@@ -106,22 +136,22 @@ class SearchConfig:
                 if PROVIDERS[provider]["key"] and provider not in keys:
                     raise ValueError(f"{PROVIDERS[provider]['label']} needs your API key")
                 chosen = provider
-            self._save(chosen, keys)
-            self.provider, self.keys = chosen, keys
+            self._save(chosen, keys, engine)
+            self.provider, self.keys, self.browser = chosen, keys, engine
         return self.describe()
 
-    def _save(self, provider, keys):
+    def _save(self, provider, keys, browser):
         def put(path, data):
             path.parent.mkdir(parents=True, exist_ok=True)
             tmp = path.with_suffix(".tmp")
             tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
             tmp.replace(path)
         if self.keys_path is None:
-            put(self.path, {"provider": provider, "keys": keys})
+            put(self.path, {"provider": provider, "browser": browser, "keys": keys})
             return
         import vault
         put(self.keys_path, {"keys_dpapi": vault.protect(json.dumps(keys))})
-        put(self.path, {"provider": provider})
+        put(self.path, {"provider": provider, "browser": browser})
 
 
 def _text(s):
@@ -351,9 +381,25 @@ class WebSearch:
                     pass
         return out
 
-    def _news_rss_rows(self, q, max_items=3):
+    def _news_rss_rows(self, q, max_items=4):
         import xml.etree.ElementTree as ET
-        url = "https://news.google.com/rss/search?q=" + urllib.parse.quote(q) + "&hl=en-US&gl=US&ceid=US:en"
+        clean_q = re.sub(
+            r"\b(?:202[567]|january|february|march|april|may|june|july|august|september|october|november|december)\b",
+            " ",
+            q or "",
+            flags=re.I,
+        )
+        clean_q = " ".join(clean_q.split()).strip()
+        topic_left = re.sub(
+            r"\b(?:top|latest|current|recent|breaking|today'?s?|today|news|headlines|updates?|summary|summari[sz]e|world|in|the|of|for)\b",
+            " ",
+            clean_q,
+            flags=re.I,
+        ).strip()
+        if not topic_left:
+            url = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"
+        else:
+            url = "https://news.google.com/rss/search?q=" + urllib.parse.quote(clean_q or q) + "&hl=en-US&gl=US&ceid=US:en"
         out = []
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
@@ -361,21 +407,19 @@ class WebSearch:
                 root = ET.fromstring(r.read(1_500_000))
             for it in root.findall(".//item")[:max_items]:
                 title = _text(it.findtext("title") or "")
-                link = (it.findtext("link") or "").strip()
-                pub = (it.findtext("pubDate") or "").strip()
                 desc = _text(it.findtext("description") or "")
                 if title:
-                    snip = (f"[{pub}] {desc}" if pub else desc)[:500]
-                    out.append({"title": title, "url": link, "snippet": snip or title})
+                    snip = f"[Live News] {desc}" if desc and desc != title else f"[Live News] {title}"
+                    out.append({"title": title, "url": "", "snippet": snip[:500]})
         except Exception:
             pass
         return out
 
-    def _public_rows(self, q):
+    def _public_rows(self, q, typed=()):
         t = self.public()
         rows = []
         for u in re.findall(r"https?://[^\s<>\"')]+", q)[:2]:
-            got = t.fetch_url_content(u)
+            got = t.fetch_url_content(u, typed=typed)
             if got and not got.startswith("[URL Fetch Error"):
                 rows.append({"title": u, "url": u, "snippet": got[:1500]})
         if rows:
@@ -386,7 +430,9 @@ class WebSearch:
             q, re.I,
         ))
         if want_news:
-            rows.extend(self._news_rss_rows(q, max_items=3))
+            rows.extend(self._news_rss_rows(q, max_items=4))
+            if len(rows) >= 3 and re.search(r"\b(?:news|headlines|latest|today|yesterday|current|recent|won|match|score)\b", q, re.I):
+                return rows
         if re.search(r"\b(?:research|paper|papers|arxiv|study|studies|preprint|publication)\b", q, re.I):
             for line in t._search_arxiv(q, max_items=3):
                 m = re.search(r"Link: (\S+)", line)
@@ -399,8 +445,9 @@ class WebSearch:
             rows.extend(self._news_rss_rows(q, max_items=2))
         return rows
 
-    def search(self, q):
-        """-> (rows, provider label, note). A failing key provider falls back to Wikipedia and arXiv, with a note."""
+    def search(self, q, typed=()):
+        """-> (rows, provider label, note). A failing key provider falls back to Wikipedia and arXiv, with a note.
+        typed: page_fetch.typed_hosts() of the user's message (a link in the query is read only if public or typed)."""
         name, key = self.provider()
         note = ""
         if WEATHER.search(q):
@@ -418,16 +465,16 @@ class WebSearch:
                 note = f"{PROVIDERS[name]['label']} found nothing; these results are from Wikipedia."
             except SearchError as exc:
                 note = f"{PROVIDERS[name]['label']} search failed: {exc}; these results are from Wikipedia."
-        return self._public_rows(q), PROVIDERS["wikipedia"]["label"], note
+        return self._public_rows(q, typed), PROVIDERS["wikipedia"]["label"], note
 
-    def execute(self, query):
+    def execute(self, query, typed=()):
         q = " ".join(str(query or "").split())[:400]
         if not q:
             return "Empty search query."
-        ck = ("search", self.provider()[0], q)
+        ck = ("search", self.provider()[0], q, tuple(sorted(typed or ())))
         if ck in self.cache:
             return self.cache[ck]
-        rows, label, note = self.search(q)
+        rows, label, note = self.search(q, typed)
         if not rows:
             return (note + "\n" if note else "") + f"No results for '{q}'."
         out = (f"({note})\n" if note else "") + "\n".join(
@@ -437,8 +484,11 @@ class WebSearch:
             self.cache[ck] = out
         return out
 
-    def fetch_url_content(self, url, max_chars=5000):
-        return self.public().fetch_url_content(url, max_chars=max_chars)
+    def fetch_url_content(self, url, max_chars=5000, typed=()):
+        u = str(url or "").strip().rstrip(").,]\"'")
+        if "news.google.com/rss/articles/" in u:
+            return "The headline and summary are already provided in the web_search result above; answer directly from those results."
+        return self.public().fetch_url_content(u, max_chars=max_chars, typed=typed)
 
     def research(self, query, pages=2, max_chars=3000):
         """Search, keep the results that match the query, read the top pages and keep the sentences that bear on it.

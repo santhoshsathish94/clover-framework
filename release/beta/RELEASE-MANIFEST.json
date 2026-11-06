@@ -1,31 +1,41 @@
 {
   "product": "Clover AI Studio",
   "publisher": "Santhosh Narayanan",
-  "release_version": "0.5.0-beta.1",
-  "release_channel": "beta",
-  "release_date": "2026-11-05",
-  "git_worktree": "C:\\personal\\oss\\clover-collective-wt",
-  "git_branch": "experiment/collective-learning",
+  "release_version": "5.0.0",
+  "release_channel": "release",
+  "release_date": "2026-11-06",
+  "generated_by": "release/beta/generate_release_reports.py",
+  "cpsl_release_signing": {
+    "algorithm": "Ed25519 (RFC 8032)",
+    "public_key_hex": "dba3f7e2e969a26c57a24d50e2ecd654249b42e25eecc1f9140a514d7dcedb8a",
+    "private_key_location": "Protected release server vault (/opt/clover-k3/web-studio/vault/cpsl_release_ed25519.key, mode 0600, never in client builds or Git)"
+  },
   "urls": {
     "website": "https://cloverframework.com/",
-    "privacy_policy": "https://cloverframework.com/governance/",
-    "support": "https://github.com/santhoshsathish94/clover-framework/issues"
+    "privacy_policy": "https://cloverframework.com/privacy/",
+    "support": "https://github.com/santhoshsathish94/clover-framework/issues",
+    "windows_direct_installer": "https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe",
+    "google_play_instant_test": "https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs",
+    "google_play_closed_beta_web": "https://play.google.com/apps/testing/ai.clover.studio",
+    "google_play_store_listing": "https://play.google.com/store/apps/details?id=ai.clover.studio"
   },
   "android": {
-    "store": "Google Play Console (Closed Testing)",
+    "store": "Google Play Console (Closed Testing & Internal App Sharing)",
     "package_name": "ai.clover.studio",
-    "version_code": 9,
-    "version_name": "0.5.0-beta.1",
+    "version_code": 13,
+    "version_name": "5.0.0",
     "min_sdk": 26,
-    "target_sdk": 34,
-    "compile_sdk": 34,
+    "target_sdk": 36,
+    "compile_sdk": 36,
     "abi": "arm64-v8a",
     "signing": {
       "keystore_env_on_k3": "/opt/clover-k3/studio-android/keystore.env",
       "key_alias": "cloverstudio",
       "certificate_dn": "CN=Clover AI Studio, OU=Clover Framework, O=Clover AI, L=Bengaluru, ST=KA, C=IN",
       "sha256_fingerprint": "88:C0:E8:32:66:FF:ED:34:73:F5:1A:A1:02:C0:D5:EC:98:CA:4E:85:F4:D9:5F:FE:70:68:46:57:E1:9C:40:F7",
+      "sha256_fingerprint_hex": "88c0e83266ffed3473f51aa102c0d5ec98ca4e85f4d95ffe70684657e19c40f7",
       "sha1_fingerprint": "CB:D4:BF:0E:FC:81:1F:18:DB:52:A7:26:C2:46:67:0B:44:B0:1A:A3",
+      "sha1_fingerprint_hex": "cbd4bf0efc811f18db52a726c246670b44b01aa3",
       "apk_schemes_verified": [
         "v2",
         "v3"
@@ -36,73 +46,77 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 73832650,
-        "sha256": "b9271c7d7245daf2051bcfa2da7ff9252d1fa9f76d08cd4dd1070ac31ff329fe"
+        "size_bytes": 73923953,
+        "sha256": "a801bae9adc75ac582070be0a75ebf83e75e783af37ac077b4c53b17739c3edf"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "type": "apk",
-        "size_bytes": 74911809,
-        "sha256": "f9ddebd66560f717b44973ba5486023b38093b3f374dd963eb83d94b2b2c48e0"
+        "size_bytes": 75003108,
+        "sha256": "ca74484be0a944cc7275cfeb8e93736128ca3d7be5028e5fb1aea982bb50574a"
       }
     ],
     "verification": {
-      "collective_tests": "33/33 passed",
-      "live_simulated_server_smoke_test": "passed (http://127.0.0.1:47651, /api/health, /api/settings, /api/collective, /api/chat/stream)",
+      "collective_tests": "35/35 passed (Ed25519 asymmetric release verification)",
+      "google_identity_collective_tests": "32/32 passed (Google OIDC RS256 JWKS, PKCE loopback, 2-installation HTTP E2E sync, expiry/revocation)",
+      "human_usefulness_tests": "18/18 passed (first-turn zero-refusal human usefulness benchmark)",
+      "live_activity_sse_tests": "18/18 passed (monotonic seq, cancellation, disconnect, reconnection, concurrency)",
+      "live_simulated_server_smoke_test": "passed (/api/health, /api/settings, /api/collective, /api/identity/google, /api/chat/stream, /api/turn/events)",
       "ready_for_closed_testing_upload": true
     }
   },
   "windows": {
-    "store": "Microsoft Partner Center (Private Audience / Beta)",
-    "packaging_route": "Option A (MSIX / .msixupload Store-Signed Package) + Standalone Win32 Setup EXE",
-    "package_identity_name": "SanthoshNarayanan.CloverAIStudio",
-    "publisher_dn": "CN=A0DCEEB8-49DB-4CD8-8D07-BC439E69B9AF",
+    "distribution": "Standalone Native C# Win32 Per-User Installer (CloverAIStudio-Setup.exe)",
+    "packaging_route": "Native .NET Framework 4.8 x64 GUI Setup & Launcher (csc.exe) with embedded asInvoker manifest, automatic Zone.Identifier unblocking, and embedded TrustedPublisher certificate registration",
     "publisher_display_name": "Santhosh Narayanan",
-    "store_id": "9P2KP2XGF5LG",
-    "package_family_name": "SanthoshNarayanan.CloverAIStudio_ffvna78masvs2",
-    "manifest_version": "0.5.0.0",
-    "display_version": "0.5.0-beta.1",
+    "manifest_version": "5.0.0.0",
+    "display_version": "5.0.0",
     "architecture": "x64",
     "min_windows_version": "10.0.19041.0",
     "max_windows_version_tested": "10.0.26100.0",
     "signing": {
-      "msix_store_signing": "Signed by Microsoft Store upon Partner Center ingestion; locally signed with test cert CN=A0DCEEB8-49DB-4CD8-8D07-BC439E69B9AF (Thumbprint B6551BA01FD1C8B7D4BB103BB027A1203EB69FFC) for local validation",
-      "standalone_exe_signing": "Signed with CN=Clover Framework, O=Clover Framework (Thumbprint 843BC8476BFCAD1EE2FABE82CDB403994CCE3F99)"
+      "standalone_exe_signing": "Authenticode SHA-256 signed with CN=Clover Framework, O=Clover Framework (Thumbprint 843BC8476BFCAD1EE2FABE82CDB403994CCE3F99, Status: Valid)",
+      "certificate_file": "release/beta/windows/CloverFramework-CodeSign.cer",
+      "certificate_sha256": "9365ec5d455b0ef8179ccf1c061cf481c86dad234b9f3dc62244e487c659072d"
     },
     "artifacts": [
       {
         "file": "release/beta/windows/clover-ai-studio-beta.msixupload",
         "type": "msixupload",
-        "size_bytes": 4790987,
-        "sha256": "1408dede60b6b24b95c03307647f9d38cce7b3c4bd086f0c1a54f546cc907f5d"
+        "size_bytes": 5079423,
+        "sha256": "a92953ff77c1c8a7540932f762ac16ba5cfc69edfe7651033bf6cd9815309a98"
       },
       {
-        "file": "release/beta/windows/SanthoshNarayanan.CloverAIStudio_0.5.0.0_x64.msix",
+        "file": "release/beta/windows/SanthoshNarayanan.CloverAIStudio_5.0.0.0_x64.msix",
         "type": "msix",
-        "size_bytes": 4839470,
-        "sha256": "d9a9269327685d0574a416e766cb5ccfc96d7103037072909b2eb678a63d78b9"
+        "size_bytes": 5128537,
+        "sha256": "3d9f409adaa719f75503a31ae19b474853a5571751eeb4b86bad1208fef5572d"
       },
       {
         "file": "release/beta/windows/clover-ai-studio-beta.msix",
         "type": "msix",
-        "size_bytes": 4839470,
-        "sha256": "d9a9269327685d0574a416e766cb5ccfc96d7103037072909b2eb678a63d78b9"
+        "size_bytes": 5128537,
+        "sha256": "3d9f409adaa719f75503a31ae19b474853a5571751eeb4b86bad1208fef5572d"
       },
       {
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "type": "exe",
-        "size_bytes": 2453976,
-        "sha256": "45eb978db7d80087aa541a90bdbbd03ac981a9172b6355ac95da8e37a56b9455"
+        "size_bytes": 2634712,
+        "sha256": "1a7a847962a9a103e2dc7f66f71390ece9138dda23210753771482085e6d652a"
       }
     ],
     "verification": {
       "semantics_tests": "155/155 passed",
-      "collective_tests": "33/33 passed",
+      "collective_tests": "35/35 passed (Ed25519 asymmetric release verification)",
+      "google_identity_collective_tests": "32/32 passed (Google OIDC RS256 JWKS, PKCE loopback, 2-installation HTTP E2E sync, expiry/revocation)",
+      "human_usefulness_tests": "18/18 passed (first-turn zero-refusal human usefulness benchmark)",
+      "live_activity_sse_tests": "18/18 passed (monotonic seq, cancellation, disconnect, reconnection, concurrency)",
       "repo_tests": "27/27 passed",
       "tool_routing_tests": "129/129 passed",
-      "regression_fixes_tests": "29/29 passed",
-      "live_ui_and_api_smoke_test": "passed (http://127.0.0.1:8799)",
-      "ready_for_partner_center_upload": true
+      "page_fetch_tests": "119/119 passed (address guard, robots.txt, citations)",
+      "browser_first_tests": "30/30 passed (browser-first search engines & links)",
+      "browser_handback_tests": "51/51 passed (Send to Clover Chrome/Edge native messaging host & inbox)",
+      "regression_fixes_tests": "61/61 passed (full Clover C1-C3/S1-S3/CSI/PPL system)"
     }
   }
 }

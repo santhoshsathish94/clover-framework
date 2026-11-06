@@ -72,11 +72,11 @@ class ReplayWeb:
             f.write(json.dumps({"key": key, "result": res, "at": time.strftime("%Y-%m-%dT%H:%M:%S")}, ensure_ascii=False) + "\n")
         return res
 
-    def execute(self, query):
-        return self._get(f"search:{self._inner().provider()[0]}\t" + query, lambda w: w.execute(query))
+    def execute(self, query, typed=()):
+        return self._get(f"search:{self._inner().provider()[0]}\t" + query, lambda w: w.execute(query, typed=typed))
 
-    def fetch_url_content(self, url, max_chars=5000):
-        return self._get(f"fetch\t{max_chars}\t{url}", lambda w: w.fetch_url_content(url, max_chars=max_chars))
+    def fetch_url_content(self, url, max_chars=5000, typed=()):
+        return self._get(f"fetch\t{max_chars}\t{url}", lambda w: w.fetch_url_content(url, max_chars=max_chars, typed=typed))
 
     def research(self, query):
         return self._get(f"research:{self._inner().provider()[0]}\t" + query, lambda w: w.research(query))

@@ -5,7 +5,8 @@ Serves http://127.0.0.1:<port>/ from a scratch folder (default %TEMP%\\clover-ui
 search, workspaces, storage, sessions and the repository are the real code; only the model is replaced. The stand-in
 streams a short answer; a message containing "run" calls run_powershell under the real permission store (Allow / Ask /
 Off), so the permission card, tool card, layer tags, Try again and Helpful can be checked in a browser. "code" adds a
-code block and a code-check tag. Nothing here touches the laptop.
+code block and a code-check tag. "search" shows a web search and a page robots.txt refused, each with its "in your
+browser" link; a click on one is printed (OPEN ...), not opened. Nothing here touches the laptop.
 """
 import argparse
 import os
@@ -114,6 +115,20 @@ class FakeEngine:
             reply = "Here is your picture." if okp else "I could not make the picture."
         if "slow" in low:
             reply = " ".join(["word"] * 120)
+        if "search" in low:  # browser-first search: the steps offer the user's own browser (2026-11-06)
+            q = user_text[:80]
+            emit({"type": "tool_call", "id": "t5", "name": "web_search", "arguments": {"query": q}})
+            res = "• Reference Source 1: Pune (https://en.wikipedia.org/wiki/Pune): Pune is a city in Maharashtra, India."
+            emit({"type": "tool_result", "id": "t5", "name": "web_search", "ran": True, "worked": True,
+                  "summary": "1 result from Wikipedia", "why": "allowed", "result": res})
+            url = "https://www.google.com/search?q=" + "+".join(q.split())
+            emit({"type": "tool_call", "id": "t6", "name": "fetch_url", "arguments": {"url": url}})
+            res = (f"[URL Fetch Error for {url}: www.google.com's robots.txt asks automated readers not to open this "
+                   "page; open it in your browser instead]")
+            worked, summary = N.tool_worked("fetch_url", True, res)
+            emit({"type": "tool_result", "id": "t6", "name": "fetch_url", "ran": True, "worked": worked,
+                  "summary": summary, "why": "allowed", "result": res})
+            reply = "Wikipedia says Pune is a city in Maharashtra, India. For the rest of the web, search in your browser."
         if "table" in low:
             reply = "Your files:\n\n| File | Size |\n\n|------|------|\n\n| README | 14 bytes |\n\n| notes.txt | 5 bytes |\n\nThat is all."
         if "rebase" in low:  # a command that asks even when the terminal is allowed
@@ -179,6 +194,9 @@ def main():
     S.memidx = memory_index.MemoryIndex(base, S.repo, start=False, recall=S.settings.get()["layers"]["recall"])
     S.engine = FakeEngine(S.perms)
     S.omni_engine = S.engine
+    real_open = server.open_in_browser
+    server.open_in_browser = lambda body, start=None: real_open(
+        body, start=lambda u: print("OPEN (recorded, not opened by the harness):", u, flush=True))
     server.setup_needed = lambda: False
     server.omni_available = lambda _b: (True, "")
     server.gpu_available = lambda _b: (True, "")

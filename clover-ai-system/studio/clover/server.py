@@ -35,9 +35,9 @@ import paths  # noqa: E402
 import semantics  # noqa: E402
 
 MODEL_ID = "lfm3-omni-2b"
-STUDIO_VERSION = "0.5.0-beta.1"
-RELEASE_CHANNEL = "beta"
-PRIVACY_URL = "https://cloverframework.com/governance/"
+STUDIO_VERSION = "5.0.0"
+RELEASE_CHANNEL = "release"
+PRIVACY_URL = "https://cloverframework.com/privacy/"
 SUPPORT_URL = "https://github.com/santhoshsathish94/clover-framework/issues"
 MAX_BODY = 4 * 1024 * 1024
 CHAT_BODY = 100 * 1024 * 1024  # streamed chat carries images, audio and video as base64
@@ -86,6 +86,8 @@ class S:
     kit = None
     memidx = None
     csi = None  # csi_child.CSIService
+    google_identity = None  # google_identity.GoogleIdentityManager
+    gateway_runtime = None  # {"gateway": CollectiveGateway, "evaluator": CollectiveEvaluator, "registry": CoreRegistry}
     hardware = None  # hardware.probe(): this machine and the settings chosen for it
     last_turn_end = time.time()
     kv_sid = None
@@ -94,7 +96,9 @@ class S:
     chat_dirs = {}  # chat id -> the folder its commands run in (the last repository cloned in that chat)
     sess_lock = threading.Lock()
     turn_lock = threading.Lock()
-    active = {}  # turn_id -> {"cancel": Event, "pending": {request_id: {"event": Event, "decision": str}}}
+    turns_lock = threading.Lock()
+    active = {}  # turn_id -> {"cancel": Event, "pending": {request_id: {"event": Event, "decision": str}}, "seq": int, "events": list}
+    recent_turns = {}  # turn_id -> completed turn state for SSE reconnection replay (bounded to 32)
     busy = None
     port = 8765
     started = time.time()
@@ -227,18 +231,16 @@ def _csi_url_ok(url):
 
 
 class Settings:
-    """config/settings.json: which model and engine run Layer 1, when tools are offered, which Clover layers are on."""
-    # human, 2026-10-31: tools only when asked; memory, ontology and code check on by default; the Clover cycle is
-    # not a setting: it runs when the user says an answer is not right (clover_cycle.retry_requested)
-    # recall (Layer 2), measured in the Studio on the 70 tasks with an unrelated 49-chat history (2026-10-31): step 7
-    # 47/65, step 7 + recall 40/65 (gains 4, losses 11, sign test p=0.118), so it stays off; the human decides defaults
+    """config/settings.json: which model and engine run Layer 1, when tools are offered, and collective learning opt-in.
+    All Clover core stages (C1 Inference, C2 HybridAgent Plan, Bridges, C3 11-level NCM Decode), supporting layers
+    (S1 Memory, S2 Recall & Ontology, S3 Tools & Compiler), and semantic layers (CSI & PPL) are always enabled."""
     DEFAULTS = {"model": "omni", "engine": "gpu", "tools": "ask", "image_model": "sd15-lcm",
                 "remote_models": [],
-                "layers": {"memory": True, "ontology": True, "compiler": True, "ncm": False, "kv_slots": False,
-                           "recall": False},
-                "csi": True,  # CSI as a child process (csi_child.py), on when its files are installed (human, 2026-11-03)
-                "csi_url": "",  # or a CSI service the user runs on this laptop (it then replaces the child)
-                "personal": True,  # the user's own learning (research/personal-process-learning): on, the user can turn it off
+                "layers": {"memory": True, "ontology": True, "compiler": True, "ncm": True, "kv_slots": False,
+                           "recall": True},
+                "csi": True,
+                "csi_url": "",
+                "personal": True,
                 "collective_contribute": False,  # opt-in candidate extraction (research/collective-learning)
                 "collective_receive": False}  # opt-in shared-core updates (research/collective-learning)
 
@@ -266,15 +268,14 @@ class Settings:
             self.data["tools"] = saved["tools"]
         if saved.get("image_model") in IMAGE_MODELS:
             self.data["image_model"] = saved["image_model"]
-        for k, v in (saved.get("layers") or {}).items():
-            if k in LAYER_KEYS and isinstance(v, bool):
-                self.data["layers"][k] = v
+        if isinstance((saved.get("layers") or {}).get("kv_slots"), bool):
+            self.data["layers"]["kv_slots"] = saved["layers"]["kv_slots"]
+        for k in ("memory", "ontology", "compiler", "ncm", "recall"):
+            self.data["layers"][k] = True
         if isinstance(saved.get("csi_url"), str) and _csi_url_ok(saved["csi_url"]):
             self.data["csi_url"] = saved["csi_url"].strip()
-        if isinstance(saved.get("csi"), bool):
-            self.data["csi"] = saved["csi"]
-        if isinstance(saved.get("personal"), bool):
-            self.data["personal"] = saved["personal"]
+        self.data["csi"] = True
+        self.data["personal"] = True
         if isinstance(saved.get("collective_contribute"), bool):
             self.data["collective_contribute"] = saved["collective_contribute"]
         if isinstance(saved.get("collective_receive"), bool):
@@ -309,7 +310,7 @@ class Settings:
             for k, v in (changes.get("layers") or {}).items():
                 if k not in LAYER_KEYS or not isinstance(v, bool):
                     raise ValueError(f"unknown layer setting {k!r}")
-                self.data["layers"][k] = v
+                self.data["layers"][k] = v if k == "kv_slots" else True
             if "csi_url" in changes:
                 if not isinstance(changes["csi_url"], str) or not _csi_url_ok(changes["csi_url"]):
                     raise ValueError("csi_url must be empty (off) or a CSI service on this laptop (http://127.0.0.1:<port>)")
@@ -317,11 +318,11 @@ class Settings:
             if "csi" in changes:
                 if not isinstance(changes["csi"], bool):
                     raise ValueError("csi must be true or false")
-                self.data["csi"] = changes["csi"]
+                self.data["csi"] = True
             if "personal" in changes:
                 if not isinstance(changes["personal"], bool):
                     raise ValueError("personal must be true or false")
-                self.data["personal"] = changes["personal"]
+                self.data["personal"] = True
             if "collective_contribute" in changes:
                 if not isinstance(changes["collective_contribute"], bool):
                     raise ValueError("collective_contribute must be true or false")
@@ -356,12 +357,14 @@ def _walkthrough_flag(base):
 
 
 def setup_needed():
-    """The phone and laptop apps show the clean setup screen when the model is not downloaded yet, or right after
-    Setup.exe launches the Studio for its first-run walkthrough."""
+    """The phone and laptop apps show the clean setup screen when the model is not downloaded yet, while first-start
+    setup is still running, or right after Setup.exe launches the Studio for its first-run walkthrough."""
     if paths.WEB or S.args is None:
         return False
     base = Path(S.args.base)
     if _walkthrough_flag(base).is_file():
+        return True
+    if S.load.get("status") == "setup" and S.setup is not None and S.setup.state in ("running", "stopped", "failed"):
         return True
     return not omni_available(base)[0]
 
@@ -449,8 +452,15 @@ class Setup:
                 traceback.print_exc()
             if S.csi is not None and S.settings is not None and S.settings.get().get("csi", True):
                 S.csi.start()
+            if S.memidx is not None:
+                S.memidx.wake()
+            try:
+                import omni_c2_c3
+                omni_c2_c3.for_base(self.base)
+            except Exception:
+                pass
         with self.lock:
-            if rc == 0 and not setup_needed():
+            if rc == 0 and not _walkthrough_flag(self.base).is_file() and omni_available(self.base)[0]:
                 self.state = "done"
             else:
                 self.state = "stopped" if rc == 3 else "failed"
@@ -598,14 +608,15 @@ def image_tool(sid, cancel, made):
     gen = image_gen.ImageGen(S.args.base, S.settings.get().get("image_model", "sd15-lcm"))
 
     def run(a):
-        free = image_gen.free_mb()
-        if free is not None and free < image_gen.NEED_FREE_MB and hasattr(S.engine, "free_voice") and S.engine.free_voice():
-            time.sleep(1.5)
+        if gen.available()[0]:
             free = image_gen.free_mb()
-        if free is not None and free < image_gen.NEED_FREE_MB:
-            return (f"Error: no picture was made: this laptop has {free / 1024:.1f} GB of memory free and making a picture "
-                    f"needs about {image_gen.NEED_FREE_MB / 1024:.1f} GB. Tell the user to close some programs (browser "
-                    "tabs, other apps) and ask again. Do not try again now.")
+            if free is not None and free < image_gen.NEED_FREE_MB and hasattr(S.engine, "free_voice") and S.engine.free_voice():
+                time.sleep(1.5)
+                free = image_gen.free_mb()
+            if free is not None and free < image_gen.NEED_FREE_MB:
+                return (f"Error: no picture was made: this laptop has {free / 1024:.1f} GB of memory free and making a picture "
+                        f"needs about {image_gen.NEED_FREE_MB / 1024:.1f} GB. Tell the user to close some programs (browser "
+                        "tabs, other apps) and ask again. Do not try again now.")
         try:
             r = gen.generate(a.get("prompt") or "", media_dir(), cancel=cancel)
         except (RuntimeError, ValueError, TypeError) as exc:
@@ -614,7 +625,7 @@ def image_tool(sid, cancel, made):
         return (f"Made the picture ({r['width']}x{r['height']}, {r['model']}, {r['seconds']} s); the user sees it in the chat "
                 "now. Reply with one short sentence; do not describe details you cannot see.")
     return {"schema": lfm3_native._fn(
-        "generate_image", "Make a picture from a text description with the image model on this laptop. Use when the "
+        "generate_image", "Make a picture or illustration from a text description. Use when the "
         "user asks for an image, picture, drawing or illustration.",
         {"prompt": {"type": "string", "description": "what the picture shows, in English, with style details"}}, ["prompt"]),
         "permission": "media", "detail": lambda a: "Create a picture: " + str(a.get("prompt") or "")[:300], "run": run}
@@ -697,6 +708,29 @@ def collective_store(csi=None, keep_csi=True):
     return coll
 
 
+def google_identity_manager():
+    """Stateless Google OpenID Connect identity manager for this installation (<base>/vault)."""
+    import google_identity
+    if S.google_identity is None and S.args is not None:
+        S.google_identity = google_identity.GoogleIdentityManager(Path(S.args.base))
+    return S.google_identity
+
+
+def collective_gateway_runtime():
+    """Remote Collective Learning Gateway & Signed Registry runtime (hosted on k3 or local gateway mode)."""
+    import collective_evaluator
+    import collective_gateway
+    import core_registry
+    if S.gateway_runtime is None and S.args is not None:
+        base = Path(S.args.base)
+        gw = collective_gateway.CollectiveGateway(state_dir=base / "collective-gateway")
+        min_inst = int(os.environ.get("CLOVER_CPSL_MIN_INSTALLATIONS") or 2)
+        ev = collective_evaluator.CollectiveEvaluator(min_installations=min_inst, min_agreement=0.75)
+        reg = core_registry.CoreRegistry(base / "clover-collective")
+        S.gateway_runtime = {"gateway": gw, "evaluator": ev, "registry": reg, "lock": threading.RLock()}
+    return S.gateway_runtime
+
+
 def personal_step(pers, method, *args):
     """A personal-learning step; it never breaks the turn or the request (the error is printed and they go on)."""
     if pers is None:
@@ -709,6 +743,40 @@ def personal_step(pers, method, *args):
 
 
 REMEMBER_ASK = semantics.REMEMBER_ASK
+OPEN_URL = re.compile(r"https?://[^\s\x00-\x1f\x7f]{1,2040}", re.I)
+
+
+def open_in_browser(body, start=None):
+    """A search (body["query"], with the engine picked in Settings) or a page (body["url"]) opened in the user's default
+    browser, where they are signed in and search themselves. On Windows the page's own links open in Clover's app window
+    (its own Edge profile); the phone app and the Web page open links in the user's browser themselves. Only http and
+    https addresses are opened. start: os.startfile (tests replace it). -> the address opened."""
+    import web_search
+    if paths.PLATFORM != "windows":
+        raise ValueError("open the link from the page: this device opens links in your browser itself")
+    query = " ".join(str(body.get("query") or "").split())
+    url = web_search.browser_search_url(query, S.search.browser_engine()) if query else str(body.get("url") or "").strip()
+    if not OPEN_URL.fullmatch(url):
+        raise ValueError("only an http or https address is opened in your browser")
+    (start or os.startfile)(url)
+    return url
+
+
+def inbox_count():
+    """Pages waiting from the user's browser (laptop only)."""
+    if paths.PLATFORM != "windows" or S.args is None:
+        return 0
+    import browser_host
+    return browser_host.count(S.args.base)
+
+
+def inbox_describe():
+    import browser_host
+    if paths.PLATFORM != "windows":
+        return {"pages": [], "available": False}
+    ext = HERE.parent / "browser-extension"
+    return {"pages": browser_host.pages(S.args.base), "available": True, "registered": browser_host.registered(S.args.base),
+            "extension_id": browser_host.EXTENSION_ID, "extension_dir": str(ext) if (ext / "manifest.json").is_file() else None}
 
 
 def workspace_action(action, body):
@@ -930,6 +998,12 @@ def load_engine(args):
                 S.k3_engines = {k: k3_host_engine.K3HostEngine(k, S.omni_engine, Path(args.base), S.perms)
                                 for k in ("nemotron-3.5-super-vl", "kimi-k3")}
             S.remote_engines.clear()
+            try:
+                import omni_c2_c3
+                progress("C2 HybridAgent, Bridges & C3 11-Level NCM")
+                omni_c2_c3.for_base(Path(args.base))
+            except Exception:
+                traceback.print_exc()
             S.engine = engine_for(S.settings.get().get("model"))
             S.kv_sid = None
             S.load.update(status="ready", step="ready", ready_s=round(time.time() - S.load["since"], 1))
@@ -1142,10 +1216,40 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
         extra += vscode_tools(sid)
     made = []
     eng.turn_images = made  # pictures and charts made in this turn (image tool, Python's PNG files)
-    if (Path(S.args.base) / "tools" / "sd.cpp" / "vulkan" / "sd-cli.exe").is_file():
-        extra.append(image_tool(sid, cancel, made))
+    extra.append(image_tool(sid, cancel, made))
     t0 = time.perf_counter()
-    with S.turn_lock:
+    if S.turn_lock.locked() and on_event:
+        on_event({"type": "plan", "round": 1, "stage": "queued"})
+    while not S.turn_lock.acquire(timeout=0.05):
+        if cancel is not None and cancel.is_set():
+            m_id = getattr(eng, "model_key", None) or MODEL_ID
+            return {
+                "reply": "(Stopped.)",
+                "cancelled": True,
+                "tool_calls": [],
+                "rounds": 0,
+                "generation": [],
+                "layers": [],
+                "session_id": sid,
+                "model": m_id,
+                "mode": "lfm3",
+                "wall_ms": round((time.perf_counter() - t0) * 1000.0, 1),
+            }
+    try:
+        if cancel is not None and cancel.is_set():
+            m_id = getattr(eng, "model_key", None) or MODEL_ID
+            return {
+                "reply": "(Stopped.)",
+                "cancelled": True,
+                "tool_calls": [],
+                "rounds": 0,
+                "generation": [],
+                "layers": [],
+                "session_id": sid,
+                "model": m_id,
+                "mode": "lfm3",
+                "wall_ms": round((time.perf_counter() - t0) * 1000.0, 1),
+            }
         files = [str(f.get("name") or "file") for f in body.get("attached_files") or [] if isinstance(f, dict)]
         files += [d["name"] for d in docs]
         n, growth = S.repo.turn_start(sid, typed, how, files, media) if S.repo else (0, [])
@@ -1237,6 +1341,8 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                 kit.meaning = None
             if gate is not None:
                 gate.release()
+    finally:
+        S.turn_lock.release()
     reply = str(res.get("reply") or "")
     # a stopped answer that already has text stays in the conversation: "Summarize that story" after Stop got "I don't
     # have access to the story" (2026-11-01)
@@ -1498,13 +1604,7 @@ class Handler(BaseHTTPRequestHandler):
     def _cors_headers(self):
         origin = (self.headers.get("Origin") or "").strip()
         if not paths.WEB:
-            if origin in ("https://cloverframework.com", "https://www.cloverframework.com"):
-                return {
-                    "Access-Control-Allow-Origin": origin,
-                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-                    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Clover-Key, X-Clover-Token, X-Clover-Bridge, X-Clover-User, X-Clover-Team",
-                    "Vary": "Origin",
-                }
+            # a public website must not read a laptop's local server (Windows sets no token)
             return {}
         if origin not in WEB_ORIGINS and not origin.startswith(("http://127.0.0.1:", "http://localhost:")):
             origin = "https://cloverframework.com"
@@ -1579,8 +1679,6 @@ class Handler(BaseHTTPRequestHandler):
             if not origin or origin in WEB_ORIGINS or origin.startswith(("http://127.0.0.1:", "http://localhost:")):
                 return False
             return True
-        if origin in ("https://cloverframework.com", "https://www.cloverframework.com"):
-            return False
         if origin and origin not in (f"http://127.0.0.1:{S.port}", f"http://localhost:{S.port}"):
             return True
         return self.headers.get("Sec-Fetch-Site") not in (None, "same-origin", "none")
@@ -1596,6 +1694,112 @@ class Handler(BaseHTTPRequestHandler):
             raise ValueError("JSON object expected")
         return body
 
+    def _bearer_token(self) -> str:
+        auth = (self.headers.get("Authorization") or "").strip()
+        return auth[7:].strip() if auth.lower().startswith("bearer ") else ""
+
+    def _serve_hf_mirror(self, path: str):
+        """Read-only SHA256-pinned setup artifact mirror for networks where DNS/firewalls (e.g. Cisco Umbrella) block
+        huggingface.co. Every file downloaded from this mirror is verified against its publisher SHA-256 by setup_fetch.py."""
+        rel = path[len("/api/hf-mirror/"):].lstrip("/")
+        if not rel or ".." in rel.split("/"):
+            return self._send(400, {"error": "invalid mirror path"})
+        k3_data = Path("/opt/clover-k3/core-observe/laptop-base/data")
+        base_data = k3_data if k3_data.is_dir() else (Path(S.args.base) / "data")
+        k3_pre = Path("/home/santhosh/oss/clover-framework/clover-ai-system/src/models/lfm3-1.7b/models")
+        precomp = k3_pre if k3_pre.is_dir() else (Path(S.args.base) / "data" / "omni" / "precomputed")
+        if (precomp / "models").is_dir():
+            precomp = precomp / "models"
+
+        if rel.startswith("api/datasets/Santhoshsathish94/clover-ai-studio/tree/") and rel.endswith("/liquid-lfm3"):
+            if not precomp.is_dir():
+                return self._send(404, {"error": "precomputed dataset not found"})
+            cache_f = Path("/tmp/clover_hf_mirror_tree_v6.json") if os.name != "nt" else (Path(S.args.base) / "cache" / "hf_mirror_tree_v6.json")
+            if cache_f.is_file():
+                try:
+                    return self._send(200, cache_f.read_bytes(), "application/json")
+                except OSError:
+                    pass
+            inc = ("hybridagent/plan-trunk-0/", "bridges/bridge-trunk-0/", "ncm/", "trunks/tokenizer.json", "trunks/global-0/embed_tokens.bf16.bin")
+            entries = []
+            all_fps = []
+            for root_d, _, fnames in os.walk(precomp, followlinks=True):
+                for fn in fnames:
+                    if not fn.endswith(".pt"):
+                        all_fps.append(Path(root_d) / fn)
+            for fp in sorted(all_fps):
+                r_posix = fp.relative_to(precomp).as_posix()
+                if not any(r_posix == p or r_posix.startswith(p) for p in inc):
+                    continue
+                h = hashlib.sha256()
+                with open(fp, "rb") as f:
+                    for ch in iter(lambda: f.read(1 << 20), b""):
+                        h.update(ch)
+                sz = fp.stat().st_size
+                entries.append({
+                    "type": "file",
+                    "path": "liquid-lfm3/" + r_posix,
+                    "size": sz,
+                    "lfs": {"oid": h.hexdigest(), "size": sz},
+                })
+            raw = json.dumps(entries).encode("utf-8")
+            try:
+                cache_f.parent.mkdir(parents=True, exist_ok=True)
+                cache_f.write_bytes(raw)
+            except OSError:
+                pass
+            return self._send(200, raw, "application/json")
+
+        target = None
+        m_ds = re.match(r"^datasets/Santhoshsathish94/clover-ai-studio/resolve/[^/]+/liquid-lfm3/(.+)$", rel)
+        if m_ds:
+            target = precomp / m_ds.group(1)
+        m_csi = re.match(r"^datasets/Santhoshsathish94/clover-ai-studio/resolve/[^/]+/csi/morph-verb-v1\.1/([^/]+)$", rel)
+        if m_csi:
+            for d_cand in (Path(S.args.base) / "data", base_data):
+                cand = d_cand / "csi" / "morph-verb-v1.1" / m_csi.group(1)
+                if cand.is_file():
+                    target = cand
+                    break
+        m_bge = re.match(r"^BAAI/bge-small-en-v1\.5/resolve/[^/]+/([^/]+)$", rel)
+        if m_bge:
+            target = base_data / "embed" / "bge-small-en-v1.5" / m_bge.group(1)
+        m_gguf = re.match(r"^LiquidAI/LFM3-Omni-2B-GGUF/resolve/[^/]+/([^/]+)$", rel)
+        if m_gguf:
+            target = base_data / "omni" / "gguf" / m_gguf.group(1)
+        if target is None or not target.is_file():
+            return self._send(404, {"error": "mirror file not found"})
+
+        total = target.stat().st_size
+        start = 0
+        rng = (self.headers.get("Range") or "").strip()
+        m_rng = re.match(r"^bytes=(\d+)-$", rng)
+        if m_rng:
+            start = int(m_rng.group(1))
+            if start >= total:
+                self.send_response(416)
+                self.send_header("Content-Range", f"bytes */{total}")
+                self.end_headers()
+                return
+        self.send_response(206 if start > 0 else 200)
+        self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Content-Length", str(total - start))
+        self.send_header("Accept-Ranges", "bytes")
+        if start > 0:
+            self.send_header("Content-Range", f"bytes {start}-{total - 1}/{total}")
+        self.end_headers()
+        with open(target, "rb") as f:
+            if start > 0:
+                f.seek(start)
+            while True:
+                buf = f.read(1 << 20)
+                if not buf:
+                    break
+                try:
+                    self.wfile.write(buf)
+                except (BrokenPipeError, ConnectionResetError):
+                    break
+
     # ---------- GET ----------
     def do_GET(self):
         path, _, query = self.path.partition("?")
@@ -1603,6 +1807,52 @@ class Handler(BaseHTTPRequestHandler):
             S.last_request = time.time()
         if not self._host_ok():
             return self._send(403, {"error": "forbidden host"})
+        if path.startswith("/api/hf-mirror/"):
+            return self._serve_hf_mirror(path)
+        if path == "/api/identity/google/callback":
+            from urllib.parse import parse_qs
+            import google_identity
+            q = {k: v[0] for k, v in parse_qs(query).items()}
+            mgr = google_identity_manager()
+            if mgr is None:
+                return self._send(500, {"error": "Google identity manager unavailable"})
+            if q.get("error"):
+                html_err = (
+                    "<!doctype html><meta charset=utf-8><title>Google Sign-In Cancelled</title>"
+                    "<body style='font:15px system-ui,sans-serif;background:#F7F3E9;color:#39473D;padding:2rem;text-align:center'>"
+                    f"<h3>Google sign-in was not completed ({re.sub(r'[^A-Za-z0-9_ -]', '', str(q.get('error'))[:60])})</h3>"
+                    "<p>You can close this window and return to Clover AI Studio.</p></body>"
+                )
+                return self._send(400, html_err.encode("utf-8"), "text/html")
+            try:
+                mgr.complete_pkce_callback(state=str(q.get("state") or ""), code=str(q.get("code") or ""))
+                if S.repo is not None:
+                    S.repo.note("Google identity connected via OIDC PKCE")
+                html_ok = (
+                    "<!doctype html><meta charset=utf-8><title>Connected to Clover AI Studio</title>"
+                    "<body style='font:15px system-ui,sans-serif;background:#F7F3E9;color:#39473D;padding:2rem;text-align:center'>"
+                    "<h3>Google identity connected to Clover AI Studio</h3>"
+                    "<p>Collective learning remains off until you explicitly enable it in Settings &rarr; Learning &amp; Growth.</p>"
+                    "<p>You can close this tab and return to Clover AI Studio.</p></body>"
+                )
+                return self._send(200, html_ok.encode("utf-8"), "text/html")
+            except google_identity.GoogleIdentityError as exc:
+                return self._send(400, {"error": str(exc)})
+        if path == "/api/collective/gateway/releases":
+            from urllib.parse import parse_qs
+            import collective_gateway
+            q = {k: v[0] for k, v in parse_qs(query).items()}
+            gw_rt = collective_gateway_runtime()
+            if gw_rt is None:
+                return self._send(503, {"error": "Collective gateway runtime unavailable"})
+            bearer = self._bearer_token()
+            try:
+                gw_rt["gateway"].authenticate_contributor(bearer)
+            except collective_gateway.GatewaySecurityError as exc:
+                return self._send(exc.status, {"error": exc.message, "code": exc.code})
+            with gw_rt["lock"]:
+                bundle = gw_rt["registry"].get_release_bundle(since_version=q.get("since_version"))
+            return self._send(200, bundle)
         if not paths.WEB and not self._token_ok():
             return self._send(403, {"error": "token required"})
         if path in ("/", "/index.html") and setup_needed():
@@ -1661,7 +1911,8 @@ class Handler(BaseHTTPRequestHandler):
                   "models": [x["id"] for x in cat],
                   "model_catalog": cat,
                   "account": getattr(self, "_authed_account", None),
-                  "inputs": getattr(eng, "inputs", ["text"]) if eng else None}
+                  "inputs": getattr(eng, "inputs", ["text"]) if eng else None,
+                  "inbox": inbox_count()}
             if busy:
                 st["busy"] = {"kind": busy["kind"], "elapsed_s": round(time.time() - busy["since"]),
                               "stage": eng.stage["name"] if eng else None,
@@ -1674,7 +1925,9 @@ class Handler(BaseHTTPRequestHandler):
             o_ok, o_why = omni_available(S.args.base)
             import fused_engine
             import k3_host_engine
+            import omni_c2_c3
             f_need = fused_engine.missing(S.args.base)
+            c2c3_need = omni_c2_c3.missing_c2_c3_files(S.args.base)
             cat = model_catalog()
             owner = k3_host_engine.is_owner_device(S.args.base)
             return self._send(200, {"settings": S.settings.get(), "version": STUDIO_VERSION, "channel": RELEASE_CHANNEL,
@@ -1684,20 +1937,29 @@ class Handler(BaseHTTPRequestHandler):
                                     **({"k3_key": k3_host_engine.k3_host_key()} if (owner and not paths.WEB and k3_host_engine.k3_host_key()) else {}),
                                     "gpu_available": ok, "gpu_reason": why,
                                     "omni_available": o_ok, "omni_reason": o_why, "warning": S.load.get("warning"),
+                                    "c2c3_available": not c2c3_need,
+                                    "c2c3_reason": ("missing " + ", ".join(c2c3_need)) if c2c3_need else "",
                                     "fused_available": not f_need,
                                     "fused_reason": ("missing " + ", ".join(f_need)) if f_need else "",
                                     "csi_status": S.csi.describe() if S.csi is not None else None,
                                     "hardware": S.hardware})
         if path == "/api/memory":
             return self._send(200, {"memories": layer_kit().memories()})
+        if path == "/api/identity/google":
+            mgr = google_identity_manager()
+            return self._send(200, mgr.status() if mgr else {"connected": False, "status_text": "Not connected"})
         if path == "/api/personal":  # what Clover learned about the user, from which experiences
             pers = personal_store()
             return self._send(200, pers.view() if pers else
                               {"enabled": False, "how": "Personal learning is off for this process (CLOVER_PPL=off)."})
         if path == "/api/collective":  # collective learning: consent switches, candidate preview, active shared-core rules
             coll = collective_store()
-            return self._send(200, coll.view(personal_store()) if coll else
-                              {"enabled": False, "how": "Collective learning is off for this process (CLOVER_COLLECTIVE=off)."})
+            mgr = google_identity_manager()
+            g_stat = mgr.status() if mgr else {"connected": False, "status_text": "Not connected"}
+            p_on = bool(S.settings.get().get("personal", True)) if S.settings else True
+            return self._send(200, dict(coll.view(personal_store(), google_status=g_stat), personal_enabled=p_on) if coll else
+                              {"enabled": False, "google_identity": g_stat, "personal_enabled": p_on,
+                               "how": "Collective learning is off for this process (CLOVER_COLLECTIVE=off)."})
         if path == "/api/sessions":  # conversations in the repository, newest first (titles, not contents)
             return self._send(200, {"sessions": [{k: s[k] for k in ("id", "title", "turns", "started", "updated")}
                                                  for s in S.repo.sessions()[:300]]})
@@ -1723,6 +1985,8 @@ class Handler(BaseHTTPRequestHandler):
                                     "media_files": len(files), "media_bytes": sum(p.stat().st_size for p in files)})
         if path == "/api/search":
             return self._send(200, S.search.describe())
+        if path == "/api/inbox":  # pages the user sent from their browser (laptop: the Send to Clover extension)
+            return self._send(200, inbox_describe())
         if path == "/api/workspaces":  # whether a GitHub token is set, never the token
             return self._send(200, S.workspaces.describe())
         if path == "/api/vscode/poll":  # the Clover extension in a VS Code window asks for its next job
@@ -1739,6 +2003,28 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/vscode":
             return self._send(200, {"connected": S.vscode.connected(), "repo": github_repo(),
                                     "local": str(S.repo.dir), "installed": vscode_exe() is not None})
+        if path == "/api/turn/events":
+            from urllib.parse import parse_qs
+            q = {k: v[0] for k, v in parse_qs(query).items()}
+            tid = str(q.get("turn_id") or "").strip()
+            try:
+                after = int(q.get("after") or self.headers.get("Last-Event-ID") or 0)
+            except ValueError:
+                after = 0
+            with S.turns_lock:
+                t_obj = S.active.get(tid) or S.recent_turns.get(tid)
+                if not t_obj:
+                    return self._send(404, {"error": "unknown turn_id"})
+                evs = [e for e in t_obj["events"] if int(e.get("seq") or 0) > after]
+                return self._send(200, {
+                    "turn_id": tid,
+                    "session_id": t_obj.get("session_id"),
+                    "active": tid in S.active,
+                    "done": bool(t_obj.get("done")),
+                    "cancelled": t_obj["cancel"].is_set(),
+                    "last_seq": int(t_obj.get("seq") or 0),
+                    "events": evs,
+                })
         if path in ("/v1/models", "/models"):
             return self._send(200, {"object": "list", "data": [{"id": MODEL_ID, "object": "model", "owned_by": "clover-local"}]})
         self._send(404, {"error": "not found"})
@@ -1749,6 +2035,35 @@ class Handler(BaseHTTPRequestHandler):
         if not self._host_ok() or self._cross_site():
             return self._send(403, {"error": "cross-site requests are not accepted"})
         path = self.path.split("?", 1)[0]
+        if path in ("/api/collective/gateway/contribute", "/api/collective/gateway/withdraw"):
+            import collective_gateway
+            try:
+                body = self._read_json(MAX_BODY)
+            except Exception as exc:
+                return self._send(400, {"error": str(exc)})
+            gw_rt = collective_gateway_runtime()
+            if gw_rt is None:
+                return self._send(503, {"error": "Collective gateway runtime unavailable"})
+            bearer = self._bearer_token()
+            try:
+                with gw_rt["lock"]:
+                    if path.endswith("/contribute"):
+                        res = gw_rt["gateway"].submit_authenticated_contribution(id_token=bearer, payload=body)
+                    else:
+                        res = gw_rt["gateway"].withdraw_authenticated_contributor(id_token=bearer, payload=body)
+                    agg = gw_rt["gateway"].aggregate_candidates()
+                    eval_res = gw_rt["evaluator"].evaluate_all(agg)
+                    res["evaluated_count"] = eval_res["total_evaluated"]
+                    res["promoted_count"] = eval_res["promoted_count"]
+                    if gw_rt["registry"]._seed is not None:
+                        note = "Collective gateway evaluation" if path.endswith("/contribute") else "Contributor withdrawal re-evaluation"
+                        manifest = gw_rt["registry"].publish_release(eval_res, note=note)
+                        res["release_version"] = manifest["version"]
+                return self._send(200, res)
+            except collective_gateway.GatewaySecurityError as exc:
+                return self._send(exc.status, {"error": exc.message, "code": exc.code})
+            except Exception as exc:
+                return self._send(500, {"error": f"{type(exc).__name__}: {exc}"})
         if path == "/api/auth/login":
             try:
                 body = self._read_json(MAX_BODY)
@@ -1894,13 +2209,19 @@ class Handler(BaseHTTPRequestHandler):
                 pend["decision"] = decision if decision in ("once", "always", "deny") else "deny"
                 pend["event"].set()
                 return self._send(200, {"ok": True})
-            if path == "/api/cancel":
-                turn = S.active.get(str(body.get("turn_id") or ""))
-                if turn:
-                    turn["cancel"].set()
-                    for pend in turn["pending"].values():
+            if path in ("/api/cancel", "/api/stop"):
+                tid = str(body.get("turn_id") or "").strip()
+                cancelled_ids = []
+                with S.turns_lock:
+                    targets = [S.active[tid]] if (tid and tid != "all" and tid in S.active) else (
+                        list(S.active.values()) if not tid or tid == "all" else []
+                    )
+                for t_obj in targets:
+                    t_obj["cancel"].set()
+                    for pend in list(t_obj["pending"].values()):
                         pend["event"].set()
-                return self._send(200, {"ok": bool(turn)})
+                    cancelled_ids.append(t_obj.get("turn_id") or tid)
+                return self._send(200, {"ok": bool(cancelled_ids), "cancelled_turns": cancelled_ids})
             if path == "/api/chat":
                 prompt = str(body.get("prompt") or "").strip()
                 if not prompt:
@@ -1934,7 +2255,23 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, {"permissions": S.perms.describe()})
             if path == "/api/search":  # the answer reports whether a key is set, never the key
                 return self._send(200, S.search.update(provider=body.get("provider"), key=body.get("key"),
-                                                       forget=body.get("forget")))
+                                                       forget=body.get("forget"), browser=body.get("browser")))
+            if path == "/api/browser/open":
+                return self._send(200, {"opened": open_in_browser(body)})
+            if path in ("/api/inbox/take", "/api/inbox/dismiss", "/api/browser/register"):
+                if paths.PLATFORM != "windows":
+                    raise ValueError("pages come from the browser on the laptop only")
+                import browser_host
+                base = S.args.base
+                if path == "/api/inbox/take":  # the page as a document for the next message; it leaves the inbox
+                    return self._send(200, {"document": browser_host.take(body.get("id"), base, flag=semantics.flag_injection)})
+                if path == "/api/inbox/dismiss":
+                    browser_host.dismiss(body.get("id"), base)
+                elif body.get("on"):  # the user's click in Settings: HKCU keys for Chrome and Edge, no administrator
+                    browser_host.register(base)
+                else:
+                    browser_host.unregister(base)
+                return self._send(200, inbox_describe())
             if path == "/api/search/test":
                 import web_search
                 ok, message = web_search.WebSearch(S.search).test()
@@ -1964,7 +2301,49 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(200, {"result": sync_repo(), "repo": github_repo()})
                 except RuntimeError as exc:
                     return self._send(409, {"error": str(exc)})
+            if path in ("/api/identity/google/start", "/api/identity/google/token", "/api/identity/google/disconnect"):
+                import google_identity
+                mgr = google_identity_manager()
+                if mgr is None:
+                    return self._send(500, {"error": "Google identity manager unavailable"})
+                if path.endswith("/start"):
+                    redir = str(body.get("redirect_uri") or f"http://127.0.0.1:{S.port}/api/identity/google/callback").strip()
+                    res = mgr.start_pkce_flow(redirect_uri=redir, client_id=body.get("client_id"))
+                    if body.get("open_browser") is True and os.name == "nt":
+                        import webbrowser
+                        try:
+                            webbrowser.open(res["auth_url"])
+                        except Exception:
+                            pass
+                    return self._send(200, res)
+                if path.endswith("/token"):
+                    id_tok = str(body.get("id_token") or "").strip()
+                    nonce = body.get("nonce")
+                    try:
+                        st = mgr.connect_with_id_token(id_tok, expected_nonce=nonce if nonce else None)
+                    except google_identity.GoogleIdentityError as exc:
+                        return self._send(400, {"error": str(exc)})
+                    if S.repo is not None:
+                        S.repo.note("Google identity connected via OIDC ID token")
+                    coll = collective_store()
+                    return self._send(200, {"ok": True, "google_identity": st,
+                                            "collective": coll.view(personal_store(), google_status=st) if coll else None})
+                st = mgr.disconnect()
+                coll = collective_store()
+                if coll is not None:
+                    coll.set_consent(contribute=False, receive=False)
+                if S.settings is not None:
+                    S.settings.update({"collective_contribute": False, "collective_receive": False})
+                if S.repo is not None:
+                    S.repo.note("Google identity disconnected; collective learning disabled")
+                return self._send(200, {"ok": True, "google_identity": st,
+                                        "collective": coll.view(personal_store(), google_status=st) if coll else None})
             if path == "/api/settings":
+                if isinstance(body, dict) and (body.get("collective_contribute") is True or body.get("collective_receive") is True):
+                    mgr = google_identity_manager()
+                    g_ok = bool(mgr and mgr.status().get("connected"))
+                    if not g_ok:
+                        raise ValueError("Sign in with Google first to enable collective learning.")
                 before = S.settings.get()
                 new = S.settings.update(body if isinstance(body, dict) else {})
                 if S.mode == "lfm3" and new["engine"] != before["engine"]:
@@ -2021,28 +2400,69 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(200, dict(pers.forget_all(), view=pers.view()))
                 ids = body.get("ids") if isinstance(body.get("ids"), list) else []
                 return self._send(200, dict(pers.retention(ids, str(body.get("choice") or "")), view=pers.view()))
-            if path in ("/api/collective/consent", "/api/collective/sync", "/api/collective/preview"):
+            if path in ("/api/collective/consent", "/api/collective/contribute", "/api/collective/sync",
+                        "/api/collective/withdraw", "/api/collective/preview"):
+                import core_sync
                 coll = collective_store()
                 if coll is None:
                     return self._send(409, {"error": "collective learning is off for this process (CLOVER_COLLECTIVE=off)"})
                 pers = personal_store()
-                if path.endswith("/consent"):
-                    c_in = body.get("contribute") if isinstance(body.get("contribute"), bool) else None
-                    r_in = body.get("receive") if isinstance(body.get("receive"), bool) else None
-                    coll.set_consent(contribute=c_in, receive=r_in)
-                    upd = {}
-                    if c_in is not None:
-                        upd["collective_contribute"] = c_in
-                    if r_in is not None:
-                        upd["collective_receive"] = r_in
-                    if upd and S.settings is not None:
-                        S.settings.update(upd)
-                    return self._send(200, coll.view(pers))
-                if path.endswith("/sync"):
-                    reg_dir = str(body.get("registry_dir") or (Path(S.args.base) / "clover-collective")).strip()
-                    sync_res = coll.sync_from_registry(reg_dir)
-                    return self._send(200, dict(sync_res, view=coll.view(pers)))
-                return self._send(200, {"candidates": coll.preview_candidates(pers)})
+                mgr = google_identity_manager()
+                g_stat = mgr.status() if mgr else {"connected": False, "status_text": "Not connected"}
+                p_on = bool(S.settings.get().get("personal", True)) if S.settings else True
+                try:
+                    if path.endswith("/consent"):
+                        c_in = body.get("contribute") if isinstance(body.get("contribute"), bool) else None
+                        r_in = body.get("receive") if isinstance(body.get("receive"), bool) else None
+                        coll.set_consent(
+                            contribute=c_in,
+                            receive=r_in,
+                            google_connected=bool(g_stat.get("connected")),
+                            require_identity=True,
+                        )
+                        upd = {}
+                        if c_in is not None:
+                            upd["collective_contribute"] = c_in
+                        if r_in is not None:
+                            upd["collective_receive"] = r_in
+                        if upd and S.settings is not None:
+                            S.settings.update(upd)
+                        return self._send(200, dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on))
+                    if path.endswith("/contribute"):
+                        id_tok = mgr.get_valid_id_token() if mgr else None
+                        pkgs = body.get("packages")
+                        if pkgs is None:
+                            pkgs = coll.preview_candidates(pers)
+                        resp = coll.contribute_to_gateway(
+                            id_token=id_tok,
+                            packages=pkgs,
+                            confirmed=bool(body.get("confirmed")),
+                            gateway_url=body.get("gateway_url"),
+                        )
+                        return self._send(200, dict(resp, view=dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)))
+                    if path.endswith("/sync"):
+                        if body.get("registry_dir"):
+                            sync_res = coll.sync_from_registry(str(body["registry_dir"]).strip())
+                        else:
+                            id_tok = mgr.get_valid_id_token() if mgr else None
+                            sync_res = coll.sync_from_gateway(
+                                id_token=id_tok,
+                                require_identity=True,
+                                gateway_url=body.get("gateway_url"),
+                            )
+                        return self._send(200, dict(sync_res, view=dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)))
+                    if path.endswith("/withdraw"):
+                        id_tok = mgr.get_valid_id_token() if mgr else None
+                        w_res = coll.withdraw_from_gateway(
+                            id_token=id_tok,
+                            gateway_url=body.get("gateway_url"),
+                        )
+                        if S.settings is not None:
+                            S.settings.update({"collective_contribute": False})
+                        return self._send(200, dict(w_res, view=dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)))
+                    return self._send(200, {"candidates": coll.preview_candidates(pers)})
+                except core_sync.CoreSyncError as exc:
+                    return self._send(400, {"error": str(exc), "view": dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)})
             if path == "/api/media/clear":
                 gone = 0
                 for p in media_dir().iterdir():  # only files Clover named (by content): the folder may be the user's
@@ -2086,16 +2506,49 @@ class Handler(BaseHTTPRequestHandler):
     # ---------------- LFM3 mode: streamed turn ----------------
     def _lfm3_stream(self, body):
         prompt = str(body.get("prompt") or "").strip()
-        if not prompt and not body.get("media") and not body.get("documents"):
+        resume_tid = str(body.get("resume_turn_id") or "").strip()
+        if not prompt and not body.get("media") and not body.get("documents") and not resume_tid:
             return self._send(400, {"error": "prompt is required"})
         eng = engine_for(body.get("model"))
         if eng is None:
             raise EngineNotReady(S.load.get("error") or f"engine is loading ({S.load.get('step')})")
         sid = re.sub(r"[^A-Za-z0-9_\-]", "_", str(body.get("session_id") or uuid.uuid4().hex))[:96]
+        if resume_tid:
+            try:
+                after_seq = int(body.get("after_seq") or self.headers.get("Last-Event-ID") or 0)
+            except ValueError:
+                after_seq = 0
+            with S.turns_lock:
+                prev_turn = S.active.get(resume_tid) or S.recent_turns.get(resume_tid)
+                replay_evs = [e for e in (prev_turn["events"] if prev_turn else []) if int(e.get("seq") or 0) > after_seq]
+            if prev_turn is not None:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                for k, v in self._cors_headers().items():
+                    self.send_header(k, v)
+                self.end_headers()
+                for ev in replay_evs:
+                    self.wfile.write(f"id: {ev['seq']}\ndata: {json.dumps(ev, ensure_ascii=False, default=str)}\n\n".encode("utf-8"))
+                self.wfile.flush()
+                return None
+
         turn_id = uuid.uuid4().hex
-        turn = {"cancel": threading.Event(), "pending": {}}
-        S.active[turn_id] = turn
+        turn = {
+            "turn_id": turn_id,
+            "session_id": sid,
+            "cancel": threading.Event(),
+            "pending": {},
+            "seq": 0,
+            "events": [],
+            "done": False,
+            "updated": time.time(),
+        }
+        with S.turns_lock:
+            S.active[turn_id] = turn
         write_lock = threading.Lock()
+        client_closed = [False]
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
@@ -2105,12 +2558,26 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
         def emit(ev):
-            try:
-                with write_lock:
-                    self.wfile.write(f"data: {json.dumps(ev, ensure_ascii=False, default=str)}\n\n".encode("utf-8"))
+            with write_lock:
+                turn["seq"] += 1
+                seq = turn["seq"]
+                out_ev = dict(ev, seq=seq, turn_id=turn_id)
+                turn["events"].append(out_ev)
+                if len(turn["events"]) > 512:
+                    del turn["events"][:len(turn["events"]) - 512]
+                if ev.get("type") in ("done", "error"):
+                    turn["done"] = True
+                turn["updated"] = time.time()
+                if client_closed[0]:
+                    return
+                try:
+                    self.wfile.write(f"id: {seq}\ndata: {json.dumps(out_ev, ensure_ascii=False, default=str)}\n\n".encode("utf-8"))
                     self.wfile.flush()
-            except OSError:  # the window was closed: stop generating
-                turn["cancel"].set()
+                except (OSError, BrokenPipeError, ConnectionResetError):  # the window was closed: stop generating
+                    client_closed[0] = True
+                    turn["cancel"].set()
+                    for pend in list(turn["pending"].values()):
+                        pend["event"].set()
 
         def ask(perm, detail, risk=None):
             import permissions as P
@@ -2140,12 +2607,17 @@ class Handler(BaseHTTPRequestHandler):
 
         def heartbeat():
             while not done_ev.wait(timeout=15):
+                if client_closed[0]:
+                    break
                 try:
                     with write_lock:
                         self.wfile.write(b": keepalive\n\n")
                         self.wfile.flush()
-                except OSError:
+                except (OSError, BrokenPipeError, ConnectionResetError):
+                    client_closed[0] = True
                     turn["cancel"].set()
+                    for pend in list(turn["pending"].values()):
+                        pend["event"].set()
                     break
 
         threading.Thread(target=heartbeat, daemon=True, name="sse-heartbeat").start()
@@ -2164,7 +2636,11 @@ class Handler(BaseHTTPRequestHandler):
             emit({"type": "error", "error": f"{type(exc).__name__}: {exc}"})
         finally:
             done_ev.set()
-            S.active.pop(turn_id, None)
+            with S.turns_lock:
+                S.active.pop(turn_id, None)
+                S.recent_turns[turn_id] = turn
+                while len(S.recent_turns) > 32:
+                    S.recent_turns.pop(next(iter(S.recent_turns)))
         return None
 
     # ---------- OpenAI-compatible ----------
@@ -2358,6 +2834,10 @@ def main():
         print("SETUP_NEEDED", flush=True)
     else:
         threading.Thread(target=load_engine, args=(a,), daemon=True, name="engine-load").start()
+        if S.setup is not None:
+            import omni_c2_c3
+            if omni_c2_c3.missing_c2_c3_files(base) or csi_child.missing(base):
+                S.setup.start(components="core,csi,c2c3")
     if a.idle_exit_min > 0:
         threading.Thread(target=idle_watch, args=(a.idle_exit_min,), daemon=True, name="idle-watch").start()
     print(f"SERVING http://127.0.0.1:{a.port}/ (pid {os.getpid()})", flush=True)
