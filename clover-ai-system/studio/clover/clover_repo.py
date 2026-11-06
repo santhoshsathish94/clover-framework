@@ -538,10 +538,11 @@ class Repo:
         if LAST_ONE.search(q):
             return cands[:1]
         want = _words(q)
+        if not want:
+            return cands[:2]
         scored = sorted(((len(want & _words(s["first"] + " " + s["last_answer"])), s) for s in cands),
                         key=lambda x: x[0], reverse=True)
-        best = [s for k, s in scored if k][:2]
-        return best or cands[:2]
+        return [s for k, s in scored if k][:2]
 
     # ---------------- summaries: a CONTEXT.md in every folder and at the top ----------------
     def refresh_context(self):

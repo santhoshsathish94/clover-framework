@@ -18,14 +18,15 @@ import urllib.request
 from pathlib import Path
 
 PROVIDERS = {
-    "wikipedia": {"label": "Wikipedia and arXiv", "key": False, "signup": None,
-                  "detail": "Free public APIs, no key. Good for encyclopedic facts; weak for news and recent events."},
+    "wikipedia": {"label": "Web, News, Wikipedia & arXiv", "key": False, "signup": None,
+                  "detail": "Free public web search, live news, Wikipedia and arXiv, plus live page reading (no key required)."},
     "tavily": {"label": "Tavily", "key": True, "signup": "https://app.tavily.com/home",
                "detail": "Web search built for AI assistants. Free plan: 1,000 searches a month, no credit card."},
     "brave": {"label": "Brave Search", "key": True, "signup": "https://api-dashboard.search.brave.com/register",
               "detail": "Brave's own web index. $5 of free searches a month (about 1,000); a card is needed to sign up."},
 }
 UA = "CloverAIStudio/0.3 (local assistant on the user's laptop; +https://cloverframework.com)"
+BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 # the user's own browser does the whole-web searching (browser-first, 2026-11-06): Clover only opens the search there,
 # with the engine the user picks; the user sends back the pages that matter
 BROWSERS = {
@@ -396,11 +397,34 @@ class WebSearch:
             clean_q,
             flags=re.I,
         ).strip()
+        out = []
+        seen_titles = set()
+        # 1. Bing News RSS (returns real publisher URLs in the link query and full 1-2 sentence summaries)
+        if topic_left:
+            try:
+                b_url = "https://www.bing.com/news/search?q=" + urllib.parse.quote(clean_q or q) + "&format=rss"
+                req_b = urllib.request.Request(b_url, headers={"User-Agent": BROWSER_UA})
+                with urllib.request.urlopen(req_b, timeout=min(self.timeout, 6)) as rb:
+                    b_root = ET.fromstring(rb.read(1_500_000))
+                for it in b_root.findall(".//item")[:max_items]:
+                    title = _text(it.findtext("title") or "")
+                    desc = _text(it.findtext("description") or "")
+                    link = (it.findtext("link") or "").strip()
+                    m_u = re.search(r"[?&]url=([^&]+)", link)
+                    real_u = urllib.parse.unquote(m_u.group(1)) if m_u else link
+                    if title and title.lower() not in seen_titles:
+                        seen_titles.add(title.lower())
+                        snip = f"[Live News] {desc}" if desc and desc != title else f"[Live News] {title}"
+                        out.append({"title": title, "url": real_u if real_u.startswith("http") else "", "snippet": snip[:550]})
+            except Exception:
+                pass
+        if len(out) >= max_items:
+            return out[:max_items]
+        # 2. Google News RSS
         if not topic_left:
             url = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"
         else:
             url = "https://news.google.com/rss/search?q=" + urllib.parse.quote(clean_q or q) + "&hl=en-US&gl=US&ceid=US:en"
-        out = []
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=min(self.timeout, 8)) as r:
@@ -408,42 +432,98 @@ class WebSearch:
             for it in root.findall(".//item")[:max_items]:
                 title = _text(it.findtext("title") or "")
                 desc = _text(it.findtext("description") or "")
-                if title:
+                if title and title.lower() not in seen_titles:
+                    seen_titles.add(title.lower())
                     snip = f"[Live News] {desc}" if desc and desc != title else f"[Live News] {title}"
                     out.append({"title": title, "url": "", "snippet": snip[:500]})
+                    if len(out) >= max_items:
+                        break
         except Exception:
             pass
         return out
 
+    def _enrich_top_page(self, rows, q):
+        """Read and parse the top live web page via page_fetch so the model gets extracted article sentences, not only short search snippets."""
+        t = self.public()
+        for r in rows[:2]:
+            u = str(r.get("url") or "")
+            if not u.startswith("http") or any(d in u for d in ("wikipedia.org", "arxiv.org", "news.google.com", "youtube.com")):
+                continue
+            try:
+                page = t.fetch_url_content(u, max_chars=8000)
+                if not page or page.startswith("[URL Fetch Error"):
+                    continue
+                sents = relevant_sentences(page, q, k=3, min_hits=1)
+                if sents:
+                    extra = " ".join(sents)[:450]
+                    if extra and extra[:60].lower() not in (r.get("snippet") or "").lower():
+                        r["snippet"] = (str(r.get("snippet") or "").rstrip(".") + ". " + extra)[:750]
+                break
+            except Exception:
+                continue
+
     def _public_rows(self, q, typed=()):
         t = self.public()
         rows = []
+        seen_urls = set()
+
+        def add_row(title, url, snippet):
+            u_norm = (url or "").rstrip("/").lower()
+            if u_norm and u_norm in seen_urls:
+                return
+            if u_norm:
+                seen_urls.add(u_norm)
+            rows.append({"title": title, "url": url, "snippet": snippet})
+
         for u in re.findall(r"https?://[^\s<>\"')]+", q)[:2]:
             got = t.fetch_url_content(u, typed=typed)
             if got and not got.startswith("[URL Fetch Error"):
-                rows.append({"title": u, "url": u, "snippet": got[:1500]})
+                add_row(u, u, got[:1500])
         if rows:
             return rows
-        rows.extend(self._live_finance_rows(q))
+        for r in self._live_finance_rows(q):
+            add_row(r["title"], r["url"], r["snippet"])
         want_news = bool(re.search(
-            r"\b(?:news|latest|today|yesterday|current|recent|202[567]|price|rate|score|won|match|launch|update|release|headline)\b",
+            r"\b(?:news|latest|today|yesterday|current|recent|202[567]|price|rate|score|won|match|launch|update|release|"
+            r"headline|midterms?|elections?|polls?|results?|senate|congress|parliament|winner|standings)\b",
             q, re.I,
         ))
+        want_places = bool(re.search(
+            r"\b(?:restaurants?|caf[e\u00e9]s?|hotels?|places?|shops?|stores?|bars?|baker(?:y|ies)|diner|bistro|near\s+me|best\s+\w+\s+in)\b",
+            q, re.I,
+        ))
+        search_web = getattr(t, "_search_web", None)
         if want_news:
-            rows.extend(self._news_rss_rows(q, max_items=4))
-            if len(rows) >= 3 and re.search(r"\b(?:news|headlines|latest|today|yesterday|current|recent|won|match|score)\b", q, re.I):
-                return rows
+            if callable(search_web):
+                for r in search_web(q, max_items=3):
+                    add_row(r["title"], r["url"], r["snippet"])
+            for r in self._news_rss_rows(q, max_items=4):
+                add_row(r["title"], r["url"], r["snippet"])
+            self._enrich_top_page(rows, q)
+            if len(rows) >= 3:
+                return rows[:5]
+        if want_places and callable(search_web):
+            for r in search_web(q, max_items=4):
+                add_row(r["title"], r["url"], r["snippet"])
+            self._enrich_top_page(rows, q)
         if re.search(r"\b(?:research|paper|papers|arxiv|study|studies|preprint|publication)\b", q, re.I):
             for line in t._search_arxiv(q, max_items=3):
                 m = re.search(r"Link: (\S+)", line)
-                rows.append({"title": line.split(" — ")[0], "url": m.group(1) if m else "", "snippet": line})
-        for line in t._search_wikipedia(keywords(q) or q, max_items=max(2, 4 - min(len(rows), 2))):
+                add_row(line.split(" — ")[0], m.group(1) if m else "", line)
+        if callable(search_web) and len(rows) < 3:
+            for r in search_web(q, max_items=3):
+                add_row(r["title"], r["url"], r["snippet"])
+            self._enrich_top_page(rows, q)
+        for line in t._search_wikipedia(keywords(q) or q, max_items=max(2, 5 - len(rows))):
             m = re.match(r"(.*?) \((https?://[^)]+)\): (.*)$", line)
-            rows.append({"title": m.group(1), "url": m.group(2), "snippet": m.group(3)} if m
-                        else {"title": "", "url": "", "snippet": line})
+            if m:
+                add_row(m.group(1), m.group(2), m.group(3))
+            else:
+                add_row("", "", line)
         if not want_news and len(rows) < 4:
-            rows.extend(self._news_rss_rows(q, max_items=2))
-        return rows
+            for r in self._news_rss_rows(q, max_items=2):
+                add_row(r["title"], r["url"], r["snippet"])
+        return rows[:5]
 
     def search(self, q, typed=()):
         """-> (rows, provider label, note). A failing key provider falls back to Wikipedia and arXiv, with a note.
