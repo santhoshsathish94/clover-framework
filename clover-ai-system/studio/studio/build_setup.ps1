@@ -7,7 +7,10 @@ $build = Join-Path $env:TEMP 'clover-setup-build'
 $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 if (-not (Test-Path $csc)) { throw "csc.exe not found at $csc" }
 
-$fw = [IO.Path]::GetFullPath((Join-Path $base '..\..\..\clover-framework'))
+$fw = [IO.Path]::GetFullPath((Join-Path $base '..\..'))
+if (-not (Test-Path (Join-Path $fw 'clover-ai-system\mobile'))) {
+    $fw = [IO.Path]::GetFullPath((Join-Path $base '..\..\..\clover-framework'))
+}
 if (-not (Test-Path (Join-Path $fw 'clover-ai-system\mobile'))) {
     $fw = [IO.Path]::GetFullPath((Join-Path $base '..\..\..\clover-collective-wt'))
 }

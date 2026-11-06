@@ -978,7 +978,7 @@ def load_engine(args):
             for kind in ([] if S.engine is not None else [want, "cpu"] if want == "gpu" else ["cpu"]):
                 try:
                     S.engine = omni_native.OmniNative(Path(args.base), S.perms, progress=progress, engine=kind,
-                                                      max_tokens=hw.get("ctx") or 32768,
+                                                      max_tokens=hw.get("ctx") or 65536,
                                                       voice_threads=hw.get("voice_threads") or omni_native.VOICE_THREADS,
                                                       gpu_name=hw.get("gpu") or "GPU", threads=hw.get("threads"))
                     break
@@ -1278,7 +1278,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                 offer=[t["function"]["name"] for t in lfm3_native.STUDIO_TOOLS] + [t["schema"]["function"]["name"] for t in extra])
             if kit is not None:
                 kit.meaning = frame
-            max_new = int(min(4096, max(64, int(body.get("max_new_tokens") or 2048))))
+            max_new = int(min(8192, max(64, int(body.get("max_new_tokens") or 4096))))
             kv = kv_switch(sid) if frame.act != "social" else None
             if frame.act == "social":
                 # only pleasantries ("hi", "thanks", "bye"): semantics answers and the model is not called

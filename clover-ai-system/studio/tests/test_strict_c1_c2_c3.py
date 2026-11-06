@@ -123,7 +123,46 @@ for cand_base in (
             rt.forward_hybridlink_2048 = orig_hl2
         check("c3_decode decodes text using only C3 Bridges + 11L NCM + PointerDecoder (zero C1/C2 calls)",
               bool(decoded.strip()) and c3_info.get("codes", 0) > 0 and c3_info.get("windows") == 1)
+
+        # Verify 512-token window handles >100 tokens in a single one-time flow without splitting into 48-token chunks
+        check("OmniC2C3Runtime token window size P_BPE is 512", omni_c2_c3.P_BPE == 512)
+        long_para = " ".join(["Clover processes a 512-token window in a single one-time flow between C1, C2, and C3."] * 8)
+        c1_long, c1_long_info = rt.c1_infer(long_para)
+        c2_long, c2_long_info = rt.c2_plan("Explain the one-time flow", c1_state=c1_long)
+        dec_long, c3_long_info = rt.c3_decode(c2_long)
+        check(
+            "Long paragraph (>100 tokens) runs in 1 single window across C1, C2, and C3",
+            len(c1_long["pids_primary"]) > 80
+            and c1_long_info.get("windows") == 1
+            and c2_long_info.get("windows") == 1
+            and c3_long_info.get("windows") == 1
+            and bool(dec_long.strip()),
+        )
         break
+
+# 2b. Verify one-time S3 -> C1 -> C2 -> C3 flow on web_search (1 single C1 pass, not 2 LLM rounds)
+c1_calls = []
+def fake_c1_single_pass(msgs, schemas, max_new, by_name, on_delta=None, cancel=None, seed=0, tool_choice=None, **kw):
+    c1_calls.append({"msgs": len(msgs), "schemas": len(schemas)})
+    return "Based on the live web search results, the 2026 midterm elections are scheduled for November 3, 2026.", [], {
+        "prompt_tokens": 64, "reused_tokens": 0, "new_tokens": 20, "prefill_s": 0.04, "decode_s": 0.08, "finish": "stop"
+    }
+
+eng._chat = fake_c1_single_pass
+eng.execute_tool = lambda name, args, ask=None, allow=(): (True, "1. 2026 US Midterm Elections — Nov 3, 2026\n   https://example.com/midterms", "allowed")
+res_ws = eng.run_turn(
+    [],
+    "What are the latest 2026 midterm election results?",
+    tools=True,
+    only_tools=["web_search"],
+    layers=("ncm",),
+    kit=kit,
+    system="SYS",
+)
+check(
+    "One-time S3 -> C1 -> C2 -> C3 flow executes web_search in S3 and runs C1 only ONCE",
+    len(c1_calls) == 1 and c1_calls[0]["schemas"] == 0 and len(res_ws["tool_calls"]) == 1 and res_ws["tool_calls"][0]["tool"] == "web_search",
+)
 
 # 3. Verify S2 relationship gate & S3 live web search routing (restaurants vs midterms results)
 import clover_repo as R

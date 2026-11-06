@@ -95,9 +95,8 @@ def _no_power_throttling(proc):
 
 
 class LlamaServer:
-    # The conv-state checkpoint lands about ubatch + 4 tokens before the prompt's end. Measured reuse on a 1,416-token
-    # chat: ubatch 512 -> 884 tokens, 256 -> 1,140, 128 -> 0.
-    def __init__(self, base_dir, kind="vulkan", ctx=8192, timeout_s=180, ubatch=256, model=None, mmproj=None,
+    # Larger token window and ubatch size for faster one-time C1 prefill across longer prompts
+    def __init__(self, base_dir, kind="vulkan", ctx=32768, timeout_s=180, ubatch=1024, model=None, mmproj=None,
                  extra_args=(), name=None, threads=None):
         base_dir = Path(base_dir)
         self.exe = server_exe(base_dir, kind)
@@ -110,11 +109,10 @@ class LlamaServer:
         self.slots_dir.mkdir(parents=True, exist_ok=True)
         self.log_path = base_dir / "logs" / f"llama-server-{name or kind}.log"
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
-        # LFM3's conv layers can only resume from a saved state; the default spacing (8,192 tokens) left tool round 2
-        # reusing 93 of 681 prompt tokens
+        batch_sz = max(2048, int(ubatch) * 2)
         args = [str(self.exe), "-m", str(self.model), "--host", "127.0.0.1", "--port", str(self.port), "-c", str(self.ctx),
-                "-np", "1", "--no-webui", "-ngl", "99" if kind == "vulkan" else "0", "--slot-save-path", str(self.slots_dir),
-                "--checkpoint-min-step", "0", "-ub", str(int(ubatch))]
+                "-b", str(batch_sz), "-np", "1", "--no-webui", "-ngl", "99" if kind == "vulkan" else "0",
+                "--slot-save-path", str(self.slots_dir), "--checkpoint-min-step", "0", "-ub", str(int(ubatch))]
         if mmproj:
             args += ["--mmproj", str(mmproj)]
         args += [str(a) for a in extra_args]
@@ -134,6 +132,8 @@ class LlamaServer:
         self.proc = subprocess.Popen(args, stdout=self._log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, env=env,
                                      cwd=str(self.exe.parent), creationflags=0x08000000 if os.name == "nt" else 0)
         self._job = _kill_with_parent(self.proc)
+        import atexit
+        atexit.register(self.close)
         _no_power_throttling(self.proc)
         t0 = time.time()
         while True:

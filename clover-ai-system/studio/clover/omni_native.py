@@ -159,7 +159,7 @@ class SideGate:
 
 
 class OmniNative(N.LFM3Native):
-    def __init__(self, base_dir, perms, max_tokens=32768, progress=None, engine="gpu", quant="q4_0",
+    def __init__(self, base_dir, perms, max_tokens=65536, progress=None, engine="gpu", quant="q4_0",
                  voice_threads=VOICE_THREADS, gpu_name="GPU", threads=None):
         """max_tokens (context), voice_threads, gpu_name and (on a phone) threads come from this machine (hardware.choose)."""
         t0 = time.perf_counter()
@@ -186,7 +186,8 @@ class OmniNative(N.LFM3Native):
         self.engine_kind, self.max_tokens, self.cache = engine, int(max_tokens), None
         # speech on its own CPU instance while chat has the laptop's GPU; a phone has no memory for a second copy
         self.separate_voice = engine == "gpu" and not ANDROID
-        self.gpu = L.LlamaServer(base_dir, kind, max_tokens, model=paths["model"], mmproj=paths["mmproj"],
+        ubatch_sz = 1024 if ANDROID else 2048
+        self.gpu = L.LlamaServer(base_dir, kind, max_tokens, ubatch=ubatch_sz, model=paths["model"], mmproj=paths["mmproj"],
                                  extra_args=extra, name=f"omni-{kind}", timeout_s=300, threads=threads)
         props = self.gpu.props()
         mods = props.get("modalities") or {}
@@ -560,6 +561,85 @@ class OmniNative(N.LFM3Native):
 
         with self.lock:
             try:
+                # One-time flow S1 -> S2 -> S3 -> C1 -> C2 -> C3:
+                # When S1 (semantics) routes a deterministic S3 tool (web_search, fetch_url with URL,
+                # get_current_time, laptop_status, remember), execute S3 once BEFORE C1 so C1 runs in a single pass.
+                s3_pre_call = None
+                if tools and schemas and only_tools and not (cancel and cancel.is_set()):
+                    url_m = re.search(r"https?://\S+", query or "")
+                    if "fetch_url" in only_tools and "fetch_url" in by_name and url_m:
+                        u = url_m.group(0).rstrip(".,;)'>\"]")
+                        s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "fetch_url", "arguments": {"url": u}}
+                    elif (
+                        "web_search" in only_tools
+                        and "web_search" in by_name
+                        and set(only_tools) <= {"web_search", "fetch_url"}
+                        and not url_m
+                    ):
+                        ws_q = query
+                        if meaning is not None and getattr(meaning, "follow_up", False) and past_msgs:
+                            prev_u = next(
+                                (str(m.get("content") or "") for m in reversed(past_msgs)
+                                 if m.get("role") == "user" and isinstance(m.get("content"), str)),
+                                "",
+                            )
+                            if prev_u and len((query or "").split()) <= 6:
+                                ws_q = f"{prev_u.strip()} {query.strip()}".strip()[:200]
+                        s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "web_search", "arguments": {"query": ws_q}}
+                    elif list(only_tools) == ["get_current_time"] and "get_current_time" in by_name:
+                        s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "get_current_time", "arguments": {}}
+                    elif list(only_tools) == ["laptop_status"] and "laptop_status" in by_name:
+                        s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "laptop_status", "arguments": {}}
+                    elif list(only_tools) == ["remember"] and "remember" in by_name and meaning is not None and getattr(meaning, "remember", ""):
+                        note = str(meaning.remember).strip()
+                        if note:
+                            s3_pre_call = {
+                                "id": "call_" + uuid.uuid4().hex[:16],
+                                "name": "remember",
+                                "arguments": {"text": note[0].upper() + note[1:] + ("" if note.endswith(".") else ".")},
+                            }
+                    if s3_pre_call is not None:
+                        emit({"type": "round", "round": 1})
+                        emit({"type": "plan", "round": 1, "stage": "planning", "tools": [s3_pre_call["name"]]})
+                        emit({"type": "plan", "round": 1, "stage": "preparing_tool", "tool": s3_pre_call["name"]})
+                        emit({"type": "tool_call", "id": s3_pre_call["id"], "name": s3_pre_call["name"], "arguments": s3_pre_call["arguments"]})
+                        key = (s3_pre_call["name"], json.dumps(s3_pre_call["arguments"], sort_keys=True))
+                        ran, result, why = self.execute_tool(s3_pre_call["name"], s3_pre_call["arguments"], ask, allow)
+                        done_calls[key] = result
+                        worked, summary = N.tool_worked(s3_pre_call["name"], ran, result, why)
+                        emit({
+                            "type": "tool_result",
+                            "id": s3_pre_call["id"],
+                            "name": s3_pre_call["name"],
+                            "ran": ran,
+                            "worked": worked,
+                            "summary": summary,
+                            "why": why,
+                            "result": result[:3000],
+                        })
+                        rounds.append({
+                            "tool": s3_pre_call["name"],
+                            "arguments": s3_pre_call["arguments"],
+                            "ran": ran,
+                            "worked": worked,
+                            "summary": summary,
+                            "why": why,
+                            "result": result[:2000],
+                        })
+                        msgs.insert(
+                            -1,
+                            {
+                                "role": "system",
+                                "content": (
+                                    f"Live {s3_pre_call['name']} results for this request (already executed in S3 — "
+                                    f"answer directly from these real results in plain text without calling tools):\n{result}"
+                                ),
+                            },
+                        )
+                        msgs[0]["content"] = system or self.system_prompt(False, None)
+                        schemas = []
+                        only_tools = None
+
                 first_compiler_fb = None
                 for attempt in range(3 if "compiler" in layers else 1):
                     if attempt:
@@ -582,7 +662,8 @@ class OmniNative(N.LFM3Native):
                         msgs.append({"role": "user", "content": "The Clover compiler checked the code in your answer and "
                                      "reported:\n" + fb + "\nFix the problem and reply with the complete corrected code."})
                     for r in range(max_rounds):
-                        emit({"type": "round", "round": r + 1})
+                        if not (r == 0 and attempt == 0 and s3_pre_call is not None):
+                            emit({"type": "round", "round": r + 1})
                         if schemas and getattr(self, "turn_web", 0) >= getattr(self, "turn_web_cap", 99):
                             # past the search limit the Omni kept calling refused searches, then wrote a Python scraper of
                             # invented URLs for 5 minutes (2026-11-01): no tools for the rest of this answer

@@ -4,7 +4,10 @@
 $ErrorActionPreference = 'Stop'
 $src = $PSScriptRoot
 $base = Split-Path -Parent $src
-$wt = [IO.Path]::GetFullPath((Join-Path $base '..\..\..\clover-collective-wt'))
+$wt = [IO.Path]::GetFullPath((Join-Path $base '..\..'))
+if (-not (Test-Path (Join-Path $wt 'release\beta\windows'))) {
+    $wt = [IO.Path]::GetFullPath((Join-Path $base '..\..\..\clover-collective-wt'))
+}
 $outWin = Join-Path $wt 'release\beta\windows'
 New-Item -ItemType Directory -Force $outWin | Out-Null
 

@@ -513,7 +513,7 @@ class LFM3Native:
         perm = TOOL_PERMISSION.get(tool) or (self._extra.get(tool) or {}).get("permission")
         if perm is None:
             return True, "no permission needed"
-        if perm in allow:
+        if perm in allow or tool in allow:
             return True, "allowed for this turn"
         mode = self.perms.get()[perm]
         if mode == "deny":

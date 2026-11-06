@@ -35,9 +35,9 @@ V_LFM3 = 128000
 D_LFM3 = 2048
 D_VQ = 384
 D_NCM = 768
-P_BPE = 48
-P_RH = 48
-L_WMT = 64
+P_BPE = 512
+P_RH = 512
+L_WMT = 512
 VQ_LEVELS = (1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64)
 
 GRAMMAR_CONNECTOR_WORDS = (
@@ -257,9 +257,10 @@ def bf16_rows_to_f32(mm_u16: np.ndarray, indices: np.ndarray | list[int]) -> np.
 
 
 def layer_norm(x: np.ndarray, weight: np.ndarray | None = None, bias: np.ndarray | None = None, eps: float = 1e-5) -> np.ndarray:
+    x = x.astype(np.float32, copy=False)
     mean = x.mean(axis=-1, keepdims=True)
     var = ((x - mean) ** 2).mean(axis=-1, keepdims=True)
-    y = (x - mean) / np.sqrt(var + eps)
+    y = (x - mean) / np.sqrt(var + np.float32(eps))
     if weight is not None:
         y = y * weight
     if bias is not None:
@@ -268,41 +269,57 @@ def layer_norm(x: np.ndarray, weight: np.ndarray | None = None, bias: np.ndarray
 
 
 def group_norm_bcl(x_bcl: np.ndarray, groups: int = 8, eps: float = 1e-5) -> np.ndarray:
+    x_bcl = x_bcl.astype(np.float32, copy=False)
     B, C, L = x_bcl.shape
     xg = x_bcl.reshape(B, groups, C // groups, L)
     mean = xg.mean(axis=(2, 3), keepdims=True)
     var = ((xg - mean) ** 2).mean(axis=(2, 3), keepdims=True)
-    return ((xg - mean) / np.sqrt(var + eps)).reshape(B, C, L)
+    return ((xg - mean) / np.sqrt(var + np.float32(eps))).reshape(B, C, L)
 
 
 def rms_norm(x: np.ndarray, weight: np.ndarray, eps: float = 1e-6) -> np.ndarray:
-    rms = np.sqrt((x ** 2).mean(axis=-1, keepdims=True) + eps)
+    x = x.astype(np.float32, copy=False)
+    rms = np.sqrt((x * x).mean(axis=-1, keepdims=True) + np.float32(eps))
     return (x / rms) * weight
 
 
 def gelu(x: np.ndarray) -> np.ndarray:
-    # Exact GELU via Abramowitz & Stegun 7.1.26 erf approximation (max error < 1.5e-7)
-    z = x * 0.7071067811865475
+    # Exact GELU via Abramowitz & Stegun 7.1.26 erf approximation (max error < 1.5e-7), strictly float32
+    x = x.astype(np.float32, copy=False)
+    z = x * np.float32(0.7071067811865475)
     sign = np.sign(z)
     az = np.abs(z)
-    t = 1.0 / (1.0 + 0.3275911 * az)
-    poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))))
-    erf_val = sign * (1.0 - poly * np.exp(-(az * az)))
-    return 0.5 * x * (1.0 + erf_val)
+    t = np.float32(1.0) / (np.float32(1.0) + np.float32(0.3275911) * az)
+    poly = t * (
+        np.float32(0.254829592)
+        + t * (
+            np.float32(-0.284496736)
+            + t * (np.float32(1.421413741) + t * (np.float32(-1.453152027) + t * np.float32(1.061405429)))
+        )
+    )
+    erf_val = sign * (np.float32(1.0) - poly * np.exp(-(az * az)))
+    return np.float32(0.5) * x * (np.float32(1.0) + erf_val)
 
 
 def softmax(x: np.ndarray, axis: int = -1) -> np.ndarray:
+    x = x.astype(np.float32, copy=False)
     m = np.max(x, axis=axis, keepdims=True)
     e = np.exp(x - m)
     return e / np.sum(e, axis=axis, keepdims=True)
 
 
 def sigmoid(x: np.ndarray) -> np.ndarray:
-    return 1.0 / (1.0 + np.exp(-np.clip(x, -60.0, 60.0)))
+    x = x.astype(np.float32, copy=False)
+    return np.float32(1.0) / (np.float32(1.0) + np.exp(-np.clip(x, np.float32(-60.0), np.float32(60.0))))
 
 
 def linear(x: np.ndarray, weight: np.ndarray, bias: np.ndarray | None = None) -> np.ndarray:
-    y = np.matmul(x, weight.T)
+    if x.dtype != np.float32:
+        x = x.astype(np.float32, copy=False)
+    if x.ndim == 3 and x.shape[0] == 1:
+        y = np.matmul(x[0], weight.T)[None, :, :]
+    else:
+        y = np.matmul(x, weight.T)
     if bias is not None:
         y = y + bias
     return y
@@ -325,24 +342,25 @@ def apply_rotary_emb(x: np.ndarray, cos: np.ndarray, sin: np.ndarray) -> np.ndar
 
 
 def sdpa(q: np.ndarray, k: np.ndarray, v: np.ndarray) -> np.ndarray:
-    scale = 1.0 / math.sqrt(q.shape[-1])
+    scale = np.float32(1.0 / math.sqrt(q.shape[-1]))
     scores = np.matmul(q, np.swapaxes(k, -1, -2)) * scale
     probs = softmax(scores, axis=-1)
     return np.matmul(probs, v)
 
 
 def interp_linear_1d(x_bcl: np.ndarray, size: int) -> np.ndarray:
+    x_bcl = x_bcl.astype(np.float32, copy=False)
     B, C, L = x_bcl.shape
     if L == size:
         return x_bcl.copy()
     if L == 1:
         return np.repeat(x_bcl, size, axis=2)
-    idx = (np.arange(size, dtype=np.float32) + 0.5) * (L / float(size)) - 0.5
-    idx = np.clip(idx, 0.0, L - 1.0)
+    idx = (np.arange(size, dtype=np.float32) + np.float32(0.5)) * np.float32(L / float(size)) - np.float32(0.5)
+    idx = np.clip(idx, np.float32(0.0), np.float32(L - 1.0))
     lo = np.floor(idx).astype(np.int64)
     hi = np.minimum(lo + 1, L - 1)
-    w = (idx - lo)[None, None, :]
-    return x_bcl[:, :, lo] * (1.0 - w) + x_bcl[:, :, hi] * w
+    w = (idx - lo.astype(np.float32))[None, None, :]
+    return x_bcl[:, :, lo] * (np.float32(1.0) - w) + x_bcl[:, :, hi] * w
 
 
 def interp_area_1d(x_bcl: np.ndarray, size: int) -> np.ndarray:
@@ -362,21 +380,19 @@ def interp_area_1d(x_bcl: np.ndarray, size: int) -> np.ndarray:
 
 def conv_transpose1d_s4(x_bcl: np.ndarray, weight: np.ndarray, bias: np.ndarray) -> np.ndarray:
     # weight: [C_in, C_out, 4], stride=4, kernel_size=4
-    B, _, L = x_bcl.shape
+    B, C_in, L = x_bcl.shape
     C_out = weight.shape[1]
-    y = np.einsum("bcl,cok->bolk", x_bcl, weight).reshape(B, C_out, L * 4)
+    y = np.matmul(np.swapaxes(x_bcl, 1, 2), weight.reshape(C_in, C_out * 4)).reshape(B, L, C_out, 4)
+    y = np.swapaxes(y, 1, 2).reshape(B, C_out, L * 4)
     return y + bias[None, :, None]
 
 
 def conv1d_k3_p1(x_bcl: np.ndarray, weight: np.ndarray, bias: np.ndarray) -> np.ndarray:
     # weight: [C_out, C_in, 3], stride=1, padding=1
-    y = np.einsum("bcl,oc->bol", x_bcl, weight[:, :, 1]) + bias[None, :, None]
+    y = np.matmul(weight[:, :, 1], x_bcl) + bias[None, :, None]
     if x_bcl.shape[2] > 1:
-        y[:, :, 1:] += np.einsum("bcl,oc->bol", x_bcl[:, :, :-1], weight[:, :, 0])
-        y[:, :, :-1] += np.einsum("bcl,oc->bol", x_bcl[:, :, 1:], weight[:, :, 2])
-    else:
-        # L == 1 with pad=1 means left and right are zero-padded, so only center tap weight[:,:,1] contributes
-        pass
+        y[:, :, 1:] += np.matmul(weight[:, :, 0], x_bcl[:, :, :-1])
+        y[:, :, :-1] += np.matmul(weight[:, :, 2], x_bcl[:, :, 1:])
     return y
 
 
@@ -424,7 +440,7 @@ class OmniC2C3Runtime:
         self.ptr_blocks = [read_clvrtrk1(self.pre / "ncm" / f"ptr-trunk-{l}") for l in range(3)]
 
         # Precompute RoPE tables and level index embeddings matching NextConceptTransformer
-        self.rope_cos, self.rope_sin = precompute_rope_cos_sin(max_pos=512, head_dim=64, base=100000.0)
+        self.rope_cos, self.rope_sin = precompute_rope_cos_sin(max_pos=4096, head_dim=64, base=100000.0)
         lvl_ids = []
         for i, lv in enumerate(VQ_LEVELS[1:]):
             lvl_ids.extend([i] * lv)
@@ -487,8 +503,8 @@ class OmniC2C3Runtime:
         raw_inference_text: str,
         generation_stats: list[dict[str, Any]] | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Execute strictly C1 (Model Inference representation extraction ONLY).
-        Extracts 2048-d C1 hidden/token representations (`h_valid`) for each window of `raw_inference_text`.
+        """Execute strictly C1 (Model Inference representation extraction ONLY) in a single one-time pass.
+        Extracts 2048-d C1 hidden/token representations (`h_primary` and window views `h_valid`) across up to `P_BPE = 512` tokens.
         Performs zero C2 planning (`HybridLink`) and zero C3 decoding (`Bridges` / `11-Level NCM`).
         """
         t0 = time.perf_counter()
@@ -523,11 +539,13 @@ class OmniC2C3Runtime:
                 continue
             pids = all_pids[:P_BPE]
             tail_ids = all_pids[P_BPE:]
-            h_valid = self.token_embeddings_2048(pids)[None, :, :]  # [1, L_val, 2048]
             total_tokens += len(all_pids)
-            if len(all_active_pids) < P_BPE:
-                need = P_BPE - len(all_active_pids)
-                all_active_pids.extend(pids[:need])
+            start_idx = len(all_active_pids)
+            if start_idx + len(pids) <= P_BPE:
+                all_active_pids.extend(pids)
+                end_idx = len(all_active_pids)
+            else:
+                start_idx, end_idx = -1, -1
             windows.append({
                 "passthrough": False,
                 "raw": ln,
@@ -536,22 +554,32 @@ class OmniC2C3Runtime:
                 "clean": clean,
                 "pids": pids,
                 "tail_ids": tail_ids,
-                "h_valid": h_valid,
+                "start": start_idx,
+                "end": end_idx,
             })
 
         if not all_active_pids:
             all_active_pids = self.tok.encode(raw.strip() or "Hello", allow_special=False)[:P_BPE] or [self.tok.bos_token_id]
+        # Single one-time C1 embedding lookup across the entire token window
         h_primary = self.token_embeddings_2048(all_active_pids)[None, :, :]  # [1, L_prim, 2048]
+        for w in windows:
+            if w.get("passthrough"):
+                continue
+            st_i, ed_i = w.get("start", -1), w.get("end", -1)
+            if 0 <= st_i < ed_i <= h_primary.shape[1]:
+                w["h_valid"] = h_primary[:, st_i:ed_i, :]
+            else:
+                w["h_valid"] = self.token_embeddings_2048(w["pids"])[None, :, :]
 
         tensor_ms = (time.perf_counter() - t0) * 1000.0
-        gen_ms = 0.0
+        prefill_ms = 0.0
         gen_tokens = 0
         for st in generation_stats or ():
             if isinstance(st, dict):
-                gen_ms += float(st.get("prefill_s") or 0.0) * 1000.0 + float(st.get("decode_s") or 0.0) * 1000.0
+                prefill_ms += float(st.get("prefill_s") or 0.0) * 1000.0
                 gen_tokens += int(st.get("new_tokens") or 0)
-        total_ms = round(gen_ms + tensor_ms, 2)
-        n_active = sum(1 for w in windows if not w.get("passthrough"))
+        total_ms = round(prefill_ms + tensor_ms, 2)
+        n_active = 1 if any(not w.get("passthrough") for w in windows) else 0
 
         c1_state = {
             "stage": "c1_inference",
@@ -566,6 +594,7 @@ class OmniC2C3Runtime:
             "layer": "c1_inference",
             "model": "LFM3-Omni-2B",
             "windows": n_active,
+            "window_tokens": P_BPE,
             "tokens": gen_tokens or total_tokens,
             "ms": total_ms,
         }
@@ -580,9 +609,9 @@ class OmniC2C3Runtime:
         offered_tools: list[str] | None = None,
         latent_steps: int = 3,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Execute strictly C2 (`HybridAgent` continuous `<latent>` planning on `plan-trunk-0` ONLY).
-        Takes C1's `2048`-d inference state (`c1_state`) and computes `r_valid` (`[1, L_val, 2048]`) via
-        `Lfm3NativeHybridLink(d=2048, bottleneck=512)` + `HybridLink2048(d=2048 -> 2048 -> 2048)`.
+        """Execute strictly C2 (`HybridAgent` continuous `<latent>` planning on `plan-trunk-0` ONLY) in a single one-time pass.
+        Takes C1's `2048`-d inference state (`c1_state`) and computes `r_primary` (`[1, L_prim, 2048]`) via
+        `Lfm3NativeHybridLink(d=2048, bottleneck=512)` + `HybridLink2048(d=2048 -> 2048 -> 2048)` in one batched forward pass.
         Performs zero C3 decoding (`Bridges` / `11-Level NCM`).
         """
         t0 = time.perf_counter()
@@ -602,16 +631,21 @@ class OmniC2C3Runtime:
                 norms.append(float(np.linalg.norm(r_native)))
                 h_cur = h_cur + 0.5 * (r_native + r_s3)
 
+            # Single one-time C2 pass across the entire token window
             r_primary = self.forward_hybridlink(h_primary) + self.forward_hybridlink_2048(h_primary)
             planned_windows: list[dict[str, Any]] = []
-            n_active = 0
+            has_active = False
             for w in c1_state.get("windows") or ():
                 if w.get("passthrough"):
                     planned_windows.append(dict(w))
                     continue
+                has_active = True
                 h_valid = w["h_valid"]
-                r_valid = self.forward_hybridlink(h_valid) + self.forward_hybridlink_2048(h_valid)
-                n_active += 1
+                st_i, ed_i = w.get("start", -1), w.get("end", -1)
+                if 0 <= st_i < ed_i <= r_primary.shape[1]:
+                    r_valid = r_primary[:, st_i:ed_i, :]
+                else:
+                    r_valid = self.forward_hybridlink(h_valid) + self.forward_hybridlink_2048(h_valid)
                 planned_windows.append({
                     "passthrough": False,
                     "raw": w["raw"],
@@ -620,9 +654,12 @@ class OmniC2C3Runtime:
                     "clean": w["clean"],
                     "pids": w["pids"],
                     "tail_ids": w["tail_ids"],
+                    "start": st_i,
+                    "end": ed_i,
                     "h_valid": h_valid,
                     "r_valid": r_valid,
                 })
+            n_active = 1 if has_active else 0
 
         ms = round((time.perf_counter() - t0) * 1000.0, 2)
         if isinstance(offered_tools, str):
@@ -648,6 +685,7 @@ class OmniC2C3Runtime:
             "module": "HybridLink2048 + Lfm3NativeHybridLink(d=2048, bottleneck=512)",
             "trunk": "plan-trunk-0",
             "windows": n_active,
+            "window_tokens": P_BPE,
             "prompt_tokens": int(c1_state.get("tokens") or len(c1_state["pids_primary"])),
             "latent_steps": int(latent_steps),
             "latent_norm": round(norms[-1], 4),
@@ -691,7 +729,7 @@ class OmniC2C3Runtime:
         dve = self.vq_experts[level_idx]
         h_bcl = np.swapaxes(h_blc, 1, 2)
         conv_out = conv1d_k3_p1(h_bcl, dve["quant_resi.weight"], dve["quant_resi.bias"])
-        out_bcl = 0.5 * h_bcl + 0.5 * conv_out
+        out_bcl = np.float32(0.5) * h_bcl + np.float32(0.5) * conv_out
         return np.swapaxes(out_bcl, 1, 2)
 
     def _vq_next_autoregressive_input(self, level_idx: int, z_hat: np.ndarray, z_q_level: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -764,7 +802,7 @@ class OmniC2C3Runtime:
         x = x + linear(mlp_h, pblk["mlp2.weight"], pblk["mlp2.bias"])
         return x
 
-    def _vqvae_middle_and_decode(self, z_refined: np.ndarray, allowed_ids: np.ndarray) -> np.ndarray:
+    def _vqvae_middle_hidden(self, z_refined: np.ndarray) -> np.ndarray:
         dvq = self.vq_trunk
         B, T, C = z_refined.shape
         nh, hd = 6, 64
@@ -779,11 +817,12 @@ class OmniC2C3Runtime:
         xn2 = layer_norm(xd, None, None, 1e-6)
         mlp_h = gelu(linear(xn2, dvq["middle_block.mlp.c_fc_fused.weight"], dvq["middle_block.mlp.c_fc_fused.bias"]))
         xd = xd + linear(mlp_h, dvq["middle_block.mlp.c_proj.weight"], dvq["middle_block.mlp.c_proj.bias"])
-        xd = layer_norm(xd, dvq["decoder.ln_f.weight"], None, 1e-6)
+        return layer_norm(xd, dvq["decoder.ln_f.weight"], None, 1e-6)
 
+    def _vqvae_middle_and_decode(self, z_refined: np.ndarray, allowed_ids: np.ndarray) -> np.ndarray:
+        xd = self._vqvae_middle_hidden(z_refined)
         sub_w = bf16_rows_to_f32(self.vq_dec_mm, allowed_ids)
-        sub_logits = np.matmul(xd, sub_w.T)
-        return sub_logits
+        return np.matmul(xd, sub_w.T)
 
     def _build_allowed_vocab_ids(self, plan_str: str) -> np.ndarray:
         allowed = set(self.grammar_ids)
@@ -923,6 +962,12 @@ class OmniC2C3Runtime:
         z_hat, _ = self._vq_next_autoregressive_input(max_lvl, z_hat, z_q_last)
         return z_hat, codes_emitted, max_lvl + 1
 
+    @staticmethod
+    def _pos_slice(w_2d: np.ndarray, length: int) -> np.ndarray:
+        if length <= w_2d.shape[0]:
+            return w_2d[:length][None, :, :]
+        return np.swapaxes(interp_linear_1d(np.swapaxes(w_2d[None, :, :], 1, 2), length), 1, 2)
+
     def _pointer_decode_from_zhat(
         self,
         z_hat: np.ndarray,
@@ -931,25 +976,33 @@ class OmniC2C3Runtime:
         pids: list[int],
         tail_ids: list[int],
         clean: str,
+        precomputed: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray] | None = None,
     ) -> tuple[str, bool]:
         """Run C3 3-Layer LexicalPointerDecoder (`ptr-trunk-0..2` + `ptr-global-0`) + `vqvae-trunk-0` on one planned window."""
         L_val = len(pids)
         dpg = self.ptr_global
-        t_pos = dpg["tgt_pos.weight"][:L_val][None, :, :]
-        p_pos = dpg["plan_pos.weight"][:L_val][None, :, :]
-        r_pos = dpg["rh_pos.weight"][:L_val][None, :, :]
-        mem_bpe = z_bpe_v + p_pos
-        mem_rh = z_rh_v + r_pos
-        mem = np.concatenate([mem_rh, mem_bpe], axis=1)
+        if precomputed is not None:
+            x_d, mem_bpe, sub_logits_in, allowed_ids = precomputed
+            sub_logits = sub_logits_in.copy()
+        else:
+            allowed_ids = self._build_allowed_vocab_ids(clean)
+            t_pos = self._pos_slice(dpg["tgt_pos.weight"], L_val)
+            p_pos = self._pos_slice(dpg["plan_pos.weight"], L_val)
+            r_pos = self._pos_slice(dpg["rh_pos.weight"], L_val)
+            mem_bpe = z_bpe_v + p_pos
+            mem_rh = z_rh_v + r_pos
+            mem = np.concatenate([mem_rh, mem_bpe], axis=1)
 
-        zh_sub = z_hat[:, :L_val, :]
-        x_d = zh_sub + t_pos
-        for pblk in self.ptr_blocks:
-            x_d = self._ptr_block_forward(x_d, mem, pblk)
-        z_refined = zh_sub + layer_norm(x_d, dpg["ln_out_fused.weight"], dpg["ln_out_fused.bias"], 1e-5)
-
-        allowed_ids = self._build_allowed_vocab_ids(clean)
-        sub_logits = self._vqvae_middle_and_decode(z_refined, allowed_ids)[0]  # [L_val, len(allowed_ids)]
+            zh_sub = (
+                z_hat[:, :L_val, :]
+                if L_val <= z_hat.shape[1]
+                else np.swapaxes(interp_linear_1d(np.swapaxes(z_hat, 1, 2), L_val), 1, 2)
+            )
+            x_d = zh_sub + t_pos
+            for pblk in self.ptr_blocks:
+                x_d = self._ptr_block_forward(x_d, mem, pblk)
+            z_refined = zh_sub + layer_norm(x_d, dpg["ln_out_fused.weight"], dpg["ln_out_fused.bias"], 1e-5)
+            sub_logits = self._vqvae_middle_and_decode(z_refined, allowed_ids)[0]  # [L_val, len(allowed_ids)]
 
         cq = linear(x_d, dpg["copy_q.weight"], dpg.get("copy_q.bias"))
         cq = cq / (np.linalg.norm(cq, axis=-1, keepdims=True) + 1e-8)
@@ -1003,18 +1056,45 @@ class OmniC2C3Runtime:
             h_prim = c2_state["h_primary"]
             r_prim = c2_state["r_primary"]
 
-            # 1. Bridges (`bridge-trunk-0`) on primary plan trajectory
+            # 1. Single one-time Bridges pass (`bridge-trunk-0`) across the entire token window (`P_BPE = 512`)
             z_rh_p = self.forward_combo_bridge(r_prim)
             z_exp_p = self.forward_expert_bridge(h_prim)
             z_bpe_p = bf16_rows_to_f32(self.vq_wte_mm, pids_prim)[None, :, :] + z_exp_p
-            z_pref_p = np.concatenate([z_rh_p, z_bpe_p], axis=1)
+            if z_rh_p.shape[1] > 48:
+                z_rh_ncm = np.swapaxes(interp_linear_1d(np.swapaxes(z_rh_p, 1, 2), 48), 1, 2)
+                z_bpe_ncm = np.swapaxes(interp_linear_1d(np.swapaxes(z_bpe_p, 1, 2), 48), 1, 2)
+                z_pref_p = np.concatenate([z_rh_ncm, z_bpe_ncm], axis=1)
+            else:
+                z_pref_p = np.concatenate([z_rh_p, z_bpe_p], axis=1)
 
-            # 2. C3 12-Layer NextConceptTransformer + 11-Level Multiscale VQ-VAE
-            z_hat, codes_emitted, levels_run = self._run_ncm_multiscale_levels(z_pref_p, len(pids_prim))
+            # 2. Single one-time C3 12-Layer NextConceptTransformer + 11-Level Multiscale VQ-VAE pass
+            z_hat, codes_emitted, levels_run = self._run_ncm_multiscale_levels(z_pref_p, min(len(pids_prim), 64))
 
-            # 3. C3 Bridges + 3-Layer LexicalPointerDecoder + VQ-VAE Decoder across each planned window
+            # 3. Single one-time C3 3-Layer LexicalPointerDecoder + VQ-VAE Middle Block pass across `L_prim`
+            L_prim = z_rh_p.shape[1]
+            dpg = self.ptr_global
+            t_pos_p = self._pos_slice(dpg["tgt_pos.weight"], L_prim)
+            p_pos_p = self._pos_slice(dpg["plan_pos.weight"], L_prim)
+            r_pos_p = self._pos_slice(dpg["rh_pos.weight"], L_prim)
+            mem_bpe_p = z_bpe_p + p_pos_p
+            mem_rh_p = z_rh_p + r_pos_p
+            mem_p = np.concatenate([mem_rh_p, mem_bpe_p], axis=1)
+            zh_prim = (
+                z_hat[:, :L_prim, :]
+                if L_prim <= z_hat.shape[1]
+                else np.swapaxes(interp_linear_1d(np.swapaxes(z_hat, 1, 2), L_prim), 1, 2)
+            )
+            x_d_prim = zh_prim + t_pos_p
+            for pblk in self.ptr_blocks:
+                x_d_prim = self._ptr_block_forward(x_d_prim, mem_p, pblk)
+            z_ref_prim = zh_prim + layer_norm(x_d_prim, dpg["ln_out_fused.weight"], dpg["ln_out_fused.bias"], 1e-5)
+            xd_prim = self._vqvae_middle_hidden(z_ref_prim)
+            allowed_prim = self._build_allowed_vocab_ids(raw_text)
+            sub_w_prim = bf16_rows_to_f32(self.vq_dec_mm, allowed_prim)
+            sub_logits_prim = np.matmul(xd_prim[0], sub_w_prim.T)
+
             out_lines: list[str] = []
-            n_win = 0
+            has_active = False
             for w in c2_state.get("windows") or ():
                 if w.get("passthrough"):
                     line_out = str(w.get("raw") or "")
@@ -1022,27 +1102,38 @@ class OmniC2C3Runtime:
                     if on_window is not None:
                         on_window(line_out)
                     continue
+                has_active = True
                 pids = w["pids"]
                 tail_ids = w["tail_ids"]
-                h_valid = w["h_valid"]
-                r_valid = w["r_valid"]
-                z_rh_v = self.forward_combo_bridge(r_valid)
-                z_exp_v = self.forward_expert_bridge(h_valid)
-                z_bpe_v = bf16_rows_to_f32(self.vq_wte_mm, pids)[None, :, :] + z_exp_v
-                rendered_body, _ = self._pointer_decode_from_zhat(z_hat, z_rh_v, z_bpe_v, pids, tail_ids, w["clean"])
+                st_i, ed_i = w.get("start", -1), w.get("end", -1)
+                if 0 <= st_i < ed_i <= z_rh_p.shape[1]:
+                    z_rh_v = z_rh_p[:, st_i:ed_i, :]
+                    z_bpe_v = z_bpe_p[:, st_i:ed_i, :]
+                    precomp = (x_d_prim[:, st_i:ed_i, :], mem_bpe_p[:, st_i:ed_i, :], sub_logits_prim[st_i:ed_i, :], allowed_prim)
+                else:
+                    h_valid = w["h_valid"]
+                    r_valid = w["r_valid"]
+                    z_rh_v = self.forward_combo_bridge(r_valid)
+                    z_exp_v = self.forward_expert_bridge(h_valid)
+                    z_bpe_v = bf16_rows_to_f32(self.vq_wte_mm, pids)[None, :, :] + z_exp_v
+                    precomp = None
+                rendered_body, _ = self._pointer_decode_from_zhat(
+                    z_hat, z_rh_v, z_bpe_v, pids, tail_ids, w["clean"], precomputed=precomp
+                )
                 if w.get("prefix"):
                     line_out = str(w["prefix"]) + rendered_body.lstrip()
                 else:
                     line_out = str(w.get("lead_ws") or "") + rendered_body
                 out_lines.append(line_out)
-                n_win += 1
                 if on_window is not None:
                     on_window(line_out)
+            n_win = 1 if has_active else 0
 
             elapsed_s = round(time.perf_counter() - t0, 2)
             return "\n".join(out_lines), {
                 "layer": "ncm",
                 "windows": n_win,
+                "window_tokens": P_BPE,
                 "codes": codes_emitted,
                 "levels": levels_run or 11,
                 "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",

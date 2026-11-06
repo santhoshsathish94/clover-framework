@@ -2826,15 +2826,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             detail: 'Checked ' + ev.parts.join(', '), badge: '\u2713 Checked' });
         } else if (ev.layer === 'c1_inference') {
           upsertStep('layer_c1', { icon: 'model', state: 'ok', name: 'C1 Inference (' + (ev.model || 'LFM3-Omni-2B') + ')',
-            detail: (ev.tokens ? ev.tokens + ' tokens' : '24-layer inference') + (ev.windows ? ' \u00b7 ' + ev.windows + (ev.windows === 1 ? ' window' : ' windows') : ''),
-            badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(1) + 's' : '') });
+            detail: (ev.tokens ? ev.tokens + ' tokens' : '24-layer inference') + ' \u00b7 1 pass (' + (ev.window_tokens || 512) + '-tok window)',
+            badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
         } else if (ev.layer === 'c2_hybridagent') {
           upsertStep('layer_c2', { icon: 'models', state: 'ok', name: 'C2 Plan (HybridAgent)',
             detail: (ev.module || 'HybridLink') + ' \u00b7 ' + (ev.latent_steps || 3) + ' latent steps' + (ev.hybridlink_cos ? ' \u00b7 cos ' + ev.hybridlink_cos : ''),
             badge: '\u2713 Planned' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
         } else if (ev.layer === 'ncm') {
           upsertStep('layer_c3', { icon: 'spark', state: 'ok', name: 'C3 Decode (Bridges + 11L NCM)',
-            detail: (ev.bridges || 'ComboBridge + ExpertBridge') + (ev.codes ? ' \u2192 ' + ev.codes + ' VQ codes' : '') + ' (' + (ev.windows || 1) + ' win)',
+            detail: (ev.bridges || 'ComboBridge + ExpertBridge') + (ev.codes ? ' \u2192 ' + ev.codes + ' VQ codes' : '') + ' (' + (ev.window_tokens || 512) + '-tok window)',
             badge: '\u2713 Decoded' + (ev.s ? ' \u00b7 ' + ev.s + 's' : '') });
         } else if (ev.layer === 'compiler') {
           if (ev.ok || !ev.feedback) {
@@ -2886,7 +2886,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           setStage('C1 inference \u00b7 ' + (ev.model || 'LFM3-Omni-2B'));
         } else if (ev.stage === 'c1_done') {
           if (stepMap.layer_c1 && stepMap.layer_c1.data.state === 'run') {
-            stepMap.layer_c1.update({ state: 'ok', badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(1) + 's' : '') });
+            stepMap.layer_c1.update({ state: 'ok', badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
           }
         } else if (ev.stage === 'c2_plan') {
           if (stepMap.layer_c1 && stepMap.layer_c1.data.state === 'run') {

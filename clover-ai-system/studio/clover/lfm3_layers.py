@@ -419,10 +419,11 @@ class LayerKit:
         if rt is not None:
             return rt.c1_infer(raw_reply, generation_stats=stats)
         windows = answer_windows(raw_reply)
-        gen_ms = sum((float(s.get("prefill_s") or 0) + float(s.get("decode_s") or 0)) * 1000.0 for s in (stats or ()) if isinstance(s, dict))
+        prefill_ms = sum(float(s.get("prefill_s") or 0) * 1000.0 for s in (stats or ()) if isinstance(s, dict))
         gen_tok = sum(int(s.get("new_tokens") or 0) for s in (stats or ()) if isinstance(s, dict))
-        state = {"stage": "c1_inference", "raw_text": str(raw_reply or ""), "windows": windows, "tokens": gen_tok, "ms": round(gen_ms, 2)}
-        info = {"layer": "c1_inference", "model": "LFM3-Omni-2B", "windows": len(windows), "tokens": gen_tok, "ms": round(gen_ms, 2)}
+        n_win = 1 if windows else 0
+        state = {"stage": "c1_inference", "raw_text": str(raw_reply or ""), "windows": windows, "window_tokens": 512, "tokens": gen_tok, "ms": round(prefill_ms, 2)}
+        info = {"layer": "c1_inference", "model": "LFM3-Omni-2B", "windows": n_win, "window_tokens": 512, "tokens": gen_tok, "ms": round(prefill_ms, 2)}
         return state, info
 
     def c2_plan_state(self, q, c1_state=None, offered_tools=None):
@@ -433,11 +434,13 @@ class LayerKit:
             return rt.c2_plan(q, c1_state=c1_state, offered_tools=list(offered_tools or []))
         raw = str((c1_state or {}).get("raw_text") or "")
         windows = answer_windows(raw)
+        n_win = 1 if windows else 0
         info = {
             "layer": "c2_hybridagent",
             "module": "HybridLink2048 + Lfm3NativeHybridLink(d=2048, bottleneck=512)",
             "trunk": "plan-trunk-0",
-            "windows": len(windows),
+            "windows": n_win,
+            "window_tokens": 512,
             "latent_steps": 3,
             "planned_tools": list(offered_tools or []),
             "ms": 0.1,

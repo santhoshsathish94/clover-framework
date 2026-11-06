@@ -103,13 +103,13 @@ def gpus(base):
 
 def choose(c, ram, gpu_list):
     """Settings for this machine. GPU when Vulkan finds a real one (the 2B model with its projector needs about 2 GB of
-    the GPU's memory); context 32,768 tokens at the minimum's 16 GB, 65,536 from 30 GB; the speech instance and CSI use
+    the GPU's memory); context 65,536 tokens from 15 GB; the speech instance and CSI use
     the physical cores the chat engine leaves."""
     usable = [g for g in gpu_list if not g["software"] and g["memory_mb"] >= 2048]
     best = max(usable, key=lambda g: g["memory_mb"]) if usable else None
     cores = c.get("cores") or max(1, (c.get("threads") or 2) // 2)
     return {"engine": "gpu" if best else "cpu", "gpu": best["name"] if best else None,
-            "ctx": 65536 if (ram or 0) >= 30 else 32768,
+            "ctx": 65536 if (ram or 0) >= 15 else 32768,
             "voice_threads": max(4, min(16, cores)),
             "csi_threads": 2 if cores <= 10 else 4}
 
@@ -198,12 +198,12 @@ def android_gpus(base):
 
 
 def android_choose(c, ram, gpu_list):
-    """GPU when an Adreno is found (else the CPU); context 8,192 tokens up to 10 GB of memory, 16,384 above; chat and
+    """GPU when an Adreno is found (else the CPU); context 16,384 tokens up to 10 GB of memory, 32,768 above; chat and
     speech share one llama.cpp instance and use the big cores."""
     adreno = [g for g in gpu_list if "adreno" in g["name"].lower()]
     big = c.get("performance_cores") or max(1, (c.get("threads") or 4) // 2)
     return {"engine": "gpu" if adreno else "cpu", "gpu": adreno[0]["name"] if adreno else None,
-            "ctx": 16384 if (ram or 0) >= 10.5 else 8192, "threads": big, "voice_threads": big, "csi_threads": 1}
+            "ctx": 32768 if (ram or 0) >= 10.5 else 16384, "threads": big, "voice_threads": big, "csi_threads": 1}
 
 
 def android_probe(base):
