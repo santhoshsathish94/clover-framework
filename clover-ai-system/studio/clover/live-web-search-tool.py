@@ -145,8 +145,80 @@ class LiveWebSearchTool:
             pass
         return out
 
+    def _search_web(self, query: str, max_items: int = 4) -> list[dict]:
+        """Queries live full-web search (Yahoo Search HTML + Bing Web RSS fallback) and extracts real destination URLs,
+        page titles, and text snippets without requiring an API key."""
+        clean_q = re.sub(
+            r"^\s*(?:can you\s+|please\s+|do\s+a?\s*)?(?:google\s+search|search\s+google|search\s+the\s+web|search|find|look\s+up|google)\s*(?:for|on|about)?\s*",
+            "",
+            query.strip(),
+            flags=re.IGNORECASE,
+        ).strip() or query.strip()
+        browser_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+        out = []
+        seen_urls = set()
+
+        # 1. Yahoo Search HTML (organic web results across the entire internet with real destination URLs in /RU=.../RK=)
+        try:
+            y_url = "https://search.yahoo.com/search?p=" + urllib.parse.quote(clean_q)
+            req = urllib.request.Request(
+                y_url,
+                headers={"User-Agent": browser_ua, "Accept": "text/html", "Accept-Language": "en-US,en;q=0.9"},
+            )
+            with urllib.request.urlopen(req, timeout=8) as r:
+                page = r.read(1_500_000).decode("utf-8", errors="ignore")
+            rx = re.compile(
+                r'<a[^>]*href="([^"]+)"[^>]*>(?:(?!<a\b)[\s\S])*?<h3[^>]*class="[^"]*\btitle\b[^"]*"[^>]*>([\s\S]*?)</h3></a>'
+                r'[\s\S]{0,220}?<div[^>]*class="[^"]*\bcompText\b[^"]*"[^>]*>([\s\S]*?)</div>',
+                re.I,
+            )
+            for m in rx.finditer(page):
+                raw_u, raw_t, raw_s = m.group(1), m.group(2), m.group(3)
+                ru = re.search(r"/RU=([^/]+)/RK=", raw_u)
+                u = urllib.parse.unquote(ru.group(1)) if ru else html.unescape(raw_u).strip()
+                if not u.startswith("http") or "yahoo.com/search" in u or "yahoo.com/scout" in u or "bing.com/aclick" in u:
+                    continue
+                u_norm = u.rstrip("/").lower()
+                if u_norm in seen_urls:
+                    continue
+                t_clean = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", raw_t)).split())
+                s_clean = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", raw_s)).split())
+                if t_clean and s_clean:
+                    seen_urls.add(u_norm)
+                    out.append({"title": t_clean, "url": u, "snippet": s_clean[:600]})
+                if len(out) >= max_items:
+                    return out
+        except Exception:
+            pass
+
+        # 2. Bing Web RSS fallback
+        try:
+            b_url = "https://www.bing.com/search?q=" + urllib.parse.quote(clean_q) + "&format=rss"
+            req_b = urllib.request.Request(b_url, headers={"User-Agent": browser_ua})
+            with urllib.request.urlopen(req_b, timeout=6) as rb:
+                b_root = ET.fromstring(rb.read(1_000_000))
+            for it in b_root.findall(".//item"):
+                t_clean = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", it.findtext("title") or "")).split())
+                u = (it.findtext("link") or "").strip()
+                s_clean = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", it.findtext("description") or "")).split())
+                u_norm = u.rstrip("/").lower()
+                if t_clean and s_clean and u.startswith("http") and u_norm not in seen_urls:
+                    seen_urls.add(u_norm)
+                    out.append({"title": t_clean, "url": u, "snippet": s_clean[:600]})
+                if len(out) >= max_items:
+                    break
+        except Exception:
+            pass
+        return out
+
     def _search_ddg(self, query: str, max_items: int = 3) -> list[str]:
-        """Queries DuckDuckGo HTML search endpoint for live web pages and extracts destination URLs."""
+        """Queries live web search (`_search_web` with DuckDuckGo HTML fallback) and formats destination URLs."""
+        web_rows = self._search_web(query, max_items=max_items)
+        if web_rows:
+            return [
+                f"[Web: {r['title']} — Link: {r['url']}] {r['snippet']}" if r.get("url") else f"[Web: {r['title']}] {r['snippet']}"
+                for r in web_rows[:max_items]
+            ]
         clean_q = re.sub(
             r"^\s*(?:can you\s+|please\s+|do\s+a?\s*)?(?:google\s+search|search\s+google|search\s+the\s+web|search|find|look\s+up|google)\s*(?:for|on|about)?\s*",
             "",

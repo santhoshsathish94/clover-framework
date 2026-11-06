@@ -53,8 +53,11 @@ LIVE = (r"\b(?:what(?:'?s|\s+is)|how(?:'?s|\s+is))\s+(?:the\s+)?weather\b|"
         r"\b(?:usd|eur|gbp|inr|jpy|cad|aud|chf|cny|sgd|aed|dollars?|rupees?|euros?|pounds?|yen)\s+(?:to|in|into|vs\.?|rate)\s+(?:usd|eur|gbp|inr|jpy|cad|aud|chf|cny|sgd|aed|dollars?|rupees?|euros?|pounds?|yen)\b|"
         r"\b(?:price|rate|cost|value)\s+of\s+(?:bitcoin|btc|ethereum|eth|solana|gold|silver|oil|petrol|diesel)\b|"
         r"\b(?:bitcoin|btc|ethereum|eth|solana|gold|silver|petrol|diesel)\s+(?:price|rate|value)\b|"
-        r"\bwho\s+(?:won|is\s+winning)\b[^.?!\n]{0,30}\b(?:match|game|race|final|series|election|yesterday|last\s+night|today)\b|"
-        r"\b(?:live|latest|current)\s+score\b|"
+        r"\bwho\s+(?:won|is\s+winning|leads|is\s+leading)\b[^.?!\n]{0,30}\b(?:match|game|race|final|series|election|midterms?|yesterday|last\s+night|today|202[567])\b|"
+        r"\b(?:midterms?|elections?|polls?|voting|senate|house|congress|governor|box\s+office)\s+(?:results?|outcomes?|winners?|updates?|numbers?|projections?|seats?|count|tally)\b|"
+        r"\b(?:results?|outcomes?|winners?|projections?)\s+(?:of|for|in|from)\s+(?:the\s+)?(?:202[567]\s+)?(?:midterms?|elections?|match|game|race|final|series|polls?)\b|"
+        r"\b202[567]\s+(?:midterms?|elections?|results?|polls?)\b|"
+        r"\b(?:live|latest|current)\s+(?:score|results?|standings|polls?)\b|"
         r"\bwho\s+is\s+the\s+(?:current|present|new)\s+(?:ceo|president|prime\s+minister|pm|governor|mayor|leader|champion)\b")
 # (capabilities, what a message says when it asks for them); the order is the order tools are offered
 ASKS = (
@@ -705,6 +708,8 @@ def route(frame, mode, tools_on, offer=(), said=None, retry_tools=()):
             # means these words - their validated habit (it was not offered here before, so habits did nothing in
             # "When I ask", the Studio's default; found 2026-11-03)
             caps = frame.caps
+            if frame.places and not caps:
+                caps = ["web.search", "web.page"]
         only = list(dict.fromkeys(rt.names([c for c in caps if c not in no]) + list(retry_tools)))
         return _chose(frame, "asked" if only else "nothing asked", only), bool(only)
     if frame.asked:
@@ -746,7 +751,8 @@ def answered_unasked(frame, text, names):
     replaced the answer with talk about that result."""
     if frame is None or frame.runtime is None or not names:
         return False
-    if any(frame.runtime.capability(n) in frame.caps for n in names):
+    want_caps = set(frame.caps) | ({"web.search", "web.page"} if getattr(frame, "places", False) else set())
+    if any(frame.runtime.capability(n) in want_caps for n in names):
         return False
     t = (text or "").strip()
     words = len(t.split())

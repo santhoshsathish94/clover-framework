@@ -125,4 +125,45 @@ for cand_base in (
               bool(decoded.strip()) and c3_info.get("codes", 0) > 0 and c3_info.get("windows") == 1)
         break
 
-print("ALL STRICT C1/C2/C3 CHECKS PASSED")
+# 3. Verify S2 relationship gate & S3 live web search routing (restaurants vs midterms results)
+import clover_repo as R
+import memory_index as MI
+import semantics as M
+
+b_rel = Path(tempfile.mkdtemp())
+(b_rel / "AGENTS.md").write_text("# AGENTS\n", encoding="utf-8")
+repo_rel = R.Repo(b_rel, b_rel / "AGENTS.md")
+n_r, _ = repo_rel.turn_start("chat_rest", "What are some good vegetarian restaurants in Jaipur?")
+repo_rel.turn_end("chat_rest", n_r, {"reply": "Some top vegetarian restaurants in Jaipur are LMB Hotel and Tapri Central."}, 1.0)
+idx_rel = MI.MemoryIndex(b_rel, repo_rel, embedder=MI.SubwordHashEmbedder(), start=False)
+idx_rel.refresh()
+n_m, _ = repo_rel.turn_start("chat_mid", "What are the midterms results?")
+blk_rel, info_rel = idx_rel.recall("chat_mid", n_m, "What are the midterms results?", history_turns=0)
+check("S2 relationship gate excludes unrelated restaurant chat when asking for midterms results",
+      blk_rel is None and info_rel.get("refs") == [])
+
+# Verify OmniNative._history filters out unrelated in-session turns on topic shifts while keeping follow-ups
+hist_mixed = [
+    {"role": "user", "content": "What are some good vegetarian restaurants in Jaipur?"},
+    {"role": "assistant", "content": "LMB Hotel and Tapri Central are great vegetarian restaurants in Jaipur."},
+]
+filtered_shift = eng._history(hist_mixed, current_query="What are the midterms results?", is_follow_up=False)
+check("OmniNative._history filters out unrelated prior restaurant turn on topic shift to midterms results",
+      filtered_shift == [])
+kept_followup = eng._history(hist_mixed, current_query="Which one is best for dinner?", is_follow_up=True)
+check("OmniNative._history preserves prior turns on follow-up questions",
+      len(kept_followup) == 2)
+
+# Verify semantics routes both 'midterms results' and 'good vegetarian restaurants in Jaipur' to web_search in 'ask' mode
+rt_sem = omni_native.N.RUNTIME
+fr_mid = M.interpret("What are the midterms results?", rt_sem)
+only_mid, on_mid = M.route(fr_mid, "ask", True, offer=["web_search", "fetch_url", "run_python"])
+check("semantics routes 'What are the midterms results?' to web_search in default 'ask' mode",
+      on_mid and "web_search" in (only_mid or []))
+
+fr_rest = M.interpret("What are some good vegetarian restaurants in Jaipur?", rt_sem)
+only_rest, on_rest = M.route(fr_rest, "ask", True, offer=["web_search", "fetch_url", "run_python"])
+check("semantics routes 'What are some good vegetarian restaurants in Jaipur?' to web_search in default 'ask' mode",
+      on_rest and "web_search" in (only_rest or []) and not M.answered_unasked(fr_rest, "Here are some options.", ["web_search"]))
+
+print("ALL STRICT C1/C2/C3 AND S1/S2/S3 CHECKS PASSED")

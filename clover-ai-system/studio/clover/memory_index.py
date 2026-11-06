@@ -450,17 +450,41 @@ class MemoryIndex:
             e = np.stack([self.vec[key(t)] for t in texts])
             bm25_txt = bm25([toks(t) for t in texts], qt)
             cos_txt = e @ qv
-            best_cos = float(cos_txt.max()) if len(cos_txt) else 0.0
-            best_bm25 = float(bm25_txt.max()) if len(bm25_txt) else 0.0
-            if not force and isinstance(self.emb, (Embedder, NumpyBgeEmbedder, SubwordHashEmbedder)) and best_bm25 < 1.2 and best_cos < 0.62:
-                return None, {"layer": "recall", "refs": [], "chats": 0, "candidates": len(cands),
-                              "best_cosine": round(best_cos, 4), "ms": round((time.perf_counter() - t0) * 1000, 1)}
-            lists = [bm25_txt, cos_txt]
+            is_bge = isinstance(self.emb, (Embedder, NumpyBgeEmbedder))
             noted = all(x is not None for x in notes)  # partial notes would rank the unnoted by file order
             if noted:
-                lists += [bm25([toks(x) for x in notes], qt), np.stack([self.vec[key(x or "(nothing)")] for x in notes]) @ qv]
-            text, picked = block_lines(cands, list(np.argsort(-rrf(*lists), kind="stable")))
-            refs = [cands[i]["ref"] for i in picked]
+                bm25_note = bm25([toks(x) for x in notes], qt)
+                cos_note = np.stack([self.vec[key(x or "(nothing)")] for x in notes]) @ qv
+            else:
+                bm25_note = np.zeros(len(cands), dtype=np.float64)
+                cos_note = np.zeros(len(cands), dtype=np.float32)
+
+            # Relationship gate: find turns (sid, n) that share a real lexical or semantic relationship with the query
+            if isinstance(self.emb, (Embedder, NumpyBgeEmbedder, SubwordHashEmbedder)):
+                rel_turns = set()
+                for i, u in enumerate(cands):
+                    b_sc = max(float(bm25_txt[i]), float(bm25_note[i]))
+                    c_sc = max(float(cos_txt[i]), float(cos_note[i]))
+                    if is_bge:
+                        ok_i = (b_sc >= 0.8 and c_sc >= 0.56) or c_sc >= (0.64 if force else 0.70)
+                    else:
+                        ok_i = b_sc >= (0.6 if force else 1.2) or c_sc >= (0.28 if force else 0.45)
+                    if ok_i:
+                        rel_turns.add((u["sid"], u["n"]))
+                rel_idx = [i for i, u in enumerate(cands) if (u["sid"], u["n"]) in rel_turns]
+            else:
+                rel_idx = list(range(len(cands)))
+            best_cos = float(cos_txt[rel_idx].max()) if rel_idx else (float(cos_txt.max()) if len(cos_txt) else 0.0)
+            if not rel_idx:
+                return None, {"layer": "recall", "refs": [], "chats": 0, "candidates": len(cands),
+                              "best_cosine": round(best_cos, 4), "ms": round((time.perf_counter() - t0) * 1000, 1)}
+
+            cands_rel = [cands[i] for i in rel_idx]
+            lists = [bm25_txt[rel_idx], cos_txt[rel_idx]]
+            if noted:
+                lists += [bm25_note[rel_idx], cos_note[rel_idx]]
+            text, picked = block_lines(cands_rel, list(np.argsort(-rrf(*lists), kind="stable")))
+            refs = [cands_rel[i]["ref"] for i in picked]
         info = {"layer": "recall", "refs": refs, "chats": len({r.split("#")[0] for r in refs}), "candidates": len(cands),
                 "with_notes": noted, "best_cosine": round(best_cos, 4),
                 "ms": round((time.perf_counter() - t0) * 1000, 1)}

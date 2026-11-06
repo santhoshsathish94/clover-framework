@@ -437,7 +437,28 @@ class OmniNative(N.LFM3Native):
                                 "finish": reason, **({"looped": True} if looped else {}),
                                 **({"rambling": True} if cut is not None else {})}
 
-    def _history(self, history, keep_last_media=False, strip_attached=False):
+    def _history(self, history, keep_last_media=False, strip_attached=False, current_query=None, is_follow_up=False):
+        if history and current_query and not is_follow_up and not keep_last_media:
+            import lfm3_layers
+            if not lfm3_layers.needs_recall(current_query):
+                q_terms = lfm3_layers.topic_terms(current_query)
+                if len(q_terms) >= 1 and not re.search(r"\b(?:it|that|this|those|these|them|they|same|instead|above|earlier|previous|before|more|else|another)\b", current_query, re.I):
+                    rel_pairs = []
+                    i = 0
+                    while i < len(history):
+                        m = history[i]
+                        if m.get("role") == "user":
+                            u_txt = str(m.get("content") or "")
+                            a_m = history[i + 1] if (i + 1 < len(history) and history[i + 1].get("role") == "assistant") else None
+                            a_txt = str((a_m or {}).get("content") or "")
+                            if lfm3_layers.topic_terms(u_txt + " " + a_txt) & q_terms:
+                                rel_pairs.append(m)
+                                if a_m is not None:
+                                    rel_pairs.append(a_m)
+                            i += 2 if a_m is not None else 1
+                        else:
+                            i += 1
+                    history = rel_pairs
         out = []
         last_media_idx = -1
         if keep_last_media:
@@ -515,7 +536,13 @@ class OmniNative(N.LFM3Native):
             past_msgs = []
             user_text = (user_text or "").rstrip() + "\n(Answer strictly from the image/video attached to this message.)"
         else:
-            past_msgs = self._history(history, keep_last_media=keep_last_media, strip_attached=bool(media))
+            past_msgs = self._history(
+                history,
+                keep_last_media=keep_last_media,
+                strip_attached=bool(media),
+                current_query=query,
+                is_follow_up=bool(meaning is not None and getattr(meaning, "follow_up", False)),
+            )
         msgs = ([{"role": "system", "content": sys_txt}] + past_msgs + recall
                 + [{"role": "user", "content": user_content(user_text, media, self.media_dir)}])
         rounds, final, stats_all = [], "", []
@@ -621,6 +648,18 @@ class OmniNative(N.LFM3Native):
                                     tools = True
                                     calls = [{"id": "call_" + uuid.uuid4().hex[:16], "name": "web_search", "arguments": {"query": query}}]
                                     content = ""
+                        if calls and r == 0 and meaning is not None and not getattr(meaning, "follow_up", False) and history:
+                            import lfm3_layers
+                            q_topics = lfm3_layers.topic_terms(query)
+                            prev_u = " ".join(str(m.get("content") or "") for m in history[-4:] if m.get("role") == "user")
+                            prev_topics = lfm3_layers.topic_terms(prev_u) - q_topics
+                            if len(q_topics) >= 1 and prev_topics:
+                                for c in calls:
+                                    if c.get("name") == "web_search" and isinstance(c.get("arguments"), dict):
+                                        cq = str(c["arguments"].get("query") or "")
+                                        ct = lfm3_layers.topic_terms(cq)
+                                        if not (ct & q_topics) and (ct & prev_topics):
+                                            c["arguments"] = {"query": query}
                         names = [c["name"] for c in calls]
                         if calls and semantics.answered_unasked(meaning, TOOL_XML.sub("", content), names):
                             rt = meaning.runtime
