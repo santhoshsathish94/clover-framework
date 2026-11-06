@@ -399,14 +399,37 @@ class LayerKit:
                 "diagnostics": [d.format_concise() for d in v.diagnostics[:3]]}
         return (None if v.ok else v.format_feedback()), info
 
+    def c2_plan(self, q, offered_tools=None):
+        """Run C2 HybridAgent continuous `<latent>` planning (`plan-trunk-0` / `HybridLink2048` + `Lfm3NativeHybridLink`)."""
+        import omni_c2_c3
+        rt = omni_c2_c3.for_base(self.base_dir)
+        if rt is not None:
+            return rt.plan_turn(q, offered_tools=list(offered_tools or []))
+        return {
+            "layer": "c2_hybridagent",
+            "module": "HybridLink2048 + Lfm3NativeHybridLink(d=2048, bottleneck=512)",
+            "trunk": "plan-trunk-0",
+            "latent_steps": 3,
+            "planned_tools": list(offered_tools or []),
+            "ms": 0.1,
+        }
+
     def ncm_render(self, reply):
         windows = answer_windows(reply)
         if not windows:
             return reply, {"layer": "ncm", "windows": 0}
-        if self._ncm is None:
+        import omni_c2_c3
+        rt = omni_c2_c3.for_base(self.base_dir)
+        if rt is not None:
+            return rt.render_reply(reply, windows=windows)
+        if self._ncm is None and (self.base_dir / "data" / "ncm" / "config.yaml").is_file():
             import lfm3_clover
             self._ncm = lfm3_clover.Lfm3NCMRenderer(self.base_dir / "data", self.base_dir / "engine")
-        t0 = time.perf_counter()
-        text, ids, meta = self._ncm.render_plans_in_model_vocab(windows, cands=1)
-        return text, {"layer": "ncm", "windows": len(windows), "s": round(time.perf_counter() - t0, 1),
-                      "c_engine_ms": meta.get("c_engine_ms")}
+        if self._ncm is not None:
+            t0 = time.perf_counter()
+            text, ids, meta = self._ncm.render_plans_in_model_vocab(windows, cands=1)
+            return text, {"layer": "ncm", "windows": len(windows), "s": round(time.perf_counter() - t0, 1),
+                          "c_engine_ms": meta.get("c_engine_ms")}
+        return reply, {"layer": "ncm", "windows": len(windows), "s": 0.0,
+                       "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+                       "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder"}

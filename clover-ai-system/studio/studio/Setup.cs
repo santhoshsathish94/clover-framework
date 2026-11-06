@@ -59,7 +59,7 @@ namespace CloverAIStudioSetup
 
     internal static class Program
     {
-        private const string VersionString = "0.5.0-beta.1";
+        private const string VersionString = "5.0.0";
         private static string LogPath;
         private static readonly object LogLock = new object();
 
@@ -173,7 +173,7 @@ namespace CloverAIStudioSetup
             bool noShortcuts = false;
             bool trustOnly = false;
             string baseDir = "";
-            string components = "core,csi";
+            string components = "core,csi,c2c3";
             string reuseDir = "";
 
             if (args != null)
@@ -367,7 +367,7 @@ namespace CloverAIStudioSetup
                     File.Delete(tmpZip);
                 }
 
-                foreach (string sub in new[] { "clover", "studio" })
+                foreach (string sub in new[] { "clover", "studio", "browser-extension" })
                 {
                     string dstSub = Path.Combine(baseDir, sub);
                     string srcSub = Path.Combine(newDir, sub);

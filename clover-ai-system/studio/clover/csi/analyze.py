@@ -256,8 +256,189 @@ def _request_readings(nlp, doc):
     return Doc(doc.vocab, words=[t.text for t in doc], spaces=[bool(t.whitespace_) for t in doc], **ann), records
 
 
+_FALLBACK_TOKEN_RE = re.compile(r"[A-Za-z]+(?:n't|'s|'re|'ve|'ll|'d|'m)?|\d+(?:\.\d+)?|[^\sA-Za-z0-9]") if "re" in globals() else None
+
+
+def _analyze_with_morph_oewn(text):
+    """Rule-based clause & morphology CSI analyser backed by `morph-verb-v1.1` and `Open English WordNet 2025`
+    when `spaCy` is not installed in the process (such as on Android Chaquopy)."""
+    import re as _re
+    from .dictionary import lemmatise
+    morph, dic, lemma_source = (None, None, "rule")
+    if CSI_MORPH and CSI_DICT and os.path.exists(CSI_MORPH) and os.path.exists(CSI_DICT):
+        try:
+            morph, dic, lemma_source = _lemmatiser()
+        except Exception:
+            morph, dic, lemma_source = (None, None, "rule")
+
+    tok_rx = _re.compile(r"n't|'s|'re|'ve|'ll|'d|'m|[A-Za-z]+|\d+(?:\.\d+)?|[^\sA-Za-z0-9]")
+    raw_matches = []
+    pos = 0
+    while pos < len(text):
+        if text[pos].isspace():
+            pos += 1
+            continue
+        low_rem = text[pos:].lower()
+        if low_rem.startswith("don't") or low_rem.startswith("can't") or low_rem.startswith("won't"):
+            raw_matches.append((pos, text[pos:pos + 2]))
+            raw_matches.append((pos + 2, text[pos + 2:pos + 5]))
+            pos += 5
+            continue
+        if low_rem.startswith(("didn't", "wasn't", "isn't", "aren't", "haven't", "hasn't", "hadn't", "wouldn't", "couldn't", "shouldn't")):
+            cut = low_rem.find("n't")
+            raw_matches.append((pos, text[pos:pos + cut]))
+            raw_matches.append((pos + cut, text[pos + cut:pos + cut + 3]))
+            pos += cut + 3
+            continue
+        m = tok_rx.match(text, pos)
+        if not m:
+            pos += 1
+            continue
+        raw_matches.append((m.start(), m.group(0)))
+        pos = m.end()
+
+    aux_words = {"do", "does", "did", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had"}
+    modal_words = {"can", "ca", "could", "would", "should", "may", "might", "must", "will", "wo", "shall"}
+    neg_words = {"not", "n't", "never", "no"}
+    pron_words = {"i", "we", "you", "he", "she", "it", "they", "me", "us", "him", "her", "them"}
+    det_words = {"the", "a", "an", "this", "that", "these", "those", "my", "your", "our", "their", "his", "her", "its"}
+    adp_words = {"in", "on", "at", "to", "for", "of", "by", "with", "from", "into", "about", "over", "after", "before", "without"}
+    conj_words = {"and", "or", "but", "so", "because", "while", "when", "if", "why", "how"}
+    common_verbs = {
+        "search", "use", "run", "read", "write", "open", "list", "delete", "remove", "create", "make", "generate",
+        "draw", "calculate", "compute", "estimate", "tell", "explain", "summarize", "check", "commit", "committed",
+        "push", "pushed", "pull", "pulled", "clone", "cloned", "install", "installed", "update", "updated",
+        "produce", "produced", "save", "saved", "build", "built", "test", "tested", "find", "found", "look",
+        "know", "think", "remember", "forget", "corroborate", "audit", "verify", "try", "tried",
+    }
+
+    tokens = []
+    for i, (idx, surf) in enumerate(raw_matches):
+        low = surf.lower()
+        lemma = low
+        if not surf[0].isalnum() and low != "n't":
+            upos, tag = "PUNCT", surf
+        elif low in neg_words:
+            upos, tag, lemma = "PART", "RB", ("not" if low == "n't" else low)
+        elif low in aux_words:
+            upos, tag = "AUX", ("VBD" if low in ("did", "was", "were", "had") else "VB")
+            lemma = "be" if low in ("is", "are", "was", "were", "been", "being") else ("have" if low in ("has", "had") else ("do" if low in ("does", "did") else low))
+        elif low in modal_words:
+            upos, tag = "AUX", "MD"
+            lemma = "can" if low == "ca" else ("will" if low == "wo" else low)
+        elif low in pron_words:
+            upos, tag = "PRON", "PRP"
+        elif low in det_words:
+            upos, tag = "DET", "DT"
+        elif low in adp_words:
+            upos, tag = "ADP", "IN"
+        elif low in conj_words:
+            upos, tag = "CCONJ", "CC"
+        else:
+            form_t = "gerund" if low.endswith("ing") else ("past" if low.endswith("ed") else ("third_singular" if low.endswith("s") else None))
+            if morph is not None and dic is not None and form_t:
+                lem_v, src_v = lemmatise(low, "verb", morph, dic, form_type=form_t)
+                if src_v in ("listed", "known"):
+                    lemma = lem_v
+            elif low.endswith("ed") and len(low) > 4:
+                lemma = low[:-1] if low.endswith("ted") is False and low[-3] == "e" else (low[:-3] if len(low) > 5 and low[-3] == low[-4] else low[:-2])
+            is_v = (
+                low in common_verbs
+                or lemma in common_verbs
+                or (dic is not None and dic.knows(lemma, "verb") and (i == 0 or (tokens and tokens[-1]["upos"] in ("AUX", "PART", "PRON", "ADV"))))
+            )
+            if is_v:
+                upos = "VERB"
+                tag = "VBD" if (low.endswith("ed") or low in ("committed", "ran", "wrote", "made", "drew", "found", "told")) else ("VBG" if low.endswith("ing") else "VB")
+            else:
+                upos, tag = "NOUN", "NN"
+        tokens.append({
+            "i": i, "idx": idx, "text": surf, "lemma": lemma, "upos": upos, "tag": tag,
+            "feats": {"Polarity": "Neg"} if low in neg_words else {}, "head": i, "dep": "ROOT", "prop": None,
+        })
+
+    # Split tokens into clauses on ',', ';', ':', '.', '!', '?', 'but', or 'why'/'how' subordinate boundaries
+    clauses = []
+    cur = []
+    for t in tokens:
+        low = t["text"].lower()
+        if t["upos"] == "PUNCT" and t["text"] in (",", ";", ":", ".", "!", "?"):
+            if cur:
+                clauses.append(cur)
+                cur = []
+            continue
+        if low in ("but", "why", "because") and cur:
+            clauses.append(cur)
+            cur = [t]
+            continue
+        cur.append(t)
+    if cur:
+        clauses.append(cur)
+
+    propositions = []
+    for cl in clauses:
+        verbs = [t for t in cl if t["upos"] == "VERB"]
+        if not verbs:
+            continue
+        pred = verbs[0]
+        embedded = None
+        if pred["lemma"] in ("try", "attempt") and len(verbs) > 1:
+            embedded = pred["lemma"]
+            pred = verbs[1]
+        cl_lows = [t["text"].lower() for t in cl]
+        neg = any(w in neg_words for w in cl_lows)
+        mod = next((t["lemma"] for t in cl if t["tag"] == "MD" and t["lemma"] not in ("will", "shall")), None)
+        has_perf = any(t["lemma"] == "have" and t["upos"] == "AUX" for t in cl)
+        has_pass = any(t["lemma"] == "be" and t["upos"] == "AUX" for t in cl) and pred["tag"] == "VBD"
+        tense = "past" if (pred["tag"] == "VBD" or any(t["text"].lower() in ("did", "was", "were") for t in cl)) else "present"
+        aspect = "perfect" if has_perf else "simple"
+        voice = "passive" if has_pass else "active"
+        subj = next((t for t in cl if t["i"] < pred["i"] and t["upos"] in ("PRON", "NOUN")), None)
+        roles = {}
+        if voice == "passive" and subj is not None:
+            roles["ARG1"] = {"text": subj["text"], "head_lemma": subj["lemma"], "head": subj["i"], "tokens": [subj["i"]]}
+        elif subj is not None:
+            roles["ARG0"] = {"text": subj["text"], "head_lemma": subj["lemma"], "head": subj["i"], "tokens": [subj["i"]]}
+        else:
+            roles["ARG0"] = dict(ADDRESSEE)
+        p_idx = len(propositions)
+        for t in cl:
+            t["prop"] = p_idx
+        propositions.append({
+            "predicate": {"lemma": pred["lemma"], "token": pred["i"]},
+            "roles": roles,
+            "polarity": "negative" if neg else "positive",
+            "tense": tense,
+            "aspect": aspect,
+            "modality": mod,
+            "mood": "imperative" if subj is None else "indicative",
+            "voice": voice,
+            "embedded_under": embedded,
+            "provenance": {"syntax": "csi.fallback", "structure": f"csi.analyze@{CSI_VERSION}", "lemmas": lemma_source},
+        })
+
+    reading = {
+        "confidence": 1.0 if propositions else 0.5,
+        "tokens": tokens,
+        "propositions": propositions,
+        "problems": [],
+        "request_rereads": [],
+    }
+    return {
+        "csi_version": CSI_VERSION,
+        "text": text,
+        "readings": [reading],
+        "ambiguity": [],
+        "unsupported": [] if propositions else ["no verbal root"],
+        "confidence_note": "v0.1 confidence is uncalibrated (coverage only)",
+    }
+
+
 def analyze(text):
-    nlp, parser_id, scheme = _nlp()
+    try:
+        nlp, parser_id, scheme = _nlp()
+    except Exception:
+        return _analyze_with_morph_oewn(text)
     doc, request_records = _request_readings(nlp, nlp(text))
     reread = {r["token"] for r in request_records if r["accepted"]}
     lemma_source = parser_id

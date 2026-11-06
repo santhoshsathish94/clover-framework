@@ -208,6 +208,8 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
   margin: -.1rem 0 .45rem; max-height: 240px; overflow: auto; white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
 .tool { border: 1px solid var(--line); background: var(--surface); border-radius: 11px; margin: 0; overflow: hidden; box-shadow: none; animation: rise .18s var(--ease) both; }
 .tool__head { display: flex; align-items: center; gap: .5rem; padding: .38rem .56rem; cursor: pointer; font-size: .81rem; }
+.tool__acts { padding: 0 .56rem .3rem 2.05rem; }
+.tool__acts .linkish { font-size: .78rem; padding: .1rem 0; }
 .tool__head:hover { background: #fff; }
 .tool__head > .ic { color: var(--accent); width: 15px; height: 15px; }
 .tool__name { font-weight: 600; white-space: nowrap; color: var(--ink); }
@@ -272,6 +274,8 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 .att button:hover { color: var(--danger); background: var(--danger-soft); }
 .att .ic { width: 14px; height: 14px; }
 .att img { width: 24px; height: 24px; object-fit: cover; border-radius: 6px; margin-left: -.45rem; }
+#inbox .att { border-style: dashed; }
+#inbox .att .linkish { font-size: .8rem; padding: 0 .1rem; }
 @property --beam-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
 @keyframes beam-clockwise { to { --beam-angle: 360deg; } }
 .composer { position: relative; width: min(760px, 100%); margin: 0 auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 26px; box-shadow: var(--shadow);
@@ -540,6 +544,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
     <div class="dock">
       <div class="notice" id="notice" hidden><svg class="spin" id="notice-spin" aria-hidden="true"><use href="#clover-spin"/></svg><span id="notice-t"></span></div>
+      <div class="attachments" id="inbox" hidden></div>
       <div class="attachments" id="attachments" hidden></div>
       <div class="composer" id="composer">
         <input type="file" id="file-input" multiple hidden>
@@ -565,7 +570,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     <p class="note" id="auth-note" hidden></p>
     <div class="auth-links">
       <a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
-      <a href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNST0mwN2vPTOPN7ZLs_CGVqSbOh8hZpSj7ww63CuXdasv0pCuEsU62FEbMlHuEjx5yEE5m-ApIJBwp2ZF12" target="_blank" rel="noopener noreferrer">Test on Google Play</a>
+      <a href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Test on Google Play</a>
       <a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download Android (.apk)</a>
     </div>
   </div>
@@ -607,7 +612,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       </div>
       <div class="glabel">Learning Preferences</div>
       <div class="group">
-        <label class="row static"><span class="row__t">Personal Learning<small>Enabled by default. Learns your habits and answer preferences locally; works offline and never leaves this device.</small></span><span class="switch"><input type="checkbox" id="lg-personal" checked><span></span></span></label>
+        <div class="row static"><span class="row__t">Personal Learning<small>Always enabled locally. Learns your habits and answer preferences offline; never leaves this device.</small></span><span class="badge on">Always on</span></div>
         <label class="row static"><span class="row__t">Contribute to Collective Learning<small>Disabled by default. Requires Google sign-in, explicit consent, and per-candidate review before upload.</small></span><span class="switch"><input type="checkbox" id="lg-contribute"><span></span></span></label>
         <label class="row static"><span class="row__t">Receive Collective Learning<small>Disabled by default. Requires Google sign-in and explicit consent; applies Ed25519-signed shared-core releases.</small></span><span class="switch"><input type="checkbox" id="lg-receive"><span></span></span></label>
       </div>
@@ -777,6 +782,18 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <div class="note" id="search-note" hidden></div>
       </div>
       <p class="gfoot">The search text goes to the service you pick. Keys stay on this laptop.</p>
+      <div class="glabel">Search in your browser</div>
+      <div class="group pad">
+        <div class="seg full" id="s-browser" style="flex-wrap:wrap"><button type="button" data-v="google">Google</button><button type="button" data-v="bing">Bing</button><button type="button" data-v="duckduckgo">DuckDuckGo</button><button type="button" data-v="brave">Brave</button><button type="button" data-v="startpage">Startpage</button><button type="button" data-v="ecosia">Ecosia</button></div>
+        <p class="fine">For the whole web, Clover opens the search in your own browser with this engine when you click "Search in your browser" on a web search. You choose the pages; Clover reads them on this laptop.</p>
+      </div>
+      <div class="glabel laptop-only">Send pages from your browser</div>
+      <div class="group pad laptop-only">
+        <p class="fine" id="handback-state">Checking…</p>
+        <div class="btns"><button type="button" class="btn" id="handback-on">Set up for Chrome and Edge</button><button type="button" class="btn danger" id="handback-off" hidden>Remove</button></div>
+        <p class="fine" id="handback-help"></p>
+        <div class="note" id="handback-note" hidden></div>
+      </div>
     </section>
 
     <section class="page" data-page="workspaces" hidden>
@@ -1112,6 +1129,34 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     update(s);
     return { el: row, update: update, data: s };
   }
+  /* browser-first search: the user's own browser searches the whole web and shows the pages; the user clicks, Clover
+     never opens a tab by itself. Windows goes through this laptop's server (the app window has its own Edge profile);
+     the phone app and the Web page open links in the user's browser themselves. */
+  function browserHref(t) {
+    var a = String(t.args || '').split('\n')[0].trim();
+    if (!a) return '';
+    if (t.name === 'web_search') {
+      var s = state.search, b = s && s.browsers && s.browsers[s.browser];
+      return (b ? b.url : 'https://www.google.com/search?q=') + encodeURIComponent(a).replace(/%20/g, '+');
+    }
+    return t.name === 'fetch_url' && /^https?:\/\/\S+$/i.test(a) ? a : '';
+  }
+  function browserLink(t) {
+    if (!browserHref(t)) return null;
+    if (!state.search && !state.searchLoading) { state.searchLoading = true; loadSearch(); }
+    var row = el('div', 'tool__acts'), a = document.createElement('a');
+    a.className = 'linkish'; a.href = browserHref(t); a.target = '_blank'; a.rel = 'noopener noreferrer';
+    a.innerHTML = ic('globe') + '<span>' + (t.name === 'web_search' ? 'Search in your browser' : 'Open in your browser') + '</span>';
+    a.addEventListener('click', function (e) {
+      a.href = browserHref(t);  // the engine picked in Settings may have loaded since
+      if (PHONE || WEB) return;
+      e.preventDefault();
+      api('POST', '/api/browser/open', t.name === 'web_search' ? { query: String(t.args || '').split('\n')[0] } : { url: a.href })
+        .catch(function () { window.open(a.href, '_blank', 'noopener'); });
+    });
+    row.appendChild(a);
+    return row;
+  }
   function toolEl(t) {
     var ui = TOOL_UI[t.name] || [t.name || 'Tool', 'code'];
     var box = el('div', 'tool');
@@ -1132,6 +1177,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     head.addEventListener('click', toggle);
     head.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
     box.appendChild(head); box.appendChild(body);
+    var acts = browserLink(t);
+    if (acts) box.insertBefore(acts, body);
     var api_ = {
       el: box,
       set: function (s, why, summary) {
@@ -1676,6 +1723,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     api('GET', '/api/status').then(function (st) {
       if (WEB) showAuthGate(false);
       if (st.status === 'setup' && !WEB) { location.replace('/'); return; }
+      if (typeof st.inbox === 'number' && st.inbox !== state.inboxCount) { state.inboxCount = st.inbox; loadInbox(); }
       state.ready = st.status === 'ready';
       if (st.model_catalog && st.model_catalog.length) {
         state.catalog = st.model_catalog;
@@ -1779,75 +1827,67 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     toolsValue(); renderLayers();
   }
 
-  /* Clover layers: 3 core (inference, plan, decode) and 3 supporting (memory, relationships, tools), each with what it
-     does on this laptop now. Switches only where a part can be turned on or off. */
+  /* Clover layers: 3 core (C1 inference, C2 HybridAgent plan, C3 Bridges + 11-level NCM decode), 3 supporting
+     (S1 memory, S2 relationships, S3 tools & compiler), and semantics (CSI & PPL) are always on; only CPSL
+     (Collective Learning) has opt-in toggle switches. */
   function renderLayers() {
     var sv = state.server; if (!sv || !sv.settings) return;
     var st = sv.settings, L = st.layers || {}, info = modelInfo(st.model);
     var omni = true, k3Big = /nemotron|kimi/i.test(st.model || '');
     var mLabel = info ? info.name : 'LFM3-Omni-2B';
     var rec = (state.health && state.health.recall) || null, mc = state.memCount;
-    var recallNote = !omni ? ' Works with LFM3-Omni-2B.'
-      : !rec || !L.recall ? '' : rec.state === 'ready' ? ' ' + Number(rec.messages || 0).toLocaleString() + ' messages indexed.'
-      : rec.state === 'loading' ? ' Getting ready…' : rec.state === 'error' ? ' Could not start: ' + (rec.error || 'error') + '.'
-      : /embedder/.test(rec.state) ? ' Needs its embedding model: run Clover AI Studio setup again.' : '';
+    var recallNote = !rec ? '' : rec.state === 'ready' ? ' ' + Number(rec.messages || 0).toLocaleString() + ' messages indexed.'
+      : rec.state === 'loading' ? ' Getting ready…' : '';
     var whereDesc = (info && info.host && info.host !== 'local') ? ('hosted on ' + info.host) : ('the ' + (st.engine === 'gpu' ? gpuName() : 'CPU'));
-    var fusedOk = !!sv.fused_available, fusedActive = !k3Big && st.engine === 'fused' && fusedOk;
+    var fusedOk = !!sv.fused_available, c2c3Ok = sv.c2c3_available !== false || fusedOk || k3Big;
     var core = [
       { tag: 'C1', name: 'Inference', badge: 'On', on: true,
-        desc: mLabel + ' on ' + whereDesc + '. The model itself.',
+        desc: mLabel + ' on ' + whereDesc + '. Performs model inference only (planning is C2 HybridAgent; decoding is C3 NCM).',
         links: [['model', 'Model and voice']] },
-      { tag: 'C2', name: 'Plan', badge: (k3Big || fusedActive) ? 'On' : 'Try again', on: true, part: !(k3Big || fusedActive),
-        desc: k3Big ? ('HybridAgent planner + Studio tool loop running on k3 for ' + mLabel + ', plus Try again when you say an answer is not right.')
-          : fusedOk ? ('Try again: when you say an answer is not right, Clover checks it with outside evidence and solves it again. ' +
-            'The precomputed C2 planner for LFM3-Omni-2B is installed on this laptop' + (fusedActive ? ' and active in C1 + C2 + C3 mode.' : ' (switch to C1 + C2 + C3 in Model and voice to turn it on).'))
-          : ('Try again: when you say an answer is not right, Clover checks it with outside evidence and solves it again. ' +
-            'The optional precomputed C2 planner for LFM3-Omni-2B is not installed on this laptop (' + (sv.fused_reason || 'optional component c2c3') + ').') },
-      { tag: 'C3', name: 'Decode', badge: (k3Big || fusedActive) ? 'On' : (fusedOk ? 'Installed' : 'Not installed'), on: (k3Big || fusedActive),
-        desc: k3Big ? ('11-level Neural Concept Machine (NCM) concept renderer running on k3 for ' + mLabel + '.')
-          : fusedOk ? ('The precomputed 11-level NCM concept renderer for LFM3-Omni-2B is installed on this laptop' + (fusedActive ? ' and active.' : ' and switches on with C1 + C2 + C3.'))
-          : ('The optional precomputed 11-level NCM concept renderer for LFM3-Omni-2B is not installed on this laptop (' + (sv.fused_reason || 'optional component c2c3') + ').') }
+      { tag: 'C2', name: 'Plan · HybridAgent', badge: 'On', on: true,
+        desc: c2c3Ok
+          ? ('HybridAgent (HybridLink2048 + Lfm3NativeHybridLink, plan-trunk-0) continuous latent planning & Studio tool loop for ' + mLabel + ', plus Try again verification cycle.')
+          : ('HybridAgent planner for LFM3-Omni-2B is not installed on this laptop (' + (sv.c2c3_reason || sv.fused_reason || 'downloading c2c3') + ').') },
+      { tag: 'C3', name: 'Decode · Bridges & 11-Level NCM', badge: 'On', on: true,
+        desc: c2c3Ok
+          ? ('Lfm3ComboBridge(2048\u2192384) + Lfm3ExpertBridge(2048\u2192384) (bridge-trunk-0) into 11-level multiscale VQ-VAE, 12-layer NextConceptTransformer & 3-layer LexicalPointerDecoder.')
+          : ('The precomputed 11-level NCM concept renderer for LFM3-Omni-2B is not installed on this laptop (' + (sv.c2c3_reason || sv.fused_reason || 'downloading c2c3') + ').') }
     ];
     var support = [
-      { tag: 'S1', name: 'Memory', on: !!L.memory,
-        subs: [{ key: 'memory', name: 'Remember', desc: 'What you ask Clover to remember, and what it learned when you said an answer was not right.' +
-          (mc == null ? '' : ' Now ' + mc + (mc === 1 ? ' item.' : ' items.')) }],
-        desc: 'Your chats are always kept on this laptop.', links: [['storage', 'Where it is kept']] },
-      { tag: 'S2', name: 'Relationships', on: !!((L.recall && omni) || L.ontology), part: !(L.recall && omni && L.ontology),
-        subs: [{ key: 'recall', name: 'Earlier chats', disabled: !omni,
-                 desc: 'Brings back what you said in earlier conversations. Off by default: with unrelated earlier chats it lowered Clover\'s test score (40 instead of 47 of 65).' + recallNote },
-               { key: 'ontology', name: 'Knowledge graph', desc: 'Grounds answers about Clover in its verified records.' }] },
-      { tag: 'S3', name: 'Tools', on: true,
-        desc: 'Web search, Python, PowerShell, files and VS Code, ' + (st.tools === 'always' ? 'when Clover decides to use them.' : 'when you ask for them.') + ' Each follows Permissions.',
-        subs: [{ key: 'compiler', name: 'Code check', desc: 'Checks Python in answers and lets the model fix it.' }],
+      { tag: 'S1', name: 'Memory', badge: 'On', on: true,
+        desc: 'Always on. Remembers what you ask Clover to remember and what it learned from verification outcomes, plus full git-backed session records.' +
+          (mc == null ? '' : ' Now ' + mc + (mc === 1 ? ' item.' : ' items.')),
+        links: [['storage', 'Where it is kept']] },
+      { tag: 'S2', name: 'Relationships · Recall & Knowledge Graph', badge: 'On', on: true,
+        desc: 'Always on. Turn-level earlier-chat recall (BM25 + bge-small-en-v1.5 RRF)' + recallNote + ' and deterministic Ontology Knowledge Graph grounding.' },
+      { tag: 'S3', name: 'Tools & Generative Compiler', badge: 'On', on: true,
+        desc: 'Always on. Web search, Python, PowerShell, files, VS Code and statement-level Python Generative Compiler code check.',
         links: [['tools', 'Tools and search'], ['perms', 'Permissions']] }
     ];
     fillLayers($('layers-core'), core, L); fillLayers($('layers-support'), support, L);
     var cs = sv.csi_status || {}, pv = state.personal || {}, cv = state.collective || {};
-    var csiNote = !st.csi ? '' : cs.state === 'ready' ? ' Ready (' + (cs.parser || 'parser') + ', ' + (cs.lemmatiser || '') + ').'
-      : cs.state === 'starting' ? ' Starting: ' + (cs.detail || '') + '.' : cs.state === 'missing' ? ' ' + cs.detail + '.'
-      : cs.state === 'failed' ? ' Could not start: ' + (cs.detail || '') + '.' : '';
+    var csiNote = cs.state === 'ready' ? ' Ready (' + (cs.parser || 'parser') + ', ' + (cs.lemmatiser || 'morph-verb-v1.1') + ', Open English WordNet 2025).'
+      : cs.state === 'starting' ? ' Starting: ' + (cs.detail || '') + '.' : '';
     var learned = (pv.learned || []).filter(function (h) { return h.status === 'validated'; }).length +
       (pv.preferences || []).filter(function (p) { return p.in_use; }).length, exps = (pv.experiences || []).length;
     var collOn = !!(st.collective_contribute || st.collective_receive);
     var collPart = !!(st.collective_contribute) !== !!(st.collective_receive);
     var candN = (cv.candidate_preview || []).length, actN = (cv.active_rules || []).length + (cv.active_defaults || []).length;
     var sem = [
-      { tag: 'CSI', name: 'Structure of what you say', on: !!st.csi && cs.state === 'ready', part: !!st.csi && cs.state !== 'ready',
-        subs: [{ key: 'csi', top: true, name: 'Read each message\'s structure',
-                 desc: 'A parser and dictionary on this computer read which tools you turn down ("don\'t search the web") and whether an answer claims something was done.' + csiNote }] },
-      { tag: 'PPL', name: 'How you usually mean things', on: !!st.personal, links: exps ? [['personal', 'What Clover learned']] : null,
-        subs: [{ key: 'personal', top: true, name: 'Learn from my corrections',
-                 desc: 'When you correct Clover ("No, look it up online", "Shorter, please") it learns how you usually mean things and how you like answers. Kept only on this computer; turn it off any time.' +
-                   (exps ? ' ' + exps + (exps === 1 ? ' experience, ' : ' experiences, ') + learned + ' learned.' : '') }] },
+      { tag: 'CSI', name: 'Structure of what you say', badge: 'On', on: true,
+        desc: 'Always on. Reads each message\'s syntactic structure, declined tools ("don\'t search the web"), and action claims using morph-verb-v1.1 and Open English WordNet 2025.' + csiNote },
+      { tag: 'PPL', name: 'How you usually mean things', badge: 'On', on: true,
+        links: [['personal', 'What Clover learned']],
+        desc: 'Always on locally. Learns from your corrections and preferences ("No, look it up online", "Shorter, please") and stays on this device.' +
+          (exps ? ' ' + exps + (exps === 1 ? ' experience, ' : ' experiences, ') + learned + ' learned.' : '') },
       { tag: 'CPSL', name: 'Collective problem-solving', on: collOn, part: collPart,
-        links: [['collective', 'Shared core & candidate preview']],
+        links: [['learning', 'Learning & Growth settings'], ['collective', 'Shared core & candidate preview']],
         subs: [
           { key: 'collective_contribute', top: true, name: 'Contribute candidate strategies',
-            desc: 'Extracts stripped, zero-verbatim structural strategies from validated problem-solving episodes (never raw prompts or paths).' +
+            desc: 'Opt-in (requires Google sign-in). Extracts stripped, zero-verbatim structural strategies from validated problem-solving episodes.' +
               (candN ? ' ' + candN + (candN === 1 ? ' candidate ready.' : ' candidates ready.') : '') },
           { key: 'collective_receive', top: true, name: 'Receive validated shared-core updates',
-            desc: 'Applies signed shared-core improvements that passed the 5-gate evaluator without overriding your personal rules.' +
+            desc: 'Opt-in (requires Google sign-in). Applies Ed25519-signed shared-core improvements that passed the 5-gate evaluator.' +
               (actN ? ' ' + actN + (actN === 1 ? ' shared rule active.' : ' shared rules active.') : '') }
         ] }
     ];
@@ -1867,8 +1907,22 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         var inp = sub.querySelector('input'), top = state.server && state.server.settings;
         inp.checked = (s.top ? !!(top && top[s.key]) : !!L[s.key]) && !s.disabled; inp.disabled = !!s.disabled; inp.setAttribute('aria-label', s.name);
         inp.addEventListener('change', function () {
+          var elCb = this, val = this.checked;
+          if (s.key === 'collective_contribute' || s.key === 'collective_receive') {
+            var body = {}; body[s.key === 'collective_contribute' ? 'contribute' : 'receive'] = val;
+            api('POST', '/api/collective/consent', body).then(function (r) {
+              state.collective = r;
+              if (state.server && state.server.settings) state.server.settings[s.key] = val;
+              renderLayers(); renderCollective(); renderLearningGrowth();
+            }).catch(function (e) {
+              elCb.checked = !val;
+              openSettings('learning');
+              setNote('lg-note', e.message);
+            });
+            return;
+          }
           var ch = { layers: {} };
-          if (s.top) { ch = {}; ch[s.key] = this.checked; } else ch.layers[s.key] = this.checked;
+          if (s.top) { ch = {}; ch[s.key] = val; } else ch.layers[s.key] = val;
           saveServer(ch).then(loadHealth).then(loadPersonal).then(loadCollective);
         });
         row.appendChild(sub);
@@ -2033,6 +2087,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     sel = sel || s.provider; var p = s.providers[sel] || {};
     state.searchPick = sel;
     pick('s-search', sel);
+    if (s.browser) pick('s-browser', s.browser);
     var help = $('search-help');
     help.textContent = (p.detail || '') + (sel === s.provider ? ' In use now.' : ' Not in use yet.');
     if (p.signup) {
@@ -2063,11 +2118,60 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   });
   $('search-key').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('search-save').click(); } });
   $('search-forget').addEventListener('click', function () { saveSearch({ forget: state.searchPick }); });
+  segClick('s-browser', function (v) {
+    api('POST', '/api/search', { browser: v }).then(function (r) {
+      state.search = r; renderSearch(); setNote('search-note', r.browsers[r.browser].label + ' opens your browser searches.', true);
+    }).catch(function (e) { setNote('search-note', e.message); });
+  });
   $('search-test').addEventListener('click', function () {
     setNote('search-note', 'Searching…', true);
     api('POST', '/api/search/test', {}).then(function (r) { setNote('search-note', (r.ok ? 'Works: ' : 'Did not work: ') + r.message, r.ok); })
       .catch(function (e) { setNote('search-note', e.message); });
   });
+
+  /* ---------- pages from the user's browser (laptop: the Send to Clover extension; nothing is read until they click) ---------- */
+  function loadInbox() {
+    if (PHONE || WEB) return;
+    api('GET', '/api/inbox').then(function (r) { state.inbox = r; renderInbox(); renderHandback(); }).catch(function () {});
+  }
+  function renderInbox() {
+    var box = $('inbox'), pages = (state.inbox && state.inbox.pages) || [];
+    box.innerHTML = ''; box.hidden = !pages.length;
+    pages.slice(0, 3).forEach(function (p) {
+      var c = el('span', 'att'), t = el('span');
+      t.textContent = 'From your browser: ' + (p.title || p.site) + (p.selection ? ' (with your selection)' : '');
+      t.title = p.url;
+      var add = btn('linkish', 'Add to message', 'Add this page to your next message');
+      add.addEventListener('click', function () {
+        if (state.docs.length >= MAX_DOCS) { alert('Up to ' + MAX_DOCS + ' documents per message.'); return; }
+        api('POST', '/api/inbox/take', { id: p.id }).then(function (r) {
+          state.docs.push(r.document); renderAtt(); updateSend(); loadInbox();
+        }).catch(function (e) { alert(e.message); loadInbox(); });
+      });
+      var x = btn('', ic('x'), 'Dismiss');
+      x.addEventListener('click', function () { api('POST', '/api/inbox/dismiss', { id: p.id }).then(loadInbox).catch(loadInbox); });
+      c.innerHTML = ic('globe'); c.appendChild(t); c.appendChild(add); c.appendChild(x); box.appendChild(c);
+    });
+  }
+  function renderHandback() {
+    var r = state.inbox; if (!r || !r.available) return;
+    $('handback-state').textContent = r.registered
+      ? 'Set up: Chrome and Edge can pass a page to Clover when you click the Send to Clover button.'
+      : 'Not set up. With the Send to Clover extension, you click its button on a page and Clover gets that page.';
+    $('handback-on').hidden = !!r.registered; $('handback-off').hidden = !r.registered;
+    $('handback-help').textContent = r.extension_dir
+      ? 'Add the extension: open chrome://extensions or edge://extensions, turn on Developer mode, choose Load unpacked and pick ' + r.extension_dir + ' (its ID is ' + r.extension_id + ').'
+      : 'The Send to Clover extension is not included in this install yet.';
+  }
+  function setHandback(on) {
+    api('POST', '/api/browser/register', { on: on }).then(function (r) {
+      state.inbox = r; renderHandback(); renderInbox();
+      setNote('handback-note', on ? 'Set up for Chrome and Edge on this Windows account.' : 'Removed.', true);
+    }).catch(function (e) { setNote('handback-note', e.message); });
+  }
+  $('handback-on').addEventListener('click', function () { setHandback(true); });
+  $('handback-off').addEventListener('click', function () { setHandback(false); });
+  window.addEventListener('focus', function () { if (!PHONE && !WEB) pollStatus(); });  // back from the browser
 
   /* ---------- permissions ---------- */
   function loadPerms() { return api('GET', '/api/permissions').then(function (r) { state.perms = phonePerms(r.permissions || {}); renderPerms(); }).catch(function () {}); }
@@ -2155,7 +2259,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     else if (name === 'collective') loadCollective();
     else if (name === 'model') { renderEngine(); renderSettings(); loadServerSettings(); loadHealth(); }
     else if (name === 'perms') loadPerms();
-    else if (name === 'tools') { loadServerSettings(); loadSearch(); }
+    else if (name === 'tools') { loadServerSettings(); loadSearch(); loadInbox(); }
     else if (name === 'workspaces') loadWorkspaces();
   }
   if ($('lg-google-connect')) {
@@ -2720,6 +2824,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         } else if (ev.layer === 'records' && (ev.parts || []).length) {
           upsertStep('layer_records', { icon: 'database', state: 'ok', name: 'Records (S1)',
             detail: 'Checked ' + ev.parts.join(', '), badge: '\u2713 Checked' });
+        } else if (ev.layer === 'c2_hybridagent') {
+          upsertStep('layer_c2', { icon: 'models', state: 'ok', name: 'C2 Plan (HybridAgent)',
+            detail: (ev.module || 'HybridLink') + ' \u00b7 ' + (ev.latent_steps || 3) + ' latent steps' + (ev.hybridlink_cos ? ' \u00b7 cos ' + ev.hybridlink_cos : ''),
+            badge: '\u2713 Planned' });
+        } else if (ev.layer === 'ncm') {
+          upsertStep('layer_c3', { icon: 'spark', state: 'ok', name: 'C3 Decode (Bridges + 11L NCM)',
+            detail: (ev.bridges || 'ComboBridge + ExpertBridge') + (ev.codes ? ' \u2192 ' + ev.codes + ' VQ codes' : '') + ' (' + (ev.windows || 1) + ' win)',
+            badge: '\u2713 Decoded' + (ev.s ? ' \u00b7 ' + ev.s + 's' : '') });
         } else if (ev.layer === 'compiler') {
           if (ev.ok || !ev.feedback) {
             upsertStep('compiler', { icon: 'code', state: 'ok', name: 'Code check (S3)',
@@ -2747,12 +2859,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         }
         if (ev.stage === 'planning') {
           var plTools = (ev.tools || []).slice(0, 5).map(toolName);
-          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning',
+          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning (C2 HybridAgent)',
             detail: plTools.length ? 'Choosing how to use ' + plTools.join(', ') : 'Formulating response plan\u2026', badge: 'Planning\u2026' });
           setStage(plTools.length ? 'planning \u00b7 ' + plTools.join(', ') : 'planning response');
         } else if (ev.stage === 'preparing_tool' && ev.tool) {
           var prepName = toolName(ev.tool);
-          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning',
+          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning (C2 HybridAgent)',
             detail: 'Preparing ' + prepName + ' input\u2026', badge: 'Preparing\u2026' });
           setStage('preparing ' + prepName);
         } else if (ev.stage === 'reviewing') {
@@ -2764,6 +2876,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           upsertStep('draft', { icon: 'models', state: 'run', name: 'Verifying facts & tools',
             detail: 'Checking local tools & context before ' + (ev.model || 'synthesis'), badge: 'Checking\u2026' });
           setStage('verifying facts & tools');
+        } else if (ev.stage === 'ncm_decode') {
+          upsertStep('layer_c3', { icon: 'spark', state: 'run', name: 'C3 Decode (Bridges + 11L NCM)',
+            detail: 'Running ComboBridge + ExpertBridge \u2192 11-level VQ-VAE & NextConceptTransformer\u2026', badge: 'Decoding\u2026' });
+          setStage('decoding with 11-level NCM');
+        } else if (ev.stage === 'ncm_done') {
+          if (stepMap.layer_c3 && stepMap.layer_c3.data.state === 'run') {
+            stepMap.layer_c3.update({ state: 'ok', badge: '\u2713 Decoded' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(1) + 's' : '') });
+          }
         } else if (ev.stage === 'k3_synthesis' || ev.stage === 'fused_c1_c2_c3') {
           if (stepMap.draft) stepMap.draft.update({ state: 'ok', badge: '\u2713 Verified' });
           if (stepMap.plan) stepMap.plan.update({ state: 'ok', badge: '\u2713 Planned' });
@@ -2949,7 +3069,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       else if (l.layer === 'ontology') out.push('S2 knowledge graph');
       else if (l.layer === 'ontology_grounding' && l.changed) out.push('S2 grounding fix');
       else if (l.layer === 'compiler' && l.checked) out.push(l.ok ? 'S3 code checked' : 'S3 code issue');
-      else if (l.layer === 'ncm' && l.windows) out.push('C3 NCM');
+      else if (l.layer === 'c2_hybridagent') out.push('C2 HybridAgent');
+      else if (l.layer === 'ncm' && l.windows) out.push('C3 11L NCM');
       else if (l.layer === 'workspace') out.push('workspace ' + l.workspace);
       else if (l.layer === 'cycle' && l.trigger === 'user') {
         out.push({

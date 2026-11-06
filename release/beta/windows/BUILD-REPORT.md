@@ -16,7 +16,7 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/windows/clover-ai-studio-beta-setup.exe` | `download/laptop/CloverAIStudio-Setup.exe` | Standalone direct-download Windows x64 installer | `1,881,048` bytes (`1.79 MB`) | `afc2f2179122ab22543356e8b840d377e2869ee09e83b41a6eb94343a2877ea6` |
+| `release/beta/windows/clover-ai-studio-beta-setup.exe` | `download/laptop/CloverAIStudio-Setup.exe` | Standalone direct-download Windows x64 installer | `2,630,104` bytes (`2.51 MB`) | `38faa0d3cd49a46ee1c63196bfd24dcc95ab3f20efd7708795cbebc10f859079` |
 | `release/beta/windows/CloverFramework-CodeSign.cer` | `download/laptop/CloverFramework-CodeSign.cer` | Authenticode code-signing public certificate | `832` bytes | `9365ec5d455b0ef8179ccf1c061cf481c86dad234b9f3dc62244e487c659072d` |
 
 ---
@@ -43,4 +43,7 @@
 - `python clover/test_live_activity_sse.py`: **`18/18` checks passed** (strictly monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
 - `python tests/test_clover_repo.py`: **`27/27` checks passed**.
 - `python tests/test_tool_routing.py`: **`129/129` checks passed**.
-- `python tests/test_regression_fixes.py`: **`29/29` checks passed**.
+- `python tests/test_page_fetch.py`: **`119/119` checks passed** (address guard, `robots.txt`, and citations).
+- `python tests/test_browser_first.py`: **`30/30` checks passed** (browser-first search engines & links).
+- `python tests/test_browser_handback.py`: **`51/51` checks passed** (Send to Clover Chrome/Edge extension + native messaging host & inbox).
+- `python tests/test_regression_fixes.py`: **`61/61` checks passed** (full Clover `C1 -> C2 HybridAgent -> Bridges -> C3 11-Level NCM + S1–S3 + CSI + PPL` system).

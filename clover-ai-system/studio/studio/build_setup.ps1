@@ -97,6 +97,10 @@ Copy-Item $exe.FullName $stage
 Copy-Item $cerPath (Join-Path $stage 'studio\CloverFramework-CodeSign.cer') -Force
 & robocopy (Join-Path $base 'clover') (Join-Path $stage 'clover') /E /XD __pycache__ /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "robocopy failed ($LASTEXITCODE)" }
+if (Test-Path (Join-Path $base 'browser-extension')) {
+    & robocopy (Join-Path $base 'browser-extension') (Join-Path $stage 'browser-extension') /E /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw "robocopy browser-extension failed ($LASTEXITCODE)" }
+}
 Copy-Item (Join-Path $src 'clover.ico'), (Join-Path $src 'requirements.lock') (Join-Path $stage 'studio')
 $vsix = Get-ChildItem (Join-Path $src 'dist') -Filter 'clover-local-*.vsix' |
         Sort-Object { [version]($_.BaseName -replace '^clover-local-', '') } -Descending | Select-Object -First 1

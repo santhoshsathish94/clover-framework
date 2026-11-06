@@ -15,14 +15,14 @@
     "privacy_policy": "https://cloverframework.com/privacy/",
     "support": "https://github.com/santhoshsathish94/clover-framework/issues",
     "windows_direct_installer": "https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe",
-    "google_play_instant_test": "https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNST0mwN2vPTOPN7ZLs_CGVqSbOh8hZpSj7ww63CuXdasv0pCuEsU62FEbMlHuEjx5yEE5m-ApIJBwp2ZF12",
+    "google_play_instant_test": "https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs",
     "google_play_closed_beta_web": "https://play.google.com/apps/testing/ai.clover.studio",
     "google_play_store_listing": "https://play.google.com/store/apps/details?id=ai.clover.studio"
   },
   "android": {
     "store": "Google Play Console (Closed Testing & Internal App Sharing)",
     "package_name": "ai.clover.studio",
-    "version_code": 12,
+    "version_code": 13,
     "version_name": "5.0.0",
     "min_sdk": 26,
     "target_sdk": 36,
@@ -46,15 +46,15 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 73878329,
-        "sha256": "cd20189fc456666035190e0dea0d8060ff8f8523fb41b0d02cb585c9725a0c02"
+        "size_bytes": 73918641,
+        "sha256": "877612b52f0c37e550513b7fcd83fe527cbeb84aee98f486b8095693963b884f"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "mirror": "download/mobile/CloverAIStudio.apk",
         "type": "apk",
-        "size_bytes": 74957501,
-        "sha256": "af1340cff9ac799556c2bb419c87b540841c61b5e5ab3dab459381dfb2874e4e"
+        "size_bytes": 74997803,
+        "sha256": "f490f1d12653153c21ce77b494ada5046e0b30a625c49db60a6ca250617070a4"
       }
     ],
     "verification": {
@@ -85,8 +85,8 @@
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "mirror": "download/laptop/CloverAIStudio-Setup.exe",
         "type": "exe",
-        "size_bytes": 1881048,
-        "sha256": "afc2f2179122ab22543356e8b840d377e2869ee09e83b41a6eb94343a2877ea6"
+        "size_bytes": 2630104,
+        "sha256": "38faa0d3cd49a46ee1c63196bfd24dcc95ab3f20efd7708795cbebc10f859079"
       },
       {
         "file": "release/beta/windows/CloverFramework-CodeSign.cer",
@@ -104,7 +104,10 @@
       "live_activity_sse_tests": "18/18 passed (monotonic seq, cancellation, disconnect, reconnection, concurrency)",
       "repo_tests": "27/27 passed",
       "tool_routing_tests": "129/129 passed",
-      "regression_fixes_tests": "29/29 passed"
+      "page_fetch_tests": "119/119 passed (address guard, robots.txt, citations)",
+      "browser_first_tests": "30/30 passed (browser-first search engines & links)",
+      "browser_handback_tests": "51/51 passed (Send to Clover Chrome/Edge native messaging host & inbox)",
+      "regression_fixes_tests": "61/61 passed (full Clover C1-C3/S1-S3/CSI/PPL system)"
     }
   }
 }

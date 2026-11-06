@@ -228,18 +228,16 @@ def _csi_url_ok(url):
 
 
 class Settings:
-    """config/settings.json: which model and engine run Layer 1, when tools are offered, which Clover layers are on."""
-    # human, 2026-10-31: tools only when asked; memory, ontology and code check on by default; the Clover cycle is
-    # not a setting: it runs when the user says an answer is not right (clover_cycle.retry_requested)
-    # recall (Layer 2), measured in the Studio on the 70 tasks with an unrelated 49-chat history (2026-10-31): step 7
-    # 47/65, step 7 + recall 40/65 (gains 4, losses 11, sign test p=0.118), so it stays off; the human decides defaults
+    """config/settings.json: which model and engine run Layer 1, when tools are offered, and collective learning opt-in.
+    All Clover core stages (C1 Inference, C2 HybridAgent Plan, Bridges, C3 11-level NCM Decode), supporting layers
+    (S1 Memory, S2 Recall & Ontology, S3 Tools & Compiler), and semantic layers (CSI & PPL) are always enabled."""
     DEFAULTS = {"model": "omni", "engine": "gpu", "tools": "ask", "image_model": "sd15-lcm",
                 "remote_models": [],
-                "layers": {"memory": True, "ontology": True, "compiler": True, "ncm": False, "kv_slots": False,
-                           "recall": False},
-                "csi": True,  # CSI as a child process (csi_child.py), on when its files are installed (human, 2026-11-03)
-                "csi_url": "",  # or a CSI service the user runs on this laptop (it then replaces the child)
-                "personal": True,  # the user's own learning (research/personal-process-learning): on, the user can turn it off
+                "layers": {"memory": True, "ontology": True, "compiler": True, "ncm": True, "kv_slots": False,
+                           "recall": True},
+                "csi": True,
+                "csi_url": "",
+                "personal": True,
                 "collective_contribute": False,  # opt-in candidate extraction (research/collective-learning)
                 "collective_receive": False}  # opt-in shared-core updates (research/collective-learning)
 
@@ -267,15 +265,14 @@ class Settings:
             self.data["tools"] = saved["tools"]
         if saved.get("image_model") in IMAGE_MODELS:
             self.data["image_model"] = saved["image_model"]
-        for k, v in (saved.get("layers") or {}).items():
-            if k in LAYER_KEYS and isinstance(v, bool):
-                self.data["layers"][k] = v
+        if isinstance((saved.get("layers") or {}).get("kv_slots"), bool):
+            self.data["layers"]["kv_slots"] = saved["layers"]["kv_slots"]
+        for k in ("memory", "ontology", "compiler", "ncm", "recall"):
+            self.data["layers"][k] = True
         if isinstance(saved.get("csi_url"), str) and _csi_url_ok(saved["csi_url"]):
             self.data["csi_url"] = saved["csi_url"].strip()
-        if isinstance(saved.get("csi"), bool):
-            self.data["csi"] = saved["csi"]
-        if isinstance(saved.get("personal"), bool):
-            self.data["personal"] = saved["personal"]
+        self.data["csi"] = True
+        self.data["personal"] = True
         if isinstance(saved.get("collective_contribute"), bool):
             self.data["collective_contribute"] = saved["collective_contribute"]
         if isinstance(saved.get("collective_receive"), bool):
@@ -310,7 +307,7 @@ class Settings:
             for k, v in (changes.get("layers") or {}).items():
                 if k not in LAYER_KEYS or not isinstance(v, bool):
                     raise ValueError(f"unknown layer setting {k!r}")
-                self.data["layers"][k] = v
+                self.data["layers"][k] = v if k == "kv_slots" else True
             if "csi_url" in changes:
                 if not isinstance(changes["csi_url"], str) or not _csi_url_ok(changes["csi_url"]):
                     raise ValueError("csi_url must be empty (off) or a CSI service on this laptop (http://127.0.0.1:<port>)")
@@ -318,11 +315,11 @@ class Settings:
             if "csi" in changes:
                 if not isinstance(changes["csi"], bool):
                     raise ValueError("csi must be true or false")
-                self.data["csi"] = changes["csi"]
+                self.data["csi"] = True
             if "personal" in changes:
                 if not isinstance(changes["personal"], bool):
                     raise ValueError("personal must be true or false")
-                self.data["personal"] = changes["personal"]
+                self.data["personal"] = True
             if "collective_contribute" in changes:
                 if not isinstance(changes["collective_contribute"], bool):
                     raise ValueError("collective_contribute must be true or false")
@@ -450,6 +447,11 @@ class Setup:
                 traceback.print_exc()
             if S.csi is not None and S.settings is not None and S.settings.get().get("csi", True):
                 S.csi.start()
+            try:
+                import omni_c2_c3
+                omni_c2_c3.for_base(self.base)
+            except Exception:
+                pass
         with self.lock:
             if rc == 0 and not setup_needed():
                 self.state = "done"
@@ -734,6 +736,40 @@ def personal_step(pers, method, *args):
 
 
 REMEMBER_ASK = semantics.REMEMBER_ASK
+OPEN_URL = re.compile(r"https?://[^\s\x00-\x1f\x7f]{1,2040}", re.I)
+
+
+def open_in_browser(body, start=None):
+    """A search (body["query"], with the engine picked in Settings) or a page (body["url"]) opened in the user's default
+    browser, where they are signed in and search themselves. On Windows the page's own links open in Clover's app window
+    (its own Edge profile); the phone app and the Web page open links in the user's browser themselves. Only http and
+    https addresses are opened. start: os.startfile (tests replace it). -> the address opened."""
+    import web_search
+    if paths.PLATFORM != "windows":
+        raise ValueError("open the link from the page: this device opens links in your browser itself")
+    query = " ".join(str(body.get("query") or "").split())
+    url = web_search.browser_search_url(query, S.search.browser_engine()) if query else str(body.get("url") or "").strip()
+    if not OPEN_URL.fullmatch(url):
+        raise ValueError("only an http or https address is opened in your browser")
+    (start or os.startfile)(url)
+    return url
+
+
+def inbox_count():
+    """Pages waiting from the user's browser (laptop only)."""
+    if paths.PLATFORM != "windows" or S.args is None:
+        return 0
+    import browser_host
+    return browser_host.count(S.args.base)
+
+
+def inbox_describe():
+    import browser_host
+    if paths.PLATFORM != "windows":
+        return {"pages": [], "available": False}
+    ext = HERE.parent / "browser-extension"
+    return {"pages": browser_host.pages(S.args.base), "available": True, "registered": browser_host.registered(S.args.base),
+            "extension_id": browser_host.EXTENSION_ID, "extension_dir": str(ext) if (ext / "manifest.json").is_file() else None}
 
 
 def workspace_action(action, body):
@@ -955,6 +991,12 @@ def load_engine(args):
                 S.k3_engines = {k: k3_host_engine.K3HostEngine(k, S.omni_engine, Path(args.base), S.perms)
                                 for k in ("nemotron-3.5-super-vl", "kimi-k3")}
             S.remote_engines.clear()
+            try:
+                import omni_c2_c3
+                progress("C2 HybridAgent, Bridges & C3 11-Level NCM")
+                omni_c2_c3.for_base(Path(args.base))
+            except Exception:
+                traceback.print_exc()
             S.engine = engine_for(S.settings.get().get("model"))
             S.kv_sid = None
             S.load.update(status="ready", step="ready", ready_s=round(time.time() - S.load["since"], 1))
@@ -1649,6 +1691,108 @@ class Handler(BaseHTTPRequestHandler):
         auth = (self.headers.get("Authorization") or "").strip()
         return auth[7:].strip() if auth.lower().startswith("bearer ") else ""
 
+    def _serve_hf_mirror(self, path: str):
+        """Read-only SHA256-pinned setup artifact mirror for networks where DNS/firewalls (e.g. Cisco Umbrella) block
+        huggingface.co. Every file downloaded from this mirror is verified against its publisher SHA-256 by setup_fetch.py."""
+        rel = path[len("/api/hf-mirror/"):].lstrip("/")
+        if not rel or ".." in rel.split("/"):
+            return self._send(400, {"error": "invalid mirror path"})
+        k3_data = Path("/opt/clover-k3/core-observe/laptop-base/data")
+        base_data = k3_data if k3_data.is_dir() else (Path(S.args.base) / "data")
+        k3_pre = Path("/home/santhosh/oss/clover-framework/clover-ai-system/src/models/lfm3-1.7b/models")
+        precomp = k3_pre if k3_pre.is_dir() else (Path(S.args.base) / "data" / "omni" / "precomputed")
+        if (precomp / "models").is_dir():
+            precomp = precomp / "models"
+
+        if rel.startswith("api/datasets/Santhoshsathish94/clover-ai-studio/tree/") and rel.endswith("/liquid-lfm3"):
+            if not precomp.is_dir():
+                return self._send(404, {"error": "precomputed dataset not found"})
+            cache_f = Path("/tmp/clover_hf_mirror_tree_v6.json") if os.name != "nt" else (Path(S.args.base) / "cache" / "hf_mirror_tree_v6.json")
+            if cache_f.is_file():
+                try:
+                    return self._send(200, cache_f.read_bytes(), "application/json")
+                except OSError:
+                    pass
+            inc = ("hybridagent/plan-trunk-0/", "bridges/bridge-trunk-0/", "ncm/", "trunks/tokenizer.json", "trunks/global-0/embed_tokens.bf16.bin")
+            entries = []
+            all_fps = []
+            for root_d, _, fnames in os.walk(precomp, followlinks=True):
+                for fn in fnames:
+                    if not fn.endswith(".pt"):
+                        all_fps.append(Path(root_d) / fn)
+            for fp in sorted(all_fps):
+                r_posix = fp.relative_to(precomp).as_posix()
+                if not any(r_posix == p or r_posix.startswith(p) for p in inc):
+                    continue
+                h = hashlib.sha256()
+                with open(fp, "rb") as f:
+                    for ch in iter(lambda: f.read(1 << 20), b""):
+                        h.update(ch)
+                sz = fp.stat().st_size
+                entries.append({
+                    "type": "file",
+                    "path": "liquid-lfm3/" + r_posix,
+                    "size": sz,
+                    "lfs": {"oid": h.hexdigest(), "size": sz},
+                })
+            raw = json.dumps(entries).encode("utf-8")
+            try:
+                cache_f.parent.mkdir(parents=True, exist_ok=True)
+                cache_f.write_bytes(raw)
+            except OSError:
+                pass
+            return self._send(200, raw, "application/json")
+
+        target = None
+        m_ds = re.match(r"^datasets/Santhoshsathish94/clover-ai-studio/resolve/[^/]+/liquid-lfm3/(.+)$", rel)
+        if m_ds:
+            target = precomp / m_ds.group(1)
+        m_csi = re.match(r"^datasets/Santhoshsathish94/clover-ai-studio/resolve/[^/]+/csi/morph-verb-v1\.1/([^/]+)$", rel)
+        if m_csi:
+            for d_cand in (Path(S.args.base) / "data", base_data):
+                cand = d_cand / "csi" / "morph-verb-v1.1" / m_csi.group(1)
+                if cand.is_file():
+                    target = cand
+                    break
+        m_bge = re.match(r"^BAAI/bge-small-en-v1\.5/resolve/[^/]+/([^/]+)$", rel)
+        if m_bge:
+            target = base_data / "embed" / "bge-small-en-v1.5" / m_bge.group(1)
+        m_gguf = re.match(r"^LiquidAI/LFM3-Omni-2B-GGUF/resolve/[^/]+/([^/]+)$", rel)
+        if m_gguf:
+            target = base_data / "omni" / "gguf" / m_gguf.group(1)
+        if target is None or not target.is_file():
+            return self._send(404, {"error": "mirror file not found"})
+
+        total = target.stat().st_size
+        start = 0
+        rng = (self.headers.get("Range") or "").strip()
+        m_rng = re.match(r"^bytes=(\d+)-$", rng)
+        if m_rng:
+            start = int(m_rng.group(1))
+            if start >= total:
+                self.send_response(416)
+                self.send_header("Content-Range", f"bytes */{total}")
+                self.end_headers()
+                return
+        self.send_response(206 if start > 0 else 200)
+        self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Content-Length", str(total - start))
+        self.send_header("Accept-Ranges", "bytes")
+        if start > 0:
+            self.send_header("Content-Range", f"bytes {start}-{total - 1}/{total}")
+        self.end_headers()
+        with open(target, "rb") as f:
+            if start > 0:
+                f.seek(start)
+            while True:
+                buf = f.read(1 << 20)
+                if not buf:
+                    break
+                try:
+                    self.wfile.write(buf)
+                except (BrokenPipeError, ConnectionResetError):
+                    break
+
     # ---------- GET ----------
     def do_GET(self):
         path, _, query = self.path.partition("?")
@@ -1656,6 +1800,8 @@ class Handler(BaseHTTPRequestHandler):
             S.last_request = time.time()
         if not self._host_ok():
             return self._send(403, {"error": "forbidden host"})
+        if path.startswith("/api/hf-mirror/"):
+            return self._serve_hf_mirror(path)
         if path == "/api/identity/google/callback":
             from urllib.parse import parse_qs
             import google_identity
@@ -1758,7 +1904,8 @@ class Handler(BaseHTTPRequestHandler):
                   "models": [x["id"] for x in cat],
                   "model_catalog": cat,
                   "account": getattr(self, "_authed_account", None),
-                  "inputs": getattr(eng, "inputs", ["text"]) if eng else None}
+                  "inputs": getattr(eng, "inputs", ["text"]) if eng else None,
+                  "inbox": inbox_count()}
             if busy:
                 st["busy"] = {"kind": busy["kind"], "elapsed_s": round(time.time() - busy["since"]),
                               "stage": eng.stage["name"] if eng else None,
@@ -1771,7 +1918,9 @@ class Handler(BaseHTTPRequestHandler):
             o_ok, o_why = omni_available(S.args.base)
             import fused_engine
             import k3_host_engine
+            import omni_c2_c3
             f_need = fused_engine.missing(S.args.base)
+            c2c3_need = omni_c2_c3.missing_c2_c3_files(S.args.base)
             cat = model_catalog()
             owner = k3_host_engine.is_owner_device(S.args.base)
             return self._send(200, {"settings": S.settings.get(), "version": STUDIO_VERSION, "channel": RELEASE_CHANNEL,
@@ -1781,6 +1930,8 @@ class Handler(BaseHTTPRequestHandler):
                                     **({"k3_key": k3_host_engine.k3_host_key()} if (owner and not paths.WEB and k3_host_engine.k3_host_key()) else {}),
                                     "gpu_available": ok, "gpu_reason": why,
                                     "omni_available": o_ok, "omni_reason": o_why, "warning": S.load.get("warning"),
+                                    "c2c3_available": not c2c3_need,
+                                    "c2c3_reason": ("missing " + ", ".join(c2c3_need)) if c2c3_need else "",
                                     "fused_available": not f_need,
                                     "fused_reason": ("missing " + ", ".join(f_need)) if f_need else "",
                                     "csi_status": S.csi.describe() if S.csi is not None else None,
@@ -1827,6 +1978,8 @@ class Handler(BaseHTTPRequestHandler):
                                     "media_files": len(files), "media_bytes": sum(p.stat().st_size for p in files)})
         if path == "/api/search":
             return self._send(200, S.search.describe())
+        if path == "/api/inbox":  # pages the user sent from their browser (laptop: the Send to Clover extension)
+            return self._send(200, inbox_describe())
         if path == "/api/workspaces":  # whether a GitHub token is set, never the token
             return self._send(200, S.workspaces.describe())
         if path == "/api/vscode/poll":  # the Clover extension in a VS Code window asks for its next job
@@ -2095,7 +2248,23 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, {"permissions": S.perms.describe()})
             if path == "/api/search":  # the answer reports whether a key is set, never the key
                 return self._send(200, S.search.update(provider=body.get("provider"), key=body.get("key"),
-                                                       forget=body.get("forget")))
+                                                       forget=body.get("forget"), browser=body.get("browser")))
+            if path == "/api/browser/open":
+                return self._send(200, {"opened": open_in_browser(body)})
+            if path in ("/api/inbox/take", "/api/inbox/dismiss", "/api/browser/register"):
+                if paths.PLATFORM != "windows":
+                    raise ValueError("pages come from the browser on the laptop only")
+                import browser_host
+                base = S.args.base
+                if path == "/api/inbox/take":  # the page as a document for the next message; it leaves the inbox
+                    return self._send(200, {"document": browser_host.take(body.get("id"), base, flag=semantics.flag_injection)})
+                if path == "/api/inbox/dismiss":
+                    browser_host.dismiss(body.get("id"), base)
+                elif body.get("on"):  # the user's click in Settings: HKCU keys for Chrome and Edge, no administrator
+                    browser_host.register(base)
+                else:
+                    browser_host.unregister(base)
+                return self._send(200, inbox_describe())
             if path == "/api/search/test":
                 import web_search
                 ok, message = web_search.WebSearch(S.search).test()
@@ -2658,6 +2827,10 @@ def main():
         print("SETUP_NEEDED", flush=True)
     else:
         threading.Thread(target=load_engine, args=(a,), daemon=True, name="engine-load").start()
+        if S.setup is not None:
+            import omni_c2_c3
+            if omni_c2_c3.missing_c2_c3_files(base) or csi_child.missing(base):
+                S.setup.start(components="core,csi,c2c3")
     if a.idle_exit_min > 0:
         threading.Thread(target=idle_watch, args=(a.idle_exit_min,), daemon=True, name="idle-watch").start()
     print(f"SERVING http://127.0.0.1:{a.port}/ (pid {os.getpid()})", flush=True)

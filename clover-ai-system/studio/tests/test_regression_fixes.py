@@ -243,5 +243,57 @@ try:
 finally:
     PT.WEB, SV.S.port = web_before, port_before
 
+# Full Clover System (C1 -> C2 HybridAgent -> Bridges -> C3 11-level NCM + S1-S3 + CSI + PPL always on)
+import importlib as _importlib  # noqa: E402
+import json as _json  # noqa: E402
+import omni_c2_c3 as OC2C3  # noqa: E402
+CSIA = _importlib.import_module("csi.analyze")
+
+studio_root = Path(__file__).resolve().parent.parent / "clover"
+m_win = _json.loads((studio_root / "launch" / "manifest.json").read_text(encoding="utf-8"))
+m_and = _json.loads((studio_root / "launch" / "manifest-android.json").read_text(encoding="utf-8"))
+win_comps = {x.get("component", "core") for k in ("archives", "files", "datasets") for x in m_win.get(k, [])}
+and_comps = {x.get("component", "core") for k in ("archives", "files", "datasets") for x in m_and.get(k, [])}
+check("Full system: manifest.json downloads core, csi, and c2c3",
+      {"core", "csi", "c2c3"}.issubset(win_comps))
+check("Full system: manifest-android.json downloads core, csi, and c2c3",
+      {"core", "csi", "c2c3"}.issubset(and_comps))
+
+with tempfile.TemporaryDirectory() as td:
+    st_obj = SV.Settings(str(Path(td) / "settings.json"))
+    # Even if someone sends false for S1-S3, CSI, or PPL, they stay permanently True
+    updated = st_obj.update({
+        "csi": False,
+        "personal": False,
+        "layers": {"memory": False, "ontology": False, "compiler": False, "ncm": False, "recall": False},
+    })
+    check("Full system: S1-S3, NCM, CSI, and PPL are permanently enabled",
+          updated["csi"] is True and updated["personal"] is True
+          and all(updated["layers"][k] is True for k in ("memory", "ontology", "compiler", "ncm", "recall")))
+    check("Full system: Collective Learning remains opt-in toggleable",
+          updated["collective_contribute"] is False and updated["collective_receive"] is False)
+
+check("Full system: Settings UI only has toggle switches for Collective Learning (contribute/receive)",
+      'id="lg-personal"' not in app_html and 'id="lg-contribute"' in app_html and 'id="lg-receive"' in app_html)
+check("Full system: omni_c2_c3 required files cover HybridAgent, Bridges, and 11-Level NCM",
+      "hybridagent/plan-trunk-0/index.bin" in OC2C3.REQUIRED_PRECOMPUTED
+      and "bridges/bridge-trunk-0/index.bin" in OC2C3.REQUIRED_PRECOMPUTED
+      and "ncm/ncm-trunk-11/index.bin" in OC2C3.REQUIRED_PRECOMPUTED)
+fb_frame = CSIA._analyze_with_morph_oewn("Do not search the web; calculate 14 * 29 with Python.")
+fb_props = (fb_frame.get("readings") or [{}])[0].get("propositions") or []
+check("Full system: CSI morph+OEWN fallback detects negated web search and requested Python",
+      len(fb_props) == 2 and fb_props[0]["polarity"] == "negative" and fb_props[0]["predicate"]["lemma"] == "search"
+      and fb_props[1]["polarity"] == "positive" and fb_props[1]["predicate"]["lemma"] == "calculate")
+
+local_clover = Path.home() / "CloverAI"
+if not OC2C3.missing_c2_c3_files(local_clover):
+    rt_c2c3 = OC2C3.for_base(local_clover)
+    c2_res = rt_c2c3.plan_turn("Explain how HybridAgent and the 11-level NCM work together in Clover.", ["python_interpreter"])
+    c3_text, c3_res = rt_c2c3.render_reply("HybridAgent plans in continuous latent space while the 11-level NCM renders multiscale concept codes.")
+    check("Full system: C2 HybridAgent executes 3 latent steps with cosine similarity > 0.90",
+          c2_res["layer"] == "c2_hybridagent" and c2_res["latent_steps"] == 3 and c2_res["hybridlink_cos"] > 0.90)
+    check("Full system: Bridges + C3 11-Level NCM decodes concept codes and preserves fidelity",
+          c3_res["layer"] == "ncm" and c3_res["codes"] > 20 and "HybridAgent plans in continuous latent space" in c3_text)
+
 print("ALL PASS" if ok else "SOME FAILED")
 sys.exit(0 if ok else 1)

@@ -346,14 +346,21 @@ class MemoryIndex:
         with self.lock:
             texts = [u["text"] for u in cands]
             e = np.stack([self.vec[key(t)] for t in texts])
-            lists = [bm25([toks(t) for t in texts], qt), e @ qv]
+            bm25_txt = bm25([toks(t) for t in texts], qt)
+            cos_txt = e @ qv
+            best_cos = float(cos_txt.max()) if len(cos_txt) else 0.0
+            best_bm25 = float(bm25_txt.max()) if len(bm25_txt) else 0.0
+            if not force and (best_bm25 < 2.5 or best_cos < 0.62):
+                return None, {"layer": "recall", "refs": [], "chats": 0, "candidates": len(cands),
+                              "best_cosine": round(best_cos, 4), "ms": round((time.perf_counter() - t0) * 1000, 1)}
+            lists = [bm25_txt, cos_txt]
             noted = all(x is not None for x in notes)  # partial notes would rank the unnoted by file order
             if noted:
                 lists += [bm25([toks(x) for x in notes], qt), np.stack([self.vec[key(x or "(nothing)")] for x in notes]) @ qv]
             text, picked = block_lines(cands, list(np.argsort(-rrf(*lists), kind="stable")))
             refs = [cands[i]["ref"] for i in picked]
         info = {"layer": "recall", "refs": refs, "chats": len({r.split("#")[0] for r in refs}), "candidates": len(cands),
-                "with_notes": noted, "best_cosine": round(float((e @ qv).max()), 4),
+                "with_notes": noted, "best_cosine": round(best_cos, 4),
                 "ms": round((time.perf_counter() - t0) * 1000, 1)}
         return HEAD + "\n" + text, info
 

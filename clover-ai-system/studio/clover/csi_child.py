@@ -39,13 +39,6 @@ def missing(base):
     out = [f"{MORPH[0]}/{f}" for f in MORPH[1] if not (d / MORPH[0] / f).is_file()]
     if not (d / OEWN).is_file():
         out.append(OEWN)
-    if not (os.environ.get("CLOVER_CSI_PYTHON") and Path(os.environ["CLOVER_CSI_PYTHON"]).is_file()):
-        try:
-            import importlib.util
-            if importlib.util.find_spec(PARSER) is None or importlib.util.find_spec("spacy") is None:
-                out.append(f"spaCy {PARSER}")
-        except (ImportError, ValueError):
-            out.append(f"spaCy {PARSER}")
     if not (HERE / "csi_service.py").is_file() or not (HERE / "csi" / "analyze.py").is_file():
         out.append("csi package")
     return out
@@ -101,14 +94,33 @@ class CSIService:
 
     def _run(self, timeout_s):
         import llamacpp_engine as L
+        import paths
         d = data_dir(self.base)
+        os.environ["CSI_MORPH"] = str(d / MORPH[0])
+        os.environ["CSI_DICT"] = str(d / OEWN)
         env = dict(os.environ, CSI_PARSER=PARSER, CSI_MORPH=str(d / MORPH[0]), CSI_DICT=str(d / OEWN),
                    OMP_NUM_THREADS=str(self.threads), MKL_NUM_THREADS=str(self.threads), HF_HUB_OFFLINE="1",
                    PYTHONIOENCODING="utf-8")
         for k in ("CSI_SENSES", "CSI_CLOSENESS"):  # the frozen v0.1r3 reading: lemmas, no word senses
             env.pop(k, None)
-        py = _csi_python()
         self.port = L._free_port()
+        if paths.ANDROID:
+            try:
+                from http.server import ThreadingHTTPServer
+                import csi.analyze as csi_an
+                import csi_service
+                csi_an.CSI_MORPH = str(d / MORPH[0])
+                csi_an.CSI_DICT = str(d / OEWN)
+                csi_an.analyze("Please search the web.")
+                self._httpd = ThreadingHTTPServer(("127.0.0.1", self.port), csi_service.Handler)
+                threading.Thread(target=self._httpd.serve_forever, daemon=True, name="csi-inproc").start()
+                self.state = "ready"
+                self.detail = f"ready in {time.time() - self.started:.0f} s"
+                return
+            except Exception as exc:
+                self.state, self.detail = "failed", f"could not start in-process CSI: {exc}"
+                return
+        py = _csi_python()
         log = self.base / "logs" / "csi-service.log"
         log.parent.mkdir(parents=True, exist_ok=True)
         try:

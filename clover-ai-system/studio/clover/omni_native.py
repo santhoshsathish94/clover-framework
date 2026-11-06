@@ -206,9 +206,16 @@ class OmniNative(N.LFM3Native):
     def describe(self):
         return {"mode": "omni", "model": "LFM3-Omni-2B", "engine": self.engine_kind, "max_tokens": self.max_tokens,
                 "setup_s": self.setup_s, "tools": [t["function"]["name"] for t in N.STUDIO_TOOLS],
-                "layers": [f"L1 LFM3-Omni-2B (llama.cpp {self.gpu.kind}, {self.quant.upper()})", "native tools"],
+                "layers": [
+                    f"C1 LFM3-Omni-2B (llama.cpp {self.gpu.kind}, {self.quant.upper()})",
+                    "C2 HybridAgent (HybridLink2048 + Lfm3NativeHybridLink, plan-trunk-0)",
+                    "Bridges (Lfm3ComboBridge + Lfm3ExpertBridge, bridge-trunk-0)",
+                    "C3 11-level NCM (VQ-VAE + 12L NextConceptTransformer + 3L PointerDecoder)",
+                    "S1 Memory & Records · S2 Recall & Ontology · S3 Tools & Compiler · CSI & PPL",
+                ],
                 "device": self.gpu.device, "weights": f"4-bit ({self.quant.upper()}) + projector Q8_0",
-                "backend": "llama.cpp " + self.gpu.kind, "inputs": self.inputs, "outputs": ["text", "speech"],
+                "backend": "llama.cpp " + self.gpu.kind + " + C2 HybridAgent + Bridges + C3 11-level NCM",
+                "inputs": self.inputs, "outputs": ["text", "speech"],
                 "speech": (f"CPU, own llama.cpp instance ({self.voice_threads} threads; "
                            + ("running)" if self._voice is not None else "starts when Clover first speaks)")
                            if self.separate_voice else "same instance as chat"),
@@ -459,6 +466,7 @@ class OmniNative(N.LFM3Native):
         emit = on_event or (lambda e: None)
         self.turn_cancel = cancel  # a running command stops when the user stops the turn
         self.turn_paths = list(meaning.paths) if meaning is not None else N.user_paths(user_text)
+        self.turn_hosts = N.typed_hosts(meaning.text if meaning is not None else user_text)
         self.turn_unknown = set()
         self.turn_ran = set()
         self.turn_web, self.turn_web_cap = 0, (meaning.web_cap if meaning is not None else
@@ -491,8 +499,12 @@ class OmniNative(N.LFM3Native):
                 if info.get("refs"):
                     emit(dict(info, type="layer"))
         if meaning is not None and getattr(meaning, "guidance", ""):
-            # the user's preferred form of answer (personal.py, off by default): fixed wording, no user text
+            # the user's preferred form of answer (personal.py): fixed wording, no user text
             recall.append({"role": "system", "content": meaning.guidance})
+        if kit is not None and hasattr(kit, "c2_plan"):
+            c2_info = kit.c2_plan(query, offered_tools=only_tools if only_tools is not None else [t["function"]["name"] for t in schemas[:5]])
+            layer_log.append(c2_info)
+            emit(dict(c2_info, type="layer"))
         sys_txt = system or self.system_prompt(bool(schemas), only_tools)
         keep_last_media = bool(meaning is not None and getattr(meaning, "seen", ()) and not media)
         has_new_visual = any(m.get("kind") in ("image", "video") for m in media or () if isinstance(m, dict))
@@ -667,8 +679,13 @@ class OmniNative(N.LFM3Native):
                         last = next((rd for rd in reversed(rounds) if rd["ran"]), None)
                         final = final or (f"(Clover used all {max_rounds} tool rounds without finishing an answer."
                                           + (f" Last {last['tool']} result: {last['result'][:400]}" if last else "") + ")")
-                if "ncm" in layers:  # the NCM checkpoint reads LFM3-1.7B's hidden states, not the Omni's
-                    layer_log.append({"layer": "ncm", "skipped": "needs an NCM trained for LFM3-Omni-2B"})
+                if "ncm" in layers and kit is not None and not (cancel and cancel.is_set()):
+                    emit({"type": "plan", "round": len(stats_all) or 1, "stage": "ncm_decode", "model": "11-Level NCM"})
+                    final, ncm_info = kit.ncm_render(final)
+                    layer_log.append(ncm_info)
+                    emit(dict(ncm_info, type="layer"))
+                    emit({"type": "plan", "round": len(stats_all) or 1, "stage": "ncm_done",
+                          "ms": round((ncm_info.get("s") or 0) * 1000)})
                 if "ontology" in layers:
                     final, changed = kit.grounding_filter(query, final)
                     layer_log.append({"layer": "ontology_grounding", "changed": changed})

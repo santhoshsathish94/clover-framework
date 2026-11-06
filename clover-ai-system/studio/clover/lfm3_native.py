@@ -27,6 +27,7 @@ import numpy as np  # noqa: E402
 
 import local_terminal  # noqa: E402
 import local_tool_packs  # noqa: E402
+import page_fetch  # noqa: E402
 import paths  # noqa: E402
 import permissions as P  # noqa: E402
 import semantics  # noqa: E402
@@ -272,7 +273,7 @@ def tool_worked(name, ran, result, why=""):
     s = str(result or "").strip()
     exit_m = re.search(r"\[exit\s+(-?[1-9]\d*)\]\s*$", s)
     failed = (
-        s.startswith(("Error:", "Not run:", "Could not read the page."))
+        s.startswith(("Error:", "Not run:", "Could not read the page.", "[URL Fetch Error"))
         or (name == "web_search" and s == "No results.")
         or "Traceback (most recent call last):" in s
         or "\nSyntaxError:" in s
@@ -348,6 +349,14 @@ def repair_args(args, user_paths=()):
 
 
 USER_PATH, user_paths, restore_paths = semantics.USER_PATH, semantics.user_paths, semantics.restore_paths
+# server.build_prompt puts attached files before this line and the user's own words after it
+ATTACHED = "Using the attached content / session context above, answer the user's request clearly and thoroughly:\n"
+
+
+def typed_hosts(user_text):
+    """Hosts the user typed in this message, not those inside attached files: only these may be private addresses
+    for web_search and fetch_url (page_fetch)."""
+    return page_fetch.typed_hosts(str(user_text or "").rsplit(ATTACHED, 1)[-1])
 
 
 class LFM3Native:
@@ -632,9 +641,11 @@ class LFM3Native:
                 self._py = PythonTool(python_path=sys.executable, timeout=60, max_output_chars=50_000, memory_limit_gb=mem_gb)
             return self._python(str(a.get("code") or ""))
         if name in ("web_search", "fetch_url"):
+            typed = getattr(self, "turn_hosts", frozenset())
             if name == "web_search":
-                return self._web_tool().execute(str(a.get("query") or "")) or "No results."
-            return self._web_tool().fetch_url_content(str(a.get("url") or ""), max_chars=5000) or "Could not read the page."
+                return self._web_tool().execute(str(a.get("query") or ""), typed=typed) or "No results."
+            return (self._web_tool().fetch_url_content(str(a.get("url") or ""), max_chars=5000, typed=typed)
+                    or "Could not read the page.")
         if name == "run_powershell":
             import local_terminal
             cwd, err = local_terminal.resolve_cwd(a.get("cwd"), self.workdir)
@@ -731,6 +742,7 @@ class LFM3Native:
         emit = on_event or (lambda e: None)
         self.turn_cancel = cancel  # a running command stops when the user stops the turn
         self.turn_unknown, self.turn_ran, self.turn_web = set(), set(), 0  # per answer, as in OmniNative.run_turn
+        self.turn_hosts = typed_hosts(user_text)
         cfg = SAMPLING[sampling]
         base = [t for t in STUDIO_TOOLS if only_tools is None or t["function"]["name"] in only_tools]
         extra_tools = [t for t in extra_tools if only_tools is None or t["schema"]["function"]["name"] in only_tools]
