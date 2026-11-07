@@ -1,0 +1,186 @@
+{
+  "model": "Best case for the paper's engine with tuned parameters: at what n can it beat exhaustive search at all?",
+  "rows": [
+    {
+      "log2_n": 10,
+      "total": 2.085,
+      "r": 4,
+      "Q": 1,
+      "R": 2,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.5
+    },
+    {
+      "log2_n": 20,
+      "total": 1.6759,
+      "r": 22,
+      "Q": 1,
+      "R": 2,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0909
+    },
+    {
+      "log2_n": 30,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 1,
+      "R": 2,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "log2_n": 40,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 1,
+      "R": 2,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "log2_n": 64,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 1,
+      "R": 2,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "log2_n": 100,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 2,
+      "R": 3,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "log2_n": 200,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 6,
+      "R": 7,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "log2_n": 400,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 8,
+      "R": 9,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "log2_n": 1000,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 30,
+      "R": 31,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "log2_n": 2000,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 82,
+      "R": 65,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "log2_n": 4000,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 83,
+      "R": 66,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "log2_n": 8000,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 166,
+      "R": 94,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "log2_n": 16000,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 333,
+      "R": 128,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "log2_n": 32000,
+      "total": 1.4799,
+      "r": 14,
+      "Q": 2100,
+      "R": 259,
+      "taylor": 1.3181,
+      "measurements": 0.0189,
+      "group": 0.1429
+    },
+    {
+      "log2_n": 64000,
+      "total": 1.2645,
+      "r": 14,
+      "Q": 4202,
+      "R": 374,
+      "taylor": 1.1024,
+      "measurements": 0.0193,
+      "group": 0.1429
+    },
+    {
+      "log2_n": 128000,
+      "total": 1.0597,
+      "r": 17,
+      "Q": 7828,
+      "R": 526,
+      "taylor": 0.9255,
+      "measurements": 0.0165,
+      "group": 0.1176
+    },
+    {
+      "log2_n": 256000,
+      "total": 0.882,
+      "r": 19,
+      "Q": 15066,
+      "R": 750,
+      "taylor": 0.7568,
+      "measurements": 0.0199,
+      "group": 0.1053
+    },
+    {
+      "log2_n": 512000,
+      "total": 0.6879,
+      "r": 21,
+      "Q": 29141,
+      "R": 1028,
+      "taylor": 0.5926,
+      "measurements": 0.0,
+      "group": 0.0952
+    }
+  ],
+  "smallest_log2_n_below_brute_force": 160035
+}
