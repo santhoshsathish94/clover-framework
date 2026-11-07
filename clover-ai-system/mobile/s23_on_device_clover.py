@@ -3729,6 +3729,50 @@ class CloverS23OnDeviceSystem:
                 layer_trace["layer6_generative_compiler"] = {"enabled": False}
 
             # ------------------------------------------------------------------
+            # 5b. Multi-Cycle AGENTS.md Clover Cycle Outcome Verification
+            #     Repeats up to 3 cycles (`Context -> Direction -> Execution -> Outcome -> Growth`)
+            #     whenever `clover_cycle.outcome_findings` detects an arithmetic or format defect.
+            # ------------------------------------------------------------------
+            try:
+                import clover_cycle as _CC
+                auto_cycle_findings = _CC.outcome_findings(user_clean, reply_text)
+                auto_cycles_used = 1
+                first_auto_findings = list(auto_cycle_findings)
+                while auto_cycle_findings and auto_cycles_used < 3:
+                    auto_cycles_used += 1
+                    fix_msg = _CC.AUTO_CYCLE_FIX.format(
+                        findings="\n".join("- " + f for f in auto_cycle_findings)
+                    )
+                    cyc_prompt_str = (
+                        f"{sys_prompt_str}<|im_start|>user\n{user_clean}<|im_end|>\n"
+                        f"<|im_start|>assistant\n<think></think><answer>{reply_text}</answer><|im_end|>\n"
+                        f"<|im_start|>user\n{fix_msg}<|im_end|>\n"
+                        "<|im_start|>assistant\n<think></think><answer>"
+                    )
+                    cyc_ids = self.tokenizer.encode(cyc_prompt_str, allow_special=True)[-1280:]
+                    h_cyc, ms_cyc_pre = self.engine.prefill_cached(cyc_ids)
+                    g_cyc, _, ms_cyc_dec = self.engine.decode_from_cache(
+                        h_cyc, max_new_tokens=max_new_tokens, allow_thinking=False
+                    )
+                    c_total_ms += ms_cyc_pre + ms_cyc_dec
+                    cand_reply = self._clean_model_text(self.tokenizer.decode(g_cyc, skip_special_tokens=False))
+                    if cand_reply.strip():
+                        reply_text = cand_reply
+                        active_h_seq = None
+                        active_r_seq = None
+                    auto_cycle_findings = _CC.outcome_findings(user_clean, reply_text)
+                layer_trace["clover_cycle_verification"] = {
+                    "cycles_used": auto_cycles_used,
+                    "first_findings": first_auto_findings,
+                    "final_findings": auto_cycle_findings,
+                    "verified": len(auto_cycle_findings) == 0,
+                }
+                if auto_cycles_used > 1:
+                    tools_used.append(f"clover_cycle_{auto_cycles_used}x")
+            except Exception:
+                pass
+
+            # ------------------------------------------------------------------
             # 6. C3: Unified 11-Level `NCM` (`VQVAE` + `NextConceptTransformer` + `LexicalPointerDecoder`)
             #    Uses in-situ `active_h_seq` (from C1) and `active_r_seq` (from C2) directly (`0.00 ms` redundant C1/C2 cost!)
             # ------------------------------------------------------------------

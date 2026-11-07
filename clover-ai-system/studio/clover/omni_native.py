@@ -744,27 +744,28 @@ class OmniNative(N.LFM3Native):
                         schemas = []
                         only_tools = None
 
-                first_compiler_fb = None
-                for attempt in range(3 if "compiler" in layers else 1):
-                    if attempt:
-                        fb, info = kit.compiler_check(query, final)
-                        layer_log.append(info)
-                        if not fb or (cancel and cancel.is_set()):
-                            if info.get("checked") and not fb:
-                                emit({"type": "layer", "layer": "compiler", "checked": True, "ok": True})
-                            if not fb and first_compiler_fb:
-                                layer_log.append({
-                                    "layer": "cycle", "action": "compiler_repaired",
-                                    "lesson": C.lesson_text(query, ["Code: " + first_compiler_fb.strip()[:240]], "", passed=True),
-                                    "lesson_kind": "verified",
-                                })
-                            break
-                        if first_compiler_fb is None:
-                            first_compiler_fb = fb
-                        emit({"type": "layer", "layer": "compiler", "checked": True, "ok": False, "feedback": fb})
-                        msgs.append({"role": "assistant", "content": final})
-                        msgs.append({"role": "user", "content": "The Clover compiler checked the code in your answer and "
-                                     "reported:\n" + fb + "\nFix the problem and reply with the complete corrected code."})
+                def _auto_verify_py(code_str):
+                    if cancel and cancel.is_set():
+                        return False, "", False
+                    if self.perms.get().get("code") != "allow" and "code" not in (allow or ()) and "run_python" not in (allow or ()):
+                        return False, "", True
+                    cid = "call_" + uuid.uuid4().hex[:16]
+                    args_py = {"code": code_str}
+                    emit({"type": "tool_call", "id": cid, "name": "run_python", "arguments": args_py})
+                    ran, result, why = self.execute_tool("run_python", args_py, ask, allow)
+                    worked, summary = N.tool_worked("run_python", ran, result, why)
+                    emit({"type": "tool_result", "id": cid, "name": "run_python", "ran": ran, "worked": worked,
+                          "summary": summary, "why": why, "result": result[:3000]})
+                    rounds.append({"tool": "run_python", "arguments": args_py, "ran": ran, "worked": worked,
+                                   "summary": summary, "why": why, "result": result[:2000]})
+                    return ran, result, worked
+
+                first_cycle_findings = None
+                c1_first_failed = None
+                max_clover_cycles = 3
+                cycles_used = 1
+                for attempt in range(max_clover_cycles):
+                    cycles_used = attempt + 1
                     for r in range(max_rounds):
                         if not (r == 0 and attempt == 0 and s3_pre_call is not None):
                             emit({"type": "round", "round": r + 1})
@@ -914,6 +915,77 @@ class OmniNative(N.LFM3Native):
                         last = next((rd for rd in reversed(rounds) if rd["ran"]), None)
                         final = final or (f"(Clover used all {max_rounds} tool rounds without finishing an answer."
                                           + (f" Last {last['tool']} result: {last['result'][:400]}" if last else "") + ")")
+
+                    # ---- Clover Cycle Outcome Stage (`Context -> Direction -> Execution -> Outcome -> Growth`) ----
+                    if cancel and cancel.is_set():
+                        break
+                    findings, c_meta = C.verify_turn_outcome(
+                        query,
+                        final,
+                        rounds,
+                        kit=kit,
+                        layers=layers,
+                        meaning=meaning,
+                        execute_python_fn=_auto_verify_py,
+                    )
+                    comp_info = c_meta.get("compiler_info")
+                    if comp_info is not None:
+                        layer_log.append(comp_info)
+                        if comp_info.get("checked"):
+                            if c_meta.get("compiler_ok"):
+                                emit({"type": "layer", "layer": "compiler", "checked": True, "ok": True})
+                            else:
+                                emit({"type": "layer", "layer": "compiler", "checked": True, "ok": False, "feedback": findings[0]})
+
+                    if not findings:
+                        if first_cycle_findings:
+                            only_comp = all(f.startswith("Code compiler check:") for f in first_cycle_findings)
+                            emit({"type": "cycle", "cycle": attempt + 1, "stage": "verified", "cycles_used": attempt + 1})
+                            layer_log.append({
+                                "layer": "cycle",
+                                "trigger": "auto",
+                                "action": "compiler_repaired" if only_comp else "corrected",
+                                "cycles_used": attempt + 1,
+                                "first_findings": first_cycle_findings,
+                                "final_findings": [],
+                                "tools": [rd["tool"] for rd in rounds if rd.get("ran") and rd.get("worked")],
+                                "lesson": C.lesson_text(query, [f[:240] for f in first_cycle_findings[:2]], "", passed=True),
+                                "lesson_kind": "verified",
+                            })
+                        break
+
+                    if first_cycle_findings is None:
+                        first_cycle_findings = list(findings)
+                        if kit is not None and hasattr(kit, "c1_infer"):
+                            try:
+                                c1_first_failed = kit.c1_infer(final)[0]
+                            except Exception:
+                                c1_first_failed = None
+
+                    if attempt + 1 < max_clover_cycles:
+                        emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
+                        if any(f.startswith(("Arithmetic:", "Code execution check:", "Tool execution check:")) for f in findings):
+                            if self.perms.get().get("code") == "allow" or "code" in (allow or ()):
+                                for t_cand in N.STUDIO_TOOLS:
+                                    t_fn = t_cand["function"]["name"]
+                                    if t_fn in ("run_python", "calculate") and t_fn not in by_name:
+                                        schemas.append(t_cand)
+                                        by_name[t_fn] = t_cand["function"]
+                                        tools = True
+                        msgs.append({"role": "assistant", "content": final})
+                        msgs.append({"role": "user", "content": C.AUTO_CYCLE_FIX.format(
+                            findings="\n".join("- " + f for f in findings)
+                        )})
+                    else:
+                        layer_log.append({
+                            "layer": "cycle",
+                            "trigger": "auto",
+                            "action": "unconfirmed",
+                            "cycles_used": attempt + 1,
+                            "first_findings": first_cycle_findings or findings,
+                            "final_findings": findings,
+                        })
+
                 rnd_n = len(stats_all) or 1
                 if kit is not None and not (cancel and cancel.is_set()):
                     # 1. Strict Stage C1: Inference ONLY (`c1_infer`)
@@ -930,11 +1002,17 @@ class OmniNative(N.LFM3Native):
                         planned_t = [rd["tool"] for rd in rounds if rd.get("ran")] or (
                             list(only_tools) if only_tools is not None else [t["function"]["name"] for t in schemas[:5]]
                         )
+                        if c1_first_failed is not None and cycles_used > 1 and hasattr(kit, "jepa_record_outcome"):
+                            try:
+                                kit.c2_plan_state(query, c1_state=c1_first_failed, offered_tools=planned_t)
+                                kit.jepa_record_outcome(c1_obs_state=c1_state, is_baseline=False)
+                            except Exception:
+                                pass
                         c2_state, c2_info = kit.c2_plan_state(query, c1_state=c1_state, offered_tools=planned_t)
                         layer_log.append(c2_info)
                         emit(dict(c2_info, type="layer"))
                         emit({"type": "plan", "round": rnd_n, "stage": "c2_done", "ms": c2_info.get("ms")})
-                        if hasattr(kit, "jepa_record_outcome"):
+                        if hasattr(kit, "jepa_record_outcome") and c1_first_failed is None:
                             kit.jepa_record_outcome(c1_obs_state=c1_state, is_baseline=True)
                     else:
                         c2_state = final

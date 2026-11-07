@@ -787,18 +787,10 @@ class LFM3Native:
 
         with self.lock:
           try:
-            for attempt in range(3 if "compiler" in layers else 1):
-                if attempt:
-                    fb, info = kit.compiler_check(query, final)
-                    layer_log.append(info)
-                    if not fb or (cancel and cancel.is_set()):
-                        if info.get("checked") and not fb:
-                            emit({"type": "layer", "layer": "compiler", "checked": True, "ok": True})
-                        break
-                    emit({"type": "layer", "layer": "compiler", "checked": True, "ok": False, "feedback": fb})
-                    msgs.append({"role": "assistant", "content": final})
-                    msgs.append({"role": "user", "content": "The Clover compiler checked the code in your answer and reported:\n"
-                                 + fb + "\nFix the problem and reply with the complete corrected code."})
+            import clover_cycle as C
+            first_cycle_findings = None
+            max_clover_cycles = 3
+            for attempt in range(max_clover_cycles):
                 for r in range(max_rounds):
                     prompt = self._render(msgs, schemas, thinking)
                     emit({"type": "round", "round": r + 1})
@@ -852,6 +844,50 @@ class LFM3Native:
                         tail = (content + after) if thinking and "</think>" in text else ("" if thinking else text)
                         final = re.sub(r"<tool_call>[\s\S]*?(?:</tool_call>|$)", "", tail).strip()
                     final = final or "(Stopped after the maximum number of tool rounds.)"
+                if cancel and cancel.is_set():
+                    break
+                findings, c_meta = C.verify_turn_outcome(query, final, rounds, kit=kit, layers=layers)
+                comp_info = c_meta.get("compiler_info")
+                if comp_info is not None:
+                    layer_log.append(comp_info)
+                    if comp_info.get("checked"):
+                        if c_meta.get("compiler_ok"):
+                            emit({"type": "layer", "layer": "compiler", "checked": True, "ok": True})
+                        else:
+                            emit({"type": "layer", "layer": "compiler", "checked": True, "ok": False, "feedback": findings[0]})
+                if not findings:
+                    if first_cycle_findings:
+                        only_comp = all(f.startswith("Code compiler check:") for f in first_cycle_findings)
+                        emit({"type": "cycle", "cycle": attempt + 1, "stage": "verified", "cycles_used": attempt + 1})
+                        layer_log.append({
+                            "layer": "cycle",
+                            "trigger": "auto",
+                            "action": "compiler_repaired" if only_comp else "corrected",
+                            "cycles_used": attempt + 1,
+                            "first_findings": first_cycle_findings,
+                            "final_findings": [],
+                            "tools": [rd["tool"] for rd in rounds if rd.get("ran") and rd.get("worked")],
+                            "lesson": C.lesson_text(query, [f[:240] for f in first_cycle_findings[:2]], "", passed=True),
+                            "lesson_kind": "verified",
+                        })
+                    break
+                if first_cycle_findings is None:
+                    first_cycle_findings = list(findings)
+                if attempt + 1 < max_clover_cycles:
+                    emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
+                    msgs.append({"role": "assistant", "content": final})
+                    msgs.append({"role": "user", "content": C.AUTO_CYCLE_FIX.format(
+                        findings="\n".join("- " + f for f in findings)
+                    )})
+                else:
+                    layer_log.append({
+                        "layer": "cycle",
+                        "trigger": "auto",
+                        "action": "unconfirmed",
+                        "cycles_used": attempt + 1,
+                        "first_findings": first_cycle_findings or findings,
+                        "final_findings": findings,
+                    })
             rnd_n = len(stats_all) or 1
             if kit is not None and not (cancel and cancel.is_set()):
                 if hasattr(kit, "c1_infer"):

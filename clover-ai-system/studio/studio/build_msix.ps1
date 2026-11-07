@@ -28,8 +28,12 @@ $layout = Join-Path $msixBuild 'layout'
 $assets = Join-Path $layout 'Assets'
 New-Item -ItemType Directory -Force $assets | Out-Null
 
-# 2. Generate crisp 5-leaf Clover MSIX visual assets (GDI+ HighQualityBicubic / AntiAlias)
+# 2. Generate crisp 5-petal yellow Clover flower MSIX & Store visual assets using the canonical brand master icon
 Add-Type -AssemblyName System.Drawing
+$yellowIconPack = Join-Path $wt 'assets\clover-yellow-flower-icon-pack'
+$brandMasterPath = Join-Path $yellowIconPack 'brand\clover-app-icon-master.png'
+$brandCirclePath = Join-Path $yellowIconPack 'brand\clover-circle.png'
+
 function New-CloverAsset([string]$path, [int]$w, [int]$h, [bool]$transparentBg = $false) {
     $bmp = New-Object System.Drawing.Bitmap($w, $h, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g = [System.Drawing.Graphics]::FromImage($bmp)
@@ -43,38 +47,51 @@ function New-CloverAsset([string]$path, [int]$w, [int]$h, [bool]$transparentBg =
         $bgBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
             (New-Object System.Drawing.Point(0, 0)),
             (New-Object System.Drawing.Point($w, $h)),
-            [System.Drawing.Color]::FromArgb(255, 11, 20, 16),
-            [System.Drawing.Color]::FromArgb(255, 18, 34, 27)
+            [System.Drawing.Color]::FromArgb(255, 14, 17, 23),
+            [System.Drawing.Color]::FromArgb(255, 22, 26, 35)
         )
         $g.FillRectangle($bgBrush, 0, 0, $w, $h)
         $bgBrush.Dispose()
     }
 
-    $cx = $w / 2.0
-    $cy = $h / 2.0
-    $scale = [Math]::Min($w, $h) * 0.34
-    $colors = @(
-        [System.Drawing.Color]::FromArgb(255, 52, 211, 153),
-        [System.Drawing.Color]::FromArgb(255, 16, 185, 129),
-        [System.Drawing.Color]::FromArgb(255, 52, 211, 153),
-        [System.Drawing.Color]::FromArgb(255, 5, 150, 105),
-        [System.Drawing.Color]::FromArgb(255, 16, 185, 129)
-    )
-    for ($i = 0; $i -lt 5; $i++) {
-        $state = $g.Save()
-        $g.TranslateTransform($cx, $cy)
-        $g.RotateTransform($i * 72.0)
-        $leafW = [float]($scale * 0.54)
-        $leafH = [float]($scale * 0.88)
-        $brush = New-Object System.Drawing.SolidBrush($colors[$i])
-        $g.FillEllipse($brush, [float](-$leafW / 2.0), [float](-$leafH - ($scale * 0.06)), $leafW, $leafH)
-        $brush.Dispose()
-        $g.Restore($state)
+    if ((Test-Path $brandMasterPath) -and -not $transparentBg -and ($w -eq $h)) {
+        $srcImg = [System.Drawing.Image]::FromFile($brandMasterPath)
+        $g.DrawImage($srcImg, 0, 0, $w, $h)
+        $srcImg.Dispose()
+    } elseif (Test-Path $brandCirclePath) {
+        $srcImg = [System.Drawing.Image]::FromFile($brandCirclePath)
+        $side = [int]([Math]::Min($w, $h) * $(if ($transparentBg) { 0.92 } else { 0.78 }))
+        $dx = [int](($w - $side) / 2)
+        $dy = [int](($h - $side) / 2)
+        $g.DrawImage($srcImg, $dx, $dy, $side, $side)
+        $srcImg.Dispose()
+    } else {
+        $cx = $w / 2.0
+        $cy = $h / 2.0
+        $scale = [Math]::Min($w, $h) * 0.34
+        $colors = @(
+            [System.Drawing.Color]::FromArgb(255, 255, 240, 120),
+            [System.Drawing.Color]::FromArgb(255, 248, 207, 30),
+            [System.Drawing.Color]::FromArgb(255, 255, 240, 120),
+            [System.Drawing.Color]::FromArgb(255, 216, 150, 6),
+            [System.Drawing.Color]::FromArgb(255, 248, 207, 30)
+        )
+        for ($i = 0; $i -lt 5; $i++) {
+            $state = $g.Save()
+            $g.TranslateTransform($cx, $cy)
+            $g.RotateTransform($i * 72.0)
+            $leafW = [float]($scale * 0.54)
+            $leafH = [float]($scale * 0.88)
+            $brush = New-Object System.Drawing.SolidBrush($colors[$i])
+            $g.FillEllipse($brush, [float](-$leafW / 2.0), [float](-$leafH - ($scale * 0.06)), $leafW, $leafH)
+            $brush.Dispose()
+            $g.Restore($state)
+        }
+        $hubR = [float]([Math]::Max(2.0, $scale * 0.14))
+        $hubBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 255, 240, 120))
+        $g.FillEllipse($hubBrush, [float]($cx - $hubR), [float]($cy - $hubR), [float]($hubR * 2.0), [float]($hubR * 2.0))
+        $hubBrush.Dispose()
     }
-    $hubR = [float]([Math]::Max(2.0, $scale * 0.14))
-    $hubBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 236, 253, 245))
-    $g.FillEllipse($hubBrush, [float]($cx - $hubR), [float]($cy - $hubR), [float]($hubR * 2.0), [float]($hubR * 2.0))
-    $hubBrush.Dispose()
 
     $g.Dispose()
     $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
@@ -94,56 +111,70 @@ New-CloverAsset (Join-Path $assets 'SplashScreen.png') 620 300 $false
 $gpScreens = Join-Path $wt 'release\beta\store\google-play\screenshots'
 $msScreens = Join-Path $wt 'release\beta\store\microsoft\screenshots'
 New-Item -ItemType Directory -Force $gpScreens, $msScreens | Out-Null
-New-CloverAsset (Join-Path $gpScreens 'app-icon-512x512.png') 512 512 $false
+$gpYellow512 = Join-Path $yellowIconPack 'mobile\android\ic_launcher-512.png'
+if (Test-Path $gpYellow512) {
+    Copy-Item $gpYellow512 (Join-Path $gpScreens 'app-icon-512x512.png') -Force
+} else {
+    New-CloverAsset (Join-Path $gpScreens 'app-icon-512x512.png') 512 512 $false
+}
 New-CloverAsset (Join-Path $msScreens 'app-icon-300x300.png') 300 300 $false
 
 function New-FeatureGraphic([string]$path, [int]$w, [int]$h) {
     $bmp = New-Object System.Drawing.Bitmap($w, $h, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+    $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
     $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::ClearTypeGridFit
     $bg = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
         (New-Object System.Drawing.Point(0, 0)),
         (New-Object System.Drawing.Point($w, $h)),
-        [System.Drawing.Color]::FromArgb(255, 11, 20, 16),
-        [System.Drawing.Color]::FromArgb(255, 20, 38, 30)
+        [System.Drawing.Color]::FromArgb(255, 14, 17, 23),
+        [System.Drawing.Color]::FromArgb(255, 24, 28, 38)
     )
     $g.FillRectangle($bg, 0, 0, $w, $h)
     $bg.Dispose()
-    $cx = $w * 0.19
+    $cx = $w * 0.18
     $cy = $h / 2.0
-    $sc = $h * 0.30
-    $cols = @(
-        [System.Drawing.Color]::FromArgb(255, 52, 211, 153),
-        [System.Drawing.Color]::FromArgb(255, 16, 185, 129),
-        [System.Drawing.Color]::FromArgb(255, 52, 211, 153),
-        [System.Drawing.Color]::FromArgb(255, 5, 150, 105),
-        [System.Drawing.Color]::FromArgb(255, 16, 185, 129)
-    )
-    for ($i = 0; $i -lt 5; $i++) {
-        $st = $g.Save()
-        $g.TranslateTransform($cx, $cy)
-        $g.RotateTransform($i * 72.0)
-        $lw = [float]($sc * 0.54)
-        $lh = [float]($sc * 0.88)
-        $b = New-Object System.Drawing.SolidBrush($cols[$i])
-        $g.FillEllipse($b, [float](-$lw / 2.0), [float](-$lh - ($sc * 0.06)), $lw, $lh)
-        $b.Dispose()
-        $g.Restore($st)
+    if (Test-Path $brandCirclePath) {
+        $srcImg = [System.Drawing.Image]::FromFile($brandCirclePath)
+        $side = [int]($h * 0.64)
+        $g.DrawImage($srcImg, [int]($cx - ($side / 2.0)), [int]($cy - ($side / 2.0)), $side, $side)
+        $srcImg.Dispose()
+    } else {
+        $sc = $h * 0.30
+        $cols = @(
+            [System.Drawing.Color]::FromArgb(255, 255, 240, 120),
+            [System.Drawing.Color]::FromArgb(255, 248, 207, 30),
+            [System.Drawing.Color]::FromArgb(255, 255, 240, 120),
+            [System.Drawing.Color]::FromArgb(255, 216, 150, 6),
+            [System.Drawing.Color]::FromArgb(255, 248, 207, 30)
+        )
+        for ($i = 0; $i -lt 5; $i++) {
+            $st = $g.Save()
+            $g.TranslateTransform($cx, $cy)
+            $g.RotateTransform($i * 72.0)
+            $lw = [float]($sc * 0.54)
+            $lh = [float]($sc * 0.88)
+            $b = New-Object System.Drawing.SolidBrush($cols[$i])
+            $g.FillEllipse($b, [float](-$lw / 2.0), [float](-$lh - ($sc * 0.06)), $lw, $lh)
+            $b.Dispose()
+            $g.Restore($st)
+        }
+        $hr = [float]([Math]::Max(3.0, $sc * 0.14))
+        $hb = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 255, 240, 120))
+        $g.FillEllipse($hb, [float]($cx - $hr), [float]($cy - $hr), [float]($hr * 2.0), [float]($hr * 2.0))
+        $hb.Dispose()
     }
-    $hr = [float]([Math]::Max(3.0, $sc * 0.14))
-    $hb = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 236, 253, 245))
-    $g.FillEllipse($hb, [float]($cx - $hr), [float]($cy - $hr), [float]($hr * 2.0), [float]($hr * 2.0))
-    $hb.Dispose()
     $f1 = New-Object System.Drawing.Font("Segoe UI Semibold", 36, [System.Drawing.FontStyle]::Bold)
     $f2 = New-Object System.Drawing.Font("Segoe UI", 16, [System.Drawing.FontStyle]::Regular)
     $f3 = New-Object System.Drawing.Font("Segoe UI", 13, [System.Drawing.FontStyle]::Regular)
-    $tb1 = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 236, 253, 245))
-    $tb2 = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 167, 243, 208))
-    $tb3 = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 143, 163, 153))
+    $tb1 = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 248, 250, 252))
+    $tb2 = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 248, 207, 30))
+    $tb3 = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 160, 174, 192))
     $g.DrawString("Clover AI Studio", $f1, $tb1, [float]($w * 0.34), [float]($h * 0.27))
     $g.DrawString("Local-First Multimodal AI Assistant & Workspace", $f2, $tb2, [float]($w * 0.345), [float]($h * 0.49))
-    $g.DrawString("7-Layer Architecture  ·  Personal & Collective Learning  ·  Zero Cloud Lock-In", $f3, $tb3, [float]($w * 0.345), [float]($h * 0.63))
+    $g.DrawString("7-Layer Architecture  ·  AGENTS.md Clover Cycles  ·  Zero Cloud Lock-In", $f3, $tb3, [float]($w * 0.345), [float]($h * 0.63))
     $f1.Dispose(); $f2.Dispose(); $f3.Dispose(); $tb1.Dispose(); $tb2.Dispose(); $tb3.Dispose()
     $g.Dispose()
     $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
@@ -195,7 +226,7 @@ $manifestXml = @'
       <uap:VisualElements
         DisplayName="Clover AI Studio"
         Description="Clover AI Studio — Local-first multimodal AI assistant and developer workspace"
-        BackgroundColor="#0B1410"
+        BackgroundColor="#0E1117"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square310x310Logo="Assets\Square310x310Logo.png" Square71x71Logo="Assets\Square71x71Logo.png">
@@ -205,7 +236,7 @@ $manifestXml = @'
             <uap:ShowOn Tile="square310x310Logo" />
           </uap:ShowNameOnTiles>
         </uap:DefaultTile>
-        <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#0B1410" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#0E1117" />
       </uap:VisualElements>
     </Application>
   </Applications>

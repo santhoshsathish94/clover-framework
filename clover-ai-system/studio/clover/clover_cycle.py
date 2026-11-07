@@ -744,3 +744,102 @@ def lesson_text(question, findings, said="", passed=False):
     if passed:
         parts.append("the corrected answer passed those checks")
     return "; ".join(parts) + "."
+
+
+AUTO_CYCLE_FIX = (
+    "Clover Cycle Outcome Verification checked your draft above against reality and found:\n"
+    "{findings}\n"
+    "Return to Context: use the verified evidence and tools above, fix the cause of each problem, and reply with the complete corrected answer."
+)
+
+
+def verify_turn_outcome(
+    question,
+    answer,
+    rounds=None,
+    *,
+    kit=None,
+    layers=(),
+    meaning=None,
+    execute_python_fn=None,
+):
+    """Run Clover's deterministic Outcome stage (`Context -> Direction -> Execution -> Outcome -> Growth`) on a turn draft.
+    Checks:
+      1. Empty / truncated non-answer.
+      2. Compiler & AST syntax verification (`kit.compiler_check`), plus sandbox execution (`execute_python_fn`) for
+         self-contained computational Python blocks that have not yet been executed in `rounds`.
+      3. Arithmetic equation verification (`arithmetic_findings`) & explicit format constraints (`format_findings`),
+         plus exact direct-expression evaluation (`direct_arithmetic_value`).
+      4. Unrecovered tool execution failures in `rounds`.
+    Returns `(findings, meta)`. When `findings` is empty, the Outcome is verified and complete.
+    """
+    q = (question or "").strip()
+    a = (answer or "").strip()
+    rounds_list = list(rounds or [])
+    findings = []
+    meta = {"compiler_checked": False, "compiler_ok": True, "compiler_info": None, "auto_python_ran": False}
+
+    if not a or a.startswith("(Clover "):
+        findings.append("Outcome check: the draft answer was empty or incomplete; write a complete direct answer.")
+        return findings, meta
+
+    if "compiler" in (layers or ()) and kit is not None and hasattr(kit, "compiler_check"):
+        fb, info = kit.compiler_check(q, a)
+        meta["compiler_info"] = info
+        meta["compiler_checked"] = bool(info and info.get("checked"))
+        meta["compiler_ok"] = not bool(fb)
+        if fb:
+            findings.append("Code compiler check:\n" + fb.strip()[:600])
+        elif meta["compiler_checked"] and execute_python_fn is not None:
+            try:
+                import lfm3_layers
+                code = lfm3_layers.extract_python(a)
+            except Exception:
+                code = ""
+            already_ran_py = any(rd.get("tool") == "run_python" and rd.get("ran") and rd.get("worked") for rd in rounds_list)
+            if (
+                code
+                and not already_ran_py
+                and computes(code)
+                and re.search(r"\b(?:print|assert)\b", code)
+                and not re.search(
+                    r"\b(?:input\s*\(|open\s*\(|os\.remove|os\.unlink|os\.rmdir|shutil\.|subprocess\.|socket\.|urllib\.|requests\.|fastapi|flask|django|uvicorn|plt\.show)\b",
+                    code,
+                )
+            ):
+                py_res = execute_python_fn(code)
+                if len(py_res) == 3:
+                    ran, out, worked = py_res
+                else:
+                    worked, out = py_res
+                    ran = True
+                meta["auto_python_ran"] = bool(ran)
+                meta["python_sandbox_checked"] = bool(ran)
+                if ran and not worked:
+                    findings.append(f"Code execution check: running your Python code raised an error:\n{str(out).strip()[:500]}")
+
+    af = outcome_findings(q, a)
+    if af:
+        findings.extend(af)
+
+    exact_v = direct_arithmetic_value(q)
+    if exact_v is not None:
+        got_v = final_answer(q, a)
+        if not same(got_v, exact_v):
+            shown_v = f"{int(exact_v)}" if float(exact_v).is_integer() else f"{exact_v:g}"
+            findings.append(f"Arithmetic: the exact value is {shown_v} (your draft gave {got_v}).")
+
+    if rounds_list and not findings:
+        last_rd = rounds_list[-1]
+        if last_rd.get("ran") and not last_rd.get("worked"):
+            res_txt = str(last_rd.get("result") or "").strip()
+            if not res_txt.startswith(("[Clover permission]", "Not run:")) and not any(
+                rd.get("ran") and rd.get("worked") for rd in rounds_list
+            ):
+                if not re.search(r"\b(?:error|failed|could not|unable to|did not work|doesn'?t exist|not found)\b", a, re.I):
+                    findings.append(
+                        f"Tool execution check: `{last_rd.get('tool')}` failed with `{res_txt[:240]}`, "
+                        "but your draft did not resolve the error or report it honestly."
+                    )
+
+    return findings, meta

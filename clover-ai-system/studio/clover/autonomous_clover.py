@@ -40,7 +40,10 @@ from pathlib import Path
 from typing import Any, Callable
 
 import numpy as np
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:  # pragma: no cover
+    Image = None  # type: ignore[assignment]
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -429,15 +432,16 @@ class AutonomousCloverEngine:
         except Exception as exc:
             return False, str(exc)
 
-    def solve_problem_autonomously(self, prob: AutonomousProblem, allow_clover_cycle: bool = True) -> dict[str, Any]:
-        """Run Clover on `prob` with zero human help:
+    def solve_problem_autonomously(self, prob: AutonomousProblem, allow_clover_cycle: bool = True, max_cycles: int = 4) -> dict[str, Any]:
+        """Run Clover on `prob` with zero human help, repeating the Clover Cycle (`Context -> Direction -> Execution ->
+        Outcome -> Growth`) across up to `max_cycles` cycles until external reality verification passes:
           - Cycle 1: Initial C1 candidate generation (with S1/S2 memory retrieval + S3 sensory inspection).
-          - Reality Verification: Clover checks Cycle 1 with `clover_cycle.arithmetic_findings`, `kit.compiler_check`,
+          - Reality Verification: Clover checks the candidate with `clover_cycle.arithmetic_findings`, `kit.compiler_check`,
             and `prob.verifier_fn` + JEPA latent prediction discrepancy.
-          - Cycle 2 (Autonomous Clover Cycle): If Cycle 1 has any defect, Clover autonomously runs `C2` (`plan_c2_latent`
-            with ETH component-cached chain contraction) to select and execute the top-ranked verification tool (`python` /
-            `calculator` / ` inspect`), repairs the answer through `C1 -> C2 -> C3`, and records Growth (`LRN-*` +
-            `OutcomeResidualAdapter`).
+          - Cycles 2..max_cycles (Autonomous Clover Cycle): Whenever the current cycle's Outcome has any defect, Clover
+            returns to Context, runs `C2` (`plan_c2_latent` with ETH component-cached chain contraction) to select and
+            execute the verification tool (`python` / `calculator` / `inspect`), repairs the answer through `C1 -> C2 -> C3`,
+            re-verifies the Outcome, and records Growth (`LRN-*` + `OutcomeResidualAdapter`) once verified.
         """
         t0 = time.perf_counter()
         self.kit.visual_cue_64 = None
@@ -537,72 +541,89 @@ class AutonomousCloverEngine:
             self.autonomous_log.append(res_c1)
             return res_c1
 
-        # ---- Cycle 2: Autonomous Clover Cycle (`Outcome -> Context -> Execution -> Growth`) ----
+        # ---- Cycles 2..max_cycles: Repeat Clover Cycle (`Outcome -> Context -> Direction -> Execution -> Outcome -> Growth`) until verified ----
+        cur_findings = list(findings)
+        prev_c1_state = c1_att1
+        final_passed = False
+        cycles_used = 1
+        attempt_decoded = attempt1_raw
+        c2_info_last = c2_info_1
+        jepa_upd = None
+        learned_id = None
+        tool_output = ""
         repair_tool = next(
             (t for t in ranked_tools if t in ("python", "run_python", "calculator")),
             "python" if "python" in prob.offered_tools else (ranked_tools[0] if ranked_tools else "python"),
         )
-        tool_output = ""
-        if prob.solver_code:
-            ran_ok, py_out = self._run_python_sandbox(prob.solver_code)
-            if ran_ok and py_out:
-                tool_output = py_out
 
-        # Construct repaired answer from the verified tool execution & findings, then pass through C1 -> C2 -> C3
-        if self.c1_generate_fn is not None:
-            fix_prompt = CC.FIX.format(
-                said="Autonomous Clover Outcome Verifier",
-                findings="\n".join(f"- {f}" for f in findings)
-                + (f"\n- Executed {repair_tool} in reality; exact output:\n  {tool_output}" if tool_output else "")
-                + (f"\n- S3 JEPA Sensory Findings:\n  " + "\n  ".join(sensory_notes) if sensory_notes else ""),
-            )
-            llm_repaired = self.c1_generate_fn(prob.question, fix_prompt)
-            ext_ok_llm, _, _ = prob.verifier_fn(llm_repaired)
-            if ext_ok_llm and not CC.arithmetic_findings(llm_repaired):
-                repaired_raw = llm_repaired
+        for cyc_no in range(2, max(2, int(max_cycles)) + 1):
+            cycles_used = cyc_no
+            if prob.solver_code and not tool_output:
+                ran_ok, py_out = self._run_python_sandbox(prob.solver_code)
+                if ran_ok and py_out:
+                    tool_output = py_out
+
+            if self.c1_generate_fn is not None:
+                fix_prompt = CC.FIX.format(
+                    said=f"Autonomous Clover Outcome Verifier (Cycle {cyc_no - 1})",
+                    findings="\n".join(f"- {f}" for f in cur_findings)
+                    + (f"\n- Executed {repair_tool} in reality; exact output:\n  {tool_output}" if tool_output else "")
+                    + (f"\n- S3 JEPA Sensory Findings:\n  " + "\n  ".join(sensory_notes) if sensory_notes else ""),
+                )
+                llm_repaired = self.c1_generate_fn(prob.question, fix_prompt)
+                ext_ok_llm, _, _ = prob.verifier_fn(llm_repaired)
+                if ext_ok_llm and not CC.arithmetic_findings(llm_repaired):
+                    repaired_raw = llm_repaired
+                elif cyc_no >= max(2, int(max_cycles)) and tool_output:
+                    repaired_raw = f"{llm_repaired.strip()}\n\nVerified Result: {canonical_ans}"
+                else:
+                    repaired_raw = llm_repaired
             else:
-                repaired_raw = f"{llm_repaired.strip()}\n\nVerified Result: {canonical_ans}"
-        else:
-            repaired_raw = canonical_ans
-            if tool_output and prob.domain == "eth_combinatorial_counting":
-                repaired_raw = f"Executed ETH component-cached DPLL counter in Python: exact count = {tool_output}. {canonical_ans}"
-            elif tool_output and prob.domain == "arithmetic_audit":
-                repaired_raw = f"Verified via Python calculation ({tool_output}): {canonical_ans}"
+                repaired_raw = canonical_ans
+                if tool_output and prob.domain == "eth_combinatorial_counting":
+                    repaired_raw = f"Executed ETH component-cached DPLL counter in Python: exact count = {tool_output}. {canonical_ans}"
+                elif tool_output and prob.domain == "arithmetic_audit":
+                    repaired_raw = f"Verified via Python calculation ({tool_output}): {canonical_ans}"
 
-        c1_att2, _ = self.kit.c1_infer(repaired_raw)
-        # Record real Outcome -> Growth in JEPA OutcomeResidualAdapter (from failed c1_att1 plan to verified c1_att2 state!)
-        _, _ = self.kit.c2_plan_state(prob.question, c1_state=c1_att1, offered_tools=prob.offered_tools)
-        jepa_upd = self.kit.jepa_record_outcome(c1_obs_state=c1_att2, is_baseline=False)
+            c1_cur, _ = self.kit.c1_infer(repaired_raw)
+            _, _ = self.kit.c2_plan_state(prob.question, c1_state=prev_c1_state, offered_tools=prob.offered_tools)
+            jepa_upd = self.kit.jepa_record_outcome(c1_obs_state=c1_cur, is_baseline=False)
 
-        c2_att2, c2_info_2 = self.kit.c2_plan_state(prob.question, c1_state=c1_att2, offered_tools=prob.offered_tools)
-        attempt2_decoded, _ = self.kit.c3_decode(c2_att2)
+            c2_cur, c2_info_last = self.kit.c2_plan_state(prob.question, c1_state=c1_cur, offered_tools=prob.offered_tools)
+            attempt_decoded, _ = self.kit.c3_decode(c2_cur)
 
-        ext_ok2, ext_finding2, _ = prob.verifier_fn(attempt2_decoded)
-        arith_err2 = CC.arithmetic_findings(attempt2_decoded)
-        comp_fb2, _ = self.kit.compiler_check(prob.question, attempt2_decoded)
-        cycle2_passed = bool(ext_ok2 and not arith_err2 and not comp_fb2)
+            ext_ok_k, ext_finding_k, _ = prob.verifier_fn(attempt_decoded)
+            arith_err_k = CC.arithmetic_findings(attempt_decoded)
+            comp_fb_k, _ = self.kit.compiler_check(prob.question, attempt_decoded)
+            final_passed = bool(ext_ok_k and not arith_err_k and not comp_fb_k)
+            if final_passed:
+                self.solved_ids.add(prob.problem_id)
+                lesson_str = CC.lesson_text(prob.question, findings[:2], f"Use {repair_tool} verification before answering.", passed=True)
+                learned_id, _ = self.kit.learn(lesson_str, sid="autonomous-clover", n=len(self.solved_ids), kind="verified")
+                self._record_verified_sample(prob, c1_prompt_s, c1_cur, repair_tool)
+                break
 
-        learned_id = None
-        if cycle2_passed:
-            self.solved_ids.add(prob.problem_id)
-            lesson_str = CC.lesson_text(prob.question, findings[:2], f"Use {repair_tool} verification before answering.", passed=True)
-            learned_id, _ = self.kit.learn(lesson_str, sid="autonomous-clover", n=len(self.solved_ids), kind="verified")
-            self._record_verified_sample(prob, c1_prompt_s, c1_att2, repair_tool)
+            cur_findings = list(arith_err_k)
+            if comp_fb_k:
+                cur_findings.append(f"Compiler: {comp_fb_k}")
+            if ext_finding_k and not ext_ok_k:
+                cur_findings.append(ext_finding_k)
+            prev_c1_state = c1_cur
 
         res_entry = {
             "problem_id": prob.problem_id,
             "domain": prob.domain,
             "title": prob.title,
             "cycle1_passed": cycle1_passed,
-            "final_passed": cycle2_passed,
-            "cycles_used": 2,
-            "top_planned_tool": repair_tool if cycle2_passed else top_tool,
+            "final_passed": final_passed,
+            "cycles_used": cycles_used,
+            "top_planned_tool": repair_tool if final_passed else top_tool,
             "ranked_tools": ranked_tools,
-            "c2_energy_reduction_pct": c2_info_2.get("jepa_energy_reduction_pct", 0.0),
+            "c2_energy_reduction_pct": c2_info_last.get("jepa_energy_reduction_pct", 0.0),
             "cycle1_findings": findings,
             "tool_executed": repair_tool if tool_output else None,
             "tool_output": tool_output[:160],
-            "final_answer": attempt2_decoded[:240],
+            "final_answer": attempt_decoded[:240],
             "learned_entry_id": learned_id,
             "jepa_outcome_update": jepa_upd,
             "ms": round((time.perf_counter() - t0) * 1000.0, 2),

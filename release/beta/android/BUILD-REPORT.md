@@ -3,9 +3,9 @@
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
 **Release Version**: `5.0.0`  
-**Version Code**: `13`  
+**Version Code**: `14`  
 **Package Name**: `ai.clover.studio`  
-**Build Date**: `2026-11-06`  
+**Build Date**: `2026-11-07`  
 **Build Environment**: `k3` (`/opt/clover-k3/studio-android`), OpenJDK `17.0.20`, Gradle `8.9`, Android Gradle Plugin `8.5.2`, Chaquopy `17.2.0` (CPython `3.12`), Android SDK `36` (`minSdk 26`, `targetSdk 36`, `compileSdk 36`), Android NDK `llvm-strip`.
 
 ---
@@ -14,8 +14,8 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 13`, `targetSdk 36`) | `80,960,868` bytes (`77.21 MB`) | `97d0218904c0d0f7670242f815d1d8f70884057afdc17d6d290901e565eb7816` |
-| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 13`, `targetSdk 36`) | `82,037,909` bytes (`78.24 MB`) | `4841bab6062473b1b48432e96750fee4dddeb965050381a0be642473cad23c03` |
+| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 14`, `targetSdk 36`) | `80,970,832` bytes (`77.22 MB`) | `ca7c82c57f1e42196583b4b1150d78e23a6bb93f4bae6453910123427549bbfe` |
+| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 14`, `targetSdk 36`) | `82,047,517` bytes (`78.25 MB`) | `df6b1e08d5ad62047b7d34ce42bdd78528a3eefcba725074d263fe1f0f4e6d2f` |
 
 ---
 
@@ -38,7 +38,7 @@
 ## 3. Package & Manifest Audit (`build.gradle`)
 
 ```text
-package: name='ai.clover.studio' versionCode='13' versionName='5.0.0'
+package: name='ai.clover.studio' versionCode='14' versionName='5.0.0'
 sdkVersion:'26'
 targetSdkVersion:'36'
 compileSdkVersion:'36'
@@ -50,9 +50,10 @@ launchable-activity: name='ai.clover.studio.MainActivity'
 
 ## 4. Functional Smoke Test, Live Activity SSE & Collective Learning Verification
 
-1. **Collective Problem-Solving Learning (`test_collective.py`)**: **`35/35` checks passed** (RFC 8032 Ed25519 public-key verification, unauthenticated-publish refusal, forged-key rejection, PII stripping, Sybil deduplication, Byzantine poison rejection, `Personal > Collective > General` priority).
-2. **Google OIDC Identity & E2E Collective Sync (`test_google_identity_collective.py`)**: **`32/32` checks passed** (RS256 JWKS verification, OAuth PKCE, Android OIDC token flow, two-installation HTTP E2E synchronization, expiry/revocation rejection, and consent withdrawal).
-3. **Live Activity SSE Timeline (`test_live_activity_sse.py`)**: **`18/18` checks passed** (monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
-4. **Google Play Console Links**:
+1. **Multi-Cycle AGENTS.md Clover Cycle Verification (`test_clover_cycles.py`)**: **`ALL CLOVER CYCLE TESTS PASSED`** (6 Outcome verification checks, 3-cycle `run_turn` auto-repair + `LRN-*` Growth in `LEARNINGS.md`, and 3-cycle `AutonomousCloverEngine`).
+2. **Collective Problem-Solving Learning (`test_collective.py`)**: **`35/35` checks passed** (RFC 8032 Ed25519 public-key verification, unauthenticated-publish refusal, forged-key rejection, PII stripping, Sybil deduplication, Byzantine poison rejection, `Personal > Collective > General` priority).
+3. **Google OIDC Identity & E2E Collective Sync (`test_google_identity_collective.py`)**: **`32/32` checks passed** (RS256 JWKS verification, OAuth PKCE, Android OIDC token flow, two-installation HTTP E2E synchronization, expiry/revocation rejection, and consent withdrawal).
+4. **Live Activity SSE Timeline (`test_live_activity_sse.py`)**: **`18/18` checks passed** (monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
+5. **Google Play Console Links**:
    - Instant Test (Internal App Sharing): `https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs`
    - Closed Testing Opt-In: `https://play.google.com/apps/testing/ai.clover.studio`

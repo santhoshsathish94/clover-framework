@@ -3694,15 +3694,22 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         scrollDown();
       } else if (ev.type === 'cycle') {
         var cycText = ev.stage === 'check' ? 'checking the earlier answer'
+          : ev.stage === 'verified' ? ('Outcome verified in ' + (ev.cycles_used || 1) + ((ev.cycles_used || 1) === 1 ? ' Clover cycle' : ' Clover cycles'))
           : ev.stage === 'search' ? 'searching the web and reading the best pages'
           : ev.stage === 'python' ? 'writing a Python program to calculate it'
           : ev.stage === 'second' ? 'solving it again on its own (1 of 2)' : ev.stage === 'third' ? 'solving it again another way (2 of 2)'
           : ev.stage === 'rewrite' ? (ev.how === 'recheck' ? 'checking each step of the answer again'
             : ev.how === 'another' ? 'writing a different version' : 'writing a new answer from what you said')
-          : 'correcting: ' + String((ev.findings || [''])[0]).slice(0, 90);
-        upsertStep('cycle_' + ev.stage, { icon: 'refresh', state: 'run', name: 'Verification cycle', detail: cap(cycText), badge: 'Checking\u2026' });
+          : 'Cycle ' + (ev.cycle || 2) + ' · returning to Context & fixing: ' + String((ev.findings || [''])[0]).slice(0, 90);
+        upsertStep('cycle_' + ev.stage + (ev.cycle ? '_' + ev.cycle : ''), {
+          icon: 'refresh',
+          state: ev.stage === 'verified' ? 'ok' : 'run',
+          name: ev.cycle ? ('Clover Cycle ' + ev.cycle) : 'Verification cycle',
+          detail: cap(cycText),
+          badge: ev.stage === 'verified' ? '\u2713 Verified' : 'Cycle ' + (ev.cycle || 2) + '\u2026'
+        });
         Object.keys(stepMap).forEach(function (k) {
-          if (k.indexOf('cycle_') === 0 && k !== 'cycle_' + ev.stage && stepMap[k].data.state === 'run') {
+          if (k.indexOf('cycle_') === 0 && k !== 'cycle_' + ev.stage + (ev.cycle ? '_' + ev.cycle : '') && stepMap[k].data.state === 'run') {
             stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
           }
         });
@@ -3820,6 +3827,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           rewritten: 'Answered again', unconfirmed: 'Answered again · not confirmed', redone: 'Answered again with tools'
         }[l.action] || 'Answered again');
         (l.tools || []).forEach(function (t) { out.push(t === 'a web search' ? 'searched the web' : t === 'a Python calculation' ? 'calculated in Python' : t); });
+      }
+      else if (l.layer === 'cycle') {
+        if (l.action === 'corrected' || l.action === 'compiler_repaired' || (l.cycles_used || 1) > 1) {
+          out.push('Clover Cycle · repaired in ' + (l.cycles_used || 2) + ' cycles');
+        } else if (l.action === 'unconfirmed') {
+          out.push('Clover Cycle · ' + (l.cycles_used || 3) + ' cycles');
+        }
       }
     });
     if (ev.growth && ev.growth.length) out.push('growth · ' + ev.growth.length + (ev.growth.length === 1 ? ' update' : ' updates'));

@@ -30,7 +30,10 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageOps
+try:
+    from PIL import Image, ImageDraw, ImageOps
+except ImportError:  # pragma: no cover
+    Image = ImageDraw = ImageOps = None  # type: ignore[assignment]
 
 NAMED_COLORS = (
     ("black", (18, 18, 18)),
