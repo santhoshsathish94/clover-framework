@@ -102,7 +102,7 @@ if paths.ANDROID or paths.WEB:
         if paths.WEB else ("git.inspect", "media.info", "media.frame")
     )
     RUNTIME = semantics.Runtime(tools={k: v for k, v in RUNTIME.tools.items()
-                                       if k not in _skip and not k.startswith(("vscode.", "github."))},
+                                       if k not in _skip and (k == "vscode.open" or not k.startswith(("vscode.", "github.")))},
                                 device=paths.DEVICE_WORD, risky=local_terminal.risky)
 CONCEPT, EXPLICIT, EDIT, CREATIVE = semantics.CONCEPT, semantics.EXPLICIT, semantics.EDIT, semantics.CREATIVE
 

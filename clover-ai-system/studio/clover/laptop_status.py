@@ -63,7 +63,27 @@ def memory():
 
 def report(cancel=None):
     if os.name != "nt":
-        return "laptop_status works on Windows only."
+        lines = []
+        try:
+            u = shutil.disk_usage("/")
+            lines.append(f"Storage (/): {_gb(u.free)} free of {_gb(u.total)}")
+        except OSError:
+            pass
+        try:
+            import hardware
+            tot, free = hardware.android_memory_gb()
+            if tot is not None and free is not None:
+                lines.append(f"Memory (RAM): {tot - free:.1f} GB in use of {tot:.1f} GB, {free:.1f} GB free")
+        except Exception:
+            pass
+        try:
+            import device_actions
+            act = device_actions.read_active_activity()
+            if act.get("open_windows"):
+                lines.append("Running apps / processes: " + "; ".join(act["open_windows"][:6]))
+        except Exception:
+            pass
+        return "\n".join(lines) or "Could not read device status."
     lines = disks()
     for part in (battery, memory):
         try:
@@ -77,4 +97,13 @@ def report(cancel=None):
     apps = [a.strip() for a in out.splitlines() if a.strip()] if code == 0 else []
     if apps:
         lines.append("Apps using the most memory: " + "; ".join(apps))
+    try:
+        import device_actions
+        act = device_actions.read_active_activity()
+        if act.get("foreground_window"):
+            lines.append("Active window: " + act["foreground_window"])
+        if act.get("open_windows"):
+            lines.append("Open windows: " + "; ".join(act["open_windows"][:8]))
+    except Exception:
+        pass
     return "\n".join(lines) or "Could not read this laptop's status."

@@ -6,6 +6,8 @@ import android.app.Activity;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Insets;
 import android.media.AudioFormat;
@@ -494,6 +496,117 @@ public class MainActivity extends Activity {
                 } catch (Exception ignored) {
                 }
             });
+        }
+
+        @JavascriptInterface
+        public void openExternal(String url) {
+            if (url == null || url.isEmpty()) {
+                return;
+            }
+            runOnUiThread(() -> {
+                try {
+                    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(i);
+                } catch (Exception ignored) {
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public boolean openApp(String appName, String pkg, String intentAction, String fallbackUrl) {
+            final String name = appName != null ? appName.trim().toLowerCase() : "";
+            runOnUiThread(() -> {
+                try {
+                    PackageManager pm = getPackageManager();
+                    if (pkg != null && !pkg.isEmpty()) {
+                        Intent launch = pm.getLaunchIntentForPackage(pkg);
+                        if (launch != null) {
+                            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(launch);
+                            return;
+                        }
+                    }
+                    if (intentAction != null && !intentAction.isEmpty() && !intentAction.startsWith("app://")) {
+                        Intent actIntent = new Intent(intentAction);
+                        actIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        try {
+                            startActivity(actIntent);
+                            return;
+                        } catch (Exception ignored) {
+                        }
+                    }
+                    String cat = null;
+                    if (name.contains("calc")) cat = Intent.CATEGORY_APP_CALCULATOR;
+                    else if (name.contains("calendar")) cat = Intent.CATEGORY_APP_CALENDAR;
+                    else if (name.contains("map")) cat = Intent.CATEGORY_APP_MAPS;
+                    else if (name.contains("mail") || name.contains("gmail")) cat = Intent.CATEGORY_APP_EMAIL;
+                    else if (name.contains("photo") || name.contains("gallery")) cat = Intent.CATEGORY_APP_GALLERY;
+                    else if (name.contains("file") || name.contains("explorer")) cat = Intent.CATEGORY_APP_FILES;
+                    else if (name.contains("browser") || name.contains("chrome")) cat = Intent.CATEGORY_APP_BROWSER;
+                    else if (name.contains("music") || name.contains("spotify")) cat = Intent.CATEGORY_APP_MUSIC;
+                    else if (name.contains("message") || name.contains("sms")) cat = Intent.CATEGORY_APP_MESSAGING;
+                    if (cat != null) {
+                        Intent catIntent = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, cat);
+                        catIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        try {
+                            startActivity(catIntent);
+                            return;
+                        } catch (Exception ignored) {
+                        }
+                    }
+                    if ("settings".equals(name)) {
+                        Intent setIntent = new Intent("android.settings.SETTINGS");
+                        setIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(setIntent);
+                        return;
+                    }
+                    if (fallbackUrl != null && !fallbackUrl.isEmpty()) {
+                        Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fallbackUrl));
+                        webIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(webIntent);
+                    }
+                } catch (Exception ignored) {
+                }
+            });
+            return true;
+        }
+
+        @JavascriptInterface
+        public String captureScreen() {
+            if (root == null) {
+                return "ERROR:NO_VIEW";
+            }
+            final String[] resultHolder = new String[]{""};
+            final Object latch = new Object();
+            runOnUiThread(() -> {
+                try {
+                    int w = Math.max(1, root.getWidth());
+                    int h = Math.max(1, root.getHeight());
+                    Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+                    Canvas canvas = new Canvas(bmp);
+                    root.draw(canvas);
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    bmp.compress(Bitmap.CompressFormat.PNG, 92, bos);
+                    bmp.recycle();
+                    resultHolder[0] = Base64.encodeToString(bos.toByteArray(), Base64.NO_WRAP);
+                } catch (Throwable e) {
+                    resultHolder[0] = "ERROR:" + e.getMessage();
+                } finally {
+                    synchronized (latch) {
+                        latch.notifyAll();
+                    }
+                }
+            });
+            synchronized (latch) {
+                try {
+                    if (resultHolder[0].isEmpty()) {
+                        latch.wait(3000);
+                    }
+                } catch (InterruptedException ignored) {
+                }
+            }
+            return resultHolder[0];
         }
     }
 }

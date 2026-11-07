@@ -556,10 +556,27 @@ class OmniNative(N.LFM3Native):
                             layer_log.append(info_img)
                             emit(dict(info_img, type="layer"))
                 if snap_blocks:
+                    act_hdr = ""
+                    try:
+                        import device_actions
+                        if device_actions.asks_for_screen_or_activity(query) or any(m.get("screen_capture") for m in media or () if isinstance(m, dict)):
+                            act = device_actions.read_active_activity()
+                            parts_a = []
+                            if act.get("foreground_window"):
+                                parts_a.append(f"- Active Foreground Window: {act['foreground_window']}")
+                            if act.get("open_windows"):
+                                parts_a.append("- Open Application Windows: " + "; ".join(act["open_windows"][:10]))
+                            if act.get("clipboard_preview"):
+                                parts_a.append(f"- Clipboard Text Preview: {act['clipboard_preview'][:400]}")
+                            if parts_a:
+                                act_hdr = "Live Device Activity Context:\n" + "\n".join(parts_a) + "\n\n"
+                    except Exception:
+                        pass
                     recall.append({
                         "role": "system",
                         "content": (
-                            "S3 Playwright-Style Visual & UI Inspection of attached image(s) "
+                            act_hdr
+                            + "S3 Playwright-Style Visual & UI Inspection of attached image(s) "
                             "(use these exact OCR texts, [e1..eN] bounding boxes, dimensions, and hex colors together with what you see in the image):\n"
                             + "\n\n".join(snap_blocks)
                         ),
@@ -631,6 +648,13 @@ class OmniNative(N.LFM3Native):
                                 "name": "remember",
                                 "arguments": {"text": note[0].upper() + note[1:] + ("" if note.endswith(".") else ".")},
                             }
+                    elif "vscode_open" in only_tools and "vscode_open" in by_name and not semantics.VSCODE.search(query or ""):
+                        import device_actions
+                        m_app = device_actions.OPEN_APP_ASK.match(query or "")
+                        if m_app:
+                            tgt = m_app.group(1).strip()
+                            if device_actions.is_standalone_app_target(tgt):
+                                s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "vscode_open", "arguments": {"target": tgt}}
                     if s3_pre_call is not None:
                         emit({"type": "round", "round": 1})
                         emit({"type": "plan", "round": 1, "stage": "planning", "tools": [s3_pre_call["name"]]})

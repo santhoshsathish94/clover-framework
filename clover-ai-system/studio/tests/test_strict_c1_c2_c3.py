@@ -262,7 +262,34 @@ check(
     "if ($('mic')) $('mic').hidden = true;" in app_html
     and "HOLD_MS = 450" in app_html
     and 'id="img-inspector"' in app_html
-    and 'id="acct-gh-token"' in app_html,
+    and 'id="acct-gh-token"' in app_html
+    and 'id="screen-btn"' in app_html
+    and "md-link" in app_html
+    and "md-app-btn" in app_html
+    and "md-img" in app_html,
+)
+
+# 5. Verify device_actions (app launching, screen capture, active window & activity reading)
+import device_actions
+
+check(
+    "device_actions detects screen capture and activity requests",
+    device_actions.asks_for_screen_or_activity("Take a screenshot and help me with my activity")
+    and device_actions.asks_for_screen_or_activity("Read what is on my screen right now")
+    and not device_actions.asks_for_screen_or_activity("What is the capital of France?"),
+)
+check(
+    "semantics routes 'Open Calculator' and 'Open Google Chrome' to vscode_open",
+    "vscode_open" in omni_native.N.asked_tools("Open Calculator")
+    and "vscode_open" in omni_native.N.asked_tools("Open Google Chrome"),
+)
+scr_rep = device_actions.capture_screenshot(base_tmp)
+check(
+    "device_actions.capture_screenshot captures PNG, inspects UI elements, and reads active windows",
+    bool(scr_rep.get("file"))
+    and (base_tmp / "media" / scr_rep["file"]).is_file()
+    and scr_rep.get("width", 0) > 0
+    and isinstance(scr_rep.get("activity"), dict),
 )
 
 print("ALL STRICT C1/C2/C3 AND S1/S2/S3 CHECKS PASSED")

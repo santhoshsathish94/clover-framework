@@ -119,7 +119,10 @@ ASKS = (
      r"^\s*(?:(?:please|can\s+you|could\s+you|would\s+you)\s+)?(?:clone|install)\b|"
      r"\b(?:please|can\s+you|could\s+you|would\s+you)\s+(?:clone|install)\b|"
      r"\bgithub\.com/[\w.-]+/[\w.-]+|"
-     r"\bopen\b[^.?!\n]{0,60}\b(?:folder|repo|repository|project|page|website|site|url|link|video|image|preview)\b"),
+     r"\b(?:open|launch)\b[^.?!\n]{0,60}\b(?:folder|repo|repository|project|page|website|site|url|link|video|image|preview|"
+     r"app|application|program|browser|calculator|calc|notepad|paint|snipping\s+tool|settings|explorer|file\s+explorer|"
+     r"task\s+manager|chrome|edge|firefox|brave|spotify|discord|slack|teams|whatsapp|telegram|youtube|gmail|maps|"
+     r"calendar|clock|camera|gallery|photos|vlc|zoom|word|excel|powerpoint|outlook|play\s+store)\b"),
     (("github.setup", "github.sync"),
      r"^\s*(?:(?:please|can\s+you|could\s+you|would\s+you)\s+)?(?:sync|push|back\s*up|upload)\b[^.?!\n]{0,40}"
      r"\b(?:github|repo|repository|records|memory)\b|"

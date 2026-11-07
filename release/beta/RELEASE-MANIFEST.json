@@ -46,14 +46,14 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 73944467,
-        "sha256": "258ba0d8f5c8269a40513c91ff5d99759650f82f4cace45f11ef9707fff0e25c"
+        "size_bytes": 73952858,
+        "sha256": "c83d7b48a21749fb0ec4da0587bb1b5582f842d8bc95dd7d75a4721b456999d3"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "type": "apk",
-        "size_bytes": 75023606,
-        "sha256": "060d808f48f29be0cdb03b58a4a2c3267d52045fe0a4a5dd79e9ba669e63fb97"
+        "size_bytes": 75031985,
+        "sha256": "00b1079f889f2ec0f045e837ff4a6c0a7bc2e7175fe4ad485a98e9bfaaade679"
       }
     ],
     "verification": {
@@ -83,26 +83,26 @@
       {
         "file": "release/beta/windows/clover-ai-studio-beta.msixupload",
         "type": "msixupload",
-        "size_bytes": 3832040,
-        "sha256": "e4667807f8a82f406f23bbb7b35b86e4ddbc553ab3755249c2c925925ac0bf1b"
+        "size_bytes": 3845866,
+        "sha256": "f95353fa473b3f3d45c4b3cc43f162858213aa0ae455618cbafc634bb2344864"
       },
       {
         "file": "release/beta/windows/SanthoshNarayanan.CloverAIStudio_5.0.0.0_x64.msix",
         "type": "msix",
-        "size_bytes": 3880531,
-        "sha256": "1e27b6a8c601c2dee14e6d1cb051e3777b98a7a2d1cdf581b82de979e0aab954"
+        "size_bytes": 3894590,
+        "sha256": "cc4a2cd833b99c11d05af1e81bc997d6454a11f64a4c83cc4a21d74030fe1c02"
       },
       {
         "file": "release/beta/windows/clover-ai-studio-beta.msix",
         "type": "msix",
-        "size_bytes": 3880531,
-        "sha256": "1e27b6a8c601c2dee14e6d1cb051e3777b98a7a2d1cdf581b82de979e0aab954"
+        "size_bytes": 3894590,
+        "sha256": "cc4a2cd833b99c11d05af1e81bc997d6454a11f64a4c83cc4a21d74030fe1c02"
       },
       {
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "type": "exe",
-        "size_bytes": 2022872,
-        "sha256": "5f73abbb5ae41d3540db0daf87909b01e8e2158e8c9217ecef06b40932e21d5c"
+        "size_bytes": 2029528,
+        "sha256": "36e0544c6ec00653c6c0705d7425fbd53f6b4aa6b9d92573a5285d3c663642fa"
       }
     ],
     "verification": {
