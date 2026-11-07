@@ -433,9 +433,19 @@ class LayerKit:
     @staticmethod
     def _fallback_h2048(text: str):
         import numpy as np
-        seed = int.from_bytes(hashlib.sha256(str(text or "").encode("utf-8")).digest()[:8], "little")
-        rng = np.random.default_rng(seed)
-        return rng.standard_normal((1, 4, 2048)).astype(np.float32) * np.float32(0.25)
+        vec = np.zeros((4, 2048), dtype=np.float32)
+        words = re.findall(r"[a-z0-9_]+", str(text or "").lower())
+        if not words:
+            words = ["empty"]
+        for i, w in enumerate(words[:128]):
+            h = hashlib.sha256(w.encode("utf-8")).digest()
+            row = i % 4
+            for b_i in range(0, 24, 3):
+                idx = ((h[b_i] << 8) | h[b_i + 1]) % 2048
+                sgn = 1.0 if (h[b_i + 2] & 1) == 0 else -1.0
+                vec[row, idx] += np.float32(sgn)
+        norms = np.linalg.norm(vec, axis=-1, keepdims=True) + np.float32(1e-6)
+        return (vec / norms * np.float32(0.5))[None, :, :]
 
     def c2_plan_state(self, q, c1_state=None, offered_tools=None):
         """Strictly C2: run HybridAgent continuous `<latent>` planning (`plan-trunk-0`) + selectable JEPA (`eb_jepa`/`clover_rpre`)

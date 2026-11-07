@@ -305,6 +305,17 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
   display: inline-flex; align-items: center; justify-content: center; transition: background-color .15s, color .15s; }
 .cbtn:hover { background: var(--fill); color: var(--ink); }
 .cbtn .ic { width: 22px; height: 22px; }
+.senses-pop { position: absolute; left: .4rem; bottom: calc(100% + .5rem); width: min(310px, calc(100vw - 2rem)); background: var(--surface);
+  border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow-lg); padding: .38rem; z-index: 35; display: flex; flex-direction: column; gap: .15rem; }
+.senses-pop[hidden] { display: none !important; }
+.senses-hd { font-size: .72rem; font-weight: 680; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: .35rem .6rem .2rem; }
+.senses-item { border: 0; background: none; color: var(--ink); border-radius: 11px; padding: .5rem .65rem; text-align: left; display: flex; align-items: center; gap: .6rem; cursor: pointer; transition: background-color .14s; }
+.senses-item:hover { background: var(--fill); }
+.senses-item .ic { width: 18px; height: 18px; color: var(--accent); flex: none; }
+.senses-item__t { display: flex; flex-direction: column; min-width: 0; }
+.senses-item__t b { font-size: .85rem; font-weight: 600; color: var(--ink); }
+.senses-item__t small { font-size: .74rem; color: var(--muted); line-height: 1.3; }
+.dbg-pre { max-height: 280px; overflow: auto; font: .76rem/1.45 var(--mono); background: var(--surface); padding: .65rem; border-radius: 10px; border: 1px solid var(--line); white-space: pre-wrap; word-break: break-word; margin: .35rem 0; }
 .mic.rec { background: var(--accent-soft); color: var(--accent-2); animation: ring 1.3s ease-in-out infinite; }
 @keyframes ring { 50% { box-shadow: 0 0 0 5px rgba(23, 107, 44, .16); } }
 .send { width: 38px; height: 38px; flex: none; border-radius: 50%; border: 0; background: var(--accent); color: #fff; padding: 0; touch-action: none; user-select: none; -webkit-user-select: none;
@@ -593,8 +604,18 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="attachments" id="attachments" hidden></div>
       <div class="composer" id="composer">
         <input type="file" id="file-input" multiple hidden>
-        <button type="button" class="cbtn" id="attach" title="Add files, photos, audio or video" aria-label="Add files"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
-        <button type="button" class="cbtn" id="screen-btn" title="Capture screen or active window to inspect &amp; ask Clover" aria-label="Capture screen"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></button>
+        <input type="file" id="sense-camera-input" accept="image/*" capture="environment" hidden>
+        <input type="file" id="sense-video-input" accept="video/*" capture="environment" hidden>
+        <input type="file" id="sense-audio-input" accept="audio/*" capture hidden>
+        <div class="senses-pop" id="senses-menu" hidden role="menu" aria-label="Add files or connect system senses">
+          <div class="senses-hd">Files &amp; System Senses (S3)</div>
+          <button type="button" class="senses-item" data-sense="files"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span class="senses-item__t"><b>Add files, documents or media</b><small>Attach Excel, CSV, PDF, Word, code, photos, audio or video</small></span></button>
+          <button type="button" class="senses-item" data-sense="screenshot"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span class="senses-item__t"><b>System Screenshot app</b><small>Use OS Screenshot / Snipping Tool &amp; inspect with I-JEPA</small></span></button>
+          <button type="button" class="senses-item" data-sense="screen_record"><svg class="ic" aria-hidden="true"><use href="#i-video"/></svg><span class="senses-item__t"><b>System Screen Recorder / Video</b><small>Use OS Screen Recorder or Video Capture for visual analysis</small></span></button>
+          <button type="button" class="senses-item" data-sense="camera"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span class="senses-item__t"><b>System Camera app</b><small>Capture a live photo with OS Camera for I-JEPA inspection</small></span></button>
+          <button type="button" class="senses-item" data-sense="microphone"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span class="senses-item__t"><b>System Microphone / Voice Recorder</b><small>Capture audio via OS Mic / Recorder for Audio-JEPA analysis</small></span></button>
+        </div>
+        <button type="button" class="cbtn" id="attach" title="Add files or use System Senses (Screenshot, Screen Recorder, Camera, Microphone)" aria-label="Add files or system senses" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
         <textarea id="prompt" rows="1" placeholder="Message Clover" aria-label="Message"></textarea>
         <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
         <button type="button" class="send" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
@@ -687,6 +708,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="group">
         <button type="button" class="row t" data-go="learning"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="row__t">Learning &amp; Growth</span><span class="row__v" id="v-learning">Personal on</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="storage"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Storage</span><span class="row__v" id="v-storage">This laptop</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="debug"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">Debug logs &amp; Senses</span><span class="row__v" id="v-debug">Live</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="advanced"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></span><span class="row__t">Advanced</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
       <p class="gfoot center">Clover runs on this laptop with the setup that measured best. Nothing leaves it unless you allow it.</p>
@@ -733,6 +755,16 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="group pad" id="lg-submitted-list"></div>
       <div class="glabel">Active Shared-Core Rules</div>
       <div class="group pad" id="lg-active-rules"></div>
+      <div class="glabel">Autonomous Clover Cycle &amp; Self-Training (JEPA / RPRE)</div>
+      <div class="group pad">
+        <p class="fine" style="margin-top:0">Clover discovers high-surprise problems via JEPA Epistemic Surprise, repairs Cycle 1 failures autonomously in Cycle 2, and self-trains its local <code>idm</code> and <code>OutcomeResidualAdapter</code> only on externally verified outcomes.</p>
+        <div class="kv" id="lg-auto-kv" style="margin-top:.5rem"></div>
+        <div class="btns" style="margin-top:.6rem">
+          <button type="button" class="btn pri sm" id="lg-auto-run">Run Autonomous Cycle &amp; Self-Train</button>
+          <button type="button" class="btn sm" data-go="debug">Open Debug Logs</button>
+        </div>
+        <pre class="dbg-pre" id="lg-auto-out" hidden></pre>
+      </div>
     </section>
 
     <section class="page" data-page="account" hidden>
@@ -771,6 +803,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="group">
         <button type="button" class="row t" data-go="perms"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></span><span class="row__t">Permissions</span><span class="row__v" id="v-perms"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="tools"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg></span><span class="row__t">Tools and search</span><span class="row__v" id="v-tools"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="debug"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">Debug logs &amp; System Senses</span><span class="row__v">Live</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
       <div class="group laptop-only">
         <button type="button" class="row t" data-go="workspaces"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Workspaces</span><span class="row__v" id="v-ws">None</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
@@ -780,12 +813,61 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
     <section class="page" data-page="layers" hidden>
       <p class="lead">Clover is three core stages, inference, plan and decode, with three supporting layers that serve them. What is on is the setup that measured best on Clover's tasks.</p>
+      <div class="glabel">Predictive World Model (JEPA / RPRE)</div>
+      <div class="group pad">
+        <div class="seg full" id="s-jepa" style="flex-wrap:wrap">
+          <button type="button" data-v="auto">Auto</button>
+          <button type="button" data-v="clover_rpre">Clover RPRE</button>
+          <button type="button" data-v="ijepa">I-JEPA</button>
+          <button type="button" data-v="audio_jepa">Audio-JEPA</button>
+          <button type="button" data-v="eb_jepa">EB-JEPA</button>
+          <button type="button" data-v="mjepa">MJEPA</button>
+          <button type="button" data-v="none">Off</button>
+        </div>
+        <p class="fine" id="jepa-d">Selects the Joint-Embedding Predictive Architecture across S3 Visual (<code>I-JEPA</code>), S3 Audio (<code>Audio-JEPA</code>), S2 Multimodal Recall (<code>MJEPA</code>), C2 Latent Planning with ETH Chain Contraction (<code>EB-JEPA</code> / <code>RPRE</code>), and Closed-Loop Outcome Growth.</p>
+        <div class="kv" id="jepa-kv" style="margin-top:.55rem"></div>
+      </div>
       <div class="glabel">Core</div>
       <div class="group" id="layers-core"></div>
       <div class="glabel">Supporting</div>
       <div class="group" id="layers-support"></div>
       <div class="glabel">Semantics</div>
       <div class="group" id="layers-semantics"></div>
+    </section>
+
+    <section class="page" data-page="debug" hidden>
+      <p class="lead">Live structured debug logs and OS System Senses (`S3` Screenshot, Screen Recorder, Camera, and Microphone). Clover connects to your system apps as sensory inputs rather than capturing its own window.</p>
+      <div class="glabel">System Senses (OS Apps &rarr; S3 Sensory Analysis)</div>
+      <div class="group pad">
+        <div class="btns" style="margin-top:0">
+          <button type="button" class="btn sm pri" data-test-sense="screenshot">System Screenshot</button>
+          <button type="button" class="btn sm" data-test-sense="screen_record">System Screen Recorder</button>
+          <button type="button" class="btn sm" data-test-sense="camera">System Camera</button>
+          <button type="button" class="btn sm" data-test-sense="microphone">System Microphone</button>
+        </div>
+        <p class="fine">Invokes the OS system app (Snipping Tool / Smart Capture, Screen Recorder, Camera, Voice Recorder / Mic) and inspects the captured media with <code>I-JEPA</code>, <code>Audio-JEPA</code>, and <code>LFM3-Omni-2B</code>.</p>
+      </div>
+      <div class="glabel">Structured Debug Logs</div>
+      <div class="group pad">
+        <div class="seg full" id="dbg-cat" style="flex-wrap:wrap;margin-bottom:.5rem">
+          <button type="button" class="on" data-v="all">All</button>
+          <button type="button" data-v="turn">Turns</button>
+          <button type="button" data-v="senses">Senses</button>
+          <button type="button" data-v="jepa">JEPA</button>
+          <button type="button" data-v="collective">Collective</button>
+          <button type="button" data-v="settings">Settings</button>
+        </div>
+        <div class="btns" style="margin-top:0;margin-bottom:.45rem">
+          <button type="button" class="btn sm pri" id="dbg-refresh">Refresh</button>
+          <button type="button" class="btn sm" id="dbg-copy">Copy logs</button>
+          <button type="button" class="btn sm danger" id="dbg-clear">Clear logs</button>
+        </div>
+        <pre class="dbg-pre" id="dbg-entries">Loading debug logs…</pre>
+      </div>
+      <div class="glabel">Server &amp; Engine Log Files</div>
+      <div class="group pad">
+        <pre class="dbg-pre" id="dbg-files">No log files loaded yet.</pre>
+      </div>
     </section>
 
     <section class="page" data-page="personal" hidden>
@@ -1020,11 +1102,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     ['pencil', 'Write an email', 'Write a short, friendly email inviting my team to lunch on Friday.']
   ];
   if (PHONE || WEB) SUGGEST[2] = ['clock', 'Plan my day', 'Help me plan a calm, productive day with three priorities.'];
-  var PAGES = { home: 'Settings', learning: 'Learning & Growth', account: 'GitHub account', storage: 'Storage', advanced: 'Advanced', layers: 'Clover layers',
-    model: 'Model and voice', perms: 'Permissions', tools: 'Tools and search', workspaces: 'Workspaces', vscode: 'VS Code',
-    personal: 'What Clover learned', collective: 'Collective learning' };
-  var PARENT = { learning: 'home', account: 'home', storage: 'home', advanced: 'home', layers: 'advanced', model: 'advanced', perms: 'advanced',
-    tools: 'advanced', workspaces: 'advanced', vscode: 'advanced', personal: 'learning', collective: 'layers' };
+  var PAGES = { home: 'Settings', learning: 'Learning & Growth', account: 'GitHub account', storage: 'Storage', debug: 'Debug logs & Senses',
+    advanced: 'Advanced', layers: 'Clover layers', model: 'Model and voice', perms: 'Permissions', tools: 'Tools and search',
+    workspaces: 'Workspaces', vscode: 'VS Code', personal: 'What Clover learned', collective: 'Collective learning' };
+  var PARENT = { learning: 'home', account: 'home', storage: 'home', debug: 'home', advanced: 'home', layers: 'advanced',
+    model: 'advanced', perms: 'advanced', tools: 'advanced', workspaces: 'advanced', vscode: 'advanced',
+    personal: 'learning', collective: 'layers' };
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
@@ -1794,6 +1877,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('s-think').addEventListener('change', function () { state.settings.thinking = this.checked; saveSettings(); });
   $('s-autospeak').addEventListener('change', function () { state.settings.autospeak = this.checked; saveSettings(); });
   segClick('s-tools', function (v) { saveServer({ tools: v }); });
+  if ($('s-jepa')) segClick('s-jepa', function (v) { saveServer({ jepa_arch: v }); });
   $('s-kv').addEventListener('change', function () { saveServer({ layers: { kv_slots: this.checked } }); });
   segClick('s-engine', function (v) {
     if (state.server && state.server.settings.engine === v) return;
@@ -2001,9 +2085,20 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     setNote('engine-note', sv.warning || (sv.gpu_available === false && !WEB ? 'GPU engine not installed: ' + sv.gpu_reason : '') ||
       (st.engine !== 'fused' && !sv.fused_available ? '' : '') || (running && st.engine && running !== st.engine ? 'Switching engine…' : ''));
     pick('s-tools', st.tools || 'ask');
+    if ($('s-jepa')) pick('s-jepa', st.jepa_arch || 'auto');
     $('s-kv').checked = !!(st.layers && st.layers.kv_slots);
     renderModelPicker();
     toolsValue(); renderLayers();
+    if ($('jepa-kv') && sv.jepa_status) {
+      var js = sv.jepa_status, fr = js.flow_routing || {};
+      var jRows = [
+        ['Configured architecture', js.configured_arch || st.jepa_arch || 'auto'],
+        ['Weights source', String(js.weights_source || 'clvrtrk1').split(/[/\\]/).pop()],
+        ['Outcome adapter updates', String(js.cycle_updates || 0) + ' verified cycles'],
+        ['Flow routing', 'S3 Vis: ' + (fr.visual_s3 || 'ijepa') + ' · S3 Aud: ' + (fr.audio_s3 || 'audio_jepa') + ' · S2: ' + (fr.multimodal_s2 || 'mjepa') + ' · C2: ' + (fr.c2_plan || 'eb_jepa')]
+      ];
+      $('jepa-kv').innerHTML = jRows.map(function (r) { return '<span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b>'; }).join('');
+    }
   }
 
   /* Clover layers: 3 core (C1 inference, C2 HybridAgent plan, C3 Bridges + 11-level NCM decode), 3 supporting
@@ -2429,17 +2524,83 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function loadPage(name) {
     if (name === 'home') { loadVscode(); loadStorage(); loadPersonal(); loadCollective(); }
-    else if (name === 'learning') { loadServerSettings(); loadPersonal(); loadCollective(); }
+    else if (name === 'learning') { loadServerSettings(); loadPersonal(); loadCollective(); loadAutonomous(); }
     else if (name === 'account' || name === 'vscode') loadVscode();
     else if (name === 'storage') loadStorage();
+    else if (name === 'debug') loadDebugLogs();
     else if (name === 'advanced') { loadServerSettings(); loadPerms(); loadSearch(); loadWorkspaces(); loadVscode(); }
-    else if (name === 'layers') { loadServerSettings(); loadHealth(); loadMemoryCount(); loadPersonal(); loadCollective(); }
+    else if (name === 'layers') { loadServerSettings(); loadHealth(); loadMemoryCount(); loadPersonal(); loadCollective(); loadAutonomous(); }
     else if (name === 'personal') loadPersonal();
     else if (name === 'collective') loadCollective();
     else if (name === 'model') { renderEngine(); renderSettings(); loadServerSettings(); loadHealth(); }
     else if (name === 'perms') loadPerms();
     else if (name === 'tools') { loadServerSettings(); loadSearch(); loadInbox(); }
     else if (name === 'workspaces') loadWorkspaces();
+  }
+  var dbgCat = 'all';
+  function loadDebugLogs() {
+    api('GET', '/api/debug/logs?category=' + encodeURIComponent(dbgCat) + '&limit=120').then(function (r) {
+      var entries = r.entries || [];
+      if ($('dbg-entries')) {
+        $('dbg-entries').textContent = entries.length
+          ? entries.map(function (e) {
+              var det = typeof e.detail === 'object' ? JSON.stringify(e.detail) : String(e.detail || '');
+              return '[' + (e.ts || '') + '] [' + (e.category || 'log').toUpperCase() + '] ' + (e.event || '') + (det ? ' — ' + det : '');
+            }).join('\n')
+          : '(No debug events recorded yet for category "' + dbgCat + '".)';
+      }
+      if ($('dbg-files')) {
+        var tails = r.file_tails || {}, names = Object.keys(tails);
+        $('dbg-files').textContent = names.length
+          ? names.map(function (n) { return '=== ' + n + ' ===\n' + tails[n]; }).join('\n\n')
+          : '(No log files found in <base>/logs/.)';
+      }
+    }).catch(function (e) {
+      if ($('dbg-entries')) $('dbg-entries').textContent = 'Error loading debug logs: ' + e.message;
+    });
+  }
+  if ($('dbg-cat')) segClick('dbg-cat', function (v) { dbgCat = v; loadDebugLogs(); });
+  if ($('dbg-refresh')) $('dbg-refresh').addEventListener('click', loadDebugLogs);
+  if ($('dbg-copy')) $('dbg-copy').addEventListener('click', function () {
+    var txt = (($('dbg-entries') && $('dbg-entries').textContent) || '') + '\n\n' + (($('dbg-files') && $('dbg-files').textContent) || '');
+    copyText(txt, $('dbg-copy'));
+  });
+  if ($('dbg-clear')) $('dbg-clear').addEventListener('click', function () {
+    api('POST', '/api/debug/logs/clear', {}).then(loadDebugLogs).catch(function () {});
+  });
+  function loadAutonomous() {
+    api('GET', '/api/autonomous').then(function (r) {
+      var j = r.jepa || {}, cm = r.collective_jepa_metrics || {};
+      if ($('lg-auto-kv')) {
+        var rows = [
+          ['JEPA architecture', j.configured_arch || 'auto'],
+          ['Verified outcome updates', String(j.cycle_updates || 0)],
+          ['8x RTX 3090 collective round', cm.round ? ('Round ' + cm.round + ' (' + (cm.verified_outcomes_count || 0) + ' verified trajectories)') : 'Sync collective core to load'],
+          ['Collective IDM / Trans MSE', cm.idm_mse_after != null ? (cm.idm_mse_after + ' / ' + cm.trans_mse_after) : '—']
+        ];
+        $('lg-auto-kv').innerHTML = rows.map(function (x) { return '<span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b>'; }).join('');
+      }
+      if (r.last_autonomous_run && $('lg-auto-out')) {
+        $('lg-auto-out').hidden = false;
+        $('lg-auto-out').textContent = JSON.stringify(r.last_autonomous_run, null, 2);
+      }
+    }).catch(function () {});
+  }
+  if ($('lg-auto-run')) {
+    $('lg-auto-run').addEventListener('click', function () {
+      var b = $('lg-auto-run'); b.disabled = true; b.textContent = 'Running Autonomous Cycle…';
+      api('POST', '/api/autonomous/run', {}).then(function (r) {
+        b.disabled = false; b.textContent = 'Run Autonomous Cycle & Self-Train';
+        if ($('lg-auto-out')) {
+          $('lg-auto-out').hidden = false;
+          $('lg-auto-out').textContent = JSON.stringify(r, null, 2);
+        }
+        loadAutonomous(); loadServerSettings();
+      }).catch(function (e) {
+        b.disabled = false; b.textContent = 'Run Autonomous Cycle & Self-Train';
+        setNote('lg-note', e.message);
+      });
+    });
   }
   if ($('lg-google-connect')) {
     $('lg-google-connect').addEventListener('click', function () {
@@ -2600,8 +2761,47 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     return false;
   };
 
-  /* ---------- attachments: text and code; photos, audio and video with LFM3-Omni ---------- */
-  $('attach').addEventListener('click', function () { $('file-input').click(); });
+  /* ---------- attachments & System Senses (S3: Screenshot, Screen Recorder, Camera, Microphone) ---------- */
+  function closeSensesMenu() {
+    if ($('senses-menu')) $('senses-menu').hidden = true;
+    if ($('attach')) $('attach').setAttribute('aria-expanded', 'false');
+  }
+  $('attach').addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    var m = $('senses-menu');
+    if (!m) { $('file-input').click(); return; }
+    var show = m.hidden;
+    m.hidden = !show;
+    $('attach').setAttribute('aria-expanded', String(show));
+  });
+  document.addEventListener('click', function (ev) {
+    if ($('senses-menu') && !$('senses-menu').hidden && !$('senses-menu').contains(ev.target) && ev.target !== $('attach')) {
+      closeSensesMenu();
+    }
+    var ts = ev.target.closest && ev.target.closest('[data-test-sense]');
+    if (ts) {
+      closeSheet();
+      triggerSystemSense(ts.getAttribute('data-test-sense'));
+    }
+  });
+  if ($('senses-menu')) {
+    $('senses-menu').addEventListener('click', function (ev) {
+      var b = ev.target.closest && ev.target.closest('[data-sense]');
+      if (!b) return;
+      var s = b.getAttribute('data-sense');
+      closeSensesMenu();
+      if (s === 'files') { $('file-input').click(); return; }
+      triggerSystemSense(s);
+    });
+  }
+  ['sense-camera-input', 'sense-video-input', 'sense-audio-input'].forEach(function (id) {
+    if ($(id)) {
+      $(id).addEventListener('change', function (ev) {
+        Array.prototype.forEach.call(ev.target.files || [], addFile);
+        ev.target.value = '';
+      });
+    }
+  });
   function openExternalOrApp(href, meta) {
     if (!href) return;
     meta = meta || {};
@@ -2660,26 +2860,26 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       }
     }
   });
-  function captureScreenToAttachment() {
-    if (!state.omni || state.inputs.indexOf('vision') < 0) {
-      alert('Switch the model to LFM3-Omni-2B to capture and inspect screenshots.');
-      return;
-    }
+  function triggerSystemSense(sense) {
+    sense = String(sense || 'screenshot').toLowerCase();
     if (state.media.length >= MAX_MEDIA) {
       alert('Up to ' + MAX_MEDIA + ' attachments per message.');
       return;
     }
-    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.captureScreen === 'function') {
-      var b64 = String(window.CloverAndroidBridge.captureScreen() || '');
-      if (b64 && b64.indexOf('ERROR:') !== 0) {
-        var dUrl = 'data:image/png;base64,' + b64;
-        var item = { kind: 'image', name: 'Screen capture.png', data: b64, thumb: dUrl, screen_capture: true };
-        state.media.push(item); renderAtt(); updateSend();
-        if (!$('prompt').value.trim()) { $('prompt').value = 'Read what is on my screen and help me with it.'; autosize(); updateSend(); }
-        return;
-      }
+    api('POST', '/api/debug/log', { category: 'senses', event: 'ui_trigger_system_sense', detail: { sense: sense, platform: PLATFORM } }).catch(function () {});
+
+    // On Android, delegate to native CloverAndroidBridge.launchSystemSense so Android opens the OS Camera,
+    // Video/Screen Recorder, Voice Recorder, or System Screenshot picker and returns the media to the WebView.
+    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.launchSystemSense === 'function') {
+      var launched = window.CloverAndroidBridge.launchSystemSense(sense);
+      if (launched) return;
     }
-    if (WEB && navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+    // On Phone WebView when native bridge method is not yet present, use HTML5 capture inputs for camera/video/audio
+    if (PHONE && sense === 'camera' && $('sense-camera-input')) { $('sense-camera-input').click(); return; }
+    if (PHONE && sense === 'screen_record' && $('sense-video-input')) { $('sense-video-input').click(); return; }
+    if (PHONE && sense === 'microphone' && $('sense-audio-input')) { $('sense-audio-input').click(); return; }
+
+    if (WEB && sense === 'screenshot' && navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
       navigator.mediaDevices.getDisplayMedia({ video: true }).then(function (stream) {
         var v = document.createElement('video');
         v.srcObject = stream;
@@ -2690,31 +2890,85 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
             stream.getTracks().forEach(function (t) { t.stop(); });
             var sUrl = c.toDataURL('image/png');
-            var item = { kind: 'image', name: 'Screen capture.png', data: sUrl.slice(sUrl.indexOf(',') + 1), thumb: sUrl, screen_capture: true };
+            var item = { kind: 'image', name: 'System screenshot.png', data: sUrl.slice(sUrl.indexOf(',') + 1), thumb: sUrl, screen_capture: true };
             state.media.push(item); renderAtt(); updateSend();
-            if (!$('prompt').value.trim()) { $('prompt').value = 'Read what is on my screen and help me with it.'; autosize(); updateSend(); }
+            if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this screenshot and help me with what is on the screen.'; autosize(); updateSend(); }
           });
         };
       }).catch(function () {});
       return;
     }
-    setStatus('busy', 'Capturing screen…', 'Capturing screen & active window for visual inspection…');
-    api('POST', '/api/screen/capture', {}).then(function (rep) {
+
+    setStatus('busy', 'Connecting to system ' + sense + '…', 'Connecting to OS system ' + sense + ' app & running JEPA sensory analysis…');
+    api('POST', '/api/senses/capture', { sense: sense, launch_system_app: true }).then(function (rep) {
       setStatus('ok', $('status-text').textContent, '');
       pollStatus();
       if (rep && rep.data) {
-        var sUrl = 'data:image/png;base64,' + rep.data;
-        var item = { kind: 'image', name: 'Screen capture (' + rep.width + '\u00d7' + rep.height + ').png', file: rep.file, data: rep.data, thumb: sUrl, screen_capture: true };
-        state.media.push(item); renderAtt(); updateSend();
-        thumb(sUrl).then(function (t) { item.thumb = t; renderAtt(); }).catch(function () {});
-        if (!$('prompt').value.trim()) { $('prompt').value = 'Read what is on my screen and help me with it.'; autosize(); updateSend(); }
+        var kind = rep.kind || (sense === 'microphone' ? 'audio' : sense === 'screen_record' ? 'video' : 'image');
+        if (kind === 'image') {
+          var sUrl = 'data:image/png;base64,' + rep.data;
+          var jv = rep.jepa_visual || {};
+          var label = 'System screenshot (' + (rep.width || '') + '\u00d7' + (rep.height || '') + (jv.scene_kind ? ' · ' + jv.scene_kind : '') + ').png';
+          var item = { kind: 'image', name: label, file: rep.file, data: rep.data, thumb: sUrl, screen_capture: true };
+          state.media.push(item); renderAtt(); updateSend();
+          thumb(sUrl).then(function (t) { item.thumb = t; renderAtt(); }).catch(function () {});
+          if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this screenshot and help me with what is on the screen.'; autosize(); updateSend(); }
+        } else if (kind === 'audio') {
+          var ja = rep.jepa_audio || {};
+          var aLabel = (rep.name || 'System audio') + (ja.acoustic_regime ? ' (' + ja.acoustic_regime + ', ' + (ja.snr_db || 0) + ' dB)' : '');
+          state.media.push({ kind: 'audio', name: aLabel, file: rep.file, data: rep.data });
+          renderAtt(); updateSend();
+          if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this audio recording and tell me what you hear.'; autosize(); updateSend(); }
+        }
+      } else if (rep && rep.message) {
+        setStatus('ok', rep.message, rep.message);
+        setTimeout(pollStatus, 4000);
       }
     }).catch(function (e) {
-      setStatus('err', 'Capture failed', e.message);
-      setTimeout(pollStatus, 3000);
+      setStatus('err', 'Sense capture failed', e.message);
+      setTimeout(pollStatus, 3500);
     });
   }
-  if ($('screen-btn')) $('screen-btn').addEventListener('click', captureScreenToAttachment);
+  window.__cloverOnSystemSenseMedia = function (sense, fileName, mimeType, base64Data) {
+    if (!base64Data) return;
+    api('POST', '/api/senses/capture', { sense: sense, name: fileName || '', data: base64Data, launch_system_app: false }).then(function (rep) {
+      var kind = rep.kind || (/^audio\//i.test(mimeType) ? 'audio' : /^video\//i.test(mimeType) ? 'video' : 'image');
+      if (kind === 'image') {
+        var dUrl = 'data:' + (mimeType || 'image/png') + ';base64,' + (rep.data || base64Data);
+        var jv = rep.jepa_visual || {};
+        var item = {
+          kind: 'image',
+          name: (fileName || 'System image') + (jv.scene_kind ? ' · ' + jv.scene_kind : ''),
+          file: rep.file,
+          data: rep.data || base64Data,
+          thumb: dUrl,
+          screen_capture: sense === 'screenshot'
+        };
+        state.media.push(item); renderAtt(); updateSend();
+        thumb(dUrl).then(function (t) { item.thumb = t; renderAtt(); }).catch(function () {});
+        if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this image and help me with it.'; autosize(); updateSend(); }
+      } else if (kind === 'audio') {
+        var ja = rep.jepa_audio || {};
+        state.media.push({
+          kind: 'audio',
+          name: (fileName || 'System audio') + (ja.acoustic_regime ? ' (' + ja.acoustic_regime + ')' : ''),
+          file: rep.file,
+          data: base64Data
+        });
+        renderAtt(); updateSend();
+        if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this audio recording.'; autosize(); updateSend(); }
+      } else if (kind === 'video') {
+        state.media.push({
+          kind: 'video',
+          name: fileName || 'System screen recording.mp4',
+          file: rep.file,
+          data: base64Data
+        });
+        renderAtt(); updateSend();
+        if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this video / screen recording.'; autosize(); updateSend(); }
+      }
+    }).catch(function () {});
+  };
   function mediaKind(f) { var m = /^(image|video|audio)\//.exec(f.type || ''); return m ? m[1] : null; }
   function addFile(f) {
     var kind = mediaKind(f);
@@ -2864,7 +3118,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     req.then(function (rep) {
       inspState.rep = rep;
       if (spec.item && rep.file) spec.item.file = rep.file;
-      $('insp-meta').textContent = rep.width + '\u00d7' + rep.height + ' px \u00b7 ' + (rep.format || 'PNG') + ' \u00b7 aspect ' + (rep.aspect_ratio || '') + ' \u00b7 ' + (rep.ms || 0) + ' ms';
+      var jv = rep.jepa_visual || {};
+      var jepaTag = jv.scene_kind ? (' \u00b7 JEPA(' + (jv.arch || 'ijepa') + '): ' + jv.scene_kind) : '';
+      $('insp-meta').textContent = rep.width + '\u00d7' + rep.height + ' px \u00b7 ' + (rep.format || 'PNG') + jepaTag + ' \u00b7 ' + (rep.ms || 0) + ' ms';
       var palBox = $('insp-pal'); palBox.innerHTML = '';
       (rep.palette || []).forEach(function (c) {
         var sw = el('button', 'insp-swatch', '<i style="background:' + esc(c.hex) + '"></i><span>' + esc(c.hex) + ' \u00b7 ' + esc(c.name) + ' (' + c.pct + '%)</span>');
@@ -2880,7 +3136,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         var card = el('div', 'insp-el');
         card.setAttribute('data-ref', elItem.ref);
         var top = el('div', 'insp-el__top');
-        var left = el('span', '', '<span class="insp-el__ref">[' + esc(elItem.ref) + ']</span> <span class="insp-el__role">' + esc(elItem.role) + '</span> <span class="insp-el__coords">(' + esc(elItem.zone) + ' \u00b7 ' + bx[0] + ',' + bx[1] + ' ' + bx[2] + '\u00d7' + bx[3] + ')</span>');
+        var salStr = elItem.jepa_salience != null ? (' \u00b7 salience ' + elItem.jepa_salience) : '';
+        var left = el('span', '', '<span class="insp-el__ref">[' + esc(elItem.ref) + ']</span> <span class="insp-el__role">' + esc(elItem.role) + '</span> <span class="insp-el__coords">(' + esc(elItem.zone) + ' \u00b7 ' + bx[0] + ',' + bx[1] + ' ' + bx[2] + '\u00d7' + bx[3] + salStr + ')</span>');
         var askBtn = btn('btn sm', 'Ask Clover');
         askBtn.addEventListener('click', function (ev) {
           ev.stopPropagation();

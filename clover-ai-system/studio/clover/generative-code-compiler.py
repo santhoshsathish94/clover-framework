@@ -808,6 +808,20 @@ class CloverPythonGenerativeCompiler:
                     f"    raise AssertionError(f'''Doctest {expr!r} returned {{_actual_{idx}!r}}, expected {{_expected_{idx}!r}}''')"
                 )
         script = "\n".join(harness_lines)
+        if hasattr(sys, "getandroidapilevel") or not sys.executable or "app_process" in str(sys.executable):
+            g_doc: dict = {"__name__": "__main__"}
+            try:
+                exec(compile(script, "<doctest>", "exec"), g_doc, g_doc)
+                return []
+            except Exception as exc:
+                return [
+                    GCDiagnostic(
+                        code="E_PY_DOCTEST_FAIL",
+                        message=f"{type(exc).__name__}: {exc}",
+                        line=body_start_line,
+                        column=5,
+                    )
+                ]
         try:
             res = subprocess.run(
                 [sys.executable, "-c", script],

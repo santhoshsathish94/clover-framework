@@ -7,7 +7,6 @@ import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Insets;
 import android.media.AudioFormat;
@@ -16,6 +15,7 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -37,6 +37,7 @@ import android.widget.FrameLayout;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -50,12 +51,14 @@ public class MainActivity extends Activity {
     private static final int PICK_FILES = 1;
     private static final int ASK_MIC = 2;
     private static final int ASK_NOTES = 3;
+    private static final int PICK_SENSE = 4;
     private static volatile MainActivity current;
     private static volatile boolean awake;
 
     private FrameLayout root;
     private WebView web;
     private ValueCallback<Uri[]> picked;
+    private String pendingSenseKind = "screenshot";
     private PermissionRequest micRequest;
     private boolean opened;
     private String origin;
@@ -284,6 +287,12 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
+        if (request == PICK_SENSE) {
+            if (result == RESULT_OK && data != null) {
+                handleSystemSenseResult(pendingSenseKind, data);
+            }
+            return;
+        }
         if (request != PICK_FILES || picked == null) {
             return;
         }
@@ -301,6 +310,63 @@ public class MainActivity extends Activity {
         }
         picked.onReceiveValue(uris);
         picked = null;
+    }
+
+    private void handleSystemSenseResult(final String sense, final Intent data) {
+        new Thread(() -> {
+            try {
+                byte[] raw = null;
+                String mime = "image/png";
+                String name = "System_" + sense + ".png";
+                Uri u = data.getData();
+                if (u != null) {
+                    String m = getContentResolver().getType(u);
+                    if (m != null && !m.isEmpty()) {
+                        mime = m;
+                    }
+                    String lastSeg = u.getLastPathSegment();
+                    if (lastSeg != null && !lastSeg.isEmpty()) {
+                        name = lastSeg.replaceAll("[^A-Za-z0-9._-]", "_");
+                    }
+                    try (InputStream is = getContentResolver().openInputStream(u)) {
+                        if (is != null) {
+                            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                            byte[] buf = new byte[16384];
+                            int n;
+                            while ((n = is.read(buf)) > 0) {
+                                if (bos.size() + n > 20 * 1024 * 1024) break;
+                                bos.write(buf, 0, n);
+                            }
+                            raw = bos.toByteArray();
+                        }
+                    }
+                } else if (data.getExtras() != null && data.getExtras().get("data") instanceof Bitmap) {
+                    Bitmap bmp = (Bitmap) data.getExtras().get("data");
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    bmp.compress(Bitmap.CompressFormat.PNG, 92, bos);
+                    raw = bos.toByteArray();
+                    mime = "image/png";
+                    name = "Camera_photo.png";
+                }
+                if (raw != null && raw.length > 0) {
+                    final String b64 = Base64.encodeToString(raw, Base64.NO_WRAP);
+                    final String fName = name;
+                    final String fMime = mime;
+                    runOnUiThread(() -> {
+                        if (web != null) {
+                            String js = "window.__cloverOnSystemSenseMedia && window.__cloverOnSystemSenseMedia("
+                                    + org.json.JSONObject.quote(sense) + ","
+                                    + org.json.JSONObject.quote(fName) + ","
+                                    + org.json.JSONObject.quote(fMime) + ","
+                                    + org.json.JSONObject.quote(b64) + ")";
+                            web.evaluateJavascript(js, null);
+                        }
+                    });
+                }
+            } catch (Throwable e) {
+                Log.w(StudioService.TAG, "handleSystemSenseResult error: " + e.getMessage());
+            }
+        }, "clover-sense-result").start();
     }
 
     @Override
@@ -573,40 +639,38 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
-        public String captureScreen() {
-            if (root == null) {
-                return "ERROR:NO_VIEW";
-            }
-            final String[] resultHolder = new String[]{""};
-            final Object latch = new Object();
+        public boolean launchSystemSense(String sense) {
+            final String s = sense != null ? sense.trim().toLowerCase() : "screenshot";
+            pendingSenseKind = s;
             runOnUiThread(() -> {
                 try {
-                    int w = Math.max(1, root.getWidth());
-                    int h = Math.max(1, root.getHeight());
-                    Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-                    Canvas canvas = new Canvas(bmp);
-                    root.draw(canvas);
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    bmp.compress(Bitmap.CompressFormat.PNG, 92, bos);
-                    bmp.recycle();
-                    resultHolder[0] = Base64.encodeToString(bos.toByteArray(), Base64.NO_WRAP);
-                } catch (Throwable e) {
-                    resultHolder[0] = "ERROR:" + e.getMessage();
-                } finally {
-                    synchronized (latch) {
-                        latch.notifyAll();
+                    if ("camera".equals(s)) {
+                        Intent cam = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        Intent pick = new Intent(Intent.ACTION_GET_CONTENT).addCategory(Intent.CATEGORY_OPENABLE).setType("image/*");
+                        Intent chooser = Intent.createChooser(pick, "Capture photo with System Camera or select image");
+                        chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{cam});
+                        startActivityForResult(chooser, PICK_SENSE);
+                    } else if ("screen_record".equals(s) || "video".equals(s)) {
+                        Intent vid = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+                        Intent pick = new Intent(Intent.ACTION_GET_CONTENT).addCategory(Intent.CATEGORY_OPENABLE).setType("video/*");
+                        Intent chooser = Intent.createChooser(pick, "Record video or select System Screen Recording");
+                        chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{vid});
+                        startActivityForResult(chooser, PICK_SENSE);
+                    } else if ("microphone".equals(s) || "audio".equals(s)) {
+                        Intent rec = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
+                        Intent pick = new Intent(Intent.ACTION_GET_CONTENT).addCategory(Intent.CATEGORY_OPENABLE).setType("audio/*");
+                        Intent chooser = Intent.createChooser(pick, "Record with System Voice Recorder or select audio");
+                        chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{rec});
+                        startActivityForResult(chooser, PICK_SENSE);
+                    } else {
+                        Intent pick = new Intent(Intent.ACTION_GET_CONTENT).addCategory(Intent.CATEGORY_OPENABLE).setType("image/*");
+                        startActivityForResult(Intent.createChooser(pick, "Select System Screenshot"), PICK_SENSE);
                     }
+                } catch (Exception e) {
+                    Log.w(StudioService.TAG, "launchSystemSense error: " + e.getMessage());
                 }
             });
-            synchronized (latch) {
-                try {
-                    if (resultHolder[0].isEmpty()) {
-                        latch.wait(3000);
-                    }
-                } catch (InterruptedException ignored) {
-                }
-            }
-            return resultHolder[0];
+            return true;
         }
     }
 }

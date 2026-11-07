@@ -1534,6 +1534,29 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
         S.memidx.wake()
     m_id = getattr(eng, "model_key", None) or MODEL_ID
     res.update(session_id=sid, model=m_id, mode="lfm3", wall_ms=round((time.perf_counter() - t0) * 1000.0, 1))
+    try:
+        import device_actions
+        c2_l = next((x for x in (res.get("layers") or []) if x.get("layer") == "c2_hybridagent"), {})
+        sem_l = next((x for x in (res.get("layers") or []) if x.get("layer") == "semantics"), {})
+        device_actions.log_debug(
+            "turn",
+            "turn_completed",
+            {
+                "session_id": sid,
+                "model": m_id,
+                "wall_ms": res["wall_ms"],
+                "tools_ran": [tc.get("tool") for tc in (res.get("tool_calls") or []) if tc.get("ran")],
+                "understood": sem_l.get("understood"),
+                "knowledge": sem_l.get("knowledge"),
+                "label": sem_l.get("label"),
+                "jepa_arch": c2_l.get("jepa_arch"),
+                "jepa_energy_reduction_pct": c2_l.get("jepa_energy_reduction_pct"),
+                "planned_tools": c2_l.get("planned_tools"),
+            },
+            base_dir=Path(S.args.base) if S.args else None,
+        )
+    except Exception:
+        pass
     return res
 
 
@@ -2105,13 +2128,16 @@ class Handler(BaseHTTPRequestHandler):
             ok, why = gpu_available(S.args.base)
             o_ok, o_why = omni_available(S.args.base)
             import fused_engine
+            import jepa_engine
             import k3_host_engine
             import omni_c2_c3
             f_need = fused_engine.missing(S.args.base)
             c2c3_need = omni_c2_c3.missing_c2_c3_files(S.args.base)
             cat = model_catalog()
             owner = k3_host_engine.is_owner_device(S.args.base)
-            return self._send(200, {"settings": S.settings.get(), "version": STUDIO_VERSION, "channel": RELEASE_CHANNEL,
+            st_cur = S.settings.get()
+            jepa_desc = jepa_engine.for_base(S.args.base).describe(st_cur.get("jepa_arch", "auto"))
+            return self._send(200, {"settings": st_cur, "version": STUDIO_VERSION, "channel": RELEASE_CHANNEL,
                                     "privacy_policy_url": PRIVACY_URL, "support_url": SUPPORT_URL,
                                     "models": [x["id"] for x in cat], "model_catalog": cat,
                                     "owner": owner,
@@ -2123,7 +2149,34 @@ class Handler(BaseHTTPRequestHandler):
                                     "fused_available": not f_need,
                                     "fused_reason": ("missing " + ", ".join(f_need)) if f_need else "",
                                     "csi_status": S.csi.describe() if S.csi is not None else None,
+                                    "jepa_status": jepa_desc,
                                     "hardware": S.hardware})
+        if path == "/api/debug/logs":
+            from urllib.parse import parse_qs
+            import device_actions
+            q = {k: v[0] for k, v in parse_qs(query).items()}
+            lim = int(q.get("limit") or 200) if str(q.get("limit") or "").isdigit() else 200
+            return self._send(200, device_actions.get_debug_logs(
+                Path(S.args.base) if S.args else None,
+                category=str(q.get("category") or ""),
+                limit=lim,
+            ))
+        if path == "/api/autonomous":
+            import jepa_engine
+            jrt = jepa_engine.for_base(S.args.base)
+            st_cur = S.settings.get() if S.settings else {}
+            j_coll = Path(S.args.base) / "collective" / "jepa_collective_growth.json"
+            coll_metrics = {}
+            if j_coll.is_file():
+                try:
+                    coll_metrics = json.loads(j_coll.read_text(encoding="utf-8")).get("metrics") or {}
+                except Exception:
+                    coll_metrics = {}
+            return self._send(200, {
+                "jepa": jrt.describe(st_cur.get("jepa_arch", "auto")),
+                "collective_jepa_metrics": coll_metrics,
+                "last_autonomous_run": getattr(S, "last_autonomous_run", None),
+            })
         if path == "/api/memory":
             return self._send(200, {"memories": layer_kit().memories()})
         if path == "/api/identity/google":
@@ -2432,8 +2485,16 @@ class Handler(BaseHTTPRequestHandler):
                 sid = re.sub(r"[^A-Za-z0-9_\-]", "_", str(body.get("session_id") or uuid.uuid4().hex))[:96]
                 if S.mode == "lfm3":
                     docs = save_documents(body.get("documents"))
-                    return self._send(200, lfm3_turn(sid, build_prompt(prompt, body.get("attached_files"), docs), body,
-                                                     ask_text=prompt, docs=docs))
+                    tid_c = str(body.get("turn_id") or uuid.uuid4().hex)
+                    t_c = {"turn_id": tid_c, "session_id": sid, "cancel": threading.Event(), "pending": {}, "events": [], "seq": 0, "done": False}
+                    with S.turns_lock:
+                        S.active[tid_c] = t_c
+                    try:
+                        return self._send(200, lfm3_turn(sid, build_prompt(prompt, body.get("attached_files"), docs), body,
+                                                         cancel=t_c["cancel"], ask_text=prompt, docs=docs))
+                    finally:
+                        with S.turns_lock:
+                            S.active.pop(tid_c, None)
                 seed = body.get("history")
                 if isinstance(seed, list):  # the Studio keeps chats; after a server restart it re-seeds the context
                     with S.sess_lock:
@@ -2467,10 +2528,102 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, res_open)
             if path == "/api/screen/capture":
                 import device_actions
-                rep = device_actions.capture_screenshot(Path(S.args.base))
+                rep = device_actions.capture_screenshot(
+                    Path(S.args.base),
+                    launch_system_app=bool(body.get("launch_system_app", False)),
+                )
                 img_bytes = (media_dir() / rep["file"]).read_bytes()
                 rep["data"] = base64.b64encode(img_bytes).decode("ascii")
                 return self._send(200, rep)
+            if path == "/api/senses/capture":
+                import device_actions
+                sense_kind = str(body.get("sense") or "screenshot").strip().lower()
+                raw_b64 = str(body.get("data") or "").strip()
+                if "," in raw_b64 and raw_b64.startswith("data:"):
+                    raw_b64 = raw_b64.split(",", 1)[1]
+                raw_bytes = base64.b64decode(raw_b64) if raw_b64 else None
+                rep = device_actions.analyze_sensory_media(
+                    Path(S.args.base),
+                    sense=sense_kind,
+                    raw_bytes=raw_bytes,
+                    filename=str(body.get("name") or ""),
+                    launch_system_app=bool(body.get("launch_system_app", False)),
+                )
+                if rep.get("file") and (media_dir() / rep["file"]).is_file() and rep.get("kind") in ("image", "audio", None):
+                    f_bytes = (media_dir() / rep["file"]).read_bytes()
+                    if len(f_bytes) <= 12 * 1024 * 1024:
+                        rep["data"] = base64.b64encode(f_bytes).decode("ascii")
+                return self._send(200, rep)
+            if path == "/api/debug/log":
+                import device_actions
+                ent = device_actions.log_debug(
+                    str(body.get("category") or "ui"),
+                    str(body.get("event") or "client_event"),
+                    body.get("detail"),
+                    level=str(body.get("level") or "INFO"),
+                    base_dir=Path(S.args.base) if S.args else None,
+                )
+                return self._send(200, {"ok": True, "entry": ent})
+            if path == "/api/debug/logs/clear":
+                import device_actions
+                return self._send(200, device_actions.clear_debug_logs(Path(S.args.base) if S.args else None))
+            if path == "/api/autonomous/run":
+                import autonomous_clover as AC
+                import device_actions
+                import jepa_engine as JE
+                import tempfile
+                base_p = Path(S.args.base)
+                jrt = JE.for_base(base_p)
+                jepa_arch = (S.settings.get().get("jepa_arch") if S.settings else "auto") or "auto"
+                with tempfile.TemporaryDirectory(prefix="clover_auto_ui_") as td:
+                    td_p = Path(td)
+                    # Use lightweight temporary directory for fast C2 JEPA/ETH planning + Clover Cycle verification
+                    eng_auto = AC.AutonomousCloverEngine(td_p, work_dir=td_p, jepa_arch=jepa_arch)
+                    eng_auto.jepa = jrt
+                    step_seed = int(time.time()) % 10000
+                    frontier = [
+                        eng_auto.synthesize_new_problem(step_idx=3, seed=step_seed),
+                        eng_auto.synthesize_new_problem(step_idx=4, seed=step_seed + 1),
+                        eng_auto.synthesize_new_problem(step_idx=5, seed=step_seed + 2),
+                    ]
+                    p1, d1 = eng_auto.discover_next_problem(frontier, rng_seed=step_seed)
+                    s1 = eng_auto.solve_problem_autonomously(p1, allow_clover_cycle=True)
+                    for fp in frontier:
+                        if fp.problem_id != p1.problem_id:
+                            eng_auto.solve_problem_autonomously(fp, allow_clover_cycle=True)
+                    st_rep = eng_auto.self_train_on_verified_outcomes(steps=16, lr=0.025)
+                    p_synth, d_synth = eng_auto.discover_next_problem([], rng_seed=step_seed + 7)
+                    s_synth = eng_auto.solve_problem_autonomously(p_synth, allow_clover_cycle=True)
+                out_auto = {
+                    "ok": True,
+                    "jepa_arch": jepa_arch,
+                    "discovered_problem": {
+                        "id": p1.problem_id,
+                        "domain": p1.domain,
+                        "title": p1.title,
+                        "surprise": d1.get("selected_surprise"),
+                        "cycle1_passed": s1["cycle1_passed"],
+                        "final_passed": s1["final_passed"],
+                        "cycles_used": s1["cycles_used"],
+                        "top_planned_tool": s1["top_planned_tool"],
+                    },
+                    "synthesized_problem": {
+                        "id": p_synth.problem_id,
+                        "domain": p_synth.domain,
+                        "title": p_synth.title,
+                        "surprise": d_synth.get("selected_surprise"),
+                        "cycle1_passed": s_synth["cycle1_passed"],
+                        "final_passed": s_synth["final_passed"],
+                        "cycles_used": s_synth["cycles_used"],
+                        "top_planned_tool": s_synth["top_planned_tool"],
+                    },
+                    "self_train": st_rep,
+                    "jepa_status": jrt.describe(jepa_arch),
+                    "ran_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                }
+                S.last_autonomous_run = out_auto
+                device_actions.log_debug("jepa", "autonomous_cycle_and_self_train", out_auto, base_dir=base_p)
+                return self._send(200, out_auto)
             if path in ("/api/inbox/take", "/api/inbox/dismiss", "/api/browser/register"):
                 if paths.PLATFORM != "windows":
                     raise ValueError("pages come from the browser on the laptop only")
@@ -2586,6 +2739,11 @@ class Handler(BaseHTTPRequestHandler):
                 changed = {k: v for k, v in new.items() if before.get(k) != v}
                 if changed:
                     S.repo.note("settings changed by the user: " + json.dumps(changed))
+                    try:
+                        import device_actions
+                        device_actions.log_debug("settings", "settings_updated", changed, base_dir=Path(S.args.base))
+                    except Exception:
+                        pass
                 if "personal" in changed:
                     personal_step(personal_store(), "set_learning", new["personal"])
                 if "collective_contribute" in changed or "collective_receive" in changed:
@@ -2598,7 +2756,9 @@ class Handler(BaseHTTPRequestHandler):
                 if S.memidx is not None and new["layers"]["recall"] != before["layers"]["recall"]:
                     S.memidx.set_recall(new["layers"]["recall"])
                 cat = model_catalog()
-                return self._send(200, {"settings": new, "models": [x["id"] for x in cat], "model_catalog": cat})
+                import jepa_engine
+                jepa_desc = jepa_engine.for_base(S.args.base).describe(new.get("jepa_arch", "auto"))
+                return self._send(200, {"settings": new, "jepa_status": jepa_desc, "models": [x["id"] for x in cat], "model_catalog": cat})
             if path == "/api/memory/forget":
                 eid = str(body.get("id") or "")
                 ok = layer_kit().forget(eid)
@@ -2676,6 +2836,11 @@ class Handler(BaseHTTPRequestHandler):
                                 require_identity=True,
                                 gateway_url=body.get("gateway_url"),
                             )
+                        try:
+                            import device_actions
+                            device_actions.log_debug("collective", "collective_synced", sync_res, base_dir=Path(S.args.base))
+                        except Exception:
+                            pass
                         return self._send(200, dict(sync_res, view=dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)))
                     if path.endswith("/withdraw"):
                         id_tok = mgr.get_valid_id_token() if mgr else None

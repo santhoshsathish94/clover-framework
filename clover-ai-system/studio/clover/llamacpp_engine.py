@@ -110,9 +110,11 @@ class LlamaServer:
         self.log_path = base_dir / "logs" / f"llama-server-{name or kind}.log"
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
         batch_sz = max(2048, int(ubatch) * 2)
-        args = [str(self.exe), "-m", str(self.model), "--host", "127.0.0.1", "--port", str(self.port), "-c", str(self.ctx),
-                "-b", str(batch_sz), "-np", "1", "--no-webui", "-ngl", "99" if kind == "vulkan" else "0",
-                "--slot-save-path", str(self.slots_dir), "--checkpoint-min-step", "0", "-ub", str(int(ubatch))]
+        args = [str(self.exe), "-m", str(self.model), "--host", "127.0.0.1", "--port", str(self.port), "-c", str(self.ctx)]
+        if not paths.ANDROID:
+            args += ["-b", str(batch_sz)]
+        args += ["-np", "1", "--no-webui", "-ngl", "99" if kind == "vulkan" else "0",
+                 "--slot-save-path", str(self.slots_dir), "--checkpoint-min-step", "0", "-ub", str(int(ubatch))]
         if mmproj:
             args += ["--mmproj", str(mmproj)]
         args += [str(a) for a in extra_args]

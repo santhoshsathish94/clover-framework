@@ -10,13 +10,16 @@ Enables Clover to:
 """
 from __future__ import annotations
 
+import collections
 import ctypes
 import hashlib
+import io
 import json
 import os
 import re
 import shutil
 import subprocess
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -27,6 +30,92 @@ import clover_repo
 import image_inspector
 import paths
 
+_DEBUG_LOCK = threading.Lock()
+_DEBUG_RING: collections.deque[dict[str, Any]] = collections.deque(maxlen=400)
+
+
+def log_debug(
+    category: str,
+    event: str,
+    detail: dict[str, Any] | str | None = None,
+    *,
+    level: str = "INFO",
+    base_dir: Path | None = None,
+) -> dict[str, Any]:
+    """Record a structured debug log entry in memory and append to `<base_dir>/logs/clover-debug.jsonl`."""
+    entry: dict[str, Any] = {
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "epoch_ms": int(time.time() * 1000),
+        "level": str(level or "INFO").upper(),
+        "category": str(category or "general"),
+        "event": str(event or ""),
+        "detail": detail if isinstance(detail, (dict, list)) else (str(detail) if detail is not None else ""),
+    }
+    with _DEBUG_LOCK:
+        _DEBUG_RING.append(entry)
+        if base_dir is not None:
+            try:
+                log_f = Path(base_dir) / "logs" / "clover-debug.jsonl"
+                log_f.parent.mkdir(parents=True, exist_ok=True)
+                with open(log_f, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")
+            except Exception:
+                pass
+    return entry
+
+
+def get_debug_logs(base_dir: Path | None = None, category: str = "", limit: int = 200) -> dict[str, Any]:
+    """Return structured debug logs plus tails of `studio-server.log` and `llama-server*.log`."""
+    with _DEBUG_LOCK:
+        items = list(_DEBUG_RING)
+    if not items and base_dir is not None:
+        log_f = Path(base_dir) / "logs" / "clover-debug.jsonl"
+        if log_f.is_file():
+            try:
+                lines = log_f.read_text(encoding="utf-8", errors="replace").splitlines()[-limit:]
+                for ln in lines:
+                    if ln.strip():
+                        try:
+                            items.append(json.loads(ln))
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+    cat = str(category or "").strip().lower()
+    if cat and cat not in ("all", "*"):
+        items = [x for x in items if str(x.get("category") or "").lower() == cat]
+    items = items[-max(1, min(500, int(limit))):]
+
+    file_tails: dict[str, str] = {}
+    if base_dir is not None:
+        logs_dir = Path(base_dir) / "logs"
+        if logs_dir.is_dir():
+            for p in sorted(logs_dir.glob("*.log"))[:6]:
+                try:
+                    raw = p.read_bytes()
+                    tail = raw[-8000:].decode("utf-8", errors="replace")
+                    file_tails[p.name] = "\n".join(tail.splitlines()[-60:])
+                except Exception:
+                    pass
+    return {
+        "count": len(items),
+        "entries": list(reversed(items)),
+        "file_tails": file_tails,
+    }
+
+
+def clear_debug_logs(base_dir: Path | None = None) -> dict[str, Any]:
+    with _DEBUG_LOCK:
+        _DEBUG_RING.clear()
+        if base_dir is not None:
+            log_f = Path(base_dir) / "logs" / "clover-debug.jsonl"
+            if log_f.is_file():
+                try:
+                    log_f.unlink()
+                except Exception:
+                    pass
+    return {"cleared": True}
+
 # Known cross-platform app targets:
 #   key -> {"win": Windows exe/URI, "android_pkg": Android package, "android_uri": Android intent URI, "web": Web URL, "label": Display name}
 KNOWN_APPS: dict[str, dict[str, str]] = {
@@ -35,7 +124,15 @@ KNOWN_APPS: dict[str, dict[str, str]] = {
     "notepad": {"win": "notepad.exe", "android_pkg": "com.samsung.android.app.notes", "label": "Notepad / Notes"},
     "notes": {"win": "notepad.exe", "android_pkg": "com.samsung.android.app.notes", "label": "Notes"},
     "paint": {"win": "mspaint.exe", "label": "Paint"},
-    "snipping tool": {"win": "ms-screenclip:", "label": "Snipping Tool"},
+    "snipping tool": {"win": "ms-screenclip:", "android_pkg": "com.samsung.android.app.smartcapture", "android_uri": "android.intent.action.PICK", "label": "System Screenshot / Snipping Tool"},
+    "screenshot": {"win": "ms-screenclip:", "android_pkg": "com.samsung.android.app.smartcapture", "android_uri": "android.intent.action.PICK", "label": "System Screenshot"},
+    "screen capture": {"win": "ms-screenclip:", "android_pkg": "com.samsung.android.app.smartcapture", "android_uri": "android.intent.action.PICK", "label": "System Screen Capture"},
+    "screen recorder": {"win": "ms-screenclip:", "android_pkg": "com.samsung.android.app.screenrecorder", "android_uri": "android.media.action.VIDEO_CAPTURE", "label": "System Screen Recorder"},
+    "screen recording": {"win": "ms-screenclip:", "android_pkg": "com.samsung.android.app.screenrecorder", "android_uri": "android.media.action.VIDEO_CAPTURE", "label": "System Screen Recorder"},
+    "video recorder": {"win": "microsoft.windows.camera:", "android_uri": "android.media.action.VIDEO_CAPTURE", "label": "System Video Recorder"},
+    "voice recorder": {"win": "ms-callrecording:", "android_pkg": "com.sec.android.app.voicenote", "android_uri": "android.provider.MediaStore.RECORD_SOUND", "label": "System Voice Recorder"},
+    "sound recorder": {"win": "ms-callrecording:", "android_pkg": "com.sec.android.app.voicenote", "android_uri": "android.provider.MediaStore.RECORD_SOUND", "label": "System Sound Recorder"},
+    "microphone": {"win": "ms-callrecording:", "android_pkg": "com.sec.android.app.voicenote", "android_uri": "android.provider.MediaStore.RECORD_SOUND", "label": "System Microphone / Voice Recorder"},
     "settings": {"win": "ms-settings:", "android_uri": "android.settings.SETTINGS", "label": "Settings"},
     "wifi settings": {"win": "ms-settings:network-wifi", "android_uri": "android.settings.WIFI_SETTINGS", "label": "Wi-Fi Settings"},
     "bluetooth settings": {"win": "ms-settings:bluetooth", "android_uri": "android.settings.BLUETOOTH_SETTINGS", "label": "Bluetooth Settings"},
@@ -341,45 +438,151 @@ def read_active_activity() -> dict[str, Any]:
     }
 
 
-def capture_screenshot(base_dir: Path, *, inspect: bool = True) -> dict[str, Any]:
-    """Capture a live screenshot of the user's screen, save it into `<base_dir>/media/<sha256>.png`, and run
-    `image_inspector.inspect_image` so Clover has both the visual PNG and Playwright-grade OCR + `[e1..eN]` elements."""
+def _system_sense_dirs(kind: str) -> list[Path]:
+    """Return OS directories where system Screenshot, Screen Recorder, Camera, and Voice Recorder apps save captures."""
+    home = Path.home()
+    dirs: list[Path] = []
+    if os.name == "nt":
+        if kind == "screenshot":
+            dirs.extend([
+                home / "Pictures" / "Screenshots",
+                home / "OneDrive" / "Pictures" / "Screenshots",
+                home / "Pictures",
+            ])
+        elif kind in ("screen_record", "video"):
+            dirs.extend([
+                home / "Videos" / "Captures",
+                home / "Videos" / "Screen Recordings",
+                home / "Pictures" / "Screenshots",
+                home / "Videos",
+            ])
+        elif kind == "camera":
+            dirs.extend([
+                home / "Pictures" / "Camera Roll",
+                home / "OneDrive" / "Pictures" / "Camera Roll",
+                home / "Pictures",
+            ])
+        elif kind in ("microphone", "audio"):
+            dirs.extend([
+                home / "Documents" / "Sound Recordings",
+                home / "Music",
+            ])
+    else:
+        for root_str in ("/sdcard", "/storage/emulated/0"):
+            r = Path(root_str)
+            if kind == "screenshot":
+                dirs.extend([r / "DCIM" / "Screenshots", r / "Pictures" / "Screenshots"])
+            elif kind in ("screen_record", "video"):
+                dirs.extend([
+                    r / "DCIM" / "Screen recordings",
+                    r / "Movies" / "Screen recordings",
+                    r / "Movies",
+                    r / "DCIM" / "Camera",
+                ])
+            elif kind == "camera":
+                dirs.extend([r / "DCIM" / "Camera", r / "Pictures"])
+            elif kind in ("microphone", "audio"):
+                dirs.extend([r / "Recordings", r / "Voice Recorder", r / "Music" / "Recordings", r / "Music"])
+    return [d for d in dirs if d.is_dir()]
+
+
+def _find_latest_system_file(kind: str, exts: tuple[str, ...], max_age_s: float = 86400.0) -> Path | None:
+    now = time.time()
+    best_p: Path | None = None
+    best_mtime = 0.0
+    for d in _system_sense_dirs(kind):
+        try:
+            for p in d.iterdir():
+                if not p.is_file() or p.suffix.lower() not in exts:
+                    continue
+                mt = p.stat().st_mtime
+                if (now - mt) <= max_age_s and mt > best_mtime and p.stat().st_size > 256:
+                    best_mtime = mt
+                    best_p = p
+        except Exception:
+            continue
+    return best_p
+
+
+def capture_screenshot(base_dir: Path, *, inspect: bool = True, launch_system_app: bool = False) -> dict[str, Any]:
+    """Capture or ingest a screenshot via the OS system screenshot app / clipboard / system screenshot folder, save it
+    into `<base_dir>/media/<sha256>.png`, and run `image_inspector.inspect_image` (`I-JEPA` + OCR + `[e1..eN]`)."""
     media = paths.media_dir(base_dir)
     media.mkdir(parents=True, exist_ok=True)
     img: Image.Image | None = None
+    source_used = "unknown"
 
     if os.name == "nt":
         try:
             ctypes.windll.user32.SetProcessDPIAware()
         except Exception:
             pass
-        try:
-            from PIL import ImageGrab
-            img = ImageGrab.grab(all_screens=False)
-        except Exception:
-            img = None
+        if launch_system_app:
+            try:
+                os.startfile("ms-screenclip:")
+                log_debug("senses", "launched_windows_snipping_tool", {"uri": "ms-screenclip:"}, base_dir=base_dir)
+                time.sleep(1.5)
+            except Exception as exc:
+                log_debug("senses", "snipping_tool_launch_error", str(exc), level="WARN", base_dir=base_dir)
+        # 1. Check recent system screenshot file in Pictures\Screenshots (taken in last 60s)
+        latest_ss = _find_latest_system_file("screenshot", (".png", ".jpg", ".jpeg", ".webp"), max_age_s=60.0)
+        if latest_ss is not None:
+            try:
+                img = Image.open(latest_ss).convert("RGB")
+                source_used = f"system_screenshot_file:{latest_ss.name}"
+            except Exception:
+                img = None
+        # 2. Check Windows Clipboard image (placed there by Windows Snipping Tool / Win+Shift+S)
+        if img is None:
+            try:
+                from PIL import ImageGrab
+                clip_im = ImageGrab.grabclipboard()
+                if isinstance(clip_im, Image.Image):
+                    img = clip_im.convert("RGB")
+                    source_used = "windows_snipping_clipboard"
+            except Exception:
+                pass
+        # 3. Fallback to OS desktop frame grab via ImageGrab
+        if img is None:
+            try:
+                from PIL import ImageGrab
+                img = ImageGrab.grab(all_screens=False)
+                source_used = "windows_desktop_grab"
+            except Exception:
+                img = None
 
     if img is None and paths.ANDROID:
-        # Check if Android screencap works or pick most recent screenshot
-        tmp_cap = media / "tmp_screencap.png"
-        try:
-            r = subprocess.run(["screencap", "-p", str(tmp_cap)], capture_output=True, timeout=5)
-            if r.returncode == 0 and tmp_cap.is_file() and tmp_cap.stat().st_size > 1000:
-                img = Image.open(tmp_cap).convert("RGB")
-        except Exception:
-            pass
-        finally:
-            if tmp_cap.is_file():
-                tmp_cap.unlink(missing_ok=True)
+        # 1. Check Android system screenshot directory (/sdcard/DCIM/Screenshots or /sdcard/Pictures/Screenshots)
+        latest_android_ss = _find_latest_system_file("screenshot", (".png", ".jpg", ".jpeg", ".webp"), max_age_s=3600.0)
+        if latest_android_ss is not None:
+            try:
+                img = Image.open(latest_android_ss).convert("RGB")
+                source_used = f"android_system_screenshot:{latest_android_ss.name}"
+            except Exception:
+                img = None
+        # 2. Try Android system screencap service
+        if img is None:
+            tmp_cap = media / "tmp_screencap.png"
+            try:
+                r = subprocess.run(["screencap", "-p", str(tmp_cap)], capture_output=True, timeout=5)
+                if r.returncode == 0 and tmp_cap.is_file() and tmp_cap.stat().st_size > 1000:
+                    img = Image.open(tmp_cap).convert("RGB")
+                    source_used = "android_screencap_service"
+            except Exception:
+                pass
+            finally:
+                if tmp_cap.is_file():
+                    tmp_cap.unlink(missing_ok=True)
 
     activity = read_active_activity()
 
     if img is None:
         # Fallback visual activity card when running on a headless Linux server (e.g., k3)
+        source_used = "activity_snapshot_card"
         im = Image.new("RGB", (960, 540), (247, 243, 233))
         dr = ImageDraw.Draw(im)
         dr.rectangle([0, 0, 960, 56], fill=(23, 107, 44))
-        dr.text((24, 18), "Clover Live Screen & Activity Snapshot", fill=(255, 255, 255))
+        dr.text((24, 18), "Clover System Senses & Activity Snapshot", fill=(255, 255, 255))
         y = 80
         if activity["foreground_window"]:
             dr.text((24, y), f"Active Window: {activity['foreground_window'][:80]}", fill=(18, 25, 21))
@@ -392,7 +595,6 @@ def capture_screenshot(base_dir: Path, *, inspect: bool = True) -> dict[str, Any
             y += 34
         img = im
 
-    import io
     buf = io.BytesIO()
     img.convert("RGB").save(buf, format="PNG")
     png_bytes = buf.getvalue()
@@ -409,8 +611,147 @@ def capture_screenshot(base_dir: Path, *, inspect: bool = True) -> dict[str, Any
         "ocr_lines": [],
         "ocr_text": "",
     }
+    report["sense"] = "screenshot"
+    report["source"] = source_used
     report["activity"] = activity
+    log_debug(
+        "senses",
+        "screenshot_captured_and_inspected",
+        {
+            "source": source_used,
+            "file": fname,
+            "size": f"{report.get('width')}x{report.get('height')}",
+            "elements": len(report.get("elements") or []),
+            "jepa_scene": (report.get("jepa_visual") or {}).get("scene_kind"),
+        },
+        base_dir=base_dir,
+    )
     return report
+
+
+def analyze_sensory_media(
+    base_dir: Path,
+    *,
+    sense: str,
+    raw_bytes: bytes | None = None,
+    filename: str = "",
+    launch_system_app: bool = False,
+) -> dict[str, Any]:
+    """Unified S3 Sensory handler talking to OS system apps (Screenshot, Screen Recorder, Camera, Voice Recorder/Mic)
+    and running JEPA (`I-JEPA`, `Audio-JEPA`, `MJEPA`) sensory analysis on captured images, videos, and audio."""
+    sense_norm = str(sense or "screenshot").strip().lower()
+    media = paths.media_dir(base_dir)
+    media.mkdir(parents=True, exist_ok=True)
+
+    if sense_norm in ("screenshot", "screen_capture") and not raw_bytes:
+        return capture_screenshot(base_dir, inspect=True, launch_system_app=launch_system_app)
+
+    if launch_system_app and not raw_bytes:
+        app_map = {
+            "screen_record": "screen recorder",
+            "video": "screen recorder",
+            "camera": "camera",
+            "microphone": "voice recorder",
+            "audio": "voice recorder",
+        }
+        target_app = app_map.get(sense_norm, sense_norm)
+        opened_info = {}
+        try:
+            opened_info = open_target(target_app, base_dir=base_dir)
+        except Exception as exc:
+            opened_info = {"opened": False, "error": str(exc)}
+        log_debug("senses", f"launched_system_{sense_norm}_app", opened_info, base_dir=base_dir)
+
+        # Also check if a recent system recording/photo exists in the OS media folders
+        ext_map = {
+            "screen_record": (".mp4", ".webm", ".mkv", ".mov"),
+            "video": (".mp4", ".webm", ".mkv", ".mov"),
+            "camera": (".jpg", ".jpeg", ".png", ".webp"),
+            "microphone": (".wav", ".m4a", ".mp3", ".ogg", ".aac"),
+            "audio": (".wav", ".m4a", ".mp3", ".ogg", ".aac"),
+        }
+        latest_f = _find_latest_system_file(sense_norm, ext_map.get(sense_norm, (".png", ".mp4", ".wav")), max_age_s=600.0)
+        if latest_f is None:
+            return {
+                "ok": True,
+                "sense": sense_norm,
+                "launched_system_app": True,
+                "system_app": opened_info,
+                "message": f"Launched system {opened_info.get('label') or target_app}. Capture or select media to analyze.",
+            }
+        raw_bytes = latest_f.read_bytes()
+        filename = latest_f.name
+
+    if not raw_bytes:
+        raise ValueError(f"No media data received from system sense {sense_norm!r}")
+
+    ext = Path(filename).suffix.lower() if filename else ""
+    if sense_norm in ("microphone", "audio") or ext in (".wav", ".mp3", ".m4a", ".ogg", ".aac"):
+        if ext not in (".wav", ".mp3", ".m4a", ".ogg", ".aac"):
+            ext = ".wav"
+        fname = hashlib.sha256(raw_bytes).hexdigest()[:32] + ext
+        out_path = media / fname
+        out_path.write_bytes(raw_bytes)
+        jepa_audio = {}
+        try:
+            import jepa_engine
+            jepa_audio = jepa_engine.for_base(base_dir).inspect_audio_latent(out_path, configured_arch="auto")
+            jepa_audio = {k: v for k, v in jepa_audio.items() if k not in ("z_jepa", "z_vq")}
+        except Exception as exc:
+            jepa_audio = {"error": str(exc)}
+        res_aud = {
+            "ok": True,
+            "sense": "microphone",
+            "kind": "audio",
+            "file": fname,
+            "name": filename or f"System audio ({fname[:8]}{ext})",
+            "bytes": len(raw_bytes),
+            "jepa_audio": jepa_audio,
+        }
+        log_debug("senses", "audio_sense_analyzed", res_aud, base_dir=base_dir)
+        return res_aud
+
+    if sense_norm in ("screen_record", "video") or ext in (".mp4", ".webm", ".mkv", ".mov"):
+        if ext not in (".mp4", ".webm", ".mkv", ".mov"):
+            ext = ".mp4"
+        fname = hashlib.sha256(raw_bytes).hexdigest()[:32] + ext
+        out_path = media / fname
+        out_path.write_bytes(raw_bytes)
+        res_vid = {
+            "ok": True,
+            "sense": "screen_record",
+            "kind": "video",
+            "file": fname,
+            "name": filename or f"Screen recording ({fname[:8]}{ext})",
+            "bytes": len(raw_bytes),
+        }
+        log_debug("senses", "video_sense_captured", res_vid, base_dir=base_dir)
+        return res_vid
+
+    # Image / Camera / Screenshot sense
+    img_obj = Image.open(io.BytesIO(raw_bytes)).convert("RGB")
+    buf = io.BytesIO()
+    img_obj.save(buf, format="PNG")
+    png_bytes = buf.getvalue()
+    fname = hashlib.sha256(png_bytes).hexdigest()[:32] + ".png"
+    out_path = media / fname
+    out_path.write_bytes(png_bytes)
+    rep = image_inspector.inspect_image(out_path, annotate_dir=media)
+    rep["ok"] = True
+    rep["sense"] = sense_norm
+    rep["kind"] = "image"
+    log_debug(
+        "senses",
+        f"{sense_norm}_image_analyzed",
+        {
+            "file": fname,
+            "size": f"{rep.get('width')}x{rep.get('height')}",
+            "elements": len(rep.get("elements") or []),
+            "jepa_scene": (rep.get("jepa_visual") or {}).get("scene_kind"),
+        },
+        base_dir=base_dir,
+    )
+    return rep
 
 
 def format_activity_for_prompt(screen_report: dict[str, Any]) -> str:

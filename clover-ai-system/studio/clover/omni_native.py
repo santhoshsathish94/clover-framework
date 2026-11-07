@@ -186,7 +186,7 @@ class OmniNative(N.LFM3Native):
         self.engine_kind, self.max_tokens, self.cache = engine, int(max_tokens), None
         # speech on its own CPU instance while chat has the laptop's GPU; a phone has no memory for a second copy
         self.separate_voice = engine == "gpu" and not ANDROID
-        ubatch_sz = 1024 if ANDROID else 2048
+        ubatch_sz = 256 if ANDROID else 2048
         self.gpu = L.LlamaServer(base_dir, kind, max_tokens, ubatch=ubatch_sz, model=paths["model"], mmproj=paths["mmproj"],
                                  extra_args=extra, name=f"omni-{kind}", timeout_s=300, threads=threads)
         props = self.gpu.props()
@@ -347,7 +347,8 @@ class OmniNative(N.LFM3Native):
     def _chat(self, msgs, schemas, max_new, by_name, on_delta=None, cancel=None, seed=0, tool_choice=None, on_plan=None):
         """One C1 inference pass through /v1/chat/completions -> (content, calls, stats).
         C1 is strictly for inference only; C2 plans and C3 (11-Level NCM) decodes the final answer."""
-        body = dict(GREEDY, messages=msgs, max_tokens=int(max_new), seed=int(seed), cache_prompt=True)
+        eff_max = min(int(max_new), 512) if tool_choice == "required" else int(max_new)
+        body = dict(GREEDY, messages=msgs, max_tokens=eff_max, seed=int(seed), cache_prompt=True)
         if schemas:
             body["tools"] = schemas
             if tool_choice:
@@ -681,6 +682,11 @@ class OmniNative(N.LFM3Native):
                         s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "get_current_time", "arguments": {}}
                     elif list(only_tools) == ["laptop_status"] and "laptop_status" in by_name:
                         s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "laptop_status", "arguments": {}}
+                    elif "run_python" in only_tools and "run_python" in by_name and re.search(r"```(?:python|py)\b", query or "", re.I):
+                        import lfm3_layers
+                        py_code = lfm3_layers.extract_python(query or "")
+                        if py_code.strip():
+                            s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "run_python", "arguments": {"code": py_code.strip()}}
                     elif list(only_tools) == ["remember"] and "remember" in by_name and meaning is not None and getattr(meaning, "remember", ""):
                         note = str(meaning.remember).strip()
                         if note:

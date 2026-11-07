@@ -404,6 +404,17 @@ class AutonomousCloverEngine:
     def _run_python_sandbox(self, code: str) -> tuple[bool, str]:
         if not code.strip():
             return False, ""
+        if hasattr(sys, "getandroidapilevel") or not sys.executable or "app_process" in str(sys.executable):
+            import contextlib
+            import io
+            buf = io.StringIO()
+            g: dict[str, Any] = {"__name__": "__main__"}
+            try:
+                with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+                    exec(compile(code, "<clover-sandbox>", "exec"), g, g)
+                return True, buf.getvalue().strip()
+            except Exception as exc:
+                return False, (buf.getvalue() + "\n" + str(exc)).strip()
         try:
             proc = subprocess.run(
                 [sys.executable, "-c", code],
@@ -527,8 +538,12 @@ class AutonomousCloverEngine:
             return res_c1
 
         # ---- Cycle 2: Autonomous Clover Cycle (`Outcome -> Context -> Execution -> Growth`) ----
+        repair_tool = next(
+            (t for t in ranked_tools if t in ("python", "run_python", "calculator")),
+            "python" if "python" in prob.offered_tools else (ranked_tools[0] if ranked_tools else "python"),
+        )
         tool_output = ""
-        if prob.solver_code and any(t in ("python", "run_python", "calculator") for t in ranked_tools[:2]):
+        if prob.solver_code:
             ran_ok, py_out = self._run_python_sandbox(prob.solver_code)
             if ran_ok and py_out:
                 tool_output = py_out
@@ -538,7 +553,7 @@ class AutonomousCloverEngine:
             fix_prompt = CC.FIX.format(
                 said="Autonomous Clover Outcome Verifier",
                 findings="\n".join(f"- {f}" for f in findings)
-                + (f"\n- Executed {top_tool} in reality; exact output:\n  {tool_output}" if tool_output else "")
+                + (f"\n- Executed {repair_tool} in reality; exact output:\n  {tool_output}" if tool_output else "")
                 + (f"\n- S3 JEPA Sensory Findings:\n  " + "\n  ".join(sensory_notes) if sensory_notes else ""),
             )
             llm_repaired = self.c1_generate_fn(prob.question, fix_prompt)
@@ -570,9 +585,9 @@ class AutonomousCloverEngine:
         learned_id = None
         if cycle2_passed:
             self.solved_ids.add(prob.problem_id)
-            lesson_str = CC.lesson_text(prob.question, findings[:2], f"Use {top_tool} verification before answering.", passed=True)
+            lesson_str = CC.lesson_text(prob.question, findings[:2], f"Use {repair_tool} verification before answering.", passed=True)
             learned_id, _ = self.kit.learn(lesson_str, sid="autonomous-clover", n=len(self.solved_ids), kind="verified")
-            self._record_verified_sample(prob, c1_prompt_s, c1_att2, top_tool)
+            self._record_verified_sample(prob, c1_prompt_s, c1_att2, repair_tool)
 
         res_entry = {
             "problem_id": prob.problem_id,
@@ -581,11 +596,11 @@ class AutonomousCloverEngine:
             "cycle1_passed": cycle1_passed,
             "final_passed": cycle2_passed,
             "cycles_used": 2,
-            "top_planned_tool": top_tool,
+            "top_planned_tool": repair_tool if cycle2_passed else top_tool,
             "ranked_tools": ranked_tools,
             "c2_energy_reduction_pct": c2_info_2.get("jepa_energy_reduction_pct", 0.0),
             "cycle1_findings": findings,
-            "tool_executed": top_tool if tool_output else None,
+            "tool_executed": repair_tool if tool_output else None,
             "tool_output": tool_output[:160],
             "final_answer": attempt2_decoded[:240],
             "learned_entry_id": learned_id,
@@ -671,6 +686,9 @@ class AutonomousCloverEngine:
             "z_a_vq_384": z_a_vq,
             "act_8": act_v,
         })
+        self.total_verified_count = getattr(self, "total_verified_count", 0) + 1
+        if len(self.verified_experience) > 128:
+            self.verified_experience.pop(0)
 
     # ---------------- 3. Autonomous Self-Training of JEPA World Model ----------------
 
@@ -747,7 +765,7 @@ class AutonomousCloverEngine:
 
         return {
             "self_trained": True,
-            "verified_samples": len(self.verified_experience),
+            "verified_samples": getattr(self, "total_verified_count", len(self.verified_experience)),
             "idm_mse_before": round(idm_mse_before, 5),
             "idm_mse_after": round(idm_mse_after, 5),
             "transition_mse_before": round(trans_mse_before, 5),

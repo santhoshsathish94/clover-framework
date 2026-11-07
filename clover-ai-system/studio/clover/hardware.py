@@ -198,12 +198,13 @@ def android_gpus(base):
 
 
 def android_choose(c, ram, gpu_list):
-    """GPU when an Adreno is found (else the CPU); context 16,384 tokens up to 10 GB of memory, 32,768 above; chat and
-    speech share one llama.cpp instance and use the big cores."""
+    """GPU when an Adreno is found (else the CPU); context 4,096 tokens under 8.5 GB, 8,192 up to 10.5 GB, 16,384 above;
+    chat and speech share one llama.cpp instance and use the big cores."""
     adreno = [g for g in gpu_list if "adreno" in g["name"].lower()]
     big = c.get("performance_cores") or max(1, (c.get("threads") or 4) // 2)
+    ctx_sz = 16384 if (ram or 0) >= 10.5 else (8192 if (ram or 0) >= 8.5 else 4096)
     return {"engine": "gpu" if adreno else "cpu", "gpu": adreno[0]["name"] if adreno else None,
-            "ctx": 32768 if (ram or 0) >= 10.5 else 16384, "threads": big, "voice_threads": big, "csi_threads": 1}
+            "ctx": ctx_sz, "threads": big, "voice_threads": big, "csi_threads": 1}
 
 
 def android_probe(base):

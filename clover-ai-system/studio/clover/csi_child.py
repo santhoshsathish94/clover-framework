@@ -106,13 +106,14 @@ class CSIService:
         self.port = L._free_port()
         if paths.ANDROID:
             try:
-                import importlib
                 from http.server import ThreadingHTTPServer
                 import csi_service
-                csi_an = importlib.import_module("csi.analyze")
-                csi_an.CSI_MORPH = str(d / MORPH[0])
-                csi_an.CSI_DICT = str(d / OEWN)
-                csi_an.analyze("Please search the web.")
+                from csi import analyze as csi_analyze_fn
+                csi_mod = sys.modules.get(csi_analyze_fn.__module__)
+                if csi_mod is not None:
+                    csi_mod.CSI_MORPH = str(d / MORPH[0])
+                    csi_mod.CSI_DICT = str(d / OEWN)
+                csi_analyze_fn("Please search the web.")
                 self._httpd = ThreadingHTTPServer(("127.0.0.1", self.port), csi_service.Handler)
                 threading.Thread(target=self._httpd.serve_forever, daemon=True, name="csi-inproc").start()
                 self.state = "ready"
