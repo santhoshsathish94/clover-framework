@@ -43,6 +43,18 @@ SPECS = {
         "max_tokens": 32768,
         "layers": ["C1 LFM3-Omni-2B on k3 (Zen 4 AVX-512)"],
     },
+    "clover-35b-a3b": {
+        "model": "Clover-35B-A3B",
+        "short": "Clover-35B-A3B",
+        "full_name": "DiffuSpace Clover-35B-A3B-Preview (35B-A3B Block Diffusion MoE)",
+        "maker": "DiffuSpace",
+        "badge": "k3",
+        "desc": "DiffuSpace 35B-A3B Block Diffusion MoE hosted on k3 · 40 layers (30 BD-GDN + 10 Gated GQA), 128K context, HybridAgent, JEPA & NCM",
+        "backend": "Clover BD-GDN/GQA MoE engine + HybridAgent + JEPA + 11-level NCM",
+        "weights": "4-bit / bf16 MoE + BD-GDN preview (40 layers, 256 experts top-8, coreset top_p=0.9)",
+        "max_tokens": 131072,
+        "layers": ["C1 Clover-35B-A3B (40L BD-GDN + Gated GQA + 256-Expert MoE)", "C2 HybridAgent + JEPA latent steps", "C3 11-level NCM"],
+    },
     "nemotron-3.5-super-vl": {
         "model": "Nemotron 3.5",
         "short": "Nemotron 3.5",
@@ -127,10 +139,10 @@ def is_owner_device(base_dir=None):
 
 
 def owner_k3_models():
-    """The 3 models hosted on k3, surfaced in the dropdown for the owner (and anyone who connects k3 with its key)."""
+    """The 4 models hosted on k3, surfaced in the dropdown for the owner (and anyone who connects k3 with its key)."""
     prefix = "" if paths.WEB else "k3:"
     out = []
-    for k in ("omni", "nemotron-3.5-super-vl", "kimi-k3"):
+    for k in ("omni", "clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3"):
         sp = SPECS[k]
         out.append({
             "id": prefix + k,

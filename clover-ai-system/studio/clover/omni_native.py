@@ -518,6 +518,9 @@ class OmniNative(N.LFM3Native):
                     emit(dict(info, type="layer"))
         if blocks:  # Clover appends its observations after the question
             user_text = user_text + "\n\n" + "\n\n".join(blocks)
+            if not getattr(meaning, "caps", ()) and any(x.get("layer") in ("ontology", "memory") for x in layer_log):
+                schemas = []
+                only_tools = None
         recall = []
         if "recall" in layers and kit is not None:  # background right before the message (memory-research exp G5)
             block, info = kit.recall_context(query, sum(1 for m in history if m.get("role") == "user"))

@@ -1,0 +1,84 @@
+{
+  "model_key": "clover-35b-a3b",
+  "hf_repo_id": "Diffuspace/Clover-35B-A3B-Preview",
+  "gguf_hf_repo_id": "Diffuspace/Clover-35B-A3B-Preview-GGUF",
+  "stage_verification": {
+    "device": "cuda:0",
+    "causal_commit_pruned_vs_raw_cos": 1.0,
+    "causal_commit_pruned_vs_raw_max_abs_diff": 0.0,
+    "block_diffusion_preview_pruned_vs_raw_cos": 1.0,
+    "block_diffusion_preview_pruned_vs_raw_max_abs_diff": 0.0,
+    "moe_4bit_vs_bf16_cos": 0.997095,
+    "hidden_state_shape": [
+      1,
+      8,
+      2048
+    ],
+    "logits_shape": [
+      1,
+      8,
+      248320
+    ],
+    "bd_gdn_30_layers_verified": 30,
+    "gqa_attention_bin_dropped": true,
+    "all_finite": true
+  },
+  "hybridagent_summary": {
+    "model_key": "clover-35b-a3b",
+    "hf_repo_id": "Diffuspace/Clover-35B-A3B-Preview",
+    "gpus_used": 8,
+    "hidden_size": 2048,
+    "vocab_size": 248320,
+    "ntp_loss_before": 7.7253,
+    "ntp_loss_after": 0.0032,
+    "stage_losses": {
+      "stage1": 0.0208,
+      "stage2": 0.0047,
+      "stage3": 0.0032
+    },
+    "token_accuracy_after": 1.0,
+    "eval_cos_512_before": 0.0224,
+    "eval_cos_512_after": 0.2699,
+    "eval_cos_1024_after": 0.4743,
+    "eval_cos_2048_after": 0.9812
+  },
+  "ncm_summary": {
+    "model_key": "clover-35b-a3b",
+    "vocab_size": 248320,
+    "vq_levels": [
+      1,
+      4,
+      8,
+      14,
+      20,
+      26,
+      32,
+      40,
+      48,
+      56,
+      64
+    ],
+    "total_vq_codes": 313,
+    "surface_token_acc_before": 0.0035,
+    "surface_token_acc_after": 0.9843,
+    "concept_384_cos_after": 0.2041,
+    "expert_bridge_alpha": 1.1019
+  },
+  "jepa_summary": {
+    "model_key": "clover-35b-a3b",
+    "hidden_size": 2048,
+    "vq_dim": 384,
+    "jepa_dim": 64,
+    "architectures": [
+      "auto",
+      "clover_rpre",
+      "ijepa",
+      "audio_jepa",
+      "eb_jepa",
+      "mjepa",
+      "none"
+    ],
+    "num_tensors": 106
+  },
+  "hf_stage_ready": true
+}

@@ -29,11 +29,6 @@ import re
 FIX = ("The user says your answer above is not right ({said}). Clover checked it and found:\n{findings}\nReturn to "
        "Context: re-read the question, find the cause of each problem and fix it. Reply with the complete corrected "
        "answer, in the form the question asks for, without comments about the check.")
-AUTO_CYCLE_FIX = ("Clover's Outcome verification checked your draft answer before returning it and found:\n{findings}\n"
-                  "Return to Context (AGENTS.md Clover Cycle: Context -> Direction -> Execution -> Outcome -> Growth): "
-                  "re-read the question and evidence, run a tool (such as `run_python` or `calculate`) if computation "
-                  "or verification is needed, fix every defect above, and reply with the complete verified answer only "
-                  "without mentioning this internal check.")
 REDO = ("The user says your answer above is not right or not what they expected ({said}). Return to Context: re-read "
         "the question and their words, work out what was missed or misread, and write a better answer. Reply with the "
         "complete new answer only.")
@@ -258,6 +253,12 @@ def format_findings(question, answer):
         n = len(_sentences(a))
         if n > 1:
             out.append(f"Form: the question asks for one sentence; your answer has {n}.")
+    m_sent = re.search(r"\b(?:in|with|as|exactly)\s+(\d+|" + "|".join(_WORDNUM) + r")\s+(?:clear\s+|short\s+|concise\s+)?sentences\b", q, re.I)
+    if m_sent:
+        want_s = int(m_sent.group(1)) if m_sent.group(1).isdigit() else _WORDNUM[m_sent.group(1).lower()]
+        n_s = len(_sentences(a))
+        if n_s != want_s:
+            out.append(f"Form: the question asks for {want_s} sentences; your answer has {n_s}.")
     m = re.search(r"\b(\d+|" + "|".join(_WORDNUM) + r")\s+(?:bullet(?:\s+point)?s|bullets)\b", q, re.I)
     if m:
         want = int(m.group(1)) if m.group(1).isdigit() else _WORDNUM[m.group(1).lower()]
@@ -270,6 +271,12 @@ def format_findings(question, answer):
         words = len(re.findall(r"\b\w[\w'\-]*\b", re.sub(r"```[\s\S]*?```", " ", a)))
         if words > limit:
             out.append(f"Form: the question allows at most {limit} words; your answer has {words}.")
+    m_ex = re.search(r"\b(?:in\s+)?exactly\s+(\d+|" + "|".join(_WORDNUM) + r")\s+words\b", q, re.I)
+    if m_ex:
+        want_w = int(m_ex.group(1)) if m_ex.group(1).isdigit() else _WORDNUM[m_ex.group(1).lower()]
+        words = len(re.findall(r"\b\w[\w'\-]*\b", re.sub(r"```[\s\S]*?```", " ", a)))
+        if words != want_w:
+            out.append(f"Form: the question asks for exactly {want_w} words; your answer has {words}.")
     if re.search(r"\b(?:in|as|valid|return|output|respond\s+with|give)\s+(?:a\s+|an\s+|the\s+)?(?:valid\s+)?json\b", q, re.I):
         cand = _json_candidate(a)
         if cand is None:
@@ -751,7 +758,11 @@ def lesson_text(question, findings, said="", passed=False):
     return "; ".join(parts) + "."
 
 
-_PY_FENCE = re.compile(r"```(?:python|py)\s*\n([\s\S]*?)```", re.I)
+AUTO_CYCLE_FIX = (
+    "Clover Cycle Outcome Verification checked your draft above against reality and found:\n"
+    "{findings}\n"
+    "Return to Context: use the verified evidence and tools above, fix the cause of each problem, and reply with the complete corrected answer."
+)
 
 
 def verify_turn_outcome(
@@ -764,99 +775,83 @@ def verify_turn_outcome(
     meaning=None,
     execute_python_fn=None,
 ):
-    """Deterministic `AGENTS.md` Clover Cycle Outcome verification at the end of a turn cycle.
-
-    Checks the draft `answer` against reality before Clover declares the turn done:
-      1. Empty / truncated / non-answer check: if the draft is empty or stopped at the tool-round cap without an answer.
-      2. Compiler & syntax check (`kit.compiler_check`): any code blocks in `answer` are compiled/tested against the
-         Clover generative compiler (`S3`). Also runs self-contained computational Python blocks via `execute_python_fn`
-         when provided and no `run_python` tool ran in `rounds`.
-      3. Deterministic arithmetic & format verification (`outcome_findings(question, answer)`):
-         - every `LHS = RHS` equation written in `answer` is evaluated and checked;
-         - explicit format constraints (`#### <number>`, `State the correct option letter`, `Reply with just the number`)
-           are verified;
-         - direct arithmetic questions (`What is 17 * 23?`) are evaluated and compared against the stated final value.
-      4. Unrecovered tool failure check: if the final tool call in `rounds` failed (`worked == False`) and the model
-         did not recover with a working tool call, or if `meaning` required a tool that failed.
-
-    Returns `(findings, meta)` where `findings` is a list of concrete defect strings (empty when the Outcome is
-    verified and the Clover Cycle can complete), and `meta` records what was checked.
+    """Run Clover's deterministic Outcome stage (`Context -> Direction -> Execution -> Outcome -> Growth`) on a turn draft.
+    Checks:
+      1. Empty / truncated non-answer.
+      2. Compiler & AST syntax verification (`kit.compiler_check`), plus sandbox execution (`execute_python_fn`) for
+         self-contained computational Python blocks that have not yet been executed in `rounds`.
+      3. Arithmetic equation verification (`arithmetic_findings`) & explicit format constraints (`format_findings`),
+         plus exact direct-expression evaluation (`direct_arithmetic_value`).
+      4. Unrecovered tool execution failures in `rounds`.
+    Returns `(findings, meta)`. When `findings` is empty, the Outcome is verified and complete.
     """
-    findings = []
-    meta = {
-        "compiler_checked": False,
-        "compiler_ok": True,
-        "compiler_info": None,
-        "arithmetic_checked": True,
-        "python_sandbox_checked": False,
-        "tool_failure_checked": True,
-    }
     q = (question or "").strip()
-    ans = (answer or "").strip()
+    a = (answer or "").strip()
+    rounds_list = list(rounds or [])
+    findings = []
+    meta = {"compiler_checked": False, "compiler_ok": True, "compiler_info": None, "auto_python_ran": False}
 
-    # 1. Empty or non-answer check
-    if not ans or ans == "(No answer generated.)" or ans == "(Stopped after the maximum number of tool rounds.)":
-        findings.append(
-            "The draft answer is empty or stopped before producing a complete answer. "
-            "Synthesize the evidence gathered so far and write the complete answer to the user's question."
-        )
+    if not a or a.startswith("(Clover "):
+        findings.append("Outcome check: the draft answer was empty or incomplete; write a complete direct answer.")
         return findings, meta
 
-    # 2. Code compiler check (`S3`)
-    if kit is not None and ("compiler" in (layers or ())):
-        fb, comp_info = kit.compiler_check(q, ans)
-        meta["compiler_info"] = comp_info
-        meta["compiler_checked"] = bool(comp_info.get("checked"))
+    if "compiler" in (layers or ()) and kit is not None and hasattr(kit, "compiler_check"):
+        fb, info = kit.compiler_check(q, a)
+        meta["compiler_info"] = info
+        meta["compiler_checked"] = bool(info and info.get("checked"))
+        meta["compiler_ok"] = not bool(fb)
         if fb:
-            meta["compiler_ok"] = False
-            findings.append("Code compiler check: " + fb.strip()[:600])
+            findings.append("Code compiler check:\n" + fb.strip()[:600])
+        elif meta["compiler_checked"] and execute_python_fn is not None:
+            try:
+                import lfm3_layers
+                code = lfm3_layers.extract_python(a)
+            except Exception:
+                code = ""
+            already_ran_py = any(rd.get("tool") == "run_python" and rd.get("ran") and rd.get("worked") for rd in rounds_list)
+            if (
+                code
+                and not already_ran_py
+                and computes(code)
+                and re.search(r"\b(?:print|assert)\b", code)
+                and not re.search(
+                    r"\b(?:input\s*\(|open\s*\(|os\.remove|os\.unlink|os\.rmdir|shutil\.|subprocess\.|socket\.|urllib\.|requests\.|fastapi|flask|django|uvicorn|plt\.show)\b",
+                    code,
+                )
+            ):
+                py_res = execute_python_fn(code)
+                if len(py_res) == 3:
+                    ran, out, worked = py_res
+                else:
+                    worked, out = py_res
+                    ran = True
+                meta["auto_python_ran"] = bool(ran)
+                meta["python_sandbox_checked"] = bool(ran)
+                if ran and not worked:
+                    findings.append(f"Code execution check: running your Python code raised an error:\n{str(out).strip()[:500]}")
 
-    # Optional Python sandbox execution check for self-contained computational code blocks not yet executed via tool
-    if execute_python_fn is not None and meta["compiler_ok"]:
-        already_ran_py = any(
-            r.get("ran") and r.get("tool") in ("run_python", "python", "calculate")
-            for r in (rounds or [])
-        )
-        if not already_ran_py:
-            py_blocks = _PY_FENCE.findall(ans)
-            for blk in py_blocks[:1]:
-                code_str = blk.strip()
-                if (
-                    code_str
-                    and len(code_str) <= 2400
-                    and computes(code_str)
-                    and ("print(" in code_str or "assert " in code_str)
-                    and not re.search(r"\b(?:input\s*\(|open\s*\(|requests\.|urllib\.|socket\.|subprocess\.|os\.system)", code_str)
-                ):
-                    meta["python_sandbox_checked"] = True
-                    meta["auto_python_ran"] = True
-                    py_res = execute_python_fn(code_str)
-                    if len(py_res) == 3:
-                        ran_py, py_out, ok_py = py_res
-                    else:
-                        ok_py, py_out = py_res
-                        ran_py = True
-                    if ran_py and not ok_py and py_out:
-                        findings.append("Running the Python code block in your answer raised an error:\n" + str(py_out).strip()[:450])
+    af = outcome_findings(q, a)
+    if af:
+        findings.extend(af)
 
-    # 3. Deterministic arithmetic & format verification (`outcome_findings`)
-    det_findings = outcome_findings(q, ans)
-    for df in det_findings:
-        if df not in findings:
-            findings.append(df)
+    exact_v = direct_arithmetic_value(q)
+    if exact_v is not None:
+        got_v = final_answer(q, a)
+        if not same(got_v, exact_v):
+            shown_v = f"{int(exact_v)}" if float(exact_v).is_integer() else f"{exact_v:g}"
+            findings.append(f"Arithmetic: the exact value is {shown_v} (your draft gave {got_v}).")
 
-    # 4. Unrecovered tool failure in `rounds`
-    if rounds:
-        failed_tools = [r for r in rounds if r.get("ran") and not r.get("worked")]
-        succeeded_tools = [r for r in rounds if r.get("ran") and r.get("worked")]
-        if failed_tools and not succeeded_tools:
-            last_fail = failed_tools[-1]
-            t_name = last_fail.get("tool") or "tool"
-            t_err = str(last_fail.get("result") or "")[:240]
-            findings.append(
-                f"Tool `{t_name}` failed during Execution ({t_err}) and no working tool call recovered. "
-                "Fix the tool arguments or use an alternative verification step so the answer is grounded in real output."
-            )
+    if rounds_list and not findings:
+        last_rd = rounds_list[-1]
+        if last_rd.get("ran") and not last_rd.get("worked"):
+            res_txt = str(last_rd.get("result") or "").strip()
+            if not res_txt.startswith(("[Clover permission]", "Not run:")) and not any(
+                rd.get("ran") and rd.get("worked") for rd in rounds_list
+            ):
+                if not re.search(r"\b(?:error|failed|could not|unable to|did not work|doesn'?t exist|not found)\b", a, re.I):
+                    findings.append(
+                        f"Tool execution check: `{last_rd.get('tool')}` failed with `{res_txt[:240]}`, "
+                        "but your draft did not resolve the error or report it honestly."
+                    )
 
     return findings, meta
-

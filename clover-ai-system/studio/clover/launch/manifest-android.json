@@ -38,11 +38,11 @@
      "sha256": "9e50db6fb7001166df1ac4d07dc6fd7ad355205a66dcd8964ec7e98188414e10", "size": 11780148}
   ],
   "datasets": [
-    {"component": "c2c3", "name": "Clover C2 HybridAgent, Bridges & C3 11-Level NCM (LFM3-Omni-2B)",
-     "repo": "Santhoshsathish94/clover-ai-studio", "revision": "5f886993d7259b0179294c36761f94e802ea8188",
+    {"component": "c2c3", "name": "Clover C2 HybridAgent, Bridges, JEPA & C3 11-Level NCM (LFM3-Omni-2B)",
+     "repo": "Santhoshsathish94/clover-ai-studio", "revision": "a783d9378a9e50c7a0f21bd7e21c0decd334a065",
      "prefix": "liquid-lfm3/", "dest": "data/omni/precomputed",
-     "include_prefixes": ["hybridagent/plan-trunk-0/", "bridges/bridge-trunk-0/", "ncm/", "trunks/tokenizer.json"],
+     "include_prefixes": ["hybridagent/plan-trunk-0/", "bridges/bridge-trunk-0/", "ncm/", "jepa/", "trunks/tokenizer.json"],
      "exclude_suffixes": [".pt", ".4bit.bin", ".py", ".yaml"],
-     "bytes": 586000000}
+     "bytes": 598000000}
   ]
 }

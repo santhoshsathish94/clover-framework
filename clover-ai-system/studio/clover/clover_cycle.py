@@ -253,6 +253,12 @@ def format_findings(question, answer):
         n = len(_sentences(a))
         if n > 1:
             out.append(f"Form: the question asks for one sentence; your answer has {n}.")
+    m_sent = re.search(r"\b(?:in|with|as|exactly)\s+(\d+|" + "|".join(_WORDNUM) + r")\s+(?:clear\s+|short\s+|concise\s+)?sentences\b", q, re.I)
+    if m_sent:
+        want_s = int(m_sent.group(1)) if m_sent.group(1).isdigit() else _WORDNUM[m_sent.group(1).lower()]
+        n_s = len(_sentences(a))
+        if n_s != want_s:
+            out.append(f"Form: the question asks for {want_s} sentences; your answer has {n_s}.")
     m = re.search(r"\b(\d+|" + "|".join(_WORDNUM) + r")\s+(?:bullet(?:\s+point)?s|bullets)\b", q, re.I)
     if m:
         want = int(m.group(1)) if m.group(1).isdigit() else _WORDNUM[m.group(1).lower()]
@@ -265,6 +271,12 @@ def format_findings(question, answer):
         words = len(re.findall(r"\b\w[\w'\-]*\b", re.sub(r"```[\s\S]*?```", " ", a)))
         if words > limit:
             out.append(f"Form: the question allows at most {limit} words; your answer has {words}.")
+    m_ex = re.search(r"\b(?:in\s+)?exactly\s+(\d+|" + "|".join(_WORDNUM) + r")\s+words\b", q, re.I)
+    if m_ex:
+        want_w = int(m_ex.group(1)) if m_ex.group(1).isdigit() else _WORDNUM[m_ex.group(1).lower()]
+        words = len(re.findall(r"\b\w[\w'\-]*\b", re.sub(r"```[\s\S]*?```", " ", a)))
+        if words != want_w:
+            out.append(f"Form: the question asks for exactly {want_w} words; your answer has {words}.")
     if re.search(r"\b(?:in|as|valid|return|output|respond\s+with|give)\s+(?:a\s+|an\s+|the\s+)?(?:valid\s+)?json\b", q, re.I):
         cand = _json_candidate(a)
         if cand is None:

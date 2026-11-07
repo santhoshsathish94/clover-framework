@@ -7,6 +7,7 @@ to repair):  python setup_fetch.py --base <install folder> [--components core,cs
 
 --reuse: another Clover install whose files with the same hash are copied instead of downloaded."""
 import argparse
+import concurrent.futures
 import fnmatch
 import hashlib
 import json
@@ -14,6 +15,7 @@ import os
 import re
 import shutil
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -21,12 +23,14 @@ import zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-UA = {"User-Agent": "CloverAIStudio-setup/0.4"}
+UA = {"User-Agent": "CloverAIStudio-setup/0.5"}
 LOG = None
+_LOG_LOCK = threading.Lock()
 # progress for a setup window: "@@{json}" lines on stdout when CLOVER_PROGRESS=1 (the exe), or ON_EVENT(ev) in-process
 PROGRESS = os.environ.get("CLOVER_PROGRESS") == "1"
 ON_EVENT = None
 STOP = None  # in-process (the phone app): a threading.Event; set, the run stops at the next chunk (resumable)
+_HF_DIRECT_OK = None  # None = untested, True = huggingface.co works, False = sticky fallback to HF_MIRROR
 
 
 class Stopped(Exception):
@@ -35,17 +39,19 @@ class Stopped(Exception):
 
 def emit(**ev):
     if PROGRESS:
-        print("@@" + json.dumps(ev), flush=True)
+        with _LOG_LOCK:
+            print("@@" + json.dumps(ev), flush=True)
     if ON_EVENT is not None:
         ON_EVENT(ev)
 
 
 def say(msg):
     line = time.strftime("%H:%M:%S ") + msg
-    print(line, flush=True)
-    if LOG:
-        with open(LOG, "a", encoding="utf-8") as f:
-            f.write(line + "\n")
+    with _LOG_LOCK:
+        print(line, flush=True)
+        if LOG:
+            with open(LOG, "a", encoding="utf-8") as f:
+                f.write(line + "\n")
 
 
 def mb(n):
@@ -74,9 +80,112 @@ HF_MIRROR = "https://api.cloverframework.com/api/hf-mirror"
 
 
 def _candidate_urls(url):
+    global _HF_DIRECT_OK
     if url.startswith("https://huggingface.co/"):
-        return [url, HF_MIRROR + url[len("https://huggingface.co"):]]
+        mirror_url = HF_MIRROR + url[len("https://huggingface.co"):]
+        if _HF_DIRECT_OK is False:
+            return [mirror_url, url]
+        return [url, mirror_url]
     return [url]
+
+
+def _mark_url_outcome(cur_url, ok):
+    global _HF_DIRECT_OK
+    if cur_url.startswith("https://huggingface.co/"):
+        if ok and _HF_DIRECT_OK is None:
+            _HF_DIRECT_OK = True
+        elif not ok:
+            _HF_DIRECT_OK = False
+
+
+def _download_parallel_ranges(url, part, label, size, gname, gbefore, gtotal, t0):
+    """Fast multi-connection HTTP Range downloader (6 parallel streams of 16 MB slices) for large model/dataset files."""
+    urls = _candidate_urls(url)
+    chosen_url = None
+    for cand in urls:
+        req = urllib.request.Request(cand, headers=dict(UA, Range="bytes=0-0"))
+        t_out = 10 if cand.startswith("https://huggingface.co/") else 25
+        try:
+            with urllib.request.urlopen(req, timeout=t_out) as r:
+                _mark_url_outcome(cand, True)
+                if r.status == 206:
+                    chosen_url = cand
+                    break
+        except Exception:
+            _mark_url_outcome(cand, False)
+            continue
+    if not chosen_url:
+        return False
+
+    slice_size = 16 * 1024 * 1024
+    ranges = []
+    pos = 0
+    while pos < size:
+        end = min(size - 1, pos + slice_size - 1)
+        ranges.append((pos, end))
+        pos = end + 1
+
+    with open(part, "wb") as f:
+        f.truncate(size)
+
+    prog_lock = threading.Lock()
+    state = {"done": 0, "tick": 0.0, "last": 0.0, "start_t": time.time()}
+
+    def fetch_slice(rng_pair):
+        s_off, e_off = rng_pair
+        expected = e_off - s_off + 1
+        for attempt in range(4):
+            if STOP is not None and STOP.is_set():
+                raise Stopped("stopped")
+            cur = s_off
+            req = urllib.request.Request(chosen_url, headers=dict(UA, Range=f"bytes={s_off}-{e_off}"))
+            try:
+                with urllib.request.urlopen(req, timeout=45) as r:
+                    if r.status != 206:
+                        raise RuntimeError(f"expected 206, got {r.status}")
+                    with open(part, "r+b") as wf:
+                        wf.seek(s_off)
+                        while cur <= e_off:
+                            if STOP is not None and STOP.is_set():
+                                raise Stopped("stopped")
+                            chunk = r.read(min(1 << 20, e_off - cur + 1))
+                            if not chunk:
+                                break
+                            wf.write(chunk)
+                            cur += len(chunk)
+                            with prog_lock:
+                                state["done"] += len(chunk)
+                                now = time.time()
+                                if now - state["tick"] > 0.5:
+                                    state["tick"] = now
+                                    rate_bps = int(state["done"] / max(0.1, now - state["start_t"]))
+                                    emit(ev="bytes", name=gname, done=gbefore + state["done"],
+                                         total=gtotal or size, rate=rate_bps)
+                                if now - state["last"] > 5:
+                                    state["last"] = now
+                                    rate_mbs = state["done"] / max(0.1, now - state["start_t"]) / 1048576
+                                    pct = state["done"] * 100 // size
+                                    say(f"   {label}: {mb(state['done'])} of {mb(size)} ({pct}%), {rate_mbs:.1f} MB/s")
+                if cur - s_off == expected:
+                    return True
+            except Stopped:
+                raise
+            except Exception:
+                with prog_lock:
+                    state["done"] = max(0, state["done"] - (cur - s_off))
+                time.sleep(1 + attempt)
+        return False
+
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(6, len(ranges))) as pool:
+            results = list(pool.map(fetch_slice, ranges))
+        return all(results)
+    except Stopped:
+        part.unlink(missing_ok=True)
+        raise
+    except Exception:
+        part.unlink(missing_ok=True)
+        return False
 
 
 def download(url, dest, label, sha256=None, size=None, sha1=None, group=None):
@@ -88,8 +197,19 @@ def download(url, dest, label, sha256=None, size=None, sha1=None, group=None):
     gname, gbefore, gtotal = group if group else (label, 0, None)
     if not group:
         emit(ev="item", name=label, state="getting", size=size)
-    urls = _candidate_urls(url)
+
+    if size is not None and size >= 12 * 1024 * 1024 and not part.exists():
+        if _download_parallel_ranges(url, part, label, size, gname, gbefore, gtotal, t0):
+            if good(part, sha256, size, sha1):
+                os.replace(part, dest)
+                got = dest.stat().st_size
+                emit(ev="bytes", name=gname, done=gbefore + got, total=gtotal or got, rate=0)
+                say(f"   {label}: done, {mb(got)} in {time.time() - t0:.0f} s, hash checked")
+                return
+            part.unlink(missing_ok=True)
+
     for attempt in range(8):
+        urls = _candidate_urls(url)
         have = part.stat().st_size if part.exists() else 0
         if part.is_file() and size is not None and have == size:
             break
@@ -98,8 +218,10 @@ def download(url, dest, label, sha256=None, size=None, sha1=None, group=None):
         for cur_url in urls:
             have = part.stat().st_size if part.exists() else 0
             req = urllib.request.Request(cur_url, headers=dict(UA, **({"Range": f"bytes={have}-"} if have else {})))
+            t_out = 12 if (cur_url.startswith("https://huggingface.co/") and _HF_DIRECT_OK is not True) else 45
             try:
-                with urllib.request.urlopen(req, timeout=60) as r:
+                with urllib.request.urlopen(req, timeout=t_out) as r:
+                    _mark_url_outcome(cur_url, True)
                     append = have and r.status == 206
                     total = (have if append else 0) + int(r.headers.get("Content-Length") or 0)
                     done = have if append else 0
@@ -126,14 +248,16 @@ def download(url, dest, label, sha256=None, size=None, sha1=None, group=None):
                 if exc.code == 416:  # nothing left to fetch
                     ok_attempt = True
                     break
+                _mark_url_outcome(cur_url, False)
                 last_exc = exc
             except (urllib.error.URLError, OSError, TimeoutError) as exc:
+                _mark_url_outcome(cur_url, False)
                 last_exc = exc
         if ok_attempt:
             break
         if isinstance(last_exc, urllib.error.HTTPError) and last_exc.code in (401, 403, 404):
             raise NotFound(f"{url} answered {last_exc.code}") from None
-        wait = min(60, 5 * (attempt + 1))
+        wait = min(30, 3 * (attempt + 1))
         say(f"   {label}: {type(last_exc).__name__}: {last_exc}; again in {wait} s")
         time.sleep(wait)
     else:
@@ -240,30 +364,35 @@ def fetch_archive(base, item, reuse):
 
 
 def _list_dataset_files(repo, revision, prefix):
-    """List dataset files via Hugging Face REST API (`urllib.request`, zero external library required on Android),
-    with automatic fallback to `HF_MIRROR` when local DNS/firewall blocks `huggingface.co`, and `huggingface_hub.HfApi`."""
+    """List dataset files via Hugging Face REST API (`urllib.request`, zero external library required on Android)
+    and `HF_MIRROR`, merging entries by path so newly computed JEPA & C2/C3 artifacts on `HF_MIRROR` are always included."""
     pfx = prefix.rstrip("/")
     api_url = f"https://huggingface.co/api/datasets/{repo}/tree/{revision}/{pfx}?recursive=true"
-    for cur_url in _candidate_urls(api_url):
+    mirror_api_url = HF_MIRROR + api_url[len("https://huggingface.co"):]
+    merged = {}
+    for cur_url in (mirror_api_url, api_url) if _HF_DIRECT_OK is False else (api_url, mirror_api_url):
         req = urllib.request.Request(cur_url, headers=UA)
+        t_out = 12 if cur_url.startswith("https://huggingface.co/") else 30
         try:
-            with urllib.request.urlopen(req, timeout=60) as r:
+            with urllib.request.urlopen(req, timeout=t_out) as r:
                 entries = json.loads(r.read().decode("utf-8"))
-            out = []
             for e in entries:
                 if not isinstance(e, dict) or e.get("type") != "file":
                     continue
                 lfs = e.get("lfs") if isinstance(e.get("lfs"), dict) else None
-                out.append({
-                    "path": str(e["path"]),
+                p_str = str(e["path"])
+                item_meta = {
+                    "path": p_str,
                     "size": int(e.get("size") or (lfs.get("size") if lfs else 0) or 0),
                     "sha256": str(lfs.get("oid")) if (lfs and lfs.get("oid")) else None,
                     "sha1": None if (lfs and lfs.get("oid")) else str(e.get("oid") or ""),
-                })
-            if out:
-                return out
+                }
+                if p_str not in merged or cur_url == mirror_api_url:
+                    merged[p_str] = item_meta
         except Exception:
             continue
+    if merged:
+        return [merged[k] for k in sorted(merged)]
     from huggingface_hub import HfApi
     from huggingface_hub.hf_api import RepoFile
     return [
@@ -280,9 +409,37 @@ def _list_dataset_files(repo, revision, prefix):
 
 def fetch_dataset(base, item, reuse):
     label, prefix = item["name"], item["prefix"]
-    all_files = _list_dataset_files(item["repo"], item["revision"], prefix)
+    dest_root = base / item["dest"]
     inc = tuple(item.get("include_prefixes") or ())
     exc = tuple(item.get("exclude_suffixes") or ())
+    stamp_path = dest_root / ".clover-dataset.json"
+
+    if stamp_path.is_file():
+        try:
+            st_doc = json.loads(stamp_path.read_text(encoding="utf-8"))
+            st_files = st_doc.get("files") or {}
+            if (
+                st_doc.get("revision") == item["revision"]
+                and tuple(st_doc.get("include_prefixes") or ()) == inc
+                and st_files
+                and (not ("jepa/" in inc) or any(k.startswith("jepa/") for k in st_files))
+            ):
+                all_present = True
+                total_st = 0
+                for rel_p, sz_expected in st_files.items():
+                    fp_c = dest_root / rel_p
+                    if not fp_c.is_file() or fp_c.stat().st_size != int(sz_expected):
+                        all_present = False
+                        break
+                    total_st += int(sz_expected)
+                if all_present:
+                    emit(ev="bytes", name=label, done=total_st, total=total_st, rate=0)
+                    say(f"ok {label} ({len(st_files)} were already here)")
+                    return
+        except Exception:
+            pass
+
+    all_files = _list_dataset_files(item["repo"], item["revision"], prefix)
     files = []
     for e in all_files:
         rel = e["path"][len(prefix):] if e["path"].startswith(prefix) else e["path"]
@@ -294,24 +451,73 @@ def fetch_dataset(base, item, reuse):
     total = sum(e["size"] for _, e in files)
     say(f"get {label}: {len(files)} files, {mb(total)} ({item['repo']}@{item['revision'][:8]})")
     emit(ev="item", name=label, state="getting", size=total)
-    have, before = 0, 0
-    for i, (rel, e) in enumerate(files, 1):
-        dest = base / item["dest"] / rel
+
+    def _check_existing(idx_pair):
+        i, (rel, e) = idx_pair
+        dest = dest_root / rel
         sha256, sha1, sz = e["sha256"], e["sha1"], e["size"]
         if good(dest, sha256, sz, sha1):
-            have += 1
-            before += sz
-            emit(ev="bytes", name=label, done=before, total=total, rate=0)
-            continue
+            return ("have", i, rel, e)
         src = (reuse / item["dest"] / rel) if reuse is not None else None
         if src is not None and good(src, sha256, sz, sha1):
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src, dest)
-            before += sz
-            continue
+            return ("reused", i, rel, e)
+        return ("todo", i, rel, e)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+        checked = list(pool.map(_check_existing, enumerate(files, 1)))
+
+    have = sum(1 for status_k, _, _, _ in checked if status_k == "have")
+    done_bytes = sum(e["size"] for status_k, _, _, e in checked if status_k in ("have", "reused"))
+    if done_bytes:
+        emit(ev="bytes", name=label, done=done_bytes, total=total, rate=0)
+
+    todo = [(i, rel, e) for status_k, i, rel, e in checked if status_k == "todo"]
+    small_todo = [(i, rel, e) for i, rel, e in todo if e["size"] < 12 * 1024 * 1024]
+    large_todo = [(i, rel, e) for i, rel, e in todo if e["size"] >= 12 * 1024 * 1024]
+
+    if small_todo:
+        prog_lock = threading.Lock()
+        state = {"done": done_bytes}
+
+        def _fetch_small(item_triple):
+            i, rel, e = item_triple
+            if STOP is not None and STOP.is_set():
+                raise Stopped("stopped")
+            dest = dest_root / rel
+            sha256, sha1, sz = e["sha256"], e["sha1"], e["size"]
+            url = f"https://huggingface.co/datasets/{item['repo']}/resolve/{item['revision']}/{e['path']}"
+            with prog_lock:
+                cur_before = state["done"]
+            download(url, dest, f"{label} [{i}/{len(files)}] {rel}", sha256, sz, sha1, group=(label, cur_before, total))
+            with prog_lock:
+                state["done"] += sz
+                emit(ev="bytes", name=label, done=state["done"], total=total, rate=0)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+            futs = [pool.submit(_fetch_small, t) for t in small_todo]
+            for fut in concurrent.futures.as_completed(futs):
+                fut.result()
+        done_bytes = state["done"]
+
+    for i, rel, e in large_todo:
+        dest = dest_root / rel
+        sha256, sha1, sz = e["sha256"], e["sha1"], e["size"]
         url = f"https://huggingface.co/datasets/{item['repo']}/resolve/{item['revision']}/{e['path']}"
-        download(url, dest, f"{label} [{i}/{len(files)}] {rel}", sha256, sz, sha1, group=(label, before, total))
-        before += sz
+        download(url, dest, f"{label} [{i}/{len(files)}] {rel}", sha256, sz, sha1, group=(label, done_bytes, total))
+        done_bytes += sz
+
+    try:
+        dest_root.mkdir(parents=True, exist_ok=True)
+        stamp_doc = {
+            "revision": item["revision"],
+            "include_prefixes": list(inc),
+            "files": {rel: int(e["size"]) for rel, e in files},
+        }
+        stamp_path.write_text(json.dumps(stamp_doc, indent=2), encoding="utf-8")
+    except OSError:
+        pass
     say(f"ok {label} ({have} were already here)")
 
 

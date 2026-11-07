@@ -1,0 +1,21 @@
+{
+  "device": "cuda:0",
+  "causal_commit_pruned_vs_raw_cos": 1.0,
+  "causal_commit_pruned_vs_raw_max_abs_diff": 0.0,
+  "block_diffusion_preview_pruned_vs_raw_cos": 1.0,
+  "block_diffusion_preview_pruned_vs_raw_max_abs_diff": 0.0,
+  "moe_4bit_vs_bf16_cos": 0.997095,
+  "hidden_state_shape": [
+    1,
+    8,
+    2048
+  ],
+  "logits_shape": [
+    1,
+    8,
+    248320
+  ],
+  "bd_gdn_30_layers_verified": 30,
+  "gqa_attention_bin_dropped": true,
+  "all_finite": true
+}

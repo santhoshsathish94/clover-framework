@@ -85,8 +85,8 @@
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "mirror": "download/laptop/CloverAIStudio-Setup.exe",
         "type": "exe",
-        "size_bytes": 8993752,
-        "sha256": "f2d21368801ba5408757700412a7c6aa5d8d0ed43db5d106789c94b320226da8"
+        "size_bytes": 9003480,
+        "sha256": "bcdee171e9e1f5c0e7ffe951c7593c08c5b5e2f49b47c788db41ec09f7fdfedd"
       },
       {
         "file": "release/beta/windows/CloverFramework-CodeSign.cer",

@@ -117,7 +117,7 @@ IMAGE_MODELS = ("sd15-lcm", "sd15")  # image_gen.presets; the default is the bes
 JEPA_ARCHS = ("auto", "clover_rpre", "ijepa", "audio_jepa", "eb_jepa", "mjepa", "none")
 # gpu / cpu: LFM3-Omni-2B on llama.cpp; fused: C1 + C2 + C3, the phone's fused runtime on the CPU (fused_engine.py)
 ENGINES = ("gpu", "cpu", "fused")
-WEB_MODELS = ("omni", "nemotron-3.5-super-vl", "kimi-k3")
+WEB_MODELS = ("omni", "clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3")
 MODELS = WEB_MODELS if paths.WEB else ("omni",)
 
 
@@ -204,7 +204,7 @@ def engine_for(model_key=None):
     elif ent.get("key_id"):
         key = vault.get(base_dir, ent["key_id"])
     rm_name = ent.get("remote_model") or ""
-    if ent.get("host") == "k3" and rm_name in ("nemotron-3.5-super-vl", "kimi-k3"):
+    if ent.get("host") == "k3" and rm_name in ("clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3"):
         k3_omni_ent = next((x for x in k3_host_engine.owner_k3_models() if x.get("remote_model") == "omni"), ent)
         r_omni = k3_host_engine.RemoteOmniEngine(k3_omni_ent, base_dir, S.perms, api_key=key, local_omni=S.omni_engine)
         eng = k3_host_engine.K3HostEngine(
@@ -1133,7 +1133,7 @@ def load_engine(args):
             if paths.WEB:
                 import k3_host_engine
                 S.k3_engines = {k: k3_host_engine.K3HostEngine(k, S.omni_engine, Path(args.base), S.perms)
-                                for k in ("nemotron-3.5-super-vl", "kimi-k3")}
+                                for k in ("clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3")}
             S.remote_engines.clear()
             try:
                 import omni_c2_c3
@@ -1446,7 +1446,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                 # a message asking for a tool is not a question about Clover's knowledge: the ontology layer matched
                 # "Clover" in C:\Users\santh\CloverAI\... and in a pasted clover-framework URL, added records with "no
                 # tools needed", and the Omni summarised them instead of opening the file or cloning the repository
-                act = bool(only)
+                act = bool(getattr(frame, "caps", ()))
                 turn_layers = tuple(x for x in layers if x != "ontology") if act else layers
                 import device_actions
                 if omni and not media and device_actions.asks_for_screen_or_activity(typed):
@@ -1900,26 +1900,27 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(400, {"error": "invalid mirror path"})
         k3_data = Path("/opt/clover-k3/core-observe/laptop-base/data")
         base_data = k3_data if k3_data.is_dir() else (Path(S.args.base) / "data")
+        own_pre = Path(S.args.base) / "data" / "omni" / "precomputed"
         k3_pre = Path("/home/santhosh/oss/clover-framework/clover-ai-system/src/models/lfm3-1.7b/models")
-        precomp = k3_pre if k3_pre.is_dir() else (Path(S.args.base) / "data" / "omni" / "precomputed")
+        precomp = own_pre if (own_pre / "hybridagent").is_dir() else (k3_pre if k3_pre.is_dir() else own_pre)
         if (precomp / "models").is_dir():
             precomp = precomp / "models"
 
         if rel.startswith("api/datasets/Santhoshsathish94/clover-ai-studio/tree/") and rel.endswith("/liquid-lfm3"):
             if not precomp.is_dir():
                 return self._send(404, {"error": "precomputed dataset not found"})
-            cache_f = Path("/tmp/clover_hf_mirror_tree_v6.json") if os.name != "nt" else (Path(S.args.base) / "cache" / "hf_mirror_tree_v6.json")
+            cache_f = Path("/tmp/clover_hf_mirror_tree_v7.json") if os.name != "nt" else (Path(S.args.base) / "cache" / "hf_mirror_tree_v7.json")
             if cache_f.is_file():
                 try:
                     return self._send(200, cache_f.read_bytes(), "application/json")
                 except OSError:
                     pass
-            inc = ("hybridagent/plan-trunk-0/", "bridges/bridge-trunk-0/", "ncm/", "trunks/tokenizer.json", "trunks/global-0/embed_tokens.bf16.bin")
+            inc = ("hybridagent/plan-trunk-0/", "bridges/bridge-trunk-0/", "ncm/", "jepa/", "trunks/tokenizer.json", "trunks/global-0/embed_tokens.bf16.bin")
             entries = []
             all_fps = []
             for root_d, _, fnames in os.walk(precomp, followlinks=True):
                 for fn in fnames:
-                    if not fn.endswith(".pt"):
+                    if not fn.endswith(".pt") and not fn.startswith(".clover-"):
                         all_fps.append(Path(root_d) / fn)
             for fp in sorted(all_fps):
                 r_posix = fp.relative_to(precomp).as_posix()
@@ -1947,7 +1948,11 @@ class Handler(BaseHTTPRequestHandler):
         target = None
         m_ds = re.match(r"^datasets/Santhoshsathish94/clover-ai-studio/resolve/[^/]+/liquid-lfm3/(.+)$", rel)
         if m_ds:
-            target = precomp / m_ds.group(1)
+            sub_rel = m_ds.group(1)
+            for cand_pre in (precomp, own_pre, k3_pre):
+                if cand_pre and (cand_pre / sub_rel).is_file():
+                    target = cand_pre / sub_rel
+                    break
         m_csi = re.match(r"^datasets/Santhoshsathish94/clover-ai-studio/resolve/[^/]+/csi/morph-verb-v1\.1/([^/]+)$", rel)
         if m_csi:
             for d_cand in (Path(S.args.base) / "data", base_data):
@@ -1966,29 +1971,37 @@ class Handler(BaseHTTPRequestHandler):
 
         total = target.stat().st_size
         start = 0
+        end = max(0, total - 1)
+        has_range = False
         rng = (self.headers.get("Range") or "").strip()
-        m_rng = re.match(r"^bytes=(\d+)-$", rng)
-        if m_rng:
+        m_rng = re.match(r"^bytes=(\d+)-(\d*)$", rng)
+        if m_rng and total > 0:
             start = int(m_rng.group(1))
-            if start >= total:
+            if m_rng.group(2):
+                end = min(total - 1, int(m_rng.group(2)))
+            if start >= total or start > end:
                 self.send_response(416)
                 self.send_header("Content-Range", f"bytes */{total}")
                 self.end_headers()
                 return
-        self.send_response(206 if start > 0 else 200)
+            has_range = True
+        length = (end - start + 1) if total > 0 else 0
+        self.send_response(206 if has_range else 200)
         self.send_header("Content-Type", "application/octet-stream")
-        self.send_header("Content-Length", str(total - start))
+        self.send_header("Content-Length", str(length))
         self.send_header("Accept-Ranges", "bytes")
-        if start > 0:
-            self.send_header("Content-Range", f"bytes {start}-{total - 1}/{total}")
+        if has_range:
+            self.send_header("Content-Range", f"bytes {start}-{end}/{total}")
         self.end_headers()
         with open(target, "rb") as f:
             if start > 0:
                 f.seek(start)
-            while True:
-                buf = f.read(1 << 20)
+            rem = length
+            while rem > 0:
+                buf = f.read(min(1 << 20, rem))
                 if not buf:
                     break
+                rem -= len(buf)
                 try:
                     self.wfile.write(buf)
                 except (BrokenPipeError, ConnectionResetError):

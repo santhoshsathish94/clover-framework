@@ -1,0 +1,65 @@
+{
+  "autonomous_cycle": {
+    "base_c1_pass": "0/6",
+    "base_total_verified": "6/6",
+    "novel_heldout_c1_acc": 0.0,
+    "self_train": {
+      "cycle_updates": 42,
+      "idm_mse_after": 0.05614,
+      "idm_mse_before": 0.16378,
+      "ms": 38.49,
+      "self_trained": true,
+      "transition_mse_after": 0.06228,
+      "transition_mse_before": 2.56183,
+      "verified_samples": 18
+    },
+    "synthesized_count": 6
+  },
+  "collective_gateway": {
+    "accepted_count": 5,
+    "accepted_package_ids": [
+      "cand_gpu_corroborate_v1_w2",
+      "cand_gpu_audit_v1_w2",
+      "cand_gpu_benchmark_v1_w2",
+      "cand_gpu_reconcile_v1_w2",
+      "cand_gpu_forecast_v1_w2"
+    ],
+    "consent_status": "active",
+    "contributor_id": "contrib_eb1641cfaf9c6266113e7347",
+    "evaluated_count": 5,
+    "ok": true,
+    "promoted_count": 5,
+    "rejected": [],
+    "rejected_count": 0,
+    "release_version": "1.0.327"
+  },
+  "elapsed_s": 102.36,
+  "gpu_refinement": {
+    "gpu_count": 8,
+    "gpu_mem_allocated_mb": [
+      25.53,
+      16.25,
+      16.25,
+      16.25,
+      16.25,
+      16.25,
+      16.25,
+      16.25
+    ],
+    "gpu_names": [
+      "NVIDIA GeForce RTX 3090",
+      "NVIDIA GeForce RTX 3090",
+      "NVIDIA GeForce RTX 3090",
+      "NVIDIA GeForce RTX 3090",
+      "NVIDIA GeForce RTX 3090",
+      "NVIDIA GeForce RTX 3090",
+      "NVIDIA GeForce RTX 3090",
+      "NVIDIA GeForce RTX 3090"
+    ],
+    "updated": true,
+    "val_loss_after": 0.154079,
+    "val_loss_before": 0.214787
+  },
+  "round": 2,
+  "timestamp_utc": "2026-11-07T17:13:41Z"
+}

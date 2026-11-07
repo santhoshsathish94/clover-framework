@@ -1,0 +1,8 @@
+{
+  "model_repo": "Diffuspace/Clover-35B-A3B-Preview",
+  "work_dir": "/dev/shm/clover-port/clover-35b-a3b",
+  "cached_experts_per_stage": 16,
+  "bd_gdn_containers_extracted": 30,
+  "gqa_attention_bin_dropped": true,
+  "elapsed_seconds": 51.94
+}

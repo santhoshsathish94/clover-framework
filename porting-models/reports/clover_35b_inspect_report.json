@@ -1,0 +1,19 @@
+{
+  "model_key": "clover-35b-a3b",
+  "display_name": "Clover-35B-A3B (35B / 3B Active, 30 BD-GDN + 10 Gated GQA + Block Diffusion MoE)",
+  "hf_repo_id": "Diffuspace/Clover-35B-A3B-Preview",
+  "model_type": "clover_moe",
+  "architectures": [
+    "CloverMoeModelLM"
+  ],
+  "hidden_size": 2048,
+  "vocab_size": 248320,
+  "total_layers": 40,
+  "index_summary": {
+    "total_parameter_bytes": 69322701696,
+    "total_tensors": 813,
+    "total_shards": 28,
+    "dsa_indexer_tensors_count": 0
+  },
+  "drafter_summary": {}
+}

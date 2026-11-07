@@ -1,0 +1,22 @@
+{
+  "model_key": "clover-35b-a3b",
+  "vocab_size": 248320,
+  "vq_levels": [
+    1,
+    4,
+    8,
+    14,
+    20,
+    26,
+    32,
+    40,
+    48,
+    56,
+    64
+  ],
+  "total_vq_codes": 313,
+  "surface_token_acc_before": 0.0035,
+  "surface_token_acc_after": 0.9843,
+  "concept_384_cos_after": 0.2041,
+  "expert_bridge_alpha": 1.1019
+}

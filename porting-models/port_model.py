@@ -116,6 +116,16 @@ def cmd_prepare_trunks(cfg: dict[str, Any], work_dir: Path, cached_experts: int 
         )
         print(json.dumps(res, indent=2), flush=True)
         return res
+    if model_key.startswith("clover-35b"):
+        from clover_35b_gpu_backbone import prepare_clover_35b_datasets
+
+        res = prepare_clover_35b_datasets(
+            work_dir=work_dir,
+            repo_id=cfg["hf_repo_id"],
+            num_cached_experts_per_stage=cached_experts,
+        )
+        print(json.dumps(res, indent=2), flush=True)
+        return res
     raise ValueError(f"Unsupported model_key for prepare_trunks: {model_key}")
 
 
@@ -128,14 +138,28 @@ def cmd_prune_trunks(cfg: dict[str, Any], work_dir: Path) -> dict[str, Any]:
         (work_dir / "prune_and_stage_verification.json").write_text(json.dumps(res, indent=2), encoding="utf-8")
         print(json.dumps(res, indent=2), flush=True)
         return res
+    if model_key.startswith("clover-35b"):
+        from clover_35b_gpu_backbone import verify_clover_35b_stages
+
+        res = verify_clover_35b_stages(work_dir)
+        (work_dir / "prune_and_stage_verification.json").write_text(json.dumps(res, indent=2), encoding="utf-8")
+        print(json.dumps(res, indent=2), flush=True)
+        return res
     raise ValueError(f"Unsupported model_key for prune_trunks: {model_key}")
 
 
 def cmd_train_hybridagent(cfg: dict[str, Any], work_dir: Path, gpus: int = 8) -> None:
+    model_key = cfg["model_key"]
     t_defaults = cfg.get("training_defaults", {})
     s1 = int(t_defaults.get("hybridsft_stage1_steps", 40))
     s2 = int(t_defaults.get("hybridsft_stage2_steps", 60))
     s3 = int(t_defaults.get("hybridsft_stage3_steps", 60))
+    if model_key.startswith("clover-35b"):
+        from train_clover_35b_hybrid_ncm_gpu import run_full_clover_35b_port_training
+
+        ncm_steps = int(t_defaults.get("ncm_bridge_steps", 400))
+        run_full_clover_35b_port_training(work_dir, s1_steps=s1, s2_steps=s2, s3_steps=s3, ncm_steps=ncm_steps)
+        return
     script = SCRIPT_DIR / "train_kimi_k31_hybridagent_gpu.py"
 
     if gpus > 1:
@@ -171,6 +195,22 @@ def cmd_train_hybridagent(cfg: dict[str, Any], work_dir: Path, gpus: int = 8) ->
 
 
 def cmd_train_ncm(cfg: dict[str, Any], work_dir: Path) -> None:
+    model_key = cfg["model_key"]
+    if model_key.startswith("clover-35b"):
+        if (work_dir / "hybrid-ncm" / "clover_35b_hybrid_ncm_gpu_training_summary.json").is_file():
+            print("[Clover Port] Clover-35B NCM & Bridges already trained in unified GPU pass.", flush=True)
+            return
+        from train_clover_35b_hybrid_ncm_gpu import run_full_clover_35b_port_training
+
+        t_defaults = cfg.get("training_defaults", {})
+        run_full_clover_35b_port_training(
+            work_dir,
+            s1_steps=int(t_defaults.get("hybridsft_stage1_steps", 40)),
+            s2_steps=int(t_defaults.get("hybridsft_stage2_steps", 60)),
+            s3_steps=int(t_defaults.get("hybridsft_stage3_steps", 60)),
+            ncm_steps=int(t_defaults.get("ncm_bridge_steps", 400)),
+        )
+        return
     t_defaults = cfg.get("training_defaults", {})
     n_win = int(t_defaults.get("ncm_windows", 1024))
     vq_steps = int(t_defaults.get("vqvae_steps", 400))
@@ -194,6 +234,31 @@ def cmd_train_ncm(cfg: dict[str, Any], work_dir: Path) -> None:
 
 
 def cmd_verify(cfg: dict[str, Any], work_dir: Path) -> dict[str, Any]:
+    model_key = cfg["model_key"]
+    if model_key.startswith("clover-35b"):
+        from clover_35b_gpu_backbone import verify_clover_35b_stages
+
+        stage_ver = verify_clover_35b_stages(work_dir)
+        ha_sum_p = work_dir / "hybridagent-8gpu" / "clover_35b_hybridagent_training_summary.json"
+        ncm_sum_p = work_dir / "hybrid-ncm" / "clover_35b_hybrid_ncm_gpu_training_summary.json"
+        jepa_sum_p = work_dir / "hf-stage" / "jepa" / "clover_35b_jepa_report.json"
+
+        report = {
+            "model_key": cfg["model_key"],
+            "hf_repo_id": cfg["hf_repo_id"],
+            "gguf_hf_repo_id": cfg.get("gguf_hf_repo_id"),
+            "stage_verification": stage_ver,
+            "hybridagent_summary": json.loads(ha_sum_p.read_text(encoding="utf-8")) if ha_sum_p.exists() else None,
+            "ncm_summary": json.loads(ncm_sum_p.read_text(encoding="utf-8")) if ncm_sum_p.exists() else None,
+            "jepa_summary": json.loads(jepa_sum_p.read_text(encoding="utf-8")) if jepa_sum_p.exists() else None,
+            "hf_stage_ready": (work_dir / "hf-stage" / "bridges" / "bridge-trunk-0" / "index.bin").is_file(),
+        }
+        (work_dir / "port_verification_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+        if (work_dir / "hf-stage").is_dir():
+            (work_dir / "hf-stage" / "port_verification_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+        print(json.dumps(report, indent=2), flush=True)
+        return report
+
     from kimi_k31_gpu_backbone import verify_kimi_k31_stages
 
     stage_ver = verify_kimi_k31_stages(work_dir / "pruned")

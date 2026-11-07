@@ -1,0 +1,19 @@
+{
+  "model_key": "clover-35b-a3b",
+  "hf_repo_id": "Diffuspace/Clover-35B-A3B-Preview",
+  "gpus_used": 8,
+  "hidden_size": 2048,
+  "vocab_size": 248320,
+  "ntp_loss_before": 7.7253,
+  "ntp_loss_after": 0.0032,
+  "stage_losses": {
+    "stage1": 0.0208,
+    "stage2": 0.0047,
+    "stage3": 0.0032
+  },
+  "token_accuracy_after": 1.0,
+  "eval_cos_512_before": 0.0224,
+  "eval_cos_512_after": 0.2699,
+  "eval_cos_1024_after": 0.4743,
+  "eval_cos_2048_after": 0.9812
+}
