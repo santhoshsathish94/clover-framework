@@ -733,7 +733,14 @@ def collective_gateway_runtime():
         gw = collective_gateway.CollectiveGateway(state_dir=base / "collective-gateway")
         min_inst = int(os.environ.get("CLOVER_CPSL_MIN_INSTALLATIONS") or 2)
         ev = collective_evaluator.CollectiveEvaluator(min_installations=min_inst, min_agreement=0.75)
-        reg = core_registry.CoreRegistry(base / "clover-collective")
+        vault_key = Path("/opt/clover-k3/web-studio/vault/cpsl_release_ed25519.key")
+        sig_key = None
+        if (paths.WEB or os.environ.get("CLOVER_CPSL_USE_SERVER_VAULT") == "1") and vault_key.is_file():
+            try:
+                sig_key = vault_key.read_text(encoding="utf-8").strip()
+            except Exception:
+                sig_key = None
+        reg = core_registry.CoreRegistry(base / "clover-collective", signing_key=sig_key)
         S.gateway_runtime = {"gateway": gw, "evaluator": ev, "registry": reg, "lock": threading.RLock()}
     return S.gateway_runtime
 
@@ -2238,6 +2245,7 @@ class Handler(BaseHTTPRequestHandler):
             bearer = self._bearer_token()
             try:
                 with gw_rt["lock"]:
+                    jepa_growth_in = body.pop("jepa_growth", None) if isinstance(body, dict) else None
                     if path.endswith("/contribute"):
                         res = gw_rt["gateway"].submit_authenticated_contribution(id_token=bearer, payload=body)
                     else:
@@ -2248,7 +2256,11 @@ class Handler(BaseHTTPRequestHandler):
                     res["promoted_count"] = eval_res["promoted_count"]
                     if gw_rt["registry"]._seed is not None:
                         note = "Collective gateway evaluation" if path.endswith("/contribute") else "Contributor withdrawal re-evaluation"
-                        manifest = gw_rt["registry"].publish_release(eval_res, note=note)
+                        manifest = gw_rt["registry"].publish_release(
+                            eval_res,
+                            note=note,
+                            jepa_growth=jepa_growth_in if isinstance(jepa_growth_in, dict) else None,
+                        )
                         res["release_version"] = manifest["version"]
                 return self._send(200, res)
             except collective_gateway.GatewaySecurityError as exc:
@@ -2510,12 +2522,25 @@ class Handler(BaseHTTPRequestHandler):
                 if path.endswith("/start"):
                     redir = str(body.get("redirect_uri") or f"http://127.0.0.1:{S.port}/api/identity/google/callback").strip()
                     res = mgr.start_pkce_flow(redirect_uri=redir, client_id=body.get("client_id"))
-                    if body.get("open_browser") is True and os.name == "nt":
-                        import webbrowser
-                        try:
-                            webbrowser.open(res["auth_url"])
-                        except Exception:
-                            pass
+                    if body.get("open_browser") is True:
+                        if not os.environ.get("CLOVER_GOOGLE_CLIENT_SECRET", "").strip():
+                            st = mgr.connect_device_oidc()
+                            if S.repo is not None:
+                                S.repo.note("Google identity connected via OIDC device session")
+                            coll = collective_store()
+                            return self._send(200, dict(
+                                res,
+                                ok=True,
+                                connected=True,
+                                google_identity=st,
+                                collective=coll.view(personal_store(), google_status=st) if coll else None,
+                            ))
+                        if os.name == "nt":
+                            import webbrowser
+                            try:
+                                webbrowser.open(res["auth_url"])
+                            except Exception:
+                                pass
                     return self._send(200, res)
                 if path.endswith("/token"):
                     id_tok = str(body.get("id_token") or "").strip()

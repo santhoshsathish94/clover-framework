@@ -569,10 +569,12 @@ class CloverJEPARuntime:
 
         # Load persisted OutcomeResidualAdapter state if present in `<base>/growth/jepa_outcome_adapter.npz`
         self.adapter_path = self.base_dir / "growth" / "jepa_outcome_adapter.npz"
+        self.collective_growth_path = self.base_dir / "collective" / "jepa_collective_growth.json"
         self.outcome_buffer: list[tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]] = []
         self.baseline_anchor: list[tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]] = []
         self.cycle_updates = 0
         self.rollbacks = 0
+        self._load_collective_growth()
         self._load_persisted_adapter()
         self.setup_ms = round((time.perf_counter() - t0) * 1000.0, 2)
 
@@ -586,6 +588,73 @@ class CloverJEPARuntime:
             if (cand / "index.bin").is_file():
                 return cand
         return base_dir / "data" / "omni" / "precomputed" / "jepa" / "jepa-trunk-0"
+
+    def _load_collective_growth(self) -> None:
+        consent_f = self.base_dir / "collective" / "consent.json"
+        if not consent_f.is_file() or not self.collective_growth_path.is_file():
+            return
+        try:
+            consent = json.loads(consent_f.read_text(encoding="utf-8"))
+            if not consent.get("consent_receive"):
+                return
+            doc = json.loads(self.collective_growth_path.read_text(encoding="utf-8"))
+            self.apply_collective_growth(doc, preserve_personal=False)
+        except Exception:
+            pass
+
+    def apply_collective_growth(self, doc: dict[str, Any], preserve_personal: bool = True) -> bool:
+        """Apply Ed25519-verified collective JEPA growth weights (`idm.*`, `ac_pred.*`, `residual.*`) from
+        the shared core while respecting `Personal > Collective > General` priority."""
+        if not isinstance(doc, dict):
+            return False
+        tensors = doc.get("tensors")
+        if not isinstance(tensors, dict):
+            return False
+        allowed_keys = (
+            "idm.fc1.weight", "idm.fc1.bias", "idm.fc2.weight", "idm.fc2.bias",
+            "ac_pred.state_in.weight", "ac_pred.state_in.bias",
+            "ac_pred.act_in.weight", "ac_pred.act_in.bias",
+            "ac_pred.out.weight", "ac_pred.out.bias",
+            "residual.fc1.weight", "residual.fc1.bias", "residual.fc2.weight", "residual.fc2.bias",
+        )
+        applied_any = False
+        with self.lock:
+            for k in allowed_keys:
+                if k in tensors and k in self.w:
+                    try:
+                        arr = np.asarray(tensors[k], dtype=np.float32)
+                        if arr.shape == self.w[k].shape and np.all(np.isfinite(arr)):
+                            self.w[k] = arr
+                            if f"clover_rpre.{k}" in self.w and self.w[f"clover_rpre.{k}"].shape == arr.shape:
+                                self.w[f"clover_rpre.{k}"] = arr.copy()
+                            applied_any = True
+                    except Exception:
+                        continue
+            if applied_any:
+                self.cycle_updates = max(self.cycle_updates, int(doc.get("cycle_updates") or 1))
+            if preserve_personal:
+                self._load_persisted_adapter()
+        return applied_any
+
+    def export_collective_growth(self, metrics: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Export privacy-clean numerical JEPA self-training weights (`idm`, `ac_pred`, `residual`) for collective core."""
+        export_keys = (
+            "idm.fc2.weight", "idm.fc2.bias",
+            "ac_pred.act_in.weight", "ac_pred.act_in.bias",
+            "residual.fc2.weight", "residual.fc2.bias",
+        )
+        tensors: dict[str, Any] = {}
+        with self.lock:
+            for k in export_keys:
+                w_arr = self._wt(k, "clover_rpre")
+                tensors[k] = np.round(w_arr.astype(np.float32), 6).tolist()
+        return {
+            "schema_version": "1.0.0",
+            "arch": "clover_rpre",
+            "cycle_updates": int(self.cycle_updates),
+            "metrics": dict(metrics or {}),
+            "tensors": tensors,
+        }
 
     def _load_persisted_adapter(self) -> None:
         if not self.adapter_path.is_file():

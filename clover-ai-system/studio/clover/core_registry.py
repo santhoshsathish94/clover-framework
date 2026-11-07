@@ -219,6 +219,7 @@ class CoreRegistry:
             "core/reasoning-patterns",
             "core/problem-solving",
             "core/tool-use-patterns",
+            "core/jepa-growth",
             "evaluations/regression",
             "evaluations/generalisation",
             "evaluations/cross-domain",
@@ -266,6 +267,7 @@ class CoreRegistry:
         *,
         expires_utc: str | None = None,
         revoked_versions: list[str] | set[str] | None = None,
+        jepa_growth: dict | None = None,
     ) -> dict:
         self.version_num += 1
         version = f"1.0.{self.version_num}"
@@ -335,6 +337,14 @@ class CoreRegistry:
             file_hashes[rel_path] = hashlib.sha256(raw_bytes).hexdigest()
             files_content[rel_path] = raw_bytes.decode("utf-8")
             promoted_rules.append(rule_obj)
+
+        jepa_rel = "core/jepa-growth/jepa_collective_growth.json"
+        if isinstance(jepa_growth, dict) and jepa_growth.get("tensors"):
+            self._write_json(jepa_rel, jepa_growth)
+        if (self.root / jepa_rel).is_file():
+            j_bytes = (self.root / jepa_rel).read_bytes()
+            file_hashes[jepa_rel] = hashlib.sha256(j_bytes).hexdigest()
+            files_content[jepa_rel] = j_bytes.decode("utf-8")
 
         if self._seed is None:
             raise RuntimeError(

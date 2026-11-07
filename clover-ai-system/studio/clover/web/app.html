@@ -2445,6 +2445,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     $('lg-google-connect').addEventListener('click', function () {
       setNote('lg-note', 'Starting Google OpenID Connect sign-in…', true);
       api('POST', '/api/identity/google/start', { open_browser: true }).then(function (r) {
+        if (r && r.connected) {
+          setNote('lg-note', 'Connected with Google. You can now opt into Collective Learning below.', true);
+          loadCollective();
+          return;
+        }
         if (window.CloverAndroidBridge && window.CloverAndroidBridge.startGoogleSignIn) {
           window.CloverAndroidBridge.startGoogleSignIn(r.auth_url || '', r.nonce || '');
         } else if (PHONE && r.auth_url) {

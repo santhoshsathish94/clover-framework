@@ -1,6 +1,6 @@
 {
   "date": "2026-11-07",
-  "elapsed_s": 36.03,
+  "elapsed_s": 77.64,
   "weights_source": "clvrtrk1:C:\\personal\\oss\\clover-jepa-wt\\clover-ai-system\\studio\\clover\\models\\jepa-trunk-0",
   "available_architectures": [
     "auto",
@@ -16,31 +16,31 @@
       "focal_element_precision": 1.0,
       "scene_classification_rate": 0.0,
       "sparse_attn_flops_ratio": 1.0,
-      "mean_ms": 682.34
+      "mean_ms": 2129.14
     },
     "ijepa": {
       "focal_element_precision": 1.0,
       "scene_classification_rate": 1.0,
       "sparse_attn_flops_ratio": 0.5625,
-      "mean_ms": 631.6
+      "mean_ms": 690.5
     },
     "mjepa": {
       "focal_element_precision": 1.0,
       "scene_classification_rate": 1.0,
       "sparse_attn_flops_ratio": 0.5625,
-      "mean_ms": 615.44
+      "mean_ms": 696.62
     },
     "clover_rpre": {
       "focal_element_precision": 1.0,
       "scene_classification_rate": 1.0,
       "sparse_attn_flops_ratio": 0.5625,
-      "mean_ms": 619.25
+      "mean_ms": 727.19
     },
     "auto": {
       "focal_element_precision": 1.0,
       "scene_classification_rate": 1.0,
       "sparse_attn_flops_ratio": 0.5625,
-      "mean_ms": 621.38
+      "mean_ms": 1001.04
     }
   },
   "flow2_audio_s3": {
@@ -54,25 +54,25 @@
       "regime_acc": 1.0,
       "mean_tf_latent_cos": 0.9922,
       "mean_centered_norm_mse": 0.0156,
-      "mean_ms": 5.44
+      "mean_ms": 4.28
     },
     "mjepa": {
       "regime_acc": 1.0,
       "mean_tf_latent_cos": 0.9913,
       "mean_centered_norm_mse": 0.0174,
-      "mean_ms": 3.25
+      "mean_ms": 4.06
     },
     "clover_rpre": {
       "regime_acc": 1.0,
       "mean_tf_latent_cos": 0.9913,
       "mean_centered_norm_mse": 0.0174,
-      "mean_ms": 3.18
+      "mean_ms": 3.76
     },
     "auto": {
       "regime_acc": 1.0,
       "mean_tf_latent_cos": 0.9922,
       "mean_centered_norm_mse": 0.0156,
-      "mean_ms": 4.09
+      "mean_ms": 3.14
     }
   },
   "flow3_multimodal_s2": {
@@ -118,42 +118,42 @@
       "mean_energy_after": 0.3906,
       "mean_energy_reduction_pct": 17.49,
       "mean_vc_std": 1.0,
-      "mean_ms": 10.98
+      "mean_ms": 10.54
     },
     "audio_jepa": {
       "mean_energy_before": 0.4927,
       "mean_energy_after": 0.394,
       "mean_energy_reduction_pct": 20.21,
       "mean_vc_std": 1.0,
-      "mean_ms": 11.01
+      "mean_ms": 8.36
     },
     "mjepa": {
       "mean_energy_before": 0.4241,
       "mean_energy_after": 0.3538,
       "mean_energy_reduction_pct": 16.86,
       "mean_vc_std": 1.0,
-      "mean_ms": 9.0
+      "mean_ms": 10.49
     },
     "eb_jepa": {
       "mean_energy_before": 0.4495,
       "mean_energy_after": 0.3481,
       "mean_energy_reduction_pct": 20.82,
       "mean_vc_std": 1.0,
-      "mean_ms": 12.45
+      "mean_ms": 8.97
     },
     "clover_rpre": {
       "mean_energy_before": 0.4212,
       "mean_energy_after": 0.3415,
       "mean_energy_reduction_pct": 19.29,
       "mean_vc_std": 1.0,
-      "mean_ms": 14.07
+      "mean_ms": 9.54
     },
     "auto": {
       "mean_energy_before": 0.4545,
       "mean_energy_after": 0.3651,
       "mean_energy_reduction_pct": 19.98,
       "mean_vc_std": 1.0,
-      "mean_ms": 8.65
+      "mean_ms": 10.23
     }
   },
   "flow5_outcome_growth": {

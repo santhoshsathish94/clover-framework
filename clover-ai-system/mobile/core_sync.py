@@ -223,7 +223,18 @@ class CoreSync:
             if actual_sha != expected_sha:
                 raise CoreSyncError(f"File SHA-256 mismatch for {rel_path}")
 
-        return {"version": version, "rules": list(rules)}
+        jepa_growth = None
+        jepa_path = root / "core" / "jepa-growth" / "jepa_collective_growth.json"
+        if "core/jepa-growth/jepa_collective_growth.json" in file_hashes and jepa_path.is_file():
+            try:
+                jepa_growth = json.loads(jepa_path.read_text(encoding="utf-8"))
+            except Exception:
+                jepa_growth = None
+
+        out = {"version": version, "rules": list(rules)}
+        if isinstance(jepa_growth, dict):
+            out["jepa_growth"] = jepa_growth
+        return out
 
 
 class Collective:
@@ -380,10 +391,25 @@ class Collective:
             self.rules = res["rules"]
             if self.consent_receive and self.version is not None:
                 self._applied_path.write_text(json.dumps(res, indent=2, sort_keys=True), encoding="utf-8")
+                if isinstance(res.get("jepa_growth"), dict):
+                    jepa_dst = self.dir / "jepa_collective_growth.json"
+                    jepa_dst.write_text(json.dumps(res["jepa_growth"], indent=2, sort_keys=True), encoding="utf-8")
+                    try:
+                        import jepa_engine
+                        j_rt = jepa_engine.for_process(self.dir.parent)
+                        if j_rt is not None and hasattr(j_rt, "apply_collective_growth"):
+                            j_rt.apply_collective_growth(res["jepa_growth"])
+                    except Exception:
+                        pass
                 self.last_sync_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
                 self.last_sync_error = ""
                 self._save_sync_state()
-            return {"synced": self.consent_receive, "version": self.version, "rules_count": len(self.rules)}
+            return {
+                "synced": self.consent_receive,
+                "version": self.version,
+                "rules_count": len(self.rules),
+                "jepa_growth_synced": bool(self.consent_receive and isinstance(res.get("jepa_growth"), dict)),
+            }
 
     def _http_call(
         self,

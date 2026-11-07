@@ -15,7 +15,7 @@ if (-not (Test-Path (Join-Path $fw 'clover-ai-system\mobile'))) {
     $fw = [IO.Path]::GetFullPath((Join-Path $base '..\..\..\clover-collective-wt'))
 }
 if (Test-Path (Join-Path $fw 'clover-ai-system\mobile')) {
-    foreach ($f in 'semantics.py', 'personal.py', 'collective.py', 'collective_gateway.py', 'collective_evaluator.py', 'core_registry.py', 'core_sync.py', 'test_collective.py') {
+    foreach ($f in 'semantics.py', 'personal.py', 'collective.py', 'collective_gateway.py', 'collective_evaluator.py', 'core_registry.py', 'core_sync.py', 'jepa_engine.py', 'test_collective.py') {
         $p = Join-Path $fw "clover-ai-system\mobile\$f"
         if (Test-Path $p) { Copy-Item $p (Join-Path $base "clover\$f") -Force }
     }
@@ -41,6 +41,7 @@ if (Test-Path (Join-Path $fw 'clover-ai-system\mobile')) {
         clover-ai-system/mobile/collective_evaluator.py `
         clover-ai-system/mobile/core_registry.py `
         clover-ai-system/mobile/core_sync.py `
+        clover-ai-system/mobile/jepa_engine.py `
         clover-ai-system/mobile/semantics.py `
         clover-ai-system/mobile/web_search.py `
         clover-ai-system/src/models/lfm3-1.7b `

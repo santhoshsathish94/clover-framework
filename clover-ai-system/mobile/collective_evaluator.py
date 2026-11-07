@@ -49,6 +49,20 @@ DEFAULT_STRATEGY_PROBES = [
      "target": ["files.list", "files.read", "python"]},
     {"context": "laptop", "text": "Audit C:\\reports\\q4.csv and check the totals.",
      "target": ["files.list", "files.read", "python"]},
+    {"context": "phone", "text": "Audit C:\\data\\expenses.csv for anomalies.",
+     "target": ["files.list", "files.read", "python"]},
+    {"context": "phone", "text": "Could you benchmark the sorting algorithm latency?",
+     "target": ["python", "shell"]},
+    {"context": "laptop", "text": "Please benchmark the matrix multiplication throughput.",
+     "target": ["python", "shell"]},
+    {"context": "phone", "text": "Please reconcile C:\\data\\ledger.csv for discrepancies.",
+     "target": ["files.list", "files.read", "python"]},
+    {"context": "laptop", "text": "Reconcile C:\\reports\\q4.csv against the invoice totals.",
+     "target": ["files.list", "files.read", "python"]},
+    {"context": "phone", "text": "Could you forecast the solar capacity trend for next year?",
+     "target": ["python", "web.page", "web.search"]},
+    {"context": "laptop", "text": "Forecast the battery cost curve from current data.",
+     "target": ["python", "web.page", "web.search"]},
 ]
 
 
