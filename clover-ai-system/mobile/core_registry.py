@@ -209,7 +209,7 @@ class CoreRegistry:
     def _write_json(self, rel: str, obj):
         p = self.root / rel
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False), encoding="utf-8")
+        p.write_bytes(json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8"))
 
     def _init_repo(self):
         for sub in [

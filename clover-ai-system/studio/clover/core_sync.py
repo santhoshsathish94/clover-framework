@@ -582,10 +582,9 @@ class Collective:
                 if not str(dest).startswith(str(mirror.resolve())):
                     raise CoreSyncError(f"Unsafe file path in release bundle: {rel_path!r}")
                 dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_text(str(content), encoding="utf-8")
-            (mirror / "releases" / "manifest.json").write_text(
-                json.dumps(bundle["manifest"], indent=2, sort_keys=True),
-                encoding="utf-8",
+                dest.write_bytes(str(content).encode("utf-8"))
+            (mirror / "releases" / "manifest.json").write_bytes(
+                json.dumps(bundle["manifest"], indent=2, sort_keys=True).encode("utf-8"),
             )
 
             res = self.sync_from_registry(mirror, now_utc=now_utc)
