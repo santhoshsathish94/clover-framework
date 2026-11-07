@@ -26,6 +26,7 @@ This directory contains the source-level audit, unified implementation (`rpre/`)
 - [`STAGE2-REUSABLE-PREDICTIVE-ENGINE-ARCHITECTURE.md`](STAGE2-REUSABLE-PREDICTIVE-ENGINE-ARCHITECTURE.md) — Unified mathematical and systems architecture of `RPRE`.
 - [`STAGE3-EXPERIMENTS-AND-RESULTS.md`](STAGE3-EXPERIMENTS-AND-RESULTS.md) — Complete multi-seed experimental results (`E1`–`E5`) and ablations.
 - [`STAGE4-CLOVER-AI-SYSTEM-JEPA-INTEGRATION.md`](STAGE4-CLOVER-AI-SYSTEM-JEPA-INTEGRATION.md) — Integration into the live Clover AI System (`clover/jepa_engine.py`, `models/jepa-trunk-0`), 5-flow benchmarks, and GPU training pipeline.
+- [`STAGE5-AUTONOMOUS-CLOVER-CYCLE-AND-SELF-TRAINING.md`](STAGE5-AUTONOMOUS-CLOVER-CYCLE-AND-SELF-TRAINING.md) — End-to-end autonomous Clover Cycle problem solving, JEPA epistemic surprise problem discovery, and verified self-training (`clover/autonomous_clover.py`).
 - [`rpre/`](rpre/) — Reusable PyTorch package:
   - [`rpre/masks.py`](rpre/masks.py) — `apply_masks`, `sample_multiblock_2d_masks`, `sample_audio_tf_masks`, `sample_random_masks`.
   - [`rpre/losses.py`](rpre/losses.py) — `CenteredNormMSELoss`, `HingeStdLoss`, `CovarianceLoss`, `VCLoss`, `TemporalSimilarityLoss`, `InverseDynamicsLoss`, `VC_IDM_Sim_Regularizer`, `BCSLoss`, `MJEPA9PathLoss`.
@@ -35,7 +36,8 @@ This directory contains the source-level audit, unified implementation (`rpre/`)
 - [`scripts/run_all_jepa_experiments.py`](scripts/run_all_jepa_experiments.py) — Reproducible multi-seed (`[101, 202, 303]`) experiment suite (`E1`–`E5`).
 - [`scripts/prepare_real_jepa_dataset.py`](scripts/prepare_real_jepa_dataset.py) — Extracts real visual, 16 kHz audio WAV, and `LFM3-Omni` (`2048-d`) / `VQ-VAE` (`384-d`) embeddings for GPU training.
 - [`scripts/train_clover_jepa_trunks.py`](scripts/train_clover_jepa_trunks.py) — 8x RTX 3090 GPU / CPU PyTorch trainer & `CLVRTRK1` binary trunk exporter (`models/jepa-trunk-0`).
-- [`results/jepa_investigation_results.json`](results/jepa_investigation_results.json), [`results/jepa_trunk_training_report.json`](results/jepa_trunk_training_report.json), [`results/clover_jepa_flow_integration_results.json`](results/clover_jepa_flow_integration_results.json) — Complete JSON outputs.
+- [`scripts/run_autonomous_clover_experiment.py`](scripts/run_autonomous_clover_experiment.py) — Live `LFM3-Omni-2B` + `C1–C3` + `JEPA/RPRE` + `ETH` autonomous problem solving, problem synthesis, and self-training experiment.
+- [`results/jepa_investigation_results.json`](results/jepa_investigation_results.json), [`results/jepa_trunk_training_report.json`](results/jepa_trunk_training_report.json), [`results/clover_jepa_flow_integration_results.json`](results/clover_jepa_flow_integration_results.json), [`results/autonomous_clover_self_training_results.json`](results/autonomous_clover_self_training_results.json) — Complete JSON outputs.
 
 ## 4. Verification & GPU Training Commands
 
@@ -45,4 +47,5 @@ python scripts/run_all_jepa_experiments.py
 python scripts/prepare_real_jepa_dataset.py
 python scripts/train_clover_jepa_trunks.py --device auto --scale full --epochs 240 --batch-size 256
 python ../../clover-ai-system/studio/clover/test_jepa_clover_flows.py
+python scripts/run_autonomous_clover_experiment.py
 ```

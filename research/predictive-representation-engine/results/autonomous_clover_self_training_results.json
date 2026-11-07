@@ -1,0 +1,490 @@
+{
+  "date": "2026-11-07",
+  "elapsed_s": 1158.47,
+  "live_lfm3_omni_2b_used": true,
+  "gpu_device": "Intel(R) UHD Graphics",
+  "phase1_autonomous_discovery_and_solving": {
+    "total_steps": 7,
+    "seed_problems_solved": 4,
+    "self_generated_problems_solved": 3,
+    "initial_steps_1_to_4_cycle1_pass_rate": 0.25,
+    "initial_steps_1_to_4_after_clover_cycle_pass_rate": 1.0,
+    "post_self_train_steps_5_to_7_cycle1_pass_rate": 1.0,
+    "post_self_train_steps_5_to_7_final_pass_rate": 1.0,
+    "discovery_trace": [
+      {
+        "step": 1,
+        "selected_problem_id": "SEED-MM-SENSORY-01",
+        "selected_domain": "multimodal_sensory_audit",
+        "selected_surprise": 2.2974,
+        "candidates_evaluated": 4,
+        "ranking": [
+          {
+            "id": "SEED-MM-SENSORY-01",
+            "domain": "multimodal_sensory_audit",
+            "surprise": 2.2974
+          },
+          {
+            "id": "SEED-ETH-CNF-01",
+            "domain": "eth_combinatorial_counting",
+            "surprise": 1.5857
+          },
+          {
+            "id": "SEED-CODE-SYN-01",
+            "domain": "code_synthesis",
+            "surprise": 1.5798
+          },
+          {
+            "id": "SEED-AUDIT-FIN-01",
+            "domain": "arithmetic_audit",
+            "surprise": 1.5177
+          }
+        ]
+      },
+      {
+        "step": 2,
+        "selected_problem_id": "SEED-ETH-CNF-01",
+        "selected_domain": "eth_combinatorial_counting",
+        "selected_surprise": 1.5857,
+        "candidates_evaluated": 3,
+        "ranking": [
+          {
+            "id": "SEED-ETH-CNF-01",
+            "domain": "eth_combinatorial_counting",
+            "surprise": 1.5857
+          },
+          {
+            "id": "SEED-CODE-SYN-01",
+            "domain": "code_synthesis",
+            "surprise": 1.5798
+          },
+          {
+            "id": "SEED-AUDIT-FIN-01",
+            "domain": "arithmetic_audit",
+            "surprise": 1.5177
+          }
+        ]
+      },
+      {
+        "step": 3,
+        "selected_problem_id": "SEED-CODE-SYN-01",
+        "selected_domain": "code_synthesis",
+        "selected_surprise": 1.5798,
+        "candidates_evaluated": 2,
+        "ranking": [
+          {
+            "id": "SEED-CODE-SYN-01",
+            "domain": "code_synthesis",
+            "surprise": 1.5798
+          },
+          {
+            "id": "SEED-AUDIT-FIN-01",
+            "domain": "arithmetic_audit",
+            "surprise": 1.5177
+          }
+        ]
+      },
+      {
+        "step": 4,
+        "selected_problem_id": "SEED-AUDIT-FIN-01",
+        "selected_domain": "arithmetic_audit",
+        "selected_surprise": 1.5177,
+        "candidates_evaluated": 1,
+        "ranking": [
+          {
+            "id": "SEED-AUDIT-FIN-01",
+            "domain": "arithmetic_audit",
+            "surprise": 1.5177
+          }
+        ]
+      },
+      {
+        "step": 5,
+        "selected_problem_id": "AUTO-CODE-SYN-05",
+        "selected_domain": "code_synthesis",
+        "selected_surprise": 0.5503,
+        "candidates_evaluated": 1,
+        "ranking": [
+          {
+            "id": "AUTO-CODE-SYN-05",
+            "domain": "code_synthesis",
+            "surprise": 0.5503
+          }
+        ]
+      },
+      {
+        "step": 6,
+        "selected_problem_id": "AUTO-ETH-CNF-06",
+        "selected_domain": "eth_combinatorial_counting",
+        "selected_surprise": 0.6355,
+        "candidates_evaluated": 1,
+        "ranking": [
+          {
+            "id": "AUTO-ETH-CNF-06",
+            "domain": "eth_combinatorial_counting",
+            "surprise": 0.6355
+          }
+        ]
+      },
+      {
+        "step": 7,
+        "selected_problem_id": "AUTO-AUDIT-FIN-07",
+        "selected_domain": "arithmetic_audit",
+        "selected_surprise": 0.6128,
+        "candidates_evaluated": 1,
+        "ranking": [
+          {
+            "id": "AUTO-AUDIT-FIN-07",
+            "domain": "arithmetic_audit",
+            "surprise": 0.6128
+          }
+        ]
+      }
+    ],
+    "solve_trace": [
+      {
+        "step": 1,
+        "problem_id": "SEED-MM-SENSORY-01",
+        "domain": "multimodal_sensory_audit",
+        "title": "Multimodal Incident Chart & Acoustic Alert Audit",
+        "cycle1_passed": true,
+        "final_passed": true,
+        "cycles_used": 1,
+        "top_planned_tool": "image_gen",
+        "ranked_tools": [
+          "image_gen",
+          "python",
+          "calculator",
+          "memory_recall",
+          "web_search"
+        ],
+        "c2_energy_reduction_pct": 70.7,
+        "cycle1_findings": [],
+        "tool_executed": null,
+        "tool_output": "",
+        "final_answer": "Visual scene class: `tabular_chart` (index 0)\nAudio regime: `transient_alert` (index 0)\nCombined severity: `146`",
+        "learned_entry_id": null,
+        "jepa_outcome_update": null,
+        "ms": 96925.35
+      },
+      {
+        "step": 2,
+        "problem_id": "SEED-ETH-CNF-01",
+        "domain": "eth_combinatorial_counting",
+        "title": "Self-Generated #3-SAT Chain-Bounded Instance (n=20, m=18)",
+        "cycle1_passed": false,
+        "final_passed": true,
+        "cycles_used": 2,
+        "top_planned_tool": "calculator",
+        "ranked_tools": [
+          "calculator",
+          "python",
+          "image_gen",
+          "memory_recall",
+          "web_search"
+        ],
+        "c2_energy_reduction_pct": 81.4,
+        "cycle1_findings": [
+          "Combinatorial count mismatch: expected 113601 satisfying assignments (found [2, 20, 1048576])."
+        ],
+        "tool_executed": "calculator",
+        "tool_output": "113601",
+        "final_answer": "The exact number of satisfying truth assignments for the 3-CNF formula on n = 20 boolean variables with the given clauses is 113601.",
+        "learned_entry_id": "LRN-20261107-115518-49f0c9",
+        "jepa_outcome_update": {
+          "enabled": true,
+          "flow": "outcome_growth",
+          "arch": "clover_rpre",
+          "updated": true,
+          "rolled_back": false,
+          "cycle_updates": 1,
+          "mse_before": 0.37873,
+          "mse_after": 0.37873,
+          "baseline_mse_before": 0.06468,
+          "baseline_mse_after": 0.06468,
+          "ms": 16.15
+        },
+        "ms": 74324.04
+      },
+      {
+        "step": 3,
+        "problem_id": "SEED-CODE-SYN-01",
+        "domain": "code_synthesis",
+        "title": "Self-Generated Verified Python Synthesis (n=228, k=7)",
+        "cycle1_passed": false,
+        "final_passed": true,
+        "cycles_used": 2,
+        "top_planned_tool": "python",
+        "ranked_tools": [
+          "python",
+          "calculator",
+          "image_gen",
+          "memory_recall",
+          "web_search"
+        ],
+        "c2_energy_reduction_pct": 79.1,
+        "cycle1_findings": [
+          "Expected computed output 1233960."
+        ],
+        "tool_executed": "python",
+        "tool_output": "1233960",
+        "final_answer": "```python\ndef solve_sum_squares(n=228, k=7):\n    total = 0\n    for i in range(1, n + 1):\n        if i % 7 == 0 or i % 5 == 0:\n            total += i * i\n    return total\n\nprint(solve_sum_squares(228, 7))\n```\n\nThe exact result is 1233960.",
+        "learned_entry_id": "LRN-20261107-115631-6784e6",
+        "jepa_outcome_update": {
+          "enabled": true,
+          "flow": "outcome_growth",
+          "arch": "clover_rpre",
+          "updated": true,
+          "rolled_back": false,
+          "cycle_updates": 2,
+          "mse_before": 0.45405,
+          "mse_after": 0.45405,
+          "baseline_mse_before": 0.06468,
+          "baseline_mse_after": 0.06468,
+          "ms": 8.51
+        },
+        "ms": 74274.9
+      },
+      {
+        "step": 4,
+        "problem_id": "SEED-AUDIT-FIN-01",
+        "domain": "arithmetic_audit",
+        "title": "Self-Generated Multi-Line Invoice & Tax Audit #4",
+        "cycle1_passed": false,
+        "final_passed": true,
+        "cycles_used": 2,
+        "top_planned_tool": "calculator",
+        "ranked_tools": [
+          "calculator",
+          "python",
+          "image_gen",
+          "memory_recall",
+          "web_search"
+        ],
+        "c2_energy_reduction_pct": 80.3,
+        "cycle1_findings": [
+          "Expected final total $1331.74 (subtotal $1128.59 + tax $203.15)."
+        ],
+        "tool_executed": "calculator",
+        "tool_output": "subtotal=1128.59, tax=203.15, total=1331.74",
+        "final_answer": "Subtotal: $1128.59\nTax (18%): $203.15\nFinal total: $1331.74",
+        "learned_entry_id": "LRN-20261107-115739-9ba713",
+        "jepa_outcome_update": {
+          "enabled": true,
+          "flow": "outcome_growth",
+          "arch": "clover_rpre",
+          "updated": true,
+          "rolled_back": false,
+          "cycle_updates": 3,
+          "mse_before": 0.34924,
+          "mse_after": 0.34924,
+          "baseline_mse_before": 0.06468,
+          "baseline_mse_after": 0.06468,
+          "ms": 5.12
+        },
+        "ms": 63884.59
+      },
+      {
+        "step": 5,
+        "problem_id": "AUTO-CODE-SYN-05",
+        "domain": "code_synthesis",
+        "title": "Self-Generated Verified Python Synthesis (n=226, k=11)",
+        "cycle1_passed": true,
+        "final_passed": true,
+        "cycles_used": 1,
+        "top_planned_tool": "python",
+        "ranked_tools": [
+          "python",
+          "calculator",
+          "image_gen",
+          "memory_recall",
+          "web_search"
+        ],
+        "c2_energy_reduction_pct": 83.3,
+        "cycle1_findings": [],
+        "tool_executed": "python",
+        "tool_output": "1041395",
+        "final_answer": "```python\ndef solve_sum_squares(n=226, k=11):\n    total = 0\n    for i in range(1, n + 1):\n        if i % 11 == 0 or i % 5 == 0:\n            total += i * i\n    return total\n\nprint(solve_sum_squares(226, 11))\n```\n\nThe exact result is **104139",
+        "learned_entry_id": null,
+        "jepa_outcome_update": null,
+        "ms": 46838.9
+      },
+      {
+        "step": 6,
+        "problem_id": "AUTO-ETH-CNF-06",
+        "domain": "eth_combinatorial_counting",
+        "title": "Self-Generated #3-SAT Chain-Bounded Instance (n=26, m=24)",
+        "cycle1_passed": true,
+        "final_passed": true,
+        "cycles_used": 1,
+        "top_planned_tool": "calculator",
+        "ranked_tools": [
+          "calculator",
+          "python",
+          "image_gen",
+          "memory_recall",
+          "web_search"
+        ],
+        "c2_energy_reduction_pct": 81.8,
+        "cycle1_findings": [],
+        "tool_executed": "calculator",
+        "tool_output": "2555907",
+        "final_answer": "The exact number of satisfying truth assignments for the 3-CNF formula on n=26 boolean variables with the given clauses is **2555907**.",
+        "learned_entry_id": null,
+        "jepa_outcome_update": null,
+        "ms": 84730.44
+      },
+      {
+        "step": 7,
+        "problem_id": "AUTO-AUDIT-FIN-07",
+        "domain": "arithmetic_audit",
+        "title": "Self-Generated Multi-Line Invoice & Tax Audit #7",
+        "cycle1_passed": true,
+        "final_passed": true,
+        "cycles_used": 1,
+        "top_planned_tool": "calculator",
+        "ranked_tools": [
+          "calculator",
+          "python",
+          "image_gen",
+          "memory_recall",
+          "web_search"
+        ],
+        "c2_energy_reduction_pct": 80.6,
+        "cycle1_findings": [],
+        "tool_executed": "calculator",
+        "tool_output": "subtotal=627.09, tax=112.88, total=739.97",
+        "final_answer": "Subtotal: $627.09\nTax (18%): $112.88\nFinal total: $739.97",
+        "learned_entry_id": null,
+        "jepa_outcome_update": null,
+        "ms": 49388.71
+      }
+    ],
+    "self_training_stages": [
+      {
+        "after_step": 4,
+        "self_trained": true,
+        "verified_samples": 4,
+        "idm_mse_before": 0.06825,
+        "idm_mse_after": 0.02327,
+        "transition_mse_before": 0.45129,
+        "transition_mse_after": 0.0432,
+        "cycle_updates": 7,
+        "ms": 642.76
+      },
+      {
+        "after_step": 7,
+        "self_trained": true,
+        "verified_samples": 7,
+        "idm_mse_before": 0.02384,
+        "idm_mse_after": 0.00876,
+        "transition_mse_before": 0.61612,
+        "transition_mse_after": 0.06731,
+        "cycle_updates": 14,
+        "ms": 381.39
+      }
+    ],
+    "learned_memory_entries_count": 3,
+    "learned_memory_entries": [
+      {
+        "id": "LRN-20261107-115739-9ba713",
+        "title": "On a question like \"An invoice lists 5 line items: $301.33, $206.32, $207.19, $1",
+        "summary": "On a question like \"An invoice lists 5 line items: $301.33, $206.32, $207.19, $161.73, $252.02, plus a 18% tax on the subtotal. Compute the exact subtotal, tax amount, and final to\"; the user said the first answer was not right: \"Use calculator verification before answering.\"; Clover's checks found: Expected final total $1331.74 (subtotal $1128.59 + tax $203.15).; the corrected answer passed those",
+        "created_at": "2026-11-07T06:27:39Z",
+        "status": "active",
+        "type": "correction",
+        "epistemic": "observed",
+        "kind": "learning",
+        "worked": 0,
+        "did_not_work": 0
+      },
+      {
+        "id": "LRN-20261107-115631-6784e6",
+        "title": "On a question like \"Write a Python function `solve_sum_squares(n=228, k=7)` that",
+        "summary": "On a question like \"Write a Python function `solve_sum_squares(n=228, k=7)` that returns the sum of squares of all integers from 1 to 228 inclusive that are divisible by 7 or 5, an\"; the user said the first answer was not right: \"Use python verification before answering.\"; Clover's checks found: Expected computed output 1233960.; the corrected answer passed those checks.",
+        "created_at": "2026-11-07T06:26:31Z",
+        "status": "active",
+        "type": "correction",
+        "epistemic": "observed",
+        "kind": "learning",
+        "worked": 0,
+        "did_not_work": 0
+      },
+      {
+        "id": "LRN-20261107-115518-49f0c9",
+        "title": "On a question like \"Calculate the exact number of satisfying truth assignments f",
+        "summary": "On a question like \"Calculate the exact number of satisfying truth assignments for the 3-CNF formula on n=20 boolean variables with clauses (1, 2, 3), (2, 3, 4), (-3, 4, 5), (4, -5\"; the user said the first answer was not right: \"Use calculator verification before answering.\"; Clover's checks found: Combinatorial count mismatch: expected 113601 satisfying assignments (found [2, 20, 1048576]).; the",
+        "created_at": "2026-11-07T06:25:18Z",
+        "status": "active",
+        "type": "correction",
+        "epistemic": "observed",
+        "kind": "learning",
+        "worked": 0,
+        "did_not_work": 0
+      }
+    ]
+  },
+  "phase2_held_out_novel_problems": {
+    "num_problems": 6,
+    "static_open_loop_pass_rate": 0.0,
+    "self_trained_first_pass_cycle1_rate": 1.0,
+    "self_trained_final_pass_rate": 1.0,
+    "mean_cycles_needed_after_self_training": 1.0,
+    "problems": [
+      {
+        "problem_id": "AUTO-AUDIT-FIN-10",
+        "domain": "arithmetic_audit",
+        "static_open_loop_pass": false,
+        "self_trained_cycle1_pass": true,
+        "self_trained_final_pass": true,
+        "self_trained_cycles_used": 1,
+        "top_planned_tool": "calculator"
+      },
+      {
+        "problem_id": "AUTO-CODE-SYN-11",
+        "domain": "code_synthesis",
+        "static_open_loop_pass": false,
+        "self_trained_cycle1_pass": true,
+        "self_trained_final_pass": true,
+        "self_trained_cycles_used": 1,
+        "top_planned_tool": "python"
+      },
+      {
+        "problem_id": "AUTO-ETH-CNF-12",
+        "domain": "eth_combinatorial_counting",
+        "static_open_loop_pass": false,
+        "self_trained_cycle1_pass": true,
+        "self_trained_final_pass": true,
+        "self_trained_cycles_used": 1,
+        "top_planned_tool": "calculator"
+      },
+      {
+        "problem_id": "AUTO-AUDIT-FIN-13",
+        "domain": "arithmetic_audit",
+        "static_open_loop_pass": false,
+        "self_trained_cycle1_pass": true,
+        "self_trained_final_pass": true,
+        "self_trained_cycles_used": 1,
+        "top_planned_tool": "calculator"
+      },
+      {
+        "problem_id": "AUTO-CODE-SYN-14",
+        "domain": "code_synthesis",
+        "static_open_loop_pass": false,
+        "self_trained_cycle1_pass": true,
+        "self_trained_final_pass": true,
+        "self_trained_cycles_used": 1,
+        "top_planned_tool": "python"
+      },
+      {
+        "problem_id": "AUTO-ETH-CNF-15",
+        "domain": "eth_combinatorial_counting",
+        "static_open_loop_pass": false,
+        "self_trained_cycle1_pass": true,
+        "self_trained_final_pass": true,
+        "self_trained_cycles_used": 1,
+        "top_planned_tool": "calculator"
+      }
+    ]
+  }
+}

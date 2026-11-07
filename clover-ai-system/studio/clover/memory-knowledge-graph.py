@@ -2099,6 +2099,8 @@ class CloverMemoryGraphStore:
 
         try:
             import torch as _torch
+            if getattr(_torch, "__clover_stand_in__", False):
+                raise ImportError("stand-in torch")
             dev = device or ("cuda:7" if _torch.cuda.is_available() else "cpu")
             # Build pattern matrix Xi of shape (M, N) in {-1, +1}
             xi_bip = _torch.full((m_pat, n_dim), -1.0, dtype=_torch.float32, device=dev)
@@ -2478,7 +2480,7 @@ class CloverMemoryGraphStore:
 
         try:
             import torch as _torch
-            has_torch = True
+            has_torch = not getattr(_torch, "__clover_stand_in__", False)
         except ImportError:
             _torch = None
             has_torch = False

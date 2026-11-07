@@ -20,7 +20,9 @@
    - Complete experimental tables and ablation analysis across seeds `[101, 202, 303]`.
 4. [**Stage 4 — Clover AI System Integration, Selectable JEPA Interfaces & 5-Flow Benchmark**](STAGE4-CLOVER-AI-SYSTEM-JEPA-INTEGRATION.md)
    - Unified selectable JEPA interface ([`clover/jepa_engine.py`](../../clover-ai-system/studio/clover/jepa_engine.py)), trained `CLVRTRK1` binary trunk (`models/jepa-trunk-0`), GPU training pipeline ([`scripts/train_clover_jepa_trunks.py`](scripts/train_clover_jepa_trunks.py)), and 5-flow benchmark ([`test_jepa_clover_flows.py`](../../clover-ai-system/studio/clover/test_jepa_clover_flows.py)).
-5. [**Code & Reproducibility**](rpre/)
+5. [**Stage 5 — Autonomous Clover Cycle, Epistemic Surprise Problem Discovery & Verified Self-Training**](STAGE5-AUTONOMOUS-CLOVER-CYCLE-AND-SELF-TRAINING.md)
+   - Live `LFM3-Omni-2B` + `C1–C3` + `JEPA/RPRE` + `ETH` autonomous problem solving, autonomous problem synthesis, and verified self-training ([`clover/autonomous_clover.py`](../../clover-ai-system/studio/clover/autonomous_clover.py), [`scripts/run_autonomous_clover_experiment.py`](scripts/run_autonomous_clover_experiment.py)).
+6. [**Code & Reproducibility**](rpre/)
    - [`rpre/masks.py`](rpre/masks.py), [`rpre/losses.py`](rpre/losses.py), [`rpre/engine.py`](rpre/engine.py), [`rpre/planner.py`](rpre/planner.py)
    - [`tests/test_rpre.py`](tests/test_rpre.py) (15 unit & integration checks)
    - [`scripts/run_all_jepa_experiments.py`](scripts/run_all_jepa_experiments.py) & [`results/jepa_investigation_results.json`](results/jepa_investigation_results.json)
