@@ -1,0 +1,106 @@
+{
+  "model": "no balance requirement; D^2 <= 2^(n/2)",
+  "rows": [
+    {
+      "n": 64,
+      "total": 1.985,
+      "r": 5,
+      "Q": 1,
+      "R": 2,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.4
+    },
+    {
+      "n": 256,
+      "total": 1.7668,
+      "r": 11,
+      "Q": 1,
+      "R": 2,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.1818
+    },
+    {
+      "n": 1024,
+      "total": 1.6759,
+      "r": 22,
+      "Q": 1,
+      "R": 2,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0909
+    },
+    {
+      "n": 4096,
+      "total": 1.6294,
+      "r": 45,
+      "Q": 1,
+      "R": 2,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0444
+    },
+    {
+      "n": 16384,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 1,
+      "R": 2,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "n": 65536,
+      "total": 1.6162,
+      "r": 64,
+      "Q": 6,
+      "R": 7,
+      "taylor": 1.585,
+      "measurements": 0.0,
+      "group": 0.0312
+    },
+    {
+      "n": 262144,
+      "total": 1.3749,
+      "r": 4,
+      "Q": 8192,
+      "R": 489,
+      "taylor": 0.856,
+      "measurements": 0.019,
+      "group": 0.5
+    },
+    {
+      "n": 1048576,
+      "total": 1.0578,
+      "r": 4,
+      "Q": 32767,
+      "R": 1034,
+      "taylor": 0.5461,
+      "measurements": 0.0116,
+      "group": 0.5
+    },
+    {
+      "n": 4194304,
+      "total": 0.8016,
+      "r": 6,
+      "Q": 58254,
+      "R": 1460,
+      "taylor": 0.4599,
+      "measurements": 0.0083,
+      "group": 0.3333
+    },
+    {
+      "n": 16777216,
+      "total": 0.5695,
+      "r": 8,
+      "Q": 131072,
+      "R": 2046,
+      "taylor": 0.3195,
+      "measurements": 0.0,
+      "group": 0.25
+    }
+  ],
+  "smallest_n_below_brute_force": 1368064
+}
