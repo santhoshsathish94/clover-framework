@@ -130,6 +130,10 @@ class LayerKit:
         self.records = None  # clover_repo.Repo (app mode): conversations, outcomes and summaries
         self.recall = None  # memory_index.MemoryIndex (app mode): Layer 2 over the conversations
         self.meaning = None  # semantics.Frame of the turn being answered (app mode)
+        self.jepa_arch = "auto"  # selectable JEPA architecture: auto | clover_rpre | ijepa | audio_jepa | eb_jepa | mjepa | none
+        self.visual_cue_64 = None
+        self.audio_cue_64 = None
+        self.last_c2_jepa = None
 
     def workspace_context(self, q):
         if self.workspaces is None or self._skip(q):
@@ -427,11 +431,27 @@ class LayerKit:
         return state, info
 
     def c2_plan_state(self, q, c1_state=None, offered_tools=None):
-        """Strictly C2: run HybridAgent continuous `<latent>` planning (`plan-trunk-0`) on `c1_state` -> (`c2_state`, `c2_info`)."""
+        """Strictly C2: run HybridAgent continuous `<latent>` planning (`plan-trunk-0`) + selectable JEPA (`eb_jepa`/`clover_rpre`)
+        latent trajectory optimization on `c1_state` -> (`c2_state`, `c2_info`)."""
         import omni_c2_c3
+        cue_64 = None
+        if self.visual_cue_64 is not None and self.audio_cue_64 is not None:
+            cue_64 = 0.5 * (self.visual_cue_64 + self.audio_cue_64)
+        elif self.visual_cue_64 is not None:
+            cue_64 = self.visual_cue_64
+        elif self.audio_cue_64 is not None:
+            cue_64 = self.audio_cue_64
         rt = omni_c2_c3.for_base(self.base_dir)
         if rt is not None:
-            return rt.c2_plan(q, c1_state=c1_state, offered_tools=list(offered_tools or []))
+            c2_state, c2_info = rt.c2_plan(
+                q,
+                c1_state=c1_state,
+                offered_tools=list(offered_tools or []),
+                jepa_arch=getattr(self, "jepa_arch", "auto"),
+                context_cue_64=cue_64,
+            )
+            self.last_c2_jepa = c2_state.get("jepa_plan")
+            return c2_state, c2_info
         raw = str((c1_state or {}).get("raw_text") or "")
         windows = answer_windows(raw)
         n_win = 1 if windows else 0
@@ -447,6 +467,37 @@ class LayerKit:
         }
         state = {"stage": "c2_plan", "raw_text": raw, "windows": windows}
         return state, info
+
+    def jepa_record_outcome(self, z_obs_64=None, is_baseline=False):
+        """Flow 5 (`Outcome -> Growth`): update `OutcomeResidualAdapter` from the latest C2 plan and observed outcome."""
+        if getattr(self, "jepa_arch", "auto") == "none" or not isinstance(self.last_c2_jepa, dict):
+            return None
+        try:
+            import jepa_engine
+            import numpy as np
+            z_init = self.last_c2_jepa.get("z_init_64")
+            act = self.last_c2_jepa.get("first_action")
+            z_plan = self.last_c2_jepa.get("z_planned_64")
+            if z_init is None or act is None or z_plan is None:
+                return None
+            z_obs = z_obs_64 if z_obs_64 is not None else np.asarray(z_plan, dtype=np.float32)
+            cue_64 = None
+            if self.visual_cue_64 is not None and self.audio_cue_64 is not None:
+                cue_64 = 0.5 * (self.visual_cue_64 + self.audio_cue_64)
+            elif self.visual_cue_64 is not None:
+                cue_64 = self.visual_cue_64
+            elif self.audio_cue_64 is not None:
+                cue_64 = self.audio_cue_64
+            return jepa_engine.for_base(self.base_dir).record_and_adapt_outcome(
+                z_init,
+                act,
+                z_obs,
+                context_cue_64=cue_64,
+                is_baseline=is_baseline,
+                configured_arch=getattr(self, "jepa_arch", "auto"),
+            )
+        except Exception:
+            return None
 
     def c2_plan(self, q, offered_tools=None, c1_state=None):
         """Run C2 HybridAgent continuous `<latent>` planning (`plan-trunk-0` / `HybridLink2048` + `Lfm3NativeHybridLink`)."""

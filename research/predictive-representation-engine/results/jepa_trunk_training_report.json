@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-07",
+  "device": "cpu",
+  "scale": "pilot",
+  "epochs": 45,
+  "batch_size": 96,
+  "elapsed_s": 19.01,
+  "history": [
+    {
+      "epoch": 1,
+      "loss": 2.9954
+    },
+    {
+      "epoch": 22,
+      "loss": 0.1494
+    },
+    {
+      "epoch": 45,
+      "loss": 0.1225
+    }
+  ],
+  "eval_visual_scene_acc": 1.0,
+  "eval_acoustic_regime_acc": 1.0,
+  "exported_trunk": "/tmp/rpre-study/clover-ai-system/studio/clover/models/jepa-trunk-0",
+  "num_tensors": 102
+}

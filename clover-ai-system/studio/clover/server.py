@@ -114,6 +114,7 @@ class EngineNotReady(Exception):
 
 LAYER_KEYS = ("memory", "ontology", "compiler", "ncm", "kv_slots", "recall")
 IMAGE_MODELS = ("sd15-lcm", "sd15")  # image_gen.presets; the default is the best measured
+JEPA_ARCHS = ("auto", "clover_rpre", "ijepa", "audio_jepa", "eb_jepa", "mjepa", "none")
 # gpu / cpu: LFM3-Omni-2B on llama.cpp; fused: C1 + C2 + C3, the phone's fused runtime on the CPU (fused_engine.py)
 ENGINES = ("gpu", "cpu", "fused")
 WEB_MODELS = ("omni", "nemotron-3.5-super-vl", "kimi-k3")
@@ -232,6 +233,7 @@ class Settings:
     All Clover core stages (C1 Inference, C2 HybridAgent Plan, Bridges, C3 11-level NCM Decode), supporting layers
     (S1 Memory, S2 Recall & Ontology, S3 Tools & Compiler), and semantic layers (CSI & PPL) are always enabled."""
     DEFAULTS = {"model": "omni", "engine": "gpu", "tools": "ask", "image_model": "sd15-lcm",
+                "jepa_arch": "auto",
                 "remote_models": [],
                 "layers": {"memory": True, "ontology": True, "compiler": True, "ncm": True, "kv_slots": False,
                            "recall": True},
@@ -265,6 +267,8 @@ class Settings:
             self.data["tools"] = saved["tools"]
         if saved.get("image_model") in IMAGE_MODELS:
             self.data["image_model"] = saved["image_model"]
+        if saved.get("jepa_arch") in JEPA_ARCHS:
+            self.data["jepa_arch"] = saved["jepa_arch"]
         if isinstance((saved.get("layers") or {}).get("kv_slots"), bool):
             self.data["layers"]["kv_slots"] = saved["layers"]["kv_slots"]
         for k in ("memory", "ontology", "compiler", "ncm", "recall"):
@@ -304,6 +308,10 @@ class Settings:
                 if changes["image_model"] not in IMAGE_MODELS:
                     raise ValueError("unknown image model")
                 self.data["image_model"] = changes["image_model"]
+            if "jepa_arch" in changes:
+                if changes["jepa_arch"] not in JEPA_ARCHS:
+                    raise ValueError(f"jepa_arch must be one of {', '.join(JEPA_ARCHS)}")
+                self.data["jepa_arch"] = changes["jepa_arch"]
             for k, v in (changes.get("layers") or {}).items():
                 if k not in LAYER_KEYS or not isinstance(v, bool):
                     raise ValueError(f"unknown layer setting {k!r}")
@@ -637,6 +645,8 @@ def layer_kit():
         S.kit.records = S.repo
     if S.kit.recall is None:
         S.kit.recall = S.memidx
+    if S.settings is not None:
+        S.kit.jepa_arch = S.settings.get().get("jepa_arch", "auto")
     return S.kit
 
 

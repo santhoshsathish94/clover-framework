@@ -25,6 +25,7 @@ This directory contains the source-level audit, unified implementation (`rpre/`)
 - [`STAGE1-FOUR-PAPERS-AND-REPOS-AUDIT.md`](STAGE1-FOUR-PAPERS-AND-REPOS-AUDIT.md) — Line-referenced source audit of all four repositories.
 - [`STAGE2-REUSABLE-PREDICTIVE-ENGINE-ARCHITECTURE.md`](STAGE2-REUSABLE-PREDICTIVE-ENGINE-ARCHITECTURE.md) — Unified mathematical and systems architecture of `RPRE`.
 - [`STAGE3-EXPERIMENTS-AND-RESULTS.md`](STAGE3-EXPERIMENTS-AND-RESULTS.md) — Complete multi-seed experimental results (`E1`–`E5`) and ablations.
+- [`STAGE4-CLOVER-AI-SYSTEM-JEPA-INTEGRATION.md`](STAGE4-CLOVER-AI-SYSTEM-JEPA-INTEGRATION.md) — Integration into the live Clover AI System (`clover/jepa_engine.py`, `models/jepa-trunk-0`), 5-flow benchmarks, and GPU training pipeline.
 - [`rpre/`](rpre/) — Reusable PyTorch package:
   - [`rpre/masks.py`](rpre/masks.py) — `apply_masks`, `sample_multiblock_2d_masks`, `sample_audio_tf_masks`, `sample_random_masks`.
   - [`rpre/losses.py`](rpre/losses.py) — `CenteredNormMSELoss`, `HingeStdLoss`, `CovarianceLoss`, `VCLoss`, `TemporalSimilarityLoss`, `InverseDynamicsLoss`, `VC_IDM_Sim_Regularizer`, `BCSLoss`, `MJEPA9PathLoss`.
@@ -32,11 +33,14 @@ This directory contains the source-level audit, unified implementation (`rpre/`)
   - [`rpre/planner.py`](rpre/planner.py) — `ReprTargetDistObjective`, `CEMPlanner`, `MPPIPlanner`, `CloverCycleAgent`.
 - [`tests/test_rpre.py`](tests/test_rpre.py) — 15 unit and integration checks covering all modules and findings.
 - [`scripts/run_all_jepa_experiments.py`](scripts/run_all_jepa_experiments.py) — Reproducible multi-seed (`[101, 202, 303]`) experiment suite (`E1`–`E5`).
-- [`results/jepa_investigation_results.json`](results/jepa_investigation_results.json) — Complete JSON output from `E1`–`E5`.
+- [`scripts/train_clover_jepa_trunks.py`](scripts/train_clover_jepa_trunks.py) — CPU/GPU PyTorch trainer & `CLVRTRK1` binary trunk exporter (`models/jepa-trunk-0`).
+- [`results/jepa_investigation_results.json`](results/jepa_investigation_results.json), [`results/jepa_trunk_training_report.json`](results/jepa_trunk_training_report.json), [`results/clover_jepa_flow_integration_results.json`](results/clover_jepa_flow_integration_results.json) — Complete JSON outputs.
 
-## 4. Verification Commands
+## 4. Verification & GPU Training Commands
 
 ```bash
 python tests/test_rpre.py
 python scripts/run_all_jepa_experiments.py
+python scripts/train_clover_jepa_trunks.py --device auto --scale pilot
+python ../../clover-ai-system/studio/clover/test_jepa_clover_flows.py
 ```

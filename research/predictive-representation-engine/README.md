@@ -18,7 +18,10 @@
    - Full mathematical specification and system diagram of `RPRE` (`rpre/`).
 3. [**Stage 3 — Controlled Multi-Seed Experiments (`E1`–`E5`) & Results**](STAGE3-EXPERIMENTS-AND-RESULTS.md)
    - Complete experimental tables and ablation analysis across seeds `[101, 202, 303]`.
-4. [**Code & Reproducibility**](rpre/)
+4. [**Stage 4 — Clover AI System Integration, Selectable JEPA Interfaces & 5-Flow Benchmark**](STAGE4-CLOVER-AI-SYSTEM-JEPA-INTEGRATION.md)
+   - Unified selectable JEPA interface ([`clover/jepa_engine.py`](../../clover-ai-system/studio/clover/jepa_engine.py)), trained `CLVRTRK1` binary trunk (`models/jepa-trunk-0`), GPU training pipeline ([`scripts/train_clover_jepa_trunks.py`](scripts/train_clover_jepa_trunks.py)), and 5-flow benchmark ([`test_jepa_clover_flows.py`](../../clover-ai-system/studio/clover/test_jepa_clover_flows.py)).
+5. [**Code & Reproducibility**](rpre/)
    - [`rpre/masks.py`](rpre/masks.py), [`rpre/losses.py`](rpre/losses.py), [`rpre/engine.py`](rpre/engine.py), [`rpre/planner.py`](rpre/planner.py)
    - [`tests/test_rpre.py`](tests/test_rpre.py) (15 unit & integration checks)
    - [`scripts/run_all_jepa_experiments.py`](scripts/run_all_jepa_experiments.py) & [`results/jepa_investigation_results.json`](results/jepa_investigation_results.json)
+   - [`scripts/train_clover_jepa_trunks.py`](scripts/train_clover_jepa_trunks.py), [`results/jepa_trunk_training_report.json`](results/jepa_trunk_training_report.json), & [`results/clover_jepa_flow_integration_results.json`](results/clover_jepa_flow_integration_results.json)

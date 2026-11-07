@@ -532,7 +532,36 @@ class OmniNative(N.LFM3Native):
         sys_txt = system or self.system_prompt(bool(schemas), only_tools)
         keep_last_media = bool(meaning is not None and getattr(meaning, "seen", ()) and not media)
         has_new_visual = any(m.get("kind") in ("image", "video") for m in media or () if isinstance(m, dict))
+        has_new_audio = any(m.get("kind") == "audio" for m in media or () if isinstance(m, dict))
         not_comparing_prior = not re.search(r"\b(?:previous|earlier|first|prior|other|both|compare|same\s+as)\b", query or "", re.I)
+        jepa_arch_cfg = getattr(kit, "jepa_arch", "auto") if kit is not None else "auto"
+        if kit is not None:
+            kit.visual_cue_64 = None
+            kit.audio_cue_64 = None
+        if has_new_audio and jepa_arch_cfg != "none":
+            try:
+                import jepa_engine
+                for m in media or ():
+                    if isinstance(m, dict) and m.get("kind") == "audio" and m.get("file"):
+                        aud_fp = Path(self.media_dir) / m["file"]
+                        if aud_fp.is_file():
+                            ja = jepa_engine.for_base(self.base_dir).inspect_audio_latent(aud_fp, configured_arch=jepa_arch_cfg)
+                            if ja.get("enabled"):
+                                if kit is not None:
+                                    kit.audio_cue_64 = ja.get("z_jepa")
+                                info_aud = {
+                                    "layer": "jepa_audio",
+                                    "arch": ja["arch"],
+                                    "file": m["file"],
+                                    "acoustic_regime": ja["acoustic_regime"],
+                                    "snr_db": ja["snr_db"],
+                                    "tf_latent_cos": ja["tf_latent_cos"],
+                                    "ms": ja["ms"],
+                                }
+                                layer_log.append(info_aud)
+                                emit(dict(info_aud, type="layer"))
+            except Exception:
+                pass
         if has_new_visual:
             try:
                 import image_inspector
@@ -541,8 +570,18 @@ class OmniNative(N.LFM3Native):
                     if isinstance(m, dict) and m.get("kind") == "image" and m.get("file"):
                         img_fp = Path(self.media_dir) / m["file"]
                         if img_fp.is_file():
-                            rep = image_inspector.inspect_image(img_fp, annotate_dir=Path(self.media_dir))
+                            rep = image_inspector.inspect_image(img_fp, annotate_dir=Path(self.media_dir), jepa_arch=jepa_arch_cfg)
                             snap_blocks.append(image_inspector.format_snapshot_for_prompt(rep))
+                            jv = rep.get("jepa_visual") or {}
+                            if kit is not None and jv.get("arch"):
+                                try:
+                                    import jepa_engine
+                                    from PIL import Image
+                                    with Image.open(img_fp) as _im:
+                                        _jv_full = jepa_engine.for_base(self.base_dir).inspect_visual_latent(_im.convert("RGB"), configured_arch=jepa_arch_cfg)
+                                        kit.visual_cue_64 = _jv_full.get("z_jepa")
+                                except Exception:
+                                    pass
                             info_img = {
                                 "layer": "image_analysis",
                                 "file": m["file"],
@@ -551,6 +590,8 @@ class OmniNative(N.LFM3Native):
                                 "height": rep["height"],
                                 "elements": len(rep.get("elements") or []),
                                 "ocr_lines": len(rep.get("ocr_lines") or []),
+                                "jepa_arch": jv.get("arch"),
+                                "jepa_scene": jv.get("scene_kind"),
                                 "ms": rep.get("ms", 0),
                             }
                             layer_log.append(info_img)
@@ -1022,6 +1063,11 @@ class OmniNative(N.LFM3Native):
                         layer_log.append(c2_info)
                         emit(dict(c2_info, type="layer"))
                         emit({"type": "plan", "round": rnd_n, "stage": "c2_done", "ms": c2_info.get("ms")})
+                        if hasattr(kit, "jepa_record_outcome"):
+                            j_out = kit.jepa_record_outcome(is_baseline=False)
+                            if isinstance(j_out, dict) and j_out.get("enabled"):
+                                layer_log.append({"layer": "jepa_outcome_growth", **j_out})
+                                emit({"type": "layer", "layer": "jepa_outcome_growth", **j_out})
                     else:
                         c2_state = answer
                     if "ncm" in layers and (hasattr(kit, "c3_decode") or hasattr(kit, "ncm_render")):

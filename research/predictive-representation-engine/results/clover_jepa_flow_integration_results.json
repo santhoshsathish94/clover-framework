@@ -1,0 +1,169 @@
+{
+  "date": "2026-11-07",
+  "elapsed_s": 3.8,
+  "weights_source": "clvrtrk1:/tmp/rpre-study/clover-ai-system/studio/clover/models/jepa-trunk-0",
+  "available_architectures": [
+    "auto",
+    "clover_rpre",
+    "ijepa",
+    "audio_jepa",
+    "eb_jepa",
+    "mjepa",
+    "none"
+  ],
+  "flow1_visual_s3": {
+    "none": {
+      "focal_element_precision": 0.25,
+      "scene_classification_rate": 0.0,
+      "sparse_attn_flops_ratio": 1.0,
+      "mean_ms": 97.21
+    },
+    "ijepa": {
+      "focal_element_precision": 1.0,
+      "scene_classification_rate": 1.0,
+      "sparse_attn_flops_ratio": 0.5625,
+      "mean_ms": 69.72
+    },
+    "mjepa": {
+      "focal_element_precision": 1.0,
+      "scene_classification_rate": 1.0,
+      "sparse_attn_flops_ratio": 0.5625,
+      "mean_ms": 68.8
+    },
+    "clover_rpre": {
+      "focal_element_precision": 1.0,
+      "scene_classification_rate": 1.0,
+      "sparse_attn_flops_ratio": 0.5625,
+      "mean_ms": 70.0
+    },
+    "auto": {
+      "focal_element_precision": 1.0,
+      "scene_classification_rate": 1.0,
+      "sparse_attn_flops_ratio": 0.5625,
+      "mean_ms": 69.9
+    }
+  },
+  "flow2_audio_s3": {
+    "none": {
+      "regime_acc": 0.0,
+      "mean_tf_latent_cos": 0.0,
+      "mean_centered_norm_mse": null,
+      "mean_ms": 0.0
+    },
+    "audio_jepa": {
+      "regime_acc": 1.0,
+      "mean_tf_latent_cos": 0.995,
+      "mean_centered_norm_mse": 0.01,
+      "mean_ms": 2.25
+    },
+    "mjepa": {
+      "regime_acc": 1.0,
+      "mean_tf_latent_cos": 0.9941,
+      "mean_centered_norm_mse": 0.0119,
+      "mean_ms": 2.11
+    },
+    "clover_rpre": {
+      "regime_acc": 1.0,
+      "mean_tf_latent_cos": 0.9941,
+      "mean_centered_norm_mse": 0.0119,
+      "mean_ms": 2.12
+    },
+    "auto": {
+      "regime_acc": 1.0,
+      "mean_tf_latent_cos": 0.995,
+      "mean_centered_norm_mse": 0.01,
+      "mean_ms": 2.09
+    }
+  },
+  "flow3_multimodal_s2": {
+    "none": {
+      "missing_modality_recall_at_1": 0.9,
+      "mean_cross_modal_av_cos": 0.0
+    },
+    "mjepa": {
+      "missing_modality_recall_at_1": 1.0,
+      "mean_cross_modal_av_cos": 0.1731
+    },
+    "clover_rpre": {
+      "missing_modality_recall_at_1": 1.0,
+      "mean_cross_modal_av_cos": 0.1682
+    },
+    "auto": {
+      "missing_modality_recall_at_1": 1.0,
+      "mean_cross_modal_av_cos": 0.1593
+    }
+  },
+  "flow4_c2_latent_planning": {
+    "none": {
+      "mean_energy_before": 1.25,
+      "mean_energy_after": 1.25,
+      "mean_energy_reduction_pct": 0.0,
+      "mean_vc_std": 0.0,
+      "mean_ms": 0.0
+    },
+    "eb_jepa": {
+      "mean_energy_before": 0.415,
+      "mean_energy_after": 0.3831,
+      "mean_energy_reduction_pct": 10.99,
+      "mean_vc_std": 1.0,
+      "mean_ms": 3.29
+    },
+    "clover_rpre": {
+      "mean_energy_before": 0.4557,
+      "mean_energy_after": 0.3948,
+      "mean_energy_reduction_pct": 14.82,
+      "mean_vc_std": 1.0,
+      "mean_ms": 1.75
+    },
+    "auto": {
+      "mean_energy_before": 0.4001,
+      "mean_energy_after": 0.4036,
+      "mean_energy_reduction_pct": 11.07,
+      "mean_vc_std": 1.0,
+      "mean_ms": 1.26
+    }
+  },
+  "flow5_outcome_growth": {
+    "cycle_1_mse_before": 0.0661,
+    "cycle_5_mse_after": 0.00374,
+    "mse_reduction_ratio": 17.67,
+    "baseline_regime0_mse": 0.0,
+    "cycles": [
+      {
+        "cycle": 1,
+        "mse_before": 0.0661,
+        "mse_after": 0.00376,
+        "baseline_mse_after": 0.0,
+        "updated": true
+      },
+      {
+        "cycle": 2,
+        "mse_before": 0.00376,
+        "mse_after": 0.00374,
+        "baseline_mse_after": 0.0,
+        "updated": true
+      },
+      {
+        "cycle": 3,
+        "mse_before": 0.00374,
+        "mse_after": 0.00374,
+        "baseline_mse_after": 0.0,
+        "updated": true
+      },
+      {
+        "cycle": 4,
+        "mse_before": 0.00374,
+        "mse_after": 0.00374,
+        "baseline_mse_after": 0.0,
+        "updated": true
+      },
+      {
+        "cycle": 5,
+        "mse_before": 0.00374,
+        "mse_after": 0.00374,
+        "baseline_mse_after": 0.0,
+        "updated": true
+      }
+    ]
+  }
+}

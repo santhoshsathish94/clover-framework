@@ -460,18 +460,19 @@ def inspect_image(
     annotate_dir: Path | None = None,
     crop_bbox: list[int] | tuple[int, int, int, int] | None = None,
     max_elements: int = 18,
+    jepa_arch: str = "auto",
 ) -> dict[str, Any]:
-    """Run full Playwright-style structured visual, layout, color, and OCR inspection on `img_path`."""
+    """Run full Playwright-style structured visual, layout, color, OCR, and JEPA visual latent inspection on `img_path`."""
     t0 = time.perf_counter()
     p = Path(img_path)
     if not p.is_file():
         raise FileNotFoundError(f"Image not found: {p}")
 
     cache_path = p.with_suffix(p.suffix + ".inspect.json")
-    if crop_bbox is None and annotate_dir is None and cache_path.is_file():
+    if crop_bbox is None and annotate_dir is None and jepa_arch == "auto" and cache_path.is_file():
         try:
             cached = json.loads(cache_path.read_text(encoding="utf-8"))
-            if isinstance(cached, dict) and cached.get("width") and "elements" in cached:
+            if isinstance(cached, dict) and cached.get("width") and "elements" in cached and "jepa_visual" in cached:
                 return cached
         except Exception:
             pass
@@ -503,6 +504,22 @@ def inspect_image(
     elements = detect_visual_regions(im, ocr_lines, max_elements=max_elements)
     full_text = "\n".join(ln["text"] for ln in ocr_lines).strip()
 
+    jepa_vis_summary = None
+    try:
+        import jepa_engine
+        jv = jepa_engine.for_base().inspect_visual_latent(np.asarray(im), elements=elements, configured_arch=jepa_arch)
+        if jv.get("enabled"):
+            jepa_vis_summary = {
+                "arch": jv["arch"],
+                "scene_kind": jv["scene_kind"],
+                "attn_flops_ratio": jv["attn_flops_ratio"],
+                "mean_patch_surprise": jv["mean_patch_surprise"],
+                "top_salient_elements": jv["top_salient_elements"],
+                "ms": jv["ms"],
+            }
+    except Exception:
+        jepa_vis_summary = None
+
     annotated_file = None
     if annotate_dir is not None and elements:
         h_tag = hashlib.sha256(f"{p.name}:{W}x{H}:{len(elements)}".encode("utf-8")).hexdigest()[:16]
@@ -526,11 +543,12 @@ def inspect_image(
         "ocr_lines": ocr_lines,
         "ocr_text": full_text,
         "elements": elements,
+        "jepa_visual": jepa_vis_summary,
         "low_contrast_refs": low_contrast,
         "annotated_file": annotated_file,
         "ms": ms,
     }
-    if crop_bbox is None and annotate_dir is None:
+    if crop_bbox is None and annotate_dir is None and jepa_arch == "auto":
         try:
             cache_path.write_text(json.dumps(report, ensure_ascii=False), encoding="utf-8")
         except OSError:
@@ -548,6 +566,13 @@ def format_snapshot_for_prompt(report: dict[str, Any], max_chars: int = 3200) ->
         f"Playwright-Style Visual & UI Snapshot ({report.get('file', 'image')}: {W}x{H} px, {fmt}, aspect {aspect}):",
         f"- Dominant Palette: {pal or 'n/a'}",
     ]
+    jv = report.get("jepa_visual")
+    if isinstance(jv, dict) and jv.get("arch"):
+        top_s = ", ".join(f"{x['ref']} ({x['role']} sal={x['salience']})" for x in (jv.get("top_salient_elements") or [])[:4])
+        lines.append(
+            f"- JEPA Visual Latent Prediction (arch={jv['arch']}, scene={jv.get('scene_kind')}, "
+            f"sparse_flops={jv.get('attn_flops_ratio')}x, focal={top_s or 'n/a'})"
+        )
     elements = report.get("elements") or []
     if elements:
         lines.append(f"- Detected Visual / UI Elements ({len(elements)} regions, top-to-bottom):")

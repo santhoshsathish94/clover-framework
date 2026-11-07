@@ -608,16 +608,25 @@ class OmniC2C3Runtime:
         c1_state: dict[str, Any] | None = None,
         offered_tools: list[str] | None = None,
         latent_steps: int = 3,
+        jepa_arch: str = "auto",
+        context_cue_64: np.ndarray | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Execute strictly C2 (`HybridAgent` continuous `<latent>` planning on `plan-trunk-0` ONLY) in a single one-time pass.
+        """Execute strictly C2 (`HybridAgent` continuous `<latent>` planning on `plan-trunk-0` + selectable `EB-JEPA`/`RPRE`
+        latent trajectory optimization) in a single one-time pass.
         Takes C1's `2048`-d inference state (`c1_state`) and computes `r_primary` (`[1, L_prim, 2048]`) via
-        `Lfm3NativeHybridLink(d=2048, bottleneck=512)` + `HybridLink2048(d=2048 -> 2048 -> 2048)` in one batched forward pass.
+        `Lfm3NativeHybridLink(d=2048, bottleneck=512)` + `HybridLink2048(d=2048 -> 2048 -> 2048)` + `jepa_engine.plan_c2_latent`.
         Performs zero C3 decoding (`Bridges` / `11-Level NCM`).
         """
         t0 = time.perf_counter()
         if c1_state is None or c1_state.get("stage") != "c1_inference":
             c1_state, _ = self.c1_infer(prompt_text or "Hello")
 
+        if isinstance(offered_tools, str):
+            tools_list = [offered_tools] if offered_tools.strip() else []
+        else:
+            tools_list = list(offered_tools or [])
+
+        jepa_res: dict[str, Any] = {"enabled": False, "arch": "none"}
         with self.lock:
             h_primary = c1_state["h_primary"]  # [1, L_prim, 2048]
             h_cur = h_primary.mean(axis=1)     # [1, 2048]
@@ -633,6 +642,23 @@ class OmniC2C3Runtime:
 
             # Single one-time C2 pass across the entire token window
             r_primary = self.forward_hybridlink(h_primary) + self.forward_hybridlink_2048(h_primary)
+            if jepa_arch != "none":
+                try:
+                    import jepa_engine
+                    jepa_res = jepa_engine.for_base(self.base_dir).plan_c2_latent(
+                        h_primary,
+                        r_primary,
+                        offered_tools=tools_list,
+                        context_cue_64=context_cue_64,
+                        configured_arch=jepa_arch,
+                    )
+                    if jepa_res.get("enabled") and "r_refined_2048" in jepa_res:
+                        r_primary = jepa_res["r_refined_2048"]
+                        if jepa_res.get("ranked_tools"):
+                            tools_list = jepa_res["ranked_tools"]
+                except Exception:
+                    jepa_res = {"enabled": False, "arch": "none"}
+
             planned_windows: list[dict[str, Any]] = []
             has_active = False
             for w in c1_state.get("windows") or ():
@@ -662,10 +688,17 @@ class OmniC2C3Runtime:
             n_active = 1 if has_active else 0
 
         ms = round((time.perf_counter() - t0) * 1000.0, 2)
-        if isinstance(offered_tools, str):
-            tools_list = [offered_tools] if offered_tools.strip() else []
-        else:
-            tools_list = list(offered_tools or [])
+        jepa_meta = (
+            {
+                "jepa_arch": jepa_res["arch"],
+                "jepa_energy_before": jepa_res["energy_before"],
+                "jepa_energy_after": jepa_res["energy_after"],
+                "jepa_energy_reduction_pct": jepa_res["energy_reduction_pct"],
+                "jepa_vc_std": jepa_res["vc_std"],
+            }
+            if jepa_res.get("enabled")
+            else {}
+        )
 
         c2_state = {
             "stage": "c2_plan",
@@ -678,11 +711,14 @@ class OmniC2C3Runtime:
             "latent_norm": round(norms[-1], 4),
             "hybridlink_cos": round(cos_list[-1], 4),
             "planned_tools": tools_list,
+            "jepa_plan": jepa_res if jepa_res.get("enabled") else None,
+            **jepa_meta,
             "ms": ms,
         }
         c2_info = {
             "layer": "c2_hybridagent",
-            "module": "HybridLink2048 + Lfm3NativeHybridLink(d=2048, bottleneck=512)",
+            "module": "HybridLink2048 + Lfm3NativeHybridLink(d=2048, bottleneck=512)"
+                      + (f" + JEPA({jepa_res['arch']})" if jepa_res.get("enabled") else ""),
             "trunk": "plan-trunk-0",
             "windows": n_active,
             "window_tokens": P_BPE,
@@ -691,6 +727,7 @@ class OmniC2C3Runtime:
             "latent_norm": round(norms[-1], 4),
             "hybridlink_cos": round(cos_list[-1], 4),
             "planned_tools": tools_list,
+            **jepa_meta,
             "ms": ms,
         }
         return c2_state, c2_info
