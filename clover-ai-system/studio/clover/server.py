@@ -354,12 +354,14 @@ def _walkthrough_flag(base):
 
 
 def setup_needed():
-    """The phone and laptop apps show the clean setup screen when the model is not downloaded yet, or right after
-    Setup.exe launches the Studio for its first-run walkthrough."""
+    """The phone and laptop apps show the clean setup screen when the model is not downloaded yet, while first-start
+    setup is still running, or right after Setup.exe launches the Studio for its first-run walkthrough."""
     if paths.WEB or S.args is None:
         return False
     base = Path(S.args.base)
     if _walkthrough_flag(base).is_file():
+        return True
+    if S.load.get("status") == "setup" and S.setup is not None and S.setup.state in ("running", "stopped", "failed"):
         return True
     return not omni_available(base)[0]
 
@@ -447,13 +449,15 @@ class Setup:
                 traceback.print_exc()
             if S.csi is not None and S.settings is not None and S.settings.get().get("csi", True):
                 S.csi.start()
+            if S.memidx is not None:
+                S.memidx.wake()
             try:
                 import omni_c2_c3
                 omni_c2_c3.for_base(self.base)
             except Exception:
                 pass
         with self.lock:
-            if rc == 0 and not setup_needed():
+            if rc == 0 and not _walkthrough_flag(self.base).is_file() and omni_available(self.base)[0]:
                 self.state = "done"
             else:
                 self.state = "stopped" if rc == 3 else "failed"
@@ -736,6 +740,40 @@ def personal_step(pers, method, *args):
 
 
 REMEMBER_ASK = semantics.REMEMBER_ASK
+OPEN_URL = re.compile(r"https?://[^\s\x00-\x1f\x7f]{1,2040}", re.I)
+
+
+def open_in_browser(body, start=None):
+    """A search (body["query"], with the engine picked in Settings) or a page (body["url"]) opened in the user's default
+    browser, where they are signed in and search themselves. On Windows the page's own links open in Clover's app window
+    (its own Edge profile); the phone app and the Web page open links in the user's browser themselves. Only http and
+    https addresses are opened. start: os.startfile (tests replace it). -> the address opened."""
+    import web_search
+    if paths.PLATFORM != "windows":
+        raise ValueError("open the link from the page: this device opens links in your browser itself")
+    query = " ".join(str(body.get("query") or "").split())
+    url = web_search.browser_search_url(query, S.search.browser_engine()) if query else str(body.get("url") or "").strip()
+    if not OPEN_URL.fullmatch(url):
+        raise ValueError("only an http or https address is opened in your browser")
+    (start or os.startfile)(url)
+    return url
+
+
+def inbox_count():
+    """Pages waiting from the user's browser (laptop only)."""
+    if paths.PLATFORM != "windows" or S.args is None:
+        return 0
+    import browser_host
+    return browser_host.count(S.args.base)
+
+
+def inbox_describe():
+    import browser_host
+    if paths.PLATFORM != "windows":
+        return {"pages": [], "available": False}
+    ext = HERE.parent / "browser-extension"
+    return {"pages": browser_host.pages(S.args.base), "available": True, "registered": browser_host.registered(S.args.base),
+            "extension_id": browser_host.EXTENSION_ID, "extension_dir": str(ext) if (ext / "manifest.json").is_file() else None}
 
 
 def workspace_action(action, body):
@@ -885,12 +923,125 @@ def _git_with_vscode(action, args):
         S.repo.protect_agents()
 
 
+def _github_api(method: str, api_path: str, token: str, payload: dict | None = None) -> tuple[int, dict]:
+    import urllib.error
+    import urllib.request
+    data = json.dumps(payload).encode("utf-8") if payload is not None else None
+    req = urllib.request.Request(
+        f"https://api.github.com{api_path}",
+        data=data,
+        method=method,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "CloverAIStudio/5.0",
+            **({"Content-Type": "application/json"} if data is not None else {}),
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+            return resp.status, (json.loads(raw) if raw.strip() else {})
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace") if exc.fp else ""
+        try:
+            doc = json.loads(raw) if raw.strip() else {}
+        except ValueError:
+            doc = {"message": raw[:200]}
+        return exc.code, doc
+
+
+def _direct_github_sync(token: str, full_repo: str) -> dict:
+    """Sync `S.repo.dir` with `https://github.com/<full_repo>` directly using `token` (via `git` or GitHub Git Data API)."""
+    import workspaces
+    S.repo.flush()
+    notes_cnt = len(list((S.repo.dir / "growth" / "knowledge").glob("*.json")))
+    if S.repo.git:
+        env = workspaces._git_env(token)
+        url = f"https://github.com/{full_repo}.git"
+        S.repo.agents_writable()
+        try:
+            subprocess.run([S.repo.git, "remote", "remove", "origin"], cwd=S.repo.dir, capture_output=True)
+            subprocess.run([S.repo.git, "remote", "add", "origin", url], cwd=S.repo.dir, capture_output=True)
+            f_res = subprocess.run([S.repo.git, "fetch", "origin", "main"], cwd=S.repo.dir, env=env,
+                                   capture_output=True, text=True, timeout=120)
+            merged = False
+            if f_res.returncode == 0:
+                m_res = subprocess.run(
+                    [S.repo.git, "merge", "origin/main", "--allow-unrelated-histories", "-X", "ours", "-m", "Sync memory from GitHub"],
+                    cwd=S.repo.dir, env=env, capture_output=True, text=True, timeout=120,
+                )
+                merged = m_res.returncode == 0 and "Already up to date" not in (m_res.stdout or "")
+            p_res = subprocess.run([S.repo.git, "push", "-u", "origin", "HEAD:main"], cwd=S.repo.dir, env=env,
+                                   capture_output=True, text=True, timeout=120)
+            if p_res.returncode != 0:
+                err = workspaces._redact((p_res.stderr or p_res.stdout or "git push failed").strip(), token)
+                raise RuntimeError(f"GitHub sync push failed: {err}")
+            return {"repo": full_repo, "path": str(S.repo.dir), "notes": notes_cnt, "committed": True, "merged": merged}
+        finally:
+            S.repo.protect_agents()
+    # Pure-REST fallback when git binary is not present (e.g. Android): push tracked files via GitHub Contents API
+    pushed = 0
+    for rel_dir in ("growth/knowledge", "sessions", f"outcomes/{S.repo.device}"):
+        d = S.repo.dir / rel_dir
+        if not d.is_dir():
+            continue
+        for fp in sorted(d.rglob("*")):
+            if not fp.is_file() or fp.suffix == ".tmp" or "_index" in fp.parts:
+                continue
+            rel = fp.relative_to(S.repo.dir).as_posix()
+            st_code, cur = _github_api("GET", f"/repos/{full_repo}/contents/{rel}", token)
+            b64 = base64.b64encode(fp.read_bytes()).decode("ascii")
+            body = {"message": f"Sync {rel}", "content": b64}
+            if st_code == 200 and isinstance(cur, dict) and cur.get("sha"):
+                body["sha"] = cur["sha"]
+            _github_api("PUT", f"/repos/{full_repo}/contents/{rel}", token, body)
+            pushed += 1
+    return {"repo": full_repo, "path": str(S.repo.dir), "notes": notes_cnt, "committed": pushed > 0, "merged": False}
+
+
+def _direct_github_setup(token: str, name: str | None = None) -> dict:
+    repo_name = (name or paths.REPO_NAME).strip()
+    if "/" in repo_name:
+        full_repo = repo_name
+        created = False
+    else:
+        code, user_doc = _github_api("GET", "/user", token)
+        if code != 200 or not user_doc.get("login"):
+            raise RuntimeError("GitHub rejected the token (check that it has 'repo' scope).")
+        login = user_doc["login"]
+        full_repo = f"{login}/{repo_name}"
+        rc, rdoc = _github_api("GET", f"/repos/{full_repo}", token)
+        created = False
+        if rc == 404:
+            cc, cdoc = _github_api(
+                "POST",
+                "/user/repos",
+                token,
+                {"name": repo_name, "private": True, "auto_init": True,
+                 "description": "Clover AI Studio private memory repository"},
+            )
+            if cc not in (200, 201):
+                raise RuntimeError(f"Could not create private repository {full_repo}: {cdoc.get('message') or cc}")
+            created = True
+        elif rc != 200:
+            raise RuntimeError(f"Could not access repository {full_repo}: {rdoc.get('message') or rc}")
+    sync_res = _direct_github_sync(token, full_repo)
+    return dict(sync_res, repo=full_repo, private=True, created=created)
+
+
 def github_setup(name=None):
-    """Creates (after the user confirms in VS Code) or connects the user's private GitHub repository and pushes the
-    records to it."""
-    res = _git_with_vscode("githubSetupRepo", {"name": name or paths.REPO_NAME, "path": str(S.repo.dir)})
+    """Creates or connects the user's private GitHub repository and pushes the records to it (via saved GitHub token
+    or VS Code GitHub sign-in)."""
+    tok = getattr(S.github, "token", None)
+    if tok:
+        res = _direct_github_setup(tok, name=name)
+    else:
+        res = _git_with_vscode("githubSetupRepo", {"name": name or paths.REPO_NAME, "path": str(S.repo.dir)})
     if isinstance(res, dict) and res.get("repo"):
-        github_repo({"repo": res["repo"], "private": bool(res.get("private")), "last_sync": time.strftime("%Y-%m-%d %H:%M")})
+        notes_cnt = len(list((S.repo.dir / "growth" / "knowledge").glob("*.json")))
+        github_repo({"repo": res["repo"], "private": bool(res.get("private", True)),
+                     "notes": notes_cnt, "last_sync": time.strftime("%Y-%m-%d %H:%M")})
         S.repo.reindex()
         layer_kit().store().rebuild_index()
         S.repo.note(f"GitHub: records pushed to {res['repo']} (private)" + (", created" if res.get("created") else ""))
@@ -900,13 +1051,18 @@ def github_setup(name=None):
 def sync_repo():
     st = github_repo()
     if not st or not st.get("repo"):
-        raise ValueError("set up the private GitHub repository first (Settings -> VS Code)")
-    res = _git_with_vscode("githubSyncFolder", {"path": str(S.repo.dir), "repo": st["repo"]})
+        raise ValueError("set up the private GitHub repository first (Settings -> GitHub account)")
+    tok = getattr(S.github, "token", None)
+    if tok:
+        res = _direct_github_sync(tok, st["repo"])
+    else:
+        res = _git_with_vscode("githubSyncFolder", {"path": str(S.repo.dir), "repo": st["repo"]})
     S.repo.reindex()
     layer_kit().store().rebuild_index()
-    github_repo({"last_sync": time.strftime("%Y-%m-%d %H:%M")})
+    notes_cnt = len(list((S.repo.dir / "growth" / "knowledge").glob("*.json")))
+    github_repo({"last_sync": time.strftime("%Y-%m-%d %H:%M"), "notes": notes_cnt})
     S.repo.note(f"GitHub: synced with {st['repo']}" + (" (other devices' records merged)" if (res or {}).get("merged") else ""))
-    return dict(res or {}, repo=st["repo"])
+    return dict(res or {}, repo=st["repo"], notes=notes_cnt)
 
 
 def _tell_phone(text, percent):
@@ -945,7 +1101,7 @@ def load_engine(args):
             for kind in ([] if S.engine is not None else [want, "cpu"] if want == "gpu" else ["cpu"]):
                 try:
                     S.engine = omni_native.OmniNative(Path(args.base), S.perms, progress=progress, engine=kind,
-                                                      max_tokens=hw.get("ctx") or 32768,
+                                                      max_tokens=hw.get("ctx") or 65536,
                                                       voice_threads=hw.get("voice_threads") or omni_native.VOICE_THREADS,
                                                       gpu_name=hw.get("gpu") or "GPU", threads=hw.get("threads"))
                     break
@@ -1250,7 +1406,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                 offer=[t["function"]["name"] for t in lfm3_native.STUDIO_TOOLS] + [t["schema"]["function"]["name"] for t in extra])
             if kit is not None:
                 kit.meaning = frame
-            max_new = int(min(4096, max(64, int(body.get("max_new_tokens") or 2048))))
+            max_new = int(min(8192, max(64, int(body.get("max_new_tokens") or 4096))))
             kv = kv_switch(sid) if frame.act != "social" else None
             if frame.act == "social":
                 # only pleasantries ("hi", "thanks", "bye"): semantics answers and the model is not called
@@ -1712,7 +1868,7 @@ class Handler(BaseHTTPRequestHandler):
         if rel.startswith("api/datasets/Santhoshsathish94/clover-ai-studio/tree/") and rel.endswith("/liquid-lfm3"):
             if not precomp.is_dir():
                 return self._send(404, {"error": "precomputed dataset not found"})
-            cache_f = Path("/tmp/clover_hf_mirror_tree_v5.json") if os.name != "nt" else (Path(S.args.base) / "cache" / "hf_mirror_tree.json")
+            cache_f = Path("/tmp/clover_hf_mirror_tree_v6.json") if os.name != "nt" else (Path(S.args.base) / "cache" / "hf_mirror_tree_v6.json")
             if cache_f.is_file():
                 try:
                     return self._send(200, cache_f.read_bytes(), "application/json")
@@ -1720,9 +1876,12 @@ class Handler(BaseHTTPRequestHandler):
                     pass
             inc = ("hybridagent/plan-trunk-0/", "bridges/bridge-trunk-0/", "ncm/", "trunks/tokenizer.json", "trunks/global-0/embed_tokens.bf16.bin")
             entries = []
-            for fp in sorted(precomp.rglob("*")):
-                if not fp.is_file() or fp.name.endswith(".pt"):
-                    continue
+            all_fps = []
+            for root_d, _, fnames in os.walk(precomp, followlinks=True):
+                for fn in fnames:
+                    if not fn.endswith(".pt"):
+                        all_fps.append(Path(root_d) / fn)
+            for fp in sorted(all_fps):
                 r_posix = fp.relative_to(precomp).as_posix()
                 if not any(r_posix == p or r_posix.startswith(p) for p in inc):
                     continue
@@ -1751,7 +1910,11 @@ class Handler(BaseHTTPRequestHandler):
             target = precomp / m_ds.group(1)
         m_csi = re.match(r"^datasets/Santhoshsathish94/clover-ai-studio/resolve/[^/]+/csi/morph-verb-v1\.1/([^/]+)$", rel)
         if m_csi:
-            target = base_data / "csi" / "morph-verb-v1.1" / m_csi.group(1)
+            for d_cand in (Path(S.args.base) / "data", base_data):
+                cand = d_cand / "csi" / "morph-verb-v1.1" / m_csi.group(1)
+                if cand.is_file():
+                    target = cand
+                    break
         m_bge = re.match(r"^BAAI/bge-small-en-v1\.5/resolve/[^/]+/([^/]+)$", rel)
         if m_bge:
             target = base_data / "embed" / "bge-small-en-v1.5" / m_bge.group(1)
@@ -1867,6 +2030,16 @@ class Handler(BaseHTTPRequestHandler):
             name, ctype = STATIC[path]
             f = HERE / "web" / name
             return self._send(200, f.read_bytes(), ctype) if f.is_file() else self._send(404, {"error": "not found"})
+        if path in ("/download/laptop/CloverAIStudio-Setup.exe", "/download/laptop/CloverFramework-CodeSign.cer",
+                    "/download/mobile/CloverAIStudio.apk", "/download/SHA256SUMS.txt"):
+            rel_dl = path.lstrip("/")
+            for cand_root in (Path(S.args.base) if S.args else None, HERE.parents[2], Path("/opt/clover-k3/web-studio")):
+                if cand_root and (cand_root / rel_dl).is_file():
+                    fp_dl = cand_root / rel_dl
+                    ctype = "text/plain; charset=utf-8" if fp_dl.suffix == ".txt" else "application/octet-stream"
+                    hdrs = {"Content-Disposition": f'attachment; filename="{fp_dl.name}"'} if fp_dl.suffix != ".txt" else {}
+                    return self._send(200, fp_dl.read_bytes(), ctype, hdrs)
+            return self._send(404, {"error": "installer file not found"})
         if paths.WEB and not self._token_ok():
             return self._send(401, {"error": "Sign in with an approved account to use Clover AI Studio.", "auth_required": True})
         if path == "/api/auth/session":
@@ -1902,7 +2075,8 @@ class Handler(BaseHTTPRequestHandler):
                   "models": [x["id"] for x in cat],
                   "model_catalog": cat,
                   "account": getattr(self, "_authed_account", None),
-                  "inputs": getattr(eng, "inputs", ["text"]) if eng else None}
+                  "inputs": getattr(eng, "inputs", ["text"]) if eng else None,
+                  "inbox": inbox_count()}
             if busy:
                 st["busy"] = {"kind": busy["kind"], "elapsed_s": round(time.time() - busy["since"]),
                               "stage": eng.stage["name"] if eng else None,
@@ -1958,12 +2132,28 @@ class Handler(BaseHTTPRequestHandler):
             if not re.fullmatch(r"[A-Za-z0-9_\-]{1,96}", sid):
                 return self._send(400, {"error": "bad conversation id"})
             return self._send(200, {"id": sid, "messages": S.repo.messages(sid)})
-        if path.startswith("/api/media/file/"):  # pictures Clover made: content-named files in the media folder only
+        if path.startswith("/api/media/file/"):  # pictures Clover made or user attached: content-named files in media folder
             name = path.rsplit("/", 1)[1]
-            if not re.fullmatch(r"[0-9a-f]{32}\.png", name):
+            if not re.fullmatch(r"(?:[0-9a-f]{32}|annotated_[0-9a-f]{16})\.(?:png|jpg|jpeg|gif|webp)", name):
                 return self._send(400, {"error": "bad file name"})
             f = media_dir() / name
-            return self._send(200, f.read_bytes(), "image/png") if f.is_file() else self._send(404, {"error": "not found"})
+            if not f.is_file():
+                return self._send(404, {"error": "not found"})
+            ext = f.suffix.lower().lstrip(".")
+            mime = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg", "gif": "image/gif", "webp": "image/webp"}.get(ext, "image/png")
+            return self._send(200, f.read_bytes(), mime)
+        if path == "/api/media/inspect":
+            from urllib.parse import parse_qs
+            import image_inspector
+            q = {k: v[0] for k, v in parse_qs(query).items()}
+            fname = str(q.get("file") or "").strip()
+            if not re.fullmatch(r"(?:[0-9a-f]{32}|annotated_[0-9a-f]{16})\.(?:png|jpg|jpeg|gif|webp)", fname):
+                return self._send(400, {"error": "valid media file name required"})
+            f = media_dir() / fname
+            if not f.is_file():
+                return self._send(404, {"error": "media file not found"})
+            rep = image_inspector.inspect_image(f, annotate_dir=media_dir())
+            return self._send(200, rep)
         if path == "/api/media":
             files = [p for p in media_dir().iterdir() if p.is_file()]
             return self._send(200, {"path": str(media_dir()), "files": len(files),
@@ -1975,6 +2165,8 @@ class Handler(BaseHTTPRequestHandler):
                                     "media_files": len(files), "media_bytes": sum(p.stat().st_size for p in files)})
         if path == "/api/search":
             return self._send(200, S.search.describe())
+        if path == "/api/inbox":  # pages the user sent from their browser (laptop: the Send to Clover extension)
+            return self._send(200, inbox_describe())
         if path == "/api/workspaces":  # whether a GitHub token is set, never the token
             return self._send(200, S.workspaces.describe())
         if path == "/api/vscode/poll":  # the Clover extension in a VS Code window asks for its next job
@@ -1990,6 +2182,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"job": job})
         if path == "/api/vscode":
             return self._send(200, {"connected": S.vscode.connected(), "repo": github_repo(),
+                                    "github": S.github.describe() if S.github else {"token_set": False},
                                     "local": str(S.repo.dir), "installed": vscode_exe() is not None})
         if path == "/api/turn/events":
             from urllib.parse import parse_qs
@@ -2256,6 +2449,20 @@ class Handler(BaseHTTPRequestHandler):
                 img_bytes = (media_dir() / rep["file"]).read_bytes()
                 rep["data"] = base64.b64encode(img_bytes).decode("ascii")
                 return self._send(200, rep)
+            if path in ("/api/inbox/take", "/api/inbox/dismiss", "/api/browser/register"):
+                if paths.PLATFORM != "windows":
+                    raise ValueError("pages come from the browser on the laptop only")
+                import browser_host
+                base = S.args.base
+                if path == "/api/inbox/take":  # the page as a document for the next message; it leaves the inbox
+                    return self._send(200, {"document": browser_host.take(body.get("id"), base, flag=semantics.flag_injection)})
+                if path == "/api/inbox/dismiss":
+                    browser_host.dismiss(body.get("id"), base)
+                elif body.get("on"):  # the user's click in Settings: HKCU keys for Chrome and Edge, no administrator
+                    browser_host.register(base)
+                else:
+                    browser_host.unregister(base)
+                return self._send(200, inbox_describe())
             if path == "/api/search/test":
                 import web_search
                 ok, message = web_search.WebSearch(S.search).test()
@@ -2447,6 +2654,23 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(200, {"candidates": coll.preview_candidates(pers)})
                 except core_sync.CoreSyncError as exc:
                     return self._send(400, {"error": str(exc), "view": dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)})
+            if path == "/api/media/inspect":
+                import image_inspector
+                fname = str(body.get("file") or "").strip()
+                raw_data = str(body.get("data") or "").strip()
+                crop = body.get("crop_bbox") if isinstance(body.get("crop_bbox"), list) and len(body.get("crop_bbox")) == 4 else None
+                if raw_data:
+                    if "," in raw_data and raw_data.startswith("data:"):
+                        raw_data = raw_data.split(",", 1)[1]
+                    saved = save_media([{"kind": "image", "name": body.get("name") or "image.png", "data": raw_data}])
+                    fname = saved[0]["file"]
+                if not re.fullmatch(r"(?:[0-9a-f]{32}|annotated_[0-9a-f]{16})\.(?:png|jpg|jpeg|gif|webp)", fname):
+                    return self._send(400, {"error": "valid media file or image data required"})
+                f = media_dir() / fname
+                if not f.is_file():
+                    return self._send(404, {"error": "media file not found"})
+                rep = image_inspector.inspect_image(f, annotate_dir=media_dir(), crop_bbox=crop)
+                return self._send(200, rep)
             if path == "/api/media/clear":
                 gone = 0
                 for p in media_dir().iterdir():  # only files Clover named (by content): the folder may be the user's
