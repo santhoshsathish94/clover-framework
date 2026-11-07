@@ -928,6 +928,8 @@ class OmniNative(N.LFM3Native):
                         layer_log.append(c2_info)
                         emit(dict(c2_info, type="layer"))
                         emit({"type": "plan", "round": rnd_n, "stage": "c2_done", "ms": c2_info.get("ms")})
+                        if hasattr(kit, "jepa_record_outcome"):
+                            kit.jepa_record_outcome(c1_obs_state=c1_state, is_baseline=True)
                     else:
                         c2_state = final
                     # 3. Strict Stage C3: Decoding ONLY (`Bridges + 11-Level NCM`)
@@ -1051,23 +1053,25 @@ class OmniNative(N.LFM3Native):
                 rnd_n = len(stats_all) or 1
                 if kit is not None and not (cancel and cancel.is_set()):
                     if hasattr(kit, "c1_infer"):
+                        c1_prev, _ = kit.c1_infer(previous or question)
                         c1_state, c1_info = kit.c1_infer(answer, stats=stats_all)
                         layer_log.append(c1_info)
                         emit(dict(c1_info, type="layer"))
                         emit({"type": "plan", "round": rnd_n, "stage": "c1_done", "ms": c1_info.get("ms")})
                     else:
-                        c1_state = None
+                        c1_prev, c1_state = None, None
                     if hasattr(kit, "c2_plan_state"):
                         emit({"type": "plan", "round": rnd_n, "stage": "c2_plan", "model": "HybridAgent"})
+                        _, _ = kit.c2_plan_state(question, c1_state=c1_prev, offered_tools=info["tools"])
+                        if hasattr(kit, "jepa_record_outcome"):
+                            j_out = kit.jepa_record_outcome(c1_obs_state=c1_state, is_baseline=False)
+                            if isinstance(j_out, dict) and j_out.get("enabled"):
+                                layer_log.append({"layer": "jepa_outcome_growth", **j_out})
+                                emit({"type": "layer", "layer": "jepa_outcome_growth", **j_out})
                         c2_state, c2_info = kit.c2_plan_state(question, c1_state=c1_state, offered_tools=info["tools"])
                         layer_log.append(c2_info)
                         emit(dict(c2_info, type="layer"))
                         emit({"type": "plan", "round": rnd_n, "stage": "c2_done", "ms": c2_info.get("ms")})
-                        if hasattr(kit, "jepa_record_outcome"):
-                            j_out = kit.jepa_record_outcome(is_baseline=False)
-                            if isinstance(j_out, dict) and j_out.get("enabled"):
-                                layer_log.append({"layer": "jepa_outcome_growth", **j_out})
-                                emit({"type": "layer", "layer": "jepa_outcome_growth", **j_out})
                     else:
                         c2_state = answer
                     if "ncm" in layers and (hasattr(kit, "c3_decode") or hasattr(kit, "ncm_render")):

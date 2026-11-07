@@ -184,8 +184,8 @@ def evaluate_all_flows() -> dict[str, Any]:
             a_tok = jepa_engine._linear(aud_p, rt.w["aud_adapter.weight"], rt.w["aud_adapter.bias"]) + rt.w["aud_pos_embed"] + rt.w["aud_mod_token"]
             zv_full, _ = rt._run_encoder_blocks(v_tok, return_hierarchical=True)
             za_full, _ = rt._run_encoder_blocks(a_tok, return_hierarchical=True)
-            zv_c = zv_full.mean(axis=0)
-            za_c = za_full.mean(axis=0)
+            zv_c = rt._spatial_pool_16x64(v_tok, zv_full)
+            za_c = rt._spatial_pool_16x64(a_tok, za_full)
             class_vis_z.append(zv_c)
             class_aud_z.append(za_c)
             base_vq = np.zeros((1, jepa_engine.D_VQ), dtype=np.float32)
@@ -194,7 +194,7 @@ def evaluate_all_flows() -> dict[str, Any]:
             joint_vq = jepa_engine._layer_norm(jepa_engine._linear(joint_64, rt.w["bridge.jepa_to_vq.weight"], rt.w["bridge.jepa_to_vq.bias"]))
             cand_Protos_vq[c_i] = jepa_engine._l2_normalize(0.5 * base_vq + 0.5 * joint_vq).squeeze(0)
 
-        for arch in ("none", "mjepa", "clover_rpre", "auto"):
+        for arch in ("none", "ijepa", "audio_jepa", "eb_jepa", "mjepa", "clover_rpre", "auto"):
             hits = 0
             av_cos_list = []
             n_trials = 30
@@ -229,7 +229,7 @@ def evaluate_all_flows() -> dict[str, Any]:
         # Flow 4: Core 2 (`C2`) Energy-Based Latent Trajectory Planning (`EB-JEPA` / `RPRE`)
         # ====================================================================
         flow4_results: dict[str, Any] = {}
-        for arch in ("none", "eb_jepa", "clover_rpre", "auto"):
+        for arch in ("none", "ijepa", "audio_jepa", "mjepa", "eb_jepa", "clover_rpre", "auto"):
             e_before_list = []
             e_after_list = []
             red_pct_list = []

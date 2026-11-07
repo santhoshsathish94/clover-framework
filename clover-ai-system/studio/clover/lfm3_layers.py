@@ -468,8 +468,11 @@ class LayerKit:
         state = {"stage": "c2_plan", "raw_text": raw, "windows": windows}
         return state, info
 
-    def jepa_record_outcome(self, z_obs_64=None, is_baseline=False):
-        """Flow 5 (`Outcome -> Growth`): update `OutcomeResidualAdapter` from the latest C2 plan and observed outcome."""
+    def jepa_record_outcome(self, z_obs_64=None, c1_obs_state=None, is_baseline=False):
+        """Flow 5 (`Outcome -> Growth`): update `OutcomeResidualAdapter` from the latest C2 plan and observed outcome.
+        When `c1_obs_state` is provided (e.g., the C1 state of a verified or retry-corrected answer), encodes its
+        2048-d representation into 64-d JEPA state space as the real observed outcome `z_obs_64`.
+        """
         if getattr(self, "jepa_arch", "auto") == "none" or not isinstance(self.last_c2_jepa, dict):
             return None
         try:
@@ -480,7 +483,15 @@ class LayerKit:
             z_plan = self.last_c2_jepa.get("z_planned_64")
             if z_init is None or act is None or z_plan is None:
                 return None
-            z_obs = z_obs_64 if z_obs_64 is not None else np.asarray(z_plan, dtype=np.float32)
+            jrt = jepa_engine.for_base(self.base_dir)
+            if z_obs_64 is not None:
+                z_obs = np.asarray(z_obs_64, dtype=np.float32)
+            elif isinstance(c1_obs_state, dict) and "h_primary" in c1_obs_state:
+                h_mean_2048 = np.asarray(c1_obs_state["h_primary"], dtype=np.float32).mean(axis=1)
+                h_vq = jepa_engine._layer_norm(jepa_engine._linear(h_mean_2048, jrt.w["bridge.lfm3_to_vq.weight"], jrt.w["bridge.lfm3_to_vq.bias"]))
+                z_obs = jepa_engine._layer_norm(jepa_engine._linear(h_vq, jrt.w["state_adapter.weight"], jrt.w["state_adapter.bias"]) + jrt.w["state_mod_token"]).squeeze(0)
+            else:
+                z_obs = np.asarray(z_plan, dtype=np.float32)
             cue_64 = None
             if self.visual_cue_64 is not None and self.audio_cue_64 is not None:
                 cue_64 = 0.5 * (self.visual_cue_64 + self.audio_cue_64)
@@ -488,7 +499,7 @@ class LayerKit:
                 cue_64 = self.visual_cue_64
             elif self.audio_cue_64 is not None:
                 cue_64 = self.audio_cue_64
-            return jepa_engine.for_base(self.base_dir).record_and_adapt_outcome(
+            return jrt.record_and_adapt_outcome(
                 z_init,
                 act,
                 z_obs,

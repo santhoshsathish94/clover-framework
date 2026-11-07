@@ -33,7 +33,8 @@ This directory contains the source-level audit, unified implementation (`rpre/`)
   - [`rpre/planner.py`](rpre/planner.py) — `ReprTargetDistObjective`, `CEMPlanner`, `MPPIPlanner`, `CloverCycleAgent`.
 - [`tests/test_rpre.py`](tests/test_rpre.py) — 15 unit and integration checks covering all modules and findings.
 - [`scripts/run_all_jepa_experiments.py`](scripts/run_all_jepa_experiments.py) — Reproducible multi-seed (`[101, 202, 303]`) experiment suite (`E1`–`E5`).
-- [`scripts/train_clover_jepa_trunks.py`](scripts/train_clover_jepa_trunks.py) — CPU/GPU PyTorch trainer & `CLVRTRK1` binary trunk exporter (`models/jepa-trunk-0`).
+- [`scripts/prepare_real_jepa_dataset.py`](scripts/prepare_real_jepa_dataset.py) — Extracts real visual, 16 kHz audio WAV, and `LFM3-Omni` (`2048-d`) / `VQ-VAE` (`384-d`) embeddings for GPU training.
+- [`scripts/train_clover_jepa_trunks.py`](scripts/train_clover_jepa_trunks.py) — 8x RTX 3090 GPU / CPU PyTorch trainer & `CLVRTRK1` binary trunk exporter (`models/jepa-trunk-0`).
 - [`results/jepa_investigation_results.json`](results/jepa_investigation_results.json), [`results/jepa_trunk_training_report.json`](results/jepa_trunk_training_report.json), [`results/clover_jepa_flow_integration_results.json`](results/clover_jepa_flow_integration_results.json) — Complete JSON outputs.
 
 ## 4. Verification & GPU Training Commands
@@ -41,6 +42,7 @@ This directory contains the source-level audit, unified implementation (`rpre/`)
 ```bash
 python tests/test_rpre.py
 python scripts/run_all_jepa_experiments.py
-python scripts/train_clover_jepa_trunks.py --device auto --scale pilot
+python scripts/prepare_real_jepa_dataset.py
+python scripts/train_clover_jepa_trunks.py --device auto --scale full --epochs 240 --batch-size 256
 python ../../clover-ai-system/studio/clover/test_jepa_clover_flows.py
 ```

@@ -32,8 +32,10 @@ PyTorch at inference time, while pairing directly with `train_clover_jepa_trunks
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import math
+import re
 import struct
 import threading
 import time
@@ -116,15 +118,258 @@ def _l2_normalize(x: np.ndarray, axis: int = -1, eps: float = 1e-6) -> np.ndarra
 
 
 def centered_norm_mse(pred: np.ndarray, target: np.ndarray, center_pred: bool = True) -> float:
-    """Audio-JEPA symmetric centered normalized MSE loss (`rpre/losses.py`)."""
+    """Audio-JEPA symmetric centered normalized MSE loss (`rpre/losses.py`).
+    Centers across both patch tokens and feature channels so constant/untrained predictions do not get artificial 0.99 cosine.
+    """
     p = np.asarray(pred, dtype=np.float32)
     t = np.asarray(target, dtype=np.float32)
+    if p.ndim >= 2 and p.shape[0] > 1:
+        t = t - t.mean(axis=0, keepdims=True)
+        if center_pred:
+            p = p - p.mean(axis=0, keepdims=True)
     t = (t - t.mean(axis=-1, keepdims=True)) / np.sqrt(t.var(axis=-1, keepdims=True) + np.float32(1e-6))
     if center_pred:
         p = (p - p.mean(axis=-1, keepdims=True)) / np.sqrt(p.var(axis=-1, keepdims=True) + np.float32(1e-6))
     pn = _l2_normalize(p, axis=-1)
     tn = _l2_normalize(t, axis=-1)
     return float(np.mean((pn - tn) ** 2))
+
+
+def tool_capability_vector(tool_name: str) -> np.ndarray:
+    """Map any tool name `tool_name` into a deterministic 8-d semantic capability vector in `R^{D_ACT}` (`D_ACT = 8`).
+    Completely invariant to the position of `tool_name` in `offered_tools`:
+      - Dim 0: `web_factual` (`web_search`, `fetch_url`, `browse`, `wikipedia`, `news`)
+      - Dim 1: `math_calc` (`calculator`, `calc`, `convert_units`, `units`)
+      - Dim 2: `code_python` (`python`, `run_python`, `analyze_table`, `chart_table`)
+      - Dim 3: `memory_knowledge` (`memory_recall`, `remember`, `recall`, `read_document`, `ontology`)
+      - Dim 4: `files_workspace` (`read_file`, `write_file`, `search_files`, `file_info`, `git_inspect`, `vscode_*`)
+      - Dim 5: `visual_media` (`image_gen`, `generate_image`, `extract_frame`, `media_info`)
+      - Dim 6: `system_device` (`laptop_status`, `get_current_time`, `run_powershell`, `ssh`)
+      - Dim 7: `general_dialogue` (or hash-projected signature for arbitrary custom tool names)
+    """
+    s = str(tool_name or "").strip().lower()
+    v = np.zeros(D_ACT, dtype=np.float32)
+    if re.search(r"web|search_web|fetch_url|url|browse|google|wiki|news", s) and "file" not in s:
+        v[0] = 1.0
+        v[3] = 0.25
+    elif re.search(r"calc|math|unit|convert|eval", s):
+        v[1] = 1.0
+        v[2] = 0.30
+    elif re.search(r"python|code|script|table|chart|plot|compile", s):
+        v[2] = 1.0
+        v[1] = 0.35
+    elif re.search(r"mem|recall|remember|note|know|doc|ontolog|account|password|sleep|tip", s):
+        v[3] = 1.0
+        v[0] = 0.20
+    elif re.search(r"file|dir|folder|git|vscode|workspace|repo", s):
+        v[4] = 1.0
+        v[6] = 0.20
+    elif re.search(r"image|pic|photo|draw|paint|render|media|frame|visual", s):
+        v[5] = 1.0
+    elif re.search(r"status|laptop|battery|disk|time|clock|powershell|shell|terminal|ssh", s):
+        v[6] = 1.0
+        v[4] = 0.20
+    else:
+        digest = hashlib.sha256(s.encode("utf-8")).digest()
+        raw = np.frombuffer(digest[:D_ACT], dtype=np.uint8).astype(np.float32) - 128.0
+        v = raw / (np.linalg.norm(raw) + np.float32(1e-6))
+        return v
+    h_tie = (int(hashlib.md5(s.encode("utf-8")).hexdigest()[:6], 16) / float(0xFFFFFF) - 0.5) * 1e-3
+    v[7] += np.float32(h_tie)
+    return v / (np.linalg.norm(v) + np.float32(1e-6))
+
+
+# ---------------- Real Visual & Audio Patch Feature Extractors ----------------
+
+def extract_visual_patches_16x48(img_rgb: np.ndarray) -> np.ndarray:
+    """Extract a `[16, 48]` visual patch matrix from `img_rgb` (`[H, W, 3]`) that is fast (`< 4 ms` even on 4K images),
+    invariant to mild crop/resize/JPEG compression, and encodes both local $4 \times 4$ patch layout and global
+    scene geometry (`ui_controls`, `tabular_chart`, `document_receipt`, `code_terminal`, `diagram_scene`, `natural_photo`).
+    """
+    arr = np.asarray(img_rgb)
+    if arr.ndim == 2:
+        arr = np.stack([arr, arr, arr], axis=-1)
+    H_orig, W_orig = int(arr.shape[0]), int(arr.shape[1])
+
+    sy_step = max(1, H_orig // 192)
+    sx_step = max(1, W_orig // 192)
+    small = arr[::sy_step, ::sx_step, :3].astype(np.float32)
+    if small.max() > 1.5:
+        small = small / np.float32(255.0)
+    H, W, _ = small.shape
+
+    lum = np.float32(0.299) * small[:, :, 0] + np.float32(0.587) * small[:, :, 1] + np.float32(0.114) * small[:, :, 2]
+    cmax = np.max(small, axis=-1)
+    cmin = np.min(small, axis=-1)
+    sat = (cmax - cmin) / (cmax + np.float32(1e-4))
+    gx = np.abs(np.diff(lum, axis=1, prepend=lum[:, :1]))
+    gy = np.abs(np.diff(lum, axis=0, prepend=lum[:1, :]))
+    grad = gx + gy
+
+    log_aspect = float(np.clip(math.log(H_orig / max(1.0, float(W_orig))), -1.2, 1.2))
+    white_paper_frac = float(np.mean((lum > 0.82) & (sat < 0.12)))
+    dark_ide_frac = float(np.mean((lum < 0.22) & (sat < 0.18)))
+    color_bar_frac = float(np.mean((sat > 0.32) & (lum > 0.20) & (lum < 0.92)))
+    flat_frac = float(np.mean(grad < 0.012))
+    natural_smooth_frac = float(np.mean((grad >= 0.006) & (grad <= 0.09) & (lum >= 0.15) & (lum <= 0.85)))
+    horiz_line_bias = float((gy.mean() - gx.mean()) / (gy.mean() + gx.mean() + 1e-4))
+
+    img_mean = small.mean(axis=(0, 1), keepdims=True)
+    img_std = small.std(axis=(0, 1), keepdims=True) + np.float32(0.05)
+    small_std = (small - img_mean) / img_std
+
+    patches = np.zeros((N_PATCHES, 48), dtype=np.float32)
+    for py in range(4):
+        y0, y1 = int(py * H / 4), max(int(py * H / 4) + 1, int((py + 1) * H / 4))
+        for px in range(4):
+            x0, x1 = int(px * W / 4), max(int(px * W / 4) + 1, int((px + 1) * W / 4))
+            cell_std = small_std[y0:y1, x0:x1, :]
+            cell_raw = small[y0:y1, x0:x1, :]
+            cell_lum = lum[y0:y1, x0:x1]
+            cell_sat = sat[y0:y1, x0:x1]
+            cell_gx = gx[y0:y1, x0:x1]
+            cell_gy = gy[y0:y1, x0:x1]
+            cell_grad = grad[y0:y1, x0:x1]
+
+            ch, cw = cell_std.shape[0], cell_std.shape[1]
+            sub27 = []
+            for sy in range(3):
+                sy0, sy1 = int(sy * ch / 3), max(int(sy * ch / 3) + 1, int((sy + 1) * ch / 3))
+                for sx in range(3):
+                    sx0, sx1 = int(sx * cw / 3), max(int(sx * cw / 3) + 1, int((sx + 1) * cw / 3))
+                    sub = cell_std[sy0:sy1, sx0:sx1, :]
+                    sub27.extend(sub.mean(axis=(0, 1)).tolist() if sub.size else [0.0, 0.0, 0.0])
+
+            c_mean = cell_raw.mean(axis=(0, 1)).tolist()
+            c_std = cell_raw.std(axis=(0, 1)).tolist()
+            q10, q50, q90 = [float(v) for v in np.percentile(cell_lum, [10, 50, 90])]
+
+            mgx, mgy = float(cell_gx.mean()), float(cell_gy.mean())
+            aniso = (mgy - mgx) / (mgy + mgx + 1e-4)
+            edge_hi = float(np.mean(cell_grad > 0.14))
+            edge_flat = float(np.mean(cell_grad < 0.012))
+            msat = float(cell_sat.mean())
+
+            glob6 = [
+                0.25 * log_aspect,
+                0.25 * white_paper_frac,
+                0.25 * dark_ide_frac,
+                0.25 * color_bar_frac,
+                0.25 * (natural_smooth_frac - flat_frac),
+                0.25 * horiz_line_bias,
+            ]
+
+            vec48 = sub27[:27] + c_mean + c_std + [q10, q50, q90] + [mgx * 4.0, mgy * 4.0, aniso, edge_hi, edge_flat, msat] + glob6
+            patches[py * 4 + px] = np.array(vec48[:48], dtype=np.float32)
+
+    return patches
+
+
+def extract_audio_patches_16x16(samples: np.ndarray) -> tuple[np.ndarray, float]:
+    """Extract a `[16, 16]` time-frequency & acoustic structure patch matrix plus estimated speech `snr_db` from
+    16 kHz mono audio `samples`.
+    """
+    if samples.ndim == 2 and samples.shape == (16, 16):
+        p90 = float(np.percentile(samples, 90))
+        p10 = float(np.percentile(samples, 10))
+        return samples.astype(np.float32), max(0.0, (p90 - p10) * 8.0)
+
+    s = np.asarray(samples, dtype=np.float32).reshape(-1)
+    if s.size < 640:
+        s = np.pad(s, (0, 640 - s.size))
+
+    rms_total = float(np.sqrt(np.mean(s * s) + 1e-12))
+    peak_total = float(np.max(np.abs(s)) + 1e-12)
+
+    win_len = 320
+    hop = max(160, (s.size - win_len) // 240)
+    n_frames = max(16, 1 + (s.size - win_len) // hop)
+    idx_mat = np.arange(win_len)[None, :] + (np.arange(n_frames) * hop)[:, None]
+    idx_mat = np.clip(idx_mat, 0, s.size - 1)
+    frames = s[idx_mat] * np.hanning(win_len).astype(np.float32)[None, :]
+
+    spec_mag = np.abs(np.fft.rfft(frames, axis=-1))
+    spec_pow = spec_mag * spec_mag
+    frame_pow = np.mean(frames * frames, axis=-1) + np.float32(1e-12)
+
+    mel_edges = [1, 3, 5, 8, 11, 15, 20, 26, 33, 42, 52, 65, 80, 98, 120, 142, 161]
+    mel_t_f = np.zeros((n_frames, 16), dtype=np.float32)
+    for b_i in range(16):
+        b0, b1 = mel_edges[b_i], mel_edges[b_i + 1]
+        mel_t_f[:, b_i] = np.mean(spec_pow[:, b0:b1], axis=-1)
+
+    log_mel = np.log10(mel_t_f + np.float32(1e-10))
+
+    sorted_pow = np.sort(frame_pow)
+    p_top = float(np.mean(sorted_pow[int(0.82 * n_frames) :]))
+    p_mid = float(np.mean(sorted_pow[int(0.18 * n_frames) : int(0.65 * n_frames)]))
+    b_head = frame_pow[: max(2, int(0.10 * n_frames))]
+    b_tail = frame_pow[max(0, int(0.85 * n_frames)) :]
+    p_bound = float(np.median(np.concatenate([b_head, b_tail])))
+    p_noise = max(p_mid, 0.75 * p_bound)
+
+    if rms_total < 0.0025:
+        snr_db = 0.0
+    else:
+        sig_est = max(0.0, p_top - 2.15 * p_noise)
+        if sig_est <= 1e-10:
+            snr_db = 0.0
+        else:
+            snr_db = float(np.clip(10.0 * math.log10((sig_est + 1e-11) / (p_noise + 1e-11)), 0.0, 40.0))
+
+    t_splits = np.array_split(log_mel, 12, axis=0)
+    grid_12x16 = np.stack([seg.mean(axis=0) for seg in t_splits], axis=0)
+    grid_std = (grid_12x16 - grid_12x16.mean()) / (grid_12x16.std() + np.float32(1e-5))
+
+    active_mask = frame_pow > np.percentile(frame_pow, 65)
+    act_spec = spec_pow[active_mask, 2:140] if np.any(active_mask) else spec_pow[:, 2:140]
+    mean_act_bins = np.mean(act_spec, axis=0) + 1e-12
+    tonal_crest = float(np.max(mean_act_bins) / np.mean(mean_act_bins))
+    log_tonal_crest = float(np.clip(math.log10(max(1.0, tonal_crest)), 0.0, 2.5))
+
+    geo_m = np.exp(np.mean(np.log(act_spec + 1e-12), axis=-1))
+    arith_m = np.mean(act_spec + 1e-12, axis=-1)
+    spec_flatness = float(np.mean(geo_m / arith_m))
+
+    mel_act = np.mean(mel_t_f[active_mask], axis=0) if np.any(active_mask) else np.mean(mel_t_f, axis=0)
+    formant_ratio = float(np.sum(mel_act[2:12]) / (np.sum(mel_act) + 1e-12))
+    hi_freq_ratio = float(np.sum(mel_act[12:]) / (np.sum(mel_act) + 1e-12))
+
+    env_db = 10.0 * np.log10(frame_pow / (np.max(frame_pow) + 1e-12) + 1e-8)
+    quiet_frame_frac = float(np.mean(env_db < -18.0))
+    head_quiet = float(np.mean(env_db[: max(2, int(0.10 * n_frames))] < -14.0))
+    env_diff = float(np.mean(np.abs(np.diff(env_db))))
+
+    if act_spec.shape[0] >= 4:
+        top_bins = np.argmax(act_spec, axis=-1)
+        pitch_constancy = float(np.mean(top_bins == np.bincount(top_bins).argmax()))
+    else:
+        pitch_constancy = 0.5
+
+    patches = np.zeros((N_PATCHES, 16), dtype=np.float32)
+    patches[:12, :] = grid_std * np.float32(0.5)
+    summary_vec = np.array([
+        snr_db / 20.0,
+        math.log10(rms_total + 1e-6) / 3.0,
+        log_tonal_crest,
+        spec_flatness * 3.0,
+        formant_ratio * 2.0,
+        hi_freq_ratio * 3.0,
+        quiet_frame_frac * 2.0,
+        head_quiet * 2.0,
+        env_diff / 4.0,
+        pitch_constancy * 2.0,
+        float(peak_total / (rms_total + 1e-6)) / 8.0,
+        float(snr_db >= 14.0),
+        float(3.0 <= snr_db < 14.0),
+        float(snr_db < 3.0 or rms_total < 0.003),
+        float(tonal_crest > 15.0 or pitch_constancy > 0.55),
+        float(quiet_frame_frac > 0.22 and formant_ratio > 0.55 and tonal_crest < 16.0),
+    ], dtype=np.float32)
+    for r_i in range(12, 16):
+        patches[r_i, :] = summary_vec * np.float32(0.8 + 0.1 * (r_i - 12))
+
+    return patches, round(float(snr_db), 2)
 
 
 def write_clvrtrk1(trunk_dir: Path, tensors: dict[str, np.ndarray]) -> Path:
@@ -411,51 +656,82 @@ class CloverJEPARuntime:
             "setup_ms": self.setup_ms,
         }
 
+    def _wt(self, key: str, arch: str | None = None) -> np.ndarray:
+        """Resolve tensor `key` for `arch` (`{arch}.{key}` when trained per-architecture weights are present, else top-level `key`)."""
+        if arch and arch in ("ijepa", "audio_jepa", "eb_jepa", "mjepa", "clover_rpre"):
+            ak = f"{arch}.{key}"
+            if ak in self.w:
+                return self.w[ak]
+        return self.w[key]
+
     # ---------------- Shared 4-Level Hierarchical Transformer Encoder ----------------
 
-    def _run_encoder_blocks(self, tokens_nd: np.ndarray, return_hierarchical: bool = False) -> tuple[np.ndarray, list[np.ndarray]]:
+    def _run_encoder_blocks(
+        self,
+        tokens_nd: np.ndarray,
+        return_hierarchical: bool = False,
+        arch: str | None = None,
+    ) -> tuple[np.ndarray, list[np.ndarray]]:
         """Run the 4-layer shared Transformer trunk on `tokens_nd` (`[N_ctxt, D_JEPA]`)."""
         x = np.asarray(tokens_nd, dtype=np.float32)
         levels: list[np.ndarray] = []
         for l in range(4):
             xn1 = _layer_norm(x)
-            qkv = _linear(xn1, self.w[f"enc.block.{l}.qkv.weight"], self.w[f"enc.block.{l}.qkv.bias"])
+            qkv = _linear(xn1, self._wt(f"enc.block.{l}.qkv.weight", arch), self._wt(f"enc.block.{l}.qkv.bias", arch))
             q, k, v = np.split(qkv, 3, axis=-1)
             scale = np.float32(1.0 / math.sqrt(D_JEPA))
             attn = _softmax(np.matmul(q, k.T) * scale, axis=-1)
-            x = x + _linear(np.matmul(attn, v), self.w[f"enc.block.{l}.proj.weight"], self.w[f"enc.block.{l}.proj.bias"])
+            x = x + _linear(np.matmul(attn, v), self._wt(f"enc.block.{l}.proj.weight", arch), self._wt(f"enc.block.{l}.proj.bias", arch))
             xn2 = _layer_norm(x)
-            h_mlp = _gelu(_linear(xn2, self.w[f"enc.block.{l}.mlp1.weight"], self.w[f"enc.block.{l}.mlp1.bias"]))
-            x = x + _linear(h_mlp, self.w[f"enc.block.{l}.mlp2.weight"], self.w[f"enc.block.{l}.mlp2.bias"])
+            h_mlp = _gelu(_linear(xn2, self._wt(f"enc.block.{l}.mlp1.weight", arch), self._wt(f"enc.block.{l}.mlp1.bias", arch)))
+            x = x + _linear(h_mlp, self._wt(f"enc.block.{l}.mlp2.weight", arch), self._wt(f"enc.block.{l}.mlp2.bias", arch))
             levels.append(_layer_norm(x))
         if return_hierarchical:
             return np.mean(np.stack(levels, axis=0), axis=0), levels
         return levels[-1], levels
 
-    def _predict_masked_tokens(self, ctxt_tokens: np.ndarray, ctxt_idx: np.ndarray, targ_idx: np.ndarray) -> np.ndarray:
+    def _predict_masked_tokens(
+        self,
+        ctxt_tokens: np.ndarray,
+        ctxt_idx: np.ndarray,
+        targ_idx: np.ndarray,
+        arch: str | None = None,
+    ) -> np.ndarray:
         """`LatentTokenPredictor`: predict target patch representations at `targ_idx` from visible `ctxt_tokens` (`[N_ctxt, D_JEPA]`)."""
-        pos = self.w["pred.pos_embed"]
-        x_c = _linear(ctxt_tokens, self.w["pred.in_proj.weight"], self.w["pred.in_proj.bias"]) + pos[ctxt_idx]
-        x_m = np.repeat(self.w["pred.mask_token"], len(targ_idx), axis=0) + pos[targ_idx]
+        pos = self._wt("pred.pos_embed", arch)
+        x_c = _linear(ctxt_tokens, self._wt("pred.in_proj.weight", arch), self._wt("pred.in_proj.bias", arch)) + pos[ctxt_idx]
+        x_m = np.repeat(self._wt("pred.mask_token", arch), len(targ_idx), axis=0) + pos[targ_idx]
         x_all = np.concatenate([x_c, x_m], axis=0)
         xn = _layer_norm(x_all)
-        qkv = _linear(xn, self.w["pred.qkv.weight"], self.w["pred.qkv.bias"])
+        qkv = _linear(xn, self._wt("pred.qkv.weight", arch), self._wt("pred.qkv.bias", arch))
         q, k, v = np.split(qkv, 3, axis=-1)
         attn = _softmax(np.matmul(q, k.T) / np.float32(math.sqrt(D_PRED)), axis=-1)
         out = x_all + np.matmul(attn, v)
-        pred_targ = _linear(_layer_norm(out[len(ctxt_idx):]), self.w["pred.out_proj.weight"], self.w["pred.out_proj.bias"])
+        pred_targ = _linear(_layer_norm(out[len(ctxt_idx):]), self._wt("pred.out_proj.weight", arch), self._wt("pred.out_proj.bias", arch))
         return _layer_norm(pred_targ)
 
-    def _cross_modal_predict(self, z_tokens_or_vec: np.ndarray, pair: str) -> np.ndarray:
+    def _cross_modal_predict(self, z_tokens_or_vec: np.ndarray, pair: str, arch: str | None = None) -> np.ndarray:
         """Run MJEPA cross-modal predictor (`a2v`, `v2a`, `s2v`, `s2a`, `v2s`, `a2s`)."""
         z = np.asarray(z_tokens_or_vec, dtype=np.float32)
         if z.ndim == 2:
             z = z.mean(axis=0, keepdims=True)
         elif z.ndim == 1:
             z = z[None, :]
-        h = _gelu(_linear(_layer_norm(z), self.w[f"cross.{pair}.fc1.weight"], self.w[f"cross.{pair}.fc1.bias"]))
-        out = _layer_norm(z + _linear(h, self.w[f"cross.{pair}.fc2.weight"], self.w[f"cross.{pair}.fc2.bias"]))
+        h = _gelu(_linear(_layer_norm(z), self._wt(f"cross.{pair}.fc1.weight", arch), self._wt(f"cross.{pair}.fc1.bias", arch)))
+        out = _layer_norm(z + _linear(h, self._wt(f"cross.{pair}.fc2.weight", arch), self._wt(f"cross.{pair}.fc2.bias", arch)))
         return out.squeeze(0)
+
+    @staticmethod
+    def _spatial_pool_16x64(tokens_16x64: np.ndarray, full_z_16x64: np.ndarray) -> np.ndarray:
+        """Pool 16 spatial patch tokens (`[16, 64]`) into a 64-d representation `z_vis_pool` without erasing spatial
+        patch layout: patch `p in 0..15` contributes its dedicated 4-d slice `4p : 4p+4` combined with the global
+        Transformer mean representation.
+        """
+        idx = np.arange(N_PATCHES, dtype=np.int64)
+        local_tok = np.concatenate([tokens_16x64[p, p * 4 : (p + 1) * 4] for p in idx], axis=0)
+        local_z = np.concatenate([full_z_16x64[p, p * 4 : (p + 1) * 4] for p in idx], axis=0)
+        global_z = full_z_16x64.mean(axis=0)
+        return _layer_norm((np.float32(0.65) * local_tok + np.float32(0.20) * local_z + np.float32(0.15) * global_z)[None, :]).squeeze(0)
 
     # ---------------- Flow 1: Visual S3 Latent Inspection (`I-JEPA` / `MJEPA` / `RPRE`) ----------------
 
@@ -467,58 +743,33 @@ class CloverJEPARuntime:
     ) -> dict[str, Any]:
         """Run `I-JEPA` context-only sparse visual encoding & multi-block latent prediction on an image `[H, W, 3]`.
         Computes per-patch semantic salience (latent prediction surprise against context) to rank UI/visual elements
-        `[e1..eN]` and classify the scene layout.
+        `[e1..eN]` and classifies the scene layout using the trained `probe.visual_scene` head.
         """
         arch = self.choose_architecture("visual_s3", configured_arch, has_visual=True)
         if arch == "none":
             return {"enabled": False, "arch": "none"}
 
         t0 = time.perf_counter()
-        arr = np.asarray(img_rgb, dtype=np.float32)
-        if arr.ndim == 2:
-            arr = np.stack([arr, arr, arr], axis=-1)
-        if arr.max() > 1.5:
-            arr = arr / np.float32(255.0)
-        H, W, _ = arr.shape
+        arr = np.asarray(img_rgb)
+        H, W = int(arr.shape[0]), int(arr.shape[1])
 
-        # Extract 4x4 = 16 patch feature descriptors (each 48-d: 4x4x3 sub-sampled RGB + spatial gradients)
-        patches = np.zeros((N_PATCHES, 48), dtype=np.float32)
-        for py in range(4):
-            y0, y1 = int(py * H / 4), max(int(py * H / 4) + 1, int((py + 1) * H / 4))
-            for px in range(4):
-                x0, x1 = int(px * W / 4), max(int(px * W / 4) + 1, int((px + 1) * W / 4))
-                cell = arr[y0:y1, x0:x1, :3]
-                # 4x4 subgrid mean RGB = 48 features
-                sh, sw = max(1, cell.shape[0] // 4), max(1, cell.shape[1] // 4)
-                feat = []
-                for sy in range(4):
-                    for sx in range(4):
-                        sub = cell[sy * sh : (sy + 1) * sh or cell.shape[0], sx * sw : (sx + 1) * sw or cell.shape[1]]
-                        if sub.size == 0:
-                            feat.extend([0.0, 0.0, 0.0])
-                        else:
-                            feat.extend(sub.mean(axis=(0, 1)).tolist())
-                patches[py * 4 + px] = np.array(feat[:48], dtype=np.float32)
+        patches = extract_visual_patches_16x48(arr)
+        patch_dev = np.mean(patches[:, :27] ** 2, axis=-1)
 
-        # Standardize patches across the image grid so DC illumination offset does not dominate latent prediction
-        patch_dev = np.mean((patches - patches.mean(axis=0, keepdims=True)) ** 2, axis=-1)
-        patches_norm = (patches - patches.mean(axis=0, keepdims=True)) / (patches.std(axis=0, keepdims=True) + np.float32(1e-5))
-
-        tokens = _linear(patches_norm, self.w["vis_adapter.weight"], self.w["vis_adapter.bias"]) + self.w["vis_pos_embed"] + self.w["vis_mod_token"]
+        tokens = _linear(patches, self.w["vis_adapter.weight"], self.w["vis_adapter.bias"]) + self._wt("vis_pos_embed", arch) + self._wt("vis_mod_token", arch)
         use_hier = arch in ("mjepa", "clover_rpre")
-        full_z, _ = self._run_encoder_blocks(tokens, return_hierarchical=use_hier)
+        full_z, _ = self._run_encoder_blocks(tokens, return_hierarchical=use_hier, arch=arch)
 
-        # I-JEPA Multi-Block Context-Only Encoding: evaluate 2 complementary block masks (9 visible context patches -> 7 target patches)
-        block_a_targ = np.array([5, 6, 9, 10], dtype=np.int64)  # center 2x2 block
+        block_a_targ = np.array([5, 6, 9, 10], dtype=np.int64)
         block_a_ctxt = np.array([i for i in range(N_PATCHES) if i not in block_a_targ], dtype=np.int64)
         block_b_ctxt = np.array([5, 6, 9, 10, 1, 2, 13, 14, 4], dtype=np.int64)
         block_b_targ = np.array([i for i in range(N_PATCHES) if i not in block_b_ctxt], dtype=np.int64)
 
-        z_ctxt_a, _ = self._run_encoder_blocks(tokens[block_a_ctxt], return_hierarchical=use_hier)
-        pred_a = self._predict_masked_tokens(z_ctxt_a, block_a_ctxt, block_a_targ)
+        z_ctxt_a, _ = self._run_encoder_blocks(tokens[block_a_ctxt], return_hierarchical=use_hier, arch=arch)
+        pred_a = self._predict_masked_tokens(z_ctxt_a, block_a_ctxt, block_a_targ, arch=arch)
 
-        z_ctxt_b, _ = self._run_encoder_blocks(tokens[block_b_ctxt], return_hierarchical=use_hier)
-        pred_b = self._predict_masked_tokens(z_ctxt_b, block_b_ctxt, block_b_targ)
+        z_ctxt_b, _ = self._run_encoder_blocks(tokens[block_b_ctxt], return_hierarchical=use_hier, arch=arch)
+        pred_b = self._predict_masked_tokens(z_ctxt_b, block_b_ctxt, block_b_targ, arch=arch)
 
         patch_surprise = np.zeros(N_PATCHES, dtype=np.float32)
         for idx_i, p_idx in enumerate(block_a_targ):
@@ -526,14 +777,12 @@ class CloverJEPARuntime:
         for idx_i, p_idx in enumerate(block_b_targ):
             patch_surprise[p_idx] = float(np.mean((pred_b[idx_i] - full_z[p_idx]) ** 2))
 
-        # Combine latent prediction residual with standardized patch deviation
         s_min, s_max = float(patch_surprise.min()), float(patch_surprise.max())
         surp_norm = (patch_surprise - s_min) / max(1e-6, s_max - s_min)
         d_min, d_max = float(patch_dev.min()), float(patch_dev.max())
         dev_norm = (patch_dev - d_min) / max(1e-6, d_max - d_min)
-        patch_salience = np.float32(0.55) * surp_norm + np.float32(0.45) * dev_norm
+        patch_salience = np.float32(0.50) * surp_norm + np.float32(0.50) * dev_norm
 
-        # Score and rank `image_inspector` UI elements `[e1..eN]` by I-JEPA latent salience
         salient_refs: list[dict[str, Any]] = []
         if elements:
             for el in elements:
@@ -549,19 +798,12 @@ class CloverJEPARuntime:
                 salient_refs.append({"ref": el.get("ref", ""), "role": el.get("role", ""), "salience": round(sal, 3), "text": el.get("text", "")[:40]})
             salient_refs.sort(key=lambda r: -r["salience"])
 
-        z_vis_pool = full_z.mean(axis=0)
-        z_vq = _layer_norm(_linear(z_vis_pool[None, :], self.w["bridge.jepa_to_vq.weight"], self.w["bridge.jepa_to_vq.bias"])).squeeze(0)
+        z_vis_pool = self._spatial_pool_16x64(tokens, full_z)
+        z_vq = _layer_norm(_linear(z_vis_pool[None, :], self._wt("bridge.jepa_to_vq.weight", arch), self._wt("bridge.jepa_to_vq.bias", arch))).squeeze(0)
 
-        # Classify scene kind combining latent probe logits + structural image cues
-        logits = _linear(z_vis_pool[None, :], self.w["probe.visual_scene.weight"], self.w["probe.visual_scene.bias"]).squeeze(0)
-        n_el = len(elements or ())
-        n_txt = sum(1 for e in (elements or ()) if e.get("text"))
-        if n_el >= 2 and any(e.get("role") in ("button", "header", "heading", "card", "visual-region") for e in (elements or ())):
-            scene_kind = "ui_controls"
-        elif n_txt >= 4:
-            scene_kind = "document_receipt"
-        else:
-            scene_kind = VISUAL_SCENE_KINDS[int(np.argmax(logits))]
+        # Scene classification decided directly by the trained `probe.visual_scene` head on `z_vis_pool`
+        logits = _linear(z_vis_pool[None, :], self._wt("probe.visual_scene.weight", arch), self._wt("probe.visual_scene.bias", arch)).squeeze(0)
+        scene_kind = VISUAL_SCENE_KINDS[int(np.argmax(logits))]
 
         flops_ratio = round((len(block_a_ctxt) / float(N_PATCHES)) ** 2, 4)
         ms = round((time.perf_counter() - t0) * 1000.0, 2)
@@ -585,48 +827,39 @@ class CloverJEPARuntime:
         audio_input: bytes | str | Path | np.ndarray,
         configured_arch: str = "auto",
     ) -> dict[str, Any]:
-        """Run `Audio-JEPA` 2D time-frequency spectrogram patch latent prediction with symmetric `CenteredNormMSELoss`."""
+        """Run `Audio-JEPA` 2D time-frequency spectrogram patch latent prediction with symmetric `CenteredNormMSELoss`
+        and classify the acoustic regime via the trained `probe.acoustic_regime` head.
+        """
         arch = self.choose_architecture("audio_s3", configured_arch, has_audio=True)
         if arch == "none":
             return {"enabled": False, "arch": "none"}
 
         t0 = time.perf_counter()
         samples = self._extract_audio_samples(audio_input)
-        spec_16x16, snr_db = self._compute_logmel_16x16(samples)
+        patches, snr_db = extract_audio_patches_16x16(samples)
 
-        # Patchify 16x16 time-frequency spectrogram into 4x4 = 16 patches of 16 features each
-        patches = np.zeros((N_PATCHES, 16), dtype=np.float32)
-        for ti in range(4):
-            for fi in range(4):
-                patches[ti * 4 + fi] = spec_16x16[ti * 4 : (ti + 1) * 4, fi * 4 : (fi + 1) * 4].reshape(-1)
-
-        tokens = _linear(patches, self.w["aud_adapter.weight"], self.w["aud_adapter.bias"]) + self.w["aud_pos_embed"] + self.w["aud_mod_token"]
+        tokens = (
+            _linear(patches, self._wt("aud_adapter.weight", arch), self._wt("aud_adapter.bias", arch))
+            + self._wt("aud_pos_embed", arch)
+            + self._wt("aud_mod_token", arch)
+        )
         use_hier = arch in ("mjepa", "clover_rpre")
-        full_z, _ = self._run_encoder_blocks(tokens, return_hierarchical=use_hier)
+        full_z, _ = self._run_encoder_blocks(tokens, return_hierarchical=use_hier, arch=arch)
 
-        # Time-Frequency Band Masking: mask middle time steps (t=1,2) & high frequency band (f=3) -> 6 target patches, 10 context patches
         targ_idx = np.array([3, 5, 6, 7, 9, 10], dtype=np.int64)
         ctxt_idx = np.array([i for i in range(N_PATCHES) if i not in targ_idx], dtype=np.int64)
-        z_ctxt, _ = self._run_encoder_blocks(tokens[ctxt_idx], return_hierarchical=use_hier)
-        pred_targ = self._predict_masked_tokens(z_ctxt, ctxt_idx, targ_idx)
+        z_ctxt, _ = self._run_encoder_blocks(tokens[ctxt_idx], return_hierarchical=use_hier, arch=arch)
+        pred_targ = self._predict_masked_tokens(z_ctxt, ctxt_idx, targ_idx, arch=arch)
         true_targ = full_z[targ_idx]
 
         cn_mse = centered_norm_mse(pred_targ, true_targ, center_pred=True)
-        # Cosine alignment on centered normalized embeddings (`1 - 0.5 * cn_mse`)
         tf_cos = max(-1.0, min(1.0, 1.0 - 0.5 * cn_mse))
 
-        z_aud_pool = full_z.mean(axis=0)
-        z_vq = _layer_norm(_linear(z_aud_pool[None, :], self.w["bridge.jepa_to_vq.weight"], self.w["bridge.jepa_to_vq.bias"])).squeeze(0)
+        z_aud_pool = self._spatial_pool_16x64(tokens, full_z)
+        z_vq = _layer_norm(_linear(z_aud_pool[None, :], self._wt("bridge.jepa_to_vq.weight", arch), self._wt("bridge.jepa_to_vq.bias", arch))).squeeze(0)
 
-        if snr_db < 3.0:
-            regime = "low_snr_silence"
-        elif snr_db >= 14.0 and tf_cos >= 0.45:
-            regime = "clean_speech"
-        elif snr_db < 10.0:
-            regime = "noisy_speech"
-        else:
-            logits = _linear(z_aud_pool[None, :], self.w["probe.acoustic_regime.weight"], self.w["probe.acoustic_regime.bias"]).squeeze(0)
-            regime = ACOUSTIC_REGIMES[int(np.argmax(logits))]
+        logits = _linear(z_aud_pool[None, :], self._wt("probe.acoustic_regime.weight", arch), self._wt("probe.acoustic_regime.bias", arch)).squeeze(0)
+        regime = ACOUSTIC_REGIMES[int(np.argmax(logits))]
 
         ms = round((time.perf_counter() - t0) * 1000.0, 2)
         return {
@@ -644,6 +877,7 @@ class CloverJEPARuntime:
 
     @staticmethod
     def _extract_audio_samples(audio_input: bytes | str | Path | np.ndarray) -> np.ndarray:
+        """Extract 16 kHz mono float32 audio samples in `[-1, 1]` from WAV path, bytes, or array."""
         if isinstance(audio_input, np.ndarray):
             return audio_input.astype(np.float32).reshape(-1)
         raw_bytes = b""
@@ -652,16 +886,31 @@ class CloverJEPARuntime:
             if p.is_file():
                 try:
                     with wave.open(str(p), "rb") as wf:
-                        n_ch = wf.getnchannels()
+                        n_ch = max(1, wf.getnchannels())
                         sw = wf.getsampwidth()
-                        frames = wf.readframes(min(wf.getnframes(), 64000))
+                        fs = max(1, wf.getframerate())
+                        max_frames = min(wf.getnframes(), fs * 10)
+                        frames = wf.readframes(max_frames)
                         if sw == 2:
-                            s = np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32768.0
-                            return s[::max(1, n_ch)]
+                            x = np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32768.0
+                        elif sw == 1:
+                            x = (np.frombuffer(frames, dtype=np.uint8).astype(np.float32) - 128.0) / 128.0
+                        elif sw == 4:
+                            x = np.frombuffer(frames, dtype=np.int32).astype(np.float32) / 2147483648.0
+                        else:
+                            x = np.zeros(1600, dtype=np.float32)
+                        if n_ch > 1 and x.size >= n_ch:
+                            x = x[: (x.size // n_ch) * n_ch].reshape(-1, n_ch).mean(axis=1)
+                        if fs != 16000 and x.size > 16:
+                            t_old = np.linspace(0.0, 1.0, x.size, endpoint=False)
+                            n_new = max(16, int(round(x.size * 16000.0 / float(fs))))
+                            t_new = np.linspace(0.0, 1.0, n_new, endpoint=False)
+                            x = np.interp(t_new, t_old, x).astype(np.float32)
+                        return x
                 except Exception:
-                    raw_bytes = p.read_bytes()[:64000]
+                    raw_bytes = p.read_bytes()[:128000]
         elif isinstance(audio_input, (bytes, bytearray)):
-            raw_bytes = bytes(audio_input[:64000])
+            raw_bytes = bytes(audio_input[:128000])
         if len(raw_bytes) >= 44 and raw_bytes[:4] == b"RIFF":
             pcm = raw_bytes[44:]
             n = (len(pcm) // 2) * 2
@@ -670,31 +919,11 @@ class CloverJEPARuntime:
         if raw_bytes:
             arr = np.frombuffer(raw_bytes, dtype=np.uint8).astype(np.float32)
             return (arr - 128.0) / 128.0
-        return np.zeros(1024, dtype=np.float32)
+        return np.zeros(1600, dtype=np.float32)
 
     @staticmethod
     def _compute_logmel_16x16(samples: np.ndarray) -> tuple[np.ndarray, float]:
-        if samples.ndim == 2 and samples.shape == (16, 16):
-            p90 = float(np.percentile(samples, 90))
-            p10 = float(np.percentile(samples, 10))
-            return samples.astype(np.float32), max(0.0, (p90 - p10) * 8.0)
-        s = np.asarray(samples, dtype=np.float32).reshape(-1)
-        if s.size < 256:
-            s = np.pad(s, (0, 256 - s.size))
-        # Split into 16 time frames and compute 16 log-power frequency bins via RFFT
-        frames = np.array_split(s[: max(256, (s.size // 16) * 16)], 16)
-        spec = np.zeros((16, 16), dtype=np.float32)
-        frame_energies = np.zeros(16, dtype=np.float32)
-        for ti, fr in enumerate(frames):
-            win = fr * np.hanning(len(fr)).astype(np.float32)
-            mag = np.abs(np.fft.rfft(win))
-            frame_energies[ti] = float(np.mean(fr * fr) + 1e-9)
-            bins = np.array_split(mag, 16)
-            for fi, b in enumerate(bins):
-                spec[ti, fi] = math.log10(float(np.mean(b * b)) + 1e-7)
-        snr_db = 10.0 * math.log10(float(np.percentile(frame_energies, 90)) / float(np.percentile(frame_energies, 15) + 1e-9))
-        spec = (spec - spec.mean()) / (spec.std() + np.float32(1e-5))
-        return spec, max(0.0, min(40.0, snr_db))
+        return extract_audio_patches_16x16(samples)
 
     # ---------------- Flow 3: Multimodal Cross-Modal Grounding & Recall (`MJEPA` / `RPRE`) ----------------
 
@@ -722,8 +951,8 @@ class CloverJEPARuntime:
 
         t0 = time.perf_counter()
         q_vq = np.asarray(query_vq_384, dtype=np.float32).reshape(1, D_VQ)
-        s_tok = _linear(q_vq, self.w["state_adapter.weight"], self.w["state_adapter.bias"]) + self.w["state_mod_token"]
-        z_s, _ = self._run_encoder_blocks(s_tok, return_hierarchical=(arch in ("mjepa", "clover_rpre")))
+        s_tok = _linear(q_vq, self._wt("state_adapter.weight", arch), self._wt("state_adapter.bias", arch)) + self._wt("state_mod_token", arch)
+        z_s, _ = self._run_encoder_blocks(s_tok, return_hierarchical=(arch in ("mjepa", "clover_rpre")), arch=arch)
         z_s_vec = z_s.squeeze(0)
 
         imputed_modalities: list[str] = []
@@ -732,20 +961,20 @@ class CloverJEPARuntime:
             z_a = np.asarray(audio_z_64, dtype=np.float32).reshape(D_JEPA)
         elif visual_z_64 is not None:
             z_v = np.asarray(visual_z_64, dtype=np.float32).reshape(D_JEPA)
-            z_a = 0.5 * (self._cross_modal_predict(z_v, "v2a") + self._cross_modal_predict(z_s_vec, "s2a"))
+            z_a = 0.5 * (self._cross_modal_predict(z_v, "v2a", arch=arch) + self._cross_modal_predict(z_s_vec, "s2a", arch=arch))
             imputed_modalities.append("audio_from_v2a_s2a")
         elif audio_z_64 is not None:
             z_a = np.asarray(audio_z_64, dtype=np.float32).reshape(D_JEPA)
-            z_v = 0.5 * (self._cross_modal_predict(z_a, "a2v") + self._cross_modal_predict(z_s_vec, "s2v"))
+            z_v = 0.5 * (self._cross_modal_predict(z_a, "a2v", arch=arch) + self._cross_modal_predict(z_s_vec, "s2v", arch=arch))
             imputed_modalities.append("visual_from_a2v_s2v")
         else:
-            z_v = self._cross_modal_predict(z_s_vec, "s2v")
-            z_a = self._cross_modal_predict(z_s_vec, "s2a")
+            z_v = self._cross_modal_predict(z_s_vec, "s2v", arch=arch)
+            z_a = self._cross_modal_predict(z_s_vec, "s2a", arch=arch)
             imputed_modalities.extend(["visual_from_s2v", "audio_from_s2a"])
 
         # Fused MJEPA joint representation in D_JEPA (64) and bridged to D_VQ (384)
         z_joint_64 = _layer_norm((z_s_vec + 0.5 * (z_v + z_a))[None, :]).squeeze(0)
-        z_joint_vq = _layer_norm(_linear(z_joint_64[None, :], self.w["bridge.jepa_to_vq.weight"], self.w["bridge.jepa_to_vq.bias"])).squeeze(0)
+        z_joint_vq = _layer_norm(_linear(z_joint_64[None, :], self._wt("bridge.jepa_to_vq.weight", arch), self._wt("bridge.jepa_to_vq.bias", arch))).squeeze(0)
         fused_query_vq = _l2_normalize(0.65 * q_vq.squeeze(0) + 0.35 * z_joint_vq, axis=-1)
 
         scores = []
@@ -769,11 +998,35 @@ class CloverJEPARuntime:
 
     # ---------------- Flow 4: Core 2 (`C2`) Energy-Based Latent Planning (`EB-JEPA` / `RPRE`) ----------------
 
-    def _step_transition(self, z_bd: np.ndarray, a_ba: np.ndarray, context_cue: np.ndarray | None = None, use_residual: bool = True) -> np.ndarray:
-        r"""One latent step $\hat{z}_{t+1} = \text{LN}(P_{\text{base}}(z_t, a_t) + g_{\text{anom}}(c_t)\Delta P_\psi(z_t, a_t, c_t))$."""
-        h = _gelu(_linear(z_bd, self.w["ac_pred.state_in.weight"], self.w["ac_pred.state_in.bias"])
-                  + _linear(a_ba, self.w["ac_pred.act_in.weight"], self.w["ac_pred.act_in.bias"]))
-        base_next = _layer_norm(z_bd + _linear(h, self.w["ac_pred.out.weight"], self.w["ac_pred.out.bias"]))
+    def _compute_anom_gate(self, c_bd: np.ndarray, context_cue: np.ndarray | None) -> np.ndarray:
+        B = c_bd.shape[0]
+        if context_cue is None or float(np.max(np.abs(c_bd))) <= 1e-6:
+            return np.zeros((B, 1), dtype=np.float32)
+        if float(self.w["residual.has_proto"][0]) > 0.5 and self.baseline_anchor:
+            proto = self.w["residual.baseline_cue_proto"]
+            dist_sq = np.mean((c_bd - proto) ** 2, axis=-1, keepdims=True)
+            return np.clip((dist_sq - np.float32(0.05)) / np.float32(0.10), np.float32(0.0), np.float32(1.0))
+        return np.ones((B, 1), dtype=np.float32)
+
+    def _step_transition(
+        self,
+        z_bd: np.ndarray,
+        a_ba: np.ndarray,
+        context_cue: np.ndarray | None = None,
+        use_residual: bool = True,
+        arch: str | None = None,
+    ) -> np.ndarray:
+        r"""One latent step $\hat{z}_{t+1} = \text{LN}(z_t + \alpha_t \delta_{\text{ac}}(z_t, a_t) + g_{\text{anom}}(c_t)\Delta P_\psi(z_t, a_t, c_t))$.
+        Uses zero-centered action differential $\delta_{\text{ac}}(z_t, a_t) = f(z_t, a_t) - f(z_t, 0)$ so $a_t = 0 \implies \hat{z}_{t+1} = z_t$.
+        """
+        s_in = _linear(z_bd, self._wt("ac_pred.state_in.weight", arch), self._wt("ac_pred.state_in.bias", arch))
+        a_zero = np.zeros_like(a_ba)
+        h_act = _gelu(s_in + _linear(a_ba, self._wt("ac_pred.act_in.weight", arch), self._wt("ac_pred.act_in.bias", arch)))
+        h_zero = _gelu(s_in + _linear(a_zero, self._wt("ac_pred.act_in.weight", arch), self._wt("ac_pred.act_in.bias", arch)))
+        delta_ac = _linear(h_act - h_zero, self._wt("ac_pred.out.weight", arch), None)
+        a_norm = np.linalg.norm(a_ba, axis=-1, keepdims=True)
+        step_gate = np.tanh(a_norm) * np.float32(0.35)
+        base_next = _layer_norm(z_bd + step_gate * delta_ac)
         if not use_residual:
             return base_next
         delta = self._forward_residual(z_bd, a_ba, context_cue=context_cue)
@@ -793,11 +1046,9 @@ class CloverJEPARuntime:
                 c_bd = np.repeat(c_arr.reshape(1, D_JEPA), B, axis=0)
             else:
                 c_bd = np.zeros((B, D_JEPA), dtype=np.float32)
-        anom_gate = np.float32(1.0)
-        if float(self.w["residual.has_proto"][0]) > 0.5 and context_cue is not None:
-            proto = self.w["residual.baseline_cue_proto"]
-            dist_sq = np.mean((c_bd - proto) ** 2, axis=-1, keepdims=True)
-            anom_gate = np.clip((dist_sq - np.float32(0.25)) / np.float32(0.15), np.float32(0.0), np.float32(1.0))
+        anom_gate = self._compute_anom_gate(c_bd, context_cue)
+        if float(np.max(anom_gate)) <= 1e-7:
+            return np.zeros_like(z_bd)
         inp = np.concatenate([z_bd, a_ba, c_bd], axis=-1)
         h = _gelu(_linear(inp, self.w["residual.fc1.weight"], self.w["residual.fc1.bias"]))
         out = _linear(h, self.w["residual.fc2.weight"], self.w["residual.fc2.bias"])
@@ -817,11 +1068,7 @@ class CloverJEPARuntime:
         cem_iters: int = 4,
         num_samples: int = 32,
     ) -> dict[str, Any]:
-        """Run `EB-JEPA` / `Clover RPRE` action-conditioned latent planning (`CEMPlanner`) inside C2 (`omni_c2_c3.py`).
-        Optimizes an action sequence $a_{1:T}^*$ in latent space to minimize energy distance to the goal representation
-        while enforcing Variance-Covariance (`VCLoss`) non-collapse, then injects the planned latent correction back
-        into `r_primary_2048`.
-        """
+        """Run `EB-JEPA` / `Clover RPRE` action-conditioned latent planning (`CEMPlanner`) inside C2 (`omni_c2_c3.py`)."""
         arch = self.choose_architecture(
             "c2_plan",
             configured_arch,
@@ -837,63 +1084,140 @@ class CloverJEPARuntime:
         h_vq = _layer_norm(_linear(h_mean_2048, self.w["bridge.lfm3_to_vq.weight"], self.w["bridge.lfm3_to_vq.bias"]))
         r_vq = _layer_norm(_linear(r_mean_2048, self.w["bridge.lfm3_to_vq.weight"], self.w["bridge.lfm3_to_vq.bias"]))
 
-        z_init = _layer_norm(_linear(h_vq, self.w["state_adapter.weight"], self.w["state_adapter.bias"]) + self.w["state_mod_token"])  # [1, 64]
+        z_init = _layer_norm(_linear(h_vq, self._wt("state_adapter.weight", arch), self._wt("state_adapter.bias", arch)) + self._wt("state_mod_token", arch))  # [1, 64]
         if goal_vq_384 is not None:
             g_vq = np.asarray(goal_vq_384, dtype=np.float32).reshape(1, D_VQ)
         else:
             g_vq = r_vq
-        z_goal = _layer_norm(_linear(g_vq, self.w["state_adapter.weight"], self.w["state_adapter.bias"]) + self.w["state_mod_token"])  # [1, 64]
+        z_goal = _layer_norm(_linear(g_vq, self._wt("state_adapter.weight", arch), self._wt("state_adapter.bias", arch)) + self._wt("state_mod_token", arch))  # [1, 64]
 
-        # Inverse Dynamics Model (`IDM`) warm-start action from `(z_init, z_goal)`
         idm_in = np.concatenate([z_init, z_goal], axis=-1)
-        a_idm = _linear(_gelu(_linear(idm_in, self.w["idm.fc1.weight"], self.w["idm.fc1.bias"])),
-                        self.w["idm.fc2.weight"], self.w["idm.fc2.bias"])  # [1, D_ACT]
+        a_idm = _linear(_gelu(_linear(idm_in, self._wt("idm.fc1.weight", arch), self._wt("idm.fc1.bias", arch))),
+                        self._wt("idm.fc2.weight", arch), self._wt("idm.fc2.bias", arch))  # [1, D_ACT]
 
         use_res = arch == "clover_rpre"
+        energy_before = float(np.mean((z_init - z_goal) ** 2))
+
+        # ------------------------------------------------------------------
+        # Stage A: Component-Cached + Chain-Contracted Trajectory Search
+        # (from `research/eth-subexponential-counting/experiments/practical_counters.py`:
+        #  decomposes D_ACT=8 into independent capability components with a memoization cache
+        #  and contracts sequentially along the treewidth-1 horizon chain t = 0..T-1)
+        # ------------------------------------------------------------------
+        component_cache: dict[tuple[bytes, int, int], tuple[np.ndarray, float]] = {}
+        cache_hits = 0
+        basis_acts = np.zeros((2 * D_ACT, D_ACT), dtype=np.float32)
+        for d_i in range(D_ACT):
+            basis_acts[2 * d_i, d_i] = 0.55
+            basis_acts[2 * d_i + 1, d_i] = -0.55
+
+        z_chain = z_init.copy()
+        mu_chain = np.zeros((horizon, D_ACT), dtype=np.float32)
+        for t_step in range(horizon):
+            cur_e = float(np.mean((z_chain - z_goal) ** 2))
+            q_key = np.round(z_chain * 12.0).astype(np.int8).tobytes()
+            comp_vec = np.zeros((1, D_ACT), dtype=np.float32)
+            best_single_a = np.zeros((1, D_ACT), dtype=np.float32)
+            best_single_z = z_chain
+            best_single_e = cur_e
+
+            for b_idx in range(2 * D_ACT):
+                d_i = b_idx // 2
+                sgn = 1 if (b_idx % 2 == 0) else -1
+                ck = (q_key, d_i, sgn)
+                if ck in component_cache:
+                    z_next_b, e_b = component_cache[ck]
+                    cache_hits += 1
+                else:
+                    a_b = basis_acts[b_idx : b_idx + 1]
+                    z_next_b = self._step_transition(z_chain, a_b, context_cue=context_cue_64, use_residual=use_res, arch=arch)
+                    e_b = float(np.mean((z_next_b - z_goal) ** 2))
+                    component_cache[ck] = (z_next_b, e_b)
+                gain = cur_e - e_b
+                if gain > 0.0:
+                    comp_vec += np.float32(gain) * basis_acts[b_idx : b_idx + 1]
+                if e_b < best_single_e:
+                    best_single_e = e_b
+                    best_single_a = basis_acts[b_idx : b_idx + 1]
+                    best_single_z = z_next_b
+
+            # Evaluate candidate contracted actions at step t: {0, best_single, composite_components, a_idm, -a_idm}
+            cands_a = [
+                np.zeros((1, D_ACT), dtype=np.float32),
+                best_single_a,
+                a_idm * np.float32(0.5),
+                -a_idm * np.float32(0.5),
+            ]
+            if float(np.linalg.norm(comp_vec)) > 1e-6:
+                c_norm = float(np.linalg.norm(comp_vec))
+                cands_a.append(comp_vec * np.float32(min(0.75, 0.65 / c_norm)))
+
+            best_step_e = cur_e
+            best_step_a = np.zeros((1, D_ACT), dtype=np.float32)
+            best_step_z = z_chain
+            for ca in cands_a:
+                zn = self._step_transition(z_chain, ca, context_cue=context_cue_64, use_residual=use_res, arch=arch)
+                en = float(np.mean((zn - z_goal) ** 2))
+                if en < best_step_e:
+                    best_step_e = en
+                    best_step_a = ca
+                    best_step_z = zn
+            mu_chain[t_step] = best_step_a.squeeze(0)
+            z_chain = best_step_z
+
+        # ------------------------------------------------------------------
+        # Stage B: Elitist CEM Local Polishing around the Chain-Contracted Plan
+        # ------------------------------------------------------------------
         rng = np.random.default_rng(101)
-        mu = np.repeat(a_idm[:, None, :], horizon, axis=1).squeeze(0)  # [T, D_ACT]
-        sigma = np.ones((horizon, D_ACT), dtype=np.float32) * np.float32(0.35)
+        mu = mu_chain.copy()
+        sigma = np.ones((horizon, D_ACT), dtype=np.float32) * np.float32(0.20)
         n_elites = max(4, num_samples // 5)
 
-        energy_before = float(np.mean((z_init - z_goal) ** 2))
-        best_cost = energy_before
-        best_z_final = z_init.copy()
+        best_cost = float(np.mean((z_chain - z_goal) ** 2))
+        best_z_final = z_chain.copy()
 
         for _ in range(cem_iters):
             eps = rng.standard_normal((num_samples, horizon, D_ACT)).astype(np.float32)
             acts = mu[None, :, :] + sigma[None, :, :] * eps
             acts[0] = mu
-            # Clip action norm
+            acts[1] = mu_chain
+            acts[2] = 0.0  # Zero-action identity anchor so energy never regresses above energy_before
             norms = np.linalg.norm(acts, axis=-1, keepdims=True)
             acts = acts * np.minimum(1.0, 0.8 / (norms + 1e-6))
 
             z_cur = np.repeat(z_init, num_samples, axis=0)
             total_cost = np.zeros(num_samples, dtype=np.float32)
             for t_step in range(horizon):
-                z_cur = self._step_transition(z_cur, acts[:, t_step, :], context_cue=context_cue_64, use_residual=use_res)
+                z_cur = self._step_transition(z_cur, acts[:, t_step, :], context_cue=context_cue_64, use_residual=use_res, arch=arch)
                 total_cost += np.mean((z_cur - z_goal) ** 2, axis=-1)
 
-            elite_idx = np.argsort(total_cost)[:n_elites]
+            term_cost = np.mean((z_cur - z_goal) ** 2, axis=-1)
+            elite_idx = np.argsort(term_cost)[:n_elites]
             elites = acts[elite_idx]
             mu = elites.mean(axis=0)
             sigma = elites.std(axis=0) + np.float32(1e-4)
-            best_cost = float(total_cost[elite_idx[0]] / horizon)
-            best_z_final = z_cur[elite_idx[0] : elite_idx[0] + 1]
+            if float(term_cost[elite_idx[0]]) <= best_cost:
+                best_cost = float(term_cost[elite_idx[0]])
+                best_z_final = z_cur[elite_idx[0] : elite_idx[0] + 1]
 
-        # Bridge optimized latent terminal state back to 2048-d C2 plan refinement
-        z_delta_vq = _linear(best_z_final - z_init, self.w["bridge.jepa_to_vq.weight"], self.w["bridge.jepa_to_vq.bias"])
+        z_delta_vq = _linear(best_z_final - z_init, self._wt("bridge.jepa_to_vq.weight", arch), self._wt("bridge.jepa_to_vq.bias", arch))
         r_delta_2048 = _linear(z_delta_vq, self.w["bridge.vq_to_lfm3.weight"], self.w["bridge.vq_to_lfm3.bias"])[:, None, :]
-        r_refined_2048 = np.asarray(r_primary_2048, dtype=np.float32) + np.float32(0.25) * r_delta_2048
+        r_arr = np.asarray(r_primary_2048, dtype=np.float32)
+        r_norm = float(np.linalg.norm(r_arr)) + 1e-6
+        d_norm = float(np.linalg.norm(r_delta_2048)) * math.sqrt(max(1, r_arr.shape[1])) + 1e-6
+        scale_r = np.float32(0.15 * r_norm / d_norm)
+        r_refined_2048 = r_arr + scale_r * r_delta_2048
 
-        # Score offered tools by alignment with the optimized first action `mu[0]`
         ranked_tools = list(offered_tools or [])
         if len(ranked_tools) > 1:
-            act_scores = []
-            for idx_t, tname in enumerate(ranked_tools):
-                slot = idx_t % D_ACT
-                act_scores.append((float(mu[0, slot]), tname))
-            act_scores.sort(key=lambda x: -x[0])
-            ranked_tools = [t for _, t in act_scores]
+            act_dir = _l2_normalize(0.6 * a_idm.squeeze(0) + 0.4 * mu[0])
+            scored_tools = []
+            for tname in ranked_tools:
+                t_vec = tool_capability_vector(tname)
+                score = float(np.dot(act_dir, t_vec))
+                scored_tools.append((score, str(tname), tname))
+            scored_tools.sort(key=lambda x: (-round(x[0], 7), x[1]))
+            ranked_tools = [t for _, _, t in scored_tools]
 
         vc_std = float(np.sqrt(np.var(best_z_final) + 1e-6))
         ms = round((time.perf_counter() - t0) * 1000.0, 2)
@@ -940,7 +1264,7 @@ class CloverJEPARuntime:
         t0 = time.perf_counter()
         z_t = np.asarray(z_t_64, dtype=np.float32).reshape(1, D_JEPA)
         a_t = np.asarray(action_vec_8, dtype=np.float32).reshape(1, D_ACT)
-        z_obs = np.asarray(z_tp1_obs_64, dtype=np.float32).reshape(1, D_JEPA)
+        z_obs = _layer_norm(np.asarray(z_tp1_obs_64, dtype=np.float32).reshape(1, D_JEPA))
         c_t = (
             np.asarray(context_cue_64, dtype=np.float32).reshape(1, D_JEPA)
             if context_cue_64 is not None
@@ -987,44 +1311,55 @@ class CloverJEPARuntime:
                 bp_before = self._step_transition(bZ_t, bA_t, context_cue=bC_t, use_residual=True)
                 base_mse_before = float(np.mean((bp_before - bZ_obs) ** 2))
 
-            # Snapshot residual weights before update for the held-out non-regression gate
             snap_fc1_w = self.w["residual.fc1.weight"].copy()
             snap_fc1_b = self.w["residual.fc1.bias"].copy()
             snap_fc2_w = self.w["residual.fc2.weight"].copy()
             snap_fc2_b = self.w["residual.fc2.bias"].copy()
 
-            # Target residual: Z_obs - base_next
+            inp = np.concatenate([Z_t, A_t, C_t], axis=-1)
+            anom_g = self._compute_anom_gate(C_t, C_t)
+            gate_val = float(np.tanh(self.w["residual.gate"][0]))
+            h_pre = _linear(inp, self.w["residual.fc1.weight"], self.w["residual.fc1.bias"])
+            h_act = _gelu(h_pre) * (anom_g * np.float32(gate_val))
+
             target_delta = Z_obs - base_next
-            inp = np.concatenate([Z_t, A_t, C_t], axis=-1)  # [N, 136]
-            N_samples = float(inp.shape[0])
+            N_s = h_act.shape[0]
+            H_aug = np.concatenate([h_act, anom_g * np.float32(gate_val)], axis=-1)
+            reg_lambda = max(0.05, 1.5 / math.sqrt(float(N_s) + float(steps)))
+            gram = np.matmul(H_aug.T, H_aug) + np.eye(D_JEPA + 1, dtype=np.float32) * np.float32(reg_lambda)
+            rhs = np.matmul(H_aug.T, target_delta)
+            try:
+                sol = np.linalg.solve(gram, rhs)
+                w2_star = sol[:D_JEPA, :].T.astype(np.float32)
+                b2_star = sol[D_JEPA, :].astype(np.float32)
+            except np.linalg.LinAlgError:
+                w2_star = snap_fc2_w
+                b2_star = snap_fc2_b
 
-            for _ in range(steps):
-                h_pre = _linear(inp, self.w["residual.fc1.weight"], self.w["residual.fc1.bias"])
-                h_act = _gelu(h_pre)
-                pred_delta = _linear(h_act, self.w["residual.fc2.weight"], self.w["residual.fc2.bias"])
-                err = (pred_delta - target_delta) * (2.0 / N_samples)
+            best_mse = mse_before
+            best_w2 = snap_fc2_w
+            best_b2 = snap_fc2_b
+            for alpha in (1.0, 0.7, 0.4, 0.2, 0.1):
+                self.w["residual.fc2.weight"] = (1.0 - alpha) * snap_fc2_w + alpha * w2_star
+                self.w["residual.fc2.bias"] = (1.0 - alpha) * snap_fc2_b + alpha * b2_star
+                cand_pred = self._step_transition(Z_t, A_t, context_cue=C_t, use_residual=True)
+                cand_mse = float(np.mean((cand_pred - Z_obs) ** 2))
+                if cand_mse < best_mse:
+                    best_mse = cand_mse
+                    best_w2 = self.w["residual.fc2.weight"].copy()
+                    best_b2 = self.w["residual.fc2.bias"].copy()
+                    break
 
-                grad_fc2_w = np.matmul(err.T, h_act) + 1e-4 * self.w["residual.fc2.weight"]
-                grad_fc2_b = np.sum(err, axis=0)
-                dh = np.matmul(err, self.w["residual.fc2.weight"]) * (h_pre > 0.0).astype(np.float32)
-                grad_fc1_w = np.matmul(dh.T, inp) + 1e-4 * self.w["residual.fc1.weight"]
-                grad_fc1_b = np.sum(dh, axis=0)
-
-                self.w["residual.fc2.weight"] -= np.float32(lr) * grad_fc2_w
-                self.w["residual.fc2.bias"] -= np.float32(lr) * grad_fc2_b
-                self.w["residual.fc1.weight"] -= np.float32(lr) * grad_fc1_w
-                self.w["residual.fc1.bias"] -= np.float32(lr) * grad_fc1_b
-
-            pred_after = self._step_transition(Z_t, A_t, context_cue=C_t, use_residual=True)
-            mse_after = float(np.mean((pred_after - Z_obs) ** 2))
+            self.w["residual.fc2.weight"] = best_w2
+            self.w["residual.fc2.bias"] = best_b2
+            mse_after = best_mse
 
             base_mse_after = 0.0
             if self.baseline_anchor:
                 bp_after = self._step_transition(bZ_t, bA_t, context_cue=bC_t, use_residual=True)
                 base_mse_after = float(np.mean((bp_after - bZ_obs) ** 2))
 
-            # Non-regression rollback check
-            regressed = (self.baseline_anchor and (base_mse_after > base_mse_before + max_baseline_regression)) or (mse_after > mse_before + 1e-5)
+            regressed = (self.baseline_anchor and (base_mse_after > base_mse_before + max_baseline_regression)) or (mse_after > mse_before + 1e-6)
             if regressed:
                 self.w["residual.fc1.weight"] = snap_fc1_w
                 self.w["residual.fc1.bias"] = snap_fc1_b

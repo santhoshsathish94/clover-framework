@@ -1,26 +1,29 @@
 {
   "date": "2026-11-07",
-  "device": "cpu",
-  "scale": "pilot",
-  "epochs": 45,
-  "batch_size": 96,
-  "elapsed_s": 19.01,
+  "device": "8x NVIDIA GeForce RTX 3090",
+  "scale": "full",
+  "epochs": 240,
+  "batch_size": 256,
+  "real_dataset_used": true,
+  "elapsed_s": 393.14,
   "history": [
     {
       "epoch": 1,
-      "loss": 2.9954
+      "loss": 10.2964
     },
     {
-      "epoch": 22,
-      "loss": 0.1494
+      "epoch": 120,
+      "loss": 2.1222
     },
     {
-      "epoch": 45,
-      "loss": 0.1225
+      "epoch": 240,
+      "loss": 2.0813
     }
   ],
   "eval_visual_scene_acc": 1.0,
   "eval_acoustic_regime_acc": 1.0,
-  "exported_trunk": "/tmp/rpre-study/clover-ai-system/studio/clover/models/jepa-trunk-0",
+  "eval_idm_mse": 0.00893,
+  "eval_cross_modal_a2v_cos": 0.1762,
+  "exported_trunk": "/workspace/rpre-gpu/clover-ai-system/studio/clover/models/jepa-trunk-0",
   "num_tensors": 102
 }

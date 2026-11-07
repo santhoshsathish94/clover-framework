@@ -88,16 +88,34 @@ Executed via [`clover-ai-system/studio/clover/test_jepa_clover_flows.py`](../../
 
 ---
 
-## 3. GPU Training Pipeline (Ready When You Switch On the GPU)
+## 3. Real-System GPU Training (`8x NVIDIA GeForce RTX 3090`) & Independent Probes (`P1`–`P5`)
 
-The pilot `CLVRTRK1` binary trunk (`clover-ai-system/studio/clover/models/jepa-trunk-0/`, 102 tensors, `7.25 MB`) has already been trained on `k3` (`loss: 2.9954 -> 0.1225`, `eval_visual_scene_acc = 100%`, `eval_acoustic_regime_acc = 100%`) and is active in the worktree.
+Using the 8x RTX 3090 GPU instance (`136.36.169.232:40456`), we extracted a real multimodal + `LFM3-Omni` / `VQ-VAE` dataset ([`scripts/prepare_real_jepa_dataset.py`](scripts/prepare_real_jepa_dataset.py) $\to$ `results/real_clover_jepa_dataset.npz`, `4.55 MB`: 296 real/augmented image pairs across all 6 visual scene classes, 448 real speech/noise/system-sound WAV clips across all 5 acoustic regimes, and 208 real `2048-d` `LFM3-Omni` & `384-d` `ComboBridge`/`VQ-VAE` embeddings) and trained `jepa-trunk-0` for 240 epochs (`batch_size = 256`, `393.14s`).
 
-Whenever you switch on the GPU server (`gpu` or Vast.ai), run the following single command to train the full-scale trunk on CUDA and hot-swap `models/jepa-trunk-0/` with zero runtime code changes:
+We also integrated the two structural algorithms from `research/eth-subexponential-counting` (`experiments/practical_counters.py`) into `Flow 4` (`plan_c2_latent` in [`clover/jepa_engine.py`](../../clover-ai-system/studio/clover/jepa_engine.py)):
+1. **Component Decomposition + Memoization Cache (`count_dpll` pattern)**: Decomposes the $D_{\text{ACT}} = 8$ capability space into independent signed coordinate basis transitions $\{\pm 0.55 e_d\}_{d=0}^7$, memoizes 1-step transition evaluations by quantized `(state_hash, dim, sign)`, and composes all energy-reducing components additively.
+2. **Treewidth-1 Chain Contraction (`count_contract` pattern)**: Contracts the horizon-$T$ sequential rollout ($t = 0 \to \dots \to T-1$) step-by-step along the minimum-energy frontier over the zero-centered action differential $\delta_{\text{ac}}(z_t, a_t) = f_{\text{ac}}(z_t, a_t) - f_{\text{ac}}(z_t, 0)$ before running elitist `CEMPlanner` local polishing.
+
+### Before vs. After on the Five Independent Real-System Probes (`P1`–`P5`)
+
+| Probe | What It Tests on Real Inputs | Before (Synthetic Pilot Trunk) | After (Real-Data 8x RTX 3090 Trunk + Structural Fixes) |
+|---|---|---|---|
+| **`P1` (`p1_weights.py`)** | Tensors in `jepa-trunk-0` still within $\pm 1/\sqrt{\text{fan\_in}}$ init bound | `13 / 92` untouched (`bridge.lfm3_to_vq`, `bridge.vq_to_lfm3`, `residual.fc1/fc2`, biases) | **`0 / 92` untouched (`92 / 92` trained beyond init bound)** |
+| **`P2` (`p2_visual.py`)** | 21 real images (UI screenshots, invoices, charts, diagrams, 4K photos, code) + crop/resize/JPEG retrieval@1 | `z_trained` retrieval@1: `14/21` (margin `+0.0852`, off-diag cos `0.2060`); probe-only scene acc: `1/13`; 4K photo `492.9 ms` | **`z_trained` retrieval@1: `21/21` (`100%`, median margin `+0.9533`, off-diag cos `-0.0062`)**; **probe-only scene acc: `13/13` (`100%`)**; median latency **`12.79 ms`** (`13.7 ms` on 4K photo) |
+| **`P3` (`p3_audio.py`)** | 32 real 16 kHz WAVs (`q-capital.wav` + `bg-tv.wav` / white noise at `+30..-5 dB`, silence, 15 Windows alarms/rings/chimes) + 10 phone Studio WAVs | Non-speech labelled as speech: `16/19`; speech labelled as speech: `8/13`; unchanged with random weights: `29/32` | **Non-speech labelled as speech: `0/19` (`0%` false positives)**; **speech labelled as speech: `13/13` (`100%`)**; unchanged with random weights: **`4/32`** (`5.12 ms` median) |
+| **`P4` (`p4_c2.py` + `test_jepa_clover_flows.py`)** | Real `C1 → C2 → C3` path: tool ranking under list permutations, `|dr|/|r|` scale, and latent energy reduction | Ranked by list index (`[3, 4, 2, 1, 0]` on any permutation); `|dr|/|r| = 1.58–1.97`; `0.0%` energy reduction on real-data trunk with random CEM | **100% permutation-invariant semantic tool ranking** (`web_search` #1 on factual, `calculator` #1 on math/invoice, `memory_recall` #1 on account/tips); **`|dr|/|r| = 0.1500`**; **`19.29%–20.82%` latent energy reduction** via Component-Cached Chain Contraction |
+| **`P5` (`p4_c2.py` + `test_jepa_clover_flows.py`)** | 30-turn `Outcome → Growth` progression and baseline non-regression | `27/30` updates (`3` rollbacks; MSE flat on turns 1–2); live `retry_turn` passed `z_obs = None` | **`30/30` updates (`0` rollbacks)**; MSE drops `0.16235 → 0.00561` on Turn 1 and **`321.4x` (`0.06428 → 0.00020`)** across Cycles 1–5 with **`0.0` baseline regression**; live `retry_turn` passes real `c1_obs_state` |
+
+---
+
+## 4. Re-Running Dataset Preparation, GPU Training & Verification
 
 ```bash
+python research/predictive-representation-engine/scripts/prepare_real_jepa_dataset.py
 python research/predictive-representation-engine/scripts/train_clover_jepa_trunks.py \
   --device cuda \
   --scale full \
-  --epochs 120 \
+  --epochs 240 \
   --batch-size 256
+python clover-ai-system/studio/clover/test_jepa_clover_flows.py
 ```

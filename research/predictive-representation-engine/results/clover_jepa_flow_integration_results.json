@@ -1,7 +1,7 @@
 {
   "date": "2026-11-07",
-  "elapsed_s": 3.8,
-  "weights_source": "clvrtrk1:/tmp/rpre-study/clover-ai-system/studio/clover/models/jepa-trunk-0",
+  "elapsed_s": 36.03,
+  "weights_source": "clvrtrk1:C:\\personal\\oss\\clover-jepa-wt\\clover-ai-system\\studio\\clover\\models\\jepa-trunk-0",
   "available_architectures": [
     "auto",
     "clover_rpre",
@@ -13,34 +13,34 @@
   ],
   "flow1_visual_s3": {
     "none": {
-      "focal_element_precision": 0.25,
+      "focal_element_precision": 1.0,
       "scene_classification_rate": 0.0,
       "sparse_attn_flops_ratio": 1.0,
-      "mean_ms": 97.21
+      "mean_ms": 682.34
     },
     "ijepa": {
       "focal_element_precision": 1.0,
       "scene_classification_rate": 1.0,
       "sparse_attn_flops_ratio": 0.5625,
-      "mean_ms": 69.72
+      "mean_ms": 631.6
     },
     "mjepa": {
       "focal_element_precision": 1.0,
       "scene_classification_rate": 1.0,
       "sparse_attn_flops_ratio": 0.5625,
-      "mean_ms": 68.8
+      "mean_ms": 615.44
     },
     "clover_rpre": {
       "focal_element_precision": 1.0,
       "scene_classification_rate": 1.0,
       "sparse_attn_flops_ratio": 0.5625,
-      "mean_ms": 70.0
+      "mean_ms": 619.25
     },
     "auto": {
       "focal_element_precision": 1.0,
       "scene_classification_rate": 1.0,
       "sparse_attn_flops_ratio": 0.5625,
-      "mean_ms": 69.9
+      "mean_ms": 621.38
     }
   },
   "flow2_audio_s3": {
@@ -52,45 +52,57 @@
     },
     "audio_jepa": {
       "regime_acc": 1.0,
-      "mean_tf_latent_cos": 0.995,
-      "mean_centered_norm_mse": 0.01,
-      "mean_ms": 2.25
+      "mean_tf_latent_cos": 0.9922,
+      "mean_centered_norm_mse": 0.0156,
+      "mean_ms": 5.44
     },
     "mjepa": {
       "regime_acc": 1.0,
-      "mean_tf_latent_cos": 0.9941,
-      "mean_centered_norm_mse": 0.0119,
-      "mean_ms": 2.11
+      "mean_tf_latent_cos": 0.9913,
+      "mean_centered_norm_mse": 0.0174,
+      "mean_ms": 3.25
     },
     "clover_rpre": {
       "regime_acc": 1.0,
-      "mean_tf_latent_cos": 0.9941,
-      "mean_centered_norm_mse": 0.0119,
-      "mean_ms": 2.12
+      "mean_tf_latent_cos": 0.9913,
+      "mean_centered_norm_mse": 0.0174,
+      "mean_ms": 3.18
     },
     "auto": {
       "regime_acc": 1.0,
-      "mean_tf_latent_cos": 0.995,
-      "mean_centered_norm_mse": 0.01,
-      "mean_ms": 2.09
+      "mean_tf_latent_cos": 0.9922,
+      "mean_centered_norm_mse": 0.0156,
+      "mean_ms": 4.09
     }
   },
   "flow3_multimodal_s2": {
     "none": {
-      "missing_modality_recall_at_1": 0.9,
+      "missing_modality_recall_at_1": 1.0,
       "mean_cross_modal_av_cos": 0.0
+    },
+    "ijepa": {
+      "missing_modality_recall_at_1": 1.0,
+      "mean_cross_modal_av_cos": 0.5954
+    },
+    "audio_jepa": {
+      "missing_modality_recall_at_1": 1.0,
+      "mean_cross_modal_av_cos": 0.6058
+    },
+    "eb_jepa": {
+      "missing_modality_recall_at_1": 1.0,
+      "mean_cross_modal_av_cos": 0.5935
     },
     "mjepa": {
       "missing_modality_recall_at_1": 1.0,
-      "mean_cross_modal_av_cos": 0.1731
+      "mean_cross_modal_av_cos": 0.5942
     },
     "clover_rpre": {
       "missing_modality_recall_at_1": 1.0,
-      "mean_cross_modal_av_cos": 0.1682
+      "mean_cross_modal_av_cos": 0.5902
     },
     "auto": {
       "missing_modality_recall_at_1": 1.0,
-      "mean_cross_modal_av_cos": 0.1593
+      "mean_cross_modal_av_cos": 0.5959
     }
   },
   "flow4_c2_latent_planning": {
@@ -101,66 +113,87 @@
       "mean_vc_std": 0.0,
       "mean_ms": 0.0
     },
-    "eb_jepa": {
-      "mean_energy_before": 0.415,
-      "mean_energy_after": 0.3831,
-      "mean_energy_reduction_pct": 10.99,
+    "ijepa": {
+      "mean_energy_before": 0.4784,
+      "mean_energy_after": 0.3906,
+      "mean_energy_reduction_pct": 17.49,
       "mean_vc_std": 1.0,
-      "mean_ms": 3.29
+      "mean_ms": 10.98
+    },
+    "audio_jepa": {
+      "mean_energy_before": 0.4927,
+      "mean_energy_after": 0.394,
+      "mean_energy_reduction_pct": 20.21,
+      "mean_vc_std": 1.0,
+      "mean_ms": 11.01
+    },
+    "mjepa": {
+      "mean_energy_before": 0.4241,
+      "mean_energy_after": 0.3538,
+      "mean_energy_reduction_pct": 16.86,
+      "mean_vc_std": 1.0,
+      "mean_ms": 9.0
+    },
+    "eb_jepa": {
+      "mean_energy_before": 0.4495,
+      "mean_energy_after": 0.3481,
+      "mean_energy_reduction_pct": 20.82,
+      "mean_vc_std": 1.0,
+      "mean_ms": 12.45
     },
     "clover_rpre": {
-      "mean_energy_before": 0.4557,
-      "mean_energy_after": 0.3948,
-      "mean_energy_reduction_pct": 14.82,
+      "mean_energy_before": 0.4212,
+      "mean_energy_after": 0.3415,
+      "mean_energy_reduction_pct": 19.29,
       "mean_vc_std": 1.0,
-      "mean_ms": 1.75
+      "mean_ms": 14.07
     },
     "auto": {
-      "mean_energy_before": 0.4001,
-      "mean_energy_after": 0.4036,
-      "mean_energy_reduction_pct": 11.07,
+      "mean_energy_before": 0.4545,
+      "mean_energy_after": 0.3651,
+      "mean_energy_reduction_pct": 19.98,
       "mean_vc_std": 1.0,
-      "mean_ms": 1.26
+      "mean_ms": 8.65
     }
   },
   "flow5_outcome_growth": {
-    "cycle_1_mse_before": 0.0661,
-    "cycle_5_mse_after": 0.00374,
-    "mse_reduction_ratio": 17.67,
+    "cycle_1_mse_before": 0.06428,
+    "cycle_5_mse_after": 0.0002,
+    "mse_reduction_ratio": 321.4,
     "baseline_regime0_mse": 0.0,
     "cycles": [
       {
         "cycle": 1,
-        "mse_before": 0.0661,
-        "mse_after": 0.00376,
+        "mse_before": 0.06428,
+        "mse_after": 0.005,
         "baseline_mse_after": 0.0,
         "updated": true
       },
       {
         "cycle": 2,
-        "mse_before": 0.00376,
-        "mse_after": 0.00374,
+        "mse_before": 0.005,
+        "mse_after": 0.00148,
         "baseline_mse_after": 0.0,
         "updated": true
       },
       {
         "cycle": 3,
-        "mse_before": 0.00374,
-        "mse_after": 0.00374,
+        "mse_before": 0.00148,
+        "mse_after": 0.00065,
         "baseline_mse_after": 0.0,
         "updated": true
       },
       {
         "cycle": 4,
-        "mse_before": 0.00374,
-        "mse_after": 0.00374,
+        "mse_before": 0.00065,
+        "mse_after": 0.00034,
         "baseline_mse_after": 0.0,
         "updated": true
       },
       {
         "cycle": 5,
-        "mse_before": 0.00374,
-        "mse_after": 0.00374,
+        "mse_before": 0.00034,
+        "mse_after": 0.0002,
         "baseline_mse_after": 0.0,
         "updated": true
       }
