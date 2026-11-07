@@ -53,3 +53,40 @@ Following the canonical Clover Cycle (**`Context → Direction → Execution →
         Uploaded all `300` files (`~4.04 GB`) of `clover-35b/` (`experts/`, `trunks/`, `hybridagent/`, `ncm/`, `bridges/`, `jepa/`), all `12` files (`12.35 MB`) of `liquid-lfm3/jepa/`, and the updated dataset card `README.md` to Hugging Face [`Santhoshsathish94/clover-ai-studio`](https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio) (commits `dc432f32`, `ce9a0f1d`, `a783d937`).
   - [x] **Step 3.6 (End-to-End Verification across GPU Server, `k3`, and Windows Laptop):**
         Verified `ALL_CLOVER_35B_INTEGRATION_CHECKS_PASSED` on the 8x RTX 3090 GPU server, verified `K3_MODELS` and `test_clover_cycles.py` on `k3`, and verified fast `setup_fetch.py` + live Studio + `test_clover_cycles.py` on the Windows laptop (`laptop`).
+
+---
+
+## 4. Full VS Code & Copilot Integration (`File Viewer`, `Shared Integrated Browser`, `Terminal`, `Diagnostics/Symbols`, & `LanguageModelChatProvider`)
+
+> **Primary-Source Context Document:** [docs/runtime-context/engine-and-architecture/clover-vscode-studio-integration-context.md](docs/runtime-context/engine-and-architecture/clover-vscode-studio-integration-context.md)
+
+- [x] **Step 4.1 — Context (Understand VS Code Core Workbench & Copilot Agent Architecture):**
+  - Read `resources/app/out/vs/workbench/workbench.desktop.main.js` and `resources/app/extensions/copilot/package.json` + `dist/extension.js` to map how VS Code's built-in tools and Copilot Agent loop work:
+    1. **Integrated Browser & Agent Tab Sharing (`browserViewService` + `playwrightService`):**
+       - `open_browser_page`, `list_browser_pages`, `read_page`, `click_element`, `type_in_page`, `navigate_page`, `hover_element`, `drag_element`, `handle_dialog`, `screenshot_page`, and `run_playwright_code`.
+       - Shared browser tabs (`model.sharingState === "shared"`) are passed in `<attachment id="Browser Pages">` as `[pageId] Title (url)` with accessibility tree snapshots (`[ref=e1]`, `aria-ref=e1`).
+    2. **Integrated Terminal & Shell Integration (`terminalService` + `shellIntegration`):**
+       - `run_in_terminal` (`sync`/`async`), `get_terminal_output`, `send_to_terminal`, `kill_terminal`, `terminal_last_command`, and `terminal_selection`.
+    3. **File Viewer, Diff Editor, Diagnostics & Language Server (`vscode.workspace`, `vscode.languages`, `vscode.commands`):**
+       - `read_file`, `view_image`, `list_dir`, `file_search`, `grep_search`, `semantic_search`, `replace_string_in_file`, `multi_replace_string_in_file`, `insert_edit_into_file`, `create_file`, `apply_patch`, `get_errors` (`vscode.languages.getDiagnostics`), `vscode_listCodeUsages` (`vscode.executeReferenceProvider`), `vscode_renameSymbol`, and `vscode.diff`.
+    4. **Extension-Contributed `LanguageModelChatProvider` (`vscode.lm.registerLanguageModelChatProvider`):**
+       - Any model registered by `clover-local` receives all 50+ built-in workbench & Copilot tools in `options.tools` and returns `vscode.LanguageModelToolCallPart` to drive VS Code's native UI, confirmations, browser tab sharing, diff viewer, and terminal.
+- [x] **Step 4.2 — Direction (Use VS Code's Own Open-Source Features Instead of Rebuilding Them in Clover AI Studio):**
+  - **Inside VS Code (`Copilot Chat / Agent Mode` -> Clover):**
+    - Expose all Clover models (`LFM3-Omni-2B (this laptop)`, `Clover-35B-A3B (k3)`, `Nemotron 3.5 Super VL (k3)`, `Kimi K3.1 Pro (k3)`) in VS Code's Copilot model picker.
+    - Preserve `<attachment id="Browser Pages">` (shared browser `pageId`s & URLs) and `<context>` (active editor file, selection, terminals) inside `workspace_info` in `parse_openai_messages` (`server.py`) without letting trailing context-only messages wipe `tool_rounds`.
+    - Surface VS Code's **Integrated Browser tools** (`open_browser_page`, `read_page`, `click_element`, `type_in_page`, `navigate_page`, `screenshot_page`, `run_playwright_code`), **File Viewer / Language Server tools** (`get_errors`, `vscode_listCodeUsages`, `vscode_renameSymbol`, `view_image`), and **Terminal tools** (`run_in_terminal`, `get_terminal_output`, `send_to_terminal`) directly in `vscode_step` (`lfm3_native.py` & `omni_native.py`).
+    - Run `AGENTS.md` multi-cycle Clover Cycle Outcome verification (`verify_turn_outcome`) on `/v1/chat/completions` final answers.
+  - **From Clover AI Studio -> VS Code (`vscode_bridge.py` + `extension.js`):**
+    - Delegate File Viewer (`editor` / `diff` / `diagnostics` / `symbols`), Shared Integrated Browser (`browser`), and Terminal (`run` / `terminals`) actions directly to the connected VS Code window:
+      - `vscode_editor`: Inspect active file, cursor line, selection, open editor tabs, and Language Server diagnostics/symbols in VS Code.
+      - `vscode_diff`: Open a side-by-side visual diff (`vscode.diff`) in VS Code's File Viewer.
+      - `vscode_browser`: Open URLs in VS Code's Integrated Browser and invoke VS Code's built-in shared browser tools (`open_browser_page`, `list_browser_pages`, `read_page`, `click_element`, `type_in_page`, `navigate_page`, `screenshot_page`) via `vscode.lm.invokeTool`.
+- [x] **Step 4.3 — Execution (Implement Across `server.py`, `lfm3_native.py`, `omni_native.py`, `vscode-extension/extension.js`, and Package `.vsix`):**
+  - [x] Upgraded `parse_openai_messages` & `_v1_chat` in [clover-ai-system/studio/clover/server.py](clover-ai-system/studio/clover/server.py) to preserve `<attachment id="Browser Pages">` in `workspace_info`, pass `with_tool_outputs(user_prompt, tool_rounds)` + multi-cycle `verify_turn_outcome` in `S.mode == "lfm3"`, and expose `vscode_editor`, `vscode_diagnostics`, `vscode_diff`, and `vscode_browser` bridge tools.
+  - [x] Upgraded `VSCODE_CORE`, `active_vscode_tools`, `repair_vscode_browser_args`, and `vscode_step` in [clover-ai-system/studio/clover/lfm3_native.py](clover-ai-system/studio/clover/lfm3_native.py) and [clover-ai-system/studio/clover/omni_native.py](clover-ai-system/studio/clover/omni_native.py) so Integrated Browser tools (`open_browser_page`, `list_browser_pages`, `read_page`, `click_element`, `type_in_page`, `navigate_page`, `screenshot_page`, `run_playwright_code`), Terminal tools (`get_terminal_output`, `send_to_terminal`, `kill_terminal`), and Code Intelligence tools (`vscode_listCodeUsages`, `vscode_renameSymbol`, `view_image`) are active when relevant and automatically resolve `[ref=eN]` and `pageId`.
+  - [x] Upgraded `vscode-extension/extension.js` & `package.json` (`v0.4.0` in `clover-local-0.4.0.vsix` and `v4.2.0` in [clover-ai-system/vscode-extension/extension.js](clover-ai-system/vscode-extension/extension.js)) to expose all 4 Clover models (`LFM3-Omni-2B`, `Clover-35B-A3B`, `Nemotron 3.5 Super VL`, `Kimi K3.1 Pro`) in VS Code's Copilot model picker and add `editor`, `diagnostics`, `diff`, `browser`, and `terminals` bridge actions.
+- [x] **Step 4.4 — Outcome & Growth (Verify Offline & Live on Windows Laptop):**
+  - [x] Created and ran [clover-ai-system/studio/tests/test_vscode_integration.py](clover-ai-system/studio/tests/test_vscode_integration.py) + [clover-ai-system/studio/tests/test_vscode_bridge.py](clover-ai-system/studio/tests/test_vscode_bridge.py) + [clover-ai-system/studio/tests/test_tool_routing.py](clover-ai-system/studio/tests/test_tool_routing.py) (`ALL VS CODE & COPILOT INTEGRATION TESTS PASSED`, `ALL PASS`, `129 checks passed`).
+  - [x] Verified live 2-round VS Code Copilot Integrated Browser loop (`read_page({"pageId": "page-99"})` $\to$ `click_element({"pageId": "page-99", "element": "Settings", "ref": "e4"})`) and installed `clover-local-0.4.0.vsix` on the Windows laptop (`laptop`).
+

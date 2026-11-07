@@ -531,7 +531,9 @@ def tool_inventory():
     import lfm3_native
     import local_tool_packs
     base = [t["function"]["name"] for t in lfm3_native.STUDIO_TOOLS]
-    conditional = ["remember", "vscode_open", "vscode_clone", "vscode_install", "vscode_run", "generate_image"]
+    vs_names = ["vscode_open", "vscode_clone", "vscode_install", "vscode_run",
+                "vscode_editor", "vscode_diagnostics", "vscode_diff", "vscode_browser"]
+    conditional = ["remember"] + vs_names + ["generate_image"]
     installed_cond, unavailable_cond = [], []
     on_mem = bool(S.settings and S.settings.get().get("layers", {}).get("memory"))
     if on_mem or (S.workspaces and S.workspaces.list()):
@@ -539,9 +541,9 @@ def tool_inventory():
     else:
         unavailable_cond.append("remember")
     if S.vscode is not None:
-        installed_cond.extend(["vscode_open", "vscode_clone", "vscode_install", "vscode_run"])
+        installed_cond.extend(vs_names)
     else:
-        unavailable_cond.extend(["vscode_open", "vscode_clone", "vscode_install", "vscode_run"])
+        unavailable_cond.extend(vs_names)
     base_dir = Path(S.args.base) if S.args else None
     if base_dir and (base_dir / "tools" / "sd.cpp" / "vulkan" / "sd-cli.exe").is_file():
         installed_cond.append("generate_image")
@@ -814,8 +816,9 @@ def workspace_action(action, body):
 
 # ---------- VS Code: Clover asks, VS Code does the work with its own UI, sign-in and confirmations ----------
 VSCODE_TIMEOUTS = {"open": 60, "clone": 600, "install": 300, "run": 900, "githubSignIn": 300, "githubSetupRepo": 600,
-                   "githubSyncFolder": 300, "status": 20}
-UI_VSCODE_ACTIONS = ("status", "open", "githubSignIn", "githubSetupRepo")
+                   "githubSyncFolder": 300, "status": 20, "editor": 30, "diagnostics": 30, "diff": 30,
+                   "browser": 60, "terminals": 30}
+UI_VSCODE_ACTIONS = ("status", "open", "githubSignIn", "githubSetupRepo", "editor", "diagnostics", "diff", "browser", "terminals")
 
 
 def vscode_exe():
@@ -898,6 +901,38 @@ def vscode_tools(sid=None):
          "permission": "shell",
          "detail": lambda a: f"{a.get('command')}\n(in {a.get('cwd') or chat_dir(sid) or 'your home folder'}, in a VS Code terminal)",
          "run": run},
+        {"schema": lfm3_native._fn("vscode_editor", "Inspect the active file, cursor selection, open editor tabs, and "
+                                 "document symbols in VS Code's File Viewer.",
+                                 {"filePath": dict(s, description="optional file path to inspect in VS Code"),
+                                  "startLine": {"type": "integer", "description": "optional 1-based start line"},
+                                  "endLine": {"type": "integer", "description": "optional 1-based end line"}}, []),
+         "permission": "vscode", "detail": lambda a: "Inspect VS Code File Viewer" + (f": {a.get('filePath')}" if a.get("filePath") else ""),
+         "run": vscode_tool("editor")},
+        {"schema": lfm3_native._fn("vscode_diagnostics", "Get live Language Server compile and lint errors/warnings "
+                                 "from VS Code's Problems panel.",
+                                 {"filePath": dict(s, description="optional file path to filter diagnostics")}, []),
+         "permission": "vscode", "detail": lambda a: "Read VS Code diagnostics" + (f" for {a.get('filePath')}" if a.get("filePath") else ""),
+         "run": vscode_tool("diagnostics")},
+        {"schema": lfm3_native._fn("vscode_diff", "Open a side-by-side visual diff in VS Code's File Viewer comparing "
+                                 "an existing file with proposed content or another file.",
+                                 {"filePath": dict(s, description="path to the original file"),
+                                  "proposedContent": dict(s, description="proposed new content to compare side-by-side"),
+                                  "otherFilePath": dict(s, description="or path to a second file to compare")}, ["filePath"]),
+         "permission": "vscode", "detail": lambda a: "Open side-by-side diff in VS Code: " + str(a.get("filePath") or ""),
+         "run": vscode_tool("diff")},
+        {"schema": lfm3_native._fn("vscode_browser", "Use VS Code's Integrated Browser (shared with the agent): open a URL, "
+                                 "list shared browser tabs, read the accessibility tree of a shared page, click, type, "
+                                 "navigate, or capture a screenshot.",
+                                 {"subaction": {"type": "string", "enum": ["open", "list", "read", "click", "type", "navigate", "screenshot"],
+                                                "description": "browser action to run in VS Code"},
+                                  "url": dict(s, description="URL to open or navigate to"),
+                                  "pageId": dict(s, description="shared browser page ID from list/open"),
+                                  "ref": dict(s, description="element ref (e.g. e1) from read_page"),
+                                  "selector": dict(s, description="Playwright selector when ref is not used"),
+                                  "element": dict(s, description="description of the element to click/type"),
+                                  "text": dict(s, description="text to type")}, ["subaction"]),
+         "permission": "vscode", "detail": lambda a: f"VS Code Integrated Browser ({a.get('subaction') or 'open'}): {a.get('url') or a.get('pageId') or ''}".strip(),
+         "run": vscode_tool("browser")},
         {"schema": lfm3_native._fn("vscode_github_setup", "Create (or connect) the user's private GitHub repository for "
                                  "Clover's records and push them. VS Code asks the user to sign in and to confirm.", {}),
          "permission": "vscode", "detail": lambda a: "Set up your private GitHub repository for Clover's records",
@@ -1589,7 +1624,14 @@ def parse_openai_messages(messages):
             att_blocks = []
             for m_att in re.finditer(r"<attachment\b([^>]*)>\s*([\s\S]*?)\s*</attachment>", u_text, flags=re.IGNORECASE):
                 attrs, body = m_att.group(1), m_att.group(2).strip()
-                if not body or "Browser Pages" in attrs or "Browser Pages" in body[:80] or "browser pages are currently shared" in body[:120]:
+                if not body:
+                    continue
+                if "Browser Pages" in attrs or "Browser Pages" in body[:80] or "browser pages are currently shared" in body[:120]:
+                    if (
+                        "The following browser pages are currently shared with you" in body
+                        or re.search(r"\b(?:browser|page|tab|website|url|share|click|type|screenshot|localhost)\b", core_q, re.I)
+                    ):
+                        workspace_info_chunks.append("Browser Pages:\n" + body[:1200])
                     continue
                 att_blocks.append(body[:2400])
             if att_blocks:
@@ -3075,17 +3117,18 @@ class Handler(BaseHTTPRequestHandler):
         tools = body.get("tools") or []
         user_prompt, prior_turns, tool_rounds, ws_info = parse_openai_messages(messages)
         if S.mode == "lfm3":
+            v1_eng = engine_for(body.get("model")) or S.engine
             # images from VS Code (the Omni reads them; LFM3-1.7B is text only and they are left out as before)
             media = []
-            if "vision" in (getattr(S.engine, "inputs", None) or []):
+            if "vision" in (getattr(v1_eng, "inputs", None) or []):
                 media = save_media([{"kind": "image", "data": u, "name": "image from VS Code"} for u in openai_images(messages)])
             if tools and body.get("tool_choice") != "none":
                 t0 = time.perf_counter()
                 with S.turn_lock:
                     S.busy = {"kind": "VS Code step", "since": time.time()}
                     try:
-                        out = S.engine.vscode_step(user_prompt, ws_info, prior_turns, tool_rounds, tools,
-                                                   **({"media": media} if media else {}))
+                        out = v1_eng.vscode_step(user_prompt, ws_info, prior_turns, tool_rounds, tools,
+                                                 **({"media": media} if media else {}))
                     finally:
                         S.busy = None
                 print("V1_LFM3_STEP", json.dumps({"ms": round((time.perf_counter() - t0) * 1000), "call": out.get("tool_call"),
@@ -3093,11 +3136,17 @@ class Handler(BaseHTTPRequestHandler):
                       flush=True)
                 if out.get("tool_call"):
                     return self._openai_reply(None, out["tool_call"], stream, user_prompt)
-                return self._openai_reply(out.get("content") or "", None, stream, user_prompt)
+                draft_c = out.get("content") or ""
+                if draft_c:
+                    import clover_cycle as C
+                    findings, _ = C.verify_turn_outcome(user_prompt, draft_c, [], kit=layer_kit(), layers=("compiler",))
+                    if not findings:
+                        return self._openai_reply(draft_c, None, stream, user_prompt)
             hist = []
             for h in prior_turns[-6:]:
                 hist.append({"user": h["user"], "reply": h["reply"]})
-            res = lfm3_turn("vsc-" + uuid.uuid4().hex, user_prompt, {"history": hist}, kind="VS Code answer", media=media)
+            res = lfm3_turn("vsc-" + uuid.uuid4().hex, with_tool_outputs(user_prompt, tool_rounds),
+                            {"history": hist, "model": body.get("model")}, kind="VS Code answer", media=media)
             with S.sess_lock:
                 S.sessions.pop(res["session_id"], None)
             text = res.get("reply") or ""

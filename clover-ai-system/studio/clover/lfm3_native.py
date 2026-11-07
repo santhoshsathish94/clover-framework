@@ -130,6 +130,85 @@ def tools_sentence(tools_on, asked=None):
     return TOOLS_ON
 VSCODE_CORE = ["read_file", "list_dir", "file_search", "grep_search", "semantic_search", "run_in_terminal",
                "get_errors", "replace_string_in_file", "create_file", "insert_edit_into_file", "apply_patch"]
+VSCODE_BROWSER_TOOLS = ["open_browser_page", "list_browser_pages", "read_page", "click_element", "type_in_page",
+                        "navigate_page", "screenshot_page", "hover_element", "drag_element", "handle_dialog",
+                        "run_playwright_code", "fetch_webpage"]
+VSCODE_TERMINAL_TOOLS = ["run_in_terminal", "get_terminal_output", "send_to_terminal", "kill_terminal",
+                         "terminal_last_command", "terminal_selection"]
+VSCODE_CODE_INTEL_TOOLS = ["vscode_listCodeUsages", "vscode_renameSymbol", "view_image", "multi_replace_string_in_file"]
+_VSCODE_BROWSER_CUE = re.compile(
+    r"\b(?:browser|web\s*page|page\s+id|shared\s+with\s+you|open_browser_page|read_page|click_element|"
+    r"type_in_page|screenshot_page|navigate_page|playwright|localhost|127\.0\.0\.1|https?://|dom\b|ui\s+page)\b",
+    re.I,
+)
+_VSCODE_TERM_CUE = re.compile(
+    r"\b(?:terminal|background\s+command|send_to_terminal|get_terminal_output|kill_terminal|last\s+command|terminal_selection)\b",
+    re.I,
+)
+_VSCODE_INTEL_CUE = re.compile(
+    r"\b(?:usages?|references?|where\s+is\s+[\w.]+\s+used|rename\s+symbol|vscode_listCodeUsages|vscode_renameSymbol|"
+    r"view_image|\.png\b|\.jpg\b|\.jpeg\b|\.webp\b)\b",
+    re.I,
+)
+
+
+def active_vscode_tools(user_prompt="", workspace_info="", tool_rounds=()):
+    """Selects the non-deferred VS Code tool set for `vscode_step`, activating VS Code's Integrated Browser,
+    Terminal, and Code Intelligence tools whenever the user prompt, shared browser pages, or prior rounds need them."""
+    active = set(VSCODE_CORE)
+    used = {rd.get("name") for rd in (tool_rounds or ()) if isinstance(rd, dict) and rd.get("name")}
+    active |= used
+    combined = f"{user_prompt or ''}\n{workspace_info or ''}"
+    if _VSCODE_BROWSER_CUE.search(combined) or (used & set(VSCODE_BROWSER_TOOLS)):
+        active.update(VSCODE_BROWSER_TOOLS)
+    if _VSCODE_TERM_CUE.search(combined) or (used & set(VSCODE_TERMINAL_TOOLS)):
+        active.update(VSCODE_TERMINAL_TOOLS)
+    if _VSCODE_INTEL_CUE.search(combined) or (used & set(VSCODE_CODE_INTEL_TOOLS)):
+        active.update(VSCODE_CODE_INTEL_TOOLS)
+    return active
+
+
+def repair_vscode_browser_args(call_name, call_args, workspace_info="", tool_rounds=()):
+    """Ensures VS Code Integrated Browser tool calls (`click_element`, `type_in_page`, `hover_element`, `read_page`, etc.)
+    always include `pageId` (from shared browser pages or prior rounds) and `ref` (matched from the accessibility snapshot
+    in `read_page` / `open_browser_page` output when the model only supplied `element`)."""
+    args = dict(call_args or {})
+    if call_name not in VSCODE_BROWSER_TOOLS or call_name in ("open_browser_page", "list_browser_pages", "fetch_webpage"):
+        return args
+    if not args.get("pageId"):
+        for rd in reversed(list(tool_rounds or ())):
+            try:
+                rd_a = json.loads(rd.get("arguments") or "{}") if isinstance(rd.get("arguments"), str) else (rd.get("arguments") or {})
+                if rd_a.get("pageId"):
+                    args["pageId"] = str(rd_a["pageId"])
+                    break
+            except Exception:
+                pass
+        if not args.get("pageId") and workspace_info:
+            m_pg = re.search(r"-\s*\[([A-Za-z0-9_.\-]+)\]\s+", workspace_info)
+            if m_pg:
+                args["pageId"] = m_pg.group(1)
+    if call_name in ("click_element", "type_in_page", "hover_element") and not args.get("ref") and not args.get("selector"):
+        el_desc = str(args.get("element") or "").strip().lower()
+        el_words = [w for w in re.findall(r"[a-z0-9]+", el_desc) if w not in ("button", "link", "input", "box", "field", "the", "a", "an")]
+        for rd in reversed(list(tool_rounds or ())):
+            out_txt = str(rd.get("output") or "")
+            if "[ref=" not in out_txt:
+                continue
+            best_ref, best_score = None, 0
+            for ln in out_txt.splitlines():
+                m_ref = re.search(r"\[ref=([A-Za-z0-9_\-]+)\]", ln)
+                if not m_ref:
+                    continue
+                ln_low = ln.lower()
+                score = (10 if (el_desc and el_desc in ln_low) else 0) + sum(2 for w in el_words if w in ln_low)
+                if score > best_score:
+                    best_score = score
+                    best_ref = m_ref.group(1)
+            if best_ref:
+                args["ref"] = best_ref
+                break
+    return args
 
 
 class EngineCache:
@@ -926,8 +1005,7 @@ class LFM3Native:
     def vscode_step(self, user_prompt, workspace_info, prior_turns, tool_rounds, vs_tools, thinking=True, max_new=1024):
         """One assistant step for VS Code: a VS Code tool call to return, or the final answer."""
         schemas, by_name = [], {}
-        used = {rd.get("name") for rd in tool_rounds}
-        core = [n for n in VSCODE_CORE]
+        core = active_vscode_tools(user_prompt, workspace_info, tool_rounds)
         for t in vs_tools:
             fn = t.get("function") if isinstance(t.get("function"), dict) else t
             name = str(fn.get("name") or "").strip()
@@ -938,7 +1016,7 @@ class LFM3Native:
             f = {"name": name, "description": desc, "parameters": params}
             by_name[name] = f
             entry = {"type": "function", "function": f}
-            if name not in core and name not in used:
+            if name not in core:
                 entry["defer_loading"] = True
             schemas.append(entry)
         deferred = [s["function"] for s in schemas if s.get("defer_loading")]
@@ -986,7 +1064,8 @@ class LFM3Native:
                         continue
                     if calls:
                         c = calls[0]
-                        return {"tool_call": {"name": c["name"], "arguments": json.dumps(c["arguments"])}, "trace": trace}
+                        c_args = repair_vscode_browser_args(c["name"], c["arguments"], workspace_info, tool_rounds)
+                        return {"tool_call": {"name": c["name"], "arguments": json.dumps(c_args)}, "trace": trace}
                     final = (content + after).strip() if (not thinking or "</think>" in text) else ""
                     return {"content": final or "(Clover did not finish an answer in time.)", "trace": trace}
                 return {"content": "(Clover kept searching for tools without choosing one.)", "trace": trace}

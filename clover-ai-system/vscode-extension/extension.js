@@ -38,6 +38,20 @@ class CloverModelCatalogFactory {
         capabilities: { ...sharedCapabilities },
       },
       {
+        id: "clover-35b-a3b",
+        name: "Clover — Clover-35B-A3B (35B-A3B Block Diffusion MoE)",
+        vendor: "clover",
+        family: "clover-35b",
+        version: "4.2.0",
+        maxInputTokens: 131072,
+        maxOutputTokens: 16000,
+        isUserSelectable: true,
+        isDefault: false,
+        tooltip:
+          "Clover 7-Layer AI System with DiffuSpace Clover-35B-A3B-Preview (40-Layer 35B-A3B MoE: 30 Bidirectional Gated DeltaNet + 10 Gated GQA + 256 Experts Top-8 Coreset + LowConfidence Block Diffusion + HybridAgent + JEPA + 11-Level NCM + Multi-Cycle Outcome Verification, 128K context)",
+        capabilities: { ...sharedCapabilities },
+      },
+      {
         id: "lfm3-1.7b",
         name: "Clover — Liquid LFM3-Omni (1.7B • Samsung S23 / Edge & Server)",
         vendor: "clover",
@@ -75,6 +89,9 @@ class CloverModelCatalogFactory {
     }
     if (raw.includes("nemotron")) {
       return "nemotron-3.5-super-vl";
+    }
+    if (raw.includes("35b") || raw.includes("a3b") || raw.includes("diffuspace")) {
+      return "clover-35b-a3b";
     }
     if (raw.includes("lfm3") || raw.includes("lmf3") || raw.includes("liquid") || raw.includes("s23") || raw.includes("omni")) {
       return "lfm3-1.7b";

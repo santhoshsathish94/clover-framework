@@ -1183,7 +1183,7 @@ class OmniNative(N.LFM3Native):
     def vscode_step(self, user_prompt, workspace_info, prior_turns, tool_rounds, vs_tools, thinking=True, max_new=1024,
                     media=()):
         schemas, by_name = [], {}
-        used = {rd.get("name") for rd in tool_rounds}
+        active_core = N.active_vscode_tools(user_prompt, workspace_info, tool_rounds)
         for t in vs_tools:
             fn = t.get("function") if isinstance(t.get("function"), dict) else t
             name = str(fn.get("name") or "").strip()
@@ -1193,7 +1193,7 @@ class OmniNative(N.LFM3Native):
                  "parameters": fn.get("parameters") or fn.get("inputSchema") or {"type": "object", "properties": {}}}
             by_name[name] = f
             entry = {"type": "function", "function": f}
-            if name not in N.VSCODE_CORE and name not in used:
+            if name not in active_core:
                 entry["defer_loading"] = True
             schemas.append(entry)
         deferred = [s["function"] for s in schemas if s.get("defer_loading")]
@@ -1236,7 +1236,8 @@ class OmniNative(N.LFM3Native):
                         continue
                     if calls:
                         c = calls[0]
-                        return {"tool_call": {"name": c["name"], "arguments": json.dumps(c["arguments"])}, "trace": trace}
+                        c_args = N.repair_vscode_browser_args(c["name"], c["arguments"], workspace_info, tool_rounds)
+                        return {"tool_call": {"name": c["name"], "arguments": json.dumps(c_args)}, "trace": trace}
                     return {"content": content.strip() or "(Clover did not finish an answer in time.)", "trace": trace}
                 return {"content": "(Clover kept searching for tools without choosing one.)", "trace": trace}
             finally:

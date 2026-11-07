@@ -43,13 +43,15 @@
           "default": "nemotron-3.5-super-vl",
           "enum": [
             "nemotron-3.5-super-vl",
+            "clover-35b-a3b",
             "lfm3-1.7b",
             "clover-kimi-k3"
           ],
           "enumDescriptions": [
             "NVIDIA Nemotron 3.5 Super VL (120B-A12B Hybrid Mamba-2 + Latent ReLU² MoE + NoPE GQA + C-RADIO + 2-Layer Native MTP, 1M context)",
+            "DiffuSpace Clover-35B-A3B-Preview (35B-A3B Block Diffusion MoE: 30 BD-GDN + 10 Gated GQA + 256 Experts Top-8 Coreset + HybridAgent + JEPA + 11-Level NCM, 128K context)",
             "Liquid AI LFM3-1.7B (24-Layer Tri-Hybrid Width-7 Gated ShortConv + Sliding/Full GQA, 1M session context)",
-            "MoonshotAI Kimi K3 (93-Layer 2.78T MoE + MoonViT3d + DSpark, 1M session context)"
+            "MoonshotAI Kimi K3.1 Pro (93-Layer 2.8T MoE + Gated DSA + MoonViT-V2 + DSpark, 1M session context)"
           ],
           "description": "Default Layer-1 foundation model backbone used when a generic Clover model ID is requested."
         },
