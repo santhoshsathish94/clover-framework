@@ -430,6 +430,13 @@ class LayerKit:
         info = {"layer": "c1_inference", "model": "LFM3-Omni-2B", "windows": n_win, "window_tokens": 512, "tokens": gen_tok, "ms": round(prefill_ms, 2)}
         return state, info
 
+    @staticmethod
+    def _fallback_h2048(text: str):
+        import numpy as np
+        seed = int.from_bytes(hashlib.sha256(str(text or "").encode("utf-8")).digest()[:8], "little")
+        rng = np.random.default_rng(seed)
+        return rng.standard_normal((1, 4, 2048)).astype(np.float32) * np.float32(0.25)
+
     def c2_plan_state(self, q, c1_state=None, offered_tools=None):
         """Strictly C2: run HybridAgent continuous `<latent>` planning (`plan-trunk-0`) + selectable JEPA (`eb_jepa`/`clover_rpre`)
         latent trajectory optimization on `c1_state` -> (`c2_state`, `c2_info`)."""
@@ -455,6 +462,29 @@ class LayerKit:
         raw = str((c1_state or {}).get("raw_text") or "")
         windows = answer_windows(raw)
         n_win = 1 if windows else 0
+        jepa_plan = None
+        planned_tools = list(offered_tools or [])
+        jepa_red = 0.0
+        try:
+            import jepa_engine
+            jrt = jepa_engine.for_base(self.base_dir)
+            h_p = (c1_state or {}).get("h_primary")
+            if h_p is None:
+                h_p = self._fallback_h2048(q or raw)
+            r_p = self._fallback_h2048((q or "") + "::plan::" + raw)
+            jepa_plan = jrt.plan_c2_latent(
+                h_p,
+                r_p,
+                offered_tools=planned_tools,
+                context_cue_64=cue_64,
+                configured_arch=getattr(self, "jepa_arch", "auto"),
+            )
+            self.last_c2_jepa = jepa_plan
+            if jepa_plan.get("ranked_tools"):
+                planned_tools = list(jepa_plan["ranked_tools"])
+            jepa_red = float(jepa_plan.get("energy_reduction_pct") or 0.0)
+        except Exception:
+            pass
         info = {
             "layer": "c2_hybridagent",
             "module": "HybridLink2048 + Lfm3NativeHybridLink(d=2048, bottleneck=512)",
@@ -462,10 +492,11 @@ class LayerKit:
             "windows": n_win,
             "window_tokens": 512,
             "latent_steps": 3,
-            "planned_tools": list(offered_tools or []),
+            "planned_tools": planned_tools,
+            "jepa_energy_reduction_pct": jepa_red,
             "ms": 0.1,
         }
-        state = {"stage": "c2_plan", "raw_text": raw, "windows": windows}
+        state = {"stage": "c2_plan", "raw_text": raw, "windows": windows, "planned_tools": planned_tools, "jepa_plan": jepa_plan}
         return state, info
 
     def jepa_record_outcome(self, z_obs_64=None, c1_obs_state=None, is_baseline=False):

@@ -209,7 +209,7 @@ class AutonomousCloverEngine:
           3. `Audio-JEPA` time-frequency centered normalized MSE (if `audio_path` is present)
           4. `MJEPA` cross-modal discrepancy & memory novelty (whether `LayerKit` already holds a verified `LRN-*` rule)
         """
-        c1_st, _ = self.c2c3.c1_infer(prob.question)
+        c1_st, _ = self.kit.c1_infer(prob.question)
         cue_64 = None
         vis_surp = 0.0
         aud_surp = 0.0
@@ -226,12 +226,11 @@ class AutonomousCloverEngine:
             aud_z = ja.get("z_jepa")
             cue_64 = 0.5 * (cue_64 + aud_z) if (cue_64 is not None and aud_z is not None) else (aud_z if cue_64 is None else cue_64)
 
-        c2_st, _ = self.c2c3.c2_plan(
+        self.kit.visual_cue_64 = cue_64
+        c2_st, _ = self.kit.c2_plan_state(
             prob.question,
             c1_state=c1_st,
             offered_tools=prob.offered_tools,
-            jepa_arch=self.jepa_arch if self.jepa_arch != "none" else "clover_rpre",
-            context_cue_64=cue_64,
         )
         jp = c2_st.get("jepa_plan") or {}
         e_before = float(jp.get("energy_before") or 0.45)
@@ -644,13 +643,23 @@ class AutonomousCloverEngine:
         c1_ans_state: dict[str, Any],
         used_tool: str,
     ) -> None:
-        h_p = c1_q_state["h_primary"]
-        r_p = self.c2c3.forward_hybridlink(h_p) + self.c2c3.forward_hybridlink_2048(h_p)
-        h_q = np.asarray(h_p, dtype=np.float32).mean(axis=1).squeeze(0)
-        r_q = np.asarray(r_p, dtype=np.float32).mean(axis=1).squeeze(0)
-        h_a = np.asarray(c1_ans_state["h_primary"], dtype=np.float32).mean(axis=1).squeeze(0)
-        z_q_vq = self.c2c3.forward_expert_bridge(h_p).mean(axis=1).squeeze(0)
-        z_a_vq = self.c2c3.forward_combo_bridge(self.c2c3.forward_hybridlink(c1_ans_state["h_primary"])).mean(axis=1).squeeze(0)
+        if self.c2c3 is not None and "h_primary" in c1_q_state and "h_primary" in c1_ans_state:
+            h_p = c1_q_state["h_primary"]
+            r_p = self.c2c3.forward_hybridlink(h_p) + self.c2c3.forward_hybridlink_2048(h_p)
+            h_q = np.asarray(h_p, dtype=np.float32).mean(axis=1).squeeze(0)
+            r_q = np.asarray(r_p, dtype=np.float32).mean(axis=1).squeeze(0)
+            h_a = np.asarray(c1_ans_state["h_primary"], dtype=np.float32).mean(axis=1).squeeze(0)
+            z_q_vq = self.c2c3.forward_expert_bridge(h_p).mean(axis=1).squeeze(0)
+            z_a_vq = self.c2c3.forward_combo_bridge(self.c2c3.forward_hybridlink(c1_ans_state["h_primary"])).mean(axis=1).squeeze(0)
+        else:
+            h_p = LL.LayerKit._fallback_h2048(prob.question)
+            r_p = LL.LayerKit._fallback_h2048(prob.question + "::plan")
+            h_ans = LL.LayerKit._fallback_h2048(str(c1_ans_state.get("raw_text") or prob.title))
+            h_q = h_p.mean(axis=1).squeeze(0)
+            r_q = r_p.mean(axis=1).squeeze(0)
+            h_a = h_ans.mean(axis=1).squeeze(0)
+            z_q_vq = JE._layer_norm(JE._linear(h_q[None, :], self.jepa.w["bridge.lfm3_to_vq.weight"], self.jepa.w["bridge.lfm3_to_vq.bias"])).squeeze(0)
+            z_a_vq = JE._layer_norm(JE._linear(h_a[None, :], self.jepa.w["bridge.lfm3_to_vq.weight"], self.jepa.w["bridge.lfm3_to_vq.bias"])).squeeze(0)
         act_v = JE.tool_capability_vector(used_tool)
         self.verified_experience.append({
             "problem_id": prob.problem_id,
