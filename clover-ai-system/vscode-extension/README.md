@@ -29,6 +29,17 @@ VS Code (`1.105+` / `copilot-chat 0.70+`) includes a native `customendpoint` pro
         "streaming": true
       },
       {
+        "id": "clover-35b-a3b",
+        "name": "Clover — Clover-35B-A3B (35B-A3B Block Diffusion MoE)",
+        "url": "https://api.cloverframework.com/v1/chat/completions",
+        "apiType": "chat-completions",
+        "toolCalling": true,
+        "vision": true,
+        "contextWindow": 131072,
+        "maxOutputTokens": 16000,
+        "streaming": true
+      },
+      {
         "id": "lfm3-1.7b",
         "name": "Clover — Liquid LFM3-1.7B (24L Tri-Hybrid)",
         "url": "https://api.cloverframework.com/v1/chat/completions",
@@ -55,7 +66,7 @@ VS Code (`1.105+` / `copilot-chat 0.70+`) includes a native `customendpoint` pro
 ]
 ```
 
-2. Open the model picker in the VS Code Chat view and select **`Clover — Nemotron 3.5 Super VL (120B-A12B)`**, **`Clover — Liquid LFM3-1.7B (24L Tri-Hybrid)`**, or **`Clover — Kimi K3 (2.78T MoE)`**.
+2. Open the model picker in the VS Code Chat view and select **`Clover — Nemotron 3.5 Super VL (120B-A12B)`**, **`Clover — Clover-35B-A3B (35B-A3B Block Diffusion MoE)`**, **`Clover — Liquid LFM3-1.7B (24L Tri-Hybrid)`**, or **`Clover — Kimi K3 (2.78T MoE)`**.
 
 ---
 
@@ -66,6 +77,6 @@ For users who want a one-click install (or whose GitHub Enterprise organization 
 ### Install Locally
 ```bash
 # Symlink or copy into ~/.vscode/extensions/
-cp -r vscode-extension ~/.vscode/extensions/clover-framework.clover-vscode-provider-4.1.2
+cp -r vscode-extension ~/.vscode/extensions/clover-framework.clover-vscode-provider-5.0.0
 ```
-Reload VS Code (`Developer: Reload Window`), open the Chat model picker, and select any of the three Clover models under the **Clover** provider.
+Reload VS Code (`Developer: Reload Window`), open the Chat model picker, and select any of the four Clover models under the **Clover** provider.

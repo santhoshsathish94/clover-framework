@@ -14,8 +14,8 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 14`, `targetSdk 36`) | `81,005,174` bytes (`77.25 MB`) | `4a1b7703cac5882d1d5b290cc145252147201ea62596ea0326eca85c11aa4c0b` |
-| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 14`, `targetSdk 36`) | `82,081,858` bytes (`78.28 MB`) | `e013bb3ce131bc367c01ccefb32eeb5e685fbaddba6336d5bd82d5fffd67b7e8` |
+| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 14`, `targetSdk 36`) | `81,014,437` bytes (`77.26 MB`) | `d40b5bd84a6b513c5da231544173d78907ce9f81803eecaa3cc4a44eea44f904` |
+| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 14`, `targetSdk 36`) | `82,091,117` bytes (`78.29 MB`) | `5b7a6c8b0486f4ddea1d03e5fb03e458df4428f840666a5fab158fe33a3eb3f2` |
 
 ---
 

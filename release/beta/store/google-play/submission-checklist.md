@@ -3,17 +3,17 @@
 ## 1. Release Artifacts & Signing
 
 - **Upload Artifact (Google Play Console)**: `release/beta/android/clover-ai-studio-beta.aab`
-  - Size: `73,808,723` bytes (`71 MB`)
-  - SHA-256: `778aabeee6fddfcb00566955984d496793264f958b74c1124364c78893c85fd1`
+  - Size: `81,014,437` bytes (`77.26 MB`)
+  - SHA-256: `d40b5bd84a6b513c5da231544173d78907ce9f81803eecaa3cc4a44eea44f904`
 - **Direct ADB / Tester APK**: `release/beta/android/clover-ai-studio-beta.apk`
-  - Size: `74,887,886` bytes (`72 MB`)
-  - SHA-256: `ed3784813432b21050d1a37fd2c547fd1084f065f50633de239b090b162d2ce8`
+  - Size: `82,091,117` bytes (`78.29 MB`)
+  - SHA-256: `5b7a6c8b0486f4ddea1d03e5fb03e458df4428f840666a5fab158fe33a3eb3f2`
 - **Package Identity**:
   - `applicationId`: `ai.clover.studio`
-  - `versionCode`: `9`
-  - `versionName`: `0.5.0-beta.1`
+  - `versionCode`: `14`
+  - `versionName`: `5.0.0`
   - `minSdk`: `26` (Android 8.0)
-  - `targetSdk` / `compileSdk`: `34` (Android 14)
+  - `targetSdk` / `compileSdk`: `36` (Android 16)
 - **Upload Keystore Certificate (`cloverstudio`)**:
   - Subject (`DN`): `CN=Clover AI Studio, OU=Clover Framework, O=Clover AI, L=Bengaluru, ST=KA, C=IN`
   - SHA-256 Fingerprint: `88:C0:E8:32:66:FF:ED:34:73:F5:1A:A1:02:C0:D5:EC:98:CA:4E:85:F4:D9:5F:FE:70:68:46:57:E1:9C:40:F7`
@@ -77,7 +77,7 @@
 1. Open **Google Play Console** → Create or select app **Clover AI Studio** (`ai.clover.studio`).
 2. Navigate to **Test and release → Testing → Closed testing** → select the **Alpha / Closed Beta** track → **Create new release**.
 3. Under **App integrity / App signing**, confirm Play App Signing is active.
-4. Upload `release/beta/android/clover-ai-studio-beta.aab` (`versionCode 9`, `versionName 0.5.0-beta.1`).
+4. Upload `release/beta/android/clover-ai-studio-beta.aab` (`versionCode 14`, `versionName 5.0.0`, `targetSdk 36`).
 5. Paste the contents of `release/beta/store/google-play/release-notes.md` into **Release notes (`en-US`)**.
 6. Under **Testers**, select your beta tester email list / Google Group and copy the **Join on Android / Join on the Web** opt-in link.
 7. Click **Next** → **Save and publish** to submit for Google Play Closed Testing review.

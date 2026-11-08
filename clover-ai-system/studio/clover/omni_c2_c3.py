@@ -615,6 +615,7 @@ class OmniC2C3Runtime:
         latent_steps: int = 3,
         jepa_arch: str = "auto",
         context_cue_64: np.ndarray | None = None,
+        action_prior_8: np.ndarray | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         """Execute strictly C2 (`HybridAgent` continuous `<latent>` planning on `plan-trunk-0` + selectable `EB-JEPA`/`RPRE`
         latent trajectory optimization) in a single one-time pass.
@@ -655,6 +656,7 @@ class OmniC2C3Runtime:
                         r_primary,
                         offered_tools=tools_list,
                         context_cue_64=context_cue_64,
+                        action_prior_8=action_prior_8,
                         configured_arch=jepa_arch,
                     )
                     if jepa_res.get("enabled") and "r_refined_2048" in jepa_res:

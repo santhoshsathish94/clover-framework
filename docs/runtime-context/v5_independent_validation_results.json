@@ -1,0 +1,518 @@
+{
+  "timestamp": "2026-11-08T09:16:33Z",
+  "version": "5.0.0",
+  "elapsed_s": 149.31,
+  "goal_1_stabilize_v5": {
+    "status": "passed",
+    "version": "5.0.0",
+    "checked_manifests": [
+      "VERSION",
+      "server.STUDIO_VERSION",
+      "clover-ai-system/studio/clover/launch/manifest.json",
+      "clover-ai-system/vscode-extension/package.json"
+    ]
+  },
+  "goal_2_four_models_e2e_cycle": {
+    "status": "passed",
+    "models_tested": 4,
+    "per_model": {
+      "omni": {
+        "model_label": "LFM3-Omni-2B",
+        "stages_completed": [
+          "context",
+          "direction",
+          "execution",
+          "outcome",
+          "growth"
+        ],
+        "cycles_used": 2,
+        "context_files_loaded": [
+          "CONTEXT.md",
+          "TODO.md",
+          "src/src-context.md"
+        ],
+        "todos_completed": 5,
+        "repaired_answer_verified": true,
+        "growth_recorded": [
+          "learned LRN-20261108-101405-ba91e8"
+        ],
+        "workspace_context_updated": "src-context.md"
+      },
+      "clover-35b-a3b": {
+        "model_label": "Clover-35B-A3B",
+        "stages_completed": [
+          "context",
+          "direction",
+          "execution",
+          "outcome",
+          "growth"
+        ],
+        "cycles_used": 2,
+        "context_files_loaded": [
+          "CONTEXT.md",
+          "TODO.md",
+          "src/src-context.md"
+        ],
+        "todos_completed": 5,
+        "repaired_answer_verified": true,
+        "growth_recorded": [
+          "learned LRN-20261108-101406-ba91e8"
+        ],
+        "workspace_context_updated": "src-context.md"
+      },
+      "nemotron-3.5-super-vl": {
+        "model_label": "Nemotron 3.5",
+        "stages_completed": [
+          "context",
+          "direction",
+          "execution",
+          "outcome",
+          "growth"
+        ],
+        "cycles_used": 2,
+        "context_files_loaded": [
+          "CONTEXT.md",
+          "TODO.md",
+          "src/src-context.md"
+        ],
+        "todos_completed": 5,
+        "repaired_answer_verified": true,
+        "growth_recorded": [
+          "learned LRN-20261108-101407-ba91e8"
+        ],
+        "workspace_context_updated": "src-context.md"
+      },
+      "kimi-k3": {
+        "model_label": "Kimi K3.1 Pro",
+        "stages_completed": [
+          "context",
+          "direction",
+          "execution",
+          "outcome",
+          "growth"
+        ],
+        "cycles_used": 2,
+        "context_files_loaded": [
+          "CONTEXT.md",
+          "TODO.md",
+          "src/src-context.md"
+        ],
+        "todos_completed": 5,
+        "repaired_answer_verified": true,
+        "growth_recorded": [
+          "learned LRN-20261108-101408-ba91e8"
+        ],
+        "workspace_context_updated": "src-context.md"
+      }
+    },
+    "live_k3_worker": {
+      "omni": {
+        "model_label": "LFM3-Omni-2B",
+        "wall_ms": 40900.8,
+        "outcome_verified": true,
+        "reply_excerpt": "47 * 83 = 3901 The exact product of 47 * 83 is 3901.\n\n\u2022 Final Answer: #### 47 * 83 = 3901"
+      },
+      "clover-35b-a3b": {
+        "model_label": "Clover-35B-A3B",
+        "wall_ms": 32552.9,
+        "outcome_verified": true,
+        "reply_excerpt": "47 * 83 = 3901 The exact product of 47 * 83 is 3901.\n\n\u2022 Final Answer: #### 47 * 83 = 3901"
+      },
+      "nemotron-3.5-super-vl": {
+        "model_label": "Nemotron 3.5",
+        "wall_ms": 32524.8,
+        "outcome_verified": true,
+        "reply_excerpt": "47 * 83 = 3901 The exact product of 47 * 83 is 3901.\n\n\u2022 Final Answer: #### 47 * 83 = 3901"
+      },
+      "kimi-k3": {
+        "model_label": "Kimi K3.1 Pro",
+        "wall_ms": 33127.7,
+        "outcome_verified": true,
+        "reply_excerpt": "47 * 83 = 3901 The exact product of 47 * 83 is 3901.\n\n\u2022 Final Answer: #### 47 * 83 = 3901"
+      }
+    }
+  },
+  "goal_3_meaning_engine_bridge": {
+    "status": "passed",
+    "memory_to_ontology_entity_linking": {
+      "implicit_query": "What weakness (CWE) and attack pattern apply to the production bastion gateway issue I asked you to remember?",
+      "with_bridge_entities": [
+        "CVE-2024-6387",
+        "CWE-362",
+        "CWE-364",
+        "CAPEC-29",
+        "CVE-2024-6387",
+        "CWE-362",
+        "CVE-2024-6387",
+        "CWE-364",
+        "CVE-2024-6387",
+        "CAPEC-29",
+        "CVE-2024-6387",
+        "CWE-362",
+        "CAPEC-29",
+        "CVE-2024-6387",
+        "CAPEC-29",
+        "CWE-362",
+        "CVE-2024-6387",
+        "CWE-364",
+        "CWE-362"
+      ],
+      "with_bridge_from_memory": [
+        "MEM-USER-20261108-101628-64053c"
+      ],
+      "without_bridge_entities": []
+    },
+    "action_ranking_benchmark": {
+      "full_meaning_bridge": {
+        "top1_accuracy": 1.0,
+        "hits": 6,
+        "total": 6,
+        "tasks": [
+          {
+            "id": "M2O-1",
+            "expected": "run_python",
+            "got_top1": "run_python",
+            "ranked_top3": [
+              "run_python",
+              "calculate",
+              "web_search"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": true
+          },
+          {
+            "id": "M2O-2",
+            "expected": "read_file",
+            "got_top1": "read_file",
+            "ranked_top3": [
+              "read_file",
+              "laptop_status",
+              "web_search"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": true
+          },
+          {
+            "id": "M2O-3",
+            "expected": "web_search",
+            "got_top1": "web_search",
+            "ranked_top3": [
+              "web_search",
+              "calculate",
+              "run_python"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": true
+          },
+          {
+            "id": "M2O-4",
+            "expected": "laptop_status",
+            "got_top1": "laptop_status",
+            "ranked_top3": [
+              "laptop_status",
+              "web_search",
+              "read_file"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": true
+          },
+          {
+            "id": "M2O-5",
+            "expected": "generate_image",
+            "got_top1": "generate_image",
+            "ranked_top3": [
+              "generate_image",
+              "web_search",
+              "laptop_status"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": true
+          },
+          {
+            "id": "M2O-6",
+            "expected": "run_python",
+            "got_top1": "run_python",
+            "ranked_top3": [
+              "run_python",
+              "calculate",
+              "web_search"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": true
+          }
+        ]
+      },
+      "ablation_no_jepa_action_prior": {
+        "top1_accuracy": 0.1667,
+        "hits": 1,
+        "total": 6,
+        "tasks": [
+          {
+            "id": "M2O-1",
+            "expected": "run_python",
+            "got_top1": "generate_image",
+            "ranked_top3": [
+              "generate_image",
+              "laptop_status",
+              "web_search"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": false
+          },
+          {
+            "id": "M2O-2",
+            "expected": "read_file",
+            "got_top1": "laptop_status",
+            "ranked_top3": [
+              "laptop_status",
+              "generate_image",
+              "web_search"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": false
+          },
+          {
+            "id": "M2O-3",
+            "expected": "web_search",
+            "got_top1": "web_search",
+            "ranked_top3": [
+              "web_search",
+              "calculate",
+              "generate_image"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": true
+          },
+          {
+            "id": "M2O-4",
+            "expected": "laptop_status",
+            "got_top1": "generate_image",
+            "ranked_top3": [
+              "generate_image",
+              "laptop_status",
+              "web_search"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": false
+          },
+          {
+            "id": "M2O-5",
+            "expected": "generate_image",
+            "got_top1": "web_search",
+            "ranked_top3": [
+              "web_search",
+              "generate_image",
+              "laptop_status"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": false
+          },
+          {
+            "id": "M2O-6",
+            "expected": "run_python",
+            "got_top1": "generate_image",
+            "ranked_top3": [
+              "generate_image",
+              "laptop_status",
+              "web_search"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": false
+          }
+        ]
+      },
+      "ablation_no_meaning_bridge": {
+        "top1_accuracy": 0.1667,
+        "hits": 1,
+        "total": 6,
+        "tasks": [
+          {
+            "id": "M2O-1",
+            "expected": "run_python",
+            "got_top1": "run_python",
+            "ranked_top3": [
+              "run_python",
+              "calculate",
+              "web_search"
+            ],
+            "jepa_energy_reduction_pct": 0.0,
+            "passed": true
+          },
+          {
+            "id": "M2O-2",
+            "expected": "read_file",
+            "got_top1": "run_python",
+            "ranked_top3": [
+              "run_python",
+              "calculate",
+              "web_search"
+            ],
+            "jepa_energy_reduction_pct": 2.0,
+            "passed": false
+          },
+          {
+            "id": "M2O-3",
+            "expected": "web_search",
+            "got_top1": "calculate",
+            "ranked_top3": [
+              "calculate",
+              "run_python",
+              "generate_image"
+            ],
+            "jepa_energy_reduction_pct": 13.7,
+            "passed": false
+          },
+          {
+            "id": "M2O-4",
+            "expected": "laptop_status",
+            "got_top1": "run_python",
+            "ranked_top3": [
+              "run_python",
+              "calculate",
+              "web_search"
+            ],
+            "jepa_energy_reduction_pct": 1.1,
+            "passed": false
+          },
+          {
+            "id": "M2O-5",
+            "expected": "generate_image",
+            "got_top1": "calculate",
+            "ranked_top3": [
+              "calculate",
+              "run_python",
+              "generate_image"
+            ],
+            "jepa_energy_reduction_pct": 2.4,
+            "passed": false
+          },
+          {
+            "id": "M2O-6",
+            "expected": "run_python",
+            "got_top1": "calculate",
+            "ranked_top3": [
+              "calculate",
+              "run_python",
+              "generate_image"
+            ],
+            "jepa_energy_reduction_pct": 8.4,
+            "passed": false
+          }
+        ]
+      }
+    }
+  },
+  "goal_4_collective_learning_transfer": {
+    "status": "passed",
+    "pre_transfer_accuracy": 0.0,
+    "post_transfer_accuracy": 1.0,
+    "pre_transfer_hits": "0/4",
+    "post_transfer_hits": "4/4",
+    "pii_leaked_tokens": 0,
+    "forged_ed25519_rejected": true,
+    "personal_priority_preserved": true,
+    "explicit_refusal_respected": true,
+    "promoted_rules_count": 2,
+    "held_out_before": [
+      {
+        "id": "CPSL-HO-1",
+        "got_tools": [],
+        "passed": false
+      },
+      {
+        "id": "CPSL-HO-2",
+        "got_tools": [],
+        "passed": false
+      },
+      {
+        "id": "CPSL-HO-3",
+        "got_tools": [],
+        "passed": false
+      },
+      {
+        "id": "CPSL-HO-4",
+        "got_tools": [],
+        "passed": false
+      }
+    ],
+    "held_out_after": [
+      {
+        "id": "CPSL-HO-1",
+        "got_tools": [
+          "fetch_url",
+          "run_python",
+          "web_search"
+        ],
+        "passed": true
+      },
+      {
+        "id": "CPSL-HO-2",
+        "got_tools": [
+          "fetch_url",
+          "run_python",
+          "web_search"
+        ],
+        "passed": true
+      },
+      {
+        "id": "CPSL-HO-3",
+        "got_tools": [
+          "run_python"
+        ],
+        "passed": true
+      },
+      {
+        "id": "CPSL-HO-4",
+        "got_tools": [
+          "run_python"
+        ],
+        "passed": true
+      }
+    ]
+  },
+  "goal_5_independent_validation_and_ablations": {
+    "status": "passed",
+    "ablation_matrix": [
+      {
+        "configuration": "Full Clover v5.0.0 System (All 5 Stages + Meaning Bridge + JEPA Prior + 3-Cycle Retry + CPSL)",
+        "multi_cycle_4model": "4/4 (100.0%)",
+        "meaning_bridge_6tasks": "6/6 (100.0%)",
+        "collective_transfer_4tasks": "4/4 (100.0%)",
+        "overall_score": "14/14 (100.0%)"
+      },
+      {
+        "configuration": "Ablation 1: -Memory->Ontology Meaning Bridge (`enable_meaning_bridge = False`)",
+        "multi_cycle_4model": "4/4 (100.0%)",
+        "meaning_bridge_6tasks": "1/6 (16.7%)",
+        "collective_transfer_4tasks": "4/4 (100.0%)",
+        "overall_score": "9/14 (64.3%)"
+      },
+      {
+        "configuration": "Ablation 2: -JEPA 8-d Action Prior (`enable_jepa_action_prior = False`)",
+        "multi_cycle_4model": "4/4 (100.0%)",
+        "meaning_bridge_6tasks": "1/6 (16.7%)",
+        "collective_transfer_4tasks": "4/4 (100.0%)",
+        "overall_score": "9/14 (64.3%)"
+      },
+      {
+        "configuration": "Ablation 3: -Stage 4 Outcome Verification & Multi-Cycle Retry (Single-Pass Only)",
+        "multi_cycle_4model": "0/4 (0.0%)",
+        "meaning_bridge_6tasks": "6/6 (100.0%)",
+        "collective_transfer_4tasks": "4/4 (100.0%)",
+        "overall_score": "10/14 (71.4%)"
+      },
+      {
+        "configuration": "Ablation 4: -Collective Learning Shared-Core Sync (`Pre-Transfer Baseline`)",
+        "multi_cycle_4model": "4/4 (100.0%)",
+        "meaning_bridge_6tasks": "6/6 (100.0%)",
+        "collective_transfer_4tasks": "0/4 (0.0%)",
+        "overall_score": "10/14 (71.4%)"
+      }
+    ],
+    "documented_failure_modes_verified": {
+      "persistent_3cycle_failure_marked_unconfirmed": true,
+      "oov_nonce_blocked_by_oewn_privacy_gate": true,
+      "implicit_ontology_missed_without_memory_bridge": true
+    }
+  }
+}

@@ -133,7 +133,13 @@ class LayerKit:
         self.jepa_arch = "auto"  # selectable JEPA architecture: auto | clover_rpre | ijepa | audio_jepa | eb_jepa | mjepa | none
         self.visual_cue_64 = None
         self.audio_cue_64 = None
+        self.semantic_cue_64 = None
         self.last_c2_jepa = None
+        self.enable_meaning_bridge = True
+        self.enable_jepa_action_prior = True
+        self.last_memory_package = None
+        self.last_ontology_evidence = []
+        self.last_meaning_bridge = None
 
     def workspace_context(self, q):
         if self.workspaces is None or self._skip(q):
@@ -204,8 +210,20 @@ class LayerKit:
             return self._food_notes(q, st)
         pkg = st.retrieve_context_package(query=q, max_seeds=3, max_depth=2, max_entries=6, token_budget=1100)
         qt = topic_terms(q)
-        pkg.items = [it for it in pkg.items if "learning" not in it.entry.tags
-                     or len(qt & topic_terms(it.entry.summary)) >= 2]
+        top_score, top_id, _ = seeds[0]
+        seed_scores = {eid: sc for sc, eid, _ in seeds}
+        min_overlap = 2 if len(qt) >= 3 else 1
+        pkg.items = [
+            it for it in pkg.items
+            if (
+                it.entry.id == top_id
+                or getattr(it, "depth", 0) > 0
+                or (
+                    seed_scores.get(it.entry.id, 0.0) >= 0.35 * top_score
+                    and len(qt & topic_terms((it.entry.summary or "") + " " + (it.entry.content or ""))) >= min_overlap
+                )
+            )
+        ]
         return pkg if pkg.items else self._food_notes(q, st)
 
     def _food_notes(self, q, st):
@@ -224,6 +242,9 @@ class LayerKit:
         return pkg if pkg.items else None
 
     def memory_context(self, q):
+        self.last_memory_package = None
+        self.last_meaning_bridge = None
+        self.semantic_cue_64 = None
         if self._skip(q):
             return None, None
         t0 = time.perf_counter()
@@ -232,6 +253,7 @@ class LayerKit:
         pkg = self.cl.retrieve_relevant_memory_package(self.store(), q) if self.memory_root is None else self._user_memory_package(q)
         if pkg is None or not pkg.items:
             return None, None
+        self.last_memory_package = pkg
         info = {"layer": "memory", "entries": [it.entry.id for it in pkg.items], "ms": round((time.perf_counter() - t0) * 1000, 1)}
         if self.memory_root is not None:
             # the K3 rendering lists file paths, and LFM3 then went looking for the files (8 tool calls in a test)
@@ -256,7 +278,8 @@ class LayerKit:
                      and note_words(e.content or e.summary) == note_words(text)), None)
         if same is not None:  # "Remember that I'm vegetarian..." twice made two notes that say the same (2026-11-01)
             return same.id
-        words = [w for w in re.findall(r"[a-z][a-z0-9\-]{3,}", text.lower()) if w not in STOP]
+        meta_stop = FILLER | {"remember", "remembered", "earlier", "previous", "previously", "noted", "told", "said", "asked", "agreed", "discussed", "please"}
+        words = [w for w in re.findall(r"[a-z][a-z0-9\-]{3,}", text.lower()) if w not in meta_stop]
         tags = list(dict.fromkeys(words))[:8]
         eid = "MEM-USER-" + time.strftime("%Y%m%d-%H%M%S") + "-" + hashlib.sha1(text.encode("utf-8")).hexdigest()[:6]
         entry = M.MemoryEntry(
@@ -364,6 +387,7 @@ class LayerKit:
                 + (f", now {'holding' if e.status == 'active' else e.status}" if e.status != before else ""))
 
     def ontology_context(self, q):
+        self.last_ontology_evidence = []
         if self.memory_root is not None:  # app: a link or path is not a topic (github.com/.../clover-framework matched)
             q = LINKS_AND_PATHS.sub(" ", q)
             if not re.search(r"[A-Za-z]{3}", q):
@@ -374,13 +398,40 @@ class LayerKit:
             self._ontology = self.cl.CloverOntologyRetriever()
             self._verifier = self.cl.CloverSymbolicVerifier(self._ontology)
         t0 = time.perf_counter()
-        ev = self._ontology.retrieve(q, max_entities=4, max_paths=6)
+        ev = list(self._ontology.retrieve(q, max_entities=4, max_paths=6))
+        bridged_from_mem = []
+        bridged_entities = []
+        if self.enable_meaning_bridge and self.last_memory_package is not None and getattr(self.last_memory_package, "items", None):
+            active_mems = [it.entry for it in self.last_memory_package.items if not getattr(it, "superseded_by_id", None)]
+            if active_mems:
+                mem_terms = []
+                for e in active_mems[:3]:
+                    raw_m = f"{e.title or ''} {e.summary or ''} {e.content or ''} {' '.join(e.concepts or ())} {' '.join(e.tags or ())}"
+                    clean_m = re.sub(r"\bClover(?:'s)?\s+checks?\b", " ", raw_m, flags=re.I)
+                    mem_terms.append(clean_m)
+                bridge_q = f"{q}\n" + "\n".join(mem_terms)
+                ev_bridged = self._ontology.retrieve(bridge_q, max_entities=4, max_paths=6)
+                seen_keys = {(item.kind, tuple(item.entities), item.text[:120]) for item in ev}
+                for b_item in ev_bridged:
+                    b_key = (b_item.kind, tuple(b_item.entities), b_item.text[:120])
+                    if b_key not in seen_keys and len(ev) < 10:
+                        ev.append(b_item)
+                        seen_keys.add(b_key)
+                        for ent_id in b_item.entities:
+                            if ent_id not in bridged_entities:
+                                bridged_entities.append(ent_id)
+                if bridged_entities or ev_bridged:
+                    bridged_from_mem = [e.id for e in active_mems[:3]]
         if self.memory_root is not None:
             ev = [e for e in ev if not any(str(x).startswith(BENCHMARK_ONLY_COLLECTIONS) for x in e.entities)]
         if not ev:
             return None, None
+        self.last_ontology_evidence = list(ev)
         info = {"layer": "ontology", "entities": [e for item in ev for e in item.entities], "n_evidence": len(ev),
                 "ms": round((time.perf_counter() - t0) * 1000, 1)}
+        if bridged_from_mem:
+            info["bridged_from_memory"] = bridged_from_mem
+            info["bridged_entities"] = bridged_entities
         rendered = self.cl.render_evidence(ev)
         if self.memory_root is None:
             return "Ontology-Guided Symbolic Evidence & Provenance Paths:\n" + rendered + "\n" + ONTOLOGY_INSTRUCTION, info
@@ -455,33 +506,104 @@ class LayerKit:
         norms = np.linalg.norm(vec, axis=-1, keepdims=True) + np.float32(1e-6)
         return (vec / norms * np.float32(0.5))[None, :, :]
 
+    def compute_meaning_bridge(self, q):
+        """Synthesize the `Memory -> Ontology -> HybridAgent/JEPA -> Action` bridge state for the current turn:
+          1. Extracts active Memory Graph entries (`self.last_memory_package`) and Ontology Graph evidence (`self.last_ontology_evidence`).
+          2. Computes the 8-d action capability prior `action_prior_8` and `recommended_tools` via `jepa_engine.semantic_action_prior_8`.
+          3. Projects the bridged symbolic evidence into a 64-d JEPA latent context cue `semantic_cue_64` via `jrt.encode_semantic_bridge_cue`.
+        """
+        if not self.enable_meaning_bridge:
+            self.last_meaning_bridge = None
+            self.semantic_cue_64 = None
+            return None
+        mem_ids, mem_texts = [], []
+        if self.last_memory_package is not None and getattr(self.last_memory_package, "items", None):
+            for it in self.last_memory_package.items:
+                if not getattr(it, "superseded_by_id", None):
+                    e = it.entry
+                    mem_ids.append(e.id)
+                    mem_texts.append(f"{e.title or ''}: {e.summary or ''} ({e.content or ''})")
+        ont_entities, ont_texts = [], []
+        for item in self.last_ontology_evidence or ():
+            for ent_id in getattr(item, "entities", ()):
+                if ent_id not in ont_entities:
+                    ont_entities.append(ent_id)
+            ont_texts.append(str(getattr(item, "text", "") or ""))
+        if not mem_texts and not ont_texts:
+            self.last_meaning_bridge = None
+            self.semantic_cue_64 = None
+            return None
+        import jepa_engine
+        action_prior_8, rec_tools, dim_scores = jepa_engine.semantic_action_prior_8(
+            q if (mem_texts or ont_texts) else "",
+            memory_texts=mem_texts,
+            ontology_texts=ont_texts,
+        )
+        sem_cue_64 = None
+        try:
+            jrt = jepa_engine.for_base(self.base_dir)
+            bridge_str = "\n".join(mem_texts[:2] + ont_texts[:3])[:1600]
+            h_bridge = self._fallback_h2048(bridge_str)
+            sem_cue_64 = jrt.encode_semantic_bridge_cue(h_bridge, configured_arch=getattr(self, "jepa_arch", "auto"))
+        except Exception:
+            sem_cue_64 = None
+        self.semantic_cue_64 = sem_cue_64
+        bridge_info = {
+            "layer": "meaning_bridge",
+            "memory_entries": mem_ids,
+            "ontology_entities": ont_entities,
+            "recommended_tools": rec_tools,
+            "action_prior_dims": dim_scores,
+            "action_prior_8": action_prior_8 if self.enable_jepa_action_prior else None,
+            "has_semantic_cue_64": sem_cue_64 is not None,
+        }
+        self.last_meaning_bridge = bridge_info
+        return bridge_info
+
     def c2_plan_state(self, q, c1_state=None, offered_tools=None):
         """Strictly C2: run HybridAgent continuous `<latent>` planning (`plan-trunk-0`) + selectable JEPA (`eb_jepa`/`clover_rpre`)
         latent trajectory optimization on `c1_state` -> (`c2_state`, `c2_info`)."""
+        import numpy as np
         import omni_c2_c3
-        cue_64 = None
-        if self.visual_cue_64 is not None and self.audio_cue_64 is not None:
-            cue_64 = 0.5 * (self.visual_cue_64 + self.audio_cue_64)
-        elif self.visual_cue_64 is not None:
-            cue_64 = self.visual_cue_64
-        elif self.audio_cue_64 is not None:
-            cue_64 = self.audio_cue_64
+        if self.enable_meaning_bridge and self.last_meaning_bridge is None and (self.last_memory_package or self.last_ontology_evidence):
+            self.compute_meaning_bridge(q)
+        cues = [c for c in (self.visual_cue_64, self.audio_cue_64, self.semantic_cue_64 if self.enable_meaning_bridge else None) if c is not None]
+        cue_64 = np.mean(np.stack([np.asarray(c, dtype=np.float32).reshape(64) for c in cues], axis=0), axis=0) if cues else None
+        act_prior = (
+            self.last_meaning_bridge.get("action_prior_8")
+            if (self.enable_meaning_bridge and self.enable_jepa_action_prior and isinstance(self.last_meaning_bridge, dict))
+            else None
+        )
+        tools_in = list(offered_tools or [])
+        if not tools_in and self.enable_meaning_bridge and isinstance(self.last_meaning_bridge, dict):
+            declined = set(getattr(self.meaning, "declined", ()) or ()) if self.meaning is not None else set()
+            for rt_name in self.last_meaning_bridge.get("recommended_tools") or ():
+                if rt_name not in tools_in and rt_name not in declined:
+                    tools_in.append(rt_name)
         rt = omni_c2_c3.for_base(self.base_dir)
         if rt is not None:
             c2_state, c2_info = rt.c2_plan(
                 q,
                 c1_state=c1_state,
-                offered_tools=list(offered_tools or []),
+                offered_tools=tools_in,
                 jepa_arch=getattr(self, "jepa_arch", "auto"),
                 context_cue_64=cue_64,
+                action_prior_8=act_prior,
             )
+            if isinstance(self.last_meaning_bridge, dict):
+                c2_info["meaning_bridge"] = {
+                    "memory_entries": self.last_meaning_bridge.get("memory_entries", []),
+                    "ontology_entities": self.last_meaning_bridge.get("ontology_entities", []),
+                    "recommended_tools": self.last_meaning_bridge.get("recommended_tools", []),
+                    "action_prior_dims": self.last_meaning_bridge.get("action_prior_dims", {}),
+                }
             self.last_c2_jepa = c2_state.get("jepa_plan")
             return c2_state, c2_info
         raw = str((c1_state or {}).get("raw_text") or "")
         windows = answer_windows(raw)
         n_win = 1 if windows else 0
         jepa_plan = None
-        planned_tools = list(offered_tools or [])
+        planned_tools = list(tools_in)
         jepa_red = 0.0
         try:
             import jepa_engine
@@ -495,6 +617,7 @@ class LayerKit:
                 r_p,
                 offered_tools=planned_tools,
                 context_cue_64=cue_64,
+                action_prior_8=act_prior,
                 configured_arch=getattr(self, "jepa_arch", "auto"),
             )
             self.last_c2_jepa = jepa_plan
@@ -514,6 +637,13 @@ class LayerKit:
             "jepa_energy_reduction_pct": jepa_red,
             "ms": 0.1,
         }
+        if isinstance(self.last_meaning_bridge, dict):
+            info["meaning_bridge"] = {
+                "memory_entries": self.last_meaning_bridge.get("memory_entries", []),
+                "ontology_entities": self.last_meaning_bridge.get("ontology_entities", []),
+                "recommended_tools": self.last_meaning_bridge.get("recommended_tools", []),
+                "action_prior_dims": self.last_meaning_bridge.get("action_prior_dims", {}),
+            }
         state = {"stage": "c2_plan", "raw_text": raw, "windows": windows, "planned_tools": planned_tools, "jepa_plan": jepa_plan}
         return state, info
 

@@ -14,7 +14,8 @@ ROOT = Path(__file__).resolve().parent.parent          # laptop/
 EXT = ROOT / "vscode-extension"
 DIST = ROOT / "studio" / "dist"
 WEB = ROOT / "clover" / "web"
-PACK = Path(r"C:\personal\oss\clover-framework\assets\robo-icon")
+PACK = Path(r"C:\personal\oss\clover-framework\assets\clover-yellow-flower-icon-pack")
+ROBO_PACK = Path(r"C:\personal\oss\clover-framework\assets\robo-icon")
 CREAM = (247, 243, 233)  # the pack's surface colour, the Studio page background
 
 
@@ -25,8 +26,9 @@ def build_icons():
               "brand/clover-mark.svg": WEB / "favicon.svg",
               "brand/clover-mark-512.png": ROOT / "studio" / "icon-512.png"}
     for name, dest in copies.items():
-        shutil.copyfile(PACK / name, dest)
-        print("icon:", name, "->", dest)
+        if dest.parent.is_dir() and (PACK / name).is_file():
+            shutil.copyfile(PACK / name, dest)
+            print("icon:", name, "->", dest)
 
 
 def build_mascot(width=480):
@@ -34,7 +36,7 @@ def build_mascot(width=480):
     background is a pinker white than the page, so light pixels are shifted to the page colour and the edges fade
     into it."""
     from PIL import Image
-    im = Image.open(PACK / "robo-clover" / "robo-clover-master.png").convert("RGB").crop((120, 0, 1320, 1024))
+    im = Image.open(ROBO_PACK / "robo-clover" / "robo-clover-master.png").convert("RGB").crop((120, 0, 1320, 1024))
     im = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
     bg = im.getpixel((2, im.height // 2))
     shift = [c - b for c, b in zip(CREAM, bg)]

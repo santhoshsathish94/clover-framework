@@ -21,6 +21,8 @@ import subprocess
 import threading
 from pathlib import Path
 
+import semantics
+
 MARK = "<!-- clover:context v1 - Clover AI Studio keeps the lists up to date; edit the Notes freely -->"
 NOTES = "## Notes"
 NOTES_HINT = ("_What the human and Clover learn about this folder: decisions, constraints, what was tried. Clover keeps "
@@ -633,7 +635,7 @@ class Workspaces:
             efp = root / extra_name
             if efp.is_file() and (asked or extra_name.lower() in low or (extra_name == "TODO.md" and todo_asked)):
                 try:
-                    raw_ex = efp.read_text(encoding="utf-8", errors="replace").strip()
+                    raw_ex = semantics.flag_injection(efp.read_text(encoding="utf-8", errors="replace").strip())
                     if raw_ex and room >= 250:
                         chunk = f"[{extra_name}]\n{raw_ex[:min(500, room - 40)]}"
                         parts.append(chunk)
@@ -642,7 +644,7 @@ class Workspaces:
                 except OSError:
                     pass
         for _, ctx_rel, text in scored[:2]:
-            clean_t = _plain(text.replace(NOTES_HINT, ""))
+            clean_t = semantics.flag_injection(_plain(text.replace(NOTES_HINT, "")))
             chunk = f"[{ctx_rel}]\n" + clean_t[:min(900, max(0, room - 40))]
             parts.append(chunk)
             used.append(ctx_rel)
@@ -650,7 +652,7 @@ class Workspaces:
             if room < 250:
                 break
         if room >= 200 and w.get("index") and idx_text:
-            clean_idx = _plain(idx_text.replace(NOTES_HINT, ""))
+            clean_idx = semantics.flag_injection(_plain(idx_text.replace(NOTES_HINT, "")))
             body_idx = clean_idx.split("\n", 2)[-1].strip() if "\n" in clean_idx else clean_idx
             if body_idx:
                 parts.append(f"[{w['index']}]\n{body_idx[:room - 40]}")
@@ -660,7 +662,11 @@ class Workspaces:
 
 def local_context_for_paths(paths_list, workdir=None, active_ws_path=None, budget=1100):
     """Stage 1 (Context): read any context file (`CONTEXT.md`, `*-context.md`, `*-context-index.md`, `TODO.md`) beside
-    the files/folders named in the turn (`paths_list`) or `workdir` when they lie outside the active workspace."""
+    the files/folders named in the turn (`paths_list`) or `workdir` when they lie outside the active workspace.
+    Enforces WEB host isolation and vault read blocking, and flags prompt-injection strings via `semantics.flag_injection`."""
+    import paths as _paths
+    if getattr(_paths, "WEB", False):
+        return None, None
     ws_root = None
     if active_ws_path:
         try:
@@ -677,6 +683,8 @@ def local_context_for_paths(paths_list, workdir=None, active_ws_path=None, budge
             continue
         d = p if p.is_dir() else p.parent
         if not d.is_dir():
+            continue
+        if any(part.lower() == "vault" for part in d.parts):
             continue
         if ws_root is not None:
             try:
@@ -701,7 +709,8 @@ def local_context_for_paths(paths_list, workdir=None, active_ws_path=None, budge
             if not fp.is_file():
                 continue
             try:
-                txt = _plain(fp.read_text(encoding="utf-8", errors="replace").replace(NOTES_HINT, "")).strip()
+                raw_txt = fp.read_text(encoding="utf-8", errors="replace").replace(NOTES_HINT, "")
+                txt = semantics.flag_injection(_plain(raw_txt)).strip()
             except OSError:
                 continue
             if not txt or room < 180:

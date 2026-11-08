@@ -4,7 +4,7 @@
 
 Clover **v5.0.0** unifies the 7-layer Clover AI architecture, Universal Clover AI Studio (`Windows`, `Android`, and `Web` on `k3`), Local Personal Process Learning (`PPL`), and Google OIDC–authenticated Collective Problem-Solving Learning (`CPSL`) into a single production release:
 
-- **Framework & Studio Version**: `5.0.0` (Android `versionCode 12`, `versionName "5.0.0"`; Windows `5.0.0.0`).
+- **Framework & Studio Version**: `5.0.0` (Android `versionCode 14`, `versionName "5.0.0"`, `targetSdk 36`; Windows `5.0.0.0`).
 - **Android 15/16 (`targetSdk 36`) Edge-to-Edge WindowInsets & Native Audio Capture**:
   - Dynamic `WindowInsets.Type.systemBars() | displayCutout() | ime()` inset padding verified on Samsung Galaxy S23 (`[0,98][1080,2295]`).
   - Added `MODIFY_AUDIO_SETTINGS` permission and native `CloverAndroidBridge` 16 kHz mono PCM WAV `AudioRecord` capture (`startAudioCapture` / `stopAudioCapture`) plus visible `#mic` button so voice recording works reliably on Android and Windows without browser modal alerts.

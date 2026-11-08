@@ -179,6 +179,91 @@ def tool_capability_vector(tool_name: str) -> np.ndarray:
     return v / (np.linalg.norm(v) + np.float32(1e-6))
 
 
+def semantic_action_prior_8(
+    query: str,
+    memory_texts: list[str] | tuple[str, ...] = (),
+    ontology_texts: list[str] | tuple[str, ...] = (),
+) -> tuple[np.ndarray, list[str], dict[str, float]]:
+    """Compute the 8-d semantic capability prior `action_prior_8` in `R^{D_ACT}` (`D_ACT = 8`) from the combined
+    Memory Graph entries (`memory_texts`), Ontology Graph entities/paths/constraints (`ontology_texts`), and `query`.
+    Bridges `Memory -> Ontology -> HybridAgent/JEPA -> Action`:
+      - Dim 0 (`web_factual`): URLs, live CVE/advisory/status checks, web search directives
+      - Dim 1 (`math_calc`): Ontology `FORMULA` records, equations, break-even/unit/rate constraints
+      - Dim 2 (`code_python`): Learned `LRN-*` code/script verification, `itertools.permutations`, Python algorithms
+      - Dim 3 (`memory_knowledge`): Document/knowledge synthesis across recalled records
+      - Dim 4 (`files_workspace`): Local workspace file paths (`.py`, `.json`, `.md`, `.yaml`), repo/git inspection
+      - Dim 5 (`visual_media`): Image/chart/media generation or frame extraction
+      - Dim 6 (`system_device`): Device/system health, disk, memory, battery, shell diagnostics
+      - Dim 7 (`general_dialogue`): Baseline conversational synthesis
+    Returns `(prior_8, recommended_tools, dim_scores)`.
+    """
+    mem_joined = "\n".join(str(x or "") for x in (memory_texts or ()))
+    ont_raw = "\n".join(str(x or "") for x in (ontology_texts or ()))
+    ont_joined = re.sub(r"(?im)^\s*Source\s+URL:\s*\S+\s*$", "", ont_raw)
+    q_str = str(query or "")
+    combined = f"{q_str}\n{mem_joined}\n{ont_joined}".lower()
+    ev_only = f"{mem_joined}\n{ont_joined}".lower()
+
+    v = np.zeros(D_ACT, dtype=np.float32)
+
+    # Dim 0: web_factual
+    if re.search(r"https?://\S+|\b(?:web_search|fetch_url|search\s+the\s+web|live\s+status|current\s+advisory|nvd|cve-\d{4}-\d+)\b", combined):
+        v[0] += np.float32(0.85 if re.search(r"https?://|\b(?:web_search|fetch_url|search\s+the\s+web)\b", combined) else 0.45)
+
+    # Dim 1: math_calc
+    if re.search(r"\b(?:formula:|verified\s+constraints:|break-even|carrying\s+capacity|wavelength|refractive|compound\s+interest|convert_units|calculate)\b|[0-9]+\s*[*+/^]\s*[0-9]+", combined):
+        v[1] += np.float32(0.80)
+        v[2] += np.float32(0.45)
+
+    # Dim 2: code_python
+    if re.search(r"\b(?:run_python|python|itertools|permutations|def\s+\w+|script|compile|algorithm|max_time|24-hour\s+time|chart\.png|matplotlib|pandas)\b", combined):
+        v[2] += np.float32(0.95)
+        v[1] += np.float32(0.30)
+    elif ev_only and re.search(r"\b(?:checked\s+with\s+python|independent\s+check|verify\s+with\s+code|verified\s+constraints)\b", ev_only):
+        v[2] += np.float32(0.80)
+
+    # Dim 3: memory_knowledge
+    if mem_joined.strip() or ont_joined.strip():
+        v[3] += np.float32(0.40)
+
+    # Dim 4: files_workspace
+    if re.search(r"\b(?:read_file|write_file|search_files|list_directory|git_inspect|[\w\-]+\.(?:py|ts|js|json|yaml|yml|toml|md|rs|c|h))\b", combined):
+        v[4] += np.float32(0.90)
+
+    # Dim 5: visual_media
+    if re.search(r"\b(?:generate_image|draw\s+a|create\s+an?\s+image|extract_frame|media_info)\b", combined):
+        v[5] += np.float32(0.85)
+
+    # Dim 6: system_device
+    if re.search(r"\b(?:laptop_status|run_powershell|free\s+disk|battery\s+level|memory\s+in\s+use|get-psdrive|get-childitem)\b", combined):
+        v[6] += np.float32(0.85)
+
+    norm = float(np.linalg.norm(v))
+    if norm > 1e-6:
+        v = v / np.float32(norm)
+
+    dim_names = (
+        "web_factual", "math_calc", "code_python", "memory_knowledge",
+        "files_workspace", "visual_media", "system_device", "general_dialogue",
+    )
+    dim_scores = {dim_names[i]: round(float(v[i]), 4) for i in range(D_ACT) if float(v[i]) > 0.01}
+
+    rec_tools: list[str] = []
+    if float(v[2]) >= 0.45:
+        rec_tools.append("run_python")
+    if float(v[4]) >= 0.45:
+        rec_tools.append("read_file")
+    if float(v[0]) >= 0.45:
+        rec_tools.append("fetch_url" if "http" in combined else "web_search")
+    if float(v[1]) >= 0.45 and "run_python" not in rec_tools:
+        rec_tools.append("calculate")
+    if float(v[6]) >= 0.45:
+        rec_tools.append("laptop_status")
+    if float(v[5]) >= 0.45:
+        rec_tools.append("generate_image")
+    return v, rec_tools, dim_scores
+
+
 # ---------------- Real Visual & Audio Patch Feature Extractors ----------------
 
 def extract_visual_patches_16x48(img_rgb: np.ndarray) -> np.ndarray:
@@ -1124,6 +1209,24 @@ class CloverJEPARuntime:
         gate = np.tanh(self.w["residual.gate"][0])
         return anom_gate * gate * out
 
+    def encode_semantic_bridge_cue(self, h_bridge_2048: np.ndarray, configured_arch: str = "auto") -> np.ndarray:
+        """Project a 2048-d representation of bridged `Memory Graph + Ontology Graph` symbolic evidence into the 64-d
+        JEPA latent state space (`semantic_cue_64`) via `bridge.lfm3_to_vq` (`2048 -> 384`), `state_adapter` (`384 -> 64`),
+        and the 4-layer hierarchical JEPA Transformer encoder.
+        """
+        arch = self.choose_architecture("c2_plan", configured_arch, has_outcome_feedback=True)
+        if arch == "none":
+            arch = "clover_rpre"
+        h_mean = np.asarray(h_bridge_2048, dtype=np.float32)
+        if h_mean.ndim == 3:
+            h_mean = h_mean.mean(axis=1)
+        elif h_mean.ndim == 1:
+            h_mean = h_mean.reshape(1, -1)
+        h_vq = _layer_norm(_linear(h_mean, self.w["bridge.lfm3_to_vq.weight"], self.w["bridge.lfm3_to_vq.bias"]))
+        s_tok = _linear(h_vq, self._wt("state_adapter.weight", arch), self._wt("state_adapter.bias", arch)) + self._wt("state_mod_token", arch)
+        z_enc, _ = self._run_encoder_blocks(s_tok, return_hierarchical=True, arch=arch)
+        return _layer_norm(z_enc).squeeze(0)
+
     def plan_c2_latent(
         self,
         h_primary_2048: np.ndarray,
@@ -1132,6 +1235,7 @@ class CloverJEPARuntime:
         goal_vq_384: np.ndarray | None = None,
         offered_tools: list[str] | None = None,
         context_cue_64: np.ndarray | None = None,
+        action_prior_8: np.ndarray | None = None,
         configured_arch: str = "auto",
         horizon: int = 4,
         cem_iters: int = 4,
@@ -1141,7 +1245,7 @@ class CloverJEPARuntime:
         arch = self.choose_architecture(
             "c2_plan",
             configured_arch,
-            has_outcome_feedback=(self.cycle_updates > 0 or context_cue_64 is not None),
+            has_outcome_feedback=(self.cycle_updates > 0 or context_cue_64 is not None or action_prior_8 is not None),
         )
         if arch == "none":
             return {"enabled": False, "arch": "none", "r_refined_2048": r_primary_2048}
@@ -1159,10 +1263,19 @@ class CloverJEPARuntime:
         else:
             g_vq = r_vq
         z_goal = _layer_norm(_linear(g_vq, self._wt("state_adapter.weight", arch), self._wt("state_adapter.bias", arch)) + self._wt("state_mod_token", arch))  # [1, 64]
+        if context_cue_64 is not None:
+            c64 = np.asarray(context_cue_64, dtype=np.float32).reshape(1, D_JEPA)
+            z_goal = _layer_norm(0.80 * z_goal + 0.20 * c64)
 
         idm_in = np.concatenate([z_init, z_goal], axis=-1)
         a_idm = _linear(_gelu(_linear(idm_in, self._wt("idm.fc1.weight", arch), self._wt("idm.fc1.bias", arch))),
                         self._wt("idm.fc2.weight", arch), self._wt("idm.fc2.bias", arch))  # [1, D_ACT]
+        ap_vec = None
+        if action_prior_8 is not None:
+            ap_arr = np.asarray(action_prior_8, dtype=np.float32).reshape(-1)
+            if ap_arr.size == D_ACT and float(np.linalg.norm(ap_arr)) > 1e-6:
+                ap_vec = _l2_normalize(ap_arr).reshape(1, D_ACT)
+                a_idm = 0.45 * _l2_normalize(a_idm) + 0.55 * ap_vec
 
         use_res = arch == "clover_rpre"
         energy_before = float(np.mean((z_init - z_goal) ** 2))
@@ -1279,7 +1392,10 @@ class CloverJEPARuntime:
 
         ranked_tools = list(offered_tools or [])
         if len(ranked_tools) > 1:
-            act_dir = _l2_normalize(0.6 * a_idm.squeeze(0) + 0.4 * mu[0])
+            if ap_vec is not None:
+                act_dir = _l2_normalize(0.20 * _l2_normalize(a_idm.squeeze(0)) + 0.15 * _l2_normalize(mu[0]) + 0.65 * ap_vec.squeeze(0))
+            else:
+                act_dir = _l2_normalize(0.6 * a_idm.squeeze(0) + 0.4 * mu[0])
             scored_tools = []
             for tname in ranked_tools:
                 t_vec = tool_capability_vector(tname)

@@ -870,6 +870,11 @@ class LFM3Native:
             blocks.append(l_blk)
             layer_log.append(l_info)
             emit(dict(l_info, type="layer"))
+        bridge_info = kit.compute_meaning_bridge(query) if (kit is not None and hasattr(kit, "compute_meaning_bridge")) else None
+        if bridge_info:
+            b_emit = {k: v for k, v in bridge_info.items() if k != "action_prior_8"}
+            layer_log.append(b_emit)
+            emit(dict(b_emit, type="layer"))
         if blocks:  # Clover appends its observations after the question
             user_text = user_text + "\n\n" + "\n\n".join(blocks)
         ctx_sources = [x.get("layer") for x in layer_log if isinstance(x, dict) and x.get("layer")]

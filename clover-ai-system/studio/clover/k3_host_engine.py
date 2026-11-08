@@ -733,6 +733,11 @@ class K3HostEngine:
             blocks.append(l_blk)
             layer_log.append(l_info)
             emit(dict(l_info, type="layer"))
+        bridge_info = kit.compute_meaning_bridge(query) if (kit is not None and hasattr(kit, "compute_meaning_bridge")) else None
+        if bridge_info:
+            b_emit = {k: v for k, v in bridge_info.items() if k != "action_prior_8"}
+            layer_log.append(b_emit)
+            emit(dict(b_emit, type="layer"))
         before = []
         if "recall" in layers and kit is not None:
             block, info = kit.recall_context(query, sum(1 for m in history or () if m.get("role") == "user"))
@@ -857,6 +862,23 @@ class K3HostEngine:
         op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
         if not reply:
             reply = "(Clover finished without writing an answer.)"
+        if kit is not None and not (cancel and cancel.is_set()):
+            try:
+                c1_state, c1_info = kit.c1_infer(
+                    reply, stats=stats_all, model=self.spec["model"], layers_desc=self.spec["layers"][0]
+                )
+                layer_log.append(c1_info)
+                emit(dict(c1_info, type="layer"))
+                planned_t = [rd["tool"] for rd in rounds if rd.get("ran")] or (
+                    list(only_tools) if only_tools is not None else ["run_python", "web_search"]
+                )
+                _, c2_info = kit.c2_plan_state(query, c1_state=c1_state, offered_tools=planned_t)
+                layer_log.append(c2_info)
+                emit(dict(c2_info, type="layer"))
+                if hasattr(kit, "jepa_record_outcome"):
+                    kit.jepa_record_outcome(c1_obs_state=c1_state, is_baseline=(len(cycle_history) <= 1))
+            except Exception:
+                pass
         op_plan.complete_stage("growth", "Growth preserved · verified outcome & context updated")
         emit({"type": "token", "round": len(stats_all), "kind": "answer", "text": reply})
         layer_log.append({"layer": "ncm", "windows": max(1, len(plans)), "model": self.spec["model"]})

@@ -321,5 +321,48 @@ launchable-activity: name='ai.clover.studio.MainActivity'
     }
 
 
+def sync_store_checklists(meta: dict) -> None:
+    import re
+    gp_chk = BETA_DIR / "store" / "google-play" / "submission-checklist.md"
+    if gp_chk.is_file():
+        txt = gp_chk.read_text(encoding="utf-8")
+        aab_s = meta["android_aab"]["size"]
+        aab_h = meta["android_aab"]["sha256"]
+        apk_s = meta["android_apk"]["size"]
+        apk_h = meta["android_apk"]["sha256"]
+        txt = re.sub(
+            r"- \*\*Upload Artifact \(Google Play Console\)\*\*: `release/beta/android/clover-ai-studio-beta\.aab`\s*\n\s*- Size: `[^`]+` bytes \(`[^`]+`\)\s*\n\s*- SHA-256: `[0-9a-f]+`",
+            f"- **Upload Artifact (Google Play Console)**: `release/beta/android/clover-ai-studio-beta.aab`\n  - Size: `{aab_s:,}` bytes (`{aab_s / (1024*1024):.2f} MB`)\n  - SHA-256: `{aab_h}`",
+            txt,
+        )
+        txt = re.sub(
+            r"- \*\*Direct ADB / Tester APK\*\*: `release/beta/android/clover-ai-studio-beta\.apk`\s*\n\s*- Size: `[^`]+` bytes \(`[^`]+`\)\s*\n\s*- SHA-256: `[0-9a-f]+`",
+            f"- **Direct ADB / Tester APK**: `release/beta/android/clover-ai-studio-beta.apk`\n  - Size: `{apk_s:,}` bytes (`{apk_s / (1024*1024):.2f} MB`)\n  - SHA-256: `{apk_h}`",
+            txt,
+        )
+        txt = txt.replace("- `versionCode`: `9`", "- `versionCode`: `14`")
+        txt = txt.replace("- `versionName`: `0.5.0-beta.1`", "- `versionName`: `5.0.0`")
+        txt = txt.replace("- `targetSdk` / `compileSdk`: `34` (Android 14)", "- `targetSdk` / `compileSdk`: `36` (Android 16)")
+        txt = txt.replace("(`versionCode 9`, `versionName 0.5.0-beta.1`)", "(`versionCode 14`, `versionName 5.0.0`, `targetSdk 36`)")
+        gp_chk.write_text(txt, encoding="utf-8")
+
+    ms_chk = BETA_DIR / "store" / "microsoft" / "submission-checklist.md"
+    if ms_chk.is_file():
+        txt = ms_chk.read_text(encoding="utf-8")
+        exe_s = meta["windows_setup"]["size"]
+        exe_h = meta["windows_setup"]["sha256"]
+        txt = txt.replace("`0.5.0.0` (Display Version: `0.5.0-beta.1`)", "`5.0.0.0` (Display Version: `5.0.0`)")
+        txt = txt.replace("SanthoshNarayanan.CloverAIStudio_0.5.0.0_x64.msix", "SanthoshNarayanan.CloverAIStudio_5.0.0.0_x64.msix")
+        txt = txt.replace("`SanthoshNarayanan.CloverAIStudio` `0.5.0.0` (`x64`)", "`SanthoshNarayanan.CloverAIStudio` `5.0.0.0` (`x64`)")
+        txt = re.sub(
+            r"- \*\*Standalone Direct-Download Setup EXE \(`x64`\)\*\*: `release/beta/windows/clover-ai-studio-beta-setup\.exe`\s*\n\s*- Size: `[^`]+` bytes \(`[^`]+`\)\s*\n\s*- SHA-256: `[0-9a-f]+`",
+            f"- **Standalone Direct-Download Setup EXE (`x64`)**: `release/beta/windows/clover-ai-studio-beta-setup.exe`\n  - Size: `{exe_s:,}` bytes (`{exe_s / (1024*1024):.2f} MB`)\n  - SHA-256: `{exe_h}`",
+            txt,
+        )
+        ms_chk.write_text(txt, encoding="utf-8")
+
+
 if __name__ == "__main__":
-    print(json.dumps(generate_all(), indent=2))
+    res = generate_all()
+    sync_store_checklists(res)
+    print(json.dumps(res, indent=2))

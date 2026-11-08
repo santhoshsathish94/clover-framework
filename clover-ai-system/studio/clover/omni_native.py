@@ -535,11 +535,31 @@ class OmniNative(N.LFM3Native):
             blocks.append(l_blk)
             layer_log.append(l_info)
             emit(dict(l_info, type="layer"))
+        bridge_info = kit.compute_meaning_bridge(query) if (kit is not None and hasattr(kit, "compute_meaning_bridge")) else None
+        if bridge_info:
+            b_emit = {k: v for k, v in bridge_info.items() if k != "action_prior_8"}
+            layer_log.append(b_emit)
+            emit(dict(b_emit, type="layer"))
         if blocks:  # Clover appends its observations after the question
             user_text = user_text + "\n\n" + "\n\n".join(blocks)
             if not getattr(meaning, "caps", ()) and any(x.get("layer") in ("ontology", "memory") for x in layer_log):
-                schemas = []
-                only_tools = None
+                bridged_recs = (bridge_info or {}).get("recommended_tools") or []
+                declined_set = set(getattr(meaning, "declined", ()) or ()) if meaning is not None else set()
+                has_lrn_or_formula = bool(
+                    bridge_info
+                    and (
+                        any(str(m_id).startswith("LRN-") for m_id in (bridge_info.get("memory_entries") or ()))
+                        or any(str(e_id).startswith(("FORMULA:", "STEM_CONCEPT:")) for e_id in (bridge_info.get("ontology_entities") or ()))
+                    )
+                )
+                active_bridged = [t for t in bridged_recs if t not in declined_set] if has_lrn_or_formula else []
+                if active_bridged and tools:
+                    schemas = [t for t in N.STUDIO_TOOLS if t["function"]["name"] in active_bridged]
+                    by_name = {t["function"]["name"]: t["function"] for t in schemas}
+                    only_tools = active_bridged
+                else:
+                    schemas = []
+                    only_tools = None
         recall = []
         if "recall" in layers and kit is not None:  # background right before the message (memory-research exp G5)
             block, info = kit.recall_context(query, sum(1 for m in history if m.get("role") == "user"))
