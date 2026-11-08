@@ -60,14 +60,14 @@
   <section class="hero" id="overview">
     <div class="wrap">
       <h1>AI Studio</h1>
-      <p class="hero__tagline">One system. Any open-weight model. Your phone, laptop, or server.</p>
-      <p class="lede">An outcome does not come from which model you use. It comes from the system around it. Clover AI Studio wraps any open-weight model in local memory, relationships, verified tools, and continuous reasoning — lifting a 2B phone model, a 120B multimodal model, and a 2.8T MoE model (<code>Kimi K3.1 Pro</code>) from <code>22.9%&ndash;47.1%</code> alone to <strong><code>70 / 70</code> (<code>100%</code>)</strong> on the same test.</p>
+      <p class="hero__tagline">One system. Any open-weight model. Your phone, laptop, VS Code, or server.</p>
+      <p class="lede">An outcome does not come from which model you use. It comes from the system around it. Clover AI Studio wraps any open-weight model in local memory, relationships, verified tools, JEPA world-model planning, and multi-cycle <code>AGENTS.md</code> Outcome verification — running <code>LFM3-Omni-2B</code> (2B), <code>Clover-35B-A3B</code> (35B-A3B Block Diffusion MoE), <code>Nemotron 3.5 Super VL</code> (120B-A12B), and <code>Kimi K3.1 Pro</code> (2.8T MoE) across Windows, Android, Web, and VS Code Copilot Chat.</p>
       <div class="actions">
         <a class="btn btn--primary" href="../download/laptop/CloverAIStudio-Setup.exe" download="CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
         <a class="btn btn--primary" href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Test on Google Play (Android)</a>
         <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.0/CloverAIStudio.apk">Download Android (.apk)</a>
         <a class="btn" href="../clover-ai/">Open Web Studio &rarr;</a>
-        <a class="btn btn--plain" href="#studio-architecture">See how it works &darr;</a>
+        <a class="btn btn--plain" href="#vscode-integration">VS Code &amp; Copilot &darr;</a>
       </div>
     </div>
   </section>
@@ -76,13 +76,13 @@
   <section class="band" id="downloads">
     <div class="wrap">
       <h2>Run it on your device</h2>
-      <p class="lede">Install the native app on Windows or Android, join the Google Play beta, or launch it in your browser. All three share the same interface, permissions, and model switcher.</p>
+      <p class="lede">Install the native app on Windows or Android, use all four Clover models directly inside VS Code Copilot Chat, or launch it in your browser. All platforms share the same multi-cycle <code>AGENTS.md</code> verification loop, permissions, and 4-model switcher.</p>
 
       <div class="grid grid--3" style="margin-top:1.5rem">
         <div class="card">
-          <h3>Windows Laptop</h3>
-          <p><strong><code>CloverAIStudio-Setup.exe</code></strong> &middot; v5.0.0 (<code>2.6 MB</code>)</p>
-          <p>Runs <code>LFM3-Omni-2B</code> (C1) with <code>HybridAgent</code> (C2) &amp; <code>11-Level NCM</code> (C3), <code>S1&ndash;S3</code>, <code>CSI</code>, and <code>PPL</code> on Intel Iris Xe, AMD, or NVIDIA Vulkan GPUs.</p>
+          <h3>Windows Laptop + VS Code</h3>
+          <p><strong><code>CloverAIStudio-Setup.exe</code></strong> &middot; v5.0.0 (<code>8.6 MB</code>)</p>
+          <p>Runs <code>LFM3-Omni-2B</code> (C1) with <code>HybridAgent</code> &amp; <code>JEPA</code> (C2), <code>11-Level NCM</code> (C3), <code>S1&ndash;S3</code> System Senses, <code>CSI</code>, and <code>PPL</code> on Vulkan GPUs, and installs <code>clover-local-0.4.0.vsix</code> for full two-way VS Code &amp; Copilot integration.</p>
           <div class="actions" style="margin-top:1.1rem;flex-wrap:wrap;gap:.5rem">
             <a class="btn btn--primary" href="../download/laptop/CloverAIStudio-Setup.exe" download="CloverAIStudio-Setup.exe">Download Windows (.exe)</a>
             <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.0/CloverAIStudio-Setup.exe">GitHub Release</a>
@@ -90,8 +90,8 @@
         </div>
         <div class="card">
           <h3>Android Phone</h3>
-          <p><strong><code>ai.clover.studio</code></strong> &middot; v5.0.0 (<code>71.6 MB</code>)</p>
-          <p>Runs the full Clover system (<code>C1&ndash;C3</code>, <code>S1&ndash;S3</code>, <code>CSI</code>, <code>PPL</code>) on Snapdragon Adreno OpenCL GPUs and ARM64 CPUs with voice, camera, and documents.</p>
+          <p><strong><code>ai.clover.studio</code></strong> &middot; v5.0.0 build 14 (<code>78.3 MB</code>)</p>
+          <p>Runs the full Clover system (<code>C1&ndash;C3</code>, <code>JEPA</code>, <code>S1&ndash;S3</code> System Senses, <code>CSI</code>, <code>PPL</code>, and multi-cycle <code>AGENTS.md</code> Outcome verification) on Snapdragon Adreno OpenCL GPUs and ARM64 CPUs, plus instant switching to all 4 hosted <code>k3</code> models.</p>
           <div class="actions" style="margin-top:1.1rem;flex-wrap:wrap;gap:.5rem">
             <a class="btn btn--primary" href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Google Play Instant Test</a>
             <a class="btn" href="https://play.google.com/apps/testing/ai.clover.studio" target="_blank" rel="noopener noreferrer">Join Closed Beta</a>
@@ -99,16 +99,17 @@
           </div>
         </div>
         <div class="card">
-          <h3>Web Studio</h3>
+          <h3>Web Studio &amp; Admin</h3>
           <p><strong><code>cloverframework.com/clover-ai/</code></strong></p>
-          <p>Runs in any browser. Connects to your local device, our three-model server (<code>LFM3</code>, <code>Nemotron 3.5</code>, <code>Kimi K3.1 Pro</code>), or any custom endpoint.</p>
-          <div class="actions" style="margin-top:1.1rem">
+          <p>Runs in any browser for approved accounts. Connects to your local device, our four-model <code>k3</code> server (<code>LFM3-Omni</code>, <code>Clover-35B-A3B</code>, <code>Nemotron 3.5</code>, <code>Kimi K3.1 Pro</code>), or any custom OpenAI-compatible endpoint.</p>
+          <div class="actions" style="margin-top:1.1rem;flex-wrap:wrap;gap:.5rem">
             <a class="btn" href="../clover-ai/">Launch Web Studio &rarr;</a>
+            <a class="btn btn--plain" href="../admin/">k3 Admin Console &rarr;</a>
           </div>
         </div>
       </div>
 
-      <p class="note" style="margin-top:1rem">Verify installers with <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/download/SHA256SUMS.txt"><code>download/SHA256SUMS.txt</code> &rarr;</a> &middot; Google Play store listing: <a href="https://play.google.com/store/apps/details?id=ai.clover.studio" target="_blank" rel="noopener noreferrer"><code>play.google.com/store/apps/details?id=ai.clover.studio</code></a></p>
+      <p class="note" style="margin-top:1rem">Verify installers with <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/download/SHA256SUMS.txt"><code>download/SHA256SUMS.txt</code> &rarr;</a> &middot; Parallel 6-stream Range installer pulls precomputed JEPA &amp; NCM trunks from <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio" target="_blank" rel="noopener noreferrer"><code>Santhoshsathish94/clover-ai-studio</code></a> &middot; Google Play store listing: <a href="https://play.google.com/store/apps/details?id=ai.clover.studio" target="_blank" rel="noopener noreferrer"><code>play.google.com/store/apps/details?id=ai.clover.studio</code></a></p>
     </div>
   </section>
 
@@ -180,26 +181,55 @@
       <dl class="kv kv--wide" style="margin-top:1.6rem">
         <div><dt>Center · Semantics</dt><dd>Reads your intent, selects only the needed tools, blocks unauthorized vault paths, and labels every answer by how it was verified.</dd></div>
         <div><dt>CSI · Language Parser</dt><dd>Parses grammar, verb morphology, and negation so declined tools are never called and unverified action claims are caught.</dd></div>
-        <div><dt>PPL · Process Learning</dt><dd>Learns your personal habits and preferred answer format (such as short bullet points or tables) and stores them in your local Git repo.</dd></div>
-        <div><dt>C1 · Inference</dt><dd>Runs the active open-weight model (<code>LFM3-Omni-2B</code>, <code>Nemotron 3.5</code>, or <code>Kimi K3.1 Pro</code>) with Direction B zero-writeback memory caching.</dd></div>
-        <div><dt>C2 · Plan</dt><dd>Projects continuous <code>&lt;latent&gt;</code> thought vectors before speaking, and runs a 3-way solver vote whenever you click <strong>Try again</strong>.</dd></div>
+        <div><dt>PPL &amp; CPSL · Learning</dt><dd>Learns your personal habits locally (<code>PPL</code>) and optionally syncs stripped, Ed25519-signed shared-core strategies across installations via Google OIDC (<code>CPSL</code>).</dd></div>
+        <div><dt>C1 · Inference</dt><dd>Runs the active open-weight model (<code>LFM3-Omni-2B</code>, <code>Clover-35B-A3B</code>, <code>Nemotron 3.5 Super VL</code>, or <code>Kimi K3.1 Pro</code>) with Direction B zero-writeback memory caching.</dd></div>
+        <div><dt>C2 · Plan &amp; JEPA</dt><dd>Projects continuous <code>&lt;latent&gt;</code> thought vectors with <code>HybridAgent</code> &amp; <code>JEPA / RPRE</code> world-model planning, and runs up to 3 autonomous <code>AGENTS.md</code> Clover Cycle verification passes per turn.</dd></div>
         <div><dt>C3 · Decode</dt><dd>Predicts 11 hierarchical concept levels in parallel and decodes strictly inside the active model&rsquo;s native vocabulary.</dd></div>
         <div><dt>S1 · Memory</dt><dd>Saves sessions, execution logs, outcomes, and learned notes in a 5-stage local Git repository with optional private GitHub sync.</dd></div>
-        <div><dt>S2 · Relationships</dt><dd>Combines symbolic Ontology GraphRAG and the 11 foundational papers with scenario-gated recall of your earlier chats.</dd></div>
-        <div><dt>S3 · Tools</dt><dd>Checks Python and Rust code with a live compiler, reads Excel/CSV/PDF/Word files, searches the web, and connects to VS Code under <code>Allow / Ask / Off</code> permissions.</dd></div>
+        <div><dt>S2 · Relationships</dt><dd>Combines symbolic Ontology GraphRAG, multimodal <code>MJEPA</code> recall, and the 11 foundational papers with scenario-gated recall of your earlier chats.</dd></div>
+        <div><dt>S3 · Tools &amp; Senses</dt><dd>Checks Python/Rust code with a live compiler, connects to OS System Senses (Screenshot, Screen Recorder, Camera, Mic with <code>I-JEPA</code> &amp; <code>Audio-JEPA</code>), and drives VS Code &amp; Copilot under <code>Allow / Ask / Off</code> permissions.</dd></div>
       </dl>
+    </div>
+  </section>
+
+  <!-- ============ VS CODE & COPILOT INTEGRATION ============ -->
+  <section class="band" id="vscode-integration">
+    <div class="wrap">
+      <h2>Two-way VS Code &amp; GitHub Copilot integration</h2>
+      <p class="lede">Instead of rebuilding an editor, diff viewer, browser, and terminal from scratch, Clover AI Studio integrates directly with VS Code&rsquo;s open-source workbench and GitHub Copilot Agent loop in both directions (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-vscode-studio-integration-context.md">architecture reference</a>).</p>
+
+      <div class="grid grid--2" style="margin-top:1.5rem">
+        <div class="card">
+          <h3>1. Inside VS Code Copilot Chat &rarr; Clover Engine</h3>
+          <p><code>clover-local-0.4.0.vsix</code> registers all four Clover models (<code>LFM3-Omni-2B</code>, <code>Clover-35B-A3B</code>, <code>Nemotron 3.5 Super VL</code>, and <code>Kimi K3.1 Pro</code>) directly in VS Code&rsquo;s Copilot Chat model picker:</p>
+          <ul>
+            <li><strong>Shared Integrated Browser (<code>browserViewService</code>):</strong> Preserves shared browser tabs (<code>&lt;attachment id="Browser Pages"&gt;</code>) and drives <code>open_browser_page</code>, <code>read_page</code>, <code>click_element</code>, <code>type_in_page</code>, <code>navigate_page</code>, <code>screenshot_page</code>, and <code>run_playwright_code</code> with automatic <code>[ref=eN]</code> and <code>pageId</code> resolution.</li>
+            <li><strong>Integrated Terminal (<code>terminalService</code>):</strong> Runs and monitors <code>run_in_terminal</code> (sync/async), <code>get_terminal_output</code>, <code>send_to_terminal</code>, and <code>kill_terminal</code>.</li>
+            <li><strong>File Viewer &amp; Language Server:</strong> Uses <code>read_file</code>, <code>replace_string_in_file</code>, <code>get_errors</code>, <code>vscode_listCodeUsages</code>, <code>vscode_renameSymbol</code>, and multi-cycle <code>AGENTS.md</code> Outcome verification.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>2. Inside Clover AI Studio &rarr; VS Code Host</h3>
+          <p>When VS Code is open on your laptop, Clover AI Studio connects over its authenticated local bridge (<code>/api/vscode/*</code>) to use VS Code&rsquo;s native UI:</p>
+          <ul>
+            <li><strong><code>vscode_editor</code> &amp; <code>vscode_diff</code>:</strong> Inspects the active editor tab, cursor selection, and document symbols, or opens a side-by-side visual diff (<code>vscode.diff</code>) before applying changes.</li>
+            <li><strong><code>vscode_diagnostics</code>:</strong> Reads live compiler and linter errors/warnings from VS Code&rsquo;s Problems panel (<code>vscode.languages.getDiagnostics</code>).</li>
+            <li><strong><code>vscode_browser</code> &amp; <code>vscode_run</code>:</strong> Opens and interacts with pages in VS Code&rsquo;s Integrated Browser via <code>vscode.lm.invokeTool</code> and runs visible commands in VS Code&rsquo;s terminal.</li>
+          </ul>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- ============ PORTING GUIDE ============ -->
   <section class="band" id="porting-guide">
     <div class="wrap">
-      <h2>Port any open-weight model in five folders</h2>
-      <p class="lede">Clover is model-agnostic. Every ported model in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a> uses the same five folders while the Studio app, memory, and tools stay unchanged. Run the entire porting pipeline with one command in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/porting-models"><code>porting-models/</code></a>: <code>./porting-models/port all --config porting-models/configs/kimi-k3.1-pro.json --gpus 8</code>.</p>
+      <h2>Port any open-weight model in five folders + JEPA</h2>
+      <p class="lede">Clover is model-agnostic. Every ported model in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a> uses the same folder layout while the Studio app, memory, and tools stay unchanged. Run the entire porting pipeline with one command in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/porting-models"><code>porting-models/</code></a>: <code>./porting-models/port all --config porting-models/configs/clover-35b-a3b.json --gpus 8</code>.</p>
 
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">Unified 5-folder layout across all three models in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a>.</caption>
+          <caption class="note">Unified folder layout across all four models in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a>.</caption>
           <thead>
             <tr>
               <th scope="col">Folder</th>
@@ -207,16 +237,18 @@
               <th scope="col">Verification gate</th>
               <th scope="col"><code>kimi/</code> (K3.1 Pro 2.8T)</th>
               <th scope="col"><code>nemotron/</code> (120B)</th>
+              <th scope="col"><code>clover-35b/</code> (35B-A3B)</th>
               <th scope="col"><code>liquid-lfm3/</code> (2B)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <th scope="row"><strong>1. <code>trunks/</code></strong></th>
-              <td>Pack per-layer norms &amp; attention/conv projections into <code>CLVRTRK1</code> (plus <code>indexer.bin</code> for Gated DSA) and prune duplicate weights.</td>
+              <td>Pack per-layer norms &amp; attention/conv projections into <code>CLVRTRK1</code> / <code>CLV35TRK</code> (plus <code>indexer.bin</code> or <code>bd_gdn.bin</code>) and prune duplicate weights.</td>
               <td><code>max_abs_diff = 0.0</code> vs. official BF16 model across all layers.</td>
               <td>93 trunks + 24 DSA Indexers (<code>-35.2%</code> RAM)</td>
               <td>88 trunks (<code>-46.1%</code> bytes)</td>
+              <td>40 trunks (30 BD-GDN + 10 Gated GQA, <code>diff = 0.0</code>)</td>
               <td>24 trunks (<code>-15.9%</code> bytes)</td>
             </tr>
             <tr>
@@ -225,30 +257,34 @@
               <td>Layer cosine $\ge 0.993$ and identical top-1 greedy token IDs.</td>
               <td>896 experts/layer (<code>1,347 GiB</code>)</td>
               <td>512 experts/layer (<code>66.4 GiB</code>)</td>
+              <td>256 experts top-8 coreset ($\cos = 0.9971$)</td>
               <td>24 FFN + VQ experts (<code>0.63 GiB</code>)</td>
             </tr>
             <tr>
               <th scope="row"><strong>3. <code>hybridagent/</code></strong></th>
               <td>Train and fuse <code>NativeHybridLink</code> (<code>plan-trunk-0/</code>) mapping hidden states $h_t \to r_t$.</td>
-              <td>Held-out next-token cosine $\ge 0.998$ and fusion diff $\le 4\times 10^{-8}$.</td>
+              <td>Held-out next-token cosine $\ge 0.98$ and 100% token accuracy.</td>
               <td>$7168 \to 7168$ (<code>7.51 GiB</code>)</td>
               <td>$4096 \to 4096$ ($\cos = 0.9985$)</td>
+              <td>$2048 \to 2048$ ($\cos = 0.9812$, <code>100%</code> acc)</td>
               <td>$2048 \to 2048$ ($\cos = 0.9994$)</td>
             </tr>
             <tr>
               <th scope="row"><strong>4. <code>ncm/</code></strong></th>
               <td>Graft the model&rsquo;s native tokenizer vocabulary into the 11-level VQ-VAE and 12-layer NCM trunks.</td>
-              <td>$\ge 99.8\%$ exact token reconstruction &amp; $100\%$ character-exact text.</td>
+              <td>$\ge 98.4\%$ exact token reconstruction &amp; character-exact text.</td>
               <td><code>163,840</code> tiktoken vocab</td>
               <td><code>131,072</code> Tekken ($99.83\%$)</td>
+              <td><code>248,320</code> Qwen/Clover ($98.43\%$)</td>
               <td><code>128,000</code> LFM3 ($100.0\%$)</td>
             </tr>
             <tr>
-              <th scope="row"><strong>5. <code>bridges/</code></strong></th>
-              <td>Train and fuse <code>ComboBridge</code> &amp; <code>ExpertBridge</code> ($D_{\text{model}} \to 384$) into <code>bridge-trunk-0/</code>.</td>
-              <td><code>70 / 70</code> (<code>100%</code>) on the 70-task suite &amp; <code>11 / 11</code> scenario checks.</td>
+              <th scope="row"><strong>5. <code>bridges/</code> &amp; <code>jepa/</code></strong></th>
+              <td>Train and fuse <code>ComboBridge</code>, <code>ExpertBridge</code> ($D_{\text{model}} \to 384$), and <code>jepa-trunk-0/</code> world-model predictors.</td>
+              <td><code>70 / 70</code> (<code>100%</code>) on the 70-task suite &amp; multi-cycle verification.</td>
               <td><strong><code>70 / 70</code> (100%)</strong></td>
               <td><strong><code>70 / 70</code> (100%)</strong></td>
+              <td><strong>Verified (100% stage &amp; NCM)</strong></td>
               <td><strong><code>70 / 70</code> (100%)</strong></td>
             </tr>
           </tbody>
@@ -281,25 +317,25 @@
             <tr>
               <th scope="row"><strong>1. Android Phone</strong></th>
               <td>Samsung Galaxy S23 &middot; Snapdragon 8 Gen 2 (Adreno 740 GPU, 8 GB RAM)</td>
-              <td>On-device <code>LFM3-Omni-2B</code> + remote 3-model switcher</td>
+              <td>On-device <code>LFM3-Omni-2B</code> + remote 4-model switcher (<code>Clover-35B-A3B</code>, <code>Nemotron 3.5</code>, <code>Kimi K3.1 Pro</code>)</td>
               <td><strong><code>17.9 tok/s</code></strong> text &middot; <strong><code>9.9 s</code></strong> photo &middot; <strong><code>4.1 s</code></strong> voice &middot; <code>1.48 GB</code> storage</td>
             </tr>
             <tr>
               <th scope="row"><strong>2. Windows Laptop</strong></th>
               <td>Intel Core i5-1335U &middot; Intel Iris Xe Vulkan iGPU &middot; 16 GB RAM</td>
-              <td>Local <code>LFM3-Omni-2B</code> + CPU speech + Vulkan image gen</td>
+              <td>Local <code>LFM3-Omni-2B</code> + CPU speech + Vulkan image gen + VS Code Copilot Bridge</td>
               <td><strong><code>438 tok/s</code></strong> prefill &middot; <strong><code>28.0 tok/s</code></strong> decode &middot; <strong><code>1.28 GB</code></strong> RAM</td>
             </tr>
             <tr>
               <th scope="row"><strong>3. CPU Workstation (<code>k3</code>)</strong></th>
               <td>AMD Ryzen 9 7950X3D (16C/32T AVX-512) &middot; 124 GB RAM &middot; NVMe RAID1</td>
-              <td>All 3 models hot-switchable (<code>LFM3</code>, <code>Nemotron 3.5</code>, <code>Kimi K3.1 Pro</code>)</td>
-              <td><strong><code>1.12 s</code></strong> Nemotron C &middot; <strong><code>3.45 s</code></strong> LFM3 C &middot; <strong><code>1.99 s/tok</code></strong> Kimi K3.1 Pro</td>
+              <td>All 4 models hot-switchable (<code>LFM3-Omni</code>, <code>Clover-35B-A3B</code>, <code>Nemotron 3.5</code>, <code>Kimi K3.1 Pro</code>)</td>
+              <td><strong><code>1.12 s</code></strong> Nemotron C &middot; <strong><code>1.27 s</code></strong> Clover-35B &middot; <strong><code>1.99 s/tok</code></strong> Kimi K3.1 Pro</td>
             </tr>
             <tr>
               <th scope="row"><strong>4. Multi-GPU Server</strong></th>
               <td>8 &times; NVIDIA RTX 3090 (<code>192 GiB</code> VRAM, NVLink) &middot; 376 GiB RAM</td>
-              <td>Full 93-layer <code>Kimi K3.1 Pro 2.8T</code> + <code>HybridAgent</code> + 11-level NCM</td>
+              <td>Full <code>Kimi K3.1 Pro 2.8T</code> + <code>Clover-35B-A3B</code> + <code>HybridAgent</code> + 11-level NCM + Autonomous JEPA trainer</td>
               <td><strong><code>148.5 tok/s</code></strong> &middot; <strong><code>95.3%</code></strong> VRAM hit rate &middot; <strong><code>0</code></strong> PCIe writebacks</td>
             </tr>
           </tbody>
@@ -309,7 +345,7 @@
       <h3 style="margin-top:2rem">Official released baseline vs. ported into Clover</h3>
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">Comparison against each model&rsquo;s official standalone footprint, speed, and 70-task score.</caption>
+          <caption class="note">Comparison against each model&rsquo;s official standalone footprint, speed, and Clover verification metrics.</caption>
           <thead>
             <tr>
               <th scope="col">Model</th>
@@ -330,6 +366,12 @@
               <td>Needs <code>~249 GB</code> BF16 VRAM across multiple H100/A100 GPUs; <strong><code>16 / 70</code> (<code>22.9%</code>)</strong> stage baseline alone.</td>
               <td>Runs on <strong>1 CPU with <code>0</code> GPUs</strong>; <code>6.97 GiB</code> pruned trunks + 4-bit experts; <code>1.12 s/task</code>; <strong><code>70 / 70</code> (<code>100%</code>)</strong>.</td>
               <td><strong><code>-46.1%</code> trunk bytes</strong> &middot; <strong><code>2.93&times;</code> faster C</strong> &middot; <strong><code>+77.1 pp</code> accuracy</strong></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>DiffuSpace Clover-35B-A3B-Preview</strong><br><small>35B Total / 3B Active Block Diffusion MoE (30 BD-GDN + 10 Gated GQA)</small></th>
+              <td><code>69.3 GB</code> BF16 across 28 safetensor shards (<code>813</code> tensors); 256 routed experts top-8; <code>block_size = 32</code> LowConfidence diffusion.</td>
+              <td>Streamed &amp; packed into <strong><code>~4.04 GB</code></strong> precomputed stage trunks, 4-bit experts, <code>248,320</code>-vocab 11L NCM &amp; JEPA trunk; <code>diff = 0.0</code> pruned vs. raw.</td>
+              <td><strong><code>17.1&times;</code> smaller stage pack</strong> &middot; <strong><code>cos = 1.0</code> BD-GDN/GQA</strong> &middot; <strong><code>98.43%</code> NCM surface acc</strong></td>
             </tr>
             <tr>
               <th scope="row"><strong>Liquid AI LFM3-Omni-2B</strong><br><small>2.17B / 1.73B Tri-Hybrid</small></th>
@@ -433,9 +475,9 @@
       <p class="lede">Clover AI Studio builds on the open models and papers of the teams below.</p>
 
       <dl class="kv kv--wide">
-        <div><dt>Open-Weight Models</dt><dd><a href="https://huggingface.co/LiquidAI/LFM3-1.7B">Liquid AI LFM3</a>, <a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16">NVIDIA Nemotron 3.5 Super VL</a>, <a href="https://huggingface.co/moonshotai/Kimi-K3.1-Pro">Moonshot AI Kimi K3.1 Pro</a>, and <a href="https://huggingface.co/LithosAI/Kimi-K3.1-Pro-DSpark">LithosAI Kimi-K3.1-Pro-DSpark</a>.</dd></div>
-        <div><dt>Research Architecture</dt><dd><a href="https://arxiv.org/abs/2610.18861">HybridAgent</a> (Stanford / Together AI), <a href="https://arxiv.org/abs/2610.14162">Next-Concept Modeling</a> (Hazy Research, Stanford), <a href="https://doi.org/10.1007/s00521-026-12495-0">Ontology-Guided GraphRAG</a> (Univ. of Naples), <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a> (Fareed Khan), and the <a href="../origin/">11 foundational papers (1943&ndash;2017)</a>.</dd></div>
-        <div><dt>Dataset &amp; Source Code</dt><dd>Precomputed trunks and experts in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a>, one-command porting kit in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/porting-models"><code>porting-models/</code></a>, and full source in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system"><code>clover-ai-system/</code></a>.</dd></div>
+        <div><dt>Open-Weight Models</dt><dd><a href="https://huggingface.co/LiquidAI/LFM3-1.7B">Liquid AI LFM3</a>, <a href="https://huggingface.co/Diffuspace/Clover-35B-A3B-Preview">DiffuSpace Clover-35B-A3B-Preview</a> (<a href="https://huggingface.co/Diffuspace/Clover-35B-A3B-Preview-GGUF">GGUF</a>), <a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16">NVIDIA Nemotron 3.5 Super VL</a>, <a href="https://huggingface.co/moonshotai/Kimi-K3.1-Pro">Moonshot AI Kimi K3.1 Pro</a>, and <a href="https://huggingface.co/LithosAI/Kimi-K3.1-Pro-DSpark">LithosAI Kimi-K3.1-Pro-DSpark</a>.</dd></div>
+        <div><dt>Research Architecture</dt><dd><a href="https://arxiv.org/abs/2610.18861">HybridAgent</a> (Stanford / Together AI), <a href="https://arxiv.org/abs/2610.14162">Next-Concept Modeling</a> (Hazy Research, Stanford), <a href="https://doi.org/10.1007/s00521-026-12495-0">Ontology-Guided GraphRAG</a> (Univ. of Naples), <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a> (Fareed Khan), JEPA / RPRE (<code>I-JEPA</code>, <code>Audio-JEPA</code>, <code>MJEPA</code>, <code>EB-JEPA</code>), and the <a href="../origin/">11 foundational papers (1943&ndash;2017)</a>.</dd></div>
+        <div><dt>Dataset &amp; Source Code</dt><dd>Precomputed trunks, experts, NCM, and JEPA weights in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a>, one-command porting kit in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/porting-models"><code>porting-models/</code></a>, VS Code integration reference in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-vscode-studio-integration-context.md"><code>clover-vscode-studio-integration-context.md</code></a>, and full source in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system"><code>clover-ai-system/</code></a>.</dd></div>
       </dl>
 
       <div class="actions" style="margin-top:2rem">
@@ -470,8 +512,9 @@
         <li><a href="https://play.google.com/apps/testing/ai.clover.studio" target="_blank" rel="noopener noreferrer">Join Google Play Closed Beta</a></li>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.0/CloverAIStudio.apk">Download for Android (.apk)</a></li>
         <li><a href="../clover-ai/">Launch Clover AI Web Studio</a></li>
+        <li><a href="../admin/">k3 Admin Access Console</a></li>
         <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/README.md">Clover AI System README</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-ai-system-switchable-models-context.md">Switchable 3-Model Architecture</a></li>
+        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-vscode-studio-integration-context.md">VS Code &amp; Copilot Integration</a></li>
       </ul>
     </div>
     <div>

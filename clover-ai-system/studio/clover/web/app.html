@@ -1011,6 +1011,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   var $ = function (id) { return document.getElementById(id); };
   // the same page on Laptop (windows), in the Android app (android), and on the Web (web, hosted on k3)
   var PLATFORM = (document.querySelector('meta[name="clover-platform"]') || {}).content || '';
+  if (PLATFORM === '__CLOVER_PLATFORM__') PLATFORM = /^(127\.0\.0\.1|localhost)$/i.test(location.hostname || '') ? 'windows' : 'web';
   var PHONE = PLATFORM === 'android', WEB = PLATFORM === 'web';
   if (PHONE || WEB) {
     document.documentElement.classList.add(PHONE ? 'phone' : 'web');

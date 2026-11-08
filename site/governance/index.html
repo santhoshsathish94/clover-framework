@@ -280,8 +280,22 @@
         </div>
       </div>
 
+      <div class="apple-grid apple-grid--2" style="margin-top:1.2rem">
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">Hosted k3 Access Control</span>
+          <h3>GitHub-Gated Admin Allowlist (<code>/admin/</code>)</h3>
+          <p>Access to the four hosted <code>k3</code> models (<code>LFM3-Omni</code>, <code>Clover-35B-A3B</code>, <code>Nemotron 3.5</code>, <code>Kimi K3.1 Pro</code>) is restricted to approved accounts in <code>allowed-accounts.json</code> (`0600`), managed behind owner GitHub OAuth Device Flow at <a href="../admin/"><code>cloverframework.com/admin/</code></a> with domain-separated HMAC tokens (<code>admin:...</code> vs. <code>acct:...</code>) and per-IP rate limiting.</p>
+        </div>
+        <div class="apple-card">
+          <span class="apple-card__eyebrow">Security &amp; Hardcoding Audit</span>
+          <h3>Independently Verified Controls</h3>
+          <p>All 72 modified modules across Studio, VS Code Bridge, Android, and the <code>k3</code> gateway are audited against passwordless bypasses, launch-token shadowing, temp-file races, and secret hardcoding in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/security-and-code-review-2026-11-08.md"><code>security-and-code-review-2026-11-08.md</code></a>.</p>
+        </div>
+      </div>
+
       <div class="actions" style="margin-top:1.6rem">
         <a class="btn btn--primary" href="../privacy/">Read the Full Privacy Policy &rarr;</a>
+        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/security-and-code-review-2026-11-08.md">Read Security Audit Report &rarr;</a>
         <a class="btn" href="../ai-system/">Explore Clover AI Studio &rarr;</a>
       </div>
     </div>

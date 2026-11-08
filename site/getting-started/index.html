@@ -112,9 +112,9 @@
       <dl class="kv">
         <div><dt>Read first</dt><dd>Check memory and the context file before acting so settled decisions are never re-argued.</dd></div>
         <div><dt>Reach real evidence</dt><dd>Inspect running systems, logs, and source directly instead of guessing from summaries.</dd></div>
-        <div><dt>Self-check</dt><dd>Verify work against known failure modes before handing back.</dd></div>
+        <div><dt>Multi-cycle Outcome check</dt><dd>In Clover AI Studio and VS Code (<code>clover-local-0.4.0.vsix</code>), every turn runs up to 3 automatic <code>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</code> verification cycles (checking AST syntax, sandboxed Python execution, arithmetic, and tool results) before returning.</dd></div>
         <div><dt>Name the evidence</dt><dd>State what was checked, what was observed, and what could not be verified.</dd></div>
-        <div><dt>Write Growth back</dt><dd>Record what held and what failed so the next cycle starts ahead of this one.</dd></div>
+        <div><dt>Write Growth back</dt><dd>Record what held and what failed (<code>LRN-*</code> notes) so the next cycle starts ahead of this one.</dd></div>
       </dl>
 
       <h3 id="ag-t2">What it stops</h3>

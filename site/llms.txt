@@ -28,11 +28,12 @@ Accountability follows the same scale boundary. Within a task or piece of work, 
 
 - [The framework](https://cloverframework.com/): the full argument, the actors, the system cycle, and the closing claim that responsibility for AI was sidelined.
 - [Origin](https://cloverframework.com/origin/): twelve chapters from 1943 to 2026 in vertical sections, explained in plain language from reading the primary papers and running their mechanisms firsthand.
-- [AI Studio](https://cloverframework.com/ai-system/): Clover AI Studio & the 7-layer Clover AI System (`clover-ai-system`), running across Windows laptops (`CloverAIStudio-Setup.exe`), Android phones (`CloverAIStudio.apk`), VS Code, and Web (`cloverframework.com/clover-ai/`), showing how to port any open-weight model (`Kimi K3.1 Pro 2.8T MoE`, `NVIDIA Nemotron 3.5 Super VL 120B-A12B`, `Liquid AI LFM3-Omni-2B / LFM3-1.7B`) via `porting-models/` and lifting all three models from `22.9%–47.1%` standalone to `70/70` (`100.0%`) on the standardized 70-task suite.
+- [AI Studio](https://cloverframework.com/ai-system/): Clover AI Studio & the 7-layer Clover AI System (`clover-ai-system`), running across Windows laptops (`CloverAIStudio-Setup.exe`), Android phones (`CloverAIStudio.apk`), VS Code + GitHub Copilot (`clover-local-0.4.0.vsix`), and Web (`cloverframework.com/clover-ai/`), showing how to port any open-weight model (`Kimi K3.1 Pro 2.8T MoE`, `NVIDIA Nemotron 3.5 Super VL 120B-A12B`, `DiffuSpace Clover-35B-A3B-Preview 35B-A3B Block Diffusion MoE`, `Liquid AI LFM3-Omni-2B / LFM3-1.7B`) via `porting-models/` with `JEPA / RPRE` world-model planning and automatic multi-cycle `AGENTS.md` Outcome verification.
 - [AGENTS.md](https://cloverframework.com/getting-started/): read-only system access, AGENTS.md, and a first cycle.
-- [Governance](https://cloverframework.com/governance/): access, attribution, approvals, agent behavior, delegated execution, and the named human who is accountable.
-- [Privacy Policy](https://cloverframework.com/privacy/): on-device AI inference, local Git-backed logging (`sessions/`, `execution/`, `outcomes/`, `growth/`, `config/`), encrypted `vault/`, secret redaction, and why nothing leaves the device unless the user explicitly allows it.
+- [Governance](https://cloverframework.com/governance/): access, attribution, approvals, agent behavior, delegated execution, the named human who is accountable, and the `k3` Admin Access Console (`/admin/`).
+- [Privacy Policy](https://cloverframework.com/privacy/): on-device AI inference, local Git-backed logging (`sessions/`, `execution/`, `outcomes/`, `growth/`, `config/`), encrypted `vault/`, secret redaction, Google OIDC collective learning, and why nothing leaves the device unless the user explicitly allows it.
 - [Clover AI](https://cloverframework.com/clover-ai/): interactive Clover AI studio.
+- [Admin Console](https://cloverframework.com/admin/): GitHub-authenticated owner console for managing the `k3` model allowlist (`allowed-accounts.json`).
 - [Glossary](https://cloverframework.com/glossary/): plain-language definitions.
 - [The author](https://cloverframework.com/author/): who wrote it.
 

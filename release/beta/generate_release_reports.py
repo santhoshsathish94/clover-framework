@@ -295,7 +295,7 @@ launchable-activity: name='ai.clover.studio.MainActivity'
     )
     (BETA_DIR / "android" / "SHA256SUMS.txt").write_text(and_sums, encoding="utf-8")
 
-    # Write download/SHA256SUMS.txt
+    # Write download/SHA256SUMS.txt and sync site/download/
     dl_sums = (
         "Clover AI Studio installers (SHA-256). Each downloads what it needs on first run, from the publishers, checked against pinned hashes.\n\n"
         f"laptop/CloverAIStudio-Setup.exe  5.0.0  Windows 10 2004+ x64, 16 GB RAM, AVX2, 25 GB free  {setup_size} bytes\n"
@@ -306,6 +306,12 @@ launchable-activity: name='ai.clover.studio.MainActivity'
         f"  {apk_sha}\n"
     )
     (REPO_ROOT / "download" / "SHA256SUMS.txt").write_text(dl_sums, encoding="utf-8")
+    site_dl = REPO_ROOT / "site" / "download"
+    if site_dl.is_dir():
+        (site_dl / "SHA256SUMS.txt").write_text(dl_sums, encoding="utf-8")
+        (site_dl / "laptop").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(win_setup_rel, site_dl / "laptop" / "CloverAIStudio-Setup.exe")
+        shutil.copy2(win_cer_rel, site_dl / "laptop" / "CloverFramework-CodeSign.cer")
 
     return {
         "windows_setup": {"size": setup_size, "sha256": setup_sha},

@@ -35,10 +35,12 @@ python -m http.server 8000 --directory site
 site/
   index.html                             the framework: one cycle, at any scale
   origin/                                the Origin page: 12 foundational AI chapters (1943–2026) in vertical sections
-  ai-system/                             the AI Studio page: Clover AI Studio downloads, architecture, open-weight model porting guide, efficiency vs. official numbers, and 70-task benchmarks
-  getting-started/                       the AGENTS.md menu page: read-only access, the agent file, a first cycle
-  governance/                            governance: vertical storyline on access, attribution, approvals, delegated execution
+  ai-system/                             the AI Studio page: Clover AI Studio downloads, architecture, two-way VS Code & Copilot integration, open-weight model porting guide (Kimi K3.1 Pro, Nemotron 3.5, Clover-35B-A3B, LFM3-Omni-2B), efficiency vs. official numbers, and 70-task benchmarks
+  getting-started/                       the AGENTS.md menu page: read-only access, the agent file, multi-cycle verification, a first cycle
+  governance/                            governance: vertical storyline on access, attribution, approvals, delegated execution, and k3 allowlist security
+  privacy/                               privacy policy: on-device inference, local Git logging, encrypted vault, and opt-in Google OIDC collective learning
   clover-ai/                             full-viewport interactive Clover AI studio
+  admin/                                 GitHub-authenticated owner console for managing the k3 model allowlist
   glossary/                              searchable terms
   author/                                who wrote this, in the first person
   assets/                                the peacock feather, and the four evidence diagrams (SVG)

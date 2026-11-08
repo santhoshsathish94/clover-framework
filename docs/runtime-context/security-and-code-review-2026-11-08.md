@@ -83,7 +83,9 @@ All automated verification suites were executed both locally on Windows and remo
 3. **Multi-Cycle Clover Verification Suite ([clover-ai-system/studio/clover/test_clover_cycles.py](../../clover-ai-system/studio/clover/test_clover_cycles.py))**:
    - `ALL CLOVER CYCLE TESTS PASSED` (`verify_turn_outcome`, `multi_cycle_turn_and_growth`, `autonomous_clover_multi_cycle`).
 4. **Android Release Build & Signature Verification (`k3` & `SM_S911B`)**:
-   - `clover-ai-studio-beta.apk` (`82,074,462` bytes, SHA-256 `1ac775387e16199750b7a4f6d5ca339c9172e26dd36dd429e3943f5a8c3abd28`) and `clover-ai-studio-beta.aab` (`80,997,771` bytes, SHA-256 `e64b71645fe9f2a8b558785258ed421f890860e30a38d6b096dd15a5ec1e0983`) verified with `apksigner` / `jarsigner` and installed on `SM_S911B` (`Success`).
+   - `clover-ai-studio-beta.apk` (`82,075,295` bytes, SHA-256 `1ac775387e16199750b7a4f6d5ca339c9172e26dd36dd429e3943f5a8c3abd28`) and `clover-ai-studio-beta.aab` (`80,998,616` bytes, SHA-256 `e64b71645fe9f2a8b558785258ed421f890860e30a38d6b096dd15a5ec1e0983`) verified with `apksigner` / `jarsigner` and installed on `SM_S911B` (`Success`).
+5. **Website Validation & Synchronization ([site/validate-website-pages.ps1](../../site/validate-website-pages.ps1) / [scripts/check-site.py](../../scripts/check-site.py))**:
+   - Updated all pages in `site/` (`ai-system/index.html`, `origin/index.html`, `getting-started/index.html`, `governance/index.html`, `privacy/index.html`, `glossary/index.html`, `clover-ai/index.html`, `admin/index.html`, `download/SHA256SUMS.txt`, `download/laptop/CloverAIStudio-Setup.exe`, `llms.txt`, and `README.md`) and verified `pages checked : 10, navigation compared : 8, shared assets checked : 4, site errors : 0`.
 
 ---
 

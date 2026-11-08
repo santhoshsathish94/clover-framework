@@ -1,8 +1,8 @@
 Clover AI Studio installers (SHA-256). Each downloads what it needs on first run, from the publishers, checked against pinned hashes.
 
-laptop/CloverAIStudio-Setup.exe  5.0.0  Windows 10 2004+ x64, 16 GB RAM, AVX2, 25 GB free  8987608 bytes
-  2e1f3c77899b2c14c6817a7aeb08a65f90dc77682896d870082c11be7f2732ec
+laptop/CloverAIStudio-Setup.exe  5.0.0  Windows 10 2004+ x64, 16 GB RAM, AVX2, 25 GB free  9008600 bytes
+  b8b66926e5788de0732f06762b433e9e0944c5bd13d9a42e37e3998a63be64b6
 laptop/CloverFramework-CodeSign.cer  Clover Framework Authenticode certificate  832 bytes
   9365ec5d455b0ef8179ccf1c061cf481c86dad234b9f3dc62244e487c659072d
-mobile/CloverAIStudio.apk  5.0.0 (code 13, targetSdk 36)  Android 8+ arm64, Snapdragon GPU via OpenCL, about 3 GB free  82037909 bytes
-  4841bab6062473b1b48432e96750fee4dddeb965050381a0be642473cad23c03
+mobile/CloverAIStudio.apk  5.0.0 (code 14, targetSdk 36)  Android 8+ arm64, Snapdragon GPU via OpenCL, about 3 GB free  82075295 bytes
+  1ac775387e16199750b7a4f6d5ca339c9172e26dd36dd429e3943f5a8c3abd28
