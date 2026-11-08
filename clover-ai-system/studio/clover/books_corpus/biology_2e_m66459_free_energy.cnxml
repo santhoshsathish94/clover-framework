@@ -1,0 +1,185 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:m="http://www.w3.org/1998/Math/MathML">
+<title>Potential, Kinetic, Free, and Activation Energy</title>
+<metadata xmlns:md="http://cnx.rice.edu/mdml">
+  <md:content-id>m66459</md:content-id>
+  <md:title>Potential, Kinetic, Free, and Activation Energy</md:title>
+  <md:abstract><para id="para-00001">By the end of this section, you will be able to do the following:</para><list id="list-00001">
+<item>Define “energy”</item>
+<item>Explain the difference between kinetic and potential energy</item>
+<item>Discuss the concepts of free energy and activation energy</item>
+<item>Describe endergonic and exergonic reactions</item>
+</list></md:abstract>
+  <md:uuid>7c27bd5e-7ad6-466c-b204-4d46bd7a60a9</md:uuid>
+</metadata>
+
+<content>
+<para id="fs-id2195131">We define energy as the ability to do work. As you’ve learned, energy exists in different forms. For example, electrical energy, light energy, and heat energy are all different energy types. While these are all familiar energy types that one can see or feel, there is another energy type that is much less tangible. Scientists associate this energy with something as simple as an object above the ground. In order to appreciate the way energy flows into and out of biological systems, it is important to understand more about the different energy types that exist in the physical world.</para>
+<section id="fs-id1988431">
+<title>Energy Types</title>
+<para id="fs-id1437457">When an object is in motion, there is energy. For example, an airplane in flight produces considerable energy. This is because moving objects are capable of enacting a change, or doing work. Think of a wrecking ball. Even a slow-moving wrecking ball can do considerable damage to other objects. However, a wrecking ball that is not in motion is incapable of performing work. Energy with objects in motion is <term id="term-00001">kinetic energy</term>. A speeding bullet, a walking person, rapid molecule movement in the air (which produces heat), and electromagnetic radiation like light all have kinetic energy.</para>
+<para id="fs-id2054126">What if we lift that same motionless wrecking ball two stories above a car with a crane? If the suspended wrecking ball is unmoving, can we associate energy with it? The answer is yes. The suspended wrecking ball has associated energy that is fundamentally different from the kinetic energy of objects in motion. This energy form results from the <emphasis effect="italics">potential</emphasis> for the wrecking ball to do work. If we release the ball it would do work. Because this energy type refers to the potential to do work, we call it <term id="term-00002">potential energy</term>. Objects transfer their energy between kinetic and potential in the following way: As the wrecking ball hangs motionless, it has 0 kinetic and 100 percent potential energy. Once it releases, its kinetic energy begins to increase because it builds speed due to gravity. Simultaneously, as it nears the ground, it loses potential energy. Somewhere mid-fall it has 50 percent kinetic and 50 percent potential energy. Just before it hits the ground, the ball has nearly lost its potential energy and has near-maximal kinetic energy. Other examples of potential energy include water's energy held behind a dam (<link target-id="fig-ch06_02_01"/>), or a person about to skydive from an airplane.</para>
+<figure id="fig-ch06_02_01"><media id="fs-id1477773" alt="The photo on the left shows a river that is blocked by a giant cement wall, called a dam. The photo on the right shows a waterfall.">
+<image mime-type="image/jpg" src="../../media/Figure_06_03_01ab.jpg" width="500"/>
+</media>
+
+<caption>Water behind a dam has potential energy. Moving water, such as in a waterfall or a rapidly flowing river, has kinetic energy. (credit “dam”: modification of work by "Pascal"/Flickr; credit “waterfall”: modification of work by Frank Gualtieri)</caption></figure><para id="fs-id2170204">We associate potential energy not only with the matter's location (such as a child sitting on a tree branch), but also with the matter's structure. A spring on the ground has potential energy if it is compressed; so does a tautly pulled rubber band. The very existence of living cells relies heavily on structural potential energy. On a chemical level, the bonds that hold the molecules' atoms together have potential energy. Remember that anabolic cellular pathways require energy to synthesize complex molecules from simpler ones, and catabolic pathways release energy when complex molecules break down. That certain chemical bonds' breakdown can release energy implies that those bonds have potential energy. In fact, there is potential energy stored within the bonds of all the food molecules we eat, which we eventually harness for use. This is because these bonds can release energy when broken. Scientists call the potential energy type that exists within chemical bonds that releases when those bonds break <term id="term-00003">chemical energy</term> (<link target-id="fig-ch06_02_02"/>). Chemical energy is responsible for providing living cells with energy from food. Breaking the molecular bonds within fuel molecules brings about the energy's release.</para><figure id="fig-ch06_02_02"><media id="fs-id2315555" alt="The molecular formula of octane (top), which is a chain of eight carbons and eighteen hydrogens, fuels a racecar speeding along a track (bottom).">
+<image mime-type="image/jpg" src="../../media/Figure_06_03_02ab.jpg" width="320"/>
+</media>
+<caption>The molecules in gasoline contain chemical energy within the chemical bonds. This energy transforms into kinetic energy that allows a car to race on a racetrack. (credit “car”: modification of work by Russell Trow)</caption>
+</figure>
+<note id="fs-id1568451" class="interactive">
+<para id="fs-id1469809">Visit this <link window="new" url="https://openstax.org/l/simple_pendulum">site</link> and select “A simple pendulum” on the menu (under “Harmonic Motion”) to see the shifting kinetic (K) and potential energy (U) of a pendulum in motion.</para>
+</note>
+</section>
+<section id="fs-id1366956">
+<title>Free Energy</title>
+<para id="fs-id2051640">After learning that chemical reactions release energy when energy-storing bonds break, an important next question is how do we quantify and express the chemical reactions with the associated energy? How can we compare the energy that releases from one reaction to that of another reaction? We use a measurement of <term id="term-00004">free energy</term> to quantitate these energy transfers. Scientists call this free energy Gibbs free energy (abbreviated with the letter G) after Josiah Willard Gibbs, the scientist who developed the measurement. According to the second law of thermodynamics, all energy transfers involve losing some energy in an unusable form such as heat, resulting in entropy. Gibbs free energy specifically refers to the energy that takes place with a chemical reaction that is available after we account for entropy. In other words, Gibbs free energy is usable energy, or energy that is available to do work.</para><para id="fs-id1896127">Every chemical reaction involves a change in free energy, called delta G (∆G). We can calculate the change in free energy for any system that undergoes such a change, such as a chemical reaction. To calculate ∆G, subtract the amount of energy lost to entropy (denoted as ∆S) from the system's total energy change. The total energy in the system is <term id="term-00005">enthalpy</term> and we denote it as ∆H. The formula for calculating ∆G is as follows, where the symbol T refers to absolute temperature in Kelvin (degrees Celsius + 273):</para>
+<equation id="eip-327" class="unnumbered">
+<m:math display="block">
+<m:mrow>
+<m:mi>Δ</m:mi><m:mtext>G</m:mtext><m:mo>=</m:mo><m:mi>Δ</m:mi><m:mtext>H</m:mtext><m:mo>−</m:mo><m:mtext>T</m:mtext><m:mi>Δ</m:mi><m:mtext>S</m:mtext>
+</m:mrow>
+</m:math>
+</equation>
+<para id="fs-id2335177">We express a chemical reaction's standard free energy change as an amount of energy per mole of the reaction product (either in kilojoules or kilocalories, kJ/mol or kcal/mol; 1 kJ = 0.239 kcal) under standard pH, temperature, and pressure conditions. We generally calculate standard pH, temperature, and pressure conditions at pH 7.0 in biological systems, 25 degrees Celsius, and 100 kilopascals (1 atm pressure), respectively. Note that cellular conditions vary considerably from these standard conditions, and so standard calculated ∆G values for biological reactions will be different inside the cell.</para>
+<section id="fs-id1394781">
+<title>Endergonic Reactions and Exergonic Reactions</title>
+<para id="fs-id1236680">If energy releases during a chemical reaction, then the resulting value from the above equation will be a negative number. In other words, reactions that release energy have a ∆G &lt; 0. A negative ∆G also means that the reaction's products have less free energy than the reactants, because they gave off some free energy during the reaction. Scientists call reactions that have a negative ∆G and consequently release free energy <term id="term-00006">exergonic reactions</term>. Think: <emphasis effect="italics">ex</emphasis>ergonic means energy is <emphasis effect="italics">ex</emphasis>iting the system. We also refer to these reactions as spontaneous reactions, because they can occur without adding energy into the system. Understanding which chemical reactions are spontaneous and release free energy is extremely useful for biologists, because these reactions can be harnessed to perform work inside the cell. We must draw an important distinction between the term spontaneous and the idea of a chemical reaction that occurs immediately. Contrary to the everyday use of the term, a spontaneous reaction is not one that suddenly or quickly occurs. Rusting iron is an example of a spontaneous reaction that occurs slowly, little by little, over time.</para>
+<para id="fs-id1406190">If a chemical reaction requires an energy input rather than releasing energy, then the ∆G for that reaction will be a positive value. In this case, the products have more free energy than the reactants. Thus, we can think of the reactions' products as energy-storing molecules. We call these chemical reactions <term id="term-00007">endergonic reactions</term>, and they are non-spontaneous. An endergonic reaction will not take place on its own without adding free energy.</para>
+<para id="fs-id1235966">Let’s revisit the example of the synthesis and breakdown of the food molecule, glucose. Remember that building complex molecules, such as sugars, from simpler ones is an anabolic process and requires energy. Therefore, the chemical reactions involved in anabolic processes are endergonic reactions. Alternatively the catabolic process of breaking sugar down into simpler molecules releases energy in a series of exergonic reactions. Like the rust example above, the sugar breakdown involves spontaneous reactions, but these reactions do not occur instantaneously. <link target-id="fig-ch06_02_03"/> shows some other examples of endergonic and exergonic reactions. Later sections will provide more information about what else is required to make even spontaneous reactions happen more efficiently.</para>
+<note id="fs-idp35744256" class="visual-connection">
+<para id="fs-id1772017">
+<figure id="fig-ch06_02_03"><media id="fs-id2155472" alt="There are four photos show.  The first photo shows a pile of wood chips and dirt, with small plants growing from this.  The second photo shows a small baby bird breaking out of its egg as it hatches.  The third photo shows a large patch of desert where someone has drawn patterns in the sand.  The fourth photo shows a grassy hill outside where people climb into giant inflatable balls and roll down the hillside.">
+<image mime-type="image/png" src="../../media/Figure_B06_03_05abcd_new.png" width="400"/>
+</media>
+
+<caption>This figure shows some examples of endergonic processes (ones that require energy) and exergonic processes (ones that release energy). These include (a) a compost pile decomposing, (b) a chick developing from a fertilized egg, (c) sand art destruction, and (d) a ball rolling down a hill. (credit a: modification of work by Natalie Maynor; credit b: modification of work by USDA; credit c: modification of work by “Athlex”/Flickr; credit d: modification of work by Harry Malsch)</caption></figure></para>
+<para id="fs-id1361463">Look at each of the processes, and decide if it is endergonic or exergonic. In each case, does enthalpy increase or decrease, and does entropy increase or decrease?</para>
+</note>
+<para id="fs-id1485321">An important concept in studying metabolism and energy is that of chemical equilibrium. Most chemical reactions are reversible. They can proceed in both directions, releasing energy into their environment in one direction, and absorbing it from the environment in the other direction (<link target-id="fig-ch06_02_04"/>). The same is true for the chemical reactions involved in cell metabolism, such as the breaking down and building up of proteins into and from individual amino acids, respectively. Reactants within a closed system will undergo chemical reactions in both directions until they reach a state of equilibrium, which is one of the lowest possible free energy and a state of maximal entropy. To push the reactants and products away from a state of equilibrium requires energy. Either reactants or products must be added, removed, or changed. If a cell were a closed system, its chemical reactions would reach equilibrium, and it would die because there would be insufficient free energy left to perform the necessary work to maintain life. In a living cell, chemical reactions are constantly moving towards equilibrium, but never reach it. This is because a living cell is an open system. Materials pass in and out, the cell recycles the products of certain chemical reactions into other reactions, and there is never chemical equilibrium. In this way, living organisms are in a constant energy-requiring, uphill battle against equilibrium and entropy. This constant energy supply ultimately comes from sunlight, which produces nutrients in the photosynthesis process.</para>
+<figure id="fig-ch06_02_04"><media id="fs-id1769482" alt="The two plots show the change in Gibbs free energy as reactants are converted to products. Gibbs free energy decreases with time for an exergonic reaction (left), and the reaction is spontaneous. Gibbs free energy increases with time for an endergonic reaction (right), and the reaction is not spontaneous.">
+<image mime-type="image/jpg" src="../../media/Figure_06_03_03-0c82.jpg"/>
+</media>
+
+<caption>Exergonic and endergonic reactions result in changes in Gibbs free energy (G). Exergonic reactions have a net release of energy and are
+spontaneous reactions. Endergonic reactions require an input of energy to proceed and are nonspontaneous reactions. Both Exergonic and endergonic
+reactions require initial activation energy for the reaction to occur.Credit: Tag, A., Rao, A., Fletcher, S. and Ryan, A. Department of Biology, Texas A&amp;M
+University.</caption></figure></section>
+</section>
+<section id="fs-id1242632">
+<title>Activation Energy</title>
+<para id="fs-id1378392">There is another important concept that we must consider regarding endergonic and exergonic reactions. Even exergonic reactions require a small amount of energy input before they can proceed with their energy-releasing steps. These reactions have a net release of energy, but still require some initial energy. Scientists call this small amount of energy input necessary for all chemical reactions to occur the <term id="term-00008">activation energy</term> (or free energy of activation) abbreviated as E<sub>A</sub> (<link target-id="fig-ch06_02_05"/>).</para>
+<para id="fs-id1439064">Why would an energy-releasing, negative ∆G reaction actually require some energy to proceed? The reason lies in the steps that take place during a chemical reaction. During chemical reactions, certain chemical bonds break and new ones form. For example, when a glucose molecule breaks down, bonds between the molecule's carbon atoms break. Since these are energy-storing bonds, they release energy when broken. However, to get them into a state that allows the bonds to break, the molecule must be somewhat contorted. A small energy input is required to achieve this contorted state. This contorted state is the <term id="term-00009">transition state</term>, and it is a high-energy, unstable state. For this reason, reactant molecules do not last long in their transition state, but very quickly proceed to the chemical reaction's next steps. Free energy diagrams illustrate the energy profiles for a given reaction. Whether the reaction is exergonic or endergonic determines whether the products in the diagram will exist at a lower or higher energy state than both the reactants and the products. However, regardless of this measure, the transition state of the reaction exists at a higher energy state than the reactants, and thus, E<sub>A</sub> is always positive.</para>
+<note id="fs-id1805336" class="interactive">
+<para id="fs-id1942750">Watch an animation of the move from free energy to transition state at <link window="new" url="https://openstax.org/l/energy_reaction">this</link> site.</para>
+</note>
+<para id="fs-id1446439">From where does the activation energy that chemical reactants require come? The activation energy's required source to push reactions forward is typically heat energy from the surroundings. <term id="term-00010">Heat energy</term> (the total bond energy of reactants or products in a chemical reaction) speeds up the molecule's motion, increasing the frequency and force with which they collide. It also moves atoms and bonds within the molecule slightly, helping them reach their transition state. For this reason, heating a system will cause chemical reactants within that system to react more frequently. Increasing the pressure on a system has the same effect. Once reactants have absorbed enough heat energy from their surroundings to reach the transition state, the reaction will proceed.</para>
+<para id="fs-id1768863">The activation energy of a particular reaction determines the rate at which it will proceed. The higher the activation energy, the slower the chemical reaction. The example of iron rusting illustrates an inherently slow reaction. This reaction occurs slowly over time because of its high E<sub>A</sub>. Additionally, burning many fuels, which is strongly exergonic, will take place at a negligible rate unless sufficient heat from a spark overcomes their activation energy. However, once they begin to burn, the chemical reactions release enough heat to continue the burning process, supplying the activation energy for surrounding fuel molecules. Like these reactions outside of cells, the activation energy for most cellular reactions is too high for heat energy to overcome at efficient rates. In other words, in order for important cellular reactions to occur at appreciable rates (number of reactions per unit time), their activation energies must be lowered (<link target-id="fig-ch06_02_05"/>). Scientist refer to this as catalysis. This is a very good thing as far as living cells are concerned. Important macromolecules, such as proteins, DNA, and RNA, store considerable energy, and their breakdown is exergonic. If cellular temperatures alone provided enough heat energy for these exergonic reactions to overcome their activation barriers, the cell's essential components would disintegrate.</para>
+<note id="fs-id1721002" class="visual-connection">
+<para id="fs-id1787601">
+<figure id="fig-ch06_02_05"><media id="fs-id2018830" alt="This plot shows the activation energy for an exergonic reaction. As the reaction proceeds, energy initially increases to overcome the activation energy. In a catalyzed reaction, the activation energy is much lower. The energy then decreases such that the Gibbs free energy of the products is less than that of the reactants. The activation energy is the peak of the energy plot minus the energy of the reactants. The Gibbs free energy (delta G) is the energy of the products minus the energy of the reactants.">
+<image mime-type="image/jpg" src="../../media/Figure_06_03_04.jpg" width="280"/>
+</media>
+<caption>Activation energy is the energy required for a reaction to proceed, and it is lower if the reaction is catalyzed. This diagram's horizontal axis describes the sequence of events in time.</caption>
+</figure>
+</para>
+<para id="fs-id1974397">If no activation energy were required to break down sucrose (table sugar), would you be able to store it in a sugar bowl?</para>
+</note>
+</section>
+<section id="fs-id1444105" class="summary">
+<title>Section Summary</title>
+<para id="fs-id2000265">Energy comes in many different forms. Objects in motion do physical work, and kinetic energy is the energy of objects in motion. Objects that are not in motion may have the potential to do work, and thus, have potential energy. Molecules also have potential energy because breaking molecular bonds has the potential to release energy. Living cells depend on harvesting potential energy from molecular bonds to perform work. Free energy is a measure of energy that is available to do work. A system's free energy changes during energy transfers such as chemical reactions, and scientists refer to this change as ∆G.</para>
+<para id="fs-id1343175">A reaction's ∆G can be negative or positive, meaning that the reaction releases energy or consumes energy, respectively. A reaction with a negative ∆G that gives off energy is an exergonic reaction. One with a positive ∆G that requires energy input is an endergonic reaction. Exergonic reactions are spontaneous because their products have less energy than their reactants. Endergonic reactions' products have a higher energy state than the reactants, and so these are nonspontaneous reactions. However, all reactions (including spontaneous -∆G reactions) require an initial energy input in order to reach the transition state, at which they will proceed. This initial input of energy is the activation energy.</para>
+</section>
+<section id="fs-idp22423600" class="visual-exercise">
+<title>Visual Connection Questions</title>
+<exercise id="fs-idm57896784"><problem id="fs-id1970779">
+<para id="fs-idp55181168"> <link target-id="fig-ch06_02_03"/> Look at each of the processes, and decide if it is endergonic or exergonic. In each case, does enthalpy increase or decrease, and does entropy increase or decrease?</para>
+</problem>
+<solution id="fs-id1772383">
+<label/>
+<para id="fs-id1404899"><link target-id="fig-ch06_02_03"/> A compost pile decomposing is an exergonic process; enthalpy decreases (energy is released) and entropy increases (large molecules are broken down into smaller ones). A baby developing from a fertilized egg is an endergonic process; enthalpy increases (energy is absorbed) and entropy decreases. Sand art being destroyed is an exergonic process; there is no change in enthalpy, but entropy increases. A ball rolling downhill is an exergonic process; enthalpy decreases (energy is released), but there is no change in entropy.</para></solution>
+</exercise><exercise id="fs-idp41379504"><problem id="fs-id2078828">
+<para id="fs-idp66710416"> <link target-id="fig-ch06_02_05"/> If no activation energy were required to break down sucrose (table sugar), would you be able to store it in a sugar bowl?</para>
+</problem>
+<solution id="fs-id1786520"><label/>
+<para id="fs-id1507066"> <link target-id="fig-ch06_02_05"/> No. We can store chemical energy because of the need to overcome the barrier to its breakdown.</para>
+</solution>
+</exercise>
+</section>
+<section id="fs-id1780695" class="multiple-choice">
+<title>Review Questions</title><exercise id="fs-id2258341">
+<problem id="fs-id1778807">
+<para id="fs-id1967789">Consider a pendulum swinging. Which type(s) of energy is/are associated with the pendulum in the following instances: i. the moment at which it completes one cycle, just before it begins to fall back towards the other end, ii. the moment that it is in the middle between the two ends, and iii. just before it reaches the end of one cycle (just before instant i.).</para>
+<list id="fs-id1771443" list-type="enumerated" number-style="lower-alpha">
+<item>i. potential and kinetic, ii. potential and kinetic, iii. kinetic</item>
+<item>i. potential, ii. potential and kinetic, iii. potential and kinetic</item>
+<item>i. potential, ii. kinetic, iii. potential and kinetic</item>
+<item>i. potential and kinetic, ii. kinetic iii. kinetic</item>
+</list>
+</problem>
+<solution id="fs-id1396419">
+<label/>
+<para id="fs-id1975218">C</para>
+</solution>
+</exercise>
+<exercise id="fs-id1791408">
+<problem id="fs-id1524656">
+<para id="fs-id1249157">Which of the following comparisons or contrasts between endergonic and exergonic reactions is false?</para>
+<list id="fs-id1704998" list-type="enumerated" number-style="lower-alpha">
+<item>Endergonic reactions have a positive ∆G and exergonic reactions have a negative ∆G.</item>
+<item>Endergonic reactions consume energy and exergonic reactions release energy.</item>
+<item>Both endergonic and exergonic reactions require a small amount of energy to overcome an activation barrier.</item>
+<item>Endergonic reactions take place slowly and exergonic reactions take place quickly.</item>
+</list>
+</problem>
+<solution id="fs-id2216009">
+<label/>
+<para id="fs-id2188624">D</para>
+</solution>
+</exercise>
+<exercise id="fs-id1772148">
+<problem id="fs-id1968190">
+<para id="fs-id2279994">Which of the following is the best way to judge the relative activation energies between two given chemical reactions?</para>
+<list id="fs-id1785669" list-type="enumerated" number-style="lower-alpha">
+<item>Compare the ∆G values between the two reactions.</item>
+<item>Compare their reaction rates.</item>
+<item>Compare their ideal environmental conditions.</item>
+<item>Compare the spontaneity between the two reactions.</item>
+</list>
+</problem>
+<solution id="fs-id2010854">
+<label/>
+<para id="fs-id1882991">B</para>
+</solution>
+</exercise>
+</section>
+<section id="fs-id1419104" class="critical-thinking">
+<title>Critical Thinking Questions</title>
+<exercise id="fs-id1768714">
+<problem id="fs-id2025390">
+<para id="fs-id1966544">Explain in your own words the difference between a spontaneous reaction and one that occurs instantaneously, and what causes this difference.</para></problem>
+<solution id="fs-id1594532"><label/>
+<para id="fs-id1883228">A spontaneous reaction is one that has a negative ∆G and thus releases energy. However, a spontaneous reaction need not occur quickly or suddenly like an instantaneous reaction. It may occur over long periods due to a large energy of activation, which prevents the reaction from occurring quickly.</para></solution>
+</exercise>
+<exercise id="fs-id1863345">
+<problem id="fs-id1805502">
+<para id="fs-id1769427">Describe the position of the transition state on a vertical energy scale, from low to high, relative to the position of the reactants and products, for both endergonic and exergonic reactions.</para></problem>
+<solution id="fs-id1871574"><label/>
+<para id="fs-id2187832">The transition state is always higher in energy than the reactants and the products of a reaction (therefore, above), regardless of whether the reaction is endergonic or exergonic.</para></solution>
+</exercise>
+</section>
+ </content>
+<glossary>
+<definition id="fs-id1286063"><term>activation energy</term> <meaning id="fs-id1635254">energy necessary for reactions to occur</meaning></definition>
+<definition id="fs-id1433263"><term>chemical energy</term> <meaning id="fs-id1519767">potential energy in chemical bonds that releases when those bonds are broken</meaning></definition>
+<definition id="fs-id2575234"><term>endergonic</term> <meaning id="fs-id2072264">describes chemical reactions that require energy input</meaning></definition>
+<definition id="fs-id1359443"><term>enthalpy</term> <meaning id="fs-id1720501">a system's total energy</meaning></definition>
+<definition id="fs-id1260889"><term>exergonic</term> <meaning id="fs-id1769864">describes chemical reactions that release free energy</meaning></definition>
+<definition id="fs-id2057346"><term>free energy</term> <meaning id="fs-id1720773">Gibbs free energy is the usable energy, or energy that is available to do work</meaning></definition>
+<definition id="fs-id1988350"><term>heat energy</term> <meaning id="fs-id1640143">total bond energy of reactants or products in a chemical reaction</meaning></definition>
+<definition id="fs-id1808392"><term>kinetic energy</term> <meaning id="fs-id1419914">energy type that takes place with objects or particles in motion</meaning></definition>
+<definition id="fs-id1689970"><term>potential energy</term> <meaning id="fs-id1772400">energy type that has the potential to do work; stored energy</meaning></definition>
+<definition id="fs-id1341960"><term>transition state</term> <meaning id="fs-id1482640">high-energy, unstable state (an intermediate form between the substrate and the product) occurring during a chemical reaction</meaning></definition>
+</glossary>
+</document>

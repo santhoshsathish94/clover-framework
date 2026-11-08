@@ -1,0 +1,1675 @@
+{
+  "experiment": "Experiment 5.2 \u2014 Real Source Learning, Model-Generated Understanding & Multi-Seed Evaluation",
+  "timestamp": "2026-11-08T16:23:22Z",
+  "model": "LFM3-Omni-2B",
+  "total_model_calls": 92,
+  "total_prompt_tokens": 81853,
+  "total_completion_tokens": 22091,
+  "total_model_wall_ms": 842686.6,
+  "total_experiment_wall_s": 878.03,
+  "production_memory_tree_untouched": true,
+  "step_0_isolated_sandbox_security": {
+    "status": "passed",
+    "valid_execution_verified": true,
+    "attacks_blocked": 7,
+    "details": {
+      "file_open_write": {
+        "blocked": true,
+        "reason": "SecurityError: builtin 'open' is not permitted in sandbox"
+      },
+      "import_os": {
+        "blocked": true,
+        "reason": "SecurityError: import of module 'os' is not permitted in sandbox"
+      },
+      "import_socket": {
+        "blocked": true,
+        "reason": "SecurityError: import of module 'socket' is not permitted in sandbox"
+      },
+      "import_subprocess": {
+        "blocked": true,
+        "reason": "SecurityError: import of module 'subprocess' is not permitted in sandbox"
+      },
+      "dunder_escape": {
+        "blocked": true,
+        "reason": "SecurityError: dunder attribute access '__subclasses__' is not permitted in sandbox"
+      },
+      "eval_exec": {
+        "blocked": true,
+        "reason": "SecurityError: builtin 'eval' is not permitted in sandbox"
+      },
+      "infinite_loop_timeout": {
+        "blocked": true,
+        "reason": "TimeoutError: sandbox execution exceeded 0.8s limit"
+      }
+    }
+  },
+  "step_1_real_book_ingestion": {
+    "think_python_3e_ch06": {
+      "book_title": "Think Python: How to Think Like a Computer Scientist (3rd Edition)",
+      "section_title": "Chapter 6: Return Values \u2014 Recursion, Fibonacci, and Checking Types",
+      "location_span": "think_python_3e_chap06.ipynb#cells[87:118]",
+      "license": "CC BY-NC-SA 3.0",
+      "raw_file_bytes": 51424,
+      "raw_file_sha256": "6f4163260f746cd862356930901ec2670e97a3aac9dc07082b7e65aea2dbb14a",
+      "verbatim_chars": 9519
+    },
+    "think_python_3e_ch10": {
+      "book_title": "Think Python: How to Think Like a Computer Scientist (3rd Edition)",
+      "section_title": "Chapter 10: Dictionaries \u2014 Call Graphs, Memos, and Self-Checks",
+      "location_span": "think_python_3e_chap10.ipynb#cells[96:108]",
+      "license": "CC BY-NC-SA 3.0",
+      "raw_file_bytes": 48688,
+      "raw_file_sha256": "68f930d786d12f95f723572e0834d0742dfed1b8157df41796e063d6014f4e89",
+      "verbatim_chars": 5469
+    },
+    "university_physics_v1_m58306": {
+      "book_title": "University Physics, Volume 1 (OpenStax)",
+      "section_title": "Section 6.4: Drag Force and Terminal Speed",
+      "location_span": "university_physics_v1_m58306_drag_terminal_speed.cnxml#lines[1:746](chars[0:6600])",
+      "license": "CC BY 4.0 / OpenStax Attribution",
+      "raw_file_bytes": 113837,
+      "raw_file_sha256": "b4138356d60e75166dda534e391279a1d12ed199cd418adadda67c77f47ec4fc",
+      "verbatim_chars": 6600
+    },
+    "university_physics_v1_m58314": {
+      "book_title": "University Physics, Volume 1 (OpenStax)",
+      "section_title": "Section 8.3: Conservation of Energy and Non-Conservative Work",
+      "location_span": "university_physics_v1_m58314_conservation_of_energy.cnxml#lines[1:338](chars[6800:11600])",
+      "license": "CC BY 4.0 / OpenStax Attribution",
+      "raw_file_bytes": 51630,
+      "raw_file_sha256": "6d99ce22b67a1d00e08301da806d71001f105e39e9577a95da3b5d640e927745",
+      "verbatim_chars": 4800
+    },
+    "biology_2e_m66459": {
+      "book_title": "Biology 2e (OpenStax)",
+      "section_title": "Section 6.2: Potential, Kinetic, Free, and Activation Energy",
+      "location_span": "biology_2e_m66459_free_energy.cnxml#lines[1:185](chars[0:5200])",
+      "license": "CC BY 4.0 / OpenStax Attribution",
+      "raw_file_bytes": 29431,
+      "raw_file_sha256": "e9584eaa75e7149c38c8f4359b5c6006f9dc4a9e05c08b2ce372c27b08f798b2",
+      "verbatim_chars": 5200
+    },
+    "biology_2e_m66461": {
+      "book_title": "Biology 2e (OpenStax)",
+      "section_title": "Section 6.3: The Laws of Thermodynamics in Living Systems",
+      "location_span": "biology_2e_m66461_thermodynamics.cnxml#lines[1:100](chars[0:5200])",
+      "license": "CC BY 4.0 / OpenStax Attribution",
+      "raw_file_bytes": 14335,
+      "raw_file_sha256": "4b46064564c69dbdb16a8652e6415bd568d0855aad1d32ae3e8f696ffb2d9da4",
+      "verbatim_chars": 5200
+    },
+    "biology_2e_m66462": {
+      "book_title": "Biology 2e (OpenStax)",
+      "section_title": "Section 6.4: ATP: Adenosine Triphosphate and Energy Coupling",
+      "location_span": "biology_2e_m66462_atp_coupling.cnxml#lines[1:119](chars[3500:8800])",
+      "license": "CC BY 4.0 / OpenStax Attribution",
+      "raw_file_bytes": 14105,
+      "raw_file_sha256": "20bec814db512250387bb87ae1bff82675effad961bffe1ad767af37ee70c369",
+      "verbatim_chars": 5300
+    }
+  },
+  "step_5_multi_seed_comparison_summary": {
+    "base_model": {
+      "hits_per_seed": [
+        0,
+        0,
+        0
+      ],
+      "total_per_seed": 5,
+      "mean_accuracy": 0.0,
+      "std_accuracy": 0.0,
+      "total_hits_across_seeds": "0/15"
+    },
+    "ordinary_rag": {
+      "hits_per_seed": [
+        0,
+        0,
+        0
+      ],
+      "total_per_seed": 5,
+      "mean_accuracy": 0.0,
+      "std_accuracy": 0.0,
+      "total_hits_across_seeds": "0/15"
+    },
+    "clover_learning": {
+      "hits_per_seed": [
+        2,
+        3,
+        3
+      ],
+      "total_per_seed": 5,
+      "mean_accuracy": 0.5333,
+      "std_accuracy": 0.0943,
+      "total_hits_across_seeds": "8/15"
+    }
+  },
+  "seed_runs": [
+    {
+      "seed": 1,
+      "sections_studied": 6,
+      "sections_promoted": 6,
+      "study_units": [
+        {
+          "source_key": "think_python_3e_ch06",
+          "section_title": "Chapter 6: Return Values \u2014 Recursion, Fibonacci, and Checking Types",
+          "location_span": "think_python_3e_chap06.ipynb#cells[87:118]",
+          "raw_file_sha256": "6f4163260f746cd862356930901ec2670e97a3aac9dc07082b7e65aea2dbb14a",
+          "concept_id": "MEM-CONCEPT-855D26",
+          "concept_title": "Recursive return values in Python",
+          "emergent_hypothesis": "The recursive call must return a value that, when multiplied by `n`, yields the correct final result, which is only guaranteed if the base cases and the recursive step are correctly defined.",
+          "where_it_breaks": "Naive use assumes the recursive call returns the correct value without verifying the precondition (e.g., `n == 0` or `n == 1`), causing `TypeError` when `step > 1` and the argument is not an integer, boolean, or non-negative.",
+          "coding_rule": "def _rec(k): if k <= 0: return 0; return k + _rec(k - step)",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 0,
+          "model_wall_ms": 21014.1
+        },
+        {
+          "source_key": "think_python_3e_ch10",
+          "section_title": "Chapter 10: Dictionaries \u2014 Call Graphs, Memos, and Self-Checks",
+          "location_span": "think_python_3e_chap10.ipynb#cells[96:108]",
+          "raw_file_sha256": "68f930d786d12f95f723572e0834d0742dfed1b8157df41796e063d6014f4e89",
+          "concept_id": "MEM-CONCEPT-F9B8F9",
+          "concept_title": "Dictionary Memoization via a Fresh `memo` Dictionary",
+          "emergent_hypothesis": "Initializing `memo = {}` inside the outer function guarantees that previously computed values are never recomputed, eliminating the exponential blowup.",
+          "where_it_breaks": "Naive recursion without a memo stores every intermediate value, causing exponential recomputation as `n` grows.",
+          "coding_rule": "`memo = {}`; `def _rec(n): return memo.get(n, None) if memo.get(n, None) is None else memo[n] = fibonacci_memo(n-1) + fibonacci_memo(n-2)`",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 1,
+          "model_wall_ms": 23596.4
+        },
+        {
+          "source_key": "university_physics_v1_m58306",
+          "section_title": "Section 6.4: Drag Force and Terminal Speed",
+          "location_span": "university_physics_v1_m58306_drag_terminal_speed.cnxml#lines[1:746](chars[0:6600])",
+          "raw_file_sha256": "b4138356d60e75166dda534e391279a1d12ed199cd418adadda67c77f47ec4fc",
+          "concept_id": "MEM-CONCEPT-167E13",
+          "concept_title": "Quadratic Drag and Terminal Velocity",
+          "emergent_hypothesis": "The exponent n in the drag force equation is fixed at 2 for high-speed flow, regardless of velocity.",
+          "where_it_breaks": "Naive use assumes drag coefficient C is constant across all velocities, ignoring the stated dependency on velocity.",
+          "coding_rule": "F_d = 0.5 * C * rho * A * v^2",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 0,
+          "model_wall_ms": 19907.3
+        },
+        {
+          "source_key": "university_physics_v1_m58314",
+          "section_title": "Section 8.3: Conservation of Energy and Non-Conservative Work",
+          "location_span": "university_physics_v1_m58314_conservation_of_energy.cnxml#lines[1:338](chars[6800:11600])",
+          "raw_file_sha256": "6d99ce22b67a1d00e08301da806d71001f105e39e9577a95da3b5d640e927745",
+          "concept_id": "MEM-CONCEPT-5A6588",
+          "concept_title": "Conservation of Mechanical Energy with Non-Conservative Air-Drag Work",
+          "emergent_hypothesis": "The total mechanical energy of the system is conserved, so the algebraic sum of the gain in kinetic energy and loss in potential energy equals the dissipated energy, regardless of the specific path taken.",
+          "where_it_breaks": "Naive use of the equation \u0394E_diss = |\u0394K + \u0394U| assumes the non-conservative work is purely dissipative and independent of the path, ignoring that the work done by air resistance depends on the specific trajectory (initial and final states) and is path-dependent.",
+          "coding_rule": "\u0394E_diss = | K_f - K_i + U_f - U_i | = | (1/2) * mass * (v_final ** 2) - mass * g * h_drop |",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 1,
+          "model_wall_ms": 22551.5
+        },
+        {
+          "source_key": "biology_2e_m66459",
+          "section_title": "Section 6.2: Potential, Kinetic, Free, and Activation Energy",
+          "location_span": "biology_2e_m66459_free_energy.cnxml#lines[1:185](chars[0:5200])",
+          "raw_file_sha256": "e9584eaa75e7149c38c8f4359b5c6006f9dc4a9e05c08b2ce372c27b08f798b2",
+          "concept_id": "MEM-CONCEPT-60CE3A",
+          "concept_title": "Gibbs Free Energy and Spontaneity of Chemical Reactions",
+          "emergent_hypothesis": "The author claims that Gibbs free energy (G) is the usable energy available after accounting for entropy, making it the correct measure for quantifying and comparing energy transfers in chemical reactions.",
+          "where_it_breaks": "Naive use of the formula \u0394G = \u0394H - T\u0394S breaks when entropy (\u0394S) is not accounted for, leading to incorrect predictions of spontaneity.",
+          "coding_rule": "\u0394G = \u0394H - T\u0394S (where \u0394H is enthalpy change, T is temperature in Kelvin, and \u0394S is entropy change)",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 1,
+          "model_wall_ms": 26314.7
+        },
+        {
+          "source_key": "biology_2e_m66462",
+          "section_title": "Section 6.4: ATP: Adenosine Triphosphate and Energy Coupling",
+          "location_span": "biology_2e_m66462_atp_coupling.cnxml#lines[1:119](chars[3500:8800])",
+          "raw_file_sha256": "20bec814db512250387bb87ae1bff82675effad961bffe1ad767af37ee70c369",
+          "concept_id": "MEM-CONCEPT-E892BC",
+          "concept_title": "ATP hydrolysis free-energy coupling and ion pump energy coupling",
+          "emergent_hypothesis": "The smallest integer n_atp equals floor(delta_g_endergonic / per_atp) + 1, ensuring Delta_G_net < 0.",
+          "where_it_breaks": "Na+ and K+ transport across the membrane requires a precise integer number of ATP molecules, which breaks naive application of a simple energy-per-ATP ratio.",
+          "coding_rule": "n_atp = int(math.floor(delta_g_endergonic / per_atp)) + 1; Delta_G_net = delta_g_endergonic - n_atp * per_atp < 0",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 1,
+          "model_wall_ms": 23362.1
+        }
+      ],
+      "false_hypothesis_quarantine": {
+        "hypothesis_id": "MEM-HYP-FALSE-GLOBAL-MEMO-S1",
+        "sandbox_ran": true,
+        "hypothesis_held": false,
+        "refuted_by_counterexample": true,
+        "final_status": "contested",
+        "promoted_to_validated_concepts": false
+      },
+      "evaluation": {
+        "base_model": {
+          "passed": 0,
+          "total": 5,
+          "accuracy": 0.0,
+          "problems": [
+            {
+              "problem_id": "UNSEEN-TP-01-STEP-OVERSHOOT",
+              "title": "Multi-Step Recursive Countdown Sum with Input Validation",
+              "mode": "base_model",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "RecursionError (line 9: return n + countdown_sum(n - step, step)): maximum recursion depth exceeded",
+              "context_used": "none",
+              "model_wall_ms": 4141.2,
+              "generated_code": "def countdown_sum(n, step):\n    # Validate inputs: n must be an integer (not bool), step must be a positive integer\n    if not isinstance(n, int) or isinstance(n, bool) or not isinstance(step, int) or step <= 0:\n        return None\n    # Recursively sum n + (n - step) + (n - 2*step) + ... down to 0\n    if n == 0:\n        return 0\n    return n + countdown_sum(n - step, step)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-02-MEMO-CACHE-ISOLATION",
+              "title": "Parameterized Minimum-Cost Staircase Climber Across Multiple Calls",
+              "mode": "base_model",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "call1_35_2_5",
+                    false
+                  ],
+                  [
+                    "call2_35_10_3_no_stale_cache",
+                    true
+                  ],
+                  [
+                    "call3_35_4_4_no_stale_cache",
+                    true
+                  ]
+                ],
+                "got": [
+                  68,
+                  61,
+                  72
+                ]
+              },
+              "context_used": "none",
+              "model_wall_ms": 3683.2,
+              "generated_code": "def min_climb_cost(n, cost1, cost2):\n    memo = {}\n    def helper(n):\n        if n in memo:\n            return memo[n]\n        if n == 1:\n            return cost1\n        if n == 2:\n            return min(cost1, cost2)\n        res = min(helper(n-1) + cost1, helper(n-2) + cost2)\n        memo[n] = res\n        return res\n    return helper(n)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-03-GRID-DAG-OBSTACLES",
+              "title": "Memoized 2D Grid Path Counter with Obstacle Set Isolation",
+              "mode": "base_model",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "TimeoutError: sandbox execution exceeded 5.0s limit",
+              "context_used": "none",
+              "model_wall_ms": 3347.8,
+              "generated_code": "def count_grid_paths(r, c, blocked):\n    if r < 0 or c < 0 or (r, c) in blocked or (0, 0) in blocked:\n        return 0\n    if r == 0 and c == 0:\n        return 1\n    return count_grid_paths(r - 1, c, blocked) + count_grid_paths(r, c - 1, blocked)"
+            },
+            {
+              "problem_id": "UNSEEN-PHY-04-DRAG-AND-NONCONSERVATIVE-WORK",
+              "title": "Quadratic Drag Terminal Velocity and Non-Conservative Work-Energy Balance",
+              "mode": "base_model",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "v_term_check",
+                    false
+                  ],
+                  [
+                    "w_nc_negative_dissipation",
+                    false
+                  ]
+                ],
+                "got": [
+                  51.26,
+                  -322560.0
+                ]
+              },
+              "context_used": "none",
+              "model_wall_ms": 6140.6,
+              "generated_code": "import math\n\ng = 9.81\n\ndef analyze_descent(mass, area, rho, drag_c, h_drop, v_actual):\n    # Theoretical terminal speed under quadratic drag: v_term = sqrt(2 * m * g / (drag_c * area))\n    v_term = math.sqrt(2 * mass * g / (drag_c * area))\n    \n    # Non-conservative work done by air drag: w_nc = - (1/2) * drag_c * area * v^2 * h_drop\n    # The negative sign indicates energy is removed from the system.\n    w_nc = -0.5 * drag_c * area * v_actual**2 * h_drop\n    \n    return (round(v_term, 2), round(w_nc, 2))"
+            },
+            {
+              "problem_id": "UNSEEN-BIO-05-ATP-COUPLED-HOMEOSTASIS",
+              "title": "ATP Free-Energy Coupling and Open-System Ion Gradient Maintenance",
+              "mode": "base_model",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "SyntaxError at line 19: unmatched ')'",
+              "context_used": "none",
+              "model_wall_ms": 14517.2,
+              "generated_code": "import math\n\ndef atp_pump_balance(delta_g_endergonic, delta_g_atp, eff, leak_rate, c_in, c_out):\n    # Endergonic reaction: Delta_G = +delta_g_endergonic (kJ/mol, >0)\n    # ATP hydrolysis: delta_g_atp kJ/mol per ATP, e.g. -30.5\n    # Efficiency: eff in (0, 1]\n    # Steady-state leak: J_leak = leak_rate * (c_in - c_out) (mol/s)\n    # Each ATP pump consumes n_atp ATP molecules per unit flux\n    \n    # Calculate energy required for ATP hydrolysis\n    energy_atp = abs(delta_g_atp) * n_atp  # kJ/mol\n    \n    # Total energy needed for the coupled reaction to be spontaneous\n    total_energy_needed = energy_atp + delta_g_endergonic\n    \n    # Calculate ATP molecules needed to make the reaction spontaneous\n    # Delta_G_net < 0 => n_atp >= ceil(total_energy_needed / delta_g_endergonic)\n    n_atp = math.ceil(total_energy_needed / delta_g_endergonic))\n    \n    # Calculate resulting Delta_G_net (rounded to 2 decimals)\n    delta_G_net = total_energy_needed - n_atp * delta_g_endergonic\n    delta_G_net_rounded = round(delta_G_net, 2)\n    \n    # Calculate ATP consumption rate to maintain c_in > c_out\n    # At steady state: n_atp * J_leak = c_in - c_out\n    # J_leak = leak_rate * (c_in - c_out) mol/s\n    J_leak = leak_rate * (c_in - c_out)\n    atp_per_s = n_atp * J_leak\n    atp_per_s_rounded = round(atp_per_s, 2)\n    \n    return (int(n_atp), delta_G_net_rounded, atp_per_s_rounded)"
+            }
+          ]
+        },
+        "ordinary_rag": {
+          "passed": 0,
+          "total": 5,
+          "accuracy": 0.0,
+          "problems": [
+            {
+              "problem_id": "UNSEEN-TP-01-STEP-OVERSHOOT",
+              "title": "Multi-Step Recursive Countdown Sum with Input Validation",
+              "mode": "ordinary_rag",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "TypeError (line 12: return n + countdown_sum(n - step, step)): unsupported operand type(s) for +: 'int' and 'NoneType'",
+              "context_used": "2 raw BM25 chunks (university_physics_v1_m58314#chunk_4, university_physics_v1_m58314#chunk_3)",
+              "model_wall_ms": 5475.3,
+              "generated_code": "def countdown_sum(n, step):\n    # Validate inputs: n must be an integer >= 0, step must be a positive integer\n    if not isinstance(n, int) or isinstance(n, bool) or n < 0:\n        return None\n    if not isinstance(step, int) or isinstance(step, bool) or step <= 0:\n        return None\n\n    # Recursive sum: n + (n - step) + (n - 2*step) + ... down to 0\n    if n == 0:\n        return 0\n    return n + countdown_sum(n - step, step)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-02-MEMO-CACHE-ISOLATION",
+              "title": "Parameterized Minimum-Cost Staircase Climber Across Multiple Calls",
+              "mode": "ordinary_rag",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "call1_35_2_5",
+                    true
+                  ],
+                  [
+                    "call2_35_10_3_no_stale_cache",
+                    false
+                  ],
+                  [
+                    "call3_35_4_4_no_stale_cache",
+                    true
+                  ]
+                ],
+                "got": [
+                  70,
+                  54,
+                  72
+                ]
+              },
+              "context_used": "2 raw BM25 chunks (think_python_3e_ch06#chunk_1, think_python_3e_ch06#chunk_6)",
+              "model_wall_ms": 4494.6,
+              "generated_code": "from functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef min_climb_cost(n, cost1, cost2):\n    if n == 0:\n        return 0\n    if n == 1:\n        return min(cost1, cost2)\n    return min(min_climb_cost(n-1, cost1, cost2) + cost1,\n              min_climb_cost(n-2, cost1, cost2) + cost2)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-03-GRID-DAG-OBSTACLES",
+              "title": "Memoized 2D Grid Path Counter with Obstacle Set Isolation",
+              "mode": "ordinary_rag",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "TimeoutError: sandbox execution exceeded 5.0s limit",
+              "context_used": "2 raw BM25 chunks (think_python_3e_ch06#chunk_1, think_python_3e_ch06#chunk_2)",
+              "model_wall_ms": 4240.9,
+              "generated_code": "def count_grid_paths(r, c, blocked):\n    if r < 0 or c < 0 or (r, c) in blocked or (0, 0) in blocked:\n        return 0\n    if r == 0 and c == 0:\n        return 1\n    return count_grid_paths(r - 1, c, blocked) + count_grid_paths(r, c - 1, blocked)"
+            },
+            {
+              "problem_id": "UNSEEN-PHY-04-DRAG-AND-NONCONSERVATIVE-WORK",
+              "title": "Quadratic Drag Terminal Velocity and Non-Conservative Work-Energy Balance",
+              "mode": "ordinary_rag",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "v_term_check",
+                    true
+                  ],
+                  [
+                    "w_nc_negative_dissipation",
+                    false
+                  ]
+                ],
+                "got": [
+                  46.6,
+                  -390297.6
+                ]
+              },
+              "context_used": "2 raw BM25 chunks (university_physics_v1_m58306#chunk_8, university_physics_v1_m58306#chunk_2)",
+              "model_wall_ms": 7717.9,
+              "generated_code": "import math\n\ng = 9.81\n\ndef analyze_descent(mass, area, rho, drag_c, h_drop, v_actual):\n    # Theoretical terminal speed under quadratic drag: v_term = sqrt((2 * mass * g) / (rho * C * A))\n    v_term = math.sqrt((2 * mass * g) / (rho * drag_c * area))\n    \n    # Non-conservative work done by air drag: W_nc = - (1/2) * C * rho * A * v^2 * h_drop\n    # The negative sign indicates energy is removed from the system (work done by drag)\n    v_squared = v_actual ** 2\n    W_nc = -0.5 * drag_c * rho * area * v_squared * h_drop\n    \n    return (round(v_term, 2), round(W_nc, 2))"
+            },
+            {
+              "problem_id": "UNSEEN-BIO-05-ATP-COUPLED-HOMEOSTASIS",
+              "title": "ATP Free-Energy Coupling and Open-System Ion Gradient Maintenance",
+              "mode": "ordinary_rag",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "n_atp_min_3",
+                    false
+                  ],
+                  [
+                    "dg_total_negative",
+                    false
+                  ],
+                  [
+                    "atp_flux_rate",
+                    false
+                  ]
+                ],
+                "got": [
+                  -2,
+                  1.2,
+                  0.0
+                ]
+              },
+              "context_used": "2 raw BM25 chunks (biology_2e_m66462#chunk_4, biology_2e_m66462#chunk_3)",
+              "model_wall_ms": 10886.3,
+              "generated_code": "import math\n\ndef atp_pump_balance(delta_g_endergonic, delta_g_atp, eff, leak_rate, c_in, c_out):\n    # ATP hydrolysis releases 7.3 kcal/mol = 7300 J/mol\n    energy_atp = 7300.0  # J/mol\n\n    # Minimum ATP needed to make net reaction spontaneous:\n    # Delta_G_net = Delta_G_endergonic - (eff * delta_g_atp) * n_atp <= 0\n    # => n_atp >= (Delta_G_endergonic) / (eff * delta_g_atp)\n    n_min = math.ceil(delta_g_endergonic / (eff * delta_g_atp))\n\n    # Energy required to move c_in - c_out ions across membrane:\n    # J = leak_rate * (c_in - c_out)  (c_in, c_out in J/mol)\n    J_leak = leak_rate * (c_in - c_out)\n\n    # ATP needed per second to maintain c_in > c_out against leak:\n    # n_atp_per_s = J_leak / energy_atp\n    atp_per_s = J_leak / energy_atp\n\n    return (int(n_min), round(delta_g_endergonic - eff * delta_g_atp * n_min, 2),\n            round(atp_per_s, 2))"
+            }
+          ]
+        },
+        "clover_learning": {
+          "passed": 2,
+          "total": 5,
+          "accuracy": 0.4,
+          "problems": [
+            {
+              "problem_id": "UNSEEN-TP-01-STEP-OVERSHOOT",
+              "title": "Multi-Step Recursive Countdown Sum with Input Validation",
+              "mode": "clover_learning",
+              "seed": 1,
+              "passed": true,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": true,
+                "checks": [
+                  [
+                    "valid_exact_zero",
+                    true
+                  ],
+                  [
+                    "valid_overshoot_odd",
+                    true
+                  ],
+                  [
+                    "valid_overshoot_step3",
+                    true
+                  ],
+                  [
+                    "valid_zero_start",
+                    true
+                  ],
+                  [
+                    "invalid_neg_n",
+                    true
+                  ],
+                  [
+                    "invalid_float_n",
+                    true
+                  ],
+                  [
+                    "invalid_zero_step",
+                    true
+                  ]
+                ]
+              },
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 3807.1,
+              "generated_code": "def countdown_sum(n, step):\n    if not isinstance(n, int) or isinstance(n, bool) or n < 0:\n        return None\n    if not isinstance(step, int) or isinstance(step, bool) or step <= 0:\n        return None\n    total = 0\n    current = n\n    while current >= 0:\n        total += current\n        current -= step\n    return total"
+            },
+            {
+              "problem_id": "UNSEEN-TP-02-MEMO-CACHE-ISOLATION",
+              "title": "Parameterized Minimum-Cost Staircase Climber Across Multiple Calls",
+              "mode": "clover_learning",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "NameError (line 11: res = min(_rec(n-1, cost1, cost2) + cost1, _rec(n-2, cost1, cost2) + cost2)): name 'cost1' is not defined",
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 4473.7,
+              "generated_code": "memo = {}\n\ndef _rec(n):\n    if n in memo:\n        return memo[n]\n    if n == 0:\n        return 0\n    if n == 1:\n        return cost1\n    res = min(_rec(n-1, cost1, cost2) + cost1, _rec(n-2, cost1, cost2) + cost2)\n    memo[n] = res\n    return res\n\ndef min_climb_cost(n, cost1, cost2):\n    return _rec(n)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-03-GRID-DAG-OBSTACLES",
+              "title": "Memoized 2D Grid Path Counter with Obstacle Set Isolation",
+              "mode": "clover_learning",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "open_14x14",
+                    false
+                  ],
+                  [
+                    "center_blocked_14x14",
+                    false
+                  ],
+                  [
+                    "origin_blocked",
+                    true
+                  ],
+                  [
+                    "small_2x2_blocked_1_1",
+                    false
+                  ]
+                ],
+                "got": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 6430.2,
+              "generated_code": "def count_grid_paths(r, c, blocked):\n    if r < 0 or c < 0 or (r, c) in blocked or (0, 0) in blocked:\n        return 0\n    if r == 0 and c == 0:\n        return 1\n    memo = {}\n    def _rec(row, col):\n        if (row, col) in memo:\n            return memo[(row, col)]\n        if row < 0 or col < 0 or (row, col) in blocked:\n            return 0\n        res = _rec(row - 1, col) + _rec(row, col - 1)\n        memo[(row, col)] = res\n        return res\n    return _rec(r, c)"
+            },
+            {
+              "problem_id": "UNSEEN-PHY-04-DRAG-AND-NONCONSERVATIVE-WORK",
+              "title": "Quadratic Drag Terminal Velocity and Non-Conservative Work-Energy Balance",
+              "mode": "clover_learning",
+              "seed": 1,
+              "passed": true,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": true,
+                "checks": [
+                  [
+                    "v_term_check",
+                    true
+                  ],
+                  [
+                    "w_nc_negative_dissipation",
+                    true
+                  ]
+                ],
+                "got": [
+                  46.6,
+                  -281475.0
+                ]
+              },
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 4773.8,
+              "generated_code": "import math\n\ng = 9.81\n\ndef analyze_descent(mass, area, rho, drag_c, h_drop, v_actual):\n    v_term = math.sqrt((2.0 * mass * g) / (drag_c * rho * area))\n    w_nc = 0.5 * mass * (v_actual ** 2) - mass * g * h_drop\n    return (round(v_term, 2), round(w_nc, 2))"
+            },
+            {
+              "problem_id": "UNSEEN-BIO-05-ATP-COUPLED-HOMEOSTASIS",
+              "title": "ATP Free-Energy Coupling and Open-System Ion Gradient Maintenance",
+              "mode": "clover_learning",
+              "seed": 1,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "n_atp_min_3",
+                    false
+                  ],
+                  [
+                    "dg_total_negative",
+                    false
+                  ],
+                  [
+                    "atp_flux_rate",
+                    false
+                  ]
+                ],
+                "got": [
+                  -1,
+                  19.5,
+                  -6.75
+                ]
+              },
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 10312.5,
+              "generated_code": "import math\n\ndef atp_pump_balance(delta_g_endergonic, delta_g_atp, eff, leak_rate, c_in, c_out):\n    # Minimum ATP needed to make the coupled reaction spontaneous:\n    # Delta_G_net = delta_g_endergonic - n_atp * delta_g_atp < 0\n    # => n_atp > delta_g_endergonic / delta_g_atp\n    # n_atp = floor(delta_g_endergonic / delta_g_atp) + 1\n    n_atp = int(math.floor(delta_g_endergonic / delta_g_atp)) + 1\n    Delta_G_net = delta_g_endergonic - n_atp * delta_g_atp\n    Delta_G_net = round(Delta_G_net, 2)\n    \n    # Steady-state ATP consumption rate to maintain c_in > c_out against leak\n    J_leak = leak_rate * (c_in - c_out)\n    # Each ATP consumes n_atp, so rate = leak_rate * (c_in - c_out) / n_atp\n    atp_per_s = round(leak_rate * (c_in - c_out) / n_atp, 2)\n    \n    return (n_atp, Delta_G_net, atp_per_s)"
+            }
+          ]
+        }
+      },
+      "unprompted_cross_domain_discovery": {
+        "prompt": "Can the principles you learned about energy, constraints and dynamic systems help explain anything about living systems? Identify possible relationships, distinguish analogy from actual mechanism, and propose a way to test your ideas (including a ```python``` simulation script that sets `RESULT = True` if your test confirms the distinction between static equilibrium and a driven living steady state).",
+        "seed": 1,
+        "model_wall_ms": 23947.6,
+        "distinguishes_analogy_from_mechanism": true,
+        "identifies_free_energy_and_dissipation": true,
+        "proposed_test_executed_in_sandbox": true,
+        "proposed_test_result": true,
+        "model_response_excerpt": "### Discovered Relationships\n- **Energy Coupling in Living Systems**: The principles of Gibbs free energy and ATP hydrolysis coupling directly explain how living systems convert chemical energy (ATP) into usable work (e.g., muscle contraction, ion pumping). The model extracted rule `n_atp = int(math.floor(delta_g_endergonic / per_atp)) + 1` quantifies the minimum ATP required to drive an endergonic process, mirroring the biological requirement for energy coupling.\n- **Dynamic vs. Static Equilibrium**: Living systems operate far from equilibrium (e.g., ATP hydrolysis continuously releases energy to maintain gradients), contrasting with static equilibrium (e.g., a closed system at constant T and P). This distinction is critical for understanding metabolic flux and cellular homeostasis.\n- **Constraint-Based Modeling**: The sandbox verification of `RESULT=True` confirms that the mathematical constraints derived from Gibbs free energy (\u0394G = \u0394H - T\u0394S) and ATP coupling (n_atp calculation) align with biological reality, validating the use of these principles in modeling living systems.\n\n### Misleading Analogy vs. Actual Mechanism\n- **Analogy**: The naive application of a simple energy-per-",
+        "model_test_code": "import math\n\n# Constants for ATP hydrolysis (simplified for demonstration)\ndelta_g_endergonic = -30.0  # kJ/mol (typical for ATP hydrolysis)\nper_atp = 10.0  # kJ/mol (simplified for demonstration)\n\n# Model extracted rule: n_atp = int(math.floor(delta_g_endergonic / per_atp)) + 1\nn_atp = int(math.floor(delta_g_endergonic / per_atp)) + 1\nDelta_G_net = delta_g_endergonic - n_atp * per_atp\n\n# Validate: Delta_G_net should be < 0 for endergonic process\nRESULT = Delta_G_net < 0\n\nprint(f\"Delta_G_net = {Delta_G_net:.2f} kJ/mol\")\nprint(f\"n_atp = {n_atp}\")\nprint(f\"RESULT = {RESULT}\")"
+      }
+    },
+    {
+      "seed": 2,
+      "sections_studied": 6,
+      "sections_promoted": 6,
+      "study_units": [
+        {
+          "source_key": "think_python_3e_ch06",
+          "section_title": "Chapter 6: Return Values \u2014 Recursion, Fibonacci, and Checking Types",
+          "location_span": "think_python_3e_chap06.ipynb#cells[87:118]",
+          "raw_file_sha256": "6f4163260f746cd862356930901ec2670e97a3aac9dc07082b7e65aea2dbb14a",
+          "concept_id": "MEM-CONCEPT-0873E6",
+          "concept_title": "Recursive return values in Python",
+          "emergent_hypothesis": "The recursive call must return a value that, when multiplied by `n`, yields the correct final result, which is only guaranteed if the base cases and the recursive step are correctly defined.",
+          "where_it_breaks": "Naive use assumes the recursive call returns the correct value without verifying the precondition (e.g., `n == 0` or `n == 1`), causing `TypeError` when `step > 1` and the argument is not an integer, boolean, or non-negative.",
+          "coding_rule": "def _rec(k): if k <= 0: return 0; return k + _rec(k - step)",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 0,
+          "model_wall_ms": 20814.0
+        },
+        {
+          "source_key": "think_python_3e_ch10",
+          "section_title": "Chapter 10: Dictionaries \u2014 Call Graphs, Memos, and Self-Checks",
+          "location_span": "think_python_3e_chap10.ipynb#cells[96:108]",
+          "raw_file_sha256": "68f930d786d12f95f723572e0834d0742dfed1b8157df41796e063d6014f4e89",
+          "concept_id": "MEM-CONCEPT-138E32",
+          "concept_title": "Dictionary Memoization via a Fresh `memo` Dictionary",
+          "emergent_hypothesis": "Initializing `memo = {}` inside the outer function guarantees that previously computed values are never recomputed, eliminating the exponential blowup.",
+          "where_it_breaks": "Naive recursion without a memo stores every intermediate value, causing exponential recomputation as `n` grows.",
+          "coding_rule": "`memo = {}`; `def _rec(n): return memo.get(n, None) if memo.get(n, None) is None else memo[n] = fibonacci_memo(n-1) + fibonacci_memo(n-2)`",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 1,
+          "model_wall_ms": 23794.0
+        },
+        {
+          "source_key": "university_physics_v1_m58306",
+          "section_title": "Section 6.4: Drag Force and Terminal Speed",
+          "location_span": "university_physics_v1_m58306_drag_terminal_speed.cnxml#lines[1:746](chars[0:6600])",
+          "raw_file_sha256": "b4138356d60e75166dda534e391279a1d12ed199cd418adadda67c77f47ec4fc",
+          "concept_id": "MEM-CONCEPT-3BCA49",
+          "concept_title": "Quadratic Drag and Terminal Velocity",
+          "emergent_hypothesis": "The exponent n in the drag force equation is fixed at 2 for high-speed flow, regardless of velocity.",
+          "where_it_breaks": "Naive use assumes drag coefficient C is constant across all velocities, ignoring the stated dependency on velocity.",
+          "coding_rule": "F_d = 0.5 * C * rho * A * v^2",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 0,
+          "model_wall_ms": 19842.6
+        },
+        {
+          "source_key": "university_physics_v1_m58314",
+          "section_title": "Section 8.3: Conservation of Energy and Non-Conservative Work",
+          "location_span": "university_physics_v1_m58314_conservation_of_energy.cnxml#lines[1:338](chars[6800:11600])",
+          "raw_file_sha256": "6d99ce22b67a1d00e08301da806d71001f105e39e9577a95da3b5d640e927745",
+          "concept_id": "MEM-CONCEPT-F6144D",
+          "concept_title": "Conservation of Mechanical Energy with Non-Conservative Air-Drag Work",
+          "emergent_hypothesis": "The total mechanical energy of the system is conserved, so the algebraic sum of the gain in kinetic energy and loss in potential energy equals the dissipated energy, regardless of the specific path taken.",
+          "where_it_breaks": "Naive use of the equation \u0394E_diss = |\u0394K + \u0394U| assumes the non-conservative work is purely dissipative and independent of the path, ignoring that the work done by air resistance depends on the specific trajectory (initial and final states) and is path-dependent.",
+          "coding_rule": "\u0394E_diss = | K_f - K_i + U_f - U_i | = | (1/2) * mass * (v_final ** 2) - mass * g * h_drop |",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 1,
+          "model_wall_ms": 22456.8
+        },
+        {
+          "source_key": "biology_2e_m66459",
+          "section_title": "Section 6.2: Potential, Kinetic, Free, and Activation Energy",
+          "location_span": "biology_2e_m66459_free_energy.cnxml#lines[1:185](chars[0:5200])",
+          "raw_file_sha256": "e9584eaa75e7149c38c8f4359b5c6006f9dc4a9e05c08b2ce372c27b08f798b2",
+          "concept_id": "MEM-CONCEPT-FFD00E",
+          "concept_title": "Gibbs Free Energy and Spontaneity of Chemical Reactions",
+          "emergent_hypothesis": "The author claims that Gibbs free energy (G) is the usable energy available after accounting for entropy, making it the correct measure for quantifying and comparing energy transfers in chemical reactions.",
+          "where_it_breaks": "Naive use of the formula \u0394G = \u0394H - T\u0394S breaks when entropy (\u0394S) is not accounted for, leading to incorrect predictions of spontaneity.",
+          "coding_rule": "\u0394G = \u0394H - T\u0394S (where \u0394H is enthalpy change, T is temperature in Kelvin, and \u0394S is entropy change)",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 1,
+          "model_wall_ms": 26449.2
+        },
+        {
+          "source_key": "biology_2e_m66462",
+          "section_title": "Section 6.4: ATP: Adenosine Triphosphate and Energy Coupling",
+          "location_span": "biology_2e_m66462_atp_coupling.cnxml#lines[1:119](chars[3500:8800])",
+          "raw_file_sha256": "20bec814db512250387bb87ae1bff82675effad961bffe1ad767af37ee70c369",
+          "concept_id": "MEM-CONCEPT-AC032C",
+          "concept_title": "ATP hydrolysis free-energy coupling and ion pump energy coupling",
+          "emergent_hypothesis": "The smallest integer n_atp equals floor(delta_g_endergonic / per_atp) + 1, ensuring Delta_G_net < 0.",
+          "where_it_breaks": "Na+ and K+ transport across the membrane requires a precise integer number of ATP molecules, which breaks naive application of a simple energy-per-ATP ratio.",
+          "coding_rule": "n_atp = int(math.floor(delta_g_endergonic / per_atp)) + 1; Delta_G_net = delta_g_endergonic - n_atp * per_atp < 0",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 1,
+          "model_wall_ms": 23060.0
+        }
+      ],
+      "false_hypothesis_quarantine": {
+        "hypothesis_id": "MEM-HYP-FALSE-GLOBAL-MEMO-S2",
+        "sandbox_ran": true,
+        "hypothesis_held": false,
+        "refuted_by_counterexample": true,
+        "final_status": "contested",
+        "promoted_to_validated_concepts": false
+      },
+      "evaluation": {
+        "base_model": {
+          "passed": 0,
+          "total": 5,
+          "accuracy": 0.0,
+          "problems": [
+            {
+              "problem_id": "UNSEEN-TP-01-STEP-OVERSHOOT",
+              "title": "Multi-Step Recursive Countdown Sum with Input Validation",
+              "mode": "base_model",
+              "seed": 2,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "RecursionError (line 9: return n + countdown_sum(n - step, step)): maximum recursion depth exceeded",
+              "context_used": "none",
+              "model_wall_ms": 4161.1,
+              "generated_code": "def countdown_sum(n, step):\n    # Validate inputs: n must be an integer (not bool), step must be a positive integer\n    if not isinstance(n, int) or isinstance(n, bool) or not isinstance(step, int) or step <= 0:\n        return None\n    # Recursively sum n + (n - step) + (n - 2*step) + ... down to 0\n    if n == 0:\n        return 0\n    return n + countdown_sum(n - step, step)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-02-MEMO-CACHE-ISOLATION",
+              "title": "Parameterized Minimum-Cost Staircase Climber Across Multiple Calls",
+              "mode": "base_model",
+              "seed": 2,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "call1_35_2_5",
+                    false
+                  ],
+                  [
+                    "call2_35_10_3_no_stale_cache",
+                    true
+                  ],
+                  [
+                    "call3_35_4_4_no_stale_cache",
+                    true
+                  ]
+                ],
+                "got": [
+                  68,
+                  61,
+                  72
+                ]
+              },
+              "context_used": "none",
+              "model_wall_ms": 3666.8,
+              "generated_code": "def min_climb_cost(n, cost1, cost2):\n    memo = {}\n    def helper(n):\n        if n in memo:\n            return memo[n]\n        if n == 1:\n            return cost1\n        if n == 2:\n            return min(cost1, cost2)\n        res = min(helper(n-1) + cost1, helper(n-2) + cost2)\n        memo[n] = res\n        return res\n    return helper(n)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-03-GRID-DAG-OBSTACLES",
+              "title": "Memoized 2D Grid Path Counter with Obstacle Set Isolation",
+              "mode": "base_model",
+              "seed": 2,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "TimeoutError: sandbox execution exceeded 5.0s limit",
+              "context_used": "none",
+              "model_wall_ms": 3359.2,
+              "generated_code": "def count_grid_paths(r, c, blocked):\n    if r < 0 or c < 0 or (r, c) in blocked or (0, 0) in blocked:\n        return 0\n    if r == 0 and c == 0:\n        return 1\n    return count_grid_paths(r - 1, c, blocked) + count_grid_paths(r, c - 1, blocked)"
+            },
+            {
+              "problem_id": "UNSEEN-PHY-04-DRAG-AND-NONCONSERVATIVE-WORK",
+              "title": "Quadratic Drag Terminal Velocity and Non-Conservative Work-Energy Balance",
+              "mode": "base_model",
+              "seed": 2,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "v_term_check",
+                    false
+                  ],
+                  [
+                    "w_nc_negative_dissipation",
+                    false
+                  ]
+                ],
+                "got": [
+                  51.26,
+                  -322560.0
+                ]
+              },
+              "context_used": "none",
+              "model_wall_ms": 6112.0,
+              "generated_code": "import math\n\ng = 9.81\n\ndef analyze_descent(mass, area, rho, drag_c, h_drop, v_actual):\n    # Theoretical terminal speed under quadratic drag: v_term = sqrt(2 * m * g / (drag_c * area))\n    v_term = math.sqrt(2 * mass * g / (drag_c * area))\n    \n    # Non-conservative work done by air drag: w_nc = - (1/2) * drag_c * area * v^2 * h_drop\n    # The negative sign indicates energy is removed from the system.\n    w_nc = -0.5 * drag_c * area * v_actual**2 * h_drop\n    \n    return (round(v_term, 2), round(w_nc, 2))"
+            },
+            {
+              "problem_id": "UNSEEN-BIO-05-ATP-COUPLED-HOMEOSTASIS",
+              "title": "ATP Free-Energy Coupling and Open-System Ion Gradient Maintenance",
+              "mode": "base_model",
+              "seed": 2,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "SyntaxError at line 19: unmatched ')'",
+              "context_used": "none",
+              "model_wall_ms": 14483.6,
+              "generated_code": "import math\n\ndef atp_pump_balance(delta_g_endergonic, delta_g_atp, eff, leak_rate, c_in, c_out):\n    # Endergonic reaction: Delta_G = +delta_g_endergonic (kJ/mol, >0)\n    # ATP hydrolysis: delta_g_atp kJ/mol per ATP, e.g. -30.5\n    # Efficiency: eff in (0, 1]\n    # Steady-state leak: J_leak = leak_rate * (c_in - c_out) (mol/s)\n    # Each ATP pump consumes n_atp ATP molecules per unit flux\n    \n    # Calculate energy required for ATP hydrolysis\n    energy_atp = abs(delta_g_atp) * n_atp  # kJ/mol\n    \n    # Total energy needed for the coupled reaction to be spontaneous\n    total_energy_needed = energy_atp + delta_g_endergonic\n    \n    # Calculate ATP molecules needed to make the reaction spontaneous\n    # Delta_G_net < 0 => n_atp >= ceil(total_energy_needed / delta_g_endergonic)\n    n_atp = math.ceil(total_energy_needed / delta_g_endergonic))\n    \n    # Calculate resulting Delta_G_net (rounded to 2 decimals)\n    delta_G_net = total_energy_needed - n_atp * delta_g_endergonic\n    delta_G_net_rounded = round(delta_G_net, 2)\n    \n    # Calculate ATP consumption rate to maintain c_in > c_out\n    # At steady state: n_atp * J_leak = c_in - c_out\n    # J_leak = leak_rate * (c_in - c_out) mol/s\n    J_leak = leak_rate * (c_in - c_out)\n    atp_per_s = n_atp * J_leak\n    atp_per_s_rounded = round(atp_per_s, 2)\n    \n    return (int(n_atp), delta_G_net_rounded, atp_per_s_rounded)"
+            }
+          ]
+        },
+        "ordinary_rag": {
+          "passed": 0,
+          "total": 5,
+          "accuracy": 0.0,
+          "problems": [
+            {
+              "problem_id": "UNSEEN-TP-01-STEP-OVERSHOOT",
+              "title": "Multi-Step Recursive Countdown Sum with Input Validation",
+              "mode": "ordinary_rag",
+              "seed": 2,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "TypeError (line 12: return n + countdown_sum(n - step, step)): unsupported operand type(s) for +: 'int' and 'NoneType'",
+              "context_used": "2 raw BM25 chunks (university_physics_v1_m58314#chunk_4, university_physics_v1_m58314#chunk_3)",
+              "model_wall_ms": 5549.8,
+              "generated_code": "def countdown_sum(n, step):\n    # Validate inputs: n must be an integer >= 0, step must be a positive integer\n    if not isinstance(n, int) or isinstance(n, bool) or n < 0:\n        return None\n    if not isinstance(step, int) or isinstance(step, bool) or step <= 0:\n        return None\n\n    # Recursive sum: n + (n - step) + (n - 2*step) + ... down to 0\n    if n == 0:\n        return 0\n    return n + countdown_sum(n - step, step)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-02-MEMO-CACHE-ISOLATION",
+              "title": "Parameterized Minimum-Cost Staircase Climber Across Multiple Calls",
+              "mode": "ordinary_rag",
+              "seed": 2,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "call1_35_2_5",
+                    true
+                  ],
+                  [
+                    "call2_35_10_3_no_stale_cache",
+                    false
+                  ],
+                  [
+                    "call3_35_4_4_no_stale_cache",
+                    true
+                  ]
+                ],
+                "got": [
+                  70,
+                  54,
+                  72
+                ]
+              },
+              "context_used": "2 raw BM25 chunks (think_python_3e_ch06#chunk_1, think_python_3e_ch06#chunk_6)",
+              "model_wall_ms": 4532.0,
+              "generated_code": "from functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef min_climb_cost(n, cost1, cost2):\n    if n == 0:\n        return 0\n    if n == 1:\n        return min(cost1, cost2)\n    return min(min_climb_cost(n-1, cost1, cost2) + cost1,\n              min_climb_cost(n-2, cost1, cost2) + cost2)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-03-GRID-DAG-OBSTACLES",
+              "title": "Memoized 2D Grid Path Counter with Obstacle Set Isolation",
+              "mode": "ordinary_rag",
+              "seed": 2,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "TimeoutError: sandbox execution exceeded 5.0s limit",
+              "context_used": "2 raw BM25 chunks (think_python_3e_ch06#chunk_1, think_python_3e_ch06#chunk_2)",
+              "model_wall_ms": 4271.9,
+              "generated_code": "def count_grid_paths(r, c, blocked):\n    if r < 0 or c < 0 or (r, c) in blocked or (0, 0) in blocked:\n        return 0\n    if r == 0 and c == 0:\n        return 1\n    return count_grid_paths(r - 1, c, blocked) + count_grid_paths(r, c - 1, blocked)"
+            },
+            {
+              "problem_id": "UNSEEN-PHY-04-DRAG-AND-NONCONSERVATIVE-WORK",
+              "title": "Quadratic Drag Terminal Velocity and Non-Conservative Work-Energy Balance",
+              "mode": "ordinary_rag",
+              "seed": 2,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "v_term_check",
+                    true
+                  ],
+                  [
+                    "w_nc_negative_dissipation",
+                    false
+                  ]
+                ],
+                "got": [
+                  46.6,
+                  -390297.6
+                ]
+              },
+              "context_used": "2 raw BM25 chunks (university_physics_v1_m58306#chunk_8, university_physics_v1_m58306#chunk_2)",
+              "model_wall_ms": 7717.5,
+              "generated_code": "import math\n\ng = 9.81\n\ndef analyze_descent(mass, area, rho, drag_c, h_drop, v_actual):\n    # Theoretical terminal speed under quadratic drag: v_term = sqrt((2 * mass * g) / (rho * C * A))\n    v_term = math.sqrt((2 * mass * g) / (rho * drag_c * area))\n    \n    # Non-conservative work done by air drag: W_nc = - (1/2) * C * rho * A * v^2 * h_drop\n    # The negative sign indicates energy is removed from the system (work done by drag)\n    v_squared = v_actual ** 2\n    W_nc = -0.5 * drag_c * rho * area * v_squared * h_drop\n    \n    return (round(v_term, 2), round(W_nc, 2))"
+            },
+            {
+              "problem_id": "UNSEEN-BIO-05-ATP-COUPLED-HOMEOSTASIS",
+              "title": "ATP Free-Energy Coupling and Open-System Ion Gradient Maintenance",
+              "mode": "ordinary_rag",
+              "seed": 2,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "n_atp_min_3",
+                    false
+                  ],
+                  [
+                    "dg_total_negative",
+                    false
+                  ],
+                  [
+                    "atp_flux_rate",
+                    false
+                  ]
+                ],
+                "got": [
+                  -2,
+                  1.2,
+                  0.0
+                ]
+              },
+              "context_used": "2 raw BM25 chunks (biology_2e_m66462#chunk_4, biology_2e_m66462#chunk_3)",
+              "model_wall_ms": 10939.6,
+              "generated_code": "import math\n\ndef atp_pump_balance(delta_g_endergonic, delta_g_atp, eff, leak_rate, c_in, c_out):\n    # ATP hydrolysis releases 7.3 kcal/mol = 7300 J/mol\n    energy_atp = 7300.0  # J/mol\n\n    # Minimum ATP needed to make net reaction spontaneous:\n    # Delta_G_net = Delta_G_endergonic - (eff * delta_g_atp) * n_atp <= 0\n    # => n_atp >= (Delta_G_endergonic) / (eff * delta_g_atp)\n    n_min = math.ceil(delta_g_endergonic / (eff * delta_g_atp))\n\n    # Energy required to move c_in - c_out ions across membrane:\n    # J = leak_rate * (c_in - c_out)  (c_in, c_out in J/mol)\n    J_leak = leak_rate * (c_in - c_out)\n\n    # ATP needed per second to maintain c_in > c_out against leak:\n    # n_atp_per_s = J_leak / energy_atp\n    atp_per_s = J_leak / energy_atp\n\n    return (int(n_min), round(delta_g_endergonic - eff * delta_g_atp * n_min, 2),\n            round(atp_per_s, 2))"
+            }
+          ]
+        },
+        "clover_learning": {
+          "passed": 3,
+          "total": 5,
+          "accuracy": 0.6,
+          "problems": [
+            {
+              "problem_id": "UNSEEN-TP-01-STEP-OVERSHOOT",
+              "title": "Multi-Step Recursive Countdown Sum with Input Validation",
+              "mode": "clover_learning",
+              "seed": 2,
+              "passed": true,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": true,
+                "checks": [
+                  [
+                    "valid_exact_zero",
+                    true
+                  ],
+                  [
+                    "valid_overshoot_odd",
+                    true
+                  ],
+                  [
+                    "valid_overshoot_step3",
+                    true
+                  ],
+                  [
+                    "valid_zero_start",
+                    true
+                  ],
+                  [
+                    "invalid_neg_n",
+                    true
+                  ],
+                  [
+                    "invalid_float_n",
+                    true
+                  ],
+                  [
+                    "invalid_zero_step",
+                    true
+                  ]
+                ]
+              },
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 3755.6,
+              "generated_code": "def countdown_sum(n, step):\n    if not isinstance(n, int) or isinstance(n, bool) or n < 0:\n        return None\n    if not isinstance(step, int) or isinstance(step, bool) or step <= 0:\n        return None\n    total = 0\n    current = n\n    while current >= 0:\n        total += current\n        current -= step\n    return total"
+            },
+            {
+              "problem_id": "UNSEEN-TP-02-MEMO-CACHE-ISOLATION",
+              "title": "Parameterized Minimum-Cost Staircase Climber Across Multiple Calls",
+              "mode": "clover_learning",
+              "seed": 2,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "NameError (line 11: res = min(_rec(n-1, cost1, cost2) + cost1, _rec(n-2, cost1, cost2) + cost2)): name 'cost1' is not defined",
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 4408.4,
+              "generated_code": "memo = {}\n\ndef _rec(n):\n    if n in memo:\n        return memo[n]\n    if n == 0:\n        return 0\n    if n == 1:\n        return cost1\n    res = min(_rec(n-1, cost1, cost2) + cost1, _rec(n-2, cost1, cost2) + cost2)\n    memo[n] = res\n    return res\n\ndef min_climb_cost(n, cost1, cost2):\n    return _rec(n)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-03-GRID-DAG-OBSTACLES",
+              "title": "Memoized 2D Grid Path Counter with Obstacle Set Isolation",
+              "mode": "clover_learning",
+              "seed": 2,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "open_14x14",
+                    false
+                  ],
+                  [
+                    "center_blocked_14x14",
+                    false
+                  ],
+                  [
+                    "origin_blocked",
+                    true
+                  ],
+                  [
+                    "small_2x2_blocked_1_1",
+                    false
+                  ]
+                ],
+                "got": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 6451.2,
+              "generated_code": "def count_grid_paths(r, c, blocked):\n    if r < 0 or c < 0 or (r, c) in blocked or (0, 0) in blocked:\n        return 0\n    if r == 0 and c == 0:\n        return 1\n    memo = {}\n    def _rec(row, col):\n        if (row, col) in memo:\n            return memo[(row, col)]\n        if row < 0 or col < 0 or (row, col) in blocked:\n            return 0\n        res = _rec(row - 1, col) + _rec(row, col - 1)\n        memo[(row, col)] = res\n        return res\n    return _rec(r, c)"
+            },
+            {
+              "problem_id": "UNSEEN-PHY-04-DRAG-AND-NONCONSERVATIVE-WORK",
+              "title": "Quadratic Drag Terminal Velocity and Non-Conservative Work-Energy Balance",
+              "mode": "clover_learning",
+              "seed": 2,
+              "passed": true,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": true,
+                "checks": [
+                  [
+                    "v_term_check",
+                    true
+                  ],
+                  [
+                    "w_nc_negative_dissipation",
+                    true
+                  ]
+                ],
+                "got": [
+                  46.6,
+                  -281475.0
+                ]
+              },
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 4727.9,
+              "generated_code": "import math\n\ng = 9.81\n\ndef analyze_descent(mass, area, rho, drag_c, h_drop, v_actual):\n    v_term = math.sqrt((2.0 * mass * g) / (drag_c * rho * area))\n    w_nc = 0.5 * mass * (v_actual ** 2) - mass * g * h_drop\n    return (round(v_term, 2), round(w_nc, 2))"
+            },
+            {
+              "problem_id": "UNSEEN-BIO-05-ATP-COUPLED-HOMEOSTASIS",
+              "title": "ATP Free-Energy Coupling and Open-System Ion Gradient Maintenance",
+              "mode": "clover_learning",
+              "seed": 2,
+              "passed": true,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": true,
+                "checks": [
+                  [
+                    "n_atp_min_3",
+                    true
+                  ],
+                  [
+                    "dg_total_negative",
+                    true
+                  ],
+                  [
+                    "atp_flux_rate",
+                    true
+                  ]
+                ],
+                "got": [
+                  3,
+                  -23.2,
+                  20.25
+                ]
+              },
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 8034.3,
+              "generated_code": "import math\n\ndef atp_pump_balance(delta_g_endergonic, delta_g_atp, eff, leak_rate, c_in, c_out):\n    # Energenic reaction: Delta_G_endergonic > 0\n    # ATP hydrolysis per ATP: per_atp = eff * abs(delta_g_atp)\n    per_atp = eff * abs(delta_g_atp)\n    # Minimum ATP needed to make Delta_G_net < 0\n    n_atp = int(math.floor(delta_g_endergonic / per_atp)) + 1\n    # Net free energy change\n    Delta_G_net = delta_g_endergonic - n_atp * per_atp\n    # Steady-state ATP consumption rate to maintain c_in > c_out\n    atp_per_s = leak_rate * (c_in - c_out) * n_atp\n    return (n_atp, round(Delta_G_net, 2), round(atp_per_s, 2))"
+            }
+          ]
+        }
+      },
+      "unprompted_cross_domain_discovery": {
+        "prompt": "Can the principles you learned about energy, constraints and dynamic systems help explain anything about living systems? Identify possible relationships, distinguish analogy from actual mechanism, and propose a way to test your ideas (including a ```python``` simulation script that sets `RESULT = True` if your test confirms the distinction between static equilibrium and a driven living steady state).",
+        "seed": 2,
+        "model_wall_ms": 16204.4,
+        "distinguishes_analogy_from_mechanism": true,
+        "identifies_free_energy_and_dissipation": true,
+        "proposed_test_executed_in_sandbox": true,
+        "proposed_test_result": true,
+        "model_response_excerpt": "### Discovered Relationships\n- ATP hydrolysis free-energy coupling (MEM-CONCEPT-AC032C) provides the per-ATP energy (eff * abs(delta_g_atp)) that drives ion pumps, creating a dynamic energy gradient across the membrane.\n- Gibbs Free Energy (MEM-CONCEPT-FFD00E) governs the spontaneity of these coupled reactions: exergonic ATP-driven pumps (\u0394G < 0) maintain a steady-state active transport that actively opposes the concentration gradient (c_in - c_out), which is a hallmark of a living steady state rather than static equilibrium.\n- The model extracted rule `n_atp = int(math.floor(delta_g_endergonic / per_atp)) + 1` shows that the number of ATP molecules required is not a simple ratio but a discrete, integer constraint imposed by the energy landscape, a feature of dynamic systems.\n\n### Misleading Analogy vs. Actual Mechanism\n- The naive analogy of \"one ATP = one unit of work\" breaks because the actual mechanism requires a precise integer number of ATP molecules to maintain a net negative \u0394G, which is not a simple linear scaling.\n- The textbook hidden assumption that Na+ and K+ transport requires a precise integer number of ATP molecules is misleading; in reality, the number of ATP molec",
+        "model_test_code": "import math\n\n# Parameters for ATP hydrolysis free-energy coupling\nper_atp = 10.0  # kJ/mol\ndelta_g_endergonic = -30.0  # kJ/mol\n\n# Model extracted rule: n_atp = int(math.floor(delta_g_endergonic / per_atp)) + 1\nn_atp = int(math.floor(delta_g_endergonic / per_atp)) + 1\nDelta_G_net = delta_g_endergonic - n_atp * per_atp\n\n# Test: Delta_G_net should be negative for a driven steady state\ntest_pass = Delta_G_net < 0\n\nRESULT = test_pass\nprint(f\"RESULT = {RESULT}\")"
+      }
+    },
+    {
+      "seed": 3,
+      "sections_studied": 6,
+      "sections_promoted": 6,
+      "study_units": [
+        {
+          "source_key": "think_python_3e_ch06",
+          "section_title": "Chapter 6: Return Values \u2014 Recursion, Fibonacci, and Checking Types",
+          "location_span": "think_python_3e_chap06.ipynb#cells[87:118]",
+          "raw_file_sha256": "6f4163260f746cd862356930901ec2670e97a3aac9dc07082b7e65aea2dbb14a",
+          "concept_id": "MEM-CONCEPT-13904D",
+          "concept_title": "Recursive return values in Python",
+          "emergent_hypothesis": "The recursive call must return a value that, when multiplied by `n`, yields the correct final result, which is only guaranteed if the base cases and the recursive step are correctly defined.",
+          "where_it_breaks": "Naive use assumes the recursive call returns the correct value without verifying the precondition (e.g., `n == 0` or `n == 1`), causing `TypeError` when `step > 1` and the argument is not an integer, boolean, or non-negative.",
+          "coding_rule": "def _rec(k): if k <= 0: return 0; return k + _rec(k - step)",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 0,
+          "model_wall_ms": 20949.5
+        },
+        {
+          "source_key": "think_python_3e_ch10",
+          "section_title": "Chapter 10: Dictionaries \u2014 Call Graphs, Memos, and Self-Checks",
+          "location_span": "think_python_3e_chap10.ipynb#cells[96:108]",
+          "raw_file_sha256": "68f930d786d12f95f723572e0834d0742dfed1b8157df41796e063d6014f4e89",
+          "concept_id": "MEM-CONCEPT-0ED630",
+          "concept_title": "Dictionary Memoization via a Fresh `memo` Dictionary",
+          "emergent_hypothesis": "Initializing `memo = {}` inside the outer function guarantees that previously computed values are never recomputed, eliminating the exponential blowup.",
+          "where_it_breaks": "Naive recursion without a memo stores every intermediate value, causing exponential recomputation as `n` grows.",
+          "coding_rule": "`memo = {}`; `def _rec(n): return memo.get(n, None) if memo.get(n, None) is None else memo[n] = fibonacci_memo(n-1) + fibonacci_memo(n-2)`",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 1,
+          "model_wall_ms": 23509.0
+        },
+        {
+          "source_key": "university_physics_v1_m58306",
+          "section_title": "Section 6.4: Drag Force and Terminal Speed",
+          "location_span": "university_physics_v1_m58306_drag_terminal_speed.cnxml#lines[1:746](chars[0:6600])",
+          "raw_file_sha256": "b4138356d60e75166dda534e391279a1d12ed199cd418adadda67c77f47ec4fc",
+          "concept_id": "MEM-CONCEPT-23FD91",
+          "concept_title": "Quadratic Drag and Terminal Velocity",
+          "emergent_hypothesis": "The exponent n in the drag force equation is fixed at 2 for high-speed flow, regardless of velocity.",
+          "where_it_breaks": "Naive use assumes drag coefficient C is constant across all velocities, ignoring the stated dependency on velocity.",
+          "coding_rule": "F_d = 0.5 * C * rho * A * v^2",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 0,
+          "model_wall_ms": 19808.7
+        },
+        {
+          "source_key": "university_physics_v1_m58314",
+          "section_title": "Section 8.3: Conservation of Energy and Non-Conservative Work",
+          "location_span": "university_physics_v1_m58314_conservation_of_energy.cnxml#lines[1:338](chars[6800:11600])",
+          "raw_file_sha256": "6d99ce22b67a1d00e08301da806d71001f105e39e9577a95da3b5d640e927745",
+          "concept_id": "MEM-CONCEPT-3BD1C9",
+          "concept_title": "Conservation of Mechanical Energy with Non-Conservative Air-Drag Work",
+          "emergent_hypothesis": "The total mechanical energy of the system is conserved, so the algebraic sum of the gain in kinetic energy and loss in potential energy equals the dissipated energy, regardless of the specific path taken.",
+          "where_it_breaks": "Naive use of the equation \u0394E_diss = |\u0394K + \u0394U| assumes the non-conservative work is purely dissipative and independent of the path, ignoring that the work done by air resistance depends on the specific trajectory (initial and final states) and is path-dependent.",
+          "coding_rule": "\u0394E_diss = | K_f - K_i + U_f - U_i | = | (1/2) * mass * (v_final ** 2) - mass * g * h_drop |",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 1,
+          "model_wall_ms": 22218.1
+        },
+        {
+          "source_key": "biology_2e_m66459",
+          "section_title": "Section 6.2: Potential, Kinetic, Free, and Activation Energy",
+          "location_span": "biology_2e_m66459_free_energy.cnxml#lines[1:185](chars[0:5200])",
+          "raw_file_sha256": "e9584eaa75e7149c38c8f4359b5c6006f9dc4a9e05c08b2ce372c27b08f798b2",
+          "concept_id": "MEM-CONCEPT-157FB2",
+          "concept_title": "Gibbs Free Energy and Spontaneity of Chemical Reactions",
+          "emergent_hypothesis": "The author claims that Gibbs free energy (G) is the usable energy available after accounting for entropy, making it the correct measure for quantifying and comparing energy transfers in chemical reactions.",
+          "where_it_breaks": "Naive use of the formula \u0394G = \u0394H - T\u0394S breaks when entropy (\u0394S) is not accounted for, leading to incorrect predictions of spontaneity.",
+          "coding_rule": "\u0394G = \u0394H - T\u0394S (where \u0394H is enthalpy change, T is temperature in Kelvin, and \u0394S is entropy change)",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 1,
+          "model_wall_ms": 25936.5
+        },
+        {
+          "source_key": "biology_2e_m66462",
+          "section_title": "Section 6.4: ATP: Adenosine Triphosphate and Energy Coupling",
+          "location_span": "biology_2e_m66462_atp_coupling.cnxml#lines[1:119](chars[3500:8800])",
+          "raw_file_sha256": "20bec814db512250387bb87ae1bff82675effad961bffe1ad767af37ee70c369",
+          "concept_id": "MEM-CONCEPT-2DFC8E",
+          "concept_title": "ATP hydrolysis free-energy coupling and ion pump energy coupling",
+          "emergent_hypothesis": "The smallest integer n_atp equals floor(delta_g_endergonic / per_atp) + 1, ensuring Delta_G_net < 0.",
+          "where_it_breaks": "Na+ and K+ transport across the membrane requires a precise integer number of ATP molecules, which breaks naive application of a simple energy-per-ATP ratio.",
+          "coding_rule": "n_atp = int(math.floor(delta_g_endergonic / per_atp)) + 1; Delta_G_net = delta_g_endergonic - n_atp * per_atp < 0",
+          "sandbox_verified": true,
+          "sandbox_result": true,
+          "repair_attempts": 1,
+          "model_wall_ms": 23123.6
+        }
+      ],
+      "false_hypothesis_quarantine": {
+        "hypothesis_id": "MEM-HYP-FALSE-GLOBAL-MEMO-S3",
+        "sandbox_ran": true,
+        "hypothesis_held": false,
+        "refuted_by_counterexample": true,
+        "final_status": "contested",
+        "promoted_to_validated_concepts": false
+      },
+      "evaluation": {
+        "base_model": {
+          "passed": 0,
+          "total": 5,
+          "accuracy": 0.0,
+          "problems": [
+            {
+              "problem_id": "UNSEEN-TP-01-STEP-OVERSHOOT",
+              "title": "Multi-Step Recursive Countdown Sum with Input Validation",
+              "mode": "base_model",
+              "seed": 3,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "RecursionError (line 9: return n + countdown_sum(n - step, step)): maximum recursion depth exceeded",
+              "context_used": "none",
+              "model_wall_ms": 4152.4,
+              "generated_code": "def countdown_sum(n, step):\n    # Validate inputs: n must be an integer (not bool), step must be a positive integer\n    if not isinstance(n, int) or isinstance(n, bool) or not isinstance(step, int) or step <= 0:\n        return None\n    # Recursively sum n + (n - step) + (n - 2*step) + ... down to 0\n    if n == 0:\n        return 0\n    return n + countdown_sum(n - step, step)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-02-MEMO-CACHE-ISOLATION",
+              "title": "Parameterized Minimum-Cost Staircase Climber Across Multiple Calls",
+              "mode": "base_model",
+              "seed": 3,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "call1_35_2_5",
+                    false
+                  ],
+                  [
+                    "call2_35_10_3_no_stale_cache",
+                    true
+                  ],
+                  [
+                    "call3_35_4_4_no_stale_cache",
+                    true
+                  ]
+                ],
+                "got": [
+                  68,
+                  61,
+                  72
+                ]
+              },
+              "context_used": "none",
+              "model_wall_ms": 3712.1,
+              "generated_code": "def min_climb_cost(n, cost1, cost2):\n    memo = {}\n    def helper(n):\n        if n in memo:\n            return memo[n]\n        if n == 1:\n            return cost1\n        if n == 2:\n            return min(cost1, cost2)\n        res = min(helper(n-1) + cost1, helper(n-2) + cost2)\n        memo[n] = res\n        return res\n    return helper(n)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-03-GRID-DAG-OBSTACLES",
+              "title": "Memoized 2D Grid Path Counter with Obstacle Set Isolation",
+              "mode": "base_model",
+              "seed": 3,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "TimeoutError: sandbox execution exceeded 5.0s limit",
+              "context_used": "none",
+              "model_wall_ms": 3326.4,
+              "generated_code": "def count_grid_paths(r, c, blocked):\n    if r < 0 or c < 0 or (r, c) in blocked or (0, 0) in blocked:\n        return 0\n    if r == 0 and c == 0:\n        return 1\n    return count_grid_paths(r - 1, c, blocked) + count_grid_paths(r, c - 1, blocked)"
+            },
+            {
+              "problem_id": "UNSEEN-PHY-04-DRAG-AND-NONCONSERVATIVE-WORK",
+              "title": "Quadratic Drag Terminal Velocity and Non-Conservative Work-Energy Balance",
+              "mode": "base_model",
+              "seed": 3,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "v_term_check",
+                    false
+                  ],
+                  [
+                    "w_nc_negative_dissipation",
+                    false
+                  ]
+                ],
+                "got": [
+                  51.26,
+                  -322560.0
+                ]
+              },
+              "context_used": "none",
+              "model_wall_ms": 6100.4,
+              "generated_code": "import math\n\ng = 9.81\n\ndef analyze_descent(mass, area, rho, drag_c, h_drop, v_actual):\n    # Theoretical terminal speed under quadratic drag: v_term = sqrt(2 * m * g / (drag_c * area))\n    v_term = math.sqrt(2 * mass * g / (drag_c * area))\n    \n    # Non-conservative work done by air drag: w_nc = - (1/2) * drag_c * area * v^2 * h_drop\n    # The negative sign indicates energy is removed from the system.\n    w_nc = -0.5 * drag_c * area * v_actual**2 * h_drop\n    \n    return (round(v_term, 2), round(w_nc, 2))"
+            },
+            {
+              "problem_id": "UNSEEN-BIO-05-ATP-COUPLED-HOMEOSTASIS",
+              "title": "ATP Free-Energy Coupling and Open-System Ion Gradient Maintenance",
+              "mode": "base_model",
+              "seed": 3,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "SyntaxError at line 19: unmatched ')'",
+              "context_used": "none",
+              "model_wall_ms": 14510.8,
+              "generated_code": "import math\n\ndef atp_pump_balance(delta_g_endergonic, delta_g_atp, eff, leak_rate, c_in, c_out):\n    # Endergonic reaction: Delta_G = +delta_g_endergonic (kJ/mol, >0)\n    # ATP hydrolysis: delta_g_atp kJ/mol per ATP, e.g. -30.5\n    # Efficiency: eff in (0, 1]\n    # Steady-state leak: J_leak = leak_rate * (c_in - c_out) (mol/s)\n    # Each ATP pump consumes n_atp ATP molecules per unit flux\n    \n    # Calculate energy required for ATP hydrolysis\n    energy_atp = abs(delta_g_atp) * n_atp  # kJ/mol\n    \n    # Total energy needed for the coupled reaction to be spontaneous\n    total_energy_needed = energy_atp + delta_g_endergonic\n    \n    # Calculate ATP molecules needed to make the reaction spontaneous\n    # Delta_G_net < 0 => n_atp >= ceil(total_energy_needed / delta_g_endergonic)\n    n_atp = math.ceil(total_energy_needed / delta_g_endergonic))\n    \n    # Calculate resulting Delta_G_net (rounded to 2 decimals)\n    delta_G_net = total_energy_needed - n_atp * delta_g_endergonic\n    delta_G_net_rounded = round(delta_G_net, 2)\n    \n    # Calculate ATP consumption rate to maintain c_in > c_out\n    # At steady state: n_atp * J_leak = c_in - c_out\n    # J_leak = leak_rate * (c_in - c_out) mol/s\n    J_leak = leak_rate * (c_in - c_out)\n    atp_per_s = n_atp * J_leak\n    atp_per_s_rounded = round(atp_per_s, 2)\n    \n    return (int(n_atp), delta_G_net_rounded, atp_per_s_rounded)"
+            }
+          ]
+        },
+        "ordinary_rag": {
+          "passed": 0,
+          "total": 5,
+          "accuracy": 0.0,
+          "problems": [
+            {
+              "problem_id": "UNSEEN-TP-01-STEP-OVERSHOOT",
+              "title": "Multi-Step Recursive Countdown Sum with Input Validation",
+              "mode": "ordinary_rag",
+              "seed": 3,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "TypeError (line 12: return n + countdown_sum(n - step, step)): unsupported operand type(s) for +: 'int' and 'NoneType'",
+              "context_used": "2 raw BM25 chunks (university_physics_v1_m58314#chunk_4, university_physics_v1_m58314#chunk_3)",
+              "model_wall_ms": 5521.4,
+              "generated_code": "def countdown_sum(n, step):\n    # Validate inputs: n must be an integer >= 0, step must be a positive integer\n    if not isinstance(n, int) or isinstance(n, bool) or n < 0:\n        return None\n    if not isinstance(step, int) or isinstance(step, bool) or step <= 0:\n        return None\n\n    # Recursive sum: n + (n - step) + (n - 2*step) + ... down to 0\n    if n == 0:\n        return 0\n    return n + countdown_sum(n - step, step)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-02-MEMO-CACHE-ISOLATION",
+              "title": "Parameterized Minimum-Cost Staircase Climber Across Multiple Calls",
+              "mode": "ordinary_rag",
+              "seed": 3,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "call1_35_2_5",
+                    true
+                  ],
+                  [
+                    "call2_35_10_3_no_stale_cache",
+                    false
+                  ],
+                  [
+                    "call3_35_4_4_no_stale_cache",
+                    true
+                  ]
+                ],
+                "got": [
+                  70,
+                  54,
+                  72
+                ]
+              },
+              "context_used": "2 raw BM25 chunks (think_python_3e_ch06#chunk_1, think_python_3e_ch06#chunk_6)",
+              "model_wall_ms": 4524.9,
+              "generated_code": "from functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef min_climb_cost(n, cost1, cost2):\n    if n == 0:\n        return 0\n    if n == 1:\n        return min(cost1, cost2)\n    return min(min_climb_cost(n-1, cost1, cost2) + cost1,\n              min_climb_cost(n-2, cost1, cost2) + cost2)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-03-GRID-DAG-OBSTACLES",
+              "title": "Memoized 2D Grid Path Counter with Obstacle Set Isolation",
+              "mode": "ordinary_rag",
+              "seed": 3,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "TimeoutError: sandbox execution exceeded 5.0s limit",
+              "context_used": "2 raw BM25 chunks (think_python_3e_ch06#chunk_1, think_python_3e_ch06#chunk_2)",
+              "model_wall_ms": 4305.2,
+              "generated_code": "def count_grid_paths(r, c, blocked):\n    if r < 0 or c < 0 or (r, c) in blocked or (0, 0) in blocked:\n        return 0\n    if r == 0 and c == 0:\n        return 1\n    return count_grid_paths(r - 1, c, blocked) + count_grid_paths(r, c - 1, blocked)"
+            },
+            {
+              "problem_id": "UNSEEN-PHY-04-DRAG-AND-NONCONSERVATIVE-WORK",
+              "title": "Quadratic Drag Terminal Velocity and Non-Conservative Work-Energy Balance",
+              "mode": "ordinary_rag",
+              "seed": 3,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "v_term_check",
+                    true
+                  ],
+                  [
+                    "w_nc_negative_dissipation",
+                    false
+                  ]
+                ],
+                "got": [
+                  46.6,
+                  -390297.6
+                ]
+              },
+              "context_used": "2 raw BM25 chunks (university_physics_v1_m58306#chunk_8, university_physics_v1_m58306#chunk_2)",
+              "model_wall_ms": 7775.5,
+              "generated_code": "import math\n\ng = 9.81\n\ndef analyze_descent(mass, area, rho, drag_c, h_drop, v_actual):\n    # Theoretical terminal speed under quadratic drag: v_term = sqrt((2 * mass * g) / (rho * C * A))\n    v_term = math.sqrt((2 * mass * g) / (rho * drag_c * area))\n    \n    # Non-conservative work done by air drag: W_nc = - (1/2) * C * rho * A * v^2 * h_drop\n    # The negative sign indicates energy is removed from the system (work done by drag)\n    v_squared = v_actual ** 2\n    W_nc = -0.5 * drag_c * rho * area * v_squared * h_drop\n    \n    return (round(v_term, 2), round(W_nc, 2))"
+            },
+            {
+              "problem_id": "UNSEEN-BIO-05-ATP-COUPLED-HOMEOSTASIS",
+              "title": "ATP Free-Energy Coupling and Open-System Ion Gradient Maintenance",
+              "mode": "ordinary_rag",
+              "seed": 3,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "n_atp_min_3",
+                    false
+                  ],
+                  [
+                    "dg_total_negative",
+                    false
+                  ],
+                  [
+                    "atp_flux_rate",
+                    false
+                  ]
+                ],
+                "got": [
+                  -2,
+                  1.2,
+                  0.0
+                ]
+              },
+              "context_used": "2 raw BM25 chunks (biology_2e_m66462#chunk_4, biology_2e_m66462#chunk_3)",
+              "model_wall_ms": 10898.8,
+              "generated_code": "import math\n\ndef atp_pump_balance(delta_g_endergonic, delta_g_atp, eff, leak_rate, c_in, c_out):\n    # ATP hydrolysis releases 7.3 kcal/mol = 7300 J/mol\n    energy_atp = 7300.0  # J/mol\n\n    # Minimum ATP needed to make net reaction spontaneous:\n    # Delta_G_net = Delta_G_endergonic - (eff * delta_g_atp) * n_atp <= 0\n    # => n_atp >= (Delta_G_endergonic) / (eff * delta_g_atp)\n    n_min = math.ceil(delta_g_endergonic / (eff * delta_g_atp))\n\n    # Energy required to move c_in - c_out ions across membrane:\n    # J = leak_rate * (c_in - c_out)  (c_in, c_out in J/mol)\n    J_leak = leak_rate * (c_in - c_out)\n\n    # ATP needed per second to maintain c_in > c_out against leak:\n    # n_atp_per_s = J_leak / energy_atp\n    atp_per_s = J_leak / energy_atp\n\n    return (int(n_min), round(delta_g_endergonic - eff * delta_g_atp * n_min, 2),\n            round(atp_per_s, 2))"
+            }
+          ]
+        },
+        "clover_learning": {
+          "passed": 3,
+          "total": 5,
+          "accuracy": 0.6,
+          "problems": [
+            {
+              "problem_id": "UNSEEN-TP-01-STEP-OVERSHOOT",
+              "title": "Multi-Step Recursive Countdown Sum with Input Validation",
+              "mode": "clover_learning",
+              "seed": 3,
+              "passed": true,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": true,
+                "checks": [
+                  [
+                    "valid_exact_zero",
+                    true
+                  ],
+                  [
+                    "valid_overshoot_odd",
+                    true
+                  ],
+                  [
+                    "valid_overshoot_step3",
+                    true
+                  ],
+                  [
+                    "valid_zero_start",
+                    true
+                  ],
+                  [
+                    "invalid_neg_n",
+                    true
+                  ],
+                  [
+                    "invalid_float_n",
+                    true
+                  ],
+                  [
+                    "invalid_zero_step",
+                    true
+                  ]
+                ]
+              },
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 3754.3,
+              "generated_code": "def countdown_sum(n, step):\n    if not isinstance(n, int) or isinstance(n, bool) or n < 0:\n        return None\n    if not isinstance(step, int) or isinstance(step, bool) or step <= 0:\n        return None\n    total = 0\n    current = n\n    while current >= 0:\n        total += current\n        current -= step\n    return total"
+            },
+            {
+              "problem_id": "UNSEEN-TP-02-MEMO-CACHE-ISOLATION",
+              "title": "Parameterized Minimum-Cost Staircase Climber Across Multiple Calls",
+              "mode": "clover_learning",
+              "seed": 3,
+              "passed": false,
+              "sandbox_ok": false,
+              "grader_output": "NameError (line 11: res = min(_rec(n-1, cost1, cost2) + cost1, _rec(n-2, cost1, cost2) + cost2)): name 'cost1' is not defined",
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 4457.7,
+              "generated_code": "memo = {}\n\ndef _rec(n):\n    if n in memo:\n        return memo[n]\n    if n == 0:\n        return 0\n    if n == 1:\n        return cost1\n    res = min(_rec(n-1, cost1, cost2) + cost1, _rec(n-2, cost1, cost2) + cost2)\n    memo[n] = res\n    return res\n\ndef min_climb_cost(n, cost1, cost2):\n    return _rec(n)"
+            },
+            {
+              "problem_id": "UNSEEN-TP-03-GRID-DAG-OBSTACLES",
+              "title": "Memoized 2D Grid Path Counter with Obstacle Set Isolation",
+              "mode": "clover_learning",
+              "seed": 3,
+              "passed": false,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": false,
+                "checks": [
+                  [
+                    "open_14x14",
+                    true
+                  ],
+                  [
+                    "center_blocked_14x14",
+                    false
+                  ],
+                  [
+                    "origin_blocked",
+                    true
+                  ],
+                  [
+                    "small_2x2_blocked_1_1",
+                    false
+                  ]
+                ],
+                "got": [
+                  40116600,
+                  40116600,
+                  0,
+                  6
+                ]
+              },
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 6991.9,
+              "generated_code": "def count_grid_paths(r, c, blocked):\n    if r < 0 or c < 0 or (r, c) in blocked or (0, 0) in blocked:\n        return 0\n    if r == 0 and c == 0:\n        return 1\n    memo = {}\n    def _rec(k, c):\n        if (k, c) in memo:\n            return memo[(k, c)]\n        if k == 0 or c == 0:\n            res = 1 if (0, 0) not in blocked else 0\n        else:\n            res = _rec(k - 1, c) + _rec(k, c - 1)\n        memo[(k, c)] = res\n        return res\n    return _rec(r, c)"
+            },
+            {
+              "problem_id": "UNSEEN-PHY-04-DRAG-AND-NONCONSERVATIVE-WORK",
+              "title": "Quadratic Drag Terminal Velocity and Non-Conservative Work-Energy Balance",
+              "mode": "clover_learning",
+              "seed": 3,
+              "passed": true,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": true,
+                "checks": [
+                  [
+                    "v_term_check",
+                    true
+                  ],
+                  [
+                    "w_nc_negative_dissipation",
+                    true
+                  ]
+                ],
+                "got": [
+                  46.6,
+                  -281475.0
+                ]
+              },
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 4656.6,
+              "generated_code": "import math\n\ng = 9.81\n\ndef analyze_descent(mass, area, rho, drag_c, h_drop, v_actual):\n    v_term = math.sqrt((2.0 * mass * g) / (drag_c * rho * area))\n    w_nc = 0.5 * mass * (v_actual ** 2) - mass * g * h_drop\n    return (round(v_term, 2), round(w_nc, 2))"
+            },
+            {
+              "problem_id": "UNSEEN-BIO-05-ATP-COUPLED-HOMEOSTASIS",
+              "title": "ATP Free-Energy Coupling and Open-System Ion Gradient Maintenance",
+              "mode": "clover_learning",
+              "seed": 3,
+              "passed": true,
+              "sandbox_ok": true,
+              "grader_output": {
+                "passed": true,
+                "checks": [
+                  [
+                    "n_atp_min_3",
+                    true
+                  ],
+                  [
+                    "dg_total_negative",
+                    true
+                  ],
+                  [
+                    "atp_flux_rate",
+                    true
+                  ]
+                ],
+                "got": [
+                  3,
+                  -23.2,
+                  20.25
+                ]
+              },
+              "context_used": "6 validated Memory Graph concepts",
+              "model_wall_ms": 8333.9,
+              "generated_code": "import math\n\ndef atp_pump_balance(delta_g_endergonic, delta_g_atp, eff, leak_rate, c_in, c_out):\n    # Energetic coupling: each ATP provides per_atp = eff * |delta_g_atp| kJ/mol\n    per_atp = eff * abs(delta_g_atp)\n    # Minimum ATP to make net \u0394G < 0: n_atp = floor(delta_g_endergonic / per_atp) + 1\n    n_atp = int(math.floor(delta_g_endergonic / per_atp)) + 1\n    # Net free energy after coupling\n    delta_g_net = delta_g_endergonic - n_atp * per_atp\n    # Steady-state active pump flux to maintain c_in > c_out\n    atp_per_s = leak_rate * (c_in - c_out) * n_atp\n    return (n_atp, round(delta_g_net, 2), round(atp_per_s, 2))"
+            }
+          ]
+        }
+      },
+      "unprompted_cross_domain_discovery": {
+        "prompt": "Can the principles you learned about energy, constraints and dynamic systems help explain anything about living systems? Identify possible relationships, distinguish analogy from actual mechanism, and propose a way to test your ideas (including a ```python``` simulation script that sets `RESULT = True` if your test confirms the distinction between static equilibrium and a driven living steady state).",
+        "seed": 3,
+        "model_wall_ms": 24991.6,
+        "distinguishes_analogy_from_mechanism": true,
+        "identifies_free_energy_and_dissipation": true,
+        "proposed_test_executed_in_sandbox": true,
+        "proposed_test_result": true,
+        "model_response_excerpt": "### Discovered Relationships\n- **Energy Coupling in Living Systems**: The principles of Gibbs free energy and ATP hydrolysis coupling directly explain how living systems convert chemical energy (ATP) into usable work (e.g., muscle contraction, ion pumping). The model extracted rule `n_atp = int(math.floor(delta_g_endergonic / per_atp)) + 1` quantifies the minimum ATP required to drive an endergonic process, mirroring the biological requirement for energy coupling.\n- **Dynamic vs. Static Equilibrium**: Living systems operate far from equilibrium (e.g., ATP hydrolysis continuously releases energy to maintain gradients), contrasting with static equilibrium (e.g., a closed system at constant T and P). This distinction is critical for understanding metabolic flux and cellular homeostasis.\n- **Constraint-Based Modeling**: The sandbox verification of `RESULT=True` confirms that the mathematical constraints derived from Gibbs free energy (\u0394G = \u0394H - T\u0394S) and ATP coupling (n_atp calculation) align with biological reality, validating the use of these principles as constraints in modeling living systems.\n\n### Misleading Analogy vs. Actual Mechanism\n- **Analogy**: The naive application of `\u0394G =",
+        "model_test_code": "import math\n\n# Biological constants (simplified)\ndelta_G_endergonic = 50.0  # kJ/mol (endergonic)\nper_atp = 10.0            # kJ/mol per ATP molecule\nT = 298.0                # K (body temperature)\n\n# Model extraction: ATP required to drive endergonic process\nn_atp = int(math.floor(delta_G_endergonic / per_atp)) + 1\nDelta_G_net = delta_G_endergonic - n_atp * per_atp\n\n# Test: Is the net free energy negative (spontaneous)?\nspontaneous = Delta_G_net < 0\n\n# Falsifiability check: If Delta_G_net >= 0, the model fails.\nRESULT = spontaneous and Delta_G_net < 0\n\nprint(f\"Delta_G_net = {Delta_G_net:.2f} kJ/mol\")\nprint(f\"n_atp required = {n_atp}\")\nprint(f\"Spontaneous? {spontaneous}\")\nprint(f\"Falsifiable Test Result: {RESULT}\")"
+      }
+    }
+  ]
+}

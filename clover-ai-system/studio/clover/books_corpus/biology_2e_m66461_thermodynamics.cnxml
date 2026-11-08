@@ -1,0 +1,100 @@
+<document xmlns="http://cnx.rice.edu/cnxml">
+<title>The Laws of Thermodynamics</title>
+<metadata xmlns:md="http://cnx.rice.edu/mdml">
+  <md:content-id>m66461</md:content-id>
+  <md:title>The Laws of Thermodynamics</md:title>
+  <md:abstract><para id="para-00001">By the end of this section, you will be able to do the following:</para><list id="list-00001">
+<item>Discuss the concept of entropy</item>
+<item>Explain the first and second laws of thermodynamics</item>
+</list></md:abstract>
+  <md:uuid>071bb27f-a14e-43ea-8301-4447cec95b7a</md:uuid>
+</metadata>
+
+<content>
+<para id="fs-id1772751"><term id="term-00001">Thermodynamics</term> refers to the study of energy and energy transfer involving physical matter. The matter and its environment relevant to a particular case of energy transfer are classified as a system, and everything outside that system is the surroundings. For instance, when heating a pot of water on the stove, the system includes the stove, the pot, and the water. Energy transfers within the system (between the stove, pot, and water). There are two types of systems: open and closed. An open system is one in which energy and matter can transfer between the system and its surroundings. The stovetop system is open because it can lose heat into the air. A closed system is one that can transfer energy but not matter to its surroundings.</para><para id="fs-id1870581">Biological organisms are open systems. Energy exchanges between them and their surroundings, as they consume energy-storing molecules and release energy to the environment by doing work. Like all things in the physical world, energy is subject to the laws of physics. The laws of thermodynamics govern the transfer of energy in and among all systems in the universe.</para>
+<section id="fs-id2571663">
+<title>The First Law of Thermodynamics</title>
+<para id="fs-id1445322">The first law of thermodynamics deals with the total amount of energy in the universe. It states that this total amount of energy is constant. In other words, there has always been, and always will be, exactly the same amount of energy in the universe. Energy exists in many different forms. According to the first law of thermodynamics, energy may transfer from place to place or transform into different forms, but it cannot be created or destroyed. The transfers and transformations of energy take place around us all the time. Light bulbs transform electrical energy into light energy. Gas stoves transform chemical energy from natural gas into heat energy. Plants perform one of the most biologically useful energy transformations on earth: that of converting sunlight energy into the chemical energy stored within organic molecules (<link target-id="fig-ch06_01_01" document="m66457"/>). <link target-id="fig-ch06_03_01"/> examples of energy transformations.</para><para id="fs-id1808182">The challenge for all living organisms is to obtain energy from their surroundings in forms that they can transfer or transform into usable energy to do work. Living cells have evolved to meet this challenge very well. Chemical energy stored within organic molecules such as sugars and fats transforms through a series of cellular chemical reactions into energy within ATP molecules. Energy in ATP molecules is easily accessible to do work. Examples of the types of work that cells need to do include building complex molecules, transporting materials, powering the beating motion of cilia or flagella, contracting muscle fibers to create movement, and reproduction.</para>
+<figure id="fig-ch06_03_01"><media id="fs-id2199498" alt="The left side of this diagram depicts energy being transferred from an ice cream cone to two boys riding a bike; this is described as chemical energy to kinetic energy. The right side depicts a plant converting light energy into chemical energy.">
+<image mime-type="image/png" src="../../media/Figure_06_02_01.png" width="500"/>
+</media>
+
+<caption>Here are two examples of energy transferring from one system to another and transformed from one form to another. Humans can convert the chemical energy in food, like this ice cream cone, into kinetic energy (the energy of movement to ride a bicycle). Plants can convert electromagnetic radiation (light energy) from the sun into chemical energy. (credit “ice cream”: modification of work by D. Sharon Pruitt; credit “kids on bikes”: modification of work by Michelle Riggen-Ransom; credit “leaf”: modification of work by Cory Zanker)</caption></figure></section>
+<section id="fs-id1467282">
+<title>The Second Law of Thermodynamics</title>
+<para id="fs-id2336465">A living cell’s primary tasks of obtaining, transforming, and using energy to do work may seem simple. However, the second law of thermodynamics explains why these tasks are harder than they appear. None of the energy transfers that we have discussed, along with all energy transfers and transformations in the universe, is completely efficient. In every energy transfer, some amount of energy is lost in a form that is unusable. In most cases, this form is heat energy. Thermodynamically, scientists define <term id="term-00002">heat energy</term> as energy that transfers from one system to another that is not doing work. For example, when an airplane flies through the air, it loses some of its energy as heat energy due to friction with the surrounding air. This friction actually heats the air by temporarily increasing air molecule speed. Likewise, some energy is lost as heat energy during cellular metabolic reactions. This is good for warm-blooded creatures like us, because heat energy helps to maintain our body temperature. Strictly speaking, no energy transfer is completely efficient, because some energy is lost in an unusable form.</para>
+<para id="fs-id1631701">An important concept in physical systems is that of order and disorder (or randomness). The more energy that a system loses to its surroundings, the less ordered and more random the system. Scientists refer to the measure of randomness or disorder within a system as <term id="term-00003">entropy</term>. High entropy means high disorder and low energy (<link target-id="fig-ch06_03_02"/>). To better understand entropy, think of a student’s bedroom. If no energy or work were put into it, the room would quickly become messy. It would exist in a very disordered state, one of high entropy. Energy must be put into the system, in the form of the student doing work and putting everything away, in order to bring the room back to a state of cleanliness and order. This state is one of low entropy. Similarly, a car or house must be constantly maintained with work in order to keep it in an ordered state. Left alone, a house's or car's entropy gradually increases through rust and degradation. Molecules and chemical reactions have varying amounts of entropy as well. For example, as chemical reactions reach a state of equilibrium, entropy increases, and as molecules at a high concentration in one place diffuse and spread out, entropy also increases.</para>
+<note id="fs-id1626927" class="scientific">
+<para id="fs-id2326289"><title>Transfer of Energy and the Resulting Entropy</title>Set up a simple experiment to understand how energy transfers and how a change in entropy results.</para>
+<list id="fs-id1255097" list-type="enumerated">
+<item>Take a block of ice. This is water in solid form, so it has a high structural order. This means that the molecules cannot move very much and are in a fixed position. The ice's temperature is 0°C or less. As a result, the system's entropy is low.</item>
+<item>Allow the ice to melt at room temperature. What is the state of molecules in the liquid water now? How did the energy transfer take place? Is the system's entropy higher or lower? Why?</item>
+<item>Heat the water to its boiling point. What happens to the system's entropy when the water is heated?</item>
+</list>
+</note>
+<para id="fs-id873679">Think of all physical systems in this way: Living things are highly ordered, requiring constant energy input to maintain themselves in a state of low entropy. As living systems take in energy-storing molecules and transform them through chemical reactions, they lose some amount of usable energy in the process, because no reaction is completely efficient. They also produce waste and by-products that are not useful energy sources. This process increases the entropy of the system’s surroundings. Since all energy transfers result in losing some usable energy, the second law of thermodynamics states that every energy transfer or transformation increases the universe's entropy. Even though living things are highly ordered and maintain a state of low entropy, the universe's entropy in total is constantly increasing due to losing usable energy with each energy transfer that occurs. Essentially, living things are in a continuous uphill battle against this constant increase in universal entropy.</para>
+<figure id="fig-ch06_03_02"><media id="fs-id1770096" alt="This diagram shows that solids have a regular packing arrangement and low entropy, whereas liquids have irregular packing and higher entropy.">
+<image mime-type="image/jpg" src="../../media/Figure_06_02_02.jpg" width="300"/>
+</media>
+<caption>Entropy is a measure of randomness or disorder in a system. Gases have higher entropy than liquids, and liquids have higher entropy than solids.</caption>
+</figure>
+</section>
+<section id="fs-id1613002" class="summary">
+<title>Section Summary</title>
+<para id="fs-id1281011">In studying energy, scientists use the term “system” to refer to the matter and its environment involved in energy transfers. Everything outside of the system is the surroundings. Single cells are biological systems. We can think of systems as having a certain amount of order. It takes energy to make a system more ordered. The more ordered a system, the lower its entropy. Entropy is a measure of a system's disorder. As a system becomes more disordered, the lower its energy and the higher its entropy.</para>
+<para id="fs-id2491691">The laws of thermodynamics are a series of laws that describe the properties and processes of energy transfer. The first law states that the total amount of energy in the universe is constant. This means that energy cannot be created or destroyed, only transferred or transformed. The second law of thermodynamics states that every energy transfer involves some loss of energy in an unusable form, such as heat energy, resulting in a more disordered system. In other words, no energy transfer is completely efficient, and all transfers trend toward disorder.</para>
+</section>
+<section id="fs-id2026434" class="multiple-choice">
+<title>Review Questions</title><exercise id="fs-id1242488">
+<problem id="fs-id2192724">
+<para id="fs-id2078590">Which of the following is not an example of an energy transformation?</para>
+<list id="fs-id1454570" list-type="enumerated" number-style="lower-alpha">
+<item>turning on a light switch</item>
+<item>solar panels at work</item>
+<item>formation of static electricity</item>
+<item>none of the above</item>
+</list>
+</problem>
+<solution id="fs-id1769754">
+<label/>
+<para id="fs-id2228037">A</para>
+</solution>
+</exercise>
+<exercise id="fs-id2229379">
+<problem id="fs-id1595664">
+<para id="fs-id1485321">In each of the three systems, determine the state of entropy (low or high) when comparing the first and second: i. the instant that a perfume bottle is sprayed compared with 30 seconds later, ii. an old 1950s car compared with a brand new car, and iii. a living cell compared with a dead cell.</para>
+<list id="fs-id1787601" list-type="enumerated" number-style="lower-alpha">
+<item>i. low, ii. high, iii. low</item>
+<item>i. low, ii. high, iii. high</item>
+<item>i. high, ii. low, iii. high</item>
+<item>i. high, ii. low, iii. low</item>
+</list>
+</problem>
+<solution id="fs-id1369088">
+<label/>
+<para id="fs-id1772028">A</para>
+</solution>
+</exercise>
+</section>
+<section id="fs-id2491166" class="critical-thinking">
+<title>Critical Thinking Questions</title>
+<exercise id="fs-id2024135">
+<problem id="fs-id846110">
+<para id="fs-id1396419">Imagine an elaborate ant farm with tunnels and passageways through the sand where ants live in a large community. Now imagine that an earthquake shook the ground and demolished the ant farm. In which of these two scenarios, before or after the earthquake, was the ant farm system in a state of higher or lower entropy?</para></problem>
+<solution id="fs-id2000265"><label/>
+<para id="fs-id1708061">The ant farm had lower entropy before the earthquake because it was a highly ordered system. After the earthquake, the system became much more disordered and had higher entropy.</para></solution>
+</exercise>
+<exercise id="fs-id1876170">
+<problem id="fs-id2059689">
+<para id="fs-id1248468">Energy transfers take place constantly in everyday activities. Think of two scenarios: cooking on a stove and driving. Explain how the second law of thermodynamics applies to these two scenarios.</para></problem>
+<solution id="fs-id2197107"><label/>
+<para id="fs-id2011760">While cooking, food is heating up on the stove, but not all of the heat goes to cooking the food, some of it is lost as heat energy to the surrounding air, increasing entropy. While driving, cars burn gasoline to run the engine and move the car. This reaction is not completely efficient, as some energy during this process is lost as heat energy, which is why the hood and the components underneath it heat up while the engine is turned on. The tires also heat up because of friction with the pavement, which is additional energy loss. This energy transfer, like all others, also increases entropy.</para></solution>
+</exercise>
+</section>
+ </content>
+<glossary>
+<definition id="fs-id1428702"><term>entropy (S)</term> <meaning id="fs-id1870614">measure of randomness or disorder within a system</meaning></definition>
+<definition id="fs-id2316354"><term>heat</term> <meaning id="fs-id1728320">energy transferred from one system to another that is not work (energy of the molecules' motion or particles)</meaning></definition>
+<definition id="fs-id1479018"><term>thermodynamics</term> <meaning id="fs-id1524656">study of energy and energy transfer involving physical matter</meaning></definition>
+</glossary>
+</document>

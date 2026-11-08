@@ -573,12 +573,8 @@ class WorldLearningMissionEngine:
 
     @staticmethod
     def _run_verification_code(code: str) -> tuple[bool, Any, str]:
-        ns: dict[str, Any] = {}
-        try:
-            exec(compile(code, "<learning_mission_verifier>", "exec"), ns, ns)
-            return True, ns.get("RESULT"), "ok"
-        except Exception as exc:
-            return False, None, f"{type(exc).__name__}: {exc}"
+        import isolated_sandbox
+        return isolated_sandbox.run_in_isolated_sandbox(code, timeout_s=5.0)
 
     def active_validated_concept_ids(self) -> set[str]:
         return {

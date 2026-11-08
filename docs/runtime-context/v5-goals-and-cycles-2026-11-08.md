@@ -231,5 +231,74 @@ Clover traversed its Memory Graph and Symbolic Ontology Graph to produce:
 3. **Proposed & Executed Falsifiable Test**:
    - Perturbing a cell's ion gradient from $120\text{ mM}$ to $80\text{ mM}$ with intact ATP flux ($J_{\text{pump}} = 6.0\text{ mM/s}$) restores the $120.0\text{ mM}$ set-point, whereas cutting ATP supply ($J_{\text{pump}} = 0$) causes the gradient to decay exponentially to $0.0054\text{ mM} \approx 0\text{ mM}$, falsifying the static-equilibrium spring analogy (`falsifies_static_equilibrium_analogy: true`).
 
+---
+
+## Experiment 5.2 — Real Source Learning, Isolated Sandbox Security, Model-Generated Understanding & 3-Seed Evaluation
+
+### 1. Context (Review of Commits `36a56b5` & `2185f49`)
+Following the review of Experiment 5.1, two critical architectural requirements were identified before claiming genuine source-driven learning:
+1. **Execution Security Boundary**: `world_learning_mission.py` previously executed verification snippets via in-process `exec()`. Before allowing live model-generated learning experiments and candidate solutions to run, execution must be isolated in a separate OS process with filesystem, network, process, memory, and CPU restrictions.
+2. **Real Book Ingestion & Live Model-Driven Learning (Zero Authored Concept Fixtures)**: Rather than testing the bookkeeping pipeline with pre-authored concept summaries and prewritten solution dispatch, Clover must ingest the actual textbook chapters (*Think Python 3e*, *University Physics Vol. 1*, and *Biology 2e*), let the live model (`LFM3-Omni-2B`) extract concepts and breakdown boundaries from the raw chapters, test its own verification scripts in the isolated sandbox, and solve hidden held-out problems across multiple random seeds (`seed = 1, 2, 3`), comparing against both the **Base Model** (zero-shot) and **Ordinary RAG** (top-2 BM25 raw chunks).
+
+### 2. Direction & Architecture Implemented
+We built four new modules (and wired `world_learning_mission._run_verification_code` to use the hardened sandbox):
+1. **[clover-ai-system/studio/clover/isolated_sandbox.py](../../clover-ai-system/studio/clover/isolated_sandbox.py) (`IsolatedPythonSandbox`)**:
+   - **Layer 1 (Static AST Allowlist Gate)**: Rejects any `import` outside pure mathematical/data-structure modules (`math`, `itertools`, `functools`, `collections`, `heapq`, `bisect`, `fractions`, `decimal`, `statistics`, `random`, `typing`, `re`, `dataclasses`, `operator`, `copy`, `string`, `time`), blocks dangerous builtins (`open`, `eval`, `exec`, `compile`, `__import__`, `getattr`, `setattr`, `globals`, `locals`), and blocks all dunder attribute access (`__subclasses__`, `__globals__`, `__class__`, etc.).
+   - **Layer 2 (Separate Child Process `python -I -S -B`)**: Runs in an isolated child process with stripped environment variables and an empty ephemeral working directory.
+   - **Layer 3 (Kernel Resource Limits)**: Applies POSIX `RLIMIT_AS` (`256 MiB`), `RLIMIT_CPU`, `RLIMIT_FSIZE = 0` (zero file writes), and `RLIMIT_NPROC = 0` (zero child forks) on Linux, and a Win32 Job Object (`JOB_OBJECT_LIMIT_PROCESS_MEMORY = 256 MiB`, `JOB_OBJECT_LIMIT_ACTIVE_PROCESS = 1`, `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`) on Windows.
+   - **Layer 4 (CPython Runtime Audit Hook `sys.addaudithook`)**: Blocks `open`, `os.*`, `subprocess.*`, `socket.*`, `urllib.*`, `http.*`, `ctypes.*`, `shutil.*`, `pathlib.*`, and unauthorized imports at the CPython C-API level.
+   - Verified against `7` adversarial sandbox-escape and denial-of-service payloads (`file_open_write`, `import_os`, `import_socket`, `import_subprocess`, `dunder_escape`, `eval_exec`, `infinite_loop_timeout` — **`7/7` blocked**).
+2. **[clover-ai-system/studio/clover/book_ingestor.py](../../clover-ai-system/studio/clover/book_ingestor.py) (`RealBookIngestor`)**:
+   - Ingests real upstream chapters from Allen B. Downey's `ThinkPython/3e` Jupyter notebooks (`chap06.ipynb`, `chap10.ipynb`) and OpenStax `osbooks-university-physics-bundle` / `osbooks-biology-bundle` CNXML modules (`m58306`, `m58314`, `m66459`, `m66461`, `m66462`), preserving exact file byte counts, SHA-256 digests, cell/line spans, and CC license metadata (`CC BY-NC-SA 3.0` / `CC BY 4.0`).
+   - Also provides a pure BM25 chunk retriever (`retrieve_rag_chunks`) over the raw ingested chapters for the **Ordinary RAG** baseline.
+3. **[clover-ai-system/studio/clover/real_source_learning.py](../../clover-ai-system/studio/clover/real_source_learning.py) (`RealSourceLearningEngine`) & [clover-ai-system/studio/clover/test_experiment_5_2_real_source_learning.py](../../clover-ai-system/studio/clover/test_experiment_5_2_real_source_learning.py)**:
+   - Connects to the live `LFM3-Omni-2B` model (`92` live LLM generation calls, `81,853` prompt tokens, `22,091` completion tokens, `878.03 s` total wall-clock runtime across `3` seeds).
+   - **Machine-Readable Artifact**: [docs/runtime-context/experiment_5_2_real_source_learning_results.json](experiment_5_2_real_source_learning_results.json).
+
+### 3. Step 1 Outcome — Real Book Ingestion & SHA-256 Provenance
+
+| Section Key | Book & Section Title | Exact Source Span | License | Raw Bytes | SHA-256 Digest |
+| :--- | :--- | :--- | :--- | ---: | :--- |
+| `think_python_3e_ch06` | *Think Python 3e* — Ch. 6: Return Values, Recursion, Fibonacci & Checking Types | `think_python_3e_chap06.ipynb#cells[87:118]` | `CC BY-NC-SA 3.0` | `51,424` | `6f4163260f746cd8...` |
+| `think_python_3e_ch10` | *Think Python 3e* — Ch. 10: Dictionaries, Call Graphs, Memos & Self-Checks | `think_python_3e_chap10.ipynb#cells[96:108]` | `CC BY-NC-SA 3.0` | `48,688` | `68f930d786d12f95...` |
+| `university_physics_v1_m58306` | *University Physics Vol. 1* — Sec. 6.4: Drag Force and Terminal Speed | `university_physics_v1_m58306_drag_terminal_speed.cnxml#lines[1:746]` | `CC BY 4.0` | `113,837` | `b4138356d60e7516...` |
+| `university_physics_v1_m58314` | *University Physics Vol. 1* — Sec. 8.3: Conservation of Energy & Non-Conservative Work | `university_physics_v1_m58314_conservation_of_energy.cnxml#lines[1:338]` | `CC BY 4.0` | `51,630` | `6d99ce22b67a1d00...` |
+| `biology_2e_m66459` | *Biology 2e* — Sec. 6.2: Potential, Kinetic, Free, and Activation Energy | `biology_2e_m66459_free_energy.cnxml#lines[1:185]` | `CC BY 4.0` | `29,431` | `e9584eaa75e7149c...` |
+| `biology_2e_m66461` | *Biology 2e* — Sec. 6.3: The Laws of Thermodynamics in Living Systems | `biology_2e_m66461_thermodynamics.cnxml#lines[1:100]` | `CC BY 4.0` | `14,335` | `4b46064564c69dbd...` |
+| `biology_2e_m66462` | *Biology 2e* — Sec. 6.4: ATP: Adenosine Triphosphate and Energy Coupling | `biology_2e_m66462_atp_coupling.cnxml#lines[1:119]` | `CC BY 4.0` | `14,105` | `20bec814db512250...` |
+
+### 4. Step 2 & 3 Outcome — Multi-Seed Blind Problem Evaluation (`seed = 1, 2, 3`)
+
+Across all `3` seeds (`15` blind problem evaluations per condition, `92` live `LFM3-Omni-2B` calls, `878.03 s` wall time):
+
+| Evaluation Condition | Seed 1 (`5` problems) | Seed 2 (`5` problems) | Seed 3 (`5` problems) | Total Across 3 Seeds (`15`) | Mean Accuracy $\pm$ Std |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **1. `base_model`** (Zero-Shot `LFM3-Omni-2B`, No Book Context) | `0/5` (`0.0%`) | `0/5` (`0.0%`) | `0/5` (`0.0%`) | `0/15` | **`0.0%` $\pm$ `0.0%`** |
+| **2. `ordinary_rag`** (Top-2 BM25 Raw Textbook Chunks) | `0/5` (`0.0%`) | `0/5` (`0.0%`) | `0/5` (`0.0%`) | `0/15` | **`0.0%` $\pm$ `0.0%`** |
+| **3. `clover_learning`** (Model-Extracted Memory Graph Concepts + Stage 4 Sanity Check) | **`2/5` (`40.0%`)** | **`3/5` (`60.0%`)** | **`3/5` (`60.0%`)** | **`8/15`** | **`53.3%` $\pm$ `9.4%` (`+53.3 pp`)** |
+
+#### Deep Dive: Think Python Chapter 6 (`UNSEEN-TP-01-STEP-OVERSHOOT`) — Discovering an Unstated Boundary Principle
+- **What the Chapter Shows**: In *Think Python 3e* Chapter 6 (`cells[87:118]`), Allen Downey writes `factorial(n)` with `if n == 0: return 1` and adds input guardians (`if not isinstance(n, int): return None` and `elif n < 0: return None`) inside the same recursive function. The chapter never names what happens when a recursive countdown decrements by `step > 1` (`n - step`).
+- **What Happened on the Unseen Problem (`countdown_sum(n, step)`)**:
+  - **Base Model (`0/3` seeds)**: Wrote `if n == 0: return 0` and `return n + countdown_sum(n - step, step)`. On `countdown_sum(5, 2)` (`5 -> 3 -> 1 -> -1`), it missed `0` and crashed with `RecursionError: maximum recursion depth exceeded`.
+  - **Ordinary RAG (`0/3` seeds)**: Retrieved the raw Chapter 6 chunks and copied Downey's `if n < 0: return None` + `if n == 0: return 0` inside `countdown_sum`. On `countdown_sum(5, 2)`, the recursive call `countdown_sum(-1, 2)` hit the negative-input guard, returned `None`, and crashed at `1 + None` with `TypeError: unsupported operand type(s) for +: 'int' and 'NoneType'`!
+  - **Clover Learning (`3/3` seeds = `100%`)**: Applied the validated Ch. 6 breakdown invariant (`MEM-CONCEPT-*`) separating caller precondition validation (`n < 0 -> None`) from the step-overshoot termination boundary (`<= 0`) and passed all `7/7` black-box checks across all `3` seeds.
+
+#### Per-Problem Breakdown & Honest Failure Analysis (`8/15` Passed, `7/15` Failed)
+| Blind Problem ID | Domain | Base Model (`3` seeds) | Ordinary RAG (`3` seeds) | Clover Learning (`3` seeds) | Observed Mechanism / Failure Analysis |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| `UNSEEN-TP-01-STEP-OVERSHOOT` | *Think Python 3e* Ch. 6 | `0/3` (`RecursionError`) | `0/3` (`TypeError: int + NoneType`) | **`3/3` (`100%`)** | Clover Learning separated outer `n < 0 -> None` precondition validation from the `<= 0` step-overshoot termination boundary. |
+| `UNSEEN-PHY-04-DRAG-AND-NONCONSERVATIVE-WORK` | *University Physics Vol. 1* Sec. 6.4 & 8.3 | `0/3` (omitted $\rho$, wrong $W_{\text{nc}}$) | `0/3` (computed $-F_d \cdot h$ instead of $\Delta K + \Delta U$) | **`3/3` (`100%`)** | Clover Learning combined $v_{\text{term}} = \sqrt{\frac{2mg}{C\rho A}}$ (`m58306`) with $W_{\text{nc}} = \Delta K + \Delta U = \frac{1}{2}mv^2 - mgh$ (`m58314`). |
+| `UNSEEN-BIO-05-ATP-COUPLED-HOMEOSTASIS` | *Biology 2e* Sec. 6.2–6.4 + Physics Steady State | `0/3` (`SyntaxError` / circular variable) | `0/3` (hardcoded `7300` J/mol, wrong sign) | **`2/3` (`66.7%`)** | Seeds 2 & 3 passed all 3 checks (`n_atp=3`, `Delta_G_net=-23.20`, `atp_per_s=20.25`); Seed 1 failed when the 2B model substituted textbook `7.3` kcal/mol instead of `eff * abs(delta_g_atp)`. |
+| `UNSEEN-TP-02-MEMO-CACHE-ISOLATION` | *Think Python 3e* Ch. 10 | `0/3` (wrong base case `min(cost1, cost2)`) | `0/3` (wrong base case `min(cost1, cost2)`) | **`0/3` (`0.0%`)** | **Documented 2B Model Limitation**: Even with local `memo = {}` isolation, `LFM3-Omni-2B` repeatedly wrote `if n == 1: return min(cost1, cost2)` instead of `return cost1`, failing when `cost1 = 10 > cost2 = 3`. |
+| `UNSEEN-TP-03-GRID-DAG-OBSTACLES` | *Think Python 3e* Ch. 6 & 10 | `0/3` (`TimeoutError` — unmemoized $O(2^{r+c})$) | `0/3` (`TimeoutError` — unmemoized $O(2^{r+c})$) | **`0/3` (`0.0%`)** | **Documented 2B Model Limitation**: `LFM3-Omni-2B` decorated `count_grid_paths(r, c, blocked)` with `@lru_cache`, which raised `TypeError: unhashable type: 'set'` because `blocked` is a `set`. |
+
+### 5. Step 4 Outcome — Unprompted Cross-Domain Discovery (`Physics + Biology -> Living Systems`)
+Across all `3` seeds (`seed = 1, 2, 3`), when prompted with the open Section 4 question without naming the target connection:
+- `distinguishes_analogy_from_mechanism = True` (`3/3` seeds)
+- `identifies_free_energy_and_dissipation = True` (`3/3` seeds)
+- `proposed_test_executed_in_sandbox = True` (`3/3` seeds, `RESULT = True`)
+
+
 
 
