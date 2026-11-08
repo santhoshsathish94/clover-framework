@@ -175,7 +175,7 @@ def decide_tool_step(eng, user_prompt, workspace_info, history, tool_rounds, ava
             continue
         fn = t.get("function") if isinstance(t.get("function"), dict) else t
         name = str(fn.get("name") or "").strip()
-        if not name or name in ("vscode_askQuestions", "manage_todo_list"):
+        if not name or name == "vscode_askQuestions":
             continue
         desc_lines = str(fn.get("description") or "").splitlines()
         desc = re.split(r"(?<=[.!?])\s", desc_lines[0])[0][:160] if desc_lines else ""
@@ -233,6 +233,10 @@ def decide_tool_step(eng, user_prompt, workspace_info, history, tool_rounds, ava
         elif t_name == "replace_string_in_file":
             args = {"filePath": _resolve_abs_path(args.get("filePath") or args.get("path") or ""),
                     "oldString": str(args.get("oldString") or ""), "newString": str(args.get("newString") or "")}
+        elif t_name == "manage_todo_list":
+            import clover_cycle as C
+            raw_list = args.get("todoList") or args.get("todos") or args.get("items") or []
+            args = {"todoList": C.normalize_todo_list(raw_list)}
         return args
 
     already = set()

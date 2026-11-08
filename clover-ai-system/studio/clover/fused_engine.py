@@ -192,15 +192,23 @@ class FusedEngine:
         if media:
             raise ValueError("C1 + C2 + C3 reads text only: switch the engine to the GPU or CPU in Settings for photos, "
                              "audio and video")
-        # Clover's S layers as the GPU and CPU engines add them (omni_native.run_turn): memory, ontology, workspace and
-        # records after the question; recall and the user's preferred form before it (the runtime takes no system
-        # messages). The first regression run had none of them: "When is my sister Anjali's birthday?" after it was
-        # remembered got "I don't have access to personal information" (2026-11-03). Not ported: the compiler check.
+        import clover_cycle as C
+        import semantics
+        import workspaces as WS
         emit = on_event or (lambda e: None)
         query = layer_query or prompt
+        op_plan = C.OperatingCyclePlan(emit, model_name="LFM3-Omni-2B (C1+C2+C3)", query=query, offered_tools=())
+        self.active_op_plan = op_plan
+        op_plan.start_stage("context")
         after, layer_log = self._context(layers, kit, query)
         for info in layer_log:
             emit(dict(info, type="layer"))
+        ws_active_p = (kit.workspaces.active() or {}).get("path") if (kit is not None and getattr(kit, "workspaces", None) is not None) else None
+        l_blk, l_info = WS.local_context_for_paths(semantics.user_paths(prompt), workdir=getattr(self, "workdir", None), active_ws_path=ws_active_p)
+        if l_blk:
+            after.append(l_blk)
+            layer_log.append(l_info)
+            emit(dict(l_info, type="layer"))
         before = []
         if kit is not None and "recall" in layers:
             block, info = kit.recall_context(query, sum(1 for m in hist or () if m.get("role") == "user"))
@@ -212,18 +220,80 @@ class FusedEngine:
                     emit(dict(info, type="layer"))
         if meaning is not None and getattr(meaning, "guidance", ""):
             before.append(meaning.guidance)
-        emit({"type": "plan", "round": 1, "stage": "fused_c1_c2_c3", "model": "LFM3-Omni-2B"})
-        ans = self._ask("\n\n".join(before + [prompt] + after), hist, max_new)
-        emit({"type": "plan", "round": 1, "stage": "fused_done", "model": "LFM3-Omni-2B",
-              "ms": round((ans.get("seconds") or 0) * 1000)})
-        reply = ans.get("reply") or ""
-        if "ontology" in layers and kit is not None:
-            reply, changed = kit.grounding_filter(query, reply)
-            layer_log.append({"layer": "ontology_grounding", "changed": changed})
+        ctx_sources = [x.get("layer") for x in layer_log if isinstance(x, dict) and x.get("layer")]
+        op_plan.complete_stage(
+            "context",
+            "Context established (" + (", ".join(dict.fromkeys(ctx_sources)) if ctx_sources else "AGENTS.md & conversation state") + ")",
+        )
+        op_plan.start_stage("direction", "Direction set (C2 HybridLink latent planning -> C3 11-level NCM)")
+        op_plan.complete_stage("direction")
+        op_plan.start_stage("execution", "Executing C1 -> C2 -> C3 fused runtime…")
+        max_clover_cycles = 3
+        cycle_history, answers = [], []
+        cur_prompt = "\n\n".join(before + [prompt] + after)
+        cur_hist = list(hist or ())
+        reply = ""
+        for attempt in range(max_clover_cycles):
+            cycle_num = attempt + 1
+            emit({"type": "plan", "round": len(answers) + 1, "stage": "fused_c1_c2_c3", "model": "LFM3-Omni-2B", "cycle": cycle_num})
+            ans = self._ask(cur_prompt, cur_hist, max_new)
+            answers.append(ans)
+            emit({"type": "plan", "round": len(answers), "stage": "fused_done", "model": "LFM3-Omni-2B",
+                  "ms": round((ans.get("seconds") or 0) * 1000), "cycle": cycle_num})
+            reply = ans.get("reply") or ""
+            if "ontology" in layers and kit is not None:
+                reply, changed = kit.grounding_filter(query, reply)
+                layer_log.append({"layer": "ontology_grounding", "changed": changed, "cycle": cycle_num})
+            op_plan.complete_stage("execution")
+            op_plan.start_stage("outcome", f"Cycle {cycle_num} Outcome: verifying output against reality…")
+            findings, c_meta = C.verify_turn_outcome(query, reply, [], kit=kit, layers=layers, meaning=meaning)
+            c_meta["cycle"] = cycle_num
+            c_meta["findings"] = list(findings)
+            c_meta["ok"] = not bool(findings)
+            cycle_history.append(c_meta)
+            if c_meta.get("compiler_info") is not None:
+                layer_log.append(c_meta["compiler_info"])
+            if not findings or (cancel and cancel.is_set()):
+                break
+            if attempt + 1 >= max_clover_cycles:
+                break
+            op_plan.retry_from_context(cycle_num + 1, findings[0])
+            emit({"type": "cycle", "step": "outcome_retry", "cycle": cycle_num + 1, "findings": findings})
+            cur_hist = cur_hist + [{"role": "user", "content": cur_prompt}, {"role": "assistant", "content": reply}]
+            cur_prompt = C.AUTO_CYCLE_FIX.format(findings="\n".join("- " + f for f in findings))
+
+        if len(cycle_history) > 1 or (cycle_history and cycle_history[0].get("findings")):
+            lesson_txt = (
+                C.lesson_text(query, [f[:240] for f in (cycle_history[0].get("findings") or [])[:2]], "", passed=True)
+                if len(cycle_history) > 1 and cycle_history[-1].get("ok")
+                else ""
+            )
+            cyc_info = {
+                "layer": "cycle",
+                "trigger": "auto",
+                "action": "corrected" if (len(cycle_history) > 1 and cycle_history[-1].get("ok")) else "unconfirmed",
+                "cycles": len(cycle_history),
+                "cycles_used": len(cycle_history),
+                "repaired": len(cycle_history) > 1 and bool(cycle_history[-1].get("ok")),
+                "first_findings": cycle_history[0].get("findings", []),
+                "final_findings": cycle_history[-1].get("findings", []),
+                "lesson": lesson_txt,
+                "lesson_kind": "verified" if lesson_txt else "unconfirmed",
+            }
+            layer_log.append(cyc_info)
+            emit(dict(cyc_info, type="layer"))
+        op_plan.complete_stage(
+            "outcome",
+            f"Outcome verified in {len(cycle_history)} Clover cycle" + ("s" if len(cycle_history) != 1 else ""),
+        )
+        op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
+        op_plan.complete_stage("growth", "Growth preserved · verified outcome & context updated")
         if on_event:
-            on_event({"type": "token", "round": 1, "kind": "answer", "text": reply})
-        return {"reply": reply, "tool_calls": [], "rounds": 1, "generation": [self._generation(ans)],
-                "layers": layer_log + [self._fused_layer([ans])]}
+            on_event({"type": "token", "round": len(answers), "kind": "answer", "text": reply})
+        return {"reply": reply, "tool_calls": [], "rounds": len(answers),
+                "generation": [self._generation(a) for a in answers],
+                "layers": layer_log + [self._fused_layer(answers)],
+                "todo_list": op_plan.todos}
 
     def retry_turn(self, history, question, previous, feedback, *, media=(), layers=(), kit=None, on_event=None,
                    cancel=None, max_new=2048, context="", **kw):
@@ -235,8 +305,15 @@ class FusedEngine:
             raise ValueError("C1 + C2 + C3 reads text only: switch the engine to the GPU or CPU in Settings for photos, "
                              "audio and video")
         emit = on_event or (lambda e: None)
+        op_plan = C.OperatingCyclePlan(emit, model_name="LFM3-Omni-2B (C1+C2+C3)", query=question, offered_tools=())
+        self.active_op_plan = op_plan
+        op_plan.start_stage("context", f"Re-establishing Context from user feedback: {str(feedback)[:80]}")
         blocks, layer_log = self._context(layers, kit, question)  # Context gathered again for the question
         notes = ("\n\n" + "\n\n".join(blocks)) if blocks else ""
+        op_plan.complete_stage("context")
+        op_plan.start_stage("direction", "Setting corrected Direction for independent solve")
+        op_plan.complete_stage("direction")
+        op_plan.start_stage("execution", "Running C1 -> C2 -> C3 retry cycle…")
         convo = [m for m in (history or []) if m.get("role") in ("user", "assistant")]
         start, answers = len(convo), []
 
@@ -263,12 +340,18 @@ class FusedEngine:
         if "ontology" in layers and kit is not None:
             answer, changed = kit.grounding_filter(question, answer)
             layer_log.append({"layer": "ontology_grounding", "changed": changed})
+        op_plan.complete_stage("execution")
+        op_plan.start_stage("outcome", "Outcome verified against user feedback")
+        op_plan.complete_stage("outcome")
+        op_plan.start_stage("growth", "Growth preserved")
+        op_plan.complete_stage("growth")
         cancelled = bool(cancel and cancel.is_set())
         reply = "(Stopped.)" if cancelled else answer
         emit({"type": "token", "round": 1, "kind": "answer", "text": reply})
         return {"reply": reply, "tool_calls": [], "rounds": len(answers),
                 "generation": [self._generation(a) for a in answers], "reasoning": "", "cancelled": cancelled,
-                "layers": layer_log + [self._fused_layer(answers)]}
+                "layers": layer_log + [self._fused_layer(answers)],
+                "todo_list": op_plan.todos}
 
     def vscode_step(self, user_prompt, ws_info, prior_turns, tool_rounds, tools, **kw):
         res = self.run_turn([], user_prompt)

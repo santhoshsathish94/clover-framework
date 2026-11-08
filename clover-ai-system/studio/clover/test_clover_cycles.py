@@ -281,11 +281,168 @@ def test_autonomous_clover_multi_cycle() -> dict:
     }
 
 
+def test_context_files_and_todo_list() -> dict:
+    """Verify end-to-end Context File (`*-context.md`, `*-context-index.md`, `CONTEXT.md`, `TODO.md`) and Todo List
+    (`decompose_task_todos`, `OperatingCyclePlan.todos`, `Repo.save_todos`/`load_todos`) support."""
+    import workspaces as WS
+
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        ws_dir = tmp_path / "sample-project"
+        (ws_dir / "src").mkdir(parents=True, exist_ok=True)
+        (ws_dir / "main_app.py").write_text('"""Top-level entry point."""\ndef run_app():\n    return 42\n', encoding="utf-8")
+        (ws_dir / "src" / "solver.py").write_text('"""Time solver module."""\ndef max_time(digits):\n    return "23:41"\n', encoding="utf-8")
+        (ws_dir / "TODO.md").write_text("# Project Todo\n- [ ] Add 23:10 edge-case test\n", encoding="utf-8")
+        (ws_dir / "CONTEXT.md").write_text("# Project Context\nAlways validate 24-hour HH:MM bounds.\n", encoding="utf-8")
+
+        ws = WS.Workspaces(tmp_path / "workspaces.json", tmp_path / "clones", HERE)
+        ws.add(str(ws_dir), "sample-project")
+
+        # 1. Top-level file query matches <repo>-context-index.md even when no subfolder matches
+        blk_top, info_top = ws.context_block("What does main_app.py define?")
+        assert blk_top and "main_app.py" in blk_top, f"Expected main_app.py in workspace context, got {blk_top}"
+
+        # 2. Todo/project query includes TODO.md and CONTEXT.md beside the workspace
+        blk_todo, info_todo = ws.context_block("What is on our todo list for sample-project?")
+        assert blk_todo and "23:10 edge-case test" in blk_todo and "24-hour HH:MM bounds" in blk_todo, (
+            f"Expected TODO.md and CONTEXT.md in workspace context, got {blk_todo}"
+        )
+
+        # 3. Stage 5 Growth records learned outcome note into the folder context file beside touched files
+        saved_fp = ws.record_outcome_note(
+            "Fixed greedy hour-first trap in max_time for 1230 -> 23:10.",
+            touched_paths=[str(ws_dir / "src" / "solver.py")],
+        )
+        assert saved_fp and saved_fp.endswith("src-context.md"), f"Expected src-context.md, got {saved_fp}"
+        blk_after, _ = ws.context_block("How does solver.py handle 1230?")
+        assert blk_after and "greedy hour-first trap" in blk_after, f"Expected growth note in context_block, got {blk_after}"
+
+        # 4. Local context file reading for a path outside the active workspace
+        ext_dir = tmp_path / "external-mod"
+        ext_dir.mkdir(parents=True, exist_ok=True)
+        (ext_dir / "CONTEXT.md").write_text("# External Module Context\nUses port 9091 for telemetry.\n", encoding="utf-8")
+        l_blk, l_info = WS.local_context_for_paths([str(ext_dir / "worker.py")], active_ws_path=str(ws_dir))
+        assert l_blk and "port 9091" in l_blk and l_info["layer"] == "local_context", f"Expected external CONTEXT.md, got {l_blk}"
+
+        # 5. Multi-step Task Todo List decomposition & step-by-step progression in OperatingCyclePlan
+        todo_events = []
+        plan = C.OperatingCyclePlan(
+            emit_fn=lambda e: todo_events.append(e) if e.get("type") == "todo_list" else None,
+            model_name="Clover-35B-A3B",
+            query="1. Read src/solver.py\n2. Fix 1230 -> 23:10 bug\n3. Run verification tests",
+            offered_tools=["read_file", "write_file", "run_python"],
+        )
+        assert len(plan.todos) == 5, f"Expected 5 todos (context + 3 steps + outcome/growth), got {plan.todos}"
+        plan.start_stage("context")
+        assert plan.todos[0]["status"] == "in-progress"
+        assert sum(1 for t in plan.todos if t["status"] == "in-progress") == 1
+        plan.complete_stage("context")
+        plan.start_stage("direction")
+        plan.complete_stage("direction")
+        plan.start_stage("execution")
+        assert plan.todos[0]["status"] == "completed" and plan.todos[1]["status"] == "in-progress"
+        plan.advance_execution_step("read_file")
+        assert plan.todos[1]["status"] == "completed" and plan.todos[2]["status"] == "in-progress"
+        plan.advance_execution_step("write_file")
+        assert plan.todos[2]["status"] == "completed" and plan.todos[3]["status"] == "in-progress"
+        plan.complete_stage("execution")
+        plan.start_stage("outcome")
+        assert plan.todos[-1]["status"] == "in-progress"
+        plan.complete_stage("outcome")
+        plan.start_stage("growth")
+        plan.complete_stage("growth")
+        assert all(t["status"] == "completed" for t in plan.todos), f"Expected all todos completed, got {plan.todos}"
+
+        # 6. Repo todo persistence & retrieval in Stage 1 Context when todos are unfinished
+        if clover_repo is not None:
+            repo = clover_repo.Repo(tmp_path / "studio-base", HERE / "AGENTS.md")
+            repo.turn_start("sess-todo-1", "Start multi-step migration")
+            repo.save_todos("sess-todo-1", [
+                {"id": 1, "title": "Inspect schema", "status": "completed"},
+                {"id": 2, "title": "Migrate user table", "status": "in-progress"},
+                {"id": 3, "title": "Verify row counts", "status": "not-started"},
+            ])
+            r_blk, r_info = repo.context_block("Continue where we left off")
+            assert r_blk and "Migrate user table (in-progress)" in r_blk and "todos" in r_info["parts"], (
+                f"Expected unfinished session todos in Repo.context_block, got {r_blk}"
+            )
+
+        # 7. Verify K3HostEngine (Clover-35B-A3B, Nemotron 3.5 Super VL, Kimi K3.1 Pro) runs Context files + Todo list + Multi-cycle repair
+        import k3_host_engine
+        for model_key in ("clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3"):
+            k3_eng = k3_host_engine.K3HostEngine.__new__(k3_host_engine.K3HostEngine)
+            k3_eng.model_key = model_key
+            k3_eng.raw_key = model_key
+            k3_eng.spec = k3_host_engine.SPECS[model_key]
+            k3_eng.omni = None
+            k3_eng.workdir = str(ext_dir)
+            k3_eng.workname = "external-mod"
+            k3_eng.after_write = None
+            k3_eng.turn_images = []
+            k3_eng.media_dir = tmp_path
+            import threading
+            k3_eng.lock = threading.Lock()
+            k3_calls = []
+
+            def _fake_worker(sid, prompt_txt, hist, media=(), _calls=k3_calls):
+                _calls.append(prompt_txt)
+                if len(_calls) == 1:
+                    return {
+                        "reply": "Step 1 checked. Therefore 47 * 83 = 3800.",
+                        "plans": ["Cycle 1 draft"],
+                        "tool_calls": [{"tool": "python", "input": "print(1)", "result": "1"}],
+                    }
+                return {
+                    "reply": "Step 1 checked. Therefore 47 * 83 = 3901.",
+                    "plans": ["Cycle 2 verified"],
+                    "tool_calls": [],
+                }
+
+            k3_eng._call_worker = _fake_worker
+            k3_events = []
+            k3_res = k3_eng.run_turn(
+                [],
+                "1. Inspect external module config\n2. Compute what is 47 * 83?",
+                on_event=lambda e, _ev=k3_events: _ev.append(e),
+            )
+            assert "3901" in k3_res["reply"], f"Expected K3HostEngine ({model_key}) to auto-repair to 3901, got {k3_res['reply']}"
+            assert "port 9091" in k3_calls[0], f"Expected K3HostEngine ({model_key}) to include local CONTEXT.md in prompt"
+            assert k3_res.get("todo_list") and all(t["status"] == "completed" for t in k3_res["todo_list"]), (
+                f"Expected K3HostEngine ({model_key}) to return completed todo_list, got {k3_res.get('todo_list')}"
+            )
+
+        # 8. Verify FusedEngine (C1 + C2 + C3) runs Context files + Todo list + Multi-cycle repair
+        import fused_engine
+        f_eng = fused_engine.FusedEngine.__new__(fused_engine.FusedEngine)
+        f_eng.workdir = str(ext_dir)
+        f_calls = []
+
+        def _fake_ask(prompt_txt, hist, max_new):
+            f_calls.append(prompt_txt)
+            if len(f_calls) == 1:
+                return {"reply": "47 * 83 = 3800.", "seconds": 0.1, "prompt_tokens": 20, "tokens": 10}
+            return {"reply": "47 * 83 = 3901.", "seconds": 0.1, "prompt_tokens": 30, "tokens": 10}
+
+        f_eng._ask = _fake_ask
+        f_eng._context = lambda layers, kit, q: ([], [])
+        f_eng._generation = lambda a: {"prompt_tokens": 20, "new_tokens": 10, "prefill_s": 0.05, "decode_s": 0.05, "finish": "stop"}
+        f_eng._fused_layer = lambda ans: {"layer": "fused", "calls": len(ans)}
+        f_res = f_eng.run_turn([], "1. Check external module\n2. What is 47 * 83?")
+        assert "3901" in f_res["reply"], f"Expected FusedEngine to auto-repair to 3901, got {f_res['reply']}"
+        assert "port 9091" in f_calls[0], "Expected FusedEngine to include local CONTEXT.md"
+        assert f_res.get("todo_list") and all(t["status"] == "completed" for t in f_res["todo_list"]), (
+            f"Expected FusedEngine to return completed todo_list, got {f_res.get('todo_list')}"
+        )
+
+    return {"status": "ok", "checks_verified": 8}
+
+
 if __name__ == "__main__":
     out = {
         "verify_turn_outcome": test_verify_turn_outcome_checks(),
         "multi_cycle_turn_and_growth": test_multi_cycle_turn_and_growth(),
         "autonomous_clover_multi_cycle": test_autonomous_clover_multi_cycle(),
+        "context_files_and_todo_list": test_context_files_and_todo_list(),
     }
     print("ALL CLOVER CYCLE TESTS PASSED")
     print(json.dumps(out, indent=2))

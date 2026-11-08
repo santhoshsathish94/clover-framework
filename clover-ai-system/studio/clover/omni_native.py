@@ -511,12 +511,14 @@ class OmniNative(N.LFM3Native):
             self.describe().get("model") if hasattr(self, "describe") else None
         ) or "LFM3-Omni-2B"
         l_c1 = getattr(self, "display_layers_desc", None) or ""
+        import workspaces as WS
         op_plan = C.OperatingCyclePlan(
             emit,
             model_name=m_c1,
             query=query,
             offered_tools=only_tools if only_tools is not None else list(by_name)[:4],
         )
+        self.active_op_plan = op_plan
         op_plan.start_stage("context")
         layer_log, blocks = [], []
         for name, fn in (("memory", "memory_context"), ("ontology", "ontology_context"), ("workspace", "workspace_context"),
@@ -527,6 +529,12 @@ class OmniNative(N.LFM3Native):
                     blocks.append(block)
                     layer_log.append(info)
                     emit(dict(info, type="layer"))
+        ws_active_p = (kit.workspaces.active() or {}).get("path") if (kit is not None and getattr(kit, "workspaces", None) is not None) else None
+        l_blk, l_info = WS.local_context_for_paths(self.turn_paths, workdir=self.workdir, active_ws_path=ws_active_p)
+        if l_blk:
+            blocks.append(l_blk)
+            layer_log.append(l_info)
+            emit(dict(l_info, type="layer"))
         if blocks:  # Clover appends its observations after the question
             user_text = user_text + "\n\n" + "\n\n".join(blocks)
             if not getattr(meaning, "caps", ()) and any(x.get("layer") in ("ontology", "memory") for x in layer_log):
@@ -920,6 +928,7 @@ class OmniNative(N.LFM3Native):
                                 rounds.append({"tool": c["name"], "arguments": c["arguments"], "ran": ran, "worked": worked,
                                                "summary": summary, "why": why, "result": result[:2000]})
                                 msgs.append({"role": "tool", "tool_call_id": c["id"], "content": result})
+                                op_plan.advance_execution_step(c["name"])
                             continue
                         final = TOOL_XML.sub("", content).strip() if forced else content.strip()
                         web_ok = any(rd["tool"] == "web_search" and rd["ran"] and not rd["result"].startswith("No results") for rd in rounds)
@@ -1103,7 +1112,8 @@ class OmniNative(N.LFM3Native):
             finally:
                 self.stage = {"name": "idle", "since": time.time()}
         return {"reply": final, "tool_calls": rounds, "rounds": len(stats_all), "generation": stats_all,
-                "reasoning": "", "cancelled": bool(cancel and cancel.is_set()), "layers": layer_log}
+                "reasoning": "", "cancelled": bool(cancel and cancel.is_set()), "layers": layer_log,
+                "todo_list": op_plan.todos}
 
     # ---------------- the Clover cycle, when the user says the answer is not right ----------------
     def retry_turn(self, history, question, previous, feedback, *, media=(), layers=(), kit=None, on_event=None,
@@ -1283,7 +1293,8 @@ class OmniNative(N.LFM3Native):
                 self.stage = {"name": "idle", "since": time.time()}
         cancelled = bool(cancel and cancel.is_set())
         return {"reply": "(Stopped.)" if cancelled else answer, "tool_calls": rounds, "rounds": len(stats_all),
-                "generation": stats_all, "reasoning": "", "cancelled": cancelled, "layers": layer_log}
+                "generation": stats_all, "reasoning": "", "cancelled": cancelled, "layers": layer_log,
+                "todo_list": op_plan.todos}
 
     # ---------------- VS Code (OpenAI messages + VS Code's tools) ----------------
     def vscode_step(self, user_prompt, workspace_info, prior_turns, tool_rounds, vs_tools, thinking=True, max_new=1024,
@@ -1293,7 +1304,7 @@ class OmniNative(N.LFM3Native):
         for t in vs_tools:
             fn = t.get("function") if isinstance(t.get("function"), dict) else t
             name = str(fn.get("name") or "").strip()
-            if not name or name in ("vscode_askQuestions", "manage_todo_list") or name in by_name:
+            if not name or name == "vscode_askQuestions" or name in by_name:
                 continue
             f = {"name": name, "description": str(fn.get("description") or "").split("\n")[0][:240],
                  "parameters": fn.get("parameters") or fn.get("inputSchema") or {"type": "object", "properties": {}}}

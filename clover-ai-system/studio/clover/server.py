@@ -1571,10 +1571,36 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
             hist += [asked, {"role": "assistant", "content": kept}]
             del hist[:-24]
     if S.repo is not None:  # Growth: what the user's response and this turn taught, shown with the answer
+        if res.get("todo_list"):
+            try:
+                S.repo.save_todos(sid, res["todo_list"])
+            except Exception:
+                pass
         res["growth"] = list(ppl_growth) + growth + S.repo.turn_end(sid, n, res, time.perf_counter() - t0)
         res["turn"] = n
     elif ppl_growth:
         res["growth"] = list(ppl_growth)
+    if ws and S.workspaces is not None and not res.get("cancelled"):
+        try:
+            cyc_l = next((x for x in (res.get("layers") or []) if x.get("layer") == "cycle" and x.get("lesson")), None)
+            written_p = [
+                str((tc.get("arguments") or {}).get("path") or "")
+                for tc in (res.get("tool_calls") or [])
+                if tc.get("tool") == "write_file" and tc.get("ran") and tc.get("worked")
+            ]
+            written_p = [p for p in written_p if p]
+            ws_note = None
+            if cyc_l and cyc_l.get("lesson"):
+                ws_note = str(cyc_l["lesson"])
+            elif written_p:
+                names_w = ", ".join(Path(p).name for p in written_p[:4])
+                ws_note = f"Updated {names_w} during turn ({' '.join(str(typed or '').split())[:120]})"
+            if ws_note:
+                saved_ctx = S.workspaces.record_outcome_note(ws_note, touched_paths=written_p)
+                if saved_ctx:
+                    res.setdefault("growth", []).append(f"updated workspace context ({Path(saved_ctx).name})")
+        except Exception:
+            pass
     if S.memidx is not None:
         S.memidx.wake()
     m_id = getattr(eng, "model_key", None) or MODEL_ID

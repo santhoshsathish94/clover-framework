@@ -505,11 +505,50 @@ class Repo:
             self.schedule(f"Turn {n} of {sid}: marked helpful")
             return changes
 
+    def _todo_file(self, sid):
+        safe = re.sub(r"[^A-Za-z0-9_\-]", "_", str(sid or "default"))[:80]
+        d = self.dir / "sessions" / "todos"
+        d.mkdir(parents=True, exist_ok=True)
+        return d / f"{safe}.json"
+
+    def save_todos(self, sid, items, markdown=""):
+        if not sid or not isinstance(items, list):
+            return
+        with self.lock:
+            fp = self._todo_file(sid)
+            payload = {"session": sid, "updated": iso(), "items": items, "markdown": str(markdown or "")}
+            self._write(fp, json.dumps(payload, indent=2) + "\n")
+
+    def load_todos(self, sid):
+        if not sid:
+            return []
+        fp = self._todo_file(sid)
+        if not fp.is_file():
+            return []
+        try:
+            data = json.loads(fp.read_text(encoding="utf-8"))
+            return data.get("items") if isinstance(data.get("items"), list) else []
+        except (OSError, ValueError):
+            return []
+
     # ---------------- retrieval: only what this message needs ----------------
     def context_block(self, q):
         """Earlier conversations when the message refers to them; the growth, outcomes, execution or config summary
-        when it asks about them. Nothing otherwise. -> (block, info) or (None, None)"""
+        when it asks about them; active session todos when unfinished or asked about. Nothing otherwise. -> (block, info) or (None, None)"""
         parts, used = [], []
+        cur_sid = self.current[0] if self.current else None
+        if cur_sid:
+            todos = self.load_todos(cur_sid)
+            has_open = any(t.get("status") in ("not-started", "in-progress") for t in todos if isinstance(t, dict))
+            todo_asked = bool(re.search(r"\b(?:todo|todos|task\s+list|checklist|pending\s+tasks?|where\s+we\s+left\s+off|next\s+steps?)\b", q or "", re.I))
+            if todos and (has_open or todo_asked):
+                used.append("todos")
+                t_lines = ["Current session Todo list:"]
+                for t in todos[:12]:
+                    if isinstance(t, dict):
+                        mark = "x" if t.get("status") == "completed" else ("~" if t.get("status") == "in-progress" else " ")
+                        t_lines.append(f"- [{mark}] {t.get('id', '')}. {t.get('title', '')} ({t.get('status', 'not-started')})")
+                parts.append("\n".join(t_lines))
         if PAST.search(q):
             hits = self._past_sessions(q)
             if hits:

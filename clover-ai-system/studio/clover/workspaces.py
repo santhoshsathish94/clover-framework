@@ -543,14 +543,45 @@ class Workspaces:
         if not ours or MARK not in body:
             raise ValueError(f"{ctx_rel} is not a context file Clover keeps; refresh the workspace first")
         head = body.split("\n" + NOTES + "\n", 1)[0].rstrip("\n")
-        entry = f"- {datetime.date.today().isoformat()}: {' '.join(str(text).split())[:600]}"
+        clean_note = " ".join(str(text).split())[:600]
+        entry = f"- {datetime.date.today().isoformat()}: {clean_note}"
+        if notes and clean_note.lower() in notes.lower():
+            return str(fp)
         fp.write_text(head + "\n\n" + NOTES + "\n" + (notes + "\n" + entry if notes else entry) + "\n", encoding="utf-8")
         return str(fp)
 
+    def record_outcome_note(self, text, touched_paths=()):
+        """Stage 5 (Growth): preserve what the cycle taught or what changed in the workspace's context file beside the work."""
+        w = self.active()
+        if not w or not text:
+            return None
+        root = Path(w["path"]).resolve()
+        target = None
+        for p in touched_paths or ():
+            try:
+                rel = Path(p).resolve().relative_to(root).as_posix()
+            except (ValueError, OSError):
+                continue
+            parent = rel.rsplit("/", 1)[0] if "/" in rel else ""
+            if parent:
+                for ctx_rel in w.get("folders") or []:
+                    folder = ctx_rel.rsplit("/", 1)[0]
+                    if parent == folder or parent.startswith(folder + "/"):
+                        if target is None or folder.count("/") > target[0].count("/"):
+                            target = (folder, ctx_rel)
+        ctx_rel = target[1] if target else (self.note_target(text) or w.get("index"))
+        if not ctx_rel:
+            return None
+        try:
+            return self.add_note(ctx_rel, text)
+        except (ValueError, OSError):
+            return None
+
     def context_block(self, query, budget=1800):
-        """(block, info) for a question about the active workspace: up to two folder context files that match it and
-        the index's folder list. None when the question does not concern the workspace (a 2B model cites whatever
-        context it is given, so unrelated context is left out)."""
+        """(block, info) for a question about the active workspace: up to two folder context files that match it,
+        the index's top-level files/folders/notes, and any CONTEXT.md or TODO.md beside the work. None when the
+        question does not concern the workspace (a 2B model cites whatever context it is given, so unrelated context
+        is left out)."""
         w = self.active()
         if not w or not (w.get("folders") or w.get("index")):
             return None, None
@@ -566,32 +597,122 @@ class Workspaces:
             names = _terms(folder.replace("/", " ")) | {folder.rsplit("/", 1)[-1].lower()}
             fterms = _terms(" ".join(files)) | {f.lower() for f in files}
             notes = text.split(sep, 1)[1] if sep in text else ""
+            if notes.strip() == NOTES_HINT:
+                notes = ""
             s = 3 * len(q & names) + 2 * len(q & fterms) + len(q & _terms(notes))
             if s:
                 scored.append((s, ctx_rel, text))
+        idx_text, idx_score = "", 0
+        if w.get("index"):
+            try:
+                idx_text = (root / w["index"]).read_text(encoding="utf-8", errors="replace")
+                top_files = re.findall(r"^- \[`([^`]+)`\]", idx_text, re.M)
+                top_terms = _terms(" ".join(top_files)) | {f.lower() for f in top_files}
+                idx_notes = idx_text.split(sep, 1)[1] if sep in idx_text else ""
+                if idx_notes.strip() == NOTES_HINT:
+                    idx_notes = ""
+                idx_score = 2 * len(q & top_terms) + len(q & _terms(idx_notes))
+            except OSError:
+                idx_text = ""
         scored.sort(key=lambda x: -x[0])
         low = (query or "").lower()
-        asked = bool(PROJECT_WORDS.search(query or "")) or w["name"].lower() in low or root.name.lower() in low
-        if not asked and (not scored or scored[0][0] < 3):
+        todo_asked = bool(re.search(r"\b(?:todo|todos|task|tasks|checklist|roadmap|next\s+steps?|context)\b", low))
+        asked = (
+            bool(PROJECT_WORDS.search(query or ""))
+            or w["name"].lower() in low
+            or root.name.lower() in low
+            or todo_asked
+        )
+        if not asked and (not scored or scored[0][0] < 2) and idx_score < 2:
             return None, None
         head = (f'The user is working in the workspace "{w["name"]}" ({root}); relative file paths refer to it. From '
-                "its context files (Clover's index of folders and files; read a file for details). Files named "
+                "its context files (Clover's index of folders, files, notes, and TODOs; read a file for details). Files named "
                 "*-context.md and *-context-index.md are Clover's own notes, not part of the project:")
         parts, used, room = [head], [], budget - len(head)
+        for extra_name in ("CONTEXT.md", "TODO.md"):
+            efp = root / extra_name
+            if efp.is_file() and (asked or extra_name.lower() in low or (extra_name == "TODO.md" and todo_asked)):
+                try:
+                    raw_ex = efp.read_text(encoding="utf-8", errors="replace").strip()
+                    if raw_ex and room >= 250:
+                        chunk = f"[{extra_name}]\n{raw_ex[:min(500, room - 40)]}"
+                        parts.append(chunk)
+                        used.append(extra_name)
+                        room -= len(chunk)
+                except OSError:
+                    pass
         for _, ctx_rel, text in scored[:2]:
-            chunk = f"[{ctx_rel}]\n" + _plain(text)[:min(900, max(0, room - 40))]
+            clean_t = _plain(text.replace(NOTES_HINT, ""))
+            chunk = f"[{ctx_rel}]\n" + clean_t[:min(900, max(0, room - 40))]
             parts.append(chunk)
             used.append(ctx_rel)
             room -= len(chunk)
             if room < 250:
                 break
-        if room >= 250 and w.get("index"):
-            try:
-                idx = (root / w["index"]).read_text(encoding="utf-8", errors="replace")
-                tail = idx.split("## Folders", 1)[1].split(sep, 1)[0].strip() if "## Folders" in idx else ""
-                if tail:
-                    parts.append(f"[{w['index']}: folders]\n{_plain(tail)[:room - 60]}")
-                    used.append(w["index"])
-            except OSError:
-                pass
+        if room >= 200 and w.get("index") and idx_text:
+            clean_idx = _plain(idx_text.replace(NOTES_HINT, ""))
+            body_idx = clean_idx.split("\n", 2)[-1].strip() if "\n" in clean_idx else clean_idx
+            if body_idx:
+                parts.append(f"[{w['index']}]\n{body_idx[:room - 40]}")
+                used.append(w["index"])
         return "\n\n".join(parts), {"layer": "workspace", "workspace": w["name"], "files": used}
+
+
+def local_context_for_paths(paths_list, workdir=None, active_ws_path=None, budget=1100):
+    """Stage 1 (Context): read any context file (`CONTEXT.md`, `*-context.md`, `*-context-index.md`, `TODO.md`) beside
+    the files/folders named in the turn (`paths_list`) or `workdir` when they lie outside the active workspace."""
+    ws_root = None
+    if active_ws_path:
+        try:
+            ws_root = Path(active_ws_path).resolve()
+        except OSError:
+            ws_root = None
+    cand_dirs = []
+    for raw_p in list(paths_list or []) + ([workdir] if workdir else []):
+        if not raw_p:
+            continue
+        try:
+            p = Path(str(raw_p)).resolve()
+        except OSError:
+            continue
+        d = p if p.is_dir() else p.parent
+        if not d.is_dir():
+            continue
+        if ws_root is not None:
+            try:
+                d.relative_to(ws_root)
+                continue
+            except ValueError:
+                pass
+        if d not in cand_dirs:
+            cand_dirs.append(d)
+    if not cand_dirs:
+        return None, None
+    parts, used, room = [], [], budget
+    for d in cand_dirs[:2]:
+        names = [
+            "CONTEXT.md",
+            f"{slug(d.name)}-context.md",
+            f"{slug(d.name)}-context-index.md",
+            "TODO.md",
+        ]
+        for nm in names:
+            fp = d / nm
+            if not fp.is_file():
+                continue
+            try:
+                txt = _plain(fp.read_text(encoding="utf-8", errors="replace").replace(NOTES_HINT, "")).strip()
+            except OSError:
+                continue
+            if not txt or room < 180:
+                continue
+            rel_label = f"{d.name}/{nm}"
+            chunk = f"[{rel_label}]\n{txt[:min(550, room - 30)]}"
+            parts.append(chunk)
+            used.append(str(fp))
+            room -= len(chunk)
+    if not parts:
+        return None, None
+    head = "Context files found beside the target folder/files:"
+    return head + "\n\n" + "\n\n".join(parts), {"layer": "local_context", "files": used}
+

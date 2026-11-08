@@ -74,6 +74,11 @@ STUDIO_TOOLS = [
     _fn("get_current_time", "Current local date and time on this laptop."),
     _fn("laptop_status", "This laptop's free disk space on each drive, battery level, memory in use, and the apps using "
         "the most memory."),
+    _fn("manage_todo_list", "Create or update the structured task todo list (`id`, `title`, `status` in "
+        "`not-started | in-progress | completed`) to track progress on multi-step work.",
+        {"todoList": {"type": "array", "items": {"type": "object", "properties": {
+            "id": {"type": "integer"}, "title": {"type": "string"}, "status": {"type": "string"}}}}},
+        ["todoList"]),
 ] + list(local_tool_packs.PACK_TOOLS)
 if paths.ANDROID or paths.WEB:  # the phone app and web server: no PowerShell and no Windows status
     _drop_tools = ("run_powershell", "laptop_status") + (("git_inspect", "media_info", "extract_frame") if paths.ANDROID else ())
@@ -82,7 +87,7 @@ if paths.ANDROID or paths.WEB:  # the phone app and web server: no PowerShell an
                     for t in STUDIO_TOOLS if t["function"]["name"] not in _drop_tools]
 TOOL_PERMISSION = {"run_python": "code", "web_search": "internet", "fetch_url": "internet", "run_powershell": "shell",
                    "read_file": "files", "list_directory": "files", "write_file": "edit_files", "get_current_time": None,
-                   "laptop_status": "shell", **local_tool_packs.PACK_PERMISSIONS}
+                   "laptop_status": "shell", "manage_todo_list": None, **local_tool_packs.PACK_PERMISSIONS}
 # Tools only when the message asks for them (human, 2026-10-31): a tool list in every prompt cost LFM3-Omni-2B 6 of 65
 # ladder tasks (it searched instead of answering, and its arithmetic got worse). The rules are common (semantics.py);
 # the laptop's own part is which of its tools serves each capability.
@@ -129,7 +134,8 @@ def tools_sentence(tools_on, asked=None):
                 "follow-up questions. If it is not allowed, answer without it and say what you could not check.")
     return TOOLS_ON
 VSCODE_CORE = ["read_file", "list_dir", "file_search", "grep_search", "semantic_search", "run_in_terminal",
-               "get_errors", "replace_string_in_file", "create_file", "insert_edit_into_file", "apply_patch"]
+               "get_errors", "replace_string_in_file", "create_file", "insert_edit_into_file", "apply_patch",
+               "manage_todo_list"]
 VSCODE_BROWSER_TOOLS = ["open_browser_page", "list_browser_pages", "read_page", "click_element", "type_in_page",
                         "navigate_page", "screenshot_page", "hover_element", "drag_element", "handle_dialog",
                         "run_playwright_code", "fetch_webpage"]
@@ -788,6 +794,15 @@ class LFM3Native:
         if name == "laptop_status":
             import laptop_status
             return laptop_status.report(cancel=getattr(self, "turn_cancel", None))
+        if name == "manage_todo_list":
+            import clover_cycle as C
+            raw_items = a.get("todoList") or a.get("todos") or a.get("items") or []
+            plan = getattr(self, "active_op_plan", None)
+            if plan is not None:
+                plan.set_todos(raw_items, custom=True)
+                return plan.todos_markdown()
+            norm = C.normalize_todo_list(raw_items)
+            return json.dumps(norm)
         if name in local_tool_packs.PACK_PERMISSIONS:
             return local_tool_packs.run_pack_tool(name, a, self)
         raise ValueError(name)
@@ -831,12 +846,14 @@ class LFM3Native:
         by_name = {t["function"]["name"]: t["function"] for t in schemas}
         query = layer_query or user_text
         import clover_cycle as C
+        import workspaces as WS
         op_plan = C.OperatingCyclePlan(
             emit,
             model_name="LFM3-1.7B",
             query=query,
             offered_tools=only_tools if only_tools is not None else list(by_name)[:4],
         )
+        self.active_op_plan = op_plan
         op_plan.start_stage("context")
         layer_log, blocks = [], []
         for name, fn in (("memory", "memory_context"), ("ontology", "ontology_context"), ("workspace", "workspace_context"),
@@ -847,6 +864,12 @@ class LFM3Native:
                     blocks.append(block)
                     layer_log.append(info)
                     emit(dict(info, type="layer"))
+        ws_active_p = (kit.workspaces.active() or {}).get("path") if (kit is not None and getattr(kit, "workspaces", None) is not None) else None
+        l_blk, l_info = WS.local_context_for_paths(user_paths(user_text), workdir=self.workdir, active_ws_path=ws_active_p)
+        if l_blk:
+            blocks.append(l_blk)
+            layer_log.append(l_info)
+            emit(dict(l_info, type="layer"))
         if blocks:  # Clover appends its observations after the question
             user_text = user_text + "\n\n" + "\n\n".join(blocks)
         ctx_sources = [x.get("layer") for x in layer_log if isinstance(x, dict) and x.get("layer")]
@@ -940,6 +963,7 @@ class LFM3Native:
                             rounds.append({"tool": c["name"], "arguments": c["arguments"], "ran": ran, "worked": worked,
                                            "summary": summary, "why": why, "result": result[:2000]})
                             msgs.append({"role": "tool", "tool_call_id": c["id"], "content": result})
+                            op_plan.advance_execution_step(c["name"])
                         continue
                     final = (content + after).strip() if thinking and "</think>" in text else (text.strip() if not thinking else "")
                     if not final and st["finish"] == "length":
@@ -1047,7 +1071,7 @@ class LFM3Native:
             self.stage = {"name": "idle", "since": time.time()}
         return {"reply": final, "tool_calls": rounds, "rounds": len(stats_all), "generation": stats_all,
                 "reasoning": reasoning if thinking else "", "cancelled": bool(cancel and cancel.is_set()),
-                "layers": layer_log}
+                "layers": layer_log, "todo_list": op_plan.todos}
 
     # ---------------- VS Code (OpenAI messages + VS Code's tools) ----------------
     def vscode_step(self, user_prompt, workspace_info, prior_turns, tool_rounds, vs_tools, thinking=True, max_new=1024):
@@ -1057,7 +1081,7 @@ class LFM3Native:
         for t in vs_tools:
             fn = t.get("function") if isinstance(t.get("function"), dict) else t
             name = str(fn.get("name") or "").strip()
-            if not name or name in ("vscode_askQuestions", "manage_todo_list") or name in by_name:
+            if not name or name == "vscode_askQuestions" or name in by_name:
                 continue
             desc = str(fn.get("description") or "").split("\n")[0][:240]
             params = fn.get("parameters") or fn.get("inputSchema") or {"type": "object", "properties": {}}

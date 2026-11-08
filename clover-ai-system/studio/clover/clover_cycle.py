@@ -766,9 +766,88 @@ AUTO_CYCLE_FIX = (
 )
 
 
+def decompose_task_todos(question: str, offered_tools=None) -> list[dict]:
+    """Break a user request into structured, actionable task todo items (`id`, `title`, `status`) following the
+    Clover operating cycle."""
+    q = str(question or "").strip()
+    tools_list = [str(t) for t in (offered_tools or ()) if t and t != "manage_todo_list"]
+    explicit_steps = []
+    for m in re.finditer(r"(?:^|\n)\s*(?:\d+[.)]|[-*•]|step\s+\d+[:.)])\s+([^\n]{4,120})", q, re.I):
+        item = " ".join(m.group(1).split()).rstrip(".;,")
+        if item and item not in explicit_steps:
+            explicit_steps.append(item[:90])
+    if len(explicit_steps) < 2 and re.search(r"\b(?:first|1\))\b[\s\S]+?\b(?:then|second|next|2\)|finally)\b", q, re.I):
+        parts = re.split(r"(?:[,;.]|\band\b)\s*(?=(?:first|second|third|then|next|after\s+that|finally)\b)", q, flags=re.I)
+        for p in parts:
+            cl = re.sub(r"^(?:first|second|third|then|next|after\s+that|finally)\s*[,:]?\s*", "", p.strip(), flags=re.I)
+            cl = " ".join(cl.split()).rstrip(".;,")
+            if len(cl) >= 6 and cl not in explicit_steps:
+                explicit_steps.append(cl[:90])
+    q_short = " ".join(q.split())[:68] or "user request"
+    todos = [
+        {
+            "id": 1,
+            "title": "Read context files, memory & task constraints",
+            "status": "not-started",
+        }
+    ]
+    if len(explicit_steps) >= 2:
+        for step_txt in explicit_steps[:5]:
+            todos.append({
+                "id": len(todos) + 1,
+                "title": step_txt[0].upper() + step_txt[1:] if step_txt else "Execute step",
+                "status": "not-started",
+            })
+    else:
+        exec_title = (
+            f"Run tools ({', '.join(tools_list[:3])}) & build solution"
+            if tools_list
+            else f"Solve & draft response ({q_short})"
+        )
+        todos.append({
+            "id": 2,
+            "title": exec_title[:90],
+            "status": "not-started",
+        })
+    todos.append({
+        "id": len(todos) + 1,
+        "title": "Verify outcome against reality & update context/growth",
+        "status": "not-started",
+    })
+    return todos
+
+
+def normalize_todo_list(raw_items) -> list[dict]:
+    """Normalize a list of todo dicts (`id`, `title`, `status` in `not-started | in-progress | completed`), ensuring
+    at most ONE item is `in-progress` at a time."""
+    if not isinstance(raw_items, list):
+        return []
+    out = []
+    seen_in_progress = False
+    for idx, it in enumerate(raw_items[:20], start=1):
+        if not isinstance(it, dict):
+            continue
+        title = " ".join(str(it.get("title") or it.get("text") or it.get("step") or f"Step {idx}").split())[:120]
+        if not title:
+            continue
+        st = str(it.get("status") or "not-started").strip().lower().replace("_", "-")
+        if st not in ("not-started", "in-progress", "completed"):
+            st = "completed" if st in ("done", "complete", "finished") else (
+                "in-progress" if st in ("active", "running", "working", "doing") else "not-started"
+            )
+        if st == "in-progress":
+            if seen_in_progress:
+                st = "not-started"
+            else:
+                seen_in_progress = True
+        out.append({"id": int(it.get("id") or idx), "title": title, "status": st})
+    return out
+
+
 class OperatingCyclePlan:
-    """Tracks the 5-Stage Clover Operating Cycle (`Context -> Direction -> Execution -> Outcome -> Growth`) step-by-step
-    during a turn and emits structured `operating_cycle` SSE events so the user sees each stage transition in real time."""
+    """Tracks the 5-Stage Clover Operating Cycle (`Context -> Direction -> Execution -> Outcome -> Growth`) AND the
+    per-turn actionable Task Todo List (`self.todos`) step-by-step during a turn, emitting structured `operating_cycle`
+    and `todo_list` SSE events in real time."""
 
     STAGE_ORDER = ("context", "direction", "execution", "outcome", "growth")
     STAGE_TITLES = {
@@ -779,10 +858,11 @@ class OperatingCyclePlan:
         "growth": "5. Growth",
     }
 
-    def __init__(self, emit_fn=None, model_name="LFM3-Omni-2B", query="", offered_tools=None):
+    def __init__(self, emit_fn=None, model_name="LFM3-Omni-2B", query="", offered_tools=None, persist_todos_fn=None):
         self.emit = emit_fn or (lambda e: None)
         self.model_name = model_name or "LFM3-Omni-2B"
         self.cycle = 1
+        self.persist_todos_fn = persist_todos_fn
         q_short = " ".join(str(query or "").split())[:90]
         tools_list = list(offered_tools) if isinstance(offered_tools, (list, tuple, set)) else []
         t_desc = (", ".join(tools_list[:4])) if tools_list else "direct model reasoning"
@@ -819,6 +899,79 @@ class OperatingCyclePlan:
             },
         }
         self._q_short = q_short
+        self.todos = decompose_task_todos(query, offered_tools=tools_list)
+        self._custom_todos = False
+
+    def todos_markdown(self) -> str:
+        lines = ["# Clover Task Todo List", ""]
+        for it in self.todos:
+            mark = "x" if it["status"] == "completed" else ("~" if it["status"] == "in-progress" else " ")
+            lines.append(f"- [{mark}] {it['id']}. {it['title']} ({it['status']})")
+        return "\n".join(lines) + "\n"
+
+    def todo_snapshot(self):
+        return {
+            "type": "todo_list",
+            "cycle": self.cycle,
+            "items": [dict(x) for x in self.todos],
+        }
+
+    def _emit_todos(self):
+        snap = self.todo_snapshot()
+        self.emit(snap)
+        if callable(self.persist_todos_fn):
+            try:
+                self.persist_todos_fn(self.todos, self.todos_markdown())
+            except Exception:
+                pass
+        return snap
+
+    def set_todos(self, raw_items, custom=True):
+        norm = normalize_todo_list(raw_items)
+        if not norm:
+            return self.todo_snapshot()
+        self.todos = norm
+        if custom:
+            self._custom_todos = True
+        return self._emit_todos()
+
+    def _auto_advance_todo(self, stage_key, completed_all=False):
+        if not self.todos:
+            return
+        if completed_all:
+            for it in self.todos:
+                it["status"] = "completed"
+            self._emit_todos()
+            return
+        if self._custom_todos:
+            return
+        n = len(self.todos)
+        if stage_key in ("context", "direction"):
+            self.todos[0]["status"] = "in-progress"
+            for j in range(1, n):
+                self.todos[j]["status"] = "not-started"
+        elif stage_key == "execution":
+            self.todos[0]["status"] = "completed"
+            for j in range(1, n):
+                self.todos[j]["status"] = "not-started"
+            if n >= 2:
+                self.todos[1]["status"] = "in-progress"
+        elif stage_key in ("outcome", "growth"):
+            for j in range(0, max(1, n - 1)):
+                self.todos[j]["status"] = "completed"
+            self.todos[-1]["status"] = "in-progress"
+        self._emit_todos()
+
+    def advance_execution_step(self, step_note=""):
+        """When multiple execution subtasks exist and a tool finishes, advance to the next middle todo item."""
+        if self._custom_todos or len(self.todos) <= 3:
+            return
+        mid_indices = list(range(1, len(self.todos) - 1))
+        cur_idx = next((i for i in mid_indices if self.todos[i]["status"] == "in-progress"), None)
+        if cur_idx is not None and cur_idx + 1 < len(self.todos) - 1:
+            self.todos[cur_idx]["status"] = "completed"
+            self.todos[cur_idx + 1]["status"] = "in-progress"
+            self._emit_todos()
 
     def snapshot(self, active_stage=""):
         return {
@@ -827,6 +980,7 @@ class OperatingCyclePlan:
             "active_stage": active_stage,
             "model": self.model_name,
             "stages": [dict(self.stages[k]) for k in self.STAGE_ORDER],
+            "todos": [dict(x) for x in self.todos],
         }
 
     def start_stage(self, stage_key, detail=None, cycle=None):
@@ -840,6 +994,7 @@ class OperatingCyclePlan:
                 break
             elif self.stages[k]["status"] == "in-progress":
                 self.stages[k]["status"] = "completed"
+        self._auto_advance_todo(stage_key, completed_all=False)
         self.emit(self.snapshot(active_stage=stage_key))
 
     def complete_stage(self, stage_key, detail=None):
@@ -847,6 +1002,8 @@ class OperatingCyclePlan:
             self.stages[stage_key]["status"] = "completed"
             if detail:
                 self.stages[stage_key]["detail"] = str(detail)[:220]
+        if stage_key == "growth":
+            self._auto_advance_todo("growth", completed_all=True)
         self.emit(self.snapshot(active_stage=stage_key))
 
     def retry_from_context(self, next_cycle, finding_summary=""):
@@ -860,7 +1017,15 @@ class OperatingCyclePlan:
         self.stages["execution"]["detail"] = f"Cycle {self.cycle} Execution: running corrected pass on {self.model_name}"
         self.stages["outcome"]["status"] = "not-started"
         self.stages["growth"]["status"] = "not-started"
+        if not self._custom_todos and len(self.todos) >= 2:
+            self.todos[0]["status"] = "completed"
+            for j in range(1, len(self.todos)):
+                self.todos[j]["status"] = "not-started"
+            self.todos[1]["status"] = "in-progress"
+            self.todos[1]["title"] = f"Cycle {self.cycle} repair: fix Outcome finding ({sum_short[:65]})"
+            self._emit_todos()
         self.emit(self.snapshot(active_stage="execution"))
+
 
 
 def extract_time_examples(question: str) -> list[tuple[str, str]]:

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#F7F3E9">
-<meta name="clover-platform" content="__CLOVER_PLATFORM__">
+<meta name="clover-platform" content="web">
 <title>Clover</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="icon" type="image/png" sizes="256x256" href="icon.png">
@@ -201,14 +201,20 @@ button { cursor: pointer; }
 .step-ic.run { background: var(--warn-soft); color: var(--warn); }
 .step-ic.wait { background: var(--fill); color: var(--faint); }
 .step-ic.no, .step-ic.fail { background: var(--danger-soft); color: var(--danger); }
-.op-cycle { display: flex; align-items: center; gap: .26rem; flex-wrap: wrap; padding: .36rem .54rem; border-radius: 11px;
+.op-cycle { display: flex; flex-direction: column; gap: .32rem; padding: .38rem .56rem; border-radius: 11px;
   background: var(--surface); border: 1px solid var(--line); font-size: .74rem; line-height: 1.35; }
+.op-cycle__row { display: flex; align-items: center; gap: .26rem; flex-wrap: wrap; }
 .op-cycle__lbl { font-weight: 700; color: var(--accent-2); margin-right: .18rem; white-space: nowrap; }
 .op-stage { display: inline-flex; align-items: center; gap: .22rem; padding: .1rem .44rem; border-radius: 999px; font-weight: 600;
   background: var(--fill); color: var(--faint); white-space: nowrap; transition: all .15s var(--ease); }
 .op-stage.in-progress { background: var(--warn-soft); color: var(--warn); box-shadow: 0 0 0 1px var(--warn-line); }
 .op-stage.completed { background: var(--accent-soft); color: var(--accent-2); }
 .op-arr { color: var(--faint); font-size: .68rem; user-select: none; }
+.op-todos { display: flex; flex-direction: column; gap: .18rem; border-top: 1px dashed var(--line); padding-top: .28rem; font-size: .73rem; }
+.op-todo { display: flex; align-items: center; gap: .36rem; color: var(--muted); }
+.op-todo.in-progress { color: var(--warn); font-weight: 600; }
+.op-todo.completed { color: var(--accent-2); }
+.op-todo__mark { font-weight: 700; width: .95rem; text-align: center; flex: none; }
 .step-name { font-weight: 600; color: var(--ink); white-space: nowrap; }
 .step-det { flex: 1; min-width: 0; color: var(--muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .md.live.stale { opacity: .45; }
@@ -1011,7 +1017,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   </div>
 </aside>
 
-<script nonce="__CSP_NONCE__">
+<script>
 (function () {
   'use strict';
   var KEY = 'clover_studio_sessions_v1', SKEY = 'clover_studio_settings_v1';
@@ -1021,7 +1027,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   var $ = function (id) { return document.getElementById(id); };
   // the same page on Laptop (windows), in the Android app (android), and on the Web (web, hosted on k3)
   var PLATFORM = (document.querySelector('meta[name="clover-platform"]') || {}).content || '';
-  if (PLATFORM === '__CLOVER_PLATFORM__') PLATFORM = /^(127\.0\.0\.1|localhost)$/i.test(location.hostname || '') ? 'windows' : 'web';
+  if (PLATFORM === 'web') PLATFORM = /^(127\.0\.0\.1|localhost)$/i.test(location.hostname || '') ? 'windows' : 'web';
   var PHONE = PLATFORM === 'android', WEB = PLATFORM === 'web';
   if (PHONE || WEB) {
     document.documentElement.classList.add(PHONE ? 'phone' : 'web');
@@ -1508,7 +1514,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (!box || !oc || !Array.isArray(oc.stages)) return;
     box.hidden = false;
     var cycNum = oc.cycle || 1;
-    var html = '<span class="op-cycle__lbl">Clover Cycle' + (cycNum > 1 ? ' ' + cycNum : '') + ':</span>';
+    var html = '<div class="op-cycle__row"><span class="op-cycle__lbl">Clover Cycle' + (cycNum > 1 ? ' ' + cycNum : '') + ':</span>';
     oc.stages.forEach(function (st, idx) {
       if (idx > 0) html += '<span class="op-arr" aria-hidden="true">&rarr;</span>';
       var status = st.status || 'not-started';
@@ -1517,6 +1523,17 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       html += '<span class="op-stage ' + esc(status) + '" title="' + esc((st.title || shortName) + (st.detail ? ' — ' + st.detail : '')) + '">' +
         mark + esc(shortName) + '</span>';
     });
+    html += '</div>';
+    if (Array.isArray(oc.todos) && oc.todos.length) {
+      html += '<div class="op-todos">';
+      oc.todos.forEach(function (td, i) {
+        var tst = td.status || 'not-started';
+        var tmk = tst === 'completed' ? '\u2713' : tst === 'in-progress' ? '\u25cf' : '\u25cb';
+        html += '<div class="op-todo ' + esc(tst) + '"><span class="op-todo__mark">' + tmk + '</span><span>' +
+          esc((td.id || (i + 1)) + '. ' + (td.title || '')) + '</span></div>';
+      });
+      html += '</div>';
+    }
     box.innerHTML = html;
   }
   function botEl(m) {
@@ -3542,12 +3559,25 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       }
       if (ev.type === 'start') state.turnId = ev.turn_id;
       else if (ev.type === 'operating_cycle') {
-        lastOpCycle = { cycle: ev.cycle || 1, active_stage: ev.active_stage || '', model: ev.model || '', stages: ev.stages || [] };
+        var prevTodos = (lastOpCycle && lastOpCycle.todos) || [];
+        lastOpCycle = {
+          cycle: ev.cycle || 1,
+          active_stage: ev.active_stage || '',
+          model: ev.model || '',
+          stages: ev.stages || [],
+          todos: Array.isArray(ev.todos) && ev.todos.length ? ev.todos : prevTodos
+        };
         renderOpCycleBar(opCycleBox, lastOpCycle);
         var actSt = (ev.stages || []).find(function (s) { return s.id === ev.active_stage; });
         if (actSt && actSt.detail && actSt.status === 'in-progress') {
           setStage(actSt.detail.replace(/…$/, ''));
         }
+        scrollDown();
+      }
+      else if (ev.type === 'todo_list') {
+        if (!lastOpCycle) lastOpCycle = { cycle: ev.cycle || 1, active_stage: '', model: '', stages: [], todos: [] };
+        lastOpCycle.todos = ev.items || [];
+        renderOpCycleBar(opCycleBox, lastOpCycle);
         scrollDown();
       }
       else if (ev.type === 'semantics') {
@@ -3577,8 +3607,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           upsertStep('layer_ont', { icon: 'graph', state: 'ok', name: 'Knowledge graph (S2)',
             detail: 'Grounded in ' + (ev.n_evidence || 'verified') + ' records', badge: '\u2713 Grounded' });
         } else if (ev.layer === 'workspace' && ev.workspace) {
-          upsertStep('layer_ws', { icon: 'folder', state: 'ok', name: 'Workspace',
-            detail: 'Loaded context from ' + ev.workspace, badge: '\u2713 Loaded' });
+          upsertStep('layer_ws', { icon: 'folder', state: 'ok', name: 'Workspace context',
+            detail: 'Loaded context from ' + ev.workspace + ((ev.files && ev.files.length) ? ' (' + ev.files.slice(0, 2).join(', ') + ')' : ''), badge: '\u2713 Loaded' });
+        } else if (ev.layer === 'local_context' && (ev.files || []).length) {
+          upsertStep('layer_loc_ctx', { icon: 'folder', state: 'ok', name: 'Context files',
+            detail: 'Read context file(s) beside target folder', badge: '\u2713 Read' });
         } else if (ev.layer === 'recall' && (ev.refs || []).length) {
           upsertStep('layer_rec', { icon: 'clock', state: 'ok', name: 'Earlier chats (S2)',
             detail: 'Recalled ' + ev.refs.length + ' notes from ' + (ev.chats || 1) + ' chat(s)', badge: '\u2713 Recalled' });
