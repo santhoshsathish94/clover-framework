@@ -140,6 +140,19 @@ class LayerKit:
         self.last_memory_package = None
         self.last_ontology_evidence = []
         self.last_meaning_bridge = None
+        self._emergent = None
+
+    def emergent_concepts(self):
+        """Return the `EmergentConceptEngine` connected to this `LayerKit`'s `CloverMemoryGraphStore` and `CloverOntologyGraph`."""
+        if self._emergent is None:
+            import emergent_concepts
+            if self._ontology is None:
+                self._ontology = self.cl.CloverOntologyRetriever()
+                self._verifier = self.cl.CloverSymbolicVerifier(self._ontology)
+            self._emergent = emergent_concepts.EmergentConceptEngine(
+                self.store(), self._ontology.graph, base_dir=self.base_dir
+            )
+        return self._emergent
 
     def workspace_context(self, q):
         if self.workspaces is None or self._skip(q):
@@ -412,6 +425,29 @@ class LayerKit:
                 bridge_q = f"{q}\n" + "\n".join(mem_terms)
                 ev_bridged = self._ontology.retrieve(bridge_q, max_entities=4, max_paths=6)
                 seen_keys = {(item.kind, tuple(item.entities), item.text[:120]) for item in ev}
+                for e in active_mems[:3]:
+                    if str(e.id).startswith("MEM-CONCEPT-EMERGENT-"):
+                        import k3_ontology_graph as _O
+                        s_hash = str(e.id).rsplit("-", 1)[-1]
+                        c_ref = _O.EntityRef("STEM_CONCEPT", f"STEM-EMERGENT-{s_hash}")
+                        c_doc = self._ontology.graph.get(c_ref)
+                        if c_doc is not None:
+                            ev.append(_O.Evidence(
+                                kind="entity",
+                                text=_O.render_entity_record(c_ref, c_doc),
+                                entities=(c_ref.canonical,),
+                                score=0.98,
+                            ))
+                            if c_ref.canonical not in bridged_entities:
+                                bridged_entities.append(c_ref.canonical)
+                            for p_em in self._ontology.traversal.paths([c_ref], hops=2, max_paths=4):
+                                ev.append(_O.Evidence(
+                                    kind="path",
+                                    text=p_em.describe(),
+                                    entities=tuple(r.canonical for r in p_em.entity_refs),
+                                    score=0.94,
+                                    provenance=tuple(ed.get("provenance", {}) for ed in p_em.edges),
+                                ))
                 for b_item in ev_bridged:
                     b_key = (b_item.kind, tuple(b_item.entities), b_item.text[:120])
                     if b_key not in seen_keys and len(ev) < 10:
@@ -423,7 +459,13 @@ class LayerKit:
                 if bridged_entities or ev_bridged:
                     bridged_from_mem = [e.id for e in active_mems[:3]]
         if self.memory_root is not None:
-            ev = [e for e in ev if not any(str(x).startswith(BENCHMARK_ONLY_COLLECTIONS) for x in e.entities)]
+            ev = [
+                e for e in ev
+                if not any(
+                    str(x).startswith(BENCHMARK_ONLY_COLLECTIONS) and "EMERGENT-" not in str(x)
+                    for x in e.entities
+                )
+            ]
         if not ev:
             return None, None
         self.last_ontology_evidence = list(ev)

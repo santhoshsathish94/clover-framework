@@ -1,0 +1,163 @@
+{
+  "experiment": "5.1 \u2014 Emergent Concept Acquisition",
+  "status": "passed",
+  "elapsed_s": 27.167,
+  "stage_1_observe": {
+    "unfamiliar_situations_observed": 12,
+    "pre_supplied_concept_names": 0,
+    "domains_covered": [
+      "distributed_systems",
+      "manufacturing_logistics",
+      "networking_compilers",
+      "pharmacology_clinical"
+    ]
+  },
+  "stage_2_associate": {
+    "pairwise_similar_to_links": 10,
+    "similar_to_edges_in_memory_graph": 20,
+    "clusters_formed": 4,
+    "isolated_single_observation_excluded": true,
+    "cross_cluster_conflation_errors": 0
+  },
+  "stage_3_hypothesize": {
+    "candidate_hypotheses_proposed": 4,
+    "all_marked_unverified_hypothesis": true,
+    "all_status_under_review": true,
+    "active_concepts_before_validation": 0,
+    "hypotheses": [
+      {
+        "id": "MEM-HYP-EMERGENT-B85354",
+        "slug": "emergent-broad-prefix-before-specific-specific-branch-unreachabl",
+        "epistemic_status": "hypothesis",
+        "lifecycle_status": "under_review",
+        "supporting_observations": 3,
+        "proposed_action": "order_most_specific_pattern_first"
+      },
+      {
+        "id": "MEM-HYP-EMERGENT-5F6CB6",
+        "slug": "emergent-sequential-multi-stage-shared-cyclic-resource-flat-inva",
+        "epistemic_status": "hypothesis",
+        "lifecycle_status": "under_review",
+        "supporting_observations": 3,
+        "proposed_action": "partition_resource_per_stage"
+      },
+      {
+        "id": "MEM-HYP-EMERGENT-3360ED",
+        "slug": "emergent-incidental-noise-marker-total-zero-signal-or-hits",
+        "epistemic_status": "hypothesis",
+        "lifecycle_status": "under_review",
+        "supporting_observations": 2,
+        "proposed_action": "reboot_on_tuesday_superstition"
+      },
+      {
+        "id": "MEM-HYP-EMERGENT-81354B",
+        "slug": "emergent-zero-allocated-or-dispensed-total-zero-signal-or-hits",
+        "epistemic_status": "hypothesis",
+        "lifecycle_status": "under_review",
+        "supporting_observations": 3,
+        "proposed_action": "verify_nonzero_allocation_or_supply"
+      }
+    ]
+  },
+  "stage_4_validate": {
+    "unseen_situations_tested": 10,
+    "validated_hypotheses_count": 3,
+    "refuted_spurious_hypotheses_count": 1,
+    "negative_control_false_triggers": 0,
+    "per_hypothesis_validation": {
+      "MEM-HYP-EMERGENT-B85354": {
+        "verdict": "validated",
+        "unseen_support": 2,
+        "unseen_contra": 0,
+        "precision": 1.0
+      },
+      "MEM-HYP-EMERGENT-5F6CB6": {
+        "verdict": "validated",
+        "unseen_support": 2,
+        "unseen_contra": 0,
+        "precision": 1.0
+      },
+      "MEM-HYP-EMERGENT-3360ED": {
+        "verdict": "refuted",
+        "unseen_support": 0,
+        "unseen_contra": 2,
+        "precision": 0.0
+      },
+      "MEM-HYP-EMERGENT-81354B": {
+        "verdict": "validated",
+        "unseen_support": 2,
+        "unseen_contra": 0,
+        "precision": 1.0
+      }
+    }
+  },
+  "stage_5_grow": {
+    "promoted_to_memory_graph": 3,
+    "promoted_to_ontology_graph": 3,
+    "promoted_to_collective_core_rules": 3,
+    "quarantined_unvalidated_promoted": 0,
+    "promoted_concepts": [
+      {
+        "hypothesis_id": "MEM-HYP-EMERGENT-B85354",
+        "concept_id": "MEM-CONCEPT-EMERGENT-B85354",
+        "emergent_slug": "emergent-broad-prefix-before-specific-specific-branch-unreachabl",
+        "ontology_concept_key": "STEM-EMERGENT-B85354",
+        "ontology_formula_key": "FORMULA-EMERGENT-B85354",
+        "verified_action": "order_most_specific_pattern_first",
+        "supporting_observations": [
+          "MEM-OBS-UNFAMILIAR-2091B317",
+          "MEM-OBS-UNFAMILIAR-DF5874B4",
+          "MEM-OBS-UNFAMILIAR-E432CD74"
+        ],
+        "unseen_validations": [
+          "UNSEEN_3_CUSTOMS_TARIFF_HS_CODES",
+          "UNSEEN_4_GRAPHQL_GATEWAY_ROUTES"
+        ]
+      },
+      {
+        "hypothesis_id": "MEM-HYP-EMERGENT-5F6CB6",
+        "concept_id": "MEM-CONCEPT-EMERGENT-5F6CB6",
+        "emergent_slug": "emergent-sequential-multi-stage-shared-cyclic-resource-flat-inva",
+        "ontology_concept_key": "STEM-EMERGENT-5F6CB6",
+        "ontology_formula_key": "FORMULA-EMERGENT-5F6CB6",
+        "verified_action": "partition_resource_per_stage",
+        "supporting_observations": [
+          "MEM-OBS-UNFAMILIAR-2FAC674E",
+          "MEM-OBS-UNFAMILIAR-94C23C82",
+          "MEM-OBS-UNFAMILIAR-D0844825"
+        ],
+        "unseen_validations": [
+          "UNSEEN_1_SATELLITE_TRANSPONDER_POOL",
+          "UNSEEN_2_GENOMIC_ALIGNMENT_CACHE"
+        ]
+      },
+      {
+        "hypothesis_id": "MEM-HYP-EMERGENT-81354B",
+        "concept_id": "MEM-CONCEPT-EMERGENT-81354B",
+        "emergent_slug": "emergent-zero-allocated-or-dispensed-total-zero-signal-or-hits",
+        "ontology_concept_key": "STEM-EMERGENT-81354B",
+        "ontology_formula_key": "FORMULA-EMERGENT-81354B",
+        "verified_action": "verify_nonzero_allocation_or_supply",
+        "supporting_observations": [
+          "MEM-OBS-UNFAMILIAR-81BBCCF9",
+          "MEM-OBS-UNFAMILIAR-9A4649F0",
+          "MEM-OBS-UNFAMILIAR-B0C9B58A"
+        ],
+        "unseen_validations": [
+          "UNSEEN_5_GAS_CHROMATOGRAPH_ZERO_FLOW",
+          "UNSEEN_6_VECTOR_INDEX_ZERO_SLOTS"
+        ]
+      }
+    ],
+    "quarantined_hypotheses": [
+      {
+        "hypothesis_id": "MEM-HYP-EMERGENT-3360ED",
+        "verdict": "refuted",
+        "promoted_to_memory": false,
+        "promoted_to_ontology": false,
+        "promoted_to_collective": false
+      }
+    ],
+    "end_to_end_layerkit_retrieval_verified": true
+  }
+}

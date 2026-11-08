@@ -164,3 +164,25 @@ Inspection across the repository (`c:\personal\oss\clover-framework`) and the la
 4. **C3 11-Level NCM Code/Table Passthrough**:
    - Fenced code blocks (` ```python ... ``` `) and Markdown tables pass through C3 (`OmniC2C3Runtime.c3_decode`) unchanged by design so concept-level lexical re-rendering never alters verified code syntax or numeric table cells.
 
+---
+
+## Experiment 5.1 — Emergent Concept Acquisition (`Observe → Associate → Hypothesize → Validate → Grow`)
+
+### 1. Context & Design
+- **Module**: [clover-ai-system/studio/clover/emergent_concepts.py](../../clover-ai-system/studio/clover/emergent_concepts.py) (integrated into `LayerKit.emergent_concepts()` and `LayerKit.ontology_context()` in [lfm3_layers.py](../../clover-ai-system/studio/clover/lfm3_layers.py)).
+- **Reproducible Verification Suite**: [clover-ai-system/studio/clover/test_experiment_5_1_emergent_concepts.py](../../clover-ai-system/studio/clover/test_experiment_5_1_emergent_concepts.py) (`docs/runtime-context/experiment_5_1_emergent_concepts_results.json`).
+
+### 2. Five-Stage Execution & Results
+
+| Stage | Operation | Input / Mechanism | Observed Outcome |
+| :--- | :--- | :--- | :--- |
+| **1. Observe** | `engine.observe_situation(...)` | `12` unfamiliar situations across `4` domains (`distributed_systems`, `manufacturing_logistics`, `networking_compilers`, `pharmacology_clinical`) with **`0` concept names provided** (`entry.concepts == []`). | Recorded `12` `observation` entries (`epistemic_status="observed"`) with extracted condition/symptom/action structural roles and 64-d JEPA latent cues. |
+| **2. Associate** | `engine.associate_observations(...)` | Relational structural alignment + 64-d JEPA cosine similarity across independent `source_ref` observations, with conflict vetoes preventing conflation of distinct mechanisms. | Linked `10` pairs (`20` directed `similar_to` edges in `CloverMemoryGraphStore`), forming `4` multi-observation clusters while keeping the `1` isolated observation (`isolated-allosteric-01`) unclustered (`0` cross-cluster conflation errors). |
+| **3. Hypothesize** | `engine.hypothesize_concepts(...)` | Synthesizes candidate concepts (`MEM-HYP-EMERGENT-*`) with induced Minsky-Papert Order-3 conjunctive feature boxes and inhibitory boundary vetoes. | Proposed `4` candidate hypotheses in `hypotheses/`, **all explicitly marked unverified** (`entry_type="hypothesis"`, `epistemic_status="hypothesis"`, `status="under_review"`, `"EXPLICITLY UNVERIFIED"` in `uncertainty_notes`, `0` active concepts before validation). |
+| **4. Validate** | `engine.validate_hypotheses(...)` | Tested all `4` unverified hypotheses on **`10` completely unseen situations** (`6` unseen cross-domain transfers in `aerospace_telemetry`, `bioinformatics`, `trade_compliance`, `cloud_gateway`, `analytical_chemistry`, `search_infrastructure`; `2` spurious-correlation traps; `2` negative-control boundary cases). | **`3/4` hypotheses validated** (`unseen_support = 2/2`, `precision = 1.0`, `unseen_contra = 0`). **`1/4` spurious hypothesis (`MEM-HYP-EMERGENT-3360ED`, `tuesday + blue_rack`) refuted** (`unseen_support = 0`, `unseen_contra = 2`, marked `status="contested"`). **`0` false triggers** on negative-control boundary cases (`UNSEEN_9_NEG_CONTROL_TTL_EXPIRATION`, `UNSEEN_10_NEG_CONTROL_FIXED_WIDTH_TAGS`). |
+| **5. Grow** | `engine.grow_validated_knowledge(...)` | Promotes **ONLY validated concepts** into persistent Memory, Symbolic Ontology, and Collective Shared Core (`CPSL`). | Promoted **`3` validated concepts** to `entry_type="concept"`, `epistemic_status="externally_verified"`, `status="active"` (superseding `MEM-HYP-EMERGENT-*` with full `trace_evolution_chain` back to the `3` source observations), materialized **`3` `STEM-EMERGENT-*` + `3` `FORMULA-EMERGENT-*` vertices** in `CloverOntologyGraph`, and published **`3` Ed25519-signed rules** in `CoreRegistry`. **`0` refuted/unvalidated hypotheses promoted**. |
+
+### 3. Growth Lesson Recorded During Experiment 5.1
+- During Cycle 1 of testing `extract_relational_signature`, substring matching (`c in norm`) caused `"table"` to match inside `"portable-computer"` and `"0.0"` to match inside `"8471.30.01"` on unseen tariff HS-code descriptions. Restricting relational cue matching to tokenized words (`c in words`) and requiring both a shared-modifier cue and a container cue for `shared_cyclic_resource` eliminated false cross-role feature activation and achieved `100%` precision across all `10` unseen situations.
+
+

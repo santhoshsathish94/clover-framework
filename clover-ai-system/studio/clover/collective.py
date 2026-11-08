@@ -90,6 +90,7 @@ CORE_GENERAL_VOCAB = {
     "battery", "disk", "memory", "status", "history", "code", "file", "folder", "directory", "document", "report",
     "table", "spreadsheet", "email", "message", "event", "meeting", "topic", "term", "claim", "fact", "figure",
     "data", "into", "at", "on", "up", "over", "out", "down", "off", "through", "poke", "carefully", "spotlight",
+    "partition", "prefix", "allocate",
 }
 
 
