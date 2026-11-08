@@ -120,7 +120,7 @@ class Repo:
 
     def init(self):
         for d in ("sessions", f"execution/{self.device}", f"outcomes/{self.device}", "growth/knowledge",
-                  f"growth/notes/{self.device}", f"config/{self.device}"):
+                  "growth/curiosity", f"growth/notes/{self.device}", f"config/{self.device}"):
             (self.dir / d).mkdir(parents=True, exist_ok=True)
         if not (self.dir / ".gitignore").is_file():
             (self.dir / ".gitignore").write_text(GITIGNORE, encoding="utf-8")
@@ -464,6 +464,25 @@ class Repo:
             if cyc.get("lesson") and kit is not None:
                 lesson, ch = kit.learn(cyc["lesson"], sid, n, kind=cyc.get("lesson_kind", "user"))
                 changes += ch
+            if kit is not None and not stopped:
+                try:
+                    had_cycle_fix = bool(cyc.get("lesson") or cyc.get("action") == "redone")
+                    comp_err = 0.45 if had_cycle_fix else 0.05
+                    strat = "sandbox_counterexample_probe" if any(t.get("tool") in ("python", "run_python") for t in tools) else "memory_graph_recall"
+                    kit.curiosity_state().record_interaction_outcome(
+                        reply[:300],
+                        pred_error=0.35 if had_cycle_fix else 0.05,
+                        comp_error=comp_err,
+                        strategy_used=strat,
+                        actor="clover",
+                        controllable=True,
+                        unresolved_summary=cyc.get("lesson") if had_cycle_fix else None,
+                        memory_entry_id=lesson,
+                        session_id=sid,
+                        turn_n=n,
+                    )
+                except Exception:
+                    pass
             rec = {"at": iso(), "session": sid, "n": n, "result": "stopped" if stopped else "answered"}
             for k, v in (("tools", tools), ("checks", checks), ("used", used), ("lesson", lesson)):
                 if v:
@@ -720,6 +739,12 @@ class Repo:
                                          for e in sorted(notes, key=lambda e: e.created_at, reverse=True)[:30]] + [""]
         if rels:
             lines += ["## Relationships", ""] + [f"- {a} {t.replace('_', ' ')} {b}" for a, t, b in rels[:40]] + [""]
+        if kit is not None:
+            try:
+                _, cur_lines = kit.curiosity_state().summary_markdown()
+                lines += cur_lines
+            except Exception:
+                pass
         return head, "\n".join(lines)
 
     def _config_summary(self):

@@ -1,7 +1,7 @@
 {
   "status": "passed",
   "experiment": "5.1_progressive_world_learning_mission",
-  "elapsed_s": 12.26,
+  "elapsed_s": 10.69,
   "production_memory_tree_untouched": true,
   "license_attribution_verified": true,
   "progression_curve": [
@@ -93,7 +93,7 @@
         "provenance": "book:chemistry_2e:Chapter 16 (Thermodynamics: Entropy, Gibbs Free Energy & Coupled Reactions) [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)]",
         "confidence": 0.85,
         "context_scope": "cross_discipline",
-        "created_at": "2026-11-08T11:52:01Z",
+        "created_at": "2026-11-08T23:12:40Z",
         "note": "Biological homeostasis is governed by the exact same driven-dissipative balance law (J_pump = J_leak) as mechanical terminal velocity under drag (P_in = P_diss): both require continuous energy throughput to counter irreversible dissipation. [Breaks when: Mechanical drag dissipates kinetic momentum into heat, whereas cellular homeostasis dissipates chemical potential (ATP -> ADP + Pi) to counter diffusive entropy.]"
       },
       {
@@ -103,7 +103,7 @@
         "provenance": "book:chemistry_2e:Chapter 16 (Thermodynamics: Entropy, Gibbs Free Energy & Coupled Reactions) [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)]",
         "confidence": 0.85,
         "context_scope": "prerequisite",
-        "created_at": "2026-11-08T11:52:01Z",
+        "created_at": "2026-11-08T23:12:40Z",
         "note": "Active homeostatic pumping against an electrochemical gradient (Delta G_work > 0) depends on enzymatic coupling to exergonic ATP hydrolysis (Delta G_drive < 0). [Breaks when: If uncoupled by an ionophore, ATP hydrolysis produces only heat and zero gradient maintenance.]"
       }
     ],
@@ -321,13 +321,18 @@
         "left_unresolved": []
       },
       "remaining_knowledge_gaps": [
-        "GAP-PHY-01: Where textbook mechanical energy conservation (Delta E_mech = 0) breaks under non-conservative dissipative drag and continuous driving.",
-        "GAP-CROSS-01: How physical energy dissipation and chemical Gibbs free energy (Delta G) govern biological homeostasis and scaling constraints.",
-        "GAP-COG-01: How human memory reconsolidation biases and conditional dependence break naive Bayesian belief updating."
+        "EMERGENT-GAP (algorithms_computation / EVAL-ALG-02-DAG-MEMO): Failed with strategy 'Greedy largest-jump-first selection without overlapping-subproblem state memoization.'",
+        "EMERGENT-GAP (algorithms_computation / EVAL-ALG-03-TERMINATION-GUARD): Failed with strategy 'Assumes `n == 0` base case guarantees termination for any positive integer n.'",
+        "EMERGENT-GAP (physics_dynamical_systems / EVAL-PHY-02-DRIVEN-DISSIPATIVE): Failed with strategy 'Applies frictionless work-energy v = sqrt(2 * P * t / m) which diverges with time.'",
+        "EMERGENT-GAP (chemistry_thermodynamics / EVAL-CHEM-01-COUPLED-GIBBS): Failed with strategy 'Assumes 1:1 coupling without accounting for thermodynamic additivity or dissipative efficiency.'",
+        "EMERGENT-GAP (biological_systems / EVAL-BIO-01-HOMEOSTATIC-FLUX): Failed with strategy 'Treats homeostasis as a static equilibrium spring that stays at 120 mM without energy input.'",
+        "EMERGENT-GAP (biological_systems / EVAL-BIO-02-SCALING-CONSTRAINT): Failed with strategy 'Assumes supply and demand scale linearly together with radius.'",
+        "EMERGENT-GAP (uncertainty_bayesian_inference / EVAL-BAYES-01-BASE-RATE): Failed with strategy 'Base-rate neglect: equates P(D|+) with test accuracy 0.95.'",
+        "EMERGENT-GAP (uncertainty_bayesian_inference / EVAL-BAYES-02-CORRELATED-EVIDENCE): Failed with strategy 'Multiplies independent likelihood ratios blindly: 0.7848.'"
       ],
       "suggested_next_learning_activity": {
         "next_book_id": "university_physics_v1",
-        "reason": "Address GAP-PHY-01: establish work-energy conservation laws and where they break under non-conservative dissipative forces."
+        "reason": "Selected by ZPD readiness & curiosity score to resolve open failures in work-energy balance and non-conservative driven dissipative steady states."
       }
     },
     {
@@ -497,12 +502,18 @@
         "left_unresolved": []
       },
       "remaining_knowledge_gaps": [
-        "GAP-CROSS-01: How physical energy dissipation and chemical Gibbs free energy (Delta G) govern biological homeostasis and scaling constraints.",
-        "GAP-COG-01: How human memory reconsolidation biases and conditional dependence break naive Bayesian belief updating."
+        "EMERGENT-GAP (algorithms_computation / EVAL-ALG-02-DAG-MEMO): Failed with strategy 'Greedy largest-jump-first selection without overlapping-subproblem state memoization.'",
+        "EMERGENT-GAP (algorithms_computation / EVAL-ALG-03-TERMINATION-GUARD): Failed with strategy 'Assumes `n == 0` base case guarantees termination for any positive integer n.'",
+        "EMERGENT-GAP (physics_dynamical_systems / EVAL-PHY-02-DRIVEN-DISSIPATIVE): Failed with strategy 'Applies frictionless work-energy v = sqrt(2 * P * t / m) which diverges with time.'",
+        "EMERGENT-GAP (chemistry_thermodynamics / EVAL-CHEM-01-COUPLED-GIBBS): Failed with strategy 'Assumes 1:1 coupling without accounting for thermodynamic additivity or dissipative efficiency.'",
+        "EMERGENT-GAP (biological_systems / EVAL-BIO-01-HOMEOSTATIC-FLUX): Failed with strategy 'Treats homeostasis as a static equilibrium spring that stays at 120 mM without energy input.'",
+        "EMERGENT-GAP (biological_systems / EVAL-BIO-02-SCALING-CONSTRAINT): Failed with strategy 'Assumes supply and demand scale linearly together with radius.'",
+        "EMERGENT-GAP (uncertainty_bayesian_inference / EVAL-BAYES-01-BASE-RATE): Failed with strategy 'Base-rate neglect: equates P(D|+) with test accuracy 0.95.'",
+        "EMERGENT-GAP (uncertainty_bayesian_inference / EVAL-BAYES-02-CORRELATED-EVIDENCE): Failed with strategy 'Multiplies independent likelihood ratios blindly: 0.7848.'"
       ],
       "suggested_next_learning_activity": {
         "next_book_id": "chemistry_2e+biology_2e",
-        "reason": "Address GAP-CROSS-01: connect physical dissipative steady states to chemical Gibbs free energy coupling and biological homeostasis."
+        "reason": "Selected by ZPD readiness & curiosity score to resolve open failures in chemical Gibbs free energy coupling and biological non-equilibrium homeostasis."
       }
     },
     {
@@ -767,11 +778,18 @@
         "left_unresolved": []
       },
       "remaining_knowledge_gaps": [
-        "GAP-COG-01: How human memory reconsolidation biases and conditional dependence break naive Bayesian belief updating."
+        "EMERGENT-GAP (algorithms_computation / EVAL-ALG-02-DAG-MEMO): Failed with strategy 'Greedy largest-jump-first selection without overlapping-subproblem state memoization.'",
+        "EMERGENT-GAP (algorithms_computation / EVAL-ALG-03-TERMINATION-GUARD): Failed with strategy 'Assumes `n == 0` base case guarantees termination for any positive integer n.'",
+        "EMERGENT-GAP (physics_dynamical_systems / EVAL-PHY-02-DRIVEN-DISSIPATIVE): Failed with strategy 'Applies frictionless work-energy v = sqrt(2 * P * t / m) which diverges with time.'",
+        "EMERGENT-GAP (chemistry_thermodynamics / EVAL-CHEM-01-COUPLED-GIBBS): Failed with strategy 'Assumes 1:1 coupling without accounting for thermodynamic additivity or dissipative efficiency.'",
+        "EMERGENT-GAP (biological_systems / EVAL-BIO-01-HOMEOSTATIC-FLUX): Failed with strategy 'Treats homeostasis as a static equilibrium spring that stays at 120 mM without energy input.'",
+        "EMERGENT-GAP (biological_systems / EVAL-BIO-02-SCALING-CONSTRAINT): Failed with strategy 'Assumes supply and demand scale linearly together with radius.'",
+        "EMERGENT-GAP (uncertainty_bayesian_inference / EVAL-BAYES-01-BASE-RATE): Failed with strategy 'Base-rate neglect: equates P(D|+) with test accuracy 0.95.'",
+        "EMERGENT-GAP (uncertainty_bayesian_inference / EVAL-BAYES-02-CORRELATED-EVIDENCE): Failed with strategy 'Multiplies independent likelihood ratios blindly: 0.7848.'"
       ],
       "suggested_next_learning_activity": {
         "next_book_id": "psychology_2e+think_bayes_2e",
-        "reason": "Address GAP-COG-01: investigate human memory reconsolidation biases and Bayesian belief updating under correlated evidence."
+        "reason": "Selected by ZPD readiness & curiosity score to resolve open failures in memory reconsolidation biases and Bayesian updating under correlated evidence."
       }
     },
     {
@@ -952,12 +970,20 @@
         ]
       },
       "remaining_knowledge_gaps": [
+        "EMERGENT-GAP (algorithms_computation / EVAL-ALG-02-DAG-MEMO): Failed with strategy 'Greedy largest-jump-first selection without overlapping-subproblem state memoization.'",
+        "EMERGENT-GAP (algorithms_computation / EVAL-ALG-03-TERMINATION-GUARD): Failed with strategy 'Assumes `n == 0` base case guarantees termination for any positive integer n.'",
+        "EMERGENT-GAP (physics_dynamical_systems / EVAL-PHY-02-DRIVEN-DISSIPATIVE): Failed with strategy 'Applies frictionless work-energy v = sqrt(2 * P * t / m) which diverges with time.'",
+        "EMERGENT-GAP (chemistry_thermodynamics / EVAL-CHEM-01-COUPLED-GIBBS): Failed with strategy 'Assumes 1:1 coupling without accounting for thermodynamic additivity or dissipative efficiency.'",
+        "EMERGENT-GAP (biological_systems / EVAL-BIO-01-HOMEOSTATIC-FLUX): Failed with strategy 'Treats homeostasis as a static equilibrium spring that stays at 120 mM without energy input.'",
+        "EMERGENT-GAP (biological_systems / EVAL-BIO-02-SCALING-CONSTRAINT): Failed with strategy 'Assumes supply and demand scale linearly together with radius.'",
+        "EMERGENT-GAP (uncertainty_bayesian_inference / EVAL-BAYES-01-BASE-RATE): Failed with strategy 'Base-rate neglect: equates P(D|+) with test accuracy 0.95.'",
+        "EMERGENT-GAP (uncertainty_bayesian_inference / EVAL-BAYES-02-CORRELATED-EVIDENCE): Failed with strategy 'Multiplies independent likelihood ratios blindly: 0.7848.'",
         "GAP-OPEN-01: How a finite agent should assign prior probability mass to genuinely unimagined structural hypotheses before observation (Solomonoff induction / MDL / OpenStax Statistical Mechanics).",
         "GAP-OPEN-02: Quantitative derivation of 3/4-power Kleiber allometric metabolic scaling from fractal vascular network hydrodynamics."
       ],
       "suggested_next_learning_activity": {
         "next_book_id": "completed_foundational_cycle",
-        "reason": "All 4 foundational learning units completed; ready for independent cross-domain evaluation and OpenStax Calculus / Statistical Mechanics extension."
+        "reason": "All foundational ZPD units mastered; ready for independent cross-domain evaluation."
       }
     }
   ],

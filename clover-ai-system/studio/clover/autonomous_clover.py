@@ -243,11 +243,22 @@ class AutonomousCloverEngine:
         mem_block, _ = self.kit.memory_context(prob.question)
         mem_novelty = 0.35 if mem_block else 1.0
 
-        total_surprise = mem_novelty * (e_after + 0.5 * e_before + 0.8 * vis_surp + 0.8 * aud_surp + 0.08 * prob.difficulty)
+        # Evaluate developmental curiosity score via PersistentCuriosityEngine (Papers 01, 02, 04, 05, 10, 12)
+        cur_engine = self.kit.curiosity_state()
+        ranked_cur = cur_engine.rank_candidates_by_curiosity([
+            {"id": prob.problem_id, "question": prob.question, "cue_64": cue_64}
+        ])[0]
+        dev_curiosity = float(ranked_cur.get("curiosity_score") or 0.05)
+
+        total_surprise = mem_novelty * (
+            0.45 * dev_curiosity * 10.0 + e_after + 0.5 * e_before + 0.8 * vis_surp + 0.8 * aud_surp + 0.08 * prob.difficulty
+        )
         return {
             "problem_id": prob.problem_id,
             "domain": prob.domain,
             "surprise_score": round(float(total_surprise), 4),
+            "developmental_curiosity_score": round(dev_curiosity, 5),
+            "curiosity_region_id": ranked_cur.get("region_id", "R0"),
             "c2_energy_before": round(e_before, 4),
             "c2_energy_after": round(e_after, 4),
             "visual_surprise": round(vis_surp, 4),
@@ -259,24 +270,41 @@ class AutonomousCloverEngine:
 
     def discover_next_problem(self, candidate_pool: list[AutonomousProblem], rng_seed: int = 101) -> tuple[AutonomousProblem, dict[str, Any]]:
         r"""Autonomously select or synthesize the next problem $P_{k+1}$ from `candidate_pool` (or generate a new harder
-        combinatorial/analytic problem when the pool is exhausted) by maximizing JEPA Epistemic Surprise $\mathcal{S}(P)$.
+        combinatorial/analytic problem when all existing regions have habituated/mastered) using Clover's developmental
+        curiosity foundation (`curiosity_foundation.py`: `LPM + CPM + dot_y_C + habitation cooldown`).
         """
-        unsolved = [p for p in candidate_pool if p.problem_id not in self.solved_ids]
-        if not unsolved:
+        cur_engine = self.kit.curiosity_state()
+        active_candidates = [
+            p for p in candidate_pool
+            if cur_engine.locate_leaf_region(
+                cur_engine.rank_candidates_by_curiosity([{"question": p.question}])[0].get("cue_64")
+                if False else
+                __import__("curiosity_foundation").encode_text_to_64d(p.question)
+            ).expected_error_yc >= 0.06
+            and p.problem_id not in self.solved_ids
+        ]
+        if not active_candidates:
             synth = self.synthesize_new_problem(step_idx=len(self.solved_ids) + 1, seed=rng_seed + len(self.solved_ids))
             candidate_pool.append(synth)
-            unsolved = [synth]
+            active_candidates = [synth]
 
-        scored = [(self.compute_problem_surprise(p), p) for p in unsolved]
-        scored.sort(key=lambda item: -item[0]["surprise_score"])
+        scored = [(self.compute_problem_surprise(p), p) for p in active_candidates]
+        scored.sort(key=lambda item: (-item[0]["developmental_curiosity_score"], -item[0]["surprise_score"]))
         best_info, best_prob = scored[0]
         return best_prob, {
             "selected_problem_id": best_prob.problem_id,
             "selected_domain": best_prob.domain,
             "selected_surprise": best_info["surprise_score"],
+            "selected_curiosity_score": best_info["developmental_curiosity_score"],
+            "selected_region_id": best_info["curiosity_region_id"],
             "candidates_evaluated": len(scored),
             "ranking": [
-                {"id": info["problem_id"], "domain": info["domain"], "surprise": info["surprise_score"]}
+                {
+                    "id": info["problem_id"],
+                    "domain": info["domain"],
+                    "curiosity": info["developmental_curiosity_score"],
+                    "surprise": info["surprise_score"],
+                }
                 for info, _ in scored
             ],
         }
@@ -520,6 +548,14 @@ class AutonomousCloverEngine:
                 self.solved_ids.add(prob.problem_id)
                 self.kit.jepa_record_outcome(c1_obs_state=c1_att1, is_baseline=True)
                 self._record_verified_sample(prob, c1_prompt_s, c1_att1, ranked_tools[0] if ranked_tools else "python")
+                self.kit.curiosity_state().record_interaction_outcome(
+                    prob.question,
+                    pred_error=0.02,
+                    comp_error=0.0,
+                    strategy_used="sandbox_counterexample_probe" if proactive_tool_out else "memory_graph_recall",
+                    actor="autonomous_clover",
+                    controllable=True,
+                )
             res_c1 = {
                 "problem_id": prob.problem_id,
                 "domain": prob.domain,
@@ -601,6 +637,15 @@ class AutonomousCloverEngine:
                 lesson_str = CC.lesson_text(prob.question, findings[:2], f"Use {repair_tool} verification before answering.", passed=True)
                 learned_id, _ = self.kit.learn(lesson_str, sid="autonomous-clover", n=len(self.solved_ids), kind="verified")
                 self._record_verified_sample(prob, c1_prompt_s, c1_cur, repair_tool)
+                self.kit.curiosity_state().record_interaction_outcome(
+                    prob.question,
+                    pred_error=0.04,
+                    comp_error=0.0,
+                    strategy_used="sandbox_counterexample_probe",
+                    actor="autonomous_clover",
+                    controllable=True,
+                    memory_entry_id=learned_id,
+                )
                 break
 
             cur_findings = list(arith_err_k)

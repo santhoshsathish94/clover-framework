@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-11-08T09:16:33Z",
+  "timestamp": "2026-11-08T23:18:42Z",
   "version": "5.0.0",
-  "elapsed_s": 149.31,
+  "elapsed_s": 74.37,
   "goal_1_stabilize_v5": {
     "status": "passed",
     "version": "5.0.0",
@@ -9,7 +9,10 @@
       "VERSION",
       "server.STUDIO_VERSION",
       "clover-ai-system/studio/clover/launch/manifest.json",
-      "clover-ai-system/vscode-extension/package.json"
+      "clover-ai-system/vscode-extension/package.json",
+      "clover-ai-system/studio/browser-extension/manifest.json",
+      "release/beta/RELEASE-MANIFEST.json",
+      "download/SHA256SUMS.txt"
     ]
   },
   "goal_2_four_models_e2e_cycle": {
@@ -34,7 +37,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261108-101405-ba91e8"
+          "learned LRN-20261109-044738-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       },
@@ -56,7 +59,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261108-101406-ba91e8"
+          "learned LRN-20261109-044748-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       },
@@ -78,7 +81,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261108-101407-ba91e8"
+          "learned LRN-20261109-044758-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       },
@@ -100,37 +103,12 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261108-101408-ba91e8"
+          "learned LRN-20261109-044811-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       }
     },
-    "live_k3_worker": {
-      "omni": {
-        "model_label": "LFM3-Omni-2B",
-        "wall_ms": 40900.8,
-        "outcome_verified": true,
-        "reply_excerpt": "47 * 83 = 3901 The exact product of 47 * 83 is 3901.\n\n\u2022 Final Answer: #### 47 * 83 = 3901"
-      },
-      "clover-35b-a3b": {
-        "model_label": "Clover-35B-A3B",
-        "wall_ms": 32552.9,
-        "outcome_verified": true,
-        "reply_excerpt": "47 * 83 = 3901 The exact product of 47 * 83 is 3901.\n\n\u2022 Final Answer: #### 47 * 83 = 3901"
-      },
-      "nemotron-3.5-super-vl": {
-        "model_label": "Nemotron 3.5",
-        "wall_ms": 32524.8,
-        "outcome_verified": true,
-        "reply_excerpt": "47 * 83 = 3901 The exact product of 47 * 83 is 3901.\n\n\u2022 Final Answer: #### 47 * 83 = 3901"
-      },
-      "kimi-k3": {
-        "model_label": "Kimi K3.1 Pro",
-        "wall_ms": 33127.7,
-        "outcome_verified": true,
-        "reply_excerpt": "47 * 83 = 3901 The exact product of 47 * 83 is 3901.\n\n\u2022 Final Answer: #### 47 * 83 = 3901"
-      }
-    }
+    "live_k3_worker": "skipped_local (run on k3 for live worker timings)"
   },
   "goal_3_meaning_engine_bridge": {
     "status": "passed",
@@ -158,7 +136,7 @@
         "CWE-362"
       ],
       "with_bridge_from_memory": [
-        "MEM-USER-20261108-101628-64053c"
+        "MEM-USER-20261109-044813-64053c"
       ],
       "without_bridge_entities": []
     },

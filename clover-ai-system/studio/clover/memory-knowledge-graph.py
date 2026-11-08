@@ -1050,6 +1050,27 @@ class CloverMemoryGraphStore:
     def get_entry(self, entry_id: str) -> MemoryEntry | None:
         return self.entries.get(entry_id)
 
+    @staticmethod
+    def compute_learning_progress(
+        errors: Sequence[float],
+        window_half: int = 6,
+    ) -> tuple[float, float, float]:
+        """Compute `(lp_positive, abs_lp_vigilance, plasticity_factor)` over a sequence of regional errors
+        via `curiosity_foundation.compute_windowed_lp_and_vigilance` (Papers 01, 02, 04, 12)."""
+        import curiosity_foundation
+        return curiosity_foundation.compute_windowed_lp_and_vigilance(errors, window_half=window_half)
+
+    @staticmethod
+    def split_region(
+        vectors: Sequence[Sequence[float]],
+        outcomes: Sequence[float],
+        candidate_dims: Sequence[int] | None = None,
+    ) -> tuple[int, float, float] | None:
+        """Find the optimal `R-IAC` Criterion C2 split `(best_dim, best_threshold, variance_reduction_ratio)`
+        minimizing weighted child outcome variance via `curiosity_foundation.find_criterion_c2_split` (Paper 01)."""
+        import curiosity_foundation
+        return curiosity_foundation.find_criterion_c2_split(vectors, outcomes, candidate_dims=candidate_dims)
+
     def get_outgoing(
         self, entry_id: str, relation_types: Sequence[str] | None = None
     ) -> list[MemoryRelationship]:

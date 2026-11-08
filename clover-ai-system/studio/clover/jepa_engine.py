@@ -1580,6 +1580,50 @@ class CloverJEPARuntime:
                 "ms": round((time.perf_counter() - t0) * 1000.0, 2),
             }
 
+    def predict_expected_error(
+        self,
+        z_t_64: np.ndarray,
+        action_vec_8: np.ndarray | None = None,
+        context_cue_64: np.ndarray | None = None,
+    ) -> float:
+        """Paper 10 (Schmidhuber 1991 Confidence Module C): Predict expected transition error `y_C(z_t)` at `z_t_64`
+        from the stored outcome buffer using inverse-distance neighbor weighting in 64-d latent space."""
+        with self.lock:
+            if not self.outcome_buffer:
+                return 0.35
+            z_q = np.asarray(z_t_64, dtype=np.float32).reshape(1, D_JEPA)
+            Z_t = np.concatenate([x[0] for x in self.outcome_buffer], axis=0)
+            A_t = np.concatenate([x[1] for x in self.outcome_buffer], axis=0)
+            Z_obs = np.concatenate([x[2] for x in self.outcome_buffer], axis=0)
+            C_t = np.concatenate([x[3] for x in self.outcome_buffer], axis=0)
+            pred = self._step_transition(Z_t, A_t, context_cue=C_t, use_residual=True)
+            errs = np.mean((pred - Z_obs) ** 2, axis=-1)
+            d2 = np.mean((Z_t - z_q) ** 2, axis=-1)
+            w = np.exp(-8.0 * d2)
+            w /= np.sum(w) + np.float32(1e-9)
+            return round(float(np.sum(w * errs)), 5)
+
+    def estimate_controllable_subspace(self) -> np.ndarray:
+        """Paper 13 (Santucci et al. 2020 IMOL): Estimate per-dimension controllability `R^2_j(Action -> Delta z_j)`
+        across the 64-d JEPA latent space from recorded `(z_t, a_t, z_obs)` outcome transitions."""
+        with self.lock:
+            if len(self.outcome_buffer) < 4:
+                return np.ones(D_JEPA, dtype=np.float32)
+            Z_t = np.concatenate([x[0] for x in self.outcome_buffer], axis=0).astype(np.float64)
+            A_t = np.concatenate([x[1] for x in self.outcome_buffer], axis=0).astype(np.float64)
+            Z_obs = np.concatenate([x[2] for x in self.outcome_buffer], axis=0).astype(np.float64)
+            dZ = Z_obs - Z_t
+            r2 = np.zeros(D_JEPA, dtype=np.float32)
+            for j in range(D_JEPA):
+                vj = float(np.var(dZ[:, j]))
+                if vj < 1e-8:
+                    r2[j] = 0.05
+                    continue
+                w, _, _, _ = np.linalg.lstsq(A_t, dZ[:, j], rcond=None)
+                res_v = float(np.var(dZ[:, j] - (A_t @ w)))
+                r2[j] = np.float32(np.clip(1.0 - res_v / vj, 0.05, 1.0))
+            return r2
+
 
 _INSTANCES: dict[str, CloverJEPARuntime] = {}
 _INST_LOCK = threading.Lock()

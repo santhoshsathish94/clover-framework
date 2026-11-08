@@ -562,14 +562,12 @@ class WorldLearningMissionEngine:
             )
         self.store = M.CloverMemoryGraphStore(self.mem_root, auto_load=True)
         self.ontology_graph = O.CloverOntologyGraph()
+        import curiosity_foundation as CF
+        self.curiosity = CF.for_path(self.sandbox_dir / "curiosity" / "curiosity_state.json")
         self.learning_records: list[LearningUnitRecord] = []
         self.completed_books: list[str] = []
-        self.knowledge_gaps: list[str] = [
-            "GAP-ALG-01: How to distinguish terminating single-branch recursion from exponential overlapping-subproblem recursion and non-decreasing variants.",
-            "GAP-PHY-01: Where textbook mechanical energy conservation (Delta E_mech = 0) breaks under non-conservative dissipative drag and continuous driving.",
-            "GAP-CROSS-01: How physical energy dissipation and chemical Gibbs free energy (Delta G) govern biological homeostasis and scaling constraints.",
-            "GAP-COG-01: How human memory reconsolidation biases and conditional dependence break naive Bayesian belief updating.",
-        ]
+        # Populated endogenously from empirical baseline failures and unresolved questions (never hardcoded at init)
+        self.knowledge_gaps: list[str] = []
 
     @staticmethod
     def _run_verification_code(code: str) -> tuple[bool, Any, str]:
@@ -590,7 +588,9 @@ class WorldLearningMissionEngine:
     # ------------------------------------------------------------------
 
     def evaluate_unfamiliar_problems(self, stage_label: str) -> dict[str, Any]:
-        """Run the 10 unfamiliar problems using ONLY the validated concepts currently in `self.store`."""
+        """Run the 10 unfamiliar problems using ONLY the validated concepts currently in `self.store`,
+        and feed empirical pass/fail outcomes into `self.curiosity` (`PersistentCuriosityEngine`) so
+        knowledge gaps and ZPD priorities emerge endogenously from actual failures."""
         valid_cids = self.active_validated_concept_ids()
         problems = _build_unfamiliar_evaluation_problems()
         passed = 0
@@ -608,6 +608,19 @@ class WorldLearningMissionEngine:
                 is_pass = got_val == prob.expected_result
             if is_pass:
                 passed += 1
+            else:
+                gap_str = f"EMERGENT-GAP ({prob.domain} / {prob.problem_id}): Failed with strategy '{prob.baseline_naive_strategy}'"
+                if gap_str not in self.knowledge_gaps:
+                    self.knowledge_gaps.append(gap_str)
+            self.curiosity.record_interaction_outcome(
+                f"{prob.domain}: {prob.question}",
+                pred_error=0.02 if is_pass else 0.75,
+                comp_error=0.0 if is_pass else 0.90,
+                strategy_used="sandbox_counterexample_probe",
+                actor="world_learning_mission",
+                controllable=True,
+                unresolved_summary=None if is_pass else f"{prob.problem_id}: {prob.question[:160]}",
+            )
             details.append({
                 "problem_id": prob.problem_id,
                 "domain": prob.domain,
@@ -629,36 +642,78 @@ class WorldLearningMissionEngine:
         }
 
     # ------------------------------------------------------------------
-    # Progressive Curriculum Selector (Principle 6: Learn Progressively)
+    # Progressive Curriculum Selector (Principle 6: Learn Progressively via ZPD & LP)
     # ------------------------------------------------------------------
 
     def choose_next_learning_unit(self) -> dict[str, str]:
-        """Choose the next book/chapter based on current gaps, missing prerequisites, and testable hypotheses
-        rather than reading the entire library indiscriminately.
-        """
-        if "think_python_3e" not in self.completed_books:
+        """Choose the next learning unit dynamically using `PersistentCuriosityEngine` (`curiosity_foundation.py`)
+        and ZPD prerequisite readiness over the unmastered evaluation problems — without a hardcoded if/elif script."""
+        valid_cids = self.active_validated_concept_ids()
+        problems = _build_unfamiliar_evaluation_problems()
+
+        # Candidate curriculum units with their domain couplings and concept prerequisites (ZPD structure, Paper 08 Fig. 5)
+        candidate_units = [
+            {
+                "unit_id": "think_python_3e",
+                "books": ("think_python_3e",),
+                "domains": ("algorithms_computation",),
+                "prereq_concepts": (),
+                "description": "algorithmic recursion invariants, base-case reachability, and overlapping-subproblem DAG memoization",
+            },
+            {
+                "unit_id": "university_physics_v1",
+                "books": ("university_physics_v1",),
+                "domains": ("physics_dynamical_systems",),
+                "prereq_concepts": ("MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG",),
+                "description": "work-energy balance and non-conservative driven dissipative steady states",
+            },
+            {
+                "unit_id": "chemistry_2e+biology_2e",
+                "books": ("chemistry_2e", "biology_2e"),
+                "domains": ("chemistry_thermodynamics", "biological_systems"),
+                "prereq_concepts": ("MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE",),
+                "description": "chemical Gibbs free energy coupling and biological non-equilibrium homeostasis",
+            },
+            {
+                "unit_id": "psychology_2e+think_bayes_2e",
+                "books": ("psychology_2e", "think_bayes_2e"),
+                "domains": ("psychology_cognition", "uncertainty_bayesian_inference"),
+                "prereq_concepts": (
+                    "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY",
+                    "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS",
+                ),
+                "description": "memory reconsolidation biases and Bayesian updating under correlated evidence",
+            },
+        ]
+
+        uncompleted = [
+            u for u in candidate_units if not all(b in self.completed_books for b in u["books"])
+        ]
+        if not uncompleted:
             return {
-                "next_book_id": "think_python_3e",
-                "reason": "Address GAP-ALG-01 first: establish formal recursion invariants, base-case reachability, and overlapping-subproblem DAG memoization.",
+                "next_book_id": "completed_foundational_cycle",
+                "reason": "All foundational ZPD units mastered; ready for independent cross-domain evaluation.",
             }
-        if "university_physics_v1" not in self.completed_books:
-            return {
-                "next_book_id": "university_physics_v1",
-                "reason": "Address GAP-PHY-01: establish work-energy conservation laws and where they break under non-conservative dissipative forces.",
-            }
-        if "chemistry_2e" not in self.completed_books or "biology_2e" not in self.completed_books:
-            return {
-                "next_book_id": "chemistry_2e+biology_2e",
-                "reason": "Address GAP-CROSS-01: connect physical dissipative steady states to chemical Gibbs free energy coupling and biological homeostasis.",
-            }
-        if "psychology_2e" not in self.completed_books or "think_bayes_2e" not in self.completed_books:
-            return {
-                "next_book_id": "psychology_2e+think_bayes_2e",
-                "reason": "Address GAP-COG-01: investigate human memory reconsolidation biases and Bayesian belief updating under correlated evidence.",
-            }
+
+        scored_units: list[tuple[float, dict[str, Any]]] = []
+        for u in uncompleted:
+            prereq_met = all(c in valid_cids for c in u["prereq_concepts"])
+            zpd_gate = 1.0 if prereq_met else 0.10
+            domain_probs = [p for p in problems if p.domain in u["domains"]]
+            unsolved_cnt = sum(
+                1 for p in domain_probs if not all(c in valid_cids for c in p.required_concept_ids)
+            )
+            cur_rank = self.curiosity.rank_candidates_by_curiosity([
+                {"text": f"{ ' '.join(u['domains']) } {u['description']}"}
+            ])[0]
+            score = zpd_gate * (unsolved_cnt + 1.0) * (0.5 + float(cur_rank["curiosity_score"]))
+            scored_units.append((score, u))
+
+        scored_units.sort(key=lambda pair: -pair[0])
+        best_u = scored_units[0][1]
         return {
-            "next_book_id": "completed_foundational_cycle",
-            "reason": "All 4 foundational learning units completed; ready for independent cross-domain evaluation and OpenStax Calculus / Statistical Mechanics extension.",
+            "next_book_id": best_u["unit_id"],
+            "reason": f"Selected by ZPD readiness & curiosity score to resolve open failures in {best_u['description']}.",
         }
 
     # ------------------------------------------------------------------

@@ -142,6 +142,20 @@ class LayerKit:
         self.last_meaning_bridge = None
         self._emergent = None
         self._learning_mission = None
+        self._curiosity = None
+
+    def curiosity_state(self, storage_path=None):
+        """Return the `PersistentCuriosityEngine` (`curiosity_foundation.py`) for this `LayerKit` instance."""
+        if self._curiosity is None or storage_path is not None:
+            import curiosity_foundation
+            if storage_path is not None:
+                c_path = Path(storage_path)
+            elif self.memory_root is not None:
+                c_path = self.memory_root.parent / "curiosity" / "curiosity_state.json"
+            else:
+                c_path = self.base_dir / "growth" / "curiosity" / "curiosity_state.json"
+            self._curiosity = curiosity_foundation.for_path(c_path)
+        return self._curiosity
 
     def emergent_concepts(self):
         """Return the `EmergentConceptEngine` connected to this `LayerKit`'s `CloverMemoryGraphStore` and `CloverOntologyGraph`."""
@@ -407,6 +421,19 @@ class LayerKit:
         e.updated_at = stamp
         st._save_entry_in_place(e)
         st.rebuild_index()
+        try:
+            self.curiosity_state().record_interaction_outcome(
+                f"{e.title or ''} {e.summary or ''}",
+                pred_error=0.05 if worked else 0.70,
+                comp_error=0.0 if worked else 0.85,
+                strategy_used="memory_graph_recall",
+                actor="user_feedback",
+                controllable=True,
+                unresolved_summary=(f"Regression on {e.id}: {e.summary}" if not worked else None),
+                memory_entry_id=e.id,
+            )
+        except Exception:
+            pass
         return (f"{eid} {'worked' if worked else 'did not work'} (worked {w}, did not work {d})"
                 + (f", now {'holding' if e.status == 'active' else e.status}" if e.status != before else ""))
 
@@ -601,6 +628,25 @@ class LayerKit:
         except Exception:
             sem_cue_64 = None
         self.semantic_cue_64 = sem_cue_64
+        curiosity_info = None
+        try:
+            disc_state = getattr(self.meaning, "discernment", "proceed") if self.meaning is not None else "proceed"
+            decl_caps = getattr(self.meaning, "declined", ()) if self.meaning is not None else ()
+            curiosity_info = self.curiosity_state().recommend_strategy_and_voi(
+                q or "\n".join(mem_texts[:1]),
+                latent_cue_64=sem_cue_64,
+                discernment_state=disc_state,
+                declined_capabilities=decl_caps,
+            )
+            if curiosity_info and curiosity_info.get("should_observe") and action_prior_8 is not None:
+                import numpy as np
+                boost = np.asarray(curiosity_info.get("belief_action_boost_8") or np.zeros(8), dtype=np.float32)
+                combined_ap = np.asarray(action_prior_8, dtype=np.float32) + np.float32(0.25) * boost
+                norm_ap = float(np.linalg.norm(combined_ap))
+                if norm_ap > 1e-6:
+                    action_prior_8 = combined_ap / np.float32(norm_ap)
+        except Exception:
+            curiosity_info = None
         bridge_info = {
             "layer": "meaning_bridge",
             "memory_entries": mem_ids,
@@ -609,6 +655,13 @@ class LayerKit:
             "action_prior_dims": dim_scores,
             "action_prior_8": action_prior_8 if self.enable_jepa_action_prior else None,
             "has_semantic_cue_64": sem_cue_64 is not None,
+            "curiosity": {
+                "region_id": curiosity_info.get("region_id"),
+                "state_curiosity": curiosity_info.get("state_curiosity"),
+                "selected_strategy": curiosity_info.get("selected_strategy"),
+                "should_observe": curiosity_info.get("should_observe"),
+                "voi": (curiosity_info.get("voi_analysis") or {}).get("value_of_information_voi", 0.0),
+            } if isinstance(curiosity_info, dict) else None,
         }
         self.last_meaning_bridge = bridge_info
         return bridge_info

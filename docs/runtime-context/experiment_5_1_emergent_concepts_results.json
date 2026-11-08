@@ -1,7 +1,7 @@
 {
   "experiment": "5.1 \u2014 Emergent Concept Acquisition",
   "status": "passed",
-  "elapsed_s": 27.167,
+  "elapsed_s": 3.26,
   "stage_1_observe": {
     "unfamiliar_situations_observed": 12,
     "pre_supplied_concept_names": 0,

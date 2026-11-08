@@ -1,0 +1,95 @@
+{
+  "suite": "test_curiosity_foundation",
+  "status": "passed",
+  "elapsed_s": 3.131,
+  "test_1_endogenous_splitting_and_no_hardcoded_interests": {
+    "total_regions_after_splits": 5,
+    "leaf_regions": 3,
+    "ranking": [
+      {
+        "id": "learnable",
+        "region_id": "R0.0.1",
+        "curiosity_score": 0.03462,
+        "tonic_cpm": 0.31751,
+        "expected_error_yc": 0.21849
+      },
+      {
+        "id": "trivial",
+        "region_id": "R0.1",
+        "curiosity_score": 0.0,
+        "tonic_cpm": 0.0,
+        "expected_error_yc": 0.01
+      },
+      {
+        "id": "noise",
+        "region_id": "R0.0.0",
+        "curiosity_score": 0.0,
+        "tonic_cpm": 0.0,
+        "expected_error_yc": 0.80728
+      }
+    ]
+  },
+  "test_2_habituation_and_non_saturating_plasticity": {
+    "unique_items_visited_out_of_4": 4,
+    "visit_sequence": [
+      "item_0",
+      "item_1",
+      "item_0",
+      "item_3",
+      "item_0",
+      "item_2",
+      "item_0",
+      "item_1",
+      "item_0",
+      "item_0",
+      "item_0",
+      "item_0",
+      "item_0",
+      "item_0",
+      "item_0",
+      "item_0"
+    ],
+    "extreme_error_plasticity_floor": 0.15
+  },
+  "test_3_passive_spectator_trap_controllability_gate": {
+    "controllable_skill_curiosity": 0.01899,
+    "passive_clockwork_curiosity": 0.00473
+  },
+  "test_4_pomdp_voi_and_discernment_preemption": {
+    "voi_high_uncertainty": {
+      "prior_certainty_p": 0.6,
+      "indifference_threshold_p_star": 0.8,
+      "observation_cost": 0.1,
+      "value_of_information_voi": 0.1,
+      "should_observe": true
+    },
+    "voi_low_uncertainty": {
+      "prior_certainty_p": 0.96,
+      "indifference_threshold_p_star": 0.8,
+      "observation_cost": 0.1,
+      "value_of_information_voi": -0.08,
+      "should_observe": false
+    },
+    "refuse_preempted": "refuse"
+  },
+  "test_5_zpdes_stall_and_lateral_modality_switching": {
+    "stalled_question_id": "Q-8668157F64",
+    "lateral_question_activated": true,
+    "stalled_question_reactivated_after_lateral_mastery": true
+  },
+  "test_6_confidence_c_vigilance_and_sgim_acts": {
+    "curiosity_when_mastered": 0.0006,
+    "curiosity_after_regression_vigilance": 0.13843,
+    "abs_lp_vigilance": 0.656,
+    "shifted_strategy": "workspace_code_inspect",
+    "top_reliable_memory_id": "reliable_slightly_farther"
+  },
+  "test_7_controllable_subspace_idle_consolidation_and_persistence": {
+    "controllable_dims_r2": 0.9726,
+    "noise_dims_r2": 0.153,
+    "idle_promoted_valid_hypothesis": true,
+    "idle_rolled_back_regressing_hypothesis": true,
+    "persisted_across_reload": true,
+    "repo_growth_context_updated": true
+  }
+}

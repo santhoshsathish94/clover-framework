@@ -1,0 +1,1483 @@
+{
+  "audit_id": "14-clover-curiosity-foundation-architecture-audit",
+  "elapsed_s": 0.757,
+  "inspected_modules_count": 19,
+  "total_clover_studio_lines_inspected": 23255,
+  "live_codebase_verification": {
+    "memory_graph_schema": {
+      "valid_entry_types": [
+        "conversation",
+        "concept",
+        "observation",
+        "correction",
+        "hypothesis",
+        "decision",
+        "experiment",
+        "outcome"
+      ],
+      "valid_epistemic_statuses": [
+        "observed",
+        "user_stated_belief",
+        "hypothesis",
+        "externally_verified",
+        "unresolved"
+      ],
+      "valid_lifecycle_statuses": [
+        "active",
+        "superseded",
+        "contested",
+        "under_review"
+      ],
+      "valid_relationship_types": [
+        "supports",
+        "challenges",
+        "refines",
+        "depends_on",
+        "similar_to",
+        "derived_from",
+        "caused_by",
+        "corrects",
+        "exemplifies",
+        "unresolved_with"
+      ],
+      "traversal_priority": {
+        "corrects": 0,
+        "refines": 1,
+        "challenges": 2,
+        "unresolved_with": 3,
+        "derived_from": 4,
+        "supports": 5,
+        "caused_by": 6,
+        "depends_on": 7,
+        "exemplifies": 8,
+        "similar_to": 9
+      },
+      "has_windowed_lp_derivative": true,
+      "has_regional_split_tree": true
+    },
+    "layerkit_audit": {
+      "has_tally_worked_did_not_work": true,
+      "has_score_learning": true,
+      "has_compute_meaning_bridge": true,
+      "has_jepa_record_outcome": true,
+      "has_persistent_curiosity_state": true
+    },
+    "autonomous_clover_gap_evidence": {
+      "uses_raw_surprise_argmax_instead_of_lp_derivative": false,
+      "uses_without_replacement_solved_ids_crutch": false
+    },
+    "hardcoded_interest_evidence_to_replace_with_mechanisms": {
+      "world_learning_mission_hardcoded_gaps": false,
+      "world_learning_mission_hardcoded_book_order": false,
+      "emergent_concepts_hardcoded_condition_families": true
+    },
+    "jepa_audit": {
+      "architectures": [
+        "auto",
+        "clover_rpre",
+        "ijepa",
+        "audio_jepa",
+        "eb_jepa",
+        "mjepa",
+        "none"
+      ],
+      "d_jepa": 64,
+      "d_act": 8,
+      "has_outcome_residual_adapter": true,
+      "has_confidence_reliability_module_C": true,
+      "has_controllability_subspace_filter": true
+    }
+  },
+  "thirteen_paper_mechanism_mapping": [
+    {
+      "paper_num": 1,
+      "paper_id": "01-oudeyer-kaplan-hafner-2007-iac",
+      "mechanism": "R-IAC Progressive Region Splitting (Criterion C2: output variance minimization) + Windowed Learning Progress LP(R_n, t) + Parent-to-Child Inheritance",
+      "existing_clover_components": [
+        "memory-knowledge-graph.py: CloverMemoryGraphStore, MemoryEntry (tags, concepts, revisions)",
+        "lfm3_layers.py: LayerKit.tally(entry), LayerKit.score_learning(eid, worked, ref)",
+        "emergent_concepts.py: EmergentConceptEngine.associate_observations"
+      ],
+      "identified_gap": "Clover stores flat per-entry revision counts (worked, did_not_work) but has no regional tree partitioning R_n over 64-d JEPA/semantic space, no Criterion C2 output-variance split when a topic region becomes heterogeneous, and no sliding-window error derivative LP(R_n, t) = <e(t-tau)> - <e(t)>.",
+      "derived_architectural_integration": "Add persistent RegionTree (stored in growth/curiosity/regions.json) over Clover's 64-d JEPA + token feature space; split regions via Criterion C2 on outcome/prediction error variance while inheriting parent error windows and local reliability estimates."
+    },
+    {
+      "paper_num": 2,
+      "paper_id": "02-twomey-westermann-2018-infant-curiosity",
+      "mechanism": "Goldilocks Intermediate Complexity (Error x Plasticity) + Unbounded Logit/Linear Progress Guard + Habituation Trace (Avoiding 2-State Limit Cycles)",
+      "existing_clover_components": [
+        "autonomous_clover.py: AutonomousCloverEngine.compute_problem_surprise, discover_next_problem",
+        "jepa_engine.py: inspect_visual_latent, inspect_audio_latent, plan_c2_latent"
+      ],
+      "identified_gap": "AutonomousCloverEngine.compute_problem_surprise currently maximizes raw surprise/energy (total_surprise = mem_novelty * (e_after + 0.5*e_before + ...)) and relies on a without-replacement set (self.solved_ids) to avoid repeating items. Paper 02 E3 proved this causes saturation blindness and 2-state antipodal limit cycles when 'without replacement' is removed.",
+      "derived_architectural_integration": "Replace raw surprise maximization in problem/topic selection with non-saturating plasticity-weighted progress plus an exponential habitation/cooldown trace per region so curiosity naturally shifts along the Goldilocks frontier without needing a binary solved_ids exclusion crutch."
+    },
+    {
+      "paper_num": 3,
+      "paper_id": "03-oudeyer-smith-2016-curiosity-development",
+      "mechanism": "Self-Organized Developmental Curriculum Ordering (Zero Pre-Scripted Stages) Inside a Homeostatic Safety/Discernment Hierarchy",
+      "existing_clover_components": [
+        "AGENTS.md (\u00a78-\u00a710) & semantics.py: 4-state discernment (proceed, ask, do_not_know, refuse)",
+        "permissions.py & isolated_sandbox.py: runtime boundary & OS/process sandbox enforcement",
+        "world_learning_mission.py: WorldLearningMissionEngine.choose_next_learning_unit"
+      ],
+      "identified_gap": "WorldLearningMissionEngine.choose_next_learning_unit and self.knowledge_gaps hard-code the book order (think_python_3e -> university_physics_v1 -> ...) and hard-code the 4 GAP-* strings. Interests are scripted rather than emerging from Clover's actual interactions and error derivatives.",
+      "derived_architectural_integration": "Remove hardcoded topic/book/gap lists from the curiosity foundation; let candidate interest niches emerge endogenously from user turns, failed/repaired clover_cycle verifications, and unresolved/contested edges in CloverMemoryGraphStore, gated by semantics.py discernment."
+    },
+    {
+      "paper_num": 4,
+      "paper_id": "04-oudeyer-kaplan-2007-typology",
+      "mechanism": "Coupled Knowledge Progress (LPM, Eq. 11) + Competence Progress (CPM, Eq. 24) + Predictive Surprise Ratio (SM, Eq. 15) to Defeat the Passive Spectator Trap",
+      "existing_clover_components": [
+        "jepa_engine.py: CloverJEPARuntime (latent state prediction z_plan_64 vs z_obs_64)",
+        "clover_cycle.py: arithmetic_findings, format_findings, verify_turn_outcome (competence checks)",
+        "lfm3_layers.py: compiler_check, grounding_filter"
+      ],
+      "identified_gap": "Prediction error in jepa_engine.py and verification competence in clover_cycle.py / lfm3_layers.py are tracked separately and never combined into coupled LPM + CPM derivatives. A purely predictive curiosity signal falls into the Passive Spectator Trap (Paper 04 E2: 57.87% time on unactuated spectacles where Clover has zero verification/action authority).",
+      "derived_architectural_integration": "Define Clover's intrinsic motivation signal in each region R_n as a coupled combination of Knowledge Progress LPM(R_n) (reduction in JEPA/symbolic prediction error) and Competence Progress CPM(R_n) (reduction in executable verification/task failure rate), weighted by controllability."
+    },
+    {
+      "paper_num": 5,
+      "paper_id": "05-kaplan-oudeyer-2007-neural-circuits",
+      "mechanism": "Phasic Surprise vs. Tonic Regional Learning Progress Dissociation in Category-Level Microcolumns (MR + metaMR, Eq. 3)",
+      "existing_clover_components": [
+        "clover_cycle.py: fast turn-level phasic error/retry detection",
+        "jepa_engine.py: 64-d latent representation z_jepa",
+        "server.py: studio_idle() background hook & S.repo / S.kit"
+      ],
+      "identified_gap": "Clover has fast phasic surprise (within-turn retry/verification), but zero persistent tonic progress state across turns. Furthermore, evaluating progress globally oscillates (85.32% in Paper 05 E1), while evaluating pointwise per exact prompt habituates immediately.",
+      "derived_architectural_integration": "Maintain coupled category-level microcolumns (RegionNode = Predictor stats MR + Meta-predictor stats metaMR) in persistent storage, separating phasic turn surprise e(t) (which triggers immediate verification) from tonic progress p_R(t) = <e_R(t-theta)> - <e_R(t)> (which drives persistent interest and idle exploration)."
+    },
+    {
+      "paper_num": 6,
+      "paper_id": "06-gottlieb-2013-info-seeking",
+      "mechanism": "Instrumental Observing Actions via Value of Information (VoI) + Local LP over Unbounded/Branch-Expanding Frontiers",
+      "existing_clover_components": [
+        "semantics.py: interpret(), route() tool selection",
+        "lfm3_layers.py: compute_meaning_bridge(), jepa_engine.semantic_action_prior_8()"
+      ],
+      "identified_gap": "Tool routing in semantics.py and semantic_action_prior_8 selects tools from lexical cues without computing epistemic Value of Information VoI(action | uncertainty_R, cost_action), and does not track how resolving one question spawns child unresolved questions.",
+      "derived_architectural_integration": "Feed regional uncertainty y_C(R) and unresolved question count into LayerKit.compute_meaning_bridge to compute VoI for epistemic observing actions (memory/ontology lookup, file read, sandbox test, or clarifying question) and spawn child unresolved questions without treating expanding frontiers as failure."
+    },
+    {
+      "paper_num": 7,
+      "paper_id": "07-gottlieb-oudeyer-2018-active-sampling",
+      "mechanism": "Endogenous Active Sampling Loop (Fig. 1b) + Neutral Validity Estimation Separate from Confirmation Bias (Fig. 3c vs 4a) + Stepping-Stone Goal Sampling",
+      "existing_clover_components": [
+        "memory-knowledge-graph.py: RELATIONSHIP_TRAVERSAL_PRIORITY (corrects=0, refines=1, challenges=2, unresolved_with=3 > supports=5)",
+        "lfm3_layers.py: memory_context(), ontology_context()"
+      ],
+      "identified_gap": "While CloverMemoryGraphStore prioritizes challenges/unresolved_with edges during passive retrieval, Clover does not actively sample or schedule falsification probes for high-uncertainty / contested hypotheses, nor does it separate neutral cue validity from positive confirmation counts.",
+      "derived_architectural_integration": "Close the Fig. 1b loop by feeding Belief-Based Utility (expected uncertainty reduction + tonic LP) back into memory/ontology attention selection, prioritizing high-validity falsification of `hypothesis` and `unresolved` entries over re-confirming `active` entries."
+    },
+    {
+      "paper_num": 8,
+      "paper_id": "08-oudeyer-gottlieb-lopes-2016-educational",
+      "mechanism": "Closed LP <-> State Curiosity <-> Memory Consolidation Loop (Fig. 1B) + ZPDES Dynamic Zone of Proximal Development with Lateral Modality Switching (Fig. 5)",
+      "existing_clover_components": [
+        "memory_index.py: MemoryIndex background note writer (is_idle=studio_idle)",
+        "memory-knowledge-graph.py: depends_on, challenges, unresolved_with edges"
+      ],
+      "identified_gap": "MemoryIndex writes background notes in flat chronological order (Fig. 1A unidirectional), and Clover has no ZPDES active-frontier controller that deactivates stalled questions (LP -> 0 at high error) and opens lateral prerequisite/modality paths.",
+      "derived_architectural_integration": "Modulate idle consolidation priority in MemoryIndex / CloverMemoryGraphStore by tonic state curiosity (Fig. 1B), and maintain a dynamic ZPD frontier over unresolved questions that sidelines stalled questions and activates lateral prerequisite or alternative-strategy investigations (Fig. 5)."
+    },
+    {
+      "paper_num": 9,
+      "paper_id": "09-oudeyer-2017-baby-robots",
+      "mechanism": "Morphological/Structural Computation Before Neural Calculation + Emergent Individual Developmental Trajectories",
+      "existing_clover_components": [
+        "clover_cycle.py: normalize(), _eval(), arithmetic_findings()",
+        "generative-code-compiler.py: CloverPythonGenerativeCompiler",
+        "symbolic-ontology-graph.py: CloverOntologyGraph.run_inference()",
+        "isolated_sandbox.py: IsolatedPythonSandbox"
+      ],
+      "identified_gap": "Clover has strong structural verifiers, but lacks persistent per-workspace/per-user developmental interest state so that two Clover instances exposed to different environments organically develop distinct skill and interest trajectories.",
+      "derived_architectural_integration": "Use Clover's deterministic structural verifiers (arithmetic, compiler, Horn inference, sandbox) as zero-cost 'passive dynamics' that generate exact error/competence signals, driving emergent workspace-specific interest trajectories stored in growth/curiosity/."
+    },
+    {
+      "paper_num": 10,
+      "paper_id": "10-schmidhuber-1991-curious-control",
+      "mechanism": "Confidence/Reliability Module C (Predicting Expected Error y_C) + Signed Reliability Derivative dot_y_C(t) + Smoothed Signed Shift |E[Delta y_P]|",
+      "existing_clover_components": [
+        "jepa_engine.py: CloverJEPARuntime.record_and_adapt_outcome (OutcomeResidualAdapter)"
+      ],
+      "identified_gap": "CloverJEPARuntime adapts forward transition weights W_res on outcome residuals, but lacks a Confidence Module C that predicts expected error y_C(z) per latent region and computes dot_y_C(t) = y_C_old - y_C_new.",
+      "derived_architectural_integration": "Add a lightweight Confidence/Reliability estimator y_C(R_n) (EMA of regional prediction and verification error plus signed shift tracker E[Delta z_pred | R_n]) so curiosity rewards reliability improvement dot_y_C(t) = y_C_old - y_C_new and rejects zero-mean noise."
+    },
+    {
+      "paper_num": 11,
+      "paper_id": "11-ivaldi-2014-object-learning",
+      "mechanism": "SGIM-ACTS Active Choice of (Target Region, Epistemic Strategy, Actor) + Automatic Strategy Compensation When a Source Is Static/Biased + Multi-View Accumulation",
+      "existing_clover_components": [
+        "world_learning_mission.py: 7-dimension ConceptUnderstanding (multi-view representation)",
+        "clover_cycle.py, web_search.py, isolated_sandbox.py, workspaces.py, semantics.py (strategy primitives)"
+      ],
+      "identified_gap": "Clover has all 5 epistemic strategy primitives (memory_recall, workspace_inspect, sandbox_experiment, web_research, ask_human), but no SGIM-ACTS bandit that tracks competence progress per (region, strategy) pair and shifts away from unhelpful/static strategies.",
+      "derived_architectural_integration": "Track empirical competence progress LP(R_n, strategy) across Clover's 5 epistemic strategies; when passive recall or text reading yields zero progress on a multi-faceted concept/question, automatically shift weight toward active IsolatedPythonSandbox experimentation or targeted human clarification."
+    },
+    {
+      "paper_num": 12,
+      "paper_id": "12-nguyen-oudeyer-2014-sgim",
+      "mechanism": "SGIM-D Dual Social Guidance (Policy Imitation + Goal Emulation) with Self-Execution Calibration + |LP| Competence-Drop Vigilance + Reliability-Weighted Retrieval (dist + alpha*var)",
+      "existing_clover_components": [
+        "personal.py: Personal learner (before_turn, after_turn user corrections & preferences)",
+        "lfm3_layers.py: learn(), score_learning(), _user_memory_package()"
+      ],
+      "identified_gap": "User corrections in personal.py and lfm3_layers.py do not seed goal emulation in a curiosity interest map; memory retrieval does not penalize high-variance/unreliable entries via dist + alpha*var_h; and score_learning does not use |LP| to detect sudden competence drops on previously mastered topics.",
+      "derived_architectural_integration": "Convert user corrections, retries, and questions into socially guided goal-emulation seeds in the curiosity interest map; verify/calibrate candidate rules in IsolatedPythonSandbox before promotion; use |LP| (with competence-drop vigilance) to re-activate regions when workspace code or facts change; and weight retrieved memory/concept exemplars by dist + alpha * var_h."
+    },
+    {
+      "paper_num": 13,
+      "paper_id": "13-santucci-2020-open-ended-learning",
+      "mechanism": "Action-Relevant Controllable Subspace Filtering + Continuous-to-Discrete Goal Hierarchy + Dual Episodic-Semantic Memory Consolidation Against Catastrophic Forgetting",
+      "existing_clover_components": [
+        "clover_repo.py & memory-knowledge-graph.py (Fast Episodic Tier: sessions/, outcomes/, observation/hypothesis entries)",
+        "symbolic-ontology-graph.py & jepa_engine.py (Slow Semantic Tier: CloverOntologyGraph + OutcomeResidualAdapter rollback gate)",
+        "emergent_concepts.py: Observe -> Associate -> Hypothesize -> Validate -> Grow pipeline"
+      ],
+      "identified_gap": "The Episodic -> Semantic consolidation pipeline in emergent_concepts.py and world_learning_mission.py is currently disconnected from live Studio turns and lacks an action-controllability filter R^2(Action -> Outcome) and periodic regression replay on previously promoted concepts.",
+      "derived_architectural_integration": "Connect the Fast Episodic Tier (turns, outcomes, observations, unresolved questions) to the Slow Semantic Tier (CloverMemoryGraphStore verified concepts + CloverOntologyGraph) through the persistent Curiosity Foundation hooks (`on_turn_outcome` and `on_idle_step`), filtering candidate goal dimensions by action/verification controllability and running non-regression replay before promoting new concepts."
+    }
+  ],
+  "module_ast_inventory": {
+    "curiosity_foundation.py": {
+      "file": "clover-ai-system/studio/clover/curiosity_foundation.py",
+      "lines": 1288,
+      "classes": {
+        "StrategyStats": [
+          "empirical_lp",
+          "outcome_variance",
+          "to_dict",
+          "from_dict"
+        ],
+        "CuriosityRegion": [
+          "is_leaf",
+          "to_dict",
+          "from_dict"
+        ],
+        "UnresolvedQuestionNode": [
+          "recent_lp",
+          "to_dict",
+          "from_dict"
+        ],
+        "PersistentCuriosityEngine": [
+          "__init__",
+          "_ensure_root_region",
+          "load",
+          "save",
+          "leaf_regions",
+          "locate_leaf_region",
+          "_recompute_region_metrics",
+          "_maybe_split_region_c2",
+          "update_controllable_subspace",
+          "controllable_distance",
+          "recommend_strategy_and_voi",
+          "reliability_weighted_rank",
+          "record_interaction_outcome",
+          "_on_question_progressed_or_resolved",
+          "rank_candidates_by_curiosity",
+          "run_idle_consolidation_step",
+          "summary_markdown"
+        ]
+      },
+      "functions": [
+        "utc_now_iso",
+        "extract_emergent_terms",
+        "encode_text_to_64d",
+        "find_criterion_c2_split",
+        "compute_windowed_lp_and_vigilance",
+        "compute_pomdp_voi",
+        "compute_neutral_diagnosticity",
+        "for_path"
+      ],
+      "constants": [
+        "SCHEMA_VERSION",
+        "D_LATENT",
+        "EPISTEMIC_STRATEGIES",
+        "STRATEGY_OBSERVATION_COST",
+        "STRATEGY_TO_ACTION_DIM",
+        "STOPWORDS",
+        "_ENGINES_BY_PATH",
+        "_ENGINES_LOCK"
+      ]
+    },
+    "test_curiosity_foundation.py": {
+      "file": "clover-ai-system/studio/clover/test_curiosity_foundation.py",
+      "lines": 433,
+      "classes": {},
+      "functions": [
+        "test_1_endogenous_region_splitting_and_no_hardcoded_interests",
+        "test_2_habituation_cooldown_prevents_limit_cycles_and_saturation_blindness",
+        "test_3_passive_spectator_trap_and_controllability_gate",
+        "test_4_pomdp_voi_and_discernment_preemption",
+        "test_5_zpdes_stall_detection_and_lateral_modality_switching",
+        "test_6_schmidhuber_confidence_c_and_sgim_acts_vigilance",
+        "test_7_controllable_subspace_idle_consolidation_and_persistence",
+        "main"
+      ],
+      "constants": [
+        "HERE"
+      ]
+    },
+    "clover_cycle.py": {
+      "file": "clover-ai-system/studio/clover/clover_cycle.py",
+      "lines": 1211,
+      "classes": {
+        "OperatingCyclePlan": [
+          "__init__",
+          "todos_markdown",
+          "todo_snapshot",
+          "_emit_todos",
+          "set_todos",
+          "_auto_advance_todo",
+          "advance_execution_step",
+          "snapshot",
+          "start_stage",
+          "complete_stage",
+          "retry_from_context"
+        ]
+      },
+      "functions": [
+        "normalize",
+        "_num",
+        "_eval",
+        "direct_arithmetic_value",
+        "trim_only_value",
+        "arithmetic_findings",
+        "_sentences",
+        "_json_candidate",
+        "format_findings",
+        "_final_number_text",
+        "outcome_findings",
+        "is_choice",
+        "is_numeric",
+        "single_answer",
+        "final_answer",
+        "_stated_value",
+        "_decimals",
+        "same",
+        "second_solve_prompt",
+        "_as_answer",
+        "_words",
+        "_content",
+        "retry_requested",
+        "user_detail",
+        "is_retry_message",
+        "last_exchange",
+        "follow_up",
+        "context_before",
+        "_fmt",
+        "_still",
+        "web_query",
+        "needs_web",
+        "python_solve_prompt",
+        "python_answer",
+        "computes",
+        "_dissent",
+        "_again",
+        "_keep_code",
+        "_redo",
+        "retry_cycle",
+        "lesson_text",
+        "decompose_task_todos",
+        "normalize_todo_list",
+        "extract_time_examples",
+        "synthesize_code_verification_harness",
+        "verify_turn_outcome"
+      ],
+      "constants": [
+        "FIX",
+        "REDO",
+        "ANOTHER",
+        "RECHECK",
+        "_CREATIVE",
+        "_CODE",
+        "_GIVEN",
+        "_FORM",
+        "_NUMWORD",
+        "_FACT",
+        "_END",
+        "_RETRY_ASK",
+        "_FILLER",
+        "_NUM",
+        "_UNIT",
+        "_TERM",
+        "_ARITH",
+        "_BINOPS",
+        "_ABBREV",
+        "_DIRECT_EXPR",
+        "_WORDNUM",
+        "_FOLLOW",
+        "_FORMAT_CALLS",
+        "AUTO_CYCLE_FIX"
+      ]
+    },
+    "lfm3_layers.py": {
+      "file": "clover-ai-system/studio/clover/lfm3_layers.py",
+      "lines": 832,
+      "classes": {
+        "LayerKit": [
+          "__init__",
+          "curiosity_state",
+          "emergent_concepts",
+          "learning_mission",
+          "workspace_context",
+          "records_context",
+          "recall_context",
+          "cl",
+          "_skip",
+          "store",
+          "_user_memory_package",
+          "_food_notes",
+          "memory_context",
+          "remember",
+          "memories",
+          "forget",
+          "tally",
+          "_similar_learning",
+          "learn",
+          "score_learning",
+          "ontology_context",
+          "grounding_filter",
+          "compiler_check",
+          "c1_infer",
+          "_fallback_h2048",
+          "compute_meaning_bridge",
+          "c2_plan_state",
+          "jepa_record_outcome",
+          "c2_plan",
+          "c3_decode",
+          "ncm_render"
+        ]
+      },
+      "functions": [
+        "needs_recall",
+        "topic_terms",
+        "note_words",
+        "extract_python",
+        "answer_windows"
+      ],
+      "constants": [
+        "LAYERS",
+        "BENCHMARK_ONLY_COLLECTIONS",
+        "LINKS_AND_PATHS",
+        "MEMORY_CUES",
+        "RECALL_CUE",
+        "DEVICE_PHRASE",
+        "STOP",
+        "FILLER",
+        "LESSON_TOPIC",
+        "SPEAKER",
+        "MEMORY_INSTRUCTION",
+        "ONTOLOGY_INSTRUCTION",
+        "APP_ONTOLOGY_INSTRUCTION",
+        "APP_MEMORY_INSTRUCTION",
+        "PY_HINT"
+      ]
+    },
+    "memory-knowledge-graph.py": {
+      "file": "clover-ai-system/studio/clover/memory-knowledge-graph.py",
+      "lines": 3043,
+      "classes": {
+        "MemoryProvenance": [
+          "to_dict",
+          "to_source_provenance",
+          "from_dict",
+          "is_valid"
+        ],
+        "MemoryRelationship": [
+          "to_dict",
+          "from_dict",
+          "validate"
+        ],
+        "MemoryRevision": [
+          "to_dict",
+          "from_dict"
+        ],
+        "MemoryEntry": [
+          "validate",
+          "front_matter_dict"
+        ],
+        "GraphValidationReport": [
+          "is_healthy",
+          "to_dict"
+        ],
+        "TraversalStep": [
+          "format_hop"
+        ],
+        "TraversalResultNode": [
+          "path_string"
+        ],
+        "EvolutionChainNode": [],
+        "RetrievedMemoryItem": [
+          "to_dict"
+        ],
+        "MemoryContextPackage": [
+          "render_for_k3"
+        ],
+        "CloverMemoryGraphStore": [
+          "__init__",
+          "_load_retrieval_rules",
+          "_iter_markdown_files",
+          "rebuild_index",
+          "_compile_csc_generation",
+          "ms_paths",
+          "_write_index_cache",
+          "_find_uncertain_concept_duplicates",
+          "get_entry",
+          "compute_learning_progress",
+          "split_region",
+          "get_outgoing",
+          "get_incoming",
+          "traverse",
+          "trace_evolution_chain",
+          "create_entry",
+          "_save_entry_in_place",
+          "add_relationship",
+          "remove_relationship",
+          "revise_summary",
+          "mark_superseded",
+          "record_correction",
+          "stage_candidate_entry",
+          "list_staged_entries",
+          "promote_staged_entry",
+          "discard_staged_entry",
+          "propose_cycle_memory_update",
+          "_tokenize",
+          "_score_seed_entries",
+          "_entry_macro_branch",
+          "_apply_rosenblatt_gamma_normalization",
+          "_build_hopfield_constellations",
+          "hopfield_associative_cleanup",
+          "compute_hopfield_familiarity",
+          "compute_td_lambda_path_credit",
+          "_gtn_logadd",
+          "compute_gtn_forward_confidence",
+          "multihead_lrn_subspace_retrieve",
+          "retrieve_context_package"
+        ]
+      },
+      "functions": [
+        "utc_now_iso",
+        "_dump_yaml_front_matter",
+        "_load_yaml_front_matter",
+        "render_memory_markdown",
+        "parse_memory_markdown",
+        "build_default_memory_entries",
+        "ensure_default_memory_tree",
+        "retrieve_relevant_memory_package"
+      ],
+      "constants": [
+        "SCHEMA_VERSION",
+        "VALID_ENTRY_TYPES",
+        "VALID_EPISTEMIC_STATUSES",
+        "VALID_LIFECYCLE_STATUSES",
+        "VALID_RELATIONSHIP_TYPES",
+        "RELATIONSHIP_TRAVERSAL_PRIORITY",
+        "IRREFLEXIVE_RELATIONS",
+        "MEMORY_STOPWORDS",
+        "_SECTION_HEADER_RE",
+        "DEFAULT_MEMORY_TREE_DIR"
+      ]
+    },
+    "symbolic-ontology-graph.py": {
+      "file": "clover-ai-system/studio/clover/symbolic-ontology-graph.py",
+      "lines": 1493,
+      "classes": {
+        "EntityRef": [
+          "document_id",
+          "canonical",
+          "from_document_id"
+        ],
+        "Provenance": [
+          "from_source",
+          "from_rule",
+          "to_source_provenance",
+          "to_dict",
+          "is_traceable"
+        ],
+        "EntityClass": [],
+        "Relation": [],
+        "Vertex": [
+          "to_document"
+        ],
+        "Edge": [
+          "__post_init__",
+          "key",
+          "to_document"
+        ],
+        "GraphPath": [
+          "entity_refs",
+          "describe"
+        ],
+        "Evidence": [
+          "render"
+        ],
+        "CloverOntologyGraph": [
+          "__init__",
+          "write_vertices",
+          "write_edges",
+          "existing_ids",
+          "get",
+          "get_by_id",
+          "all_vertices",
+          "all_edges",
+          "run_inference"
+        ],
+        "CloverGraphTraversal": [
+          "__init__",
+          "_adj",
+          "neighbourhood",
+          "vertex_csm_signature",
+          "paths",
+          "gtn_logadd",
+          "score_targets_gtn_forward"
+        ],
+        "MPOntologyPredicate": [
+          "evaluate"
+        ],
+        "CloverOntologyRetriever": [
+          "__init__",
+          "link_entities",
+          "retrieve"
+        ],
+        "CloverSymbolicVerifier": [
+          "__init__",
+          "verify_mcq_with_ontology",
+          "solve_symbolic_math_constraints",
+          "verify_and_repair_python_code",
+          "verify_source_grounding",
+          "compute_csm_signature",
+          "match_formula_csm_lmc",
+          "check_turing_self_reference_stratification"
+        ]
+      },
+      "functions": [
+        "normalize_identifier_text",
+        "find_identifiers",
+        "is_canonical",
+        "_load_ontology_graph_spec",
+        "render_entity_record",
+        "_describe_provenance",
+        "render_evidence",
+        "_load_ontology_graph_spec",
+        "build_default_clover_ontology_graph",
+        "_load_ontology_predicates_and_triggers",
+        "audit_clover_ontology_graph"
+      ],
+      "constants": [
+        "_UNICODE_HYPHENS",
+        "CVE_PATTERN",
+        "CWE_PATTERN",
+        "CAPEC_PATTERN",
+        "CPE_PATTERN",
+        "ARXIV_PATTERN",
+        "DOI_PATTERN",
+        "CLOVER_ID_PATTERN",
+        "_ONTOLOGY_DIR",
+        "DEFAULT_ONTOLOGY_GRAPH_PATH",
+        "_ONTOLOGY_SPEC_CACHE",
+        "ENTITY_CLASSES",
+        "EXPLICIT_RELATIONS",
+        "DERIVED_RELATIONS",
+        "RELATIONS",
+        "PRIORITY_TRAVERSAL_EDGES",
+        "DEFAULT_ONTOLOGY_GRAPH_PATH",
+        "_STOPWORDS"
+      ]
+    },
+    "jepa_engine.py": {
+      "file": "clover-ai-system/studio/clover/jepa_engine.py",
+      "lines": 1639,
+      "classes": {
+        "CloverJEPARuntime": [
+          "__init__",
+          "_resolve_trunk_dir",
+          "_load_collective_growth",
+          "apply_collective_growth",
+          "export_collective_growth",
+          "_load_persisted_adapter",
+          "_save_persisted_adapter",
+          "choose_architecture",
+          "describe",
+          "_wt",
+          "_run_encoder_blocks",
+          "_predict_masked_tokens",
+          "_cross_modal_predict",
+          "_spatial_pool_16x64",
+          "inspect_visual_latent",
+          "inspect_audio_latent",
+          "_extract_audio_samples",
+          "_compute_logmel_16x16",
+          "fuse_and_retrieve_multimodal",
+          "_compute_anom_gate",
+          "_step_transition",
+          "_forward_residual",
+          "encode_semantic_bridge_cue",
+          "plan_c2_latent",
+          "record_and_adapt_outcome",
+          "predict_expected_error",
+          "estimate_controllable_subspace"
+        ]
+      },
+      "functions": [
+        "_layer_norm",
+        "_gelu",
+        "_softmax",
+        "_linear",
+        "_l2_normalize",
+        "centered_norm_mse",
+        "tool_capability_vector",
+        "semantic_action_prior_8",
+        "extract_visual_patches_16x48",
+        "extract_audio_patches_16x16",
+        "write_clvrtrk1",
+        "read_clvrtrk1",
+        "_build_default_weights",
+        "for_base"
+      ],
+      "constants": [
+        "JEPA_ARCHITECTURES",
+        "FLOW_DEFAULT_ARCH",
+        "VISUAL_SCENE_KINDS",
+        "ACOUSTIC_REGIMES",
+        "D_JEPA",
+        "D_PRED",
+        "D_VQ",
+        "D_LFM3",
+        "D_ACT",
+        "N_PATCHES",
+        "_INSTANCES",
+        "_INST_LOCK"
+      ]
+    },
+    "autonomous_clover.py": {
+      "file": "clover-ai-system/studio/clover/autonomous_clover.py",
+      "lines": 841,
+      "classes": {
+        "AutonomousProblem": [],
+        "AutonomousCloverEngine": [
+          "__init__",
+          "compute_problem_surprise",
+          "discover_next_problem",
+          "synthesize_new_problem",
+          "_run_python_sandbox",
+          "solve_problem_autonomously",
+          "_default_cycle1_candidate",
+          "_record_verified_sample",
+          "self_train_on_verified_outcomes"
+        ]
+      },
+      "functions": [
+        "solve_3cnf_dpll_cached"
+      ],
+      "constants": [
+        "HERE"
+      ]
+    },
+    "emergent_concepts.py": {
+      "file": "clover-ai-system/studio/clover/emergent_concepts.py",
+      "lines": 999,
+      "classes": {
+        "UnseenSituation": [],
+        "EmergentConceptEngine": [
+          "__init__",
+          "observe_situation",
+          "associate_observations",
+          "hypothesize_concepts",
+          "match_hypothesis",
+          "validate_hypotheses",
+          "grow_validated_knowledge"
+        ]
+      },
+      "functions": [
+        "_normalize_text_for_match",
+        "extract_relational_signature"
+      ],
+      "constants": [
+        "CONDITION_FAMILIES",
+        "SYMPTOM_FAMILIES",
+        "ACTION_CANONICAL_MAP"
+      ]
+    },
+    "world_learning_mission.py": {
+      "file": "clover-ai-system/studio/clover/world_learning_mission.py",
+      "lines": 1906,
+      "classes": {
+        "ReadingSourceMetadata": [
+          "to_dict",
+          "canonical_ref"
+        ],
+        "ConceptUnderstanding": [
+          "validate_understanding",
+          "to_dict"
+        ],
+        "DiscoveredRelationship": [
+          "to_dict"
+        ],
+        "IndependentValidationTest": [
+          "to_dict"
+        ],
+        "LearningUnitRecord": [
+          "validate_12_fields",
+          "to_dict"
+        ],
+        "UnfamiliarEvaluationProblem": [],
+        "WorldLearningMissionEngine": [
+          "__init__",
+          "_run_verification_code",
+          "active_validated_concept_ids",
+          "evaluate_unfamiliar_problems",
+          "choose_next_learning_unit",
+          "_execute_learning_unit",
+          "study_unit_1_think_python",
+          "study_unit_2_university_physics",
+          "study_unit_3_chemistry_and_biology",
+          "probe_cross_domain_physics_to_biology",
+          "study_unit_4_psychology_and_bayes"
+        ]
+      },
+      "functions": [
+        "_build_unfamiliar_evaluation_problems"
+      ],
+      "constants": [
+        "FOUNDATIONAL_READING_CATALOG",
+        "EPISTEMIC_ORIGIN_KINDS"
+      ]
+    },
+    "real_source_learning.py": {
+      "file": "clover-ai-system/studio/clover/real_source_learning.py",
+      "lines": 1100,
+      "classes": {
+        "LiveModelClient": [
+          "__init__",
+          "_resolve_endpoint",
+          "close",
+          "generate"
+        ],
+        "BlindUnseenProblem": [],
+        "RealSourceLearningEngine": [
+          "__init__",
+          "study_ingested_section",
+          "retrieve_learned_concepts_block",
+          "_build_invariant_sanity_check",
+          "solve_and_grade_blind_problem",
+          "run_unprompted_cross_domain_discovery",
+          "evaluate_false_hypothesis_quarantine"
+        ]
+      },
+      "functions": [
+        "extract_python_block",
+        "strip_function_defs",
+        "extract_json_or_sections"
+      ],
+      "constants": [
+        "HERE",
+        "BLIND_UNSEEN_PROBLEMS",
+        "STUDY_SYSTEM_PROMPT"
+      ]
+    },
+    "personal.py": {
+      "file": "clover-ai-system/studio/clover/personal.py",
+      "lines": 823,
+      "classes": {
+        "Hypothesis": [
+          "__init__",
+          "precision",
+          "to_json"
+        ],
+        "Learner": [
+          "__init__",
+          "reset",
+          "observe",
+          "_new",
+          "_live",
+          "_evidence",
+          "_narrow",
+          "_covers_negative",
+          "_generalise",
+          "_statement",
+          "_status",
+          "interpret",
+          "preference",
+          "references",
+          "rebuild"
+        ],
+        "Store": [
+          "__init__",
+          "learning_off",
+          "_git",
+          "_init",
+          "_write",
+          "_read",
+          "_commit",
+          "path_of",
+          "add",
+          "all_experiences",
+          "retention",
+          "eligible",
+          "keep",
+          "stop_learning",
+          "delete",
+          "_rebuild",
+          "find"
+        ],
+        "Personal": [
+          "__init__",
+          "learning",
+          "set_learning",
+          "_features",
+          "_presentation",
+          "interpret",
+          "after_turn",
+          "before_turn",
+          "helpful",
+          "_resolve",
+          "_reject",
+          "_statements",
+          "_record",
+          "view",
+          "retention",
+          "delete_session",
+          "forget_all"
+        ]
+      },
+      "functions": [
+        "_objects",
+        "features",
+        "form_requests",
+        "form_feedback",
+        "trigger_features",
+        "anchors",
+        "as_target",
+        "session_name",
+        "find_filter_repo",
+        "_writable",
+        "_remove_tree",
+        "for_process"
+      ],
+      "constants": [
+        "LIGHT",
+        "CONTENT_UPOS",
+        "ARROWS",
+        "URL",
+        "WORD",
+        "FORMS",
+        "_FORMS",
+        "DEFAULTS",
+        "GUIDE",
+        "PREF_INTRO",
+        "STATEMENTS",
+        "TYPE_WORDS",
+        "STATEMENT_LIGHT",
+        "CORRECTION",
+        "TRIGGER_KINDS",
+        "ANCHOR_KINDS",
+        "PARAMS",
+        "ID",
+        "CAP_WORDS",
+        "_PROCESS",
+        "_PROCESS_LOCK",
+        "KEEP"
+      ]
+    },
+    "collective.py": {
+      "file": "clover-ai-system/studio/clover/collective.py",
+      "lines": 348,
+      "classes": {
+        "LocalCollectiveExtractor": [
+          "__init__",
+          "_experiences_from",
+          "_build_scrubbed_learner",
+          "preview_candidates",
+          "export_candidates"
+        ]
+      },
+      "functions": [
+        "load_closed_general_vocabulary",
+        "normalize_gerund_features",
+        "is_allowed_collective_feature",
+        "_general_cue_tokens",
+        "scrub_experience_for_collective",
+        "classify_candidate_category"
+      ],
+      "constants": [
+        "SCHEMA_VERSION",
+        "PII_OR_SECRET_RE",
+        "PERSONAL_ROUTINE_WORDS",
+        "PREPOSITION_TOKENS",
+        "_RAW_STRATEGY_GUIDANCE",
+        "STRATEGY_GUIDANCE",
+        "_OEWN_CACHE",
+        "CORE_GENERAL_VOCAB",
+        "NON_GERUND_ING_NOUNS"
+      ]
+    },
+    "clover_repo.py": {
+      "file": "clover-ai-system/studio/clover/clover_repo.py",
+      "lines": 827,
+      "classes": {
+        "Repo": [
+          "__init__",
+          "_git",
+          "init",
+          "protect_agents",
+          "agents_writable",
+          "commit",
+          "schedule",
+          "_worker",
+          "flush",
+          "_append",
+          "_write",
+          "log",
+          "note",
+          "event",
+          "_session_file",
+          "messages",
+          "reindex",
+          "sessions",
+          "delete_session",
+          "session_files",
+          "notes",
+          "add_note",
+          "negative_turns",
+          "_outcomes_file",
+          "_turn_state",
+          "_last_turn",
+          "turn_start",
+          "_judge",
+          "turn_end",
+          "turn_error",
+          "feedback",
+          "_todo_file",
+          "save_todos",
+          "load_todos",
+          "context_block",
+          "_past_sessions",
+          "refresh_context",
+          "_sessions_summary",
+          "_execution_summary",
+          "_outcome_records",
+          "_outcomes_summary",
+          "_growth_summary",
+          "_config_summary"
+        ]
+      },
+      "functions": [
+        "now",
+        "iso",
+        "redact",
+        "one_line",
+        "_read_jsonl",
+        "_words",
+        "migrate"
+      ],
+      "constants": [
+        "FEEDBACK_WORDS",
+        "SECRETS",
+        "GITIGNORE",
+        "PAST",
+        "LAST_ONE",
+        "ASKS",
+        "STOPWORDS"
+      ]
+    },
+    "memory_index.py": {
+      "file": "clover-ai-system/studio/clover/memory_index.py",
+      "lines": 529,
+      "classes": {
+        "SubwordHashEmbedder": [
+          "encode"
+        ],
+        "NumpyBgeEmbedder": [
+          "__init__",
+          "_tokenize",
+          "_ln",
+          "_encode_one",
+          "encode"
+        ],
+        "Embedder": [
+          "__init__",
+          "encode"
+        ],
+        "MemoryIndex": [
+          "__init__",
+          "describe",
+          "wake",
+          "set_recall",
+          "_load_embedder",
+          "_run",
+          "_load_cache",
+          "_save_cache",
+          "_ensure",
+          "refresh",
+          "_refresh",
+          "recall",
+          "pending_notes",
+          "write_notes"
+        ]
+      },
+      "functions": [
+        "toks",
+        "ntok",
+        "bm25",
+        "key",
+        "ranks_of",
+        "rrf",
+        "clean_note",
+        "block_lines",
+        "fmt_date"
+      ],
+      "constants": [
+        "QUERY_PREFIX",
+        "HEAD",
+        "IDLE_NOTE_S",
+        "NOTE_PROMPT",
+        "NOTE_LINE",
+        "WORD",
+        "STOP"
+      ]
+    },
+    "workspaces.py": {
+      "file": "clover-ai-system/studio/clover/workspaces.py",
+      "lines": 727,
+      "classes": {
+        "GitHubAuth": [
+          "__init__",
+          "describe",
+          "update"
+        ],
+        "Workspaces": [
+          "__init__",
+          "_save",
+          "_find",
+          "describe",
+          "active",
+          "activate",
+          "remove",
+          "_unique",
+          "_too_broad",
+          "add",
+          "_clone",
+          "pull",
+          "_scan",
+          "refresh",
+          "touch",
+          "clean",
+          "note_target",
+          "add_note",
+          "record_outcome_note",
+          "context_block"
+        ]
+      },
+      "functions": [
+        "_now",
+        "slug",
+        "_size",
+        "_terms",
+        "describe_file",
+        "_file_lines",
+        "_existing",
+        "_plain",
+        "_git_exclude",
+        "_write_if_changed",
+        "_git_env",
+        "_redact",
+        "_rmtree",
+        "_dpapi",
+        "local_context_for_paths"
+      ],
+      "constants": [
+        "MARK",
+        "NOTES",
+        "NOTES_HINT",
+        "PHONE_NOTES",
+        "PHONE_TITLE",
+        "SKIP_DIRS",
+        "SECRETISH",
+        "BACKUP",
+        "KINDS",
+        "PROJECT_WORDS",
+        "GH_URL",
+        "GH_SHORT",
+        "TOKEN",
+        "STOP"
+      ]
+    },
+    "semantics.py": {
+      "file": "clover-ai-system/studio/clover/semantics.py",
+      "lines": 980,
+      "classes": {
+        "Runtime": [
+          "capability",
+          "names",
+          "word",
+          "source"
+        ],
+        "Frame": [
+          "understood",
+          "layer"
+        ]
+      },
+      "functions": [
+        "asked_caps",
+        "asked",
+        "_caps",
+        "user_paths",
+        "flag_injection",
+        "restore_paths",
+        "_space_for_backslash",
+        "_asked_user",
+        "_request_answered",
+        "social",
+        "social_reply",
+        "_kind",
+        "interpret",
+        "_personal",
+        "_collective",
+        "_chose",
+        "route",
+        "non_answer",
+        "answered_unasked",
+        "_claims",
+        "csi_claim",
+        "declined_caps",
+        "_declined",
+        "csi_reader",
+        "_worked",
+        "_numbers",
+        "_lines_in",
+        "_knowledge",
+        "align"
+      ],
+      "constants": [
+        "CHANGE_FILES",
+        "EXTENSIONS",
+        "LIVE",
+        "ASKS",
+        "VSCODE",
+        "_WITHOUT",
+        "_NO",
+        "DECLINES",
+        "DATA_FILE",
+        "DATA_ASK",
+        "CONCEPT",
+        "EXPLICIT",
+        "EDIT",
+        "CREATIVE",
+        "REMEMBER_ASK",
+        "FOOD_ASK",
+        "FOOD_NOTE",
+        "NOT_FOR_ME",
+        "PLACES",
+        "FILES_NAMED",
+        "ABOUT_MEDIA",
+        "VISUAL",
+        "LINK",
+        "FOLLOW",
+        "VAULT",
+        "USER_PATH",
+        "SOCIAL",
+        "_SOCIAL",
+        "SOCIAL_WORDS",
+        "EMOJI",
+        "EMOTICON",
+        "EMOJI_KINDS",
+        "INJECTION",
+        "INJECTION_NOTE",
+        "PROMISE",
+        "CLAIM",
+        "NEGATION",
+        "CLAIM_FORMS",
+        "CANNOT",
+        "NUMBER",
+        "CAP_WORDS",
+        "READS",
+        "OBSERVES",
+        "DONE",
+        "NO_TOOLS",
+        "QUIET",
+        "UNNAMED",
+        "_CTRL_OF",
+        "NOT_GOING_ON",
+        "LEAD_IN"
+      ]
+    },
+    "isolated_sandbox.py": {
+      "file": "clover-ai-system/studio/clover/isolated_sandbox.py",
+      "lines": 416,
+      "classes": {
+        "IsolatedPythonSandbox": [
+          "__init__",
+          "run"
+        ]
+      },
+      "functions": [
+        "validate_sandbox_ast",
+        "_from_jsonable",
+        "run_in_isolated_sandbox"
+      ],
+      "constants": [
+        "ALLOWED_IMPORTS",
+        "FORBIDDEN_BUILTINS",
+        "_CHILD_RUNNER",
+        "_DEFAULT_SANDBOX"
+      ]
+    },
+    "server.py": {
+      "file": "clover-ai-system/studio/clover/server.py",
+      "lines": 3820,
+      "classes": {
+        "S": [],
+        "EngineNotReady": [],
+        "Settings": [
+          "__init__",
+          "get",
+          "update"
+        ],
+        "Setup": [
+          "__init__",
+          "snapshot",
+          "on_event",
+          "start",
+          "_run"
+        ],
+        "StudioHTTPServer": [
+          "server_bind"
+        ],
+        "Handler": [
+          "log_message",
+          "_cors_headers",
+          "_send",
+          "do_OPTIONS",
+          "_host_ok",
+          "_token_ok",
+          "_cross_site",
+          "_read_json",
+          "_bearer_token",
+          "_request_token",
+          "_client_ip",
+          "_require_admin",
+          "_admin_users_payload",
+          "_serve_hf_mirror",
+          "do_GET",
+          "do_POST",
+          "_lfm3_stream",
+          "_v1_chat",
+          "_v1_chat_clover",
+          "_openai_reply"
+        ]
+      },
+      "functions": [
+        "setup_stdio",
+        "_norm_model",
+        "_clean_remote_models",
+        "model_catalog",
+        "engine_for",
+        "_csi_url_ok",
+        "gpu_available",
+        "omni_available",
+        "_walkthrough_flag",
+        "setup_needed",
+        "media_dir",
+        "_sniff",
+        "_ffmpeg",
+        "tool_inventory",
+        "save_media",
+        "image_tool",
+        "layer_kit",
+        "studio_idle",
+        "write_note",
+        "remember_note",
+        "laptop_runtime",
+        "personal_store",
+        "collective_store",
+        "google_identity_manager",
+        "collective_gateway_runtime",
+        "personal_step",
+        "open_in_browser",
+        "inbox_count",
+        "inbox_describe",
+        "workspace_action",
+        "vscode_exe",
+        "vscode_do",
+        "vscode_tool",
+        "chat_dir",
+        "vscode_tools",
+        "_tool_json",
+        "github_repo",
+        "_git_with_vscode",
+        "_github_api",
+        "_direct_github_sync",
+        "_direct_github_setup",
+        "github_setup",
+        "sync_repo",
+        "_tell_phone",
+        "load_engine",
+        "media_from",
+        "clean_tool_calls",
+        "run_turn",
+        "build_prompt",
+        "save_documents",
+        "lfm3_history",
+        "kv_switch",
+        "lfm3_turn",
+        "parse_openai_messages",
+        "openai_images",
+        "with_tool_outputs",
+        "_check_auth_rate_limit",
+        "_allowed_accounts_files",
+        "allowed_accounts",
+        "_auth_secret",
+        "make_account_token",
+        "verify_account_token",
+        "make_admin_token",
+        "verify_admin_token",
+        "verify_k3_credential",
+        "authenticate_web_account",
+        "idle_watch",
+        "disable_power_throttling",
+        "main"
+      ],
+      "constants": [
+        "HERE",
+        "MODEL_ID",
+        "STUDIO_VERSION",
+        "RELEASE_CHANNEL",
+        "PRIVACY_URL",
+        "SUPPORT_URL",
+        "MAX_BODY",
+        "CHAT_BODY",
+        "MEDIA_LIMITS",
+        "MEDIA_ITEMS",
+        "MAX_SESSIONS",
+        "ATTACH_MARKER",
+        "DATA_URL_RE",
+        "STATIC",
+        "LAYER_KEYS",
+        "IMAGE_MODELS",
+        "JEPA_ARCHS",
+        "ENGINES",
+        "WEB_MODELS",
+        "MODELS",
+        "REMEMBER_ASK",
+        "OPEN_URL",
+        "VSCODE_TIMEOUTS",
+        "UI_VSCODE_ACTIONS",
+        "WEB_HOSTS",
+        "WEB_ORIGINS",
+        "OWNER_GITHUB_LOGIN",
+        "OWNER_EMAIL",
+        "GITHUB_DEVICE_CLIENT_ID",
+        "_ENV_ALLOWED_ACCTS",
+        "DEFAULT_ALLOWED_ACCOUNTS",
+        "_FALLBACK_AUTH_SECRET",
+        "_CRED_CACHE_LOCK",
+        "_CRED_CACHE",
+        "_AUTH_RATE_LOCK",
+        "_AUTH_RATE_BUCKETS",
+        "AUTH_RATE_LIMIT_PER_MIN"
+      ]
+    }
+  }
+}
