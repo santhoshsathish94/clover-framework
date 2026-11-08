@@ -1,0 +1,91 @@
+{
+  "paper_id": "03-oudeyer-smith-2016-curiosity-development",
+  "title": "How Evolution May Work Through Curiosity-Driven Developmental Process",
+  "authors": "Pierre-Yves Oudeyer, Linda B. Smith",
+  "year": 2016,
+  "elapsed_s": 1.7,
+  "e1_social_playground_regularities_and_diversity": {
+    "n_runs": 40,
+    "dominant_trajectory": "grasp_elephant -> bash_hanging_toy -> vocalize_to_peer_teacher",
+    "dominant_trajectory_pct": 42.5,
+    "all_observed_trajectories_counts": {
+      "grasp_elephant -> bash_hanging_toy -> vocalize_to_peer_teacher": 17,
+      "bash_hanging_toy -> grasp_elephant -> vocalize_to_peer_teacher": 11,
+      "grasp_elephant -> vocalize_to_peer_teacher -> bash_hanging_toy": 4,
+      "vocalize_to_peer_teacher -> grasp_elephant -> bash_hanging_toy": 2,
+      "vocalize_to_peer_teacher -> bash_hanging_toy -> grasp_elephant": 3,
+      "bash_hanging_toy -> vocalize_to_peer_teacher -> grasp_elephant": 3
+    },
+    "distinct_trajectories_count": 6,
+    "sample_run_window_shares": [
+      {
+        "window": "early_0_300",
+        "already_predictable_stare": 0.1,
+        "grasp_elephant": 0.32,
+        "bash_hanging_toy": 0.2633,
+        "vocalize_to_peer_teacher": 0.14,
+        "unlearnable_bash_distant_teacher": 0.1767
+      },
+      {
+        "window": "mid_300_600",
+        "already_predictable_stare": 0.13,
+        "grasp_elephant": 0.1467,
+        "bash_hanging_toy": 0.2367,
+        "vocalize_to_peer_teacher": 0.35,
+        "unlearnable_bash_distant_teacher": 0.1367
+      },
+      {
+        "window": "late_600_900",
+        "already_predictable_stare": 0.22,
+        "grasp_elephant": 0.1833,
+        "bash_hanging_toy": 0.2033,
+        "vocalize_to_peer_teacher": 0.23,
+        "unlearnable_bash_distant_teacher": 0.1633
+      }
+    ]
+  },
+  "e2_vocal_self_exploration_to_peer_imitation": {
+    "n_seeds": 20,
+    "quarter_dominant_mode_distribution": {
+      "Q1_steps_0_200": {
+        "phonation_control": 1.0,
+        "unarticulated_vowels": 0.0,
+        "proto_syllables": 0.0,
+        "social_peer_imitation": 0.0
+      },
+      "Q2_steps_200_400": {
+        "phonation_control": 0.0,
+        "unarticulated_vowels": 1.0,
+        "proto_syllables": 0.0,
+        "social_peer_imitation": 0.0
+      },
+      "Q3_steps_400_600": {
+        "phonation_control": 0.0,
+        "unarticulated_vowels": 0.0,
+        "proto_syllables": 1.0,
+        "social_peer_imitation": 0.0
+      },
+      "Q4_steps_600_800": {
+        "phonation_control": 0.0,
+        "unarticulated_vowels": 0.0,
+        "proto_syllables": 0.0,
+        "social_peer_imitation": 1.0
+      }
+    },
+    "mean_social_imitation_onset_step": 607.0
+  },
+  "e3_curiosity_vs_survival_motivational_hierarchy": {
+    "protected_altricial_childhood": {
+      "mean_skills_mastered_out_of_3": 3.0,
+      "mean_vocal_interaction_competence": 0.9026
+    },
+    "moderate_resource_scarcity": {
+      "mean_skills_mastered_out_of_3": 3.0,
+      "mean_vocal_interaction_competence": 0.8876
+    },
+    "high_risk_aversive_ecology": {
+      "mean_skills_mastered_out_of_3": 1.0,
+      "mean_vocal_interaction_competence": 0.6728
+    }
+  }
+}

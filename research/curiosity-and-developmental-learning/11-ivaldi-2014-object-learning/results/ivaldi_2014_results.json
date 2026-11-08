@@ -1,0 +1,186 @@
+{
+  "paper_id": "11-ivaldi-2014-object-learning",
+  "title": "Object Learning Through Active Exploration",
+  "authors": "Serena Ivaldi, Sao Mai Nguyen, Natalia Lyubova, Alain Droniou, Vincent Padois, David Filliat, Pierre-Yves Oudeyer, Olivier Sigaud",
+  "year": 2014,
+  "elapsed_s": 0.05,
+  "e1_14_objects_push_affordances_and_rolling_emergence": {
+    "objects_summary": [
+      {
+        "id": 1,
+        "name": "gray_dog",
+        "median_dy_m": -0.081,
+        "view_change_pct": 10.0,
+        "collected_views": 3,
+        "inferred_rolling_category": "other"
+      },
+      {
+        "id": 2,
+        "name": "green_box",
+        "median_dy_m": -0.099,
+        "view_change_pct": 33.3,
+        "collected_views": 8,
+        "inferred_rolling_category": "other"
+      },
+      {
+        "id": 3,
+        "name": "blue_soda_can",
+        "median_dy_m": -0.181,
+        "view_change_pct": 36.7,
+        "collected_views": 9,
+        "inferred_rolling_category": "cylinder_or_wheel"
+      },
+      {
+        "id": 4,
+        "name": "blue_ball",
+        "median_dy_m": -0.518,
+        "view_change_pct": 13.3,
+        "collected_views": 4,
+        "inferred_rolling_category": "sphere"
+      },
+      {
+        "id": 5,
+        "name": "red_bear",
+        "median_dy_m": -0.115,
+        "view_change_pct": 0.0,
+        "collected_views": 1,
+        "inferred_rolling_category": "other"
+      },
+      {
+        "id": 6,
+        "name": "blue_octopus",
+        "median_dy_m": -0.078,
+        "view_change_pct": 30.0,
+        "collected_views": 4,
+        "inferred_rolling_category": "other"
+      },
+      {
+        "id": 7,
+        "name": "white_bottle",
+        "median_dy_m": -0.225,
+        "view_change_pct": 20.0,
+        "collected_views": 6,
+        "inferred_rolling_category": "cylinder_or_wheel"
+      },
+      {
+        "id": 8,
+        "name": "blue_violet_sphere",
+        "median_dy_m": -0.353,
+        "view_change_pct": 50.0,
+        "collected_views": 9,
+        "inferred_rolling_category": "sphere"
+      },
+      {
+        "id": 9,
+        "name": "chicken",
+        "median_dy_m": -0.066,
+        "view_change_pct": 56.7,
+        "collected_views": 10,
+        "inferred_rolling_category": "other"
+      },
+      {
+        "id": 10,
+        "name": "red_soda_can",
+        "median_dy_m": -0.193,
+        "view_change_pct": 30.0,
+        "collected_views": 6,
+        "inferred_rolling_category": "cylinder_or_wheel"
+      },
+      {
+        "id": 11,
+        "name": "yellow_train",
+        "median_dy_m": -0.255,
+        "view_change_pct": 70.0,
+        "collected_views": 13,
+        "inferred_rolling_category": "cylinder_or_wheel"
+      },
+      {
+        "id": 12,
+        "name": "cow",
+        "median_dy_m": -0.132,
+        "view_change_pct": 26.7,
+        "collected_views": 8,
+        "inferred_rolling_category": "other"
+      },
+      {
+        "id": 13,
+        "name": "yellow_car",
+        "median_dy_m": -0.278,
+        "view_change_pct": 46.7,
+        "collected_views": 11,
+        "inferred_rolling_category": "cylinder_or_wheel"
+      },
+      {
+        "id": 14,
+        "name": "patchwork_4_cubes",
+        "median_dy_m": -0.098,
+        "view_change_pct": 76.7,
+        "collected_views": 14,
+        "inferred_rolling_category": "other"
+      }
+    ],
+    "fig13_rolling_affordance_classification_accuracy": 1.0
+  },
+  "e2_sgim_acts_good_vs_bad_teacher_64_images": {
+    "random__unbiased_good_teacher": {
+      "recognized_images_out_of_64": 55.07,
+      "object_exploration_shares": {
+        "car": 0.1944,
+        "cube": 0.2153,
+        "ball": 0.2125,
+        "bear": 0.1875,
+        "dog": 0.1903
+      },
+      "action_strategy_shares": {
+        "robot_push": 0.3278,
+        "robot_lift_throw": 0.3389,
+        "human_show": 0.3333
+      }
+    },
+    "random__biased_bad_teacher": {
+      "recognized_images_out_of_64": 51.62,
+      "object_exploration_shares": {
+        "car": 0.1944,
+        "cube": 0.2153,
+        "ball": 0.2125,
+        "bear": 0.1875,
+        "dog": 0.1903
+      },
+      "action_strategy_shares": {
+        "robot_push": 0.3278,
+        "robot_lift_throw": 0.3389,
+        "human_show": 0.3333
+      }
+    },
+    "sgim_acts__unbiased_good_teacher": {
+      "recognized_images_out_of_64": 62.67,
+      "object_exploration_shares": {
+        "car": 0.0667,
+        "cube": 0.7667,
+        "ball": 0.0569,
+        "bear": 0.0583,
+        "dog": 0.0514
+      },
+      "action_strategy_shares": {
+        "robot_push": 0.1236,
+        "robot_lift_throw": 0.5028,
+        "human_show": 0.3736
+      }
+    },
+    "sgim_acts__biased_bad_teacher": {
+      "recognized_images_out_of_64": 62.48,
+      "object_exploration_shares": {
+        "car": 0.0722,
+        "cube": 0.7458,
+        "ball": 0.0653,
+        "bear": 0.0611,
+        "dog": 0.0556
+      },
+      "action_strategy_shares": {
+        "robot_push": 0.1403,
+        "robot_lift_throw": 0.7903,
+        "human_show": 0.0694
+      }
+    }
+  }
+}

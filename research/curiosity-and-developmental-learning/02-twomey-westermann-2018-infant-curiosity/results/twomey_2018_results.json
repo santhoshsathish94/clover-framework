@@ -1,0 +1,165 @@
+{
+  "paper_id": "02-twomey-westermann-2018-infant-curiosity",
+  "title": "Curiosity-Based Learning in Infants: A Neurocomputational Approach",
+  "authors": "Katherine E. Twomey, Gert Westermann",
+  "year": 2018,
+  "elapsed_s": 6.11,
+  "e1_fixed_presentation_orders": {
+    "max": {
+      "mean_sequence_ed": 1.1541,
+      "first_3trial_block_sse": 0.4849,
+      "last_3trial_block_sse": 0.3892,
+      "sse_decrease": 0.0957,
+      "median_prop_peripheral_sse": 0.9701,
+      "mean_prop_peripheral_sse": 0.9708,
+      "above_chance_count": 24
+    },
+    "med": {
+      "mean_sequence_ed": 0.9087,
+      "first_3trial_block_sse": 0.501,
+      "last_3trial_block_sse": 0.4103,
+      "sse_decrease": 0.0907,
+      "median_prop_peripheral_sse": 0.9141,
+      "mean_prop_peripheral_sse": 0.9158,
+      "above_chance_count": 24
+    },
+    "min": {
+      "mean_sequence_ed": 0.6866,
+      "first_3trial_block_sse": 0.5229,
+      "last_3trial_block_sse": 0.4503,
+      "sse_decrease": 0.0726,
+      "median_prop_peripheral_sse": 0.8655,
+      "mean_prop_peripheral_sse": 0.8611,
+      "above_chance_count": 24
+    },
+    "random": {
+      "mean_sequence_ed": 0.9118,
+      "first_3trial_block_sse": 0.504,
+      "last_3trial_block_sse": 0.4228,
+      "sse_decrease": 0.0812,
+      "median_prop_peripheral_sse": 0.9322,
+      "mean_prop_peripheral_sse": 0.9208,
+      "above_chance_count": 24
+    }
+  },
+  "e2_active_stimulus_selection": {
+    "curiosity": {
+      "median_prop_peripheral_sse": 0.9663,
+      "mean_prop_peripheral_sse": 0.9676,
+      "mean_sequence_ed": 1.0567,
+      "mean_successive_ed_by_step": [
+        1.1798,
+        1.3946,
+        1.2977,
+        1.3276,
+        0.848,
+        0.6825,
+        0.6668
+      ],
+      "above_chance_count": 24
+    },
+    "objective_complexity": {
+      "median_prop_peripheral_sse": 0.9643,
+      "mean_prop_peripheral_sse": 0.9656,
+      "mean_sequence_ed": 1.0962,
+      "mean_successive_ed_by_step": [
+        1.2809,
+        1.3866,
+        1.2282,
+        1.3499,
+        1.0531,
+        0.7128,
+        0.6615
+      ],
+      "above_chance_count": 24
+    },
+    "subjective_novelty": {
+      "median_prop_peripheral_sse": 0.9666,
+      "mean_prop_peripheral_sse": 0.9676,
+      "mean_sequence_ed": 1.0579,
+      "mean_successive_ed_by_step": [
+        1.1798,
+        1.3946,
+        1.2977,
+        1.3208,
+        0.8631,
+        0.6825,
+        0.6668
+      ],
+      "above_chance_count": 24
+    },
+    "plasticity": {
+      "median_prop_peripheral_sse": 0.924,
+      "mean_prop_peripheral_sse": 0.9128,
+      "mean_sequence_ed": 0.8978,
+      "mean_successive_ed_by_step": [
+        0.9403,
+        0.943,
+        0.9555,
+        1.0084,
+        0.8616,
+        0.8165,
+        0.759
+      ],
+      "above_chance_count": 24
+    },
+    "curiosity_unique_sequences_count": 19,
+    "curiosity_sample_step_eds": [
+      1.1914,
+      1.5885,
+      1.1232,
+      1.5885,
+      1.0507,
+      0.6878,
+      0.6878
+    ]
+  },
+  "e3_boundary_challenges": {
+    "challenge_3a_sigmoid_saturation_blindness": {
+      "strongly_contradicted_stimulus": {
+        "i": 0.95,
+        "o": 0.01,
+        "abs_error": 0.94,
+        "plasticity": 0.0099,
+        "curiosity_score": 0.00931
+      },
+      "mildly_discrepant_stimulus": {
+        "i": 0.7,
+        "o": 0.5,
+        "abs_error": 0.2,
+        "plasticity": 0.25,
+        "curiosity_score": 0.05
+      },
+      "blindness_ratio_mild_over_contradicted": 5.37
+    },
+    "challenge_3b_with_replacement_limit_cycle_trap": {
+      "total_trials": 40,
+      "unique_stimuli_visited_out_of_8": 4,
+      "visit_counts_by_stimulus": {
+        "0": 11,
+        "1": 9,
+        "2": 9,
+        "3": 11
+      },
+      "top_2_stimuli_share_of_trials": 0.55,
+      "sequence_head_16": [
+        0,
+        3,
+        0,
+        3,
+        0,
+        3,
+        0,
+        3,
+        0,
+        3,
+        0,
+        3,
+        0,
+        3,
+        1,
+        2
+      ]
+    }
+  }
+}

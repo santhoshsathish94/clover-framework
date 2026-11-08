@@ -1,0 +1,58 @@
+{
+  "paper_id": "10-schmidhuber-1991-curious-control",
+  "title": "Curious Model-Building Control Systems",
+  "authors": "Juergen Schmidhuber",
+  "year": 1991,
+  "elapsed_s": 0.75,
+  "e1_100_state_reactive_world_replication": {
+    "random_search": {
+      "state_visitation_shares": {
+        "trivial_0_69": 0.6989,
+        "learnable_det_70_84": 0.1484,
+        "nondet_noise_85_99": 0.1527
+      },
+      "mean_steps_to_reduce_E_below_0_25": 1578.7,
+      "final_deterministic_squared_error_E": 0.064596
+    },
+    "schmidhuber_1990_mismatch_error_curiosity": {
+      "state_visitation_shares": {
+        "trivial_0_69": 0.084,
+        "learnable_det_70_84": 0.083,
+        "nondet_noise_85_99": 0.833
+      },
+      "mean_steps_to_reduce_E_below_0_25": 2200.0,
+      "final_deterministic_squared_error_E": 0.851518
+    },
+    "schmidhuber_1991_adaptive_curiosity_dyc": {
+      "state_visitation_shares": {
+        "trivial_0_69": 0.0838,
+        "learnable_det_70_84": 0.8968,
+        "nondet_noise_85_99": 0.0194
+      },
+      "mean_steps_to_reduce_E_below_0_25": 349.4,
+      "final_deterministic_squared_error_E": 0.0
+    },
+    "schmidhuber_1991_sec4_smoothed_delta": {
+      "state_visitation_shares": {
+        "trivial_0_69": 0.0853,
+        "learnable_det_70_84": 0.2343,
+        "nondet_noise_85_99": 0.6804
+      },
+      "mean_steps_to_reduce_E_below_0_25": 625.8,
+      "final_deterministic_squared_error_E": 0.001437
+    },
+    "speedup_1991_dyc_vs_random_search": 4.52
+  },
+  "e2_unsmoothed_shift_vs_expected_shift_boundary": {
+    "learnable_state_d_080": {
+      "late_mean_unsmoothed_abs_shift": 0.00012,
+      "late_mean_sec4_abs_of_signed_expectation": 0.00243,
+      "late_mean_sec3_dot_yc": 0.00104
+    },
+    "white_noise_state_uniform": {
+      "late_mean_unsmoothed_abs_shift": 0.06954,
+      "late_mean_sec4_abs_of_signed_expectation": 0.0088,
+      "late_mean_sec3_dot_yc": 0.01831
+    }
+  }
+}

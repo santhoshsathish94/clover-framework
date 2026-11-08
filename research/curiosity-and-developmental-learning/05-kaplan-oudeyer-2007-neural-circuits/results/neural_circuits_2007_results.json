@@ -1,0 +1,38 @@
+{
+  "paper_id": "05-kaplan-oudeyer-2007-neural-circuits",
+  "title": "In Search of the Neural Circuits of Intrinsic Motivation",
+  "authors": "Frederic Kaplan, Pierre-Yves Oudeyer",
+  "year": 2007,
+  "elapsed_s": 24.05,
+  "e1_global_vs_pointwise_vs_cortical_columns": {
+    "global_limbic_integrator": {
+      "wall_to_immobile_oscillation_rate": 0.8532,
+      "late_learnable_surface_share": 0.0417,
+      "learnable_surface_generalization_mse": 0.000652
+    },
+    "pointwise_local_delta_ball": {
+      "wall_to_immobile_oscillation_rate": 0.1871,
+      "late_learnable_surface_share": 0.3887,
+      "learnable_surface_generalization_mse": 8.2e-05
+    },
+    "cortical_microcircuit_columns": {
+      "wall_to_immobile_oscillation_rate": 0.1196,
+      "late_learnable_surface_share": 0.598,
+      "learnable_surface_generalization_mse": 4.9e-05
+    }
+  },
+  "e2_phasic_vs_tonic_dopamine_dynamics": {
+    "phase_a_learning_niche_0_100": {
+      "mean_phasic_da": 0.1711,
+      "mean_tonic_da_progress": 0.0766
+    },
+    "phase_b_mastered_plateau_100_200": {
+      "mean_phasic_da": 0.0338,
+      "mean_tonic_da_progress": 0.0007
+    },
+    "phase_c_unlearnable_noise_200_300": {
+      "mean_phasic_da": 0.6301,
+      "mean_tonic_da_progress": 0.0115
+    }
+  }
+}

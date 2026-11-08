@@ -1,0 +1,152 @@
+{
+  "paper_id": "01-oudeyer-kaplan-hafner-2007-iac",
+  "title": "Intrinsic Motivation Systems for Autonomous Mental Development",
+  "authors": "Pierre-Yves Oudeyer, Frederic Kaplan, Verena V. Hafner",
+  "year": 2007,
+  "elapsed_s": 109.44,
+  "e1_three_zone_robot": {
+    "riac": {
+      "zone_allocation": {
+        "stage2_f1": 0.8852,
+        "stage2_f2": 0.0658,
+        "stage2_f3": 0.049,
+        "stage3_f1": 0.5273,
+        "stage3_f2": 0.4003,
+        "stage3_f3": 0.0724
+      },
+      "f2_test_mse_curve": [
+        0.016407,
+        0.013089,
+        0.010055,
+        0.008831,
+        0.007908,
+        0.006246,
+        0.005584
+      ],
+      "final_f2_mse": 0.005584,
+      "sample_first_split": {
+        "step": 201,
+        "parent_id": 0,
+        "split_dim": 2,
+        "split_val": 0.3299,
+        "left_id": 1,
+        "right_id": 2
+      }
+    },
+    "max_error": {
+      "zone_allocation": {
+        "stage2_f1": 0.0602,
+        "stage2_f2": 0.2252,
+        "stage2_f3": 0.7146,
+        "stage3_f1": 0.0502,
+        "stage3_f2": 0.0619,
+        "stage3_f3": 0.8879
+      },
+      "f2_test_mse_curve": [
+        0.016568,
+        0.010621,
+        0.00966,
+        0.008861,
+        0.008638,
+        0.006636,
+        0.006431
+      ],
+      "final_f2_mse": 0.006431,
+      "sample_first_split": {
+        "step": 201,
+        "parent_id": 0,
+        "split_dim": 2,
+        "split_val": 0.3299,
+        "left_id": 1,
+        "right_id": 2
+      }
+    },
+    "global_progress": {
+      "zone_allocation": {
+        "stage2_f1": 0.8796,
+        "stage2_f2": 0.068,
+        "stage2_f3": 0.0524,
+        "stage3_f1": 0.7853,
+        "stage3_f2": 0.1601,
+        "stage3_f3": 0.0545
+      },
+      "f2_test_mse_curve": [
+        0.016477,
+        0.013255,
+        0.009984,
+        0.008604,
+        0.008305,
+        0.00705,
+        0.006236
+      ],
+      "final_f2_mse": 0.006236,
+      "sample_first_split": {
+        "step": 201,
+        "parent_id": 0,
+        "split_dim": 2,
+        "split_val": 0.3299,
+        "left_id": 1,
+        "right_id": 2
+      }
+    },
+    "random": {
+      "zone_allocation": {
+        "stage2_f1": 0.3298,
+        "stage2_f2": 0.344,
+        "stage2_f3": 0.3262,
+        "stage3_f1": 0.3292,
+        "stage3_f2": 0.3372,
+        "stage3_f3": 0.3335
+      },
+      "f2_test_mse_curve": [
+        0.019436,
+        0.009416,
+        0.004441,
+        0.004121,
+        0.003872,
+        0.003649,
+        0.003814
+      ],
+      "final_f2_mse": 0.003814,
+      "sample_first_split": {
+        "step": 201,
+        "parent_id": 0,
+        "split_dim": 2,
+        "split_val": 0.3409,
+        "left_id": 1,
+        "right_id": 2
+      }
+    }
+  },
+  "e2_playground_affordance_hierarchy": {
+    "n_runs": 30,
+    "measure_2_complete_scenario_pct": 3.3,
+    "measure_3_nearly_complete_scenario_pct": 3.3,
+    "measure_4_nonaffordant_bite_before_affordant_pct": 20.0,
+    "measure_5_nonaffordant_bash_before_affordant_pct": 10.0,
+    "measure_6_systematic_successful_bite_pct": 13.3,
+    "measure_7_systematic_successful_bash_pct": 3.3,
+    "measure_8_bite_before_bash_pct": 36.7,
+    "measure_9_successful_bite_before_successful_bash_pct": 13.3,
+    "paper_table_1_reference": {
+      "complete_scenario_pct": 34.0,
+      "nearly_complete_scenario_pct": 63.0,
+      "nonaffordant_bite_before_affordant_pct": 78.0,
+      "nonaffordant_bash_before_affordant_pct": 81.0,
+      "systematic_successful_bite_pct": 100.0,
+      "systematic_successful_bash_pct": 78.0,
+      "bite_before_bash_pct": 85.0,
+      "successful_bite_before_successful_bash_pct": 83.0
+    }
+  },
+  "e3_criterion_c2_distractor_challenge": {
+    "input_variance_only": {
+      "mean_split_rank_for_relevant_dim_f": 24.75,
+      "late_f2_focus_fraction": 0.3403
+    },
+    "c2_output_variance": {
+      "mean_split_rank_for_relevant_dim_f": 8.38,
+      "late_f2_focus_fraction": 0.1992
+    }
+  }
+}

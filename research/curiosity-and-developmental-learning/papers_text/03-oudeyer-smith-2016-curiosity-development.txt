@@ -1,0 +1,442 @@
+Topics in Cognitive Science (2016) 1–11
+Copyright © 2016 Cognitive Science Society, Inc. All rights reserved.
+ISSN:1756-8757 print / 1756-8765 online
+DOI: 10.1111/tops.12196
+
+How Evolution May Work Through Curiosity-Driven
+Developmental Process
+Pierre-Yves Oudeyer,a Linda B. Smithb
+a
+
+b
+
+Inria and Ensta ParisTech, France
+Department of Psychological and Brain Sciences, Indiana University
+
+Received 13 January 2014; received in revised form 4 February 2015; accepted 6 February 2015
+
+Abstract
+Infants’ own activities create and actively select their learning experiences. Here we review
+recent models of embodied information seeking and curiosity-driven learning and show that these
+mechanisms have deep implications for development and evolution. We discuss how these mechanisms yield self-organized epigenesis with emergent ordered behavioral and cognitive developmental stages. We describe a robotic experiment that explored the hypothesis that progress in
+learning, in and for itself, generates intrinsic rewards: The robot learners probabilistically selected
+experiences according to their potential for reducing uncertainty. In these experiments, curiositydriven learning led the robot learner to successively discover object affordances and vocal interaction with its peers. We explain how a learning curriculum adapted to the current constraints of the
+learning system automatically formed, constraining learning and shaping the developmental trajectory. The observed trajectories in the robot experiment share many properties with those in infant
+development, including a mixture of regularities and diversities in the developmental patterns.
+Finally, we argue that such emergent developmental structures can guide and constrain evolution,
+in particular with regard to the origins of language.
+Keywords: Development; Evolution; Curiosity; Infant active learning; Robotic modelling; Selforganization; Motor development; Speech development; Origins of language
+
+1. Introduction
+Learning experiences do not passively “happen” to infants. Rather, infants’ own activities create and select these experiences. Piaget (1952) described a pattern of infant activity that is highly illustrative of this point. He placed a rattle in a 4-month-old infant’s
+hands. As the infant moved the rattle, it would both come into sight and also make a
+Correspondence should be sent to Pierre-Yves Oudeyer, Inria and Ensta ParisTech, 200, avenue de la
+Vieille Tour, 33405 Talence, France. E-mail: pierre-yves.oudeyer@inria.fr
+
+2
+
+P.-Y. Oudeyer, L. B. Smith / Topics in Cognitive Science (2016)
+
+noise, arousing and agitating the infant and causing more body motions, and thus causing
+the rattle to move into and out of sight and to make more noise. The infant had no prior
+knowledge of the rattle but discovered through activity the task and goal of rattle shaking. As the infant accidentally moved the rattle, and saw and heard the consequences,
+becoming captured by the activity and outcomes, the infant may be said to have gained
+intentional control over the shaking of the rattle and the goal of making a noise (Thelen,
+1994). This example—a body movement that leads to an interesting outcome and thus
+more activity and the re-experience and building of expectations about the outcome—
+may be foundational, not just to developmental process, but also to how evolution works
+through developmental process.
+Infants’ explorations of rattles are instances of action and learning motivated by curiosity
+and may reflect intrinsic motivations that select “interesting” sensorimotor activities (Gottlieb, Oudeyer, Lopes, & Baranes, 2013; Lowenstein, 1994). However, what is interesting is
+history dependent. Once all the variations in rattle shaking are easily predicted, and all the
+outcomes expected, then playing with a rattle is not very interesting, as evident in the disinterest of older infants in rattles. What is interesting depends on what one knows and what
+one does not know. Across many different fields, theorists have suggested that “interest” is
+engaged by what is just beyond current knowledge, neither too well known nor too far
+beyond what is understandable. This theoretical idea has been offered many times in psychology, through concepts like cognitive dissonance (Kagan, 1972), optimal incongruity
+(Hunt, 1965), intermediate novelty (Berlyne, 1960; Kidd, Piantadosi, & Aslin, 2012), and
+optimal challenge (Csikszenthmihalyi, 1990). There have been several recent theoretical
+advances in these ideas in developmental robotics (Baldassare & Mirolli, 2013; Gottlieb
+et al., 2013; Oudeyer, Kaplan, & Hafner, 2007), in models about the evolutionary origins of
+intrinsic motivation systems (Barto, 2013; Singh et al., 2010), and in recent findings in neuroscience linking intrinsic motivation with attention (Gottlieb et al., 2013), as well as in
+new formal models of infant visual attention (Kidd et al., 2012).
+In general, learning in these curiosity-driven activities progresses to yield an improvement of prediction or control over a repeated activity and thus a reduction in uncertainty
+(Friston et al., 2012; Kidd et al., 2012; Oudeyer & Kaplan, 2007; Schmidhuber, 1991).
+Such intrinsically motivating activities have been called “progress niches” (Oudeyer
+et al., 2007): Progress in learning in and for itself generates intrinsic rewards and an
+action selection system directly aims to maximize this reward. In reinforcement learning
+frameworks, this search for progress niches leads to spontaneous exploration (Gottlieb
+et al., 2013; Oudeyer et al., 2007; Schmidhuber, 1991). In this view, progress in prediction or control is a primary driver (and accordingly, intrinsic rewards for learning progress/uncertainty reduction may be primary rewards). These theoretical advances lead to
+a definition of curiosity as an epistemic motivational mechanism that pushes an organism
+to explore activities for the primary sake of gaining information (as opposed to searching
+for information in service of achieving an external goal like finding food or shelter). Such
+a motivational mechanism of curiosity will often be only one of several motivational
+mechanisms operating in any living being, and at any given time curiosity may interact,
+complement, or conflict with other motivations. From a machine learning perspective,
+
+P.-Y. Oudeyer, L. B. Smith / Topics in Cognitive Science (2016)
+
+3
+
+mechanisms of information seeking are called active learning, where the learner probabilistically and through its own activity selects experiences according to their potential
+for reducing uncertainty (Cohn, Ghahramani, & Jordan, 1996; Lopes & Montesano, 2014;
+Lopes & Oudeyer, 2010). Information-seeking mechanisms have been used either as an
+“exploration bonus” mechanism in service of efficient maximization of a task-specific
+reward or as primary rewards driving models of curiosity-driven learning (Gottlieb et al.,
+2013).
+Here we outline a robotic model that illustrates these ideas about curiosity-driven
+learning and how an active search for learning progress can lead to a system that first
+explores simple activities, and then progressively shifts to more complex learning experiences, effectively self-generating and self-organizing a learning curriculum adapted to the
+current constraints of the learning system, and at the same time constraining learning and
+shaping the developmental trajectory. We then turn to the implications of these results as
+to how evolution may work through development and curiosity to yield constrained and
+adaptive outcomes within a species.
+
+2. A developmental playground
+In this section, we describe a series of robot experiments that illustrate how mechanisms of curiosity-driven exploration, dynamically interacting with learning, physical, and
+social constraints, can self-organize developmental trajectories and in particular lead a
+learner to successively discover two important functionalities: object affordances and
+vocal interaction with its peers.
+In these playground experiments, a quadruped “learning” robot (the learner) is placed
+on an infant play mat with a set of nearby objects and is joined by an “adult” robot (the
+teacher), see Fig. 1A (Kaplan & Oudeyer, 2007b; Oudeyer & Kaplan, 2006; Oudeyer
+et al., 2007). On the mat and near the learner are objects for discovery: an elephant
+(which can be bitten or “grasped” by the mouth) and a hanging toy (which can be
+“bashed” or pushed with the leg). The teacher is pre-programmed to imitate the sound
+made by the learner when the learning robot looks to the teacher while vocalizing at the
+same time.
+The learner is equipped with a repertoire of motor primitives parameterized by several
+continuous numbers that control movements of its legs, head, and a simulated vocal tract.
+Each motor primitive is a dynamical system controlling various forms of actions: (a) turning
+the head in different directions; (b) opening and closing the mouth while crouching with
+varying strengths and timing; (c) rocking the leg with varying angles and speed; (d) vocalizing with varying pitches and lengths. These primitives can be combined to form a large continuous space of possible actions. Similarly, sensory primitives allow the robot to detect
+visual movement, salient visual properties, proprioceptive touch in the mouth, and pitch and
+length of perceived sounds. For the robot, these motor and sensory primitives are initially
+black boxes and he has no knowledge about their semantics, effects, or relations.
+
+4
+
+P.-Y. Oudeyer, L. B. Smith / Topics in Cognitive Science (2016)
+
+(A)
+
+(C)
+
+(B)
+
+Fig. 1. The playground experiment (Oudeyer & Kaplan, 2006; Oudeyer et al., 2007). (A) The learning context.
+(B) The computational architecture for curiosity-driven exploration in which the robot learner probabilistically
+selects experiences according to their potential for reducing uncertainty, that is, for learning progress. (C) Illustration of a self-organized developmental sequence where the robot automatically identifies, categorizes, and shifts
+from simple to more complex learning experiences. Figure adapted with permission from Gottlieb et al. (2013).
+
+The learning robot learns how to use and tune these primitives to produce various
+effects on its surrounding environment, and exploration is driven by the maximization of
+learning progress, by choosing physical experiences (“experiments”) that improve the
+quality of predictions of the consequences of its actions.
+Fig. 1B outlines a computational architecture, called R-IAC (Moulin-Frier, Nguyen, &
+Oudeyer, 2014; Oudeyer et al., 2007). A prediction machine (M) learns to predict the
+consequences of actions taken by the robot in given sensory contexts. For example, this
+module might learn to predict (with a neural network) which visual movements or proprioceptive perceptions result from using a leg motor primitive with certain parameters. A
+meta-cognitive module estimates the evolution of errors in prediction of M in various
+regions of the sensorimotor space. This module estimates how much errors decrease in
+predicting an action, for example, in predicting the consequence of a leg movement when
+this action is applied toward a particular area of the environment. These estimates of
+error reduction are used to compute the intrinsic reward from progress in learning. This
+reward is an internal quantity that is proportional to the decrease in prediction errors, and
+
+P.-Y. Oudeyer, L. B. Smith / Topics in Cognitive Science (2016)
+
+5
+
+the maximization of this quantity is the goal of action selection within a computational
+reinforcement-learning architecture (Oudeyer & Kaplan, 2007; Oudeyer et al., 2007).
+Importantly, the action selection system chooses most often to explore activities where
+the estimated reward from learning progress is high. However, this choice is probabilistic,
+which leaves the system open to learning in new areas and open to discovering other
+activities that may also yield progress in learning.1 Since the sensorimotor flow does not
+come pre-segmented into activities and tasks, a system that seeks to maximize differences
+in learnability is also used to progressively categorize the sensorimotor space into
+regions. This categorization thereby models the incremental creation and refining of
+cognitive categories differentiating activities/tasks.
+To illustrate how such an exploration mechanism can automatically generate ordered
+learning stages, let us first imagine a learner confronted with four categories of activities,
+as shown on Fig. 1C. The practice of each of these four activities, which can be of varying difficulty, leads to different learning rates at different points in time (see the top
+curves, which show the evolution of prediction errors in each activity if the learner were
+to focus full-time and exclusively on each). If, however, the learner uses curiosity-driven
+exploration to decide what and when to practice by focusing on progress niches, it will
+avoid activities already predictable (curve 4) or too difficult to learn to predict (curve 1),
+in order to focus first on the activity with the fastest learning rate (curve 3) and eventually, when the latter starts to reach a “plateau” to switch to the second most promising
+learning situation (curve 2). Thus, such robots will show a regular developmental course
+—one that will be “universal” for learners with similar internal processes learning in similar environments. Embodied exploration driven by learning progress creates an organized
+exploratory strategy: the system systematically achieves these learning experiences in an
+order and does so because they yield (given the propensities of the learner and the physical world) different patterns of uncertainty reduction.
+In the playground experiment described earlier, multiple experimental runs lead to two
+general categories of results: self-organization and a mixture of regularities and diversities
+in the developmental patterns (Oudeyer & Kaplan, 2006; Oudeyer et al., 2007).
+2.1. Self-organization
+In all of the runs, one observes the self-organization of structured developmental trajectories, where the robot explores objects and actions in a progressively more complex
+stage-like manner while acquiring autonomously diverse affordances and skills that can
+be reused later on and that change the learning progress in more complicated tasks. The
+following developmental sequence was typically observed:
+1. In a first phase, the learner achieves unorganized body babbling.
+2. In a second phase, after learning a first rough model and meta-model, the robot
+stops combining motor primitives, exploring them one by one, but each primitive is
+explored itself in a random manner.
+
+6
+
+P.-Y. Oudeyer, L. B. Smith / Topics in Cognitive Science (2016)
+
+3. In a third phase, the learner begins to experiment with actions toward zones of its
+environment where the external observer knows there are objects (the robot is not
+provided with a representation of the concept of “object”), but in a non-affordant
+manner (e.g., it vocalizes at the non-responding elephant or tries to bash the teacher
+robot which is too far to be touched).
+4. In a fourth phase, the learner now explores the affordances of different objects in
+the environment: typically focusing first on grasping movements with the elephant,
+then shifting to bashing movements with the hanging toy, and finally shifting to
+explorations of vocalizing toward the imitating teacher.
+5. In the end, the learner has learned sensorimotor affordances with several objects, as
+well as social affordances, and has mastered multiple skills. None of these specific
+objectives were pre-programmed. Instead, they self-organized through the dynamic
+interaction between curiosity-driven exploration, statistical inference, the properties
+of the body, and the properties of the environment.
+These playground experiments do not simply simulate particular skills (such as batting
+at toys to make them swing or vocalizations) but simulate an ordered and systematic
+developmental trajectory, with a universality and stage-like structure that may be mistakenly taken to indicate an internally driven process of maturation. However, the trajectory
+is created through activity and through the general principle that sensorimotor experiences
+that reduce uncertainty in prediction are rewarding. In this way, developmental achievements can build on themselves without specific pre-programmed dependencies but
+nonetheless—like evolution itself—create structure (see Smith & Breazeal, 2007; and
+Smith, 2013, for related findings and arguments).
+2.2. Regularities and diversity
+Because these are self-organizing developmental processes, they generate not only
+strong regularities but also diversity across individual developmental trajectories. For
+example, in most runs, one observes successively unorganized body babbling, then
+focused exploration of head movements, then exploration of touching an object, then
+grasping an object, and finally vocalizing toward a peer robot (pre-programmed to imitate). This can be explained as gradual exploration of new progress niches, and those
+stages and their ordering can be viewed as a form of attractor in the space of developmental trajectories. Yet, with the same mechanism and same initial parameters, individual
+trajectories may invert stages, or even generate qualitatively different behaviors. This is
+due to stochasticity, to even small variability in the physical realities and to the fact that
+this developmental dynamic system has several attractors with more or less extended and
+strong domains of attraction (characterized by amplitude of learning progress). We see
+this diversity as a positive outcome since individual development is not identical across
+different individuals but is always, for each individual, unique in its own ways. This kind
+of approach, then, offers a way to understand individual differences as emergent in
+
+P.-Y. Oudeyer, L. B. Smith / Topics in Cognitive Science (2016)
+
+7
+
+developmental process itself and makes clear how developmental process might vary
+across contexts, even with an identical learning mechanism.
+A further result to be highlighted is the early development of vocal interaction. With a
+single generic mechanism, the robot both explores and learns how to manipulate objects
+and how to vocalize to trigger specific responses from a more mature partner (Kaplan &
+Oudeyer, 2007a; Oudeyer & Kaplan, 2006). Vocal babbling and language play have been
+shown to be key in infant language development; however, the motivation to engage in
+vocal play has often been associated with hypothesized language-specific motivation. The
+playground experiment makes it possible to see how the exploration and learning of communicative behavior might be at least partially explained by general curiosity-driven
+exploration of the body affordances, as also suggested by Oller (2000).
+Other robotic models have explored how social guidance can be leveraged by an
+intrinsically motivated active learner and dynamically interact with curiosity to structure
+developmental trajectories (Nguyen & Oudeyer, 2013; Thomaz & Breazeal, 2008). Focusing on vocal development, Moulin-Frier et al. (2014) conducted experiments where a
+robot explored the control of a realistic model of the vocal tract in interaction with vocal
+peers through a drive to maximize learning progress. This model relied on a physical
+model of the vocal tract, its motor control and the auditory system. The experiments
+showed how such a mechanism can explain the adaptive transition from vocal selfexploration with little influence from the speech environment, to a later stage where vocal
+exploration becomes influenced by vocalizations of peers. Within the initial self-exploration phase, a sequence of vocal production stages self-organizes and shares properties
+with infant data: The vocal learner first discovers how to control phonation, then vocal
+variations of unarticulated sounds, and finally articulated proto-syllables. As the vocal
+learner becomes more proficient at producing complex sounds, the imitating vocalizations
+of the teacher provide high learning progress, resulting in a shift from self-exploration to
+vocal imitation.
+
+3. An evo-devo perspective: From curiosity to the evolution of language pre
+requisites
+The developmental patterns in the playground experiments exhibit a form of behavioral
+and cognitive epigenesis, as proposed by Gottlieb (1991). Developmental structures in
+these models are neither learned “tabula rasa” nor a predetermined result of an innate
+“program”; instead, they self-organize out of the dynamic interaction between constrained
+cognitive mechanisms (including curiosity, learning, and abstraction), the morphological
+properties of the body, and the physical and social environment that itself is constrained
+and ordered by the developmental level of the organism (Oudeyer, 2010, 2011; Smith,
+2013; Thelen & Smith, 1996). This self-organization includes the dynamic and automatic
+formation of behavioral and cognitive stages of progressively increasing complexity, sharing many properties with infant development (Piaget, 1952).
+
+8
+
+P.-Y. Oudeyer, L. B. Smith / Topics in Cognitive Science (2016)
+
+Such robotic models and experiments operationalize theories of epigenesis in behavioral development (e.g., Gottlieb, 1991; Lickliter & Honeycutt, 2009; West & King,
+1987), as well as the dynamic systems conceptualization of development (Thelen &
+Smith, 1996). In particular, they allow us to see in detail how the interaction of heterogeneous mechanisms and constraints at several scales could form a dynamical system where
+developmental structures emerge. Such emergent developmental structures have deep
+implications for evolution. In particular, they constitute a reservoir of behavioral and cognitive innovations which can be later on recruited for functions not yet anticipated, and at
+both developmental and evolutionary scales: This is exaptation (Gould, 1991).
+First, the results show that modality-independent generic mechanisms for curiosity-driven exploration of the body and its interactions can lead to the emergence of basic speech
+skills, vocal interaction, and vocal imitation. This suggests that in principle the infant
+may develop initial speech capabilities without an innate-specific bias for learning speech
+and vocal interaction, and without teleological knowledge that such skills will be
+recruited later on for the onset of language.
+Second, such mechanisms could be related to state-of-the-art models of the formation
+and evolution of shared vocalization systems in populations of individuals (de Boer,
+2001; Moulin-Frier et al., 2011; Oudeyer, 2006). Such population models have shown
+that when vocal learners are equipped with mechanisms of spontaneous vocal selfexploration and progressively tune their vocalizations to match those of their neighbors,
+conventionalized systems of sounds can be formed automatically at the group level from
+an initial state where each individual only produces random vocalizations. In these models, mechanisms for systematic babbling were ad hoc and hand programmed. Yet the
+robotic experiments show that principled and modality-independent mechanisms for
+curiosity-driven exploration can drive a learner to explore its vocal tract, and also drive it
+to imitate the vocalizations of its peers. Combining these models leads to a startling
+hypothesis: Conventional patterns of vocalizations at the group level could self-organize
+as a result of the interaction of individuals intrinsically motivated to learn how their
+body, and their vocal tract in particular, can produce effects on objects and social peers.
+Similar analyses have been offered for the origins of joint visual attention (Deak, Krasno,
+Triesch, Lewis, & Sepeta, 2014; Yu & Smith, 2013).
+Further, arguments presented in Barto (2013) have shown that the evolutionary origins
+of such an intrinsic motivation to learn can be explained because it maximizes long-term
+evolutionary fitness under rapidly changing environmental conditions (e.g., due to human
+social and cultural structures, which can evolve much faster than the phylogenetic scale).
+In their computer simulations, and under conditions of rapidly changing environments
+and with fitness/reward functions based on reproduction, Singh et al. (2010) have shown
+that it can be more efficient to evolve a control architecture that rewards learning per se
+rather than domain-specific adaptations. In these ways, mechanisms of information seeking can thus evolve independently of language, but yet may have spontaneously bootstraped vocal structures, both at the individual and population level, later on recruited
+through exaptation for a language function that is not already foreseen.
+
+P.-Y. Oudeyer, L. B. Smith / Topics in Cognitive Science (2016)
+
+9
+
+These arguments suggest a potentially strong role for curiosity-driven developmental
+process in the evolution of language prerequisites. They also raise interesting issues with
+respect to the comparison of humans with other animals. As argued earlier, the motivational mechanism of curiosity interacts with other motivational mechanisms like food or
+mate search, and its weight in motivational arbitration may vary widely across species
+equipped with such curiosity. Hence, the high degree of competition for survival in
+many species can be expected to promote avoidance of risk, where aversive motivational systems overcome strongly the expression of curiosity-driven exploration. The
+multimodal systematicity and the extent to which open-ended free play and curiosity are
+expressed in humans, where children are comparatively highly protected for a long period, is unrivalled in the animal kingdom (Power, 1999). The dominance of curiosity in
+the motivational hierarchy may be key to the emergence of wide-ranging domain-specific knowledge in humans as compared to other species. Yet this remains an open question and points to the next critical challenge in understanding curiosity-driven learning:
+How does curiosity compete and couple with other forms of motivation (possibly aversive)? The nature of this dynamic coupling is likely to have significant impact on how
+we understand the developmental dynamics and may also provide insight into individual
+differences. Do contexts in which there are limited resources for such basic drives as
+food and bodily safety alter the developmental trajectory by limiting curiosity-driven
+learning?
+
+4. Conclusion
+Play offers young learners a way to harness the complexity of their learning environment through exploration. The world presents learners with massive amounts of data relevant to many different kinds of tasks and problems. However, much of the data is
+available only when the world is probed through the learners’ own actions. Importantly,
+for developing learners, the kinds of play—and the kinds of probes possible—change
+systematically and are, at any given point in development, constrained both by the
+learning opportunities provided by the physical and social environment and by current
+physical and cognitive abilities of the learner. Human infants are motorically altricial
+and thus for their first few months dependent on caretakers: They can only observe or
+physically interact with objects and events in the environment that their caretakers set
+for them. The ordered constraint of experiences—ordered by developmental changes in
+the learners’ morphology and abilities and by the learners’ active probes of the environment—may play a critical role in constraining and channeling species-typical development and seems likely to have been exploited by evolutionary processes to ensure
+functional developmental outcomes that fit the environment (Gottlieb, 1991; West &
+King, 1987).
+
+10
+
+P.-Y. Oudeyer, L. B. Smith / Topics in Cognitive Science (2016)
+
+Note
+1. Technically the decision on how much time to spend on high learning progress
+activities and other activities is achieved using Multi-Armed Bandit algorithms for
+the so-called exploration/exploitation dilemma (Audibert, Munos, & Szepesvari,
+2009).
+
+References
+Audibert, J.-Y., Munos, R., & Szepesvari, C. (2009). Exploration-exploitation tradeoff using variance
+estimates in multi-armed bandits. Theoretical Computer Science, 410(19), 1876–1902.
+Baldassare, G., & Mirolli, M. (2013). Intrinsically motivated learning in natural and artificial systems.
+Berlin: Springer-Verlag.
+Barto, A. (2013). Intrinsic motivation and reinforcement learning. In G. Baldassarre & M. Mirolli (Eds.),
+Intrinsically motivated learning in natural and artificial systems (pp. 17–47). Berlin: Springer.
+Berlyne, D. (1960). Conflict, arousal and curiosity. New York: McGraw-Hill.
+de Boer, B. (2001). The origins of vowel systems. Oxford Linguistics. Oxford, UK: Oxford University Press.
+Cohn, D. A., Ghahramani, Z., & Jordan, M. I. (1996). Active learning with statistical models. Journal of
+Artificial Intelligence Research, 4, 129–145.
+Csikszenthmihalyi, M. (1990). Flow-the psychology of optimal experience. New York: Harper and Row.
+Deak, G., Krasno, A., Triesch, J., Lewis, J., & Sepeta, L. (2014). Watch the hands: Infants can learn to
+follow gaze by seeing adults manipulate objects. Developmental Science, 17(2), 270–281. doi:10.1111/
+desc.12122
+Friston, K., Adams, R. A., Perrinet, L., & Breakspear, M. (2012). Perceptions as hypotheses: Saccades as
+experiments. Frontiers in Psychology, 3, 151.
+Gottlieb, G. (1991). Experiential canalization of behavioral development: Theory. Developmental Psychology,
+27(1), 4–13. doi:10.1037/0012-1649.27.1.4
+Gottlieb, J., Oudeyer, P.-Y., Lopes, M., & Baranes, A. (2013). Information seeking, curiosity and attention:
+Computational and neural mechanisms. Trends in Cognitive Science, 17(11), 585–596.
+Gould, S. J. (1991). Exaptation: A crucial tool for an evolutionary psychology. Journal of Social Issues, 47
+(3), 43–65.
+Hunt, J. M. (1965). Intrinsic motivation and its role in psychological development. Nebraska Symposium on
+Motivation, 13, 189–282.
+Kagan, J. (1972). Motives and development. Journal of Personality and Social Psychology, 22, 51–66.
+Kaplan, F., & Oudeyer, P.-Y. (2007a). The progress-drive hypothesis: An interpretation of early imitation. In
+K. Dautenhahn & C. Nehaniv (Eds.), Imitation and social learning in robots, humans and animals:
+Behavioural, social and communicative dimensions (pp. 361–377). New York: Cambridge University
+Press.
+Kaplan, F., & Oudeyer, P.-Y. (2007b). In search of the neural circuits of intrinsic motivation. Frontiers in
+Neuroscience, 1(1), 225–236.
+Kidd, C., Piantadosi, S. T., & Aslin, R. N. (2012). The Goldilocks effect: Human infants allocate attention to
+visual sequences that are neither too simple nor too complex. PLoS ONE, 7(5), e36399.
+Lickliter, R., & Honeycutt, H. (2009). Rethinking epigenesis and evolution in light of developmental science.
+In M. S. Blumberg, J. H. Freeman & S. R. Robinson (Eds.), Handbook of behavioral and comparative
+neuroscience: Epigenetics, evolution, and behavior 30–47.
+Lopes, M., & Montesano, L. (2014). Active learning for autonomous intelligent agents: Exploration,
+curiosity, and interaction. arXiv preprint arXiv:1403.1497.
+
+P.-Y. Oudeyer, L. B. Smith / Topics in Cognitive Science (2016)
+
+11
+
+Lopes, M., & Oudeyer, P.-Y. (2010). Active learning and intrinsically motivated exploration in robots:
+Advances and challenges (Guest editorial). IEEE Transactions on Autonomous Mental Development, 2(2),
+65–69.
+Lowenstein, G. (1994). The psychology of curiosity: A review and reinterpretation. Psychological Bulletin,
+116(1), 75–98.
+Moulin-Frier, C., Nguyen, M., & Oudeyer, P.-Y. (2014). Self-organization of early vocal development in
+infants and machines: The role of intrinsic motivation. Frontiers in Cognitive Science, 4, 1006.
+doi:10.3389/fpsyg.2013.01006
+Moulin-Frier, C., Schwartz, J. L., Diard, J., Bessiere, P., Gilet, E., Simonin, E., . . . Millan, J. D. R. (2011).
+Emergence of articulatory-acoustic systems from deictic interaction games in a “vocalize to localize”
+framework. In A. Vilain, J-L. Schwartz, C. Abry & J. Vauclair (Eds.), Primate communication, and
+human language: Vocalisation, gestures, imitation and deixis in humans and non-humans, 193–220.
+Nguyen, M., & Oudeyer, P.-Y. (2013). Active choice of teachers, learning strategies and goals for a socially
+guided intrinsic motivation learner. Paladyn: Journal of Behavioural Robotics, 3(3), 136–146.
+Oller, D. K. (2000). The emergence of the speech capacity. Mahwah, NJ: Lawrence Erlbaum and Associates
+Inc.
+Oudeyer, P.-Y. (2006). Self-organization in the evolution of speech, New York: Oxford University Press.
+Oudeyer, P.-Y. (2010). On the impact of robotics in behavioral and cognitive sciences: From insect
+navigation to human cognitive development. IEEE Transactions on Autonomous Mental Development, 2
+(1), 2–16.
+Oudeyer, P.-Y. (2011). Developmental robotics. In N. M. Seel (Ed.), Encyclopedia of the sciences of
+learning. New York: Springer.
+Oudeyer, P.-Y., & Kaplan, F. (2006). Discovering communication. Connection Science, 18(2), 189–206.
+Oudeyer, P.-Y., & Kaplan, F. (2007). What is intrinsic motivation? A typology of computational approaches
+Frontiers in Neurorobotics, 1, 6. doi:10.3389/neuro.12.006.2007
+Oudeyer, P.-Y., Kaplan, F., & Hafner, V. (2007). Intrinsic motivation systems for autonomous mental
+development. IEEE Transactions on Evolutionary Computation, 11(2), 265–286.
+Piaget, J. (1952). The origins of intelligence in children. New York: International University Press.
+Power, T. G. (1999). Play and exploration in children and animals. Mahwah, NJ: Lawrence Erlbaum.
+Schmidhuber, J. (1991). Curious model-building control systems. IEEE International Joint Conference on
+Neural Networks, Singapore.
+Singh, S., & Lewis, R. L., et al. (2010). Intrinsically motivated reinforcement learning: An evolutionary
+perspective. IEEE Transactions on Autonomous Mental Development, 2(2), 70–82.
+Smith, L. B. (2013). It’s all connected: Pathways in visual object recognition and early noun learning.
+American Psychologist, 68(8), 618.
+Smith, L. B., & Breazeal, C. (2007). The dynamic lift of developmental process. Developmental Science, 10
+(1), 61–68.
+Smith, L. B., & Thelen, E. (1994). A dynamic systems approach to development: Applications. Cambridge,
+MA: MIT Press.
+Thelen, E. (1994). Three-month-old infants can learn task-specific patterns of interlimb coordination.
+Psychological Science, 5(5), 280–285.
+Thelen, E. S., & Smith, L. B. (1996). Dynamic systems approach to the development of cognition and action.
+Cambridge, MA: MIT Press.
+Thomaz, A. L., & Breazeal, C. (2008). Experiments in socially guided exploration: Lessons learned in
+building robots that learn with and without human teachers. Connection Science, Special Issue on Social
+Learning in Embodied Agents, 20(2–3), 91–110.
+West, M. J., & King, A. P. (1987). Settling nature and nurture into an ontogenetic niche. Developmental
+Psychobiology, 20(5), 549–562.
+Yu, C., & Smith, L. B. (2013). Joint attention without gaze following: Human infants and their parents
+coordinate visual attention to objects through eye-hand coordination. PLoS ONE, 8(11), e79659.
+
+

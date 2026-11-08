@@ -1,0 +1,92 @@
+{
+  "paper_id": "06-gottlieb-2013-info-seeking",
+  "title": "Information-Seeking, Curiosity, and Attention: Computational and Neural Mechanisms",
+  "authors": "Jacqueline Gottlieb, Pierre-Yves Oudeyer, Manuel Lopes, Adrien Baranes",
+  "year": 2013,
+  "elapsed_s": 0.14,
+  "e1_pomdp_observing_action_and_box1_gaze": {
+    "pomdp_intersection_voi_curve": [
+      {
+        "prior_certainty_p": 0.5,
+        "v_blind": 0.5,
+        "v_observe": 0.9,
+        "value_of_information_voi": 0.4,
+        "should_glance_at_light": true
+      },
+      {
+        "prior_certainty_p": 0.6,
+        "v_blind": 0.6,
+        "v_observe": 0.9,
+        "value_of_information_voi": 0.3,
+        "should_glance_at_light": true
+      },
+      {
+        "prior_certainty_p": 0.7,
+        "v_blind": 0.7,
+        "v_observe": 0.9,
+        "value_of_information_voi": 0.2,
+        "should_glance_at_light": true
+      },
+      {
+        "prior_certainty_p": 0.8,
+        "v_blind": 0.8,
+        "v_observe": 0.9,
+        "value_of_information_voi": 0.1,
+        "should_glance_at_light": true
+      },
+      {
+        "prior_certainty_p": 0.85,
+        "v_blind": 0.85,
+        "v_observe": 0.9,
+        "value_of_information_voi": 0.05,
+        "should_glance_at_light": true
+      },
+      {
+        "prior_certainty_p": 0.9,
+        "v_blind": 0.9,
+        "v_observe": 0.9,
+        "value_of_information_voi": 0.0,
+        "should_glance_at_light": false
+      },
+      {
+        "prior_certainty_p": 0.95,
+        "v_blind": 0.95,
+        "v_observe": 0.9,
+        "value_of_information_voi": -0.05,
+        "should_glance_at_light": false
+      },
+      {
+        "prior_certainty_p": 1.0,
+        "v_blind": 1.0,
+        "v_observe": 0.9,
+        "value_of_information_voi": -0.1,
+        "should_glance_at_light": false
+      }
+    ],
+    "indifference_prior_threshold": 0.9,
+    "box1_normative_vs_pavlovian_gaze": {
+      "normative_voi_penalty_cue_fixation_rate": 1.0,
+      "normative_voi_mean_return": 0.6838,
+      "pavlovian_liking_penalty_cue_fixation_rate": 0.192,
+      "pavlovian_liking_mean_return": 0.0964
+    }
+  },
+  "e2_info_gap_vs_learning_progress_open_science": {
+    "info_gap_reference_seeker": {
+      "domain_allocation": {
+        "closed_trivia_puzzle": 0.1825,
+        "expanding_scientific_frontier": 0.1964,
+        "irreducible_random_noise": 0.6211
+      },
+      "mean_scientific_discoveries": 78.92
+    },
+    "local_learning_progress_lp": {
+      "domain_allocation": {
+        "closed_trivia_puzzle": 0.1908,
+        "expanding_scientific_frontier": 0.7506,
+        "irreducible_random_noise": 0.0586
+      },
+      "mean_scientific_discoveries": 239.58
+    }
+  }
+}

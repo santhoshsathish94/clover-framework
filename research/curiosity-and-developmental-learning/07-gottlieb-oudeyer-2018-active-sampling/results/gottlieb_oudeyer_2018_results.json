@@ -1,0 +1,76 @@
+{
+  "paper_id": "07-gottlieb-oudeyer-2018-active-sampling",
+  "title": "Towards a Neuroscience of Active Sampling and Curiosity",
+  "authors": "Jacqueline Gottlieb, Pierre-Yves Oudeyer",
+  "year": 2018,
+  "elapsed_s": 0.51,
+  "e1_non_instrumental_and_double_edged_sampling": {
+    "fig4a_non_instrumental_cue2_search_probability": {
+      "pure_uncertainty_reduction": {
+        "0_pct_bad_news": 0.05,
+        "50_pct_uncertain": 0.8,
+        "100_pct_redundant_good_news": 0.05
+      },
+      "hybrid_uncertainty_plus_savouring": {
+        "0_pct_bad_news": 0.05,
+        "50_pct_uncertain": 0.81,
+        "100_pct_redundant_good_news": 0.47
+      }
+    },
+    "instrumental_gain_vs_loss_evasion_double_edged_sword": {
+      "lip_unbiased_validity_sampler": {
+        "loss_cue_attend_rate": 0.9083,
+        "mean_net_payoff": 0.3383
+      },
+      "reward_salience_biased_sampler": {
+        "loss_cue_attend_rate": 0.2683,
+        "mean_net_payoff": -0.0825
+      }
+    }
+  },
+  "e2_tool_use_and_free_play_curriculum": {
+    "fig5a_hierarchical_tool_use_discovery": {
+      "extrinsic_rl_sparse": {
+        "space_allocation": {
+          "hand_reaching": 0.063,
+          "stick_grasping": 0.062,
+          "cylindrical_object_via_stick": 0.6785,
+          "unmovable_object": 0.0674,
+          "random_distractor_1": 0.065,
+          "random_distractor_2": 0.0641
+        },
+        "mean_step_cylinder_unlocked": 444.8,
+        "final_cylinder_tool_use_competence": 0.0594
+      },
+      "random_exploration": {
+        "space_allocation": {
+          "hand_reaching": 0.1628,
+          "stick_grasping": 0.1663,
+          "cylindrical_object_via_stick": 0.1639,
+          "unmovable_object": 0.1683,
+          "random_distractor_1": 0.1737,
+          "random_distractor_2": 0.165
+        },
+        "mean_step_cylinder_unlocked": 249.7,
+        "final_cylinder_tool_use_competence": 0.6758
+      },
+      "lp_autonomous_goal_sampling": {
+        "space_allocation": {
+          "hand_reaching": 0.4252,
+          "stick_grasping": 0.317,
+          "cylindrical_object_via_stick": 0.153,
+          "unmovable_object": 0.0356,
+          "random_distractor_1": 0.0378,
+          "random_distractor_2": 0.0315
+        },
+        "mean_step_cylinder_unlocked": 286.2,
+        "final_cylinder_tool_use_competence": 0.7735
+      }
+    },
+    "fig6_free_play_7_games_trajectory": {
+      "early_games_7_to_20_mean_speed": 17.69,
+      "late_games_50_to_70_mean_speed": 62.0,
+      "mean_fraction_correct_maintained": 0.7153
+    }
+  }
+}

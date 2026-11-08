@@ -1,0 +1,200 @@
+{
+  "paper_id": "04-oudeyer-kaplan-2007-typology",
+  "title": "What Is Intrinsic Motivation? A Typology of Computational Approaches",
+  "authors": "Pierre-Yves Oudeyer, Frederic Kaplan",
+  "year": 2007,
+  "elapsed_s": 3.29,
+  "e1_fifteen_model_typology_benchmark": {
+    "UM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.2502,
+        "z1_easy_learnable": 0.25,
+        "z2_complex_learnable": 0.25,
+        "z3_unlearnable_noise": 0.2498
+      },
+      "exploration_entropy_norm": 1.0,
+      "learnable_niche_fraction": 0.5,
+      "developmental_stage_progression_score": 0.2506
+    },
+    "IGM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.1244,
+        "z1_easy_learnable": 0.2818,
+        "z2_complex_learnable": 0.537,
+        "z3_unlearnable_noise": 0.0568
+      },
+      "exploration_entropy_norm": 0.7945,
+      "learnable_niche_fraction": 0.8188,
+      "developmental_stage_progression_score": 0.4498
+    },
+    "DSM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.2502,
+        "z1_easy_learnable": 0.25,
+        "z2_complex_learnable": 0.25,
+        "z3_unlearnable_noise": 0.2498
+      },
+      "exploration_entropy_norm": 1.0,
+      "learnable_niche_fraction": 0.5,
+      "developmental_stage_progression_score": 0.2506
+    },
+    "DFM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.3848,
+        "z1_easy_learnable": 0.1222,
+        "z2_complex_learnable": 0.2034,
+        "z3_unlearnable_noise": 0.2896
+      },
+      "exploration_entropy_norm": 0.3322,
+      "learnable_niche_fraction": 0.3256,
+      "developmental_stage_progression_score": 0.1616
+    },
+    "NM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.0422,
+        "z1_easy_learnable": 0.0396,
+        "z2_complex_learnable": 0.038,
+        "z3_unlearnable_noise": 0.8802
+      },
+      "exploration_entropy_norm": 0.3578,
+      "learnable_niche_fraction": 0.0776,
+      "developmental_stage_progression_score": 0.0373
+    },
+    "ILNM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.5586,
+        "z1_easy_learnable": 0.3738,
+        "z2_complex_learnable": 0.0332,
+        "z3_unlearnable_noise": 0.0344
+      },
+      "exploration_entropy_norm": 0.6277,
+      "learnable_niche_fraction": 0.407,
+      "developmental_stage_progression_score": 0.0438
+    },
+    "LPM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.1244,
+        "z1_easy_learnable": 0.2818,
+        "z2_complex_learnable": 0.537,
+        "z3_unlearnable_noise": 0.0568
+      },
+      "exploration_entropy_norm": 0.7945,
+      "learnable_niche_fraction": 0.8188,
+      "developmental_stage_progression_score": 0.4498
+    },
+    "SM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.0396,
+        "z1_easy_learnable": 0.0424,
+        "z2_complex_learnable": 0.7912,
+        "z3_unlearnable_noise": 0.1268
+      },
+      "exploration_entropy_norm": 0.5076,
+      "learnable_niche_fraction": 0.8336,
+      "developmental_stage_progression_score": 0.4258
+    },
+    "FM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.8936,
+        "z1_easy_learnable": 0.0362,
+        "z2_complex_learnable": 0.0358,
+        "z3_unlearnable_noise": 0.0344
+      },
+      "exploration_entropy_norm": 0.3266,
+      "learnable_niche_fraction": 0.072,
+      "developmental_stage_progression_score": 0.04
+    },
+    "IM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.0422,
+        "z1_easy_learnable": 0.0396,
+        "z2_complex_learnable": 0.038,
+        "z3_unlearnable_noise": 0.8802
+      },
+      "exploration_entropy_norm": 0.3578,
+      "learnable_niche_fraction": 0.0776,
+      "developmental_stage_progression_score": 0.0373
+    },
+    "CPM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.0574,
+        "z1_easy_learnable": 0.3018,
+        "z2_complex_learnable": 0.5888,
+        "z3_unlearnable_noise": 0.052
+      },
+      "exploration_entropy_norm": 0.7094,
+      "learnable_niche_fraction": 0.8906,
+      "developmental_stage_progression_score": 0.5059
+    },
+    "CM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.8936,
+        "z1_easy_learnable": 0.0362,
+        "z2_complex_learnable": 0.0358,
+        "z3_unlearnable_noise": 0.0344
+      },
+      "exploration_entropy_norm": 0.3266,
+      "learnable_niche_fraction": 0.072,
+      "developmental_stage_progression_score": 0.04
+    },
+    "SyncM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.0396,
+        "z1_easy_learnable": 0.89,
+        "z2_complex_learnable": 0.0352,
+        "z3_unlearnable_noise": 0.0352
+      },
+      "exploration_entropy_norm": 0.3352,
+      "learnable_niche_fraction": 0.9252,
+      "developmental_stage_progression_score": 0.4401
+    },
+    "StabM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.8936,
+        "z1_easy_learnable": 0.0362,
+        "z2_complex_learnable": 0.0358,
+        "z3_unlearnable_noise": 0.0344
+      },
+      "exploration_entropy_norm": 0.3266,
+      "learnable_niche_fraction": 0.072,
+      "developmental_stage_progression_score": 0.04
+    },
+    "VarM": {
+      "zone_distribution": {
+        "z0_static_familiar": 0.0422,
+        "z1_easy_learnable": 0.0396,
+        "z2_complex_learnable": 0.038,
+        "z3_unlearnable_noise": 0.8802
+      },
+      "exploration_entropy_norm": 0.3578,
+      "learnable_niche_fraction": 0.0776,
+      "developmental_stage_progression_score": 0.0373
+    }
+  },
+  "e2_knowledge_lpm_vs_competence_cpm_divergence": {
+    "LPM_knowledge_progress": {
+      "task_allocation": {
+        "passive_clockwork": 0.5787,
+        "controllable_arm_skill": 0.3594,
+        "impossible_out_of_reach_goal": 0.0619
+      },
+      "final_controllable_arm_competence": 0.9471
+    },
+    "CPM_competence_progress": {
+      "task_allocation": {
+        "passive_clockwork": 0.062,
+        "controllable_arm_skill": 0.8761,
+        "impossible_out_of_reach_goal": 0.0619
+      },
+      "final_controllable_arm_competence": 0.9992
+    },
+    "IM_incompetence_max": {
+      "task_allocation": {
+        "passive_clockwork": 0.0606,
+        "controllable_arm_skill": 0.0667,
+        "impossible_out_of_reach_goal": 0.8728
+      },
+      "final_controllable_arm_competence": 0.4181
+    }
+  }
+}

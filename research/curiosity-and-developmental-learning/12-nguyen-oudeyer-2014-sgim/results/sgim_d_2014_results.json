@@ -1,0 +1,48 @@
+{
+  "paper_id": "12-nguyen-oudeyer-2014-sgim",
+  "title": "Socially Guided Intrinsic Motivation for Robot Learning of Motor Skills",
+  "authors": "Sao Mai Nguyen, Pierre-Yves Oudeyer",
+  "year": 2014,
+  "elapsed_s": 3.25,
+  "e1_five_algorithms_fishing_rod_benchmark": {
+    "learning_from_observation": {
+      "early_benchmark_distance_error_at_150": 0.4675,
+      "final_benchmark_distance_error_at_450": 0.4402,
+      "far_cast_outer_basin_coverage_share": 0.0
+    },
+    "random_exploration": {
+      "early_benchmark_distance_error_at_150": 0.343,
+      "final_benchmark_distance_error_at_450": 0.3229,
+      "far_cast_outer_basin_coverage_share": 0.03
+    },
+    "sagg_riac": {
+      "early_benchmark_distance_error_at_150": 0.3428,
+      "final_benchmark_distance_error_at_450": 0.3025,
+      "far_cast_outer_basin_coverage_share": 0.1489
+    },
+    "imitation_learning": {
+      "early_benchmark_distance_error_at_150": 0.3732,
+      "final_benchmark_distance_error_at_450": 0.2621,
+      "far_cast_outer_basin_coverage_share": 0.2242
+    },
+    "sgim_d": {
+      "early_benchmark_distance_error_at_150": 0.344,
+      "final_benchmark_distance_error_at_450": 0.2085,
+      "far_cast_outer_basin_coverage_share": 0.1314
+    }
+  },
+  "e2_three_demonstrator_types_comparison": {
+    "demonstrator_1_naive_high_variance": {
+      "final_benchmark_distance_error": 0.2823,
+      "mean_executed_movement_noise_std": 0.0351
+    },
+    "demonstrator_2_reliable_low_variance": {
+      "final_benchmark_distance_error": 0.2525,
+      "mean_executed_movement_noise_std": 0.0219
+    },
+    "demonstrator_3_human_kinesthetic": {
+      "final_benchmark_distance_error": 0.2533,
+      "mean_executed_movement_noise_std": 0.0215
+    }
+  }
+}

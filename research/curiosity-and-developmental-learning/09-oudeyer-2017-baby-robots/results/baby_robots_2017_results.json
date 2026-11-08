@@ -1,0 +1,43 @@
+{
+  "paper_id": "09-oudeyer-2017-baby-robots",
+  "title": "What Do We Learn About Development from Baby Robots?",
+  "authors": "Pierre-Yves Oudeyer",
+  "year": 2017,
+  "elapsed_s": 0.38,
+  "e1_bipedal_walking_and_body_morphology": {
+    "passive_dynamic_walker_zero_brain": {
+      "mean_falls_per_80_strides": 2.7,
+      "mean_gait_limit_cycle_error": 0.02861,
+      "mean_active_control_energy": 0.0
+    },
+    "bended_thighs_morphology_assisted": {
+      "mean_falls_per_80_strides": 1.25,
+      "mean_gait_limit_cycle_error": 0.02482,
+      "mean_active_control_energy": 9e-05
+    },
+    "straight_thighs_morphology": {
+      "mean_falls_per_80_strides": 6.65,
+      "mean_gait_limit_cycle_error": 0.0353,
+      "mean_active_control_energy": 0.0
+    },
+    "pure_central_calculation_rigid_trajectory": {
+      "mean_falls_per_80_strides": 79.3,
+      "mean_gait_limit_cycle_error": 0.04243,
+      "mean_active_control_energy": 0.3025
+    }
+  },
+  "e2_developmental_attractor_bifurcation": {
+    "standard_playmat_geometry": {
+      "attractor_trajectory_distribution": {
+        "leg_touch_object -> mouth_grasp_object -> peer_vocalization": 0.6667,
+        "mouth_grasp_object -> leg_touch_object -> peer_vocalization": 0.3333
+      }
+    },
+    "micro_shifted_object_proximity_delta_2cm": {
+      "attractor_trajectory_distribution": {
+        "mouth_grasp_object -> leg_touch_object -> peer_vocalization": 0.6667,
+        "leg_touch_object -> mouth_grasp_object -> peer_vocalization": 0.3333
+      }
+    }
+  }
+}

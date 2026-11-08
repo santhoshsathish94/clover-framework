@@ -1,0 +1,44 @@
+{
+  "paper_id": "08-oudeyer-gottlieb-lopes-2016-educational",
+  "title": "Intrinsic Motivation, Curiosity, and Learning: Theory and Applications in Educational Technologies",
+  "authors": "Pierre-Yves Oudeyer, Jacqueline Gottlieb, Manuel Lopes",
+  "year": 2016,
+  "elapsed_s": 0.57,
+  "e1_closed_curiosity_memory_feedback_loop": {
+    "fig1a_unidirectional_static_novelty": {
+      "topic_allocation": {
+        "t0_trivial": 0.0451,
+        "t1_foundational": 0.0451,
+        "t2_intermediate_bridge": 0.8721,
+        "t3_advanced_synthesis": 0.0378
+      },
+      "mean_final_curriculum_mastery": 0.3239
+    },
+    "fig1b_closed_lp_curiosity_memory_loop": {
+      "topic_allocation": {
+        "t0_trivial": 0.1331,
+        "t1_foundational": 0.3052,
+        "t2_intermediate_bridge": 0.3016,
+        "t3_advanced_synthesis": 0.2602
+      },
+      "mean_final_curriculum_mastery": 0.9463
+    }
+  },
+  "e2_zpdes_intelligent_tutoring_system_n400": {
+    "fixed_linear_sequence": {
+      "mean_posttest_score_all_12_exercises": 0.3016,
+      "mean_max_difficulty_level_mastered": 0.542,
+      "early_session_exercise_diversity_first_24_trials": 12.0
+    },
+    "expert_handcrafted_branching": {
+      "mean_posttest_score_all_12_exercises": 0.4838,
+      "mean_max_difficulty_level_mastered": 2.203,
+      "early_session_exercise_diversity_first_24_trials": 3.13
+    },
+    "zpdes_lp_bandit": {
+      "mean_posttest_score_all_12_exercises": 0.5015,
+      "mean_max_difficulty_level_mastered": 2.922,
+      "early_session_exercise_diversity_first_24_trials": 4.27
+    }
+  }
+}

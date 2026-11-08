@@ -1,0 +1,575 @@
+Primer
+
+What do we learn about
+development from baby robots?
+Pierre-Yves Oudeyer*
+Understanding infant development is one of the great scientiﬁc challenges of
+contemporary science. In addressing this challenge, robots have proven useful
+as they allow experimenters to model the developing brain and body and
+understand the processes by which new patterns emerge in sensorimotor, cognitive, and social domains. Robotics also complements traditional experimental
+methods in psychology and neuroscience, where only a few variables can be
+studied at the same time. Moreover, work with robots has enabled researchers
+to systematically explore the role of the body in shaping the development of
+skill. All told, this work has shed new light on development as a complex
+dynamical system. © 2016 Wiley Periodicals, Inc.
+How to cite this article:
+
+WIREs Cogn Sci 2017, 8:e1395. doi: 10.1002/wcs.1395
+
+INTRODUCTION
+
+T
+
+o understand the world around them, human
+beings fabricate and experiment. Children endlessly build, destroy, and manipulate to make sense
+of objects, forces, and people. To understand boats
+and water, e.g., they throw wooden sticks into rivers.
+Jean Piaget, one of the pioneers of developmental
+psychology, extensively studied this central role of
+action in infant learning and discovery.1
+Scientists do the same thing: To understand
+ocean waves, we build giant aquariums. To understand cells, we break them down to their component
+parts. To understand the formation of spiral galaxies,
+we manipulate them in computer simulations. Constructing artifacts helps us construct knowledge.
+But what if we want to understand ourselves?
+How can we understand the mechanisms of human
+learning, emotions, and curiosity? Here, the physical
+fabrication of artifacts can also be useful. Researchers
+can actually build baby robots with mechanisms
+that model aspects of the infant brain and body, and
+then alter these models systematically (see Figure 1).
+We can compare the behavior we observe with the
+
+*Correspondence to: pierre-yves.oudeyer@inria.fr
+Inria and Ensta-ParisTech, Paris, France, http://www.pyoudeyer.com.
+Conﬂict of interest: The author has declared no conﬂicts of interest
+for this article.
+
+Volume 8, January–April 2017
+
+mechanisms inside. Indeed, robots are now becoming
+an essential tool to explore the complexity of development, a tool that allows scientists to grasp the complicated dynamics of a child’s mind and behavior.
+
+EXPLORING COMPLEX SYSTEMS
+Modern developmental science has now invalidated
+the old divide between nature and nurture. We now
+know that genes are not a static program that
+unfolds independently of the environment. We also
+understand that learning in the real world can only
+work if there are appropriate constraints during
+development3,4 (see Aslin, Statistical learning: a pow
+erful mechanism that operates by mere exposure,
+WIREs Cogn Sci, also in the collection How We
+Develop). Finally, we know that many behavioral
+and cognitive patterns cannot be explained by reducing them to single genes, organs, or isolated features
+of the environment: they result from the dynamic
+interaction among cells, organs, learning mechanisms, and the physical and social properties of the
+environment at multiple spatiotemporal scales.
+Development is a complex dynamical system, characterized by spontaneous self-organization or ‘emergent
+patterns’5 at multiple scales of time and space.6
+The concepts of complex systems and selforganization revolutionized physics in the 20th century. They characterize phenomena as diverse as the
+formation of ice crystals, sand dunes, water bubbles,
+
+© 2016 Wiley Periodicals, Inc.
+
+1 of 7
+
+Primer
+
+wires.wiley.com/cogsci
+
+(a) Bended thighs
+
+(b) Straight thighs
+
+F I G U R E 1 | Robots can help us model and study the complex interactions among the brain, the body, and the environment during cognitive
+development. Here we see two open-source robotic platforms used in laboratories. Being open-source allows open science and better replicability
+by revealing experimental details. Built using 3D printing,2 the Poppy (right) allows fast and efﬁcient exploration of various body morphologies and
+how they affect skill development, such as leg shape (see alternative morphologies on the right (a) and (b)). Left: ICub http://www.icub.org; Right:
+Poppy http://www.poppy-project.org.
+climatic structures, and galaxies. A key to these scientiﬁc advances was the use of mathematics and computer simulations. Indeed, it is hard to imagine how
+we could understand the dynamics of ice crystals or
+the formation of clouds without mathematics and
+computer simulations. At the end of the 20th century, biologists began to use these concepts, e.g., to
+understand the formation of termite nests7 (see
+
+F I G U R E 2 | The architecture of termite nests is the self-organized
+result of local interactions among thousands of insects. None of these
+insects has a map of the architecture. Computer simulations
+contributed to understanding this process. Today, models in
+developmental robotics are used similarly to study how local short
+term mechanisms can give rise to macro and long-term behavioral and
+cognitive developmental structure. Source: http://commons.wikimedia.
+org/wiki/File:Termite%27s_nest.jpg.
+2 of 7
+
+Figure 2). They used computer simulations to show
+how local interactions among thousands of little termites, with no plan of the global structure, could
+self-organize sophisticated and functional large-scale
+architectures. Other mathematical and computational
+models were similarly used to study the selforganization of stripes and spots on the skin of animals, the spiral patterns of horns and mollusk shells,
+the dynamics of predator–prey populations, and of
+the dynamics of a heart beat.7
+Child development also involves the interaction
+of many components, but in a way that is probably
+orders of magnitude more complicated than crystal
+formation or termite nest construction. Hence, to
+complement the (tremendously useful) verbal conceptual tools of psychology and biology, researchers
+have begun building machines that model pattern
+formation in development. Such efforts can play a
+key role in 21st century developmental science.
+Building machines that learn and develop like
+infants is actually not a new idea. Alan Turing, who
+helped invent the ﬁrst computers in the 1940s,
+already had the intuition that machines could be useful for understanding psychological processes:
+Instead of trying to produce a programme to simulate the adult mind, why not rather try to produce
+one which simulates the child’s? If this were then
+subjected to an appropriate course of education one
+would obtain the adult brain. Presumably the child
+
+© 2016 Wiley Periodicals, Inc.
+
+Volume 8, January–April 2017
+
+WIREs Cognitive Science
+
+Learn about development from baby robots
+
+brain is something like a notebook as one buys it
+from the stationer’s. Rather little mechanism, and
+lots of blank sheets (Ref 8).
+
+For several reasons, Turing’s vision was not
+transformed into a concrete scientiﬁc program until
+the very end of the 20th century. First, the 1950s saw
+the rise of cognitivism and artiﬁcial intelligence,
+views that promoted the (unsuccessful) idea that
+intelligence could be seen as an abstract symbol
+manipulation system that could be handcrafted
+directly in its adult form. Second, Turing missed two
+important elements: (1) Learning from a blank
+slate—a tabula rasa—could not work in real organisms facing the complex ﬂow of information and
+action in the world. Rather, development needs constraints; and (2) Turing missed the role of the body:
+behavior and cognition arise in a physical substrate,
+and this physical substrate strongly inﬂuences development.9 The central role of the body in psychological development is the reason why robots, and not
+simply abstract computer simulations, will play such
+a key role in future progress.10
+
+THE ROLE OF THE BODY
+IN BIPEDAL WALKING
+Let us look at some examples, beginning with the
+behavior of bipedal walking. While this is a very
+familiar skill, we are nevertheless far from understanding how we walk with two legs, and how
+infants learn to do this. What is walking? What does
+it mean to acquire the capability to walk on two
+legs? Walking requires the real-time coordination of
+many body parts. Our bones and muscles are like the
+musicians of a symphonic orchestra: each must move
+
+(and be still) at exactly the right moment. And it is
+the juxtaposition and integration of all these movements that builds the symphony of the whole body
+walking forward with elegance and robustness.
+Is there a musical score that plans and coordinates walking? Is there a conductor driving the
+movement? In technical terms, is walking equivalent
+to calculating? Does the brain, every few milliseconds, observe the current state of the body and environment and compute the right muscular activations
+to maintain balance and move forward with minimal
+energy consumption?
+Viewing walking as pure computation is the
+approach that has long been taken by specialists who
+study human walking. Viewed in this context, understanding the development of walking requires understanding how the child could develop the capability
+to achieve all these real-time computations and make
+predictions about the dynamics of its body. Some
+roboticists interested in walking bipedal robots also
+tried this approach. Yet, even though they sometimes
+produced beautiful performances,11 this approach
+has so far led to robots that fell too easily and looked
+unnatural.
+Perhaps, then, walking is much more than calculation. Twenty years ago, a roboticist named Tad
+McGeer conducted an experiment that changed our
+understanding of biped walking in humans and
+machines. He built a pair of mechanical legs (see
+Figure 3 and video https://www.youtube.com/watch?
+v=WOPED7I5Lac) without a motor and without a
+computer (thus without the possibility to make calculations), and reproduced the geometry of human
+legs.12 Then, he threw the robot on a mild slope
+and—remarkably—the robot walked: automatically,
+through the physical interaction among the various
+
+Dynamic walking
+
+Swing leg
+pendulum
+
+Trunk
+velocity
+
+Stance leg
+inverted
+pendulum
+
+Push-off
+
+Body
+weight
+support
+
+Collision
+
+FI GU RE 3 | A robot that walks but does not have a brain! It has neither electric power nor computer control. The steps it takes are
+spontaneously generated through the physical interaction between its structure and gravity. Such mechanical experiments allow to characterize
+concretely how self-organization of behavioral structure can arise in physical dynamical systems such as proposed by the dynamical approach to
+development.5 Source: http://dyros.snu.ac.kr/concept-of-passive-dynamic-walking-robot/.
+
+Volume 8, January–April 2017
+
+© 2016 Wiley Periodicals, Inc.
+
+3 of 7
+
+Primer
+
+wires.wiley.com/cogsci
+
+mechanical parts and gravity, the two legs generated
+a gait that looked surprisingly similar to a human
+gait. The robot even responded robustly to disturbances. Other laboratories replicated the experiment
+many times (e.g., see video https://www.youtube.
+com/watch?v=rhu2xNIpgDE) and showed that this
+bipedal walking would persist on a treadmill.13 The
+coordination of the set of mechanical parts of this
+robot, interacting only locally through their physical
+contacts, is an example of self-organization: there is
+no predeﬁned plan for coordination and no conductor synchronizing every part of the score. Walking is
+a dynamic emergent pattern where the physics of
+the body and environment plays a fundamental role
+in interaction with the (learning) neural system,
+with each component part of the system structuring
+and constraining the others, as conceptually investigated by the dynamic systems approach to development5,14 (see Adolph and Franchak, The
+development of motor behavior, WIREs Cogn Sci,
+also in the collection How We Develop).
+These very clever experiments show how robots
+can be used to disentangle the roles of the body and
+the nervous system in walking. At the same time,
+they articulate concretely concepts that enlighten our
+understanding of human development. Here, we
+observe the self-organization of a pattern (bipedal
+walking) that is neither innate (there are no genes
+and no program) nor learned (there is no learning
+taking place). Therefore, this simple robot concretely
+demonstrates how the divide between innateness and
+learning can be meaningless. Structure can appear
+spontaneously through complex biophysical interactions. And such structure can then be leveraged for
+learning and development. This robotic approach
+also helps reinforce and ‘ground’ the hypothesis that
+learning how to walk can be facilitated by reusing
+and tuning a movement structure already embedded
+in the dynamics of the body.14
+
+SELF-ORGANIZATION
+OF CURIOSITY-DRIVEN
+DEVELOPMENTAL PROCESSES
+Let us now examine a second robot example that
+shows how local short-term mechanisms (here
+curiosity-driven attention and exploration) can generate macro-organized developmental structure on the
+long term in child development (here sequences of
+behavioral and cognitive phases of increasing complexity). Human children learn many things, often in
+a progressive way with speciﬁc timing and ordering.
+For example, before they learn to walk on their two
+4 of 7
+
+legs, infants typically ﬁrst explore how to control
+their neck, then to roll on their belly, then to sit, to
+stand up, and walk with their hands on the walls.
+Why and how do they follow this particular progression? Although most infants follow a similar ordering, some children do not. Why do some children
+follow quite different developmental paths? How can
+we explain the apparent universal tendencies on one
+hand and the individual variability on the other? Is
+universality the result of a ‘program’? And when we
+observe a different developmental path, does this
+imply that something in the ‘program’ is broken?
+The social environment plays a big role in guiding developmental process, and has been the object of
+study of robot modeling work focusing on the roles of
+imitation,15–17 joint attention,18 language,19,20 and
+interactive alignment of tutor and learner.21 But there
+is another fundamental force that drives all of us:
+curiosity, which pushes us to discover, to create, to
+invent.
+Research in psychology and neuroscience has
+shown how our brains have an intrinsic motivation
+to explore novel activities or stimuli for the sake of
+learning and practicing.22 Yet, we still understand little about curiosity-driven attentional and motivational mechanisms, and how it impacts learning and
+development in the long term. Neuroscientists are
+only beginning to identify brain circuits involved in
+spontaneous exploratory behaviors.23
+Several research teams have proposed to
+advance our understanding of curiosity and its
+impact on development by fabricating robots that
+learn, discover, and generate their own goals with
+formal models of curiosity-driven learning.23–25 An
+example comes from the Playground Experiment (see
+Figure 4 and video https://www.youtube.com/watch?
+v = uAoNzHjzzys25,26). Here, a robot learns by conducting experiments: it tries actions, observes effects,
+and detects regularities between these actions and
+their effects. This allows it to make predictions. The
+way the robot chooses actions is like a little scientist:
+it chooses experiments that can improve its own predictions, which can provide new information, which
+makes learning progress, while continuously allocating some proportion of time to exploring other activities in a search for new possibilities. The robot is
+also equipped with a mechanism that simultaneously
+categorizes its sensorimotor experiences into different
+categories based on how similar they are in learnability and controllability.
+At any moment in its development, the robot
+mainly focuses on exploring activities that are
+sources of learning progress, those that are neither
+too easy nor too difﬁcult. This models the idea that
+
+© 2016 Wiley Periodicals, Inc.
+
+Volume 8, January–April 2017
+
+WIREs Cognitive Science
+
+Learn about development from baby robots
+
+FI GU RE 4 | Curiosity-driven learning and self-organization of
+developmental structure in the Playground Experiment.26,27 The robot
+in the center explores and learns to predict the effects of its actions,
+driven by an intrinsic motivation mechanism that drives it to focus on
+sensorimotor experiments that maximize learning progress/information
+gain. At the short time scale, this constitutes a model of curiositydriven attention pushing the robot to prefer sensorimotor
+contingencies of intermediate complexity, compatible with recent
+experiments studying informational preferences in infants.28 When
+running over an extended period of time, one observes the
+spontaneous self-organization of developmental phases of increasing
+complexity, without an initial program that speciﬁes these phases. For
+example, the robot learns on its own to grasp an object in front of it,
+and later on focuses on exploring how to produce vocalizations that
+elicit reactions in another robot.
+what the brain ﬁnds interesting to practice is what is
+just beyond the current level of knowledge or
+competencies,26–30 and as observed in recent experiments with infants.28 Such a model also leads to a
+concrete deﬁnition of epistemic curiosity as a motivational mechanism that pushes an organism to explore
+activities for the primary sake of gaining information
+(as opposed to searching for information to achieve
+an external goal like ﬁnding food or shelter, see Ref
+25 for a review of formal models of intrinsic motivation and curiosity-driven exploration).
+In the Playground Experiment, not only is the
+robot able to learn skills based on its own
+initiative—e.g., learning how to grasp an object in
+front of it—but the robot is also able to spontaneously evolve and self-organize its behavior, which
+progressively increases in complexity. Cognitive
+stages appear, but they are not preprogramed. For
+example, after beginning through relatively random
+body babbling, the robot often focuses ﬁrst on moving the legs around to predict how it can touch
+objects, then focuses on grasping an object with its
+mouth, and ﬁnally ends up exploring vocal interaction with another robot. Critically, the engineer
+
+Volume 8, January–April 2017
+
+preprogramed none of these activities, nor did the
+engineer preprogram their timing and ordering.
+This self-organization results from the
+dynamic interaction between curiosity, learning,
+and the properties of the body and environment. If
+the same experiment is repeated several times with
+the same parameters, one observes that often the
+same course of developmental phases appears. Yet,
+sometimes individual robots invert phases, or even
+generate qualitatively different behaviors. This is
+due to random small contingencies, to even small
+variability in the physical realities, which are
+ampliﬁed through closed-loop exploration and
+learning, and leading this developmental dynamic
+system into different paths that mathematicians call
+‘attractors’: a collection of differentiated patterns
+toward which the system spontaneously evolves as
+soon as it ﬁnds itself in their vicinity, so-called
+‘basins of attraction.’
+This robot experiment helps us to understand
+and formulate hypotheses about aspects of how
+development works. It suggests a way to model the
+mechanisms of curiosity-driven learning, and to
+assess how a form of epistemic curiosity can be modeled as a concrete mechanism within a physical
+agent. It also shows how, over the long term,
+curiosity-driven attentional processes can selforganize learning and developmental phases of
+increasing complexity, without a predeﬁned maturational schedule. Finally, it offers a way to understand
+individual differences as emergent in development,
+making clear how developmental processes might
+vary across contexts, even with an identical underlying mechanism and an identical environment.
+
+CONCLUSION
+We are only beginning to uncover the basic mechanisms of infant development. Much of the difﬁculty
+comes from the fact that the development of infant
+skills results from the interactions of multiple mechanisms at multiple spatial (molecules, genes, cells,
+organs, bodies, and social groups) and temporal
+scales. Like spiral galaxies with shapes that result
+from neither the programmatic unfolding of a plan
+nor from learning, infant development consists of
+complex patterns that form spontaneously out of a
+distributed network of forces. Such patterns cannot be
+explained within the conﬁnes of a false dichotomy like
+‘innate versus acquired.’ Rather, what is needed is a
+shift to a systems perspective (see Blumberg, Develop
+ment evolving: the origins and meanings of instinct,
+WIREs Cogn Sci, and Lickliter, Developmental
+
+© 2016 Wiley Periodicals, Inc.
+
+5 of 7
+
+Primer
+
+wires.wiley.com/cogsci
+
+evolution, WIREs Cogn Sci, also in the collection
+How We Develop).
+As physicists realized a long time ago, systemic
+explanations of pattern formation in complex systems require the use of formal models based on
+mathematics and algorithms that allow us to fabricate and simulate aspects of reality. In the words of
+the physicist and Nobel laureate Richard Feynman:
+What I cannot create I cannot understand
+
+Such an approach is now being brought to
+developmental science, where algorithmic and
+robotic models are used to explore the dynamics of
+pattern formation in sensorimotor, cognitive, and
+social development. Formulating hypotheses about
+development using such models, and exploring them
+through experiments with simulation and robots,
+
+allows us to consider the interaction among many
+mechanisms and parameters. This approach crucially
+complements traditional experimental methods in
+psychology and neuroscience where only a few variables can be studied at the same time.
+In this context, the use of robots is of particular
+importance. The laws of physics generate everywhere
+around us spontaneous patterns in the inorganic
+world (ice crystals, clouds, dunes, river deltas, and so
+on). They also strongly impact living beings, and in
+particular constrain and guide infant development
+through changes in the body and its interaction with
+the physical environment. Being able to consider the
+body as an experimental variable, something that can
+be systematically changed in order to study its impact
+on skill formation, has been a longstanding dream
+for many developmental scientists. Robotics is making that dream a reality.31
+
+ACKNOWLEDGMENTS
+Preparation of this article was partially supported by European Research Council (ERC) Starting Grant
+Explorers, 240007.
+
+FURTHER READINGS
+Cangelosi A, Schlesinger M. Developmental Robotics: From Babies to Robots. Cambridge, MA: MIT Press, Bradford
+Books; 2015.
+Pfeifer R, Scheier C. Understanding Intelligence. Cambridge, MA: MIT Press; 2001.
+Playground experiment: https://www.youtube.com/watch?v=uAoNzHjzzys
+Video of passive dynamic walker robot of Tad McGeer: https://www.youtube.com/watch?v=WOPED7I5Lac
+Video of a replication of passive dynamic walker: https://www.youtube.com/watch?v=rhu2xNIpgDE
+Web site of open-souce ICub humanoid robot: http://www.icub.org
+Web site of Open-Source 3D printed humanoid platform Poppy: http://www.poppy-project.org
+Video of TedX talk where I present some of the ideas in this article: https://www.youtube.com/watch?v=AP8i435ztwE
+
+REFERENCES
+1. Piaget J. The Origins of Intelligence in Children.
+New York: International University Press; 1952.
+2. Lapeyre M, N’Guyen S, Le Fahler A, Oudeyer P-Y.
+Rapid morphological exploration with the Poppy
+humanoid platform. In: Proceedings of IEEE-RAS
+International Conference on Humanoid Robotics,
+Madrid, Spain, 2014.
+3. Gottlieb G. Experiential canalization of behavioraldevelopment—results. Dev Psychol 1991, 27:35–39.
+
+6 of 7
+
+4. Lickliter R, Honeycutt H. Rethinking epigenesis and
+evolution in light of developmental science. In:
+Blumberg MS, Freeman JH, Robinson SR, eds. Handbook of Behavioral and Comparitive Neuroscience:
+Epigenetics, Evolution, and Behavior. New York:
+Oxford University Press; 2009, 30–47.
+5. Thelen ES, Smith LB. Dynamic Systems Approach to
+the Development of Cognition and Action. Cambridge,
+MA: MIT Press; 1996.
+
+© 2016 Wiley Periodicals, Inc.
+
+Volume 8, January–April 2017
+
+WIREs Cognitive Science
+
+Learn about development from baby robots
+
+6. Spencer JP, Perone S, Buss AT. Twenty years and going
+strong: a dynamic systems revolution in motor and cognitive development. Child Dev Perspect 2011, 5:260–266.
+7. Ball P. The Self-Made Tapestry: Pattern Formation in
+Nature. New York: Oxford University Press; 2001.
+8. Turing AM. Computing machinery and intelligence.
+Mind 1950, 49:433–460.
+9. Pfeifer R, Bongard J. How the Body Shapes the Way
+We Think. Cambridge, MA: MIT Press; 2007.
+10. Cangelosi A, Schlesinger M. Developmental Robotics:
+From Babies to Robots. Cambridge, MA: MIT Press,
+Bradford Books; 2015.
+11. Hirose M, Ogawa K. Honda humanoid robots development. Philos Trans A Math Phys Eng Sci 2007,
+365:11–19.
+12. McGeer T. Passive walking with knees. In: Proceedings
+of the IEEE Robotics & Automation Conference, Cincinnati, OH; 1990.
+13. Collins S, Ruina A, Tedrake R, Wisse M. Efﬁcient
+bipedal robots based on passive-dynamic walkers. Science 2005, 307:1082–1085.
+14. Adolphs KE, Robinson SR. Motor development. In:
+Lerner RM, Liben L, Muller U, eds. Handbook of
+Child Psychology and Developmental Science. Vol.
+2. Cognitive Processes. 7th ed. New York: Wiley;
+2015, 114–157.
+15. Breazeal C, Scassellati B. Robots that imitate humans.
+Trends Cogn Sci 2002, 6:481–487.
+16. Demiris Y, Meltzoff A. The robot in the crib: a developmental analysis of imitation skills in infants and
+robots. Infant Child Dev 2008, 17:43–53.
+17. Nehaniv C, Dautenhahn K. Imitation and Social
+Learning in Robots, Humans and Animals: Behavioural, Social and Communicative Dimensions. Cambridge: Cambridge University Press; 2007.
+18. Nagai Y, Asada M, Hosoda K. Learning for joint
+attention helped by functional development. Adv
+Robot 2006, 20:1165–1181.
+19. Cangelosi A, Metta G, Sagerer G, Nolﬁ S, Nehaniv C,
+Fischer K, Tani J, Belpaeme T, Sandini G, Nori F,
+
+Volume 8, January–April 2017
+
+et al. Integration of action and language knowledge: a
+roadmap for developmental robotics. IEEE Trans
+Auton Ment Dev 2010, 2:167–195.
+20. Steels L. Experiments in Cultural Language Evolution,
+vol. 3. Amsterdam: John Benjamins Publishing; 2012.
+21. Vollmer AL, Muhlig M, Steil JJ, Pitsch K, Fritsch J,
+Rohlﬁng KJ, Wrede B. Robots show us how to teach
+them: feedback from robots shapes tutoring behavior
+during action learning. PLoS ONE 2014, 9:e91349.
+22. Loewenstein G. The psychology of curiosity—a review
+and reinterpretation. Psychol Bull 1994, 116:75–98.
+23. Gottlieb J, Oudeyer PY, Lopes M, Baranes A. Information-seeking, curiosity, and attention: computational
+and neural mechanisms. Trends Cogn Sci 2013,
+17:585–593.
+24. Baldassare G, Mirolli M. Intrinsically Motivated
+Learning in Natural and Artiﬁcial Systems. Berlin:
+Springer-Verlag; 2013.
+25. Oudeyer P-Y, Kaplan F. What is intrinsic motivation?
+A typology of computational approaches. Front Neurorobot 2007, 1:1–14.
+26. Oudeyer PY, Smith L. How evolution may work
+through curiosity-driven developmental process. Top
+Cogn Sci 2016 8:492–502.
+27. Oudeyer PY, Kaplan F, Hafner VV. Intrinsic motivation systems for autonomous mental development.
+IEEE Trans Evol Comput 2007, 11:265–286.
+28. Kidd C, Piantadosi ST, Aslin RN. The goldilocks
+effect: human infants allocate attention to visual
+sequences that are neither too simple nor too complex.
+PLoS ONE 2012, 7:e36399.
+29. Csikszenthmihalyi M. Flow: The Psychology of Optimal Experience. New York: Harper-Perennial; 1991.
+30. Schmidhuber J. Curious model-building control-systems. In: Proceedings of the IEEE International Joint
+Conference on Neural Networks, Singapore, 18–21
+November, 1991, 1458–1463.
+31. Kaplan F, Oudeyer P-Y. Stable kernels and ﬂuid body
+envelopes. Journal of SICE 2008, 48.
+
+© 2016 Wiley Periodicals, Inc.
+
+7 of 7
+
+

@@ -1,0 +1,27 @@
+{
+  "paper_id": "13-santucci-2020-open-ended-learning",
+  "title": "Editorial: Intrinsically Motivated Open-Ended Learning in Autonomous Robots",
+  "authors": "Vieri Giuliano Santucci, Pierre-Yves Oudeyer, Andrew Barto, Gianluca Baldassarre",
+  "year": 2020,
+  "elapsed_s": 0.68,
+  "e1_compact_action_relevant_goal_representation": {
+    "unfiltered_20d_sensory_goal_babbling": {
+      "mean_extrinsic_30_goal_reaching_error": 0.9332,
+      "identified_controllable_dims_r2": 1.0
+    },
+    "compact_action_relevant_4d_plus_discrete_hierarchy": {
+      "mean_extrinsic_30_goal_reaching_error": 0.2722,
+      "identified_controllable_dims_r2": 0.9671
+    }
+  },
+  "e2_catastrophic_forgetting_vs_dual_memory_imol": {
+    "single_network_sequential_imol": {
+      "mean_competence_across_all_4_tasks": 0.438,
+      "worst_retained_task_competence": 0.1201
+    },
+    "dual_memory_episodic_semantic_imol": {
+      "mean_competence_across_all_4_tasks": 0.9156,
+      "worst_retained_task_competence": 0.8842
+    }
+  }
+}
