@@ -120,3 +120,18 @@ Following the canonical Clover Cycle (**`Context → Direction → Execution →
   - Synchronized [site/clover-ai/index.html](site/clover-ai/index.html) from [clover-ai-system/studio/clover/web/app.html](clover-ai-system/studio/clover/web/app.html), added `class="clover-app-body"` to [site/admin/index.html](site/admin/index.html), and updated [release/beta/generate_release_reports.py](release/beta/generate_release_reports.py) to automatically keep `site/download/SHA256SUMS.txt` and `site/download/laptop/CloverAIStudio-Setup.exe` in sync with `download/`.
 - [x] **Outcome:** Verified with [site/validate-website-pages.ps1](site/validate-website-pages.ps1) (`pages checked : 10`, `navigation compared : 8`, `shared assets checked : 4`, `site errors : 0`).
 
+---
+
+## 7. Align Clover AI Studio's Turn Loop with the Full Agent Operating Cycle (`OperatingCyclePlan`)
+- [x] **Context (Gap Analysis Between Agent Operating Cycle & Clover AI Studio):**
+  - Identified three specific differences between how our coding agent executes the `AGENTS.md` operating cycle and how Clover AI Studio previously executed a turn:
+    1. **Structured 5-Stage Todo Plan Progression (`not-started` $\to$ `in-progress` $\to$ `completed`, one stage at a time):** Previously, Clover AI Studio emitted flat layer/tool events without maintaining a structured 5-stage operating plan (`1. Context`, `2. Direction`, `3. Execution`, `4. Outcome`, `5. Growth`).
+    2. **Pre-Execution Context Reading for Named Files:** Previously, `s3_pre_call` pre-executed `web_search` and `fetch_url`, but when the user named a local file to read (without writing), the model had to spend a generation round emitting a tool call before seeing the file's contents.
+    3. **Synthesized Test-Harness Execution in `verify_turn_outcome`:** Previously, `verify_turn_outcome` only executed Python code in the sandbox if the model wrote a `print` or `assert` statement; when the model defined a function (like `def max_time(digits): ...`) without calling it on the user's examples (`1234 -> 23:41`, `1230 -> 23:10`), logical bugs went undetected until the user manually replied.
+- [x] **Execution:**
+  - Implemented `OperatingCyclePlan`, `extract_time_examples`, and `synthesize_code_verification_harness` in [clover-ai-system/studio/clover/clover_cycle.py](clover-ai-system/studio/clover/clover_cycle.py) (and synced to [clover-ai-system/mobile/clover_cycle.py](clover-ai-system/mobile/clover_cycle.py)).
+  - Wired `OperatingCyclePlan` and pre-execution file Context reading into [clover-ai-system/studio/clover/omni_native.py](clover-ai-system/studio/clover/omni_native.py), [clover-ai-system/studio/clover/lfm3_native.py](clover-ai-system/studio/clover/lfm3_native.py), and [clover-ai-system/studio/clover/k3_host_engine.py](clover-ai-system/studio/clover/k3_host_engine.py).
+  - Added the live `Clover Cycle: ✓ Context → ✓ Direction → ● Execution → ○ Outcome → ○ Growth` status bar (`renderOpCycleBar`) in [clover-ai-system/studio/clover/web/app.html](clover-ai-system/studio/clover/web/app.html) and [site/clover-ai/index.html](site/clover-ai/index.html).
+- [x] **Outcome & Growth:**
+  - Verified all 8 checks in [clover-ai-system/studio/clover/test_clover_cycles.py](clover-ai-system/studio/clover/test_clover_cycles.py), 155 checks in [clover-ai-system/studio/tests/test_semantics.py](clover-ai-system/studio/tests/test_semantics.py), and 129 checks in [clover-ai-system/studio/tests/test_tool_routing.py](clover-ai-system/studio/tests/test_tool_routing.py) on Windows and `k3`, and installed the updated Android APK (`e013bb3c...b7e8`) on `SM_S911B`.
+

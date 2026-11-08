@@ -199,7 +199,16 @@ button { cursor: pointer; }
 .step-ic .spin { width: 14px; height: 14px; }
 .step-ic.ok { background: var(--accent-soft); color: var(--accent-2); }
 .step-ic.run { background: var(--warn-soft); color: var(--warn); }
+.step-ic.wait { background: var(--fill); color: var(--faint); }
 .step-ic.no, .step-ic.fail { background: var(--danger-soft); color: var(--danger); }
+.op-cycle { display: flex; align-items: center; gap: .26rem; flex-wrap: wrap; padding: .36rem .54rem; border-radius: 11px;
+  background: var(--surface); border: 1px solid var(--line); font-size: .74rem; line-height: 1.35; }
+.op-cycle__lbl { font-weight: 700; color: var(--accent-2); margin-right: .18rem; white-space: nowrap; }
+.op-stage { display: inline-flex; align-items: center; gap: .22rem; padding: .1rem .44rem; border-radius: 999px; font-weight: 600;
+  background: var(--fill); color: var(--faint); white-space: nowrap; transition: all .15s var(--ease); }
+.op-stage.in-progress { background: var(--warn-soft); color: var(--warn); box-shadow: 0 0 0 1px var(--warn-line); }
+.op-stage.completed { background: var(--accent-soft); color: var(--accent-2); }
+.op-arr { color: var(--faint); font-size: .68rem; user-select: none; }
 .step-name { font-weight: 600; color: var(--ink); white-space: nowrap; }
 .step-det { flex: 1; min-width: 0; color: var(--muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .md.live.stale { opacity: .45; }
@@ -230,6 +239,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 .state { font-size: .71rem; font-weight: 600; border-radius: 999px; padding: .08rem .52rem; background: var(--fill); color: var(--muted); white-space: nowrap; }
 .state.run { color: var(--warn); background: var(--warn-soft); }
 .state.ok { color: var(--accent-2); background: var(--accent-soft); }
+.state.wait { color: var(--faint); background: var(--fill); }
 .state.no, .state.fail { color: var(--danger); background: var(--danger-soft); }
 .state.skip { color: var(--warn); background: var(--warn-soft); }
 .tool__body { border-top: 1px solid var(--line); padding: .6rem .75rem .25rem; }
@@ -1482,6 +1492,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function workSummary(m) {
     var parts = [];
+    if (m.opCycle && m.opCycle.cycle > 1) parts.push('Cycle ' + m.opCycle.cycle);
     if (m.thinking) parts.push('thought ' + Math.max(1, m.thinkSecs || 1) + ' s');
     var names = [];
     (m.tools || []).forEach(function (t) {
@@ -1493,13 +1504,33 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (!parts.length && (m.used || []).length) parts.push(m.used.slice(0, 2).join(' \u00b7 '));
     return (stepCnt > 1 ? stepCnt + ' steps' : 'Steps') + (parts.length ? ' \u00b7 ' + parts.join(' \u00b7 ') : '');
   }
+  function renderOpCycleBar(box, oc) {
+    if (!box || !oc || !Array.isArray(oc.stages)) return;
+    box.hidden = false;
+    var cycNum = oc.cycle || 1;
+    var html = '<span class="op-cycle__lbl">Clover Cycle' + (cycNum > 1 ? ' ' + cycNum : '') + ':</span>';
+    oc.stages.forEach(function (st, idx) {
+      if (idx > 0) html += '<span class="op-arr" aria-hidden="true">&rarr;</span>';
+      var status = st.status || 'not-started';
+      var mark = status === 'completed' ? '\u2713 ' : status === 'in-progress' ? '\u25cf ' : '\u25cb ';
+      var shortName = (st.title || st.id || '').replace(/^\d+\.\s*/, '');
+      html += '<span class="op-stage ' + esc(status) + '" title="' + esc((st.title || shortName) + (st.detail ? ' — ' + st.detail : '')) + '">' +
+        mark + esc(shortName) + '</span>';
+    });
+    box.innerHTML = html;
+  }
   function botEl(m) {
     var wrap = el('div', 'b');
     var body = el('div', 'b__body');
-    var hasWork = !!(m.thinking || (m.tools || []).length || (m.used || []).length || (m.steps || []).length);
+    var hasWork = !!(m.thinking || (m.tools || []).length || (m.used || []).length || (m.steps || []).length || m.opCycle);
     if (hasWork) {
       var openByDefault = !!((m.tools || []).length || m.thinking);
       var w = workEl(openByDefault, false); w.label(workSummary(m));
+      if (m.opCycle && Array.isArray(m.opCycle.stages)) {
+        var ocBar = el('div', 'op-cycle');
+        renderOpCycleBar(ocBar, m.opCycle);
+        w.inner.appendChild(ocBar);
+      }
       var stBox = el('div', 'step-tl');
       (m.steps || []).forEach(function (s) {
         stBox.appendChild(stepRowEl({ icon: s.icon || 'check', state: s.state || 'ok', name: s.name, detail: s.detail, badge: s.badge }).el);
@@ -3451,6 +3482,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var c = inp.c, live = liveTurn(), body = live.body;
     var work = workEl(true, true); work.label('Understanding your message\u2026'); work.meta('0:00');
     body.insertBefore(work.box, live.wait);
+    var opCycleBox = el('div', 'op-cycle'); opCycleBox.hidden = true; work.inner.appendChild(opCycleBox);
+    var lastOpCycle = null;
     var stepsBox = el('div', 'step-tl'); work.inner.appendChild(stepsBox);
     var thBox = el('div', 'thinkbox'); thBox.hidden = true; work.inner.appendChild(thBox);
     var toolsBox = el('div', 'step-tl'); work.inner.appendChild(toolsBox);
@@ -3508,6 +3541,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         stepMap.queue.update({ state: 'ok', badge: '\u2713 Ready' });
       }
       if (ev.type === 'start') state.turnId = ev.turn_id;
+      else if (ev.type === 'operating_cycle') {
+        lastOpCycle = { cycle: ev.cycle || 1, active_stage: ev.active_stage || '', model: ev.model || '', stages: ev.stages || [] };
+        renderOpCycleBar(opCycleBox, lastOpCycle);
+        var actSt = (ev.stages || []).find(function (s) { return s.id === ev.active_stage; });
+        if (actSt && actSt.detail && actSt.status === 'in-progress') {
+          setStage(actSt.detail.replace(/…$/, ''));
+        }
+        scrollDown();
+      }
       else if (ev.type === 'semantics') {
         var semBits = [];
         if (ev.understood) semBits.push(ev.understood);
@@ -3764,10 +3806,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       var newTok = gens.reduce(function (s, g) { return s + (g.new_tokens || 0); }, 0);
       var decS = gens.reduce(function (s, g) { return s + (g.decode_s || 0); }, 0);
       var speed = decS ? newTok / decS : 0; if (speed) state.lastSpeed = speed;
+      if (lastOpCycle && Array.isArray(lastOpCycle.stages)) {
+        lastOpCycle.stages.forEach(function (st) {
+          if (st.status === 'in-progress') st.status = 'completed';
+        });
+      }
       var m = { role: 'bot', text: ev.reply || '', isNotice: !!ev.error, turn: ev.turn,
         meta: secs + ' s' + (newTok ? ' · ' + newTok + ' tokens' : '') + (speed ? ' · ' + speed.toFixed(1) + ' tok/s' : ''),
         thinking: thinking.trim(), thinkSecs: tFirst ? Math.round((tLast - tFirst) / 1000) : 0,
-        tools: tools, steps: stepsList, used: layersUsed(ev),
+        tools: tools, steps: stepsList, opCycle: lastOpCycle, used: layersUsed(ev),
         images: (ev.images || []).map(function (x) { return { file: x.file, prompt: x.prompt, model: x.model, seconds: x.seconds }; }) };
       c.messages.push(m); save();
       live.turn.replaceWith(botEl(m)); scrollDown();

@@ -67,11 +67,12 @@ _RETRY_ASK = re.compile(
     r"i\s+believe|i\s+feel|i'?m\s+(?:pretty\s+|quite\s+|fairly\s+)?sure)\W+){0,4}(?:"
     r"(?:please\s+)?(?:try\s+(?:it\s+|that\s+|this\s+)?again|retry|do\s+it\s+again|one\s+more\s+time)\b|"
     r"redo(?:\s+(?:it|that|this)\b|" + _END + r")|"
-    r"(?:that'?s|that\s+is|this\s+is|it'?s|it\s+is|your\s+answer\s+is|the\s+answer\s+is|you'?re|you\s+are)\s+"
+    r"(?:that'?s|that\s+is|this\s+is|it'?s|its|it\s+is|your\s+(?:answer|code|program|solution)\s+is|the\s+(?:answer|code|output|result)\s+is|you'?re|you\s+are)\s+"
     r"(?:wrong|incorrect|not\s+(?:quite\s+)?(?:right|correct))\b|"
+    r"(?:wrong|incorrect)\s+(?:for|on|when|with|if|because)\b|"
     r"(?:wrong(?:\s+answer)?|incorrect|nope|not\s+(?:it|right|correct))" + _END + r"|"
-    r"(?:that'?s\s+|this\s+is\s+|it'?s\s+)?not\s+what\s+i\s+(?:expected|wanted|asked(?:\s+for)?|meant)\b|"
-    r"i\s+don'?t\s+think\s+(?:that'?s|this\s+is|it'?s|that\s+is|it\s+is)\s+(?:right|correct)\b|"
+    r"(?:that'?s\s+|this\s+is\s+|it'?s\s+|its\s+)?not\s+what\s+i\s+(?:expected|wanted|asked(?:\s+for)?|meant)\b|"
+    r"i\s+don'?t\s+think\s+(?:that'?s|this\s+is|it'?s|its|that\s+is|it\s+is)\s+(?:right|correct)\b|"
     r"are\s+you\s+sure\b|"
     r"(?:check\s+(?:it\s+|that\s+|this\s+)?again|double[\s-]?check|re-?check)"
     r"(?:\s+(?:it|that|this|again|the\s+answer|your\s+(?:answer|work|math|maths|calculation|steps)))?"
@@ -765,6 +766,163 @@ AUTO_CYCLE_FIX = (
 )
 
 
+class OperatingCyclePlan:
+    """Tracks the 5-Stage Clover Operating Cycle (`Context -> Direction -> Execution -> Outcome -> Growth`) step-by-step
+    during a turn and emits structured `operating_cycle` SSE events so the user sees each stage transition in real time."""
+
+    STAGE_ORDER = ("context", "direction", "execution", "outcome", "growth")
+    STAGE_TITLES = {
+        "context": "1. Context",
+        "direction": "2. Direction",
+        "execution": "3. Execution",
+        "outcome": "4. Outcome",
+        "growth": "5. Growth",
+    }
+
+    def __init__(self, emit_fn=None, model_name="LFM3-Omni-2B", query="", offered_tools=None):
+        self.emit = emit_fn or (lambda e: None)
+        self.model_name = model_name or "LFM3-Omni-2B"
+        self.cycle = 1
+        q_short = " ".join(str(query or "").split())[:90]
+        tools_list = list(offered_tools) if isinstance(offered_tools, (list, tuple, set)) else []
+        t_desc = (", ".join(tools_list[:4])) if tools_list else "direct model reasoning"
+        self.stages = {
+            "context": {
+                "id": "context",
+                "title": self.STAGE_TITLES["context"],
+                "status": "not-started",
+                "detail": "Read AGENTS.md operating boundaries, S1 memory, S2 knowledge graph/recall & workspace files",
+            },
+            "direction": {
+                "id": "direction",
+                "title": self.STAGE_TITLES["direction"],
+                "status": "not-started",
+                "detail": f"Establish human intent, constraints & C2 HybridAgent/JEPA plan ({t_desc})",
+            },
+            "execution": {
+                "id": "execution",
+                "title": self.STAGE_TITLES["execution"],
+                "status": "not-started",
+                "detail": f"Run S3 tools & C1 ({self.model_name}) -> C3 (11-Level NCM) execution",
+            },
+            "outcome": {
+                "id": "outcome",
+                "title": self.STAGE_TITLES["outcome"],
+                "status": "not-started",
+                "detail": "Verify output against reality (compiler, Python sandbox, arithmetic & format checks)",
+            },
+            "growth": {
+                "id": "growth",
+                "title": self.STAGE_TITLES["growth"],
+                "status": "not-started",
+                "detail": "Align epistemic state (verified/known/inferred) & preserve learned context for next cycle",
+            },
+        }
+        self._q_short = q_short
+
+    def snapshot(self, active_stage=""):
+        return {
+            "type": "operating_cycle",
+            "cycle": self.cycle,
+            "active_stage": active_stage,
+            "model": self.model_name,
+            "stages": [dict(self.stages[k]) for k in self.STAGE_ORDER],
+        }
+
+    def start_stage(self, stage_key, detail=None, cycle=None):
+        if cycle is not None:
+            self.cycle = int(cycle)
+        for k in self.STAGE_ORDER:
+            if k == stage_key:
+                self.stages[k]["status"] = "in-progress"
+                if detail:
+                    self.stages[k]["detail"] = str(detail)[:220]
+                break
+            elif self.stages[k]["status"] == "in-progress":
+                self.stages[k]["status"] = "completed"
+        self.emit(self.snapshot(active_stage=stage_key))
+
+    def complete_stage(self, stage_key, detail=None):
+        if stage_key in self.stages:
+            self.stages[stage_key]["status"] = "completed"
+            if detail:
+                self.stages[stage_key]["detail"] = str(detail)[:220]
+        self.emit(self.snapshot(active_stage=stage_key))
+
+    def retry_from_context(self, next_cycle, finding_summary=""):
+        self.cycle = int(next_cycle)
+        sum_short = " ".join(str(finding_summary or "").split())[:140]
+        self.stages["context"]["status"] = "completed"
+        self.stages["context"]["detail"] = f"Cycle {self.cycle} Context: incorporated Outcome finding ({sum_short})"
+        self.stages["direction"]["status"] = "completed"
+        self.stages["direction"]["detail"] = f"Cycle {self.cycle} Direction: repair root cause & re-verify against reality"
+        self.stages["execution"]["status"] = "in-progress"
+        self.stages["execution"]["detail"] = f"Cycle {self.cycle} Execution: running corrected pass on {self.model_name}"
+        self.stages["outcome"]["status"] = "not-started"
+        self.stages["growth"]["status"] = "not-started"
+        self.emit(self.snapshot(active_stage="execution"))
+
+
+def extract_time_examples(question: str) -> list[tuple[str, str]]:
+    """Extract `(4_digit_str, expected_hh_mm)` pairs from questions like:
+    'example 1234 23:41 is the right answer' or 'for 1230 the max possible time is 23:10'."""
+    q = str(question or "")
+    pairs: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for m in re.finditer(r"\b(\d{4})\b[^0-9:\n]{1,50}?\b((?:[01]\d|2[0-3]):[0-5]\d)\b", q):
+        p = (m.group(1), m.group(2))
+        if p not in seen:
+            seen.add(p)
+            pairs.append(p)
+    if not pairs:
+        d4 = re.findall(r"\b(\d{4})\b", q)
+        tms = [m.group(0) for m in re.finditer(r"\b(?:[01]\d|2[0-3]):[0-5]\d\b", q)]
+        if len(d4) == 1 and len(tms) == 1:
+            pairs.append((d4[0], tms[0]))
+    return pairs
+
+
+def synthesize_code_verification_harness(question: str, code: str) -> str:
+    """When `code` defines a Python function (`def fn(...)`), synthesize a non-destructive verification harness that:
+    1. Runs `code` as written.
+    2. If `question` contains 4-digit -> HH:MM time examples (e.g. `1234 -> 23:41`, `1230 -> 23:10`), calls the defined
+       function on each example (trying `[int(c) for c in d]`, `d`, and `tuple(int(c) for c in d)`) and prints
+       `CLOVER_TIME_CHECK <digits> => <actual> (expected <hh:mm>)`.
+    """
+    code_s = (code or "").strip()
+    if not code_s:
+        return ""
+    try:
+        tree = ast.parse(code_s)
+    except SyntaxError:
+        return code_s
+    fn_names = [n.name for n in tree.body if isinstance(n, ast.FunctionDef) and not n.name.startswith("_")]
+    time_pairs = extract_time_examples(question)
+    if fn_names and time_pairs:
+        fn_target = fn_names[-1]
+        pairs_repr = repr(time_pairs)
+        harness = (
+            f"\n\n# --- Clover Outcome Verification Harness ---\n"
+            f"def _clover_call_time_fn(_fn, _d_str):\n"
+            f"    for _arg in ([int(_c) for _c in _d_str], _d_str, [ _c for _c in _d_str ], tuple(int(_c) for _c in _d_str)):\n"
+            f"        try:\n"
+            f"            _r = _fn(_arg)\n"
+            f"            if _r is not None:\n"
+            f"                return str(_r).strip()\n"
+            f"        except Exception:\n"
+            f"            pass\n"
+            f"    try:\n"
+            f"        return str(_fn(*[int(_c) for _c in _d_str])).strip()\n"
+            f"    except Exception as _e:\n"
+            f"        return f'ERROR:{{_e}}'\n"
+            f"for _d_in, _exp_t in {pairs_repr}:\n"
+            f"    _got_t = _clover_call_time_fn({fn_target}, _d_in)\n"
+            f"    print(f'CLOVER_TIME_CHECK {{_d_in}} => {{_got_t}} (expected {{_exp_t}})')\n"
+        )
+        return code_s + harness
+    return code_s
+
+
 def verify_turn_outcome(
     question,
     answer,
@@ -779,7 +937,7 @@ def verify_turn_outcome(
     Checks:
       1. Empty / truncated non-answer.
       2. Compiler & AST syntax verification (`kit.compiler_check`), plus sandbox execution (`execute_python_fn`) for
-         self-contained computational Python blocks that have not yet been executed in `rounds`.
+         self-contained computational Python blocks (including synthesized test harnesses for functions with examples in `question`).
       3. Arithmetic equation verification (`arithmetic_findings`) & explicit format constraints (`format_findings`),
          plus exact direct-expression evaluation (`direct_arithmetic_value`).
       4. Unrecovered tool execution failures in `rounds`.
@@ -789,7 +947,13 @@ def verify_turn_outcome(
     a = (answer or "").strip()
     rounds_list = list(rounds or [])
     findings = []
-    meta = {"compiler_checked": False, "compiler_ok": True, "compiler_info": None, "auto_python_ran": False}
+    meta = {
+        "compiler_checked": False,
+        "compiler_ok": True,
+        "compiler_info": None,
+        "auto_python_ran": False,
+        "python_sandbox_checked": False,
+    }
 
     if not a or a.startswith("(Clover "):
         findings.append("Outcome check: the draft answer was empty or incomplete; write a complete direct answer.")
@@ -809,17 +973,20 @@ def verify_turn_outcome(
             except Exception:
                 code = ""
             already_ran_py = any(rd.get("tool") == "run_python" and rd.get("ran") and rd.get("worked") for rd in rounds_list)
+            time_pairs = extract_time_examples(q)
+            run_code = synthesize_code_verification_harness(q, code) if code else ""
+            has_print_or_harness = bool(re.search(r"\b(?:print|assert)\b", run_code))
             if (
-                code
-                and not already_ran_py
-                and computes(code)
-                and re.search(r"\b(?:print|assert)\b", code)
+                run_code
+                and (not already_ran_py or time_pairs)
+                and (computes(code) or computes(run_code))
+                and has_print_or_harness
                 and not re.search(
                     r"\b(?:input\s*\(|open\s*\(|os\.remove|os\.unlink|os\.rmdir|shutil\.|subprocess\.|socket\.|urllib\.|requests\.|fastapi|flask|django|uvicorn|plt\.show)\b",
                     code,
                 )
             ):
-                py_res = execute_python_fn(code)
+                py_res = execute_python_fn(run_code)
                 if len(py_res) == 3:
                     ran, out, worked = py_res
                 else:
@@ -831,16 +998,26 @@ def verify_turn_outcome(
                     findings.append(f"Code execution check: running your Python code raised an error:\n{str(out).strip()[:500]}")
                 elif ran and worked:
                     rounds_list.append({"tool": "run_python", "ran": True, "worked": True, "result": str(out)})
-            exp_times = re.findall(r"\b([01]\d|2[0-3]):[0-5]\d\b", q)
-            if exp_times:
-                full_times = [m.group(0) for m in re.finditer(r"\b(?:[01]\d|2[0-3]):[0-5]\d\b", q)]
-                py_outs = "\n".join(str(rd.get("result") or "") for rd in rounds_list if rd.get("tool") == "run_python" and rd.get("ran"))
-                if py_outs and any(ft not in py_outs for ft in full_times):
-                    findings.append(
-                        f"Code output check: the question specifies expected 24-hour time output {', '.join(full_times)}, "
-                        f"but running your code printed `{py_outs.strip()[:200]}`. Check all 4-digit permutations "
-                        "`itertools.permutations` with `0 <= hh < 24 and 0 <= mm < 60` and return `f'{hh:02d}:{mm:02d}'`."
-                    )
+                    for m_tc in re.finditer(r"CLOVER_TIME_CHECK\s+(\d{4})\s*=>\s*([^\r\n(]+?)\s*\(expected\s+([0-9:]+)\)", str(out)):
+                        d_in, got_t, exp_t = m_tc.group(1), m_tc.group(2).strip(), m_tc.group(3).strip()
+                        if got_t != exp_t:
+                            findings.append(
+                                f"Code output check: for digits `{d_in}`, the expected max 24-hour time is `{exp_t}`, "
+                                f"but your function returned `{got_t}`. Use `itertools.permutations` over all 4 digits "
+                                f"(`hh = d[0]*10 + d[1]`, `mm = d[2]*10 + d[3]`, `0 <= hh < 24 and 0 <= mm < 60`) and "
+                                f"format the maximum valid `(hh, mm)` as `f'{{hh:02d}}:{{mm:02d}}'`."
+                            )
+            if not findings:
+                exp_times = re.findall(r"\b([01]\d|2[0-3]):[0-5]\d\b", q)
+                if exp_times:
+                    full_times = [m.group(0) for m in re.finditer(r"\b(?:[01]\d|2[0-3]):[0-5]\d\b", q)]
+                    py_outs = "\n".join(str(rd.get("result") or "") for rd in rounds_list if rd.get("tool") == "run_python" and rd.get("ran"))
+                    if py_outs and any(ft not in py_outs for ft in full_times):
+                        findings.append(
+                            f"Code output check: the question specifies expected 24-hour time output {', '.join(full_times)}, "
+                            f"but running your code printed `{py_outs.strip()[:200]}`. Check all 4-digit permutations "
+                            "`itertools.permutations` with `0 <= hh < 24 and 0 <= mm < 60` and return `f'{hh:02d}:{mm:02d}'`."
+                        )
 
     af = outcome_findings(q, a)
     if af:

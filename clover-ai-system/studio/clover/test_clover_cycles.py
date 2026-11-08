@@ -93,7 +93,84 @@ def test_verify_turn_outcome_checks() -> dict:
         )
         assert f6 == [], f"Expected 0 findings on clean answer, got {f6}"
 
-    return {"status": "ok", "checks_verified": 6}
+        # 7. Synthesized test-harness verification on a defined Python function (without a print statement)
+        def real_exec_py(code: str):
+            import io
+            import contextlib
+            buf = io.StringIO()
+            try:
+                ns = {}
+                with contextlib.redirect_stdout(buf):
+                    exec(compile(code, "<sandbox>", "exec"), ns, ns)
+                return True, buf.getvalue(), True
+            except Exception as exc:
+                return True, f"{type(exc).__name__}: {exc}", False
+
+        buggy_time_ans = (
+            "Here is the program:\n```python\n"
+            "def max_time(digits):\n"
+            "    return '23:41'\n"
+            "```"
+        )
+        f7_bad, m7_bad = C.verify_turn_outcome(
+            "Write a program to get max possible time available in given 4 digits, example 1234 23:41 is the right answer, and for 1230 the max possible time is 23:10",
+            buggy_time_ans,
+            rounds=[],
+            kit=kit,
+            layers=("compiler",),
+            execute_python_fn=real_exec_py,
+        )
+        assert m7_bad["python_sandbox_checked"] is True
+        assert f7_bad and any("23:10" in x and "1230" in x for x in f7_bad), f"Expected 1230->23:10 finding, got {f7_bad}"
+
+        correct_time_ans = (
+            "Here is the verified program:\n```python\n"
+            "import itertools\n"
+            "def max_time(digits):\n"
+            "    ds = [int(x) for x in str(digits)] if isinstance(digits, (str, int)) else [int(x) for x in digits]\n"
+            "    best = (-1, -1)\n"
+            "    for p in itertools.permutations(ds, 4):\n"
+            "        hh = p[0] * 10 + p[1]\n"
+            "        mm = p[2] * 10 + p[3]\n"
+            "        if 0 <= hh < 24 and 0 <= mm < 60 and (hh, mm) > best:\n"
+            "            best = (hh, mm)\n"
+            "    return f'{best[0]:02d}:{best[1]:02d}' if best[0] >= 0 else ''\n"
+            "```"
+        )
+        f7_ok, m7_ok = C.verify_turn_outcome(
+            "Write a program to get max possible time available in given 4 digits, example 1234 23:41 is the right answer, and for 1230 the max possible time is 23:10",
+            correct_time_ans,
+            rounds=[],
+            kit=kit,
+            layers=("compiler",),
+            execute_python_fn=real_exec_py,
+        )
+        assert m7_ok["python_sandbox_checked"] is True
+        assert f7_ok == [], f"Expected 0 findings on correct max_time function, got {f7_ok}"
+
+        # 8. OperatingCyclePlan structured 5-stage progression (one stage in-progress at a time + retry_from_context)
+        op_evs = []
+        plan = C.OperatingCyclePlan(op_evs.append, model_name="Clover-35B-A3B", query="Test operating cycle", offered_tools=["run_python"])
+        plan.start_stage("context")
+        assert [s["status"] for s in op_evs[-1]["stages"]] == ["in-progress", "not-started", "not-started", "not-started", "not-started"]
+        plan.complete_stage("context")
+        plan.start_stage("direction")
+        assert [s["status"] for s in op_evs[-1]["stages"]] == ["completed", "in-progress", "not-started", "not-started", "not-started"]
+        plan.complete_stage("direction")
+        plan.start_stage("execution")
+        plan.complete_stage("execution")
+        plan.start_stage("outcome")
+        plan.retry_from_context(2, "Code output check failed on 1230")
+        assert op_evs[-1]["cycle"] == 2
+        assert [s["status"] for s in op_evs[-1]["stages"]] == ["completed", "completed", "in-progress", "not-started", "not-started"]
+        plan.complete_stage("execution")
+        plan.start_stage("outcome")
+        plan.complete_stage("outcome")
+        plan.start_stage("growth")
+        plan.complete_stage("growth")
+        assert [s["status"] for s in op_evs[-1]["stages"]] == ["completed", "completed", "completed", "completed", "completed"]
+
+    return {"status": "ok", "checks_verified": 8}
 
 
 def test_multi_cycle_turn_and_growth() -> dict:

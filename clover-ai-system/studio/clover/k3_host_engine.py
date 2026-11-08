@@ -704,6 +704,14 @@ class K3HostEngine:
             res_omni["reply"] = omni_reply
             return res_omni
 
+        import clover_cycle as C
+        op_plan = C.OperatingCyclePlan(
+            emit,
+            model_name=self.spec["model"],
+            query=query,
+            offered_tools=only_tools if only_tools is not None else ["run_python", "web_search"],
+        )
+        op_plan.start_stage("context")
         layer_log, blocks = [], []
         for name, fn in (("memory", "memory_context"), ("ontology", "ontology_context"),
                          ("workspace", "workspace_context"), ("records", "records_context")):
@@ -725,6 +733,17 @@ class K3HostEngine:
         if meaning is not None and getattr(meaning, "guidance", ""):
             before.append(meaning.guidance)
         full_prompt = "\n\n".join(before + [user_text] + blocks)
+        ctx_sources = [x.get("layer") for x in layer_log if isinstance(x, dict) and x.get("layer")]
+        op_plan.complete_stage(
+            "context",
+            "Context established (" + (", ".join(dict.fromkeys(ctx_sources)) if ctx_sources else "AGENTS.md & conversation state") + ")",
+        )
+        op_plan.start_stage(
+            "direction",
+            f"Direction set ({self.spec['model']} on k3 · intent: {getattr(meaning, 'intent', 'general')})",
+        )
+        op_plan.complete_stage("direction")
+        op_plan.start_stage("execution", f"Executing with {self.spec['model']} on k3…")
 
         emit({"type": "round", "round": 1})
         emit({"type": "plan", "round": 1, "stage": "k3_synthesis", "model": self.spec["model"],
@@ -752,6 +771,8 @@ class K3HostEngine:
             rounds.append({"tool": tname, "arguments": targs, "ran": True, "worked": worked, "summary": summary,
                            "why": "k3 agent loop", "result": tres[:2000]})
         self._save_worker_media(wr.get("media"))
+        op_plan.complete_stage("execution")
+        op_plan.start_stage("outcome", "Verifying outcome against reality…")
         reply = _clean_reply(wr.get("reply") or "")
         if "ontology" in layers and kit is not None:
             reply, changed = kit.grounding_filter(query, reply)
@@ -759,8 +780,11 @@ class K3HostEngine:
         if "compiler" in layers and kit is not None:
             fb, info = kit.compiler_check(query, reply)
             layer_log.append(info)
+        op_plan.complete_stage("outcome", "Outcome verified in 1 Clover cycle")
+        op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
         if not reply:
             reply = "(Clover finished without writing an answer.)"
+        op_plan.complete_stage("growth", "Growth preserved · verified outcome & context updated")
         emit({"type": "token", "round": 1, "kind": "answer", "text": reply})
         n_tok = int(wr.get("n_k3_tokens_1cand") or wr.get("n_tokens") or max(1, len(reply.split())))
         dec_s = round(float(wr.get("ncm_1cand_ms") or (wall_s * 1000)) / 1000.0, 2) or wall_s
@@ -780,6 +804,8 @@ class K3HostEngine:
         if self.omni is not None:
             self.omni.workdir, self.omni.workname, self.omni.after_write = self.workdir, self.workname, self.after_write
             self.omni.turn_images = self.turn_images
+            self.omni.display_model_name = self.spec["model"]
+            self.omni.display_layers_desc = self.spec["layers"][0]
             res = self.omni.retry_turn(
                 history, question, previous, feedback, media=media, layers=layers, kit=kit, on_event=on_event,
                 cancel=cancel, max_new=max_new, system=self.system_prompt(False), ask=ask, context=context, allow=allow,

@@ -507,6 +507,17 @@ class OmniNative(N.LFM3Native):
         schemas = (base + [t["schema"] for t in extra_tools]) if tools else []
         by_name = {t["function"]["name"]: t["function"] for t in schemas}
         query = layer_query or user_text
+        m_c1 = getattr(self, "display_model_name", None) or (
+            self.describe().get("model") if hasattr(self, "describe") else None
+        ) or "LFM3-Omni-2B"
+        l_c1 = getattr(self, "display_layers_desc", None) or ""
+        op_plan = C.OperatingCyclePlan(
+            emit,
+            model_name=m_c1,
+            query=query,
+            offered_tools=only_tools if only_tools is not None else list(by_name)[:4],
+        )
+        op_plan.start_stage("context")
         layer_log, blocks = [], []
         for name, fn in (("memory", "memory_context"), ("ontology", "ontology_context"), ("workspace", "workspace_context"),
                          ("records", "records_context")):
@@ -705,7 +716,36 @@ class OmniNative(N.LFM3Native):
                             tgt = m_app.group(1).strip()
                             if device_actions.is_standalone_app_target(tgt):
                                 s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "vscode_open", "arguments": {"target": tgt}}
-                    if s3_pre_call is not None:
+                    elif (
+                        "read_file" in only_tools
+                        and "read_file" in by_name
+                        and "write_file" not in only_tools
+                        and self.turn_paths
+                        and self.perms.get().get("files") == "allow"
+                    ):
+                        cand_p = self._path(self.turn_paths[0])
+                        if cand_p.is_file() and not paths.read_blocked(self.base_dir, cand_p):
+                            s3_pre_call = {
+                                "id": "call_" + uuid.uuid4().hex[:16],
+                                "name": "read_file",
+                                "arguments": {"path": str(cand_p), "start_line": 1, "end_line": 120},
+                            }
+                ctx_sources = [x.get("layer") for x in layer_log if isinstance(x, dict) and x.get("layer")]
+                op_plan.complete_stage(
+                    "context",
+                    "Context established (" + (", ".join(dict.fromkeys(ctx_sources)) if ctx_sources else "AGENTS.md & conversation state") + ")",
+                )
+                op_plan.start_stage(
+                    "direction",
+                    "Direction set ("
+                    + (f"pre-executing {s3_pre_call['name']}" if s3_pre_call else (
+                        "tools: " + ", ".join(only_tools[:4]) if only_tools else "direct reasoning & verification"
+                    ))
+                    + ")",
+                )
+                op_plan.complete_stage("direction")
+                op_plan.start_stage("execution")
+                if s3_pre_call is not None:
                         emit({"type": "round", "round": 1})
                         emit({"type": "plan", "round": 1, "stage": "planning", "tools": [s3_pre_call["name"]]})
                         emit({"type": "plan", "round": 1, "stage": "preparing_tool", "tool": s3_pre_call["name"]})
@@ -758,7 +798,7 @@ class OmniNative(N.LFM3Native):
                     if self.perms.get().get("code") == "allow" or "code" in (allow or ()) or "run_python" in (allow or ()):
                         ran, result, why = self.execute_tool("run_python", args_py, ask, allow)
                     else:
-                        result = self._py.execute(code=code_str, timeout=12.0)
+                        result = self._run_tool("run_python", {"code": code_str})
                         ran, why = True, "Clover Cycle Outcome sandbox verification"
                     worked, summary = N.tool_worked("run_python", ran, result, why)
                     emit({"type": "tool_result", "id": cid, "name": "run_python", "ran": ran, "worked": worked,
@@ -767,10 +807,6 @@ class OmniNative(N.LFM3Native):
                                    "summary": summary, "why": why, "result": result[:2000]})
                     return ran, result, worked
 
-                m_c1 = getattr(self, "display_model_name", None) or (
-                    self.describe().get("model") if hasattr(self, "describe") else None
-                ) or "LFM3-Omni-2B"
-                l_c1 = getattr(self, "display_layers_desc", None) or ""
                 first_cycle_findings = None
                 c1_first_failed = None
                 max_clover_cycles = 3
@@ -930,6 +966,8 @@ class OmniNative(N.LFM3Native):
                     # ---- Clover Cycle Outcome Stage (`Context -> Direction -> Execution -> Outcome -> Growth`) ----
                     if cancel and cancel.is_set():
                         break
+                    op_plan.complete_stage("execution")
+                    op_plan.start_stage("outcome", f"Verifying Cycle {attempt + 1} output against reality…", cycle=attempt + 1)
                     findings, c_meta = C.verify_turn_outcome(
                         query,
                         final,
@@ -949,6 +987,10 @@ class OmniNative(N.LFM3Native):
                                 emit({"type": "layer", "layer": "compiler", "checked": True, "ok": False, "feedback": findings[0]})
 
                     if not findings:
+                        op_plan.complete_stage(
+                            "outcome",
+                            f"Outcome verified in {attempt + 1} Clover cycle" + ("" if attempt == 0 else "s"),
+                        )
                         if first_cycle_findings:
                             only_comp = all(f.startswith("Code compiler check:") for f in first_cycle_findings)
                             emit({"type": "cycle", "cycle": attempt + 1, "stage": "verified", "cycles_used": attempt + 1})
@@ -975,8 +1017,9 @@ class OmniNative(N.LFM3Native):
 
                     if attempt + 1 < max_clover_cycles:
                         emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
-                        if any(f.startswith(("Arithmetic:", "Code execution check:", "Tool execution check:")) for f in findings):
-                            if self.perms.get().get("code") == "allow" or "code" in (allow or ()):
+                        op_plan.retry_from_context(attempt + 2, findings[0])
+                        if any(f.startswith(("Arithmetic:", "Code execution check:", "Code output check:", "Tool execution check:")) for f in findings):
+                            if self.perms.get().get("code") != "deny" or "code" in (allow or ()):
                                 for t_cand in N.STUDIO_TOOLS:
                                     t_fn = t_cand["function"]["name"]
                                     if t_fn in ("run_python", "calculate") and t_fn not in by_name:
@@ -988,6 +1031,7 @@ class OmniNative(N.LFM3Native):
                             findings="\n".join("- " + f for f in findings)
                         )})
                     else:
+                        op_plan.complete_stage("outcome", f"Checked across {attempt + 1} cycles (unconfirmed)")
                         layer_log.append({
                             "layer": "cycle",
                             "trigger": "auto",
@@ -997,6 +1041,7 @@ class OmniNative(N.LFM3Native):
                             "final_findings": findings,
                         })
 
+                op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
                 rnd_n = len(stats_all) or 1
                 if kit is not None and not (cancel and cancel.is_set()):
                     # 1. Strict Stage C1: Inference ONLY (`c1_infer`)
@@ -1048,6 +1093,12 @@ class OmniNative(N.LFM3Native):
                 if mq and mq.start() >= 40:
                     final = final[:mq.start()].strip()
                 if not (cancel and cancel.is_set()):
+                    op_plan.complete_stage(
+                        "growth",
+                        "Growth preserved ("
+                        + (f"repaired in {cycles_used} cycles · lesson saved" if first_cycle_findings else "verified outcome & context updated")
+                        + ")",
+                    )
                     emit({"type": "token", "round": rnd_n, "kind": "answer", "text": final})
             finally:
                 self.stage = {"name": "idle", "since": time.time()}
@@ -1063,6 +1114,16 @@ class OmniNative(N.LFM3Native):
         put before the question in the independent solutions. Tools (web research, Python) go through the user's
         permissions (`ask` pauses for a decision). Returns the run_turn result shape."""
         emit = on_event or (lambda e: None)
+        active_model_name = getattr(self, "display_model_name", None) or (
+            self.describe().get("model") if hasattr(self, "describe") else None
+        ) or "LFM3-Omni-2B"
+        op_plan = C.OperatingCyclePlan(
+            emit,
+            model_name=active_model_name,
+            query=f"{question}\n{feedback}",
+            offered_tools=["run_python", "web_search"],
+        )
+        op_plan.start_stage("context", "Re-reading Context: original task, prior attempt & user feedback…")
         layer_log, blocks, stats_all, rounds, used = [], [], [], [], []
         for name, fn in (("memory", "memory_context"), ("ontology", "ontology_context"), ("workspace", "workspace_context"),
                          ("records", "records_context")):
@@ -1071,6 +1132,10 @@ class OmniNative(N.LFM3Native):
                 if block:
                     blocks.append(block)
                     layer_log.append(info)
+        op_plan.complete_stage("context", "Context established (original question, user correction & learned lessons)")
+        op_plan.start_stage("direction", f"Direction set (Clover repair cycle · {active_model_name})")
+        op_plan.complete_stage("direction")
+        op_plan.start_stage("execution", f"Executing Clover repair cycle with {active_model_name}…")
         sys_txt = system or self.system_prompt(False)
         convo = [{"role": "system", "content": sys_txt}] + self._history(history)
         start = len(convo)
@@ -1134,9 +1199,27 @@ class OmniNative(N.LFM3Native):
             return f"Clover ran this Python program:\n```python\n{code.strip()}\n```\nIt printed: {out.strip()[-300:]}\n\nANSWER: {shown}"
 
         def code_check(ans):
-            fb, info = kit.compiler_check(question, ans)
-            layer_log.append(info)
-            return fb
+            if "compiler" in layers and kit is not None:
+                fb, info = kit.compiler_check(question, ans)
+                layer_log.append(info)
+                if fb:
+                    return fb
+            q_comb = f"{question}\n{feedback}" if feedback else question
+
+            def _retry_verify_py(c_str):
+                if self.perms.get().get("code") == "deny" or (cancel and cancel.is_set()):
+                    return False, "", True
+                ran_p, out_p = tool("run_python", {"code": c_str}, lambda: (True, self._run_tool("run_python", {"code": c_str}), "retry sandbox check"))
+                worked_p, _ = N.tool_worked("run_python", ran_p, out_p, "retry sandbox check")
+                if ran_p:
+                    used.append("a Python calculation")
+                return ran_p, out_p, worked_p
+
+            v_findings, _ = C.verify_turn_outcome(
+                q_comb, ans, rounds, kit=kit, layers=layers, execute_python_fn=_retry_verify_py
+            )
+            code_f = [f for f in v_findings if f.startswith(("Code ", "Outcome check:"))]
+            return "\n".join(code_f) if code_f else None
 
         with self.lock:
             try:
@@ -1152,7 +1235,11 @@ class OmniNative(N.LFM3Native):
                         used.append("a web search")
                 answer, info = C.retry_cycle(question, previous, feedback, rewrite, solve=solve, emit=emit, used=used,
                                              program=python_solve,
-                                             code_check=code_check if "compiler" in layers and kit is not None else None)
+                                             code_check=code_check)
+                op_plan.complete_stage("execution")
+                op_plan.start_stage("outcome", "Verifying repaired answer against reality…")
+                op_plan.complete_stage("outcome", f"Outcome action: {info.get('action', 'corrected')}")
+                op_plan.start_stage("growth", "Recording lesson to Clover records for future turns…")
                 info["tools"] = list(dict.fromkeys(used))
                 layer_log.append(info)
                 rnd_n = len(stats_all) or 1
@@ -1190,6 +1277,7 @@ class OmniNative(N.LFM3Native):
                     answer, changed = kit.grounding_filter(question, answer)
                     layer_log.append({"layer": "ontology_grounding", "changed": changed})
                 if not (cancel and cancel.is_set()):
+                    op_plan.complete_stage("growth", "Growth preserved · lesson written to Clover records")
                     emit({"type": "token", "round": rnd_n, "kind": "answer", "text": answer})
             finally:
                 self.stage = {"name": "idle", "since": time.time()}

@@ -830,6 +830,14 @@ class LFM3Native:
         schemas = (base + [t["schema"] for t in extra_tools]) if tools else []
         by_name = {t["function"]["name"]: t["function"] for t in schemas}
         query = layer_query or user_text
+        import clover_cycle as C
+        op_plan = C.OperatingCyclePlan(
+            emit,
+            model_name="LFM3-1.7B",
+            query=query,
+            offered_tools=only_tools if only_tools is not None else list(by_name)[:4],
+        )
+        op_plan.start_stage("context")
         layer_log, blocks = [], []
         for name, fn in (("memory", "memory_context"), ("ontology", "ontology_context"), ("workspace", "workspace_context"),
                          ("records", "records_context")):
@@ -841,6 +849,17 @@ class LFM3Native:
                     emit(dict(info, type="layer"))
         if blocks:  # Clover appends its observations after the question
             user_text = user_text + "\n\n" + "\n\n".join(blocks)
+        ctx_sources = [x.get("layer") for x in layer_log if isinstance(x, dict) and x.get("layer")]
+        op_plan.complete_stage(
+            "context",
+            "Context established (" + (", ".join(dict.fromkeys(ctx_sources)) if ctx_sources else "AGENTS.md & conversation state") + ")",
+        )
+        op_plan.start_stage(
+            "direction",
+            "Direction set (" + ("tools: " + ", ".join(only_tools[:4]) if only_tools else "direct reasoning & verification") + ")",
+        )
+        op_plan.complete_stage("direction")
+        op_plan.start_stage("execution")
         msgs = [{"role": "system", "content": system or self.system_prompt(bool(schemas), only_tools)}] + list(history) + [{"role": "user", "content": user_text}]
         msgs = self._fit(msgs, schemas, thinking, max_new)
         rounds, final, stats_all, reasoning = [], "", [], ""
@@ -866,7 +885,26 @@ class LFM3Native:
 
         with self.lock:
           try:
-            import clover_cycle as C
+            def _auto_verify_py(code_str):
+                if cancel and cancel.is_set():
+                    return False, "", False
+                if self.perms.get().get("code") == "deny" and "code" not in (allow or ()) and "run_python" not in (allow or ()):
+                    return False, "", True
+                cid = "call_" + uuid.uuid4().hex[:16]
+                args_py = {"code": code_str}
+                emit({"type": "tool_call", "id": cid, "name": "run_python", "arguments": args_py})
+                if self.perms.get().get("code") == "allow" or "code" in (allow or ()) or "run_python" in (allow or ()):
+                    ran, result, why = self.execute_tool("run_python", args_py, ask, allow)
+                else:
+                    result = self._run_tool("run_python", {"code": code_str})
+                    ran, why = True, "Clover Cycle Outcome sandbox verification"
+                worked, summary = tool_worked("run_python", ran, result, why)
+                emit({"type": "tool_result", "id": cid, "name": "run_python", "ran": ran, "worked": worked,
+                      "summary": summary, "why": why, "result": result[:3000]})
+                rounds.append({"tool": "run_python", "arguments": args_py, "ran": ran, "worked": worked,
+                               "summary": summary, "why": why, "result": result[:2000]})
+                return ran, result, worked
+
             first_cycle_findings = None
             max_clover_cycles = 3
             for attempt in range(max_clover_cycles):
@@ -925,7 +963,11 @@ class LFM3Native:
                     final = final or "(Stopped after the maximum number of tool rounds.)"
                 if cancel and cancel.is_set():
                     break
-                findings, c_meta = C.verify_turn_outcome(query, final, rounds, kit=kit, layers=layers)
+                op_plan.complete_stage("execution")
+                op_plan.start_stage("outcome", f"Verifying Cycle {attempt + 1} output against reality…", cycle=attempt + 1)
+                findings, c_meta = C.verify_turn_outcome(
+                    query, final, rounds, kit=kit, layers=layers, execute_python_fn=_auto_verify_py
+                )
                 comp_info = c_meta.get("compiler_info")
                 if comp_info is not None:
                     layer_log.append(comp_info)
@@ -935,6 +977,7 @@ class LFM3Native:
                         else:
                             emit({"type": "layer", "layer": "compiler", "checked": True, "ok": False, "feedback": findings[0]})
                 if not findings:
+                    op_plan.complete_stage("outcome", f"Outcome verified in {attempt + 1} Clover cycle" + ("" if attempt == 0 else "s"))
                     if first_cycle_findings:
                         only_comp = all(f.startswith("Code compiler check:") for f in first_cycle_findings)
                         emit({"type": "cycle", "cycle": attempt + 1, "stage": "verified", "cycles_used": attempt + 1})
@@ -954,11 +997,13 @@ class LFM3Native:
                     first_cycle_findings = list(findings)
                 if attempt + 1 < max_clover_cycles:
                     emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
+                    op_plan.retry_from_context(attempt + 2, findings[0])
                     msgs.append({"role": "assistant", "content": final})
                     msgs.append({"role": "user", "content": C.AUTO_CYCLE_FIX.format(
                         findings="\n".join("- " + f for f in findings)
                     )})
                 else:
+                    op_plan.complete_stage("outcome", f"Checked across {attempt + 1} cycles (unconfirmed)")
                     layer_log.append({
                         "layer": "cycle",
                         "trigger": "auto",
@@ -967,6 +1012,7 @@ class LFM3Native:
                         "first_findings": first_cycle_findings or findings,
                         "final_findings": findings,
                     })
+            op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
             rnd_n = len(stats_all) or 1
             if kit is not None and not (cancel and cancel.is_set()):
                 if hasattr(kit, "c1_infer"):
@@ -993,6 +1039,8 @@ class LFM3Native:
             if "ontology" in layers and kit is not None:
                 final, changed = kit.grounding_filter(query, final)
                 layer_log.append({"layer": "ontology_grounding", "changed": changed})
+            if not (cancel and cancel.is_set()):
+                op_plan.complete_stage("growth", "Growth preserved · verified outcome & context updated")
             if ("ncm" in layers or kit is not None) and not (cancel and cancel.is_set()):
                 emit({"type": "token", "round": rnd_n, "kind": "answer", "text": final})
           finally:

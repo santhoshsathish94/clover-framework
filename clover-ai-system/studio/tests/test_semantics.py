@@ -409,9 +409,12 @@ else:
 
 # one semantics for every process: the laptop's copy is the clover-framework file, byte for byte
 up = Path(__file__).resolve().parents
+own_mobile = up[2] / "mobile" / "semantics.py" if len(up) > 2 else None
 wt_mobile = up[4] / "clover-collective-wt" / "clover-ai-system" / "mobile" if len(up) > 4 else None
-common = (wt_mobile / "semantics.py") if (wt_mobile is not None and (wt_mobile / "semantics.py").is_file()) else (
-    up[4] / "clover-framework" / "clover-ai-system" / "mobile" / "semantics.py" if len(up) > 4 else None
+common = own_mobile if (own_mobile is not None and own_mobile.is_file()) else (
+    (wt_mobile / "semantics.py") if (wt_mobile is not None and (wt_mobile / "semantics.py").is_file()) else (
+        up[4] / "clover-framework" / "clover-ai-system" / "mobile" / "semantics.py" if len(up) > 4 else None
+    )
 )
 if common is not None and common.is_file():
     check(common.read_bytes() == Path(M.__file__).read_bytes(), "the laptop's semantics.py is the common file")
