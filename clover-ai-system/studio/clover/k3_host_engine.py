@@ -802,6 +802,9 @@ def probe_remote_server(url, api_key="", model_hint="", name_hint=""):
     together with a GitHub token, Google token, or k3 access key to unlock the 4 k3 models."""
     raw = (url or "").strip()
     acct_hint = ""
+    if raw.startswith("acct:") and not (api_key or "").strip():
+        api_key = raw
+        raw = K3_URLS[0]
     if not raw and api_key:
         raw = K3_URLS[0]
     if not raw:
@@ -823,8 +826,8 @@ def probe_remote_server(url, api_key="", model_hint="", name_hint=""):
     host_label = "k3" if parsed.hostname in ("api.cloverframework.com", "cloverframework.com", "www.cloverframework.com") else parsed.hostname
     resolved_key = (api_key or "").strip()
     resolved_acct = acct_hint
-    if host_label == "k3" and (resolved_key or acct_hint):
-        tok, acct = exchange_k3_login(account=acct_hint, credential=resolved_key or acct_hint)
+    if host_label == "k3" and resolved_key:
+        tok, acct = exchange_k3_login(account=acct_hint, credential=resolved_key)
         if tok:
             resolved_key = tok
             resolved_acct = acct or acct_hint

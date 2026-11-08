@@ -21,7 +21,7 @@ from typing import Any
 from huggingface_hub import CommitOperationAdd, HfApi
 from huggingface_hub.hf_api import RepoFile
 
-REPO_ID = "Santhoshsathish94/clover-ai-studio"
+REPO_ID = os.environ.get("CLOVER_HF_DATASET_REPO") or "Santhoshsathish94/clover-ai-studio"
 
 
 def sha256_file(p: Path) -> str:
@@ -80,9 +80,9 @@ def collect_local_files(
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", default=REPO_ID)
-    ap.add_argument("--precomp-dir", default="/opt/clover-k3/web-studio/data/omni/precomputed")
-    ap.add_argument("--csi-dir", default="/opt/clover-k3/web-studio/data/csi/morph-verb-v1.1")
-    ap.add_argument("--clover35b-dir", default="/opt/clover-k3/clover-35b-computed/hf-stage")
+    ap.add_argument("--precomp-dir", default=os.environ.get("CLOVER_PRECOMP_DIR", "/opt/clover-k3/web-studio/data/omni/precomputed"))
+    ap.add_argument("--csi-dir", default=os.environ.get("CLOVER_CSI_DIR", "/opt/clover-k3/web-studio/data/csi/morph-verb-v1.1"))
+    ap.add_argument("--clover35b-dir", default=os.environ.get("CLOVER_35B_STAGE_DIR", "/opt/clover-k3/clover-35b-computed/hf-stage"))
     ap.add_argument("--readme", default="")
     ap.add_argument("--only-prefix", default="", help="Optional prefix filter (e.g., liquid-lfm3/jepa/ or clover-35b/)")
     ap.add_argument("--commit-message", default="feat(jepa,clover-35b): upload computed JEPA trunks, datasets, and Clover-35B-A3B precomputed artifacts")

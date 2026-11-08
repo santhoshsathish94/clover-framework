@@ -719,7 +719,7 @@ def run_full_clover_35b_port_training(
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--work-dir", type=Path, default=Path("/workspace/clover-port/clover-35b-a3b"))
+    ap.add_argument("--work-dir", type=Path, default=Path(os.environ.get("CLOVER_PORT_WORK_DIR", "/workspace/clover-port/clover-35b-a3b")))
     ap.add_argument("--stage1-steps", type=int, default=40)
     ap.add_argument("--stage2-steps", type=int, default=60)
     ap.add_argument("--stage3-steps", type=int, default=60)

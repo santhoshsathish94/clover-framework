@@ -90,3 +90,23 @@ Following the canonical Clover Cycle (**`Context → Direction → Execution →
   - [x] Created and ran [clover-ai-system/studio/tests/test_vscode_integration.py](clover-ai-system/studio/tests/test_vscode_integration.py) + [clover-ai-system/studio/tests/test_vscode_bridge.py](clover-ai-system/studio/tests/test_vscode_bridge.py) + [clover-ai-system/studio/tests/test_tool_routing.py](clover-ai-system/studio/tests/test_tool_routing.py) (`ALL VS CODE & COPILOT INTEGRATION TESTS PASSED`, `ALL PASS`, `129 checks passed`).
   - [x] Verified live 2-round VS Code Copilot Integrated Browser loop (`read_page({"pageId": "page-99"})` $\to$ `click_element({"pageId": "page-99", "element": "Settings", "ref": "e4"})`) and installed `clover-local-0.4.0.vsix` on the Windows laptop (`laptop`).
 
+---
+
+## 5. Multi-User `k3` Admin Console (`/admin/`), Mobile `k3` Model Reporting Fix, & Full Security/Hardcoding Audit
+
+> **Complete Review & Security Audit Report:** [docs/runtime-context/security-and-code-review-2026-11-08.md](docs/runtime-context/security-and-code-review-2026-11-08.md)
+
+- [x] **Context & Audit Scope:**
+  - Audited all 72 modified/added files across the repository for authentication bypasses, privilege escalation, hardcoded secrets/paths, predictable `/tmp` files, shell command injection, rate limiting, and model attribution accuracy.
+- [x] **Execution (Security & Hardcoding Remediations):**
+  - **F-01 (High):** Removed passwordless email-only authentication shortcut (`Step 2b`) in [clover-ai-system/studio/clover/server.py](clover-ai-system/studio/clover/server.py); all approved users in `allowed-accounts.json` must present a cryptographic credential (`acct:<user>:<hmac>`, `key_sha256`, verified GitHub token, or verified Google OIDC/OAuth token).
+  - **F-02 (High):** Moved `/api/auth/k3-unlock` inside the `self._token_ok()` authentication boundary and updated `_token_ok()` to evaluate all candidate auth headers/cookies (`Cookie: clover_token`, `X-Clover-Token`, `X-Clover-Key`, `Bearer`) without allowing `vault("rm_k3")` as a local launch token.
+  - **F-03 (High):** Removed legacy `clover.verifyLiveAgentLoop` / `/tmp/clover_vscode_autoverify_trigger` / `cp.execSync` harness from [clover-ai-system/vscode-extension/extension.js](clover-ai-system/vscode-extension/extension.js) and hardened `ACTIONS.diff` to use `0o700` temp directories and randomized `0o600` diff files.
+  - **F-04 (Medium):** Replaced static fallback secret in [clover-ai-system/studio/clover/manage_k3_users.py](clover-ai-system/studio/clover/manage_k3_users.py) with a persisted 256-bit random key in `vault/k3_host.key` (`0o600`) and enforced `0o600` permissions on `allowed-accounts.json`.
+  - **F-05 (Medium):** Moved Hugging Face mirror tree cache from `/tmp/clover_hf_mirror_tree_v7.json` to `Path(S.args.base) / "cache" / "hf_mirror_tree_v7.json"` in [clover-ai-system/studio/clover/server.py](clover-ai-system/studio/clover/server.py).
+  - **F-06 (Medium):** Added thread-safe per-IP sliding-window rate limiting (`_check_auth_rate_limit`, 15 attempts/min, `HTTP 429`) on `/api/auth/login`, `/api/admin/login`, and `/api/admin/github/device/start`, plus strict `EMAIL_RE` / `GITHUB_RE` validation in `manage_k3_users.cmd_add`.
+  - **F-07 (Low):** Parameterized hardcoded owner/client/path constants via environment variables (`CLOVER_OWNER_GITHUB`, `CLOVER_OWNER_EMAIL`, `CLOVER_ALLOWED_ACCOUNTS`, `CLOVER_GITHUB_CLIENT_ID`, `CLOVER_WEB_BASE`, `CLOVER_HF_DATASET_REPO`, `CLOVER_PORT_WORK_DIR`) and fixed `C1 Inference` / UI health reporting so `Clover-35B-A3B`, `Nemotron 3.5`, and `Kimi K3.1 Pro` display their true model name and layer architecture on Android, Windows, and Web.
+- [x] **Outcome & Growth:**
+  - Verified [clover-ai-system/studio/tests/test_security_and_admin_audit.py](clover-ai-system/studio/tests/test_security_and_admin_audit.py), [clover-ai-system/studio/tests/test_vscode_integration.py](clover-ai-system/studio/tests/test_vscode_integration.py), and [clover-ai-system/studio/clover/test_clover_cycles.py](clover-ai-system/studio/clover/test_clover_cycles.py) on Windows and `k3` (`ALL SECURITY & ADMIN AUDIT TESTS PASSED`, `ALL VS CODE & COPILOT INTEGRATION TESTS PASSED`, `ALL CLOVER CYCLE TESTS PASSED`).
+  - Rebuilt, signed, and installed the updated Android APK (`1ac77538...3abd28`) on `SM_S911B` and updated GitHub Release `v5.0.0`.
+

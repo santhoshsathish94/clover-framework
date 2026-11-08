@@ -22,11 +22,23 @@ import hmac
 import json
 import os
 import re
+import secrets
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-DEFAULT_BASE = Path("/opt/clover-k3/web-studio") if Path("/opt/clover-k3/web-studio").is_dir() else HERE.parent
+DEFAULT_BASE = Path(os.environ.get("CLOVER_WEB_BASE") or ("/opt/clover-k3/web-studio" if Path("/opt/clover-k3/web-studio").is_dir() else str(HERE.parent)))
+DEFAULT_OWNER_GITHUB = (os.environ.get("CLOVER_OWNER_GITHUB") or "santhoshsathish94").strip().lower().lstrip("@")
+DEFAULT_OWNER_EMAIL = (os.environ.get("CLOVER_OWNER_EMAIL") or "santhoshsathish94@gmail.com").strip().lower()
+EMAIL_RE = re.compile(r"^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$")
+GITHUB_RE = re.compile(r"^[a-z0-9](?:[a-z0-9\-]{0,37}[a-z0-9])?$")
+
+
+def _chmod_600(fp: Path) -> None:
+    try:
+        os.chmod(fp, 0o600)
+    except OSError:
+        pass
 
 
 def _secret(base: Path) -> bytes:
@@ -35,11 +47,19 @@ def _secret(base: Path) -> bytes:
         return env.encode("utf-8")
     kf = base / "vault" / "k3_host.key"
     if kf.is_file():
-        return kf.read_text(encoding="utf-8").strip().encode("utf-8")
-    kf2 = Path("/opt/clover-k3/web-studio/vault/k3_host.key")
-    if kf2.is_file():
-        return kf2.read_text(encoding="utf-8").strip().encode("utf-8")
-    return b"clover-k3-fallback-secret"
+        raw = kf.read_text(encoding="utf-8").strip()
+        if len(raw) >= 16:
+            return raw.encode("utf-8")
+    # Generate and persist a random 256-bit key in the vault if none exists yet (never fall back to a static string)
+    target_kf = base / "vault" / "k3_host.key"
+    target_kf.parent.mkdir(parents=True, exist_ok=True)
+    new_key = secrets.token_hex(32)
+    tmp = target_kf.with_suffix(".tmp")
+    tmp.write_text(new_key + "\n", encoding="utf-8")
+    _chmod_600(tmp)
+    os.replace(tmp, target_kf)
+    _chmod_600(target_kf)
+    return new_key.encode("utf-8")
 
 
 def make_account_token(account: str, base: Path = DEFAULT_BASE) -> str:
@@ -65,11 +85,11 @@ def load_allowlist(base: Path = DEFAULT_BASE) -> dict:
         except Exception:
             pass
     return {
-        "accounts": ["santhoshsathish94", "santhoshsathish94@gmail.com"],
+        "accounts": [DEFAULT_OWNER_GITHUB, DEFAULT_OWNER_EMAIL],
         "users": [
             {
-                "github": "santhoshsathish94",
-                "email": "santhoshsathish94@gmail.com",
+                "github": DEFAULT_OWNER_GITHUB,
+                "email": DEFAULT_OWNER_EMAIL,
                 "name": "Santhosh Narayanan",
                 "role": "owner",
                 "models": ["omni", "clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3"],
@@ -96,12 +116,15 @@ def save_allowlist(doc: dict, base: Path = DEFAULT_BASE) -> Path:
     fp.parent.mkdir(parents=True, exist_ok=True)
     tmp = fp.with_suffix(".tmp")
     tmp.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
+    _chmod_600(tmp)
     os.replace(tmp, fp)
+    _chmod_600(fp)
     # Also mirror into clover-ai-studio/config/allowed-accounts.json
     cfg = base / "clover-ai-studio" / "config" / "allowed-accounts.json"
     try:
         cfg.parent.mkdir(parents=True, exist_ok=True)
         cfg.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
+        _chmod_600(cfg)
     except OSError:
         pass
     return fp
@@ -133,7 +156,11 @@ def cmd_add(base: Path, email: str, github: str, name: str, role: str, key: str)
     em = (email or "").strip().lower()
     gh = (github or "").strip().lower().lstrip("@")
     if not em and not gh:
-        raise SystemExit("Provide --email (e.g. user@gmail.com) and/or --github (e.g. username)")
+        raise ValueError("Provide an email address (e.g. user@gmail.com) and/or a GitHub username.")
+    if em and not EMAIL_RE.match(em):
+        raise ValueError(f"Invalid email address format: {em!r}")
+    if gh and not GITHUB_RE.match(gh):
+        raise ValueError(f"Invalid GitHub username format: {gh!r}")
     users = list(doc.get("users") or [])
     existing = None
     for u in users:

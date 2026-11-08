@@ -1739,10 +1739,39 @@ WEB_ORIGINS = {
     "https://cloverframework.com", "https://www.cloverframework.com",
     "https://api.cloverframework.com",
 }
-DEFAULT_ALLOWED_ACCOUNTS = ("santhoshsathish94", "santhoshsathish94@gmail.com")
+OWNER_GITHUB_LOGIN = (os.environ.get("CLOVER_OWNER_GITHUB") or "santhoshsathish94").strip().lower().lstrip("@")
+OWNER_EMAIL = (os.environ.get("CLOVER_OWNER_EMAIL") or "santhoshsathish94@gmail.com").strip().lower()
+GITHUB_DEVICE_CLIENT_ID = (os.environ.get("CLOVER_GITHUB_CLIENT_ID") or "178c6fc778ccc68e1d6a").strip()
+_ENV_ALLOWED_ACCTS = tuple(
+    x.strip().lower().lstrip("@")
+    for x in (os.environ.get("CLOVER_ALLOWED_ACCOUNTS") or "").split(",")
+    if x.strip()
+)
+DEFAULT_ALLOWED_ACCOUNTS = _ENV_ALLOWED_ACCTS or (OWNER_GITHUB_LOGIN, OWNER_EMAIL)
 _FALLBACK_AUTH_SECRET = secrets.token_hex(32).encode("utf-8")
 _CRED_CACHE_LOCK = threading.Lock()
 _CRED_CACHE = {}  # sha256(token) -> (account, expires_at)
+_AUTH_RATE_LOCK = threading.Lock()
+_AUTH_RATE_BUCKETS: dict[str, list[float]] = {}  # client_ip -> list[timestamp]
+AUTH_RATE_LIMIT_PER_MIN = int(os.environ.get("CLOVER_AUTH_RATE_LIMIT_PER_MIN") or 15)
+
+
+def _check_auth_rate_limit(client_ip: str, now: float | None = None) -> bool:
+    """Sliding-window rate limiter on authentication endpoints (default 15 attempts / 60s per IP)."""
+    ts = float(now if now is not None else time.time())
+    ip = str(client_ip or "127.0.0.1").strip()[:64]
+    with _AUTH_RATE_LOCK:
+        if len(_AUTH_RATE_BUCKETS) > 1024:
+            stale_ips = [k for k, v in _AUTH_RATE_BUCKETS.items() if not v or ts - v[-1] > 120.0]
+            for k in stale_ips:
+                _AUTH_RATE_BUCKETS.pop(k, None)
+        bucket = [t for t in (_AUTH_RATE_BUCKETS.get(ip) or ()) if ts - t < 60.0]
+        if len(bucket) >= AUTH_RATE_LIMIT_PER_MIN:
+            _AUTH_RATE_BUCKETS[ip] = bucket
+            return False
+        bucket.append(ts)
+        _AUTH_RATE_BUCKETS[ip] = bucket
+        return True
 
 
 def _allowed_accounts_files(base=None):
@@ -1825,10 +1854,6 @@ def verify_account_token(token, base=None):
     return acct if secrets.compare_digest(sig.encode("utf-8"), want.encode("utf-8")) else None
 
 
-GITHUB_DEVICE_CLIENT_ID = "178c6fc778ccc68e1d6a"
-OWNER_GITHUB_LOGIN = "santhoshsathish94"
-
-
 def make_admin_token(github_login=OWNER_GITHUB_LOGIN):
     login = re.sub(r"[^a-z0-9._-]", "", str(github_login or OWNER_GITHUB_LOGIN).strip().lower())[:40]
     sig = hmac.new(_auth_secret(), f"clover-admin:{login}".encode("utf-8"), hashlib.sha256).hexdigest()[:32]
@@ -1890,16 +1915,6 @@ def verify_k3_credential(credential, account_hint="", base=None):
         or (owner_key and secrets.compare_digest(secret_in.encode("utf-8"), owner_key.encode("utf-8")))
     ):
         return True, (acct if acct in accts else DEFAULT_ALLOWED_ACCOUNTS[0]), 200
-
-    # 2b. Invited email / account in allowed-accounts.json that does not require a separate passcode
-    cand_acct = acct or secret_in.lower().lstrip("@")
-    if (
-        cand_acct in accts
-        and cand_acct not in DEFAULT_ALLOWED_ACCOUNTS
-        and cand_acct not in acct_keys
-        and secret_in.lower().lstrip("@") in (cand_acct, "k3", "clover")
-    ):
-        return True, cand_acct, 200
 
     # 3. Per-user SHA-256 key hash in allowed-accounts.json
     got_hash = hashlib.sha256(secret_in.encode("utf-8")).hexdigest().lower()
@@ -2049,40 +2064,34 @@ class Handler(BaseHTTPRequestHandler):
         m = re.search(r"(?:^|;\s*)clover_token=([A-Za-z0-9_:\-.@]+)", self.headers.get("Cookie") or "")
         auth = (self.headers.get("Authorization") or "").strip()
         bearer = auth[7:].strip() if auth.lower().startswith("bearer ") else ""
-        got = (
-            (m.group(1) if m else "")
-            or (self.headers.get("X-Clover-Key") or "").strip()
-            or (self.headers.get("X-Clover-Token") or "").strip()
-            or bearer
-        )
-        if not got:
+        candidates = [
+            c for c in (
+                (m.group(1) if m else ""),
+                (self.headers.get("X-Clover-Token") or "").strip(),
+                (self.headers.get("X-Clover-Key") or "").strip(),
+                bearer,
+            ) if c
+        ]
+        if not candidates:
             return False
-        acct = verify_account_token(got)
-        if acct:
-            self._authed_account = acct
-            return True
-        if S.token and secrets.compare_digest(got.encode("utf-8"), S.token.encode("utf-8")):
-            self._authed_account = DEFAULT_ALLOWED_ACCOUNTS[0]
-            return True
         import k3_host_engine
         owner_key = k3_host_engine.k3_host_key()
-        if owner_key and secrets.compare_digest(got.encode("utf-8"), owner_key.encode("utf-8")):
-            self._authed_account = DEFAULT_ALLOWED_ACCOUNTS[0]
-            return True
-        if not paths.WEB and S.args is not None:
-            try:
-                import vault
-                saved_k3 = (vault.get(S.args.base, "rm_k3") or "").strip()
-                if saved_k3 and len(saved_k3) >= 16 and secrets.compare_digest(got.encode("utf-8"), saved_k3.encode("utf-8")):
+        for got in candidates:
+            if S.token and secrets.compare_digest(got.encode("utf-8"), S.token.encode("utf-8")):
+                self._authed_account = DEFAULT_ALLOWED_ACCOUNTS[0]
+                return True
+            if paths.WEB:
+                acct = verify_account_token(got)
+                if acct:
+                    self._authed_account = acct
+                    return True
+                if owner_key and secrets.compare_digest(got.encode("utf-8"), owner_key.encode("utf-8")):
                     self._authed_account = DEFAULT_ALLOWED_ACCOUNTS[0]
                     return True
-            except Exception:
-                pass
-        if paths.WEB:
-            ok_cred, matched_acct, _ = verify_k3_credential(got)
-            if ok_cred:
-                self._authed_account = matched_acct
-                return True
+                ok_cred, matched_acct, _ = verify_k3_credential(got)
+                if ok_cred:
+                    self._authed_account = matched_acct
+                    return True
         return False
 
     def _cross_site(self):
@@ -2119,6 +2128,12 @@ class Handler(BaseHTTPRequestHandler):
             or (m.group(1) if m else "")
         )
 
+    def _client_ip(self) -> str:
+        xff = (self.headers.get("CF-Connecting-IP") or self.headers.get("X-Forwarded-For") or "").split(",", 1)[0].strip()
+        if xff:
+            return xff
+        return str((self.client_address or ("127.0.0.1", 0))[0])
+
     def _require_admin(self) -> str | None:
         got = self._request_token()
         if not got:
@@ -2128,7 +2143,7 @@ class Handler(BaseHTTPRequestHandler):
             return adm
         if got.startswith(("ghp_", "github_pat_", "gho_", "ghu_")):
             ok, matched, _ = verify_k3_credential(got, account_hint=OWNER_GITHUB_LOGIN)
-            if ok and matched in (OWNER_GITHUB_LOGIN, "santhoshsathish94@gmail.com"):
+            if ok and matched in (OWNER_GITHUB_LOGIN, OWNER_EMAIL):
                 return OWNER_GITHUB_LOGIN
         return None
 
@@ -2180,7 +2195,7 @@ class Handler(BaseHTTPRequestHandler):
         if rel.startswith("api/datasets/Santhoshsathish94/clover-ai-studio/tree/") and rel.endswith("/liquid-lfm3"):
             if not precomp.is_dir():
                 return self._send(404, {"error": "precomputed dataset not found"})
-            cache_f = Path("/tmp/clover_hf_mirror_tree_v7.json") if os.name != "nt" else (Path(S.args.base) / "cache" / "hf_mirror_tree_v7.json")
+            cache_f = Path(S.args.base) / "cache" / "hf_mirror_tree_v7.json"
             if cache_f.is_file():
                 try:
                     return self._send(200, cache_f.read_bytes(), "application/json")
@@ -2621,6 +2636,8 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:
                 return self._send(500, {"error": f"{type(exc).__name__}: {exc}"})
         if path == "/api/admin/github/device/start":
+            if not _check_auth_rate_limit(self._client_ip()):
+                return self._send(429, {"ok": False, "error": "Too many authentication requests. Please wait a minute and try again."})
             import urllib.parse
             import urllib.request
             data_req = urllib.parse.urlencode({
@@ -2697,6 +2714,8 @@ class Handler(BaseHTTPRequestHandler):
                 "admin_token": adm_tok,
             })
         if path == "/api/admin/login":
+            if not _check_auth_rate_limit(self._client_ip()):
+                return self._send(429, {"error": "Too many sign-in attempts. Please wait a minute and try again."})
             try:
                 body = self._read_json(MAX_BODY)
             except Exception as exc:
@@ -2779,7 +2798,7 @@ class Handler(BaseHTTPRequestHandler):
                 ident = str(body.get("identifier") or body.get("email") or body.get("github") or "").strip().lower().lstrip("@")
                 if not ident:
                     return self._send(400, {"error": "identifier is required"})
-                if ident in (OWNER_GITHUB_LOGIN, "santhoshsathish94@gmail.com"):
+                if ident in (OWNER_GITHUB_LOGIN, OWNER_EMAIL):
                     return self._send(400, {"error": "Cannot remove the owner account from the allowlist."})
                 manage_k3_users.cmd_remove(base_p, ident)
                 if S.repo is not None:
@@ -2788,6 +2807,8 @@ class Handler(BaseHTTPRequestHandler):
                 payload["removed"] = ident
                 return self._send(200, payload)
         if path == "/api/auth/login":
+            if not _check_auth_rate_limit(self._client_ip()):
+                return self._send(429, {"error": "Too many sign-in attempts. Please wait a minute and try again.", "auth_required": True})
             try:
                 body = self._read_json(MAX_BODY)
             except Exception as exc:
@@ -2797,36 +2818,6 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(code, {"error": msg_or_acct, "auth_required": True})
             tok = make_account_token(msg_or_acct)
             return self._send(200, {"ok": True, "account": msg_or_acct, "token": tok})
-        if path == "/api/auth/k3-unlock" and not paths.WEB:
-            try:
-                body = self._read_json(MAX_BODY)
-            except Exception as exc:
-                return self._send(400, {"error": str(exc)})
-            import k3_host_engine
-            res_u = k3_host_engine.try_unlock_k3_with_credential(
-                S.args.base,
-                str(body.get("key") or body.get("token") or "").strip(),
-                account=str(body.get("account") or "").strip(),
-            )
-            if not res_u.get("unlocked"):
-                return self._send(403, {"ok": False, "error": "Could not verify k3 credential against allowlist."})
-            S.remote_engines.clear()
-            pick_m = str(body.get("model") or "").strip()
-            if pick_m and S.settings is not None:
-                try:
-                    S.settings.update({"model": pick_m})
-                    S.engine = engine_for(pick_m)
-                except Exception:
-                    pass
-            cat = model_catalog()
-            return self._send(200, {
-                "ok": True,
-                "unlocked": True,
-                "account": res_u.get("account"),
-                "models": [x["id"] for x in cat],
-                "model_catalog": cat,
-                "settings": S.settings.get() if S.settings else {},
-            })
         if not self._token_ok():
             return self._send(
                 401 if paths.WEB else 403,
@@ -2840,6 +2831,32 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as exc:
             return self._send(400, {"error": str(exc)})
         try:
+            if path == "/api/auth/k3-unlock" and not paths.WEB:
+                import k3_host_engine
+                res_u = k3_host_engine.try_unlock_k3_with_credential(
+                    S.args.base,
+                    str(body.get("key") or body.get("token") or "").strip(),
+                    account=str(body.get("account") or "").strip(),
+                )
+                if not res_u.get("unlocked"):
+                    return self._send(403, {"ok": False, "error": "Could not verify k3 credential against allowlist."})
+                S.remote_engines.clear()
+                pick_m = str(body.get("model") or "").strip()
+                if pick_m and S.settings is not None:
+                    try:
+                        S.settings.update({"model": pick_m})
+                        S.engine = engine_for(pick_m)
+                    except Exception:
+                        pass
+                cat = model_catalog()
+                return self._send(200, {
+                    "ok": True,
+                    "unlocked": True,
+                    "account": res_u.get("account"),
+                    "models": [x["id"] for x in cat],
+                    "model_catalog": cat,
+                    "settings": S.settings.get() if S.settings else {},
+                })
             if path in ("/api/setup/start", "/api/setup/stop"):
                 if S.setup is None:
                     return self._send(400, {"error": "setup runs in the installer on this computer"})
