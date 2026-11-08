@@ -200,7 +200,7 @@ def engine_for(model_key=None):
         return S.omni_engine or S.engine
     key = ""
     if ent.get("host") == "k3" and k3_host_engine.is_owner_device(base_dir):
-        key = k3_host_engine.k3_host_key()
+        key = k3_host_engine.k3_host_key(base_dir)
     elif ent.get("key_id"):
         key = vault.get(base_dir, ent["key_id"])
     rm_name = ent.get("remote_model") or ""
@@ -1729,28 +1729,60 @@ WEB_ORIGINS = {
     "https://cloverframework.com", "https://www.cloverframework.com",
     "https://api.cloverframework.com",
 }
-DEFAULT_ALLOWED_ACCOUNTS = ("santhoshsathish94",)
+DEFAULT_ALLOWED_ACCOUNTS = ("santhoshsathish94", "santhoshsathish94@gmail.com")
 _FALLBACK_AUTH_SECRET = secrets.token_hex(32).encode("utf-8")
+_CRED_CACHE_LOCK = threading.Lock()
+_CRED_CACHE = {}  # sha256(token) -> (account, expires_at)
+
+
+def _allowed_accounts_files(base=None):
+    b = Path(base) if base else (Path(S.args.base) if S.args else None)
+    if b is None:
+        return []
+    out = [
+        b / "allowed-accounts.json",
+        paths.repo_dir(b) / "config" / "allowed-accounts.json",
+        paths.config_file(b, "allowed-accounts.json"),
+    ]
+    seen, uniq = set(), []
+    for fp in out:
+        rp = str(fp)
+        if rp not in seen:
+            seen.add(rp)
+            uniq.append(fp)
+    return uniq
 
 
 def allowed_accounts(base=None):
-    """Approved accounts (GitHub usernames or emails, lowercase) permitted to sign in to Web Studio, plus any
-    per-account SHA-256 key hashes from config/<device>/allowed-accounts.json."""
+    """Approved accounts (GitHub usernames or Gmail/email addresses, lowercase) permitted to use the k3 models and
+    Web Studio, plus any per-account SHA-256 key hashes from allowed-accounts.json."""
     accts = {a.lower() for a in DEFAULT_ALLOWED_ACCOUNTS}
     keys = {}
-    b = Path(base) if base else (Path(S.args.base) if S.args else None)
-    if b is not None:
-        fp = paths.config_file(b, "allowed-accounts.json")
+    for fp in _allowed_accounts_files(base):
         if fp.is_file():
             try:
                 raw = json.loads(fp.read_text(encoding="utf-8"))
                 for a in (raw.get("accounts") or ()):
                     if isinstance(a, str) and a.strip():
-                        accts.add(a.strip().lower())
+                        accts.add(a.strip().lower().lstrip("@"))
+                for u in (raw.get("users") or ()):
+                    if isinstance(u, dict):
+                        gh = str(u.get("github") or "").strip().lower().lstrip("@")
+                        em = str(u.get("email") or "").strip().lower()
+                        kh = str(u.get("key_sha256") or "").strip().lower()
+                        if gh:
+                            accts.add(gh)
+                            if kh:
+                                keys[gh] = kh
+                        if em:
+                            accts.add(em)
+                            if kh:
+                                keys[em] = kh
                 for k, v in (raw.get("keys") or {}).items():
                     if isinstance(k, str) and isinstance(v, str) and k.strip() and v.strip():
-                        accts.add(k.strip().lower())
-                        keys[k.strip().lower()] = v.strip().lower()
+                        kl = k.strip().lower().lstrip("@")
+                        accts.add(kl)
+                        keys[kl] = v.strip().lower()
             except (OSError, ValueError):
                 pass
     return accts, keys
@@ -1763,7 +1795,7 @@ def _auth_secret():
 
 
 def make_account_token(account):
-    acct = re.sub(r"[^a-z0-9._@-]", "", str(account or "").strip().lower())[:60]
+    acct = re.sub(r"[^a-z0-9._@-]", "", str(account or "").strip().lower().lstrip("@"))[:60]
     sig = hmac.new(_auth_secret(), f"clover-acct:{acct}".encode("utf-8"), hashlib.sha256).hexdigest()[:32]
     return f"acct:{acct}:{sig}"
 
@@ -1783,31 +1815,55 @@ def verify_account_token(token, base=None):
     return acct if secrets.compare_digest(sig.encode("utf-8"), want.encode("utf-8")) else None
 
 
-def authenticate_web_account(account, key, base=None):
-    """Verifies that `account` is on the approved allowlist and `key` is a valid access key or GitHub token for that
-    approved account. Returns (ok, account_or_error_msg, status_code)."""
+def verify_k3_credential(credential, account_hint="", base=None):
+    """Verifies a k3 credential (signed `acct:...` token, owner key, per-user key, GitHub Personal Access Token, or
+    Google OAuth2/OIDC ID token) against the approved allowlist (`allowed_accounts`).
+    Returns (ok, matched_account_or_error, status_code)."""
     import k3_host_engine
     import urllib.error
     import urllib.request
-    acct = str(account or "").strip().lower().lstrip("@")
-    secret_in = str(key or "").strip()
-    if not acct or not secret_in:
-        return False, "Enter both your approved account username and access key.", 400
+    acct = str(account_hint or "").strip().lower().lstrip("@")
+    secret_in = str(credential or "").strip()
+    if not secret_in:
+        return False, "Access key, GitHub token, or Google token is required.", 401
     accts, acct_keys = allowed_accounts(base)
-    if acct not in accts:
-        return False, f"Account '{acct}' does not have access to Clover AI Studio. Only approved accounts are allowed.", 403
+    if acct and acct not in accts:
+        return False, f"Account '{acct}' does not have access to Clover k3 models. Only approved accounts in allowed-accounts.json are allowed.", 403
+
+    # 1. Signed account token (`acct:<account>:<hmac>`)
+    v_acct = verify_account_token(secret_in, base=base)
+    if v_acct:
+        if acct and acct != v_acct:
+            return False, f"Token belongs to '{v_acct}', not '{acct}'.", 403
+        return True, v_acct, 200
+
+    # 2. Owner key (`S.token` or `k3_host_key`)
     owner_key = k3_host_engine.k3_host_key()
     if (
         (S.token and secrets.compare_digest(secret_in.encode("utf-8"), S.token.encode("utf-8")))
         or (owner_key and secrets.compare_digest(secret_in.encode("utf-8"), owner_key.encode("utf-8")))
-        or secrets.compare_digest(secret_in.encode("utf-8"), make_account_token(acct).encode("utf-8"))
     ):
-        return True, acct, 200
-    want_hash = acct_keys.get(acct)
-    if want_hash:
-        got_hash = hashlib.sha256(secret_in.encode("utf-8")).hexdigest().lower()
-        if secrets.compare_digest(got_hash.encode("utf-8"), want_hash.encode("utf-8")):
+        return True, (acct if acct in accts else DEFAULT_ALLOWED_ACCOUNTS[0]), 200
+
+    # 3. Per-user SHA-256 key hash in allowed-accounts.json
+    got_hash = hashlib.sha256(secret_in.encode("utf-8")).hexdigest().lower()
+    if acct and acct in acct_keys:
+        if secrets.compare_digest(got_hash.encode("utf-8"), acct_keys[acct].encode("utf-8")):
             return True, acct, 200
+    else:
+        for k_acct, want_hash in acct_keys.items():
+            if secrets.compare_digest(got_hash.encode("utf-8"), want_hash.encode("utf-8")):
+                return True, k_acct, 200
+
+    # Check 15-minute in-memory cache for external GitHub / Google tokens
+    now = time.time()
+    with _CRED_CACHE_LOCK:
+        cached = _CRED_CACHE.get(got_hash)
+        if cached and cached[1] > now and cached[0] in accts:
+            if not acct or acct == cached[0]:
+                return True, cached[0], 200
+
+    # 4. GitHub Personal Access Token (`ghp_...`, `github_pat_...`, `gho_...`, `ghu_...`)
     if secret_in.startswith(("ghp_", "github_pat_", "gho_", "ghu_")):
         req = urllib.request.Request(
             "https://api.github.com/user",
@@ -1821,14 +1877,64 @@ def authenticate_web_account(account, key, base=None):
             with urllib.request.urlopen(req, timeout=10) as r:
                 gh_user = json.loads(r.read().decode("utf-8", "replace"))
             gh_login = str(gh_user.get("login") or "").strip().lower()
-            if not gh_login or gh_login != acct or gh_login not in accts:
-                return False, f"GitHub account '@{gh_login or acct}' is not authorized for Clover AI Studio.", 403
-            return True, gh_login, 200
+            gh_email = str(gh_user.get("email") or "").strip().lower()
+            candidates = [c for c in (gh_login, gh_email) if c]
+            if not any(c in accts for c in candidates):
+                try:
+                    req_em = urllib.request.Request(
+                        "https://api.github.com/user/emails",
+                        headers={
+                            "Authorization": f"Bearer {secret_in}",
+                            "Accept": "application/vnd.github+json",
+                            "User-Agent": "CloverStudio/1.0",
+                        },
+                    )
+                    with urllib.request.urlopen(req_em, timeout=8) as r_em:
+                        for em_obj in json.loads(r_em.read().decode("utf-8", "replace")) or ():
+                            if isinstance(em_obj, dict) and em_obj.get("verified") and em_obj.get("email"):
+                                candidates.append(str(em_obj["email"]).strip().lower())
+                except Exception:
+                    pass
+            matched = next((c for c in candidates if c in accts and (not acct or c == acct or gh_login == acct)), None)
+            if not matched:
+                return False, f"GitHub account '@{gh_login or acct}' is not on the k3 allowlist.", 403
+            with _CRED_CACHE_LOCK:
+                _CRED_CACHE[got_hash] = (matched, now + 900)
+            return True, matched, 200
         except urllib.error.HTTPError:
             return False, "GitHub rejected the access token.", 401
         except Exception:
             return False, "Could not verify GitHub token right now.", 502
+
+    # 5. Google / Gmail OAuth2 or OIDC ID token (`eyJ...` JWT or `ya29....` access token)
+    if secret_in.startswith("ya29.") or (secret_in.count(".") == 2 and secret_in.startswith("eyJ")):
+        q_param = "access_token" if secret_in.startswith("ya29.") else "id_token"
+        try:
+            t_url = f"https://oauth2.googleapis.com/tokeninfo?{q_param}={urllib.parse.quote(secret_in)}"
+            req_g = urllib.request.Request(t_url, headers={"Accept": "application/json", "User-Agent": "CloverStudio/1.0"})
+            with urllib.request.urlopen(req_g, timeout=10) as rg:
+                g_info = json.loads(rg.read().decode("utf-8", "replace"))
+            g_email = str(g_info.get("email") or "").strip().lower()
+            em_ok = str(g_info.get("email_verified") or "").lower() in ("true", "1")
+            if g_email and em_ok and g_email in accts and (not acct or acct == g_email):
+                with _CRED_CACHE_LOCK:
+                    _CRED_CACHE[got_hash] = (g_email, now + 900)
+                return True, g_email, 200
+            return False, f"Google account '{g_email or acct}' is not on the k3 allowlist.", 403
+        except Exception:
+            pass
+
     return False, "Invalid access key for this account.", 401
+
+
+def authenticate_web_account(account, key, base=None):
+    """Verifies that `account` is on the approved allowlist and `key` is a valid access key, GitHub token, or Google
+    token for that approved account. Returns (ok, account_or_error_msg, status_code)."""
+    acct = str(account or "").strip().lower().lstrip("@")
+    secret_in = str(key or "").strip()
+    if not secret_in:
+        return False, "Enter your approved account and access key (or GitHub/Google token).", 400
+    return verify_k3_credential(secret_in, account_hint=acct, base=base)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -1907,6 +2013,20 @@ class Handler(BaseHTTPRequestHandler):
         if owner_key and secrets.compare_digest(got.encode("utf-8"), owner_key.encode("utf-8")):
             self._authed_account = DEFAULT_ALLOWED_ACCOUNTS[0]
             return True
+        if not paths.WEB and S.args is not None:
+            try:
+                import vault
+                saved_k3 = (vault.get(S.args.base, "rm_k3") or "").strip()
+                if saved_k3 and len(saved_k3) >= 16 and secrets.compare_digest(got.encode("utf-8"), saved_k3.encode("utf-8")):
+                    self._authed_account = DEFAULT_ALLOWED_ACCOUNTS[0]
+                    return True
+            except Exception:
+                pass
+        if paths.WEB:
+            ok_cred, matched_acct, _ = verify_k3_credential(got)
+            if ok_cred:
+                self._authed_account = matched_acct
+                return True
         return False
 
     def _cross_site(self):
@@ -2385,6 +2505,36 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(code, {"error": msg_or_acct, "auth_required": True})
             tok = make_account_token(msg_or_acct)
             return self._send(200, {"ok": True, "account": msg_or_acct, "token": tok})
+        if path == "/api/auth/k3-unlock" and not paths.WEB:
+            try:
+                body = self._read_json(MAX_BODY)
+            except Exception as exc:
+                return self._send(400, {"error": str(exc)})
+            import k3_host_engine
+            res_u = k3_host_engine.try_unlock_k3_with_credential(
+                S.args.base,
+                str(body.get("key") or body.get("token") or "").strip(),
+                account=str(body.get("account") or "").strip(),
+            )
+            if not res_u.get("unlocked"):
+                return self._send(403, {"ok": False, "error": "Could not verify k3 credential against allowlist."})
+            S.remote_engines.clear()
+            pick_m = str(body.get("model") or "").strip()
+            if pick_m and S.settings is not None:
+                try:
+                    S.settings.update({"model": pick_m})
+                    S.engine = engine_for(pick_m)
+                except Exception:
+                    pass
+            cat = model_catalog()
+            return self._send(200, {
+                "ok": True,
+                "unlocked": True,
+                "account": res_u.get("account"),
+                "models": [x["id"] for x in cat],
+                "model_catalog": cat,
+                "settings": S.settings.get() if S.settings else {},
+            })
         if not self._token_ok():
             return self._send(
                 401 if paths.WEB else 403,
@@ -2456,19 +2606,24 @@ class Handler(BaseHTTPRequestHandler):
                 name_hint = str(body.get("name") or "").strip()
                 entries = k3_host_engine.probe_remote_server(url, api_key=api_key, model_hint=model_hint, name_hint=name_hint)
                 key_id = ""
-                if api_key:
+                save_key = str(entries[0].get("resolved_key") or api_key).strip()
+                if save_key:
                     key_id = "rm_k3" if entries[0].get("host") == "k3" else (
                         "rm_" + hashlib.sha256(entries[0]["url"].encode("utf-8")).hexdigest()[:12]
                     )
-                    vault.put(S.args.base, key_id, api_key)
+                    vault.put(S.args.base, key_id, save_key)
                 cur = list(S.settings.get().get("remote_models") or [])
                 new_ids = {e["id"] for e in entries}
                 cur = [x for x in cur if x.get("id") not in new_ids]
                 for e in entries:
+                    e.pop("resolved_key", None)
+                    e.pop("resolved_account", None)
                     if key_id:
                         e["key_id"] = key_id
                     S.remote_engines.pop(e["id"], None)
                     cur.append(e)
+                if entries[0].get("host") == "k3":
+                    S.remote_engines.clear()
                 pick_id = entries[0]["id"]
                 new = S.settings.update({"remote_models": cur, "model": pick_id})
                 S.engine = engine_for(pick_id)
@@ -2700,8 +2855,20 @@ class Handler(BaseHTTPRequestHandler):
             if path.startswith("/api/workspaces/"):
                 return self._send(200, workspace_action(path.rsplit("/", 1)[1], body))
             if path == "/api/github":  # the answer says whether a token is set, never the token
-                S.github.update(token=body.get("token"), forget=bool(body.get("forget")))
-                return self._send(200, S.workspaces.describe())
+                tok_in = body.get("token")
+                S.github.update(token=tok_in, forget=bool(body.get("forget")))
+                out_ws = S.workspaces.describe()
+                if tok_in and not body.get("forget") and not paths.WEB:
+                    import k3_host_engine
+                    k3_res = k3_host_engine.try_unlock_k3_with_credential(S.args.base, tok_in)
+                    if k3_res.get("unlocked"):
+                        S.remote_engines.clear()
+                        out_ws["k3_unlocked"] = True
+                        out_ws["k3_account"] = k3_res.get("account")
+                cat = model_catalog()
+                out_ws["models"] = [x["id"] for x in cat]
+                out_ws["model_catalog"] = cat
+                return self._send(200, out_ws)
             if path == "/api/vscode/result":
                 if not S.vscode.check(self.headers.get("X-Clover-Bridge")):
                     return self._send(403, {"error": "bridge token required"})

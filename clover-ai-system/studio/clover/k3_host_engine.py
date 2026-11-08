@@ -85,7 +85,7 @@ _SIGN_OFF_PARA = re.compile(
     r"Feel free to ask|Let me know if you (?:have|need))[\s\S]*$", re.I)
 
 
-def k3_host_key():
+def k3_host_key(base_dir=None):
     env = (os.environ.get("CLOVER_K3_KEY") or os.environ.get("CLOVER_HOST_KEY") or "").strip()
     if env:
         return env
@@ -95,7 +95,60 @@ def k3_host_key():
             return key_file.read_text(encoding="utf-8").strip()
         except OSError:
             pass
+    if base_dir is not None:
+        try:
+            import vault
+            saved = (vault.get(base_dir, "rm_k3") or "").strip()
+            if saved:
+                return saved
+        except Exception:
+            pass
     return ""
+
+
+def exchange_k3_login(account="", credential=""):
+    """Exchanges a GitHub token, Google OIDC token, Gmail/GitHub username + key, or acct:... token with k3's
+    /api/auth/login endpoint, returning (token, account) when authorized on k3's allowlist."""
+    cred = (credential or "").strip()
+    acct = (account or "").strip()
+    if not cred:
+        return "", ""
+    for su in K3_URLS:
+        try:
+            body = json.dumps({"account": acct, "key": cred}).encode("utf-8")
+            req = urllib.request.Request(
+                f"{su.rstrip('/')}/api/auth/login",
+                body,
+                {"Content-Type": "application/json", "User-Agent": "CloverStudio/1.0"},
+            )
+            with urllib.request.urlopen(req, timeout=10) as r:
+                resp = json.loads(r.read().decode("utf-8", "replace"))
+            if isinstance(resp, dict) and resp.get("ok") and resp.get("token"):
+                return str(resp["token"]).strip(), str(resp.get("account") or acct).strip()
+        except Exception:
+            pass
+    return "", ""
+
+
+def try_unlock_k3_with_credential(base_dir, credential, account=""):
+    """Attempts to unlock the 4 k3 models on a Phone or Laptop using a GitHub token, Google ID token, or k3 key.
+    Saves the verified token into vault('rm_k3') if the user is on k3's allowlist."""
+    if not base_dir or not credential:
+        return {"unlocked": False}
+    tok, acct = exchange_k3_login(account=account, credential=credential)
+    use_key = tok or str(credential).strip()
+    for su in K3_URLS:
+        try:
+            req = urllib.request.Request(f"{su.rstrip('/')}/api/status?passive=1", headers=_auth_headers(use_key))
+            with urllib.request.urlopen(req, timeout=10) as r:
+                st = json.loads(r.read().decode("utf-8", "replace"))
+            if isinstance(st, dict) and ("models" in st or "model" in st):
+                import vault
+                vault.put(base_dir, "rm_k3", use_key)
+                return {"unlocked": True, "account": acct or st.get("account") or "authorized", "models": st.get("models") or list(SPECS)}
+        except Exception:
+            pass
+    return {"unlocked": False}
 
 
 def _android_model():
@@ -721,11 +774,22 @@ def _slug(s):
 
 def probe_remote_server(url, api_key="", model_hint="", name_hint=""):
     """Probes a user-hosted model server (a Clover Studio / k3 server or any OpenAI-compatible server) and returns a
-    list of model descriptors ready to save in settings['remote_models']."""
+    list of model descriptors ready to save in settings['remote_models'].
+    Also allows entering 'k3', a Gmail address (user@gmail.com), or a GitHub username (e.g. santhoshsathish94) as `url`
+    together with a GitHub token, Google token, or k3 access key to unlock the 4 k3 models."""
     raw = (url or "").strip()
+    acct_hint = ""
+    if not raw and api_key:
+        raw = K3_URLS[0]
     if not raw:
-        raise ValueError("Enter the server URL (for example http://192.168.1.50:8080 or https://my-server.example.com)")
+        raise ValueError("Enter 'k3' (or your approved Gmail / GitHub username) or a server URL (e.g. http://192.168.1.50:8080)")
     if raw.lower() in ("k3", "api.cloverframework.com", "https://api.cloverframework.com"):
+        raw = K3_URLS[0]
+    elif "@" in raw and "://" not in raw and "/" not in raw:
+        acct_hint = raw.lstrip("@").strip().lower()
+        raw = K3_URLS[0]
+    elif "://" not in raw and "." not in raw and ":" not in raw and "/" not in raw and raw.lower() != "localhost":
+        acct_hint = raw.lstrip("@").strip().lower()
         raw = K3_URLS[0]
     elif "://" not in raw:
         raw = "http://" + raw
@@ -734,7 +798,14 @@ def probe_remote_server(url, api_key="", model_hint="", name_hint=""):
         raise ValueError("URL must start with http:// or https:// and include a host name")
     base_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path.rstrip('/')}"
     host_label = "k3" if parsed.hostname in ("api.cloverframework.com", "cloverframework.com", "www.cloverframework.com") else parsed.hostname
-    headers = _auth_headers(api_key)
+    resolved_key = (api_key or "").strip()
+    resolved_acct = acct_hint
+    if host_label == "k3" and resolved_key:
+        tok, acct = exchange_k3_login(account=acct_hint, credential=resolved_key)
+        if tok:
+            resolved_key = tok
+            resolved_acct = acct or acct_hint
+    headers = _auth_headers(resolved_key)
 
     # 1. Try Clover Studio / k3 server (/api/status)
     status_urls = list(K3_URLS) if host_label == "k3" else [base_url]
@@ -751,7 +822,7 @@ def probe_remote_server(url, api_key="", model_hint="", name_hint=""):
                 for mk in avail:
                     sp = SPECS.get(mk)
                     mid = f"k3:{mk}" if host_label == "k3" else f"rm:{_slug(host_label)}-{_slug(mk)}"
-                    entries.append({
+                    ent = {
                         "id": mid,
                         "name": name_hint.strip() if (name_hint and len(avail) == 1) else (
                             sp["model"] if sp else f"{st.get('model') or mk} ({host_label})"
@@ -762,12 +833,17 @@ def probe_remote_server(url, api_key="", model_hint="", name_hint=""):
                         "url": su,
                         "remote_model": mk,
                         "kind": "clover",
-                    })
+                    }
+                    if resolved_key:
+                        ent["resolved_key"] = resolved_key
+                    if resolved_acct:
+                        ent["resolved_account"] = resolved_acct
+                    entries.append(ent)
                 if entries:
                     return entries
         except urllib.error.HTTPError as he:
             if he.code in (401, 403):
-                raise ValueError("This Clover server requires a valid access key.") from he
+                raise ValueError("This account or key is not on the k3 allowlist (or the access key is invalid).") from he
         except Exception:
             pass
 

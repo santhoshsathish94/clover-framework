@@ -896,9 +896,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="glabel">Hosted models</div>
       <div class="group" id="rm-list" hidden></div>
       <div class="group pad">
-        <p class="fine" style="margin-top:0">Host your own model (a Clover server, llama-server, Ollama, vLLM or any OpenAI-compatible server) on any machine and connect it here. By default Clover runs LFM3-Omni-2B locally on this laptop.</p>
-        <div class="keyrow" style="margin-top:.55rem"><input type="text" id="rm-url" autocomplete="off" spellcheck="false" placeholder="Server URL (e.g. http://192.168.1.50:8080)" aria-label="Model server URL"></div>
-        <div class="keyrow" style="margin-top:.45rem"><input type="password" id="rm-key" autocomplete="off" spellcheck="false" placeholder="Access key / API key (optional)" aria-label="Access key or API key"></div>
+        <p class="fine" style="margin-top:0">Unlock the hosted <code>k3</code> models (<b>Clover-35B-A3B</b>, <b>Nemotron 3.5 Super VL</b>, <b>Kimi K3.1 Pro</b>) by entering <code>k3</code> (or your approved Gmail / GitHub username) and your GitHub token or access key—or connect any OpenAI-compatible server.</p>
+        <div class="keyrow" style="margin-top:.55rem"><input type="text" id="rm-url" autocomplete="off" spellcheck="false" placeholder="k3, your Gmail/GitHub username, or Server URL" aria-label="Model server URL or approved account"></div>
+        <div class="keyrow" style="margin-top:.45rem"><input type="password" id="rm-key" autocomplete="off" spellcheck="false" placeholder="GitHub token, Google token, or Access key" aria-label="Access key or API key"></div>
         <div class="keyrow" style="margin-top:.45rem"><input type="text" id="rm-model" autocomplete="off" spellcheck="false" placeholder="Model ID (optional, auto-detected)" aria-label="Model ID"><button type="button" class="btn pri" id="rm-add">Add model</button></div>
         <div class="note" id="rm-note" hidden></div>
       </div>
@@ -4051,8 +4051,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       if (!t) { if ($('acct-gh-token')) $('acct-gh-token').focus(); return; }
       api('POST', '/api/github', { token: t }).then(function (r) {
         if ($('acct-gh-token')) $('acct-gh-token').value = '';
+        if (r.model_catalog) {
+          state.catalog = r.model_catalog;
+          if (state.server) state.server.model_catalog = r.model_catalog;
+          renderModelPicker();
+        }
         renderWorkspaces(r); loadVscode();
-        setNote('acct-note', 'GitHub token saved in encrypted vault. Tap "Set up private repository" to sync your memory.', true);
+        setNote('acct-note', r.k3_unlocked
+          ? 'GitHub token saved and k3 models (Clover-35B-A3B, Nemotron 3.5, Kimi K3.1 Pro) unlocked!'
+          : 'GitHub token saved in encrypted vault. Tap "Set up private repository" to sync your memory.', true);
       }).catch(function (e) { setNote('acct-note', e.message); });
     });
   }
