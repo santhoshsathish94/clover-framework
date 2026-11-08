@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clover Admin — k3 Model Access &amp; User Allowlist</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="../clover-leaf-favicon.svg">
+<style>
+:root {
+  color-scheme: light;
+  --cream: #F7F3E9; --green: #176B2C; --deep: #0D4D20; --leaf: #83B83D;
+  --bg: var(--cream); --surface: #FFFDF8; --fill: #ECE6D7; --fill-2: #E2DBCA;
+  --ink: #1B271F; --ink-2: #39473D; --muted: #687469;
+  --line: rgba(27, 39, 31, .11); --line-2: rgba(27, 39, 31, .18);
+  --accent: var(--green); --accent-2: var(--deep); --accent-tint: #EEF4E6;
+  --danger: #B3261E; --danger-soft: #FBEAE7;
+  --shadow: 0 8px 28px rgba(22, 38, 26, .08), 0 1px 3px rgba(22, 38, 26, .05);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+  font: 15px/1.55 var(--font); -webkit-font-smoothing: antialiased;
+}
+header {
+  border-bottom: 1px solid var(--line); background: rgba(255, 253, 248, .86);
+  backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 20;
+}
+.nav-wrap {
+  max-width: 1040px; margin: 0 auto; padding: .85rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+.brand {
+  display: inline-flex; align-items: center; gap: .6rem; text-decoration: none;
+  color: var(--ink); font-weight: 700; font-size: 1.05rem;
+}
+.brand svg { width: 28px; height: 28px; flex: none; }
+.brand span { color: var(--muted); font-weight: 500; }
+.nav-links { display: flex; align-items: center; gap: .9rem; font-size: .9rem; }
+.nav-links a { color: var(--ink-2); text-decoration: none; font-weight: 550; }
+.nav-links a:hover { color: var(--accent); }
+main { max-width: 1040px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.35rem;
+}
+h1 { margin: 0 0 .35rem; font-size: 1.55rem; letter-spacing: -.02em; }
+h2 { margin: 0 0 .75rem; font-size: 1.12rem; letter-spacing: -.01em; }
+p.lead { margin: 0 0 1.2rem; color: var(--ink-2); font-size: .96rem; }
+.badge {
+  display: inline-flex; align-items: center; gap: .35rem; font-size: .78rem;
+  font-weight: 650; padding: .22rem .65rem; border-radius: 999px;
+  background: var(--accent-tint); color: var(--accent-2); border: 1px solid rgba(23, 107, 44, .2);
+}
+.badge.owner { background: #FFF6D6; color: #7A5200; border-color: rgba(216, 150, 6, .35); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
+  border: 1px solid var(--line-2); background: var(--surface); color: var(--ink);
+  padding: .52rem .95rem; border-radius: 10px; font: inherit; font-size: .9rem;
+  font-weight: 600; cursor: pointer; text-decoration: none; transition: all .15s ease;
+}
+.btn:hover { background: var(--fill); }
+.btn.pri { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.pri:hover { background: var(--accent-2); }
+.btn.gh { background: #24292F; color: #fff; border-color: #24292F; }
+.btn.gh:hover { background: #1B1F23; }
+.btn.danger { color: var(--danger); border-color: rgba(179, 38, 30, .25); background: var(--danger-soft); }
+.btn.sm { padding: .32rem .68rem; font-size: .8rem; border-radius: 8px; }
+.grid-2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1rem; }
+@media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+label.field { display: block; margin-bottom: .85rem; }
+label.field span { display: block; font-size: .83rem; font-weight: 600; color: var(--ink-2); margin-bottom: .3rem; }
+input[type="text"], input[type="email"], input[type="password"], textarea {
+  width: 100%; border: 1px solid var(--line-2); background: #fff; color: var(--ink);
+  border-radius: 10px; padding: .58rem .75rem; font: inherit; font-size: .92rem;
+}
+textarea { resize: vertical; min-height: 76px; font-family: var(--mono); font-size: .86rem; }
+input:focus, textarea:focus { outline: 2px solid var(--leaf); border-color: var(--accent); }
+.note {
+  padding: .65rem .9rem; border-radius: 10px; font-size: .88rem; margin-top: .85rem;
+  background: #FBEAE7; color: #8C1D18; border: 1px solid rgba(179, 38, 30, .2);
+}
+.note.ok { background: var(--accent-tint); color: var(--accent-2); border-color: rgba(23, 107, 44, .22); }
+.device-box {
+  margin-top: 1rem; padding: 1.1rem; border-radius: 12px; background: var(--bg);
+  border: 1px solid var(--line-2); text-align: center;
+}
+.device-code {
+  font-family: var(--mono); font-size: 1.65rem; font-weight: 700; letter-spacing: .12em;
+  color: var(--accent-2); background: #fff; padding: .45rem 1rem; border-radius: 10px;
+  border: 1px dashed var(--accent); display: inline-block; margin: .5rem 0;
+}
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th, td { text-align: left; padding: .7rem .65rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 650; }
+code.tok {
+  font-family: var(--mono); font-size: .78rem; background: var(--bg); padding: .2rem .45rem;
+  border-radius: 6px; border: 1px solid var(--line); color: var(--ink-2);
+}
+.models-row { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+.top-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .8rem; margin-bottom: 1.2rem; }
+.user-pill { display: inline-flex; align-items: center; gap: .5rem; font-weight: 600; font-size: .9rem; }
+.user-pill img { width: 26px; height: 26px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<header>
+  <div class="nav-wrap">
+    <a class="brand" href="../">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="ylg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#FFF078"/><stop offset="55%" stop-color="#F8CF1E"/><stop offset="100%" stop-color="#D89606"/>
+          </linearGradient>
+          <path id="ylf" fill="url(#ylg)" d="M12 11.4 C9.6 8.8 9.2 5.4 10.9 4.3 C11.6 3.8 12 4.5 12 5.1 C12 4.5 12.4 3.8 13.1 4.3 C14.8 5.4 14.4 8.8 12 11.4 Z"/>
+        </defs>
+        <use href="#ylf"/><use href="#ylf" transform="rotate(72 12 12)"/><use href="#ylf" transform="rotate(144 12 12)"/><use href="#ylf" transform="rotate(216 12 12)"/><use href="#ylf" transform="rotate(288 12 12)"/>
+        <circle cx="12" cy="12" r="1.4" fill="#39473D"/>
+      </svg>
+      Clover Framework <span>· Admin</span>
+    </a>
+    <nav class="nav-links">
+      <a href="../">Framework</a>
+      <a href="../ai-system/">AI Studio</a>
+      <a href="https://api.cloverframework.com/">Web Studio</a>
+      <button type="button" class="btn sm" id="btn-logout" hidden>Sign out</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- 1. GitHub Owner Login Gate -->
+  <section class="card" id="login-card" style="max-width:540px;margin:2rem auto">
+    <span class="badge owner">Owner Only · @santhoshsathish94</span>
+    <h1 style="margin-top:.6rem">k3 Model Access Admin</h1>
+    <p class="lead">Sign in with your GitHub account (<b>@santhoshsathish94</b>) to manage the list of email addresses and GitHub accounts allowed to use the hosted <code>k3</code> models (<b>Clover-35B-A3B</b>, <b>Nemotron 3.5 Super VL</b>, <b>Kimi K3.1 Pro</b>, and <b>LFM3-Omni</b>).</p>
+
+    <div style="display:flex;flex-direction:column;gap:.65rem">
+      <button type="button" class="btn gh" id="btn-gh-device" style="padding:.7rem 1.1rem;font-size:.96rem">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        Sign in with GitHub (@santhoshsathish94)
+      </button>
+    </div>
+
+    <div class="device-box" id="device-box" hidden>
+      <div style="font-size:.86rem;color:var(--ink-2)">1. Copy your one-time GitHub verification code:</div>
+      <div class="device-code" id="device-code">----</div>
+      <div style="margin:.55rem 0">
+        <a class="btn pri sm" id="device-link" href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">Copy Code &amp; Open GitHub &rarr;</a>
+      </div>
+      <div style="font-size:.8rem;color:var(--muted)" id="device-status">Waiting for you to authorize @santhoshsathish94 on GitHub…</div>
+    </div>
+
+    <hr style="border:0;border-top:1px solid var(--line);margin:1.25rem 0">
+    <form id="pat-form">
+      <label class="field">
+        <span>Or sign in with GitHub Personal Access Token / Owner Key</span>
+        <div style="display:flex;gap:.5rem">
+          <input type="password" id="pat-input" placeholder="ghp_... or github_pat_... or k3 owner key" autocomplete="current-password">
+          <button type="submit" class="btn pri">Sign in</button>
+        </div>
+      </label>
+    </form>
+    <div class="note" id="login-note" hidden></div>
+  </section>
+
+  <!-- 2. Admin Console (shown after GitHub authentication) -->
+  <div id="admin-panel" hidden>
+    <div class="top-bar">
+      <div>
+        <h1>k3 Hosted Models — Approved Users</h1>
+        <p class="lead" style="margin-bottom:.3rem">Anyone on this list can use all 4 hosted <code>k3</code> models on their Android Phone, Windows Laptop, VS Code, or Web Studio.</p>
+        <div class="models-row">
+          <span class="badge">LFM3-Omni (k3)</span>
+          <span class="badge">Clover-35B-A3B</span>
+          <span class="badge">Nemotron 3.5 Super VL</span>
+          <span class="badge">Kimi K3.1 Pro</span>
+        </div>
+      </div>
+      <div class="user-pill">
+        <img id="admin-avatar" src="" alt="" hidden>
+        <span class="badge owner" id="admin-badge">@santhoshsathish94 · Owner</span>
+      </div>
+    </div>
+
+    <!-- Add Email / GitHub Users -->
+    <section class="card">
+      <h2>Add Approved Email Addresses or GitHub Accounts</h2>
+      <form id="add-form">
+        <div class="grid-2">
+          <div>
+            <label class="field">
+              <span>Email / Gmail Address(es) (comma or newline separated)</span>
+              <textarea id="add-emails" placeholder="alice@gmail.com&#10;bob@gmail.com"></textarea>
+            </label>
+          </div>
+          <div>
+            <label class="field">
+              <span>GitHub Username (optional)</span>
+              <input type="text" id="add-github" placeholder="e.g. octocat">
+            </label>
+            <label class="field">
+              <span>Display Name (optional)</span>
+              <input type="text" id="add-name" placeholder="e.g. Alice">
+            </label>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+          <button type="submit" class="btn pri" id="btn-add">+ Add to k3 Allowlist</button>
+          <span style="font-size:.82rem;color:var(--muted)">Approved users can unlock all 4 <code>k3</code> models in Clover AI Studio by entering their email address in <b>Model &rarr; + Add model…</b> (or signing in with GitHub).</span>
+        </div>
+      </form>
+      <div class="note" id="add-note" hidden></div>
+    </section>
+
+    <!-- Approved Users Table -->
+    <section class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.75rem">
+        <h2 style="margin:0">Approved Users (<span id="user-count">0</span>)</h2>
+        <button type="button" class="btn sm" id="btn-refresh">Refresh List</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email / Gmail</th>
+              <th>GitHub</th>
+              <th>Role</th>
+              <th>Access Key / Quick Setup</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="6" style="color:var(--muted)">Loading approved users…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  var API_BASE = /^(api\.cloverframework\.com|127\.0\.0\.1|localhost)$/i.test(location.hostname || '')
+    ? ''
+    : 'https://api.cloverframework.com';
+  var TOKEN_KEY = 'clover-admin-token';
+  var USER_KEY = 'clover-admin-user';
+  var pollTimer = null;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function getToken() { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } }
+  function setToken(t, u) {
+    try {
+      if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY);
+      if (u) localStorage.setItem(USER_KEY, JSON.stringify(u));
+    } catch (e) {}
+  }
+  function showNote(id, text, ok) {
+    var n = $(id);
+    if (!n) return;
+    n.hidden = !text;
+    n.textContent = text || '';
+    n.className = 'note' + (ok ? ' ok' : '');
+  }
+  function api(method, path, body) {
+    var headers = { 'Accept': 'application/json' };
+    var tok = getToken();
+    if (tok) {
+      headers['X-Clover-Key'] = tok;
+      headers['Authorization'] = 'Bearer ' + tok;
+    }
+    var opts = { method: method, headers: headers };
+    if (body !== undefined) {
+      headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(body);
+    }
+    return fetch(API_BASE + path, opts).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok) {
+          var err = new Error(j.error || ('HTTP ' + r.status));
+          err.status = r.status;
+          err.body = j;
+          throw err;
+        }
+        return j;
+      });
+    });
+  }
+
+  function copyStr(txt, btnEl, doneLabel) {
+    var orig = btnEl ? btnEl.textContent : '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).catch(function () {});
+    }
+    if (btnEl) {
+      btnEl.textContent = doneLabel || 'Copied!';
+      setTimeout(function () { btnEl.textContent = orig; }, 1600);
+    }
+  }
+
+  function renderUsers(data) {
+    var users = (data && data.users) || [];
+    $('user-count').textContent = String(users.length);
+    var tbody = $('users-tbody');
+    if (!users.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">No users found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = users.map(function (u) {
+      var ident = u.email || u.github || u.name;
+      var isOwner = u.role === 'owner' || u.github === 'santhoshsathish94';
+      var setupText = 'Clover AI Studio (k3 models unlocked):\n' +
+        '1. Open Clover AI Studio -> top-left Model dropdown -> + Add model…\n' +
+        '2. Server URL / Account: ' + (u.email || u.github || 'k3') + '\n' +
+        '3. Access Key: ' + (u.token || '') + '\n' +
+        '4. Tap Add model to unlock Clover-35B-A3B, Nemotron 3.5, Kimi K3.1 Pro & LFM3-Omni (k3).';
+      return '<tr>' +
+        '<td><b>' + esc(u.name || ident) + '</b></td>' +
+        '<td>' + (u.email ? '<code>' + esc(u.email) + '</code>' : '<span style="color:var(--muted)">—</span>') + '</td>' +
+        '<td>' + (u.github ? '<a href="https://github.com/' + esc(u.github) + '" target="_blank" rel="noopener noreferrer">@' + esc(u.github) + '</a>' : '<span style="color:var(--muted)">—</span>') + '</td>' +
+        '<td><span class="badge' + (isOwner ? ' owner' : '') + '">' + esc(u.role || 'user') + '</span></td>' +
+        '<td>' +
+          '<div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">' +
+            '<code class="tok" title="' + esc(u.token || '') + '">' + esc((u.token || '').slice(0, 26)) + '…</code>' +
+            '<button type="button" class="btn sm" data-copy-tok="' + esc(u.token || '') + '">Copy Key</button>' +
+            '<button type="button" class="btn sm" data-copy-setup="' + esc(setupText) + '">Copy Setup Guide</button>' +
+          '</div>' +
+        '</td>' +
+        '<td style="text-align:right">' +
+          (isOwner ? '' : '<button type="button" class="btn sm danger" data-remove="' + esc(ident) + '">Remove</button>') +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function loadUsers() {
+    return api('GET', '/api/admin/users').then(function (r) {
+      $('login-card').hidden = true;
+      $('admin-panel').hidden = false;
+      $('btn-logout').hidden = false;
+      try {
+        var u = JSON.parse(localStorage.getItem(USER_KEY) || '{}');
+        if (u.avatar_url) { $('admin-avatar').src = u.avatar_url; $('admin-avatar').hidden = false; }
+        if (u.github_login) $('admin-badge').textContent = '@' + u.github_login + ' · Owner';
+      } catch (e) {}
+      renderUsers(r);
+    }).catch(function (e) {
+      if (e.status === 401 || e.status === 403) {
+        setToken('', null);
+        $('admin-panel').hidden = true;
+        $('login-card').hidden = false;
+        $('btn-logout').hidden = true;
+      } else {
+        showNote('add-note', e.message, false);
+      }
+    });
+  }
+
+  $('btn-gh-device').addEventListener('click', function () {
+    showNote('login-note', '', false);
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    $('btn-gh-device').disabled = true;
+    api('POST', '/api/admin/github/device/start', {}).then(function (r) {
+      $('btn-gh-device').disabled = false;
+      $('device-box').hidden = false;
+      $('device-code').textContent = r.user_code || '';
+      $('device-link').href = r.verification_uri || 'https://github.com/login/device';
+      $('device-link').onclick = function () {
+        if (r.user_code && navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(r.user_code).catch(function () {});
+        }
+      };
+      var intervalMs = Math.max(5, Number(r.interval || 5)) * 1000;
+      pollTimer = setInterval(function () {
+        api('POST', '/api/admin/github/device/poll', { device_code: r.device_code }).then(function (p) {
+          if (p.status === 'authorized' && p.admin_token) {
+            clearInterval(pollTimer); pollTimer = null;
+            setToken(p.admin_token, { github_login: p.github_login, name: p.name, avatar_url: p.avatar_url });
+            $('device-box').hidden = true;
+            loadUsers();
+          }
+        }).catch(function (e) {
+          clearInterval(pollTimer); pollTimer = null;
+          showNote('login-note', e.message || 'GitHub authorization failed.', false);
+        });
+      }, intervalMs);
+    }).catch(function (e) {
+      $('btn-gh-device').disabled = false;
+      showNote('login-note', e.message, false);
+    });
+  });
+
+  $('pat-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var key = ($('pat-input').value || '').trim();
+    if (!key) return;
+    showNote('login-note', 'Verifying with GitHub…', true);
+    api('POST', '/api/admin/login', { key: key }).then(function (r) {
+      $('pat-input').value = '';
+      showNote('login-note', '', true);
+      setToken(r.admin_token, { github_login: r.github_login, name: r.name, avatar_url: r.avatar_url });
+      loadUsers();
+    }).catch(function (e) {
+      showNote('login-note', e.message, false);
+    });
+  });
+
+  $('add-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var emails = ($('add-emails').value || '').trim();
+    var gh = ($('add-github').value || '').trim();
+    var name = ($('add-name').value || '').trim();
+    if (!emails && !gh) {
+      showNote('add-note', 'Enter at least one email address or GitHub username.', false);
+      return;
+    }
+    $('btn-add').disabled = true;
+    api('POST', '/api/admin/users/add', { emails: emails, github: gh, name: name }).then(function (r) {
+      $('btn-add').disabled = false;
+      $('add-emails').value = '';
+      $('add-github').value = '';
+      $('add-name').value = '';
+      renderUsers(r);
+      var addedList = (r.added || []).map(function (x) { return x.identifier; }).join(', ');
+      showNote('add-note', 'Added ' + addedList + ' to the k3 allowlist! They can now use all 4 k3 models.', true);
+    }).catch(function (e) {
+      $('btn-add').disabled = false;
+      showNote('add-note', e.message, false);
+    });
+  });
+
+  $('users-tbody').addEventListener('click', function (ev) {
+    var bTok = ev.target.closest('button[data-copy-tok]');
+    if (bTok) { copyStr(bTok.getAttribute('data-copy-tok'), bTok, 'Copied Key!'); return; }
+    var bSet = ev.target.closest('button[data-copy-setup]');
+    if (bSet) { copyStr(bSet.getAttribute('data-copy-setup'), bSet, 'Copied Guide!'); return; }
+    var bRm = ev.target.closest('button[data-remove]');
+    if (bRm) {
+      var id = bRm.getAttribute('data-remove');
+      if (!confirm('Remove ' + id + ' from the k3 allowlist?')) return;
+      api('POST', '/api/admin/users/remove', { identifier: id }).then(function (r) {
+        renderUsers(r);
+        showNote('add-note', 'Removed ' + id + ' from the k3 allowlist.', true);
+      }).catch(function (e) {
+        showNote('add-note', e.message, false);
+      });
+    }
+  });
+
+  $('btn-refresh').addEventListener('click', loadUsers);
+  $('btn-logout').addEventListener('click', function () {
+    setToken('', null);
+    $('admin-panel').hidden = true;
+    $('login-card').hidden = false;
+    $('btn-logout').hidden = true;
+  });
+
+  if (getToken()) {
+    loadUsers();
+  }
+})();
+</script>
+</body>
+</html>

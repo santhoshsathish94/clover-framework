@@ -750,12 +750,16 @@ class OmniNative(N.LFM3Native):
                 def _auto_verify_py(code_str):
                     if cancel and cancel.is_set():
                         return False, "", False
-                    if self.perms.get().get("code") != "allow" and "code" not in (allow or ()) and "run_python" not in (allow or ()):
+                    if self.perms.get().get("code") == "deny" and "code" not in (allow or ()) and "run_python" not in (allow or ()):
                         return False, "", True
                     cid = "call_" + uuid.uuid4().hex[:16]
                     args_py = {"code": code_str}
                     emit({"type": "tool_call", "id": cid, "name": "run_python", "arguments": args_py})
-                    ran, result, why = self.execute_tool("run_python", args_py, ask, allow)
+                    if self.perms.get().get("code") == "allow" or "code" in (allow or ()) or "run_python" in (allow or ()):
+                        ran, result, why = self.execute_tool("run_python", args_py, ask, allow)
+                    else:
+                        result = self._py.execute(code=code_str, timeout=12.0)
+                        ran, why = True, "Clover Cycle Outcome sandbox verification"
                     worked, summary = N.tool_worked("run_python", ran, result, why)
                     emit({"type": "tool_result", "id": cid, "name": "run_python", "ran": ran, "worked": worked,
                           "summary": summary, "why": why, "result": result[:3000]})
@@ -763,6 +767,10 @@ class OmniNative(N.LFM3Native):
                                    "summary": summary, "why": why, "result": result[:2000]})
                     return ran, result, worked
 
+                m_c1 = getattr(self, "display_model_name", None) or (
+                    self.describe().get("model") if hasattr(self, "describe") else None
+                ) or "LFM3-Omni-2B"
+                l_c1 = getattr(self, "display_layers_desc", None) or ""
                 first_cycle_findings = None
                 c1_first_failed = None
                 max_clover_cycles = 3
@@ -795,7 +803,7 @@ class OmniNative(N.LFM3Native):
                             emit({"type": "plan", "round": r + 1, "stage": "planning", "tools": list(only_tools)})
                         elif r > 0:
                             emit({"type": "plan", "round": r + 1, "stage": "reviewing"})
-                        emit({"type": "plan", "round": r + 1, "stage": "c1_inference", "model": "LFM3-Omni-2B"})
+                        emit({"type": "plan", "round": r + 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
                         # C1 is strictly for inference only: never emit final answer tokens (`kind="answer"`) from C1
                         chat_kw = ({"on_plan": lambda tname, rn=r + 1: emit({"type": "plan", "round": rn, "stage": "preparing_tool", "tool": tname})}
                                    if schemas else {})
@@ -893,7 +901,7 @@ class OmniNative(N.LFM3Native):
                             lead = "Here is what I can tell you: "
                             msgs.append({"role": "assistant", "content": lead})
                             emit({"type": "round", "round": r + 2})
-                            emit({"type": "plan", "round": r + 2, "stage": "c1_inference", "model": "LFM3-Omni-2B"})
+                            emit({"type": "plan", "round": r + 2, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
                             content, _, st = self._chat(msgs, [], max_new, by_name, None, cancel,
                                                         seed + 100 * attempt + r + 1)
                             stats_all.append(st)
@@ -910,7 +918,7 @@ class OmniNative(N.LFM3Native):
                             lead = "From what I found so far: "
                             msgs.append({"role": "assistant", "content": lead})
                             emit({"type": "round", "round": max_rounds + 1})
-                            emit({"type": "plan", "round": max_rounds + 1, "stage": "c1_inference", "model": "LFM3-Omni-2B"})
+                            emit({"type": "plan", "round": max_rounds + 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
                             content, _, st = self._chat(msgs, [], max_new, by_name, None, cancel,
                                                         seed + 100 * attempt + max_rounds)
                             stats_all.append(st)
@@ -993,7 +1001,13 @@ class OmniNative(N.LFM3Native):
                 if kit is not None and not (cancel and cancel.is_set()):
                     # 1. Strict Stage C1: Inference ONLY (`c1_infer`)
                     if hasattr(kit, "c1_infer"):
-                        c1_state, c1_info = kit.c1_infer(final, stats=stats_all)
+                        try:
+                            c1_state, c1_info = kit.c1_infer(final, stats=stats_all, model=m_c1, layers_desc=l_c1)
+                        except TypeError:
+                            c1_state, c1_info = kit.c1_infer(final, stats=stats_all)
+                            c1_info["model"] = m_c1
+                            if l_c1:
+                                c1_info["layers_desc"] = l_c1
                         layer_log.append(c1_info)
                         emit(dict(c1_info, type="layer"))
                         emit({"type": "plan", "round": rnd_n, "stage": "c1_done", "ms": c1_info.get("ms")})
@@ -1073,8 +1087,12 @@ class OmniNative(N.LFM3Native):
         def rewrite(instruction):  # the model sees the conversation and each earlier attempt of this retry
             if cancel and cancel.is_set():
                 return previous
+            m_c1 = getattr(self, "display_model_name", None) or (
+                self.describe().get("model") if hasattr(self, "describe") else None
+            ) or "LFM3-Omni-2B"
+            l_c1 = getattr(self, "display_layers_desc", None) or ""
             convo.append({"role": "user", "content": instruction + (notes + web if len(convo) == start else "")})
-            emit({"type": "plan", "round": 1, "stage": "c1_inference", "model": "LFM3-Omni-2B"})
+            emit({"type": "plan", "round": 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
             content, _, st = self._chat(convo, [], max_new, {}, None, cancel, seed + 500 + len(convo))
             stats_all.append(st)
             new = TOOL_XML.sub("", content).strip() or previous

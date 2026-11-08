@@ -416,18 +416,26 @@ class LayerKit:
                 "diagnostics": [d.format_concise() for d in v.diagnostics[:3]]}
         return (None if v.ok else v.format_feedback()), info
 
-    def c1_infer(self, raw_reply, stats=None):
+    def c1_infer(self, raw_reply, stats=None, model=None, layers_desc=None):
         """Strictly C1: extract 2048-d C1 inference representations (`c1_state`, `c1_info`) without planning or decoding."""
         import omni_c2_c3
+        m_name = model or getattr(self, "model_name", None) or "LFM3-Omni-2B"
+        l_desc = layers_desc or getattr(self, "layers_desc", None) or ""
         rt = omni_c2_c3.for_base(self.base_dir)
         if rt is not None:
-            return rt.c1_infer(raw_reply, generation_stats=stats)
+            st, info = rt.c1_infer(raw_reply, generation_stats=stats, model_name=m_name)
+            info["model"] = m_name
+            if l_desc:
+                info["layers_desc"] = l_desc
+            return st, info
         windows = answer_windows(raw_reply)
         prefill_ms = sum(float(s.get("prefill_s") or 0) * 1000.0 for s in (stats or ()) if isinstance(s, dict))
         gen_tok = sum(int(s.get("new_tokens") or 0) for s in (stats or ()) if isinstance(s, dict))
         n_win = 1 if windows else 0
         state = {"stage": "c1_inference", "raw_text": str(raw_reply or ""), "windows": windows, "window_tokens": 512, "tokens": gen_tok, "ms": round(prefill_ms, 2)}
-        info = {"layer": "c1_inference", "model": "LFM3-Omni-2B", "windows": n_win, "window_tokens": 512, "tokens": gen_tok, "ms": round(prefill_ms, 2)}
+        info = {"layer": "c1_inference", "model": m_name, "windows": n_win, "window_tokens": 512, "tokens": gen_tok, "ms": round(prefill_ms, 2)}
+        if l_desc:
+            info["layers_desc"] = l_desc
         return state, info
 
     @staticmethod

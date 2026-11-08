@@ -382,18 +382,22 @@ def conv_transpose1d_s4(x_bcl: np.ndarray, weight: np.ndarray, bias: np.ndarray)
     # weight: [C_in, C_out, 4], stride=4, kernel_size=4
     B, C_in, L = x_bcl.shape
     C_out = weight.shape[1]
-    y = np.matmul(np.swapaxes(x_bcl, 1, 2), weight.reshape(C_in, C_out * 4)).reshape(B, L, C_out, 4)
-    y = np.swapaxes(y, 1, 2).reshape(B, C_out, L * 4)
+    x_clean = np.nan_to_num(x_bcl, nan=0.0, posinf=1e3, neginf=-1e3)
+    with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
+        y = np.matmul(np.swapaxes(x_clean, 1, 2), weight.reshape(C_in, C_out * 4)).reshape(B, L, C_out, 4)
+    y = np.swapaxes(np.nan_to_num(y, nan=0.0, posinf=1e3, neginf=-1e3), 1, 2).reshape(B, C_out, L * 4)
     return y + bias[None, :, None]
 
 
 def conv1d_k3_p1(x_bcl: np.ndarray, weight: np.ndarray, bias: np.ndarray) -> np.ndarray:
     # weight: [C_out, C_in, 3], stride=1, padding=1
-    y = np.matmul(weight[:, :, 1], x_bcl) + bias[None, :, None]
-    if x_bcl.shape[2] > 1:
-        y[:, :, 1:] += np.matmul(weight[:, :, 0], x_bcl[:, :, :-1])
-        y[:, :, :-1] += np.matmul(weight[:, :, 2], x_bcl[:, :, 1:])
-    return y
+    x_clean = np.nan_to_num(x_bcl, nan=0.0, posinf=1e3, neginf=-1e3)
+    with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
+        y = np.matmul(weight[:, :, 1], x_clean) + bias[None, :, None]
+        if x_clean.shape[2] > 1:
+            y[:, :, 1:] += np.matmul(weight[:, :, 0], x_clean[:, :, :-1])
+            y[:, :, :-1] += np.matmul(weight[:, :, 2], x_clean[:, :, 1:])
+    return np.nan_to_num(y, nan=0.0, posinf=1e3, neginf=-1e3)
 
 
 class OmniC2C3Runtime:
@@ -502,6 +506,7 @@ class OmniC2C3Runtime:
         self,
         raw_inference_text: str,
         generation_stats: list[dict[str, Any]] | None = None,
+        model_name: str | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         """Execute strictly C1 (Model Inference representation extraction ONLY) in a single one-time pass.
         Extracts 2048-d C1 hidden/token representations (`h_primary` and window views `h_valid`) across up to `P_BPE = 512` tokens.
@@ -592,7 +597,7 @@ class OmniC2C3Runtime:
         }
         c1_info = {
             "layer": "c1_inference",
-            "model": "LFM3-Omni-2B",
+            "model": model_name or "LFM3-Omni-2B",
             "windows": n_active,
             "window_tokens": P_BPE,
             "tokens": gen_tokens or total_tokens,

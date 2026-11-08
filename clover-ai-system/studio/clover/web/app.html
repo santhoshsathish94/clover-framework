@@ -1991,10 +1991,20 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       if (st.model_catalog && st.model_catalog.length) {
         state.catalog = st.model_catalog;
         if (state.server) state.server.model_catalog = st.model_catalog;
-        renderModelPicker();
       }
+      if (st.model_key) {
+        state.settings.model = st.model_key;
+        if (state.server && state.server.settings) state.server.settings.model = st.model_key;
+      }
+      renderModelPicker();
       if (st.mode && st.mode !== state.mode) { state.mode = st.mode; applyMode(); }
-      if (state.health && st.engine && state.health.engine && state.health.engine.engine !== st.engine) state.health = null;
+      if (state.health && state.health.engine && (
+        (st.engine && state.health.engine.engine !== st.engine) ||
+        (st.model && state.health.engine.model !== st.model)
+      )) {
+        state.health = null;
+        loadHealth();
+      }
       if (state.ready && st.model) setModel(st.model, st.inputs || ['text']);
       var info = modelInfo(st.model_key || state.settings.model);
       var isRemote = !info.local && !WEB;
@@ -2034,14 +2044,23 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function applyMode() { renderSettings(); }
   function setModel(name, inputs) {
-    var omni = WEB || /omni|nemotron|kimi/i.test(name) || inputs.indexOf('vision') >= 0;
-    var changed = omni !== state.omni || inputs.join() !== state.inputs.join();
+    var omni = WEB || /omni|clover-35b|nemotron|kimi/i.test(name) || inputs.indexOf('vision') >= 0;
+    var modelChanged = state.lastModelName !== name;
+    var changed = modelChanged || omni !== state.omni || inputs.join() !== state.inputs.join();
+    state.lastModelName = name;
     state.omni = omni; state.inputs = inputs;
     updatePlaceholder();
+    if (state.health && state.health.engine && state.health.engine.model !== name) {
+      state.health = null;
+      loadHealth();
+    }
+    var info = modelInfo(state.settings.model);
+    var isRemote = info && !info.local && !WEB;
+    $('hero-p').textContent = isRemote
+      ? ('Clover is connected to ' + info.name + ' on ' + (info.host || 'k3') + '. ' + (info.desc || ''))
+      : (omni ? 'Clover runs here on your laptop. It can see, hear and speak. Nothing leaves it unless you allow it.'
+              : 'Clover runs here on your laptop. Nothing leaves it unless you allow it.');
     if (!changed) return;
-    if (state.health && state.health.engine && state.health.engine.model !== name) state.health = null;
-    $('hero-p').textContent = omni ? 'Clover runs here on your laptop. It can see, hear and speak. Nothing leaves it unless you allow it.'
-      : 'Clover runs here on your laptop. Nothing leaves it unless you allow it.';
     if ($('mic')) $('mic').hidden = true;
     updateSend(); renderSettings(); renderHero(); if (!state.busy) renderLog();
   }
@@ -2072,11 +2091,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function renderServerSettings() {
     var sv = state.server; if (!sv || !sv.settings) return;
     var st = sv.settings, running = (state.health && state.health.engine && state.health.engine.engine) || st.engine;
+    var info = modelInfo(st.model);
+    var isRemote = info && !info.local && !WEB;
     setNote('model-note', sv.omni_available === false ? 'LFM3-Omni-2B not installed: ' + sv.omni_reason : '');
     $('engine-d').textContent = WEB
-      ? 'Runs on the k3 server (AMD Ryzen 9 7950X3D, 124 GB RAM): LFM3-Omni-2B in llama.cpp (Zen 4 AVX-512), Nemotron 3.5 Super VL (88-layer C engine + NCM) and Kimi K3.1 Pro 2.8T MoE (93-layer C/Rust engine + Gated DSA + NCM).'
-      : 'GPU and CPU run LFM3-Omni-2B with 4-bit weights in llama.cpp; the GPU (' + gpuName() + ') reads your message several times faster. ' +
-        'C1 + C2 + C3 runs our trained model with its planner (HybridLink) and decoder (NCM) together on the CPU: text only, no tools, slower; being measured.';
+      ? 'Runs on the k3 server (AMD Ryzen 9 7950X3D, 124 GB RAM): LFM3-Omni-2B in llama.cpp (Zen 4 AVX-512), Clover-35B-A3B (40-layer BD-GDN/GQA MoE), Nemotron 3.5 Super VL (88-layer C engine + NCM) and Kimi K3.1 Pro 2.8T MoE (93-layer C/Rust engine + Gated DSA + NCM).'
+      : isRemote
+        ? (info.name + ' hosted on ' + (info.host || 'k3') + ' — ' + (info.desc || 'Connected remote engine.') + ' Local tools, permissions, memory and Clover Cycle run on this device.')
+        : 'GPU and CPU run LFM3-Omni-2B with 4-bit weights in llama.cpp; the GPU (' + gpuName() + ') reads your message several times faster. ' +
+          'C1 + C2 + C3 runs our trained model with its planner (HybridLink) and decoder (NCM) together on the CPU: text only, no tools, slower; being measured.';
     $('s-engine').children[0].textContent = gpuName();
     Array.prototype.forEach.call($('s-engine').children, function (b) {
       var v = b.getAttribute('data-v'); b.classList.toggle('on', v === st.engine);
@@ -3534,8 +3557,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             onClick: ev.file ? function () { openImageInspector({ file: ev.file, name: 'Visual Inspector · ' + ev.file }); } : null
           });
         } else if (ev.layer === 'c1_inference') {
-          upsertStep('layer_c1', { icon: 'model', state: 'ok', name: 'C1 Inference (' + (ev.model || 'LFM3-Omni-2B') + ')',
-            detail: (ev.tokens ? ev.tokens + ' tokens' : '24-layer inference') + ' \u00b7 1 pass (' + (ev.window_tokens || 512) + '-tok window)',
+          var c1Model = ev.model || (modelInfo(state.settings.model) && modelInfo(state.settings.model).name) || 'LFM3-Omni-2B';
+          var c1Desc = ev.layers_desc || (/35b/i.test(c1Model) ? '40-layer BD-GDN/GQA MoE' : /nemotron/i.test(c1Model) ? '88-layer 120B-A12B MoE' : /kimi/i.test(c1Model) ? '93-layer 2.8T MoE' : '24-layer inference');
+          upsertStep('layer_c1', { icon: 'model', state: 'ok', name: 'C1 Inference (' + c1Model + ')',
+            detail: (ev.tokens ? ev.tokens + ' tokens \u00b7 ' : '') + c1Desc + ' (' + (ev.window_tokens || 512) + '-tok window)',
             badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
         } else if (ev.layer === 'c2_hybridagent') {
           upsertStep('layer_c2', { icon: 'models', state: 'ok', name: 'C2 Plan (HybridAgent)',
@@ -3590,9 +3615,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             detail: 'Checking local tools & context before ' + (ev.model || 'synthesis'), badge: 'Checking\u2026' });
           setStage('verifying facts & tools');
         } else if (ev.stage === 'c1_inference') {
-          upsertStep('layer_c1', { icon: 'model', state: 'run', name: 'C1 Inference (' + (ev.model || 'LFM3-Omni-2B') + ')',
-            detail: 'Running 24-layer model inference (no direct decoding)\u2026', badge: 'Inferring\u2026' });
-          setStage('C1 inference \u00b7 ' + (ev.model || 'LFM3-Omni-2B'));
+          var pModel = ev.model || (modelInfo(state.settings.model) && modelInfo(state.settings.model).name) || 'LFM3-Omni-2B';
+          var pDesc = ev.layers_desc || (/35b/i.test(pModel) ? 'Running 40-layer BD-GDN + Gated GQA + 256-expert MoE inference\u2026' : /nemotron/i.test(pModel) ? 'Running 88-layer 120B-A12B MoE inference\u2026' : /kimi/i.test(pModel) ? 'Running 93-layer 2.8T MoE + Gated DSA inference\u2026' : 'Running 24-layer model inference (no direct decoding)\u2026');
+          upsertStep('layer_c1', { icon: 'model', state: 'run', name: 'C1 Inference (' + pModel + ')',
+            detail: pDesc, badge: 'Inferring\u2026' });
+          setStage('C1 inference \u00b7 ' + pModel);
         } else if (ev.stage === 'c1_done') {
           if (stepMap.layer_c1 && stepMap.layer_c1.data.state === 'run') {
             stepMap.layer_c1.update({ state: 'ok', badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
@@ -3816,9 +3843,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       else if (l.layer === 'ontology_grounding' && l.changed) out.push('S2 grounding fix');
       else if (l.layer === 'image_analysis') out.push('S3 visual inspector (' + (l.elements || 0) + ' regions)');
       else if (l.layer === 'compiler' && l.checked) out.push(l.ok ? 'S3 code checked' : 'S3 code issue');
-      else if (l.layer === 'c1_inference') out.push('C1 Inference');
+      else if (l.layer === 'c1_inference') out.push('C1 Inference' + (l.model ? ' · ' + l.model : ''));
       else if (l.layer === 'c2_hybridagent') out.push('C2 HybridAgent');
-      else if (l.layer === 'ncm' && l.windows) out.push('C3 11L NCM');
+      else if (l.layer === 'ncm' && l.windows) out.push('C3 11L NCM' + (l.model && !/^11-Level/i.test(l.model) ? ' · ' + l.model : ''));
       else if (l.layer === 'workspace') out.push('workspace ' + l.workspace);
       else if (l.layer === 'cycle' && l.trigger === 'user') {
         out.push({

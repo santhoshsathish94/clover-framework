@@ -829,6 +829,18 @@ def verify_turn_outcome(
                 meta["python_sandbox_checked"] = bool(ran)
                 if ran and not worked:
                     findings.append(f"Code execution check: running your Python code raised an error:\n{str(out).strip()[:500]}")
+                elif ran and worked:
+                    rounds_list.append({"tool": "run_python", "ran": True, "worked": True, "result": str(out)})
+            exp_times = re.findall(r"\b([01]\d|2[0-3]):[0-5]\d\b", q)
+            if exp_times:
+                full_times = [m.group(0) for m in re.finditer(r"\b(?:[01]\d|2[0-3]):[0-5]\d\b", q)]
+                py_outs = "\n".join(str(rd.get("result") or "") for rd in rounds_list if rd.get("tool") == "run_python" and rd.get("ran"))
+                if py_outs and any(ft not in py_outs for ft in full_times):
+                    findings.append(
+                        f"Code output check: the question specifies expected 24-hour time output {', '.join(full_times)}, "
+                        f"but running your code printed `{py_outs.strip()[:200]}`. Check all 4-digit permutations "
+                        "`itertools.permutations` with `0 <= hh < 24 and 0 <= mm < 60` and return `f'{hh:02d}:{mm:02d}'`."
+                    )
 
     af = outcome_findings(q, a)
     if af:

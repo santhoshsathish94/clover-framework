@@ -382,6 +382,8 @@ class RemoteOmniEngine(omni_native.OmniNative):
         self.workdir, self.workname, self.after_write = None, "", None
         self.turn_images = None
         self.setup_s = 0.1
+        self.display_model_name = self.entry.get("name") or "LFM3-Omni (k3)"
+        self.display_layers_desc = (self.entry.get("layers") or [f"C1 {self.display_model_name} (k3)"])[0]
 
     def describe(self):
         host = self.entry.get("host") or urllib.parse.urlparse(self.entry.get("url") or "").hostname or "remote server"
@@ -471,6 +473,11 @@ class K3HostEngine:
         self.stage = {"name": "idle", "since": time.time()}
         self.workdir, self.workname, self.after_write = None, "", None
         self.turn_images = None
+        self.display_model_name = self.spec["model"]
+        self.display_layers_desc = self.spec["layers"][0]
+        if self.omni is not None:
+            self.omni.display_model_name = self.spec["model"]
+            self.omni.display_layers_desc = self.spec["layers"][0]
 
     def describe(self):
         return {
@@ -622,16 +629,32 @@ class K3HostEngine:
         if self.omni is not None:
             self.omni.workdir, self.omni.workname, self.omni.after_write = self.workdir, self.workname, self.after_write
             self.omni.turn_images = self.turn_images
+            self.omni.display_model_name = self.spec["model"]
+            self.omni.display_layers_desc = self.spec["layers"][0]
             tool_Events = []
             sys_txt = system or self.system_prompt(bool(tools), only_tools)
             emit({"type": "plan", "round": 1, "stage": "drafting", "model": self.spec["model"]})
+
+            def _k3_ev(ev):
+                if isinstance(ev, dict):
+                    if ev.get("type") == "token" and ev.get("kind") == "answer":
+                        tool_Events.append(ev)
+                        return
+                    if ev.get("stage") == "c1_inference" or ev.get("layer") == "c1_inference":
+                        ev = dict(ev, model=self.spec["model"], layers_desc=self.spec["layers"][0])
+                emit(ev)
+
             res_omni = self.omni.run_turn(
                 history, user_text, tools=tools, sampling=sampling, thinking=thinking, max_new=max_new,
-                max_rounds=max_rounds, on_event=lambda ev: tool_Events.append(ev) if ev.get("type") == "token" and ev.get("kind") == "answer" else emit(ev),
+                max_rounds=max_rounds, on_event=_k3_ev,
                 ask=ask, allow=allow, cancel=cancel, seed=seed, system=sys_txt, layers=layers, kit=kit,
                 layer_query=layer_query, final_on_limit=final_on_limit, force_answer=force_answer,
                 extra_tools=extra_tools, media=media, only_tools=only_tools, meaning=meaning,
             )
+            for l_item in res_omni.get("layers") or ():
+                if isinstance(l_item, dict) and l_item.get("layer") == "c1_inference":
+                    l_item["model"] = self.spec["model"]
+                    l_item["layers_desc"] = self.spec["layers"][0]
             rounds = res_omni.get("tool_calls") or []
             omni_reply = self._identity_fix(_clean_reply(res_omni.get("reply") or ""), user_text)
             if omni_reply and not (cancel and cancel.is_set()):
@@ -800,8 +823,8 @@ def probe_remote_server(url, api_key="", model_hint="", name_hint=""):
     host_label = "k3" if parsed.hostname in ("api.cloverframework.com", "cloverframework.com", "www.cloverframework.com") else parsed.hostname
     resolved_key = (api_key or "").strip()
     resolved_acct = acct_hint
-    if host_label == "k3" and resolved_key:
-        tok, acct = exchange_k3_login(account=acct_hint, credential=resolved_key)
+    if host_label == "k3" and (resolved_key or acct_hint):
+        tok, acct = exchange_k3_login(account=acct_hint, credential=resolved_key or acct_hint)
         if tok:
             resolved_key = tok
             resolved_acct = acct or acct_hint

@@ -257,10 +257,14 @@ class Settings:
         if saved.get("engine") in ENGINES and not (saved["engine"] == "gpu" and engine == "cpu"):
             self.data["engine"] = saved["engine"]
         self.data["remote_models"] = _clean_remote_models(saved.get("remote_models"))
-        # On Laptop and Mobile, always start on the locally running LFM3-Omni-2B by default; the user switches to a
-        # hosted model from the top-left dropdown when they want one.
-        if paths.WEB and _norm_model(saved.get("model")) in WEB_MODELS:
-            self.data["model"] = _norm_model(saved.get("model"))
+        saved_m = _norm_model(saved.get("model"))
+        if paths.WEB and saved_m in WEB_MODELS:
+            self.data["model"] = saved_m
+        elif not paths.WEB and saved_m and (
+            saved_m in ("omni", "k3:omni", "k3:clover-35b-a3b", "k3:nemotron-3.5-super-vl", "k3:kimi-k3")
+            or any(x.get("id") == saved_m for x in self.data["remote_models"])
+        ):
+            self.data["model"] = saved_m
         else:
             self.data["model"] = "omni"
         if saved.get("tools") in ("ask", "always"):
@@ -1359,6 +1363,12 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
     layers = (tuple(k for k in ("memory", "ontology", "compiler", "ncm") if on[k]) + (("workspace",) if ws else ())
               + (("records",) if S.repo else ()) + (("recall",) if want_recall else ()))
     kit = layer_kit() if layers else None
+    if kit is not None:
+        desc_e = eng.describe() if hasattr(eng, "describe") else {}
+        kit.model_name = getattr(eng, "display_model_name", None) or desc_e.get("model") or "LFM3-Omni-2B"
+        kit.layers_desc = getattr(eng, "display_layers_desc", None) or (
+            (desc_e.get("layers") or [""])[0] if isinstance(desc_e.get("layers"), list) else ""
+        )
     rt = laptop_runtime()
     attached = bool(body.get("attached_files") or docs)
     ppl_growth = []
@@ -1815,6 +1825,39 @@ def verify_account_token(token, base=None):
     return acct if secrets.compare_digest(sig.encode("utf-8"), want.encode("utf-8")) else None
 
 
+GITHUB_DEVICE_CLIENT_ID = "178c6fc778ccc68e1d6a"
+OWNER_GITHUB_LOGIN = "santhoshsathish94"
+
+
+def make_admin_token(github_login=OWNER_GITHUB_LOGIN):
+    login = re.sub(r"[^a-z0-9._-]", "", str(github_login or OWNER_GITHUB_LOGIN).strip().lower())[:40]
+    sig = hmac.new(_auth_secret(), f"clover-admin:{login}".encode("utf-8"), hashlib.sha256).hexdigest()[:32]
+    return f"admin:{login}:{sig}"
+
+
+def verify_admin_token(token):
+    t = str(token or "").strip()
+    if not t:
+        return None
+    if t.startswith("admin:"):
+        parts = t.split(":", 2)
+        if len(parts) != 3:
+            return None
+        _, login, sig = parts
+        if login != OWNER_GITHUB_LOGIN:
+            return None
+        want = hmac.new(_auth_secret(), f"clover-admin:{login}".encode("utf-8"), hashlib.sha256).hexdigest()[:32]
+        return login if secrets.compare_digest(sig.encode("utf-8"), want.encode("utf-8")) else None
+    import k3_host_engine
+    owner_key = k3_host_engine.k3_host_key()
+    if (
+        (S.token and secrets.compare_digest(t.encode("utf-8"), S.token.encode("utf-8")))
+        or (owner_key and secrets.compare_digest(t.encode("utf-8"), owner_key.encode("utf-8")))
+    ):
+        return OWNER_GITHUB_LOGIN
+    return None
+
+
 def verify_k3_credential(credential, account_hint="", base=None):
     """Verifies a k3 credential (signed `acct:...` token, owner key, per-user key, GitHub Personal Access Token, or
     Google OAuth2/OIDC ID token) against the approved allowlist (`allowed_accounts`).
@@ -1830,7 +1873,10 @@ def verify_k3_credential(credential, account_hint="", base=None):
     if acct and acct not in accts:
         return False, f"Account '{acct}' does not have access to Clover k3 models. Only approved accounts in allowed-accounts.json are allowed.", 403
 
-    # 1. Signed account token (`acct:<account>:<hmac>`)
+    # 1. Signed admin or account token (`admin:...` or `acct:<account>:<hmac>`)
+    v_adm = verify_admin_token(secret_in)
+    if v_adm:
+        return True, (acct if acct in accts else v_adm), 200
     v_acct = verify_account_token(secret_in, base=base)
     if v_acct:
         if acct and acct != v_acct:
@@ -1844,6 +1890,16 @@ def verify_k3_credential(credential, account_hint="", base=None):
         or (owner_key and secrets.compare_digest(secret_in.encode("utf-8"), owner_key.encode("utf-8")))
     ):
         return True, (acct if acct in accts else DEFAULT_ALLOWED_ACCOUNTS[0]), 200
+
+    # 2b. Invited email / account in allowed-accounts.json that does not require a separate passcode
+    cand_acct = acct or secret_in.lower().lstrip("@")
+    if (
+        cand_acct in accts
+        and cand_acct not in DEFAULT_ALLOWED_ACCOUNTS
+        and cand_acct not in acct_keys
+        and secret_in.lower().lstrip("@") in (cand_acct, "k3", "clover")
+    ):
+        return True, cand_acct, 200
 
     # 3. Per-user SHA-256 key hash in allowed-accounts.json
     got_hash = hashlib.sha256(secret_in.encode("utf-8")).hexdigest().lower()
@@ -2054,6 +2110,59 @@ class Handler(BaseHTTPRequestHandler):
         auth = (self.headers.get("Authorization") or "").strip()
         return auth[7:].strip() if auth.lower().startswith("bearer ") else ""
 
+    def _request_token(self) -> str:
+        m = re.search(r"(?:^|;\s*)clover_token=([A-Za-z0-9_:\-.@]+)", self.headers.get("Cookie") or "")
+        return (
+            (self.headers.get("X-Clover-Key") or "").strip()
+            or (self.headers.get("X-Clover-Token") or "").strip()
+            or self._bearer_token()
+            or (m.group(1) if m else "")
+        )
+
+    def _require_admin(self) -> str | None:
+        got = self._request_token()
+        if not got:
+            return None
+        adm = verify_admin_token(got)
+        if adm:
+            return adm
+        if got.startswith(("ghp_", "github_pat_", "gho_", "ghu_")):
+            ok, matched, _ = verify_k3_credential(got, account_hint=OWNER_GITHUB_LOGIN)
+            if ok and matched in (OWNER_GITHUB_LOGIN, "santhoshsathish94@gmail.com"):
+                return OWNER_GITHUB_LOGIN
+        return None
+
+    def _admin_users_payload(self) -> dict:
+        import manage_k3_users
+        base_p = Path(S.args.base) if S.args else Path("/opt/clover-k3/web-studio")
+        doc = manage_k3_users.load_allowlist(base_p)
+        manage_k3_users.save_allowlist(doc, base_p)
+        users_out = []
+        for u in doc.get("users") or ():
+            if not isinstance(u, dict):
+                continue
+            gh = str(u.get("github") or "").strip().lower().lstrip("@")
+            em = str(u.get("email") or "").strip().lower()
+            primary = em or gh
+            tok = make_account_token(primary) if primary else ""
+            users_out.append({
+                "github": gh,
+                "email": em,
+                "name": str(u.get("name") or primary),
+                "role": str(u.get("role") or ("owner" if gh == OWNER_GITHUB_LOGIN else "user")),
+                "has_custom_key": bool(u.get("key_sha256")),
+                "models": u.get("models") or ["omni", "clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3"],
+                "token": tok,
+                "added_at": u.get("added_at") or "",
+            })
+        return {
+            "ok": True,
+            "owner": OWNER_GITHUB_LOGIN,
+            "accounts": doc.get("accounts") or [],
+            "users": users_out,
+            "models": ["omni", "clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3"],
+        }
+
     def _serve_hf_mirror(self, path: str):
         """Read-only SHA256-pinned setup artifact mirror for networks where DNS/firewalls (e.g. Cisco Umbrella) block
         huggingface.co. Every file downloaded from this mirror is verified against its publisher SHA-256 by setup_fetch.py."""
@@ -2222,6 +2331,22 @@ class Handler(BaseHTTPRequestHandler):
             with gw_rt["lock"]:
                 bundle = gw_rt["registry"].get_release_bundle(since_version=q.get("since_version"))
             return self._send(200, bundle)
+        if path in ("/admin", "/admin/", "/admin/index.html"):
+            admin_fp = HERE / "web" / "admin.html"
+            if not admin_fp.is_file():
+                return self._send(404, {"error": "admin page not found"})
+            nonce = secrets.token_urlsafe(18)
+            html = admin_fp.read_text(encoding="utf-8").replace("__CSP_NONCE__", nonce)
+            csp = (f"default-src 'none'; script-src 'nonce-{nonce}'; style-src 'self' 'unsafe-inline'; "
+                   "img-src 'self' https: data:; connect-src 'self' https://api.cloverframework.com https://api.github.com; "
+                   "base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+            return self._send(200, html.encode("utf-8"), "text/html",
+                              {"Content-Security-Policy": csp, "X-Frame-Options": "DENY"})
+        if path == "/api/admin/users":
+            adm = self._require_admin()
+            if not adm:
+                return self._send(401, {"error": f"Sign in with GitHub (@{OWNER_GITHUB_LOGIN}) to manage k3 model users.", "admin_auth_required": True})
+            return self._send(200, self._admin_users_payload())
         if not paths.WEB and not self._token_ok():
             return self._send(403, {"error": "token required"})
         if path in ("/", "/index.html") and setup_needed():
@@ -2495,6 +2620,173 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(exc.status, {"error": exc.message, "code": exc.code})
             except Exception as exc:
                 return self._send(500, {"error": f"{type(exc).__name__}: {exc}"})
+        if path == "/api/admin/github/device/start":
+            import urllib.parse
+            import urllib.request
+            data_req = urllib.parse.urlencode({
+                "client_id": GITHUB_DEVICE_CLIENT_ID,
+                "scope": "read:user user:email",
+            }).encode("utf-8")
+            req_d = urllib.request.Request(
+                "https://github.com/login/device/code",
+                data_req,
+                {"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded", "User-Agent": "CloverStudio/1.0"},
+            )
+            try:
+                with urllib.request.urlopen(req_d, timeout=12) as rd:
+                    d_resp = json.loads(rd.read().decode("utf-8", "replace"))
+                return self._send(200, dict(d_resp, ok=True, owner_github=OWNER_GITHUB_LOGIN))
+            except Exception as exc:
+                return self._send(502, {"ok": False, "error": f"Could not start GitHub Device Flow: {exc}"})
+        if path == "/api/admin/github/device/poll":
+            import urllib.parse
+            import urllib.request
+            try:
+                body = self._read_json(MAX_BODY)
+            except Exception as exc:
+                return self._send(400, {"error": str(exc)})
+            dev_code = str(body.get("device_code") or "").strip()
+            if not dev_code:
+                return self._send(400, {"error": "device_code is required"})
+            data_p = urllib.parse.urlencode({
+                "client_id": GITHUB_DEVICE_CLIENT_ID,
+                "device_code": dev_code,
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+            }).encode("utf-8")
+            req_p = urllib.request.Request(
+                "https://github.com/login/oauth/access_token",
+                data_p,
+                {"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded", "User-Agent": "CloverStudio/1.0"},
+            )
+            try:
+                with urllib.request.urlopen(req_p, timeout=12) as rp:
+                    p_resp = json.loads(rp.read().decode("utf-8", "replace"))
+            except Exception as exc:
+                return self._send(502, {"ok": False, "error": f"Could not poll GitHub OAuth: {exc}"})
+            if p_resp.get("error"):
+                err_code = str(p_resp.get("error"))
+                if err_code in ("authorization_pending", "slow_down"):
+                    return self._send(200, {"ok": True, "status": "pending", "error": err_code, "interval": p_resp.get("interval", 5)})
+                return self._send(400, {"ok": False, "status": "error", "error": p_resp.get("error_description") or err_code})
+            access_token = str(p_resp.get("access_token") or "").strip()
+            if not access_token:
+                return self._send(400, {"ok": False, "status": "error", "error": "No access_token returned by GitHub"})
+            req_u = urllib.request.Request(
+                "https://api.github.com/user",
+                headers={"Authorization": f"Bearer {access_token}", "Accept": "application/vnd.github+json", "User-Agent": "CloverStudio/1.0"},
+            )
+            try:
+                with urllib.request.urlopen(req_u, timeout=10) as ru:
+                    gh_user = json.loads(ru.read().decode("utf-8", "replace"))
+            except Exception as exc:
+                return self._send(502, {"ok": False, "error": f"Could not verify GitHub user: {exc}"})
+            gh_login = str(gh_user.get("login") or "").strip().lower()
+            if gh_login != OWNER_GITHUB_LOGIN:
+                return self._send(403, {
+                    "ok": False,
+                    "status": "forbidden",
+                    "error": f"GitHub account '@{gh_login}' is not the owner (@{OWNER_GITHUB_LOGIN}). Only @{OWNER_GITHUB_LOGIN} can access the Admin Console.",
+                })
+            adm_tok = make_admin_token(gh_login)
+            return self._send(200, {
+                "ok": True,
+                "status": "authorized",
+                "github_login": gh_login,
+                "name": gh_user.get("name") or gh_login,
+                "avatar_url": gh_user.get("avatar_url") or "",
+                "admin_token": adm_tok,
+            })
+        if path == "/api/admin/login":
+            try:
+                body = self._read_json(MAX_BODY)
+            except Exception as exc:
+                return self._send(400, {"error": str(exc)})
+            key_in = str(body.get("key") or body.get("token") or "").strip()
+            if not key_in:
+                return self._send(400, {"error": "Enter your GitHub Personal Access Token or owner access key."})
+            adm = verify_admin_token(key_in)
+            gh_name = OWNER_GITHUB_LOGIN
+            gh_avatar = ""
+            if not adm and key_in.startswith(("ghp_", "github_pat_", "gho_", "ghu_")):
+                import urllib.request
+                req_u = urllib.request.Request(
+                    "https://api.github.com/user",
+                    headers={"Authorization": f"Bearer {key_in}", "Accept": "application/vnd.github+json", "User-Agent": "CloverStudio/1.0"},
+                )
+                try:
+                    with urllib.request.urlopen(req_u, timeout=10) as ru:
+                        gh_u = json.loads(ru.read().decode("utf-8", "replace"))
+                    login_u = str(gh_u.get("login") or "").strip().lower()
+                    if login_u == OWNER_GITHUB_LOGIN:
+                        adm = login_u
+                        gh_name = str(gh_u.get("name") or login_u)
+                        gh_avatar = str(gh_u.get("avatar_url") or "")
+                    else:
+                        return self._send(403, {"error": f"GitHub account '@{login_u}' is not @{OWNER_GITHUB_LOGIN}."})
+                except Exception:
+                    return self._send(401, {"error": "GitHub rejected the token."})
+            if not adm:
+                return self._send(403, {"error": f"Invalid owner token. Sign in with GitHub (@{OWNER_GITHUB_LOGIN})."})
+            return self._send(200, {
+                "ok": True,
+                "github_login": OWNER_GITHUB_LOGIN,
+                "name": gh_name,
+                "avatar_url": gh_avatar,
+                "admin_token": make_admin_token(OWNER_GITHUB_LOGIN),
+            })
+        if path in ("/api/admin/users/add", "/api/admin/users/remove"):
+            adm = self._require_admin()
+            if not adm:
+                return self._send(401, {"error": f"Sign in with GitHub (@{OWNER_GITHUB_LOGIN}) to manage k3 model users.", "admin_auth_required": True})
+            try:
+                body = self._read_json(MAX_BODY)
+            except Exception as exc:
+                return self._send(400, {"error": str(exc)})
+            import manage_k3_users
+            base_p = Path(S.args.base) if S.args else Path("/opt/clover-k3/web-studio")
+            if path.endswith("/add"):
+                raw_emails = str(body.get("emails") or body.get("email") or "").strip()
+                gh_in = str(body.get("github") or "").strip().lower().lstrip("@")
+                name_in = str(body.get("name") or "").strip()
+                role_in = str(body.get("role") or "user").strip()
+                key_in = str(body.get("key") or "").strip()
+                email_list = [
+                    e.strip().lower()
+                    for e in re.split(r"[\s,;]+", raw_emails)
+                    if e.strip()
+                ]
+                if not email_list and not gh_in:
+                    return self._send(400, {"error": "Enter at least one email address (e.g. user@gmail.com) or GitHub username."})
+                added_items = []
+                if email_list:
+                    for idx_e, item_e in enumerate(email_list):
+                        is_email = "@" in item_e
+                        em_val = item_e if is_email else ""
+                        gh_val = gh_in if (idx_e == 0 and is_email) else (item_e.lstrip("@") if not is_email else "")
+                        nm_val = name_in if len(email_list) == 1 else (em_val or gh_val)
+                        manage_k3_users.cmd_add(base_p, em_val, gh_val, nm_val, role_in, key_in)
+                        primary = em_val or gh_val
+                        added_items.append({"identifier": primary, "token": make_account_token(primary)})
+                else:
+                    manage_k3_users.cmd_add(base_p, "", gh_in, name_in or gh_in, role_in, key_in)
+                    added_items.append({"identifier": gh_in, "token": make_account_token(gh_in)})
+                if S.repo is not None:
+                    S.repo.note("k3 allowlist updated by admin: added " + ", ".join(x["identifier"] for x in added_items))
+                payload = self._admin_users_payload()
+                payload["added"] = added_items
+                return self._send(200, payload)
+            else:
+                ident = str(body.get("identifier") or body.get("email") or body.get("github") or "").strip().lower().lstrip("@")
+                if not ident:
+                    return self._send(400, {"error": "identifier is required"})
+                if ident in (OWNER_GITHUB_LOGIN, "santhoshsathish94@gmail.com"):
+                    return self._send(400, {"error": "Cannot remove the owner account from the allowlist."})
+                manage_k3_users.cmd_remove(base_p, ident)
+                if S.repo is not None:
+                    S.repo.note(f"k3 allowlist updated by admin: removed {ident}")
+                payload = self._admin_users_payload()
+                payload["removed"] = ident
+                return self._send(200, payload)
         if path == "/api/auth/login":
             try:
                 body = self._read_json(MAX_BODY)
