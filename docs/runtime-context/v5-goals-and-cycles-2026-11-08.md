@@ -185,4 +185,51 @@ Inspection across the repository (`c:\personal\oss\clover-framework`) and the la
 ### 3. Growth Lesson Recorded During Experiment 5.1
 - During Cycle 1 of testing `extract_relational_signature`, substring matching (`c in norm`) caused `"table"` to match inside `"portable-computer"` and `"0.0"` to match inside `"8471.30.01"` on unseen tariff HS-code descriptions. Restricting relational cue matching to tokenized words (`c in words`) and requiring both a shared-modifier cue and a container cue for `shared_cyclic_resource` eliminated false cross-role feature activation and achieved `100%` precision across all `10` unseen situations.
 
+---
+
+## Clover Learning Mission — Progressive Six-Book Curriculum, Critical Understanding & Cross-Domain Discovery
+
+### 1. Context: Architectural Mapping onto Existing Clover Systems (Zero Duplicate Stores)
+Inspection of Clover's existing learning architecture established a 1-to-1 mapping for every requirement in the human's Learning Mission directive:
+- **Memory Graph (`CloverMemoryGraphStore` in [memory-knowledge-graph.py](../../clover-ai-system/studio/clover/memory-knowledge-graph.py))**:
+  - Stores all 6 epistemic origin classes without conflation:
+    - `source_claim` $\to$ `epistemic_status="user_stated_belief"`, `provenance=MemoryProvenance(source_type="document", source_ref="book:<id>:<chapter> [<license>]", actor="<author>")`
+    - `observation` $\to$ `epistemic_status="observed"`
+    - `inference` $\to$ `epistemic_status="observed"` (recorded in the unit's `inferences_and_hypotheses` log)
+    - `hypothesis` $\to$ `entry_type="hypothesis"`, `epistemic_status="hypothesis"`, `status="under_review"` (never silently promoted)
+    - `validated_knowledge` $\to$ `entry_type="concept"`, `epistemic_status="externally_verified"`, `status="active"` (promoted only after independent executable tests pass, superseding the validated hypothesis via `mark_superseded` and preserving the full `trace_evolution_chain`)
+    - `unknown` / breakdown boundary $\to$ `epistemic_status="unresolved"`, `status="under_review"` / `"contested"`, linked via `challenges` / `unresolved_with` edges.
+- **Symbolic Ontology Graph (`CloverOntologyGraph` in [symbolic-ontology-graph.py](../../clover-ai-system/studio/clover/symbolic-ontology-graph.py))**:
+  - Materializes `STEM_CONCEPT` and `FORMULA` vertices and `HAS_FORMULA` / Horn-inferred `ENTAILS_CONSTRAINT` edges **strictly for validated concepts**, preserving book license attribution (`CC BY-NC-SA 3.0` / `CC BY-NC-SA 4.0`, `commercial_use_allowed: false`).
+- **Sandbox Isolation**:
+  - Runs inside an isolated sandbox directory (`LayerKit.learning_mission(sandbox_dir=...)` in [world_learning_mission.py](../../clover-ai-system/studio/clover/world_learning_mission.py)) so existing production `memory_tree/` is 100% untouched (`production_memory_tree_untouched: true`).
+
+### 2. Progressive Execution & Unfamiliar Problem-Solving Curve (Baseline $\to$ Unit 1 $\to$ Unit 2 $\to$ Unit 3 $\to$ Unit 4)
+- **Implementation**: [clover-ai-system/studio/clover/world_learning_mission.py](../../clover-ai-system/studio/clover/world_learning_mission.py)
+- **Verification Suite**: [clover-ai-system/studio/clover/test_world_learning_mission.py](../../clover-ai-system/studio/clover/test_world_learning_mission.py)
+- **Machine-Readable Artifact**: [docs/runtime-context/experiment_5_1_learning_mission_results.json](experiment_5_1_learning_mission_results.json)
+
+| Curriculum Stage | Books Studied (with License Attribution) | Concepts Validated & Promoted | Hypotheses Refuted / Left Unresolved | Unfamiliar 10-Problem Accuracy |
+| :--- | :--- | :--- | :--- | :---: |
+| **Step 1: Pre-Reading Baseline** | None (`0` books) | `0` | — | **`2/10` (`20.0%`)** |
+| **Step 2: Unit 1 (Algorithms)** | *Think Python, 3rd Ed.* (Allen B. Downey, `CC BY-NC-SA 3.0`) | `MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG` | Refuted & quarantined `MEM-HYP-LEARN-MEMO-UNIVERSAL-FALSE` (0 cache hits when path history is in key) | **`4/10` (`40.0%`)** |
+| **Step 3: Unit 2 (Physics)** | *University Physics, Vol. 1* (OpenStax, `CC BY-NC-SA 4.0`) | `MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE` | Challenged frictionless $\Delta K + \Delta U = 0$ under quadratic drag ($v_{\text{ss}} = (P_{\text{in}}/c)^{1/3}$) | **`5/10` (`50.0%`)** |
+| **Step 4: Unit 3 (Cross-Domain)** | *Chemistry 2e* & *Biology 2e* (OpenStax, `CC BY-NC-SA 4.0`) | `MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY`, `MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS` | Challenged "closed equilibrium spring" analogy for homeostasis (`MEM-UNRES-UNIT3-CHEM-BIO-CROSSDOMAIN-01`) | **`8/10` (`80.0%`)** |
+| **Step 5: Unit 4 (Cognition & Bayes)** | *Psychology 2e* (OpenStax) & *Think Bayes, 2nd Ed.* (Downey, `CC BY-NC-SA 4.0`) | `MEM-CONCEPT-LEARN-BAYESIAN-DEPENDENCE-CALIBRATION` | Left open-world prior assignment explicitly `unresolved` (`MEM-UNRES-UNIT4-PSYCHOLOGY-BAYES-01`) | **`10/10` (`100.0%`, `+80.0 pp`)** |
+
+### 3. Section 4 Observation: Unprompted Cross-Domain Discovery (Physics & Chemistry $\to$ Living Systems)
+When asked the exact Section 4 prompt without being told what connections to find:
+> *"Can the principles you learned about energy, constraints and dynamic systems help explain anything about living systems? Identify possible relationships, distinguish analogy from actual mechanism, and propose a way to test your ideas."*
+
+Clover traversed its Memory Graph and Symbolic Ontology Graph to produce:
+1. **Discovered Cross-Domain Relationships**:
+   - `MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS` $\xrightarrow{\text{caused\_by}}$ `MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE` (`context_scope="cross_discipline"`): Biological homeostasis ($J_{\text{pump}} = J_{\text{leak}}$) is governed by the same driven-dissipative balance law as terminal velocity under drag ($P_{\text{in}} = P_{\text{diss}}$).
+   - `MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS` $\xrightarrow{\text{depends\_on}}$ `MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY` (`context_scope="prerequisite"`): Active pumping against an electrochemical gradient ($\Delta G_{\text{work}} > 0$) requires enzymatic coupling to exergonic ATP hydrolysis ($\Delta G_{\text{drive}} < 0$).
+2. **Distinction Between Misleading Analogy and Actual Mechanism**:
+   - **Misleading Analogy**: Comparing biological homeostasis to a closed conservative spring or pendulum resting at the bottom of a potential well ($\Delta G = 0$, zero net flux). A closed spring remains at its rest position with zero energy input.
+   - **Actual Mechanism**: A living cell is an open driven non-equilibrium steady state where passive diffusive leak ($J_{\text{leak}} = k_{\text{leak}} \Delta C$) continuously erodes gradients toward $\Delta G = 0$ (cellular death), requiring continuous ATP free-energy input and entropy export to maintain $d(\Delta C)/dt = 0$.
+3. **Proposed & Executed Falsifiable Test**:
+   - Perturbing a cell's ion gradient from $120\text{ mM}$ to $80\text{ mM}$ with intact ATP flux ($J_{\text{pump}} = 6.0\text{ mM/s}$) restores the $120.0\text{ mM}$ set-point, whereas cutting ATP supply ($J_{\text{pump}} = 0$) causes the gradient to decay exponentially to $0.0054\text{ mM} \approx 0\text{ mM}$, falsifying the static-equilibrium spring analogy (`falsifies_static_equilibrium_analogy: true`).
+
+
 

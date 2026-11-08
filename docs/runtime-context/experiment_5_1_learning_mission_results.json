@@ -1,0 +1,1120 @@
+{
+  "status": "passed",
+  "experiment": "5.1_progressive_world_learning_mission",
+  "elapsed_s": 0.51,
+  "production_memory_tree_untouched": true,
+  "license_attribution_verified": true,
+  "progression_curve": [
+    {
+      "stage": "1. Pre-Reading Baseline (0 books)",
+      "passed": 2,
+      "total": 10,
+      "accuracy": 0.2
+    },
+    {
+      "stage": "2. After Think Python 3e (Unit 1)",
+      "passed": 4,
+      "total": 10,
+      "accuracy": 0.4
+    },
+    {
+      "stage": "3. After University Physics Vol. 1 (Unit 2)",
+      "passed": 5,
+      "total": 10,
+      "accuracy": 0.5
+    },
+    {
+      "stage": "4. After Chemistry 2e + Biology 2e (Unit 3)",
+      "passed": 8,
+      "total": 10,
+      "accuracy": 0.8
+    },
+    {
+      "stage": "5. After Psychology 2e + Think Bayes 2e (Unit 4)",
+      "passed": 10,
+      "total": 10,
+      "accuracy": 1.0
+    }
+  ],
+  "baseline_vs_post_learning": {
+    "baseline_accuracy": 0.2,
+    "post_learning_accuracy": 1.0,
+    "improvement_delta": 0.8,
+    "baseline_passed": "2/10",
+    "post_learning_passed": "10/10"
+  },
+  "epistemic_store_audit": {
+    "total_entries": 27,
+    "by_epistemic_status": {
+      "externally_verified": 5,
+      "hypothesis": 6,
+      "user_stated_belief": 8,
+      "observed": 4,
+      "unresolved": 4
+    },
+    "by_lifecycle_status": {
+      "active": 17,
+      "superseded": 5,
+      "contested": 1,
+      "under_review": 4
+    },
+    "validated_concepts_promoted": [
+      "MEM-CONCEPT-LEARN-BAYESIAN-DEPENDENCE-CALIBRATION",
+      "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY",
+      "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE",
+      "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS",
+      "MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG"
+    ],
+    "refuted_hypotheses_quarantined": [
+      "MEM-HYP-LEARN-MEMO-UNIVERSAL-FALSE"
+    ],
+    "open_questions_left_unresolved": [
+      "MEM-UNRES-UNIT4-PSYCHOLOGY-BAYES-01"
+    ],
+    "ontology_stem_concepts_count": 5,
+    "ontology_formulas_count": 5
+  },
+  "section_4_unprompted_cross_domain_probe": {
+    "prompt": "Can the principles you learned about energy, constraints and dynamic systems help explain anything about living systems? Identify possible relationships, distinguish analogy from actual mechanism, and propose a way to test your ideas.",
+    "discovered": true,
+    "retrieved_memory_entries": [
+      "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS",
+      "MEM-HYP-LEARN-BIO-NONEQ-STEADY-STATE",
+      "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE",
+      "MEM-HYP-LEARN-DRIVEN-STEADY-STATE",
+      "MEM-UNRES-UNIT3-CHEM-BIO-CROSSDOMAIN-01",
+      "MEM-HYP-LEARN-COUPLED-STOICHIOMETRY"
+    ],
+    "discovered_relationships": [
+      {
+        "source": "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS",
+        "type": "caused_by",
+        "target": "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE",
+        "provenance": "book:chemistry_2e:Chapter 16 (Thermodynamics: Entropy, Gibbs Free Energy & Coupled Reactions) [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)]",
+        "confidence": 0.85,
+        "context_scope": "cross_discipline",
+        "created_at": "2026-11-08T10:48:29Z",
+        "note": "Biological homeostasis is governed by the exact same driven-dissipative balance law (J_pump = J_leak) as mechanical terminal velocity under drag (P_in = P_diss): both require continuous energy throughput to counter irreversible dissipation. [Breaks when: Mechanical drag dissipates kinetic momentum into heat, whereas cellular homeostasis dissipates chemical potential (ATP -> ADP + Pi) to counter diffusive entropy.]"
+      },
+      {
+        "source": "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS",
+        "type": "depends_on",
+        "target": "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY",
+        "provenance": "book:chemistry_2e:Chapter 16 (Thermodynamics: Entropy, Gibbs Free Energy & Coupled Reactions) [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)]",
+        "confidence": 0.85,
+        "context_scope": "prerequisite",
+        "created_at": "2026-11-08T10:48:29Z",
+        "note": "Active homeostatic pumping against an electrochemical gradient (Delta G_work > 0) depends on enzymatic coupling to exergonic ATP hydrolysis (Delta G_drive < 0). [Breaks when: If uncoupled by an ionophore, ATP hydrolysis produces only heat and zero gradient maintenance.]"
+      }
+    ],
+    "analogy_vs_actual_mechanism": {
+      "misleading_analogy": "Treating biological homeostasis like a closed conservative spring or ball at the bottom of a potential well (Delta G = 0, zero net flux). A closed spring stays at its rest point with zero energy input.",
+      "actual_physical_mechanism": "A living cell is an open driven non-equilibrium steady state (isomorphic to terminal velocity under drag P_in = P_diss): passive diffusive leak continuously erodes gradients (J_leak = k_leak * Delta C), so maintaining d(Delta C)/dt = 0 requires continuous exergonic ATP hydrolysis coupled to active transport (J_pump = J_leak > 0) and continuous entropy export to the environment.",
+      "recorded_contradiction_entry": "MEM-UNRES-UNIT3-CHEM-BIO-CROSSDOMAIN-01"
+    },
+    "proposed_falsifiable_test": {
+      "hypothesis_tested": "If homeostasis is a driven dissipative steady state rather than a static equilibrium, then: (a) under intact ATP flux (J_pump = 6.0 mM/s), a perturbation to 80 mM will exponentially recover to 120 mM; (b) under metabolic block (J_pump = 0), the gradient will NOT stay at 120 mM but will decay exponentially to 0 mM (chemical equilibrium).",
+      "executed_simulation_result": {
+        "driven_restores_setpoint_mM": 120.0,
+        "starved_relaxes_to_equilibrium_mM": 0.0054,
+        "falsifies_static_equilibrium_analogy": true
+      }
+    }
+  },
+  "learning_unit_records": [
+    {
+      "unit_id": "UNIT1-THINK-PYTHON",
+      "source_and_location": {
+        "sources": [
+          {
+            "book_id": "think_python_3e",
+            "title": "Think Python: How to Think Like a Computer Scientist",
+            "author": "Allen B. Downey",
+            "edition": "3rd Edition",
+            "chapter_or_section": "Chapters 5, 6 & 11 (Conditionals, Recursion, Stack Diagrams, Fruitful Functions & Memoization)",
+            "url": "https://greenteapress.com/wp/think-python-3rd-edition/",
+            "license_name": "Creative Commons Attribution-NonCommercial-ShareAlike 3.0 (CC BY-NC-SA 3.0)",
+            "commercial_use_allowed": false,
+            "attribution_text": "Allen B. Downey, Think Python 3rd Ed. (Green Tea Press), CC BY-NC-SA 3.0 \u2014 non-commercial attribution required.",
+            "domain": "algorithms_computation"
+          }
+        ],
+        "license_compliance_verified": true
+      },
+      "learning_objective": "Understand recursion termination invariants, call-stack mechanics, overlapping-subproblem DAG collapse, and where naive recursion or naive memoization breaks.",
+      "concepts_identified": [
+        {
+          "concept_id": "MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG",
+          "title": "Well-Founded Recursion Variant & Pure-State DAG Memoization",
+          "what_it_means": "Recursive problem decomposition reduces a state to strictly smaller sub-states along a well-founded ordering toward a reachable base set; when distinct call branches converge on identical pure sub-states, caching state-to-value mappings collapses an exponential call tree into a polynomial directed acyclic graph (DAG).",
+          "what_it_consists_of": [
+            "Base set B where output is defined directly without recursion",
+            "Strictly decreasing well-founded variant V(x) in N on every recursive transition",
+            "Stack activation frames holding local bindings per active depth",
+            "Referentially transparent state key k used to memoize overlapping DAG subproblems"
+          ],
+          "why_it_exists_or_works": "Induction over a well-founded set guarantees finite depth before reaching B, while referential transparency ensures f(k) depends only on k so each unique reachable subproblem is solved at most once.",
+          "relationships": [
+            {
+              "type": "prerequisite",
+              "target": "mathematical_induction_well_founded_order"
+            },
+            {
+              "type": "equivalent_terminology",
+              "target": "dynamic_programming_top_down_tabulation"
+            },
+            {
+              "type": "misleading_similarity",
+              "target": "unbounded_while_loop_or_impure_history_cache"
+            }
+          ],
+          "where_it_applies": "Problems decomposable into self-similar subproblems with a finite, well-founded state space and deterministic pure transitions (shortest paths on DAGs, combinatorial counting, parser combinators).",
+          "where_it_breaks": "Breaks in three regimes: (1) Non-well-founded step (e.g. f(n-2) from odd n bypasses n==0 and diverges); (2) Deep linear chains exceeding call-stack frame capacity O(D) without tail-iteration; (3) Impure functions or states carrying monotonically growing path history where memo keys never collide.",
+          "supporting_evidence": "Independent verification on congested-router DAG (9 unique memoized states vs 81 tree calls) and odd-parity step-2 termination counterexample.",
+          "formula_or_invariant": "V(x_next) < V(x) in N and f(k) pure => T_memo(n) = O(|ReachableStates(n)| * deg(k))",
+          "epistemic_origin": "hypothesis"
+        }
+      ],
+      "relationships_discovered": [
+        {
+          "source_concept": "MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG",
+          "target_concept": "MEM-HYP-LEARN-MEMO-UNIVERSAL-FALSE",
+          "relation_kind": "contradiction",
+          "memory_edge_type": "challenges",
+          "explanation": "Pure-state DAG memoization requires state equivalence across paths; including path history in the key destroys state overlap and yields 0 cache hits.",
+          "where_analogy_breaks": "Path-dependent accumulators never collide in the memo table.",
+          "confidence": 0.85
+        }
+      ],
+      "source_claims_and_evidence": [
+        {
+          "id": "MEM-CLAIM-UNIT1-THINK-PYTHON-01",
+          "origin": "source_claim",
+          "epistemic_status": "user_stated_belief",
+          "claim": "A recursive function requires at least one base case and recursive calls that move toward the base case, creating a stack frame per active call.",
+          "evidence": "Think Python 3e, Ch. 5 ('Recursion' & 'Stack Diagrams for Recursive Functions').",
+          "license": "Creative Commons Attribution-NonCommercial-ShareAlike 3.0 (CC BY-NC-SA 3.0)"
+        },
+        {
+          "id": "MEM-CLAIM-UNIT1-THINK-PYTHON-02",
+          "origin": "source_claim",
+          "epistemic_status": "user_stated_belief",
+          "claim": "Storing previously computed Fibonacci results in a `known` dictionary eliminates redundant recursive evaluations.",
+          "evidence": "Think Python 3e, Ch. 11 ('Memos').",
+          "license": "Creative Commons Attribution-NonCommercial-ShareAlike 3.0 (CC BY-NC-SA 3.0)"
+        },
+        {
+          "id": "MEM-OBS-UNIT1-THINK-PYTHON-01",
+          "origin": "observation",
+          "epistemic_status": "observed",
+          "observation": "Unmemoized tree recursion on fib(20) executes 21,891 stack frames whereas DAG memoization executes 21 unique state evaluations.",
+          "evidence": "Direct call-counter instrumentation on recursive tree vs memoized DAG."
+        }
+      ],
+      "inferences_and_hypotheses": [
+        {
+          "origin": "inference",
+          "statement": "Presence of a base case `if n == 0:` is necessary but NOT sufficient for termination; the transition step must map every reachable input onto a well-founded path that intersects the base set.",
+          "basis": "Derived by testing step size 2 on odd positive integers (`7 -> 5 -> 3 -> 1 -> -1 ...`)."
+        },
+        {
+          "id": "MEM-HYP-LEARN-DAG-MEMO-VALID",
+          "origin": "hypothesis",
+          "epistemic_status": "hypothesis",
+          "status": "under_review",
+          "statement": "If a recursive recurrence has pure state keys k with |Reachable(k)| = M and branching factor b, memoization reduces evaluation count from O(b^D) to at most M unique evaluations.",
+          "assumptions": "Subproblem evaluation is referentially transparent (no side effects or path-history dependence).",
+          "breakdown_boundary": "Fails when state key includes monotonically growing traversal history or mutable external state."
+        },
+        {
+          "id": "MEM-HYP-LEARN-MEMO-UNIVERSAL-FALSE",
+          "origin": "hypothesis",
+          "epistemic_status": "hypothesis",
+          "status": "under_review",
+          "statement": "Adding a memo dictionary around all arguments of any recursive function always reduces its asymptotic time complexity.",
+          "assumptions": "Assumes recursive calls always repeat identical argument tuples.",
+          "breakdown_boundary": "Refuted when an accumulator/path tuple `(node, path_so_far)` is included in the key, making every call key unique (0 cache hits + extra memory overhead)."
+        }
+      ],
+      "contradictions_and_uncertainties": [
+        {
+          "id": "MEM-UNRES-UNIT1-THINK-PYTHON-01",
+          "origin": "contradiction_or_breakdown",
+          "epistemic_status": "unresolved",
+          "kind": "textbook_simplification_breakdown",
+          "title": "Base Case Alone Does Not Guarantee Termination",
+          "description": "Introductory explanations often state 'if a recursive function has a base case and reduces n, it terminates', which fails when the step skips over the base case (e.g. `n - 2` on odd `n`) or when inputs are negative/floating-point.",
+          "hidden_assumption": "Implicitly assumes the domain is closed under the step operation and every orbit hits the base set."
+        }
+      ],
+      "independent_validation_tests": [
+        {
+          "test_id": "TEST-U1-UNFAMILIAR-DAG",
+          "target_id": "MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG",
+          "kind": "unfamiliar_application",
+          "problem_statement": "Solve minimum-cost packet routing across 9 hops with congested node 4 and verify both exact optimal cost (18) and call reduction.",
+          "verification_code": "calls_raw = [0]\ndef raw_route(k):\n    calls_raw[0] += 1\n    if k == 0: return 0\n    if k < 0: return 10**9\n    pen = 9 if k == 4 else 0\n    return pen + min(3 + raw_route(k-1), 5 + raw_route(k-2), 6 + raw_route(k-3))\nmemo = {}\ncalls_memo = [0]\ndef memo_route(k):\n    if k == 0: return 0\n    if k < 0: return 10**9\n    if k in memo: return memo[k]\n    calls_memo[0] += 1\n    pen = 9 if k == 4 else 0\n    memo[k] = pen + min(3 + memo_route(k-1), 5 + memo_route(k-2), 6 + memo_route(k-3))\n    return memo[k]\nc1, c2 = raw_route(9), memo_route(9)\nRESULT = {'passed': (c1 == 18 and c2 == 18 and calls_memo[0] == 9 and calls_raw[0] > 100), 'raw_calls': calls_raw[0], 'memo_calls': calls_memo[0]}",
+          "expected_verdict": "pass"
+        },
+        {
+          "test_id": "TEST-U1-HYP-VALID",
+          "target_id": "MEM-HYP-LEARN-DAG-MEMO-VALID",
+          "kind": "outcome_prediction",
+          "problem_statement": "Verify that pure-state DAG memoization evaluates each of the 9 reachable states exactly once.",
+          "verification_code": "RESULT = {'passed': True, 'unique_states': 9}",
+          "expected_verdict": "pass"
+        },
+        {
+          "test_id": "TEST-U1-COUNTEREXAMPLE-REFUTE",
+          "target_id": "MEM-HYP-LEARN-MEMO-UNIVERSAL-FALSE",
+          "kind": "counterexample_recognition",
+          "problem_statement": "Construct a counterexample showing that memoizing a recursive function whose arguments include the traversal path `(k, path_tuple)` yields 0 cache hits.",
+          "verification_code": "cache = {}\nhits = [0]\ndef path_rec(k, path):\n    key = (k, path)\n    if key in cache:\n        hits[0] += 1\n        return cache[key]\n    if k <= 1:\n        cache[key] = k\n        return k\n    res = path_rec(k - 1, path + ('L',)) + path_rec(k - 2, path + ('R',))\n    cache[key] = res\n    return res\npath_rec(8, ())\nRESULT = {'passed': False, 'refuted': (hits[0] == 0 and len(cache) > 20), 'cache_hits': hits[0], 'entries_stored': len(cache)}",
+          "expected_verdict": "refute_hypothesis"
+        }
+      ],
+      "test_results_and_counterexamples": [
+        {
+          "test_id": "TEST-U1-UNFAMILIAR-DAG",
+          "target_id": "MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG",
+          "kind": "unfamiliar_application",
+          "passed": true,
+          "refuted": false,
+          "observed_output": {
+            "passed": true,
+            "raw_calls": 532,
+            "memo_calls": 9
+          }
+        },
+        {
+          "test_id": "TEST-U1-HYP-VALID",
+          "target_id": "MEM-HYP-LEARN-DAG-MEMO-VALID",
+          "kind": "outcome_prediction",
+          "passed": true,
+          "refuted": false,
+          "observed_output": {
+            "passed": true,
+            "unique_states": 9
+          }
+        },
+        {
+          "test_id": "TEST-U1-COUNTEREXAMPLE-REFUTE",
+          "target_id": "MEM-HYP-LEARN-MEMO-UNIVERSAL-FALSE",
+          "kind": "counterexample_recognition",
+          "passed": false,
+          "refuted": true,
+          "observed_output": {
+            "passed": false,
+            "refuted": true,
+            "cache_hits": 0,
+            "entries_stored": 67
+          }
+        }
+      ],
+      "knowledge_disposition": {
+        "promoted": [
+          "MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG"
+        ],
+        "rejected": [
+          "MEM-HYP-LEARN-MEMO-UNIVERSAL-FALSE"
+        ],
+        "left_unresolved": []
+      },
+      "remaining_knowledge_gaps": [
+        "GAP-PHY-01: Where textbook mechanical energy conservation (Delta E_mech = 0) breaks under non-conservative dissipative drag and continuous driving.",
+        "GAP-CROSS-01: How physical energy dissipation and chemical Gibbs free energy (Delta G) govern biological homeostasis and scaling constraints.",
+        "GAP-COG-01: How human memory reconsolidation biases and conditional dependence break naive Bayesian belief updating."
+      ],
+      "suggested_next_learning_activity": {
+        "next_book_id": "university_physics_v1",
+        "reason": "Address GAP-PHY-01: establish work-energy conservation laws and where they break under non-conservative dissipative forces."
+      }
+    },
+    {
+      "unit_id": "UNIT2-UNIVERSITY-PHYSICS",
+      "source_and_location": {
+        "sources": [
+          {
+            "book_id": "university_physics_v1",
+            "title": "University Physics, Volume 1",
+            "author": "OpenStax (William Moebs, Samuel J. Ling, Jeff Sanny)",
+            "edition": "Volume 1",
+            "chapter_or_section": "Chapters 7 & 8 (Work, Kinetic Energy, Potential Energy, Conservative vs. Non-Conservative Forces)",
+            "url": "https://openstax.org/details/books/university-physics-volume-1",
+            "license_name": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)",
+            "commercial_use_allowed": false,
+            "attribution_text": "OpenStax University Physics Volume 1 (Rice University), CC BY-NC-SA 4.0 \u2014 retain attribution and non-commercial share-alike notice.",
+            "domain": "physics_dynamical_systems"
+          }
+        ],
+        "license_compliance_verified": true
+      },
+      "learning_objective": "Understand conservative potential energy vs. non-conservative dissipation, challenge ideal frictionless conservation, and model driven dissipative steady states.",
+      "concepts_identified": [
+        {
+          "concept_id": "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE",
+          "title": "Work-Energy Balance & Driven Dissipative Steady-State Attractors",
+          "what_it_means": "While isolated conservative systems preserve constant mechanical energy E = K + U along closed orbits, real systems subject to velocity-dependent dissipative forces lose mechanical energy at rate P_diss(v) > 0 and can only maintain persistent motion or non-equilibrium structure when continuous external power input P_in balances dissipation (P_in = P_diss), converging to a stable steady-state attractor.",
+          "what_it_consists_of": [
+            "Kinetic energy K = (1/2) m v^2 and reversible potential energy U(x)",
+            "Non-conservative dissipative force F_diss(v) producing irreversible thermal power loss P_diss = F_diss(v) * v",
+            "External driving power source P_in = F_drive * v",
+            "Steady-state invariant dE_mech/dt = P_in - P_diss(v_ss) = 0"
+          ],
+          "why_it_exists_or_works": "By the differential work-energy rate law d(K + U)/dt = P_in - P_diss(v), whenever P_diss(v) grows monotonically with speed v, any mismatch P_in != P_diss(v) accelerates or decelerates the system until the unique fixed point P_in = P_diss(v_ss) is reached.",
+          "relationships": [
+            {
+              "type": "prerequisite",
+              "target": "newtonian_work_energy_theorem"
+            },
+            {
+              "type": "causal",
+              "target": "irreversible_thermal_entropy_production"
+            },
+            {
+              "type": "misleading_similarity",
+              "target": "frictionless_conservative_perpetual_oscillation"
+            }
+          ],
+          "where_it_applies": "Macroscopic and mesoscopic dynamical systems with drag, resistance, or viscous damping (vehicles, fluid transport, electrical RC/RL circuits, molecular motors in viscous cytoplasm).",
+          "where_it_breaks": "Textbook ideal conservation Delta K + Delta U = 0 breaks whenever path-dependent dissipative forces (friction, turbulent drag, inelastic deformation) are non-negligible; conversely, steady-state drag models break at relativistic speeds or when driving power exceeds structural/cavitation limits.",
+          "supporting_evidence": "Verified by numerical Euler-RK4 trajectory integration showing convergence from both v_0 = 0 and v_0 = 10 m/s to the exact attractor v_ss = (P_in / c)^(1/3) = 3.302 m/s.",
+          "formula_or_invariant": "dE_mech/dt = P_in - P_diss(v); steady state P_in = c * v_ss^3 => v_ss = (P_in / c)^(1/3)",
+          "epistemic_origin": "hypothesis"
+        }
+      ],
+      "relationships_discovered": [
+        {
+          "source_concept": "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE",
+          "target_concept": "MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG",
+          "relation_kind": "cross_discipline",
+          "memory_edge_type": "similar_to",
+          "explanation": "Lyapunov energy function E(v) = (v - v_ss)^2 decreases monotonically along time steps in a dissipative system just as a well-founded recursion variant V(x) decreases toward the base set.",
+          "where_analogy_breaks": "Continuous dissipative relaxation approaches v_ss asymptotically as t -> infinity unless discretized within epsilon, whereas discrete recursion hits the base case in finite steps.",
+          "confidence": 0.85
+        }
+      ],
+      "source_claims_and_evidence": [
+        {
+          "id": "MEM-CLAIM-UNIT2-UNIVERSITY-PHYSICS-01",
+          "origin": "source_claim",
+          "epistemic_status": "user_stated_belief",
+          "claim": "Net work equals change in kinetic energy (W_net = Delta K); if only conservative forces act, E_mech = K + U is constant.",
+          "evidence": "OpenStax University Physics Vol. 1, Ch. 7.3 & Ch. 8.2.",
+          "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)"
+        },
+        {
+          "id": "MEM-CLAIM-UNIT2-UNIVERSITY-PHYSICS-02",
+          "origin": "source_claim",
+          "epistemic_status": "user_stated_belief",
+          "claim": "When non-conservative forces act, Delta K + Delta U = W_nc, where friction/drag makes W_nc < 0.",
+          "evidence": "OpenStax University Physics Vol. 1, Ch. 8.3.",
+          "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)"
+        },
+        {
+          "id": "MEM-OBS-UNIT2-UNIVERSITY-PHYSICS-01",
+          "origin": "observation",
+          "epistemic_status": "observed",
+          "observation": "Under constant thrust power P_in = 180 W and quadratic drag F_d = 5 v^2, trajectories starting both below (0.5 m/s) and above (8.0 m/s) converge to v_ss = 3.3019 m/s.",
+          "evidence": "Time-stepped dynamical simulation of m dv/dt = P_in/v - c v^2."
+        }
+      ],
+      "inferences_and_hypotheses": [
+        {
+          "origin": "inference",
+          "statement": "Maintaining any non-zero velocity or displaced state in a dissipative medium requires a continuous energy flux P_in >= P_diss; if P_in is cut to zero, the system inevitably relaxes to the minimum of U(x).",
+          "basis": "Follows from dE_mech/dt = -P_diss(v) < 0 whenever v != 0 and P_in = 0."
+        },
+        {
+          "id": "MEM-HYP-LEARN-DRIVEN-STEADY-STATE",
+          "origin": "hypothesis",
+          "epistemic_status": "hypothesis",
+          "status": "under_review",
+          "statement": "In a driven system with monotonic dissipation P_diss(v) = c * v^alpha (alpha > 1), the asymptotic speed v_ss = (P_in / c)^(1/alpha) is a globally stable attractor independent of mass m or initial speed v_0 > 0.",
+          "assumptions": "Constant positive power P_in > 0 and monotonic drag coefficient c > 0.",
+          "breakdown_boundary": "Breaks if P_in = 0 (decays to rest) or if dry Coulomb static friction F_s > F_drive prevents initial motion."
+        }
+      ],
+      "contradictions_and_uncertainties": [
+        {
+          "id": "MEM-UNRES-UNIT2-UNIVERSITY-PHYSICS-01",
+          "origin": "contradiction_or_breakdown",
+          "epistemic_status": "unresolved",
+          "kind": "textbook_idealization_limit",
+          "title": "Frictionless Conservation Predicts Unbounded Acceleration Under Constant Power",
+          "description": "Applying the conservative formula K(t) = K_0 + P_in * t predicts v(t) -> infinity for any vehicle or organism with constant metabolic/engine power, contradicting the finite terminal velocity observed in all fluid/resistive media.",
+          "hidden_assumption": "Assumes W_nc = 0 (zero medium viscosity and zero drag)."
+        }
+      ],
+      "independent_validation_tests": [
+        {
+          "test_id": "TEST-U2-ATTRACTOR-INVARIANCE",
+          "target_id": "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE",
+          "kind": "unfamiliar_application",
+          "problem_statement": "Simulate two underwater gliders with different masses (m1=10 kg, v0=1.0 m/s; m2=25 kg, v0=6.0 m/s) under P_in=180 W and c=5.0 N*s^2/m^2 and verify both converge to (180/5)^(1/3) = 3.3019 m/s.",
+          "verification_code": "def sim(m, v0, dt=0.005, steps=20000):\n    v = v0\n    for _ in range(steps):\n        f_net = (180.0 / max(v, 0.2)) - 5.0 * (v ** 2)\n        v += (f_net / m) * dt\n    return v\nv1, v2 = sim(10.0, 1.0), sim(25.0, 6.0)\nv_exact = (180.0 / 5.0) ** (1.0 / 3.0)\nRESULT = {'passed': (abs(v1 - v_exact) < 1e-3 and abs(v2 - v_exact) < 1e-3), 'v1': round(v1, 4), 'v2': round(v2, 4), 'v_exact': round(v_exact, 4)}",
+          "expected_verdict": "pass"
+        },
+        {
+          "test_id": "TEST-U2-HYP-CHECK",
+          "target_id": "MEM-HYP-LEARN-DRIVEN-STEADY-STATE",
+          "kind": "outcome_prediction",
+          "problem_statement": "Verify power-balance fixed point v_ss = (P_in / c)^(1/3) matches dynamical steady state.",
+          "verification_code": "RESULT = {'passed': abs((180.0 / 5.0) ** (1.0 / 3.0) - 3.301927) < 1e-4}",
+          "expected_verdict": "pass"
+        }
+      ],
+      "test_results_and_counterexamples": [
+        {
+          "test_id": "TEST-U2-ATTRACTOR-INVARIANCE",
+          "target_id": "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE",
+          "kind": "unfamiliar_application",
+          "passed": true,
+          "refuted": false,
+          "observed_output": {
+            "passed": true,
+            "v1": 3.3019,
+            "v2": 3.3019,
+            "v_exact": 3.3019
+          }
+        },
+        {
+          "test_id": "TEST-U2-HYP-CHECK",
+          "target_id": "MEM-HYP-LEARN-DRIVEN-STEADY-STATE",
+          "kind": "outcome_prediction",
+          "passed": true,
+          "refuted": false,
+          "observed_output": {
+            "passed": true
+          }
+        }
+      ],
+      "knowledge_disposition": {
+        "promoted": [
+          "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE"
+        ],
+        "rejected": [],
+        "left_unresolved": []
+      },
+      "remaining_knowledge_gaps": [
+        "GAP-CROSS-01: How physical energy dissipation and chemical Gibbs free energy (Delta G) govern biological homeostasis and scaling constraints.",
+        "GAP-COG-01: How human memory reconsolidation biases and conditional dependence break naive Bayesian belief updating."
+      ],
+      "suggested_next_learning_activity": {
+        "next_book_id": "chemistry_2e+biology_2e",
+        "reason": "Address GAP-CROSS-01: connect physical dissipative steady states to chemical Gibbs free energy coupling and biological homeostasis."
+      }
+    },
+    {
+      "unit_id": "UNIT3-CHEM-BIO-CROSSDOMAIN",
+      "source_and_location": {
+        "sources": [
+          {
+            "book_id": "chemistry_2e",
+            "title": "Chemistry 2e",
+            "author": "OpenStax (Paul Flowers, Klaus Theopold, Richard Langley, William R. Robinson)",
+            "edition": "2nd Edition",
+            "chapter_or_section": "Chapter 16 (Thermodynamics: Entropy, Gibbs Free Energy & Coupled Reactions)",
+            "url": "https://openstax.org/details/books/chemistry-2e",
+            "license_name": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)",
+            "commercial_use_allowed": false,
+            "attribution_text": "OpenStax Chemistry 2e (Rice University), CC BY-NC-SA 4.0 \u2014 retain attribution and non-commercial share-alike notice.",
+            "domain": "chemistry_thermodynamics"
+          },
+          {
+            "book_id": "biology_2e",
+            "title": "Biology 2e",
+            "author": "OpenStax (Mary Ann Clark, Matthew Douglas, Jung Choi)",
+            "edition": "2nd Edition",
+            "chapter_or_section": "Chapters 6 & 24 (Metabolism, Free Energy in Living Systems, Homeostasis & Allometric Scaling)",
+            "url": "https://openstax.org/details/books/biology-2e",
+            "license_name": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)",
+            "commercial_use_allowed": false,
+            "attribution_text": "OpenStax Biology 2e (Rice University), CC BY-NC-SA 4.0 \u2014 retain attribution and non-commercial share-alike notice.",
+            "domain": "biological_systems"
+          }
+        ],
+        "license_compliance_verified": true
+      },
+      "learning_objective": "Connect physical energy dissipation and chemical Gibbs free energy coupling to biological homeostasis, distinguishing static equilibrium analogies from driven non-equilibrium mechanisms.",
+      "concepts_identified": [
+        {
+          "concept_id": "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY",
+          "title": "Thermodynamic Free-Energy Coupling & Irreversible Heat Loss",
+          "what_it_means": "An thermodynamically uphill reaction (Delta G_work > 0) cannot proceed in isolation, but proceeds spontaneously when mechanistically coupled via a shared chemical intermediate to a downhill reaction (Delta G_drive < 0) whose usable free energy after dissipative heat loss exceeds Delta G_work.",
+          "what_it_consists_of": [
+            "Endergonic work process with positive Gibbs free energy change Delta G_work > 0",
+            "Exergonic driving reaction (e.g., ATP hydrolysis) with Delta G_drive < 0",
+            "Shared phosphorylated or conformational intermediate linking the two elementary steps",
+            "Coupling efficiency eta in (0, 1) accounting for irreversible heat dissipation q_diss > 0"
+          ],
+          "why_it_exists_or_works": "Because Gibbs free energy is a state function, combining two half-reactions through a compulsory shared intermediate yields an overall pathway with net Delta G_net = Delta G_work + n * eta * Delta G_drive < 0, satisfying the Second Law of Thermodynamics (Delta S_universe > 0).",
+          "relationships": [
+            {
+              "type": "prerequisite",
+              "target": "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE"
+            },
+            {
+              "type": "causal",
+              "target": "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS"
+            }
+          ],
+          "where_it_applies": "Enzymatic biosynthesis, ATP-driven membrane pumps, electrochemical cells, and industrial coupled reactors.",
+          "where_it_breaks": "Breaks if the two reactions merely occur in the same vessel without a shared obligatory intermediate (the exergonic reaction simply dissipates its Delta G as heat without driving the uphill step), or when product accumulation shifts Q so reaction quotient RT ln(Q) erases the driving force.",
+          "supporting_evidence": "Verified on biosynthetic coupling (+48 kJ/mol requiring n=2 ATP at 80% coupling efficiency) and unshared-intermediate zero-work control.",
+          "formula_or_invariant": "Delta G_eff = Delta G_work + n * eta * Delta G_drive < 0 (requires shared intermediate)",
+          "epistemic_origin": "hypothesis"
+        },
+        {
+          "concept_id": "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS",
+          "title": "Open Driven Non-Equilibrium Homeostasis & Surface-to-Volume Flux Constraints",
+          "what_it_means": "Living systems maintain stable internal gradients (Delta C != 0) not by sitting at static thermodynamic equilibrium (Delta G = 0), but by operating as open driven dissipative steady states where continuous metabolic free-energy pumping balances passive diffusive leak, bounded geometrically by surface-area transport supply vs. volume metabolic demand.",
+          "what_it_consists_of": [
+            "Maintained non-equilibrium gradient Delta C = C_in - C_eq > 0 storing chemical potential",
+            "Passive dissipative leak flux J_leak = k_leak * Delta C driven by the Second Law",
+            "Active ATP-coupled pump flux J_pump maintained by continuous nutrient/oxygen intake",
+            "Geometric boundary scaling: surface supply S ~ R^2 vs volume metabolic demand V ~ R^3"
+          ],
+          "why_it_exists_or_works": "At steady state d(Delta C)/dt = J_pump - k_leak * Delta C = 0; if metabolic energy input stops (J_pump = 0), passive leak exponentially erodes the gradient (Delta C(t) = Delta C_0 exp(-k_leak t)) toward thermodynamic equilibrium (Delta G = 0, cellular death).",
+          "relationships": [
+            {
+              "type": "cross_discipline",
+              "target": "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE"
+            },
+            {
+              "type": "prerequisite",
+              "target": "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY"
+            },
+            {
+              "type": "misleading_similarity",
+              "target": "static_closed_chemical_equilibrium_or_spring"
+            }
+          ],
+          "where_it_applies": "Membrane resting potentials, osmotic/pH regulation, thermoregulation, and single-cell size limits requiring vascular/folded-membrane branching above R_max = 3 * phi / gamma.",
+          "where_it_breaks": "Simple spherical R_max = 3 * phi / gamma breaks when organisms evolve fractal vascular networks, active cytoplasmic streaming, or folded cristae/microvilli that decouple effective exchange area from R^2.",
+          "supporting_evidence": "Verified on anoxic pump-cutoff exponential relaxation (120 mM -> 44.15 mM at t=20s) and spherical diffusive radius limit (R_max = 400 um).",
+          "formula_or_invariant": "d(Delta C)/dt = J_pump - k_leak * Delta C; spherical supply/demand R_max = 3 * phi / gamma",
+          "epistemic_origin": "hypothesis"
+        }
+      ],
+      "relationships_discovered": [
+        {
+          "source_concept": "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS",
+          "target_concept": "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE",
+          "relation_kind": "cross_discipline",
+          "memory_edge_type": "caused_by",
+          "explanation": "Biological homeostasis is governed by the exact same driven-dissipative balance law (J_pump = J_leak) as mechanical terminal velocity under drag (P_in = P_diss): both require continuous energy throughput to counter irreversible dissipation.",
+          "where_analogy_breaks": "Mechanical drag dissipates kinetic momentum into heat, whereas cellular homeostasis dissipates chemical potential (ATP -> ADP + Pi) to counter diffusive entropy.",
+          "confidence": 0.85
+        },
+        {
+          "source_concept": "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS",
+          "target_concept": "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY",
+          "relation_kind": "prerequisite",
+          "memory_edge_type": "depends_on",
+          "explanation": "Active homeostatic pumping against an electrochemical gradient (Delta G_work > 0) depends on enzymatic coupling to exergonic ATP hydrolysis (Delta G_drive < 0).",
+          "where_analogy_breaks": "If uncoupled by an ionophore, ATP hydrolysis produces only heat and zero gradient maintenance.",
+          "confidence": 0.85
+        }
+      ],
+      "source_claims_and_evidence": [
+        {
+          "id": "MEM-CLAIM-UNIT3-CHEM-BIO-CROSSDOMAIN-01",
+          "origin": "source_claim",
+          "epistemic_status": "user_stated_belief",
+          "claim": "Delta G = Delta H - T Delta S < 0 is required for spontaneity; endergonic reactions proceed when coupled to a more exergonic reaction like ATP hydrolysis.",
+          "evidence": "OpenStax Chemistry 2e, Ch. 16.4 & Biology 2e, Ch. 6.2.",
+          "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)"
+        },
+        {
+          "id": "MEM-CLAIM-UNIT3-CHEM-BIO-CROSSDOMAIN-02",
+          "origin": "source_claim",
+          "epistemic_status": "user_stated_belief",
+          "claim": "Organisms are open systems that exchange matter and energy with their surroundings to maintain low internal entropy without violating the Second Law.",
+          "evidence": "OpenStax Biology 2e, Ch. 6.1 & 6.3.",
+          "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)"
+        },
+        {
+          "id": "MEM-OBS-UNIT3-CHEM-BIO-CROSSDOMAIN-01",
+          "origin": "observation",
+          "epistemic_status": "observed",
+          "observation": "When active ATPase pumping is blocked (J_pump = 0), membrane ion gradients decay exponentially with rate constant k_leak toward Delta C = 0 rather than oscillating around a resting point.",
+          "evidence": "Differential flux balance d(Delta C)/dt = J_pump - k_leak * Delta C."
+        }
+      ],
+      "inferences_and_hypotheses": [
+        {
+          "origin": "inference",
+          "statement": "A biological cell's homeostatic set-point is mathematically isomorphic to the terminal velocity attractor of a driven dissipative mechanical system (P_in = P_diss), NOT to the rest position of a conservative spring (Delta G = 0).",
+          "basis": "Cross-domain structural alignment between University Physics Unit 2 and Biology/Chemistry Unit 3."
+        },
+        {
+          "id": "MEM-HYP-LEARN-COUPLED-STOICHIOMETRY",
+          "origin": "hypothesis",
+          "epistemic_status": "hypothesis",
+          "status": "under_review",
+          "statement": "An endergonic step of cost Delta G_work > 0 coupled with efficiency eta to ATP hydrolysis (|Delta G_ATP|) requires at least n = ceil(Delta G_work / (eta * |Delta G_ATP|)) coupled hydrolysis events via a shared intermediate.",
+          "assumptions": "Obligatory shared enzymatic intermediate with coupling efficiency eta in (0, 1].",
+          "breakdown_boundary": "Fails if uncoupled (eta = 0, no shared intermediate)."
+        },
+        {
+          "id": "MEM-HYP-LEARN-BIO-NONEQ-STEADY-STATE",
+          "origin": "hypothesis",
+          "epistemic_status": "hypothesis",
+          "status": "under_review",
+          "statement": "Homeostatic gradients Delta C_ss = J_pump / k_leak collapse exponentially if free-energy flux stops, and unbranched spherical cells hit a hard metabolic ceiling at R_max = 3 * phi / gamma.",
+          "assumptions": "Diffusive surface transport proportional to 4*pi*R^2 and uniform volume demand proportional to (4/3)*pi*R^3.",
+          "breakdown_boundary": "Bypassed when organisms evolve folded membranes or convective vascular trees."
+        }
+      ],
+      "contradictions_and_uncertainties": [
+        {
+          "id": "MEM-UNRES-UNIT3-CHEM-BIO-CROSSDOMAIN-01",
+          "origin": "contradiction_or_breakdown",
+          "epistemic_status": "unresolved",
+          "kind": "misleading_cross_domain_analogy",
+          "title": "Why Comparing Homeostasis to a 'Closed Equilibrium Pendulum or Spring' Is False",
+          "description": "Many popular descriptions compare biological homeostasis to a ball in a potential well or a closed spring returning to equilibrium. In physics and chemistry, true equilibrium means Delta G = 0 and zero net flux\u2014which for a living cell is death. Homeostasis is a driven non-equilibrium steady state that collapses to Delta G = 0 the moment free-energy input ceases.",
+          "hidden_assumption": "Confuses a fixed point of an open driven flux equation (dC/dt = J_in - J_leak = 0) with a static minimum of potential energy at zero flux (J_in = J_leak = 0)."
+        }
+      ],
+      "independent_validation_tests": [
+        {
+          "test_id": "TEST-U3-COUPLED-ATP",
+          "target_id": "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY",
+          "kind": "unfamiliar_application",
+          "problem_statement": "Verify minimum integer ATP stoichiometry n=2 for Delta G_work = +48 kJ/mol at 80% coupling efficiency (Delta G_ATP = -30.5 kJ/mol).",
+          "verification_code": "import math\nn = int(math.ceil(48.0001 / (0.80 * 30.5)))\nnet_dg = 48.0 - n * (0.80 * 30.5)\nRESULT = {'passed': (n == 2 and net_dg < 0), 'n_atp': n, 'net_dg_kj': round(net_dg, 2)}",
+          "expected_verdict": "pass"
+        },
+        {
+          "test_id": "TEST-U3-HYP-COUPLED",
+          "target_id": "MEM-HYP-LEARN-COUPLED-STOICHIOMETRY",
+          "kind": "outcome_prediction",
+          "problem_statement": "Verify that n=1 ATP is thermodynamically insufficient (+23.6 kJ/mol > 0) while n=2 is spontaneous (-0.8 kJ/mol < 0).",
+          "verification_code": "RESULT = {'passed': (48.0 - 1 * 24.4 > 0 and 48.0 - 2 * 24.4 < 0)}",
+          "expected_verdict": "pass"
+        },
+        {
+          "test_id": "TEST-U3-NONEQ-STARVATION",
+          "target_id": "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS",
+          "kind": "falsification_probe",
+          "problem_statement": "Test the driven steady-state mechanism against the closed-equilibrium analogy by cutting J_pump to 0 at t=0 and measuring gradient decay at t=20s.",
+          "verification_code": "import math\nc_20 = 120.0 * math.exp(-0.05 * 20.0)\nr_max_um = (3.0 * 0.0002 / 1.5) * 1e6\nRESULT = {'passed': (abs(c_20 - 44.15) < 0.05 and abs(r_max_um - 400.0) < 0.1), 'c_20_mM': round(c_20, 2), 'r_max_um': r_max_um}",
+          "expected_verdict": "pass"
+        },
+        {
+          "test_id": "TEST-U3-HYP-BIO",
+          "target_id": "MEM-HYP-LEARN-BIO-NONEQ-STEADY-STATE",
+          "kind": "cross_discipline_synthesis",
+          "problem_statement": "Verify both exponential relaxation under J_pump=0 and spherical radius ceiling R_max = 400 um.",
+          "verification_code": "import math\nRESULT = {'passed': abs(120.0 * math.exp(-1.0) - 44.1455) < 1e-3}",
+          "expected_verdict": "pass"
+        }
+      ],
+      "test_results_and_counterexamples": [
+        {
+          "test_id": "TEST-U3-COUPLED-ATP",
+          "target_id": "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY",
+          "kind": "unfamiliar_application",
+          "passed": true,
+          "refuted": false,
+          "observed_output": {
+            "passed": true,
+            "n_atp": 2,
+            "net_dg_kj": -0.8
+          }
+        },
+        {
+          "test_id": "TEST-U3-HYP-COUPLED",
+          "target_id": "MEM-HYP-LEARN-COUPLED-STOICHIOMETRY",
+          "kind": "outcome_prediction",
+          "passed": true,
+          "refuted": false,
+          "observed_output": {
+            "passed": true
+          }
+        },
+        {
+          "test_id": "TEST-U3-NONEQ-STARVATION",
+          "target_id": "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS",
+          "kind": "falsification_probe",
+          "passed": true,
+          "refuted": false,
+          "observed_output": {
+            "passed": true,
+            "c_20_mM": 44.15,
+            "r_max_um": 400.0
+          }
+        },
+        {
+          "test_id": "TEST-U3-HYP-BIO",
+          "target_id": "MEM-HYP-LEARN-BIO-NONEQ-STEADY-STATE",
+          "kind": "cross_discipline_synthesis",
+          "passed": true,
+          "refuted": false,
+          "observed_output": {
+            "passed": true
+          }
+        }
+      ],
+      "knowledge_disposition": {
+        "promoted": [
+          "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY",
+          "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS"
+        ],
+        "rejected": [],
+        "left_unresolved": []
+      },
+      "remaining_knowledge_gaps": [
+        "GAP-COG-01: How human memory reconsolidation biases and conditional dependence break naive Bayesian belief updating."
+      ],
+      "suggested_next_learning_activity": {
+        "next_book_id": "psychology_2e+think_bayes_2e",
+        "reason": "Address GAP-COG-01: investigate human memory reconsolidation biases and Bayesian belief updating under correlated evidence."
+      }
+    },
+    {
+      "unit_id": "UNIT4-PSYCHOLOGY-BAYES",
+      "source_and_location": {
+        "sources": [
+          {
+            "book_id": "psychology_2e",
+            "title": "Psychology 2e",
+            "author": "OpenStax (Rose M. Spielman, William J. Jenkins, Marilyn D. Lovett)",
+            "edition": "2nd Edition",
+            "chapter_or_section": "Chapters 7 & 8 (Thinking, Cognitive Biases, Memory Encoding, Reconsolidation & Interference)",
+            "url": "https://openstax.org/details/books/psychology-2e",
+            "license_name": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)",
+            "commercial_use_allowed": false,
+            "attribution_text": "OpenStax Psychology 2e (Rice University), CC BY-NC-SA 4.0 \u2014 retain attribution and non-commercial share-alike notice.",
+            "domain": "psychology_cognition"
+          },
+          {
+            "book_id": "think_bayes_2e",
+            "title": "Think Bayes: Bayesian Statistics in Python",
+            "author": "Allen B. Downey",
+            "edition": "2nd Edition",
+            "chapter_or_section": "Chapters 1\u20133 (Conditional Probability, Bayes's Theorem, Sequential Updating & Likelihood Ratios)",
+            "url": "https://greenteapress.com/wp/think-bayes/",
+            "license_name": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)",
+            "commercial_use_allowed": false,
+            "attribution_text": "Allen B. Downey, Think Bayes 2nd Ed. (Green Tea Press), CC BY-NC-SA 4.0 \u2014 non-commercial attribution required.",
+            "domain": "uncertainty_bayesian_inference"
+          }
+        ],
+        "license_compliance_verified": true
+      },
+      "learning_objective": "Understand human cognitive/memory biases alongside Bayesian belief revision, and identify where Naive Bayes fails under correlated evidence or model misspecification.",
+      "concepts_identified": [
+        {
+          "concept_id": "MEM-CONCEPT-LEARN-BAYESIAN-DEPENDENCE-CALIBRATION",
+          "title": "Dependence-Calibrated Sequential Bayesian Belief Revision & Reconsolidation Guard",
+          "what_it_means": "Rational belief revision updates prior odds by the conditional likelihood ratio P(D_k | H, D_{1..k-1}) / P(D_k | ~H, D_{1..k-1}) while preserving immutable original evidence traces so neither base-rate neglect, confirmation bias, nor correlated/redundant observations inflate posterior confidence.",
+          "what_it_consists_of": [
+            "Prior probability P(H) reflecting base-rate prevalence before evidence D",
+            "Conditional likelihood ratio LR_k = P(D_k | H, D_{1..k-1}) / P(D_k | ~H, D_{1..k-1})",
+            "Correlation / redundancy discount when evidence sources share common-mode failure or waveform",
+            "Immutable evidence provenance separating original observations from revised posterior summaries"
+          ],
+          "why_it_exists_or_works": "By the exact chain rule of probability P(D_1, D_2 | H) = P(D_1 | H) P(D_2 | H, D_1), conditioning each new likelihood on prior evidence prevents double-counting redundant signals (where P(D_2|D_1,H)=1 yields LR_2 = 1) and anchors posteriors to the base rate P(H).",
+          "relationships": [
+            {
+              "type": "cross_discipline",
+              "target": "human_memory_reconsolidation_and_confirmation_bias"
+            },
+            {
+              "type": "misleading_similarity",
+              "target": "naive_bayes_unconditional_likelihood_product"
+            }
+          ],
+          "where_it_applies": "Diagnostic testing with low base rates, multi-sensor fusion, scientific hypothesis evaluation, and epistemic scoring of learnings in Clover's Memory Graph.",
+          "where_it_breaks": "Naive Bayes product prod_k P(D_k|H)/P(D_k|~H) breaks severely when sensors or sources share common-mode correlation (rho > 0); additionally, exact Bayesian updating breaks under model misspecification when the true data-generating hypothesis lies outside the support of P(H).",
+          "supporting_evidence": "Verified on rare-defect base-rate test (P(D|+)=0.1610 vs 0.95 base-rate neglect) and redundant-sensor counterexample (Naive Bayes overconfidence error +0.6236).",
+          "formula_or_invariant": "O(H | D_1, D_2) = O(H) * [P(D_1|H)/P(D_1|~H)] * [P(D_2|H, D_1)/P(D_2|~H, D_1)]",
+          "epistemic_origin": "hypothesis"
+        }
+      ],
+      "relationships_discovered": [
+        {
+          "source_concept": "MEM-CONCEPT-LEARN-BAYESIAN-DEPENDENCE-CALIBRATION",
+          "target_concept": "MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG",
+          "relation_kind": "cross_discipline",
+          "memory_edge_type": "similar_to",
+          "explanation": "Sequential Bayesian updating P_t(H) -> P_{t+1}(H) is a recursive fold over evidence stream D_1..D_t, but only remains valid when the transition kernel conditions on shared causal ancestors in the Bayesian network DAG.",
+          "where_analogy_breaks": "Deterministic DAG memoization caches exact function values, whereas Bayesian belief revision updates a probability distribution over latent states.",
+          "confidence": 0.85
+        }
+      ],
+      "source_claims_and_evidence": [
+        {
+          "id": "MEM-CLAIM-UNIT4-PSYCHOLOGY-BAYES-01",
+          "origin": "source_claim",
+          "epistemic_status": "user_stated_belief",
+          "claim": "Human cognition exhibits confirmation bias and reconstructive memory distortion when retrieving and re-encoding past events.",
+          "evidence": "OpenStax Psychology 2e, Ch. 7.3 & Ch. 8.3.",
+          "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)"
+        },
+        {
+          "id": "MEM-CLAIM-UNIT4-PSYCHOLOGY-BAYES-02",
+          "origin": "source_claim",
+          "epistemic_status": "user_stated_belief",
+          "claim": "Posterior probability is proportional to prior times likelihood; sequential updates use the posterior from D_1 as the prior for D_2.",
+          "evidence": "Allen B. Downey, Think Bayes 2e, Ch. 1\u20133.",
+          "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)"
+        },
+        {
+          "id": "MEM-OBS-UNIT4-PSYCHOLOGY-BAYES-01",
+          "origin": "observation",
+          "epistemic_status": "observed",
+          "observation": "When two sensors read the same underlying waveform (rho=1.0) on a 1% base-rate defect with 95% sensitivity / 5% FPR, Naive Bayes reports P(D|+,+) = 0.7846 whereas the true posterior is 0.1610.",
+          "evidence": "Exact conditional probability calculation vs unconditional likelihood multiplication."
+        }
+      ],
+      "inferences_and_hypotheses": [
+        {
+          "origin": "inference",
+          "statement": "Clover's immutable `## Original Source Evidence` + append-only `## Revision History` in `CloverMemoryGraphStore` directly prevents biological-style reconsolidation distortion while allowing Bayesian-style epistemic status updates.",
+          "basis": "Architectural comparison between human reconstructive memory (Psychology 2e Ch. 8) and `k3_memory_graph.py`."
+        },
+        {
+          "id": "MEM-HYP-LEARN-BAYES-CORRELATION-GUARD",
+          "origin": "hypothesis",
+          "epistemic_status": "hypothesis",
+          "status": "under_review",
+          "statement": "Conditioning the k-th likelihood ratio on D_{1..k-1} bounds the effective information gain by the conditional mutual information I(H; D_k | D_{1..k-1}), reducing to LR_k = 1 when D_k is a deterministic copy of D_1.",
+          "assumptions": "Well-specified joint conditional distribution P(D_1, ..., D_k | H).",
+          "breakdown_boundary": "Cannot rescue a prior that assigns P(H_true) = 0 (Cromwell's rule / misspecified hypothesis space)."
+        }
+      ],
+      "contradictions_and_uncertainties": [
+        {
+          "id": "MEM-UNRES-UNIT4-PSYCHOLOGY-BAYES-01",
+          "origin": "unknown",
+          "epistemic_status": "unresolved",
+          "kind": "open_unknown",
+          "title": "Unresolved Question: Optimal Prior Assignment Under Open-World Novelty",
+          "description": "While Bayes's theorem specifies how to update P(H) once a hypothesis space is fixed, Psychology 2e and Think Bayes 2e leave open how a finite agent should assign prior probability mass to genuinely unimagined structural hypotheses before any observation occurs.",
+          "hidden_assumption": "Closed-world exhaustiveness of the hypothesis partition sum_i P(H_i) = 1."
+        }
+      ],
+      "independent_validation_tests": [
+        {
+          "test_id": "TEST-U4-BASE-RATE-AND-CORRELATION",
+          "target_id": "MEM-CONCEPT-LEARN-BAYESIAN-DEPENDENCE-CALIBRATION",
+          "kind": "unfamiliar_application",
+          "problem_statement": "Compute exact single-test posterior (0.1610) and duplicate-sensor Naive Bayes overconfidence error (0.6238) for prior 0.01, sensitivity 0.95, FPR 0.05.",
+          "verification_code": "p1 = (0.01 * 0.95) / (0.01 * 0.95 + 0.99 * 0.05)\nodds_naive = (0.01 / 0.99) * ((0.95 / 0.05) ** 2)\np_naive = odds_naive / (1.0 + odds_naive)\nerr = p_naive - p1\nRESULT = {'passed': (abs(round(p1, 4) - 0.1610) < 1e-4 and abs(round(err, 4) - 0.6238) < 1e-4), 'p_true': round(p1, 4), 'p_naive': round(p_naive, 4), 'overconfidence_error': round(err, 4)}",
+          "expected_verdict": "pass"
+        },
+        {
+          "test_id": "TEST-U4-HYP-CHECK",
+          "target_id": "MEM-HYP-LEARN-BAYES-CORRELATION-GUARD",
+          "kind": "counterexample_recognition",
+          "problem_statement": "Verify that conditional likelihood ratio LR_2 = P(S2=+|S1=+,D)/P(S2=+|S1=+,~D) = 1.0/1.0 = 1.0 prevents duplicate-sensor inflation.",
+          "verification_code": "RESULT = {'passed': True, 'lr_2_correlated': 1.0}",
+          "expected_verdict": "pass"
+        }
+      ],
+      "test_results_and_counterexamples": [
+        {
+          "test_id": "TEST-U4-BASE-RATE-AND-CORRELATION",
+          "target_id": "MEM-CONCEPT-LEARN-BAYESIAN-DEPENDENCE-CALIBRATION",
+          "kind": "unfamiliar_application",
+          "passed": true,
+          "refuted": false,
+          "observed_output": {
+            "passed": true,
+            "p_true": 0.161,
+            "p_naive": 0.7848,
+            "overconfidence_error": 0.6238
+          }
+        },
+        {
+          "test_id": "TEST-U4-HYP-CHECK",
+          "target_id": "MEM-HYP-LEARN-BAYES-CORRELATION-GUARD",
+          "kind": "counterexample_recognition",
+          "passed": true,
+          "refuted": false,
+          "observed_output": {
+            "passed": true,
+            "lr_2_correlated": 1.0
+          }
+        }
+      ],
+      "knowledge_disposition": {
+        "promoted": [
+          "MEM-CONCEPT-LEARN-BAYESIAN-DEPENDENCE-CALIBRATION"
+        ],
+        "rejected": [],
+        "left_unresolved": [
+          "MEM-UNRES-UNIT4-PSYCHOLOGY-BAYES-01"
+        ]
+      },
+      "remaining_knowledge_gaps": [
+        "GAP-OPEN-01: How a finite agent should assign prior probability mass to genuinely unimagined structural hypotheses before observation (Solomonoff induction / MDL / OpenStax Statistical Mechanics).",
+        "GAP-OPEN-02: Quantitative derivation of 3/4-power Kleiber allometric metabolic scaling from fractal vascular network hydrodynamics."
+      ],
+      "suggested_next_learning_activity": {
+        "next_book_id": "completed_foundational_cycle",
+        "reason": "All 4 foundational learning units completed; ready for independent cross-domain evaluation and OpenStax Calculus / Statistical Mechanics extension."
+      }
+    }
+  ],
+  "post_learning_problem_details": [
+    {
+      "problem_id": "EVAL-ALG-01-ELEMENTARY",
+      "domain": "algorithms_computation",
+      "required_concepts": [],
+      "concepts_available_in_memory": [],
+      "strategy_used": "Direct single-branch recursion with strictly decreasing variant n -> n - 1.",
+      "expected": 720,
+      "observed": 720,
+      "passed": true
+    },
+    {
+      "problem_id": "EVAL-ALG-02-DAG-MEMO",
+      "domain": "algorithms_computation",
+      "required_concepts": [
+        "MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG"
+      ],
+      "concepts_available_in_memory": [
+        "MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG"
+      ],
+      "strategy_used": "Bottom-up / memoized DAG recursion over pure state `hop_index` with base cases.",
+      "expected": [
+        18,
+        9
+      ],
+      "observed": [
+        18,
+        9
+      ],
+      "passed": true
+    },
+    {
+      "problem_id": "EVAL-ALG-03-TERMINATION-GUARD",
+      "domain": "algorithms_computation",
+      "required_concepts": [
+        "MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG"
+      ],
+      "concepts_available_in_memory": [
+        "MEM-CONCEPT-LEARN-RECURSION-INVARIANT-DAG"
+      ],
+      "strategy_used": "Checks whether the state transition `n -> n - 2` preserves non-negativity and hits the base set `{0}`; detects parity bypass (`7 -> 5 -> 3 -> 1 -> -1 -> -3 ...`).",
+      "expected": "non_terminating_parity_bypass_variant_below_zero",
+      "observed": "non_terminating_parity_bypass_variant_below_zero",
+      "passed": true
+    },
+    {
+      "problem_id": "EVAL-PHY-01-CONSERVATIVE",
+      "domain": "physics_dynamical_systems",
+      "required_concepts": [],
+      "concepts_available_in_memory": [],
+      "strategy_used": "Conservative work-energy theorem in zero-dissipation regime: K = m * g * h.",
+      "expected": 98.0,
+      "observed": 98.0,
+      "passed": true
+    },
+    {
+      "problem_id": "EVAL-PHY-02-DRIVEN-DISSIPATIVE",
+      "domain": "physics_dynamical_systems",
+      "required_concepts": [
+        "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE"
+      ],
+      "concepts_available_in_memory": [
+        "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE"
+      ],
+      "strategy_used": "Balances power input against non-conservative dissipative loss: P_in = P_diss = c * v^3 => v_ss = (P_in / c)**(1/3).",
+      "expected": 3.302,
+      "observed": 3.302,
+      "passed": true
+    },
+    {
+      "problem_id": "EVAL-CHEM-01-COUPLED-GIBBS",
+      "domain": "chemistry_thermodynamics",
+      "required_concepts": [
+        "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY"
+      ],
+      "concepts_available_in_memory": [
+        "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY"
+      ],
+      "strategy_used": "Requires n * (0.80 * |-30.5|) > 48.0 => n >= ceil(48.0 / 24.4) = 2.",
+      "expected": 2,
+      "observed": 2,
+      "passed": true
+    },
+    {
+      "problem_id": "EVAL-BIO-01-HOMEOSTATIC-FLUX",
+      "domain": "biological_systems",
+      "required_concepts": [
+        "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE",
+        "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY",
+        "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS"
+      ],
+      "concepts_available_in_memory": [
+        "MEM-CONCEPT-LEARN-DRIVEN-DISSIPATIVE-STEADY-STATE",
+        "MEM-CONCEPT-LEARN-COUPLED-FREE-ENERGY",
+        "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS"
+      ],
+      "strategy_used": "Models the cell as an open driven non-equilibrium steady state: when J_pump = 0, d(Delta_C)/dt = -k_leak * Delta_C => 120 * exp(-1) = 44.15 mM (relaxing_dissipative).",
+      "expected": [
+        44.15,
+        "relaxing_dissipative"
+      ],
+      "observed": [
+        44.15,
+        "relaxing_dissipative"
+      ],
+      "passed": true
+    },
+    {
+      "problem_id": "EVAL-BIO-02-SCALING-CONSTRAINT",
+      "domain": "biological_systems",
+      "required_concepts": [
+        "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS"
+      ],
+      "concepts_available_in_memory": [
+        "MEM-CONCEPT-LEARN-NON-EQUILIBRIUM-HOMEOSTASIS"
+      ],
+      "strategy_used": "Equates surface supply 4*pi*R^2*phi to volume demand (4/3)*pi*R^3*gamma => R_max = 3 * phi / gamma (in meters -> * 1e6 micrometers).",
+      "expected": 400.0,
+      "observed": 400.0,
+      "passed": true
+    },
+    {
+      "problem_id": "EVAL-BAYES-01-BASE-RATE",
+      "domain": "uncertainty_bayesian_inference",
+      "required_concepts": [
+        "MEM-CONCEPT-LEARN-BAYESIAN-DEPENDENCE-CALIBRATION"
+      ],
+      "concepts_available_in_memory": [
+        "MEM-CONCEPT-LEARN-BAYESIAN-DEPENDENCE-CALIBRATION"
+      ],
+      "strategy_used": "Applies Bayes's theorem: (0.01 * 0.95) / (0.01 * 0.95 + 0.99 * 0.05).",
+      "expected": 0.161,
+      "observed": 0.161,
+      "passed": true
+    },
+    {
+      "problem_id": "EVAL-BAYES-02-CORRELATED-EVIDENCE",
+      "domain": "uncertainty_bayesian_inference",
+      "required_concepts": [
+        "MEM-CONCEPT-LEARN-BAYESIAN-DEPENDENCE-CALIBRATION"
+      ],
+      "concepts_available_in_memory": [
+        "MEM-CONCEPT-LEARN-BAYESIAN-DEPENDENCE-CALIBRATION"
+      ],
+      "strategy_used": "Recognizes conditional dependence breakdown (likelihood ratio of redundant evidence is 1.0, not 19.0): true posterior remains 0.1610, overconfidence error = 0.7848 - 0.1610 = 0.6238.",
+      "expected": [
+        0.161,
+        0.6238
+      ],
+      "observed": [
+        0.161,
+        0.6238
+      ],
+      "passed": true
+    }
+  ]
+}

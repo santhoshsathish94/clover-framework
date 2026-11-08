@@ -141,6 +141,7 @@ class LayerKit:
         self.last_ontology_evidence = []
         self.last_meaning_bridge = None
         self._emergent = None
+        self._learning_mission = None
 
     def emergent_concepts(self):
         """Return the `EmergentConceptEngine` connected to this `LayerKit`'s `CloverMemoryGraphStore` and `CloverOntologyGraph`."""
@@ -153,6 +154,16 @@ class LayerKit:
                 self.store(), self._ontology.graph, base_dir=self.base_dir
             )
         return self._emergent
+
+    def learning_mission(self, sandbox_dir=None):
+        """Return the `WorldLearningMissionEngine` running inside an isolated sandbox directory so production
+        knowledge is never modified by unvalidated hypotheses."""
+        if self._learning_mission is None or sandbox_dir is not None:
+            import world_learning_mission
+            self._learning_mission = world_learning_mission.WorldLearningMissionEngine(
+                self.base_dir, sandbox_dir=sandbox_dir
+            )
+        return self._learning_mission
 
     def workspace_context(self, q):
         if self.workspaces is None or self._skip(q):
