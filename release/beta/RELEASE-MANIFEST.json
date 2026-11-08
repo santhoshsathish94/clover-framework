@@ -46,15 +46,15 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 80970832,
-        "sha256": "ca7c82c57f1e42196583b4b1150d78e23a6bb93f4bae6453910123427549bbfe"
+        "size_bytes": 80980111,
+        "sha256": "e0d500a192d4c1ce08c08fb7ceb883a8eab9f31a39d7b110b9581c2aa76b32ad"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "mirror": "download/mobile/CloverAIStudio.apk",
         "type": "apk",
-        "size_bytes": 82047517,
-        "sha256": "df6b1e08d5ad62047b7d34ce42bdd78528a3eefcba725074d263fe1f0f4e6d2f"
+        "size_bytes": 82056809,
+        "sha256": "45ef79bb9be0077ed63bfc12c16adba4941ffb487efbc084e2af542043fa7411"
       }
     ],
     "verification": {
