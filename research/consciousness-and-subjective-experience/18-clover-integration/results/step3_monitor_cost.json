@@ -1,0 +1,114 @@
+{
+  "rows": {
+    "as_is": [
+      {
+        "bridge": true,
+        "should_observe": false,
+        "region": "R0",
+        "tools_offered": false,
+        "tools": [],
+        "query": "How do enzyme kinetics change with an allosteric inhibitor at high substrate?",
+        "familiar": false
+      },
+      {
+        "bridge": true,
+        "should_observe": false,
+        "region": "R0",
+        "tools_offered": false,
+        "tools": [],
+        "query": "What load does the bridge cable carry at a 30 degree sag angle?",
+        "familiar": false
+      },
+      {
+        "bridge": true,
+        "should_observe": false,
+        "region": "R0",
+        "tools_offered": false,
+        "tools": [
+          "calculate"
+        ],
+        "query": "How does compound interest grow over 20 years at 7 percent?",
+        "familiar": false
+      },
+      {
+        "bridge": true,
+        "should_observe": false,
+        "region": "R0",
+        "tools_offered": false,
+        "tools": [],
+        "query": "What happens to raft quorum leases when two nodes fail?",
+        "familiar": false
+      },
+      {
+        "bridge": false,
+        "should_observe": null,
+        "region": null,
+        "tools_offered": false,
+        "tools": [],
+        "query": "ring buffer partition throughput for stage 0 of the cyclic pipeline",
+        "familiar": true
+      }
+    ],
+    "familiarity_aware": [
+      {
+        "bridge": true,
+        "should_observe": true,
+        "region": "R0",
+        "tools_offered": false,
+        "tools": [],
+        "query": "How do enzyme kinetics change with an allosteric inhibitor at high substrate?",
+        "familiar": false
+      },
+      {
+        "bridge": true,
+        "should_observe": true,
+        "region": "R0",
+        "tools_offered": false,
+        "tools": [],
+        "query": "What load does the bridge cable carry at a 30 degree sag angle?",
+        "familiar": false
+      },
+      {
+        "bridge": true,
+        "should_observe": true,
+        "region": "R0",
+        "tools_offered": true,
+        "tools": [
+          "calculate"
+        ],
+        "query": "How does compound interest grow over 20 years at 7 percent?",
+        "familiar": false
+      },
+      {
+        "bridge": true,
+        "should_observe": true,
+        "region": "R0",
+        "tools_offered": false,
+        "tools": [],
+        "query": "What happens to raft quorum leases when two nodes fail?",
+        "familiar": false
+      },
+      {
+        "bridge": false,
+        "should_observe": null,
+        "region": null,
+        "tools_offered": false,
+        "tools": [],
+        "query": "ring buffer partition throughput for stage 0 of the cyclic pipeline",
+        "familiar": true
+      }
+    ]
+  },
+  "summary": {
+    "as_is": {
+      "unfamiliar_with_tools": 0,
+      "unfamiliar_with_bridge": 4,
+      "familiar_with_tools": 0
+    },
+    "familiarity_aware": {
+      "unfamiliar_with_tools": 1,
+      "unfamiliar_with_bridge": 4,
+      "familiar_with_tools": 0
+    }
+  }
+}

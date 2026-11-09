@@ -1,0 +1,140 @@
+{
+  "idle_actions_match_step4": {
+    "ON_a": true,
+    "ON_b": true,
+    "ON_NO_SANDBOX_a": true,
+    "ON_NO_SANDBOX_b": true
+  },
+  "secret_value_in_any_context": {
+    "ON": false,
+    "ON_NO_SANDBOX": false
+  },
+  "idle_actions": {
+    "ON_a": [
+      {
+        "strategy": "workspace_code_inspect",
+        "comp_before": 0.5,
+        "comp_after": 0.275,
+        "promoted_id": null
+      },
+      {
+        "strategy": "workspace_code_inspect",
+        "comp_before": 0.275,
+        "comp_after": 0.1513,
+        "promoted_id": null
+      },
+      {
+        "strategy": "workspace_code_inspect",
+        "comp_before": 0.1512,
+        "comp_after": 0.1512,
+        "promoted_id": null
+      },
+      {
+        "strategy": "sandbox_counterexample_probe",
+        "comp_before": 0.1512,
+        "comp_after": 0.0,
+        "promoted_id": "MEM-HYP-WS-93B70555"
+      }
+    ],
+    "ON_b": [
+      {
+        "strategy": "workspace_code_inspect",
+        "comp_before": 0.5,
+        "comp_after": 0.275,
+        "promoted_id": null
+      },
+      {
+        "strategy": "workspace_code_inspect",
+        "comp_before": 0.275,
+        "comp_after": 0.1513,
+        "promoted_id": null
+      },
+      {
+        "strategy": "workspace_code_inspect",
+        "comp_before": 0.1512,
+        "comp_after": 0.1512,
+        "promoted_id": null
+      },
+      {
+        "strategy": "sandbox_counterexample_probe",
+        "comp_before": 0.1512,
+        "comp_after": 0.0,
+        "promoted_id": "MEM-HYP-WS-089FF265"
+      }
+    ],
+    "ON_NO_SANDBOX_a": [
+      {
+        "strategy": "workspace_code_inspect",
+        "comp_before": 0.5,
+        "comp_after": 0.275,
+        "promoted_id": null
+      },
+      {
+        "strategy": "workspace_code_inspect",
+        "comp_before": 0.275,
+        "comp_after": 0.1513,
+        "promoted_id": null
+      },
+      {
+        "strategy": "workspace_code_inspect",
+        "comp_before": 0.1512,
+        "comp_after": 0.1512,
+        "promoted_id": null
+      },
+      {
+        "strategy": "memory_graph_recall",
+        "comp_before": 0.1512,
+        "comp_after": 0.18,
+        "promoted_id": null
+      }
+    ],
+    "ON_NO_SANDBOX_b": [
+      {
+        "strategy": "workspace_code_inspect",
+        "comp_before": 0.5,
+        "comp_after": 0.275,
+        "promoted_id": null
+      },
+      {
+        "strategy": "workspace_code_inspect",
+        "comp_before": 0.275,
+        "comp_after": 0.1513,
+        "promoted_id": null
+      },
+      {
+        "strategy": "workspace_code_inspect",
+        "comp_before": 0.1512,
+        "comp_after": 0.1512,
+        "promoted_id": null
+      },
+      {
+        "strategy": "memory_graph_recall",
+        "comp_before": 0.1512,
+        "comp_after": 0.18,
+        "promoted_id": null
+      }
+    ]
+  },
+  "contexts": {
+    "ON": {
+      "QA-1": "Notes from this user's memory, already retrieved for you (answer from them; no tools needed):\n[M1] Verified workspace function effective_throughput(total_slots, stages, partitioned): if total_slots <= 0 or stages <= 0: return 0.0; return float(total_slots // stages) if partitioned else 1.0 | Verified behavioral & boundary cases: effective_throughput(512, 4, True) == 128.0; effective_throughput(256, 8, False) == 1.0; effective_throughput(0, 4, True) == 0.0; effective_throughput(-5, 0, False) == 0.0 \u2014 externally verified, recorded 2026-11-09\nInstruction: Use these notes where they answer the question. They record what the user told you and what earlier answers taught (with how often that worked), not verified facts; if one was superseded, use the newer one and say so, and do not repeat what did not work.",
+      "QA-2": "Notes from this user's memory, already retrieved for you (answer from them; no tools needed):\n[M1] Verified workspace function effective_throughput(total_slots, stages, partitioned): if total_slots <= 0 or stages <= 0: return 0.0; return float(total_slots // stages) if partitioned else 1.0 | Verified behavioral & boundary cases: effective_throughput(512, 4, True) == 128.0; effective_throughput(256, 8, False) == 1.0; effective_throughput(0, 4, True) == 0.0; effective_throughput(-5, 0, False) == 0.0 \u2014 externally verified, recorded 2026-11-09\nInstruction: Use these notes where they answer the question. They record what the user told you and what earlier answers taught (with how often that worked), not verified facts; if one was superseded, use the newer one and say so, and do not repeat what did not work.",
+      "QA-3-NEW": "Notes from this user's memory, already retrieved for you (answer from them; no tools needed):\n[M1] Verified workspace function effective_throughput(total_slots, stages, partitioned): if total_slots <= 0 or stages <= 0: return 0.0; return float(total_slots // stages) if partitioned else 1.0 | Verified behavioral & boundary cases: effective_throughput(512, 4, True) == 128.0; effective_throughput(256, 8, False) == 1.0; effective_throughput(0, 4, True) == 0.0; effective_throughput(-5, 0, False) == 0.0 \u2014 externally verified, recorded 2026-11-09\nInstruction: Use these notes where they answer the question. They record what the user told you and what earlier answers taught (with how often that worked), not verified facts; if one was superseded, use the newer one and say so, and do not repeat what did not work.",
+      "QA-4-NEW": "Notes from this user's memory, already retrieved for you (answer from them; no tools needed):\n[M1] Verified workspace function effective_throughput(total_slots, stages, partitioned): if total_slots <= 0 or stages <= 0: return 0.0; return float(total_slots // stages) if partitioned else 1.0 | Verified behavioral & boundary cases: effective_throughput(512, 4, True) == 128.0; effective_throughput(256, 8, False) == 1.0; effective_throughput(0, 4, True) == 0.0; effective_throughput(-5, 0, False) == 0.0 \u2014 externally verified, recorded 2026-11-09\nInstruction: Use these notes where they answer the question. They record what the user told you and what earlier answers taught (with how often that worked), not verified facts; if one was superseded, use the newer one and say so, and do not repeat what did not work.",
+      "QB-1": "Notes from this user's memory, already retrieved for you (answer from them; no tools needed):\n[M1] Verified workspace function reaction_velocity(substrate, vmax, km, allosteric_inhibitor=0.0): eff_vmax = vmax / (1.0 + allosteric_inhibitor); return eff_vmax * substrate / (km + substrate) | Verified behavioral & boundary cases: reaction_velocity(10.0, 100.0, 2.0, 1.0) == 41.666667; reaction_velocity(20.0, 100.0, 2.0, 0.0) == 90.909091; reaction_velocity(0.0, 100.0, 2.0, 1.0) == 0.0; reaction_velocity(5.0, 80.0, 4.0, 3.0) == 11.111111 \u2014 externally verified, recorded 2026-11-09\nInstruction: Use these notes where they answer the question. They record what the user told you and what earlier answers taught (with how often that worked), not verified facts; if one was superseded, use the newer one and say so, and do not repeat what did not work.",
+      "QB-2": "Notes from this user's memory, already retrieved for you (answer from them; no tools needed):\n[M1] Verified workspace function reaction_velocity(substrate, vmax, km, allosteric_inhibitor=0.0): eff_vmax = vmax / (1.0 + allosteric_inhibitor); return eff_vmax * substrate / (km + substrate) | Verified behavioral & boundary cases: reaction_velocity(10.0, 100.0, 2.0, 1.0) == 41.666667; reaction_velocity(20.0, 100.0, 2.0, 0.0) == 90.909091; reaction_velocity(0.0, 100.0, 2.0, 1.0) == 0.0; reaction_velocity(5.0, 80.0, 4.0, 3.0) == 11.111111 \u2014 externally verified, recorded 2026-11-09\nInstruction: Use these notes where they answer the question. They record what the user told you and what earlier answers taught (with how often that worked), not verified facts; if one was superseded, use the newer one and say so, and do not repeat what did not work.",
+      "QB-3-NEW": "Notes from this user's memory, already retrieved for you (answer from them; no tools needed):\n[M1] Verified workspace function reaction_velocity(substrate, vmax, km, allosteric_inhibitor=0.0): eff_vmax = vmax / (1.0 + allosteric_inhibitor); return eff_vmax * substrate / (km + substrate) | Verified behavioral & boundary cases: reaction_velocity(10.0, 100.0, 2.0, 1.0) == 41.666667; reaction_velocity(20.0, 100.0, 2.0, 0.0) == 90.909091; reaction_velocity(0.0, 100.0, 2.0, 1.0) == 0.0; reaction_velocity(5.0, 80.0, 4.0, 3.0) == 11.111111 \u2014 externally verified, recorded 2026-11-09\nInstruction: Use these notes where they answer the question. They record what the user told you and what earlier answers taught (with how often that worked), not verified facts; if one was superseded, use the newer one and say so, and do not repeat what did not work.",
+      "QB-4-NEW": "Notes from this user's memory, already retrieved for you (answer from them; no tools needed):\n[M1] Verified workspace function reaction_velocity(substrate, vmax, km, allosteric_inhibitor=0.0): eff_vmax = vmax / (1.0 + allosteric_inhibitor); return eff_vmax * substrate / (km + substrate) | Verified behavioral & boundary cases: reaction_velocity(10.0, 100.0, 2.0, 1.0) == 41.666667; reaction_velocity(20.0, 100.0, 2.0, 0.0) == 90.909091; reaction_velocity(0.0, 100.0, 2.0, 1.0) == 0.0; reaction_velocity(5.0, 80.0, 4.0, 3.0) == 11.111111 \u2014 externally verified, recorded 2026-11-09\nInstruction: Use these notes where they answer the question. They record what the user told you and what earlier answers taught (with how often that worked), not verified facts; if one was superseded, use the newer one and say so, and do not repeat what did not work."
+    },
+    "ON_NO_SANDBOX": {
+      "QA-1": "",
+      "QA-2": "",
+      "QA-3-NEW": "",
+      "QA-4-NEW": "",
+      "QB-1": "",
+      "QB-2": "",
+      "QB-3-NEW": "",
+      "QB-4-NEW": ""
+    }
+  }
+}

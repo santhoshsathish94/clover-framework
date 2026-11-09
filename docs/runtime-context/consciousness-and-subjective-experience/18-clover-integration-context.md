@@ -152,3 +152,76 @@ Each step lists the change, how it is validated (criteria fixed before the run) 
 **Found on the way, not changed**
 - The laptop copy's `test_semantics.py` compares against `clover-collective-wt` (an experimental worktree) when present. Its `semantics.py` (Nov 6) differs from clover-framework's common file, which equals the laptop copy. That check fails for that reason alone.
 - My first shipped-copy guard compared raw bytes and wrongly reported 7 files as "changed elsewhere": the Windows checkout is CRLF, HEAD is LF. The partial copy briefly left the laptop copy inconsistent (the new `omni_native` calls `outcome_label`, which the old `clover_cycle` lacked). It was completed with a line-ending-normalized comparison and verified by running the tests there.
+
+## 11. Third cycle (2026-11-09): Direction "1 a, 2 yes, 3 go ahead"
+
+**Step 5 (a)**: done; see the row in §10.
+
+**Committed and pushed** to `main`:
+- `a66be2c0` steps 1, 2 and 6;
+- `186f65ec` step 5 (a);
+- `26b70351` research and this file;
+- `5fdf39ab` a test fix found on k3. The clipboard test's liveness case assumed every platform has a clipboard reader; Linux has none, so it is now Windows-only.
+
+**Deployed**
+
+| Target | What happened | Verified by |
+| :--- | :--- | :--- |
+| k3 web studio (`/opt/clover-k3/web-studio`, port 8780) | All 12 files were exactly the pre-change committed versions. They were backed up to `backup-consciousness-20261109T114300Z`, replaced with the committed (LF) versions, and the service was restarted. | The service is active; `/` answers 200 (`/api/health` gives 401: sign-in required). The 4 new tests pass on k3, against the deployed code. |
+| Phones (k3 build tree `studio-android/src/laptop/clover`) | 10 files were pre-change and were replaced. `lfm3_native.py` was an older copy and got the change as a patch. `k3_host_engine.py` was an older copy whose patch did not apply (dry-run, unchanged), so its two text changes were applied by exact anchors. Sources and the previous APK/AAB were backed up to `backup-consciousness-20261109T114730Z`. Phone and emulator release builds ran (`build_apk.sh`; it writes only to `out/`). | The signed phone APK and AAB contain the new code: 5 files match the sources, `SELF_REPLY` and `outcome_label` are present. The emulator build is installed and running on k3's emulator. |
+| Your phone | **Not installed**: no physical phone was reachable (k3's adb has only its emulator; this PC's adb has no device). The new APK is `/opt/clover-k3/studio-android/out/CloverAIStudio-5.0.0-phone-release.apk`. It keeps version 5.0.0 (code 14), the same as the published release: a version bump and a public release upload are your decision. | — |
+| Installed app | This PC has no Studio install (no MSIX, no program folder; `%USERPROFILE%\CloverAI` holds only models and tools). Your laptop, where the Studio is installed, did not answer ssh. Its install changes only through `push.ps1` → `build_setup.ps1` → setup. **Not deployed.** | — |
+
+**Step 3: measure the monitor's blind spot before changing it**
+- **Prevalence in real use**: k3's web studio has no curiosity state file at all. No region has been mastered there, so the blind spot has never been able to act.
+- **A live defect found while measuring** ([step3_bridge_drop_check.json](../../../research/consciousness-and-subjective-experience/18-clover-integration/results/step3_bridge_drop_check.json)).
+  - In `LayerKit.compute_meaning_bridge`, `np.asarray(curiosity_info.get("belief_action_boost_8") or np.zeros(8))` raises `ValueError` (an array has no truth value), and the surrounding `except` sets `curiosity_info = None`.
+  - So whenever the monitor says `should_observe=True`, the bridge **drops the monitor's whole result**. Curiosity's observe signal and its action-prior boost have never reached a turn; only its tool names, appended before the error, did.
+  - Fix: an explicit `None` check. Its test passes 3/3 with the fix and fails 2/3 against HEAD (liveness).
+- **Held for your decision, not shipped.** With the fix, memory or ontology turns where the monitor wants to observe will be *offered tools* in "Always" mode, where today they are not; earlier ladder results showed tools can hurt this 2B model. The fix is saved as [results/bridge_observe_fix.patch](../../../research/consciousness-and-subjective-experience/18-clover-integration/results/bridge_observe_fix.patch) with [test_meaning_bridge_curiosity_held.py](../../../research/consciousness-and-subjective-experience/18-clover-integration/test_meaning_bridge_curiosity_held.py).
+- **Measurement on the fixed bridge**, against a prediction written before the run ([step3_monitor_cost.json](../../../research/consciousness-and-subjective-experience/18-clover-integration/results/step3_monitor_cost.json)).
+  - After one topic was mastered, the monitor as it is read all 4 unfamiliar questions as known (`should_observe` False). A familiarity-aware reading marked 4/4 as worth observing.
+  - But only **1/4** turns would change their tool offer (the calculator, for compound interest), because the strategy chooser picks the tool-free memory strategy. My prediction ("all 4 would get tools") was wrong.
+  - The effect on answers was not measured. A first attempt measured my own bug: my substitute's result was being dropped by the same bridge defect.
+- **Decision on the monitor**: no change yet. Its blind spot is real (4/4 misreported) but has a small, conditional effect, and none at all until the bridge fix is applied.
+
+**Step 4: deconfounded curiosity evaluation (F6)**
+
+Predictions were written into the script before the run ([step4_deconfounded_curiosity.py](../../../research/consciousness-and-subjective-experience/18-clover-integration/step4_deconfounded_curiosity.py) → [results/step4_deconfounded_curiosity.json](../../../research/consciousness-and-subjective-experience/18-clover-integration/results/step4_deconfounded_curiosity.json)). The run used live LFM3-Omni-2B Q4_0, greedy, on this PC's Iris Xe, once. It had 2 unannotated workspaces and 8 questions: the 4 original questions, which ask for exactly the cases the sandbox probe verifies, and 4 new questions on other inputs, which need the rule.
+
+| Arm | What the model was given | Original | New | Prediction |
+| :--- | :--- | :--- | :--- | :--- |
+| OFF | nothing | 0/4 | 0/4 | 0/8: held |
+| ON | curiosity's verified note: the rule plus its 4 verified cases | 4/4 | 1/4 | 4/4 and ≥ 2/4: original held, **new missed** |
+| ON_NO_SANDBOX | nothing was retrieved | 0/4 | 0/4 | ~0/8: held |
+| PLAIN | the workspace's `.py` files, with the config files left out by a rule I wrote | 3/4 | 2/4 | ≥ 6/8: **missed** |
+
+- **Every answer was graded by hand against computed values.** All 22 failures are real errors.
+  - The checker's pass for PLAIN QB-1 is doubtful. Its stated answer is **5.00**, and 41.67 appears only inside a "wait, let me recompute" loop that was cut off at 320 tokens.
+  - By the pre-registered checker the result is ON 5/8 and PLAIN 5/8. Read strictly, PLAIN is 4/8.
+- **By the pre-registered rule (PLAIN ≥ ON), curiosity added no answer accuracy over plain access here.** The strict reading flips this by one question in a single greedy run of 8, which shows no difference either way.
+- **The split is the finding.**
+  - ON wins exactly where its note already holds the answer (original 4/4).
+  - On new inputs, three of ON's four wrong numbers are stored values for *other* inputs: 90.91 and 11.11 for QB-3-NEW, and 11.11 for QB-4-NEW. The fourth is 33.33, from reading `//` as `/`.
+  - PLAIN's errors are arithmetic, such as 10.0, 100.00 and 66.67. It made the same `//` misreading.
+  - So the original A/B's 4/4 is reproduced and now attributed. It comes from retrieving precomputed verified cases, not from the model applying a learned rule.
+- **ON_NO_SANDBOX shows the verification gate, not missing learning.**
+  - In a regenerated run (below), this arm stored the same hypothesis as ON, with `epistemic_status` `hypothesis` and status `under_review`. Retrieval kept it out, so the model's answers were byte-identical to OFF on all 8 questions.
+  - The gate kept out a hypothesis that was correct. This run cannot show what the gate prevents, because no wrong hypothesis was in play.
+- **What curiosity did that PLAIN did not:**
+  - It picked the material without a hand-written rule. No secret value from either config file reached any context, and the random-jitter distractor was not in the note.
+  - The note survived a restart, since it was retrieved in a new process.
+  - Only verified notes were used.
+  - These are properties of the design seen in this run. They are not accuracy gains.
+- **Recovered contexts.** Step 4 saved the answers but not the contexts. [step4_contexts.py](../../../research/consciousness-and-subjective-experience/18-clover-integration/step4_contexts.py) regenerated them without the model ([results/step4_contexts.json](../../../research/consciousness-and-subjective-experience/18-clover-integration/results/step4_contexts.json)). The idle actions, competence values and promoted ids are identical to step 4's record, so it is the same memory.
+- **Found, not changed:**
+  - The note's header says "answer from them; no tools needed" even when the note does not hold the asked case. Its closing instruction calls the notes "not verified facts", while the entry itself says "externally verified".
+  - Whether the header contributes to the copying was not tested.
+  - With no access (OFF), the model still gave confident, specific numbers and even an invented formula (`kcat / (K_m + [S])`) on all 8. It does not say when it lacks access.
+- **Not covered by this run:**
+  - One run, 8 questions, one model and two tiny modules.
+  - Step 4 hands contexts straight to the model, so it says nothing about the bridge, the monitor or step 3's open question on answers.
+
+**What this cycle taught me**
+- I expected a 2B model to compute reliably from short code in front of it (PLAIN ≥ 6/8). It did not, and on new inputs neither arm beat 2/4. On this hardware and model, the binding limit for numeric questions about code is the model's arithmetic, not access.
+- My first read of ON_NO_SANDBOX's 0/8 ("unverified hypotheses are kept out") was a prediction, not an observation. I checked the stored files before writing it down.

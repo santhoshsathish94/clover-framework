@@ -1,0 +1,16 @@
+{
+  "direct_should_observe": true,
+  "boost_type": "ndarray",
+  "the_or_expression": "ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()",
+  "bridge_curiosity": null,
+  "bridge_action_prior_present": true,
+  "bad_line_in_source": 1,
+  "liveness_with_explicit_none_check": {
+    "region_id": "R0",
+    "state_curiosity": 0.05,
+    "selected_strategy": "memory_graph_recall",
+    "recommended_studio_tools": [],
+    "should_observe": true,
+    "voi": 0.058
+  }
+}
