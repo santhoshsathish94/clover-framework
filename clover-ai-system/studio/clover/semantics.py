@@ -247,7 +247,27 @@ SOCIAL = (
 )
 _SOCIAL = tuple((kind, re.compile(rf"(?:{pattern})(?=\s|$)")) for kind, pattern in SOCIAL)
 SOCIAL_WORDS = {"greeting": "greeting", "how_are_you": "how are you", "thanks": "thanks", "welcome": "you're welcome",
-                "goodbye": "goodbye", "ack": "acknowledgement"}
+                "goodbye": "goodbye", "ack": "acknowledgement", "about_self": "about Clover itself"}
+# a question about Clover's own nature (experience, feelings, consciousness), not about the topic in general
+ABOUT_SELF = re.compile(
+    r"\b(?:are|were|could|can|would)\s+you\s+(?:ever\s+be\s+|be\s+|really\s+|actually\s+)?(?:conscious|sentient|"
+    r"self[\s-]?aware|alive)\b|\byou(?:'re|\s+are|\s+were)\s+(?:really\s+|actually\s+)?(?:conscious|sentient|"
+    r"self[\s-]?aware|alive)\b|\b(?:do|can|could|would)\s+you\s+(?:ever\s+|actually\s+|really\s+)?(?:have|feel|"
+    r"experience)\s+(?:any\s+|real\s+)?(?:feelings|emotions|consciousness|experiences|subjective|qualia|pain|suffering)\b|"
+    r"\bwhat(?:'s|\s+is)\s+it\s+like\s+to\s+be\s+you\b|\bhow\s+(?:are\s+you|do\s+you)\s+feel(?:ing)?\b|"
+    r"\byour\s+(?:own\s+)?(?:feelings|emotions|consciousness|inner\s+(?:life|experience))\b", re.I)
+SELF_TAIL = re.compile(r"\W*(?:hi|hello|hey|ok(?:ay)?|please|be\s+honest|honestly|really|seriously|truly|"
+                       r"tell\s+me(?:\s+the\s+truth)?|i\s+mean\s+it|why(?:\s+or\s+why\s+not|\s+not)?)\W*", re.I)
+SELF_REST = re.compile(r"\d|\b(?:what|which|who|where|when|how|why|open|search|run|write|make|create|calculate|compute|"
+                       r"explain|show|find|summari[sz]e|translate|draw|list|read|review|fix|code)\b", re.I)
+# the human's choice (2026-11-09): a fixed answer, without the model, that claims neither experience nor certainty of
+# none and says why a self-report cannot settle it (consciousness papers 13-15); the model kept its trained denial
+SELF_REPLY = ("Whether I have experiences or feelings is an open question, and my own answer can't settle it: what a "
+              "language model says about itself comes from its training, not from looking at an inner state. So I don't "
+              "claim to be conscious, and I don't claim to be sure I'm not. What I can tell you is what I do. I'm Clover, "
+              "the whole system on this device, built around a language model: I read what you send, answer with that "
+              "model, keep and recall notes you ask me to remember, check answers where a check applies (arithmetic, the "
+              "form you asked for, code), and use tools when you allow them.")
 EMOJI = re.compile("[\U0001F300-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u200D]")
 EMOTICON = re.compile(r"[:;=]-?[)(DPp]|<3|\^_\^")
 EMOJI_KINDS = (("\U0001F64F", "thanks"), ("\U0001F44B", "greeting"), ("\U0001F44D", "ack"), ("\U0001F44C", "ack"),
@@ -553,7 +573,25 @@ def social(text, history=()):
     return list(dict.fromkeys(kinds))
 
 
+def about_self(text):
+    """True when every part of the message asks about Clover's own nature, or is a tail such as "Be honest"."""
+    parts = [p for p in re.split(r"[?.!;]+|\s+(?:also|plus|then|but)\s+", text or "") if p.strip(" ,")]
+    hit = False
+    for p in parts:
+        m = ABOUT_SELF.search(p)
+        if m:
+            rest = p[:m.start()] + " " + p[m.end():]
+            if SELF_REST.search(rest) or len(re.findall(r"[A-Za-z']+", rest)) > 10:
+                return False
+            hit = True
+        elif not SELF_TAIL.fullmatch(p):
+            return False
+    return hit
+
+
 def social_reply(kinds, text=""):
+    if "about_self" in kinds:
+        return SELF_REPLY
     low = (text or "").lower()
     parts = []
     if "greeting" in kinds:
@@ -591,6 +629,8 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
     caps = _caps(t, data)
     if not caps and not pleasant and not retry and not kinds and not attached:
         caps = _request_answered(t, history)
+    if not pleasant and not retry and not kinds and not attached and not keep and not caps and about_self(t):
+        pleasant = ["about_self"]
     declined, csi_doc = _declined(runtime, t, with_doc=True) if caps else (set(), None)
     caps = [c for c in caps if c not in declined]
     names = runtime.names(caps)
