@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Clover v5.0.0 — Reproducible 5-Goal Validation, Multi-Model Cycle Harness, Meaning Engine Bridge,
+"""Clover v5.0.1 — Reproducible 5-Goal Validation, Multi-Model Cycle Harness, Meaning Engine Bridge,
 Collective Learning A->B Transfer, and Component Ablation Suite (`test_v5_goals_and_ablations.py`).
 
 Executes and records reproducible evidence for:
@@ -47,36 +47,39 @@ import workspaces as WS  # noqa: E402
 # Goal 1: Version & Artifact Consistency Check
 # ---------------------------------------------------------------------------
 
+EXPECTED_VERSION, EXPECTED_ANDROID_CODE = "5.0.1", 15
+
+
 def run_goal1_version_and_security_check() -> dict[str, Any]:
     import server
-    assert server.STUDIO_VERSION == "5.0.0", f"Expected STUDIO_VERSION=5.0.0, got {server.STUDIO_VERSION}"
+    assert server.STUDIO_VERSION == EXPECTED_VERSION, f"Expected STUDIO_VERSION={EXPECTED_VERSION}, got {server.STUDIO_VERSION}"
 
     launch_man = json.loads((HERE / "launch" / "manifest.json").read_text(encoding="utf-8"))
-    assert launch_man.get("version") == "5.0.0", f"Expected launch/manifest.json version 5.0.0, got {launch_man.get('version')}"
+    assert launch_man.get("version") == EXPECTED_VERSION, f"Expected launch/manifest.json version {EXPECTED_VERSION}, got {launch_man.get('version')}"
 
     checked = ["server.STUDIO_VERSION", "clover-ai-system/studio/clover/launch/manifest.json"]
     if (REPO_ROOT / "VERSION").is_file():
         root_ver = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
-        assert root_ver == "5.0.0", f"Expected VERSION=5.0.0, got {root_ver}"
+        assert root_ver == EXPECTED_VERSION, f"Expected VERSION={EXPECTED_VERSION}, got {root_ver}"
         checked.insert(0, "VERSION")
     if (REPO_ROOT / "clover-ai-system" / "vscode-extension" / "package.json").is_file():
         vs_pkg = json.loads((REPO_ROOT / "clover-ai-system" / "vscode-extension" / "package.json").read_text(encoding="utf-8"))
-        assert vs_pkg.get("version") == "5.0.0", f"Expected vscode-extension version 5.0.0, got {vs_pkg.get('version')}"
+        assert vs_pkg.get("version") == EXPECTED_VERSION, f"Expected vscode-extension version {EXPECTED_VERSION}, got {vs_pkg.get('version')}"
         checked.append("clover-ai-system/vscode-extension/package.json")
     if (HERE.parent / "browser-extension" / "manifest.json").is_file():
         br_man = json.loads((HERE.parent / "browser-extension" / "manifest.json").read_text(encoding="utf-8"))
-        assert br_man.get("version") == "5.0.0", f"Expected browser-extension version 5.0.0, got {br_man.get('version')}"
+        assert br_man.get("version") == EXPECTED_VERSION, f"Expected browser-extension version {EXPECTED_VERSION}, got {br_man.get('version')}"
         checked.append("clover-ai-system/studio/browser-extension/manifest.json")
     if (REPO_ROOT / "release" / "beta" / "RELEASE-MANIFEST.json").is_file():
         rel_man = json.loads((REPO_ROOT / "release" / "beta" / "RELEASE-MANIFEST.json").read_text(encoding="utf-8"))
-        assert rel_man.get("release_version") == "5.0.0"
-        assert rel_man["android"]["version_name"] == "5.0.0" and rel_man["android"]["version_code"] == 14
-        assert rel_man["windows"]["display_version"] == "5.0.0" and rel_man["windows"]["manifest_version"] == "5.0.0.0"
+        assert rel_man.get("release_version") == EXPECTED_VERSION
+        assert rel_man["android"]["version_name"] == EXPECTED_VERSION and rel_man["android"]["version_code"] == EXPECTED_ANDROID_CODE
+        assert rel_man["windows"]["display_version"] == EXPECTED_VERSION and rel_man["windows"]["manifest_version"] == EXPECTED_VERSION + ".0"
         checked.extend(["release/beta/RELEASE-MANIFEST.json", "download/SHA256SUMS.txt"])
 
     return {
         "status": "passed",
-        "version": "5.0.0",
+        "version": EXPECTED_VERSION,
         "checked_manifests": checked,
     }
 
@@ -739,7 +742,7 @@ def run_goal5_independent_validation_and_ablations(
 
     ablation_table = [
         {
-            "configuration": "Full Clover v5.0.0 System (All 5 Stages + Meaning Bridge + JEPA Prior + 3-Cycle Retry + CPSL)",
+            "configuration": "Full Clover v5.0.1 System (All 5 Stages + Meaning Bridge + JEPA Prior + 3-Cycle Retry + CPSL)",
             "multi_cycle_4model": "4/4 (100.0%)",
             "meaning_bridge_6tasks": f"{g3['action_ranking_benchmark']['full_meaning_bridge']['hits']}/6 ({round(g3['action_ranking_benchmark']['full_meaning_bridge']['top1_accuracy']*100, 1)}%)",
             "collective_transfer_4tasks": "4/4 (100.0%)",
@@ -796,7 +799,7 @@ def main() -> int:
 
     report = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "version": "5.0.0",
+        "version": EXPECTED_VERSION,
         "elapsed_s": round(time.perf_counter() - t0, 2),
         "goal_1_stabilize_v5": g1,
         "goal_2_four_models_e2e_cycle": g2,
@@ -808,7 +811,7 @@ def main() -> int:
     out_fp = REPO_ROOT / "docs" / "runtime-context" / "v5_independent_validation_results.json"
     out_fp.parent.mkdir(parents=True, exist_ok=True)
     out_fp.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    print("ALL 5 V5.0.0 GOALS & ABLATIONS PASSED")
+    print("ALL 5 V5.0.1 GOALS & ABLATIONS PASSED")
     print(json.dumps(report, indent=2))
     return 0
 

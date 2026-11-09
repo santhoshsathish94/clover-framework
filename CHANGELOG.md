@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## v5.0.1 — 2026-11-09
+
+**Clover v5.0.1 — Curiosity, verified answers, and honest reporting.** `VERSION` is `5.0.1` and all site `?v=5.0.1` asset cache strings match it. Windows installer, MSIX, Android APK/AAB (`versionCode 15`) and the VS Code and browser extensions are rebuilt at `5.0.1`.
+
+- **Curiosity Foundation (`curiosity_foundation.py`):** all 13 developmental curiosity mechanisms with persistent state, bounded idle exploration of the user's workspace (read, then verify in `IsolatedPythonSandbox` before anything enters memory), and the meaning bridge now keeps curiosity's result when it says observe (it was dropped by an exception on every such turn).
+- **Verified answers:** a question's literal calls of a function an externally verified note recorded are computed by running the verified copy in the sandbox (live: 8/8 vs 5/8 on questions about workspace functions).
+- **Honest reporting (consciousness integration, 17 papers):** the Outcome stage names the checks that ran, or says "No automatic check applies to this answer"; C2/C3 layers say "not run" when their parts are missing; a fixed reply for messages that only ask about Clover's own nature; the clipboard is read only when a message mentions it.
+- **Fixes:** a correction to a user's note supersedes the note it corrects (deleting it restores the old one); the arithmetic check reads `25,000` whole, stays within a line and checks values carried down a name; a memory turn is offered only tools the route allowed (no unasked file reads in tools mode Always); the Windows build no longer copies two older mobile files over the Studio's.
+- **Experiments 5.1–5.2, Hidden World Discovery and Small World** (k3), Clover-35B-A3B, selectable JEPA architectures, VS Code + Copilot integration, and the GitHub/Gmail allowlist for k3 (see the commits since `v5.0.0`).
+- **Release reports** now state the test results of the release run instead of fixed counts: `test_regression_fixes.py` 71/73 and `test_browser_first.py` 29/30 (failures that predate this release), `test_human_usefulness.py` not re-run (needs a live Studio).
+
 ## v5.0.0 — 2026-11-06
 
 **Clover v5.0.0 — Universal Clover AI Studio (`Windows`, `Android`, & `Web`), Local-First Personal Process Learning (`PPL`), Google OIDC Identity, and End-to-End Collective Problem-Solving Learning (`CPSL`).** `VERSION` is `5.0.0` and all site `?v=5.0.0` asset cache strings match it.

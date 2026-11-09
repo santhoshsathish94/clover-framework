@@ -9,11 +9,33 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 from pathlib import Path
 
 BETA_DIR = Path(__file__).resolve().parent
 REPO_ROOT = BETA_DIR.parents[1]
+VERSION = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+ANDROID_VERSION_CODE = 15
+RELEASE_DATE = "2026-11-09"
+
+
+def _verified() -> dict:
+    """Real runs (release/beta/verification-results.json): '155/155 passed', '71/73 passed (2 failed: ...)' or
+    'not re-run for this release (...)'. The reports used to carry fixed pass counts."""
+    path = BETA_DIR / "verification-results.json"
+    runs = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+    out = {}
+    for key, r in runs.items():
+        fails, passes = r.get("fail_lines") or [], int(r.get("pass_lines") or 0)
+        if r.get("exit") == 0 and not fails:
+            out[key] = f"{passes}/{passes} passed" if passes else "passed (exit 0)"
+        elif fails:
+            out[key] = f"{passes}/{passes + len(fails)} passed ({len(fails)} failed: " + "; ".join(
+                f.removeprefix("FAIL ").strip() for f in fails) + ")"
+        else:
+            out[key] = "not re-run for this release (" + str(r.get("summary") or "")[:90] + ")"
+    return out
 
 
 def _sha256_and_size(path: Path) -> tuple[str, int]:
@@ -54,12 +76,13 @@ def generate_all() -> dict:
     android_cert_sha1_hex = android_cert_sha1_colon.replace(":", "").lower()
     win_cert_thumbprint = "843BC8476BFCAD1EE2FABE82CDB403994CCE3F99"
 
+    ver = _verified()
     manifest = {
         "product": "Clover AI Studio",
         "publisher": "Santhosh Narayanan",
-        "release_version": "5.0.0",
+        "release_version": VERSION,
         "release_channel": "release",
-        "release_date": "2026-11-06",
+        "release_date": RELEASE_DATE,
         "generated_by": "release/beta/generate_release_reports.py",
         "cpsl_release_signing": {
             "algorithm": "Ed25519 (RFC 8032)",
@@ -78,8 +101,8 @@ def generate_all() -> dict:
         "android": {
             "store": "Google Play Console (Closed Testing & Internal App Sharing)",
             "package_name": "ai.clover.studio",
-            "version_code": 14,
-            "version_name": "5.0.0",
+            "version_code": ANDROID_VERSION_CODE,
+            "version_name": VERSION,
             "min_sdk": 26,
             "target_sdk": 36,
             "compile_sdk": 36,
@@ -111,20 +134,15 @@ def generate_all() -> dict:
                 }
             ],
             "verification": {
-                "collective_tests": "35/35 passed (Ed25519 asymmetric release verification)",
-                "google_identity_collective_tests": "32/32 passed (Google OIDC RS256 JWKS, PKCE loopback, 2-installation HTTP E2E sync, expiry/revocation)",
-                "human_usefulness_tests": "18/18 passed (first-turn zero-refusal human usefulness benchmark)",
-                "live_activity_sse_tests": "18/18 passed (monotonic seq, cancellation, disconnect, reconnection, concurrency)",
-                "live_simulated_server_smoke_test": "passed (/api/health, /api/settings, /api/collective, /api/identity/google, /api/chat/stream, /api/turn/events)",
-                "ready_for_closed_testing_upload": True
+                **ver,
             }
         },
         "windows": {
             "distribution": "Standalone Native C# Win32 Per-User Installer (CloverAIStudio-Setup.exe)",
             "packaging_route": "Native .NET Framework 4.8 x64 GUI Setup & Launcher (csc.exe) with embedded asInvoker manifest, automatic Zone.Identifier unblocking, and embedded TrustedPublisher certificate registration",
             "publisher_display_name": "Santhosh Narayanan",
-            "manifest_version": "5.0.0.0",
-            "display_version": "5.0.0",
+            "manifest_version": VERSION + ".0",
+            "display_version": VERSION,
             "architecture": "x64",
             "min_windows_version": "10.0.19041.0",
             "max_windows_version_tested": "10.0.26100.0",
@@ -150,21 +168,13 @@ def generate_all() -> dict:
                 }
             ],
             "verification": {
-                "semantics_tests": "155/155 passed",
-                "collective_tests": "35/35 passed (Ed25519 asymmetric release verification)",
-                "google_identity_collective_tests": "32/32 passed (Google OIDC RS256 JWKS, PKCE loopback, 2-installation HTTP E2E sync, expiry/revocation)",
-                "human_usefulness_tests": "18/18 passed (first-turn zero-refusal human usefulness benchmark)",
-                "live_activity_sse_tests": "18/18 passed (monotonic seq, cancellation, disconnect, reconnection, concurrency)",
-                "repo_tests": "27/27 passed",
-                "tool_routing_tests": "129/129 passed",
-                "page_fetch_tests": "119/119 passed (address guard, robots.txt, citations)",
-                "browser_first_tests": "30/30 passed (browser-first search engines & links)",
-                "browser_handback_tests": "51/51 passed (Send to Clover Chrome/Edge native messaging host & inbox)",
-                "regression_fixes_tests": "61/61 passed (full Clover C1-C3/S1-S3/CSI/PPL system)"
+                **ver,
             }
         }
     }
 
+    runs = json.loads((BETA_DIR / "verification-results.json").read_text(encoding="utf-8")) if (BETA_DIR / "verification-results.json").is_file() else {}
+    VERIFY_LINES = "\n".join(f"- `python {r['suite']}`: **{ver[k]}**." for k, r in runs.items())
     (BETA_DIR / "RELEASE-MANIFEST.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
     # Write Windows BUILD-REPORT.md
@@ -172,12 +182,12 @@ def generate_all() -> dict:
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `5.0.0` (`5.0.0.0` Win32 PE `AssemblyVersion`)  
+**Release Version**: `{VERSION}` (`{VERSION}.0` Win32 PE `AssemblyVersion`)  
 **Product Name**: `Clover AI Studio`  
 **Publisher**: `Santhosh Narayanan`  
 **Distribution Model**: Standalone Native C# Win32 Per-User Installer (`CloverAIStudio-Setup.exe` / `clover-ai-studio-beta-setup.exe`)  
 **Target Architecture**: `x64` (`Windows.Desktop`, `MinVersion="10.0.19041.0"`, `MaxVersionTested="10.0.26100.0"`)  
-**Build Date**: `2026-11-06`  
+**Build Date**: `{RELEASE_DATE}`  
 **Build Environment**: Windows 11 x64 (`10.0.26200`), `.NET Framework 4.8` `csc.exe` (`v4.0.30319`).
 
 ---
@@ -206,17 +216,7 @@ def generate_all() -> dict:
 
 ## 3. Verification & Regression Suite Results
 
-- `python tests/test_semantics.py`: **`155/155` checks passed**.
-- `python clover/test_collective.py`: **`35/35` checks passed** (Ed25519 public-key verification, unauthenticated-publish refusal, forged-key rejection, PII stripping, Sybil deduplication, Byzantine poison rejection, `Personal > Collective > General` priority).
-- `python clover/test_google_identity_collective.py`: **`32/32` checks passed** (Google OIDC RS256 JWKS verification, Windows OAuth PKCE loopback, Android OIDC token flow, two-installation HTTP E2E synchronization, expiry & revocation rejection, and consent withdrawal).
-- `python clover/test_human_usefulness.py`: **`18/18` checks passed** (first-turn zero-refusal human usefulness benchmark).
-- `python clover/test_live_activity_sse.py`: **`18/18` checks passed** (strictly monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
-- `python tests/test_clover_repo.py`: **`27/27` checks passed**.
-- `python tests/test_tool_routing.py`: **`129/129` checks passed**.
-- `python tests/test_page_fetch.py`: **`119/119` checks passed** (address guard, `robots.txt`, and citations).
-- `python tests/test_browser_first.py`: **`30/30` checks passed** (browser-first search engines & links).
-- `python tests/test_browser_handback.py`: **`51/51` checks passed** (Send to Clover Chrome/Edge extension + native messaging host & inbox).
-- `python tests/test_regression_fixes.py`: **`61/61` checks passed** (full Clover `C1 -> C2 HybridAgent -> Bridges -> C3 11-Level NCM + S1–S3 + CSI + PPL` system).
+{VERIFY_LINES}
 """
     (BETA_DIR / "windows" / "BUILD-REPORT.md").write_text(win_report, encoding="utf-8")
 
@@ -231,10 +231,10 @@ def generate_all() -> dict:
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `5.0.0`  
-**Version Code**: `14`  
+**Release Version**: `{VERSION}`  
+**Version Code**: `{ANDROID_VERSION_CODE}`  
 **Package Name**: `ai.clover.studio`  
-**Build Date**: `2026-11-07`  
+**Build Date**: `{RELEASE_DATE}`  
 **Build Environment**: `k3` (`/opt/clover-k3/studio-android`), OpenJDK `17.0.20`, Gradle `8.9`, Android Gradle Plugin `8.5.2`, Chaquopy `17.2.0` (CPython `3.12`), Android SDK `36` (`minSdk 26`, `targetSdk 36`, `compileSdk 36`), Android NDK `llvm-strip`.
 
 ---
@@ -243,8 +243,8 @@ def generate_all() -> dict:
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 14`, `targetSdk 36`) | `{aab_size:,}` bytes (`{aab_size / (1024*1024):.2f} MB`) | `{aab_sha}` |
-| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 14`, `targetSdk 36`) | `{apk_size:,}` bytes (`{apk_size / (1024*1024):.2f} MB`) | `{apk_sha}` |
+| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode {ANDROID_VERSION_CODE}`, `targetSdk 36`) | `{aab_size:,}` bytes (`{aab_size / (1024*1024):.2f} MB`) | `{aab_sha}` |
+| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode {ANDROID_VERSION_CODE}`, `targetSdk 36`) | `{apk_size:,}` bytes (`{apk_size / (1024*1024):.2f} MB`) | `{apk_sha}` |
 
 ---
 
@@ -267,7 +267,7 @@ def generate_all() -> dict:
 ## 3. Package & Manifest Audit (`build.gradle`)
 
 ```text
-package: name='ai.clover.studio' versionCode='14' versionName='5.0.0'
+package: name='ai.clover.studio' versionCode='{ANDROID_VERSION_CODE}' versionName='{VERSION}'
 sdkVersion:'26'
 targetSdkVersion:'36'
 compileSdkVersion:'36'
@@ -277,13 +277,11 @@ launchable-activity: name='ai.clover.studio.MainActivity'
 
 ---
 
-## 4. Functional Smoke Test, Live Activity SSE & Collective Learning Verification
+## 4. Verification (re-run for this release)
 
-1. **Multi-Cycle AGENTS.md Clover Cycle Verification (`test_clover_cycles.py`)**: **`ALL CLOVER CYCLE TESTS PASSED`** (6 Outcome verification checks, 3-cycle `run_turn` auto-repair + `LRN-*` Growth in `LEARNINGS.md`, and 3-cycle `AutonomousCloverEngine`).
-2. **Collective Problem-Solving Learning (`test_collective.py`)**: **`35/35` checks passed** (RFC 8032 Ed25519 public-key verification, unauthenticated-publish refusal, forged-key rejection, PII stripping, Sybil deduplication, Byzantine poison rejection, `Personal > Collective > General` priority).
-3. **Google OIDC Identity & E2E Collective Sync (`test_google_identity_collective.py`)**: **`32/32` checks passed** (RS256 JWKS verification, OAuth PKCE, Android OIDC token flow, two-installation HTTP E2E synchronization, expiry/revocation rejection, and consent withdrawal).
-4. **Live Activity SSE Timeline (`test_live_activity_sse.py`)**: **`18/18` checks passed** (monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
-5. **Google Play Console Links**:
+{VERIFY_LINES}
+
+**Google Play Console Links**:
    - Instant Test (Internal App Sharing): `https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs`
    - Closed Testing Opt-In: `https://play.google.com/apps/testing/ai.clover.studio`
 """
@@ -298,11 +296,11 @@ launchable-activity: name='ai.clover.studio.MainActivity'
     # Write download/SHA256SUMS.txt and sync site/download/
     dl_sums = (
         "Clover AI Studio installers (SHA-256). Each downloads what it needs on first run, from the publishers, checked against pinned hashes.\n\n"
-        f"laptop/CloverAIStudio-Setup.exe  5.0.0  Windows 10 2004+ x64, 16 GB RAM, AVX2, 25 GB free  {setup_size} bytes\n"
+        f"laptop/CloverAIStudio-Setup.exe  {VERSION}  Windows 10 2004+ x64, 16 GB RAM, AVX2, 25 GB free  {setup_size} bytes\n"
         f"  {setup_sha}\n"
         f"laptop/CloverFramework-CodeSign.cer  Clover Framework Authenticode certificate  {cer_size} bytes\n"
         f"  {cer_sha}\n"
-        f"mobile/CloverAIStudio.apk  5.0.0 (code 14, targetSdk 36)  Android 8+ arm64, Snapdragon GPU via OpenCL, about 3 GB free  {apk_size} bytes\n"
+        f"mobile/CloverAIStudio.apk  {VERSION} (code {ANDROID_VERSION_CODE}, targetSdk 36)  Android 8+ arm64, Snapdragon GPU via OpenCL, about 3 GB free  {apk_size} bytes\n"
         f"  {apk_sha}\n"
     )
     (REPO_ROOT / "download" / "SHA256SUMS.txt").write_text(dl_sums, encoding="utf-8")
@@ -322,7 +320,6 @@ launchable-activity: name='ai.clover.studio.MainActivity'
 
 
 def sync_store_checklists(meta: dict) -> None:
-    import re
     gp_chk = BETA_DIR / "store" / "google-play" / "submission-checklist.md"
     if gp_chk.is_file():
         txt = gp_chk.read_text(encoding="utf-8")
@@ -340,10 +337,11 @@ def sync_store_checklists(meta: dict) -> None:
             f"- **Direct ADB / Tester APK**: `release/beta/android/clover-ai-studio-beta.apk`\n  - Size: `{apk_s:,}` bytes (`{apk_s / (1024*1024):.2f} MB`)\n  - SHA-256: `{apk_h}`",
             txt,
         )
-        txt = txt.replace("- `versionCode`: `9`", "- `versionCode`: `14`")
-        txt = txt.replace("- `versionName`: `0.5.0-beta.1`", "- `versionName`: `5.0.0`")
+        txt = re.sub(r"- `versionCode`: `\d+`", f"- `versionCode`: `{ANDROID_VERSION_CODE}`", txt)
+        txt = re.sub(r"- `versionName`: `[^`]+`", f"- `versionName`: `{VERSION}`", txt)
         txt = txt.replace("- `targetSdk` / `compileSdk`: `34` (Android 14)", "- `targetSdk` / `compileSdk`: `36` (Android 16)")
-        txt = txt.replace("(`versionCode 9`, `versionName 0.5.0-beta.1`)", "(`versionCode 14`, `versionName 5.0.0`, `targetSdk 36`)")
+        txt = re.sub(r"\(`versionCode \d+`, `versionName [^`]+`(?:, `targetSdk 36`)?\)",
+                     f"(`versionCode {ANDROID_VERSION_CODE}`, `versionName {VERSION}`, `targetSdk 36`)", txt)
         gp_chk.write_text(txt, encoding="utf-8")
 
     ms_chk = BETA_DIR / "store" / "microsoft" / "submission-checklist.md"
@@ -351,9 +349,9 @@ def sync_store_checklists(meta: dict) -> None:
         txt = ms_chk.read_text(encoding="utf-8")
         exe_s = meta["windows_setup"]["size"]
         exe_h = meta["windows_setup"]["sha256"]
-        txt = txt.replace("`0.5.0.0` (Display Version: `0.5.0-beta.1`)", "`5.0.0.0` (Display Version: `5.0.0`)")
-        txt = txt.replace("SanthoshNarayanan.CloverAIStudio_0.5.0.0_x64.msix", "SanthoshNarayanan.CloverAIStudio_5.0.0.0_x64.msix")
-        txt = txt.replace("`SanthoshNarayanan.CloverAIStudio` `0.5.0.0` (`x64`)", "`SanthoshNarayanan.CloverAIStudio` `5.0.0.0` (`x64`)")
+        txt = re.sub(r"`\d+\.\d+\.\d+\.0` \(Display Version: `[^`]+`\)", f"`{VERSION}.0` (Display Version: `{VERSION}`)", txt)
+        txt = re.sub(r"SanthoshNarayanan\.CloverAIStudio_\d+\.\d+\.\d+\.0_x64\.msix", f"SanthoshNarayanan.CloverAIStudio_{VERSION}.0_x64.msix", txt)
+        txt = re.sub(r"`SanthoshNarayanan\.CloverAIStudio` `\d+\.\d+\.\d+\.0` \(`x64`\)", f"`SanthoshNarayanan.CloverAIStudio` `{VERSION}.0` (`x64`)", txt)
         txt = re.sub(
             r"- \*\*Standalone Direct-Download Setup EXE \(`x64`\)\*\*: `release/beta/windows/clover-ai-studio-beta-setup\.exe`\s*\n\s*- Size: `[^`]+` bytes \(`[^`]+`\)\s*\n\s*- SHA-256: `[0-9a-f]+`",
             f"- **Standalone Direct-Download Setup EXE (`x64`)**: `release/beta/windows/clover-ai-studio-beta-setup.exe`\n  - Size: `{exe_s:,}` bytes (`{exe_s / (1024*1024):.2f} MB`)\n  - SHA-256: `{exe_h}`",

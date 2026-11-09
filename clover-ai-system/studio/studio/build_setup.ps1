@@ -15,7 +15,8 @@ if (-not (Test-Path (Join-Path $fw 'clover-ai-system\mobile'))) {
     $fw = [IO.Path]::GetFullPath((Join-Path $base '..\..\..\clover-collective-wt'))
 }
 if (Test-Path (Join-Path $fw 'clover-ai-system\mobile')) {
-    foreach ($f in 'semantics.py', 'personal.py', 'collective.py', 'collective_gateway.py', 'collective_evaluator.py', 'core_registry.py', 'core_sync.py', 'jepa_engine.py', 'test_collective.py') {
+    # not collective.py or jepa_engine.py: the Studio's copies are newer (copying mobile's undid 162 lines, 2026-11-09)
+    foreach ($f in 'semantics.py', 'personal.py', 'collective_gateway.py', 'collective_evaluator.py', 'core_registry.py', 'core_sync.py', 'test_collective.py') {
         $p = Join-Path $fw "clover-ai-system\mobile\$f"
         if (Test-Path $p) { Copy-Item $p (Join-Path $base "clover\$f") -Force }
     }

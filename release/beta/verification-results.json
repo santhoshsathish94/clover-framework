@@ -1,0 +1,115 @@
+{
+  "semantics_tests": {
+    "suite": "tests/test_semantics.py",
+    "exit": 0,
+    "pass_lines": 155,
+    "fail_lines": [],
+    "summary": "155 checks passed",
+    "counted": "155 checks passed",
+    "seconds": 3.0
+  },
+  "tool_routing_tests": {
+    "suite": "tests/test_tool_routing.py",
+    "exit": 0,
+    "pass_lines": 129,
+    "fail_lines": [],
+    "summary": "129 checks passed",
+    "counted": "129 checks passed",
+    "seconds": 1.2
+  },
+  "repo_tests": {
+    "suite": "tests/test_clover_repo.py",
+    "exit": 0,
+    "pass_lines": 27,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": null,
+    "seconds": 8.9
+  },
+  "regression_fixes_tests": {
+    "suite": "tests/test_regression_fixes.py",
+    "exit": 1,
+    "pass_lines": 71,
+    "fail_lines": [
+      "FAIL ...and out of an unrelated price",
+      "FAIL k3 dropdown entries have short, clear names and k3 badge"
+    ],
+    "summary": "SOME FAILED",
+    "counted": null,
+    "seconds": 42.5
+  },
+  "page_fetch_tests": {
+    "suite": "tests/test_page_fetch.py",
+    "exit": 0,
+    "pass_lines": 119,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": "119 checks passed",
+    "seconds": 7.9
+  },
+  "browser_first_tests": {
+    "suite": "tests/test_browser_first.py",
+    "exit": 1,
+    "pass_lines": 29,
+    "fail_lines": [
+      "FAIL nothing opens by itself: only a click handler calls /api/browser/open"
+    ],
+    "summary": "SOME FAILED",
+    "counted": null,
+    "seconds": 0.4
+  },
+  "browser_handback_tests": {
+    "suite": "tests/test_browser_handback.py",
+    "exit": 0,
+    "pass_lines": 51,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": "51 checks passed",
+    "seconds": 1.9
+  },
+  "collective_tests": {
+    "suite": "clover/test_collective.py",
+    "exit": 0,
+    "pass_lines": 35,
+    "fail_lines": [],
+    "summary": "35 checks passed",
+    "counted": "35 checks passed",
+    "seconds": 21.8
+  },
+  "google_identity_collective_tests": {
+    "suite": "clover/test_google_identity_collective.py",
+    "exit": 0,
+    "pass_lines": 32,
+    "fail_lines": [],
+    "summary": "ALL 32 GOOGLE IDENTITY & COLLECTIVE LEARNING CHECKS PASSED",
+    "counted": null,
+    "seconds": 21.3
+  },
+  "human_usefulness_tests": {
+    "suite": "clover/test_human_usefulness.py",
+    "exit": 1,
+    "pass_lines": 0,
+    "fail_lines": [],
+    "summary": "urllib.error.URLError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+    "counted": null,
+    "seconds": 2.3
+  },
+  "live_activity_sse_tests": {
+    "suite": "clover/test_live_activity_sse.py",
+    "exit": 0,
+    "pass_lines": 18,
+    "fail_lines": [],
+    "summary": "18 checks passed",
+    "counted": "18 checks passed",
+    "seconds": 2.6
+  },
+  "clover_cycles_tests": {
+    "suite": "clover/test_clover_cycles.py",
+    "exit": 0,
+    "pass_lines": 0,
+    "fail_lines": [],
+    "summary": "}",
+    "counted": null,
+    "seconds": 29.0
+  }
+}
