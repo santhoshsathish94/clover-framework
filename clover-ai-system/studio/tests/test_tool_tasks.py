@@ -43,6 +43,10 @@ ok &= check("a write that reads back as written completes, checked by reading th
 summary = lfm3_native.tool_worked("write_file", ran, out, why)[1]
 ok &= check("its step in the chat says it was checked on disk",
             lfm3_native.checked_summary(eng, ran, summary).endswith("checked on disk"))
+# On the S23 the step line is cut off long before its end, so the page says it in the step's badge instead
+app = (CLOVER / "web" / "app.html").read_text(encoding="utf-8")
+ok &= check("the page shows the check in the step's badge", "/ \\u00b7 checked on disk$/" in app
+            and "'\\u2713 Checked on disk'" in app and " \u00b7 checked on disk" in lfm3_native.checked_summary(eng, ran, "x"))
 
 
 def wrong_write(name, args):  # liveness: the tool says it wrote, the file holds something else

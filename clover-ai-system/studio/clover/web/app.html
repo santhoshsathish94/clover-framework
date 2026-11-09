@@ -1463,8 +1463,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         icBox.className = 'step-ic ' + (cls === 'skip' ? 'no' : cls);
         icBox.innerHTML = s === 'run' ? SPIN : ic(ui[1]);
         st.className = 'state ' + cls;
-        st.textContent = s === 'run' ? 'Running\u2026' : s === 'ok' ? '\u2713 Worked' : s === 'fail' ? '\u2715 Failed' : 'Skipped';
-        st.title = why || summary || '';
+        // a write Clover read back and found as written (tool_tasks): said in the badge, which a phone does not cut off
+        var onDisk = s === 'ok' && / \u00b7 checked on disk$/.test(summary || '');
+        if (onDisk) summary = summary.replace(/ \u00b7 checked on disk$/, '');
+        st.textContent = s === 'run' ? 'Running\u2026' : onDisk ? '\u2713 Checked on disk' : s === 'ok' ? '\u2713 Worked' : s === 'fail' ? '\u2715 Failed' : 'Skipped';
+        st.title = onDisk ? 'Clover read the file back and it holds what was written' : (why || summary || '');
         var sumTxt = summary || (s === 'no' && why ? why : '');
         if (sumTxt) {
           argEl.innerHTML = esc(argLine ? argLine.slice(0, 56) + '  \u2192  ' : '') + '<span class="tool__sum">' + esc(sumTxt) + '</span>';
