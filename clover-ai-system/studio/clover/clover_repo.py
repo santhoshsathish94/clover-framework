@@ -418,6 +418,41 @@ class Repo:
                 if ch:
                     changes.append(ch)
                     self.log(sid, n, f"growth: {ch}")
+            try:
+                import curiosity_foundation as _CF
+                msgs = self.messages(sid)
+                orig_q = next((str(m.get("text") or "") for m in msgs if m.get("role") == "user" and m.get("n") == n), "")
+                orig_a = next((str(m.get("text") or "") for m in msgs if m.get("role") == "clover" and m.get("n") == n), "")
+                corr_txt = (
+                    next((str(m.get("text") or "") for m in msgs if m.get("role") == "user" and m.get("n") == by), "")
+                    if isinstance(by, int) and not worked
+                    else ""
+                )
+                if orig_q or orig_a:
+                    derived = _CF.derive_real_turn_outcome(
+                        orig_q,
+                        orig_a,
+                        user_feedback=kind,
+                        correction_text=corr_txt,
+                    )
+                    kit.curiosity_state().record_interaction_outcome(
+                        derived["query_text"],
+                        pred_error=derived["pred_error"],
+                        comp_error=derived["comp_error"],
+                        strategy_used=derived["strategy_used"],
+                        actor=f"user_{kind}",
+                        controllable=True,
+                        latent_before_64=derived["latent_before_64"],
+                        latent_after_64=derived["latent_after_64"],
+                        unresolved_summary=derived["unresolved_summary"],
+                        user_request=derived["user_request"],
+                        model_prediction=derived["model_prediction"],
+                        correction=derived["correction_text"],
+                        session_id=sid,
+                        turn_n=n,
+                    )
+            except Exception:
+                pass
         return changes
 
     def turn_end(self, sid, n, res, seconds):
@@ -466,18 +501,37 @@ class Repo:
                 changes += ch
             if kit is not None and not stopped:
                 try:
-                    had_cycle_fix = bool(cyc.get("lesson") or cyc.get("action") == "redone")
-                    comp_err = 0.45 if had_cycle_fix else 0.05
-                    strat = "sandbox_counterexample_probe" if any(t.get("tool") in ("python", "run_python") for t in tools) else "memory_graph_recall"
+                    import curiosity_foundation as _CF
+                    msgs = self.messages(sid)
+                    user_req = next(
+                        (str(m.get("text") or "") for m in reversed(msgs) if m.get("role") == "user" and m.get("n") == n),
+                        str(res.get("prompt") or ""),
+                    )
+                    derived = _CF.derive_real_turn_outcome(
+                        user_req,
+                        reply,
+                        layers=res.get("layers") or (),
+                        tool_calls=res.get("tool_calls") or (),
+                        jepa_plan=getattr(kit, "last_c2_jepa", None),
+                        correction_text=cyc.get("lesson"),
+                    )
                     kit.curiosity_state().record_interaction_outcome(
-                        reply[:300],
-                        pred_error=0.35 if had_cycle_fix else 0.05,
-                        comp_error=comp_err,
-                        strategy_used=strat,
+                        derived["query_text"],
+                        pred_error=derived["pred_error"],
+                        comp_error=derived["comp_error"],
+                        pre_repair_comp_error=derived["pre_repair_comp_error"],
+                        strategy_used=derived["strategy_used"],
                         actor="clover",
-                        controllable=True,
-                        unresolved_summary=cyc.get("lesson") if had_cycle_fix else None,
+                        controllable=derived["controllable"],
+                        latent_before_64=derived["latent_before_64"],
+                        latent_after_64=derived["latent_after_64"],
+                        unresolved_summary=derived["unresolved_summary"],
                         memory_entry_id=lesson,
+                        view_dimension_added=derived["view_dimension_added"],
+                        user_request=derived["user_request"],
+                        model_prediction=derived["model_prediction"],
+                        verification_result=json.dumps(checks) if checks else "",
+                        correction=derived["correction_text"],
                         session_id=sid,
                         turn_n=n,
                     )

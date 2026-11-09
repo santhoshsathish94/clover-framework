@@ -422,15 +422,26 @@ class LayerKit:
         st._save_entry_in_place(e)
         st.rebuild_index()
         try:
-            self.curiosity_state().record_interaction_outcome(
+            import curiosity_foundation as _CF
+            derived = _CF.derive_real_turn_outcome(
                 f"{e.title or ''} {e.summary or ''}",
-                pred_error=0.05 if worked else 0.70,
-                comp_error=0.0 if worked else 0.85,
+                e.content or e.summary or "",
+                user_feedback="worked" if worked else "did_not_work",
+                correction_text=ref,
+                entry_tally=(w, d),
+            )
+            self.curiosity_state().record_interaction_outcome(
+                derived["query_text"],
+                pred_error=derived["pred_error"],
+                comp_error=derived["comp_error"],
                 strategy_used="memory_graph_recall",
                 actor="user_feedback",
                 controllable=True,
                 unresolved_summary=(f"Regression on {e.id}: {e.summary}" if not worked else None),
                 memory_entry_id=e.id,
+                user_request=e.title or e.summary,
+                model_prediction=e.summary,
+                correction=ref,
             )
         except Exception:
             pass
@@ -632,19 +643,26 @@ class LayerKit:
         try:
             disc_state = getattr(self.meaning, "discernment", "proceed") if self.meaning is not None else "proceed"
             decl_caps = getattr(self.meaning, "declined", ()) if self.meaning is not None else ()
+            perms_map = getattr(self, "permissions_map", None)
             curiosity_info = self.curiosity_state().recommend_strategy_and_voi(
                 q or "\n".join(mem_texts[:1]),
                 latent_cue_64=sem_cue_64,
                 discernment_state=disc_state,
                 declined_capabilities=decl_caps,
+                permissions=perms_map,
+                interactive=True,
             )
-            if curiosity_info and curiosity_info.get("should_observe") and action_prior_8 is not None:
-                import numpy as np
-                boost = np.asarray(curiosity_info.get("belief_action_boost_8") or np.zeros(8), dtype=np.float32)
-                combined_ap = np.asarray(action_prior_8, dtype=np.float32) + np.float32(0.25) * boost
-                norm_ap = float(np.linalg.norm(combined_ap))
-                if norm_ap > 1e-6:
-                    action_prior_8 = combined_ap / np.float32(norm_ap)
+            if curiosity_info and curiosity_info.get("should_observe"):
+                for st_tool in curiosity_info.get("recommended_studio_tools") or ():
+                    if st_tool not in rec_tools and st_tool not in decl_caps:
+                        rec_tools.append(st_tool)
+                if action_prior_8 is not None:
+                    import numpy as np
+                    boost = np.asarray(curiosity_info.get("belief_action_boost_8") or np.zeros(8), dtype=np.float32)
+                    combined_ap = np.asarray(action_prior_8, dtype=np.float32) + np.float32(0.25) * boost
+                    norm_ap = float(np.linalg.norm(combined_ap))
+                    if norm_ap > 1e-6:
+                        action_prior_8 = combined_ap / np.float32(norm_ap)
         except Exception:
             curiosity_info = None
         bridge_info = {
@@ -659,12 +677,56 @@ class LayerKit:
                 "region_id": curiosity_info.get("region_id"),
                 "state_curiosity": curiosity_info.get("state_curiosity"),
                 "selected_strategy": curiosity_info.get("selected_strategy"),
+                "recommended_studio_tools": curiosity_info.get("recommended_studio_tools", []),
                 "should_observe": curiosity_info.get("should_observe"),
                 "voi": (curiosity_info.get("voi_analysis") or {}).get("value_of_information_voi", 0.0),
             } if isinstance(curiosity_info, dict) else None,
         }
         self.last_meaning_bridge = bridge_info
         return bridge_info
+
+    def run_idle_curiosity_step(
+        self,
+        *,
+        is_idle_fn=None,
+        permissions=None,
+        budget=None,
+        regression_tests=(),
+    ):
+        """Priority 2 & 3: Execute one bounded curiosity step through `studio_idle()` with explicit resource budgets
+        and permissions, closing the strategy-to-action-to-outcome loop."""
+        ws_root = None
+        if self.workspaces is not None and hasattr(self.workspaces, "active"):
+            act_ws = self.workspaces.active()
+            if isinstance(act_ws, dict) and act_ws.get("path"):
+                ws_root = act_ws["path"]
+        if self._ontology is None:
+            try:
+                self._ontology = self.cl.CloverOntologyRetriever()
+                self._verifier = self.cl.CloverSymbolicVerifier(self._ontology)
+            except Exception:
+                pass
+        ont_g = getattr(self._ontology, "graph", None) if self._ontology is not None else None
+        res = self.curiosity_state().run_bounded_idle_curiosity_step(
+            is_idle_fn=is_idle_fn,
+            permissions=permissions if permissions is not None else getattr(self, "permissions_map", None),
+            workspace_root=ws_root,
+            memory_store=self.store(),
+            ontology_graph=ont_g,
+            regression_tests=regression_tests,
+            budget=budget,
+        )
+        if res.get("ran") and self.records is not None and hasattr(self.records, "log"):
+            ar = res.get("action_result") or {}
+            self.records.log(
+                None,
+                None,
+                f"idle_curiosity: strategy={ar.get('strategy')} region={ar.get('region_id')} "
+                f"err={ar.get('comp_error_before')}->{ar.get('comp_error_after')} "
+                f"({ar.get('verification_result', '')[:120]}) in {res.get('wall_ms')} ms",
+            )
+            self.records.schedule("Idle curiosity step")
+        return res
 
     def c2_plan_state(self, q, c1_state=None, offered_tools=None):
         """Strictly C2: run HybridAgent continuous `<latent>` planning (`plan-trunk-0`) + selectable JEPA (`eb_jepa`/`clover_rpre`)

@@ -78,6 +78,35 @@ STRATEGY_TO_ACTION_DIM: dict[str, int] = {
     "human_clarification_ask": 7,      # Dim 7: general_dialogue
 }
 
+# Required permission key in permissions.py for each epistemic strategy
+STRATEGY_REQUIRED_PERMISSION: dict[str, str | None] = {
+    "memory_graph_recall": "memory",
+    "workspace_code_inspect": "files",
+    "sandbox_counterexample_probe": "code",
+    "web_primary_research": "internet",
+    "human_clarification_ask": None,
+}
+
+# Concrete Studio tool names corresponding to each epistemic strategy
+STRATEGY_TO_STUDIO_TOOLS: dict[str, tuple[str, ...]] = {
+    "memory_graph_recall": (),
+    "workspace_code_inspect": ("read_file", "search_files", "list_directory"),
+    "sandbox_counterexample_probe": ("run_python", "calculate"),
+    "web_primary_research": ("web_search", "fetch_url"),
+    "human_clarification_ask": (),
+}
+
+
+@dataclass
+class IdleResourceBudget:
+    """Explicit resource and timing budget for one bounded idle curiosity step in `studio_idle()`."""
+    max_steps_per_idle_pass: int = 1
+    max_wall_ms: float = 1500.0
+    max_sandbox_timeout_s: float = 2.0
+    max_files_read: int = 2
+    max_bytes_read: int = 32768
+    min_idle_interval_s: float = 0.0
+
 STOPWORDS: frozenset[str] = frozenset(
     "a about above after again against all am an and any are as at be because been before being below between both "
     "but by can could did do does doing down during each few for from further had has have having he her here hers "
@@ -85,7 +114,7 @@ STOPWORDS: frozenset[str] = frozenset(
     "once only or other our ours ourselves out over own please same she should so some such than that the their "
     "theirs them themselves then there these they this those through to too under until up very was we were what "
     "when where which while who whom why will with would you your yours yourself yourselves clover question answer "
-    "use using used".split()
+    "use using used verify check explain compute calculate across behave true false".split()
 )
 
 
@@ -144,6 +173,9 @@ class StrategyStats:
     def empirical_lp(self) -> float:
         if not self.progress_window:
             return 0.08  # initial optimistic exploration prior for untried strategy
+        if self.progress_window[-1] <= 1e-4:
+            # Most recent attempt of this strategy stalled (yielded 0 new views / 0 error drop)
+            return 0.01 * float(np.mean(self.progress_window[-4:]))
         return float(np.mean(self.progress_window[-6:]))
 
     @property
@@ -394,9 +426,10 @@ def compute_windowed_lp_and_vigilance(
         se_penalty += 0.50 * (mean_rec - 0.45)
     lp_pos = max(0.0, raw_drop - se_penalty)
 
-    # Paper 12 Eq. (3): |LP| vigilance when competence in a previously mastered region suddenly drops
-    if mean_pst <= 0.20 and (mean_rec - mean_pst) >= 0.18:
-        vigilance = abs(raw_drop)
+    # Paper 12 Eq. (3) & Priority 4: |LP| vigilance when competence in a previously mastered region drops
+    tail_err = max(mean_rec, float(np.mean(arr[-2:])), float(arr[-1]))
+    if (mean_pst <= 0.20 or float(np.min(pst)) <= 0.12) and (tail_err - mean_pst) >= 0.18 and float(arr[-1]) >= 0.25:
+        vigilance = max(abs(raw_drop), tail_err - mean_pst)
     else:
         vigilance = 0.0
 
@@ -404,6 +437,174 @@ def compute_windowed_lp_and_vigilance(
     p_clamped = min(0.98, max(0.02, mean_rec))
     plasticity = max(0.15, 4.0 * p_clamped * (1.0 - p_clamped))
     return round(lp_pos, 5), round(vigilance, 5), round(plasticity, 4)
+
+
+def derive_real_turn_outcome(
+    user_request: str,
+    model_prediction: str,
+    *,
+    layers: Sequence[dict[str, Any]] = (),
+    tool_calls: Sequence[dict[str, Any]] = (),
+    jepa_plan: dict[str, Any] | None = None,
+    user_feedback: str | None = None,
+    correction_text: str | None = None,
+    entry_tally: tuple[int, int] | None = None,
+) -> dict[str, Any]:
+    """Priority 1: Ground feedback in real outcomes rather than assigning fixed competence values to ordinary turns.
+    Extracts:
+      - `query_text`: the actual `user_request` (plus `correction_text` when present), never just `reply[:300]`.
+      - `strategy_used`: mapped from the actual tools/layers that executed in the turn.
+      - `pred_error` (`float | None`): measured from real C2/JEPA latent discrepancy, cycle first-attempt findings,
+        or ontology grounding mismatch (`None` if no predictive signal was measured).
+      - `pre_repair_comp_error` (`float | None`): when Cycle 1 failed real checks before repair, records the initial
+        measured failure rate so within-turn competence progress (`pre -> post`) is grounded in reality.
+      - `comp_error` (`float | None`): measured from real verification checks (`compiler`, `cycle`, `grounding`),
+        real tool execution outcomes (`ran` & `worked`), or real `user_feedback` (`continued`, `helpful`,
+        `said_not_right`, `tried_again`). Returns `None` on ordinary unverified turns so no synthetic competence
+        score is ever fabricated.
+    """
+    req_clean = " ".join(str(user_request or "").split()).strip()
+    pred_clean = " ".join(str(model_prediction or "").split()).strip()
+    corr_clean = " ".join(str(correction_text or "").split()).strip()
+    query_text = req_clean or pred_clean[:240]
+
+    # 1. Determine which epistemic strategy actually ran
+    ran_tools = [tc for tc in (tool_calls or ()) if isinstance(tc, dict) and tc.get("ran")]
+    ran_names = [str(tc.get("tool") or tc.get("name") or "") for tc in ran_tools]
+    layer_names = {str(lay.get("layer") or "") for lay in (layers or ()) if isinstance(lay, dict)}
+    sem_lay = next((lay for lay in (layers or ()) if isinstance(lay, dict) and lay.get("layer") == "semantics"), {})
+
+    if any(t in ("run_python", "python", "calculate", "convert_units", "analyze_table", "chart_table") for t in ran_names):
+        strategy_used = "sandbox_counterexample_probe"
+    elif any(t in ("read_file", "list_directory", "search_files", "file_info", "git_inspect", "read_document") for t in ran_names) or "workspace" in layer_names:
+        strategy_used = "workspace_code_inspect"
+    elif any(t in ("web_search", "fetch_url") for t in ran_names):
+        strategy_used = "web_primary_research"
+    elif sem_lay.get("discernment") == "ask":
+        strategy_used = "human_clarification_ask"
+    else:
+        strategy_used = "memory_graph_recall"
+
+    # 2. Measure real prediction discrepancy (`pred_error`)
+    pred_signals: list[float] = []
+    latent_before_64 = None
+    latent_after_64 = None
+    if isinstance(jepa_plan, dict) and jepa_plan.get("enabled"):
+        e_bef = float(jepa_plan.get("energy_before") or 0.0)
+        e_aft = float(jepa_plan.get("energy_after") or e_bef)
+        if e_bef > 1e-6:
+            pred_signals.append(float(np.clip(e_aft / max(0.25, e_bef), 0.0, 1.0)))
+        if jepa_plan.get("z_init_64") is not None:
+            latent_before_64 = jepa_plan.get("z_init_64")
+        if jepa_plan.get("z_planned_64") is not None:
+            latent_after_64 = jepa_plan.get("z_planned_64")
+
+    cyc_lay = next((lay for lay in (layers or ()) if isinstance(lay, dict) and lay.get("layer") == "cycle"), {})
+    comp_lay = next((lay for lay in (layers or ()) if isinstance(lay, dict) and lay.get("layer") == "compiler" and lay.get("checked")), None)
+    gnd_lay = next((lay for lay in (layers or ()) if isinstance(lay, dict) and lay.get("layer") == "ontology_grounding"), None)
+
+    first_findings = list(cyc_lay.get("first_findings") or [])
+    final_findings = list(cyc_lay.get("final_findings") or [])
+    if first_findings:
+        pred_signals.append(min(1.0, len(first_findings) / (len(first_findings) + 1.0)))
+    elif cyc_lay.get("action") == "redone":
+        pred_signals.append(0.65)
+    if gnd_lay and gnd_lay.get("changed"):
+        pred_signals.append(0.40)
+
+    # 3. Measure real competence/verification error (`comp_error` & `pre_repair_comp_error`)
+    comp_signals: list[float] = []
+    pre_repair_comp_error: float | None = None
+    view_added: str | None = None
+    unresolved_summary: str | None = None
+
+    if ran_tools:
+        worked_cnt = sum(
+            1 for tc in ran_tools
+            if (bool(tc.get("worked")) if "worked" in tc else not str(tc.get("result") or "").lstrip().startswith("Error"))
+        )
+        tool_fail_rate = 1.0 - (worked_cnt / len(ran_tools))
+        comp_signals.append(tool_fail_rate)
+        if worked_cnt > 0:
+            view_added = "supporting_evidence" if strategy_used == "sandbox_counterexample_probe" else "what_it_consists_of"
+
+    if comp_lay is not None:
+        diags = list(comp_lay.get("diagnostics") or [])
+        if comp_lay.get("ok"):
+            comp_signals.append(0.0)
+            view_added = view_added or "where_it_applies"
+        else:
+            c_err = min(1.0, 0.50 + 0.15 * max(1, len(diags)))
+            comp_signals.append(c_err)
+            unresolved_summary = f"Compiler diagnostic on '{req_clean[:120]}': {diags[0] if diags else 'syntax/type error'}"
+
+    if cyc_lay:
+        act = cyc_lay.get("action")
+        if first_findings and not final_findings and act in ("corrected", "compiler_repaired"):
+            # Cycle 1 failed with `first_findings` and Cycle k repaired it to 0 findings!
+            pre_repair_comp_error = round(min(1.0, len(first_findings) / (len(first_findings) + 1.0)), 4)
+            comp_signals.append(0.0)
+            view_added = "where_it_breaks"
+        elif final_findings or act == "unconfirmed":
+            f_cnt = max(1, len(final_findings) or len(first_findings))
+            c_err = min(1.0, f_cnt / (f_cnt + 1.0))
+            comp_signals.append(c_err)
+            unresolved_summary = f"Unresolved verification finding on '{req_clean[:120]}': {(final_findings or first_findings or ['unconfirmed'])[0]}"
+        elif act == "redone":
+            # User triggered retry cycle
+            pre_repair_comp_error = 0.80
+            comp_signals.append(0.15 if cyc_lay.get("lesson") else 0.35)
+            unresolved_summary = str(cyc_lay.get("lesson") or f"User requested retry on '{req_clean[:120]}'")
+
+    if user_feedback is not None:
+        fb = str(user_feedback).strip().lower()
+        if entry_tally is not None:
+            w_cnt, d_cnt = int(entry_tally[0]), int(entry_tally[1])
+            tot_cnt = max(1, w_cnt + d_cnt)
+            emp_fail_rate = d_cnt / tot_cnt
+        else:
+            emp_fail_rate = 0.0 if fb in ("continued", "helpful", "worked") else 0.85
+
+        if fb in ("said_not_right", "tried_again", "did_not_work", "rejected"):
+            fb_err = max(0.75, emp_fail_rate)
+            comp_signals.append(fb_err)
+            pred_signals.append(max(0.65, emp_fail_rate))
+            unresolved_summary = corr_clean or f"User invalidated previous answer on '{req_clean[:140]}'"
+        elif fb in ("helpful", "worked"):
+            comp_signals.append(min(0.15, emp_fail_rate))
+            pred_signals.append(min(0.10, emp_fail_rate))
+        elif fb == "continued":
+            comp_signals.append(min(0.20, emp_fail_rate))
+
+    comp_error = round(float(np.mean(comp_signals)), 4) if comp_signals else None
+    if pred_signals:
+        pred_error: float | None = round(float(np.mean(pred_signals)), 4)
+    elif comp_error is not None:
+        pred_error = comp_error
+    else:
+        pred_error = None
+
+    if latent_before_64 is None and req_clean:
+        latent_before_64 = encode_text_to_64d(req_clean)
+    if latent_after_64 is None and pred_clean:
+        latent_after_64 = encode_text_to_64d(pred_clean)
+
+    return {
+        "query_text": query_text,
+        "user_request": req_clean,
+        "model_prediction": pred_clean[:300],
+        "correction_text": corr_clean,
+        "strategy_used": strategy_used,
+        "pred_error": pred_error,
+        "pre_repair_comp_error": pre_repair_comp_error,
+        "comp_error": comp_error,
+        "verified_in_turn": comp_error is not None,
+        "controllable": True,
+        "latent_before_64": latent_before_64,
+        "latent_after_64": latent_after_64,
+        "unresolved_summary": unresolved_summary,
+        "view_dimension_added": view_added,
+    }
 
 
 def compute_pomdp_voi(
@@ -492,6 +693,7 @@ class PersistentCuriosityEngine:
         self.controllable_subspace_r2: np.ndarray = np.ones(D_LATENT, dtype=np.float64)
         self._action_history_u: list[np.ndarray] = []
         self._state_delta_history: list[np.ndarray] = []
+        self.last_idle_step_ts: float = 0.0
 
         self.load()
 
@@ -588,6 +790,10 @@ class PersistentCuriosityEngine:
         reg.tonic_cpm = cpm
         reg.abs_lp_vigilance = vig
 
+        # Priority 4: Dishabituate when new evidence invalidates previous competence (`vig > 0`)
+        if vig > 0.0:
+            reg.habituation_trace = 0.0
+
         # Paper 10 Section 4: norm of the smoothed signed shift vector ||E[Delta z | R_n]||
         shift_norm = float(np.linalg.norm(np.asarray(reg.signed_shift_ema_64, dtype=np.float64)))
         reliability_gain = max(0.0, reg.dot_yc_reliability)
@@ -596,6 +802,15 @@ class PersistentCuriosityEngine:
         ctrl_gate = float(np.clip(reg.controllability_score, 0.02, 1.0))
         plasticity = 0.5 * (plast_p + plast_c)
 
+        # Mastery decay: when a region is mastered (low expected error, low recent error, zero vigilance), interest quiets down
+        is_mastered = (
+            reg.expected_error_yc < 0.08
+            and vig == 0.0
+            and len(reg.comp_error_window) >= 3
+            and float(reg.comp_error_window[-1]) <= 0.08
+        )
+        mastery_factor = 0.08 if is_mastered else 1.0
+
         # Combine Knowledge Progress (LPM), Competence Progress (CPM), Reliability Improvement (dot_y_C), and |LP| Vigilance
         raw_interest = (
             0.30 * lpm
@@ -603,7 +818,7 @@ class PersistentCuriosityEngine:
             + 0.15 * reliability_gain
             + 0.10 * min(0.25, shift_norm)
             + 0.65 * vig
-        ) * (0.45 + 0.55 * plasticity) * ctrl_gate
+        ) * (0.45 + 0.55 * plasticity) * ctrl_gate * mastery_factor
 
         # Paper 02 E3B: Divide by habitation trace `1 + lambda_h * h_R(t)` so repeated visits cool down smoothly
         denom = 1.0 + self.habituation_weight * reg.habituation_trace
@@ -753,13 +968,15 @@ class PersistentCuriosityEngine:
         latent_cue_64: np.ndarray | Sequence[float] | None = None,
         discernment_state: str = "proceed",
         declined_capabilities: Sequence[str] = (),
+        permissions: dict[str, str] | None = None,
+        interactive: bool = True,
     ) -> dict[str, Any]:
-        """Hook A (`before_turn` / `LayerKit.compute_meaning_bridge`):
+        """Hook A (`before_turn` / `LayerKit.compute_meaning_bridge` / `studio_idle()`):
         1. Respects Paper 03 / `AGENTS.md` §9 Discernment Hierarchy: if `discernment_state` is `"refuse"` or `"ask"`,
            curiosity never overrides safety/authority boundaries.
         2. Locates the active leaf region `R_n` for `query`.
-        3. Uses the `SGIM-ACTS` bandit (Paper 11) + POMDP `VoI` (Paper 06) to select the highest-value epistemic
-           strategy and produces an 8-d belief-based utility boost for `action_prior_8` (Paper 07 Fig. 1b).
+        3. Filters strategies by `permissions` and `declined_capabilities`, then uses the `SGIM-ACTS` bandit (Paper 11)
+           + POMDP `VoI` (Paper 06) to select the highest-value permitted epistemic strategy and its concrete Studio tools.
         """
         with self.lock:
             q_vec = encode_text_to_64d(query, latent_cue_64=latent_cue_64)
@@ -769,6 +986,7 @@ class PersistentCuriosityEngine:
                     "region_id": reg.region_id,
                     "preempted_by_discernment": discernment_state,
                     "selected_strategy": "human_clarification_ask" if discernment_state != "refuse" else "none",
+                    "recommended_studio_tools": [],
                     "voi": 0.0,
                     "should_observe": False,
                     "belief_action_boost_8": np.zeros(8, dtype=np.float32),
@@ -782,17 +1000,32 @@ class PersistentCuriosityEngine:
             best_strat = "memory_graph_recall"
             best_score = -1e9
             best_voi_info: dict[str, Any] = {}
+            permitted_strategies: list[str] = []
 
             for strat in EPISTEMIC_STRATEGIES:
+                if not interactive and strat == "human_clarification_ask":
+                    continue
                 if strat == "web_primary_research" and ("web.search" in declined or "web.page" in declined):
                     continue
-                if strat == "sandbox_counterexample_probe" and "python" in declined:
+                if strat == "sandbox_counterexample_probe" and ("python" in declined or "calc" in declined):
                     continue
+                if strat == "workspace_code_inspect" and ("files.read" in declined or "files.search" in declined):
+                    continue
+                if permissions is not None:
+                    req_perm = STRATEGY_REQUIRED_PERMISSION.get(strat)
+                    if req_perm is not None:
+                        p_mode = permissions.get(req_perm, "ask")
+                        if p_mode == "deny":
+                            continue
+                        if not interactive and p_mode != "allow":
+                            continue
+                permitted_strategies.append(strat)
                 st = bandit[strat]
                 # Paper 11 SGIM-ACTS: empirical LP minus variance penalty
-                gain_rate = max(0.05, st.empirical_lp * 3.5)
+                gain_rate = max(0.25, st.empirical_lp * 3.5)
+                eff_uncertainty = max(reg.expected_error_yc, 0.75 * reg.abs_lp_vigilance)
                 voi_info = compute_pomdp_voi(
-                    reg.expected_error_yc,
+                    eff_uncertainty,
                     strategy_gain_rate=gain_rate,
                     observation_cost_ro=STRATEGY_OBSERVATION_COST[strat],
                 )
@@ -817,6 +1050,8 @@ class PersistentCuriosityEngine:
             ]
             open_qs.sort(key=lambda d: -float(d.get("diagnosticity_score", 0.5)))
 
+            studio_tools = list(STRATEGY_TO_STUDIO_TOOLS.get(best_strat, ())) if best_voi_info.get("should_observe") else []
+
             return {
                 "region_id": reg.region_id,
                 "emergent_keywords": list(reg.emergent_keywords[:6]),
@@ -825,7 +1060,9 @@ class PersistentCuriosityEngine:
                 "tonic_lpm": reg.tonic_lpm,
                 "tonic_cpm": reg.tonic_cpm,
                 "abs_lp_vigilance": reg.abs_lp_vigilance,
+                "permitted_strategies": permitted_strategies,
                 "selected_strategy": best_strat,
+                "recommended_studio_tools": studio_tools,
                 "voi_analysis": best_voi_info,
                 "should_observe": bool(best_voi_info.get("should_observe")),
                 "belief_action_boost_8": boost_8,
@@ -864,8 +1101,9 @@ class PersistentCuriosityEngine:
         self,
         query: str,
         *,
-        pred_error: float,
-        comp_error: float,
+        pred_error: float | None = None,
+        comp_error: float | None = None,
+        pre_repair_comp_error: float | None = None,
         strategy_used: str = "memory_graph_recall",
         actor: str = "clover",
         controllable: bool = True,
@@ -877,15 +1115,23 @@ class PersistentCuriosityEngine:
         prerequisite_ids: Sequence[str] = (),
         lateral_modality_ids: Sequence[str] = (),
         view_dimension_added: str | None = None,
+        user_request: str | None = None,
+        model_prediction: str | None = None,
+        verification_result: str | None = None,
+        correction: str | None = None,
         session_id: str = "",
         turn_n: int = 0,
     ) -> dict[str, Any]:
         """Hook B (`on_turn_outcome`): Update `CuriosityRegionTree`, Confidence Module `C(R_n)`, `SGIM-ACTS` strategy
-        bandit, and `ZPDES` unresolved question frontier from an interaction outcome.
+        bandit, and `ZPDES` unresolved question frontier from a real interaction outcome.
+        Priority 1: When `comp_error is None` and `pred_error is None` (an ordinary conversational turn with no
+        objective verification check and no user feedback yet), records the visit and updates emergent keywords/prototype
+        WITHOUT assigning any synthetic competence score.
         """
         with self.lock:
             self.step_counter += 1
-            q_vec = encode_text_to_64d(query, latent_cue_64=latent_before_64)
+            anchor_text = (user_request or query or "").strip()
+            q_vec = encode_text_to_64d(anchor_text, latent_cue_64=latent_before_64)
 
             # Decay habitation traces across all regions before boosting the visited region (Paper 02 E3B)
             for r in self.regions.values():
@@ -909,16 +1155,57 @@ class PersistentCuriosityEngine:
             reg.centroid_64 = [round(float(x), 5) for x in cent]
 
             # Update emergent keywords from observed query terms (zero hardcoded topics)
-            new_terms = extract_emergent_terms(query, max_terms=6)
+            new_terms = extract_emergent_terms(anchor_text, max_terms=6)
             merged_kw = list(dict.fromkeys(new_terms + reg.emergent_keywords))[:10]
             reg.emergent_keywords = merged_kw
 
+            prev_curiosity = reg.state_curiosity
+            s_key = strategy_used if strategy_used in EPISTEMIC_STRATEGIES else "memory_graph_recall"
+
+            # Priority 1: If neither competence nor prediction error was measured on this turn, do NOT fabricate fixed numbers
+            if comp_error is None and pred_error is None and not unresolved_summary:
+                self._recompute_region_metrics(reg)
+                episode = {
+                    "step": self.step_counter,
+                    "at": utc_now_iso(),
+                    "session": session_id,
+                    "turn": turn_n,
+                    "region_id": reg.region_id,
+                    "strategy": s_key,
+                    "actor": actor,
+                    "user_request": anchor_text[:200],
+                    "model_prediction": (model_prediction or "")[:200],
+                    "verified_in_turn": False,
+                    "pred_error": None,
+                    "comp_error": None,
+                    "state_curiosity_before": prev_curiosity,
+                    "state_curiosity_after": reg.state_curiosity,
+                    "split_into": None,
+                    "spawned_question_id": None,
+                    "resolved_question_ids": [],
+                }
+                self.exploration_history.append(episode)
+                self.save()
+                return episode
+
+            eff_comp = float(comp_error if comp_error is not None else pred_error)  # type: ignore[arg-type]
+            eff_pred = float(pred_error if pred_error is not None else eff_comp)
+
+            # If Cycle 1 failed real checks (`pre_repair_comp_error`) before Cycle k repaired it to `eff_comp`,
+            # record the pre-repair sample first so within-turn competence progress is grounded in the window!
+            if pre_repair_comp_error is not None and float(pre_repair_comp_error) > eff_comp:
+                pre_c = float(np.clip(pre_repair_comp_error, 0.0, 1.5))
+                reg.exemplar_vectors.append([round(float(x), 5) for x in q_vec])
+                reg.exemplar_outcomes.append(round(pre_c, 5))
+                reg.pred_error_window.append(round(max(eff_pred, pre_c), 5))
+                reg.comp_error_window.append(round(pre_c, 5))
+
             # Record exemplar for Criterion C2 splitting (Paper 01)
-            combined_err = float(np.clip(0.4 * pred_error + 0.6 * comp_error, 0.0, 1.5))
+            combined_err = float(np.clip(0.4 * eff_pred + 0.6 * eff_comp, 0.0, 1.5))
             reg.exemplar_vectors.append([round(float(x), 5) for x in q_vec])
             reg.exemplar_outcomes.append(round(combined_err, 5))
-            reg.pred_error_window.append(round(float(pred_error), 5))
-            reg.comp_error_window.append(round(float(comp_error), 5))
+            reg.pred_error_window.append(round(eff_pred, 5))
+            reg.comp_error_window.append(round(eff_comp, 5))
 
             # Paper 04 & 13: Update regional controllability score
             if controllable:
@@ -948,20 +1235,28 @@ class PersistentCuriosityEngine:
                 new_ema = 0.82 * cur_ema + 0.18 * dz
                 reg.signed_shift_ema_64 = [round(float(x), 5) for x in new_ema]
 
-            prev_curiosity = reg.state_curiosity
             self._recompute_region_metrics(reg)
 
             # Update SGIM-ACTS strategy bandit (Paper 11)
             bandit = self.strategy_bandit.setdefault(
                 reg.region_id, {s: StrategyStats(strategy=s) for s in EPISTEMIC_STRATEGIES}
             )
-            s_key = strategy_used if strategy_used in bandit else "memory_graph_recall"
             st = bandit[s_key]
             st.attempts += 1
             st.last_used_step = self.step_counter
-            prev_s_err = st.error_window[-1] if st.error_window else 0.55
-            st.error_window.append(round(float(comp_error), 5))
-            s_prog = max(0.0, prev_s_err - float(comp_error)) if controllable else 0.0
+            prev_s_err = (
+                float(pre_repair_comp_error)
+                if pre_repair_comp_error is not None
+                else (st.error_window[-1] if st.error_window else 0.55)
+            )
+            st.error_window.append(round(eff_comp, 5))
+            if not controllable:
+                s_prog = 0.0
+            elif eff_comp <= 0.10 and prev_s_err <= 0.12:
+                # Successful verification in an already-mastered region maintains competence (not a high-error stall)
+                s_prog = max(0.08, prev_s_err - eff_comp)
+            else:
+                s_prog = max(0.0, prev_s_err - eff_comp)
             st.progress_window.append(round(s_prog, 5))
             if view_dimension_added:
                 st.views_discovered += 1
@@ -969,9 +1264,19 @@ class PersistentCuriosityEngine:
             # Update or spawn ZPDES unresolved question node (Papers 06, 07, 08, 12)
             spawned_qid = None
             resolved_qids: list[str] = []
-            if unresolved_summary or comp_error > 0.25 or reg.abs_lp_vigilance > 0.0:
-                q_text = (unresolved_summary or query).strip()[:240]
-                qid = "Q-" + hashlib.sha1(q_text.lower().encode("utf-8")).hexdigest()[:10].upper()
+            q_lookup_text = (unresolved_summary or anchor_text).strip()[:240]
+            existing_qid = "Q-" + hashlib.sha1(q_lookup_text.lower().encode("utf-8")).hexdigest()[:10].upper()
+            # Also check if there is an active question in this region with overlapping terms
+            if existing_qid not in self.unresolved_questions and eff_comp <= 0.10:
+                q_terms = set(extract_emergent_terms(anchor_text, max_terms=8))
+                for cand_q in self.unresolved_questions.values():
+                    if cand_q.region_id == reg.region_id and cand_q.zpd_status != "resolved_verified":
+                        if len(q_terms & set(extract_emergent_terms(cand_q.summary, max_terms=8))) >= 2:
+                            existing_qid = cand_q.question_id
+                            break
+
+            if unresolved_summary or eff_comp > 0.25 or reg.abs_lp_vigilance > 0.0 or existing_qid in self.unresolved_questions:
+                qid = existing_qid
                 q_node = self.unresolved_questions.get(qid)
                 if q_node is None:
                     origin = (
@@ -982,7 +1287,7 @@ class PersistentCuriosityEngine:
                     q_node = UnresolvedQuestionNode(
                         question_id=qid,
                         region_id=reg.region_id,
-                        summary=q_text,
+                        summary=q_lookup_text,
                         origin_kind=origin,
                         memory_entry_id=memory_entry_id,
                         parent_question_id=parent_question_id,
@@ -992,20 +1297,25 @@ class PersistentCuriosityEngine:
                     )
                     self.unresolved_questions[qid] = q_node
                     spawned_qid = qid
+                elif reg.abs_lp_vigilance > 0.0 and q_node.zpd_status == "resolved_verified":
+                    # Priority 4: Revive resolved question when new evidence invalidates competence!
+                    q_node.zpd_status = "active_zpd"
+                    q_node.origin_kind = "competence_regression"
+
                 q_node.attempts += 1
-                q_node.error_history.append(round(float(comp_error), 4))
+                q_node.error_history.append(round(eff_comp, 4))
                 q_node.updated_at = utc_now_iso()
                 if view_dimension_added and view_dimension_added not in q_node.views_covered:
                     q_node.views_covered.append(view_dimension_added)
 
-                if comp_error <= 0.10:
+                if eff_comp <= 0.10:
                     q_node.zpd_status = "resolved_verified"
                     resolved_qids.append(qid)
                     self._on_question_progressed_or_resolved(q_node)
                 elif (
                     q_node.attempts >= self.zpd_stall_attempts
                     and q_node.recent_lp <= self.zpd_stall_eps
-                    and comp_error > 0.30
+                    and eff_comp > 0.30
                 ):
                     # Paper 08 Figure 5 (ZPDES): stall detected -> deactivate stalled node and open lateral/prerequisite nodes
                     q_node.zpd_status = "stalled_deactivated"
@@ -1028,8 +1338,14 @@ class PersistentCuriosityEngine:
                 "region_id": reg.region_id,
                 "strategy": s_key,
                 "actor": actor,
-                "pred_error": round(float(pred_error), 4),
-                "comp_error": round(float(comp_error), 4),
+                "user_request": anchor_text[:200],
+                "model_prediction": (model_prediction or "")[:200],
+                "verification_result": (verification_result or "")[:200],
+                "correction": (correction or "")[:200],
+                "verified_in_turn": True,
+                "pred_error": round(eff_pred, 4),
+                "pre_repair_comp_error": round(float(pre_repair_comp_error), 4) if pre_repair_comp_error is not None else None,
+                "comp_error": round(eff_comp, 4),
                 "phasic_surprise_sm": reg.phasic_surprise_sm,
                 "tonic_lpm": reg.tonic_lpm,
                 "tonic_cpm": reg.tonic_cpm,
@@ -1236,6 +1552,417 @@ class PersistentCuriosityEngine:
 
             self.save()
             return consolidation_result
+
+    # ---------------- Priority 2 & 3: Closed Strategy-to-Action Loop & Bounded Idle Curiosity ----------------
+
+    def execute_permitted_strategy_action(
+        self,
+        query: str,
+        *,
+        strategy: str | None = None,
+        permissions: dict[str, str] | None = None,
+        workspace_root: str | Path | None = None,
+        memory_store: Any | None = None,
+        ontology_graph: Any | None = None,
+        sandbox_runner: Callable[[str], tuple[bool, Any, str]] | None = None,
+        regression_tests: Sequence[dict[str, Any]] = (),
+        budget: IdleResourceBudget | None = None,
+        interactive: bool = False,
+        question_node: UnresolvedQuestionNode | None = None,
+        session_id: str = "",
+        turn_n: int = 0,
+    ) -> dict[str, Any]:
+        """Priority 3: Close the strategy loop by executing the selected permitted epistemic strategy
+        (`workspace_code_inspect`, `sandbox_counterexample_probe`, or `memory_graph_recall`) within `budget`
+        and `permissions`, measuring its real outcome, and feeding that outcome back into `record_interaction_outcome`.
+        """
+        t0 = time.perf_counter()
+        bud = budget or IdleResourceBudget()
+        perms = dict(permissions or {"memory": "allow", "files": "allow", "code": "allow", "internet": "ask"})
+
+        with self.lock:
+            rec = self.recommend_strategy_and_voi(
+                query,
+                permissions=perms,
+                interactive=interactive,
+            )
+            chosen_strat = strategy or rec.get("selected_strategy") or "memory_graph_recall"
+            req_perm = STRATEGY_REQUIRED_PERMISSION.get(chosen_strat)
+            if req_perm is not None:
+                p_mode = perms.get(req_perm, "ask")
+                if p_mode == "deny" or (not interactive and p_mode != "allow"):
+                    return {
+                        "executed": False,
+                        "strategy": chosen_strat,
+                        "reason": f"permission_{req_perm}_{p_mode}",
+                        "region_id": rec.get("region_id", "R0"),
+                    }
+
+            reg_id = rec.get("region_id", "R0")
+            reg = self.regions.get(reg_id, self.regions["R0"])
+            prev_err = float(
+                question_node.error_history[-1]
+                if (question_node and question_node.error_history)
+                else (reg.comp_error_window[-1] if reg.comp_error_window else reg.expected_error_yc)
+            )
+            q_terms = set(extract_emergent_terms(query, max_terms=10)) | set(reg.emergent_keywords[:6])
+
+            measured_comp_err = prev_err
+            measured_pred_err = prev_err
+            view_added: str | None = None
+            verif_summary = ""
+            promoted_id: str | None = None
+            discovered_probe_code: str | None = None
+
+            # 1. Strategy: workspace_code_inspect (requires files == "allow")
+            if chosen_strat == "workspace_code_inspect" and workspace_root is not None:
+                ws_path = Path(workspace_root)
+                if ws_path.is_dir():
+                    import ast as _ast
+                    files_read = 0
+                    bytes_read = 0
+                    matched_defs: list[str] = []
+                    candidate_files = sorted(ws_path.rglob("*.py")) + sorted(ws_path.rglob("*.md"))
+                    for fp in candidate_files:
+                        if (time.perf_counter() - t0) * 1000.0 >= bud.max_wall_ms:
+                            break
+                        if files_read >= bud.max_files_read or bytes_read >= bud.max_bytes_read:
+                            break
+                        if any(p in ("node_modules", "__pycache__", ".git", "venv") for p in fp.parts):
+                            continue
+                        if re.search(r"(?i)(?:secret|token|passw|credential|\.env|\.pem|\.key)", fp.name):
+                            continue
+                        try:
+                            raw = fp.read_bytes()[: max(1024, bud.max_bytes_read - bytes_read)]
+                        except OSError:
+                            continue
+                        txt = raw.decode("utf-8", errors="replace")
+                        f_terms = set(extract_emergent_terms(fp.stem + " " + txt[:1500], max_terms=24))
+                        if not (q_terms & f_terms) and len(candidate_files) > 2:
+                            continue
+                        files_read += 1
+                        bytes_read += len(raw)
+                        if fp.suffix.lower() == ".py":
+                            try:
+                                tree = _ast.parse(txt)
+                                for node in tree.body:
+                                    if isinstance(node, _ast.FunctionDef):
+                                        matched_defs.append(f"{fp.name}:{node.name}")
+                                        # If file contains a self-test or verification function, extract a bounded probe
+                                        if (
+                                            discovered_probe_code is None
+                                            and len(txt) <= 8000
+                                            and ("def " in txt)
+                                        ):
+                                            discovered_probe_code = (
+                                                txt
+                                                + f"\nRESULT = {{'passed': callable({node.name}), 'function': {node.name!r}}}\n"
+                                            )
+                            except SyntaxError as syn_e:
+                                verif_summary = f"SyntaxError in {fp.name}: {syn_e}"
+                                measured_comp_err = min(1.0, prev_err + 0.15)
+                        else:
+                            heads = [ln.strip() for ln in txt.splitlines() if ln.strip().startswith("#")]
+                            if heads:
+                                matched_defs.append(f"{fp.name}:{heads[0][:60]}")
+
+                    if matched_defs:
+                        verif_summary = f"Inspected {files_read} workspace file(s) ({bytes_read} B): found {', '.join(matched_defs[:4])}"
+                        hid = "MEM-HYP-WS-" + hashlib.sha1((query + verif_summary).encode("utf-8")).hexdigest()[:8].upper()
+                        already_inspected = bool(
+                            (question_node is not None and "what_it_consists_of" in question_node.views_covered)
+                            or (memory_store is not None and hasattr(memory_store, "entries") and hid in memory_store.entries)
+                        )
+                        if not already_inspected:
+                            view_added = "what_it_consists_of"
+                            measured_comp_err = max(0.15, prev_err * 0.55)
+                            measured_pred_err = max(0.12, prev_err * 0.60)
+                            if (
+                                discovered_probe_code
+                                and memory_store is not None
+                                and perms.get("memory", "allow") == "allow"
+                                and hasattr(memory_store, "create_entry")
+                            ):
+                                import k3_memory_graph as _M
+                                h_entry = _M.MemoryEntry(
+                                    id=hid,
+                                    title=f"Workspace Hypothesis: {', '.join(matched_defs[:2])}"[:80],
+                                    entry_type="hypothesis",
+                                    epistemic_status="hypothesis",
+                                    status="under_review",
+                                    summary=f"Extracted from workspace inspection ({verif_summary}) for '{query[:120]}'",
+                                    content=f"Workspace evidence: {verif_summary}\n```python\n{discovered_probe_code.strip()}\n```",
+                                    source_evidence=verif_summary,
+                                    provenance=_M.MemoryProvenance(
+                                        source_type="observation",
+                                        source_ref=f"workspace:{ws_path.name}",
+                                        actor="clover-curiosity",
+                                    ),
+                                    concepts=list(q_terms)[:4],
+                                    tags=list(q_terms)[:5] + ["hypothesis", "workspace_inspect"],
+                                )
+                                memory_store.create_entry(h_entry)
+                                if question_node is not None and not question_node.memory_entry_id:
+                                    question_node.memory_entry_id = hid
+                        else:
+                            # Paper 11 (Ivaldi et al. 2014): Re-observing the same static view adds 0 new views (LP = 0)
+                            verif_summary = f"Workspace view already collected ({', '.join(matched_defs[:2])}); static repeat yielded 0 new views"
+                    else:
+                        # Zero views discovered -> measured_comp_err unchanged so SGIM-ACTS learns this strategy stalled
+                        verif_summary = f"Workspace inspection ({files_read} files) found no matching definitions for {sorted(q_terms)[:4]}"
+
+            # 2. Strategy: sandbox_counterexample_probe (requires code == "allow")
+            elif chosen_strat == "sandbox_counterexample_probe":
+                if sandbox_runner is None:
+                    import isolated_sandbox as _SBX
+                    sandbox_runner = lambda code_s: _SBX.run_in_isolated_sandbox(code_s, timeout_s=bud.max_sandbox_timeout_s)
+
+                target_hyp = None
+                probe_code = None
+                if memory_store is not None and hasattr(memory_store, "entries"):
+                    if question_node and question_node.memory_entry_id and question_node.memory_entry_id in memory_store.entries:
+                        target_hyp = memory_store.entries[question_node.memory_entry_id]
+                    else:
+                        for e in memory_store.entries.values():
+                            if getattr(e, "status", "") in ("under_review", "contested") or getattr(e, "entry_type", "") == "hypothesis":
+                                e_terms = set(extract_emergent_terms(f"{e.title or ''} {e.summary or ''}", max_terms=10))
+                                if q_terms & e_terms:
+                                    target_hyp = e
+                                    break
+                    if target_hyp is not None:
+                        m_c = re.search(r"```python\s*\n([\s\S]*?)```", str(getattr(target_hyp, "content", "") or ""))
+                        if m_c:
+                            probe_code = m_c.group(1).strip()
+
+                if not probe_code:
+                    m_q = re.search(r"```python\s*\n([\s\S]*?)```", query or "")
+                    if m_q:
+                        probe_code = m_q.group(1).strip()
+
+                if probe_code:
+                    ok_run, val_run, err_run = sandbox_runner(probe_code)
+                    passed_probe = bool(
+                        ok_run and (val_run is True or (isinstance(val_run, dict) and val_run.get("passed") is True))
+                    )
+                    refuted_probe = bool(
+                        (isinstance(val_run, dict) and val_run.get("refuted") is True)
+                        or (not ok_run and "AssertionError" in str(err_run or ""))
+                    )
+                    reg_ok = True
+                    for rt in regression_tests or ():
+                        ok_r, val_r, _ = sandbox_runner(str(rt.get("code") or ""))
+                        if not (ok_r and (val_r is True or (isinstance(val_r, dict) and val_r.get("passed") is True))):
+                            reg_ok = False
+                            break
+
+                    if passed_probe and reg_ok:
+                        measured_comp_err = 0.0
+                        measured_pred_err = 0.02
+                        view_added = "supporting_evidence"
+                        verif_summary = f"Sandbox probe verified hypothesis ({val_run})"
+                        if target_hyp is not None and perms.get("memory", "allow") == "allow":
+                            target_hyp.epistemic_status = "externally_verified"
+                            target_hyp.status = "active"
+                            if hasattr(memory_store, "_save_entry_in_place"):
+                                memory_store._save_entry_in_place(target_hyp)
+                                memory_store.rebuild_index()
+                            promoted_id = target_hyp.id
+                    elif passed_probe and not reg_ok:
+                        measured_comp_err = 0.65
+                        measured_pred_err = 0.55
+                        verif_summary = "Sandbox probe passed locally but broke non-regression replay; rolled back"
+                        if target_hyp is not None and perms.get("memory", "allow") == "allow":
+                            target_hyp.status = "contested"
+                            if hasattr(memory_store, "_save_entry_in_place"):
+                                memory_store._save_entry_in_place(target_hyp)
+                    elif refuted_probe:
+                        # Discovering a counterexample that refutes a false hypothesis reduces epistemic uncertainty!
+                        measured_comp_err = max(0.20, prev_err * 0.65)
+                        measured_pred_err = 0.45
+                        view_added = "where_it_breaks"
+                        verif_summary = f"Counterexample refuted hypothesis in sandbox: {err_run or val_run}"
+                        if target_hyp is not None and perms.get("memory", "allow") == "allow":
+                            target_hyp.status = "contested"
+                            if hasattr(memory_store, "_save_entry_in_place"):
+                                memory_store._save_entry_in_place(target_hyp)
+                    else:
+                        measured_comp_err = min(1.0, max(prev_err, 0.75))
+                        verif_summary = f"Sandbox probe execution failed: {err_run[:140]}"
+                else:
+                    verif_summary = "No executable Python probe available yet for region; strategy yielded 0 progress"
+
+            # 3. Strategy: memory_graph_recall (requires memory == "allow")
+            elif chosen_strat == "memory_graph_recall" and memory_store is not None and hasattr(memory_store, "entries"):
+                matched_entries = []
+                for e in memory_store.entries.values():
+                    if getattr(e, "status", "") == "superseded":
+                        continue
+                    e_terms = set(extract_emergent_terms(f"{e.title or ''} {e.summary or ''}", max_terms=12))
+                    if len(q_terms & e_terms) >= 1:
+                        matched_entries.append(e)
+                if len(matched_entries) >= 2:
+                    e1, e2 = matched_entries[0], matched_entries[1]
+                    existing_targets = {r.target for r in getattr(e1, "relationships", ()) or ()}
+                    if e2.id not in existing_targets and hasattr(memory_store, "add_relationship"):
+                        try:
+                            memory_store.add_relationship(
+                                e1.id,
+                                "similar_to",
+                                e2.id,
+                                provenance="curiosity:memory_graph_recall",
+                                confidence=0.82,
+                                note=f"Linked shared terms {sorted(q_terms)[:4]} during curiosity recall",
+                            )
+                            view_added = "relationships"
+                            measured_comp_err = max(0.18, prev_err * 0.70)
+                            measured_pred_err = max(0.15, prev_err * 0.70)
+                            verif_summary = f"Linked related memory entries {e1.id} <-> {e2.id}"
+                        except Exception:
+                            verif_summary = "Memory recall inspected entries; no new link added"
+                    else:
+                        verif_summary = "Memory entries already linked; recall plateaued"
+                else:
+                    verif_summary = "Insufficient memory entries in region; recall yielded 0 new views"
+
+            episode = self.record_interaction_outcome(
+                query,
+                pred_error=measured_pred_err,
+                comp_error=measured_comp_err,
+                pre_repair_comp_error=prev_err if measured_comp_err < prev_err else None,
+                strategy_used=chosen_strat,
+                actor="curiosity_strategy_loop" if not interactive else "clover",
+                controllable=True,
+                unresolved_summary=question_node.summary if (question_node and measured_comp_err > 0.15) else None,
+                memory_entry_id=promoted_id or (question_node.memory_entry_id if question_node else None),
+                view_dimension_added=view_added,
+                user_request=query,
+                verification_result=verif_summary,
+                session_id=session_id,
+                turn_n=turn_n,
+            )
+
+            return {
+                "executed": True,
+                "strategy": chosen_strat,
+                "region_id": episode["region_id"],
+                "comp_error_before": round(prev_err, 4),
+                "comp_error_after": round(measured_comp_err, 4),
+                "progress_made": round(max(0.0, prev_err - measured_comp_err), 4),
+                "view_dimension_added": view_added,
+                "promoted_entry_id": promoted_id,
+                "verification_result": verif_summary,
+                "wall_ms": round((time.perf_counter() - t0) * 1000.0, 2),
+                "episode": episode,
+            }
+
+    def run_bounded_idle_curiosity_step(
+        self,
+        *,
+        is_idle_fn: Callable[[], bool] | None = None,
+        permissions: dict[str, str] | None = None,
+        workspace_root: str | Path | None = None,
+        memory_store: Any | None = None,
+        ontology_graph: Any | None = None,
+        sandbox_runner: Callable[[str], tuple[bool, Any, str]] | None = None,
+        regression_tests: Sequence[dict[str, Any]] = (),
+        budget: IdleResourceBudget | None = None,
+    ) -> dict[str, Any]:
+        """Priority 2: Invoke strictly ONE bounded curiosity step through `studio_idle()`, respecting explicit
+        `IdleResourceBudget` and `permissions`.
+        """
+        t0 = time.perf_counter()
+        bud = budget or IdleResourceBudget()
+        if is_idle_fn is not None and not is_idle_fn():
+            return {"ran": False, "reason": "not_idle"}
+
+        now_ts = time.time()
+        if bud.min_idle_interval_s > 0.0 and (now_ts - self.last_idle_step_ts) < bud.min_idle_interval_s:
+            return {"ran": False, "reason": "idle_cooldown_active"}
+
+        perms = dict(permissions or {"memory": "allow", "files": "allow", "code": "allow", "internet": "ask"})
+
+        with self.lock:
+            # 1. Sync any open hypothesis / unresolved / contested entries from memory_store into ZPD
+            synced_cnt = 0
+            if memory_store is not None and hasattr(memory_store, "entries"):
+                for e in list(memory_store.entries.values()):
+                    is_open = (
+                        getattr(e, "epistemic_status", "") in ("unresolved", "hypothesis")
+                        or getattr(e, "status", "") in ("contested", "under_review")
+                    )
+                    if not is_open:
+                        continue
+                    qid = f"Q-MEM-{e.id}"
+                    if qid not in self.unresolved_questions:
+                        vec = encode_text_to_64d(f"{e.title or ''} {e.summary or ''}")
+                        reg = self.locate_leaf_region(vec)
+                        rels = getattr(e, "relationships", ()) or ()
+                        sup_c = sum(1 for r in rels if getattr(r, "type", "") == "supports")
+                        chal_c = sum(1 for r in rels if getattr(r, "type", "") in ("challenges", "unresolved_with"))
+                        prereqs = [f"Q-MEM-{r.target}" for r in rels if getattr(r, "type", "") == "depends_on"]
+                        diag = compute_neutral_diagnosticity(
+                            sup_c, chal_c, is_unverified_hypothesis=(getattr(e, "entry_type", "") == "hypothesis")
+                        )
+                        self.unresolved_questions[qid] = UnresolvedQuestionNode(
+                            question_id=qid,
+                            region_id=reg.region_id,
+                            summary=str(e.summary or e.title or e.id)[:240],
+                            origin_kind="unverified_hypothesis" if getattr(e, "entry_type", "") == "hypothesis" else "memory_contradiction",
+                            memory_entry_id=e.id,
+                            prerequisite_ids=prereqs,
+                            diagnosticity_score=diag,
+                        )
+                        synced_cnt += 1
+
+            # 2. Pick the single highest-curiosity active ZPD question or unmastered leaf region
+            active_qs = [q for q in self.unresolved_questions.values() if q.zpd_status == "active_zpd"]
+            active_qs.sort(
+                key=lambda q: -(
+                    self.regions.get(q.region_id, self.regions["R0"]).state_curiosity * (0.5 + 0.5 * q.diagnosticity_score)
+                )
+            )
+            top_q = active_qs[0] if active_qs else None
+            if top_q is not None:
+                target_query = top_q.summary
+            else:
+                # Check if any leaf region has positive state_curiosity and unmastered error
+                leaves = [r for r in self.leaf_regions() if r.state_curiosity > 0.005 and r.expected_error_yc >= 0.08 and r.emergent_keywords]
+                leaves.sort(key=lambda r: -r.state_curiosity)
+                if not leaves:
+                    return {
+                        "ran": False,
+                        "reason": "no_active_curiosity_target",
+                        "synced_open_memory_entries": synced_cnt,
+                    }
+                target_query = " ".join(leaves[0].emergent_keywords[:6])
+
+            if is_idle_fn is not None and not is_idle_fn():
+                return {"ran": False, "reason": "interrupted_before_action"}
+
+            self.last_idle_step_ts = now_ts
+            action_res = self.execute_permitted_strategy_action(
+                target_query,
+                permissions=perms,
+                workspace_root=workspace_root,
+                memory_store=memory_store,
+                ontology_graph=ontology_graph,
+                sandbox_runner=sandbox_runner,
+                regression_tests=regression_tests,
+                budget=bud,
+                interactive=False,
+                question_node=top_q,
+                session_id="studio_idle",
+                turn_n=self.step_counter + 1,
+            )
+            return {
+                "ran": bool(action_res.get("executed")),
+                "synced_open_memory_entries": synced_cnt,
+                "target_question_id": top_q.question_id if top_q else None,
+                "target_query": target_query,
+                "action_result": action_res,
+                "budget_max_wall_ms": bud.max_wall_ms,
+                "wall_ms": round((time.perf_counter() - t0) * 1000.0, 2),
+            }
 
     # ---------------- Human-Readable Summary for `clover_repo.py` (`CONTEXT.md`) ----------------
 

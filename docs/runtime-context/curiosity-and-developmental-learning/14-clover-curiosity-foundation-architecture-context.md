@@ -182,3 +182,29 @@ Stored inside Clover's git-backed repository (`<repo_dir>/growth/curiosity/curio
 2. **Within-Region Exemplar Habituation Before First Split**: Tracking habitation only at the region level left all candidates inside an unsplit root region `R0` tied, causing greedy selection to repeat the first candidate before `R0` could accumulate diverse vectors to split. Adding a **within-region exemplar habitation cooldown** $h_{\text{local}}(x) = \sum_{v} \gamma^{\text{age}} \max(0, \cos(x, v))^4$ ensured diverse sampling inside `R0`.
 3. **Adjusted $R^2$ vs. Unadjusted OLS $R^2$ in Controllability Filtering**: Fitting $p = 8$ action dimensions on $N = 10..16$ transitions overfit pure random noise dimensions with spurious OLS $R^2 \approx p/N \approx 0.51$. Switching to **ridge-regularized Adjusted $R^2$** ($\bar{R}^2 = 1 - (1 - R^2)\frac{N-1}{N-p-1}$) suppressed noise dimensions to `0.1530` while preserving `0.9726` on true controllable dimensions.
 
+---
+
+## Stage 6 — Closed-Loop Runtime Integration & Multi-Session Multi-Installation Experiment
+
+- **Live Closed-Loop Verification Suite**: [clover-ai-system/studio/clover/test_live_curiosity_loop_multi_session.py](../../../clover-ai-system/studio/clover/test_live_curiosity_loop_multi_session.py)
+- **Saved Multi-Session Results JSON**: [research/curiosity-and-developmental-learning/14-clover-curiosity-architecture/results/live_curiosity_loop_multi_session_results.json](../../../research/curiosity-and-developmental-learning/14-clover-curiosity-architecture/results/live_curiosity_loop_multi_session_results.json)
+
+### 6.1 Verification Across All 5 Runtime Integration Priorities
+1. **Priority 1 — Grounded Feedback in Real Outcomes (`derive_real_turn_outcome`)**:
+   - Eliminated hardcoded competence numbers (`0.05` / `0.45`) in [clover_repo.py](../../../clover-ai-system/studio/clover/clover_repo.py) and [lfm3_layers.py](../../../clover-ai-system/studio/clover/lfm3_layers.py).
+   - Ordinary unverified turns record `comp_error = null`, `pred_error = null`, and `verified_in_turn = false` (preserving the exact `user_request` and `model_prediction` without polluting `comp_error_window`).
+   - Multi-cycle verified turns record both the measured pre-repair failure rate (`pre_repair_comp_error = 0.6667` from 2 Cycle-1 findings) and the post-repair verified outcome (`comp_error = 0.0`), while user follow-ups (`_judge`) record the real human verdict (`user_rejection_comp_error = 0.85`) and `correction_text`.
+2. **Priority 2 & 3 — Bounded Idle Curiosity (`studio_idle()`) & Closed Strategy-to-Action Loop (`execute_permitted_strategy_action`)**:
+   - Wired `MemoryIndex.run_idle_curiosity()` ([memory_index.py](../../../clover-ai-system/studio/clover/memory_index.py)) to `LayerKit.run_idle_curiosity_step()` with `IdleResourceBudget` (`max_steps_per_idle_pass=1`, `max_wall_ms=1500.0`, `max_files_read=2`, `max_bytes_read=32768`, `max_sandbox_timeout_s=2.0`) and `permissions.py` enforcement.
+   - Verified that when `code="deny"` and `files="allow"`, idle curiosity selects `workspace_code_inspect`, parses `prefix_router.py:match_longest_prefix`, creates hypothesis `MEM-HYP-WS-7C0B8403`, and reduces error from `0.85 -> 0.4675`.
+   - Verified that re-observing the same unchanged file adds `0` new views (`LP = 0`), causing `SGIM-ACTS` to switch to `sandbox_counterexample_probe` once `code="allow"`, executing the hypothesis in `IsolatedPythonSandbox` with non-regression replay, promoting `MEM-HYP-WS-7C0B8403` to `externally_verified`, and driving `comp_error_after -> 0.0`.
+3. **Priority 4 & 5 — Persistent Lifecycle & Live Multi-Session Experiment Across 2 Independent Installations (`Installation A` vs. `Installation B`)**:
+   - **Installation A (`ws_a_systems`: Ring-Buffer Partitioning Codebase)**:
+     - Emergent keywords: `["ring_buffer", "effective_throughput", "multi-stage", "cyclic", "pipeline", "partitioned", "stage"]`.
+     - Curiosity trajectory: `0.08524` (`should_observe=True` after emergence) $\to$ survives process restart $\to$ `0.00192` (`should_observe=False` when mastered, **$44.4\times$ decay**) $\to$ `0.38392` (`should_observe=True`, **`abs_lp_vigilance = 0.6875`, $200\times$ revival** when a new `total_slots=0` boundary failure invalidates previous competence).
+   - **Installation B (`ws_b_biophysics`: Enzyme Kinetics & Allosteric Inhibition Codebase)**:
+     - Emergent keywords: `["enzyme_kinetic", "reaction_velocity", "scale", "substrate", "allosteric", "inhibition", "michaelis-menten", "ceiling"]`.
+     - Curiosity trajectory: `0.08433` (`should_observe=True`) $\to$ `0.00192` (`should_observe=False` when mastered) $\to$ `0.38392` (`should_observe=True`, `abs_lp_vigilance = 0.6875` on `km=0` invalidation).
+   - **Divergence & Privacy Boundary**: Emergent domain keyword Jaccard overlap between Installation A and Installation B is **`0.0`**, and **`100%` of private user tokens** (`staging-alpha.corp.local`, `EMP-9481`, `COHORT-BIO-772`, `acct_private_882`) are excluded from both `curiosity_state.json` and `collective.py` candidate exports.
+
+

@@ -1,7 +1,7 @@
 {
   "suite": "test_curiosity_foundation",
   "status": "passed",
-  "elapsed_s": 3.131,
+  "elapsed_s": 3.462,
   "test_1_endogenous_splitting_and_no_hardcoded_interests": {
     "total_regions_after_splits": 5,
     "leaf_regions": 3,
@@ -79,8 +79,8 @@
   },
   "test_6_confidence_c_vigilance_and_sgim_acts": {
     "curiosity_when_mastered": 0.0006,
-    "curiosity_after_regression_vigilance": 0.13843,
-    "abs_lp_vigilance": 0.656,
+    "curiosity_after_regression_vigilance": 0.50021,
+    "abs_lp_vigilance": 0.82,
     "shifted_strategy": "workspace_code_inspect",
     "top_reliable_memory_id": "reliable_slightly_farther"
   },

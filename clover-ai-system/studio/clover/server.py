@@ -653,6 +653,8 @@ def layer_kit():
         S.kit.recall = S.memidx
     if S.settings is not None:
         S.kit.jepa_arch = S.settings.get().get("jepa_arch", "auto")
+    if S.perms is not None:
+        S.kit.permissions_map = S.perms.get()
     return S.kit
 
 

@@ -550,6 +550,7 @@ class OmniNative(N.LFM3Native):
                     and (
                         any(str(m_id).startswith("LRN-") for m_id in (bridge_info.get("memory_entries") or ()))
                         or any(str(e_id).startswith(("FORMULA:", "STEM_CONCEPT:")) for e_id in (bridge_info.get("ontology_entities") or ()))
+                        or bool((bridge_info.get("curiosity") or {}).get("should_observe"))
                     )
                 )
                 active_bridged = [t for t in bridged_recs if t not in declined_set] if has_lrn_or_formula else []

@@ -269,12 +269,14 @@ class MemoryIndex:
     is wanted, and while the Studio is idle has the Omni write a note for each exchange (note_writer: messages,
     max_tokens -> text, or None when it is busy or was interrupted). Notes are written whether or not recall is on."""
 
-    def __init__(self, base, repo, is_idle=None, note_writer=None, embedder=None, start=True, recall=True):
+    def __init__(self, base, repo, is_idle=None, note_writer=None, embedder=None, start=True, recall=True,
+                 curiosity_step_fn=None):
         self.base, self.repo = Path(base), repo
         self.model_dir = self.base / "data" / "embed" / "bge-small-en-v1.5"
         self.cache_dir = self.base / "cache" / "memory-index"
         self.is_idle = is_idle or (lambda: False)
         self.note_writer = note_writer
+        self.curiosity_step_fn = curiosity_step_fn
         self.want_recall = bool(recall)
         self.lock = threading.RLock()
         self._enc = threading.Lock()
@@ -337,10 +339,23 @@ class MemoryIndex:
                         self._load_embedder()
                 self.refresh()
                 self.write_notes()
+                self.run_idle_curiosity()
             except Exception as exc:
                 self.error = f"{type(exc).__name__}: {exc}"
             self._wake.wait(30)
             self._wake.clear()
+
+    def run_idle_curiosity(self):
+        """Priority 2: Invoke one bounded curiosity step when `self.is_idle()` (`studio_idle()`) is True."""
+        if not self.is_idle():
+            return None
+        if self.curiosity_step_fn is not None:
+            return self.curiosity_step_fn()
+        if self.repo is not None and getattr(self.repo, "kit", None):
+            kit = self.repo.kit()
+            if kit is not None and hasattr(kit, "run_idle_curiosity_step"):
+                return kit.run_idle_curiosity_step(is_idle_fn=self.is_idle)
+        return None
 
     def _load_cache(self):
         try:

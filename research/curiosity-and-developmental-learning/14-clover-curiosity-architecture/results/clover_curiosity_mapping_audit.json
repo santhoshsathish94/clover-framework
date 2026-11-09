@@ -1,8 +1,8 @@
 {
   "audit_id": "14-clover-curiosity-foundation-architecture-audit",
-  "elapsed_s": 0.757,
+  "elapsed_s": 0.863,
   "inspected_modules_count": 19,
-  "total_clover_studio_lines_inspected": 23255,
+  "total_clover_studio_lines_inspected": 24115,
   "live_codebase_verification": {
     "memory_graph_schema": {
       "valid_entry_types": [
@@ -242,8 +242,9 @@
   "module_ast_inventory": {
     "curiosity_foundation.py": {
       "file": "clover-ai-system/studio/clover/curiosity_foundation.py",
-      "lines": 1288,
+      "lines": 2015,
       "classes": {
+        "IdleResourceBudget": [],
         "StrategyStats": [
           "empirical_lp",
           "outcome_variance",
@@ -277,6 +278,8 @@
           "_on_question_progressed_or_resolved",
           "rank_candidates_by_curiosity",
           "run_idle_consolidation_step",
+          "execute_permitted_strategy_action",
+          "run_bounded_idle_curiosity_step",
           "summary_markdown"
         ]
       },
@@ -286,6 +289,7 @@
         "encode_text_to_64d",
         "find_criterion_c2_split",
         "compute_windowed_lp_and_vigilance",
+        "derive_real_turn_outcome",
         "compute_pomdp_voi",
         "compute_neutral_diagnosticity",
         "for_path"
@@ -296,6 +300,8 @@
         "EPISTEMIC_STRATEGIES",
         "STRATEGY_OBSERVATION_COST",
         "STRATEGY_TO_ACTION_DIM",
+        "STRATEGY_REQUIRED_PERMISSION",
+        "STRATEGY_TO_STUDIO_TOOLS",
         "STOPWORDS",
         "_ENGINES_BY_PATH",
         "_ENGINES_LOCK"
@@ -414,7 +420,7 @@
     },
     "lfm3_layers.py": {
       "file": "clover-ai-system/studio/clover/lfm3_layers.py",
-      "lines": 832,
+      "lines": 894,
       "classes": {
         "LayerKit": [
           "__init__",
@@ -443,6 +449,7 @@
           "c1_infer",
           "_fallback_h2048",
           "compute_meaning_bridge",
+          "run_idle_curiosity_step",
           "c2_plan_state",
           "jepa_record_outcome",
           "c2_plan",
@@ -1015,7 +1022,7 @@
     },
     "clover_repo.py": {
       "file": "clover-ai-system/studio/clover/clover_repo.py",
-      "lines": 827,
+      "lines": 881,
       "classes": {
         "Repo": [
           "__init__",
@@ -1084,7 +1091,7 @@
     },
     "memory_index.py": {
       "file": "clover-ai-system/studio/clover/memory_index.py",
-      "lines": 529,
+      "lines": 544,
       "classes": {
         "SubwordHashEmbedder": [
           "encode"
@@ -1107,6 +1114,7 @@
           "set_recall",
           "_load_embedder",
           "_run",
+          "run_idle_curiosity",
           "_load_cache",
           "_save_cache",
           "_ensure",
@@ -1326,7 +1334,7 @@
     },
     "server.py": {
       "file": "clover-ai-system/studio/clover/server.py",
-      "lines": 3820,
+      "lines": 3822,
       "classes": {
         "S": [],
         "EngineNotReady": [],
