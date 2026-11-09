@@ -81,9 +81,12 @@ _FILLER = {"a", "an", "the", "please", "pls", "again", "so", "ok", "okay", "hey"
            "tell", "can", "could", "would", "you", "ask", "asking", "question", "same", "once", "more"}
 
 _NUM = r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?"
-_UNIT = r"(?:\s+per\s+[A-Za-z]+|\s+(?!x\b|and\b|of\b|is\b|are\b|to\b|or\b|than\b)[A-Za-z][A-Za-z\-]*(?:/[A-Za-z]+)?|/[A-Za-z]+){0,2}"
-_TERM = rf"\(?\s*-?(?:{_NUM}){_UNIT}\s*\)?"
-_ARITH = re.compile(rf"(?<![\w.)\]%])({_TERM}(?:\s*(?:[+\-\u00d7*/\u00f7^]|x(?=\s*\(?\s*\d))\s*{_TERM})+)\s*(=|\u2248)\s*(-?(?:{_NUM}))(?![\w^(]|\.\d|\s*[\^*/\u00d7\u00f7%])")
+# [ \t] not \s: "(1.07)^3\nA = 25,000" was read as "3 A = 25" (2026-11-09)
+_UNIT = r"(?:[ \t]+per[ \t]+[A-Za-z]+|[ \t]+(?!x\b|and\b|of\b|is\b|are\b|to\b|or\b|than\b)[A-Za-z][A-Za-z\-]*(?:/[A-Za-z]+)?|/[A-Za-z]+){0,2}"
+_TERM = rf"\(?[ \t]*-?(?:{_NUM})(?!,\d){_UNIT}[ \t]*\)?"
+_ARITH = re.compile(rf"(?<![\w.)\]%])(?<!\d,)({_TERM}(?:[ \t]*(?:[+\-\u00d7*/\u00f7^]|x(?=[ \t]*\(?[ \t]*\d))[ \t]*{_TERM})+)[ \t]*(?:\n[ \t]*)?(=|\u2248)[ \t]*(-?(?:{_NUM}))(?![\w^(]|\.\d|,\d|[ \t]*[\^*/\u00d7\u00f7%])")
+_ASSIGN = re.compile(r"^[ \t]*(?:[-*\u2022][ \t]*)?([A-Za-z][A-Za-z0-9_]{0,15})[ \t]*(=|\u2248)[ \t]*(.+?)[ \t]*$", re.M)
+_PLAIN_RESULT = re.compile(rf"^(-?(?:{_NUM}))(?![\d.,])(?:[ \t]+[A-Za-z][A-Za-z\-]*){{0,2}}[ \t]*[.,;]?$")
 _BINOPS = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, ast.Div: operator.truediv}
 _ABBREV = re.compile(r"\b(?:Mr|Mrs|Ms|Dr|Prof|St|Jr|Sr|vs|etc|e\.g|i\.e|No|Inc|Ltd|Co|U\.S|U\.K|approx|Fig)\.$|\b[A-Z]\.$")
 
@@ -196,32 +199,65 @@ def _applied(applied, name):
         applied.append(name)
 
 
+def _is_wrong(true, rhs, sign, expr):
+    """True when the result `rhs` the answer shows for `expr` is wrong, allowing the rounding it shows."""
+    shown = _num(rhs)
+    decimals = len(rhs.split(".")[1]) if "." in rhs else 0
+    diff = abs(true - shown)
+    if sign == "\u2248":
+        return diff > max(0.5 * 10 ** -decimals, abs(true) * 0.01)
+    if float(true).is_integer():
+        return diff > 1e-9 * max(1.0, abs(true))
+    bad = diff >= 0.5 * 10 ** -decimals - 1e-12  # a rounded result is fine only if it is the value rounded as shown
+    whole = all("." not in n for n in re.findall(_NUM, expr))
+    if bad and whole and re.search(r"[/\u00f7]", expr) and shown == math.floor(true):
+        return False  # whole-number division in a counting step (100 / 125 = 0 trailing zeros)
+    return bad
+
+
+def _shown(true, rhs=""):
+    """The true value with two more decimals than the answer showed: '30,626.10, but ... = 30,626.1' hid the error."""
+    if float(true).is_integer():
+        return f"{int(true):,}"
+    decimals = len(rhs.split(".")[1]) if "." in rhs else 0
+    return f"{true:,.{decimals + 2}f}".rstrip("0").rstrip(".")
+
+
+def _chain_findings(text, applied):
+    """A value carried down lines that name it: 'A = 25,000 × 1.225043', then 'A ≈ 28,251.30' (code blocks left out:
+    reassigning a variable there is not a claim)."""
+    out, last = [], {}
+    for m in _ASSIGN.finditer(re.sub(r"```[\s\S]*?```", " ", text)):
+        name, sign, rhs = m.group(1), m.group(2), m.group(3)
+        res = _PLAIN_RESULT.match(rhs)
+        if res is None:
+            v = _eval(rhs) if re.search(r"[+\-\u00d7*/\u00f7^]", rhs) else None
+            last[name] = (rhs, v) if v is not None else None
+            continue
+        prev = last.pop(name, None)
+        if prev is None:
+            continue
+        _applied(applied, "arithmetic")
+        if _is_wrong(prev[1], res.group(1), sign, prev[0]):
+            out.append(f"Arithmetic: you wrote {name} = {prev[0]} and then {name} {sign} {res.group(1)}, but "
+                       f"{prev[0]} = {_shown(prev[1], res.group(1))}.")
+    return out
+
+
 def arithmetic_findings(answer, applied=None):
-    """'a op b = c' statements in the answer whose c is wrong (allowing the rounding the answer shows). applied: a list
-    that gets "arithmetic" when a statement was checked."""
+    """'a op b = c' statements in the answer whose c is wrong (allowing the rounding the answer shows), and values
+    carried down lines that name them. applied: a list that gets "arithmetic" when a statement was checked."""
     out = []
-    for m in _ARITH.finditer(normalize(answer)):
+    text = normalize(answer)
+    for m in _ARITH.finditer(text):
         expr, sign, rhs = m.group(1), m.group(2), m.group(3)
         true = _eval(expr)
         if true is None:
             continue
         _applied(applied, "arithmetic")
-        shown = _num(rhs)
-        decimals = len(rhs.split(".")[1]) if "." in rhs else 0
-        diff = abs(true - shown)
-        if sign == "\u2248":
-            bad = diff > max(0.5 * 10 ** -decimals, abs(true) * 0.01)
-        elif float(true).is_integer():
-            bad = diff > 1e-9 * max(1.0, abs(true))
-        else:  # a rounded result is fine only if it is the value rounded to the decimals shown
-            bad = diff >= 0.5 * 10 ** -decimals - 1e-12
-            whole = all("." not in n for n in re.findall(_NUM, expr))
-            if bad and whole and re.search(r"[/\u00f7]", expr) and shown == math.floor(true):
-                bad = False  # whole-number division in a counting step (100 / 125 = 0 trailing zeros)
-        if bad:
-            good = f"{true:,.6g}" if not float(true).is_integer() else f"{int(true):,}"
-            out.append(f"Arithmetic: you wrote {m.group(0).strip()}, but {expr.strip()} = {good}.")
-    return out[:4]
+        if _is_wrong(true, rhs, sign, expr):
+            out.append(f"Arithmetic: you wrote {' '.join(m.group(0).split())}, but {expr.strip()} = {_shown(true, rhs)}.")
+    return (out + _chain_findings(text, applied))[:4]
 
 
 def _sentences(text):
