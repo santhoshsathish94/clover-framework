@@ -1298,6 +1298,15 @@ def save_documents(items):
     return documents.save(items, media_dir() / "documents") if items else []
 
 
+def without_task_note(text):
+    """An answer as the model reads it back: without the one-time note about a step that did not finish."""
+    try:
+        import tool_tasks
+        return tool_tasks.strip_note(text)
+    except Exception:
+        return str(text or "")
+
+
 def lfm3_history(sid, seed):
     """Session history for LFM3 mode: user / assistant messages (final answers only). After a restart it comes from
     the conversation's file in the repository; the browser's copy is the fallback."""
@@ -1316,12 +1325,12 @@ def lfm3_history(sid, seed):
                              and (media_dir() / x["file"]).is_file()]
                     if media:
                         um["media"] = media
-                    msgs += [um, {"role": "assistant", "content": str(a.get("text") or "")[:4000]}]
+                    msgs += [um, {"role": "assistant", "content": without_task_note(a.get("text"))[:4000]}]
             if not msgs:
                 for h in (seed or [])[-6:]:
                     if isinstance(h, dict) and h.get("user") and h.get("reply"):
                         msgs += [{"role": "user", "content": str(h["user"])[:4000]},
-                                 {"role": "assistant", "content": str(h["reply"])[:4000]}]
+                                 {"role": "assistant", "content": without_task_note(h["reply"])[:4000]}]
             S.sessions[sid] = msgs
         return S.sessions[sid]
 
@@ -1577,7 +1586,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
             # retry: a request to try again rather than a question (the next retry looks past it)
             asked = dict({"role": "user", "content": prompt, "retry": how == "said"},
                          **({"media": list(media)} if media else {}))
-            kept = reply + ("\n\n(The user stopped this answer here.)" if res.get("cancelled") else "")
+            kept = without_task_note(reply) + ("\n\n(The user stopped this answer here.)" if res.get("cancelled") else "")
             hist += [asked, {"role": "assistant", "content": kept}]
             del hist[:-24]
     if S.repo is not None:  # Growth: what the user's response and this turn taught, shown with the answer

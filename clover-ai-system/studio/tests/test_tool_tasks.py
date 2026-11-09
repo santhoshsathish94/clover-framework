@@ -89,5 +89,32 @@ ok &= check("a start after that finds nothing unfinished", tt3.interrupted == []
 lines = [json.loads(x) for x in tt3.path.read_text(encoding="utf-8").splitlines() if x.strip()]
 ok &= check("the log is the SuperAgent's event log (one JSON event per line)", lines and all("seq" in x and "type" in x for x in lines))
 
+# The note is for the person. On the laptop the model repeated it in its next answer, so the model never reads it back.
+ok &= check("the note reads as before", note == "(Note: when Clover last stopped, it was in the middle of run_powershell. "
+            "That step did not finish, so check its result before relying on it.)")
+reply = "2 + 2 = 4\n\n" + note
+ok &= check("the model's copy of an answer leaves the note out", tool_tasks.strip_note(reply) == "2 + 2 = 4")
+ok &= check("an answer without the note is unchanged", tool_tasks.strip_note("plain (Note: other)") == "plain (Note: other)")
+import server as SV  # noqa: E402
+
+
+class Repo:
+    def messages(self, sid):
+        return [{"n": 1, "role": "user", "text": "What is 2 + 2?"}, {"n": 1, "role": "clover", "text": reply}]
+
+
+repo_before = SV.S.repo
+try:
+    SV.S.repo = None
+    hist = SV.lfm3_history("tt-seed", [{"user": "What is 2 + 2?", "reply": reply}])
+    ok &= check("history from the browser's copy leaves the note out", hist[-1]["content"] == "2 + 2 = 4")
+    SV.S.repo = Repo()
+    hist = SV.lfm3_history("tt-repo", None)
+    ok &= check("history from the saved conversation leaves the note out", hist[-1]["content"] == "2 + 2 = 4")
+finally:
+    SV.S.repo = repo_before
+    SV.S.sessions.pop("tt-seed", None)
+    SV.S.sessions.pop("tt-repo", None)
+
 print("ALL PASS" if ok else "SOME FAILED")
 sys.exit(0 if ok else 1)

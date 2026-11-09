@@ -126,9 +126,26 @@ class ToolTasks:
                  "evidence": v.verification_evidence} for v in views]
 
 
+NOTE_HEAD = "(Note: when Clover last stopped, it was in the middle of "
+NOTE_TAIL = "before relying on it.)"
+
+
 def interrupted_note(items):
     if not items:
         return ""
     names = ", ".join(dict.fromkeys(i["tool"] for i in items))
-    return (f"(Note: when Clover last stopped, it was in the middle of {names}. That step did not finish, so check its "
-            "result before relying on it.)")
+    return f"{NOTE_HEAD}{names}. That step did not finish, so check its result {NOTE_TAIL}"
+
+
+def strip_note(text):
+    """The note is for the person. Left in the history the model reads, the model repeated it in its next answer
+    (laptop, 2026-11-09), so the history copy leaves it out."""
+    text = str(text or "")
+    i = text.find(NOTE_HEAD)
+    while i >= 0:
+        j = text.find(NOTE_TAIL, i)
+        if j < 0:
+            break
+        text = (text[:i].rstrip() + "\n\n" + text[j + len(NOTE_TAIL):].lstrip()).strip()
+        i = text.find(NOTE_HEAD)
+    return text
