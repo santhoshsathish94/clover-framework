@@ -1498,7 +1498,8 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                 import device_actions
                 if omni and not media and device_actions.asks_for_screen_or_activity(typed):
                     try:
-                        scr = device_actions.capture_screenshot(Path(S.args.base))
+                        scr = device_actions.capture_screenshot(
+                            Path(S.args.base), use_clipboard_image=device_actions.mentions_clipboard(typed))
                         media = [{"kind": "image", "file": scr["file"], "name": "Live Screen Capture", "screen_capture": True}]
                         made.append({
                             "file": scr["file"],

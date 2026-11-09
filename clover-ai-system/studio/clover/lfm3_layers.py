@@ -779,7 +779,6 @@ class LayerKit:
             return c2_state, c2_info
         raw = str((c1_state or {}).get("raw_text") or "")
         windows = answer_windows(raw)
-        n_win = 1 if windows else 0
         jepa_plan = None
         planned_tools = list(tools_in)
         jepa_red = 0.0
@@ -806,15 +805,13 @@ class LayerKit:
             pass
         info = {
             "layer": "c2_hybridagent",
-            "module": "HybridLink2048 + Lfm3NativeHybridLink(d=2048, bottleneck=512)",
-            "trunk": "plan-trunk-0",
-            "windows": n_win,
-            "window_tokens": 512,
-            "latent_steps": 3,
+            "ran": False,
+            "reason": "C2/C3 parts not installed",
             "planned_tools": planned_tools,
             "jepa_energy_reduction_pct": jepa_red,
-            "ms": 0.1,
         }
+        if jepa_plan is not None:
+            info["jepa_from"] = "hashed words"
         if isinstance(self.last_meaning_bridge, dict):
             info["meaning_bridge"] = {
                 "memory_entries": self.last_meaning_bridge.get("memory_entries", []),
@@ -899,6 +896,4 @@ class LayerKit:
             text, ids, meta = self._ncm.render_plans_in_model_vocab(windows, cands=1)
             return text, {"layer": "ncm", "windows": len(windows), "s": round(time.perf_counter() - t0, 1),
                           "c_engine_ms": meta.get("c_engine_ms")}
-        return reply, {"layer": "ncm", "windows": len(windows), "s": 0.0,
-                       "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
-                       "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder"}
+        return reply, {"layer": "ncm", "ran": False, "reason": "C2/C3 parts not installed", "windows": len(windows)}

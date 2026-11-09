@@ -480,6 +480,11 @@ class Repo:
                                    + " ".join(lay["refs"][:12]))
                 elif name == "compiler" and lay.get("checked"):
                     checks.append({"check": "code", "passed": bool(lay.get("ok"))})
+                elif name == "outcome":
+                    rec_c = {"check": "outcome", "applied": list(lay.get("checks") or [])}
+                    if rec_c["applied"]:
+                        rec_c["passed"] = bool(lay.get("passed"))
+                    checks.append(rec_c)
                 elif name == "cycle" and lay.get("action"):
                     checks.append({"check": "cycle", "result": lay["action"]})
                 elif name == "ontology_grounding" and lay.get("changed"):

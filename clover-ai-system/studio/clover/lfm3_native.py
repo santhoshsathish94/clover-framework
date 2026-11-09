@@ -1006,7 +1006,8 @@ class LFM3Native:
                         else:
                             emit({"type": "layer", "layer": "compiler", "checked": True, "ok": False, "feedback": findings[0]})
                 if not findings:
-                    op_plan.complete_stage("outcome", f"Outcome verified in {attempt + 1} Clover cycle" + ("" if attempt == 0 else "s"))
+                    op_plan.complete_stage("outcome", C.outcome_label(c_meta["checks"], attempt + 1))
+                    layer_log.append({"layer": "outcome", "checks": list(c_meta["checks"]), "passed": True})
                     if first_cycle_findings:
                         only_comp = all(f.startswith("Code compiler check:") for f in first_cycle_findings)
                         emit({"type": "cycle", "cycle": attempt + 1, "stage": "verified", "cycles_used": attempt + 1})
@@ -1033,6 +1034,7 @@ class LFM3Native:
                     )})
                 else:
                     op_plan.complete_stage("outcome", f"Checked across {attempt + 1} cycles (unconfirmed)")
+                    layer_log.append({"layer": "outcome", "checks": list(c_meta["checks"]), "passed": False})
                     layer_log.append({
                         "layer": "cycle",
                         "trigger": "auto",
@@ -1069,7 +1071,7 @@ class LFM3Native:
                 final, changed = kit.grounding_filter(query, final)
                 layer_log.append({"layer": "ontology_grounding", "changed": changed})
             if not (cancel and cancel.is_set()):
-                op_plan.complete_stage("growth", "Growth preserved · verified outcome & context updated")
+                op_plan.complete_stage("growth", "Growth preserved · context updated")
             if ("ncm" in layers or kit is not None) and not (cancel and cancel.is_set()):
                 emit({"type": "token", "round": rnd_n, "kind": "answer", "text": final})
           finally:

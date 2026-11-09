@@ -1041,6 +1041,7 @@ def derive_real_turn_outcome(
     cyc_lay = next((lay for lay in (layers or ()) if isinstance(lay, dict) and lay.get("layer") == "cycle"), {})
     comp_lay = next((lay for lay in (layers or ()) if isinstance(lay, dict) and lay.get("layer") == "compiler" and lay.get("checked")), None)
     gnd_lay = next((lay for lay in (layers or ()) if isinstance(lay, dict) and lay.get("layer") == "ontology_grounding"), None)
+    out_lay = next((lay for lay in (layers or ()) if isinstance(lay, dict) and lay.get("layer") == "outcome"), None)
 
     first_findings = list(cyc_lay.get("first_findings") or [])
     final_findings = list(cyc_lay.get("final_findings") or [])
@@ -1076,6 +1077,9 @@ def derive_real_turn_outcome(
             c_err = min(1.0, 0.50 + 0.15 * max(1, len(diags)))
             comp_signals.append(c_err)
             unresolved_summary = f"Compiler diagnostic on '{req_clean[:120]}': {diags[0] if diags else 'syntax/type error'}"
+
+    if out_lay is not None and out_lay.get("checks") and out_lay.get("passed"):
+        comp_signals.append(0.0)
 
     if cyc_lay:
         act = cyc_lay.get("action")

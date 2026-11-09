@@ -191,14 +191,21 @@ def trim_only_value(question, reply):
     return reply
 
 
-def arithmetic_findings(answer):
-    """'a op b = c' statements in the answer whose c is wrong (allowing the rounding the answer shows)."""
+def _applied(applied, name):
+    if applied is not None and name not in applied:
+        applied.append(name)
+
+
+def arithmetic_findings(answer, applied=None):
+    """'a op b = c' statements in the answer whose c is wrong (allowing the rounding the answer shows). applied: a list
+    that gets "arithmetic" when a statement was checked."""
     out = []
     for m in _ARITH.finditer(normalize(answer)):
         expr, sign, rhs = m.group(1), m.group(2), m.group(3)
         true = _eval(expr)
         if true is None:
             continue
+        _applied(applied, "arithmetic")
         shown = _num(rhs)
         decimals = len(rhs.split(".")[1]) if "." in rhs else 0
         diff = abs(true - shown)
@@ -246,39 +253,45 @@ def _json_candidate(answer):
 _WORDNUM = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
 
 
-def format_findings(question, answer):
-    """Checks of the form the question explicitly asks for."""
+def format_findings(question, answer, applied=None):
+    """Checks of the form the question explicitly asks for. applied: a list that gets "requested form" when one ran."""
     q, a, out = question or "", answer or "", []
     if re.search(r"\b(?:in|as|with)\s+(?:one|a\s+single)\s+(?:clear\s+|short\s+|concise\s+)?sentence\b|"
                  r"\bone\s+(?:clear\s+|short\s+|grammatical\s+)?sentence\b", q, re.I):
+        _applied(applied, "requested form")
         n = len(_sentences(a))
         if n > 1:
             out.append(f"Form: the question asks for one sentence; your answer has {n}.")
     m_sent = re.search(r"\b(?:in|with|as|exactly)\s+(\d+|" + "|".join(_WORDNUM) + r")\s+(?:clear\s+|short\s+|concise\s+)?sentences\b", q, re.I)
     if m_sent:
+        _applied(applied, "requested form")
         want_s = int(m_sent.group(1)) if m_sent.group(1).isdigit() else _WORDNUM[m_sent.group(1).lower()]
         n_s = len(_sentences(a))
         if n_s != want_s:
             out.append(f"Form: the question asks for {want_s} sentences; your answer has {n_s}.")
     m = re.search(r"\b(\d+|" + "|".join(_WORDNUM) + r")\s+(?:bullet(?:\s+point)?s|bullets)\b", q, re.I)
     if m:
+        _applied(applied, "requested form")
         want = int(m.group(1)) if m.group(1).isdigit() else _WORDNUM[m.group(1).lower()]
         got = len(re.findall(r"^\s*(?:[-*\u2022]|\d+[.)])\s+\S", a, re.M))
         if got != want:
             out.append(f"Form: the question asks for {want} bullets; your answer has {got}.")
     m = re.search(r"\b(?:in\s+)?(under|fewer\s+than|at\s+most|no\s+more\s+than|up\s+to)\s+(\d+)\s+words\b", q, re.I)
     if m:
+        _applied(applied, "requested form")
         limit = int(m.group(2)) - (1 if m.group(1).lower().startswith(("under", "fewer")) else 0)
         words = len(re.findall(r"\b\w[\w'\-]*\b", re.sub(r"```[\s\S]*?```", " ", a)))
         if words > limit:
             out.append(f"Form: the question allows at most {limit} words; your answer has {words}.")
     m_ex = re.search(r"\b(?:in\s+)?exactly\s+(\d+|" + "|".join(_WORDNUM) + r")\s+words\b", q, re.I)
     if m_ex:
+        _applied(applied, "requested form")
         want_w = int(m_ex.group(1)) if m_ex.group(1).isdigit() else _WORDNUM[m_ex.group(1).lower()]
         words = len(re.findall(r"\b\w[\w'\-]*\b", re.sub(r"```[\s\S]*?```", " ", a)))
         if words != want_w:
             out.append(f"Form: the question asks for exactly {want_w} words; your answer has {words}.")
     if re.search(r"\b(?:in|as|valid|return|output|respond\s+with|give)\s+(?:a\s+|an\s+|the\s+)?(?:valid\s+)?json\b", q, re.I):
+        _applied(applied, "requested form")
         cand = _json_candidate(a)
         if cand is None:
             out.append("Form: the question asks for JSON; your answer contains none.")
@@ -288,6 +301,8 @@ def format_findings(question, answer):
             except ValueError as exc:
                 out.append(f"Form: the JSON in your answer does not parse ({exc}).")
     m = re.search(r"\bend\s+(?:your|the)\s+(?:response|answer)\s+with\s+(#+)\s*<\s*number\s*>", q, re.I)
+    if m:
+        _applied(applied, "requested form")
     if m and not re.search(re.escape(m.group(1)) + r"\s*-?\$?[\d,]+(?:\.\d+)?\s*$", a.strip()):
         out.append(f"Form: the question asks you to end with '{m.group(1)} <number>'; your answer does not.")
     m = re.search(r"\bround(?:ed)?\s+(?:it\s+|your\s+answer\s+|the\s+answer\s+)?to\s+the\s+nearest\s+"
@@ -296,6 +311,8 @@ def format_findings(question, answer):
         unit = m.group(1).lower()
         fin = _final_number_text(a)
         if fin is not None:
+            _applied(applied, "requested form")
+
             def ok(s):
                 v = _num(s)
                 dec = len(s.split(".")[1]) if "." in s else 0
@@ -321,9 +338,17 @@ def _final_number_text(text):
     return nums[-1] if nums else None
 
 
-def outcome_findings(question, answer):
-    """What the deterministic Outcome checks found in `answer` for `question` (empty: nothing found)."""
-    return arithmetic_findings(answer) + format_findings(question, answer)
+def outcome_findings(question, answer, applied=None):
+    """What the deterministic Outcome checks found in `answer` for `question` (empty: nothing found, which is not the
+    same as checked: `applied` gets the checks that ran)."""
+    return arithmetic_findings(answer, applied) + format_findings(question, answer, applied)
+
+
+def outcome_label(checks, cycles=1):
+    """The Outcome stage's words when no finding is left: the checks that ran on the answer, or that none applies."""
+    if not checks:
+        return "No automatic check applies to this answer"
+    return f"Checked: {', '.join(checks)} (passed" + (f" in {cycles} Clover cycles)" if cycles > 1 else ")")
 
 
 # ---------- one final answer: a second, independent solution compared by code ----------
@@ -1106,7 +1131,8 @@ def verify_turn_outcome(
       3. Arithmetic equation verification (`arithmetic_findings`) & explicit format constraints (`format_findings`),
          plus exact direct-expression evaluation (`direct_arithmetic_value`).
       4. Unrecovered tool execution failures in `rounds`.
-    Returns `(findings, meta)`. When `findings` is empty, the Outcome is verified and complete.
+    Returns `(findings, meta)`. Empty `findings` means nothing was found; `meta["checks"]` names the checks that ran on
+    this answer (empty: no automatic check applies, so the answer is not verified).
     """
     q = (question or "").strip()
     a = (answer or "").strip()
@@ -1118,7 +1144,9 @@ def verify_turn_outcome(
         "compiler_info": None,
         "auto_python_ran": False,
         "python_sandbox_checked": False,
+        "checks": [],
     }
+    checks = meta["checks"]
 
     if not a or a.startswith("(Clover "):
         findings.append("Outcome check: the draft answer was empty or incomplete; write a complete direct answer.")
@@ -1129,6 +1157,8 @@ def verify_turn_outcome(
         meta["compiler_info"] = info
         meta["compiler_checked"] = bool(info and info.get("checked"))
         meta["compiler_ok"] = not bool(fb)
+        if meta["compiler_checked"]:
+            _applied(checks, "code compiles")
         if fb:
             findings.append("Code compiler check:\n" + fb.strip()[:600])
         elif meta["compiler_checked"] and execute_python_fn is not None:
@@ -1159,6 +1189,8 @@ def verify_turn_outcome(
                     ran = True
                 meta["auto_python_ran"] = bool(ran)
                 meta["python_sandbox_checked"] = bool(ran)
+                if ran:
+                    _applied(checks, "code runs")
                 if ran and not worked:
                     findings.append(f"Code execution check: running your Python code raised an error:\n{str(out).strip()[:500]}")
                 elif ran and worked:
@@ -1184,12 +1216,13 @@ def verify_turn_outcome(
                             "`itertools.permutations` with `0 <= hh < 24 and 0 <= mm < 60` and return `f'{hh:02d}:{mm:02d}'`."
                         )
 
-    af = outcome_findings(q, a)
+    af = outcome_findings(q, a, checks)
     if af:
         findings.extend(af)
 
     exact_v = direct_arithmetic_value(q)
     if exact_v is not None:
+        _applied(checks, "arithmetic")
         got_v = final_answer(q, a)
         if not same(got_v, exact_v):
             shown_v = f"{int(exact_v)}" if float(exact_v).is_integer() else f"{exact_v:g}"
@@ -1202,6 +1235,7 @@ def verify_turn_outcome(
             if not res_txt.startswith(("[Clover permission]", "Not run:")) and not any(
                 rd.get("ran") and rd.get("worked") for rd in rounds_list
             ):
+                _applied(checks, "tool error reported")
                 if not re.search(r"\b(?:error|failed|could not|unable to|did not work|doesn'?t exist|not found)\b", a, re.I):
                     findings.append(
                         f"Tool execution check: `{last_rd.get('tool')}` failed with `{res_txt[:240]}`, "

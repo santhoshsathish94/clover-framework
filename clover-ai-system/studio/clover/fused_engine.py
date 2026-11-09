@@ -282,12 +282,15 @@ class FusedEngine:
             }
             layer_log.append(cyc_info)
             emit(dict(cyc_info, type="layer"))
+        last_c = cycle_history[-1] if cycle_history else {"ok": False, "checks": []}
         op_plan.complete_stage(
             "outcome",
-            f"Outcome verified in {len(cycle_history)} Clover cycle" + ("s" if len(cycle_history) != 1 else ""),
+            C.outcome_label(last_c["checks"], len(cycle_history)) if last_c["ok"]
+            else f"Checked across {len(cycle_history)} cycles (unconfirmed)",
         )
+        layer_log.append({"layer": "outcome", "checks": list(last_c["checks"]), "passed": bool(last_c["ok"])})
         op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
-        op_plan.complete_stage("growth", "Growth preserved · verified outcome & context updated")
+        op_plan.complete_stage("growth", "Growth preserved · context updated")
         if on_event:
             on_event({"type": "token", "round": len(answers), "kind": "answer", "text": reply})
         return {"reply": reply, "tool_calls": [], "rounds": len(answers),
@@ -341,7 +344,7 @@ class FusedEngine:
             answer, changed = kit.grounding_filter(question, answer)
             layer_log.append({"layer": "ontology_grounding", "changed": changed})
         op_plan.complete_stage("execution")
-        op_plan.start_stage("outcome", "Outcome verified against user feedback")
+        op_plan.start_stage("outcome", f"Outcome action: {info.get('action', 'corrected')}")
         op_plan.complete_stage("outcome")
         op_plan.start_stage("growth", "Growth preserved")
         op_plan.complete_stage("growth")

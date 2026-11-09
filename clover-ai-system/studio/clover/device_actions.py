@@ -200,6 +200,18 @@ def asks_for_screen_or_activity(text: str) -> bool:
     return bool(SCREEN_CAPTURE_ASK.search(str(text or "")))
 
 
+CLIPBOARD_ASK = re.compile(
+    r"\bclip\s?board\b|\b(?:what|text|the\s+text|the\s+thing)\s+(?:that\s+)?i(?:'ve|\s+have|\s+just)?\s+copied\b|"
+    r"\bi\s+just\s+copied\b|\bcopied\s+text\b",
+    re.I,
+)
+
+
+def mentions_clipboard(text: str) -> bool:
+    """The clipboard is read only when the user's message mentions it (human Direction, 2026-11-09)."""
+    return bool(CLIPBOARD_ASK.search(str(text or "")))
+
+
 def is_standalone_app_target(target: str) -> bool:
     """True when `target` names a standalone desktop/mobile app or web URL rather than a local code file for VS Code."""
     t = str(target or "").strip().lower()
@@ -355,8 +367,36 @@ def _open_url(url: str, label: str = "") -> dict[str, Any]:
     }
 
 
-def read_active_activity() -> dict[str, Any]:
-    """Read the user's open application window titles, foreground window, and text clipboard (secrets redacted)."""
+def _read_clipboard_text() -> str:
+    """Plain text on the Windows clipboard (CF_UNICODETEXT, secrets redacted), or ""."""
+    try:
+        user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
+        kernel32.GlobalLock.argtypes = [ctypes.c_void_p]
+        kernel32.GlobalLock.restype = ctypes.c_void_p
+        kernel32.GlobalUnlock.argtypes = [ctypes.c_void_p]
+        user32.GetClipboardData.restype = ctypes.c_void_p
+        if user32.OpenClipboard(None):
+            try:
+                if user32.IsClipboardFormatAvailable(13):
+                    h_data = user32.GetClipboardData(13)
+                    if h_data:
+                        ptr = kernel32.GlobalLock(h_data)
+                        if ptr:
+                            try:
+                                return clover_repo.redact(ctypes.wstring_at(ptr)[:1200].strip())[0]
+                            finally:
+                                kernel32.GlobalUnlock(h_data)
+            finally:
+                user32.CloseClipboard()
+    except Exception:
+        pass
+    return ""
+
+
+def read_active_activity(include_clipboard: bool = False) -> dict[str, Any]:
+    """Read the user's open application window titles and foreground window; the text clipboard (secrets redacted)
+    only with `include_clipboard` (when the user's message mentions it)."""
     fg_title = ""
     open_windows: list[str] = []
     clipboard_text = ""
@@ -391,30 +431,8 @@ def read_active_activity() -> dict[str, Any]:
         except Exception:
             pass
 
-        # Read plain text clipboard via Win32 CF_UNICODETEXT (13) without spawning PowerShell
-        try:
-            user32 = ctypes.windll.user32
-            kernel32 = ctypes.windll.kernel32
-            kernel32.GlobalLock.argtypes = [ctypes.c_void_p]
-            kernel32.GlobalLock.restype = ctypes.c_void_p
-            kernel32.GlobalUnlock.argtypes = [ctypes.c_void_p]
-            user32.GetClipboardData.restype = ctypes.c_void_p
-            if user32.OpenClipboard(None):
-                try:
-                    if user32.IsClipboardFormatAvailable(13):
-                        h_data = user32.GetClipboardData(13)
-                        if h_data:
-                            ptr = kernel32.GlobalLock(h_data)
-                            if ptr:
-                                try:
-                                    raw_clip = ctypes.wstring_at(ptr)
-                                    clipboard_text, _ = clover_repo.redact(raw_clip[:1200].strip())
-                                finally:
-                                    kernel32.GlobalUnlock(h_data)
-                finally:
-                    user32.CloseClipboard()
-        except Exception:
-            pass
+        if include_clipboard:
+            clipboard_text = _read_clipboard_text()
     else:
         try:
             proc = subprocess.run(
@@ -504,9 +522,11 @@ def _find_latest_system_file(kind: str, exts: tuple[str, ...], max_age_s: float 
     return best_p
 
 
-def capture_screenshot(base_dir: Path, *, inspect: bool = True, launch_system_app: bool = False) -> dict[str, Any]:
+def capture_screenshot(base_dir: Path, *, inspect: bool = True, launch_system_app: bool = False,
+                       use_clipboard_image: bool = False) -> dict[str, Any]:
     """Capture or ingest a screenshot via the OS system screenshot app / clipboard / system screenshot folder, save it
-    into `<base_dir>/media/<sha256>.png`, and run `image_inspector.inspect_image` (`I-JEPA` + OCR + `[e1..eN]`)."""
+    into `<base_dir>/media/<sha256>.png`, and run `image_inspector.inspect_image` (`I-JEPA` + OCR + `[e1..eN]`).
+    The clipboard image is used only when the user started the snip (`launch_system_app`) or mentioned the clipboard."""
     media = paths.media_dir(base_dir)
     media.mkdir(parents=True, exist_ok=True)
     img: Image.Image | None = None
@@ -533,7 +553,7 @@ def capture_screenshot(base_dir: Path, *, inspect: bool = True, launch_system_ap
             except Exception:
                 img = None
         # 2. Check Windows Clipboard image (placed there by Windows Snipping Tool / Win+Shift+S)
-        if img is None:
+        if img is None and (launch_system_app or use_clipboard_image):
             try:
                 from PIL import ImageGrab
                 clip_im = ImageGrab.grabclipboard()

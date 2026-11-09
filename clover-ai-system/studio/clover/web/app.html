@@ -3638,10 +3638,16 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           upsertStep('layer_c1', { icon: 'model', state: 'ok', name: 'C1 Inference (' + c1Model + ')',
             detail: (ev.tokens ? ev.tokens + ' tokens \u00b7 ' : '') + c1Desc + ' (' + (ev.window_tokens || 512) + '-tok window)',
             badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
+        } else if (ev.layer === 'c2_hybridagent' && ev.ran === false) {
+          upsertStep('layer_c2', { icon: 'models', state: 'no', name: 'C2 Plan (HybridAgent)',
+            detail: ev.reason || 'Not run', badge: 'Not run' });
         } else if (ev.layer === 'c2_hybridagent') {
           upsertStep('layer_c2', { icon: 'models', state: 'ok', name: 'C2 Plan (HybridAgent)',
             detail: (ev.module || 'HybridLink') + ' \u00b7 ' + (ev.latent_steps || 3) + ' latent steps' + (ev.hybridlink_cos ? ' \u00b7 cos ' + ev.hybridlink_cos : ''),
             badge: '\u2713 Planned' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
+        } else if (ev.layer === 'ncm' && ev.ran === false) {
+          upsertStep('layer_c3', { icon: 'spark', state: 'no', name: 'C3 Decode (Bridges + 11L NCM)',
+            detail: ev.reason || 'Not run', badge: 'Not run' });
         } else if (ev.layer === 'ncm') {
           upsertStep('layer_c3', { icon: 'spark', state: 'ok', name: 'C3 Decode (Bridges + 11L NCM)',
             detail: (ev.bridges || 'ComboBridge + ExpertBridge') + (ev.codes ? ' \u2192 ' + ev.codes + ' VQ codes' : '') + ' (' + (ev.window_tokens || 512) + '-tok window)',
@@ -3925,8 +3931,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       else if (l.layer === 'image_analysis') out.push('S3 visual inspector (' + (l.elements || 0) + ' regions)');
       else if (l.layer === 'compiler' && l.checked) out.push(l.ok ? 'S3 code checked' : 'S3 code issue');
       else if (l.layer === 'c1_inference') out.push('C1 Inference' + (l.model ? ' · ' + l.model : ''));
-      else if (l.layer === 'c2_hybridagent') out.push('C2 HybridAgent');
-      else if (l.layer === 'ncm' && l.windows) out.push('C3 11L NCM' + (l.model && !/^11-Level/i.test(l.model) ? ' · ' + l.model : ''));
+      else if (l.layer === 'c2_hybridagent' && l.ran !== false) out.push('C2 HybridAgent');
+      else if (l.layer === 'ncm' && l.windows && l.ran !== false) out.push('C3 11L NCM' + (l.model && !/^11-Level/i.test(l.model) ? ' · ' + l.model : ''));
       else if (l.layer === 'workspace') out.push('workspace ' + l.workspace);
       else if (l.layer === 'cycle' && l.trigger === 'user') {
         out.push({

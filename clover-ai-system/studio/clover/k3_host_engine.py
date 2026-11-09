@@ -855,10 +855,13 @@ class K3HostEngine:
             }
             layer_log.append(cyc_info)
             emit(dict(cyc_info, type="layer"))
+        last_c = cycle_history[-1] if cycle_history else {"ok": False, "checks": []}
         op_plan.complete_stage(
             "outcome",
-            f"Outcome verified in {len(cycle_history)} Clover cycle" + ("s" if len(cycle_history) != 1 else ""),
+            C.outcome_label(last_c["checks"], len(cycle_history)) if last_c["ok"]
+            else f"Checked across {len(cycle_history)} cycles (unconfirmed)",
         )
+        layer_log.append({"layer": "outcome", "checks": list(last_c["checks"]), "passed": bool(last_c["ok"])})
         op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
         if not reply:
             reply = "(Clover finished without writing an answer.)"
@@ -879,7 +882,7 @@ class K3HostEngine:
                     kit.jepa_record_outcome(c1_obs_state=c1_state, is_baseline=(len(cycle_history) <= 1))
             except Exception:
                 pass
-        op_plan.complete_stage("growth", "Growth preserved · verified outcome & context updated")
+        op_plan.complete_stage("growth", "Growth preserved · context updated")
         emit({"type": "token", "round": len(stats_all), "kind": "answer", "text": reply})
         layer_log.append({"layer": "ncm", "windows": max(1, len(plans)), "model": self.spec["model"]})
         return {"reply": reply, "tool_calls": rounds, "rounds": max(1, len(stats_all)), "generation": stats_all,

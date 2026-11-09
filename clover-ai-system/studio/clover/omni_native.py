@@ -645,7 +645,8 @@ class OmniNative(N.LFM3Native):
                     try:
                         import device_actions
                         if device_actions.asks_for_screen_or_activity(query) or any(m.get("screen_capture") for m in media or () if isinstance(m, dict)):
-                            act = device_actions.read_active_activity()
+                            act = device_actions.read_active_activity(
+                                include_clipboard=device_actions.mentions_clipboard(query))
                             parts_a = []
                             if act.get("foreground_window"):
                                 parts_a.append(f"- Active Foreground Window: {act['foreground_window']}")
@@ -1017,10 +1018,8 @@ class OmniNative(N.LFM3Native):
                                 emit({"type": "layer", "layer": "compiler", "checked": True, "ok": False, "feedback": findings[0]})
 
                     if not findings:
-                        op_plan.complete_stage(
-                            "outcome",
-                            f"Outcome verified in {attempt + 1} Clover cycle" + ("" if attempt == 0 else "s"),
-                        )
+                        op_plan.complete_stage("outcome", C.outcome_label(c_meta["checks"], attempt + 1))
+                        layer_log.append({"layer": "outcome", "checks": list(c_meta["checks"]), "passed": True})
                         if first_cycle_findings:
                             only_comp = all(f.startswith("Code compiler check:") for f in first_cycle_findings)
                             emit({"type": "cycle", "cycle": attempt + 1, "stage": "verified", "cycles_used": attempt + 1})
@@ -1062,6 +1061,7 @@ class OmniNative(N.LFM3Native):
                         )})
                     else:
                         op_plan.complete_stage("outcome", f"Checked across {attempt + 1} cycles (unconfirmed)")
+                        layer_log.append({"layer": "outcome", "checks": list(c_meta["checks"]), "passed": False})
                         layer_log.append({
                             "layer": "cycle",
                             "trigger": "auto",
@@ -1126,7 +1126,7 @@ class OmniNative(N.LFM3Native):
                     op_plan.complete_stage(
                         "growth",
                         "Growth preserved ("
-                        + (f"repaired in {cycles_used} cycles · lesson saved" if first_cycle_findings else "verified outcome & context updated")
+                        + (f"repaired in {cycles_used} cycles · lesson saved" if first_cycle_findings else "context updated")
                         + ")",
                     )
                     emit({"type": "token", "round": rnd_n, "kind": "answer", "text": final})
