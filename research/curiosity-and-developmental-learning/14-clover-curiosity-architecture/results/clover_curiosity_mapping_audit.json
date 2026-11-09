@@ -1,6 +1,6 @@
 {
   "audit_id": "14-clover-curiosity-foundation-architecture-audit",
-  "elapsed_s": 1.096,
+  "elapsed_s": 0.852,
   "inspected_modules_count": 19,
   "total_clover_studio_lines_inspected": 24860,
   "live_codebase_verification": {

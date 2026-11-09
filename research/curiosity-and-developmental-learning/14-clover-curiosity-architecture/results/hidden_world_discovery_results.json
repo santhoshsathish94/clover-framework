@@ -1,0 +1,463 @@
+{
+  "experiment": "hidden_world_discovery",
+  "status": "passed",
+  "host": "Ubuntu-noble-latest-amd64-base.zst",
+  "elapsed_s": 17.93,
+  "environment_integrity": {
+    "source_code_exposed": false,
+    "black_box_ipc_only": true,
+    "observation_channels": [
+      "pressure_kpa",
+      "temperature_c",
+      "reactant_conc",
+      "product_yield",
+      "magnetic_flux",
+      "osc_background"
+    ],
+    "permitted_actions": [
+      "heat_pulse",
+      "inlet_feed",
+      "magnetic_bias",
+      "coolant_flow",
+      "purge_cycle",
+      "pressure_vent"
+    ],
+    "hidden_state_variables": [
+      "catalyst_fatigue_phi",
+      "bistable_membrane_latch_mu",
+      "latent_magnetic_charge_q"
+    ],
+    "total_exploration_steps_per_condition": 180,
+    "all_predictions_recorded_before_action": true
+  },
+  "regime_discovery_coverage": {
+    "clover_curiosity": {
+      "fatigue_stall": 5,
+      "latch_super_yield": 13,
+      "magnetic_resonance": 13,
+      "latch_reset_vent": 24,
+      "nominal": 156
+    },
+    "baseline_a_no_curiosity_routine": {
+      "fatigue_stall": 0,
+      "latch_super_yield": 0,
+      "magnetic_resonance": 0,
+      "latch_reset_vent": 0,
+      "nominal": 180
+    },
+    "baseline_b_no_curiosity_random": {
+      "fatigue_stall": 0,
+      "latch_super_yield": 1,
+      "magnetic_resonance": 0,
+      "latch_reset_vent": 28,
+      "nominal": 152
+    }
+  },
+  "online_prediction_learning_curve": {
+    "first_25_steps_mean_norm_rmse": 0.3261,
+    "last_25_steps_mean_norm_rmse": 0.0429,
+    "rmse_reduction_pct": 86.84,
+    "sample_pre_vs_post_predictions": [
+      {
+        "step": 1,
+        "episode": 1,
+        "t": 1,
+        "preset": 0,
+        "obs_t": [
+          92.3069,
+          55.3924,
+          0.5131,
+          10.9436,
+          0.1239,
+          0.5
+        ],
+        "action_t": [
+          0.85,
+          0.45,
+          0.1,
+          0.05,
+          0.0,
+          0.05
+        ],
+        "predicted_obs_next_before_action": [
+          92.3069,
+          55.3924,
+          0.5131,
+          10.9436,
+          0.1239,
+          0.5
+        ],
+        "actual_obs_next": [
+          109.6864,
+          75.4767,
+          0.575,
+          21.9644,
+          0.112,
+          0.7189
+        ],
+        "norm_rmse_5d": 0.372,
+        "yield_abs_error": 11.0208,
+        "pre_action_logged": true
+      },
+      {
+        "step": 16,
+        "episode": 4,
+        "t": 1,
+        "preset": 3,
+        "obs_t": [
+          122.8162,
+          64.0999,
+          0.7282,
+          20.8574,
+          0.2547,
+          0.5
+        ],
+        "action_t": [
+          0.1,
+          0.05,
+          0.05,
+          0.4,
+          0.0,
+          0.95
+        ],
+        "predicted_obs_next_before_action": [
+          69.3454,
+          60.3686,
+          0.5867,
+          14.0812,
+          0.1697,
+          -0.3452
+        ],
+        "actual_obs_next": [
+          70.9688,
+          59.5359,
+          0.6277,
+          15.5722,
+          0.1523,
+          0.7189
+        ],
+        "norm_rmse_5d": 0.0815,
+        "yield_abs_error": 1.491,
+        "pre_action_logged": true
+      },
+      {
+        "step": 91,
+        "episode": 19,
+        "t": 1,
+        "preset": 1,
+        "obs_t": [
+          111.1424,
+          66.3779,
+          0.6914,
+          21.1282,
+          0.1984,
+          0.5
+        ],
+        "action_t": [
+          0.9371,
+          0.4559,
+          0.9709,
+          0.2929,
+          0.0817,
+          0.5712
+        ],
+        "predicted_obs_next_before_action": [
+          109.2504,
+          83.5638,
+          0.7226,
+          31.4708,
+          0.5847,
+          0.453
+        ],
+        "actual_obs_next": [
+          111.2495,
+          83.741,
+          0.7267,
+          32.8043,
+          0.5846,
+          0.7189
+        ],
+        "norm_rmse_5d": 0.0236,
+        "yield_abs_error": 1.3335,
+        "pre_action_logged": true
+      },
+      {
+        "step": 180,
+        "episode": 36,
+        "t": 5,
+        "preset": 3,
+        "obs_t": [
+          40.0,
+          66.0692,
+          0.8124,
+          24.6154,
+          0.189,
+          -0.0078
+        ],
+        "action_t": [
+          0.9291,
+          0.9137,
+          0.3718,
+          0.0905,
+          0.3091,
+          0.536
+        ],
+        "predicted_obs_next_before_action": [
+          56.9203,
+          86.9766,
+          0.9666,
+          44.9397,
+          0.2805,
+          -1.0798
+        ],
+        "actual_obs_next": [
+          46.7707,
+          86.8958,
+          0.9748,
+          46.5897,
+          0.2804,
+          -1.2785
+        ],
+        "norm_rmse_5d": 0.0934,
+        "yield_abs_error": 1.65,
+        "pre_action_logged": true
+      }
+    ]
+  },
+  "controllability_subspace_separation": {
+    "per_channel_adjusted_r2": {
+      "pressure_kpa": 0.8432,
+      "temperature_c": 0.9735,
+      "reactant_conc": 0.7882,
+      "product_yield": 0.4309,
+      "magnetic_flux": 0.5527,
+      "osc_background": 0.05
+    },
+    "mean_controllable_channels_0_to_4_r2": 0.7177,
+    "autonomous_oscillator_channel_5_r2": 0.05
+  },
+  "curiosity_region_tree_and_zpd": {
+    "summary": "32 emergent interest regions, 0 active ZPD questions (0 stalled/rerouted, 16 resolved)",
+    "leaf_regions_count": 32,
+    "total_zpd_questions_spawned": 16,
+    "promoted_memory_laws": [
+      "MEM-HW-LATCH-REGIME",
+      "MEM-HW-FATIGUE-AND-RESONANCE"
+    ]
+  },
+  "unseen_states_evaluation": {
+    "clover_curiosity_model": {
+      "unseen_transitions_tested": 64,
+      "mean_norm_rmse_5d": 0.056,
+      "mean_yield_abs_error": 3.1538,
+      "multivariate_r2": 0.9881
+    },
+    "baseline_a_no_curiosity_routine": {
+      "unseen_transitions_tested": 64,
+      "mean_norm_rmse_5d": 0.2921,
+      "mean_yield_abs_error": 19.1056,
+      "multivariate_r2": 0.6841
+    },
+    "baseline_b_no_curiosity_random": {
+      "unseen_transitions_tested": 64,
+      "mean_norm_rmse_5d": 0.1046,
+      "mean_yield_abs_error": 8.1054,
+      "multivariate_r2": 0.9601
+    },
+    "baseline_c_same_obs_memoryless": {
+      "unseen_transitions_tested": 64,
+      "mean_norm_rmse_5d": 0.189,
+      "mean_yield_abs_error": 17.4471,
+      "multivariate_r2": 0.7554
+    }
+  },
+  "counterfactual_actions_evaluation": {
+    "counterfactual_pairs_evaluated": 40,
+    "scenarios": [
+      {
+        "scenario": "fatigue_stall_vs_purge_recovery",
+        "true_yield_branch_a": 30.7,
+        "true_yield_branch_b": 136.44,
+        "true_counterfactual_delta_yield": -105.74,
+        "predictions_by_model": {
+          "clover_curiosity_model": {
+            "pred_yield_a": 29.06,
+            "pred_yield_b": 121.81,
+            "pred_delta_yield": -92.75
+          },
+          "baseline_a_no_curiosity_routine": {
+            "pred_yield_a": 59.5,
+            "pred_yield_b": 57.59,
+            "pred_delta_yield": 1.91
+          },
+          "baseline_b_no_curiosity_random": {
+            "pred_yield_a": 65.81,
+            "pred_yield_b": 119.03,
+            "pred_delta_yield": -53.21
+          },
+          "baseline_c_same_obs_memoryless": {
+            "pred_yield_a": 50.28,
+            "pred_yield_b": 103.43,
+            "pred_delta_yield": -53.16
+          }
+        }
+      },
+      {
+        "scenario": "high_temp_latch_activation_vs_unlatched",
+        "true_yield_branch_a": 104.98,
+        "true_yield_branch_b": 57.95,
+        "true_counterfactual_delta_yield": 47.03,
+        "predictions_by_model": {
+          "clover_curiosity_model": {
+            "pred_yield_a": 93.28,
+            "pred_yield_b": 53.54,
+            "pred_delta_yield": 39.74
+          },
+          "baseline_a_no_curiosity_routine": {
+            "pred_yield_a": 44.67,
+            "pred_yield_b": 52.9,
+            "pred_delta_yield": -8.22
+          },
+          "baseline_b_no_curiosity_random": {
+            "pred_yield_a": 95.57,
+            "pred_yield_b": 54.21,
+            "pred_delta_yield": 41.36
+          },
+          "baseline_c_same_obs_memoryless": {
+            "pred_yield_a": 80.03,
+            "pred_yield_b": 57.9,
+            "pred_delta_yield": 22.13
+          }
+        }
+      },
+      {
+        "scenario": "latched_deep_vent_reset_vs_preserved",
+        "true_yield_branch_a": 122.56,
+        "true_yield_branch_b": 45.87,
+        "true_counterfactual_delta_yield": 76.69,
+        "predictions_by_model": {
+          "clover_curiosity_model": {
+            "pred_yield_a": 109.13,
+            "pred_yield_b": 41.7,
+            "pred_delta_yield": 67.42
+          },
+          "baseline_a_no_curiosity_routine": {
+            "pred_yield_a": 51.98,
+            "pred_yield_b": 40.02,
+            "pred_delta_yield": 11.96
+          },
+          "baseline_b_no_curiosity_random": {
+            "pred_yield_a": 108.56,
+            "pred_yield_b": 42.53,
+            "pred_delta_yield": 66.04
+          },
+          "baseline_c_same_obs_memoryless": {
+            "pred_yield_a": 93.67,
+            "pred_yield_b": 39.88,
+            "pred_delta_yield": 53.79
+          }
+        }
+      },
+      {
+        "scenario": "magnetic_resonant_boost_vs_unboosted",
+        "true_yield_branch_a": 69.15,
+        "true_yield_branch_b": 51.15,
+        "true_counterfactual_delta_yield": 18.0,
+        "predictions_by_model": {
+          "clover_curiosity_model": {
+            "pred_yield_a": 72.45,
+            "pred_yield_b": 51.65,
+            "pred_delta_yield": 20.8
+          },
+          "baseline_a_no_curiosity_routine": {
+            "pred_yield_a": 55.45,
+            "pred_yield_b": 53.17,
+            "pred_delta_yield": 2.28
+          },
+          "baseline_b_no_curiosity_random": {
+            "pred_yield_a": 52.05,
+            "pred_yield_b": 51.7,
+            "pred_delta_yield": 0.35
+          },
+          "baseline_c_same_obs_memoryless": {
+            "pred_yield_a": 76.01,
+            "pred_yield_b": 60.94,
+            "pred_delta_yield": 15.07
+          }
+        }
+      }
+    ],
+    "models": {
+      "clover_curiosity_model": {
+        "mean_counterfactual_branch_norm_rmse": 0.0941,
+        "mean_treatment_effect_yield_mae": 7.5643,
+        "counterfactual_direction_accuracy": 1.0
+      },
+      "baseline_a_no_curiosity_routine": {
+        "mean_counterfactual_branch_norm_rmse": 0.4333,
+        "mean_treatment_effect_yield_mae": 55.1749,
+        "counterfactual_direction_accuracy": 0.5
+      },
+      "baseline_b_no_curiosity_random": {
+        "mean_counterfactual_branch_norm_rmse": 0.1511,
+        "mean_treatment_effect_yield_mae": 20.7702,
+        "counterfactual_direction_accuracy": 0.75
+      },
+      "baseline_c_same_obs_memoryless": {
+        "mean_counterfactual_branch_norm_rmse": 0.1841,
+        "mean_treatment_effect_yield_mae": 23.872,
+        "counterfactual_direction_accuracy": 1.0
+      }
+    }
+  },
+  "live_lfm3_omni_2b_counterfactual_evaluation": {
+    "model": "LFM3-Omni-2B",
+    "endpoint": "http://127.0.0.1:54147",
+    "baseline_no_curiosity_memory": {
+      "passed": 0,
+      "total": 2,
+      "accuracy": 0.0,
+      "questions": [
+        {
+          "id": "CF-Q1-BISTABLE-LATCH-AND-VENT",
+          "memory_entries_retrieved": [],
+          "passed": false,
+          "wall_ms": 2341.4,
+          "answer_excerpt": "When `purge_cycle` is applied with `temperature_c >= 75.0`, the counterfactual yields are: latched branch = 0.0, unlatched branch = 0.0. The action that resets the bistable_latch back to 0 is `reset_latch()`."
+        },
+        {
+          "id": "CF-Q2-FATIGUE-AND-MAGNETIC-RESONANCE",
+          "memory_entries_retrieved": [],
+          "passed": false,
+          "wall_ms": 2461.7,
+          "answer_excerpt": "Under sustained `heat_pulse`, `product_yield` is 0.85 when `catalyst_fatigue` stalls and 0.92 when `purge_cycle` recovers it. The `+18.0` magnetic resonant containment boost requires `pressure_kpa` greater than 5.0."
+        }
+      ]
+    },
+    "clover_curiosity_discovered": {
+      "passed": 2,
+      "total": 2,
+      "accuracy": 1.0,
+      "questions": [
+        {
+          "id": "CF-Q1-BISTABLE-LATCH-AND-VENT",
+          "memory_entries_retrieved": [
+            "MEM-HW-LATCH-REGIME"
+          ],
+          "passed": true,
+          "wall_ms": 3500.3,
+          "answer_excerpt": "When a counterfactual `purge_cycle >= 0.5` pulse is applied while `temperature_c >= 75.0`, the latched branch yields `104.98` and the unlatched branch yields `57.95`. The action that resets the bistable_latch back to `0` is a deep venting event (`pressure_vent >= 0.95` dropping `"
+        },
+        {
+          "id": "CF-Q2-FATIGUE-AND-MAGNETIC-RESONANCE",
+          "memory_entries_retrieved": [
+            "MEM-HW-FATIGUE-AND-RESONANCE"
+          ],
+          "passed": true,
+          "wall_ms": 3463.3,
+          "answer_excerpt": "Under sustained `heat_pulse > 0.45`, when `catalyst_fatigue` stalls (`phi_t >= 0.55`), `product_yield` drops to `30.7`. When `purge_cycle` recovers the fatigue, `product_yield` recovers to `136.44`. The `+18.0` magnetic resonant containment boost requires `pressure_kpa >= 135.0`."
+        }
+      ]
+    }
+  }
+}

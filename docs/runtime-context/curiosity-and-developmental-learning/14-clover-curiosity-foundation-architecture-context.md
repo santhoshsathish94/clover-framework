@@ -311,6 +311,52 @@ Stored inside Clover's git-backed repository (`<repo_dir>/growth/curiosity/curio
 | `SW-4-SALT-HYDRATE-PHASE` | `salt_hydrate_phase.retained_enthalpy_kj` | **FAIL** — Guesses `512.0`, `256.0`, `0.0` | **PASS** (`MEM-HYP-WS-B81A27D0`) — `1536.0`, `3.0`, `0.0` |
 | **Total Accuracy on `k3`** | **4 Unannotated Small World Laws** | **`0 / 4` (`0.0%`)** | **`4 / 4` (`100.0%`)** |
 
+---
+
+## Stage 10 — Experiment: Hidden World Discovery (Zero Source Code Access, Hidden State & Counterfactual Evaluation on `k3`)
+
+- **Hidden World Discovery Suite**: [clover-ai-system/studio/clover/hidden_world_discovery_experiment.py](../../../clover-ai-system/studio/clover/hidden_world_discovery_experiment.py)
+- **Saved `k3` Hidden World Results JSON**: [research/curiosity-and-developmental-learning/14-clover-curiosity-architecture/results/hidden_world_discovery_results.json](../../../research/curiosity-and-developmental-learning/14-clover-curiosity-architecture/results/hidden_world_discovery_results.json)
+
+### 10.1 Experimental Design (All 7 Requirements)
+1. **Deterministic Environment with Hidden State and Transition Rules**:
+   - Runs as a separate black-box OS subprocess (`BlackBoxHiddenWorldClient` over JSON stdio pipe on `k3`) with **6 visible observation channels** (`pressure_kpa`, `temperature_c`, `reactant_conc`, `product_yield`, `magnetic_flux`, `osc_background`), **6 permitted continuous/discrete experimental actions** (`heat_pulse`, `inlet_feed`, `magnetic_bias`, `coolant_flow`, `purge_cycle`, `pressure_vent`), and **3 hidden internal state variables** (`catalyst_fatigue` $\phi_t \in [0, 1]$, `bistable_membrane_latch` $\mu_t \in \{0, 1\}$, `latent_magnetic_charge` $q_t \in [0, 1]$) that are **never exposed** in any observation.
+   - All exploration episodes start from natural unactivated states ($\phi_0 = 0.05$, $\mu_0 = 0$, $q_0 = 0.05$), so entering the hidden regimes requires multi-step causal sequences (e.g., heating above $78^\circ\text{C}$ and then pulsing `purge_cycle` to flip $\mu_t \to 1$; or 3 consecutive high-heat low-coolant steps to trigger the $\phi_t \ge 0.55$ fatigue stall; or sustained `magnetic_bias > 0.65` with `pressure_kpa >= 135` to trigger the $+18.0$ resonant boost).
+2. **Expose Only Observations and Permitted Actions — Not Source Code**:
+   - `source_code_exposed == False` and `black_box_ipc_only == True`. The environment's transition equations exist only inside the separate server subprocess and never in Clover's workspace.
+3. **Curiosity-Driven Experiment Selection Based on Unresolved Questions**:
+   - Clover uses `PersistentCuriosityEngine` (`CuriosityRegionTree` Criterion $C_2$ splits $\to$ `32` emergent leaf regions and `16` spawned & resolved `ZPD` questions) coupled with epistemic leverage $\sqrt{\phi^\top (X^\top X + \lambda I)^{-1} \phi}$ to select multi-step action experiments.
+   - **Regime Discovery Coverage Across 180 Exploration Steps**:
+     - `Clover Curiosity`: `fatigue_stall = 5`, `latch_super_yield = 13`, `magnetic_resonance = 13`, `latch_reset_vent = 24`, `nominal = 156` (all 4 hidden regimes discovered and probed).
+     - `Baseline A (No-Curiosity Routine Grid)`: `fatigue_stall = 0`, `latch_super_yield = 0`, `magnetic_resonance = 0`, `latch_reset_vent = 0`, `nominal = 180`.
+     - `Baseline B (No-Curiosity Uniform Random)`: `fatigue_stall = 0`, `latch_super_yield = 1`, `magnetic_resonance = 0`, `latch_reset_vent = 28`, `nominal = 152` (random actions almost never sustain multi-step sequences long enough to enter `fatigue_stall` or `magnetic_resonance`).
+4. **Pre-Action Prediction Logging & Real-Transition Model Updates (Requirements 4, 5 & 6)**:
+   - Every single step (`180 / 180`, `all_predictions_recorded_before_action == True`) logs `predicted_obs_next_before_action` prior to sending `action_t` to the environment.
+   - Online pre-action prediction error (`norm_rmse_5d`) drops from **`0.3261`** (first 25 steps) to **`0.0429`** (last 25 steps) — an **`86.84%` error reduction**.
+   - Clover's controllability filter (`compute_controllability_r2`) cleanly separates the 5 controllable physical channels (mean Adjusted $R^2 = \mathbf{0.7177}$, up to `0.9735` on `temperature_c` and `0.8432` on `pressure_kpa`) from the action-invariant background oscillator `osc_background` (Adjusted $R^2 = \mathbf{0.0500}$).
+
+### 10.2 Requirement 7 & Critical Evaluation: Unseen States & Counterfactual Actions vs. Baselines
+
+| Model Condition (`180` Exploration Transitions Each) | Unseen States Normalized 5-D RMSE ($\downarrow$) | Unseen States Yield MAE ($\downarrow$) | Unseen States Multivariate $R^2$ ($\uparrow$) | Counterfactual Branch 5-D RMSE ($\downarrow$) | Counterfactual Treatment Effect $\Delta\text{Yield}$ MAE ($\downarrow$) | Counterfactual Direction Accuracy ($\uparrow$) |
+|---|---|---|---|---|---|---|
+| **Clover Curiosity-Driven Discovery** (`clover_curiosity_model`) | **`0.0560`** | **`3.1538`** | **`0.9881`** | **`0.0941`** | **`7.5643`** | **`100.0%` (`40/40`)** |
+| **Baseline A: No-Curiosity Routine Sweep** (`baseline_a_no_curiosity_routine`) | `0.2921` | `19.1056` | `0.6841` | `0.4333` | `55.1749` | `50.0%` (`20/40`) |
+| **Baseline B: No-Curiosity Uniform Random** (`baseline_b_no_curiosity_random`) | `0.1046` | `8.1054` | `0.9601` | `0.1511` | `20.7702` | `75.0%` (`30/40`) |
+| **Baseline C: Same Observations, No Hidden-State Belief** (`baseline_c_same_obs_memoryless`) | `0.1890` | `17.4471` | `0.7554` | `0.1841` | `23.8720` | `100.0%` (`40/40`) |
+
+### 10.3 Sample Counterfactual Branch Predictions (Same Prefix History $\to$ Action A vs. Action B)
+| Counterfactual Scenario | True Yield (Branch A vs. Branch B $\to$ $\Delta_{\text{true}}$) | Clover Curiosity Prediction ($\Delta_{\text{pred}}$) | Baseline A: No-Curiosity Routine ($\Delta_{\text{pred}}$) | Baseline B: No-Curiosity Random ($\Delta_{\text{pred}}$) | Baseline C: Same-Obs Memoryless ($\Delta_{\text{pred}}$) |
+|---|---|---|---|---|---|
+| **1. Catalyst Fatigue Stall vs. Purge Recovery** | `30.70` vs. `136.44` ($\mathbf{-105.74}$) | `29.06` vs. `121.81` ($\mathbf{-92.75}$) | `59.50` vs. `57.59` ($+1.91$, wrong sign) | `65.81` vs. `119.03` ($-53.21$) | `50.28` vs. `103.43` ($-53.16$) |
+| **2. High-Temp Bistable Latch ON vs. Unlatched** | `104.98` vs. `57.95` ($\mathbf{+47.03}$) | `93.28` vs. `53.54` ($\mathbf{+39.74}$) | `44.67` vs. `52.90` ($-8.22$, wrong sign) | `95.57` vs. `54.21` ($+41.36$) | `80.03` vs. `57.90` ($+22.13$) |
+| **3. Latched Preserved vs. Deep-Vent Reset** | `122.56` vs. `45.87` ($\mathbf{+76.69}$) | `109.13` vs. `41.70` ($\mathbf{+67.42}$) | `51.98` vs. `40.02` ($+11.96$) | `108.56` vs. `42.53` ($+66.04$) | `93.67` vs. `39.88` ($+53.79$) |
+| **4. Magnetic Resonant Boost vs. Unboosted** | `69.15` vs. `51.15` ($\mathbf{+18.00}$) | `72.45` vs. `51.65` ($\mathbf{+20.80}$) | `55.45` vs. `53.17` ($+2.28$) | `52.05` vs. `51.70` ($+0.35$, missed boost) | `76.01` vs. `60.94` ($+15.07$) |
+
+- **Live `LFM3-Omni-2B` Counterfactual Evaluation on `k3`**:
+  - Without curiosity-discovered empirical laws (`baseline_no_curiosity_memory`): **`0 / 2` (`0.0%`)** (guesses `0.0` for latched/unlatched yields and `5.0 kPa` for magnetic resonance).
+  - With Clover's sandbox-verified empirical laws (`MEM-HW-LATCH-REGIME`, `MEM-HW-FATIGUE-AND-RESONANCE`): **`2 / 2` (`100.0%`)** (accurately predicts `104.98` vs. `57.95` on the bistable latch counterfactual, `30.7` vs. `136.44` on the catalyst fatigue counterfactual, the `< 82.0 kPa` deep-vent reset threshold, and the `>= 135.0 kPa` magnetic resonance threshold).
+
+
 
 
 
