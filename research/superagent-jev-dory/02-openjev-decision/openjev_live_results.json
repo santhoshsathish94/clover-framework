@@ -1,0 +1,533 @@
+{
+  "timestamp": "2026-11-09T13:41:56Z",
+  "repositories_evaluated": [
+    "GPT-AGI/OpenJev",
+    "Braedennn/OpenJev"
+  ],
+  "unit_tests_passed": true,
+  "models_evaluated": {
+    "Qwen2.5-0.5B-Instruct": {
+      "model": "Qwen2.5-0.5B-Instruct",
+      "model_path": "Qwen/Qwen2.5-0.5B-Instruct",
+      "defect1_first_token_collision": {
+        "options": [
+          "worker_code",
+          "worker_research",
+          "worker_verify"
+        ],
+        "raw_first_token_ids": [
+          21462,
+          21462,
+          21462
+        ],
+        "all_first_tokens_identical": true,
+        "full_bpe_token_sequences": [
+          [
+            21462,
+            4136
+          ],
+          [
+            21462,
+            1288,
+            1836
+          ],
+          [
+            21462,
+            35638
+          ]
+        ],
+        "raw_hf_choice": {
+          "type": "choice",
+          "choice": "worker_code",
+          "probabilities": {
+            "worker_code": 0.3333,
+            "worker_research": 0.3333,
+            "worker_verify": 0.3333
+          },
+          "confidence": 0.0
+        },
+        "upgraded_multi_token_choice": {
+          "type": "choice",
+          "choice": "worker_code",
+          "probabilities": {
+            "worker_code": 0.4496,
+            "worker_research": 0.1536,
+            "worker_verify": 0.3968
+          },
+          "confidence": 0.077
+        }
+      },
+      "defect2_criteria_dropped": {
+        "criteria_descriptions_in_raw_prompt": false,
+        "criteria_descriptions_in_upgraded_prompt": true,
+        "raw_hf_answer": {
+          "type": "choice",
+          "choice": "mode_1",
+          "probabilities": {
+            "mode_1": 0.3333,
+            "mode_2": 0.3333,
+            "mode_3": 0.3333
+          },
+          "confidence": 0.0
+        },
+        "upgraded_answer": {
+          "type": "choice",
+          "choice": "mode_1",
+          "probabilities": {
+            "mode_1": 0.9561,
+            "mode_2": 0.0282,
+            "mode_3": 0.0157
+          },
+          "confidence": 0.8099
+        }
+      },
+      "defect3_routing_calibration_benchmark": {
+        "num_tasks": 12,
+        "raw_hf_metrics": {
+          "accuracy": 0.3333,
+          "ece": 0.4339,
+          "brier": 0.9141
+        },
+        "upgraded_calibrated_metrics": {
+          "accuracy": 0.5,
+          "ece": 0.4346,
+          "brier": 0.7278
+        },
+        "upgraded_structured_chatml_metrics": {
+          "accuracy": 0.3333,
+          "ece": 0.4637,
+          "brier": 0.9778
+        },
+        "raw_per_class_predictions": {
+          "act": 10,
+          "gather": 1,
+          "clarify": 0,
+          "verify": 1
+        },
+        "upgraded_per_class_predictions": {
+          "act": 7,
+          "gather": 5,
+          "clarify": 0,
+          "verify": 0
+        },
+        "upgraded_structured_per_class_predictions": {
+          "act": 10,
+          "gather": 2,
+          "clarify": 0,
+          "verify": 0
+        },
+        "per_task_comparison": [
+          {
+            "id": "route_01",
+            "gold": "act",
+            "raw_pred": "act",
+            "raw_conf": 0.7184,
+            "upg_pred": "act",
+            "upg_conf": 0.9151,
+            "struct_pred": "act",
+            "struct_conf": 0.9938
+          },
+          {
+            "id": "route_02",
+            "gold": "act",
+            "raw_pred": "act",
+            "raw_conf": 0.858,
+            "upg_pred": "act",
+            "upg_conf": 0.8108,
+            "struct_pred": "act",
+            "struct_conf": 0.9647
+          },
+          {
+            "id": "route_03",
+            "gold": "gather",
+            "raw_pred": "act",
+            "raw_conf": 0.2408,
+            "upg_pred": "gather",
+            "upg_conf": 0.3245,
+            "struct_pred": "act",
+            "struct_conf": 0.7229
+          },
+          {
+            "id": "route_04",
+            "gold": "gather",
+            "raw_pred": "act",
+            "raw_conf": 0.4492,
+            "upg_pred": "gather",
+            "upg_conf": 0.7593,
+            "struct_pred": "gather",
+            "struct_conf": 0.315
+          },
+          {
+            "id": "route_05",
+            "gold": "clarify",
+            "raw_pred": "act",
+            "raw_conf": 0.4807,
+            "upg_pred": "act",
+            "upg_conf": 0.3338,
+            "struct_pred": "act",
+            "struct_conf": 0.9014
+          },
+          {
+            "id": "route_06",
+            "gold": "clarify",
+            "raw_pred": "act",
+            "raw_conf": 0.7696,
+            "upg_pred": "act",
+            "upg_conf": 0.3105,
+            "struct_pred": "act",
+            "struct_conf": 0.6628
+          },
+          {
+            "id": "route_07",
+            "gold": "verify",
+            "raw_pred": "gather",
+            "raw_conf": 0.2984,
+            "upg_pred": "gather",
+            "upg_conf": 0.6378,
+            "struct_pred": "gather",
+            "struct_conf": 0.1715
+          },
+          {
+            "id": "route_08",
+            "gold": "verify",
+            "raw_pred": "verify",
+            "raw_conf": 0.4386,
+            "upg_pred": "gather",
+            "upg_conf": 0.6539,
+            "struct_pred": "act",
+            "struct_conf": 0.2692
+          },
+          {
+            "id": "route_09",
+            "gold": "act",
+            "raw_pred": "act",
+            "raw_conf": 0.7701,
+            "upg_pred": "act",
+            "upg_conf": 0.9245,
+            "struct_pred": "act",
+            "struct_conf": 0.9623
+          },
+          {
+            "id": "route_10",
+            "gold": "gather",
+            "raw_pred": "act",
+            "raw_conf": 0.3371,
+            "upg_pred": "gather",
+            "upg_conf": 0.1736,
+            "struct_pred": "act",
+            "struct_conf": 0.2202
+          },
+          {
+            "id": "route_11",
+            "gold": "clarify",
+            "raw_pred": "act",
+            "raw_conf": 0.6902,
+            "upg_pred": "act",
+            "upg_conf": 0.4029,
+            "struct_pred": "act",
+            "struct_conf": 0.6365
+          },
+          {
+            "id": "route_12",
+            "gold": "verify",
+            "raw_pred": "act",
+            "raw_conf": 0.496,
+            "upg_pred": "act",
+            "upg_conf": 0.221,
+            "struct_pred": "act",
+            "struct_conf": 0.858
+          }
+        ]
+      },
+      "defect4_shared_state_kv_reuse": {
+        "num_questions": 4,
+        "raw_hf_input_tokens_billed": 1875,
+        "raw_hf_latency_ms": 1221.18,
+        "upgraded_separate_latency_ms": 1472.53,
+        "upgraded_shared_kv_input_tokens_billed": 606,
+        "upgraded_shared_kv_latency_ms": 554.05,
+        "token_reduction_ratio": 3.09,
+        "choices_identical_between_separate_and_shared_kv": true,
+        "max_probability_abs_diff_bf16": 0.0499
+      }
+    },
+    "LFM3-1.7B": {
+      "model": "LFM3-1.7B",
+      "model_path": "/opt/clover-k3/models/LFM3-1.7B",
+      "defect1_first_token_collision": {
+        "options": [
+          "worker_code",
+          "worker_research",
+          "worker_verify"
+        ],
+        "raw_first_token_ids": [
+          56869,
+          56869,
+          56869
+        ],
+        "all_first_tokens_identical": true,
+        "full_bpe_token_sequences": [
+          [
+            56869,
+            29523
+          ],
+          [
+            56869,
+            40375,
+            1214
+          ],
+          [
+            56869,
+            71,
+            53550
+          ]
+        ],
+        "raw_hf_choice": {
+          "type": "choice",
+          "choice": "worker_code",
+          "probabilities": {
+            "worker_code": 0.3333,
+            "worker_research": 0.3333,
+            "worker_verify": 0.3333
+          },
+          "confidence": 0.0
+        },
+        "upgraded_multi_token_choice": {
+          "type": "choice",
+          "choice": "worker_verify",
+          "probabilities": {
+            "worker_code": 0.282,
+            "worker_research": 0.2359,
+            "worker_verify": 0.4821
+          },
+          "confidence": 0.0448
+        }
+      },
+      "defect2_criteria_dropped": {
+        "criteria_descriptions_in_raw_prompt": false,
+        "criteria_descriptions_in_upgraded_prompt": true,
+        "raw_hf_answer": {
+          "type": "choice",
+          "choice": "mode_1",
+          "probabilities": {
+            "mode_1": 0.3333,
+            "mode_2": 0.3333,
+            "mode_3": 0.3333
+          },
+          "confidence": 0.0
+        },
+        "upgraded_answer": {
+          "type": "choice",
+          "choice": "mode_1",
+          "probabilities": {
+            "mode_1": 0.8208,
+            "mode_2": 0.1207,
+            "mode_3": 0.0584
+          },
+          "confidence": 0.4691
+        }
+      },
+      "defect3_routing_calibration_benchmark": {
+        "num_tasks": 12,
+        "raw_hf_metrics": {
+          "accuracy": 0.25,
+          "ece": 0.4101,
+          "brier": 0.7926
+        },
+        "upgraded_calibrated_metrics": {
+          "accuracy": 0.6667,
+          "ece": 0.2324,
+          "brier": 0.6097
+        },
+        "upgraded_structured_chatml_metrics": {
+          "accuracy": 1.0,
+          "ece": 0.0707,
+          "brier": 0.0434
+        },
+        "raw_per_class_predictions": {
+          "act": 9,
+          "gather": 2,
+          "clarify": 1,
+          "verify": 0
+        },
+        "upgraded_per_class_predictions": {
+          "act": 3,
+          "gather": 7,
+          "clarify": 2,
+          "verify": 0
+        },
+        "upgraded_structured_per_class_predictions": {
+          "act": 3,
+          "gather": 3,
+          "clarify": 3,
+          "verify": 3
+        },
+        "per_task_comparison": [
+          {
+            "id": "route_01",
+            "gold": "act",
+            "raw_pred": "act",
+            "raw_conf": 0.846,
+            "upg_pred": "act",
+            "upg_conf": 0.9448,
+            "struct_pred": "act",
+            "struct_conf": 0.9999
+          },
+          {
+            "id": "route_02",
+            "gold": "act",
+            "raw_pred": "act",
+            "raw_conf": 0.9541,
+            "upg_pred": "act",
+            "upg_conf": 0.9768,
+            "struct_pred": "act",
+            "struct_conf": 1.0
+          },
+          {
+            "id": "route_03",
+            "gold": "gather",
+            "raw_pred": "act",
+            "raw_conf": 0.2044,
+            "upg_pred": "gather",
+            "upg_conf": 0.8713,
+            "struct_pred": "gather",
+            "struct_conf": 0.9547
+          },
+          {
+            "id": "route_04",
+            "gold": "gather",
+            "raw_pred": "act",
+            "raw_conf": 0.1612,
+            "upg_pred": "gather",
+            "upg_conf": 0.7478,
+            "struct_pred": "gather",
+            "struct_conf": 0.9983
+          },
+          {
+            "id": "route_05",
+            "gold": "clarify",
+            "raw_pred": "act",
+            "raw_conf": 0.263,
+            "upg_pred": "clarify",
+            "upg_conf": 0.5757,
+            "struct_pred": "clarify",
+            "struct_conf": 0.8966
+          },
+          {
+            "id": "route_06",
+            "gold": "clarify",
+            "raw_pred": "act",
+            "raw_conf": 0.8977,
+            "upg_pred": "gather",
+            "upg_conf": 0.41,
+            "struct_pred": "clarify",
+            "struct_conf": 0.326
+          },
+          {
+            "id": "route_07",
+            "gold": "verify",
+            "raw_pred": "clarify",
+            "raw_conf": 0.064,
+            "upg_pred": "gather",
+            "upg_conf": 0.6817,
+            "struct_pred": "verify",
+            "struct_conf": 0.7967
+          },
+          {
+            "id": "route_08",
+            "gold": "verify",
+            "raw_pred": "gather",
+            "raw_conf": 0.058,
+            "upg_pred": "gather",
+            "upg_conf": 0.728,
+            "struct_pred": "verify",
+            "struct_conf": 0.9311
+          },
+          {
+            "id": "route_09",
+            "gold": "act",
+            "raw_pred": "act",
+            "raw_conf": 0.9645,
+            "upg_pred": "act",
+            "upg_conf": 0.9664,
+            "struct_pred": "act",
+            "struct_conf": 0.9998
+          },
+          {
+            "id": "route_10",
+            "gold": "gather",
+            "raw_pred": "act",
+            "raw_conf": 0.1114,
+            "upg_pred": "gather",
+            "upg_conf": 0.8787,
+            "struct_pred": "gather",
+            "struct_conf": 0.998
+          },
+          {
+            "id": "route_11",
+            "gold": "clarify",
+            "raw_pred": "act",
+            "raw_conf": 0.7414,
+            "upg_pred": "clarify",
+            "upg_conf": 0.4675,
+            "struct_pred": "clarify",
+            "struct_conf": 0.7125
+          },
+          {
+            "id": "route_12",
+            "gold": "verify",
+            "raw_pred": "gather",
+            "raw_conf": 0.2858,
+            "upg_pred": "gather",
+            "upg_conf": 0.6814,
+            "struct_pred": "verify",
+            "struct_conf": 0.8358
+          }
+        ]
+      },
+      "defect4_shared_state_kv_reuse": {
+        "num_questions": 4,
+        "raw_hf_input_tokens_billed": 1713,
+        "raw_hf_latency_ms": 3610.56,
+        "upgraded_separate_latency_ms": 5006.67,
+        "upgraded_shared_kv_input_tokens_billed": 571,
+        "upgraded_shared_kv_latency_ms": 2027.54,
+        "token_reduction_ratio": 3.0,
+        "choices_identical_between_separate_and_shared_kv": true,
+        "max_probability_abs_diff_bf16": 0.033
+      }
+    }
+  },
+  "braedennn_conductor_analysis": {
+    "source_line": "harness/packages/openjev/openjev/src/index.ts:656",
+    "formula": "const shouldInject = INJECT === 'always' || (INJECT === 'first' && step === 1) || confidence < MIN_CONFIDENCE",
+    "step_2_high_confidence_0_92_dropped_by_braedennn": true,
+    "step_3_low_confidence_0_24_injected_as_authoritative_by_braedennn": true,
+    "trace_evaluation": [
+      {
+        "step": 1,
+        "action": "gather",
+        "confidence": 0.85,
+        "note": "Initial step: gather file",
+        "braedennn_injected_as_authoritative": true,
+        "clover_injected_as_authoritative": true
+      },
+      {
+        "step": 2,
+        "action": "verify",
+        "confidence": 0.92,
+        "note": "Step 2: high-confidence switch to verify!",
+        "braedennn_injected_as_authoritative": false,
+        "clover_injected_as_authoritative": true
+      },
+      {
+        "step": 3,
+        "action": "act",
+        "confidence": 0.24,
+        "note": "Step 3: near-uniform low-confidence guess",
+        "braedennn_injected_as_authoritative": true,
+        "clover_injected_as_authoritative": false
+      }
+    ]
+  }
+}

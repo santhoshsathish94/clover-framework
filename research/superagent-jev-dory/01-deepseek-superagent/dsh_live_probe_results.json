@@ -1,0 +1,177 @@
+{
+  "repository": "deepseek-ai/deepseek-harness",
+  "version": "0.2.2-rc.1",
+  "commit": "fcc0ad46",
+  "timestamp": "2026-11-09T13:16:28.697Z",
+  "experiments": {
+    "taskBoardAndDag": {
+      "actualStatusesInSource": [
+        "pending",
+        "in_progress",
+        "completed",
+        "deleted"
+      ],
+      "attachmentClaimedStatuses": [
+        "Created",
+        "Routed",
+        "Running",
+        "Waiting",
+        "Completed",
+        "Failed"
+      ],
+      "cycleRejectedCode": "TEAM_TASK_DEPENDENCY_CYCLE",
+      "blockedClaimCode": "TEAM_TASK_BLOCKED",
+      "staleRevisionCode": "TEAM_TASK_STALE_REVISION",
+      "t1FinalStatus": "completed",
+      "t1FinalRevision": 3,
+      "t2ReadyBeforeT1Complete": false,
+      "t2ReadyAfterT1Complete": true,
+      "advisoryWriteScopeOverlapWarningsOnT3": [
+        "write scopes overlap with task-1"
+      ],
+      "writeScopeBlockedExecution": false
+    },
+    "subagentIsolationAndMessaging": {
+      "workerAId": "1cfdaacc-d7e7-4ded-9da9-26ed9d8d73b0",
+      "workerAName": "worker-a",
+      "workerAStopReason": "completed",
+      "workerBId": "43af115e-1210-46dc-bc25-23b7563aa271",
+      "workerBStopReason": "completed",
+      "inboxBeforeTaskComplete": 0,
+      "inboxAfterTaskCompletePassive": 0,
+      "taskBoardAutoWakesWorkers": false,
+      "explicitSendMessageId": "95fce938-5e93-4718-9266-33827cf3951f",
+      "relayEventSource": {
+        "kind": "agent-message",
+        "form": "relay",
+        "senderSessionId": "clover-lead"
+      }
+    },
+    "chainOfRecallSessionReference": {
+      "discoveredCandidatesCount": 2,
+      "selfReferenceRejectedCode": "SESSION_REFERENCE_SELF_REFERENCE",
+      "recallContextSource": {
+        "kind": "session-reference",
+        "form": "recall",
+        "version": 1,
+        "references": [
+          {
+            "sessionId": "1cfdaacc-d7e7-4ded-9da9-26ed9d8d73b0",
+            "label": "worker-a",
+            "capturedFormatVersion": 4,
+            "capturedThroughSeq": 22,
+            "compacted": false,
+            "originalMessages": 3,
+            "retainedMessages": 3,
+            "omittedMessages": 0,
+            "omittedBytes": 0,
+            "truncated": false,
+            "inputIndex": 0
+          }
+        ]
+      },
+      "recallCapturedThroughSeq": 22
+    },
+    "goalAndLoopGuards": {
+      "goalLifecycleTransitions": [
+        "active",
+        "paused",
+        "active",
+        "blocked"
+      ],
+      "goalBlockedReason": {
+        "code": "missing-calibration-data",
+        "message": "Waiting for empirical calibration dataset"
+      },
+      "goalDisarmedOnRestart": "disarmed",
+      "repeatToolCallsExecuted": 3,
+      "repeatReminderCount": 2,
+      "repeatReminderSummaries": [
+        "probe_read × 2",
+        "probe_read × 3"
+      ],
+      "agentErrors": [],
+      "guardEventTypes": [
+        "agent/inbox/spliced",
+        "turn/start",
+        "agent/inbox/spliced",
+        "step/start",
+        "system/message",
+        "user/message",
+        "request/header",
+        "request/context",
+        "assistant/message",
+        "tool/call",
+        "tool/result",
+        "step/end",
+        "step/start",
+        "assistant/message",
+        "tool/call",
+        "tool/result",
+        "agent/inbox/spliced",
+        "step/end",
+        "agent/inbox/spliced",
+        "step/start",
+        "user/message",
+        "assistant/message",
+        "tool/call",
+        "tool/result",
+        "agent/inbox/spliced",
+        "step/end",
+        "agent/inbox/spliced",
+        "step/start",
+        "user/message",
+        "assistant/message",
+        "step/end",
+        "turn/end"
+      ],
+      "repeatGuardVetoedToolExecution": false
+    },
+    "coldRestartPersistence": {
+      "persistedSessionFiles": [
+        "_no-cwd",
+        "_no-cwd\\1cfdaacc-d7e7-4ded-9da9-26ed9d8d73b0",
+        "_no-cwd\\43af115e-1210-46dc-bc25-23b7563aa271",
+        "_no-cwd\\clover-lead",
+        "_no-cwd\\guarded-agent",
+        "_no-cwd\\1cfdaacc-d7e7-4ded-9da9-26ed9d8d73b0\\session.v4.jsonl.zstd",
+        "_no-cwd\\43af115e-1210-46dc-bc25-23b7563aa271\\session.v4.jsonl.zstd",
+        "_no-cwd\\clover-lead\\session.v4.jsonl.zstd",
+        "_no-cwd\\guarded-agent\\session.v4.jsonl.zstd"
+      ],
+      "recoveredTaskCount": 3,
+      "recoveredTasks": [
+        {
+          "id": "task-1",
+          "status": "completed",
+          "revision": 3,
+          "ready": false,
+          "writeScopeWarnings": [
+            "write scopes overlap with task-3"
+          ]
+        },
+        {
+          "id": "task-2",
+          "status": "pending",
+          "revision": 1,
+          "ready": true,
+          "writeScopeWarnings": []
+        },
+        {
+          "id": "task-3",
+          "status": "in_progress",
+          "revision": 2,
+          "ready": false,
+          "writeScopeWarnings": []
+        }
+      ],
+      "recoveredGoalPhase": "blocked",
+      "recoveredGoalRevision": 4
+    },
+    "idleWatchdogBehavior": {
+      "tick1Value": 1,
+      "survived80msConsumerThinkTimeBetweenDemands": true,
+      "hungIteratorAbortedWith": "STREAM_IDLE_TIMEOUT:60"
+    }
+  }
+}
