@@ -1,0 +1,504 @@
+{
+  "timestamp": "2026-11-09T14:21:23Z",
+  "experiment1_jev_adaptive_dory_loop_policy": {
+    "fixed_1": {
+      "accuracy": 0.875,
+      "correct_count": "7/8",
+      "mean_gold_probability": 0.7833,
+      "mean_executed_layers": 72.0,
+      "relative_compute_vs_4loops": 0.375,
+      "mean_latency_ms": 768.03,
+      "unnecessary_tool_calls": 0,
+      "accuracy_per_100_layers": 1.2153,
+      "tasks": [
+        {
+          "id": "w1_easy_symbol",
+          "kind": "easy",
+          "chosen_loops": 1,
+          "executed_layers": 72,
+          "gold": "Au",
+          "predicted": "Au",
+          "correct": true,
+          "confidence": 0.9863,
+          "gold_probability": 0.9974,
+          "latency_ms": 245.3
+        },
+        {
+          "id": "w2_easy_capital",
+          "kind": "easy",
+          "chosen_loops": 1,
+          "executed_layers": 72,
+          "gold": "Tokyo",
+          "predicted": "Tokyo",
+          "correct": true,
+          "confidence": 0.9606,
+          "gold_probability": 0.992,
+          "latency_ms": 850.81
+        },
+        {
+          "id": "w3_easy_http",
+          "kind": "easy",
+          "chosen_loops": 1,
+          "executed_layers": 72,
+          "gold": "404",
+          "predicted": "404",
+          "correct": true,
+          "confidence": 0.5822,
+          "gold_probability": 0.8517,
+          "latency_ms": 1861.03
+        },
+        {
+          "id": "w4_easy_route_act",
+          "kind": "easy",
+          "chosen_loops": 1,
+          "executed_layers": 72,
+          "gold": "act",
+          "predicted": "act",
+          "correct": true,
+          "confidence": 0.8203,
+          "gold_probability": 0.9385,
+          "latency_ms": 545.3
+        },
+        {
+          "id": "w5_hard_modular",
+          "kind": "hard",
+          "chosen_loops": 1,
+          "executed_layers": 72,
+          "gold": "7",
+          "predicted": "7",
+          "correct": true,
+          "confidence": 0.5014,
+          "gold_probability": 0.8038,
+          "latency_ms": 268.39
+        },
+        {
+          "id": "w6_hard_arith_prod",
+          "kind": "hard",
+          "chosen_loops": 1,
+          "executed_layers": 72,
+          "gold": "72",
+          "predicted": "72",
+          "correct": true,
+          "confidence": 0.3128,
+          "gold_probability": 0.6031,
+          "latency_ms": 1064.88
+        },
+        {
+          "id": "w7_hard_verify_route",
+          "kind": "hard",
+          "chosen_loops": 1,
+          "executed_layers": 72,
+          "gold": "verify",
+          "predicted": "clarify",
+          "correct": false,
+          "confidence": 0.492,
+          "gold_probability": 0.3045,
+          "latency_ms": 633.52
+        },
+        {
+          "id": "w8_hard_contradiction_check",
+          "kind": "hard",
+          "chosen_loops": 1,
+          "executed_layers": 72,
+          "gold": "verify",
+          "predicted": "verify",
+          "correct": true,
+          "confidence": 0.6027,
+          "gold_probability": 0.7754,
+          "latency_ms": 675.05
+        }
+      ]
+    },
+    "fixed_2": {
+      "accuracy": 0.875,
+      "correct_count": "7/8",
+      "mean_gold_probability": 0.8637,
+      "mean_executed_layers": 112.0,
+      "relative_compute_vs_4loops": 0.5833,
+      "mean_latency_ms": 1137.45,
+      "unnecessary_tool_calls": 0,
+      "accuracy_per_100_layers": 0.7812,
+      "tasks": [
+        {
+          "id": "w1_easy_symbol",
+          "kind": "easy",
+          "chosen_loops": 2,
+          "executed_layers": 112,
+          "gold": "Au",
+          "predicted": "Au",
+          "correct": true,
+          "confidence": 0.9809,
+          "gold_probability": 0.9961,
+          "latency_ms": 357.59
+        },
+        {
+          "id": "w2_easy_capital",
+          "kind": "easy",
+          "chosen_loops": 2,
+          "executed_layers": 112,
+          "gold": "Tokyo",
+          "predicted": "Tokyo",
+          "correct": true,
+          "confidence": 0.9804,
+          "gold_probability": 0.9964,
+          "latency_ms": 1224.03
+        },
+        {
+          "id": "w3_easy_http",
+          "kind": "easy",
+          "chosen_loops": 2,
+          "executed_layers": 112,
+          "gold": "404",
+          "predicted": "404",
+          "correct": true,
+          "confidence": 0.5826,
+          "gold_probability": 0.8508,
+          "latency_ms": 2731.65
+        },
+        {
+          "id": "w4_easy_route_act",
+          "kind": "easy",
+          "chosen_loops": 2,
+          "executed_layers": 112,
+          "gold": "act",
+          "predicted": "act",
+          "correct": true,
+          "confidence": 0.917,
+          "gold_probability": 0.9771,
+          "latency_ms": 825.17
+        },
+        {
+          "id": "w5_hard_modular",
+          "kind": "hard",
+          "chosen_loops": 2,
+          "executed_layers": 112,
+          "gold": "7",
+          "predicted": "7",
+          "correct": true,
+          "confidence": 0.687,
+          "gold_probability": 0.8977,
+          "latency_ms": 403.27
+        },
+        {
+          "id": "w6_hard_arith_prod",
+          "kind": "hard",
+          "chosen_loops": 2,
+          "executed_layers": 112,
+          "gold": "72",
+          "predicted": "72",
+          "correct": true,
+          "confidence": 0.7195,
+          "gold_probability": 0.9076,
+          "latency_ms": 1549.07
+        },
+        {
+          "id": "w7_hard_verify_route",
+          "kind": "hard",
+          "chosen_loops": 2,
+          "executed_layers": 112,
+          "gold": "verify",
+          "predicted": "clarify",
+          "correct": false,
+          "confidence": 0.4225,
+          "gold_probability": 0.3553,
+          "latency_ms": 967.3
+        },
+        {
+          "id": "w8_hard_contradiction_check",
+          "kind": "hard",
+          "chosen_loops": 2,
+          "executed_layers": 112,
+          "gold": "verify",
+          "predicted": "verify",
+          "correct": true,
+          "confidence": 0.8146,
+          "gold_probability": 0.9288,
+          "latency_ms": 1041.53
+        }
+      ]
+    },
+    "fixed_4": {
+      "accuracy": 1.0,
+      "correct_count": "8/8",
+      "mean_gold_probability": 0.9326,
+      "mean_executed_layers": 192.0,
+      "relative_compute_vs_4loops": 1.0,
+      "mean_latency_ms": 1919.82,
+      "unnecessary_tool_calls": 0,
+      "accuracy_per_100_layers": 0.5208,
+      "tasks": [
+        {
+          "id": "w1_easy_symbol",
+          "kind": "easy",
+          "chosen_loops": 4,
+          "executed_layers": 192,
+          "gold": "Au",
+          "predicted": "Au",
+          "correct": true,
+          "confidence": 0.9777,
+          "gold_probability": 0.9952,
+          "latency_ms": 593.76
+        },
+        {
+          "id": "w2_easy_capital",
+          "kind": "easy",
+          "chosen_loops": 4,
+          "executed_layers": 192,
+          "gold": "Tokyo",
+          "predicted": "Tokyo",
+          "correct": true,
+          "confidence": 0.9832,
+          "gold_probability": 0.997,
+          "latency_ms": 2051.19
+        },
+        {
+          "id": "w3_easy_http",
+          "kind": "easy",
+          "chosen_loops": 4,
+          "executed_layers": 192,
+          "gold": "404",
+          "predicted": "404",
+          "correct": true,
+          "confidence": 0.596,
+          "gold_probability": 0.8576,
+          "latency_ms": 4629.57
+        },
+        {
+          "id": "w4_easy_route_act",
+          "kind": "easy",
+          "chosen_loops": 4,
+          "executed_layers": 192,
+          "gold": "act",
+          "predicted": "act",
+          "correct": true,
+          "confidence": 0.9125,
+          "gold_probability": 0.9762,
+          "latency_ms": 1390.9
+        },
+        {
+          "id": "w5_hard_modular",
+          "kind": "hard",
+          "chosen_loops": 4,
+          "executed_layers": 192,
+          "gold": "7",
+          "predicted": "7",
+          "correct": true,
+          "confidence": 0.8192,
+          "gold_probability": 0.9498,
+          "latency_ms": 683.25
+        },
+        {
+          "id": "w6_hard_arith_prod",
+          "kind": "hard",
+          "chosen_loops": 4,
+          "executed_layers": 192,
+          "gold": "72",
+          "predicted": "72",
+          "correct": true,
+          "confidence": 0.705,
+          "gold_probability": 0.9036,
+          "latency_ms": 2596.56
+        },
+        {
+          "id": "w7_hard_verify_route",
+          "kind": "hard",
+          "chosen_loops": 4,
+          "executed_layers": 192,
+          "gold": "verify",
+          "predicted": "verify",
+          "correct": true,
+          "confidence": 0.6247,
+          "gold_probability": 0.8317,
+          "latency_ms": 1639.86
+        },
+        {
+          "id": "w8_hard_contradiction_check",
+          "kind": "hard",
+          "chosen_loops": 4,
+          "executed_layers": 192,
+          "gold": "verify",
+          "predicted": "verify",
+          "correct": true,
+          "confidence": 0.8555,
+          "gold_probability": 0.9494,
+          "latency_ms": 1773.5
+        }
+      ]
+    },
+    "jev_adaptive": {
+      "accuracy": 1.0,
+      "correct_count": "8/8",
+      "mean_gold_probability": 0.9202,
+      "mean_executed_layers": 122.0,
+      "relative_compute_vs_4loops": 0.6354,
+      "mean_latency_ms": 1564.26,
+      "unnecessary_tool_calls": 0,
+      "accuracy_per_100_layers": 0.8197,
+      "tasks": [
+        {
+          "id": "w1_easy_symbol",
+          "kind": "easy",
+          "chosen_loops": 1,
+          "executed_layers": 72,
+          "gold": "Au",
+          "predicted": "Au",
+          "correct": true,
+          "confidence": 0.9863,
+          "gold_probability": 0.9974,
+          "latency_ms": 234.89
+        },
+        {
+          "id": "w2_easy_capital",
+          "kind": "easy",
+          "chosen_loops": 1,
+          "executed_layers": 72,
+          "gold": "Tokyo",
+          "predicted": "Tokyo",
+          "correct": true,
+          "confidence": 0.9606,
+          "gold_probability": 0.992,
+          "latency_ms": 823.89
+        },
+        {
+          "id": "w3_easy_http",
+          "kind": "easy",
+          "chosen_loops": 1,
+          "executed_layers": 72,
+          "gold": "404",
+          "predicted": "404",
+          "correct": true,
+          "confidence": 0.5822,
+          "gold_probability": 0.8517,
+          "latency_ms": 1827.21
+        },
+        {
+          "id": "w4_easy_route_act",
+          "kind": "easy",
+          "chosen_loops": 1,
+          "executed_layers": 72,
+          "gold": "act",
+          "predicted": "act",
+          "correct": true,
+          "confidence": 0.8203,
+          "gold_probability": 0.9385,
+          "latency_ms": 542.6
+        },
+        {
+          "id": "w5_hard_modular",
+          "kind": "hard",
+          "chosen_loops": 2,
+          "executed_layers": 112,
+          "gold": "7",
+          "predicted": "7",
+          "correct": true,
+          "confidence": 0.687,
+          "gold_probability": 0.8977,
+          "latency_ms": 668.34
+        },
+        {
+          "id": "w6_hard_arith_prod",
+          "kind": "hard",
+          "chosen_loops": 4,
+          "executed_layers": 192,
+          "gold": "72",
+          "predicted": "72",
+          "correct": true,
+          "confidence": 0.705,
+          "gold_probability": 0.9036,
+          "latency_ms": 3623.77
+        },
+        {
+          "id": "w7_hard_verify_route",
+          "kind": "hard",
+          "chosen_loops": 4,
+          "executed_layers": 192,
+          "gold": "verify",
+          "predicted": "verify",
+          "correct": true,
+          "confidence": 0.6247,
+          "gold_probability": 0.8317,
+          "latency_ms": 2279.81
+        },
+        {
+          "id": "w8_hard_contradiction_check",
+          "kind": "hard",
+          "chosen_loops": 4,
+          "executed_layers": 192,
+          "gold": "verify",
+          "predicted": "verify",
+          "correct": true,
+          "confidence": 0.8555,
+          "gold_probability": 0.9494,
+          "latency_ms": 2513.58
+        }
+      ]
+    }
+  },
+  "experiment2_five_way_combined_ablation": {
+    "1_baseline_unintegrated": {
+      "description": "1-loop model, uncalibrated single-token Jev, passive task board, worker self-certification",
+      "scenarios_passed": "2/6 (33.3%)",
+      "details": {
+        "S1_easy_direct": true,
+        "S2_multi_digit_72": true,
+        "S3_false_worker_cert_caught": false,
+        "S4_stalled_worker_recovered": false,
+        "S5_process_restart_survived": false,
+        "S6_hard_verify_and_ambig_routing": false
+      }
+    },
+    "2_superagent_only": {
+      "description": "Clover.SuperAgent enabled (persistent DAG + watchdog + independent verifier), but 1-loop uncalibrated routing",
+      "scenarios_passed": "4/6 (66.7%)",
+      "details": {
+        "S1_easy_direct": true,
+        "S2_multi_digit_72": true,
+        "S3_false_worker_cert_caught": true,
+        "S4_stalled_worker_recovered": true,
+        "S5_process_restart_survived": true,
+        "S6_hard_verify_and_ambig_routing": false
+      }
+    },
+    "3_jev_decision_only": {
+      "description": "Clover.DecisionEngine enabled (multi-token + prior calibration), but 1-loop model & no persistent SuperAgent",
+      "scenarios_passed": "3/6 (50.0%)",
+      "details": {
+        "S1_easy_direct": true,
+        "S2_multi_digit_72": true,
+        "S3_false_worker_cert_caught": false,
+        "S4_stalled_worker_recovered": false,
+        "S5_process_restart_survived": false,
+        "S6_hard_verify_and_ambig_routing": true
+      }
+    },
+    "4_dory_4loop_only": {
+      "description": "Dory 4-loop always on (192 layers/token), but no SuperAgent persistence/watchdog/verifier",
+      "scenarios_passed": "3/6 (50.0%)",
+      "details": {
+        "S1_easy_direct": true,
+        "S2_multi_digit_72": true,
+        "S3_false_worker_cert_caught": false,
+        "S4_stalled_worker_recovered": false,
+        "S5_process_restart_survived": false,
+        "S6_hard_verify_and_ambig_routing": true
+      },
+      "mean_executed_layers_per_call": 192.0,
+      "mean_latency_ms": 1919.82
+    },
+    "5_combined_clover_superagent_jev_dory": {
+      "description": "Unified Clover.SuperAgent + Clover.DecisionEngine + Adaptive Clover.ModelRuntime (Dory 1/2/4 loops)",
+      "scenarios_passed": "6/6 (100.0%)",
+      "details": {
+        "S1_easy_direct": true,
+        "S2_multi_digit_72": true,
+        "S3_false_worker_cert_caught": true,
+        "S4_stalled_worker_recovered": true,
+        "S5_process_restart_survived": true,
+        "S6_hard_verify_and_ambig_routing": true
+      },
+      "mean_executed_layers_per_call": 122.0,
+      "mean_latency_ms": 1564.26,
+      "compute_saved_vs_fixed_4loops_pct": 36.46
+    }
+  }
+}

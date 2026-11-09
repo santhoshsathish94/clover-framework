@@ -1,0 +1,797 @@
+{
+  "timestamp": "2026-11-09T14:12:16Z",
+  "model_id": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+  "vllm_pr_source": "https://github.com/vllm-project/vllm/pull/60149 (commit 876edc97)",
+  "llamacpp_pr_source": "https://github.com/ggml-org/llama.cpp/pull/30306 (commit 98a74c97)",
+  "load_seconds": 17.62,
+  "stage1_architecture_census": {
+    "total_tensors_loaded": 507,
+    "total_physical_parameters": 3975229440,
+    "recurrent_block_parameters_40_layers": 1835560960,
+    "effective_parameters_by_loop_count": {
+      "1_loop": 3975229440,
+      "2_loops": 5810790400,
+      "3_loops": 7646351360,
+      "4_loops": 9481912320
+    },
+    "ngpt_eigenlearning_rate_stats": {
+      "input_0_15": {
+        "mean_effective_attn_lr": 0.38805,
+        "mean_effective_mlp_lr": 0.44675
+      },
+      "recurrent_16_55": {
+        "mean_effective_attn_lr": 0.2952,
+        "mean_effective_mlp_lr": 0.359
+      },
+      "output_56_71": {
+        "mean_effective_attn_lr": 0.25037,
+        "mean_effective_mlp_lr": 0.3274
+      }
+    }
+  },
+  "stage2_cache_and_loop_invariants": {
+    "single_pass_prefill_4loops_per_vs_last_max_abs_diff": 0.0,
+    "single_pass_prefill_4loops_kv_slots_per_loop": 96,
+    "single_pass_prefill_4loops_kv_slots_last_loop": 36,
+    "recurrent_kv_memory_reduction_4loops": 4.0,
+    "chunked_decode_vs_full_prefill_logit_cosine_bf16": 0.99979,
+    "chunked_decode_vs_full_prefill_top1_match": true,
+    "decode_3steps_per_loop_vs_last_loop_logit_cosine": 0.999551,
+    "decode_3steps_per_loop_vs_last_loop_top1_match": true
+  },
+  "stage3_and_4_loop_scaling_evaluation": {
+    "digit_tokenization_split_proof": {
+      "12": [
+        1049,
+        1050
+      ],
+      "14": [
+        1049,
+        1052
+      ],
+      "16": [
+        1049,
+        1054
+      ],
+      "18": [
+        1049,
+        1056
+      ],
+      "63": [
+        1054,
+        1051
+      ],
+      "64": [
+        1054,
+        1052
+      ]
+    },
+    "decision_benchmark_by_loop": {
+      "1_loops": {
+        "num_loops": 1,
+        "total_executed_layers": 72,
+        "overall_accuracy": 0.8333,
+        "hard_task_accuracy": 0.75,
+        "mean_gold_probability": 0.608,
+        "mean_latency_ms": 589.97,
+        "tasks": [
+          {
+            "id": "dory_task_1_easy_fact",
+            "difficulty": "easy",
+            "gold": "Au",
+            "predicted": "Au",
+            "correct": true,
+            "gold_probability": 0.9974,
+            "probabilities": {
+              "Au": 0.9974,
+              "Ag": 0.0023,
+              "Fe": 0.0001,
+              "Cu": 0.0002
+            },
+            "latency_ms": 247.02
+          },
+          {
+            "id": "dory_task_2_easy_arith",
+            "difficulty": "easy",
+            "gold": "72",
+            "predicted": "72",
+            "correct": true,
+            "gold_probability": 0.6031,
+            "probabilities": {
+              "64": 0.2941,
+              "72": 0.6031,
+              "81": 0.0224,
+              "63": 0.0803
+            },
+            "latency_ms": 1059.45
+          },
+          {
+            "id": "dory_task_3_hard_modular",
+            "difficulty": "hard",
+            "gold": "7",
+            "predicted": "7",
+            "correct": true,
+            "gold_probability": 0.8038,
+            "probabilities": {
+              "6": 0.1029,
+              "7": 0.8038,
+              "8": 0.0609,
+              "9": 0.0325
+            },
+            "latency_ms": 267.06
+          },
+          {
+            "id": "dory_task_4_hard_boolean",
+            "difficulty": "hard",
+            "gold": "False",
+            "predicted": "False",
+            "correct": true,
+            "gold_probability": 0.5644,
+            "probabilities": {
+              "True": 0.4356,
+              "False": 0.5644
+            },
+            "latency_ms": 238.96
+          },
+          {
+            "id": "dory_task_5_hard_sequence",
+            "difficulty": "hard",
+            "gold": "14",
+            "predicted": "14",
+            "correct": true,
+            "gold_probability": 0.3746,
+            "probabilities": {
+              "12": 0.0876,
+              "14": 0.3746,
+              "16": 0.3351,
+              "18": 0.2027
+            },
+            "latency_ms": 1089.97
+          },
+          {
+            "id": "dory_task_6_hard_agent_verify",
+            "difficulty": "hard",
+            "gold": "verify",
+            "predicted": "clarify",
+            "correct": false,
+            "gold_probability": 0.3045,
+            "probabilities": {
+              "act": 0.0005,
+              "gather": 0.0186,
+              "clarify": 0.6764,
+              "verify": 0.3045
+            },
+            "latency_ms": 637.33
+          }
+        ]
+      },
+      "2_loops": {
+        "num_loops": 2,
+        "total_executed_layers": 112,
+        "overall_accuracy": 0.5,
+        "hard_task_accuracy": 0.25,
+        "mean_gold_probability": 0.6602,
+        "mean_latency_ms": 887.04,
+        "tasks": [
+          {
+            "id": "dory_task_1_easy_fact",
+            "difficulty": "easy",
+            "gold": "Au",
+            "predicted": "Au",
+            "correct": true,
+            "gold_probability": 0.9961,
+            "probabilities": {
+              "Au": 0.9961,
+              "Ag": 0.0038,
+              "Fe": 0.0001,
+              "Cu": 0.0001
+            },
+            "latency_ms": 355.64
+          },
+          {
+            "id": "dory_task_2_easy_arith",
+            "difficulty": "easy",
+            "gold": "72",
+            "predicted": "72",
+            "correct": true,
+            "gold_probability": 0.9076,
+            "probabilities": {
+              "64": 0.0603,
+              "72": 0.9076,
+              "81": 0.0118,
+              "63": 0.0203
+            },
+            "latency_ms": 1550.85
+          },
+          {
+            "id": "dory_task_3_hard_modular",
+            "difficulty": "hard",
+            "gold": "7",
+            "predicted": "7",
+            "correct": true,
+            "gold_probability": 0.8977,
+            "probabilities": {
+              "6": 0.0477,
+              "7": 0.8977,
+              "8": 0.0386,
+              "9": 0.016
+            },
+            "latency_ms": 405.94
+          },
+          {
+            "id": "dory_task_4_hard_boolean",
+            "difficulty": "hard",
+            "gold": "False",
+            "predicted": "True",
+            "correct": false,
+            "gold_probability": 0.4926,
+            "probabilities": {
+              "True": 0.5074,
+              "False": 0.4926
+            },
+            "latency_ms": 364.75
+          },
+          {
+            "id": "dory_task_5_hard_sequence",
+            "difficulty": "hard",
+            "gold": "14",
+            "predicted": "16",
+            "correct": false,
+            "gold_probability": 0.3121,
+            "probabilities": {
+              "12": 0.1053,
+              "14": 0.3121,
+              "16": 0.3883,
+              "18": 0.1944
+            },
+            "latency_ms": 1646.36
+          },
+          {
+            "id": "dory_task_6_hard_agent_verify",
+            "difficulty": "hard",
+            "gold": "verify",
+            "predicted": "clarify",
+            "correct": false,
+            "gold_probability": 0.3553,
+            "probabilities": {
+              "act": 0.0001,
+              "gather": 0.0396,
+              "clarify": 0.6051,
+              "verify": 0.3553
+            },
+            "latency_ms": 998.7
+          }
+        ]
+      },
+      "3_loops": {
+        "num_loops": 3,
+        "total_executed_layers": 152,
+        "overall_accuracy": 0.8333,
+        "hard_task_accuracy": 0.75,
+        "mean_gold_probability": 0.7446,
+        "mean_latency_ms": 1186.53,
+        "tasks": [
+          {
+            "id": "dory_task_1_easy_fact",
+            "difficulty": "easy",
+            "gold": "Au",
+            "predicted": "Au",
+            "correct": true,
+            "gold_probability": 0.9957,
+            "probabilities": {
+              "Au": 0.9957,
+              "Ag": 0.0041,
+              "Fe": 0.0,
+              "Cu": 0.0001
+            },
+            "latency_ms": 485.35
+          },
+          {
+            "id": "dory_task_2_easy_arith",
+            "difficulty": "easy",
+            "gold": "72",
+            "predicted": "72",
+            "correct": true,
+            "gold_probability": 0.9007,
+            "probabilities": {
+              "64": 0.0594,
+              "72": 0.9007,
+              "81": 0.0186,
+              "63": 0.0213
+            },
+            "latency_ms": 2084.42
+          },
+          {
+            "id": "dory_task_3_hard_modular",
+            "difficulty": "hard",
+            "gold": "7",
+            "predicted": "7",
+            "correct": true,
+            "gold_probability": 0.9635,
+            "probabilities": {
+              "6": 0.0177,
+              "7": 0.9635,
+              "8": 0.0142,
+              "9": 0.0046
+            },
+            "latency_ms": 541.46
+          },
+          {
+            "id": "dory_task_4_hard_boolean",
+            "difficulty": "hard",
+            "gold": "False",
+            "predicted": "False",
+            "correct": true,
+            "gold_probability": 0.5755,
+            "probabilities": {
+              "True": 0.4245,
+              "False": 0.5755
+            },
+            "latency_ms": 489.09
+          },
+          {
+            "id": "dory_task_5_hard_sequence",
+            "difficulty": "hard",
+            "gold": "14",
+            "predicted": "16",
+            "correct": false,
+            "gold_probability": 0.3419,
+            "probabilities": {
+              "12": 0.0839,
+              "14": 0.3419,
+              "16": 0.3983,
+              "18": 0.1758
+            },
+            "latency_ms": 2207.49
+          },
+          {
+            "id": "dory_task_6_hard_agent_verify",
+            "difficulty": "hard",
+            "gold": "verify",
+            "predicted": "verify",
+            "correct": true,
+            "gold_probability": 0.6905,
+            "probabilities": {
+              "act": 0.0003,
+              "gather": 0.0234,
+              "clarify": 0.2859,
+              "verify": 0.6905
+            },
+            "latency_ms": 1311.36
+          }
+        ]
+      },
+      "4_loops": {
+        "num_loops": 4,
+        "total_executed_layers": 192,
+        "overall_accuracy": 0.8333,
+        "hard_task_accuracy": 0.75,
+        "mean_gold_probability": 0.7555,
+        "mean_latency_ms": 1509.83,
+        "tasks": [
+          {
+            "id": "dory_task_1_easy_fact",
+            "difficulty": "easy",
+            "gold": "Au",
+            "predicted": "Au",
+            "correct": true,
+            "gold_probability": 0.9952,
+            "probabilities": {
+              "Au": 0.9952,
+              "Ag": 0.0046,
+              "Fe": 0.0,
+              "Cu": 0.0001
+            },
+            "latency_ms": 601.8,
+            "hypersphere_trajectory_4loops": {
+              "input_h_l2_norm": 1.000007,
+              "final_h_l2_norm": 1.000062,
+              "loop_state_l2_norms": [
+                0.999366,
+                1.000656,
+                1.000427,
+                1.000611
+              ],
+              "reinjected_to_input_cosine": [
+                1.000001,
+                0.781004,
+                0.782176,
+                0.782261
+              ],
+              "consecutive_loop_cosine": [
+                0.218525,
+                0.998739,
+                0.999902,
+                0.99997
+              ],
+              "consecutive_loop_chord_distance": [
+                1.249789,
+                0.050235,
+                0.014065,
+                0.007773
+              ],
+              "loop_to_input_h_cosine": [
+                0.218525,
+                0.219031,
+                0.218916,
+                0.219005
+              ]
+            }
+          },
+          {
+            "id": "dory_task_2_easy_arith",
+            "difficulty": "easy",
+            "gold": "72",
+            "predicted": "72",
+            "correct": true,
+            "gold_probability": 0.9036,
+            "probabilities": {
+              "64": 0.0572,
+              "72": 0.9036,
+              "81": 0.0172,
+              "63": 0.0219
+            },
+            "latency_ms": 2604.22,
+            "hypersphere_trajectory_4loops": {
+              "input_h_l2_norm": 0.99997,
+              "final_h_l2_norm": 0.999932,
+              "loop_state_l2_norms": [
+                0.999333,
+                1.000011,
+                0.999279,
+                0.999599
+              ],
+              "reinjected_to_input_cosine": [
+                1.0,
+                0.781486,
+                0.78089,
+                0.781518
+              ],
+              "consecutive_loop_cosine": [
+                0.219502,
+                0.997093,
+                0.999839,
+                0.999967
+              ],
+              "consecutive_loop_chord_distance": [
+                1.248963,
+                0.076219,
+                0.017946,
+                0.008128
+              ],
+              "loop_to_input_h_cosine": [
+                0.219502,
+                0.220049,
+                0.219754,
+                0.219861
+              ]
+            }
+          },
+          {
+            "id": "dory_task_3_hard_modular",
+            "difficulty": "hard",
+            "gold": "7",
+            "predicted": "7",
+            "correct": true,
+            "gold_probability": 0.9498,
+            "probabilities": {
+              "6": 0.0186,
+              "7": 0.9498,
+              "8": 0.0232,
+              "9": 0.0085
+            },
+            "latency_ms": 681.14,
+            "hypersphere_trajectory_4loops": {
+              "input_h_l2_norm": 0.999981,
+              "final_h_l2_norm": 1.000075,
+              "loop_state_l2_norms": [
+                1.000872,
+                1.000675,
+                1.000879,
+                1.000806
+              ],
+              "reinjected_to_input_cosine": [
+                1.0,
+                0.774122,
+                0.774497,
+                0.774326
+              ],
+              "consecutive_loop_cosine": [
+                0.198043,
+                0.997594,
+                0.99969,
+                0.999904
+              ],
+              "consecutive_loop_chord_distance": [
+                1.266997,
+                0.069422,
+                0.024908,
+                0.013878
+              ],
+              "loop_to_input_h_cosine": [
+                0.198043,
+                0.200177,
+                0.19991,
+                0.199789
+              ]
+            }
+          },
+          {
+            "id": "dory_task_4_hard_boolean",
+            "difficulty": "hard",
+            "gold": "False",
+            "predicted": "False",
+            "correct": true,
+            "gold_probability": 0.5216,
+            "probabilities": {
+              "True": 0.4784,
+              "False": 0.5216
+            },
+            "latency_ms": 611.44,
+            "hypersphere_trajectory_4loops": {
+              "input_h_l2_norm": 0.999685,
+              "final_h_l2_norm": 0.999957,
+              "loop_state_l2_norms": [
+                0.998205,
+                0.99915,
+                0.998947,
+                0.998983
+              ],
+              "reinjected_to_input_cosine": [
+                1.0,
+                0.732329,
+                0.732317,
+                0.732376
+              ],
+              "consecutive_loop_cosine": [
+                0.066661,
+                0.998338,
+                0.999736,
+                0.999965
+              ],
+              "consecutive_loop_chord_distance": [
+                1.364824,
+                0.057581,
+                0.022957,
+                0.008378
+              ],
+              "loop_to_input_h_cosine": [
+                0.066661,
+                0.067107,
+                0.067578,
+                0.067843
+              ]
+            }
+          },
+          {
+            "id": "dory_task_5_hard_sequence",
+            "difficulty": "hard",
+            "gold": "14",
+            "predicted": "16",
+            "correct": false,
+            "gold_probability": 0.3313,
+            "probabilities": {
+              "12": 0.0734,
+              "14": 0.3313,
+              "16": 0.4358,
+              "18": 0.1595
+            },
+            "latency_ms": 2864.36,
+            "hypersphere_trajectory_4loops": {
+              "input_h_l2_norm": 1.000131,
+              "final_h_l2_norm": 1.000009,
+              "loop_state_l2_norms": [
+                0.998207,
+                1.001328,
+                1.000946,
+                1.001093
+              ],
+              "reinjected_to_input_cosine": [
+                1.000001,
+                0.755494,
+                0.755656,
+                0.755885
+              ],
+              "consecutive_loop_cosine": [
+                0.143798,
+                0.997865,
+                0.999524,
+                0.99989
+              ],
+              "consecutive_loop_chord_distance": [
+                1.307502,
+                0.065396,
+                0.030904,
+                0.01485
+              ],
+              "loop_to_input_h_cosine": [
+                0.143798,
+                0.143117,
+                0.143413,
+                0.143408
+              ]
+            }
+          },
+          {
+            "id": "dory_task_6_hard_agent_verify",
+            "difficulty": "hard",
+            "gold": "verify",
+            "predicted": "verify",
+            "correct": true,
+            "gold_probability": 0.8317,
+            "probabilities": {
+              "act": 0.0003,
+              "gather": 0.022,
+              "clarify": 0.146,
+              "verify": 0.8317
+            },
+            "latency_ms": 1696.0,
+            "hypersphere_trajectory_4loops": {
+              "input_h_l2_norm": 0.999927,
+              "final_h_l2_norm": 1.000097,
+              "loop_state_l2_norms": [
+                0.999032,
+                1.000312,
+                1.000093,
+                1.000554
+              ],
+              "reinjected_to_input_cosine": [
+                1.000001,
+                0.776222,
+                0.776412,
+                0.776102
+              ],
+              "consecutive_loop_cosine": [
+                0.208677,
+                0.993065,
+                0.997547,
+                0.999635
+              ],
+              "consecutive_loop_chord_distance": [
+                1.257378,
+                0.117738,
+                0.070057,
+                0.027044
+              ],
+              "loop_to_input_h_cosine": [
+                0.208677,
+                0.206768,
+                0.205382,
+                0.205614
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "autoregressive_generation_by_loop": {
+      "1_loops": {
+        "per_loop_output": "216",
+        "last_loop_output": "216",
+        "per_loop_matches_last_loop_text": true,
+        "per_loop_kv_bytes": 5603328,
+        "last_loop_kv_bytes": 5603328,
+        "per_loop_total_sec": 0.8742,
+        "last_loop_total_sec": 0.833,
+        "hypersphere_trajectory": {
+          "input_h_l2_norm": 0.999899,
+          "final_h_l2_norm": 0.999999,
+          "loop_state_l2_norms": [
+            1.000223
+          ],
+          "reinjected_to_input_cosine": [
+            1.000001
+          ],
+          "consecutive_loop_cosine": [
+            -0.001419
+          ],
+          "consecutive_loop_chord_distance": [
+            1.415303
+          ],
+          "loop_to_input_h_cosine": [
+            -0.001419
+          ]
+        }
+      },
+      "2_loops": {
+        "per_loop_output": "216",
+        "last_loop_output": "216",
+        "per_loop_matches_last_loop_text": true,
+        "per_loop_kv_bytes": 8716288,
+        "last_loop_kv_bytes": 5603328,
+        "per_loop_total_sec": 1.2586,
+        "last_loop_total_sec": 1.2573,
+        "hypersphere_trajectory": {
+          "input_h_l2_norm": 0.999899,
+          "final_h_l2_norm": 0.999878,
+          "loop_state_l2_norms": [
+            1.000223,
+            0.999496
+          ],
+          "reinjected_to_input_cosine": [
+            1.000001,
+            0.705964
+          ],
+          "consecutive_loop_cosine": [
+            -0.001419,
+            0.999345
+          ],
+          "consecutive_loop_chord_distance": [
+            1.415303,
+            0.036189
+          ],
+          "loop_to_input_h_cosine": [
+            -0.001419,
+            -0.002021
+          ]
+        }
+      },
+      "4_loops": {
+        "per_loop_output": "216",
+        "last_loop_output": "216",
+        "per_loop_matches_last_loop_text": true,
+        "per_loop_kv_bytes": 14942208,
+        "last_loop_kv_bytes": 5603328,
+        "per_loop_total_sec": 2.1121,
+        "last_loop_total_sec": 2.1101,
+        "hypersphere_trajectory": {
+          "input_h_l2_norm": 0.999899,
+          "final_h_l2_norm": 1.000157,
+          "loop_state_l2_norms": [
+            1.000223,
+            0.999496,
+            0.999382,
+            0.999391
+          ],
+          "reinjected_to_input_cosine": [
+            1.000001,
+            0.705964,
+            0.706322,
+            0.706344
+          ],
+          "consecutive_loop_cosine": [
+            -0.001419,
+            0.999345,
+            0.999964,
+            0.999992
+          ],
+          "consecutive_loop_chord_distance": [
+            1.415303,
+            0.036189,
+            0.008487,
+            0.003921
+          ],
+          "loop_to_input_h_cosine": [
+            -0.001419,
+            -0.002021,
+            -0.00167,
+            -0.001547
+          ]
+        }
+      }
+    },
+    "cot_reasoning_by_loop": {
+      "1_loops": {
+        "generated_tokens": 200,
+        "total_sec": 39.7742,
+        "finished_thinking": false,
+        "contains_correct_answer_14": false,
+        "output_text": "The user asks: If x=3, then x = x*2 +1, and finally x=x*2, what is final value? Need interpret carefully. Need produce concise with final number at end. Need think through.\n\nWe need parse problem. It sounds like a sequence of assignments? \"If x = 3, then x = x * 2 + 1, and finally x = x * 2, what is the final value of x?\" Need infer intended operations. Could be from some puzzle where x starts 3, then replace x with x*2+1 repeatedly? Wording: \"If x = 3, then x = x * 2 + 1, and finally x = x * 2, what is the final value of x?\" Ambiguous. Need answer final number only? User requests \"Reply concisely with the final number at the end.\" Need provide final number at end, likely just number? Need ensure final answer includes"
+      },
+      "2_loops": {
+        "generated_tokens": 200,
+        "total_sec": 60.0443,
+        "finished_thinking": false,
+        "contains_correct_answer_14": true,
+        "output_text": "The user asks: If x=3, then x = x*2 +1, and finally x=x*2, what is final value? Need interpret sequence. Need answer concise with final number at end. Need compute carefully.\n\nWe need parse problem. It sounds like a sequence of assignments:\nStart x=3.\nThen x = x*2 + 1. With current x=3, new x = 3*2+1=7.\nThen finally x = x*2. With current x=7, new x = 7*2=14.\nFinal value 14.\nNeed reply concisely with final number at end. User specifically: \"Reply concisely with the final number at the end.\" Likely final should be just \"14\" maybe with minimal? They want final number at end. We can provide concise explanation? They ask reply concisely with final number at end. Better final answer only \"14\"? Need satisfy"
+      },
+      "4_loops": {
+        "generated_tokens": 200,
+        "total_sec": 100.4034,
+        "finished_thinking": false,
+        "contains_correct_answer_14": true,
+        "output_text": "The user asks: If x=3, then x = x*2 +1, and finally x=x*2, what is final value? Need interpret sequence. Need answer concise with final number at end. Need compute carefully.\n\nWe need parse problem. It sounds like iterative updates: Start x=3. Then x = x*2 + 1 (first operation). Then finally x = x*2 (second operation). Need final value.\n\nLet's compute: x0=3.\nAfter x = x*2 +1: x1 = 3*2+1=7.\nFinally x = x*2: x2 = 7*2=14.\nFinal value 14.\nNeed reply concisely with final number at end. User specifically: \"Reply concisely with the final number at the end.\" We should provide maybe just \"14\" or include minimal? They want final number at end. Better final response should be concise and end"
+      }
+    }
+  }
+}
