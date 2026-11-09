@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Send to Clover",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "Send the page you are reading to Clover AI Studio on this computer. Nothing is read until you click.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuYOshiqsB+RQqlkcj6FRsmTEV01xbyjoDbte/pRd5XM0yDmPjBNmLmQDwG8CLren5fED63DTjzL3DE/V72OFapiqWUlrf7cTEzUaWz9rvrQL/ENdweXBW+JWeYCVZr/v57iXNGJQDbjw7OKd8//vA2uAhvtIMmW/5+8PI9w7BJcFzzCS4+ZGOBPOMx6Sz9CG5B0G1XRdoFKQQRF1eU+0R2QKjrm+s7KesmeXDJgjD51pG3HdC8NlZsa1/QZ+alibNc27SXeIN5bkkVe3Z+auKKybg4gd1en+CsOCXZsyDx4CD12rzu9KdFCbyqN6I+zCOcH9ETfbAQyGrY0h+/ojlQIDAQAB",
   "minimum_chrome_version": "102",

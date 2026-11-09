@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## v5.0.2 — 2026-11-10
+
+**Clover v5.0.2 — Checked tool steps, and a phone fix.** `VERSION` is `5.0.2` and all site `?v=5.0.2` asset cache strings match it. Windows installer, MSIX, Android APK/AAB (`versionCode 16`) and the VS Code and browser extensions are rebuilt at `5.0.2`.
+
+- **Android fix:** the 5.0.0 and 5.0.1 phone apps were built with five Studio files older than the rest (`omni_c2_c3.py`, `jepa_engine.py`, `workspaces.py`, `autonomous_clover.py`, `memory-knowledge-graph.py`). On a phone that loads C2, a turn could end with `TypeError: OmniC2C3Runtime.c2_plan() got an unexpected keyword argument 'action_prior_8'` (seen on a Galaxy S23). The phone build now uses the same versions as Windows.
+- **Tool steps are checked tasks (`tool_tasks.py`):** every tool call is a task in the SuperAgent's event log (`logs/tool-tasks/`). A file write counts as done only after Clover reads the file back and finds what it wrote; the step then says "✓ Checked on disk". A step cut off because Clover stopped (Android closed the app, the laptop restarted) is reported once in the next answer and is never re-run by itself; the model does not read that note back. `GET /api/tasks` lists recent steps.
+- **Caution only:** the SuperAgent/Jev decision engine (`superagent_jev_dory.py`, merged from `research/superagent-jev-dory`) never authorizes an action on its own, and `caution.py` can only make Clover ask before an action. The routing reading is not used in turns: on a pre-registered 200-message benchmark it identified no `clarify` message, so its gate failed.
+- **Research:** review and held-out re-test of the SuperAgent/OpenJev/Dory study; the standalone Dory engine matches the llama.cpp Dory PR at fp32 (`docs/runtime-context/superagent-jev-dory/05-review-and-held-out-retest.md`, `06-follow-up-items-1-4.md`).
+- Validated on a laptop (Windows, Iris Xe) and a Galaxy S23 before release: checked writes, a step interrupted by a stop and restart, and ordinary turns.
+
 ## v5.0.1 — 2026-11-09
 
 **Clover v5.0.1 — Curiosity, verified answers, and honest reporting.** `VERSION` is `5.0.1` and all site `?v=5.0.1` asset cache strings match it. Windows installer, MSIX, Android APK/AAB (`versionCode 15`) and the VS Code and browser extensions are rebuilt at `5.0.1`.

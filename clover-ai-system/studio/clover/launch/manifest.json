@@ -1,6 +1,6 @@
 {
   "about": "Everything Clover AI Studio downloads at setup, pinned: each file is checked against the SHA-256 its publisher lists (Hugging Face LFS ids, GitHub release digests) before it is used. Components: core (always), csi, pictures, c2c3. Read by clover/setup_fetch.py.",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "uv": {"version": "0.13.6", "url": "https://github.com/astral-sh/uv/releases/download/0.13.6/uv-x86_64-pc-windows-msvc.zip",
          "sha256": "a2a8820d5eea32f08ef467ef3b7f66883a9b076d5737a2fc2fbb5f458d1bb50f"},
   "python": "3.12.16",

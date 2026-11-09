@@ -16,7 +16,7 @@ $ProgressPreference = 'SilentlyContinue'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $Base) { $Base = Join-Path $env:USERPROFILE 'CloverAI' }
 $Base = [IO.Path]::GetFullPath($Base)
-$version = '5.0.1'
+$version = '5.0.2'
 $log = Join-Path $env:TEMP 'CloverAIStudio-setup.log'
 function Log([string]$m) { Add-Content -Path $log -Value ((Get-Date -Format 's') + ' ' + $m) }
 function Remove-Tree([string]$p) {  # PS 5.1's Remove-Item -Recurse can stop halfway; rmdir does not (nor follow junctions)

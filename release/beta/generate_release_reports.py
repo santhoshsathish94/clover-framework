@@ -16,8 +16,8 @@ from pathlib import Path
 BETA_DIR = Path(__file__).resolve().parent
 REPO_ROOT = BETA_DIR.parents[1]
 VERSION = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
-ANDROID_VERSION_CODE = 15
-RELEASE_DATE = "2026-11-09"
+ANDROID_VERSION_CODE = 16
+RELEASE_DATE = "2026-11-10"
 
 
 def _verified() -> dict:

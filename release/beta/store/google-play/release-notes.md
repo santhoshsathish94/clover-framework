@@ -1,5 +1,5 @@
-Clover AI Studio v5.0.1 (versionCode 15, targetSdk 36) — Release:
-• Curiosity: Clover explores your workspace while idle and keeps only what it verified by running it; questions about a verified function are answered from a real run.
-• Honest reports: the Outcome step names the checks that ran (or says none applies), and layers that did not run say so.
-• Fixes: a correction to a note replaces the old note; arithmetic checks read numbers like 25,000 correctly; no unasked file reads in Tools: Always.
-• Clover answers questions about its own nature plainly, and reads the clipboard only when you mention it.
+Clover AI Studio v5.0.2 (versionCode 16, targetSdk 36) — Release:
+• Fix: on phones that load Clover's planning layer, an answer could stop with an error. Fixed.
+• Checked writes: Clover reads a file back and says "Checked on disk" only when it holds what was written.
+• If Clover was closed mid-step, the next answer says which step did not finish. It is never re-run by itself.
+• Clover's decision helper can only make it more careful; it never approves an action.
