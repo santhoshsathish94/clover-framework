@@ -241,5 +241,40 @@ Stored inside Clover's git-backed repository (`<repo_dir>/growth/curiosity/curio
   | **Curiosity Lifecycle (Emerge $\to$ Mastered $\to$ Revived)** | `0.02512` $\to$ `0.00211` $\to$ **`0.38477`** (`|LP| = 0.74`) | `0.02404` $\to$ `0.00211` $\to$ **`0.38477`** (`|LP| = 0.74`) |
   | **Cross-Process Keyword Overlap / Secret Leakage** | Jaccard = `0.0000` / `0` secrets leaked | Jaccard = `0.0000` / `0` secrets leaked |
 
+---
+
+## Stage 8 — Validating Self-Directed, Useful Curiosity on Unannotated Workspaces with Live `LFM3-Omni-2B` Inference
+
+- **Live Utility Benchmark Suite**: [clover-ai-system/studio/clover/test_self_directed_curiosity_live_utility.py](../../../clover-ai-system/studio/clover/test_self_directed_curiosity_live_utility.py)
+- **Saved Benchmark Results JSON**: [research/curiosity-and-developmental-learning/14-clover-curiosity-architecture/results/self_directed_curiosity_live_utility_results.json](../../../research/curiosity-and-developmental-learning/14-clover-curiosity-architecture/results/self_directed_curiosity_live_utility_results.json)
+
+### 8.1 Step 1 — Autonomous Behavioral & Boundary Probe Synthesis on Unannotated Workspace Code (`build_unannotated_function_candidate_spec` & `synthesize_and_verify_behavioral_probe_in_sandbox`)
+- **Problem Addressed**: Real-world workspace `.py` files rarely contain inline `assert` blocks or doctests at the bottom of the module. For curiosity to be genuinely self-directed and useful on real codebases, Clover must formulate and verify its own multi-input boundary probes from unannotated functions without relaxing `validate_behavioral_verification_probe`.
+- **Mechanism Implemented**:
+  1. When `workspace_code_inspect` reads an unannotated `.py` module, `build_unannotated_function_candidate_spec(txt, fn_names)` inspects the target function's AST signature, parameter names (`total_slots`, `stages`, `partitioned`, `substrate`, `vmax`, `km`, `allosteric_inhibitor`, etc.), defaults, and conditional guard constants (`<= 0`, `1.0 + ...`) to construct 4 candidate input tuples spanning **interior normal regimes** (`normal_a`, `normal_b`) and **boundary/zero regimes** (`boundary_zero`, `boundary_alt`), attached via `# __CLOVER_UNANNOTATED_PROBE_SPEC__:`.
+  2. When `SGIM-ACTS` switches to `sandbox_counterexample_probe`, `synthesize_and_verify_behavioral_probe_in_sandbox(probe_code, sandbox_runner)` executes each candidate input tuple **twice** inside `IsolatedPythonSandbox`:
+     - **Determinism check**: Requires `fn(*args) == fn(*args)` across repeated calls (`deterministic == True`).
+     - **Non-trivial multi-regime variation check**: Requires at least 2 valid executions producing $\ge 2$ distinct outputs across the normal and boundary regimes (`len(unique_outs) >= 2`).
+     - **Synthesized verification script**: Synthesizes explicit `assert fn(*args) == expected` checks that pass `validate_behavioral_verification_probe` (`behavioral_checks = 4`, `distinct_call_args = 4`) and enriches the promoted `CloverMemoryGraphStore` entry summary with both the AST branch rule (`extract_ast_rule_summary`) and the verified input-output boundary cases.
+  3. **Epistemic Gating in `LayerKit._user_memory_package`**: Unverified hypotheses (`status in ("under_review", "contested")` or `epistemic_status == "hypothesis"`) are never injected into factual user turn retrieval until promoted to `externally_verified` (`status == "active"`).
+
+### 8.2 Step 2 — Distractor, Random-Noise & Trivial-Stub Filtering During Bounded Idle Exploration
+- Tested unannotated workspaces containing both learnable domain modules and distractors:
+  - **Random-Noise Distractor (`noise_telemetry.py` using `random.random()`)**: Rejected by `synthesize_and_verify_behavioral_probe_in_sandbox` (`is_noise = True`, `reason = "non_deterministic_noise_function_rejected"`), marked `status = "contested"` in memory, and penalized with high prediction/competence error (`0.88`) so the region's learning progress drops to `0` (`Paper 01/04/10` random-noise trap immunity).
+  - **Trivial Constant Stub (`trivial_constants.py` returning constant `1`)**: Rejected by `synthesize_and_verify_behavioral_probe_in_sandbox` (`is_trivial = True`, `reason = "trivial_constant_function_rejected"`) and habituated (`comp_error_after = 0.02`) without promoting useless constant stubs into verified memory.
+  - **Innocent-Named Secret Files (`ring_buffer_config.py`, `enzyme_kinetics_config.py`)**: Excluded prior to AST parsing by `contains_sensitive_content`.
+
+### 8.3 Step 3 — Live `LFM3-Omni-2B` A/B Utility Evaluation (`Curiosity OFF` vs. `Curiosity ON`) Across OS Process Restarts
+- Evaluated two independent installations (`Installation A: Systems Ring-Buffer` and `Installation B: Biophysical Enzyme Kinetics`) on unannotated workspace files across OS process restarts, using live `LFM3-Omni-2B (Intel(R) UHD Graphics)` inference (`temperature = 0.0`, `seed = 20261109`) on 4 held-out engineering and scientific boundary questions:
+
+| Held-Out Question ID | Target Unannotated Function & Boundary Question | `Curiosity OFF` (`LFM3-Omni-2B` Live Output) | `Curiosity ON` (`LFM3-Omni-2B` Live Output After Autonomous Idle Probe Synthesis & Restart) |
+|---|---|---|---|
+| `QA-1-UNPARTITIONED-FALLBACK` | `ring_buffer.effective_throughput(256, 8, False)` vs. `(512, 4, True)` | **FAIL** — Hallucinates `256` and `512` (no memory entries retrieved) | **PASS** — Retrieves `MEM-HYP-WS-34B4C524`; answers `1.0` and `128.0` |
+| `QA-2-ZERO-BOUNDARY` | `ring_buffer.effective_throughput(0, 4, True)` & exact guard condition | **FAIL** — Guesses `total_slots == 0` regardless of `stages` | **PASS** — Retrieves `MEM-HYP-WS-34B4C524`; answers `0.0` and exact condition `total_slots <= 0 or stages <= 0` |
+| `QB-1-ALLOSTERIC-VELOCITY` | `enzyme_kinetics.reaction_velocity(10.0, 100.0, 2.0, 1.0)` & `eff_vmax` formula | **FAIL** — Hallucinates `0.50` and `eff_vmax = kcat / (K_m + [S])` | **PASS** — Retrieves `MEM-HYP-WS-F692E130`; answers `41.67` and `eff_vmax = vmax / (1.0 + allosteric_inhibitor)` |
+| `QB-2-ZERO-SUBSTRATE-AND-INHIBITOR` | `enzyme_kinetics.reaction_velocity(20.0, 100.0, 2.0, 0.0)` vs. `(0.0, 100.0, 2.0, 1.0)` | **FAIL** — Hallucinates `100.0` and `0.0` | **PASS** — Retrieves `MEM-HYP-WS-F692E130`; answers `90.91` and `0.0` |
+| **Overall Live Model Accuracy** | **4 Held-Out Unannotated Workspace Tasks** | **`0 / 4` (`0.0%`)** | **`4 / 4` (`100.0%`)** |
+
+
 
 

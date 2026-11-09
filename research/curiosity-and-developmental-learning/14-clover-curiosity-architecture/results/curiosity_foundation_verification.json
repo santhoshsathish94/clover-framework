@@ -1,7 +1,7 @@
 {
   "suite": "test_curiosity_foundation",
   "status": "passed",
-  "elapsed_s": 3.405,
+  "elapsed_s": 3.601,
   "test_1_endogenous_splitting_and_no_hardcoded_interests": {
     "total_regions_after_splits": 5,
     "leaf_regions": 3,

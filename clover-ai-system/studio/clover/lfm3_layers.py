@@ -238,7 +238,14 @@ class LayerKit:
         st = self.store()
         if not st.entries:
             return None
-        seeds = st._score_seed_entries(q)
+        all_seeds = st._score_seed_entries(q)
+        # Exclude unverified hypotheses (`under_review` / `contested` / `hypothesis`) from factual user memory retrieval
+        seeds = [
+            s for s in all_seeds
+            if st.entries.get(s[1]) is not None
+            and st.entries[s[1]].status == "active"
+            and st.entries[s[1]].epistemic_status != "hypothesis"
+        ]
         if not seeds:
             return self._food_notes(q, st)
         score, _, reason = seeds[0]
@@ -253,7 +260,10 @@ class LayerKit:
         min_overlap = 2 if len(qt) >= 3 else 1
         pkg.items = [
             it for it in pkg.items
-            if (
+            if it.entry.status != "under_review"
+            and it.entry.status != "contested"
+            and it.entry.epistemic_status != "hypothesis"
+            and (
                 it.entry.id == top_id
                 or getattr(it, "depth", 0) > 0
                 or (

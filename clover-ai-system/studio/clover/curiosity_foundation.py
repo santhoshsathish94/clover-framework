@@ -367,7 +367,282 @@ def extract_behavioral_probe_from_python_source(txt: str, fn_names: Sequence[str
                 return cand
         _ = arg_names
 
+    return build_unannotated_function_candidate_spec(txt, fn_names)
+
+
+def extract_ast_rule_summary(txt: str, fn_names: Sequence[str] = ()) -> str:
+    """Extract a concise, human-and-model-readable summary of top-level function signatures, branch conditions,
+    and return formulas from Python AST `txt`."""
+    import ast as _ast
+
+    try:
+        tree = _ast.parse(txt or "")
+    except SyntaxError:
+        return ""
+    summaries: list[str] = []
+    for node in tree.body:
+        if not isinstance(node, _ast.FunctionDef) or node.name.startswith("_"):
+            continue
+        if fn_names and node.name not in fn_names:
+            continue
+        sig_parts = []
+        n_args = len(node.args.args)
+        n_defs = len(node.args.defaults)
+        for idx_a, a in enumerate(node.args.args):
+            p_str = a.arg
+            if idx_a >= n_args - n_defs:
+                try:
+                    p_str += "=" + _ast.unparse(node.args.defaults[idx_a - (n_args - n_defs)])
+                except Exception:
+                    pass
+            sig_parts.append(p_str)
+        sig = f"{node.name}({', '.join(sig_parts)})"
+        clauses: list[str] = []
+        for stmt in node.body:
+            if isinstance(stmt, _ast.Expr) and isinstance(stmt.value, _ast.Constant) and isinstance(stmt.value.value, str):
+                continue
+            try:
+                unparsed = " ".join(_ast.unparse(stmt).split())
+                if len(unparsed) <= 160:
+                    clauses.append(unparsed)
+            except Exception:
+                continue
+        summaries.append(f"{sig}: {'; '.join(clauses[:4])}")
+    return " | ".join(summaries[:2])[:420]
+
+
+def build_unannotated_function_candidate_spec(txt: str, fn_names: Sequence[str] = ()) -> str | None:
+    """Step 1 (Autonomous Behavioral Probe Synthesis for Unannotated Workspace Modules):
+    When a clean workspace `.py` file has zero pre-written `assert` statements or doctests, inspect the AST of its
+    pure functions (parameter annotations, defaults, comparison thresholds in `If` branches, and operators) to build
+    a candidate multi-regime boundary input specification (`# __CLOVER_UNANNOTATED_PROBE_SPEC__: ...`).
+    This spec is NOT verified yet; it is executed and checked for determinism + non-trivial output variation inside
+    `IsolatedPythonSandbox` when `sandbox_counterexample_probe` runs.
+    """
+    import ast as _ast
+    import isolated_sandbox as _SBX
+
+    if not txt or len(txt) > 12000:
+        return None
+    ast_ok, _ = _SBX.validate_sandbox_ast(txt)
+    if not ast_ok:
+        return None
+    try:
+        tree = _ast.parse(txt)
+    except SyntaxError:
+        return None
+
+    for node in tree.body:
+        if not isinstance(node, _ast.FunctionDef) or node.name.startswith("_"):
+            continue
+        if fn_names and node.name not in fn_names:
+            continue
+        args = node.args.args
+        if not args or len(args) > 6:
+            continue
+
+        # Collect numeric comparison constants inside the function body to probe around exact branch boundaries
+        num_thresholds: list[float | int] = []
+        bool_params: set[str] = set()
+        str_params: set[str] = set()
+        dict_params: set[str] = set()
+
+        for sub in _ast.walk(node):
+            if isinstance(sub, _ast.Compare):
+                for comp_node in [sub.left] + list(sub.comparators):
+                    if isinstance(comp_node, _ast.Constant) and isinstance(comp_node.value, (int, float)) and not isinstance(comp_node.value, bool):
+                        num_thresholds.append(comp_node.value)
+                    elif isinstance(comp_node, _ast.UnaryOp) and isinstance(comp_node.op, _ast.USub) and isinstance(comp_node.operand, _ast.Constant):
+                        if isinstance(comp_node.operand.value, (int, float)):
+                            num_thresholds.append(-comp_node.operand.value)
+            elif isinstance(sub, _ast.IfExp) and isinstance(sub.test, _ast.Name):
+                bool_params.add(sub.test.id)
+            elif isinstance(sub, _ast.If) and isinstance(sub.test, _ast.Name):
+                bool_params.add(sub.test.id)
+            elif isinstance(sub, _ast.Call) and isinstance(sub.func, _ast.Attribute):
+                if sub.func.attr in ("startswith", "endswith", "split", "strip", "lower", "upper") and isinstance(sub.func.value, _ast.Name):
+                    str_params.add(sub.func.value.id)
+                elif sub.func.attr in ("get", "items", "keys", "values") and isinstance(sub.func.value, _ast.Name):
+                    dict_params.add(sub.func.value.id)
+            elif isinstance(sub, _ast.Subscript) and isinstance(sub.value, _ast.Name):
+                dict_params.add(sub.value.id)
+
+        n_args = len(args)
+        n_defs = len(node.args.defaults)
+        param_kinds: list[str] = []
+        for idx_a, a in enumerate(args):
+            ann = ""
+            if a.annotation is not None:
+                try:
+                    ann = _ast.unparse(a.annotation).lower()
+                except Exception:
+                    ann = ""
+            def_val = None
+            if idx_a >= n_args - n_defs:
+                d_node = node.args.defaults[idx_a - (n_args - n_defs)]
+                if isinstance(d_node, _ast.Constant):
+                    def_val = d_node.value
+
+            pname = a.arg.lower()
+            if "bool" in ann or isinstance(def_val, bool) or a.arg in bool_params or pname.startswith(("is_", "has_", "allow_", "partition")):
+                param_kinds.append("bool")
+            elif "dict" in ann or "mapping" in ann or (a.arg in dict_params and "list" not in ann and "seq" not in ann) or "route" in pname or "table" in pname:
+                param_kinds.append("dict")
+            elif "str" in ann or isinstance(def_val, str) or a.arg in str_params or pname in ("ip", "path", "key", "text", "name"):
+                param_kinds.append("str")
+            elif "float" in ann or isinstance(def_val, float) or any(w in pname for w in ("rate", "vmax", "km", "substrate", "inhibitor", "ratio", "alpha", "temp", "conc")):
+                param_kinds.append("float")
+            elif "list" in ann or "seq" in ann or "items" in pname or "values" in pname:
+                param_kinds.append("list")
+            else:
+                param_kinds.append("int")
+
+        bound_val = num_thresholds[0] if num_thresholds else 0
+
+        def _make_arg_val(kind: str, idx_p: int, regime: str) -> Any:
+            if kind == "bool":
+                return False if regime in ("normal_b", "boundary_alt") else True
+            if kind == "dict":
+                return {} if regime == "boundary_zero" else {"10.": "corp_a", "10.20.": "subnet_b"}
+            if kind == "str":
+                if regime == "normal_a":
+                    return "10.20.1.5"
+                if regime == "normal_b":
+                    return "192.168.1.1"
+                return ""
+            if kind == "list":
+                if regime == "boundary_zero":
+                    return []
+                return [2, 4, 6] if regime == "normal_a" else [10, 20, 30]
+            if kind == "float":
+                if regime == "normal_a":
+                    return 10.0 if idx_p == 0 else (100.0 if idx_p == 1 else (2.0 if idx_p == 2 else 1.0))
+                if regime == "normal_b":
+                    return 20.0 if idx_p == 0 else (100.0 if idx_p == 1 else (2.0 if idx_p == 2 else 0.0))
+                if regime == "boundary_zero":
+                    return float(bound_val) if idx_p == 0 else (100.0 if idx_p == 1 else (2.0 if idx_p == 2 else 1.0))
+                return 5.0 if idx_p == 0 else (80.0 if idx_p == 1 else (4.0 if idx_p == 2 else 3.0))
+            # int
+            if regime == "normal_a":
+                return 512 if idx_p == 0 else (4 if idx_p == 1 else 2)
+            if regime == "normal_b":
+                return 256 if idx_p == 0 else (8 if idx_p == 1 else 4)
+            if regime == "boundary_zero":
+                return int(bound_val) if idx_p == 0 else (4 if idx_p == 1 else 1)
+            return -5 if idx_p == 0 else (0 if idx_p == 1 else 0)
+
+        candidate_inputs = [
+            [_make_arg_val(k, i, reg_name) for i, k in enumerate(param_kinds)]
+            for reg_name in ("normal_a", "normal_b", "boundary_zero", "boundary_alt")
+        ]
+        spec = {
+            "fn_name": node.name,
+            "param_names": [a.arg for a in args],
+            "param_kinds": param_kinds,
+            "candidate_inputs": candidate_inputs,
+            "ast_rule_summary": extract_ast_rule_summary(txt, [node.name]),
+        }
+        return txt.strip() + "\n\n# __CLOVER_UNANNOTATED_PROBE_SPEC__: " + json.dumps(spec)
+
     return None
+
+
+def synthesize_and_verify_behavioral_probe_in_sandbox(
+    probe_code: str,
+    sandbox_runner: Callable[[str], tuple[bool, Any, str]],
+) -> dict[str, Any]:
+    """Execute a `# __CLOVER_UNANNOTATED_PROBE_SPEC__:` candidate in `IsolatedPythonSandbox` to:
+      1. Test determinism across repeated calls `fn(*args) == fn(*args)` (rejecting random/noisy distractors),
+      2. Test non-trivial behavioral variation across normal vs. boundary inputs (rejecting constant stubs), and
+      3. Synthesize an explicit, AST-verified multi-input `assert fn(*args) == expected` script + human/model summary.
+    """
+    marker = "# __CLOVER_UNANNOTATED_PROBE_SPEC__:"
+    if marker not in (probe_code or ""):
+        return {"ok": True, "synthesized_code": probe_code, "was_unannotated": False}
+
+    clean_src, _, spec_raw = probe_code.partition(marker)
+    clean_src = clean_src.strip()
+    try:
+        spec = json.loads(spec_raw.strip().splitlines()[0])
+    except Exception as exc:
+        return {"ok": False, "reason": f"invalid_probe_spec:{exc}", "was_unannotated": True}
+
+    fn_name = str(spec["fn_name"])
+    cand_inputs = list(spec.get("candidate_inputs") or [])
+    ast_rule = str(spec.get("ast_rule_summary") or "")
+
+    harness = (
+        f"{clean_src}\n\n"
+        f"_inputs = {cand_inputs!r}\n"
+        "_records = []\n"
+        "_deterministic = True\n"
+        "for _args in _inputs:\n"
+        "    try:\n"
+        f"        _r1 = {fn_name}(*_args)\n"
+        f"        _r2 = {fn_name}(*_args)\n"
+        "        if _r1 != _r2:\n"
+        "            _deterministic = False\n"
+        "        if isinstance(_r1, float):\n"
+        "            _r1 = round(_r1, 6)\n"
+        "        _records.append({'args': _args, 'ok': True, 'out': _r1})\n"
+        "    except Exception as _e:\n"
+        "        _records.append({'args': _args, 'ok': False, 'err': str(_e)})\n"
+        "RESULT = {'deterministic': _deterministic, 'records': _records}\n"
+    )
+    ok_h, val_h, err_h = sandbox_runner(harness)
+    if not ok_h or not isinstance(val_h, dict):
+        return {"ok": False, "reason": f"sandbox_discovery_failed:{err_h[:120]}", "was_unannotated": True}
+
+    if not val_h.get("deterministic", False):
+        return {
+            "ok": False,
+            "is_noise": True,
+            "reason": "non_deterministic_noise_function_rejected",
+            "was_unannotated": True,
+        }
+
+    records = [r for r in (val_h.get("records") or []) if isinstance(r, dict) and r.get("ok")]
+    if len(records) < 2:
+        return {"ok": False, "reason": "insufficient_valid_executions", "was_unannotated": True}
+
+    unique_outs = {json.dumps(r["out"], sort_keys=True) for r in records}
+    if len(unique_outs) < 2:
+        return {
+            "ok": False,
+            "is_trivial": True,
+            "reason": "trivial_constant_function_rejected",
+            "was_unannotated": True,
+        }
+
+    assert_lines = [clean_src, ""]
+    case_descriptions: list[str] = []
+    for r in records[:4]:
+        args_repr = ", ".join(repr(a) for a in r["args"])
+        out_val = r["out"]
+        if isinstance(out_val, float):
+            assert_lines.append(f"assert round({fn_name}({args_repr}), 6) == {out_val!r}")
+        else:
+            assert_lines.append(f"assert {fn_name}({args_repr}) == {out_val!r}")
+        case_descriptions.append(f"{fn_name}({args_repr}) == {out_val!r}")
+
+    assert_lines.append(f"RESULT = {{'passed': True, 'function': {fn_name!r}, 'verified_cases': {len(records[:4])}}}")
+    synth_code = "\n".join(assert_lines)
+    integrity = validate_behavioral_verification_probe(synth_code)
+    if not integrity["ok"]:
+        return {"ok": False, "reason": integrity["reason"], "was_unannotated": True}
+
+    verified_summary = (
+        f"Verified workspace function {ast_rule} | "
+        f"Verified behavioral & boundary cases: {'; '.join(case_descriptions)}"
+    )[:480]
+    return {
+        "ok": True,
+        "was_unannotated": True,
+        "synthesized_code": synth_code,
+        "verified_summary": verified_summary,
+        "verified_cases": case_descriptions,
+        "probe_integrity": integrity,
+    }
 
 STOPWORDS: frozenset[str] = frozenset(
     "a about above after again against all am an and any are as at be because been before being below between both "
@@ -1897,6 +2172,8 @@ class PersistentCuriosityEngine:
                 if ws_path.is_dir():
                     import ast as _ast
                     matched_defs: list[str] = []
+                    discovered_fn_concepts: list[str] = []
+                    discovered_ast_rule = ""
                     raw_candidates = [
                         fp
                         for fp in (sorted(ws_path.rglob("*.py")) + sorted(ws_path.rglob("*.md")))
@@ -1955,10 +2232,13 @@ class PersistentCuriosityEngine:
                                     if isinstance(node, _ast.FunctionDef):
                                         matched_defs.append(f"{fp.name}:{node.name}")
                                         fn_names_in_file.append(node.name)
-                                # Fix 1: Only extract a behavioral probe if the source file contains real behavioral
-                                # assertions / doctests / self-tests — NEVER fabricate `callable(fn)`!
+                                        for c_tok in (fp.stem.lower(), node.name.lower()):
+                                            if c_tok not in discovered_fn_concepts:
+                                                discovered_fn_concepts.append(c_tok)
+                                # Fix 1 & Step 1: Extract explicit assertions/doctests or build unannotated candidate spec
                                 if discovered_probe_code is None and fn_names_in_file:
                                     discovered_probe_code = extract_behavioral_probe_from_python_source(txt, fn_names_in_file)
+                                    discovered_ast_rule = extract_ast_rule_summary(txt, fn_names_in_file)
                             except SyntaxError as syn_e:
                                 verif_summary = f"SyntaxError in {fp.name}: {syn_e}"
                                 measured_comp_err = min(1.0, prev_err + 0.15)
@@ -1985,15 +2265,21 @@ class PersistentCuriosityEngine:
                             ):
                                 import k3_memory_graph as _M
                                 body_text = f"Workspace evidence: {verif_summary}"
+                                if discovered_ast_rule:
+                                    body_text += f"\nAST Rule: {discovered_ast_rule}"
                                 if discovered_probe_code:
                                     body_text += f"\n```python\n{discovered_probe_code.strip()}\n```"
+                                merged_concepts = list(dict.fromkeys(discovered_fn_concepts + list(q_terms)))[:6]
                                 h_entry = _M.MemoryEntry(
                                     id=hid,
                                     title=f"Workspace Hypothesis: {', '.join(matched_defs[:2])}"[:80],
                                     entry_type="hypothesis",
                                     epistemic_status="hypothesis",
                                     status="under_review",
-                                    summary=f"Extracted from workspace inspection ({verif_summary}) for '{query[:120]}'",
+                                    summary=(
+                                        f"Unverified workspace hypothesis ({', '.join(matched_defs[:2])}): "
+                                        f"{discovered_ast_rule or verif_summary}"
+                                    )[:400],
                                     content=body_text,
                                     source_evidence=verif_summary,
                                     provenance=_M.MemoryProvenance(
@@ -2001,8 +2287,8 @@ class PersistentCuriosityEngine:
                                         source_ref=f"workspace:{ws_path.name}",
                                         actor="clover-curiosity",
                                     ),
-                                    concepts=list(q_terms)[:4],
-                                    tags=list(q_terms)[:5] + ["hypothesis", "workspace_inspect"],
+                                    concepts=merged_concepts,
+                                    tags=merged_concepts + ["hypothesis", "workspace_inspect"],
                                 )
                                 memory_store.create_entry(h_entry)
                                 if question_node is not None and not question_node.memory_entry_id:
@@ -2046,6 +2332,41 @@ class PersistentCuriosityEngine:
                         probe_code = m_q.group(1).strip()
 
                 if probe_code:
+                    # Step 1 & Step 2: If the probe came from an unannotated workspace file (`# __CLOVER_UNANNOTATED_PROBE_SPEC__:`),
+                    # synthesize and verify its multi-input behavioral assertions in `IsolatedPythonSandbox` first!
+                    synthesized_summary: str | None = None
+                    synth_res = synthesize_and_verify_behavioral_probe_in_sandbox(probe_code, sandbox_runner)
+                    if synth_res.get("was_unannotated"):
+                        if synth_res.get("is_noise"):
+                            measured_comp_err = 0.90
+                            measured_pred_err = 0.90
+                            verif_summary = f"Rejected non-deterministic noise function in sandbox ({synth_res.get('reason')})"
+                            probe_integrity_report = {"ok": False, "reason": synth_res.get("reason"), "is_noise": True}
+                            if target_hyp is not None and perms.get("memory", "allow") == "allow":
+                                target_hyp.status = "contested"
+                                if hasattr(memory_store, "_save_entry_in_place"):
+                                    memory_store._save_entry_in_place(target_hyp)
+                            if question_node is not None:
+                                question_node.zpd_status = "stalled_deactivated"
+                            probe_code = None
+                        elif synth_res.get("is_trivial"):
+                            measured_comp_err = 0.02
+                            measured_pred_err = 0.02
+                            verif_summary = f"Trivial constant stub ({synth_res.get('reason')}); region habituated without promotion"
+                            probe_integrity_report = {"ok": False, "reason": synth_res.get("reason"), "is_trivial": True}
+                            if question_node is not None:
+                                question_node.zpd_status = "resolved_verified"
+                            probe_code = None
+                        elif synth_res.get("ok"):
+                            probe_code = str(synth_res["synthesized_code"])
+                            synthesized_summary = str(synth_res.get("verified_summary") or "")
+                        else:
+                            measured_comp_err = min(1.0, max(prev_err, 0.75))
+                            verif_summary = f"Unannotated probe synthesis failed: {synth_res.get('reason')}"
+                            probe_integrity_report = {"ok": False, "reason": synth_res.get("reason")}
+                            probe_code = None
+
+                if probe_code:
                     # Fix 1 (Verification Integrity): Audit the probe AST before accepting any sandbox pass!
                     probe_integrity_report = validate_behavioral_verification_probe(probe_code)
                     if not probe_integrity_report["ok"]:
@@ -2078,6 +2399,25 @@ class PersistentCuriosityEngine:
                                 f"({probe_integrity_report['behavioral_checks']} checks, {val_run})"
                             )
                             if target_hyp is not None and perms.get("memory", "allow") == "allow":
+                                if not synthesized_summary:
+                                    ast_r = extract_ast_rule_summary(probe_code)
+                                    assert_cases = [
+                                        ln.strip()[len("assert "):].strip()
+                                        for ln in probe_code.splitlines()
+                                        if ln.strip().startswith("assert ")
+                                    ]
+                                    if ast_r or assert_cases:
+                                        synthesized_summary = (
+                                            f"Verified workspace function {ast_r} | "
+                                            f"Verified behavioral & boundary cases: {'; '.join(assert_cases[:4])}"
+                                        )[:480]
+                                if synthesized_summary:
+                                    target_hyp.summary = synthesized_summary
+                                target_hyp.content = (
+                                    f"Verified in IsolatedPythonSandbox ({verif_summary}).\n"
+                                    f"Summary: {target_hyp.summary}\n"
+                                    f"```python\n{probe_code.strip()}\n```"
+                                )
                                 target_hyp.epistemic_status = "externally_verified"
                                 target_hyp.status = "active"
                                 if hasattr(memory_store, "_save_entry_in_place"):

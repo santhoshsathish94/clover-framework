@@ -1,7 +1,7 @@
 {
   "suite": "test_live_curiosity_loop_multi_session",
   "status": "passed",
-  "elapsed_s": 14.569,
+  "elapsed_s": 17.619,
   "priority_1_grounded_feedback_in_real_outcomes": {
     "ordinary_turn_comp_error": null,
     "ordinary_turn_verified_in_turn": false,
@@ -26,8 +26,8 @@
   },
   "priority_4_and_5_multi_session_two_installations_experiment": {
     "installation_a_systems": {
-      "phase1_pid": 72208,
-      "phase2_restarted_pid": 53088,
+      "phase1_pid": 3248,
+      "phase2_restarted_pid": 68960,
       "reloaded_step_counter": 5,
       "emergent_keywords": [
         "ring_buffer",
@@ -37,7 +37,7 @@
         "pipeline",
         "partitioned",
         "stage",
-        "workspace"
+        "total_slot"
       ],
       "self_directed_utility_unseen_tasks": {
         "before_idle_curiosity": 0.0,
@@ -57,8 +57,8 @@
       "workspace_untouched": true
     },
     "installation_b_biophysics": {
-      "phase1_pid": 21744,
-      "phase2_restarted_pid": 55992,
+      "phase1_pid": 20996,
+      "phase2_restarted_pid": 64820,
       "reloaded_step_counter": 5,
       "emergent_keywords": [
         "enzyme_kinetic",
