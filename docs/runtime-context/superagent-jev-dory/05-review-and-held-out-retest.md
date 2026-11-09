@@ -119,6 +119,8 @@ but no experiment tested that explanation. The two models differ in family and t
 
 ## 6. What this means for Clover (for Direction)
 
+> **Follow-up, 2026-11-09/10:** all four items below were approved and carried out. See [06-follow-up-items-1-4.md](06-follow-up-items-1-4.md).
+
 - **Do not let the decision engine authorize `act`.** Its failure mode on plain messages is confident `act` on destructive or
   unverified requests, which is the case a confidence gate cannot catch. If it is used at all, use it
   asymmetrically: it may raise caution (gather, clarify, verify) but never grant an action. Clover's existing approval rules stay authoritative.

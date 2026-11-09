@@ -1,0 +1,24 @@
+bf16 standalone done
+fp32 standalone done
+Traceback (most recent call last):
+  File "/opt/clover-k3/superagent-jev-dory-study/dory-parity/claims.py", line 102, in <module>
+    main()
+  File "/opt/clover-k3/superagent-jev-dory-study/dory-parity/claims.py", line 90, in main
+    zip(t["options"], [round(p, 4) for p in softmax(ref_score(kind, k, ids, opts))]))
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/clover-k3/superagent-jev-dory-study/dory-parity/claims.py", line 34, in ref_score
+    out = subprocess.run([str(HERE / "dory_claims"), "score", str(RP.GGUF[kind]), str(k), "last_loop",
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 2157, in _communicate
+    stderr = self._translate_newlines(stderr,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1086, in _translate_newlines
+    data = data.decode(encoding, errors)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc4 in position 5676: invalid continuation byte

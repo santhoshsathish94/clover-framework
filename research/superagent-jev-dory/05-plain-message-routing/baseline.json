@@ -1,0 +1,1055 @@
+{
+ "a01": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a02": {
+  "act": "action",
+  "asked": [
+   "convert_units"
+  ],
+  "discernment": "proceed"
+ },
+ "a03": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a04": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a05": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a06": {
+  "act": "concept",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a07": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a08": {
+  "act": "creative",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a09": {
+  "act": "concept",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a10": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a11": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a12": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a13": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a14": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a15": {
+  "act": "concept",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a16": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a17": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a18": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a19": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a20": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a21": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a22": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a23": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a24": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a25": {
+  "act": "concept",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a26": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a27": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a28": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a29": {
+  "act": "action",
+  "asked": [
+   "run_powershell"
+  ],
+  "discernment": "proceed"
+ },
+ "a30": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a31": {
+  "act": "creative",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a32": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a33": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a34": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a35": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a36": {
+  "act": "creative",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a37": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a38": {
+  "act": "concept",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a39": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a40": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a41": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a42": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a43": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a44": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a45": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a46": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a47": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a48": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a49": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "a50": {
+  "act": "concept",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c01": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c02": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c03": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c04": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c05": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c06": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c07": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c08": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c09": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c10": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c11": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c12": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c13": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c14": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c15": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c16": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c17": {
+  "act": "action",
+  "asked": [
+   "read_file",
+   "list_directory"
+  ],
+  "discernment": "proceed"
+ },
+ "c18": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c19": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c20": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c21": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c22": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c23": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c24": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c25": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c26": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c27": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c28": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c29": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c30": {
+  "act": "action",
+  "asked": [
+   "read_file",
+   "list_directory"
+  ],
+  "discernment": "proceed"
+ },
+ "c31": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c32": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c33": {
+  "act": "action",
+  "asked": [
+   "run_powershell",
+   "list_directory"
+  ],
+  "discernment": "ask"
+ },
+ "c34": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c35": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c36": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c37": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c38": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c39": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c40": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c41": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c42": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c43": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c44": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c45": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c46": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c47": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c48": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c49": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "c50": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g01": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g02": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g03": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g04": {
+  "act": "action",
+  "asked": [
+   "get_current_time"
+  ],
+  "discernment": "proceed"
+ },
+ "g05": {
+  "act": "action",
+  "asked": [
+   "run_powershell"
+  ],
+  "discernment": "proceed"
+ },
+ "g06": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g07": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g08": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g09": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g10": {
+  "act": "action",
+  "asked": [
+   "web_search",
+   "fetch_url"
+  ],
+  "discernment": "proceed"
+ },
+ "g11": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g12": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g13": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g14": {
+  "act": "action",
+  "asked": [
+   "remember"
+  ],
+  "discernment": "proceed"
+ },
+ "g15": {
+  "act": "action",
+  "asked": [
+   "laptop_status"
+  ],
+  "discernment": "proceed"
+ },
+ "g16": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g17": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g18": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g19": {
+  "act": "action",
+  "asked": [
+   "read_file",
+   "list_directory"
+  ],
+  "discernment": "proceed"
+ },
+ "g20": {
+  "act": "action",
+  "asked": [
+   "web_search",
+   "fetch_url"
+  ],
+  "discernment": "proceed"
+ },
+ "g21": {
+  "act": "action",
+  "asked": [
+   "read_file",
+   "list_directory"
+  ],
+  "discernment": "proceed"
+ },
+ "g22": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g23": {
+  "act": "action",
+  "asked": [
+   "laptop_status"
+  ],
+  "discernment": "proceed"
+ },
+ "g24": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g25": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g26": {
+  "act": "action",
+  "asked": [
+   "web_search",
+   "fetch_url"
+  ],
+  "discernment": "proceed"
+ },
+ "g27": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g28": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g29": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g30": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g31": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g32": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g33": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g34": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g35": {
+  "act": "action",
+  "asked": [
+   "web_search",
+   "fetch_url"
+  ],
+  "discernment": "proceed"
+ },
+ "g36": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g37": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g38": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g39": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g40": {
+  "act": "action",
+  "asked": [
+   "web_search",
+   "fetch_url"
+  ],
+  "discernment": "proceed"
+ },
+ "g41": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g42": {
+  "act": "action",
+  "asked": [
+   "laptop_status"
+  ],
+  "discernment": "proceed"
+ },
+ "g43": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g44": {
+  "act": "action",
+  "asked": [
+   "remember"
+  ],
+  "discernment": "proceed"
+ },
+ "g45": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g46": {
+  "act": "action",
+  "asked": [
+   "read_file",
+   "list_directory"
+  ],
+  "discernment": "proceed"
+ },
+ "g47": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g48": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "g49": {
+  "act": "action",
+  "asked": [
+   "git_inspect"
+  ],
+  "discernment": "proceed"
+ },
+ "g50": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v01": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v02": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v03": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v04": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v05": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v06": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v07": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v08": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v09": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v10": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v11": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v12": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v13": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v14": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v15": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v16": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v17": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v18": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v19": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v20": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v21": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v22": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v23": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v24": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v25": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v26": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v27": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v28": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v29": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v30": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v31": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v32": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v33": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v34": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v35": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v36": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v37": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v38": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v39": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v40": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v41": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v42": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v43": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v44": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v45": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v46": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v47": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v48": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v49": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ },
+ "v50": {
+  "act": "question",
+  "asked": [],
+  "discernment": "proceed"
+ }
+}

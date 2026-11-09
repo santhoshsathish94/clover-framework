@@ -1,0 +1,237 @@
+{
+ "started_utc": "2026-11-09T18:09:24Z",
+ "routing": {
+  "mixed:w7_hard_verify_route": {
+   "options": [
+    "act",
+    "gather",
+    "clarify",
+    "verify"
+   ],
+   "gold": "verify",
+   "reference_bf16_k1": {
+    "act": 0.0006,
+    "gather": 0.0247,
+    "clarify": 0.8016,
+    "verify": 0.1732
+   },
+   "reference_bf16_k2": {
+    "act": 0.0002,
+    "gather": 0.0514,
+    "clarify": 0.6547,
+    "verify": 0.2937
+   },
+   "reference_bf16_k4": {
+    "act": 0.0003,
+    "gather": 0.025,
+    "clarify": 0.1421,
+    "verify": 0.8327
+   },
+   "reference_f32_k1": {
+    "act": 0.0006,
+    "gather": 0.0246,
+    "clarify": 0.7925,
+    "verify": 0.1823
+   },
+   "reference_f32_k2": {
+    "act": 0.0001,
+    "gather": 0.0477,
+    "clarify": 0.6598,
+    "verify": 0.2924
+   },
+   "reference_f32_k4": {
+    "act": 0.0002,
+    "gather": 0.0182,
+    "clarify": 0.1322,
+    "verify": 0.8493
+   },
+   "standalone_bf16_k1": {
+    "act": 0.0005,
+    "gather": 0.0186,
+    "clarify": 0.6764,
+    "verify": 0.3045
+   },
+   "standalone_bf16_k2": {
+    "act": 0.0001,
+    "gather": 0.0396,
+    "clarify": 0.6051,
+    "verify": 0.3553
+   },
+   "standalone_bf16_k4": {
+    "act": 0.0002,
+    "gather": 0.0195,
+    "clarify": 0.1195,
+    "verify": 0.8608
+   },
+   "standalone_fp32_k1": {
+    "act": 0.0006,
+    "gather": 0.0247,
+    "clarify": 0.7925,
+    "verify": 0.1822
+   },
+   "standalone_fp32_k2": {
+    "act": 0.0001,
+    "gather": 0.0474,
+    "clarify": 0.6606,
+    "verify": 0.2919
+   },
+   "standalone_fp32_k4": {
+    "act": 0.0002,
+    "gather": 0.0183,
+    "clarify": 0.1332,
+    "verify": 0.8482
+   }
+  },
+  "decision:dory_task_6_hard_agent_verify": {
+   "options": [
+    "act",
+    "gather",
+    "clarify",
+    "verify"
+   ],
+   "gold": "verify",
+   "reference_bf16_k1": {
+    "act": 0.0006,
+    "gather": 0.0247,
+    "clarify": 0.8016,
+    "verify": 0.1732
+   },
+   "reference_bf16_k2": {
+    "act": 0.0002,
+    "gather": 0.0514,
+    "clarify": 0.6547,
+    "verify": 0.2937
+   },
+   "reference_bf16_k4": {
+    "act": 0.0003,
+    "gather": 0.025,
+    "clarify": 0.1421,
+    "verify": 0.8327
+   },
+   "reference_f32_k1": {
+    "act": 0.0006,
+    "gather": 0.0246,
+    "clarify": 0.7925,
+    "verify": 0.1823
+   },
+   "reference_f32_k2": {
+    "act": 0.0001,
+    "gather": 0.0477,
+    "clarify": 0.6598,
+    "verify": 0.2924
+   },
+   "reference_f32_k4": {
+    "act": 0.0002,
+    "gather": 0.0182,
+    "clarify": 0.1322,
+    "verify": 0.8493
+   },
+   "standalone_bf16_k1": {
+    "act": 0.0005,
+    "gather": 0.0186,
+    "clarify": 0.6764,
+    "verify": 0.3045
+   },
+   "standalone_bf16_k2": {
+    "act": 0.0001,
+    "gather": 0.0396,
+    "clarify": 0.6051,
+    "verify": 0.3553
+   },
+   "standalone_bf16_k4": {
+    "act": 0.0002,
+    "gather": 0.0195,
+    "clarify": 0.1195,
+    "verify": 0.8608
+   },
+   "standalone_fp32_k1": {
+    "act": 0.0006,
+    "gather": 0.0247,
+    "clarify": 0.7925,
+    "verify": 0.1822
+   },
+   "standalone_fp32_k2": {
+    "act": 0.0001,
+    "gather": 0.0474,
+    "clarify": 0.6606,
+    "verify": 0.2919
+   },
+   "standalone_fp32_k4": {
+    "act": 0.0002,
+    "gather": 0.0183,
+    "clarify": 0.1332,
+    "verify": 0.8482
+   }
+  }
+ },
+ "cot": {
+  "gold": 14,
+  "reference_bf16_k1": {
+   "text": "h the final number at the end.\" We can provide brief reasoning? They specifically want concise and final number at end. We should probably give just the final number? Need determine correct final value.\n\nLet's solve.\n\nGiven x = 3.\nThen x = x * 2 + 1. Ambiguity: Is this an assignment in a programming",
+   "final_number": 1,
+   "tokens": 200
+  },
+  "reference_bf16_k2": {
+   "text": "perations. Likely: Start x=3. Then replace x with expression x*2+1? In programming-like substitution? Need determine intended. The phrasing: \"If x = 3, then x = x * 2 + 1, and finally x = x * 2, what is the final value of x?\" Could mean iterative updates: Given initial x=3. Apply transformation x :=",
+   "final_number": 3,
+   "tokens": 200
+  },
+  "reference_bf16_k4": {
+   "text": "equence of operations. Likely iterative substitution: Start x=3. Then replace x with expression x*2+1? In programming-like assignment? Need determine intended. The phrasing: \"If x = 3, then x = x * 2 + 1, and finally x = x * 2, what is the final value of x?\" Could mean:\n- Initially x=3.\n- Then set x",
+   "final_number": 3,
+   "tokens": 200
+  },
+  "reference_f32_k1": {
+   "text": "h the final number at the end.\" We can provide brief reasoning? They specifically want concise and final number at end. We should probably give just the final number? Need determine correct final value.\n\nLet's solve.\n\nGiven x = 3.\nThen x = x * 2 + 1. Ambiguity: Is this an assignment in a programming",
+   "final_number": 1,
+   "tokens": 200
+  },
+  "reference_f32_k2": {
+   "text": "perations. Likely: Start x=3. Then replace x with expression x*2+1? In programming-like substitution? Need determine intended. The phrasing: \"If x = 3, then x = x * 2 + 1, and finally x = x * 2, what is the final value of x?\" Could mean iterative updates: Given initial x=3. Apply transformation x :=",
+   "final_number": 3,
+   "tokens": 200
+  },
+  "reference_f32_k4": {
+   "text": "equence of operations. Likely iterative substitution: Start x=3. Then replace x with expression x*2+1? In programming-like assignment? Need determine intended. The phrasing: \"If x = 3, then x = x * 2 + 1, and finally x = x * 2, what is the final value of x?\" Could mean:\n- Initially x=3.\n- Then set x",
+   "final_number": 3,
+   "tokens": 200
+  },
+  "standalone_bf16_k1": {
+   "text": "h the final number at the end.\" We can provide brief reasoning? They specifically want concise and final number at end. We should probably give just the final number? Need determine correct final value.\n\nLet's solve.\n\nGiven x = 3.\nThen x = x * 2 + 1. Ambiguity: Is this an assignment in a programming",
+   "final_number": 1,
+   "tokens": 200
+  },
+  "standalone_bf16_k2": {
+   "text": "equence of operations. Likely iterative substitution: Start x=3. Then replace x with expression x*2+1? In programming-like assignment? Need determine intended. The phrasing: \"If x = 3, then x = x * 2 + 1, and finally x = x * 2, what is the final value of x?\" Could mean:\n- Initially x=3.\n- Then set x",
+   "final_number": 3,
+   "tokens": 200
+  },
+  "standalone_bf16_k4": {
+   "text": "of operations. Likely iterative substitution: Start x=3. Then set x equal to (x*2)+1? In programming-like assignment, if x=3, then x = x*2 + 1 means compute new x using old x? Usually in such puzzles, they mean apply transformation repeatedly? Let's parse exact wording.\n\n\"If x = 3, then x = x * 2 + ",
+   "final_number": 2,
+   "tokens": 200
+  },
+  "standalone_fp32_k1": {
+   "text": "h the final number at the end.\" We can provide brief reasoning? They specifically want concise and final number at end. We should probably give just the final number? Need determine correct final value.\n\nLet's solve.\n\nGiven x = 3.\nThen x = x * 2 + 1. Ambiguity: Is this an assignment in a programming",
+   "final_number": 1,
+   "tokens": 200
+  },
+  "standalone_fp32_k2": {
+   "text": "perations. Likely: Start x=3. Then replace x with expression x*2+1? In programming-like substitution? Need determine intended. The phrasing: \"If x = 3, then x = x * 2 + 1, and finally x = x * 2, what is the final value of x?\" Could mean iterative updates: Given initial x=3. Apply transformation x :=",
+   "final_number": 3,
+   "tokens": 200
+  },
+  "standalone_fp32_k4": {
+   "text": "equence of operations. Likely iterative substitution: Start x=3. Then replace x with expression x*2+1? In programming-like assignment? Need determine intended. The phrasing: \"If x = 3, then x = x * 2 + 1, and finally x = x * 2, what is the final value of x?\" Could mean:\n- Initially x=3.\n- Then set x",
+   "final_number": 3,
+   "tokens": 200
+  }
+ },
+ "phases": [
+  "reference_bf16",
+  "reference_f32",
+  "standalone_bf16",
+  "standalone_fp32"
+ ],
+ "finished_utc": "2026-11-09T18:32:43Z"
+}

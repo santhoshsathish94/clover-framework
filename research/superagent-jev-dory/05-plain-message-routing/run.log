@@ -1,0 +1,14 @@
+O1_markdown_a0.8 done
+O2_chat_a0.55 done
+O3_markdown_a0.0 done
+O4_chat_a0.8 done
+GATE {"selected": {"arm": "O4_chat_a0.8", "tau": 0.9}, "test": {"n": 100, "correct_4way": 36, "false_caution": 2, "n_act": 25, "caution_recall": 18, "n_non_act": 75, "added_caution": 18, "n_not_already_asking": 75, "per_label_correct": {"act": 18, "gather": 18, "clarify": 0, "verify": 0}, "predicted": {"act": 54, "gather": 37, "clarify": 3, "verify": 6}}, "G1_false_caution_le_2_of_25": true, "G2_caution_recall_ge_45_of_75": false, "G3_added_caution_ge_half": false, "verdict": "FAIL"}
+[transformers] Unrecognized keys in `rope_parameters` for 'rope_type'='default': {'sliding_attention', 'full_attention'}
+[transformers] Unrecognized keys in `rope_parameters` for 'rope_type'='default': {'sliding_attention', 'full_attention'}
+[transformers] Unrecognized keys in `rope_parameters` for 'rope_type'='default': {'sliding_attention', 'full_attention'}
+[transformers] Unrecognized keys in `rope_parameters` for 'rope_type'='default': {'sliding_attention', 'full_attention'}
+Loading weights:   0%|          | 0/286 [00:00<?, ?it/s]Loading weights: 100%|██████████| 286/286 [00:00<00:00, 4281.23it/s]
+H0_raw_hfbackend done
+H1_markdown_a0.8 done
+H2_chat_a0.55 done
+BENCH_DONE

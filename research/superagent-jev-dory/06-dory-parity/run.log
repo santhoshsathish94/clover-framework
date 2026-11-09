@@ -1,0 +1,7 @@
+standalone bf16 done
+standalone fp32 done
+mutants done
+1 {'verdict': 'PASS', 'top1_misses': 0, 'n': 24, 'median_kl': 3.3804986558323267e-06, 'p90_kl': 4.602116160896279e-05, 'max_kl': 9.456803414421893e-05}
+2 {'verdict': 'PASS', 'top1_misses': 1, 'n': 24, 'median_kl': 4.915587804718973e-06, 'p90_kl': 3.61035809843548e-05, 'max_kl': 4.434276641993528e-05}
+4 {'verdict': 'PASS', 'top1_misses': 0, 'n': 24, 'median_kl': 2.393916462000247e-06, 'p90_kl': 7.890248717333734e-05, 'max_kl': 0.00012685306813193834}
+PARITY_DONE consistent_with_reference = True
