@@ -486,6 +486,8 @@ def build_unannotated_function_candidate_spec(txt: str, fn_names: Sequence[str] 
             pname = a.arg.lower()
             if "bool" in ann or isinstance(def_val, bool) or a.arg in bool_params or pname.startswith(("is_", "has_", "allow_", "partition")):
                 param_kinds.append("bool")
+            elif "int" in ann and "float" not in ann:
+                param_kinds.append("int")
             elif "dict" in ann or "mapping" in ann or (a.arg in dict_params and "list" not in ann and "seq" not in ann) or "route" in pname or "table" in pname:
                 param_kinds.append("dict")
             elif "str" in ann or isinstance(def_val, str) or a.arg in str_params or pname in ("ip", "path", "key", "text", "name"):
@@ -2134,6 +2136,17 @@ class PersistentCuriosityEngine:
                 interactive=interactive,
             )
             chosen_strat = strategy or rec.get("selected_strategy") or "memory_graph_recall"
+            if (
+                strategy is None
+                and chosen_strat == "sandbox_counterexample_probe"
+                and question_node is not None
+                and not question_node.memory_entry_id
+                and "what_it_consists_of" not in question_node.views_covered
+                and "```python" not in (query or "")
+                and workspace_root is not None
+                and "workspace_code_inspect" in rec.get("permitted_strategies", [])
+            ):
+                chosen_strat = "workspace_code_inspect"
             req_perm = STRATEGY_REQUIRED_PERMISSION.get(chosen_strat)
             if req_perm is not None:
                 p_mode = perms.get(req_perm, "ask")
@@ -2152,7 +2165,10 @@ class PersistentCuriosityEngine:
                 if (question_node and question_node.error_history)
                 else (reg.comp_error_window[-1] if reg.comp_error_window else reg.expected_error_yc)
             )
-            q_terms = set(extract_emergent_terms(query, max_terms=10)) | set(reg.emergent_keywords[:6])
+            q_terms = (
+                set(extract_emergent_terms(query + " " + query.replace("_", " "), max_terms=16))
+                | set(reg.emergent_keywords[:6])
+            )
 
             measured_comp_err = prev_err
             measured_pred_err = prev_err
@@ -2184,7 +2200,10 @@ class PersistentCuriosityEngine:
                     # Rank by filename overlap with `q_terms` BEFORE opening any file so pre-read budget is spent wisely
                     raw_candidates.sort(
                         key=lambda fp: (
-                            -len(q_terms & set(extract_emergent_terms(fp.stem.replace("_", " "), max_terms=8))),
+                            -len(
+                                q_terms
+                                & set(extract_emergent_terms(fp.stem + " " + fp.stem.replace("_", " "), max_terms=12))
+                            ),
                             fp.name,
                         )
                     )
@@ -2220,7 +2239,11 @@ class PersistentCuriosityEngine:
                             files_excluded_sensitive += 1
                             continue
 
-                        f_terms = set(extract_emergent_terms(fp.stem.replace("_", " ") + " " + txt[:1500], max_terms=24))
+                        f_terms = set(
+                            extract_emergent_terms(
+                                fp.stem + " " + fp.stem.replace("_", " ") + " " + txt[:1500], max_terms=28
+                            )
+                        )
                         if not (q_terms & f_terms) and len(raw_candidates) > 2:
                             continue
 
@@ -2230,11 +2253,12 @@ class PersistentCuriosityEngine:
                                 fn_names_in_file: list[str] = []
                                 for node in tree.body:
                                     if isinstance(node, _ast.FunctionDef):
-                                        matched_defs.append(f"{fp.name}:{node.name}")
                                         fn_names_in_file.append(node.name)
-                                        for c_tok in (fp.stem.lower(), node.name.lower()):
-                                            if c_tok not in discovered_fn_concepts:
-                                                discovered_fn_concepts.append(c_tok)
+                                        if discovered_probe_code is None:
+                                            matched_defs.append(f"{fp.name}:{node.name}")
+                                            for c_tok in (fp.stem.lower(), node.name.lower()):
+                                                if c_tok not in discovered_fn_concepts:
+                                                    discovered_fn_concepts.append(c_tok)
                                 # Fix 1 & Step 1: Extract explicit assertions/doctests or build unannotated candidate spec
                                 if discovered_probe_code is None and fn_names_in_file:
                                     discovered_probe_code = extract_behavioral_probe_from_python_source(txt, fn_names_in_file)

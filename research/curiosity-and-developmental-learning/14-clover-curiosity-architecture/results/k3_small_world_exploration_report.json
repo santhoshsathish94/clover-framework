@@ -1,0 +1,612 @@
+{
+  "suite": "k3_curiosity_small_world",
+  "host": "Ubuntu-noble-latest-amd64-base.zst",
+  "elapsed_s": 21.97,
+  "world_workspace": "/opt/clover-k3/small-world-sandbox/world_workspace",
+  "clover_instance": "/opt/clover-k3/small-world-sandbox/clover_instance",
+  "web_studio_registered": true,
+  "workspace_read_only_verified": true,
+  "distractor_and_safety_filtering": {
+    "orbital_tide_noise_rejected_as_stochastic": true,
+    "orbital_tide_noise_reason": "non_deterministic_noise_function_rejected",
+    "quorum_raft_legacy_stub_rejected_as_trivial": true,
+    "quorum_raft_legacy_stub_reason": "trivial_constant_function_rejected",
+    "mycelial_credentials_secret_blocked_pre_ast": true
+  },
+  "autonomous_exploration_timeline": [
+    {
+      "domain_seed": "orbital_tide_mechanics",
+      "idle_step": 1,
+      "region_id": "R0",
+      "strategy": "workspace_code_inspect",
+      "comp_error_before": 0.5,
+      "comp_error_after": 0.275,
+      "promoted_entry_id": null,
+      "files_read": 4,
+      "files_excluded_sensitive": 1,
+      "workspace_read_only_verified": false,
+      "verification_result": "Inspected 4 workspace file(s) (998 B): found orbital_tide_mechanics.py:tidal_lock_torque"
+    },
+    {
+      "domain_seed": "orbital_tide_mechanics",
+      "idle_step": 2,
+      "region_id": "R0",
+      "strategy": "workspace_code_inspect",
+      "comp_error_before": 0.275,
+      "comp_error_after": 0.1513,
+      "promoted_entry_id": null,
+      "files_read": 4,
+      "files_excluded_sensitive": 1,
+      "workspace_read_only_verified": false,
+      "verification_result": "Inspected 4 workspace file(s) (998 B): found orbital_tide_mechanics.py:tidal_lock_torque"
+    },
+    {
+      "domain_seed": "orbital_tide_mechanics",
+      "idle_step": 3,
+      "region_id": "R0",
+      "strategy": "workspace_code_inspect",
+      "comp_error_before": 0.1512,
+      "comp_error_after": 0.1512,
+      "promoted_entry_id": null,
+      "files_read": 4,
+      "files_excluded_sensitive": 1,
+      "workspace_read_only_verified": false,
+      "verification_result": "Workspace view already collected (orbital_tide_mechanics.py:tidal_lock_torque); static repeat yielded 0 new views"
+    },
+    {
+      "domain_seed": "orbital_tide_mechanics",
+      "idle_step": 4,
+      "region_id": "R0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.1512,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'tidal_lock_torque', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "orbital_tide_mechanics",
+      "idle_step": 5,
+      "region_id": "R0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'tidal_lock_torque', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "orbital_tide_mechanics",
+      "idle_step": 6,
+      "region_id": "R0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'tidal_lock_torque', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "mycelial_nutrient_flux",
+      "idle_step": 1,
+      "region_id": "R0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.5,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'tidal_lock_torque', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "mycelial_nutrient_flux",
+      "idle_step": 2,
+      "region_id": "R0.0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'tidal_lock_torque', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "mycelial_nutrient_flux",
+      "idle_step": 3,
+      "region_id": "R0.0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'tidal_lock_torque', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "mycelial_nutrient_flux",
+      "idle_step": 4,
+      "region_id": "R0.0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'tidal_lock_torque', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "mycelial_nutrient_flux",
+      "idle_step": 5,
+      "region_id": "R0.1",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.275,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'tidal_lock_torque', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "mycelial_nutrient_flux",
+      "idle_step": 6,
+      "region_id": "R0.1",
+      "strategy": "workspace_code_inspect",
+      "comp_error_before": 0.5,
+      "comp_error_after": 0.275,
+      "promoted_entry_id": null,
+      "files_read": 4,
+      "files_excluded_sensitive": 1,
+      "workspace_read_only_verified": false,
+      "verification_result": "Inspected 4 workspace file(s) (998 B): found mycelial_nutrient_flux.py:hyphal_uptake_rate"
+    },
+    {
+      "domain_seed": "quorum_raft_clock",
+      "idle_step": 1,
+      "region_id": "R0.1",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.275,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-CB632771",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'hyphal_uptake_rate', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "quorum_raft_clock",
+      "idle_step": 2,
+      "region_id": "R0.1",
+      "strategy": "workspace_code_inspect",
+      "comp_error_before": 0.5,
+      "comp_error_after": 0.275,
+      "promoted_entry_id": null,
+      "files_read": 4,
+      "files_excluded_sensitive": 1,
+      "workspace_read_only_verified": false,
+      "verification_result": "Inspected 4 workspace file(s) (934 B): found quorum_raft_clock.py:effective_lease_ticks"
+    },
+    {
+      "domain_seed": "quorum_raft_clock",
+      "idle_step": 3,
+      "region_id": "R0.1.1",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.275,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-6E8595B6",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'effective_lease_ticks', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "quorum_raft_clock",
+      "idle_step": 4,
+      "region_id": "R0.0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'tidal_lock_torque', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "quorum_raft_clock",
+      "idle_step": 5,
+      "region_id": "R0.0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'tidal_lock_torque', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "quorum_raft_clock",
+      "idle_step": 6,
+      "region_id": "R0.0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'tidal_lock_torque', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "salt_hydrate_phase",
+      "idle_step": 1,
+      "region_id": "R0.1.1",
+      "strategy": "workspace_code_inspect",
+      "comp_error_before": 0.5,
+      "comp_error_after": 0.275,
+      "promoted_entry_id": null,
+      "files_read": 4,
+      "files_excluded_sensitive": 1,
+      "workspace_read_only_verified": false,
+      "verification_result": "Inspected 4 workspace file(s) (1071 B): found salt_hydrate_phase.py:retained_enthalpy_kj"
+    },
+    {
+      "domain_seed": "salt_hydrate_phase",
+      "idle_step": 2,
+      "region_id": "R0.0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-7104412A",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'retained_enthalpy_kj', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "salt_hydrate_phase",
+      "idle_step": 3,
+      "region_id": "R0.0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-7104412A",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'retained_enthalpy_kj', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "salt_hydrate_phase",
+      "idle_step": 4,
+      "region_id": "R0.0",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-7104412A",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'retained_enthalpy_kj', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "salt_hydrate_phase",
+      "idle_step": 5,
+      "region_id": "R0.0.1",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-7104412A",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'retained_enthalpy_kj', 'verified_cases': 4})"
+    },
+    {
+      "domain_seed": "salt_hydrate_phase",
+      "idle_step": 6,
+      "region_id": "R0.0.1",
+      "strategy": "sandbox_counterexample_probe",
+      "comp_error_before": 0.0,
+      "comp_error_after": 0.0,
+      "promoted_entry_id": "MEM-HYP-WS-7104412A",
+      "files_read": 0,
+      "files_excluded_sensitive": 0,
+      "workspace_read_only_verified": false,
+      "verification_result": "Sandbox behavioral probe verified hypothesis (4 checks, {'passed': True, 'function': 'retained_enthalpy_kj', 'verified_cases': 4})"
+    }
+  ],
+  "promoted_world_laws_count": 4,
+  "promoted_world_laws": [
+    {
+      "id": "MEM-HYP-WS-6E8595B6",
+      "title": "Workspace Hypothesis: quorum_raft_clock.py:effective_lease_ticks",
+      "summary": "Verified workspace function effective_lease_ticks(total_nodes, fault_quorum, strict_quorum): if total_nodes <= 0 or fault_quorum <= 0: return 0.0; return float((total_nodes - fault_quorum) // fault_quorum) if strict_quorum else 1.0 | Verified behavioral & boundary cases: effective_lease_ticks(512, 4, True) == 127.0; effective_lease_ticks(256, 8, False) == 1.0; effective_lease_ticks(0, 4, True) == 0.0; effective_lease_ticks(-5, 0, False) == 0.0",
+      "status": "active",
+      "epistemic_status": "externally_verified",
+      "concepts": [
+        "quorum_raft_clock",
+        "effective_lease_ticks",
+        "governing",
+        "scale",
+        "raft",
+        "hyphal_uptake_rate"
+      ]
+    },
+    {
+      "id": "MEM-HYP-WS-7104412A",
+      "title": "Workspace Hypothesis: salt_hydrate_phase.py:retained_enthalpy_kj",
+      "summary": "Verified workspace function retained_enthalpy_kj(mass_kg, cycle_depth, phase_locked): if mass_kg <= 0 or cycle_depth <= 0: return 0.0; return float(mass_kg * 12 // cycle_depth) if phase_locked else 3.0 | Verified behavioral & boundary cases: round(retained_enthalpy_kj(512, 4, True), 6) == 1536.0; round(retained_enthalpy_kj(256, 8, False), 6) == 3.0; round(retained_enthalpy_kj(0, 4, True), 6) == 0.0; round(retained_enthalpy_kj(-5, 0, False), 6) == 0.0",
+      "status": "active",
+      "epistemic_status": "externally_verified",
+      "concepts": [
+        "salt_hydrate_phase",
+        "retained_enthalpy_kj",
+        "governing",
+        "boundarie",
+        "finding",
+        "phase"
+      ]
+    },
+    {
+      "id": "MEM-HYP-WS-9B0E2F95",
+      "title": "Workspace Hypothesis: orbital_tide_mechanics.py:tidal_lock_torque",
+      "summary": "Verified workspace function tidal_lock_torque(orbit_radius_km, body_rigidity, resonant_lock): if orbit_radius_km <= 0 or body_rigidity <= 0: return 0.0; return float(orbit_radius_km // body_rigidity) if resonant_lock else 2.5 | Verified behavioral & boundary cases: round(tidal_lock_torque(512, 4, True), 6) == 128.0; round(tidal_lock_torque(256, 8, False), 6) == 2.5; round(tidal_lock_torque(0, 4, True), 6) == 0.0; round(tidal_lock_torque(-5, 0, False), 6) == 0.0",
+      "status": "active",
+      "epistemic_status": "externally_verified",
+      "concepts": [
+        "orbital_tide_mechanics",
+        "tidal_lock_torque",
+        "governing",
+        "zero",
+        "boundarie",
+        "mechanic"
+      ]
+    },
+    {
+      "id": "MEM-HYP-WS-CB632771",
+      "title": "Workspace Hypothesis: mycelial_nutrient_flux.py:hyphal_uptake_rate",
+      "summary": "Verified workspace function hyphal_uptake_rate(carbon_conc, max_flux, half_sat, heavy_metal_toxin=0.0): effective_flux = max_flux / (1.0 + heavy_metal_toxin); return effective_flux * carbon_conc / (half_sat + carbon_conc) | Verified behavioral & boundary cases: hyphal_uptake_rate(10.0, 100.0, 2.0, 1.0) == 41.666667; hyphal_uptake_rate(20.0, 100.0, 2.0, 0.0) == 90.909091; hyphal_uptake_rate(0.0, 100.0, 2.0, 1.0) == 0.0; hyphal_uptake_rate(5.0, 80.0, 4.0, 3.0) == 11.111111",
+      "status": "active",
+      "epistemic_status": "externally_verified",
+      "concepts": [
+        "mycelial_nutrient_flux",
+        "hyphal_uptake_rate",
+        "governing",
+        "hyphal",
+        "heavy_metal_toxin",
+        "nutrient"
+      ]
+    }
+  ],
+  "jepa_world_model_adaptations": [
+    {
+      "domain": "orbital_tide_mechanics",
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "jepa_updated": true,
+      "mse_before": 1.51328,
+      "mse_after": 0.06776
+    },
+    {
+      "domain": "orbital_tide_mechanics",
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "jepa_updated": true,
+      "mse_before": 0.70847,
+      "mse_after": 0.29708
+    },
+    {
+      "domain": "orbital_tide_mechanics",
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "jepa_updated": true,
+      "mse_before": 0.82276,
+      "mse_after": 0.46497
+    },
+    {
+      "domain": "mycelial_nutrient_flux",
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "jepa_updated": true,
+      "mse_before": 0.75496,
+      "mse_after": 0.48636
+    },
+    {
+      "domain": "mycelial_nutrient_flux",
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "jepa_updated": true,
+      "mse_before": 0.71104,
+      "mse_after": 0.49757
+    },
+    {
+      "domain": "mycelial_nutrient_flux",
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "jepa_updated": true,
+      "mse_before": 0.68353,
+      "mse_after": 0.51856
+    },
+    {
+      "domain": "mycelial_nutrient_flux",
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "jepa_updated": true,
+      "mse_before": 0.71874,
+      "mse_after": 0.54427
+    },
+    {
+      "domain": "mycelial_nutrient_flux",
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "jepa_updated": true,
+      "mse_before": 0.67562,
+      "mse_after": 0.54963
+    },
+    {
+      "domain": "quorum_raft_clock",
+      "promoted_entry_id": "MEM-HYP-WS-CB632771",
+      "jepa_updated": true,
+      "mse_before": 0.69012,
+      "mse_after": 0.51638
+    },
+    {
+      "domain": "quorum_raft_clock",
+      "promoted_entry_id": "MEM-HYP-WS-6E8595B6",
+      "jepa_updated": true,
+      "mse_before": 0.60643,
+      "mse_after": 0.51707
+    },
+    {
+      "domain": "quorum_raft_clock",
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "jepa_updated": true,
+      "mse_before": 0.61282,
+      "mse_after": 0.50966
+    },
+    {
+      "domain": "quorum_raft_clock",
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "jepa_updated": true,
+      "mse_before": 0.56606,
+      "mse_after": 0.51412
+    },
+    {
+      "domain": "quorum_raft_clock",
+      "promoted_entry_id": "MEM-HYP-WS-9B0E2F95",
+      "jepa_updated": true,
+      "mse_before": 0.56612,
+      "mse_after": 0.50639
+    },
+    {
+      "domain": "salt_hydrate_phase",
+      "promoted_entry_id": "MEM-HYP-WS-7104412A",
+      "jepa_updated": true,
+      "mse_before": 0.54005,
+      "mse_after": 0.49627
+    },
+    {
+      "domain": "salt_hydrate_phase",
+      "promoted_entry_id": "MEM-HYP-WS-7104412A",
+      "jepa_updated": true,
+      "mse_before": 0.52258,
+      "mse_after": 0.49577
+    },
+    {
+      "domain": "salt_hydrate_phase",
+      "promoted_entry_id": "MEM-HYP-WS-7104412A",
+      "jepa_updated": true,
+      "mse_before": 0.55973,
+      "mse_after": 0.47957
+    },
+    {
+      "domain": "salt_hydrate_phase",
+      "promoted_entry_id": "MEM-HYP-WS-7104412A",
+      "jepa_updated": true,
+      "mse_before": 0.51687,
+      "mse_after": 0.4731
+    },
+    {
+      "domain": "salt_hydrate_phase",
+      "promoted_entry_id": "MEM-HYP-WS-7104412A",
+      "jepa_updated": true,
+      "mse_before": 0.49931,
+      "mse_after": 0.4608
+    }
+  ],
+  "curiosity_summary_after": "4 emergent interest regions, 2 active ZPD questions (0 stalled/rerouted, 8 resolved)",
+  "live_model_evaluation": {
+    "model": "LFM3-Omni-2B",
+    "endpoint": "http://127.0.0.1:54147",
+    "before_curiosity": {
+      "passed": 0,
+      "total": 4,
+      "accuracy": 0.0,
+      "questions": [
+        {
+          "id": "SW-1-TIDAL-TORQUE",
+          "domain": "orbital_tide_mechanics",
+          "memory_entries_retrieved": [],
+          "passed": false,
+          "wall_ms": 2153.7,
+          "answer_excerpt": "`tidal_lock_torque(512, 4, True)` returns 512, `tidal_lock_torque(256, 8, False)` returns 0, and `tidal_lock_torque(0, 4, True)` returns 0."
+        },
+        {
+          "id": "SW-2-MYCELIAL-FLUX",
+          "domain": "mycelial_nutrient_flux",
+          "memory_entries_retrieved": [],
+          "passed": false,
+          "wall_ms": 3231.4,
+          "answer_excerpt": "`hyphal_uptake_rate(10.0, 100.0, 2.0, 1.0)` returns 2.00, `hyphal_uptake_rate(20.0, 100.0, 2.0, 0.0)` returns 2.00, and `effective_flux` is calculated as `hyphal_uptake_rate * heavy_metal_toxin`."
+        },
+        {
+          "id": "SW-3-QUORUM-CLOCK",
+          "domain": "quorum_raft_clock",
+          "memory_entries_retrieved": [],
+          "passed": false,
+          "wall_ms": 1964.0,
+          "answer_excerpt": "effective_lease_ticks(512, 4, True) returns 512, effective_lease_ticks(256, 8, False) returns 256, and effective_lease_ticks(0, 4, True) returns 0."
+        },
+        {
+          "id": "SW-4-SALT-HYDRATE-PHASE",
+          "domain": "salt_hydrate_phase",
+          "memory_entries_retrieved": [],
+          "passed": false,
+          "wall_ms": 2234.5,
+          "answer_excerpt": "retained_enthalpy_kj(512, 4, True) returns 512.0, retained_enthalpy_kj(256, 8, False) returns 256.0, and retained_enthalpy_kj(0, 4, True) returns 0.0."
+        }
+      ]
+    },
+    "after_curiosity": {
+      "passed": 4,
+      "total": 4,
+      "accuracy": 1.0,
+      "questions": [
+        {
+          "id": "SW-1-TIDAL-TORQUE",
+          "domain": "orbital_tide_mechanics",
+          "memory_entries_retrieved": [
+            "MEM-HYP-WS-9B0E2F95"
+          ],
+          "passed": true,
+          "wall_ms": 2423.7,
+          "answer_excerpt": "tidal_lock_torque(512, 4, True) returns 128.0; tidal_lock_torque(256, 8, False) returns 2.5; tidal_lock_torque(0, 4, True) returns 0.0."
+        },
+        {
+          "id": "SW-2-MYCELIAL-FLUX",
+          "domain": "mycelial_nutrient_flux",
+          "memory_entries_retrieved": [
+            "MEM-HYP-WS-CB632771"
+          ],
+          "passed": true,
+          "wall_ms": 3727.1,
+          "answer_excerpt": "`hyphal_uptake_rate(10.0, 100.0, 2.0, 1.0)` returns 41.67.\n`hyphal_uptake_rate(20.0, 100.0, 2.0, 0.0)` returns 90.91.\nThe formula for `effective_flux` is `max_flux / (1.0 + heavy_metal_toxin)`."
+        },
+        {
+          "id": "SW-3-QUORUM-CLOCK",
+          "domain": "quorum_raft_clock",
+          "memory_entries_retrieved": [
+            "MEM-HYP-WS-6E8595B6"
+          ],
+          "passed": true,
+          "wall_ms": 2391.9,
+          "answer_excerpt": "effective_lease_ticks(512, 4, True) returns 127.0; effective_lease_ticks(256, 8, False) returns 1.0; effective_lease_ticks(0, 4, True) returns 0.0."
+        },
+        {
+          "id": "SW-4-SALT-HYDRATE-PHASE",
+          "domain": "salt_hydrate_phase",
+          "memory_entries_retrieved": [
+            "MEM-HYP-WS-7104412A"
+          ],
+          "passed": true,
+          "wall_ms": 2711.8,
+          "answer_excerpt": "retained_enthalpy_kj(512, 4, True) returns 1536.0; retained_enthalpy_kj(256, 8, False) returns 3.0; retained_enthalpy_kj(0, 4, True) returns 0.0."
+        }
+      ]
+    }
+  }
+}

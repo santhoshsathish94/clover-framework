@@ -1,8 +1,8 @@
 {
   "audit_id": "14-clover-curiosity-foundation-architecture-audit",
-  "elapsed_s": 0.825,
+  "elapsed_s": 1.096,
   "inspected_modules_count": 19,
-  "total_clover_studio_lines_inspected": 24486,
+  "total_clover_studio_lines_inspected": 24860,
   "live_codebase_verification": {
     "memory_graph_schema": {
       "valid_entry_types": [
@@ -242,7 +242,7 @@
   "module_ast_inventory": {
     "curiosity_foundation.py": {
       "file": "clover-ai-system/studio/clover/curiosity_foundation.py",
-      "lines": 2341,
+      "lines": 2705,
       "classes": {
         "IdleResourceBudget": [],
         "StrategyStats": [
@@ -288,6 +288,9 @@
         "snapshot_workspace_manifest",
         "validate_behavioral_verification_probe",
         "extract_behavioral_probe_from_python_source",
+        "extract_ast_rule_summary",
+        "build_unannotated_function_candidate_spec",
+        "synthesize_and_verify_behavioral_probe_in_sandbox",
         "utc_now_iso",
         "extract_emergent_terms",
         "encode_text_to_64d",
@@ -425,7 +428,7 @@
     },
     "lfm3_layers.py": {
       "file": "clover-ai-system/studio/clover/lfm3_layers.py",
-      "lines": 894,
+      "lines": 904,
       "classes": {
         "LayerKit": [
           "__init__",
