@@ -66,6 +66,18 @@ SPEAKER = STOP | {"user", "user's", "i'm", "im", "am", "i've", "has", "have", "r
 def note_words(text):
     words = re.findall(r"[a-z0-9][a-z0-9'\-]*", str(text or "").lower().replace("\u2019", "'"))
     return tuple(w for w in words if w not in SPEAKER)  # in order: "Priya reports to Arun" is not "Arun ... Priya"
+
+
+# a note that corrects an earlier one: "Correction: my manager is now Arun; Priya moved to another team." was kept next to
+# "My manager is Priya." as two current notes, and the model answered Priya (2026-11-09)
+EXPLICIT_CORRECTION = re.compile(r"^\W*(?:correction|to\s+correct|i\s+was\s+wrong|that\s+was\s+wrong|that'?s\s+wrong)\b", re.I)
+CHANGE_CUE = re.compile(r"^\W*(?:update|actually)\b|\bno\s+longer\b|\bnot\s+any\s?more\b|\binstead\s+of\b|\bchanged\s+to\b|"
+                        r"\bmoved\s+to\b", re.I)
+# "My manager is now Arun." against "My manager is Priya.": the same subject with a new short value
+MY_X_IS = re.compile(r"^\W*(?:my|our)\s+([a-z][a-z'\- ]{0,40}?)\s+(?:is|are)\s+(now\s+)?([^,;.]+?)\W*$", re.I)
+ADDITION = re.compile(r"\b(?:also|too|as\s+well|in\s+addition)\b", re.I)
+CUE_WORDS = {"correction", "correct", "wrong", "update", "actually", "now", "longer", "anymore", "instead", "changed",
+             "moved"}
 MEMORY_INSTRUCTION = (
     "Instruction: Use the persistent memory records [M#], their provenance, and their correction/evolution chains "
     "above. Explicitly present both any superseded initial interpretation and the superseding correction, distinguish "
@@ -352,9 +364,10 @@ class LayerKit:
             # the K3 rendering lists file paths, and LFM3 then went looking for the files (8 tool calls in a test)
             lines = ["Notes from this user's memory, already retrieved for you (no tools needed):"]
             computed = []
+            labels = {it.entry.id: f"[M{i}]" for i, it in enumerate(pkg.items[:4], start=1)}
             for i, it in enumerate(pkg.items[:4], start=1):
                 e = it.entry
-                late = f" (superseded by {it.superseded_by_id})" if it.superseded_by_id else ""
+                late = f" (superseded by {labels.get(it.superseded_by_id, 'a later note')})" if it.superseded_by_id else ""
                 w, d = self.tally(e)
                 used = f"; used before: worked {w}, did not work {d}" if w or d else ""
                 lines.append(f"[M{i}] {e.summary} — {e.epistemic_status.replace('_', ' ')}, recorded {e.created_at[:10]}"
@@ -383,15 +396,48 @@ class LayerKit:
         words = [w for w in re.findall(r"[a-z][a-z0-9\-]{3,}", text.lower()) if w not in meta_stop]
         tags = list(dict.fromkeys(words))[:8]
         eid = "MEM-USER-" + time.strftime("%Y%m%d-%H%M%S") + "-" + hashlib.sha1(text.encode("utf-8")).hexdigest()[:6]
+        provenance = M.MemoryProvenance(source_type="conversation", source_ref=f"studio-chat:{conversation_id or 'unknown'}",
+                                        conversation_id=conversation_id, actor="user")
+        old = self._corrected_note(text)
+        if old is not None:  # kept, marked superseded, linked by "corrects"
+            self.store().record_correction(
+                correction_id=eid, target_id=old.id, title=text[:80], summary=text[:400], content=text,
+                source_evidence="Stated by the user in a Clover AI Studio chat, correcting an earlier note.",
+                provenance=provenance, epistemic_status="user_stated_belief", concepts=tags[:4], tags=tags)
+            return eid
         entry = M.MemoryEntry(
             id=eid, title=text[:80], entry_type=kind if kind in M.VALID_ENTRY_TYPES else "observation",
             epistemic_status="user_stated_belief", summary=text[:400], content=text,
             source_evidence="Stated by the user in a Clover AI Studio chat.",
-            provenance=M.MemoryProvenance(source_type="conversation", source_ref=f"studio-chat:{conversation_id or 'unknown'}",
-                                          conversation_id=conversation_id, actor="user"),
-            concepts=tags[:4], tags=tags)
+            provenance=provenance, concepts=tags[:4], tags=tags)
         self.store().create_entry(entry)
         return eid
+
+    def _corrected_note(self, text):
+        """The active user note `text` corrects, or None. An explicit correction ("Correction: my manager is Arun") needs
+        two shared words or half of the old note's; a change cue ("Update:", "no longer", "moved to") needs two; "My X is
+        now Y" replaces "My X is Z" (both values short); an addition ("I also like tea") corrects nothing."""
+        if ADDITION.search(text):
+            return None
+        explicit = EXPLICIT_CORRECTION.search(text)
+        cue = explicit or CHANGE_CUE.search(text)
+        mine = MY_X_IS.match(text)
+        new = set(note_words(text)) - CUE_WORDS
+        best, best_key = None, None
+        for e in self.store().entries.values():
+            if "learning" in e.tags or e.status != "active":
+                continue
+            body = e.content or e.summary or ""
+            old = set(note_words(body)) - CUE_WORDS
+            shared = len(old & new)
+            hit = cue and (shared >= 2 or (explicit and shared and shared / len(old) >= 0.5))
+            theirs = MY_X_IS.match(body)
+            if not hit and mine and mine.group(2) and theirs and not theirs.group(2):
+                hit = (mine.group(1).lower() == theirs.group(1).lower() and len(mine.group(3).split()) <= 4
+                       and len(theirs.group(3).split()) <= 4 and mine.group(3).lower() != theirs.group(3).lower())
+            if hit and (best_key is None or (shared, e.created_at) > best_key):
+                best, best_key = e, (shared, e.created_at)
+        return best
 
     def memories(self):
         out = []
@@ -410,6 +456,13 @@ class LayerKit:
         fp = (st.root_dir / e.rel_path).resolve()
         if fp.is_file() and str(fp).startswith(str(st.root_dir)):
             fp.unlink()
+        import k3_memory_graph as M
+        for other in st.entries.values():  # a deleted correction no longer replaces the note it corrected
+            if other.id != e.id and other.status == "superseded" and other.superseded_by == e.id:
+                other.status, other.superseded_by = "active", None
+                other.revisions.append(M.MemoryRevision(timestamp=M.utc_now_iso(), actor="user", action="restored",
+                                                        reason=f"{e.id}, which superseded it, was deleted"))
+                st._save_entry_in_place(other)
         st.rebuild_index()
         return True
 
