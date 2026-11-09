@@ -13,12 +13,12 @@ Integrates the three complementary layers into Clover's governing cycle
      (e) Non-inverted injection policy: authoritative only when `confidence >= min_confidence`;
          low confidence triggers `gather`/`clarify` or escalates Dory's recurrent loop count.
 
-2. `Clover.SuperAgent` (`CloverSuperAgent`, `TaskRecord`, `WorkerSession`, `IdleWatchdog`, `RepeatToolGuard`):
+2. `Clover.SuperAgent` (`CloverSuperAgent`, `TaskRecord`, `TaskView`, `RepeatToolGuard`):
    - Event-sourced append-only JSONL session and task log (`seq`, compare-and-set `revision`)
      that survives process restarts (`recover_from_disk()`).
    - Explicit 7-state task lifecycle:
      `created -> routed -> running -> waiting -> verifying -> completed | failed`
-   - Active dependency-ready event subscriptions (`on_blocker_completed` auto-routes ready tasks).
+   - Dependent tasks are routed when their last blocker passes verification (inside `verify_and_complete_task`).
    - Fixed `writeScopeWarnings` (checks only active `routed | running | waiting | verifying` tasks,
      never flagging already `completed` historical tasks).
    - Separate attribution for peer relay messages (`kind="agent-message"`, `form="relay"`) vs
@@ -27,10 +27,17 @@ Integrates the three complementary layers into Clover's governing cycle
    - Independent Outcome Verification Gate (`verify_and_complete_task`): rejects worker self-certification
      until an independent verification check passes.
 
-3. `Clover.ModelRuntime` (`AdaptiveDoryPolicy`, `DoryLoopConfig`):
-   - Configures NVIDIA Dory 1.0 recurrent latent loops (`1, 2, 3, 4` loops) with `last_loop` KV cache.
-   - Adaptive loop controller driven by `CloverDecisionEngine` confidence and nGPT hypersphere
-     chord distance `||state_l - state_{l-1}||_2`.
+3. `Clover.ModelRuntime` (loop selection only: `CloverDecisionEngine.select_dory_loops`):
+   - Maps a decision's action and confidence (optionally an nGPT hypersphere chord distance
+     `||state_l - state_{l-1}||_2`) to 1, 2 or 4 Dory loops. No Dory runtime is in this module; the
+     standalone engine is research/superagent-jev-dory/03-nvidia-dory/run_dory_live_experiments.py.
+
+Status (review 2026-11-09, docs/runtime-context/superagent-jev-dory/05-review-and-held-out-retest.md):
+- Research module: no Studio code path imports it.
+- Without `scorer_fn`, `CloverDecisionEngine` scores by phrase matching written from the 12 benchmark
+  sentences (plus hash noise). It is a test stand-in, not a decision model, and must not route real turns.
+- With the study's LFM3-1.7B backend, the reported configuration scored 16/24 on pre-registered held-out
+  tasks. It sent ambiguous or unverified plain messages to `act` with confidence 0.71-0.95.
 """
 
 from __future__ import annotations

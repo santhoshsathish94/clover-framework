@@ -1,5 +1,13 @@
 # Super-Agent, OpenJev Decision Engine & NVIDIA Dory 1.0 Context Ledgers
 
+> **Review, 2026-11-09 ([05](05-review-and-held-out-retest.md)):** the headline numbers in this table are qualified there.
+> - Routing 12/12 scores 16/24 on pre-registered held-out tasks.
+> - The adaptive-loop saving is 17.7% once the always-run 1-loop probe is counted (not 36.46%).
+> - The 6/6 ablation cells are fixed values, not runs.
+> - The Dory engine has no reference check.
+>
+> The upstream code findings were confirmed at source. The rows below are unchanged.
+
 This directory holds the four step-by-step Clover context records produced by cloning, setting up, running, and integrating the three projects (`deepseek-ai/deepseek-harness`, `GPT-AGI/OpenJev` + `Braedennn/OpenJev`, and `nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16`):
 
 | Context File | Project & Scope | Key Empirical Findings |
@@ -8,3 +16,4 @@ This directory holds the four step-by-step Clover context records produced by cl
 | [02-openjev-decision-engine-context.md](02-openjev-decision-engine-context.md) | **Jev / OpenJev (`GPT-AGI/OpenJev` & `Braedennn/OpenJev`)** — `Choice`, `Score`, `Noul` single-forward-pass logit decisions and `agent/pre-step` conductor | Uncovered and fixed 5 concrete defects (first-token BPE collision, dropped `Choice.criteria` descriptions, uncalibrated `"act"` prior bias + open `<think>` tags, $K\times$ redundant state prefill, and `Braedennn/OpenJev` step-2+ confidence injection inversion); lifted de-leaked `LFM3-1.7B` routing accuracy from `25.0% -> 100.0%` (`ECE: 0.4101 -> 0.0707`). |
 | [03-nvidia-dory-recurrent-loop-context.md](03-nvidia-dory-recurrent-loop-context.md) | **NVIDIA Dory 1.0 (`nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16`)** — 72-layer nGPT hypersphere transformer (`16 Input + 40 Recurrent + 16 Output`) at `1`, `2`, `3`, and `4` loops | Verified all 507 tensors (`3,975,229,440` physical params $\to$ `9.48B` effective params at 4 loops); proved `last_loop == per_loop` bit-identity (`max_abs_diff = 0.0`) on single-pass prefill with `4.0x` recurrent KV savings; showed 4 loops flips hard agent verification routing (`0.3045 -> 0.8317`) and solves multi-step sequential reasoning where 1 loop stalls. |
 | [04-clover-three-capability-integration-context.md](04-clover-three-capability-integration-context.md) | **Unified Clover Integration (`Clover.SuperAgent` + `Clover.DecisionEngine` + `Clover.ModelRuntime`)** — Production adapter & 5-way ablation | Jev-Adaptive Dory loop selection (`1 / 2 / 4` loops) matches Fixed 4-Loop `100.0%` (`8/8`) accuracy while saving `36.46%` executed layers (`1.57x` quality-per-compute); combined 5-way ablation reaches `6/6 (100.0%)` vs `2/6 (33.3%)` baseline. |
+| [05-review-and-held-out-retest.md](05-review-and-held-out-retest.md) | **Review and held-out re-test** of records 01-04 (2026-11-09) | Upstream defects confirmed at source; study reruns identically (36/36). Routing on pre-registered held-out tasks: 16/24, with plain messages 6/12 and confident `act` on ambiguous or unverified requests. Adaptive saving is 17.7% with the probe counted. Ablation cells are fixed values. Dory engine unverified against a reference. |

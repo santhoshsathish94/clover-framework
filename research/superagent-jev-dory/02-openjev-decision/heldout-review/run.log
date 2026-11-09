@@ -1,0 +1,27 @@
+=== LFM3-1.7B ===
+[transformers] Unrecognized keys in `rope_parameters` for 'rope_type'='default': {'sliding_attention', 'full_attention'}
+[transformers] Unrecognized keys in `rope_parameters` for 'rope_type'='default': {'sliding_attention', 'full_attention'}
+[transformers] Unrecognized keys in `rope_parameters` for 'rope_type'='default': {'sliding_attention', 'full_attention'}
+[transformers] Unrecognized keys in `rope_parameters` for 'rope_type'='default': {'sliding_attention', 'full_attention'}
+Loading weights:   0%|          | 0/286 [00:00<?, ?it/s]Loading weights: 100%|██████████| 286/286 [00:00<00:00, 14426.94it/s]
+LFM3-1.7B A0_raw_hfbackend: original 3/12 H1 4/12 H2 3/12 heldout 7/24 ece 0.3467
+LFM3-1.7B A1_markdown_a0.8: original 8/12 H1 6/12 H2 7/12 heldout 13/24 ece 0.2272
+LFM3-1.7B A2_chat_a0.55: original 12/12 H1 10/12 H2 6/12 heldout 16/24 ece 0.2226
+LFM3-1.7B X_chat_a0.0: original 9/12 H1 7/12 H2 6/12 heldout 13/24 ece 0.3554
+LFM3-1.7B X_chat_a0.3: original 11/12 H1 8/12 H2 7/12 heldout 15/24 ece 0.2639
+LFM3-1.7B X_chat_a0.8: original 12/12 H1 11/12 H2 6/12 heldout 17/24 ece 0.2694
+LFM3-1.7B X_chat_a1.0: original 12/12 H1 11/12 H2 5/12 heldout 16/24 ece 0.2494
+LFM3-1.7B X_markdown_a0.55: original 8/12 H1 6/12 H2 6/12 heldout 12/24 ece 0.2866
+G0 LFM3-1.7B: {'checked': 36, 'matched': 36, 'mismatches': [], 'a2_max_abs_confidence_diff_vs_recorded': 0.0}
+=== Qwen2.5-0.5B-Instruct ===
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 12543.16it/s]
+Qwen2.5-0.5B-Instruct A0_raw_hfbackend: original 4/12 H1 4/12 H2 3/12 heldout 7/24 ece 0.4805
+Qwen2.5-0.5B-Instruct A1_markdown_a0.8: original 6/12 H1 5/12 H2 3/12 heldout 8/24 ece 0.4569
+Qwen2.5-0.5B-Instruct A2_chat_a0.55: original 4/12 H1 4/12 H2 3/12 heldout 7/24 ece 0.5925
+Qwen2.5-0.5B-Instruct X_chat_a0.0: original 5/12 H1 2/12 H2 3/12 heldout 5/24 ece 0.5995
+Qwen2.5-0.5B-Instruct X_chat_a0.3: original 5/12 H1 4/12 H2 3/12 heldout 7/24 ece 0.5376
+Qwen2.5-0.5B-Instruct X_chat_a0.8: original 4/12 H1 4/12 H2 3/12 heldout 7/24 ece 0.5989
+Qwen2.5-0.5B-Instruct X_chat_a1.0: original 4/12 H1 4/12 H2 3/12 heldout 7/24 ece 0.583
+Qwen2.5-0.5B-Instruct X_markdown_a0.55: original 6/12 H1 5/12 H2 3/12 heldout 8/24 ece 0.4395
+G0 Qwen2.5-0.5B-Instruct: {'checked': 36, 'matched': 36, 'mismatches': [], 'a2_max_abs_confidence_diff_vs_recorded': 0.0}
+HELDOUT_DONE

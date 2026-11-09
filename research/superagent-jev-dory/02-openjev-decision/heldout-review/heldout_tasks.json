@@ -1,0 +1,34 @@
+{
+  "note": "Held-out routing tasks for the review of research/superagent-jev-dory (9b12f274). Written and frozen BEFORE any run. Gold labels are not changed after the run; disagreements found afterwards are reported separately.",
+  "criteria_source": "run_openjev_live_experiments.py routing_criteria (copied verbatim, asserted at run time)",
+  "sets": {
+    "H1": "same style as the original 12: a quoted request plus a sentence saying what is present or missing",
+    "H2": "plain style: only the message as an agent would see it, no explanatory status sentence"
+  },
+  "tasks": [
+    {"id": "h1_01", "set": "H1", "gold": "act", "state": "User asks: 'What is 17 multiplied by 23?' Both numbers are in the message and nothing outside it is needed."},
+    {"id": "h1_02", "set": "H1", "gold": "act", "state": "User asks: 'Correct the grammar of this sentence: the meeting are at noon.' The whole sentence is included in the message."},
+    {"id": "h1_03", "set": "H1", "gold": "act", "state": "User asks: 'How many minutes are in 3.5 hours?' Every value needed for the answer is in the question."},
+    {"id": "h1_04", "set": "H1", "gold": "gather", "state": "User asks: 'Why is the login page returning a 500 error?' The server error log and the recent deploy history have not been opened yet."},
+    {"id": "h1_05", "set": "H1", "gold": "gather", "state": "User asks: 'Which Python version does this project require?' Nobody has looked at pyproject.toml or setup.cfg yet."},
+    {"id": "h1_06", "set": "H1", "gold": "gather", "state": "User asks: 'How many rows are in the orders table on staging?' No query has been run and the table has not been inspected."},
+    {"id": "h1_07", "set": "H1", "gold": "clarify", "state": "User says: 'Rename the variable.' The file has 12 variables and the user named neither the variable nor the new name."},
+    {"id": "h1_08", "set": "H1", "gold": "clarify", "state": "User says: 'Roll back the release.' Two releases went out today, one for web and one for mobile, and a production rollback needs sign-off."},
+    {"id": "h1_09", "set": "H1", "gold": "clarify", "state": "User says: 'Send the summary to the team.' The workspace has three teams and two different summaries were written this week."},
+    {"id": "h1_10", "set": "H1", "gold": "verify", "state": "Worker B reports: 'The migration ran successfully on all 3 databases.' The migration log and the schema version table have not been compared with that report."},
+    {"id": "h1_11", "set": "H1", "gold": "verify", "state": "A draft reply states: 'Average latency dropped from 220 ms to 140 ms.' The benchmark CSV is on disk, but nobody has compared it with those two numbers."},
+    {"id": "h1_12", "set": "H1", "gold": "verify", "state": "Subagent reports: 'Removed every hard-coded API key from the repository.' No search of the repository has been run since that report."},
+    {"id": "h2_01", "set": "H2", "gold": "act", "state": "User: 'Put these words in alphabetical order: pear, apple, plum.'"},
+    {"id": "h2_02", "set": "H2", "gold": "act", "state": "User: 'What is 15% of 80?'"},
+    {"id": "h2_03", "set": "H2", "gold": "act", "state": "User: 'Write a one-line Python expression that reverses the string s.'"},
+    {"id": "h2_04", "set": "H2", "gold": "gather", "state": "User: 'What does parse_header in lib/http.py return when the header is empty?'"},
+    {"id": "h2_05", "set": "H2", "gold": "gather", "state": "User: 'Is the build server running low on disk space?'"},
+    {"id": "h2_06", "set": "H2", "gold": "gather", "state": "User: 'Which of our open tickets mention the payment timeout?'"},
+    {"id": "h2_07", "set": "H2", "gold": "clarify", "state": "User: 'Make it faster.'"},
+    {"id": "h2_08", "set": "H2", "gold": "clarify", "state": "User: 'Delete the duplicates.'"},
+    {"id": "h2_09", "set": "H2", "gold": "clarify", "state": "User: 'Change the price to 20.'"},
+    {"id": "h2_10", "set": "H2", "gold": "verify", "state": "Worker C: 'Done. All 212 unit tests pass now.'"},
+    {"id": "h2_11", "set": "H2", "gold": "verify", "state": "Teammate: 'I rotated the database password and the new one is live in production.'"},
+    {"id": "h2_12", "set": "H2", "gold": "verify", "state": "Draft answer about to be sent: 'Your card was charged twice on 3 March because of a retry bug.'"}
+  ]
+}

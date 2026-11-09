@@ -1,5 +1,7 @@
 # Research: DeepSeek Super-Agent, OpenJev Decision Engine & NVIDIA Dory 1.0
 
+> **Review, 2026-11-09:** see [05-review-and-held-out-retest.md](../../docs/runtime-context/superagent-jev-dory/05-review-and-held-out-retest.md) and the pre-registered held-out re-test in [02-openjev-decision/heldout-review/](02-openjev-decision/heldout-review/PREREGISTRATION.md).
+
 Executable probes, standalone model runtimes, and empirical JSON telemetry for the three-project Clover integration study:
 
 - [01-deepseek-superagent/](01-deepseek-superagent/clover-dsh-probe.spec.ts) — Live Cordis architecture probe (`clover-dsh-probe.spec.ts`) and telemetry ([dsh_live_probe_results.json](01-deepseek-superagent/dsh_live_probe_results.json))

@@ -1,5 +1,12 @@
 # Context: Unified Clover Integration (`Clover.SuperAgent` + `Clover.DecisionEngine` + `Clover.ModelRuntime`)
 
+> **Review, 2026-11-09 ([05](05-review-and-held-out-retest.md)):**
+> - **Experiment 2:** S1-S2 are fixed values in every arm, S3-S5 are fixed values in the arms without the SuperAgent, and S6 uses the phrase-matching fallback. So "2/6 to 6/6" is a feature checklist, not a measurement.
+> - **Experiment 1:** the adaptive policy always runs a 1-loop probe that the layer count omits. Counted, it is 158 layers per call: a 17.7% saving (measured latency 18.5%), not 122 layers (36.46%).
+> - **Module:** no Studio code path imports it, so "Production module" below is inaccurate.
+>
+> Text below unchanged.
+
 - **Date:** 2026-11-09
 - **Branch / Worktree:** `research/superagent-jev-dory` (`C:\personal\oss\clover-superagent-jev-dory-wt`)
 - **Predecessor Context Records:**

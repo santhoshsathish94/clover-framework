@@ -1,5 +1,12 @@
 # Context: OpenJev (`GPT-AGI/OpenJev` & `Braedennn/OpenJev`) — Decision Intelligence Layer Analysis
 
+> **Review, 2026-11-09 ([05](05-review-and-held-out-retest.md)):** the defect findings were confirmed at source.
+> - **Reproduction:** the 12/12 routing result reproduces exactly.
+> - **Held-out:** on 24 pre-registered held-out tasks it scores 16/24, and 6/12 on plain messages, where its misses are confident `act` routings.
+> - **Missing cell:** the same configuration scored 4/12 on `Qwen2.5-0.5B-Instruct` in this record's own results file. That cell is missing from the table below.
+>
+> Text below unchanged.
+
 - **Date:** 2026-11-09
 - **Branch / Worktree:** `research/superagent-jev-dory` (`C:\personal\oss\clover-superagent-jev-dory-wt`)
 - **Primary Sources Cloned & Executed:**

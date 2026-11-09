@@ -1,5 +1,12 @@
 # Context: NVIDIA Dory 1.0 (`nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16`) — Recurrent Latent-State Loop Analysis
 
+> **Review, 2026-11-09 ([05](05-review-and-held-out-retest.md)):** the standalone engine was never compared with a reference implementation.
+> - The checkpoint ships no modeling code.
+> - The only `max_abs_diff` below compares two cache modes of this same engine.
+> - The loop-count findings are conditional on that engine and rest on single cases.
+>
+> Text below unchanged.
+
 - **Date:** 2026-11-09
 - **Branch / Worktree:** `research/superagent-jev-dory` (`C:\personal\oss\clover-superagent-jev-dory-wt`)
 - **Primary Sources Cloned, Downloaded & Executed:**
