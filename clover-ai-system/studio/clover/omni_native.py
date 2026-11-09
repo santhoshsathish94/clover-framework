@@ -553,7 +553,10 @@ class OmniNative(N.LFM3Native):
                         or bool((bridge_info.get("curiosity") or {}).get("should_observe"))
                     )
                 )
-                active_bridged = [t for t in bridged_recs if t not in declined_set] if has_lrn_or_formula else []
+                # only tools the route allowed this turn: a note naming plan.md got read_file offered and read unasked in
+                # Always, which leaves files out when the message names none (2026-11-09)
+                allowed = set(by_name)
+                active_bridged = [t for t in bridged_recs if t not in declined_set and t in allowed] if has_lrn_or_formula else []
                 if active_bridged and tools:
                     schemas = [t for t in N.STUDIO_TOOLS if t["function"]["name"] in active_bridged]
                     by_name = {t["function"]["name"]: t["function"] for t in schemas}
