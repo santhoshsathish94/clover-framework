@@ -17,6 +17,7 @@ to remember and learnings from outcomes, retrieved with a general gate (Clover's
 benchmark's wording); the ontology leaves out the records that were written for benchmark questions (STEM_CONCEPT,
 FORMULA, DOC_RECORD).
 """
+import ast
 import hashlib
 import re
 import threading
@@ -76,8 +77,52 @@ APP_ONTOLOGY_INSTRUCTION = (
     "Instruction: Answer from these records in plain words. Do not mention the records themselves, labels or IDs.")
 APP_MEMORY_INSTRUCTION = (
     "Instruction: Use these notes where they answer the question. They record what the user told you and what earlier "
-    "answers taught (with how often that worked), not verified facts; if one was superseded, use the newer one and say "
-    "so, and do not repeat what did not work.")
+    "answers taught (with how often that worked); only a note marked externally verified was checked, and its cases hold "
+    "only for the inputs shown. If one was superseded, use the newer one and say so, and do not repeat what did not work.")
+VERIFIED_FUNCTION = re.compile(r"^Verified workspace function (\w+)\(")
+PYTHON_BLOCK = re.compile(r"```python\n([\s\S]*?)```")
+
+
+def _literal(node):
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
+        node = node.operand
+    return (isinstance(node, ast.Constant) and isinstance(node.value, (int, float, str, type(None)))
+            and len(repr(node.value)) <= 40)
+
+
+def run_verified_calls(entry, q, sandbox=None):
+    """[(call, result)] for the question's literal calls of the function an externally verified note recorded, run on
+    the verified copy in IsolatedPythonSandbox. Given only the note, the model copied its stored cases for other inputs
+    (consciousness step 4)."""
+    m = VERIFIED_FUNCTION.match(entry.summary or "")
+    block = PYTHON_BLOCK.search(entry.content or "")
+    if entry.epistemic_status != "externally_verified" or m is None or block is None:
+        return []
+    calls = []
+    for c in re.finditer(rf"\b{m.group(1)}\s*\(([^()\n#]*)\)", q or ""):
+        try:
+            node = ast.parse(f"f({c.group(1)})", mode="eval").body
+        except SyntaxError:
+            continue
+        call = f"{m.group(1)}({c.group(1).strip()})"
+        if all(map(_literal, node.args)) and all(k.arg and _literal(k.value) for k in node.keywords) and call not in calls:
+            calls.append(call)
+    calls = calls[:4]
+    if not calls:
+        return []
+    body = "\n".join(ln for ln in block.group(1).splitlines() if not ln.lstrip().startswith(("assert ", "RESULT ")))
+    code = (body + "\nRESULT = []\nfor _f in (" + "".join(f"lambda: {c}, " for c in calls) + "):\n"
+            "    try:\n        _v = _f()\n        RESULT.append('= ' + repr(float(format(_v, '.10g')) if isinstance(_v, float) else _v))\n"
+            "    except Exception as _e:\n        RESULT.append('raises ' + repr(_e))\n")
+    try:
+        import isolated_sandbox
+        ok, results, _ = (sandbox or isolated_sandbox.IsolatedPythonSandbox(timeout_s=3.0)).run(code)
+    except Exception:  # no runnable Python for the child process (a phone build): the note stays as it is
+        return []
+    # a NameError means the verified copy lacks something the module has: its result says nothing about the module
+    if not ok or not isinstance(results, list) or len(results) != len(calls) or any("NameError" in str(r) for r in results):
+        return []
+    return [(c, str(r)[:200]) for c, r in zip(calls, results)]
 
 
 PY_HINT = re.compile(r"^\s*(?:def|class|import|from|for|while|if|elif|try|with|return|print\(|[A-Za-z_]\w*\s*=(?!=))",
@@ -305,7 +350,8 @@ class LayerKit:
         info = {"layer": "memory", "entries": [it.entry.id for it in pkg.items], "ms": round((time.perf_counter() - t0) * 1000, 1)}
         if self.memory_root is not None:
             # the K3 rendering lists file paths, and LFM3 then went looking for the files (8 tool calls in a test)
-            lines = ["Notes from this user's memory, already retrieved for you (answer from them; no tools needed):"]
+            lines = ["Notes from this user's memory, already retrieved for you (no tools needed):"]
+            computed = []
             for i, it in enumerate(pkg.items[:4], start=1):
                 e = it.entry
                 late = f" (superseded by {it.superseded_by_id})" if it.superseded_by_id else ""
@@ -313,6 +359,13 @@ class LayerKit:
                 used = f"; used before: worked {w}, did not work {d}" if w or d else ""
                 lines.append(f"[M{i}] {e.summary} — {e.epistemic_status.replace('_', ' ')}, recorded {e.created_at[:10]}"
                              f"{used}{late}")
+                ran = [] if it.superseded_by_id else run_verified_calls(e, q)
+                if ran:
+                    lines.append("     Computed now by running that verified function: " + "; ".join(f"{c} {r}" for c, r in ran))
+                    computed += [{"entry": e.id, "call": c, "result": r} for c, r in ran]
+            if computed:
+                info["computed"] = computed
+                info["ms"] = round((time.perf_counter() - t0) * 1000, 1)
             return "\n".join(lines) + "\n" + APP_MEMORY_INSTRUCTION, info
         return pkg.render_for_k3(compact=True) + "\n" + MEMORY_INSTRUCTION, info
 
