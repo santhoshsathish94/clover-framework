@@ -1,7 +1,7 @@
 {
   "suite": "test_live_curiosity_loop_multi_session",
   "status": "passed",
-  "elapsed_s": 9.74,
+  "elapsed_s": 14.569,
   "priority_1_grounded_feedback_in_real_outcomes": {
     "ordinary_turn_comp_error": null,
     "ordinary_turn_verified_in_turn": false,
@@ -11,16 +11,24 @@
     "user_rejection_correction_captured": "That's wrong, exclude 70 itself from the sum."
   },
   "priority_2_and_3_idle_curiosity_and_closed_strategy_loop": {
+    "rejected_callable_existence_probe": true,
+    "rejected_tautological_constant_probe": true,
     "skipped_when_not_idle": true,
     "idle_step_1_strategy_under_code_deny": "workspace_code_inspect",
+    "pre_read_oversized_files_skipped": 1,
+    "sensitive_content_files_excluded": 1,
+    "workspace_files_untouched": true,
     "idle_step_1_error_reduction": "0.85 -> 0.4675",
     "idle_step_3_strategy_after_switch": "sandbox_counterexample_probe",
+    "idle_step_3_behavioral_checks_verified": 2,
     "idle_step_3_error_reduction": "0.4675 -> 0.0",
-    "promoted_hypothesis_id": "MEM-HYP-WS-7C0B8403"
+    "promoted_hypothesis_id": "MEM-HYP-WS-B132AF97"
   },
   "priority_4_and_5_multi_session_two_installations_experiment": {
     "installation_a_systems": {
-      "private_memory_id": "MEM-USER-20261109-053603-e25d39",
+      "phase1_pid": 72208,
+      "phase2_restarted_pid": 53088,
+      "reloaded_step_counter": 5,
       "emergent_keywords": [
         "ring_buffer",
         "effective_throughput",
@@ -28,23 +36,30 @@
         "cyclic",
         "pipeline",
         "partitioned",
-        "stage"
+        "stage",
+        "workspace"
       ],
+      "self_directed_utility_unseen_tasks": {
+        "before_idle_curiosity": 0.0,
+        "after_idle_curiosity_and_restart": 1.0
+      },
       "curiosity_trajectory": {
-        "1_after_emergence": 0.08524,
-        "2_when_mastered": 0.00192,
-        "3_after_invalidation_revival": 0.38392
+        "1_after_emergence": 0.02512,
+        "2_when_mastered": 0.00211,
+        "3_after_invalidation_revival": 0.38477
       },
       "voi_trajectory": {
         "1_after_emergence": true,
         "2_when_mastered": false,
         "3_after_invalidation_revival": true
       },
-      "abs_lp_vigilance_on_invalidation": 0.6875,
-      "persisted_state_path": "C:\\Users\\santhoshn\\AppData\\Local\\Temp\\clover_live_curiosity_loop_4y3o8yyb\\installation_A\\clover-ai-studio\\growth\\curiosity\\curiosity_state.json"
+      "abs_lp_vigilance_on_invalidation": 0.74,
+      "workspace_untouched": true
     },
     "installation_b_biophysics": {
-      "private_memory_id": "MEM-USER-20261109-053606-4a9361",
+      "phase1_pid": 21744,
+      "phase2_restarted_pid": 55992,
+      "reloaded_step_counter": 5,
       "emergent_keywords": [
         "enzyme_kinetic",
         "reaction_velocity",
@@ -55,20 +70,25 @@
         "michaelis-menten",
         "ceiling"
       ],
+      "self_directed_utility_unseen_tasks": {
+        "before_idle_curiosity": 0.0,
+        "after_idle_curiosity_and_restart": 1.0
+      },
       "curiosity_trajectory": {
-        "1_after_emergence": 0.08433,
-        "2_when_mastered": 0.00192,
-        "3_after_invalidation_revival": 0.38392
+        "1_after_emergence": 0.02404,
+        "2_when_mastered": 0.00211,
+        "3_after_invalidation_revival": 0.38477
       },
       "voi_trajectory": {
         "1_after_emergence": true,
         "2_when_mastered": false,
         "3_after_invalidation_revival": true
       },
-      "abs_lp_vigilance_on_invalidation": 0.6875,
-      "persisted_state_path": "C:\\Users\\santhoshn\\AppData\\Local\\Temp\\clover_live_curiosity_loop_4y3o8yyb\\installation_B\\clover-ai-studio\\growth\\curiosity\\curiosity_state.json"
+      "abs_lp_vigilance_on_invalidation": 0.74,
+      "workspace_untouched": true
     },
+    "separate_os_processes_verified": true,
     "keyword_jaccard_overlap": 0.0,
-    "zero_private_data_in_curiosity_state_or_collective": true
+    "zero_private_or_secret_data_in_curiosity_or_collective": true
   }
 }

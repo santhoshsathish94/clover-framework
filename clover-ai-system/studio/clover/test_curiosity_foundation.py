@@ -310,16 +310,53 @@ def test_7_controllable_subspace_idle_consolidation_and_persistence(tmp_dir: Pat
     noise_r2 = float(np.mean(eng.controllable_subspace_r2[4:]))
     assert ctrl_r2 > 2.0 * noise_r2, f"Controllable dims 0..3 must have higher R^2 ({ctrl_r2}) than noise dims ({noise_r2})"
 
-    # 7B: Idle consolidation with non-regression replay (Paper 08 Fig. 1B & Paper 13)
+    # 7B: Idle consolidation with Verification Integrity Gate (Fix 1) & Non-Regression Replay (Paper 08 Fig. 1B & Paper 13)
     mem_store = MG.CloverMemoryGraphStore(tmp_dir / "growth" / "knowledge", auto_load=True)
+
+    # First verify that an existence-only / tautological hypothesis (`callable(...)` or `RESULT = True`) is REJECTED!
+    hyp_taut = MG.MemoryEntry(
+        id="MEM-HYP-CUR-TAUTOLOGY-00",
+        title="Existence-Only Tautological Hypothesis",
+        entry_type="hypothesis",
+        epistemic_status="hypothesis",
+        status="under_review",
+        summary="Claims function is verified merely because it is callable.",
+        content="```python\ndef dummy_fn(x):\n    return x\nRESULT = {'passed': callable(dummy_fn)}\n```",
+        source_evidence="Observed function definition.",
+        provenance=MG.MemoryProvenance(source_type="experiment", source_ref="exp:curiosity_test"),
+        concepts=["dummy_fn"],
+        tags=["algorithms", "hypothesis"],
+    )
+    mem_store.create_entry(hyp_taut)
+    idle_taut = eng.run_idle_consolidation_step(
+        memory_store=mem_store,
+        sandbox_runner=lambda code: SBX.run_in_isolated_sandbox(code, timeout_s=4.0),
+    )
+    assert idle_taut.get("rejected_tautological_or_existence_probe") is True
+    assert idle_taut["promoted"] is False
+    assert mem_store.entries["MEM-HYP-CUR-TAUTOLOGY-00"].epistemic_status == "hypothesis"
+    # Deactivate the rejected tautology question so the valid behavioral hypothesis is tested next
+    eng.unresolved_questions["Q-MEM-MEM-HYP-CUR-TAUTOLOGY-00"].zpd_status = "stalled_deactivated"
+
+    # Second, verify that a genuine multi-input behavioral + boundary probe passes and is promoted
     hyp_valid = MG.MemoryEntry(
         id="MEM-HYP-CUR-VALID-01",
         title="Valid Recursion Base Case Invariant",
         entry_type="hypothesis",
         epistemic_status="hypothesis",
         status="under_review",
-        summary="Base case n == 0 must be reachable by strictly decreasing step.",
-        content="Hypothesis with executable check:\n```python\nRESULT = {'passed': (sum(range(5)) == 10)}\n```",
+        summary="Base case n <= 0 returns 0 and positive n sums 1..n.",
+        content=(
+            "Hypothesis with behavioral & boundary checks:\n"
+            "```python\n"
+            "def tri_sum(n):\n"
+            "    return 0 if n <= 0 else n + tri_sum(n - 1)\n"
+            "assert tri_sum(5) == 15\n"
+            "assert tri_sum(0) == 0\n"
+            "assert tri_sum(-3) == 0\n"
+            "RESULT = {'passed': True}\n"
+            "```"
+        ),
         source_evidence="Observed in recursion trace.",
         provenance=MG.MemoryProvenance(source_type="experiment", source_ref="exp:curiosity_test"),
         concepts=["recursion"],
@@ -335,7 +372,7 @@ def test_7_controllable_subspace_idle_consolidation_and_persistence(tmp_dir: Pat
     assert idle_res["promoted"] is True
     assert mem_store.entries["MEM-HYP-CUR-VALID-01"].epistemic_status == "externally_verified"
 
-    # Now test a hypothesis when a regression test fails -> must roll back and mark contested!
+    # Third, test a behavioral hypothesis when a regression test fails -> must roll back and mark contested!
     hyp_reg = MG.MemoryEntry(
         id="MEM-HYP-CUR-REGRESS-02",
         title="Conflicting Hypothesis Breaking Regression",
@@ -343,7 +380,15 @@ def test_7_controllable_subspace_idle_consolidation_and_persistence(tmp_dir: Pat
         epistemic_status="hypothesis",
         status="under_review",
         summary="Candidate rule that conflicts with existing invariant.",
-        content="```python\nRESULT = {'passed': True}\n```",
+        content=(
+            "```python\n"
+            "def candidate_rule(x):\n"
+            "    return x * 2\n"
+            "assert candidate_rule(3) == 6\n"
+            "assert candidate_rule(0) == 0\n"
+            "RESULT = {'passed': True}\n"
+            "```"
+        ),
         source_evidence="Observed in trace.",
         provenance=MG.MemoryProvenance(source_type="experiment", source_ref="exp:curiosity_test"),
         concepts=["conflict"],

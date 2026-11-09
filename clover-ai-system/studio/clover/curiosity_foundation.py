@@ -105,7 +105,269 @@ class IdleResourceBudget:
     max_sandbox_timeout_s: float = 2.0
     max_files_read: int = 2
     max_bytes_read: int = 32768
+    max_single_file_bytes: int = 16384
     min_idle_interval_s: float = 0.0
+
+
+# Content-level sensitive patterns excluded during workspace inspection (Fix 2: Exploration Safety)
+_SENSITIVE_CONTENT_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("github_token", re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{36,255}|github_pat_[A-Za-z0-9_]{40,255})\b")),
+    ("api_key", re.compile(r"\b(?:sk-(?:proj-)?[A-Za-z0-9_\-]{20,}|tvly-[A-Za-z0-9_\-]{16,}|AIza[0-9A-Za-z_\-]{35})\b")),
+    ("aws_key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
+    ("slack_token", re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}\b")),
+    ("private_key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
+    ("jwt_token", re.compile(r"\beyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\b")),
+    ("credential_uri", re.compile(r"\b[a-z][a-z0-9+.\-]*://[^/\s:@\"']+:[^/\s@\"']+@[^\s\"']+")),
+    (
+        "secret_assignment",
+        re.compile(
+            r"(?i)\b(?:password|passwd|pwd|secret|api_key|apikey|access_token|auth_token|private_key|"
+            r"client_secret|db_pass|connection_string|ssn|bank_routing|patient_record)\s*[:=]\s*['\"][^'\"]{4,}['\"]"
+        ),
+    ),
+    ("ssn_pattern", re.compile(r"\b\d{3}-\d{2}-\d{4}\b")),
+)
+
+
+def contains_sensitive_content(text: str) -> tuple[bool, list[str]]:
+    """Inspect file content for secrets, credentials, private keys, or PII before any AST parsing or memory storage."""
+    if not text:
+        return False, []
+    matched_kinds: list[str] = []
+    for kind, rx in _SENSITIVE_CONTENT_PATTERNS:
+        if rx.search(text):
+            matched_kinds.append(kind)
+    return bool(matched_kinds), matched_kinds
+
+
+def snapshot_workspace_manifest(workspace_root: str | Path | None) -> dict[str, tuple[int, int]]:
+    """Return a fast `{rel_posix_path: (size_bytes, mtime_ns)}` manifest of `workspace_root` to verify that
+    idle exploration never creates, modifies, or deletes any workspace file."""
+    if workspace_root is None:
+        return {}
+    root = Path(workspace_root)
+    if not root.is_dir():
+        return {}
+    snap: dict[str, tuple[int, int]] = {}
+    for fp in sorted(root.rglob("*")):
+        if any(p in ("node_modules", "__pycache__", ".git", "venv") for p in fp.parts):
+            continue
+        try:
+            if fp.is_file() and not fp.is_symlink():
+                st = fp.stat()
+                snap[fp.relative_to(root).as_posix()] = (int(st.st_size), int(st.st_mtime_ns))
+        except OSError:
+            continue
+    return snap
+
+
+def validate_behavioral_verification_probe(code: str) -> dict[str, Any]:
+    """Fix 1 (Verification Integrity): Statically audit a candidate Python verification script `code` so that
+    a hypothesis can NEVER become `externally_verified` merely because its code executes without error, assigns
+    a constant `RESULT = True` / `{'passed': True}`, or checks `callable(fn)` / `hasattr(...)`.
+
+    Requires:
+      1. Valid Python syntax.
+      2. If `code` defines one or more functions (`def fn(...)`), the probe MUST invoke at least one defined
+         target function on at least 2 distinct argument tuples inside `assert` statements or inside the
+         boolean expression computing `RESULT` / `RESULT['passed']`.
+      3. If `code` does not define a function, it must evaluate at least 2 non-constant, non-existence comparisons
+         (`assert` or boolean conjunctions in `RESULT`) over computed variables (not literal-to-literal identities
+         like `2 + 2 == 4` or `1 == 1`).
+      4. Existence-only checks (`callable(...)`, `hasattr(...)`, `isinstance(...)`) are flagged and rejected for
+         `externally_verified` promotion.
+    """
+    import ast as _ast
+
+    if not isinstance(code, str) or not code.strip():
+        return {"ok": False, "reason": "empty_code", "behavioral_checks": 0, "distinct_call_args": 0}
+    try:
+        tree = _ast.parse(code)
+    except SyntaxError as exc:
+        return {"ok": False, "reason": f"syntax_error:{exc.msg}", "behavioral_checks": 0, "distinct_call_args": 0}
+
+    defined_fns: set[str] = {
+        node.name for node in tree.body if isinstance(node, _ast.FunctionDef) and not node.name.startswith("_")
+    }
+    if not defined_fns:
+        defined_fns = {node.name for node in tree.body if isinstance(node, _ast.FunctionDef)}
+
+    existence_calls = {"callable", "hasattr", "isinstance", "issubclass", "type"}
+
+    def _is_pure_literal_or_const(n: _ast.AST) -> bool:
+        if isinstance(n, _ast.Constant):
+            return True
+        if isinstance(n, _ast.UnaryOp):
+            return _is_pure_literal_or_const(n.operand)
+        if isinstance(n, _ast.BinOp):
+            return _is_pure_literal_or_const(n.left) and _is_pure_literal_or_const(n.right)
+        if isinstance(n, (_ast.Tuple, _ast.List, _ast.Set)):
+            return all(_is_pure_literal_or_const(elt) for elt in n.elts)
+        return False
+
+    def _is_existence_only_expr(n: _ast.AST) -> bool:
+        for sub in _ast.walk(n):
+            if isinstance(sub, _ast.Call) and isinstance(sub.func, _ast.Name) and sub.func.id in existence_calls:
+                return True
+        return False
+
+    # Collect top-level / test-level calls to defined functions and non-tautological comparisons
+    fn_call_arg_sigs: set[tuple[str, str]] = set()
+    for node in _ast.walk(tree):
+        if isinstance(node, _ast.Call) and isinstance(node.func, _ast.Name):
+            fn_name = node.func.id
+            if not defined_fns or fn_name in defined_fns:
+                if fn_name not in existence_calls:
+                    arg_dump = ",".join(_ast.dump(a) for a in node.args) + ";" + ",".join(
+                        f"{k.arg}={_ast.dump(k.value)}" for k in node.keywords
+                    )
+                    fn_call_arg_sigs.add((fn_name, arg_dump))
+
+    behavioral_checks = 0
+    used_existence_only = False
+
+    def _count_behavioral_expr(expr: _ast.AST) -> int:
+        nonlocal used_existence_only
+        if _is_existence_only_expr(expr):
+            used_existence_only = True
+            return 0
+        if _is_pure_literal_or_const(expr):
+            return 0
+        if isinstance(expr, _ast.BoolOp) and isinstance(expr.op, _ast.And):
+            return sum(_count_behavioral_expr(v) for v in expr.values)
+        if isinstance(expr, _ast.Compare):
+            if _is_pure_literal_or_const(expr.left) and all(_is_pure_literal_or_const(c) for c in expr.comparators):
+                return 0
+            return 1
+        if isinstance(expr, _ast.Call):
+            return 1
+        if isinstance(expr, _ast.Name):
+            return 1
+        return 0
+
+    result_assigned = False
+    result_is_constant_true = False
+
+    for node in _ast.walk(tree):
+        if isinstance(node, _ast.Assert):
+            behavioral_checks += _count_behavioral_expr(node.test)
+        elif isinstance(node, _ast.Assign):
+            for targ in node.targets:
+                if isinstance(targ, _ast.Name) and targ.id in ("RESULT", "result"):
+                    result_assigned = True
+                    val = node.value
+                    if isinstance(val, _ast.Constant) and val.value is True:
+                        result_is_constant_true = True
+                    elif isinstance(val, _ast.Dict):
+                        for k_node, v_node in zip(val.keys, val.values):
+                            if isinstance(k_node, _ast.Constant) and k_node.value == "passed":
+                                if isinstance(v_node, _ast.Constant) and v_node.value is True:
+                                    result_is_constant_true = True
+                                else:
+                                    behavioral_checks += _count_behavioral_expr(v_node)
+                    else:
+                        behavioral_checks += _count_behavioral_expr(val)
+
+    if used_existence_only and behavioral_checks == 0:
+        return {
+            "ok": False,
+            "reason": "existence_only_check_rejected",
+            "behavioral_checks": 0,
+            "distinct_call_args": len(fn_call_arg_sigs),
+        }
+    if defined_fns and len(fn_call_arg_sigs) < 2:
+        return {
+            "ok": False,
+            "reason": f"insufficient_function_calls:need_at_least_2_distinct_inputs_got_{len(fn_call_arg_sigs)}",
+            "behavioral_checks": behavioral_checks,
+            "distinct_call_args": len(fn_call_arg_sigs),
+        }
+    if behavioral_checks < 2:
+        reason = "tautological_constant_result" if result_is_constant_true or not result_assigned else f"insufficient_behavioral_checks:{behavioral_checks}"
+        return {
+            "ok": False,
+            "reason": reason,
+            "behavioral_checks": behavioral_checks,
+            "distinct_call_args": len(fn_call_arg_sigs),
+        }
+    return {
+        "ok": True,
+        "reason": "verified_behavioral_probe",
+        "behavioral_checks": behavioral_checks,
+        "distinct_call_args": len(fn_call_arg_sigs),
+    }
+
+
+def extract_behavioral_probe_from_python_source(txt: str, fn_names: Sequence[str] = ()) -> str | None:
+    """Extract a genuine behavioral verification probe from a Python source file `txt` ONLY if the source file
+    contains real behavioral assertions (`assert ...`), doctests (`>>> fn(...)`), or a `test_*`/`_selftest` function.
+    Never fabricates `callable(fn)` existence checks!
+    """
+    import ast as _ast
+    import doctest as _doctest
+
+    if not txt or len(txt) > 12000:
+        return None
+    try:
+        tree = _ast.parse(txt)
+    except SyntaxError:
+        return None
+
+    # 1. Check for doctest examples (`>>> ...`) in module or function docstrings
+    try:
+        dt_examples = _doctest.DocTestParser().get_examples(txt)
+    except Exception:
+        dt_examples = []
+    valid_dt = [ex for ex in dt_examples if ex.source.strip() and ex.want.strip()]
+    if len(valid_dt) >= 2:
+        assert_lines = [txt.strip(), ""]
+        for ex in valid_dt[:6]:
+            src_expr = ex.source.strip()
+            want_expr = ex.want.strip()
+            if "\n" not in src_expr and "\n" not in want_expr:
+                assert_lines.append(f"assert ({src_expr}) == ({want_expr})")
+        assert_lines.append(f"RESULT = {{'passed': True, 'doctest_assertions': {len(valid_dt[:6])}}}")
+        cand = "\n".join(assert_lines)
+        if validate_behavioral_verification_probe(cand)["ok"]:
+            return cand
+
+    # 2. Check if the file already contains top-level or `__main__` `assert` statements or `test_*` functions
+    has_asserts = any(isinstance(n, _ast.Assert) for n in _ast.walk(tree))
+    test_fns = [
+        n.name
+        for n in tree.body
+        if isinstance(n, _ast.FunctionDef) and (n.name.startswith("test_") or n.name.startswith("verify_") or n.name == "_selftest")
+    ]
+    if has_asserts or test_fns:
+        lines = [txt.strip(), ""]
+        for tfn in test_fns:
+            lines.append(f"{tfn}()")
+        lines.append("RESULT = {'passed': True}")
+        cand = "\n".join(lines)
+        if validate_behavioral_verification_probe(cand)["ok"]:
+            return cand
+
+    # 3. Synthesize a multi-input differential / boundary behavioral probe ONLY when a function has pure numeric/collection/string
+    # parameters and deterministic return expressions that can be tested on >=2 distinct inputs and checked for non-constancy.
+    for node in tree.body:
+        if not isinstance(node, _ast.FunctionDef) or node.name.startswith("_"):
+            continue
+        if fn_names and node.name not in fn_names:
+            continue
+        arg_names = [a.arg for a in node.args.args]
+        # Look for explicit inline comment assertions or docstring equations (`# test: fn(...) == ...`)
+        m_tests = re.findall(rf"\b({re.escape(node.name)}\([^)\n]+\)\s*==\s*[^\n#]+)", txt)
+        if len(m_tests) >= 2:
+            lines = [txt.strip(), ""]
+            for mt in m_tests[:6]:
+                lines.append(f"assert {mt.strip()}")
+            lines.append(f"RESULT = {{'passed': True, 'function': {node.name!r}}}")
+            cand = "\n".join(lines)
+            if validate_behavioral_verification_probe(cand)["ok"]:
+                return cand
+        _ = arg_names
+
+    return None
 
 STOPWORDS: frozenset[str] = frozenset(
     "a about above after again against all am an and any are as at be because been before being below between both "
@@ -1527,28 +1789,35 @@ class PersistentCuriosityEngine:
                     if m_code:
                         v_code = m_code.group(1).strip()
                 if v_code:
-                    ok_new, val_new, _ = sandbox_runner(v_code)
-                    passed_new = bool(ok_new and (val_new is True or (isinstance(val_new, dict) and val_new.get("passed") is True)))
-                    # Paper 13: Run non-regression replay on existing validated concepts before allowing promotion
-                    reg_ok = True
-                    for rt in regression_tests or ():
-                        ok_r, val_r, _ = sandbox_runner(str(rt.get("code") or ""))
-                        if not (ok_r and (val_r is True or (isinstance(val_r, dict) and val_r.get("passed") is True))):
-                            reg_ok = False
-                            break
-                    if passed_new and reg_ok and e_hyp is not None:
-                        e_hyp.epistemic_status = "externally_verified"
-                        e_hyp.status = "active"
-                        if hasattr(memory_store, "_save_entry_in_place"):
-                            memory_store._save_entry_in_place(e_hyp)
-                        top_q.zpd_status = "resolved_verified"
-                        self._on_question_progressed_or_resolved(top_q)
-                        consolidation_result["promoted"] = True
-                    elif passed_new and not reg_ok and e_hyp is not None:
-                        e_hyp.status = "contested"
-                        if hasattr(memory_store, "_save_entry_in_place"):
-                            memory_store._save_entry_in_place(e_hyp)
-                        consolidation_result["rolled_back_on_regression"] = True
+                    integrity = validate_behavioral_verification_probe(v_code)
+                    consolidation_result["probe_integrity"] = integrity
+                    if not integrity["ok"]:
+                        consolidation_result["rejected_tautological_or_existence_probe"] = True
+                    else:
+                        ok_new, val_new, _ = sandbox_runner(v_code)
+                        passed_new = bool(
+                            ok_new and (val_new is True or (isinstance(val_new, dict) and val_new.get("passed") is True))
+                        )
+                        # Paper 13: Run non-regression replay on existing validated concepts before allowing promotion
+                        reg_ok = True
+                        for rt in regression_tests or ():
+                            ok_r, val_r, _ = sandbox_runner(str(rt.get("code") or ""))
+                            if not (ok_r and (val_r is True or (isinstance(val_r, dict) and val_r.get("passed") is True))):
+                                reg_ok = False
+                                break
+                        if passed_new and reg_ok and e_hyp is not None:
+                            e_hyp.epistemic_status = "externally_verified"
+                            e_hyp.status = "active"
+                            if hasattr(memory_store, "_save_entry_in_place"):
+                                memory_store._save_entry_in_place(e_hyp)
+                            top_q.zpd_status = "resolved_verified"
+                            self._on_question_progressed_or_resolved(top_q)
+                            consolidation_result["promoted"] = True
+                        elif passed_new and not reg_ok and e_hyp is not None:
+                            e_hyp.status = "contested"
+                            if hasattr(memory_store, "_save_entry_in_place"):
+                                memory_store._save_entry_in_place(e_hyp)
+                            consolidation_result["rolled_back_on_regression"] = True
 
             self.save()
             return consolidation_result
@@ -1575,10 +1844,13 @@ class PersistentCuriosityEngine:
         """Priority 3: Close the strategy loop by executing the selected permitted epistemic strategy
         (`workspace_code_inspect`, `sandbox_counterexample_probe`, or `memory_graph_recall`) within `budget`
         and `permissions`, measuring its real outcome, and feeding that outcome back into `record_interaction_outcome`.
+        Enforces Fix 1 (Verification Integrity) and Fix 2 (Exploration Safety: pre-read byte/file limits,
+        content-level secret/PII exclusion, and read-only workspace snapshot verification).
         """
         t0 = time.perf_counter()
         bud = budget or IdleResourceBudget()
         perms = dict(permissions or {"memory": "allow", "files": "allow", "code": "allow", "internet": "ask"})
+        ws_snap_before = snapshot_workspace_manifest(workspace_root) if not interactive else {}
 
         with self.lock:
             rec = self.recommend_strategy_and_voi(
@@ -1613,51 +1885,80 @@ class PersistentCuriosityEngine:
             verif_summary = ""
             promoted_id: str | None = None
             discovered_probe_code: str | None = None
+            files_read = 0
+            bytes_read = 0
+            files_skipped_size_limit = 0
+            files_excluded_sensitive = 0
+            probe_integrity_report: dict[str, Any] | None = None
 
-            # 1. Strategy: workspace_code_inspect (requires files == "allow")
+            # 1. Strategy: workspace_code_inspect (requires files == "allow", strictly read-only)
             if chosen_strat == "workspace_code_inspect" and workspace_root is not None:
                 ws_path = Path(workspace_root)
                 if ws_path.is_dir():
                     import ast as _ast
-                    files_read = 0
-                    bytes_read = 0
                     matched_defs: list[str] = []
-                    candidate_files = sorted(ws_path.rglob("*.py")) + sorted(ws_path.rglob("*.md"))
-                    for fp in candidate_files:
+                    raw_candidates = [
+                        fp
+                        for fp in (sorted(ws_path.rglob("*.py")) + sorted(ws_path.rglob("*.md")))
+                        if not any(p in ("node_modules", "__pycache__", ".git", "venv") for p in fp.parts)
+                        and not fp.is_symlink()
+                        and not re.search(r"(?i)(?:secret|token|passw|credential|\.env|\.pem|\.key)", fp.name)
+                    ]
+                    # Rank by filename overlap with `q_terms` BEFORE opening any file so pre-read budget is spent wisely
+                    raw_candidates.sort(
+                        key=lambda fp: (
+                            -len(q_terms & set(extract_emergent_terms(fp.stem.replace("_", " "), max_terms=8))),
+                            fp.name,
+                        )
+                    )
+                    for fp in raw_candidates:
                         if (time.perf_counter() - t0) * 1000.0 >= bud.max_wall_ms:
                             break
+                        # Fix 2A: Enforce file-count and byte-budget limits BEFORE stat/read
                         if files_read >= bud.max_files_read or bytes_read >= bud.max_bytes_read:
                             break
-                        if any(p in ("node_modules", "__pycache__", ".git", "venv") for p in fp.parts):
-                            continue
-                        if re.search(r"(?i)(?:secret|token|passw|credential|\.env|\.pem|\.key)", fp.name):
-                            continue
                         try:
-                            raw = fp.read_bytes()[: max(1024, bud.max_bytes_read - bytes_read)]
+                            st = fp.stat()
                         except OSError:
                             continue
-                        txt = raw.decode("utf-8", errors="replace")
-                        f_terms = set(extract_emergent_terms(fp.stem + " " + txt[:1500], max_terms=24))
-                        if not (q_terms & f_terms) and len(candidate_files) > 2:
+                        f_size = int(st.st_size)
+                        if f_size <= 0:
                             continue
+                        if f_size > bud.max_single_file_bytes or (bytes_read + f_size) > bud.max_bytes_read:
+                            files_skipped_size_limit += 1
+                            continue
+                        try:
+                            with open(fp, "rb") as f_in:
+                                raw = f_in.read(min(f_size, bud.max_single_file_bytes, bud.max_bytes_read - bytes_read))
+                        except OSError:
+                            continue
+                        # Count every file and byte read immediately upon reading
                         files_read += 1
                         bytes_read += len(raw)
+                        txt = raw.decode("utf-8", errors="replace")
+
+                        # Fix 2B: Content-level sensitive data inspection BEFORE any AST parsing or memory storage
+                        has_sens, _ = contains_sensitive_content(txt)
+                        if has_sens:
+                            files_excluded_sensitive += 1
+                            continue
+
+                        f_terms = set(extract_emergent_terms(fp.stem.replace("_", " ") + " " + txt[:1500], max_terms=24))
+                        if not (q_terms & f_terms) and len(raw_candidates) > 2:
+                            continue
+
                         if fp.suffix.lower() == ".py":
                             try:
                                 tree = _ast.parse(txt)
+                                fn_names_in_file: list[str] = []
                                 for node in tree.body:
                                     if isinstance(node, _ast.FunctionDef):
                                         matched_defs.append(f"{fp.name}:{node.name}")
-                                        # If file contains a self-test or verification function, extract a bounded probe
-                                        if (
-                                            discovered_probe_code is None
-                                            and len(txt) <= 8000
-                                            and ("def " in txt)
-                                        ):
-                                            discovered_probe_code = (
-                                                txt
-                                                + f"\nRESULT = {{'passed': callable({node.name}), 'function': {node.name!r}}}\n"
-                                            )
+                                        fn_names_in_file.append(node.name)
+                                # Fix 1: Only extract a behavioral probe if the source file contains real behavioral
+                                # assertions / doctests / self-tests — NEVER fabricate `callable(fn)`!
+                                if discovered_probe_code is None and fn_names_in_file:
+                                    discovered_probe_code = extract_behavioral_probe_from_python_source(txt, fn_names_in_file)
                             except SyntaxError as syn_e:
                                 verif_summary = f"SyntaxError in {fp.name}: {syn_e}"
                                 measured_comp_err = min(1.0, prev_err + 0.15)
@@ -1678,12 +1979,14 @@ class PersistentCuriosityEngine:
                             measured_comp_err = max(0.15, prev_err * 0.55)
                             measured_pred_err = max(0.12, prev_err * 0.60)
                             if (
-                                discovered_probe_code
-                                and memory_store is not None
+                                memory_store is not None
                                 and perms.get("memory", "allow") == "allow"
                                 and hasattr(memory_store, "create_entry")
                             ):
                                 import k3_memory_graph as _M
+                                body_text = f"Workspace evidence: {verif_summary}"
+                                if discovered_probe_code:
+                                    body_text += f"\n```python\n{discovered_probe_code.strip()}\n```"
                                 h_entry = _M.MemoryEntry(
                                     id=hid,
                                     title=f"Workspace Hypothesis: {', '.join(matched_defs[:2])}"[:80],
@@ -1691,7 +1994,7 @@ class PersistentCuriosityEngine:
                                     epistemic_status="hypothesis",
                                     status="under_review",
                                     summary=f"Extracted from workspace inspection ({verif_summary}) for '{query[:120]}'",
-                                    content=f"Workspace evidence: {verif_summary}\n```python\n{discovered_probe_code.strip()}\n```",
+                                    content=body_text,
                                     source_evidence=verif_summary,
                                     provenance=_M.MemoryProvenance(
                                         source_type="observation",
@@ -1709,7 +2012,10 @@ class PersistentCuriosityEngine:
                             verif_summary = f"Workspace view already collected ({', '.join(matched_defs[:2])}); static repeat yielded 0 new views"
                     else:
                         # Zero views discovered -> measured_comp_err unchanged so SGIM-ACTS learns this strategy stalled
-                        verif_summary = f"Workspace inspection ({files_read} files) found no matching definitions for {sorted(q_terms)[:4]}"
+                        verif_summary = (
+                            f"Workspace inspection ({files_read} files read, {files_skipped_size_limit} skipped size, "
+                            f"{files_excluded_sensitive} excluded sensitive) found no matching definitions"
+                        )
 
             # 2. Strategy: sandbox_counterexample_probe (requires code == "allow")
             elif chosen_strat == "sandbox_counterexample_probe":
@@ -1740,56 +2046,67 @@ class PersistentCuriosityEngine:
                         probe_code = m_q.group(1).strip()
 
                 if probe_code:
-                    ok_run, val_run, err_run = sandbox_runner(probe_code)
-                    passed_probe = bool(
-                        ok_run and (val_run is True or (isinstance(val_run, dict) and val_run.get("passed") is True))
-                    )
-                    refuted_probe = bool(
-                        (isinstance(val_run, dict) and val_run.get("refuted") is True)
-                        or (not ok_run and "AssertionError" in str(err_run or ""))
-                    )
-                    reg_ok = True
-                    for rt in regression_tests or ():
-                        ok_r, val_r, _ = sandbox_runner(str(rt.get("code") or ""))
-                        if not (ok_r and (val_r is True or (isinstance(val_r, dict) and val_r.get("passed") is True))):
-                            reg_ok = False
-                            break
-
-                    if passed_probe and reg_ok:
-                        measured_comp_err = 0.0
-                        measured_pred_err = 0.02
-                        view_added = "supporting_evidence"
-                        verif_summary = f"Sandbox probe verified hypothesis ({val_run})"
-                        if target_hyp is not None and perms.get("memory", "allow") == "allow":
-                            target_hyp.epistemic_status = "externally_verified"
-                            target_hyp.status = "active"
-                            if hasattr(memory_store, "_save_entry_in_place"):
-                                memory_store._save_entry_in_place(target_hyp)
-                                memory_store.rebuild_index()
-                            promoted_id = target_hyp.id
-                    elif passed_probe and not reg_ok:
-                        measured_comp_err = 0.65
-                        measured_pred_err = 0.55
-                        verif_summary = "Sandbox probe passed locally but broke non-regression replay; rolled back"
-                        if target_hyp is not None and perms.get("memory", "allow") == "allow":
-                            target_hyp.status = "contested"
-                            if hasattr(memory_store, "_save_entry_in_place"):
-                                memory_store._save_entry_in_place(target_hyp)
-                    elif refuted_probe:
-                        # Discovering a counterexample that refutes a false hypothesis reduces epistemic uncertainty!
-                        measured_comp_err = max(0.20, prev_err * 0.65)
-                        measured_pred_err = 0.45
-                        view_added = "where_it_breaks"
-                        verif_summary = f"Counterexample refuted hypothesis in sandbox: {err_run or val_run}"
-                        if target_hyp is not None and perms.get("memory", "allow") == "allow":
-                            target_hyp.status = "contested"
-                            if hasattr(memory_store, "_save_entry_in_place"):
-                                memory_store._save_entry_in_place(target_hyp)
+                    # Fix 1 (Verification Integrity): Audit the probe AST before accepting any sandbox pass!
+                    probe_integrity_report = validate_behavioral_verification_probe(probe_code)
+                    if not probe_integrity_report["ok"]:
+                        verif_summary = (
+                            f"Verification integrity gate rejected probe ({probe_integrity_report['reason']}): "
+                            f"hypothesis remains unverified"
+                        )
                     else:
-                        measured_comp_err = min(1.0, max(prev_err, 0.75))
-                        verif_summary = f"Sandbox probe execution failed: {err_run[:140]}"
+                        ok_run, val_run, err_run = sandbox_runner(probe_code)
+                        passed_probe = bool(
+                            ok_run and (val_run is True or (isinstance(val_run, dict) and val_run.get("passed") is True))
+                        )
+                        refuted_probe = bool(
+                            (isinstance(val_run, dict) and val_run.get("refuted") is True)
+                            or (not ok_run and "AssertionError" in str(err_run or ""))
+                        )
+                        reg_ok = True
+                        for rt in regression_tests or ():
+                            ok_r, val_r, _ = sandbox_runner(str(rt.get("code") or ""))
+                            if not (ok_r and (val_r is True or (isinstance(val_r, dict) and val_r.get("passed") is True))):
+                                reg_ok = False
+                                break
+
+                        if passed_probe and reg_ok:
+                            measured_comp_err = 0.0
+                            measured_pred_err = 0.02
+                            view_added = "supporting_evidence"
+                            verif_summary = (
+                                f"Sandbox behavioral probe verified hypothesis "
+                                f"({probe_integrity_report['behavioral_checks']} checks, {val_run})"
+                            )
+                            if target_hyp is not None and perms.get("memory", "allow") == "allow":
+                                target_hyp.epistemic_status = "externally_verified"
+                                target_hyp.status = "active"
+                                if hasattr(memory_store, "_save_entry_in_place"):
+                                    memory_store._save_entry_in_place(target_hyp)
+                                    memory_store.rebuild_index()
+                                promoted_id = target_hyp.id
+                        elif passed_probe and not reg_ok:
+                            measured_comp_err = 0.65
+                            measured_pred_err = 0.55
+                            verif_summary = "Sandbox probe passed locally but broke non-regression replay; rolled back"
+                            if target_hyp is not None and perms.get("memory", "allow") == "allow":
+                                target_hyp.status = "contested"
+                                if hasattr(memory_store, "_save_entry_in_place"):
+                                    memory_store._save_entry_in_place(target_hyp)
+                        elif refuted_probe:
+                            # Discovering a counterexample that refutes a false hypothesis reduces epistemic uncertainty!
+                            measured_comp_err = max(0.20, prev_err * 0.65)
+                            measured_pred_err = 0.45
+                            view_added = "where_it_breaks"
+                            verif_summary = f"Counterexample refuted hypothesis in sandbox: {err_run or val_run}"
+                            if target_hyp is not None and perms.get("memory", "allow") == "allow":
+                                target_hyp.status = "contested"
+                                if hasattr(memory_store, "_save_entry_in_place"):
+                                    memory_store._save_entry_in_place(target_hyp)
+                        else:
+                            measured_comp_err = min(1.0, max(prev_err, 0.75))
+                            verif_summary = f"Sandbox probe execution failed: {err_run[:140]}"
                 else:
-                    verif_summary = "No executable Python probe available yet for region; strategy yielded 0 progress"
+                    verif_summary = "No executable behavioral Python probe available yet for region; strategy yielded 0 progress"
 
             # 3. Strategy: memory_graph_recall (requires memory == "allow")
             elif chosen_strat == "memory_graph_recall" and memory_store is not None and hasattr(memory_store, "entries"):
@@ -1824,6 +2141,9 @@ class PersistentCuriosityEngine:
                 else:
                     verif_summary = "Insufficient memory entries in region; recall yielded 0 new views"
 
+            ws_snap_after = snapshot_workspace_manifest(workspace_root) if not interactive else {}
+            workspace_untouched = (ws_snap_before == ws_snap_after) if not interactive else True
+
             episode = self.record_interaction_outcome(
                 query,
                 pred_error=measured_pred_err,
@@ -1850,6 +2170,12 @@ class PersistentCuriosityEngine:
                 "progress_made": round(max(0.0, prev_err - measured_comp_err), 4),
                 "view_dimension_added": view_added,
                 "promoted_entry_id": promoted_id,
+                "probe_integrity": probe_integrity_report,
+                "files_read": files_read,
+                "bytes_read": bytes_read,
+                "files_skipped_size_limit": files_skipped_size_limit,
+                "files_excluded_sensitive": files_excluded_sensitive,
+                "workspace_untouched": workspace_untouched,
                 "verification_result": verif_summary,
                 "wall_ms": round((time.perf_counter() - t0) * 1000.0, 2),
                 "episode": episode,

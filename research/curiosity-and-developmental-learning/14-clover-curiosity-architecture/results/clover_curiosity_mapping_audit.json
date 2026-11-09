@@ -1,8 +1,8 @@
 {
   "audit_id": "14-clover-curiosity-foundation-architecture-audit",
-  "elapsed_s": 0.863,
+  "elapsed_s": 0.825,
   "inspected_modules_count": 19,
-  "total_clover_studio_lines_inspected": 24115,
+  "total_clover_studio_lines_inspected": 24486,
   "live_codebase_verification": {
     "memory_graph_schema": {
       "valid_entry_types": [
@@ -242,7 +242,7 @@
   "module_ast_inventory": {
     "curiosity_foundation.py": {
       "file": "clover-ai-system/studio/clover/curiosity_foundation.py",
-      "lines": 2015,
+      "lines": 2341,
       "classes": {
         "IdleResourceBudget": [],
         "StrategyStats": [
@@ -284,6 +284,10 @@
         ]
       },
       "functions": [
+        "contains_sensitive_content",
+        "snapshot_workspace_manifest",
+        "validate_behavioral_verification_probe",
+        "extract_behavioral_probe_from_python_source",
         "utc_now_iso",
         "extract_emergent_terms",
         "encode_text_to_64d",
@@ -302,6 +306,7 @@
         "STRATEGY_TO_ACTION_DIM",
         "STRATEGY_REQUIRED_PERMISSION",
         "STRATEGY_TO_STUDIO_TOOLS",
+        "_SENSITIVE_CONTENT_PATTERNS",
         "STOPWORDS",
         "_ENGINES_BY_PATH",
         "_ENGINES_LOCK"
@@ -309,7 +314,7 @@
     },
     "test_curiosity_foundation.py": {
       "file": "clover-ai-system/studio/clover/test_curiosity_foundation.py",
-      "lines": 433,
+      "lines": 478,
       "classes": {},
       "functions": [
         "test_1_endogenous_region_splitting_and_no_hardcoded_interests",

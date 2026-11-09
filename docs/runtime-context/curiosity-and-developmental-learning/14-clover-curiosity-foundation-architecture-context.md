@@ -207,4 +207,39 @@ Stored inside Clover's git-backed repository (`<repo_dir>/growth/curiosity/curio
      - Curiosity trajectory: `0.08433` (`should_observe=True`) $\to$ `0.00192` (`should_observe=False` when mastered) $\to$ `0.38392` (`should_observe=True`, `abs_lp_vigilance = 0.6875` on `km=0` invalidation).
    - **Divergence & Privacy Boundary**: Emergent domain keyword Jaccard overlap between Installation A and Installation B is **`0.0`**, and **`100%` of private user tokens** (`staging-alpha.corp.local`, `EMP-9481`, `COHORT-BIO-772`, `acct_private_882`) are excluded from both `curiosity_state.json` and `collective.py` candidate exports.
 
+---
+
+## Stage 7 — Verification Integrity, Exploration Safety & Real Two-Process Deployment Validation
+
+### 7.1 Fix 1: Verification Integrity (`validate_behavioral_verification_probe` & `extract_behavioral_probe_from_python_source`)
+- **Problem Addressed**: Previously, `workspace_code_inspect` synthesized `RESULT = {'passed': callable(fn_name)}` when a `.py` file defined a function, and `sandbox_counterexample_probe` / `run_idle_consolidation_step` promoted any hypothesis whose code executed and returned `True` or `{'passed': True}`. That allowed a hypothesis to become `externally_verified` merely because a function existed or a constant tautology executed.
+- **Mechanism Implemented**:
+  1. **`validate_behavioral_verification_probe(code)`**: Statically audits the verification script's AST before accepting any sandbox execution result:
+     - Rejects existence-only checks (`callable(...)`, `hasattr(...)`, `isinstance(...)`, `type(...)` $\to$ `"existence_only_check_rejected"`).
+     - Rejects constant/tautological assignments (`RESULT = True`, `RESULT = {'passed': True}`, or literal-to-literal identities like `2 + 2 == 4` without behavioral assertions $\to$ `"tautological_constant_result"`).
+     - When `code` defines functions (`def fn(...)`), requires invoking the target function on **at least 2 distinct argument tuples** inside non-tautological `assert` or `RESULT` comparisons (`behavioral_checks >= 2`, `distinct_call_args >= 2`).
+  2. **`extract_behavioral_probe_from_python_source(txt)`**: Extracts a verification probe from a workspace `.py` file **only** when the file contains real behavioral assertions (`assert ...`), doctests (`>>> fn(...)`), or `test_*`/`verify_*`/`_selftest` routines that pass `validate_behavioral_verification_probe`. If a file only defines `def fn(...)` without behavioral assertions, no probe is fabricated and the hypothesis remains `"hypothesis"` / `"under_review"`.
+
+### 7.2 Fix 2: Exploration Safety (Pre-Read Budget Enforcement, Content-Level Secret Exclusion & Read-Only Workspace Guard)
+- **Pre-Read File Count & Byte Limits**:
+  - Added `max_single_file_bytes: int = 16384` to `IdleResourceBudget`.
+  - In `workspace_code_inspect`, candidate files are ranked by filename overlap *before* opening any file; `fp.stat().st_size` is checked **before** opening (`f_size > bud.max_single_file_bytes` or `bytes_read + f_size > bud.max_bytes_read` increments `files_skipped_size_limit` without reading a single byte); and `files_read += 1` / `bytes_read += len(raw)` are incremented immediately upon reading.
+- **Content-Level Secret & PII Exclusion (`contains_sensitive_content`)**:
+  - Scans every read file's content against `_SENSITIVE_CONTENT_PATTERNS` (`github_token`, `api_key`, `aws_key`, `slack_token`, `private_key`, `jwt_token`, `credential_uri`, `secret_assignment`, `ssn_pattern`) **before** any AST parsing, keyword extraction, or memory storage. Files matching any pattern are immediately discarded (`files_excluded_sensitive += 1`).
+- **Read-Only Workspace Guarantee (`snapshot_workspace_manifest`)**:
+  - Idle exploration opens workspace files strictly with `"rb"` and verifies via `snapshot_workspace_manifest(workspace_root)` before and after every non-interactive step that `workspace_untouched == True` (zero files created, modified, or deleted in the workspace).
+
+### 7.3 Fix 3: Real Two-Process Deployment Experiment & Self-Directed Utility Validation ([test_live_curiosity_loop_multi_session.py](../../../clover-ai-system/studio/clover/test_live_curiosity_loop_multi_session.py))
+- Spawned **two separate OS child processes** (`subprocess.Popen`) with separate storage roots (`installation_A` and `installation_B`) and separate workspaces (`workspace_A_systems` and `workspace_B_biophysics`), terminated both processes, and restarted two fresh OS processes on their respective storage roots:
+  | Metric | Installation A (`ws_a_systems`) | Installation B (`ws_b_biophysics`) |
+  |---|---|---|
+  | **Phase 1 OS Process PID $\to$ Phase 2 Restarted PID** | `PID 72208` $\to$ `PID 53088` | `PID 21744` $\to$ `PID 55992` |
+  | **Innocent-Named Secret File Excluded by Content Inspection** | `ring_buffer_config.py` (`db_pass`) excluded (`1`) | `enzyme_kinetics_config.py` (`sk-proj-...`) excluded (`1`) |
+  | **Workspace Files Untouched (`snapshot_workspace_manifest`)** | `True` | `True` |
+  | **Unseen Domain Task Accuracy Before Idle Curiosity** | **`0.0000` (`0 / 2`)** | **`0.0000` (`0 / 2`)** |
+  | **Unseen Domain Task Accuracy After Idle Curiosity & Restart** | **`1.0000` (`2 / 2`)** | **`1.0000` (`2 / 2`)** |
+  | **Curiosity Lifecycle (Emerge $\to$ Mastered $\to$ Revived)** | `0.02512` $\to$ `0.00211` $\to$ **`0.38477`** (`|LP| = 0.74`) | `0.02404` $\to$ `0.00211` $\to$ **`0.38477`** (`|LP| = 0.74`) |
+  | **Cross-Process Keyword Overlap / Secret Leakage** | Jaccard = `0.0000` / `0` secrets leaked | Jaccard = `0.0000` / `0` secrets leaked |
+
+
 
