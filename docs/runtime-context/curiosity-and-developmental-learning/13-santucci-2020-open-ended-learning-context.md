@@ -36,7 +36,7 @@ Santucci, Oudeyer, Barto & Baldassarre (2020) synthesize the 18 research contrib
 
 ## Stage 3 — Execution & Stage 4 — Outcome (Quantitative Results)
 
-Running [run_santucci2020_imol_experiments.py](../../../research/curiosity-and-developmental-learning/13-santucci-2020-open-ended-learning/run_santucci2020_imol_results.json) (`10` seeds) produces:
+Running [run_santucci2020_imol_experiments.py](../../../research/curiosity-and-developmental-learning/13-santucci-2020-open-ended-learning/run_santucci2020_imol_experiments.py) (`10` seeds) produces:
 
 ### 4.1 Experiment E1: Compact Action-Relevant Goal Space vs. Unfiltered 20D Sensory Goal Babbling
 | Architecture | Identified Controllable Subspace $R^2$ | Mean Extrinsic 30-Goal Reaching Error |

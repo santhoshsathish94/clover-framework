@@ -7,7 +7,7 @@ Offered, not imposed. Date: 2026-11-09. Direction owner: Santhosh.
 - **Citation**: Varela, F. J., Thompson, E., & Rosch, E. (1991/1993; rev. ed. 2016). *The Embodied Mind: Cognitive Science and Human Experience*. MIT Press. (`doi:10.7551/mitpress/9739.001.0001`, ISBN `9780262720212`)
 - **Primary Source File**: MIT Press monograph metadata recorded in [research/consciousness-and-subjective-experience/papers_text/17-varela-thompson-rosch-1991-embodied-mind.txt](../../../research/consciousness-and-subjective-experience/papers_text/17-varela-thompson-rosch-1991-embodied-mind.txt).
 - **Executable Experiments**: [research/consciousness-and-subjective-experience/17-varela-thompson-rosch-1991-embodied-mind/run_varela_thompson_rosch_1991_embodied_mind_experiments.py](../../../research/consciousness-and-subjective-experience/17-varela-thompson-rosch-1991-embodied-mind/run_varela_thompson_rosch_1991_embodied_mind_experiments.py)
-- **Results Artifact**: [research/consciousness-and-subjective-experience/17-varela-thompson-rosch-1991-embodied-mind/results/varela_thompson_rosch_1991_embodied_mind_results.json](../../../research/consciousness-and-subjective-experience/17-varela-thompson-rosch-1991-embodied_mind_results.json)
+- **Results Artifact**: [research/consciousness-and-subjective-experience/17-varela-thompson-rosch-1991-embodied-mind/results/varela_thompson_rosch_1991_embodied_mind_results.json](../../../research/consciousness-and-subjective-experience/17-varela-thompson-rosch-1991-embodied-mind/results/varela_thompson_rosch_1991_embodied_mind_results.json)
 
 ---
 
