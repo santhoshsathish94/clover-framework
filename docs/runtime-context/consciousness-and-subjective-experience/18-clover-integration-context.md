@@ -306,3 +306,41 @@ The setup ([bridge_fix_live.py](../../../research/consciousness-and-subjective-e
   - The replaced APK is kept locally.
 - **Version.** It is still 5.0.0 (code 14), so two different builds have now been published under one version number. It installs over an existing 5.0.0 with the same signing key, but nothing tells existing users there is an update.
 - **CI** ("Validate repository") failed on `5fdf39ab` and `2e86c15e` because of the two broken links. It has passed since `6fd336f1`, and the Pages deploy of `8668bcf8` succeeded.
+
+## 13. Fifth cycle (2026-11-09): Direction "go ahead 1, and 2 fix all three", then "5.0.1 everywhere (rebuild all)"
+
+**The three fixes**: each has a test that fails without it, and each is its own commit.
+
+| Fix | Change | Test | Commit |
+| :--- | :--- | :--- | :--- |
+| Arithmetic check | Reads `25,000` whole, stays within a line, checks a value carried down a name (`A = 25,000 × 1.225043`, then `A ≈ 28,251.30`), and shows the true value with two more decimals than the answer did | `tests/test_arithmetic_findings_layout.py` 11/11; the detector flags both old garbled messages | `f197445e` |
+| Corrections to notes | `remember()` records a correction with `record_correction`: the old note is kept, marked superseded and linked by `corrects`. This applies to an explicit correction, a change cue sharing two words, or "My X is now Y" over "My X is Z". Additions and partial changes ("I'm not vegetarian any more" against a note that also holds an allergy) supersede nothing. `forget()` restores what a deleted correction superseded | `tests/test_corrected_notes_supersede.py` 13/13 | `16c7f310` |
+| Unasked file reads | A memory turn is offered only tools the route allowed. The memory branch had rebuilt its list from all tools, putting back `read_file`, which the route leaves out when the message names no file (rule of 2026-11-04) | `tests/test_memory_turn_tools_follow_route.py` 3/3, real `run_turn` with a stub GPU; with the old line `read_file` is offered | `27fd130a` |
+
+- **Live** ([fixes3_live.py](../../../research/consciousness-and-subjective-experience/18-clover-integration/fixes3_live.py)): all predictions held.
+  - B4 in Always mode got no tools and answered from the note.
+  - B1 and B2 still got the calculator and were correct.
+  - C3 answered "Your manager now is Arun."
+  - On "ask" B1, the feedback was well formed and the model corrected its own answer to 30,626; before, it stayed at 28,251.
+- **Gate:** 9 of 11 suites pass with the same 2 old failures, and all 9 new tests pass.
+
+**5.0.1 everywhere.** The human chose this over "build 15, keep 5.0.0" after being told that Goal 1 asserts one version and that the Windows and extension pipelines were unchecked.
+- **Bumped:** `VERSION`, `STUDIO_VERSION`, both launch manifests, both extensions (the framework provider and `clover-local`), `Launcher.cs`, `Setup.cs`, `app.manifest`, the MSIX identity, `install.ps1`, Android `build.gradle` (repository and k3: versionCode 15), the site links, labels and asset cache strings (`check-site.py` requires these to equal `VERSION`), the store notes and the CHANGELOG. Goal 1 now checks a single `EXPECTED_VERSION` constant and passes.
+- **Found and fixed in the build:**
+  - `build_setup.ps1` copied `mobile/collective.py` and `mobile/jepa_engine.py` over the Studio's newer copies, which would have undone 162 lines in the installer. Those two are no longer copied; the other seven files are identical.
+  - It also writes into `clover-collective-wt`, another branch, whose four target files were already modified or untracked. They were backed up and restored byte for byte.
+- **Found and fixed in the reports:** the release generator published fixed pass counts ("61/61"). It now reads the version from `VERSION` and its results from a real run (`release/beta/verification-results.json`).
+  - `test_regression_fixes.py` 71/73 and `test_browser_first.py` 29/30. Both failures predate this release: the second also fails at `d14a2219`.
+  - `test_human_usefulness.py` was not re-run, because it needs a live Studio.
+- **Artifacts:**
+  - The installer and launcher are Authenticode **Valid**, signed with the published certificate (`843BC847…`), at file version 5.0.1.0.
+  - The installer payload equals the Studio sources and carries `clover-local-5.0.1.vsix`.
+  - The MSIX identity is 5.0.1.0.
+  - The APK/AAB are `ai.clover.studio` versionCode 15 / 5.0.1; the bundled Python equals the sources.
+  - The emulator build installed as an update and runs at versionCode 15.
+- **k3:** a guarded deploy (`backup-v501-20261109T153859Z`) first stopped on byte differences in the launch manifests. These turned out to be line endings plus a stale `0.4.2` label in the Android tree; the pinned files were identical. After those were accounted for, the 8 tests pass on k3 and the service is active.
+- **Release `v5.0.1`:** 12 assets, each checked against the committed file before publishing. The tag is at `93da4fe1`, which is `main`. Downloads from the site's v5.0.1 links match the builds, and the downloaded installer's signature is Valid. CI passed on `93da4fe1`.
+- **Not done:**
+  - The framework `clover-vscode-provider` extension is bumped but was never packaged anywhere, so there is no artifact to rebuild.
+  - The `mobile/` copies (`clover_cycle.py` and others, the S23 on-device runtime) keep the old arithmetic check; the APK packs the Studio copy.
+  - Microsoft Store and Play Console uploads are the human's.
