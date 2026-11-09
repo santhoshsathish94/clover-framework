@@ -1,9 +1,9 @@
 {
   "product": "Clover AI Studio",
   "publisher": "Santhosh Narayanan",
-  "release_version": "5.0.0",
+  "release_version": "5.0.1",
   "release_channel": "release",
-  "release_date": "2026-11-06",
+  "release_date": "2026-11-09",
   "generated_by": "release/beta/generate_release_reports.py",
   "cpsl_release_signing": {
     "algorithm": "Ed25519 (RFC 8032)",
@@ -22,8 +22,8 @@
   "android": {
     "store": "Google Play Console (Closed Testing & Internal App Sharing)",
     "package_name": "ai.clover.studio",
-    "version_code": 14,
-    "version_name": "5.0.0",
+    "version_code": 15,
+    "version_name": "5.0.1",
     "min_sdk": 26,
     "target_sdk": 36,
     "compile_sdk": 36,
@@ -46,32 +46,38 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 81014437,
-        "sha256": "d40b5bd84a6b513c5da231544173d78907ce9f81803eecaa3cc4a44eea44f904"
+        "size_bytes": 81162041,
+        "sha256": "52acd3566e3a57aba965544cb2583b9c32bfd5e4b2814782dd278a112f93f253"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "mirror": "download/mobile/CloverAIStudio.apk",
         "type": "apk",
-        "size_bytes": 82236825,
-        "sha256": "987c13ea53def4dd49dbc86b0d1af2da32326b67e21858661fca2c1725dae610"
+        "size_bytes": 82238716,
+        "sha256": "512dcc0356055de82c54ae3b715f5febdad9269df71b1d9f9d786e492a48dcdc"
       }
     ],
     "verification": {
-      "collective_tests": "35/35 passed (Ed25519 asymmetric release verification)",
-      "google_identity_collective_tests": "32/32 passed (Google OIDC RS256 JWKS, PKCE loopback, 2-installation HTTP E2E sync, expiry/revocation)",
-      "human_usefulness_tests": "18/18 passed (first-turn zero-refusal human usefulness benchmark)",
-      "live_activity_sse_tests": "18/18 passed (monotonic seq, cancellation, disconnect, reconnection, concurrency)",
-      "live_simulated_server_smoke_test": "passed (/api/health, /api/settings, /api/collective, /api/identity/google, /api/chat/stream, /api/turn/events)",
-      "ready_for_closed_testing_upload": true
+      "semantics_tests": "155/155 passed",
+      "tool_routing_tests": "129/129 passed",
+      "repo_tests": "27/27 passed",
+      "regression_fixes_tests": "71/73 passed (2 failed: ...and out of an unrelated price; k3 dropdown entries have short, clear names and k3 badge)",
+      "page_fetch_tests": "119/119 passed",
+      "browser_first_tests": "29/30 passed (1 failed: nothing opens by itself: only a click handler calls /api/browser/open)",
+      "browser_handback_tests": "51/51 passed",
+      "collective_tests": "35/35 passed",
+      "google_identity_collective_tests": "32/32 passed",
+      "human_usefulness_tests": "not re-run for this release (urllib.error.URLError: <urlopen error [WinError 10061] No connection could be made because)",
+      "live_activity_sse_tests": "18/18 passed",
+      "clover_cycles_tests": "passed (exit 0)"
     }
   },
   "windows": {
     "distribution": "Standalone Native C# Win32 Per-User Installer (CloverAIStudio-Setup.exe)",
     "packaging_route": "Native .NET Framework 4.8 x64 GUI Setup & Launcher (csc.exe) with embedded asInvoker manifest, automatic Zone.Identifier unblocking, and embedded TrustedPublisher certificate registration",
     "publisher_display_name": "Santhosh Narayanan",
-    "manifest_version": "5.0.0.0",
-    "display_version": "5.0.0",
+    "manifest_version": "5.0.1.0",
+    "display_version": "5.0.1",
     "architecture": "x64",
     "min_windows_version": "10.0.19041.0",
     "max_windows_version_tested": "10.0.26100.0",
@@ -85,8 +91,8 @@
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "mirror": "download/laptop/CloverAIStudio-Setup.exe",
         "type": "exe",
-        "size_bytes": 9678296,
-        "sha256": "74fda285882dae9889e703c0213c1865350e72956a0931e444fdb27796697e69"
+        "size_bytes": 9332184,
+        "sha256": "6de21e4e496762e30912de998fb7a31154b67ddc68428cc42e62624e75a55701"
       },
       {
         "file": "release/beta/windows/CloverFramework-CodeSign.cer",
@@ -98,16 +104,17 @@
     ],
     "verification": {
       "semantics_tests": "155/155 passed",
-      "collective_tests": "35/35 passed (Ed25519 asymmetric release verification)",
-      "google_identity_collective_tests": "32/32 passed (Google OIDC RS256 JWKS, PKCE loopback, 2-installation HTTP E2E sync, expiry/revocation)",
-      "human_usefulness_tests": "18/18 passed (first-turn zero-refusal human usefulness benchmark)",
-      "live_activity_sse_tests": "18/18 passed (monotonic seq, cancellation, disconnect, reconnection, concurrency)",
-      "repo_tests": "27/27 passed",
       "tool_routing_tests": "129/129 passed",
-      "page_fetch_tests": "119/119 passed (address guard, robots.txt, citations)",
-      "browser_first_tests": "30/30 passed (browser-first search engines & links)",
-      "browser_handback_tests": "51/51 passed (Send to Clover Chrome/Edge native messaging host & inbox)",
-      "regression_fixes_tests": "61/61 passed (full Clover C1-C3/S1-S3/CSI/PPL system)"
+      "repo_tests": "27/27 passed",
+      "regression_fixes_tests": "71/73 passed (2 failed: ...and out of an unrelated price; k3 dropdown entries have short, clear names and k3 badge)",
+      "page_fetch_tests": "119/119 passed",
+      "browser_first_tests": "29/30 passed (1 failed: nothing opens by itself: only a click handler calls /api/browser/open)",
+      "browser_handback_tests": "51/51 passed",
+      "collective_tests": "35/35 passed",
+      "google_identity_collective_tests": "32/32 passed",
+      "human_usefulness_tests": "not re-run for this release (urllib.error.URLError: <urlopen error [WinError 10061] No connection could be made because)",
+      "live_activity_sse_tests": "18/18 passed",
+      "clover_cycles_tests": "passed (exit 0)"
     }
   }
 }

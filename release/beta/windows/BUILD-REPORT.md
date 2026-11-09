@@ -2,12 +2,12 @@
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `5.0.0` (`5.0.0.0` Win32 PE `AssemblyVersion`)  
+**Release Version**: `5.0.1` (`5.0.1.0` Win32 PE `AssemblyVersion`)  
 **Product Name**: `Clover AI Studio`  
 **Publisher**: `Santhosh Narayanan`  
 **Distribution Model**: Standalone Native C# Win32 Per-User Installer (`CloverAIStudio-Setup.exe` / `clover-ai-studio-beta-setup.exe`)  
 **Target Architecture**: `x64` (`Windows.Desktop`, `MinVersion="10.0.19041.0"`, `MaxVersionTested="10.0.26100.0"`)  
-**Build Date**: `2026-11-06`  
+**Build Date**: `2026-11-09`  
 **Build Environment**: Windows 11 x64 (`10.0.26200`), `.NET Framework 4.8` `csc.exe` (`v4.0.30319`).
 
 ---
@@ -16,7 +16,7 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/windows/clover-ai-studio-beta-setup.exe` | `download/laptop/CloverAIStudio-Setup.exe` | Standalone direct-download Windows x64 installer | `9,678,296` bytes (`9.23 MB`) | `74fda285882dae9889e703c0213c1865350e72956a0931e444fdb27796697e69` |
+| `release/beta/windows/clover-ai-studio-beta-setup.exe` | `download/laptop/CloverAIStudio-Setup.exe` | Standalone direct-download Windows x64 installer | `9,332,184` bytes (`8.90 MB`) | `6de21e4e496762e30912de998fb7a31154b67ddc68428cc42e62624e75a55701` |
 | `release/beta/windows/CloverFramework-CodeSign.cer` | `download/laptop/CloverFramework-CodeSign.cer` | Authenticode code-signing public certificate | `832` bytes | `9365ec5d455b0ef8179ccf1c061cf481c86dad234b9f3dc62244e487c659072d` |
 
 ---
@@ -36,14 +36,15 @@
 
 ## 3. Verification & Regression Suite Results
 
-- `python tests/test_semantics.py`: **`155/155` checks passed**.
-- `python clover/test_collective.py`: **`35/35` checks passed** (Ed25519 public-key verification, unauthenticated-publish refusal, forged-key rejection, PII stripping, Sybil deduplication, Byzantine poison rejection, `Personal > Collective > General` priority).
-- `python clover/test_google_identity_collective.py`: **`32/32` checks passed** (Google OIDC RS256 JWKS verification, Windows OAuth PKCE loopback, Android OIDC token flow, two-installation HTTP E2E synchronization, expiry & revocation rejection, and consent withdrawal).
-- `python clover/test_human_usefulness.py`: **`18/18` checks passed** (first-turn zero-refusal human usefulness benchmark).
-- `python clover/test_live_activity_sse.py`: **`18/18` checks passed** (strictly monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
-- `python tests/test_clover_repo.py`: **`27/27` checks passed**.
-- `python tests/test_tool_routing.py`: **`129/129` checks passed**.
-- `python tests/test_page_fetch.py`: **`119/119` checks passed** (address guard, `robots.txt`, and citations).
-- `python tests/test_browser_first.py`: **`30/30` checks passed** (browser-first search engines & links).
-- `python tests/test_browser_handback.py`: **`51/51` checks passed** (Send to Clover Chrome/Edge extension + native messaging host & inbox).
-- `python tests/test_regression_fixes.py`: **`61/61` checks passed** (full Clover `C1 -> C2 HybridAgent -> Bridges -> C3 11-Level NCM + S1–S3 + CSI + PPL` system).
+- `python tests/test_semantics.py`: **155/155 passed**.
+- `python tests/test_tool_routing.py`: **129/129 passed**.
+- `python tests/test_clover_repo.py`: **27/27 passed**.
+- `python tests/test_regression_fixes.py`: **71/73 passed (2 failed: ...and out of an unrelated price; k3 dropdown entries have short, clear names and k3 badge)**.
+- `python tests/test_page_fetch.py`: **119/119 passed**.
+- `python tests/test_browser_first.py`: **29/30 passed (1 failed: nothing opens by itself: only a click handler calls /api/browser/open)**.
+- `python tests/test_browser_handback.py`: **51/51 passed**.
+- `python clover/test_collective.py`: **35/35 passed**.
+- `python clover/test_google_identity_collective.py`: **32/32 passed**.
+- `python clover/test_human_usefulness.py`: **not re-run for this release (urllib.error.URLError: <urlopen error [WinError 10061] No connection could be made because)**.
+- `python clover/test_live_activity_sse.py`: **18/18 passed**.
+- `python clover/test_clover_cycles.py`: **passed (exit 0)**.

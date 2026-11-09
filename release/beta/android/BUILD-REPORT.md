@@ -2,10 +2,10 @@
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `5.0.0`  
-**Version Code**: `14`  
+**Release Version**: `5.0.1`  
+**Version Code**: `15`  
 **Package Name**: `ai.clover.studio`  
-**Build Date**: `2026-11-07`  
+**Build Date**: `2026-11-09`  
 **Build Environment**: `k3` (`/opt/clover-k3/studio-android`), OpenJDK `17.0.20`, Gradle `8.9`, Android Gradle Plugin `8.5.2`, Chaquopy `17.2.0` (CPython `3.12`), Android SDK `36` (`minSdk 26`, `targetSdk 36`, `compileSdk 36`), Android NDK `llvm-strip`.
 
 ---
@@ -14,8 +14,8 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 14`, `targetSdk 36`) | `81,014,437` bytes (`77.26 MB`) | `d40b5bd84a6b513c5da231544173d78907ce9f81803eecaa3cc4a44eea44f904` |
-| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 14`, `targetSdk 36`) | `82,236,825` bytes (`78.43 MB`) | `987c13ea53def4dd49dbc86b0d1af2da32326b67e21858661fca2c1725dae610` |
+| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 15`, `targetSdk 36`) | `81,162,041` bytes (`77.40 MB`) | `52acd3566e3a57aba965544cb2583b9c32bfd5e4b2814782dd278a112f93f253` |
+| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 15`, `targetSdk 36`) | `82,238,716` bytes (`78.43 MB`) | `512dcc0356055de82c54ae3b715f5febdad9269df71b1d9f9d786e492a48dcdc` |
 
 ---
 
@@ -38,7 +38,7 @@
 ## 3. Package & Manifest Audit (`build.gradle`)
 
 ```text
-package: name='ai.clover.studio' versionCode='14' versionName='5.0.0'
+package: name='ai.clover.studio' versionCode='15' versionName='5.0.1'
 sdkVersion:'26'
 targetSdkVersion:'36'
 compileSdkVersion:'36'
@@ -48,12 +48,21 @@ launchable-activity: name='ai.clover.studio.MainActivity'
 
 ---
 
-## 4. Functional Smoke Test, Live Activity SSE & Collective Learning Verification
+## 4. Verification (re-run for this release)
 
-1. **Multi-Cycle AGENTS.md Clover Cycle Verification (`test_clover_cycles.py`)**: **`ALL CLOVER CYCLE TESTS PASSED`** (6 Outcome verification checks, 3-cycle `run_turn` auto-repair + `LRN-*` Growth in `LEARNINGS.md`, and 3-cycle `AutonomousCloverEngine`).
-2. **Collective Problem-Solving Learning (`test_collective.py`)**: **`35/35` checks passed** (RFC 8032 Ed25519 public-key verification, unauthenticated-publish refusal, forged-key rejection, PII stripping, Sybil deduplication, Byzantine poison rejection, `Personal > Collective > General` priority).
-3. **Google OIDC Identity & E2E Collective Sync (`test_google_identity_collective.py`)**: **`32/32` checks passed** (RS256 JWKS verification, OAuth PKCE, Android OIDC token flow, two-installation HTTP E2E synchronization, expiry/revocation rejection, and consent withdrawal).
-4. **Live Activity SSE Timeline (`test_live_activity_sse.py`)**: **`18/18` checks passed** (monotonic `seq` numbers, `/api/cancel` & `/api/stop` mid-turn cancellation, broken-pipe client disconnect handling, `/api/turn/events` & `resume_turn_id` reconnection replay, and concurrent queued stream execution).
-5. **Google Play Console Links**:
+- `python tests/test_semantics.py`: **155/155 passed**.
+- `python tests/test_tool_routing.py`: **129/129 passed**.
+- `python tests/test_clover_repo.py`: **27/27 passed**.
+- `python tests/test_regression_fixes.py`: **71/73 passed (2 failed: ...and out of an unrelated price; k3 dropdown entries have short, clear names and k3 badge)**.
+- `python tests/test_page_fetch.py`: **119/119 passed**.
+- `python tests/test_browser_first.py`: **29/30 passed (1 failed: nothing opens by itself: only a click handler calls /api/browser/open)**.
+- `python tests/test_browser_handback.py`: **51/51 passed**.
+- `python clover/test_collective.py`: **35/35 passed**.
+- `python clover/test_google_identity_collective.py`: **32/32 passed**.
+- `python clover/test_human_usefulness.py`: **not re-run for this release (urllib.error.URLError: <urlopen error [WinError 10061] No connection could be made because)**.
+- `python clover/test_live_activity_sse.py`: **18/18 passed**.
+- `python clover/test_clover_cycles.py`: **passed (exit 0)**.
+
+**Google Play Console Links**:
    - Instant Test (Internal App Sharing): `https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs`
    - Closed Testing Opt-In: `https://play.google.com/apps/testing/ai.clover.studio`
