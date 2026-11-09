@@ -1,14 +1,14 @@
 """When the curiosity monitor says should_observe, the meaning bridge keeps its result and applies its action boost
-(before 2026-11-09 an `array or ...` raised and the bridge silently dropped it). HELD with results/bridge_observe_fix.patch:
-passes only once that patch is applied to lfm3_layers.py (the human decides, because it switches tools on).
-Usage: python test_meaning_bridge_curiosity_held.py"""
+(before 2026-11-09 an `array or ...` raised and the bridge silently dropped it). Applied after a live A/B in which it
+repaired one answer and broke none (research/consciousness-and-subjective-experience/18-clover-integration/bridge_fix_live.py).
+Usage: python tests/test_meaning_bridge_keeps_curiosity.py"""
 import sys
 import tempfile
 from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "clover-ai-system" / "studio" / "clover"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "clover"))
 import lfm3_layers  # noqa: E402
 
 

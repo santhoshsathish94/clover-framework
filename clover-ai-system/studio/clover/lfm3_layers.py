@@ -721,7 +721,8 @@ class LayerKit:
                         rec_tools.append(st_tool)
                 if action_prior_8 is not None:
                     import numpy as np
-                    boost = np.asarray(curiosity_info.get("belief_action_boost_8") or np.zeros(8), dtype=np.float32)
+                    boost_v = curiosity_info.get("belief_action_boost_8")
+                    boost = np.asarray(np.zeros(8) if boost_v is None else boost_v, dtype=np.float32)
                     combined_ap = np.asarray(action_prior_8, dtype=np.float32) + np.float32(0.25) * boost
                     norm_ap = float(np.linalg.norm(combined_ap))
                     if norm_ap > 1e-6:

@@ -178,7 +178,7 @@ Each step lists the change, how it is validated (criteria fixed before the run) 
   - In `LayerKit.compute_meaning_bridge`, `np.asarray(curiosity_info.get("belief_action_boost_8") or np.zeros(8))` raises `ValueError` (an array has no truth value), and the surrounding `except` sets `curiosity_info = None`.
   - So whenever the monitor says `should_observe=True`, the bridge **drops the monitor's whole result**. Curiosity's observe signal and its action-prior boost have never reached a turn; only its tool names, appended before the error, did.
   - Fix: an explicit `None` check. Its test passes 3/3 with the fix and fails 2/3 against HEAD (liveness).
-- **Held for your decision, not shipped.** With the fix, memory or ontology turns where the monitor wants to observe will be *offered tools* in "Always" mode, where today they are not; earlier ladder results showed tools can hurt this 2B model. The fix is saved as [results/bridge_observe_fix.patch](../../../research/consciousness-and-subjective-experience/18-clover-integration/results/bridge_observe_fix.patch) with [test_meaning_bridge_curiosity_held.py](../../../research/consciousness-and-subjective-experience/18-clover-integration/test_meaning_bridge_curiosity_held.py).
+- **Held for your decision, not shipped.** With the fix, memory or ontology turns where the monitor wants to observe will be *offered tools* in "Always" mode, where today they are not; earlier ladder results showed tools can hurt this 2B model. The fix is saved as [results/bridge_observe_fix.patch](../../../research/consciousness-and-subjective-experience/18-clover-integration/results/bridge_observe_fix.patch) with its test, now [tests/test_meaning_bridge_keeps_curiosity.py](../../../clover-ai-system/studio/tests/test_meaning_bridge_keeps_curiosity.py) (applied in §12 after a live A/B).
 - **Measurement on the fixed bridge**, against a prediction written before the run ([step3_monitor_cost.json](../../../research/consciousness-and-subjective-experience/18-clover-integration/results/step3_monitor_cost.json)).
   - After one topic was mastered, the monitor as it is read all 4 unfamiliar questions as known (`should_observe` False). A familiarity-aware reading marked 4/4 as worth observing.
   - But only **1/4** turns would change their tool offer (the calculator, for compound interest), because the strategy chooser picks the tool-free memory strategy. My prediction ("all 4 would get tools") was wrong.
@@ -225,3 +225,66 @@ Predictions were written into the script before the run ([step4_deconfounded_cur
 **What this cycle taught me**
 - I expected a 2B model to compute reliably from short code in front of it (PLAIN ≥ 6/8). It did not, and on new inputs neither arm beat 2/4. On this hardware and model, the binding limit for numeric questions about code is the model's arithmetic, not access.
 - My first read of ON_NO_SANDBOX's 0/8 ("unverified hypotheses are kept out") was a prediction, not an observation. I checked the stored files before writing it down.
+
+## 12. Fourth cycle (2026-11-09): Direction "if held bridge fix helps then go ahead apply it, 2 sure do it, 3 make the available in site link I will download it, fix the links"
+
+**Links**
+- Both broken links were typos: the Varela result link lacked `results/`, and the Santucci script link pointed at a results name.
+- Fixed in `6fd336f1`. All three CI checks pass locally: `check-links.py` finds 0 broken links, `scripts/tests` passes 29/29, and `check-site.py` reports 0 errors.
+
+**Item 2: questions about a verified workspace function**
+
+Changes in `lfm3_layers.py`:
+- **Wording.** The memory note header no longer says "answer from them". It still says "no tools needed", which guards against the file hunting recorded in the code. The instruction no longer calls every note "not verified facts". It now says "only a note marked externally verified was checked, and its cases hold only for the inputs shown".
+- **Computation.** When a question literally calls the function that an externally verified note recorded, `run_verified_calls` runs the note's verified copy in `IsolatedPythonSandbox` (3 s limit).
+  - Only literal arguments are accepted, and at most 4 calls.
+  - The results go under the note ("Computed now by running that verified function: …") and into the memory layer's info (`computed`).
+  - Nothing is added when there is no runnable Python, the sandbox fails, or a NameError shows the copy lacks a helper the module has.
+
+Validation:
+- `tests/test_verified_function_results.py` passes 13/13.
+  - Liveness: a different stored body gives a different value.
+  - Arguments that are not literals, unverified notes and a missing Python each add nothing.
+- Live run: [item2_verified_notes_live.py](../../../research/consciousness-and-subjective-experience/18-clover-integration/item2_verified_notes_live.py) → [results/item2_verified_notes_live.json](../../../research/consciousness-and-subjective-experience/18-clover-integration/results/item2_verified_notes_live.json).
+  - Predictions and the decision rule were written before the run.
+  - It used step 4's workspaces, questions, model and system message.
+  - Before any model call, the script confirmed three things: the memory equals step 4's, the new contexts differ from step 4's only in the two wording strings, and the computation only adds lines.
+
+| Arm | Original | New | Notes |
+| :--- | :--- | :--- | :--- |
+| HEAD | 4/4 | 1/4 | Step 4's ON answers reproduced byte for byte (8/8), as predicted |
+| Wording only | 4/4 | 1/4 | 7/8 answers byte-identical to HEAD; still copies stored values for other inputs, as predicted |
+| Wording + computation | 4/4 | **4/4** | 33.0, 50.00 and 12.50, 20.0; every answer checked by hand, as predicted |
+
+- **Controls** (3 ordinary user notes): every answer is byte-identical under the old and new wording. C3 failed under both: given "My manager is Priya." and "Correction: my manager is now Arun; …", the model answered Priya.
+- **My decision rule was wrong.** It required 3/3 controls under the new wording, as an absolute count. The question it served was whether the wording breaks normal memory answers, so it should have been "no worse than the old wording". Read literally, it said revert both.
+  - I did not overrule my own gate. I asked, and **the human chose to ship both**.
+- **Found, not changed: corrections to user notes.** `remember()` stores "Correction: …" as a second `user stated belief` note and does not mark the earlier one superseded. The model then sees two managers and can pick the old one.
+
+**Bridge fix: measured, then applied**
+
+The setup ([bridge_fix_live.py](../../../research/consciousness-and-subjective-experience/18-clover-integration/bridge_fix_live.py) → [results/bridge_fix_live.json](../../../research/consciousness-and-subjective-experience/18-clover-integration/results/bridge_fix_live.json)):
+- 20 real Studio turns: `OmniNative.run_turn` with memory, ontology, compiler and ncm, and the install's C2/C3 parts. The model was live LFM3-Omni-2B, greedy.
+- Every turn started from a fresh memory and a fresh curiosity state, as on k3 and every new install.
+- Comparison: HEAD (with item 2) against the same module with the one-line fix, in tools mode "ask" (the default) and "Always", routed by `semantics.route` as the server does.
+- This run's permissions denied every permissioned tool, so nothing on this PC was read or run.
+- Predictions and the decision rule were written before the run, and a dry run checked the setup first: all 5 questions retrieved their note, and HEAD's bridge reported `curiosity: null` every time while the fix's reported `should_observe: true`.
+
+| Mode | Correct, HEAD | Correct, fix | What changed |
+| :--- | :--- | :--- | :--- |
+| ask | 4/5 | 4/5 | Nothing: no tool offer changed and all 5 replies are byte-identical (P1, P2 held) |
+| Always | 4/5 | 5/5 | Offers changed exactly on B1 and B2 (calculate) and B4 (read_file) (P3 held) |
+
+- **B1, compound interest.** HEAD answered 28,251, which is wrong. The fix offered the calculator, which returned 30626.075, and the model answered 30626.08 (P4 held).
+- **B2.** Both arms were right; the fix's answer came from the calculator.
+- **B4, worse with the fix even though the checker passed it.** HEAD answered "Your project plan is in `plan.md` in your Documents folder." With the fix, the model made an unneeded `read_file` call. It was denied here and the reply led with "I couldn't read the file". With default permissions (files are allowed by default), it would read a file the user did not ask for.
+- **Decision rule** (FIX more correct AND no HEAD-correct turn broken): 9 vs 8, none broken. **Applied**, as directed ("if held bridge fix helps then go ahead apply it").
+  - The held test became `tests/test_meaning_bridge_keeps_curiosity.py`. It passes 3/3, and 2 checks fail when the old line is put back.
+  - Gate: 11 suites identical to the baseline (9 pass, the same 2 old failures), and the 6 new tests pass.
+- **Not covered:**
+  - One run of 5 questions on one model.
+  - The unneeded file read on B4 is a cost in Always mode that the correctness checker does not see.
+  - What curiosity's action boost does in C2 was not separately observed. It changed no reply in "ask" mode.
+- **Found, not changed: Clover's arithmetic check garbles its feedback on numbers with thousands separators.**
+  - On the "ask" B1 reply it did flag the wrong product. But it split "25,000" at the comma and read across a line break ("you wrote … = 25", "000 × 1.225043 = 0").
+  - The repair round got unusable feedback, and the final reply still says 28,251.

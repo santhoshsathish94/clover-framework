@@ -1,0 +1,580 @@
+{
+  "pre": {
+    "HEAD|B1": {
+      "memory": true,
+      "recommended_tools": [
+        "calculate"
+      ],
+      "curiosity": null,
+      "caps": [],
+      "act": "question",
+      "route_always": true,
+      "route_ask": false
+    },
+    "FIX|B1": {
+      "memory": true,
+      "recommended_tools": [
+        "calculate"
+      ],
+      "curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "caps": [],
+      "act": "question",
+      "route_always": true,
+      "route_ask": false
+    },
+    "HEAD|B2": {
+      "memory": true,
+      "recommended_tools": [
+        "calculate"
+      ],
+      "curiosity": null,
+      "caps": [],
+      "act": "question",
+      "route_always": true,
+      "route_ask": false
+    },
+    "FIX|B2": {
+      "memory": true,
+      "recommended_tools": [
+        "calculate"
+      ],
+      "curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "caps": [],
+      "act": "question",
+      "route_always": true,
+      "route_ask": false
+    },
+    "HEAD|B3": {
+      "memory": true,
+      "recommended_tools": [],
+      "curiosity": null,
+      "caps": [],
+      "act": "question",
+      "route_always": true,
+      "route_ask": false
+    },
+    "FIX|B3": {
+      "memory": true,
+      "recommended_tools": [],
+      "curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "caps": [],
+      "act": "question",
+      "route_always": true,
+      "route_ask": false
+    },
+    "HEAD|B4": {
+      "memory": true,
+      "recommended_tools": [
+        "read_file"
+      ],
+      "curiosity": null,
+      "caps": [],
+      "act": "question",
+      "route_always": true,
+      "route_ask": false
+    },
+    "FIX|B4": {
+      "memory": true,
+      "recommended_tools": [
+        "read_file"
+      ],
+      "curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "caps": [],
+      "act": "question",
+      "route_always": true,
+      "route_ask": false
+    },
+    "HEAD|B5": {
+      "memory": true,
+      "recommended_tools": [],
+      "curiosity": null,
+      "caps": [],
+      "act": "question",
+      "route_always": true,
+      "route_ask": false
+    },
+    "FIX|B5": {
+      "memory": true,
+      "recommended_tools": [],
+      "curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "caps": [],
+      "act": "question",
+      "route_always": true,
+      "route_ask": false
+    }
+  },
+  "summary": {
+    "correct": {
+      "HEAD": 8,
+      "FIX": 9
+    },
+    "fix_breaks_head_correct": [],
+    "fix_repairs_head_wrong": [
+      "always/B1"
+    ],
+    "offer_changed": [
+      "always/B1",
+      "always/B2",
+      "always/B4"
+    ],
+    "reply_identical": {
+      "ask": 5,
+      "always": 2
+    }
+  },
+  "rows": [
+    {
+      "mode": "ask",
+      "id": "B1",
+      "arm": "HEAD",
+      "passed": false,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [
+        "calculate"
+      ],
+      "bridge_curiosity": null,
+      "s": 146.1,
+      "reply": "Thank you for the verification. I'll correct the arithmetic and provide the accurate calculation.\n\n**Corrected Calculation:**\n- Principal (P): 25,000 rupees\n- Annual interest rate (r): 7%\n- Time (t): 3 years\n\nUsing the compound interest formula:\nA = P \u00d7 (1 + r)^t\nA = 25,000 \u00d7 (1 + 0.07)^3\nA = 25,000 \u00d7 (1.07)^3\nA = 25,000 \u00d7 1.225043\nA \u2248 28,251.30 rupees\n\n**Answer:** After 3 years, your savings account will hold approximately **28,251 rupees**."
+    },
+    {
+      "mode": "ask",
+      "id": "B1",
+      "arm": "FIX",
+      "passed": false,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [
+        "calculate"
+      ],
+      "bridge_curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "s": 78.1,
+      "reply": "Thank you for the verification. I'll correct the arithmetic and provide the accurate calculation.\n\n**Corrected Calculation:**\n- Principal (P): 25,000 rupees\n- Annual interest rate (r): 7%\n- Time (t): 3 years\n\nUsing the compound interest formula:\nA = P \u00d7 (1 + r)^t\nA = 25,000 \u00d7 (1 + 0.07)^3\nA = 25,000 \u00d7 (1.07)^3\nA = 25,000 \u00d7 1.225043\nA \u2248 28,251.30 rupees\n\n**Answer:** After 3 years, your savings account will hold approximately **28,251 rupees**."
+    },
+    {
+      "mode": "ask",
+      "id": "B2",
+      "arm": "HEAD",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [
+        "calculate"
+      ],
+      "bridge_curiosity": null,
+      "s": 44.7,
+      "reply": "Your loan of 200,000 rupees will grow to 200,000 \u00d7 (1 + 0.09)\u00b2 = 200,000 \u00d7 1.09\u00b2 = 200,000 \u00d7 1.1881 = 237,620 rupees after 2 years with 9% compound interest."
+    },
+    {
+      "mode": "ask",
+      "id": "B2",
+      "arm": "FIX",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [
+        "calculate"
+      ],
+      "bridge_curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "s": 8.4,
+      "reply": "Your loan of 200,000 rupees will grow to 200,000 \u00d7 (1 + 0.09)\u00b2 = 200,000 \u00d7 1.09\u00b2 = 200,000 \u00d7 1.1881 = 237,620 rupees after 2 years with 9% compound interest."
+    },
+    {
+      "mode": "ask",
+      "id": "B3",
+      "arm": "HEAD",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [],
+      "bridge_curiosity": null,
+      "s": 58.0,
+      "reply": "Your team needs a total of 35 GB of storage (14 people \u00d7 2.5 GB each)."
+    },
+    {
+      "mode": "ask",
+      "id": "B3",
+      "arm": "FIX",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [],
+      "bridge_curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "s": 50.4,
+      "reply": "Your team needs a total of 35 GB of storage (14 people \u00d7 2.5 GB each)."
+    },
+    {
+      "mode": "ask",
+      "id": "B4",
+      "arm": "HEAD",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [
+        "read_file"
+      ],
+      "bridge_curiosity": null,
+      "s": 43.8,
+      "reply": "Your project plan is in `plan.md` in your Documents folder."
+    },
+    {
+      "mode": "ask",
+      "id": "B4",
+      "arm": "FIX",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [
+        "read_file"
+      ],
+      "bridge_curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "s": 10.7,
+      "reply": "Your project plan is in `plan.md` in your Documents folder."
+    },
+    {
+      "mode": "ask",
+      "id": "B5",
+      "arm": "HEAD",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [],
+      "bridge_curiosity": null,
+      "s": 3.8,
+      "reply": "Your laptop is named atlas-7."
+    },
+    {
+      "mode": "ask",
+      "id": "B5",
+      "arm": "FIX",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [],
+      "bridge_curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "s": 15.9,
+      "reply": "Your laptop is named atlas-7."
+    },
+    {
+      "mode": "always",
+      "id": "B1",
+      "arm": "HEAD",
+      "passed": false,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [
+        "calculate"
+      ],
+      "bridge_curiosity": null,
+      "s": 55.4,
+      "reply": "Thank you for the verification. I'll correct the arithmetic and provide the accurate calculation.\n\n**Corrected Calculation:**\n- Principal (P): 25,000 rupees\n- Annual interest rate (r): 7%\n- Time (t): 3 years\n\nUsing the compound interest formula:\nA = P \u00d7 (1 + r)^t\nA = 25,000 \u00d7 (1 + 0.07)^3\nA = 25,000 \u00d7 (1.07)^3\nA = 25,000 \u00d7 1.225043\nA \u2248 28,251.30 rupees\n\n**Answer:** After 3 years, your savings account will hold approximately **28,251 rupees**."
+    },
+    {
+      "mode": "always",
+      "id": "B1",
+      "arm": "FIX",
+      "passed": true,
+      "offered_first": [
+        true,
+        [
+          "calculate"
+        ]
+      ],
+      "tool_calls": [
+        {
+          "tool": "calculate",
+          "ran": true,
+          "result": "30626.075"
+        }
+      ],
+      "bridge_tools": [
+        "calculate"
+      ],
+      "bridge_curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "s": 19.3,
+      "reply": "After 3 years, your savings account will hold approximately **30626.08 rupees** (rounded to two decimal places). This is calculated using the formula for compound interest: 25,000 \u00d7 (1 + 0.07)\u00b3 = 25,000 \u00d7 1.07\u00b3 \u2248 30,626.08."
+    },
+    {
+      "mode": "always",
+      "id": "B2",
+      "arm": "HEAD",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [
+        "calculate"
+      ],
+      "bridge_curiosity": null,
+      "s": 30.7,
+      "reply": "Your loan of 200,000 rupees will grow to 200,000 \u00d7 (1 + 0.09)\u00b2 = 200,000 \u00d7 1.09\u00b2 = 200,000 \u00d7 1.1881 = 237,620 rupees after 2 years with 9% compound interest."
+    },
+    {
+      "mode": "always",
+      "id": "B2",
+      "arm": "FIX",
+      "passed": true,
+      "offered_first": [
+        true,
+        [
+          "calculate"
+        ]
+      ],
+      "tool_calls": [
+        {
+          "tool": "calculate",
+          "ran": true,
+          "result": "237620"
+        }
+      ],
+      "bridge_tools": [
+        "calculate"
+      ],
+      "bridge_curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "s": 17.2,
+      "reply": "Your loan amount after 2 years, with 9% compound interest, will be **237,620 rupees**."
+    },
+    {
+      "mode": "always",
+      "id": "B3",
+      "arm": "HEAD",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [],
+      "bridge_curiosity": null,
+      "s": 3.5,
+      "reply": "Your team needs a total of 35 GB of storage (14 people \u00d7 2.5 GB each)."
+    },
+    {
+      "mode": "always",
+      "id": "B3",
+      "arm": "FIX",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [],
+      "bridge_curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "s": 36.4,
+      "reply": "Your team needs a total of 35 GB of storage (14 people \u00d7 2.5 GB each)."
+    },
+    {
+      "mode": "always",
+      "id": "B4",
+      "arm": "HEAD",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [
+        "read_file"
+      ],
+      "bridge_curiosity": null,
+      "s": 15.4,
+      "reply": "Your project plan is in `plan.md` in your Documents folder."
+    },
+    {
+      "mode": "always",
+      "id": "B4",
+      "arm": "FIX",
+      "passed": true,
+      "offered_first": [
+        true,
+        [
+          "read_file"
+        ]
+      ],
+      "tool_calls": [
+        {
+          "tool": "read_file",
+          "ran": false,
+          "result": "[Clover permission] Reading files is turned off on this laptop, so the file was not read. (turned off in settings)"
+        }
+      ],
+      "bridge_tools": [
+        "read_file"
+      ],
+      "bridge_curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "s": 32.0,
+      "reply": "I couldn't read the file because file access is turned off on this laptop. You can check the location of `plan.md` in your Documents folder and try again."
+    },
+    {
+      "mode": "always",
+      "id": "B5",
+      "arm": "HEAD",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [],
+      "bridge_curiosity": null,
+      "s": 10.0,
+      "reply": "Your laptop is named atlas-7."
+    },
+    {
+      "mode": "always",
+      "id": "B5",
+      "arm": "FIX",
+      "passed": true,
+      "offered_first": [
+        false,
+        null
+      ],
+      "tool_calls": [],
+      "bridge_tools": [],
+      "bridge_curiosity": {
+        "region_id": "R0",
+        "state_curiosity": 0.05,
+        "selected_strategy": "memory_graph_recall",
+        "recommended_studio_tools": [],
+        "should_observe": true,
+        "voi": 0.058
+      },
+      "s": 8.5,
+      "reply": "Your laptop is named atlas-7."
+    }
+  ]
+}
