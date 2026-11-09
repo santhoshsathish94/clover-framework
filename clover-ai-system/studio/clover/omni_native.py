@@ -948,6 +948,7 @@ class OmniNative(N.LFM3Native):
                                     ran, result, why = self.execute_tool(c["name"], c["arguments"], ask, allow)
                                     done_calls[key] = result
                                 worked, summary = N.tool_worked(c["name"], ran, result, why)
+                                summary = N.checked_summary(self, ran, summary)
                                 emit({"type": "tool_result", "id": c["id"], "name": c["name"], "ran": ran, "worked": worked,
                                       "summary": summary, "why": why, "result": result[:3000]})
                                 rounds.append({"tool": c["name"], "arguments": c["arguments"], "ran": ran, "worked": worked,

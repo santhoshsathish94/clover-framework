@@ -351,6 +351,14 @@ def _clip(s, n=TOOL_OUTPUT_CHARS):
     return s if len(s) <= n else s[:n] + f"\n... [{len(s) - n} more characters not shown]"
 
 
+def checked_summary(eng, ran, summary):
+    """A tool step's line in the chat, plus "checked on disk" when Clover read the written file back (tool_tasks)."""
+    t = getattr(eng, "last_task", None) if ran else None
+    if t and t.get("status") == "completed" and (t.get("evidence") or {}).get("checked") == "file read back":
+        return f"{summary} · checked on disk"
+    return summary
+
+
 def tool_worked(name, ran, result, why=""):
     """Evaluate whether a tool call succeeded and return `(worked: bool, summary: str)` for live UI progress."""
     if not ran:
@@ -668,11 +676,14 @@ class LFM3Native:
         if not ok:
             perm = extra["permission"] if extra else TOOL_PERMISSION[name]
             return False, (P.DECLINED_TEXT if why == "not allowed by you" else P.DENIED_TEXT[perm]) + f" ({why})", why
+        tid = self._task_begin(name, args)
         self.stage = {"name": f"running {name}", "since": time.time()}
         try:
             out = extra["run"](args) if extra else self._run_tool(name, args)
         except Exception as exc:  # report tool failures to the model as results
-            return True, f"Error: {type(exc).__name__}: {exc}", why
+            out = f"Error: {type(exc).__name__}: {exc}"
+            self._task_done(tid, name, args, out, why)
+            return True, out, why
         if name == "run_powershell" and "is not recognized as the name of a cmdlet" in str(out):
             bad = re.match(r"\s*([A-Za-z][\w-]*)", str(args.get("command") or ""))
             if bad:
@@ -681,7 +692,37 @@ class LFM3Native:
                    "program, e.g. git log --oneline -5, git status, Get-ChildItem, Get-PSDrive C.]")
         if name == "run_powershell" and "seconds: the time limit]" not in str(out):
             self.turn_ran = getattr(self, "turn_ran", set()) | {command}
+        out = self._task_done(tid, name, args, out, why)
         return True, flag_injection(_clip(out)), why
+
+    def _task_begin(self, name, args):
+        self.last_task = None
+        tasks = getattr(self, "tool_tasks", None)
+        if tasks is None:
+            return None
+        try:
+            return tasks.begin(name, args, write_scope=args.get("path") if name == "write_file" else None)
+        except Exception:  # the record never stops a tool call
+            return None
+
+    def _task_done(self, tid, name, args, out, why):
+        """The call's task (tool_tasks): a written file must read back as written before the call counts as done; one
+        that does not is reported to the model as not done."""
+        tasks = getattr(self, "tool_tasks", None)
+        if tasks is None or tid is None:
+            return out
+        import tool_tasks
+        worked = tool_worked(name, True, out, why)[0]
+        check = tool_tasks.write_check(self._path(args.get("path")), args.get("content")) if name == "write_file" else None
+        try:
+            v = tasks.finish(tid, worked, out, check)
+        except Exception:
+            return out
+        self.last_task = v
+        if worked and v["status"] == "failed":
+            return ("Error: Clover read the file back after writing and it does not hold what was written "
+                    f"({(v.get('evidence') or {}).get('reason', 'check failed')}).")
+        return out
 
     def _python(self, code):
         """run_python in a fresh output folder (<media>/out/<id>): a chart saved without a folder lands there and is shown

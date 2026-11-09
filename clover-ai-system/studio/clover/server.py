@@ -80,6 +80,7 @@ class S:
     github = None
     vscode = None
     repo = None
+    tool_tasks = None  # tool_tasks.ToolTasks: every tool call as a verified task, kept across restarts
     kit = None
     memidx = None
     csi = None  # csi_child.CSIService
@@ -1456,6 +1457,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
         eng.workdir, eng.workname, eng.after_write = (
             (Path(ws["path"]), ws["name"], S.workspaces.touch) if ws
             else (Path(cdir), Path(cdir).name, None) if cdir else (None, "", None))
+        eng.tool_tasks = S.tool_tasks
         try:
             tools_on, said = bool(body.get("tools", True)), None
             # trying again where the question or this message asks for a tool (a search): answered again with it
@@ -1540,6 +1542,11 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
             semantics.align(frame, res, remember_fn=(lambda note: remember_note(note, sid, on["memory"])) if memory_ok
                             else None)
             res.setdefault("layers", []).insert(0, frame.layer())
+            unfinished = S.tool_tasks.take_interrupted() if S.tool_tasks is not None and not res.get("cancelled") else []
+            if unfinished:
+                import tool_tasks
+                res["reply"] = (str(res.get("reply") or "").rstrip() + "\n\n" + tool_tasks.interrupted_note(unfinished)).strip()
+                res["layers"].append({"layer": "tasks", "interrupted": unfinished})
             if not retry:
                 personal_step(rt.personal, "after_turn", sid, frame, {"turn_n": n})
             if made:
@@ -2521,6 +2528,11 @@ class Handler(BaseHTTPRequestHandler):
                 "collective_jepa_metrics": coll_metrics,
                 "last_autonomous_run": getattr(S, "last_autonomous_run", None),
             })
+        if path == "/api/tasks":  # the tool-task record: recent calls, how each was checked, unfinished ones
+            if S.tool_tasks is None:
+                return self._send(200, {"on": False, "recent": [], "interrupted": []})
+            return self._send(200, {"on": True, "log": S.tool_tasks.path.name, "recent": S.tool_tasks.recent(30),
+                                    "interrupted": list(S.tool_tasks.interrupted)})
         if path == "/api/memory":
             return self._send(200, {"memories": layer_kit().memories()})
         if path == "/api/identity/google":
@@ -3783,6 +3795,16 @@ def main():
     S.repo = clover_repo.Repo(base, HERE / "AGENTS.md", kit=layer_kit)
     if moved:
         S.repo.note("moved into the repository, vault and media folder: " + "; ".join(moved))
+    try:
+        import tool_tasks
+        S.tool_tasks = tool_tasks.ToolTasks(base, paths.DEVICE_WORD)
+        if S.tool_tasks.recover_error:
+            S.repo.note("tool task log not read: " + S.tool_tasks.recover_error)
+        if S.tool_tasks.interrupted:
+            S.repo.note("unfinished when Clover last stopped: " + ", ".join(i["tool"] for i in S.tool_tasks.interrupted))
+    except Exception as exc:  # Clover runs without the task record rather than not at all
+        S.tool_tasks = None
+        S.repo.note(f"tool task log off: {type(exc).__name__}: {exc}")
     import memory_index
     S.memidx = memory_index.MemoryIndex(base, S.repo, is_idle=studio_idle, note_writer=write_note,
                                         recall=S.settings.get()["layers"]["recall"])
