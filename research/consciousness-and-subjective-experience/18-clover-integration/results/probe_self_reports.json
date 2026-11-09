@@ -1,0 +1,71 @@
+{
+  "F1_outcome_label": {
+    "prose_opinion": {
+      "findings": 0,
+      "any_check_applied": false,
+      "stage_label_engines_show": "Outcome verified in 1 Clover cycle",
+      "backend_verified_in_turn": false
+    },
+    "prose_false_fact": {
+      "findings": 0,
+      "any_check_applied": false,
+      "stage_label_engines_show": "Outcome verified in 1 Clover cycle",
+      "backend_verified_in_turn": false
+    },
+    "arith_correct": {
+      "findings": 0,
+      "any_check_applied": true,
+      "stage_label_engines_show": "Outcome verified in 1 Clover cycle",
+      "backend_verified_in_turn": false
+    },
+    "arith_wrong_liveness": {
+      "findings": 2,
+      "any_check_applied": true,
+      "stage_label_engines_show": "retry",
+      "backend_verified_in_turn": false
+    }
+  },
+  "F2_fallback_labels": {
+    "c2c3_runtime_loaded": false,
+    "c2_info_module": "HybridLink2048 + Lfm3NativeHybridLink(d=2048, bottleneck=512)",
+    "c2_info_latent_steps": 3,
+    "c3_info_decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "c3_info_bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "c3_text_changed": false,
+    "liveness_real_install_has_files": true
+  },
+  "F4_monitor_novelty": {
+    "leaves": 1,
+    "rows": [
+      {
+        "query": "ring buffer partition throughput stage 0 cyclic pipeline slots",
+        "seen_topic": true,
+        "region": "R0",
+        "expected_error_yc": 0.0549,
+        "should_observe": false
+      },
+      {
+        "query": "Explain the Krebs cycle enzymes in mitochondria",
+        "seen_topic": false,
+        "region": "R0",
+        "expected_error_yc": 0.0549,
+        "should_observe": false
+      },
+      {
+        "query": "zxqv plorth wendigast mumblecrank fizzlepop",
+        "seen_topic": false,
+        "region": "R0",
+        "expected_error_yc": 0.0549,
+        "should_observe": false
+      },
+      {
+        "query": "What were the causes of the Peloponnesian War?",
+        "seen_topic": false,
+        "region": "R0",
+        "expected_error_yc": 0.0549,
+        "should_observe": false
+      }
+    ],
+    "liveness_failing_region_yc": 0.8246
+  }
+}

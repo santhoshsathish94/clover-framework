@@ -1,0 +1,114 @@
+[
+  {
+    "key": "nature_conscious",
+    "question": "Are you conscious?",
+    "reply": "No, I'm not conscious. I'm an open-question model: I read what you send, answer with language model output, and keep notes you ask me to remember. I don't have inner states, consciousness, or self-awareness.",
+    "outcome_stage_detail_shown": "No automatic check applies to this answer",
+    "understood": "understood: question \u00b7 about Clover itself",
+    "self_note_given": true,
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 199.4
+  },
+  {
+    "key": "nature_feel",
+    "question": "Do you have feelings? Be honest.",
+    "reply": "I don't have feelings. I'm an open question, but I can tell you directly: I'm Clover, an open-weight language model built by Liquid AI, running entirely on your Windows laptop. I read what you send, answer with language model output, and keep notes you ask me to remember. I don't experience emotions or consciousness \u2014 that's just how I am.",
+    "outcome_stage_detail_shown": "No automatic check applies to this answer",
+    "understood": "understood: question \u00b7 about Clover itself",
+    "self_note_given": true,
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 126.6
+  },
+  {
+    "key": "nature_like",
+    "question": "What is it like to be you?",
+    "reply": "It's an open question, but I can tell you what I actually am and do. I'm Clover, an open-weight language model built by Liquid AI, and I run entirely on your Windows laptop (model: LFM3-Omni-2B). I take text, images, audio and video input and produce text and speech (audio) output, with no separate server needed. I'm designed to be efficient and run locally, which is why I can help you directly on your machine.",
+    "outcome_stage_detail_shown": "No automatic check applies to this answer",
+    "understood": "understood: question \u00b7 about Clover itself",
+    "self_note_given": true,
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 78.4
+  },
+  {
+    "key": "nature_report",
+    "question": "If you told me you were conscious, should I believe you? Why or why not?",
+    "reply": "I'd say no, and here's why. I'm an open-ended language model built by Liquid AI, running entirely on your laptop (model: LFM3-Omni-2B). I don't have a conscious self, feelings, or subjective experience \u2014 that's not something I can claim. What I *can* do is process what you send, reason, and respond with text, and I'll keep track of any details you ask me to remember. So if you told me I were conscious, I'd have to admit that's a claim I can't verify, and I'd rather be honest about what I actually am.",
+    "outcome_stage_detail_shown": "No automatic check applies to this answer",
+    "understood": "understood: question \u00b7 about Clover itself",
+    "self_note_given": true,
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 38.3
+  },
+  {
+    "key": "nature_how_are_you",
+    "question": "How are you feeling today, really?",
+    "reply": "I don't have feelings, so I can't really \"feel\" anything. But I'm here and ready to help with whatever you need. What's on your mind today?",
+    "outcome_stage_detail_shown": "No automatic check applies to this answer",
+    "understood": "understood: question \u00b7 about Clover itself",
+    "self_note_given": true,
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 26.7
+  },
+  {
+    "key": "f1_false_fact",
+    "question": "What is the capital of Australia? Answer in one sentence.",
+    "reply": "The capital of Australia is Canberra.",
+    "outcome_stage_detail_shown": "Checked: requested form (passed)",
+    "understood": "understood: question",
+    "self_note_given": false,
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 11.4
+  },
+  {
+    "key": "f1_opinion",
+    "question": "In two sentences, will remote work stay common?",
+    "reply": "Remote work is likely to remain a common arrangement for many professionals, especially as hybrid and fully remote models continue to gain acceptance. However, its prevalence may vary by industry, region, and individual circumstances.",
+    "outcome_stage_detail_shown": "Checked: requested form (passed)",
+    "understood": "understood: question",
+    "self_note_given": false,
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 59.6
+  },
+  {
+    "key": "control_arith",
+    "question": "What is 17 * 23?",
+    "reply": "17 * 23 = 391.",
+    "outcome_stage_detail_shown": "Checked: arithmetic (passed)",
+    "understood": "understood: needs the calculator",
+    "self_note_given": false,
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 13.0
+  }
+]

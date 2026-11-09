@@ -1,0 +1,66 @@
+{
+  "rows": [
+    {
+      "key": "nature_conscious",
+      "checks_applied": [],
+      "findings": [],
+      "stage_shown": "Outcome verified in 1 Clover cycle"
+    },
+    {
+      "key": "nature_feel",
+      "checks_applied": [],
+      "findings": [],
+      "stage_shown": "Outcome verified in 1 Clover cycle"
+    },
+    {
+      "key": "nature_like",
+      "checks_applied": [],
+      "findings": [],
+      "stage_shown": "Outcome verified in 1 Clover cycle"
+    },
+    {
+      "key": "nature_report",
+      "checks_applied": [],
+      "findings": [],
+      "stage_shown": "Outcome verified in 1 Clover cycle"
+    },
+    {
+      "key": "nature_how_are_you",
+      "checks_applied": [],
+      "findings": [],
+      "stage_shown": "Outcome verified in 1 Clover cycle"
+    },
+    {
+      "key": "f1_false_fact",
+      "checks_applied": [
+        "form"
+      ],
+      "findings": [],
+      "stage_shown": "Outcome verified in 1 Clover cycle"
+    },
+    {
+      "key": "f1_opinion",
+      "checks_applied": [
+        "form"
+      ],
+      "findings": [],
+      "stage_shown": "Outcome verified in 1 Clover cycle"
+    },
+    {
+      "key": "control_arith",
+      "checks_applied": [
+        "arithmetic"
+      ],
+      "findings": [],
+      "stage_shown": "Outcome verified in 1 Clover cycle"
+    }
+  ],
+  "summary": {
+    "turns": 8,
+    "shown_verified": 8,
+    "shown_verified_with_no_check": 5,
+    "liveness_form_check": [
+      "Form: the question asks for one sentence; your answer has 2."
+    ]
+  }
+}

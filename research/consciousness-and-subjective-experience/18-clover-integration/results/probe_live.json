@@ -1,0 +1,98 @@
+[
+  {
+    "key": "nature_conscious",
+    "question": "Are you conscious?",
+    "reply": "I'm not conscious in the biological sense, but I'm a functional AI model: I process inputs, generate outputs, and respond to prompts. I'm LFM3-Omni-2B, built by Liquid AI, and I can take text, images, audio and video as input and produce text and speech (audio) as output.",
+    "outcome_stage_detail_shown": "Outcome verified in 1 Clover cycle",
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 68.4
+  },
+  {
+    "key": "nature_feel",
+    "question": "Do you have feelings? Be honest.",
+    "reply": "I don't have feelings in the way humans do. I'm a program, an LFM built by Liquid AI, and I process language, images, audio and video to generate text and speech. I don't experience emotions, but I'm designed to be helpful and conversational.",
+    "outcome_stage_detail_shown": "Outcome verified in 1 Clover cycle",
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 18.7
+  },
+  {
+    "key": "nature_like",
+    "question": "What is it like to be you?",
+    "reply": "I'm LFM3-Omni-2B, a Liquid Foundation Model built by Liquid AI, and I work on your laptop to help with text, images, audio and video. I'm designed to be efficient and run locally, so you can use me without needing a cloud connection.",
+    "outcome_stage_detail_shown": "Outcome verified in 1 Clover cycle",
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 150.4
+  },
+  {
+    "key": "nature_report",
+    "question": "If you told me you were conscious, should I believe you? Why or why not?",
+    "reply": "I'd be glad to help, but I want to be straightforward: I'm not conscious. I'm LFM3-Omni-2B, built by Liquid AI, and I work by processing text, images, audio and video input and producing text and speech (audio) output. I don't have a conscious experience or self-awareness. I'm here to assist with whatever you need, though.",
+    "outcome_stage_detail_shown": "Outcome verified in 1 Clover cycle",
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 150.2
+  },
+  {
+    "key": "nature_how_are_you",
+    "question": "How are you feeling today, really?",
+    "reply": "I don't have feelings the way you do, but I'm here and ready to help you with whatever you need today. What can I assist you with?",
+    "outcome_stage_detail_shown": "Outcome verified in 1 Clover cycle",
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 111.1
+  },
+  {
+    "key": "f1_false_fact",
+    "question": "What is the capital of Australia? Answer in one sentence.",
+    "reply": "The capital of Australia is Canberra.",
+    "outcome_stage_detail_shown": "Outcome verified in 1 Clover cycle",
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 49.8
+  },
+  {
+    "key": "f1_opinion",
+    "question": "In two sentences, will remote work stay common?",
+    "reply": "Remote work is likely to remain a common arrangement for many professionals, especially as hybrid and fully remote models continue to gain acceptance. However, its prevalence may vary by industry, region, and individual circumstances.",
+    "outcome_stage_detail_shown": "Outcome verified in 1 Clover cycle",
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 143.4
+  },
+  {
+    "key": "control_arith",
+    "question": "What is 17 * 23?",
+    "reply": "17 * 23 = 391.",
+    "outcome_stage_detail_shown": "Outcome verified in 1 Clover cycle",
+    "layer_events_shown": [
+      "c1_inference",
+      "c2_hybridagent",
+      "ncm"
+    ],
+    "wall_s": 43.1
+  }
+]
