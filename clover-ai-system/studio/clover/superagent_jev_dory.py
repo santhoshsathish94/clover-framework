@@ -242,8 +242,18 @@ class CloverDecisionEngine:
     ) -> dict[str, Any]:
         """Fixes Braedennn/OpenJev's confidence inversion:
         Never inject a low-confidence (< min_confidence) guess as an authoritative command.
+        Caution only (review item 1, 2026-11-09): an `act` decision is never injected, however confident; only
+        gather/clarify/verify can be, because confident `act` on ambiguous or unverified requests was the failure
+        seen on held-out plain messages.
         """
         if decision.confidence >= self.min_confidence:
+            if decision.action == "act":
+                return {
+                    "inject": False,
+                    "mode": "none",
+                    "directive": "",
+                    "why": "caution only: an act decision never authorizes an action",
+                }
             inject = step == 1 or decision.action != prev_action
             return {
                 "inject": inject,
