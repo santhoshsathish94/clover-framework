@@ -1,0 +1,859 @@
+PAPER_ID: 01-nagel-1974-bat
+TITLE: What Is It Like to Be a Bat?
+AUTHORS: Thomas Nagel
+YEAR: 1974
+DOI: 10.2307/2183914
+SOURCE_URL_REACHED: https://www.sas.upenn.edu/~cavitch/pdf-library/Nagel_Bat.pdf
+RAW_BYTES: 4930377
+RAW_SHA256: 5daf2e809ea2c35648fb29f6d9e250021f476e57ab61a6f1177ef65a7a53576b
+EXTRACTED_TEXT_CHARS: 41842
+OPENALEX_ID: https://openalex.org/W2072267104
+CITED_BY_COUNT: 7877
+---
+OPENALEX_ABSTRACT:
+Consciousness is what makes the mind-body problem really intractable. Perhaps that is why current discussions of the problem give it little attention or get it obviously wrong. The recent wave of reductionist euphoria has produced several analyses of mental phenomena and mental concepts designed to explain the possibility of some variety of materialism, psychophysical identification, or reduction. But the problems dealt with are those common to this type of reduction and other types, and what makes the mind-body problem unique, and unlike the water-H2O problem or the Turing machine-IBM machine problem or the lightning-electrical discharge problem or the gene-DNA problem or the oak tree-hydrocarbon problem, is ignored.
+---
+EXTRACTED_SOURCE_TEXT:
+Philosophical Review
+What Is It Like to Be a Bat?
+Author(s): Thomas Nagel
+Source: The Philosophical Review, Vol. 83, No. 4 (Oct., 1974), pp. 435-450
+Published by: Duke University Press on behalf of Philosophical Review
+Stable URL: http://www.jstor.org/stable/2183914
+Accessed: 23-06-2016 16:41 UTC
+REFERENCES
+Linked references are available on JSTOR for this article:
+http://www.jstor.org/stable/2183914?seq=1&cid=pdf-reference#references_tab_contents
+You may need to log in to JSTOR to access the linked references.
+Your use of the JSTOR archive indicates your acceptance of the Terms & Conditions of Use, available at
+http://about.jstor.org/terms
+
+JSTOR is a not-for-profit service that helps scholars, researchers, and students discover, use, and build upon a wide range of content in a trusted
+digital archive. We use information technology and tools to increase productivity and facilitate new forms of scholarship. For more information about
+JSTOR, please contact support@jstor.org.
+
+Philosophical Review, Duke University Press are collaborating with JSTOR to digitize, preserve and
+extend access to The Philosophical Review
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+WHAT IS IT LIKE TO BE A BAT?
+
+CONSCIOUSNESS is what makes the mind-body problem
+really intractable. Perhaps that is why current discussions
+
+of the problem give it little attention or get it obviously wrong.
+The recent wave of reductionist euphoria has produced several
+analyses of mental phenomena and mental concepts designed to
+
+explain the possibility of some variety of materialism, psychophysical identification, or reduction.' But the problems dealt with are
+
+those common to this type of reduction and other types, and what
+makes the mind-body problem unique, and unlike the water-H20
+problem or the Turing machine-IBM machine problem or the
+lightning-electrical discharge problem or the gene-DNA problem
+
+or the oak tree-hydrocarbon problem, is ignored.
+Every reductionist has his favorite analogy from modern
+
+science. It is most unlikely that any of these unrelated examples
+
+of successful reduction will shed light on the relation of mind to
+brain. But philosophers share the general human weakness for
+explanations of what is incomprehensible in terms suited for
+
+what is familiar and well understood, though entirely different.
+This has led to the acceptance of implausible accounts of the
+mental largely because they would permit familiar kinds of
+reduction. I shall try to explain why the usual examples do not
+
+1 Examples are J. J. C. Smart, Philosophy and Scientific Realism (London,
+
+i963); David K. Lewis, "An Argument for the Identity Theory," Journal of
+Philosophy, LXIII (i966), reprinted with addenda in David M. Rosenthal,
+
+Materialism & the Mind-Body Problem (Englewood Cliffs, N. J., I971); Hilary
+Putnam, "Psychological Predicates" in Capitan and Merrill, Art, Mind, &
+
+Religion (Pittsburgh, i967), reprinted in Rosenthal, op. cit., as "The Nature of
+Mental States"; D. M. Armstrong, A Materialist Theory of the Mind (London,
+i968); D. C. Dennett, Content and Consciousness (London, I969). I have expressed earlier doubts in "Armstrong on the Mind," Philosophical Review,
+
+LXXIX (1970), 394-403; "Brain Bisection and the Unity of Consciousness,"
+
+Synthese, 22 (I97I); and a review of Dennett, Journal of Philosophy, LXIX
+(1972). See also Saul Kripke, "Naming and Necessity" in Davidson and
+
+Harman, Semantics of Natural Language (Dordrecht, I972), esp. pp. 334-342;
+and M. T. Thornton, "Ostensive Terms and Materialism," The Monist, 56
+(1972).
+
+435
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+THOMAS NAGEL
+
+help us to understand the relation between mind and body-
+
+why, indeed, we have at present no conception of what an explanation of the physical nature of a mental phenomenon would be.
+Without consciousness the mind-body problem would be much
+less interesting. With consciousness it seems hopeless. The most
+
+important and characteristic feature of conscious mental phenomena is very poorly understood. Most reductionist theories do
+not even try to explain it. And careful examination will show
+that no currently available concept of reduction is applicable to
+it. Perhaps a new theoretical form can be devised for the purpose,
+
+but such a solution, if it exists, lies in the distant intellectual
+future.
+
+Conscious experience is a widespread phenomenon. It occurs
+at many levels of animal life, though we cannot be sure of its
+presence in the simpler organisms, and it is very difficult to say
+in general what provides evidence of it. (Some extremists have
+
+been prepared to deny it even of mammals other than man.) No
+doubt it occurs in countless forms totally unimaginable to us, on
+other planets in other solar systems throughout the universe. But
+no matter how the form may vary, the fact that an organism has
+conscious experience at all means, basically, that there is something
+it is like to be that organism. There may be further implications
+about the form of the experience; there may even (though I
+
+doubt it) be implications about the behavior of the organism.
+But fundamentally an organism has conscious mental states if and
+
+only if there is something that it is like to be that organism-
+
+something it is like for the organism.
+We may call this the subjective character of experience. It is
+not captured by any of the familiar, recently devised reductive
+
+analyses of the mental, for all of them are logically compatible
+with its absence. It is not analyzable in terms of any explanatory
+system of functional states, or intentional states, since these could
+
+be ascribed to robots or automata that behaved like people though
+they experienced nothing.2 It is not analyzable in terms of the
+causal role of experiences in relation to typical human behavior2 Perhaps there could not actually be such robots. Perhaps anything complex
+enough to behave like a person would have experiences. But that, if true, is a
+fact which cannot be discovered merely by analyzing the concept of experience.
+436
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+WHAT IS IT LIKE TO BE A BAT?
+
+for similar reasonsA I do not deny that conscious mental states
+and events cause behavior, nor that they may be given functional.
+
+characterizations. I deny only that this kind of thing exhausts
+their analysis. Any reductionist program has to to be based on an
+analysis of what is to be reduced. If the analysis leaves something
+
+out, the problem will be falsely posed. It is useless to base the
+defense of materialism on any analysis of mental phenomena that.
+fails to deal explicitly with their subjective character. For there
+
+is no reason to suppose that a reduction which seems plausible
+when no attempt is made to account for consciousness can be
+extended to include consciousness. Without some idea, therefore
+
+of what the subjective character of experience is, we cannot;
+know what is required of a physicalist theory.
+
+While an account of the physical basis of mind must explain
+many things, this appears to be the most difficult. It is impossible
+
+to exclude the phenomenological features of experience from a,
+reduction in the same way that one excludes the phenomenal
+features of an ordinary substance from a physical or chemical
+reduction of it-namely, by explaining them as effects on the
+minds of human observers.4 If physicalism is to be defended, the
+phenomenological features must themselves be given a physical
+account. But when we examine their subjective character it:
+seems that such a result is impossible. The reason is that every
+subjective phenomenon is essentially connected with a single
+point of view, and it seems inevitable that an objective, physical
+theory will abandon that point of view.
+
+Let me first try to state the issue somewhat more fully than by
+
+referring to the relation between the subjective and the objec,
+tive, or between the pour-soi and the en-soi. This is far from easy.
+Facts about what it is like to be an X are very peculiar, so peculiar
+
+that some may be inclined to doubt their reality, or the signifi.
+cance of claims about them. To illustrate the connection between
+3 It is not equivalent to that about which we are incorrigible, both because
+we are not incorrigible about experience and because experience is present in
+animals lacking language and thought, who have no beliefs at all about their
+
+experiences.
+
+4Cf. Richard Rorty, "Mind-Body Identity, Privacy, and Categories," The
+
+Review of Metaphysics, XIX (i965), esp. 37-38.
+437
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+THOMAS NAGEL
+
+subjectivity and a point of view, and to make evident the importance of subjective features, it will help to explore the matter in
+relation to an example that brings out clearly the divergence
+between the two types of conception, subjective and objective.
+
+I assume we all believe that bats have experience. After all,
+they are mammals, and there is no more doubt that they have
+experience than that mice or pigeons or whales have experience.
+I have chosen bats instead of wasps or flounders because if one
+travels too far down the phylogenetic tree, people gradually shed
+their faith that there is experience there at all. Bats, although more
+closely related to us than those other species, nevertheless present
+a range of activity and a sensory apparatus so different from ours
+that the problem I want to pose is exceptionally vivid (though it
+certainly could be raised with other species). Even without the
+benefit of philosophical reflection, anyone who has spent some
+time in an enclosed space with an excited bat knows what it is to
+encounter a fundamentally alien form of life.
+I have said that the essence of the belief that bats have experience is that there is something that it is like to be a bat. Now
+
+we know that most bats (the microchiroptera, to be precise)
+perceive the external world primarily by sonar, or echolocation,
+
+detecting the reflections, from objects within range, of their own
+rapid, subtly modulated, high-frequency shrieks. Their brains are
+
+designed to correlate the outgoing impulses with the subsequent
+echoes, and the information thus acquired enables bats to make
+
+precise discriminations of distance, size, shape, motion, and
+texture comparable to those we make by vision. But bat sonar,
+though clearly a form of perception, is not similar in its operation
+to any sense that we possess, and there is no reason to suppose
+that it is subjectively like anything we can experience or imagine.
+
+This appears to create difficulties for the notion of what it is like
+to be a bat. We must consider whether any method will permit
+
+us to extrapolate to the inner life of the bat from our own case,5
+and if not, what alternative methods there may be for understanding the notion.
+5 By "our own case" I do not mean just "my own case," but rather the
+mentalistic ideas that we apply unproblematically to ourselves and other
+human beings.
+438
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+WHAT IS IT LIKE TO BE A BAT?
+
+Our own experience provides the basic material for our imagination, whose range is therefore limited. It will not help to try
+to imagine that one has webbing on one's arms, which enables
+one to fly around at dusk and dawn catching insects in one's
+
+mouth; that one has very poor vision, and perceives the surrounding world by a system of reflected high-frequency sound
+signals; and that one spends the day hanging upside down by
+one's feet in an attic. In so far as I can imagine this (which is not
+
+very far), it tells me only what it would be like for me to behave
+as a bat behaves. But that is not the question. I want to know
+what it is like for a bat to be a bat. Yet if I try to imagine this, I
+am restricted to the resources of my own mind, and those resources are inadequate to the task. I cannot perform it either by
+
+imagining additions to my present experience, or by imagining
+
+segments gradually subtracted from it, or by imagining some
+combination of additions, subtractions, and modifications.
+To the extent that I could look and behave like a wasp or a
+bat without changing my fundamental structure, my experiences
+
+would not be anything like the experiences of those animals. On
+the other hand, it is doubtful that any meaning can be attached
+
+to the supposition that I should possess the internal neurophysiological constitution of a bat. Even if I could by gradual degrees
+
+be transformed into a bat, nothing in my present constitution
+enables me to imagine what the experiences of such a future
+
+stage of myself thus metamorphosed would be like. The best
+evidence would come from the experiences of bats, if we only
+knew what they were like.
+
+So if extrapolation from our own case is involved in the idea
+of what it is like to be a bat, the extrapolation must be incompletable. We cannot form more than a schematic conception of what
+
+it is like. For example, we may ascribe general types of experience
+on the basis of the animal's structure and behavior. Thus we
+describe bat sonar as a form of three-dimensional forward per-
+
+ception; we believe that bats feel some versions of pain, fear,
+hunger, and lust, and that they have other, more familiar types
+
+of perception besides sonar. But we believe that these experiences
+also have in each case a specific subjective character, which it is
+
+beyond our ability to conceive. And if there is conscious life else439
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+THOMAS NAGEL
+
+where in the universe, it is likely that some of it will not be describable even in the most general experiential terms available to
+us.6 (The problem is not confined to exotic cases, however, for it
+exists between one person and another. The subjective character
+of the experience of a person deaf and blind from birth is not
+accessible to me, for example, nor presumably is mine to him.
+This does not prevent us each from believing that the other's
+experience has such a subjective character.)
+
+If anyone is inclined to deny that we can believe in the existence of facts like this whose exact nature we cannot possibly
+conceive, he should reflect that in contemplating the bats we are
+in much the same position that intelligent bats or Martians7
+would occupy if they tried to form a conception of what it was
+like to be us. The structure of their own minds might make it
+impossible for them to succeed, but we know they would be wrong
+to conclude that there is not anything precise that it is like to
+be us: that only certain general types of mental state could be
+,ascribed to us (perhaps perception and appetite would be concepts
+common to us both; perhaps not). We know they would be wrong
+to draw such a skeptical conclusion because we know what it is like
+to be us. And we know that while it includes an enormous amount
+of variation and complexity, and while we do not possess the
+vocabulary to describe it adequately, its subjective charater is
+highly specific, and in some respects describable in terms that can
+be understood only by creatures like us. The fact that we cannot
+expect ever to accommodate in our language a detailed description of Martian or bat phenomenology should not lead us to
+dismiss as meaningless the claim that bats and Martians have
+
+experiences fully comparable in richness of detail to our own. It
+would be fine if someone were to develop concepts and a theory
+that enabled us to think about those things; but such an understanding may be permanently denied to us by the limits of our
+nature. And to deny the reality or logical significance of what
+
+6 Therefore the analogical form of the English expression "what it is like"
+is misleading. It does not mean "what (in our experience) it resembles," but
+rather "how it is for the subject himself."
+Any intelligent extraterrestrial beings totally different from us.
+440
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+WHAT IS IT LIKE TO BE A BAT?
+
+we can never describe or understand is the crudest form of cogni-
+
+tive dissonance.
+This brings us to the edge of a topic that requires much more
+
+discussion than I can give it here: namely, the relation between
+facts on the one hand and conceptual schemes or systems of repre-
+
+sentation on the other. My realism about the subjective domain
+in all its forms implies a belief in the existence of facts beyond the
+
+reach of human concepts. Certainly it is possible for a human
+being to believe that there are facts which humans never will
+
+possess the requisite concepts to represent or comprehend. Indeed,
+it would be foolish to doubt this, given the finiteness of humanity's
+expectations. After all, there would have been transfinite numbers
+
+even if everyone had been wiped out by the Black Death before
+Cantor discovered them. But one might also believe that there are
+facts which could not ever be represented or comprehended by
+
+human beings, even if the species lasted forever-simply because
+our structure does not permit us to operate with concepts of the
+requisite type. This impossibility might even be observed by
+
+other beings, but it is not clear that the existence of such beings,
+or the possibility of their existence, is a precondition of the
+significance of the hypothesis that there are humanly inaccessible
+facts. (After all, the nature of beings with access to humanly
+inaccessible facts is presumably itself a humanly inaccessible
+
+fact.) Reflection on what it is like to be a bat seems to lead us,
+therefore, to the conclusion that there are facts that do not consist
+in the truth of propositions expressible in a human language. We
+
+can be compelled to recognize the existence of such facts without
+being able to state or comprehend them.
+
+I shall not pursue this subject, however. Its bearing on the
+topic before us (namely, the mind-body problem) is that it enables
+
+us to make a general observation about the subjective character
+
+of experience. Whatever may be the status of facts about what
+it is like to be a human being, or a bat, or a Martian, these appear
+
+to be facts that embody a particular point of view.
+
+I am not adverting here to the alleged privacy of experience
+to its possessor. The point of view in question is not one accessible only to a single individual. Rather it is a type. It is often
+
+possible to take up a point of view other than one's own, so the
+44I
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+THOMAS NAGEL
+
+comprehension of such facts is not limited to one's own case.
+There is a sense in which phenomenological facts are perfectly
+objective: one person can know or say of another what the quality
+of the other's experience is. They are subjective, however, in the
+sense that even this objective ascription of experience is possible
+only for someone sufficiently similar to the object of ascription
+to be able to adopt his point of view-to understand the ascription in the first person as well as in the third, so to speak. The
+more different from oneself the other experiencer is, the less
+success one can expect with this enterprise. In our own case we
+occupy the relevant point of view, but we will have as much
+difficulty understanding our own experience properly if we
+approach it from another point of view as we would if we tried
+to understand the experience of another species without taking
+up its point of view.8
+
+This bears directly on the mind-body problem. For if the facts
+of experience-facts about what it is like for the experiencing
+
+organism-are accessible only from one point of view, then it is
+a mystery how the true character of experiences could be revealed
+in the physical operation of that organism. The latter is a domain
+of objective facts par excellence-the kind that can be observed and
+understood from many points of view and by individuals with
+differing perceptual systems. There are no comparable imaginative
+obstacles to the acquisition of knowledge about bat neurophysiol-
+
+ogy by human scientists, and intelligent bats or Martians might
+learn more about the human brain than we ever will.
+8 It may be easier than I suppose to transcend inter-species barriers with the
+aid of the imagination. For example, blind people are able to detect objects
+near them by a form of sonar, using vocal clicks or taps of a cane. Perhaps if
+one knew what that was like, one could by extension imagine roughly what it
+was like to possess the much more refined sonar of a bat. The distance between
+oneself and other persons and other species can fall anywhere on a continuum.
+Even for other persons the understanding of what it is like to be them is only
+
+partial, and when one moves to species very different from oneself, a lesser
+degree of partial understanding may still be available. The imagination is
+remarkably flexible. My point, however, is not that we cannot know what it is
+like to be a bat. I am not raising that epistemological problem. My point is
+rather that even to form a conception of what it is like to be a bat (and a fortiori
+to know what it is like to be a bat) one must take up the bat's point of view.
+If one can take it up roughly, or partially, then one's conception will also be
+rough or partial. Or so it seems in our present state of understanding.
+442
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+WHAT IS IT LIKE TO BE A BAT?
+
+This is not by itself an argument against reduction. A Martian
+scientist with no understanding of visual perception could under-
+
+stand the rainbow, or lightning, or clouds as physical phenomena,
+
+though he would never be able to understand the human concepts of rainbow, lightning, or cloud, or the place these things
+
+occupy in our phenomenal world. The objective nature of the
+things picked out by these concepts could be apprehended by
+him because, although the concepts themselves are connected
+
+with a particular point of view and a particular visual phenomenology, the things apprehended from that point of view are not:
+
+they are observable from the point of view but external to it;
+hence they can be comprehended from other points of view also,
+
+either by the same organisms or by others. Lightning has an
+objective character that is not exhausted by its visual appearance,
+and this can be investigated by a Martian without vision. To be
+precise, it has a more objective character than is revealed in its
+visual appearance. In speaking of the move from subjective to
+
+objective characterization, I wish to remain noncommittal about
+the existence of an end point, the completely objective intrinsic
+nature of the thing, which one might or might not be able to
+
+reach. It may be more accurate to think of objectivity as a direc-
+
+tion in which the understanding can travel. And in understanding
+a phenomenon like lightning, it is legitimate to go as far away as
+one can from a strictly human viewpoint.9
+In the case of experience, on the other hand, the connection
+with a particular point of view seems much closer. It is difficult
+to understand what could be meant by the objective character of
+an experience, apart from the particular point of view from which
+its subject apprehends it. After all, what would be left of what it
+
+was like to be a bat if one removed the viewpoint of the bat?
+But if experience does not have, in addition to its subjective
+character, an objective nature that can be apprehended from
+
+I The problem I am going to raise can therefore be posed even if the distinc-
+
+tion between more subjective and more objective descriptions or viewpoints
+can itself be made only within a larger human point of view. I do not accept
+this kind of conceptual relativism, but it need not be refuted to make the point
+that psychophysical reduction cannot be accommodated by the subjective-toobjective model familiar from other cases.
+443
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+THOMAS NAGEL
+
+many different points of view, then how can it be supposed that
+a Martian investigating my brain might be observing physical
+processes which were my mental processes (as he might observe
+physical processes which were bolts of lightning), only from a
+different point of view? How, for that matter, could a human
+physiologist observe them from another point of view?1o
+
+We appear to be faced with a general difficulty about psychophysical reduction. In other areas the process of reduction is a
+move in the direction of greater objectivity, toward a more accurate view of the real nature of things. This is accomplished by
+reducing our dependence on individual or species-specific points
+of view toward the object of investigation. We describe it not in
+terms of the impressions it makes on our senses, but in terms of
+its more general effects and of properties detectable by means
+other than the human senses. The less it depends on a specifically
+human viewpoint, the more objective is our description. It is
+
+possible to follow this path because although the concepts and
+ideas we employ in thinking about the external world are initially
+
+applied from a point of view that involves our perceptual apparatus, they are used by us to refer to things beyond themselvestoward which we have the phenomenal point of view. Therefore
+
+we can abandon it in favor of another, and still be thinking about
+the same things.
+
+Experience itself, however, does not seem to fit the pattern.
+The idea of moving from appearance to reality seems to make no
+
+sense here. What is the analogue in this case to pursuing a more
+objective understanding of the same phenomena by abandoning
+the initial subjective viewpoint toward them in favor of another
+
+that is more objective but concerns the same thing? Certainly it
+appears unlikely that we will get closer to the real nature of human
+
+experience by leaving behind the particularity of our human point
+of view and striving for a description in terms accessible to beings
+that could not imagine what it was like to be us. If the subjective
+character of experience is fully comprehensible only from one
+10 The problem is not just that when I look at the "Mona Lisa," my visual
+experience has a certain quality, no trace of which is to be found by someone
+looking into my brain. For even if he did observe there a tiny image of the
+
+"Mona Lisa," he would have no reason to identify it with the experience.
+444
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+WHAT IS IT LIKE TO BE A BAT?
+
+point of view, then any shift to greater objectivity -that is, less
+attachment to a specific viewpoint-does not take us nearer to
+the real nature of the phenomenon: it takes us farther away
+from it.
+
+In a sense, the seeds of this objection to the reducibility of
+
+experience are already detectable in successful cases of reduction;
+
+for in discovering sound to be, in reality, a wave phenomenon in
+air or other media, we leave behind one viewpoint to take up
+another, and the auditory, human or animal viewpoint that we
+leave behind remains unreduced. Members of radically different
+
+species may both understand the same physical events in objective terms, and this does not require that they understand the
+phenomenal forms in which those events appear to the senses of
+members of the other species. Thus it is a condition of their refer-
+
+ring to a common reality that their more particular viewpoints
+are not part of the common reality that they both apprehend.
+
+The reduction can succeed only if the species-specific viewpoint
+is omitted from what is to be reduced.
+But while we are right to leave this point of view aside in
+
+seeking a fuller understanding of the external world, we cannot
+ignore it permanently, since it is the essence of the internal world,
+and not merely a point of view on it. Most of the neobehaviorism
+
+of recent philosophical psychology results from the effort to sub-
+
+stitute an objective concept of mind for the real thing, in order
+to have nothing left over which cannot be reduced. If we acknowledge that a physical theory of mind must account for the sub-
+
+jective character of experience, we must admit that no presently
+available conception gives us a clue how this could be done.
+
+The problem is unique. If mental processes are indeed physical
+
+processes, then there is something it is like, intrinsically," to
+11 The relation would therefore not be a contingent one, like that of a cause
+and its distinct effect. It would be necessarily true that a certain physical state
+felt a certain way. Saul Kripke (op. cit.) argues that causal behaviorist and
+
+related analyses of the mental fail because they construe, e.g., "pain" as a
+merely contingent name of pains. The subjective character of an experience
+("its immediate phenomenological quality" Kripke calls it [p. 340]) is the
+
+essential property left out by such analyses, and the one in virtue of which it
+is, necessarily, the experience it is. My view is closely related to his. Like
+Kripke, I find the hypothesis that a certain brain state should necessarily have
+445
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+THOMAS NAGEL
+
+undergo certain physical processes. What it is for such a thing to
+be the case remains a mystery.
+
+What moral should be drawn from these reflections, and what
+
+should be done next? It would be a mistake to conclude that
+physicalism must be false. Nothing is proved by the inadequacy
+
+of physicalist hypotheses that assume a faulty objective analysis
+of mind. It would be truer to say that physicalism is a position
+we cannot understand because we do not at present have any
+
+conception of how it might be true. Perhaps it will be thought
+unreasonable to require such a conception as a condition of
+
+understanding. After all, it might be said, the meaning of
+physicalism is clear enough: mental states are states of the body;
+
+mental events are physical events. We do not know which physical
+states and events they are, but that should not prevent us from
+
+a certain subjective character incomprehensible without further explanation.
+No such explanation emerges from theories which view the mind-brain
+relation as contingent, but perhaps there are other alternatives, not yet
+discovered.
+A theory that explained how the mind-brain relation was necessary would
+still leave us with Kripke's problem of explaining why it nevertheless appears
+contingent. That difficulty seems to me surmountable, in the following way.
+
+We may imagine something by representing it to ourselves either perceptually,
+sympathetically, or symbolically. I shall not try to say how symbolic imagina-
+
+tion works, but part of what happens in the other two cases is this. To imagine
+something perceptually, we put ourselves in a conscious state resembling the
+state we would be in if we perceived it. To imagine something sympathetically,
+we put ourselves in a conscious state resembling the thing itself. (This method
+
+can be used only to imagine mental events and states-our own or another's.)
+When we try to imagine a mental state occurring without its associated brain
+state, we first sympathetically imagine the occurrence of the mental state: that
+
+is, we put ourselves into a state that resembles it mentally. At the same time,
+
+we attempt to perceptually imagine the non-occurrence of the associated
+physical state, by putting ourselves into another state unconnected with the
+first: one resembling that which we would be in if we perceived the nonoccurrence of the physical state. Where the imagination of physical features is
+perceptual and the imagination of mental features is sympathetic, it appears
+to us that we can imagine any experience occurring without its associated
+brain state, and vice versa. The relation between them will appear contingent
+even if it is necessary, because of the independence of the disparate types of
+imagination.
+
+(Solipsism, incidentally, results if one misinterprets sympathetic imagination
+as if it worked like perceptual imagination: it then seems impossible to imagine
+any experience that is not one's own.)
+446
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+WHAT IS IT LIKE TO BE A BAT?
+
+understanding the hypothesis. What could be clearer than the
+words "is" and "are"?
+
+But I believe it is precisely this apparent clarity of the word
+"is" that is deceptive. Usually, when we are told that X is r we
+
+know how it is supposed to be true, but that depends on a conceptual or theoretical background and is not conveyed by the "is"
+alone. We know how both "X" and "r" refer, and the kinds of
+things to which they refer, and we have a rough idea how the two
+referential paths might converge on a single thing, be it an object, a
+person, a process, an event, or whatever. But when the two terms
+of the identification are very disparate it may not be so clear how
+it could be true. We may not have even a rough idea of how the
+two referential paths could converge, or what kind of things they
+might converge on, and a theoretical framework may have to be
+supplied to enable us to understand this. Without the framework,
+an air of mysticism surrounds the identification.
+This explains the magical flavor of popular presentations of
+
+fundamental scientific discoveries, given out as propositions to
+which one must subscribe without really understanding them.
+For example, people are now told at an early age that all matter
+is really energy. But despite the fact that they know what "is"
+means, most of them never form a conception of what makes this
+
+claim true, because they lack the theoretical background.
+At the present time the status of physicalism is similar to that
+
+which the hypothesis that matter is energy would have had if
+uttered by a pre-Socratic philosopher. We do not have the beginnings of a conception of how it might be true. In order to
+understand the hypothesis that a mental event is a physical event,
+
+we require more than an understanding of the word "is." The
+idea of how a mental and a physical term might refer to the same
+
+thing is lacking, and the usual analogies with theoretical identification in other fields fail to supply it. They fail because if we
+
+construe the reference of mental terms to physical events on the
+usual model, we either get a reappearance of separate subjective
+
+events as the effects through which mental reference to physical
+events is secured, or else we get a false account of how mental
+terms refer (for example, a causal behaviorist one).
+
+Strangely enough, we may have evidence for the truth of some447
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+THOMAS NAGEL
+
+thing we cannot really understand. Suppose a caterpillar is locked
+in a sterile safe by someone unfamiliar with insect metamorphosis,
+and weeks later the safe is reopened, revealing a butterfly. If the
+
+person knows that the safe has been shut the whole time, he has
+reason to believe that the butterfly is or was once the caterpillar,
+without having any idea in what sense this might be so. (One
+
+possibility is that the caterpillar contained a tiny winged parasite
+that devoured it and grew into the butterfly.)
+It is conceivable that we are in such a position with regard to
+
+physicalism. Donald Davidson has argued that if mental events
+have physical causes and effects, they must have physical descriptions. He holds that we have reason to believe this even though
+we do not-and in fact could not-have a general psychophysical
+theory.12 His argument applies to intentional mental events, but
+I think we also have some reason to believe that sensations are
+physical processes, without being in a position to understand how.
+Davidson's position is that certain physical events have irreducibly mental properties, and perhaps some view describable in
+this way is correct. But nothing of which we can now form a conception corresponds to it; nor have we any idea what a theory
+would be like that enabled us to conceive of it.13
+Very little work has been done on the basic question (from
+which mention of the brain can be entirely omitted) whether any
+sense can be made of experiences' having an objective character
+at all. Does it make sense, in other words, to ask what my experi-
+
+ences are really like, as opposed to how they appear to me? We
+cannot genuinely understand the hypothesis that their nature is
+captured in a physical description unless we understand the more
+fundamental idea that they have an objective nature (or that objective processes can have a subjective nature).14
+12 See "Mental Events" in Foster and Swanson, Experience and Theory (Amherst,
+1970); though I don't understand the argument against psychophysical laws.
+13 Similar remarks apply to my paper "Physicalism," Philosophical Review
+
+LXXIV (i965), 339-356, reprinted with postscript in John O'Connor, Modern
+Materialism (New York, I969).
+
+14 This question also lies at the heart of the problem of other minds, whose
+close connection with the mind-body problem is often overlooked. If one
+understood how subjective experience could have an objective nature, one
+would understand the existence of subjects other than oneself.
+448
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+WHAT IS IT LIKE TO BE A BAT?
+
+I should like to close with a speculative proposal. It may be
+possible to approach the gap between subjective and objective
+from another direction. Setting aside temporarily the relation
+between the mind and the brain, we can pursue a more objective
+understanding of the mental in its own right. At present we are
+
+completely unequipped to think about the subjective character
+of experience without relying on the imagination-without taking
+up the point of view of the experiential subject. This should be
+regarded as a challenge to form new concepts and devise a new
+method-an objective phenomenology not dependent on empathy or the imagination. Though presumably it would not cap-
+
+ture everything, its goal would be to describe, at least in part, the
+subjective character of experiences in a form comprehensible to
+
+beings incapable of having those experiences.
+We would have to develop such a phenomenology to describe
+the sonar experiences of bats; but it would also be possible to
+begin with humans. One might try, for example, to develop concepts that could be used to explain to a person blind from birth
+what it was like to see. One would reach a blank wall eventually,
+
+but it should be possible to devise a method of expressing in objective terms much more than we can at present, and with much
+greater precision. The loose intermodal analogies-for example,
+"Red is like the sound of a trumpet"-which crop up in discussions of this subject are of little use. That should be clear to
+anyone who has both heard a trumpet and seen red. But struc-
+
+tural features of perception might be more accessible to objective
+description, even though something would be left out. And concepts alternative to those we learn in the first person may enable
+us to arrive at a kind of understanding even of our own experience
+which is denied us by the very ease of description and lack of
+distance that subjective concepts afford.
+
+Apart from its own interest, a phenomenology that is in this
+sense objective may permit questions about the physical15 basis
+15 I have not defined the term "physical." Obviously it does not apply just
+to what can be described by the concepts of contemporary physics, since we
+expect further developments. Some may think there is nothing to prevent
+mental phenomena from eventually being recognized as physical in their own
+right. But whatever else may be said of the physical, it has to be objective. So
+449
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+THOMAS NAGEL
+
+of experience to assume a more intelligible form. Aspects of sub-
+
+jective experience that admitted this kind of objective description
+might be better candidates for objective explanations of a more
+familiar sort. But whether or not this guess is correct, it seems
+unlikely that any physical theory of mind can be contemplated
+until more thought has been given to the general problem of sub-
+
+jective and objective. Otherwise we cannot even pose the mindbody problem without sidestepping it.16
+THOMAS NAGEL
+Princeton University
+
+if our idea of the physical ever expands to include mental phenomena, it
+will have to assign them an objective character-whether or not this is done
+by analyzing them in terms of other phenomena already regarded as physical.
+It seems to me more likely, however, that mental-physical relations will
+eventually be expressed in a theory whose fundamental terms cannot be placed
+clearly in either category.
+
+16 I have read versions of this paper to a number of audiences, and am
+indebted to many people for their comments.
+
+450
+
+This content downloaded from 165.123.34.86 on Thu, 23 Jun 2016 16:41:58 UTC
+All use subject to http://about.jstor.org/terms
+
+

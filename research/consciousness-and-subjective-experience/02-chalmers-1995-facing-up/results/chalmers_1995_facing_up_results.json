@@ -1,0 +1,34 @@
+{
+  "paper_id": "02-chalmers-1995-facing-up",
+  "title": "Facing Up to the Problem of Consciousness (Chalmers, 1995)",
+  "status": "completed",
+  "elapsed_s": 0.0318,
+  "experiment_e1_easy_problems_and_zombie_isomorphism": {
+    "easy_capacities_implemented": 7,
+    "trials_tested": 100,
+    "functional_isomorph_action_divergence": 0.0,
+    "functional_isomorph_report_match_rate": 1.0,
+    "mean_awake_vs_sleep_awareness_contrast": 0.9089
+  },
+  "experiment_e2_structural_coherence_color_space": {
+    "stimuli_count": 60,
+    "structural_coherence_distance_correlation": 1.0,
+    "inverted_spectrum_structural_distortion": 0.0,
+    "inverted_spectrum_intrinsic_hue_divergence": 1.3175
+  },
+  "experiment_e3_fading_and_dancing_qualia": {
+    "gradual_replacement_steps": 11,
+    "max_functional_divergence_across_replacement": 0.0,
+    "dancing_switch_flips": 19,
+    "functional_change_detector_triggers": 0,
+    "substrate_chauvinism_unnoticed_qualia_flips": 19,
+    "organizational_invariance_unnoticed_qualia_flips": 0
+  },
+  "experiment_e4_double_aspect_information_space": {
+    "isolated_noise_shannon_entropy_bits": 6.0024,
+    "isolated_noise_global_causal_info_bits": 0.001,
+    "routed_percept_shannon_entropy_bits": 3.0002,
+    "routed_percept_global_causal_info_bits": 2.8034,
+    "thermostat_1bit_local_info_bits": 1.0002
+  }
+}

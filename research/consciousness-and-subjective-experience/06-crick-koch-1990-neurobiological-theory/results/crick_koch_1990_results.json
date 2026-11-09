@@ -1,0 +1,57 @@
+{
+  "paper_id": "06-crick-koch-1990-neurobiological-theory",
+  "title": "Towards a Neurobiological Theory of Consciousness (Crick & Koch, 1990)",
+  "status": "completed",
+  "elapsed_s": 0.0287,
+  "experiment_e1_gamma_binding_vs_superposition_catastrophe": {
+    "rate_only_conjunction_accuracy": 0.5,
+    "gamma_frequency_hz": 45.0,
+    "within_object_phase_locking_value": 1.0,
+    "coincidence_rate_true_conjunctions": 1.0,
+    "coincidence_rate_illusory_conjunctions": 0.0,
+    "gamma_phase_binding_conjunction_accuracy": 1.0
+  },
+  "experiment_e2_fast_iconic_vs_slow_attentional_wm": {
+    "scene_items_presented": 8,
+    "fast_iconic_items_available_at_50ms": 6.374,
+    "fast_iconic_items_available_at_600ms": 0.523,
+    "attentional_serial_dwell_ms": 65.0,
+    "objects_bound_into_working_memory_before_decay": 4
+  },
+  "experiment_e3_phase_crowding_and_anesthesia_boundaries": {
+    "gamma_period_ms": 22.22,
+    "coincidence_window_ms": 4.2,
+    "phase_crowding_by_object_count": {
+      "M=2": {
+        "phase_spacing_ms": 11.11,
+        "illusory_conjunction_collision_rate": 0.0005
+      },
+      "M=3": {
+        "phase_spacing_ms": 7.41,
+        "illusory_conjunction_collision_rate": 0.054
+      },
+      "M=4": {
+        "phase_spacing_ms": 5.56,
+        "illusory_conjunction_collision_rate": 0.246
+      },
+      "M=5": {
+        "phase_spacing_ms": 4.44,
+        "illusory_conjunction_collision_rate": 0.443
+      },
+      "M=6": {
+        "phase_spacing_ms": 3.7,
+        "illusory_conjunction_collision_rate": 0.6002
+      },
+      "M=7": {
+        "phase_spacing_ms": 3.17,
+        "illusory_conjunction_collision_rate": 0.6995
+      },
+      "M=8": {
+        "phase_spacing_ms": 2.78,
+        "illusory_conjunction_collision_rate": 0.7708
+      }
+    },
+    "anesthesia_local_v1_gamma_plv": 0.96,
+    "anesthesia_working_memory_activation": 0.0
+  }
+}

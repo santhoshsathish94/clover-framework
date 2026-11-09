@@ -1,0 +1,42 @@
+{
+  "paper_id": "14-butlin-2025-identifying-indicators-ai",
+  "title": "Identifying Indicators of Consciousness in AI Systems (Butlin et al., 2025/2026)",
+  "status": "completed",
+  "elapsed_s": 0.0001,
+  "experiment_e1_hierarchical_credence_across_priors_and_systems": {
+    "posterior_credence_matrix": {
+      "S1_Feedforward_Chatbot_Persona": {
+        "P1_Uniform_Theory_Strong_CF": 0.0283,
+        "P2_GWT_HOT_Cognitivist_Strong_CF": 0.0538,
+        "P3_Embodied_Predictive_Prior": 0.0206,
+        "P4_Biological_Naturalism_Skeptical_CF": 0.0017
+      },
+      "S2_Disembodied_GlobalWorkspace_Reasoner": {
+        "P1_Uniform_Theory_Strong_CF": 0.2981,
+        "P2_GWT_HOT_Cognitivist_Strong_CF": 0.4714,
+        "P3_Embodied_Predictive_Prior": 0.1801,
+        "P4_Biological_Naturalism_Skeptical_CF": 0.0175
+      },
+      "S3_Embodied_Predictive_Homeostatic_Agent": {
+        "P1_Uniform_Theory_Strong_CF": 0.4687,
+        "P2_GWT_HOT_Cognitivist_Strong_CF": 0.2576,
+        "P3_Embodied_Predictive_Prior": 0.5342,
+        "P4_Biological_Naturalism_Skeptical_CF": 0.0276
+      },
+      "S4_Full_Multi_Indicator_Candidate_Architecture": {
+        "P1_Uniform_Theory_Strong_CF": 0.7118,
+        "P2_GWT_HOT_Cognitivist_Strong_CF": 0.7138,
+        "P3_Embodied_Predictive_Prior": 0.5938,
+        "P4_Biological_Naturalism_Skeptical_CF": 0.0419
+      }
+    }
+  },
+  "experiment_e2_behavioral_self_report_unreliability": {
+    "prior_credence": 0.05,
+    "human_verbal_report_bayes_factor": 95.0,
+    "human_posterior_after_report": 0.8333,
+    "prompted_llm_verbal_report_bayes_factor": 1.0,
+    "prompted_llm_posterior_after_report": 0.05,
+    "architectural_indicator_delta_from_prompt": 0.0
+  }
+}

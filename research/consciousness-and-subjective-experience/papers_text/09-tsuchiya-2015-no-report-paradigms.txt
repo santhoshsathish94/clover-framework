@@ -1,0 +1,12 @@
+PAPER_ID: 09-tsuchiya-2015-no-report-paradigms
+TITLE: No-Report Paradigms: Extracting the True Neural Correlates of Consciousness
+AUTHORS: Naotsugu Tsuchiya, Max Wilke, Stefan Frässle, Victor A.F. Lamme
+YEAR: 2015
+DOI: 10.1016/j.tics.2015.10.002
+SOURCE_URL_REACHED: metadata_only
+RAW_BYTES: 0
+RAW_SHA256: 
+EXTRACTED_TEXT_CHARS: 0
+OPENALEX_ID: https://openalex.org/W2177128208
+CITED_BY_COUNT: 600
+---

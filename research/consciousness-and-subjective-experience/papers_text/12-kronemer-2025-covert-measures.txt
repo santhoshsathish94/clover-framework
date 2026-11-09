@@ -1,0 +1,2194 @@
+PAPER_ID: 12-kronemer-2025-covert-measures
+TITLE: Sleuthing Subjectivity: A Review of Covert Measures of Consciousness
+AUTHORS: Sharif I. Kronemer et al.
+YEAR: 2025
+DOI: 10.1038/s41583-025-00934-1
+SOURCE_URL_REACHED: https://www.nature.com/articles/s41583-025-00934-1
+RAW_BYTES: 1189349
+RAW_SHA256: cb4c4d44d4415e8381470dc61a827b105f0f0c3379929569de9712277bd5fb46
+EXTRACTED_TEXT_CHARS: 89478
+OPENALEX_ID: https://openalex.org/W4410629282
+CITED_BY_COUNT: 7
+---
+EXTRACTED_SOURCE_TEXT:
+Sleuthing subjectivity: a review of covert measures of consciousness | Nature Reviews Neuroscience
+Skip to main content
+Thank you for visiting nature.com. You are using a browser version with limited support for CSS. To obtain
+the best experience, we recommend you use a more up to date browser (or turn off compatibility mode in
+Internet Explorer). In the meantime, to ensure continued support, we are displaying the site without styles
+and JavaScript.
+Advertisement
+View all journals
+Saved research
+Search
+Account
+Log in
+Content
+Explore content
+About the journal
+Publish with us
+Subscribe
+Sign up for alerts
+RSS feed
+nature
+nature reviews neuroscience
+review articles
+article
+Review Article
+Published: 23 May 2025
+Sleuthing subjectivity: a review of covert measures of consciousness
+Sharif I. Kronemer
+ORCID: orcid.org/0000-0002-5971-5364 1 ,
+Peter A. Bandettini 1 , 2 &
+Javier Gonzalez-Castillo
+ORCID: orcid.org/0000-0002-6520-5125 1
+Nature Reviews Neuroscience
+volume 26 , pages 476–496 ( 2025 ) Cite this article
+Save article
+View saved research
+4366 Accesses
+7 Citations
+11 Altmetric
+Metrics details
+Abstract
+Consciousness is private. Although conscious beings directly access their own conscious experiences, the consciousness of others must be inferred through overt report: observable behaviours — such as overt facial expressions, vocalizations and body gestures — that suggest the level, state and content of consciousness. However, overt report is limited because it can be erroneous (for example, resulting from wilful deception or being subject to recall error), absent (for example, during sleep and paralysis) or conflict with research goals (for example, in no-report paradigms and resting-state studies). These limitations encourage the search for covert measures of consciousness: physiological signals that disclose consciousness without relying on overt behaviour. This Review highlights emerging covert measures of consciousness in humans, including eye, skin, respiratory and heart signals. We also address the challenge of distinguishing physiological signals linked to conscious versus unconscious neural processing. Finally, we consider the ethical implications of infringing on the innate privacy of consciousness.
+This is a preview of subscription content, access via your institution
+Access options
+Access through your institution
+Access Nature and 54 other Nature Portfolio journals
+Get Nature+, our best-value online-access subscription
+32.70 € / 30 days
+cancel any time
+Learn more
+Subscribe to this journal
+Receive 12 print issues and online access
+276.54 € per year
+only 23.05 € per issue
+Learn more
+Buy this article
+Purchase on SpringerLink
+Instant access to the full article PDF.
+39,95 €
+Prices may be subject to local taxes which are calculated during checkout
+Additional access options:
+Log in
+Learn about institutional subscriptions
+Read our FAQs
+Contact customer support
+Fig. 1: Methods of overt report and limitations.
+Fig. 2: Covert measures of consciousness.
+Fig. 3: Physiological signals used to infer conscious level and state.
+Fig. 4: Physiological signals to infer conscious content.
+Fig. 5: Distinguishing physiological signals indicative of conscious and unconscious processing.
+Similar content being viewed by others
+The perception paradox: between conscious and unconscious
+Article
+Open access
+10 April 2026
+Quantifying arousal and awareness in altered states of consciousness using interpretable deep learning
+Article
+Open access
+25 February 2022
+The ConTraSt database for analysing and comparing empirical studies of consciousness theories
+Article
+21 February 2022
+Explore related subjects
+Discover the latest articles and news in related subjects.
+Consciousness
+Perception
+Conscious Processing and Neural Correlates
+References
+Koch, C., Massimini, M., Boly, M. & Tononi, G. Neural correlates of consciousness: progress and problems. Nat. Rev. Neurosci. 17 , 307–321 (2016).
+Article
+CAS
+PubMed
+Google Scholar
+Nagel, T. What is it like to be a bat? Philos. Rev. 83 , 435–450 (1974).
+Article
+Google Scholar
+Kronemer, S. I. et al. Human visual consciousness involves large scale cortical and subcortical networks independent of task report and eye movement activity. Nat. Commun. 13 , 7342 (2022).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Snider, S. B. & Edlow, B. L. Magnetic resonance imaging in disorders of consciousness. Curr. Opin. Neurol. 33 , 676–683 (2022).
+Article
+Google Scholar
+Young, M. J., Edlow, B. L. & Bodien, Y. G. Covert consciousness. NeuroRehabilitation 54 , 23–42 (2024).
+PubMed
+PubMed Central
+Google Scholar
+Sandin, R. H., Enlund, G., Samuelsson, P. & Lennmarken, C. Awareness during anaesthesia: a prospective case study. Lancet 355 , 707–711 (2000).
+Article
+CAS
+PubMed
+Google Scholar
+Birch, J., Schnell, A. K. & Clayton, N. S. Dimensions of animal consciousness. Trends Cogn. Sci. 24 , 789–801 (2020).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Schooler, J. W. Re-representing consciousness: dissociations between experience and meta-consciousness. Trends Cogn. Sci. 6 , 339–344 (2002).
+Article
+PubMed
+Google Scholar
+Hurlburt, R. T. & Heavey, C. L. Investigating pristine inner experience: implications for experience sampling and questionnaires. Conscious. Cogn. 31 , 148–159 (2015).
+Article
+PubMed
+Google Scholar
+Garric, C. et al. Dissociation between objective and subjective perceptual experiences in a population of hemianopic patients: a new form of blindsight? Cortex 117 , 299–310 (2019).
+Article
+PubMed
+Google Scholar
+Levine, F. M. & Lee De Simone, L. The effects of experimenter gender on pain report in male and female subjects. Pain 44 , 69–72 (1991).
+Article
+PubMed
+Google Scholar
+Ekman, P. & Friesen, W. V. Nonverbal leakage and clues to deception. Psychiatry 32 , 88–106 (1969).
+Article
+CAS
+PubMed
+Google Scholar
+Block, N. On a confusion about a function of consciousness. Behav. Brain Sci. 18 , 227–247 (1995).
+Article
+Google Scholar
+Roediger, H. L. & McDermott, K. B. Creating false memories: remembering words not presented in lists. J. Exp. Psychol. Learn. 21 , 803–814 (1995).
+Article
+Google Scholar
+Loftus, E. F. & Palmer, J. C. Reconstruction of automobile destruction: example of the interaction between language and memory. J. Verb. Learn. Verb. Behav. 13 , 585–589 (1974).
+Article
+Google Scholar
+Tateno, A., Jorge, R. E. & Robinson, R. G. Pathological laughing and crying following traumatic brain injury. J. Neuropsychiatry Clin. Neurosci. 16 , 426–434 (2004).
+Article
+PubMed
+Google Scholar
+Cummings, J. L. et al. Defining and diagnosing involuntary emotional expression disorder. CNS Spectr. 11 , 1–7 (2006).
+Article
+PubMed
+Google Scholar
+Childs, N. L., Mercer, W. N. & Childs, H. W. Accuracy of diagnosis of persistent vegetative state. Neurology 43 , 1465–1467 (1993).
+Article
+CAS
+PubMed
+Google Scholar
+Vallotton, C. D. Signs of emotion: what can preverbal children “Say” about internal states? Infant. Ment. Health J. 29 , 234–258 (2008).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Terrace, H. S., Petitto, L. A., Sanders, R. J. & Bever, T. G. Can an ape create a sentence? Science 206 , 891–902 (1979).
+Article
+CAS
+PubMed
+Google Scholar
+Aru, J., Bachmann, T., Singer, W. & Melloni, L. Distilling the neural correlates of consciousness. Neurosci. Biobehav. Rev. 36 , 737–746 (2012).
+Article
+PubMed
+Google Scholar
+Tsuchiya, N., Wilke, M., Frassle, S. & Lamme, V. A. F. No-report paradigms: extracting the true neural correlates of consciousness. Trends Cogn. Sci. 19 , 757–770 (2015).
+Article
+PubMed
+Google Scholar
+Frässle, S., Sommer, J., Jansen, A., Naber, M. & Einhäuser, W. Binocular rivalry: frontal activity relates to introspection and action but not to perception. J. Neurosci. 34 , 1738–1747 (2014).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Block, N. What is wrong with the no-report paradigm and how to fix it. Trends Cogn. Sci. 23 , 1003–1013 (2019).
+Article
+PubMed
+Google Scholar
+Michel, M. & Morales, J. Minority reports: consciousness and the prefrontal cortex. Mind Lang. 35 , 493–513 (2020).
+Article
+Google Scholar
+Gonzalez-Castillo, J., Kam, J. W. Y., Hoy, C. W. & Bandettini, P. A. How to interpret resting-state fMRI: ask your participants. J. Neurosci. 41 , 1130–1141 (2021).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Stoll, J. et al. Pupil responses allow communication in locked-in syndrome patients. Curr. Biol. 23 , R647–R648 (2013).
+Article
+CAS
+PubMed
+Google Scholar
+Monti, M. M. et al. Willful modulation of brain activity in disorders of consciousness. N. Engl. J. Med. 362 , 579–589 (2010).
+Article
+CAS
+PubMed
+Google Scholar
+Martinez-Conde, S., Macknik, S. L., Troncoso, X. G. & Dyar, T. A. Microsaccades counteract visual fading during fixation. Neuron 49 , 297–305 (2006).
+Article
+CAS
+PubMed
+Google Scholar
+Otero-Millan, J., Macknik, S. L. & Martinez-Conde, S. Microsaccades and blinks trigger illusory rotation in the “rotating snakes” illusion. J. Neurosci. 32 , 6043–6051 (2012).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Sulutvedt, U. et al. Brightness perception changes related to pupil size. Vis. Res. 178 , 41–47 (2021).
+Article
+PubMed
+Google Scholar
+Posner, J. B., Saper, C. B., Schiff, N. D. & Claassen, J. Plum and Posner’s Diagnosis and Treatment of Stupor and Coma 5th edn (Oxford Univ. Press, 2019).
+Aru, J., Suzuki, M., Rutiku, R., Larkum, M. E. & Bachmann, T. Coupling the state and contents of consciousness. Front. Syst. Neurosci. 13 , 43 (2019).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Bayne, T., Hohwy, J. & Owen, A. M. Are there levels of consciousness? Trends Cogn. Sci. 20 , 405–413 (2016).
+Article
+PubMed
+Google Scholar
+Vaitl, D. et al. Psychobiology of altered states of consciousness. Psychol. Bull. 131 , 98–127 (2005).
+Article
+PubMed
+Google Scholar
+Blanke, O. & Metzinger, T. Full-body illusions and minimal phenomenal selfhood. Trends Cogn. Sci. 13 , 7–13 (2009).
+Article
+PubMed
+Google Scholar
+Lewis, C. I. Mind and the World-Order: Outline of a Theory of Knowledge (Charles Scribner’s Sons, 1929).
+Redinbaugh, M. J. et al. Thalamus modulates consciousness via layer-specific control of cortex. Neuron 106 , 66–75 e12 (2020).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Di Perri, C. et al. Neural correlates of consciousness in patients who have emerged from a minimally conscious state: a cross-sectional multimodal imaging study. Lancet Neurol. 15 , 830–842 (2016).
+Article
+PubMed
+Google Scholar
+Varley, T. F. et al. Fractal dimension of cortical functional connectivity networks and severity of disorders of consciousness. PLoS ONE 15 , e0223812 (2020).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Casali, A. G. et al. A theoretically based index of consciousness independent of sensory processing and behavior. Sci. Transl. Med. 5 , 198ra105 (2013).
+Article
+PubMed
+Google Scholar
+Stender, J. et al. The minimal energetic requirement of sustained awareness after brain injury. Curr. Biol. 26 , 1494–1499 (2016).
+Article
+CAS
+PubMed
+Google Scholar
+Aubinet, C. et al. Brain metabolism but not gray matter volume underlies the presence of language function in the minimally conscious state (MCS): MCS+ versus MCS− neuroimaging differences. Neurorehabil Neural Repair 34 , 172–184 (2020).
+Article
+PubMed
+Google Scholar
+Mélotte, E. et al. Is oral feeding compatible with an unresponsive wakefulness syndrome? J. Neurol. 265 , 954–961 (2018).
+Article
+PubMed
+Google Scholar
+Horikawa, T., Tamaki, M., Miyawaki, Y. & Kamitani, Y. Neural decoding of visual imagery during sleep. Science 340 , 639–642 (2013).
+Article
+CAS
+PubMed
+Google Scholar
+Vetter, P. et al. Decoding natural sounds in early “visual” cortex of congenitally blind individuals. Curr. Biol. 30 , 3039–3044 (2020).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Bannert, M. M. & Bartels, A. Human V4 activity patterns predict behavioral performance in imagery of object color. J. Neurosci. 38 , 3657–3668 (2018).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Emmerling, T. C., Zimmermann, J., Sorger, B., Frost, M. A. & Goebel, R. Decoding the direction of imagined visual motion using 7T ultra-high field fMRI. Neuroimage 125 , 61–73 (2016).
+Article
+PubMed
+Google Scholar
+Willett, F. R., Avansino, D. T., Hochberg, L. R., Henderson, J. M. & Shenoy, K. V. High-performance brain-to-text communication via handwriting. Nature 593 , 249–254 (2021).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Hatamimajoumerd, E., Ratan Murty, N. A., Pitts, M. & Cohen, M. A. Decoding perceptual awareness across the brain with a no-report fMRI masking paradigm. Curr. Biol. 32 , 4139–4149 (2022).
+Article
+CAS
+PubMed
+Google Scholar
+Hajonides, J. E., Nobre, A. C., van Ede, F. & Stokes, M. G. Decoding visual colour from scalp electroencephalography measurements. Neuroimage 237 , 118030 (2021).
+Article
+PubMed
+Google Scholar
+Koide-Majima, N., Nishimoto, S. & Majima, K. Mental image reconstruction from human brain activity: neural decoding of mental imagery via deep neural network-based Bayesian estimation. Neural Netw. 170 , 349–363 (2024).
+Article
+PubMed
+Google Scholar
+Gaziv, G. et al. Self-supervised natural image reconstruction and large-scale semantic classification from brain activity. Neuroimage 254 , 119121 (2022).
+Article
+PubMed
+Google Scholar
+Ronconi, L., Balestrieri, E., Baldauf, D. & Melcher, D. Distinct cortical networks subserve spatio-temporal sampling in vision through different oscillatory rhythms. J. Cogn. Neurosci. 36 , 572–589 (2023).
+Article
+Google Scholar
+Fovet, T. et al. Decoding activity in Broca’s area predicts the occurrence of auditory hallucinations across subjects. Biol. Psychiatry 91 , 194–201 (2022).
+Article
+PubMed
+Google Scholar
+Franke, K. et al. State-dependent pupil dilation rapidly shifts visual feature selectivity. Nature 610 , 128–134 (2022).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Murphy, P. R., O’Connell, R. G., O’Sullivan, M., Robertson, I. H. & Balsters, J. H. Pupil diameter covaries with BOLD activity in human locus coeruleus. Hum. Brain Mapp. 35 , 4140–4154 (2014).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Reimer, J. et al. Pupil fluctuations track fast switching of cortical states during quiet wakefulness. Neuron 84 , 355–362 (2014).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Pfeffer, T. et al. Coupling of pupil- and neuronal population dynamics reveals diverse influences of arousal on cortical processing. eLife 11 , e71890 (2022).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Einhäuser, W., Koch, C. & Carter, O. L. Pupil dilation betrays the timing of decisions. Front. Hum. Neurosci. 4 , 18 (2010).
+PubMed
+PubMed Central
+Google Scholar
+McGinley, M. J. et al. Waking state: rapid variations modulate neural and behavioral responses. Neuron 87 , 1143–1161 (2015).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Farraj, Y. et al. Measuring pupil size and light response through closed eyelids. Biomed. Opt. Express 12 , 6485–6495 (2021).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Goldfine, A. M. & Schiff, N. D. Consciousness: its neurobiology and the major classes of impairment. Neurol. Clin. 29 , 723–737 (2011).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Fiebelkorn, I. C. & Kastner, S. A rhythmic theory of attention. Trends Cogn. Sci. 23 , 87–101 (2019).
+Article
+PubMed
+Google Scholar
+Blumenfeld, H. Brain mechanisms of conscious awareness: detect, pulse, switch, and wave. Neuroscientist 29 , 9–18 (2023).
+Article
+PubMed
+Google Scholar
+Joshi, S., Li, Y., Kalwani, R. & Gold, J. I. Relationships between pupil diameter and neuronal activity in the locus coeruleus, colliculi, and cingulate cortex. Neuron 89 , 221–234 (2016).
+Article
+CAS
+PubMed
+Google Scholar
+Reimer, J. et al. Pupil fluctuations track rapid changes in adrenergic and cholinergic activity in cortex. Nat. Commun. 7 , 13289 (2016).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Schneider, M. et al. Spontaneous pupil dilations during the resting state are associated with activation of the salience network. Neuroimage 139 , 189–201 (2016).
+Article
+PubMed
+Google Scholar
+Van Egroo, M., Gaggioni, G., Cespedes-Ortiz, C., Ly, J. Q. M. & Vandewalle, G. Steady-state pupil size varies with circadian phase and sleep homeostasis in healthy young men. Clocks Sleep. 1 , 240–258 (2019).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Wilhelm, B., Wilhem, H., Lüdtke, H., Streicher, P. & Adler, M. Pupillographic assessment of sleepiness in sleep-deprived healthy subjects. Sleep 21 , 258–265 (1998).
+CAS
+PubMed
+Google Scholar
+Lieberman, J. D. et al. Use of admission Glasgow coma score, pupil size, and pupil reactivity to determine outcome for trauma patients. J. Trauma 55 , 437–442 (2003).
+Article
+PubMed
+Google Scholar
+Emami, P. et al. Impact of Glasgow coma scale score and pupil parameters on mortality rate and outcome in pediatric and adult severe traumatic brain injury: a retrospective, multicenter cohort study. J. Neurosurg. 126 , 760–767 (2017).
+Article
+PubMed
+Google Scholar
+Isbell, H. Comparison of the reactions induced by psilocybin and LSD-25 in man. Psychopharmacologia 1 , 29–38 (1959).
+Article
+CAS
+PubMed
+Google Scholar
+Franklin, M. S., Broadway, J. M., Mrazek, M. D., Smallwood, J. & Schooler, J. W. Window to the wandering mind: pupillometry of spontaneous thought while reading. Q. J. Exp. Psychol. 66 , 2289–2294 (2013).
+Article
+Google Scholar
+Schwartz, Z. P., Buran, B. N. & David, S. V. Pupil-associated states modulate excitability but not stimulus selectivity in primary auditory cortex. J. Neurophysiol. 123 , 191–208 (2020).
+Article
+PubMed
+Google Scholar
+van Kempen, J. et al. Behavioural and neural signatures of perceptual decision-making are modulated by pupil-linked arousal. eLife 8 , e42541 (2019).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Sangare, A. et al. Pupil dilation response elicited by violations of auditory regularities is a promising but challenging approach to probe consciousness at the bedside. Sci. Rep. 13 , 20331 (2023).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Naber, M., Frässle, S. & Einhäuser, W. Perceptual rivalry: reflexes reveal the gradual nature of visual awareness. PLoS ONE 6 , e20910 (2011).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Bárány, E. H. & Halldén, U. Phasic inhibition of the light reflex of the pupil during retinal rivalry. J. Neurophysiol. 11 , 25–30 (1948).
+Article
+PubMed
+Google Scholar
+Binda, P., Pereverzeva, M. & Murray, S. O. Pupil size reflects the focus of feature-based attention. J. Neurophysiol. 112 , 3046–3052 (2014).
+Article
+PubMed
+Google Scholar
+Unsworth, N. & Robison, M. K. Pupillary correlates of covert shifts of attention during working memory maintenance. Atten. Percept. Psychophys. 79 , 782–795 (2017).
+Article
+PubMed
+Google Scholar
+Mathot, S., van der Linden, L., Grainger, J. & Vitu, F. The pupillary light response reflects eye-movement preparation. J. Exp. Psychol. Hum. Percept. Perform. 41 , 28–35 (2015).
+Article
+PubMed
+Google Scholar
+Gusso, M. M. et al. More than a feeling: scalp EEG and eye signals in conscious tactile perception. Conscious. Cogn. 105 , 103411 (2022).
+Article
+PubMed
+Google Scholar
+Naber, M., Alvarez, G. A. & Nakayama, K. Tracking the allocation of attention using human pupillary oscillations. Front. Psychol. 4 , 919 (2013).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Zavagno, D., Tommasi, L. & Laeng, B. The eye pupil’s response to static and dynamic illusions of luminosity and darkness. Iperception 8 , 2041669517717754 (2017).
+PubMed
+PubMed Central
+Google Scholar
+Laeng, B. & Endestad, T. Bright illusions reduce the eye’s pupil. Proc. Natl Acad. Sci. USA 109 , 2162–2167 (2012).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Sperandio, I., Bond, N. & Binda, P. Pupil size as a gateway into conscious interpretation of brightness. Front. Neurol. 9 , 1070 (2018).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Laeng, B. & Sulutvedt, U. The eye pupil adjusts to imaginary light. Psychol. Sci. 25 , 188–197 (2014).
+Article
+PubMed
+Google Scholar
+Hustá, C., Dalmaijer, E., Belopolsky, A. & Mathôt, S. The pupillary light response reflects visual working memory content. J. Exp. Psychol. Hum. Percept. Perform. 45 , 1522–1528 (2019).
+Article
+PubMed
+Google Scholar
+Mathôt, S., Grainger, J. & Strijkers, K. Pupillary responses to words that convey a sense of brightness or darkness. Psychol. Sci. 28 , 1116–1124 (2017).
+Article
+PubMed
+Google Scholar
+Kay, L., Keogh, R., Andrillon, T. & Pearson, J. The pupillary light response as a physiological index of aphantasia, sensory and phenomenological imagery strength. eLife 11 , e72484 (2022).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Gao, J., Ko, A., Yabe, Y., Goodale, M. A. & Chen, J. Pupil size is modulated by the size of equal-luminance gratings. J. Vis. 20 , 4 (2020).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Tortelli, C., Turi, M., Burr, D. C. & Binda, P. Pupillary responses obey Emmert’s law and co-vary with autistic traits. J. Autism Dev. Disord. 51 , 2908–2919 (2021).
+Article
+PubMed
+Google Scholar
+Vemuri, K., Srivastava, A., Agrawal, S. & Anand, M. Age, pupil size differences, and color choices for the “dress” and the “jacket”. J. Opt. Soc. Am. A Opt. Image Sci. Vis. 35 , B347–B355 (2018).
+Article
+PubMed
+Google Scholar
+Beukema, S., Olson, J. A., Jennings, B. J. & Kingdom, F. A. A. Pupil dilation to illusory motion in peripheral drift images: perception versus reality. J. Vis. 17 , 1–13 (2017).
+Article
+PubMed
+Google Scholar
+Sahraie, A. & Barbur, J. L. Pupil response triggered by the onset of coherent motion. Graefes Arch. Clin. Exp. Ophthalmol. 235 , 494–500 (1997).
+Article
+CAS
+PubMed
+Google Scholar
+Castellotti, S., Francisci, C. & Del Viva, M. M. Pupillary response to real, illusory, and implied motion. PLoS ONE 16 , e0254105 (2021).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Sapir, A., Hershman, R. & Henik, A. Top-down effect on pupillary response: evidence from shape from shading. Cognition 212 , 104664 (2021).
+Article
+PubMed
+Google Scholar
+Sulutvedt, U., Mannix, T. K. & Laeng, B. Gaze and the eye pupil adjust to imagined size and distance. Cogn. Sci. 42 , 3159–3176 (2018).
+Article
+PubMed
+Google Scholar
+Enright, J. T. Perspective vergence: oculomotor responses to line drawings. Vis. Res. 27 , 1513–1526 (1987).
+Article
+CAS
+PubMed
+Google Scholar
+Mathot, S. Pupillometry: psychology, physiology, and function. J. Cogn. 1 , 16 (2018).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Castaldi, E., Pomè, A., Cicchini, G. M., Burr, D. & Binda, P. The pupil responds spontaneously to perceived numerosity. Nat. Commun. 12 , 5944 (2021).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Hupé, J. M., Lamirel, C. & Lorenceau, J. Pupil dynamics during bistable motion perception. J. Vis. 9 , 10 (2009).
+Article
+PubMed
+Google Scholar
+Brascamp, J. W., de Hollander, G., Wertheimer, M. D., DePew, A. N. & Knapen, T. Separable pupillary signatures of perception and action during perceptual multistability. eLlife 10 , e66161 (2021).
+Article
+CAS
+Google Scholar
+Turi, M., Burr, D. C. & Binda, P. Pupillometry reveals perceptual differences that are tightly linked to autistic traits in typical adults. eLife 7 , e32399 (2018).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Einhäuser, W., Stout, J., Koch, C. & Carter, O. Pupil dilation reflects perceptual selection and predicts subsequent stability in perceptual rivalry. Proc. Natl Acad. Sci. USA 105 , 1704–1709 (2008).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Acquafredda, M., Binda, P. & Lunghi, C. Attention cueing in rivalry: insights from pupillometry. eNeuro 9 , ENEURO.0497-21.2022 (2022).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Lowe, S. W. & Ogle, K. N. Dynamics of the pupil during binocular rivalry. Arch. Ophthalmol. 75 , 395–403 (1966).
+Article
+CAS
+PubMed
+Google Scholar
+Kloosterman, N. A. et al. Pupil size tracks perceptual content and surprise. Eur. J. Neurosci. 41 , 1068–1078 (2015).
+Article
+PubMed
+Google Scholar
+Strauch, C., Greiter, L. & Huckauf, A. Pupil dilation but not microsaccade rate robustly reveals decision formation. Sci. Rep. 8 , 13165 (2018).
+Article
+PubMed
+PubMed Central
+Google Scholar
+de Gee, J. W., Knapen, T. & Donner, T. H. Decision-related pupil dilation reflects upcoming choice and individual bias. Proc. Natl Acad. Sci. USA 111 , E618–E625 (2014).
+PubMed
+PubMed Central
+Google Scholar
+Rozado, D., Lochner, M., Engelke, U. & Dünser, A. Detecting intention through motor-imagery-triggered pupil dilations. Hum. Comput. Interact. 34 , 83–113 (2019).
+Article
+Google Scholar
+Richer, F. & Beatty, J. Pupillary dilations in movement preparation and execution. Psychophysiology 22 , 204–207 (1985).
+Article
+CAS
+PubMed
+Google Scholar
+Mischkowski, D., Palacios-Barrios, E. E., Banker, L., Dildine, T. C. & Atlas, L. Y. Pain or nociception? Subjective experience mediates the effects of acute noxious heat on autonomic responses — corrected and republished. Pain 160 , 1469–1481 (2019).
+Article
+PubMed
+PubMed Central
+Google Scholar
+van Hooijdonk, R. et al. Touch-induced pupil size reflects stimulus intensity, not subjective pleasantness. Exp. Brain Res. 237 , 201–210 (2019).
+Article
+PubMed
+Google Scholar
+Ellermeier, W. & Westphal, W. Gender differences in pain ratings and pupil reactions to painful pressure stimuli. Pain 61 , 435–439 (1995).
+Article
+PubMed
+Google Scholar
+Lewandowska, K., Gagol, A., Sikora-Wachowicz, B., Marek, T. & Fąfrowicz, M. Saying “yes” when you want to say “no” — pupil dilation reflects evidence accumulation in a visual working memory recognition task. Int. J. Psychophysiol. 139 , 18–32 (2019).
+Article
+PubMed
+Google Scholar
+Jessen, S., Altvater-Mackensen, N. & Grossmann, T. Pupillary responses reveal infants’ discrimination of facial emotions independent of conscious perception. Cognition 150 , 163–169 (2016).
+Article
+PubMed
+Google Scholar
+Kinner, V. L. et al. What our eyes tell us about feelings: tracking pupillary responses during emotion regulation processes. Psychophysiology 54 , 508–518 (2017).
+Article
+PubMed
+Google Scholar
+Bradley, M. M., Miccoli, L., Escrig, M. A. & Lang, P. J. The pupil as a measure of emotional arousal and autonomic activation. Psychophysiology 45 , 602–607 (2008).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Partala, T. & Surakka, V. Pupil size variation as an indication of affective processing. Int. J. Hum. Comput Stud. 59 , 185–198 (2003).
+Article
+Google Scholar
+Kashihara, K., Okanoya, K. & Kawai, N. Emotional attention modulates microsaccadic rate and direction. Psychol. Res. 78 , 166–179 (2014).
+Article
+PubMed
+Google Scholar
+de’Sperati, C., Roatta, S., Zovetti, N. & Baroni, T. Decoding overt shifts of attention in depth through pupillary and cortical frequency tagging. J. Neural Eng. 18 , 036008 (2021).
+Article
+Google Scholar
+Kang, O. & Wheatley, T. Pupil dilation patterns reflect the contents of consciousness. Conscious. Cogn. 35 , 128–135 (2015).
+Article
+PubMed
+Google Scholar
+Kang, O. & Banaji, M. R. Pupillometric decoding of high-level musical imagery. Conscious. Cogn. 77 , 102862 (2020).
+Article
+PubMed
+Google Scholar
+Monster, A. W., Chan, H. C. & O’Connor, D. Long-term trends in human eye blink rate. Biotelem. Patient Monit. 5 , 206–222 (1978).
+CAS
+PubMed
+Google Scholar
+Doane, M. G. Interactions of eyelids and tears in corneal wetting and the dynamics of the normal human eyeblink. Am. J. Ophthalmol. 89 , 507–516 (1980).
+Article
+CAS
+PubMed
+Google Scholar
+Guipponi, O., Odouard, S., Pinède, S., Wardak, C. & Ben Hamed, S. fMRI cortical correlates of spontaneous eye blinks in the nonhuman primate. Cereb. Cortex 25 , 2333–2345 (2015).
+Article
+PubMed
+Google Scholar
+Golan, T. et al. Human intracranial recordings link suppressed transients rather than ‘filling-in’ to perceptual continuity across blinks. eLife 5 , e17243 (2016).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Kern, M., Schulze-Bonhage, A. & Ball, T. Blink- and saccade-related suppression effects in early visual areas of the human brain: intracranial EEG investigations during natural viewing conditions. Neuroimage 230 , 117788 (2021).
+Article
+PubMed
+Google Scholar
+Blin, O., Masson, G., Azulay, J. P., Fondarai, J. & Serratrice, G. Apomorphine-induced blinking and yawning in healthy volunteers. Br. J. Clin. Pharmacol. 30 , 769–773 (1990).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Nakano, T. Blink-related dynamic switching between internal and external orienting networks while viewing videos. Neurosci. Res. 96 , 54–58 (2015).
+Article
+PubMed
+Google Scholar
+Holland, M. K. & Tarlow, G. Blinking and thinking. Percept. Mot. Skills 41 , 503–506 (1975).
+Article
+CAS
+PubMed
+Google Scholar
+Slagter, H. A., Georgopoulou, K. & Frank, M. J. Spontaneous eye blink rate predicts learning from negative, but not positive, outcomes. Neuropsychologia 71 , 126–132 (2015).
+Article
+PubMed
+Google Scholar
+Jongkees, B. J. & Colzato, L. S. Spontaneous eye blink rate as predictor of dopamine-related cognitive function — a review. Neurosci. Biobehav. Rev. 71 , 58–82 (2016).
+Article
+PubMed
+Google Scholar
+Nakano, T., Kato, M., Morito, Y., Itoi, S. & Kitazawa, S. Blink-related momentary activation of the default mode network while viewing videos. Proc. Natl Acad. Sci. USA 110 , 702–706 (2013).
+Article
+CAS
+PubMed
+Google Scholar
+Volkmann, F. C., Riggs, L. A. & Moore, R. K. Eyeblinks and visual suppression. Science 207 , 900–902 (1980).
+Article
+CAS
+PubMed
+Google Scholar
+Hari, R., Salmellin, R., Tissari, S. O., Kajola, M. & Virsu, V. Visual stability during eyeblinks. Nature 367 , 121–122 (1994).
+Article
+CAS
+PubMed
+Google Scholar
+Bristow, D., Frith, C. & Rees, G. Two distinct neural effects of blinking on human visual processing. Neuroimage 27 , 136–145 (2005).
+Article
+PubMed
+Google Scholar
+Ranti, C., Jones, W., Klin, A. & Shultz, S. Blink rate patterns provide a reliable measure of individual engagement with scene content. Sci. Rep. 10 , 8267 (2020).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Nakano, T., Yamamoto, Y., Kitajo, K., Takahashi, T. & Kitazawa, S. Synchronization of spontaneous eyeblinks while viewing video stories. Proc. Biol. Sci. 276 , 3635–3644 (2009).
+PubMed
+PubMed Central
+Google Scholar
+Hoppe, D., Helfmann, S. & Rothkopf, C. A. Humans quickly learn to blink strategically in response to environmental task demands. Proc. Natl Acad. Sci. USA 115 , 2246–2251 (2018).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Shultz, S., Klin, A. & Jones, W. Inhibition of eye blinking reveals subjective perceptions of stimulus salience. Proc. Natl Acad. Sci. USA 108 , 21270–21275 (2011).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Abeles, D., Amit, R., Tal-Perry, N., Carrasco, M. & Yuval-Greenberg, S. Oculomotor inhibition precedes temporally expected auditory targets. Nat. Commun. 11 , 3524 (2020).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Bonfiglio, L. et al. Cortical source of blink-related delta oscillations and their correlation with levels of consciousness. Hum. Brain Mapp. 34 , 2178–2189 (2013).
+Article
+PubMed
+Google Scholar
+Bonfiglio, L. et al. Spectral parameters modulation and source localization of blink-related alpha and low-beta oscillations differentiate minimally conscious state from vegetative state/unresponsive wakefulness syndrome. PLoS ONE 9 , e93252 (2014).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Magliacano, A. et al. Spontaneous eye blinking as a diagnostic marker in prolonged disorders of consciousness. Sci. Rep. 11 , 22393 (2021).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Bonfiglio, L. et al. Spontaneous blinking behaviour in persistent vegetative and minimally conscious states: relationships with evolution and outcome. Brain Res. Bull. 68 , 163–170 (2005).
+Article
+CAS
+PubMed
+Google Scholar
+Maffei, A. & Angrilli, A. Spontaneous eye blink rate: an index of dopaminergic component of sustained attention and fatigue. Int. J. Psychophysiol. 123 , 58–63 (2018).
+Article
+PubMed
+Google Scholar
+Jacobs, L., Feldman, M. & Bender, M. B. Eye movements during sleep. I. The pattern in the normal human. Arch. Neurol. 25 , 151–159 (1971).
+Article
+CAS
+PubMed
+Google Scholar
+Zargari Marandi, R., Madeleine, P., Omland, O., Vuillerme, N. & Samani, A. Eye movement characteristics reflected fatigue development in both young and elderly individuals. Sci. Rep. 8 , 13148 (2018).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Stern, J. A., Boyer, D. & Schroeder, D. Blink rate: a possible measure of fatigue. Hum. Factors 36 , 285–297 (1994).
+Article
+CAS
+PubMed
+Google Scholar
+Barbato, G. et al. Effects of sleep deprivation on spontaneous eye blink rate and alpha EEG power. Biol. Psychiatry 38 , 340–341 (1995).
+Article
+CAS
+PubMed
+Google Scholar
+Crevits, L., Simons, B. & Wildenbeest, J. Effect of sleep deprivation on saccades and eyelid blinking. Eur. Neurol. 50 , 176–180 (2003).
+Article
+PubMed
+Google Scholar
+Ponder, E. & Kennedy, W. P. On the act of blinking. Q. J. Exp. Physiol. 18 , 89–198 (1927).
+Article
+Google Scholar
+Nakano, T. & Miyazaki, Y. Blink synchronization is an indicator of interest while viewing videos. Int. J. Psychophysiol. 135 , 1–11 (2019).
+Article
+PubMed
+Google Scholar
+Smilek, D., Carriere, J. S. & Cheyne, J. A. Out of mind, out of sight: eye blinking as indicator and embodiment of mind wandering. Psychol. Sci. 21 , 786–789 (2010).
+Article
+PubMed
+Google Scholar
+Mason, M. F. et al. Wandering minds: the default network and stimulus-independent thought. Science 315 , 393–395 (2007).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Zhang, H., Anderson, N. C. & Miller, K. F. Refixation patterns of mind-wandering during real-world scene perception. J. Exp. Psychol. Hum. Percept. Perform. 47 , 36–52 (2021).
+Article
+PubMed
+Google Scholar
+Tebecis, A. K. & Provins, K. A. Hypnosis and eye movements. Biol. Psychol. 3 , 31–47 (1975).
+Article
+CAS
+PubMed
+Google Scholar
+Brych, M., Murali, S. & Handel, B. The role of blinks, microsaccades and their retinal consequences in bistable motion perception. Front. Psychol. 12 , 647256 (2021).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Ito, J. et al. Perceptual switching, eye movements, and the bus paradox. Perception 32 , 681–698 (2003).
+Article
+PubMed
+Google Scholar
+Kalisvaart, J. P. & Goossens, J. Influence of retinal image shifts and extra-retinal eye movement signals on binocular rivalry alternations. PLoS ONE 8 , e61702 (2013).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Murali, S. & Händel, B. Spontaneous eye blinks map the probability of perceptual reinterpretation during visual and auditory ambiguity. Cogn. Sci. 48 , e13414 (2024).
+Article
+PubMed
+Google Scholar
+Bonneh, Y. S., Adini, Y. & Polat, U. Contrast sensitivity revealed by spontaneous eyeblinks: evidence for a common mechanism of oculomotor inhibition. J. Vis. 16 , 1–15 (2016).
+Article
+PubMed
+Google Scholar
+Paparella, G. et al. Painful stimulation increases spontaneous blink rate in healthy subjects. Sci. Rep. 10 , 20014 (2020).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Bradley, M. M., Codispoti, M., Cuthbert, B. N. & Lang, P. J. Emotion and motivation I: defensive and appetitive reactions in picture processing. Emotion 1 , 276–298 (2001).
+Article
+CAS
+PubMed
+Google Scholar
+Hare, R., Wood, K., Britain, S. & Shadman, J. Autonomic responses to affective visual stimulation. Psychophysiology 7 , 408–417 (1970).
+Article
+CAS
+PubMed
+Google Scholar
+Terhune, D. B., Sullivan, J. G. & Simola, J. M. Time dilates after spontaneous blinking. Curr. Biol. 26 , R459–R460 (2016).
+Article
+CAS
+PubMed
+Google Scholar
+Rosenzweig, G. & Bonneh, Y. S. Familiarity revealed by involuntary eye movements on the fringe of awareness. Sci. Rep. 9 , 3029 (2019).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Walcher, S., Korner, C. & Benedek, M. Looking for ideas: eye behavior during goal-directed internally focused cognition. Conscious. Cogn. 53 , 165–175 (2017).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Annerer-Walcher, S., Korner, C., Beaty, R. E. & Benedek, M. Eye behavior predicts susceptibility to visual distraction during internally directed cognition. Atten. Percept. Psychophys. 82 , 3432–3444 (2020).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Callara, A. L., Greco, A., Scilingo, E. P. & Bonfiglio, L. Neuronal correlates of eyeblinks are an expression of primary consciousness phenomena. Sci. Rep. 13 , 12617 (2023).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Van Opstal, F., De Loof, E., Verguts, T. & Cleeremans, A. Spontaneous eyeblinks during breaking continuous flash suppression are associated with increased detection times. J. Vis. 16 , 21 (2016).
+Article
+PubMed
+Google Scholar
+Mahanama, B. et al. Eye movement and pupil measures: a review. Front. Comp. Sci. 3 , 1–22 (2022).
+Google Scholar
+Intoy, J. & Rucci, M. Finely tuned eye movements enhance visual acuity. Nat. Commun. 11 , 795 (2020).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Rucci, M., Iovin, R., Poletti, M. & Santini, F. Miniature eye movements enhance fine spatial detail. Nature 447 , 851–854 (2007).
+Article
+CAS
+PubMed
+Google Scholar
+Pritchard, R. M. Stabilized images on the retina. Sci. Am. 204 , 72–78 (1961).
+Article
+CAS
+PubMed
+Google Scholar
+Coiner, B. et al. Functional neuroanatomy of the human eye movement network: a review and atlas. Brain Struct. Funct. 224 , 2603–2617 (2019).
+Article
+CAS
+PubMed
+Google Scholar
+Hafed, Z. M., Goffart, L. & Krauzlis, R. J. A neural mechanism for microsaccade generation in the primate superior colliculus. Science 323 , 940–943 (2009).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Bremmer, F., Kubischik, M., Hoffmann, K. P. & Krekelberg, B. Neural dynamics of saccadic suppression. J. Neurosci. 29 , 12374–12383 (2009).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Golan, T. et al. Increasing suppression of saccade-related transients along the human visual hierarchy. eLife 6 , e27819 (2017).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Sdoia, S., Conversi, D., Pecchinenda, A. & Ferlazzo, F. Access to consciousness of briefly presented visual events is modulated by transcranial direct current stimulation of left dorsolateral prefrontal cortex. Sci. Rep. 9 , 10950 (2019).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Schall, J. D. The neural selection and control of saccades by the frontal eye field. Philos. Trans. R. Soc. Lond. B 357 , 1073–1082 (2002).
+Article
+Google Scholar
+Rivaud, S., Müri, R. M., Gaymard, B., Vermersch, A. I. & Pierrot-Deseilligny, C. Eye movement disorders after frontal eye field lesions in humans. Exp. Brain Res. 102 , 110–120 (1994).
+Article
+CAS
+PubMed
+Google Scholar
+Ting, W. K., Perez Velazquez, J. L. & Cusimano, M. D. Eye movement measurement in diagnostic assessment of disorders of consciousness. Front. Neurol. 5 , 137 (2014).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Overbeek, B., Eilander, H., Lavrijsen, J. & Koopmans, R. Are visual functions diagnostic signs of the minimally conscious state? An integrative review. Brain Inj. 33 , 234–234 (2019).
+Google Scholar
+Yagi, T. & Baba, S. Evaluation of the brain-stem function by the auditory brain-stem response and the caloric vestibular reaction in comatose patient. Arch. Otorhinolaryngol. 238 , 33–43 (1983).
+Article
+CAS
+PubMed
+Google Scholar
+Schlosser, H. G., Unterberg, A. & Clarke, A. Using video-oculography for galvanic evoked vestibulo-ocular monitoring in comatose patients. J. Neurosci. Methods 145 , 127–131 (2005).
+Article
+PubMed
+Google Scholar
+Trojano, L. et al. Quantitative assessment of visual behavior in disorders of consciousness. J. Neurol. 259 , 1888–1895 (2012).
+Article
+CAS
+PubMed
+Google Scholar
+Giacino, J. T. & Kalmar, K. The vegetative and minimally conscious states: a comparison of clinical features and functional outcome. J. Head Trauma Rehab. 12 , 36–51 (1997).
+Article
+Google Scholar
+Dolce, G. et al. Visual pursuit in the severe disorder of consciousness. J. Neurotrauma 28 , 1149–1154 (2011).
+Article
+PubMed
+Google Scholar
+Kallio, S., Hyönä, J., Revonsuo, A., Sikka, P. & Nummenmaa, L. The existence of a hypnotic state revealed by eye movements. PLoS ONE 6 , e26374 (2011).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Weitzenhoffer, A. M. Hypnosis and eye movements. I. Preliminary report on a possible slow eye movement correlate of hypnosis. Am. J. Clin. Hypn. 11 , 221–227 (1969).
+Article
+CAS
+PubMed
+Google Scholar
+Lange, E. B., Zweck, F. & Sinn, P. Microsaccade-rate indicates absorption by music listening. Conscious. Cogn. 55 , 59–78 (2017).
+Article
+PubMed
+Google Scholar
+Hebbard, F. W. & Fischer, R. Effect of psilocybin, LSD, and mescaline on small, involuntary eye movements. Psychopharmacologia 9 , 146–156 (1966).
+Article
+CAS
+PubMed
+Google Scholar
+Aserinsky, E. & Kleitman, N. Regularly occurring periods of eye motility, and concomitant phenomena, during sleep. Science 118 , 273–274 (1953).
+Article
+CAS
+PubMed
+Google Scholar
+Zils, E., Sprenger, A., Heide, W., Born, J. & Gais, S. Differential effects of sleep deprivation on saccadic eye movements. Sleep 28 , 1109–1115 (2005).
+Article
+PubMed
+Google Scholar
+De Gennaro, L., Ferrara, M., Curcio, G. & Bertini, M. Visual search performance across 40 h of continuous wakefulness: measures of speed and accuracy and relation with oculomotor performance. Physiol. Behav. 74 , 197–204 (2001).
+Article
+PubMed
+Google Scholar
+Di Stasi, L. L. et al. Microsaccade and drift dynamics reflect mental fatigue. Eur. J. Neurosci. 38 , 2389–2398 (2013).
+Article
+PubMed
+Google Scholar
+Di Stasi, L. L. et al. Towards a driver fatigue test based on the saccadic main sequence: a partial validation by subjective report data. Transp. Res. C. Emerg. Technol. 21 , 122–133 (2012).
+Article
+Google Scholar
+Grace, P. M., Stanford, T., Gentgall, M. & Rolan, P. E. Utility of saccadic eye movement analysis as an objective biomarker to detect the sedative interaction between opioids and sleep deprivation in opioid-naive and opioid-tolerant populations. J. Psychopharmacol. 24 , 1631–1640 (2010).
+Article
+PubMed
+Google Scholar
+Scholes, C., McGraw, P. V., Nyström, M. & Roach, N. W. Fixational eye movements predict visual sensitivity. Proc. Biol. Sci. 282 , 20151568 (2015).
+PubMed
+PubMed Central
+Google Scholar
+Engbert, R. & Kliegl, R. Microsaccades uncover the orientation of covert attention. Vis. Res. 43 , 1035–1045 (2003).
+Article
+PubMed
+Google Scholar
+Pastukhov, A., Vonau, V., Stonkute, S. & Braun, J. Spatial and temporal attention revealed by microsaccades. Vis. Res. 85 , 45–57 (2013).
+Article
+PubMed
+Google Scholar
+Kaufmann, B. C. et al. Eyetracking during free visual exploration detects neglect more reliably than paper-pencil tests. Cortex 129 , 223–235 (2020).
+Article
+PubMed
+Google Scholar
+Ro, T., Rorden, C., Driver, J. & Rafal, R. Ipsilesional biases in saccades but not perception after lesions of the human inferior parietal lobule. J. Cogn. Neurosci. 13 , 920–929 (2001).
+Article
+CAS
+PubMed
+Google Scholar
+Laubrock, J., Engbert, R. & Kliegl, R. Fixational eye movements predict the perceived direction of ambiguous apparent motion. J. Vis. 8 , 13.1–13.17 (2008).
+Article
+PubMed
+Google Scholar
+Madelain, L. & Krauzlis, R. J. Pursuit of the ineffable: perceptual and motor reversals during the tracking of apparent motion. J. Vis. 3 , 642–653 (2003).
+Article
+PubMed
+Google Scholar
+Troncoso, X. G., Macknik, S. L., Otero-Millan, J. & Martinez-Conde, S. Microsaccades drive illusory motion in the enigma illusion. Proc. Natl Acad. Sci. USA 105 , 16033–16038 (2008).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Piras, A., Raffi, M., Persiani, M., Perazzolo, M. & Squatrito, S. Effect of heading perception on microsaccade dynamics. Behav. Brain Res. 312 , 246–252 (2016).
+Article
+PubMed
+Google Scholar
+Yarbus, A. L. Eye Movements and Vision (Plenum, 1967).
+Senzai, Y. & Scanziani, M. A cognitive process occurring during sleep is revealed by rapid eye movements. Science 377 , 999–1004 (2022).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Herman, J. H. et al. Evidence for a directional correspondence between eye movements and dream imagery in REM sleep. Sleep 7 , 52–63 (1984).
+Article
+CAS
+PubMed
+Google Scholar
+Dement, W. & Wolpert, E. A. The relation of eye movements, body motility, and external stimuli to dream content. J. Exp. Psychol. 55 , 543–553 (1958).
+Article
+CAS
+PubMed
+Google Scholar
+Hobson, J. A., Goldfrank, F. & Snyder, F. Respiration and mental activity in sleep. J. Psychiatr. Res. 3 , 79–90 (1965).
+Article
+CAS
+PubMed
+Google Scholar
+Gurtner, L. M., Hartmann, M. & Mast, F. W. Eye movements during visual imagery and perception show spatial correspondence but have unique temporal signatures. Cognition 210 , 104597 (2021).
+Article
+PubMed
+Google Scholar
+Brandt, S. A. & Stark, L. W. Spontaneous eye movements during visual imagery reflect the content of the visual scene. J. Cogn. Neurosci. 9 , 27–38 (1997).
+Article
+CAS
+PubMed
+Google Scholar
+Totten, E. Eye movement during visual imagery. Comp. Psychol. Monogr. 11 , 46 (1935).
+Google Scholar
+Johansson, R., Holsanova, J. & Holmqvist, K. Pictures and spoken descriptions elicit similar eye movements during mental imagery, both in light and in complete darkness. Cogn. Sci. 30 , 1053–1079 (2006).
+Article
+PubMed
+Google Scholar
+Bonneh, Y. S., Adini, Y. & Polat, U. Contrast sensitivity revealed by microsaccades. J. Vis. 15 , 11 (2015).
+Article
+Google Scholar
+Yu, G., Yang, M., Yu, P. & Dorris, M. C. Time compression of visual perception around microsaccades. J. Neurophysiol. 118 , 416–424 (2017).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Morrone, M. C., Ross, J. & Burr, D. Saccadic eye movements cause compression of time as well as space. Nat. Neurosci. 8 , 950–954 (2005).
+Article
+CAS
+PubMed
+Google Scholar
+Ross, J., Morrone, M. C. & Burr, D. C. Compression of visual space before saccades. Nature 386 , 598–601 (1997).
+Article
+CAS
+PubMed
+Google Scholar
+Enoksson, P. Binocular rivalry and monocular dominance studied with optokinetic nystagmus. Acta Ophthalmol. 41 , 544–563 (1963).
+Article
+CAS
+Google Scholar
+White, A. L., Moreland, J. C. & Rolfs, M. Oculomotor freezing indicates conscious detection free of decision bias. J. Neurophysiol. 127 , 571–585 (2022).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Kronemer, S. I. et al. Eye metrics are a marker of visual conscious awareness and neural processing in cerebral blindness. Preprint at bioRxiv https://doi.org/10.1101/2025.01.06.631506 (2025)
+White, A. L. & Rolfs, M. Oculomotor inhibition covaries with conscious detection. J. Neurophysiol. 116 , 1507–1521 (2016).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Badde, S., Myers, C. F., Yuval-Greenberg, S. & Carrasco, M. Oculomotor freezing reflects tactile temporal expectation and aids tactile perception. Nat. Commun. 11 , 3341 (2020).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Schiff, N. D. Cognitive motor dissociation following severe brain injuries. JAMA Neurol. 72 , 1413–1415 (2015).
+Article
+PubMed
+Google Scholar
+Ekman, P. & Friesen, W. V. Detecting deception from the body or face. J. Personal. Soc. Psychol. 29 , 288–298 (1974).
+Article
+Google Scholar
+Kapoustina, O., Echegaray-Benites, C. & Gélinas, C. Fluctuations in vital signs and behavioural responses of brain surgery patients in the intensive care unit: are they valid indicators of pain? J. Adv. Nurs. 70 , 2562–2576 (2014).
+Article
+PubMed
+Google Scholar
+Chatelle, C. et al. Assessment of nociception and pain in participants in an unresponsive or minimally conscious state after acquired brain injury: the relation between the coma recovery scale-revised and the nociception coma scale-revised. Arch. Phys. Med. Rehabil. 99 , 1755–1762 (2018).
+Article
+PubMed
+Google Scholar
+Gelinas, C. et al. Behaviors indicative of pain in brain-injured adult patients with different levels of consciousness in the Intensive care unit. J. Pain. Symptom Manag. 57 , 761–773 (2019).
+Article
+Google Scholar
+Arbour, C. et al. Detecting pain in traumatic brain-injured patients with different levels of consciousness during common procedures in the ICU: typical or atypical behaviors? Clin. J. Pain 30 , 960–969 (2014).
+Article
+PubMed
+Google Scholar
+Roulin, M. J. & Ramelet, A. S. Behavioral changes in brain-injured critical care adults with different levels of consciousness during nociceptive stimulation: an observational study. Intensive Care Med. 40 , 1115–1123 (2014).
+Article
+PubMed
+Google Scholar
+Pincherle, A. et al. Motor behavior unmasks residual cognition in disorders of consciousness. Ann. Neurol. 85 , 443–447 (2019).
+Article
+PubMed
+Google Scholar
+Remi, J. et al. The crossed leg sign indicates a favorable outcome after severe stroke. Neurology 77 , 1453–1456 (2011).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Mélotte, E. et al. Swallowing in individuals with disorders of consciousness: a cohort study. Ann. Phys. Rehabil. Med. 64 , 101403 (2021).
+Article
+PubMed
+Google Scholar
+Mat, B. et al. New behavioral signs of consciousness in patients with severe brain injuries. Semin. Neurol. 42 , 259–272 (2022).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Ouellette, S. M. & Simpson, C. Monitoring for intraoperative-awareness. AORN J. 68 , 950–961 (1998).
+Article
+CAS
+PubMed
+Google Scholar
+Darwin, C. The Expression of Emotions in Man and Animals (D. Appleton and Company, 1872).
+Takalkar, M., Xu, M., Wu, Q. & Chaczko, Z. A survey: facial micro-expression recognition. Multimed. Tools Appl. 77 , 19301–19325 (2017).
+Article
+Google Scholar
+Lang, P. J., Greenwald, M. K., Bradley, M. M. & Hamm, A. O. Looking at pictures: affective, facial, visceral, and behavioral reactions. Psychophysiology 30 , 261–273 (1993).
+Article
+CAS
+PubMed
+Google Scholar
+Wolf, K. et al. The facial pattern of disgust, appetence, excited joy and relaxed joy: an improved facial EMG study. Scand. J. Psychol. 46 , 403–409 (2005).
+Article
+PubMed
+Google Scholar
+Rudokaite, J., Ertugrul, I. O., Ong, S., Janssen, M. P. & Huis In ‘t Veld, E. Predicting vasovagal reactions to needles from facial action units. J. Clin. Med. 12 , 1644 (2023).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Schwartz, G. E., Brown, S. L. & Ahern, G. L. Facial muscle patterning and subjective experience during affective imagery: sex differences. Psychophysiology 17 , 75–82 (1980).
+Article
+CAS
+PubMed
+Google Scholar
+Fridlund, A. J., Schwartz, G. E. & Fowler, S. C. Pattern recognition of self-reported emotional state from multiple-site facial EMG activity during affective imagery. Psychophysiology 21 , 622–637 (1984).
+Article
+CAS
+PubMed
+Google Scholar
+Witvliet, C. V. & Vrana, S. R. Psychophysiological responses as indices of affective dimensions. Psychophysiology 32 , 436–443 (1995).
+Article
+CAS
+PubMed
+Google Scholar
+Schwartz, G. E., Fair, P. L., Salt, P., Mandel, M. R. & Klerman, G. L. Facial muscle patterning to affective imagery in depressed and nondepressed subjects. Science 192 , 489–491 (1976).
+Article
+CAS
+PubMed
+Google Scholar
+Raduga, M. ‘I love you’: the first phrase detected from dreams. Sleep Sci. 15 , 149–157 (2022).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Raduga, M. Detecting lucid dreams only by submentalis electromyography. Sleep Med. 88 , 221–230 (2021).
+Article
+PubMed
+Google Scholar
+McGuigan, F. J. & Tanner, R. G. Covert oral behavior during conversational and visual dreams. Psychon. Sci. 23 , 263–264 (1971).
+Article
+Google Scholar
+Shimizu, A. & Inoue, T. Dreamed speech and speech muscle activity. Psychophysiology 23 , 210–214 (1986).
+Article
+CAS
+PubMed
+Google Scholar
+Fenwick, P. et al. Lucid dreaming: correspondence between dreamed and actual events in one subject during REM sleep. Biol. Psychol. 18 , 243–252 (1984).
+Article
+CAS
+PubMed
+Google Scholar
+Gardner, R. Jr., Grossman, W. I., Roffwarg, H. P. & Weiner, H. The relationship of small limb movements during REM sleep to dreamed limb action. Psychosom. Med. 37 , 147–159 (1975).
+Article
+PubMed
+Google Scholar
+Wolpert, E. A. Studies in psychophysiology of dreams. II. An electromyographic study of dreaming. AMA Arch. Gen. Psychiatry 2 , 231–241 (1960).
+Article
+CAS
+PubMed
+Google Scholar
+Shepard, R. N. & Metzler, J. Mental rotation of three-dimensional objects. Science 171 , 701–703 (1971).
+Article
+CAS
+PubMed
+Google Scholar
+Libet, B. The neural time factor in conscious and unconscious events. Ciba Found. Symp. 174 , 123–137 (1993).
+CAS
+PubMed
+Google Scholar
+Cederblad, A. M. H., Visokomogilski, A., Andersen, S. K., MacLeod, M. J. & Sahraie, A. Conscious awareness modulates processing speed in the redundant signal effect. Exp. Brain Res. 239 , 1877–1893 (2021).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Ben-Haim, M. S. et al. Disentangling perceptual awareness from nonconscious processing in rhesus monkeys ( Macaca mulatta ). Proc. Natl Acad. Sci. USA 118 , e2017543118 (2021).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Wilson, S. A note on an associated movement of the eyes and ears in man. Rev. Neurol. Psychiatry 6 , 331–336 (1908).
+Google Scholar
+Strauss, D. J. et al. Vestigial auriculomotor activity indicates the direction of auditory attention in humans. eLife 9 , e54536 (2020).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Salameh, C., Perchet, C., Hagiwara, K. & Garcia-Larrea, L. Sympathetic skin response as an objective tool to estimate stimulus-associated arousal in a human model of hyperalgesia. Neurophysiol. Clin. 52 , 436–445 (2022).
+Article
+PubMed
+Google Scholar
+Mangina, C. A. & Beuzeron-Mangina, J. H. Direct electrical stimulation of specific human brain structures and bilateral electrodermal activity. Int. J. Psychophysiol. 22 , 1–8 (1996).
+Article
+CAS
+PubMed
+Google Scholar
+Boucsein, W. Electrodermal Activity 2nd edn (Springer, 2012).
+Altintop, C. G., Latifoğlu, F., Akin, A. K., İleri, R. & Yazar, M. A. Analysis of consciousness level using galvanic skin response during therapeutic effect. J. Med. Syst. 45 , 1–12 (2020).
+Article
+PubMed
+Google Scholar
+Daltrozzo, J. et al. Emotional electrodermal response in coma and other low-responsive patients. Neurosci. Lett. 475 , 44–47 (2010).
+Article
+CAS
+PubMed
+Google Scholar
+Salvato, G. et al. Autonomic responses to emotional linguistic stimuli and amplitude of low-frequency fluctuations predict outcome after severe brain injury. Neuroimage Clin. 28 , 102356 (2020).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Reale, G. et al. The immediate effects of immersive virtual reality on autonomic nervous system function in patients with disorders of consciousness after severe acquired brain injury: a pilot study. J. Clin. Med. 12 , 7639 (2023).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Luaute, J. et al. Electrodermal reactivity to emotional stimuli in healthy subjects and patients with disorders of consciousness. Ann. Phys. Rehabil. Med. 61 , 401–406 (2018).
+Article
+PubMed
+Google Scholar
+Storm, H. et al. Skin conductance correlates with perioperative stress. Acta Anaesthesiol. Scand. 46 , 887–895 (2002).
+Article
+CAS
+PubMed
+Google Scholar
+Kurzová, A., Hess, L., Slíva, J. & Málek, J. Can changes in skin impedance be used to monitor sedation after midazolam and during recovery from anesthesia? Physiol. Res. 70 , 265–272 (2021).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Storm, H., Shafiei, M., Myre, K. & Raeder, J. Palmar skin conductance compared to a developed stress score and to noxious and awakening stimuli on patients in anaesthesia. Acta Anaesthesiol. Scand. 49 , 798–803 (2005).
+Article
+CAS
+PubMed
+Google Scholar
+Herlan, A., Ottenbacher, J., Schneider, J., Riemann, D. & Feige, B. Electrodermal activity patterns in sleep stages and their utility for sleep versus wake classification. J. Sleep Res. 28 , 1–8 (2019).
+Article
+Google Scholar
+Lester, B. K., Burch, N. R. & Dossett, R. C. Nocturnal EEG-GSR profiles: the influence of presleep states. Psychophysiology 3 , 238–248 (1967).
+Article
+CAS
+PubMed
+Google Scholar
+Johnson, L. C. & Lubin, A. Spontaneous electrodermal activity during waking and sleeping. Psychophysiology 3 , 8–17 (1966).
+Article
+CAS
+PubMed
+Google Scholar
+Richter, C. P. The significance of changes in the electrical resistance of the body during sleep. Proc. Natl Acad. Sci. USA 12 , 214–222 (1926).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Walrath, L. C. & Hamilton, D. W. Autonomic correlates of meditation and hypnosis. Am. J. Clin. Hypn. 17 , 190–197 (1975).
+Article
+CAS
+PubMed
+Google Scholar
+Block, R. I., Ghoneim, M. M., Fowles, D. C., Kumar, V. & Pathak, D. Effects of a subanesthetic concentration of nitrous oxide on establishment, elicitation, and semantic and phonemic generalization of classically conditioned skin conductance responses. Pharmacol. Biochem. Behav. 28 , 7–14 (1987).
+Article
+CAS
+PubMed
+Google Scholar
+Block, R. I., Ghoneim, M. M., Kumar, V. & Pathak, D. Psychedelic effects of a subanesthetic concentration of nitrous oxide. Anesth. Prog. 37 , 271–276 (1990).
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Loggia, M. L., Juneau, M. & Bushnell, C. M. Autonomic responses to heat pain: heart rate, skin conductance, and their relation to verbal ratings and stimulus intensity. Pain 152 , 592–598 (2011).
+Article
+PubMed
+Google Scholar
+Ledowski, T. et al. Monitoring of skin conductance to assess postoperative pain intensity. Br. J. Anaesth. 97 , 862–865 (2006).
+Article
+CAS
+PubMed
+Google Scholar
+Feinstein, B., Langton, J. N., Jameson, R. M. & Schiller, F. Experiments on pain referred from deep somatic tissues. J. Bone Joint Surg. Am. 36-A , 981–997 (1954).
+Article
+CAS
+PubMed
+Google Scholar
+Folkins, C. H., Lawson, K. D., Opton, E. M. Jr. & Lazarus, R. S. Desensitization and the experimental reduction of threat. J. Abnorm. Psychol. 73 , 100–113 (1968).
+Article
+CAS
+PubMed
+Google Scholar
+Hoppe, J. M., Holmes, E. A. & Agren, T. Exploring the neural basis of fear produced by mental imagery: imaginal exposure in individuals fearful of spiders. Philos. Trans. R. Soc. Lond. B Biol. Sci. 376 , 20190690 (2021).
+Article
+PubMed
+Google Scholar
+Hauri, P. & Van de Castle, R. L. Psychophysiological parallels in dreams. Psychosom. Med. 35 , 297–308 (1973).
+Article
+CAS
+PubMed
+Google Scholar
+He, W., Boesveldt, S., Delplanque, S., de Graaf, C. & de Wijk, R. A. Sensory-specific satiety: added insights from autonomic nervous system responses and facial expressions. Physiol. Behav. 170 , 12–18 (2017).
+Article
+CAS
+PubMed
+Google Scholar
+Zaman, J., Van de Pavert, I., Van Oudenhove, L. & Van Diest, I. The use of stimulus perception to account for variability in skin conductance responses to interoceptive stimuli. Psychophysiology 57 , e13494 (2020).
+Article
+PubMed
+Google Scholar
+Vallar, G. & Ronchi, R. Somatoparaphrenia: a body delusion. A review of the neuropsychological literature. Exp. Brain Res. 192 , 533–551 (2009).
+Article
+PubMed
+Google Scholar
+Ramachandran, V. S., Rogers-Ramachandran, D. & Cobb, S. Touching the phantom limb. Nature 377 , 489–490 (1995).
+Article
+CAS
+PubMed
+Google Scholar
+Gülbetekin, E. et al. Effects of right or left face stimulation on self and other perception in enfacement illusion. Soc. Neurosci. 16 , 189–205 (2021).
+Article
+PubMed
+Google Scholar
+Armel, K. C. & Ramachandran, V. S. Projecting sensations to external objects: evidence from skin conductance response. Proc. Biol. Sci. 270 , 1499–1506 (2003).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Ocklenburg, S., Ruther, N., Peterburs, J., Pinnow, M. & Gunturkun, O. Laterality in the rubber hand illusion. Laterality 16 , 174–187 (2011).
+Article
+PubMed
+Google Scholar
+Palomo, P. et al. Subjective, behavioral, and physiological responses to the rubber hand illusion do not vary with age in the adult phase. Conscious. Cogn. 58 , 90–96 (2018).
+Article
+PubMed
+Google Scholar
+Moseley, G. L. et al. Psychologically induced cooling of a specific body part caused by the illusory ownership of an artificial counterpart. Proc. Natl Acad. Sci. USA 105 , 13169–13173 (2008).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Kammers, M. P. M., Rose, K. & Haggard, P. Feeling numb: temperature, but not thermal pain, modulates feeling of body ownership. Neuropsychologia 49 , 1316–1321 (2011).
+Article
+PubMed
+Google Scholar
+Ehrsson, H. H., Wiech, K., Weiskopf, N., Dolan, R. J. & Passingham, R. E. Threatening a rubber hand that you feel is yours elicits a cortical anxiety response. Proc. Natl Acad. Sci. USA 104 , 9828–9833 (2007).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Williams, L. M. et al. Mapping the time course of nonconscious and conscious perception of fear: an integration of central and peripheral measures. Hum. Brain Mapp. 21 , 64–74 (2004).
+Article
+PubMed
+Google Scholar
+Scott, R. B., Minati, L., Dienes, Z., Critchley, H. D. & Seth, A. K. Detecting conscious awareness from involuntary autonomic responses. Conscious. Cogn. 20 , 936–942 (2011).
+Article
+PubMed
+Google Scholar
+Chuen, L., Sears, D. & McAdams, S. Psychophysiological responses to auditory change. Psychophysiology 53 , 891–904 (2016).
+Article
+PubMed
+Google Scholar
+Lapate, R. C., Rokers, B., Li, T. & Davidson, R. J. Nonconscious emotional activation colors first impressions: a regulatory role for conscious awareness. Psychol. Sci. 25 , 349–357 (2014).
+Article
+PubMed
+Google Scholar
+Wilms, L. & Oberfeld, D. Color and emotion: effects of hue, saturation, and brightness. Psychol. Res. 82 , 896–914 (2018).
+Article
+PubMed
+Google Scholar
+Zieliński, P. An arousal effect of colors saturation a study of self-reported ratings and electrodermal responses. J. Psychophysiol. 30 , 9–16 (2016).
+Article
+Google Scholar
+Grossberg, J. M. & Wilson, H. K. Physiological changes accompanying the visualization of fearful and neutral situations. J. Personal. Soc. Psychol. 10 , 124–133 (1968).
+Article
+CAS
+Google Scholar
+Cortese, B. M. et al. Olfactory cue reactivity in nicotine-dependent adult smokers. Psychol. Addict. Behav. 29 , 91–96 (2015).
+Article
+PubMed
+Google Scholar
+Wicken, M., Keogh, R. & Pearson, J. The critical role of mental imagery in human emotion: insights from fear-based imagery and aphantasia. Proc. Biol. Sci. 288 , 20210267 (2021).
+PubMed
+PubMed Central
+Google Scholar
+Palma, J. A. & Benarroch, E. E. Neural control of the heart: recent concepts and clinical correlations. Neurology 83 , 261–271 (2014).
+Article
+PubMed
+Google Scholar
+Skora, L. I., Livermore, J. J. A. & Roelofs, K. The functional role of cardiac activity in perception and action. Neurosci. Biobehav. Rev. 137 , 104655 (2022).
+Article
+CAS
+PubMed
+Google Scholar
+Baguley, I. J. et al. Dysautonomia after traumatic brain injury: a forgotten syndrome? J. Neurol. Neurosurg. Psychiatry 67 , 39–43 (1999).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Riganello, F. et al. A heartbeat away from consciousness: heart rate variability entropy can discriminate disorders of consciousness and is correlated with resting-state fMRI brain connectivity of the central autonomic network. Front. Neurol. 9 , 769 (2018).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Raimondo, F. et al. Brain–heart interactions reveal consciousness in noncommunicating patients. Ann. Neurol. 82 , 578–591 (2017).
+Article
+PubMed
+Google Scholar
+Sattin, D. et al. Analyzing the loss and the recovery of consciousness: functional connectivity patterns and changes in heart rate variability during propofol-induced anesthesia. Front. Syst. Neurosci. 15 , 652080 (2021).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Scheffer, G. J., Tenvoorde, B. J., Karemaker, J. M., Ros, H. H. & Delange, J. J. Effects of thiopentone, etomidate and propofol on beat-to-beat cardiovascular signals in man. Anaesthesia 48 , 849–855 (1993).
+Article
+CAS
+PubMed
+Google Scholar
+Moerman, N., Bonke, B. & Oosting, J. Awareness and recall during general anesthesia. facts and feelings. Anesthesiology 79 , 454–464 (1993).
+Article
+CAS
+PubMed
+Google Scholar
+DeBenedittis, G., Cigada, M., Bianchi, A., Signorini, M. G. & Cerutti, S. Autonomic changes during hypnosis: a heart rate variability power spectrum analysis as a marker of sympatho-vagal balance. Int. J. Clin. Exp. Hypn. 42 , 140–152 (1994).
+Article
+CAS
+PubMed
+Google Scholar
+Oswald, V. et al. Autonomic nervous system modulation during self-induced non-ordinary states of consciousness. Sci. Rep. 13 , 151811 (2023).
+Article
+Google Scholar
+Cauthen, N. R. & Prymak, C. A. Meditation versus relaxation: an examination of the physiological effects of relaxation training and of different levels of experience with transcendental meditation. J. Consult. Clin. Psychol. 45 , 496–497 (1977).
+Article
+CAS
+PubMed
+Google Scholar
+Yüksel, R., Ozcan, O. & Dane, S. The effects of hypnosis on heart rate variability. Int. J. Clin. Exp. Hypn. 61 , 162–171 (2013).
+Article
+PubMed
+Google Scholar
+Uslu, T. et al. Cerebral blood flow evaluation during the hypnotic state with transcranial doppler sonography. Int. J. Clin. Exp. Hypn. 60 , 81–87 (2012).
+Article
+PubMed
+Google Scholar
+Somers, V. K., Dyken, M. E., Mark, A. L. & Abboud, F. M. Sympathetic-nerve activity during sleep in normal subjects. N. Engl. J. Med. 328 , 303–307 (1993).
+Article
+CAS
+PubMed
+Google Scholar
+Trinder, J. et al. Autonomic activity during human sleep as a function of time and sleep stage. J. Sleep Res. 10 , 253–264 (2001).
+Article
+CAS
+PubMed
+Google Scholar
+Gronfier, C., Simon, C., Piquard, F., Ehrhart, J. & Brandenberger, G. Neuroendocrine processes underlying ultradian sleep regulation in man. J. Clin. Endocrinol. Metab. 84 , 2686–2690 (1999).
+Article
+CAS
+PubMed
+Google Scholar
+Chouchou, F. & Desseilles, M. Heart rate variability: a tool to explore the sleeping brain? Front. Neurosci. 8 , 402 (2014).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Brylowski, A., Levitan, L. & Laberge, S. H-Reflex suppression and autonomic activation during lucid rem-sleep: a case-study. Sleep 12 , 374–378 (1989).
+Article
+CAS
+PubMed
+Google Scholar
+Nardelli, M. et al. Activation of brain–heart axis during REM sleep: a trigger for dreaming. Am. J. Physiol. Regul. Integr. Comp. Physiol. 321 , R951–R959 (2021).
+Article
+CAS
+PubMed
+Google Scholar
+LaBerge, S., Levitan, L. & Dement, W. C. Lucid dreaming: physiological correlates of consciousness during REM sleep. J. Mind Behav. 7 , 251–258 (1986).
+Google Scholar
+Al, E. et al. Heart–brain interactions shape somatosensory perception and evoked potentials. Proc. Natl Acad. Sci. USA 117 , 10575–10584 (2020).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Walker, B. B. & Sandman, C. A. Visual evoked-potentials change as heart-rate and carotid pressure change. Psychophysiology 19 , 520–527 (1982).
+Article
+CAS
+PubMed
+Google Scholar
+Sandman, C. A. Augmentation of the auditory event related potentials of the brain during diastole. Int. J. Psychophysiol. 2 , 111–119 (1984).
+Article
+CAS
+PubMed
+Google Scholar
+Leupin, V. & Britz, J. Interoceptive signals shape the earliest markers and neural pathway to awareness at the visual threshold. Proc. Natl Acad. Sci. USA 121 , e2311953121 (2024).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Motyka, P. et al. Interactions between cardiac activity and conscious somatosensory perception. Psychophysiology 56 , e13424 (2019).
+Article
+PubMed
+Google Scholar
+Grund, M. et al. Respiration, heartbeat, and conscious tactile perception. J. Neurosci. 42 , 643–656 (2022).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Sandman, C. A., McCanne, T. R., Kaiser, D. N. & Diamond, B. Heart rate and cardiac phase influences on visual perception. J. Comp. Physiol. Psychol. 91 , 189–202 (1977).
+Article
+CAS
+PubMed
+Google Scholar
+Cobos, M. I., Guerra, P. M., Vila, J. & Chica, A. B. Heart-rate modulations reveal attention and consciousness interactions. Psychophysiology 56 , e13295 (2019).
+Article
+PubMed
+Google Scholar
+Salomon, R. et al. The insula mediates access to awareness of visual stimuli presented synchronously to the heartbeat. J. Neurosci. 36 , 5115–5127 (2016).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Dworkin, B. R. et al. Central effects of baroreceptor activation in humans: attenuation of skeletal reflexes and pain perception. Proc. Natl Acad. Sci. USA 91 , 6329–6333 (1994).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Pramme, L., Larra, M. F., Schächinger, H. & Frings, C. Cardiac cycle time effects on mask inhibition. Biol. Psychol. 100 , 115–121 (2014).
+Article
+PubMed
+Google Scholar
+Burton, A. R., Birznieks, I., Bolton, P. S., Henderson, L. A. & Macefield, V. G. Effects of deep and superficial experimentally induced acute pain on muscle sympathetic nerve activity in human subjects. J. Physiol. 587 , 183–193 (2009).
+Article
+CAS
+PubMed
+Google Scholar
+Kyle, B. N. & McNeil, D. W. Autonomic arousal and experimentally induced pain: a critical review of the literature. Pain Res. Manag. 19 , 159–167 (2014).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Burton, A. R., Brown, R. & Macefield, V. G. Selective activation of muscle and skin nociceptors does not trigger exaggerated sympathetic responses in spinal-injured subjects. Spinal Cord 46 , 660–665 (2008).
+Article
+CAS
+PubMed
+Google Scholar
+Lang, P. J., Kozak, M. J., Miller, G. A., Levin, D. N. & McLean, A. Jr. Emotional imagery: conceptual structure and pattern of somato-visceral response. Psychophysiology 17 , 179–192 (1980).
+Article
+CAS
+PubMed
+Google Scholar
+Wang, Y. & Morgan, W. P. The effect of imagery perspectives on the psychophysiological responses to imagined exercise. Behav. Brain Res. 52 , 167–174 (1992).
+Article
+CAS
+PubMed
+Google Scholar
+Erlacher, D. & Schredl, M. Cardiovascular responses to dreamed physical exercise during REM lucid dreaming. Dreaming 18 , 112–121 (2008).
+Article
+Google Scholar
+Decety, J., Jeannerod, M., Germain, M. & Pastene, J. Vegetative response during imagined movement is proportional to mental effort. Behav. Brain Res. 42 , 1–5 (1991).
+Article
+CAS
+PubMed
+Google Scholar
+Park, H. D., Correia, S., Ducorps, A. & Tallon-Baudry, C. Spontaneous fluctuations in neural responses to heartbeats predict visual detection. Nat. Neurosci. 17 , 612–618 (2014).
+Article
+CAS
+PubMed
+Google Scholar
+Sadeghi, S., Wittmann, M., De Rosa, E. & Anderson, A. K. Wrinkles in subsecond time perception are synchronized to the heart. Psychophysiology 60 , e14270 (2023).
+Article
+PubMed
+Google Scholar
+Ogden, R. S., Dobbins, C., Slade, K., McIntyre, J. & Fairclough, S. The psychophysiological mechanisms of real-world time experience. Sci. Rep. 12 , 12890 (2022).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Schwarz, M. A., Winkler, I. & Sedlmeier, P. The heart beat does not make us tick: the impacts of heart rate and arousal on time perception. Atten. Percept. Psychophys. 75 , 182–193 (2013).
+Article
+PubMed
+Google Scholar
+Kralemann, B. et al. In vivo cardiac phase response curve elucidates human respiratory heart rate variability. Nat. Commun. 4 , 2418 (2013).
+Article
+PubMed
+Google Scholar
+Parviainen, T., Lyyra, P. & Nokia, M. S. Cardiorespiratory rhythms, brain oscillatory activity and cognition: review of evidence and proposal for significance. Neurosci. Biobehav. Rev. 142 , 104908 (2022).
+Article
+Google Scholar
+Larsen, P. D., Tzeng, Y. C., Sin, P. Y. & Galletly, D. C. Respiratory sinus arrhythmia in conscious humans during spontaneous respiration. Respir. Physiol. Neurobiol. 174 , 111–118 (2010).
+Article
+CAS
+PubMed
+Google Scholar
+Kluger, D. S. et al. Modulatory dynamics of periodic and aperiodic activity in respiration–brain coupling. Nat. Commun. 14 , 4699 (2023).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Allen, M., Varga, S. & Heck, D. H. Respiratory rhythms of the predictive mind. Psychol. Rev. 130 , 1066–1080 (2023).
+Article
+PubMed
+Google Scholar
+Kluger, D. S. & Gross, J. Respiration modulates oscillatory neural network activity at rest. PLoS Biol. 19 , e3001457 (2021).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Zelano, C. et al. Nasal respiration entrains human limbic oscillations and modulates cognitive function. J. Neurosci. 36 , 12448–12467 (2016).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Yang, Q. et al. Smell-induced gamma oscillations in human olfactory cortex are required for accurate perception of odor identity. PLoS Biol. 20 , 1–30 (2022).
+Article
+Google Scholar
+Perl, O. et al. Human non-olfactory cognition phase-locked with inhalation. Nat. Hum. Behav. 3 , 501–512 (2019).
+Article
+PubMed
+Google Scholar
+Laing, D. G. Natural sniffing gives optimum odour perception for humans. Perception 12 , 99–117 (1983).
+Article
+CAS
+PubMed
+Google Scholar
+Sobel, N., Khan, R. M., Saltman, A., Sullivan, E. V. & Gabrieli, J. D. E. Olfaction — the world smells different to each nostril. Nature 402 , 35–35 (1999).
+Article
+CAS
+PubMed
+Google Scholar
+Solaz, J. et al. Drowsiness detection based on the analysis of breathing rate obtained from real-time image recognition. Transp. Res. Proc. 14 , 3867–3876 (2016).
+Google Scholar
+Kiashari, S. E. H., Nahvi, A., Homayounfard, A. & Bakhoda, H. Monitoring the variation in driver respiration rate from wakefulness to drowsiness: a non-instrusive method for drowsiness detection using thermal imaging. J. Sleep Sci. 3 , 1–9 (2018).
+Google Scholar
+Sattin, D. et al. Olfactory discrimination in disorders of consciousness: a new sniff protocol. Brain Behav. 9 , e01273 (2019).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Arzi, A. et al. Olfactory sniffing signals consciousness in unresponsive patients with brain injuries. Nature 581 , 428–433 (2020).
+Article
+CAS
+PubMed
+Google Scholar
+Charland-Verville, V. et al. Detection of response to command using voluntary control of breathing in disorders of consciousness. Front. Hum. Neurosci. 8 , 1020 (2014).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Plotkin, A. et al. Sniffing enables communication and environmental control for the severely disabled. Proc. Natl Acad. Sci. USA 107 , 14413–14418 (2010).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Douglas, N. J., White, D. P., Pickett, C. K., Weil, J. V. & Zwillich, C. W. Respiration during sleep in normal man. Thorax 37 , 840–844 (1982).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Bulow, K. Respiration and wakefulness in man. Acta Physiol. Scand. Suppl. 209 , 1–110 (1963).
+CAS
+PubMed
+Google Scholar
+Trinder, J., Whitworth, F., Kay, A. & Wilkin, P. Respiratory instability during sleep onset. J. Appl. Physiol. 73 , 2462–2469 (1992).
+Article
+CAS
+PubMed
+Google Scholar
+Saraswat, V. Effects of anaesthesia techniques and drugs on pulmonary function. Indian J. Anaesth. 59 , 557–564 (2015).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Flexman, J. E., Demaree, R. G. & Simpson, D. D. Respiratory phase and visual signal-detection. Percept. Psychophys. 16 , 337–339 (1974).
+Article
+Google Scholar
+Kluger, D. S., Balestrieri, E., Busch, N. A. & Gross, J. Respiration aligns perception with neural excitability. eLife 10 , e70907 (2021).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Zaccaro, A., Perrucci, M. G., Parrotta, E., Costantini, M. & Ferri, F. Brain-heart interactions are modulated across the respiratory cycle via interoceptive attention. Neuroimage 262 , 1–15 (2022).
+Article
+Google Scholar
+Molle, L. & Coste, A. The respiratory modulation of interoception. J. Neurophysiol. 127 , 896–899 (2022).
+Article
+PubMed
+Google Scholar
+Arsenault, M., Ladouceur, A., Lehmann, A., Rainville, P. & Piche, M. Pain modulation induced by respiration: phase and frequency effects. Neuroscience 252 , 501–511 (2013).
+Article
+CAS
+PubMed
+Google Scholar
+Homma, I. & Masaoka, Y. Breathing rhythms and emotions. Exp. Physiol. 93 , 1011–1021 (2008).
+Article
+PubMed
+Google Scholar
+Gomez, P. & Danuser, B. Affective and physiological responses to environmental noises and music. Int. J. Psychophysiol. 53 , 91–103 (2004).
+Article
+PubMed
+Google Scholar
+Gomez, P., Stahel, W. A. & Danuser, B. Respiratory responses during affective picture viewing. Biol. Psychol. 67 , 359–373 (2004).
+Article
+PubMed
+Google Scholar
+Ogden, R. S., Henderson, J., Slade, K., McGlone, F. & Richter, M. The effect of increased parasympathetic activity on perceived duration. Conscious. Cogn. 76 , 102829 (2019).
+Article
+PubMed
+Google Scholar
+Mainland, J. & Sobel, N. The sniff is part of the olfactory percept. Chem. Senses 31 , 181–196 (2006).
+Article
+PubMed
+Google Scholar
+Masaoka, Y., Koiwa, N. & Homma, I. Inspiratory phase-locked alpha oscillation in human olfaction: source generators estimated by a dipole tracing method. J. Physiol. 566 , 979–997 (2005).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Huijbers, W. et al. Respiration phase-locks to fast stimulus presentations: implications for the interpretation of posterior midline “deactivations”. Hum. Brain Mapp. 35 , 4932–4943 (2014).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Bocca, E., Antonelli, A. R. & Mosciaro, O. Mechanical co-factors in olfactory stimulation. Acta Oto-Laryngol. 59 , 243–247 (1965).
+Article
+Google Scholar
+Leopold, D. Distortion of olfactory perception: diagnosis and treatment. Chem. Senses 27 , 611–615 (2002).
+Article
+PubMed
+Google Scholar
+Frank, R. A., Dulay, M. F. & Gesteland, R. C. Assessment of the sniff magnitude test as a clinical test of olfactory function. Physiol. Behav. 78 , 195–204 (2003).
+Article
+CAS
+PubMed
+Google Scholar
+Bensafi, M. et al. Olfactomotor activity during imagery mimics that during perception. Nat. Neurosci. 6 , 1142–1144 (2003).
+Article
+CAS
+PubMed
+Google Scholar
+Bensafi, M., Pouliot, S. & Sobel, N. Odorant-specific patterns of sniffing during imagery distinguish ‘bad’ and ‘good’ olfactory imagers. Chem. Senses 30 , 521–529 (2005).
+Article
+CAS
+PubMed
+Google Scholar
+Oudiette, D. et al. Author correction: REM sleep respiratory behaviours match mental content in narcoleptic lucid dreamers. Sci. Rep. 8 , 6128 (2018).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Breivik, H. et al. Assessment of pain. Br. J. Anaesth. 101 , 17–24 (2008).
+Article
+CAS
+PubMed
+Google Scholar
+Daguet, I., Bouhassira, D. & Gronfier, C. Baseline pupil diameter is not a reliable biomarker of subjective sleepiness. Front. Neurol. 10 , 108 (2019).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Cross, D. J. et al. Distinct neural circuits underlie assessment of a diversity of natural dangers by American crows. Proc. Biol. Sci. 280 , 20131046 (2013).
+PubMed
+PubMed Central
+Google Scholar
+Mott, R. O., Hawthorne, S. J. & McBride, S. D. Blink rate as a measure of stress and attention in the domestic horse ( Equus caballus ). Sci. Rep. 10 , 21409 (2020).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Ungurean, G., Martinez-Gonzalez, D., Massot, B., Libourel, P. A. & Rattenborg, N. C. Pupillary behavior during wakefulness, non-REM sleep, and REM sleep in birds is opposite that of mammals. Curr. Biol. 31 , 5370–5376 (2021).
+Article
+CAS
+PubMed
+Google Scholar
+Pophale, A. et al. Wake-like skin patterning and neural activity during octopus sleep. Nature 619 , 129–134 (2023).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Medeiros, S. L. S. et al. Cyclic alternation of quiet and active sleep states in the octopus. iScience 24 , 102223 (2021).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Alamia, A., VanRullen, R., Pasqualotto, E., Mouraux, A. & Zenon, A. Pupil-linked arousal responds to unconscious surprisal. J. Neurosci. 39 , 5369–5376 (2019).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Barbur, J. L., Weiskrantz, L. & Harlow, J. A. The unseen color aftereffect of an unseen stimulus: insight from blindsight into mechanisms of color afterimages. Proc. Natl Acad. Sci. USA 96 , 11637–11641 (1999).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Harlan, G. C. Pupil reflex in absolute blindness. Trans. Am. Ophthalmol. Soc. 7 , 671–677 (1896).
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Weiskrantz, L., Cowey, A. & Le Mare, C. Learning from the pupil: a spatial visual channel in the absence of V1 in monkey and human. Brain 121 , 1065–1072 (1998).
+Article
+PubMed
+Google Scholar
+Abouleish, E. & Taylor, F. H. Effect of morphine–diazepam on signs of anesthesia, awareness, and dreams of patients under N 2 O for cesarean section. Anesth. Analg. 55 , 702–705 (1976).
+Article
+CAS
+PubMed
+Google Scholar
+Arzi, A., Rozenkrantz, L., Holtzman, Y., Secundo, L. & Sobel, N. Sniffing patterns uncover implicit memory for undetected odors. Curr. Biol. 24 , R263–R264 (2014).
+Article
+CAS
+PubMed
+Google Scholar
+McGinnies, E. Emotionality and perceptual defense. Psychol. Rev. 56 , 244–251 (1949).
+Article
+CAS
+PubMed
+Google Scholar
+Dimberg, U., Thunberg, M. & Elmehed, K. Unconscious facial reactions to emotional facial expressions. Psychol. Sci. 11 , 86–89 (2000).
+Article
+CAS
+PubMed
+Google Scholar
+Wiemer, J., Gerdes, A. B. & Pauli, P. The effects of an unexpected spider stimulus on skin conductance responses and eye movements: an inattentional blindness study. Psychol. Res. 77 , 155–166 (2013).
+Article
+PubMed
+Google Scholar
+Chechko, N. et al. Progressively analogous evidence of covert face recognition from functional magnetic resonance imaging and skin conductance responses studies involving a patient with dissociative amnesia. Eur. J. Neurosci. 48 , 1964–1975 (2018).
+Article
+PubMed
+Google Scholar
+Tamietto, M. et al. Unseen facial and bodily expressions trigger fast emotional reactions. Proc. Natl Acad. Sci. USA 106 , 17661–17666 (2009).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Gallegos-Ayala, G. et al. Brain communication in a completely locked-in patient using bedside near-infrared spectroscopy. Neurology 82 , 1930–1932 (2014).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Grujic, N., Polania, R. & Burdakov, D. Neurobehavioral meaning of pupil size. Neuron 112 , 3381–3395 (2024).
+Article
+CAS
+PubMed
+Google Scholar
+Meissner, S. N. et al. Self-regulating arousal via pupil-based biofeedback. Nat. Hum. Behav . https://doi.org/10.1038/s41562-023-01729-z (2023).
+Rainey, S., Martin, S., Christen, A., Megevand, P. & Fourneret, E. Brain recording, mind-reading, and neurotechnology: ethical issues from consumer devices to brain-based speech decoding. Sci. Eng. Ethics 26 , 2295–2311 (2020).
+Article
+PubMed
+PubMed Central
+Google Scholar
+Drew, L. Mind-reading machines are coming — how can we keep them in check? Nature 620 , 18–19 (2023).
+Article
+CAS
+PubMed
+Google Scholar
+Mecacci, G. & Haselager, P. Identifying criteria for the evaluation of the implications of brain reading for mental privacy. Sci. Eng. Ethics 25 , 443–461 (2019).
+Article
+PubMed
+Google Scholar
+Istace, T. Neurorights: the debate about new legal safeguards to protect the mind. Issues Law Med. 37 , 95–114 (2022).
+PubMed
+Google Scholar
+Sim, I. Mobile devices and health. N. Engl. J. Med. 381 , 956–968 (2019).
+Article
+PubMed
+Google Scholar
+Zheng, N. S. et al. Sleep patterns and risk of chronic disease as measured by long-term monitoring with commercial wearable devices in the all of us research program. Nat. Med. 30 , 2648–2656 (2024).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Kronemer, S. I. et al. Cross-species real-time detection of trends in pupil size fluctuation. Behav. Res. Methods 57 , 9 (2025).
+Article
+Google Scholar
+Meegan, D. V. Neuroimaging techniques for memory detection: scientific, ethical, and legal issues. Am. J. Bioeth. 8 , 9–20 (2008).
+Article
+PubMed
+Google Scholar
+Shao, D. D., Liu, C. B. & Tsow, F. Noncontact physiological measurement using a camera: a technical review and future directions. ACS Sens. 6 , 321–334 (2021).
+Article
+CAS
+PubMed
+Google Scholar
+Fultz, N. E. et al. Coupled electrophysiological, hemodynamic, and cerebrospinal fluid oscillations in human sleep. Science 366 , 628–631 (2019).
+Article
+CAS
+PubMed
+PubMed Central
+Google Scholar
+Gottschalk, L. A., Stone, W. N., Gleser, G. C. & Iacono, J. M. Anxiety levels in dreams: relation to changes in plasma free fatty acids. Science 153 , 654–657 (1966).
+Article
+CAS
+PubMed
+Google Scholar
+Wooley, S. C. & Wooley, O. W. Salivation to the sight and thought of food: a new measure of appetite. Psychosom. Med. 35 , 136–142 (1973).
+Article
+CAS
+PubMed
+Google Scholar
+Jenkins, G. N. & Dawes, C. The psychic flow of saliva in man. Arch. Oral. Biol. 11 , 1203–1204 (1966).
+Article
+CAS
+PubMed
+Google Scholar
+Wilhelm, B., Jordan, M. & Birbaumer, N. Communication in locked-in syndrome: effects of imagery on salivary pH. Neurology 67 , 534–535 (2006).
+Article
+CAS
+PubMed
+Google Scholar
+Download references
+Acknowledgements
+This research was made possible by support from the National Institute of Mental Health Intramural Research Program (ZIAMH002783). The authors thank members of the Section on Functional Imaging Methods for their constructive feedback. The views expressed in this article do not necessarily represent the views of the National Institutes of Health, the Department of Health and Human Services, or the United States Government.
+Author information
+Authors and Affiliations
+Section on Functional Imaging Methods, Laboratory of Brain and Cognition, National Institute of Mental Health, National Institutes of Health, Bethesda, MD, USA
+Sharif I. Kronemer, Peter A. Bandettini & Javier Gonzalez-Castillo
+Functional Magnetic Resonance Imaging Core Facility, National Institute of Mental Health, National Institutes of Health, Bethesda, MD, USA
+Peter A. Bandettini
+Authors
+Sharif I. Kronemer
+View author publications
+Search author on: PubMed Google Scholar
+Peter A. Bandettini
+View author publications
+Search author on: PubMed Google Scholar
+Javier Gonzalez-Castillo
+View author publications
+Search author on: PubMed Google Scholar
+Contributions
+S.I.K. researched data for the article, provided a substantial contribution to discussion of its content, wrote the article and reviewed/edited the manuscript before submission. P.A.B. and J.G.-C. provided substantial contributions to discussion of the article’s content and reviewed/edited the manuscript before submission.
+Corresponding author
+Correspondence to
+Sharif I. Kronemer .
+Ethics declarations
+Competing interests
+The authors declare no conflicts of interest.
+Peer review
+Peer review information
+Nature Reviews Neuroscience thanks Nicholas Schiff and the other, anonymous, reviewer(s) for their contribution to the peer review of this work.
+Additional information
+Publisher’s note Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations.
+Glossary
+Conscious content
+The subject or category of subjective experience; also called qualia, phenomenology or phenomenal experience.
+Conscious level
+The likelihood of being or becoming conscious, closely linked with the physiological states of arousal, alertness and vigilance.
+Conscious state
+The unique combination of conscious level and content characteristic of specific states of consciousness.
+Covert measures of consciousness
+Physiological signals linked to conscious level, state or content (for example, pupil size, eye movements and skin conductance).
+Enabling factor of consciousness
+Prerequisite or precursor physiological states (for example, arousal and attention) that facilitate consciousness. These factors are often necessary but not sufficient for consciousness.
+Rights and permissions
+Reprints and permissions
+About this article
+Cite this article
+Kronemer, S.I., Bandettini, P.A. & Gonzalez-Castillo, J. Sleuthing subjectivity: a review of covert measures of consciousness.
+Nat. Rev. Neurosci. 26 , 476–496 (2025). https://doi.org/10.1038/s41583-025-00934-1
+Download citation
+Accepted : 02 May 2025
+Published : 23 May 2025
+Version of record : 23 May 2025
+Issue date : August 2025
+DOI : https://doi.org/10.1038/s41583-025-00934-1
+Share this article
+Anyone you share the following link with will be able to read this content:
+Get shareable link
+Sorry, a shareable link is not currently available for this article.
+Copy shareable link to clipboard
+Provided by the Springer Nature SharedIt content-sharing initiative
+Access through your institution
+Buy or subscribe
+Advertisement
+Explore content
+Research articles
+Reviews & Analysis
+News & Comment
+Videos
+Current issue
+Collections
+Follow us on Facebook
+Follow us on X
+Subscribe
+Sign up for alerts
+RSS feed
+About the journal
+Aims & Scope
+Journal Information
+Editors
+Editorial policies
+Reviews Cross-Journal Editorial Team
+Journal Credits
+Editorial input and checks
+Editorial Values Statement
+Journal Metrics
+Publishing model
+Conferences
+Posters
+Web Feeds
+Contact
+Publish with us
+For Authors
+For Referees
+Submit manuscript
+Search
+Search articles by subject, keyword or author
+Show results from
+All journals
+This journal
+Search
+Advanced search
+Quick links
+Explore articles by subject
+Find a job
+Guide to authors
+Editorial policies
+Nature Reviews Neuroscience
+( Nat. Rev. Neurosci. )
+ISSN 1471-0048 (online)
+ISSN 1471-003X (print)
+nature.com footer links
+About Nature Portfolio
+About us
+Press releases
+Press office
+Contact us
+Discover content
+Journals A-Z
+Articles by subject
+protocols.io
+Nature Index
+Publishing policies
+Nature portfolio policies
+Open access
+Author & Researcher services
+Reprints & permissions
+Research data
+Language editing
+Scientific editing
+Nature Masterclasses
+Research Solutions
+Libraries & institutions
+Librarian service & tools
+Librarian portal
+Open research
+Recommend to library
+Advertising & partnerships
+Advertising
+Partnerships & Services
+Media kits
+Branded
+content
+Professional development
+Nature Awards
+Nature Careers
+Nature
+Conferences
+Regional websites
+Nature Africa
+Nature China
+Nature India
+Nature Japan
+Nature Middle East
+Privacy
+Policy
+Use
+of cookies
+Your privacy choices/Manage cookies
+Legal
+notice
+Accessibility
+statement
+Terms & Conditions
+Your US state privacy rights
+Withdrawal from contracts here
+© 2026 Springer Nature Limited
+Close banner
+Close
+Sign up for the Nature Briefing newsletter — what matters in science, free to your inbox daily.
+Email address
+Sign up
+I agree my information will be processed in accordance with the Nature and Springer Nature Limited Privacy Policy .
+Close banner
+Close
+Get the most important science stories of the day, free in your inbox.
+Sign up for Nature Briefing

@@ -1,0 +1,85 @@
+{
+  "paper_id": "10-koch-2016-ncc-progress-problems",
+  "title": "Neural Correlates of Consciousness: Progress and Problems (Koch et al., 2016)",
+  "status": "completed",
+  "elapsed_s": 0.1038,
+  "experiment_e1_pci_across_seven_brain_states": {
+    "pci_empirical_cutoff": 0.31,
+    "classification_accuracy_across_7_states": 1.0,
+    "states": {
+      "Awake_Alert": {
+        "ground_truth_conscious": true,
+        "pci": 1.0,
+        "predicted_conscious_above_0_31": true,
+        "activation_rate_p1": 0.8917,
+        "lz_complexity": 52.0
+      },
+      "REM_Dreaming": {
+        "ground_truth_conscious": true,
+        "pci": 1.0,
+        "predicted_conscious_above_0_31": true,
+        "activation_rate_p1": 0.8677,
+        "lz_complexity": 58.0
+      },
+      "Ketamine_Anesthesia": {
+        "ground_truth_conscious": true,
+        "pci": 1.0,
+        "predicted_conscious_above_0_31": true,
+        "activation_rate_p1": 0.8938,
+        "lz_complexity": 48.0
+      },
+      "Locked_In_Syndrome": {
+        "ground_truth_conscious": true,
+        "pci": 1.0,
+        "predicted_conscious_above_0_31": true,
+        "activation_rate_p1": 0.8917,
+        "lz_complexity": 50.0
+      },
+      "NREM_Slow_Wave_Sleep": {
+        "ground_truth_conscious": false,
+        "pci": 0.2447,
+        "predicted_conscious_above_0_31": false,
+        "activation_rate_p1": 0.0333,
+        "lz_complexity": 5.0
+      },
+      "Propofol_Midazolam_Anesthesia": {
+        "ground_truth_conscious": false,
+        "pci": 0.2447,
+        "predicted_conscious_above_0_31": false,
+        "activation_rate_p1": 0.0333,
+        "lz_complexity": 5.0
+      },
+      "Generalized_Seizure_Hypersynchrony": {
+        "ground_truth_conscious": false,
+        "pci": 0.0413,
+        "predicted_conscious_above_0_31": false,
+        "activation_rate_p1": 0.5,
+        "lz_complexity": 4.0
+      }
+    }
+  },
+  "experiment_e2_p3b_vs_posterior_van_dissociation": {
+    "factorial_erp_results": {
+      "Seen_Task_Relevant": {
+        "posterior_hotzone_van_uv": -4.1,
+        "frontoparietal_p3b_uv": 5.55
+      },
+      "Seen_Task_Irrelevant": {
+        "posterior_hotzone_van_uv": -3.8,
+        "frontoparietal_p3b_uv": 0.15
+      },
+      "Unseen_Task_Relevant": {
+        "posterior_hotzone_van_uv": -0.3,
+        "frontoparietal_p3b_uv": 0.0
+      },
+      "Unseen_Task_Irrelevant": {
+        "posterior_hotzone_van_uv": -0.0,
+        "frontoparietal_p3b_uv": 0.0
+      }
+    }
+  },
+  "experiment_e3_pci_causal_thresholding_vs_random_noise_trap": {
+    "unthresholded_white_noise_spurious_pci": 1.0,
+    "phase_locked_causal_thresholded_noise_pci": 0.0
+  }
+}

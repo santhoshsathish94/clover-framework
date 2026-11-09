@@ -1,0 +1,18 @@
+PAPER_ID: 16-carvalho-damasio-2021-interoception-feelings
+TITLE: Interoception and the Origin of Feelings: A New Synthesis
+AUTHORS: Gil B. Carvalho, Antonio Damasio
+YEAR: 2021
+DOI: 10.1002/bies.202000261
+SOURCE_URL_REACHED: metadata_only
+RAW_BYTES: 0
+RAW_SHA256: 
+EXTRACTED_TEXT_CHARS: 0
+OPENALEX_ID: https://openalex.org/W3136505404
+CITED_BY_COUNT: 140
+---
+CROSSREF_ABSTRACT:
+Abstract Feelings are conscious mental events that represent body states as they undergo homeostatic regulation. Feelings depend on the interoceptive nervous system (INS), a collection of peripheral and central pathways, nuclei and cortical regions which continuously sense chemical and anatomical changes in the organism. How such humoral and neural signals come to generate conscious mental states has been a major scientific question. The answer proposed here invokes (1) several distinctive and poorly known physiological features of the INS; and (2) a unique interaction between the body (the ‘object’ of interoception) and the central nervous system (which generates the 'subject' of interoception). The atypical traits of the INS and the direct interactions between neural and non‐neural physiological compartments of the organism, neither of which is present in exteroceptive systems, plausibly explain the qualitative and subjective aspects of feelings, thus accounting for their conscious nature.
+---
+OPENALEX_ABSTRACT:
+Feelings are conscious mental events that represent body states as they undergo homeostatic regulation. Feelings depend on the interoceptive nervous system (INS), a collection of peripheral and central pathways, nuclei and cortical regions which continuously sense chemical and anatomical changes in the organism. How such humoral and neural signals come to generate conscious mental states has been a major scientific question. The answer proposed here invokes (1) several distinctive and poorly known physiological features of the INS; and (2) a unique interaction between the body (the 'object' of interoception) and the central nervous system (which generates the 'subject' of interoception). The atypical traits of the INS and the direct interactions between neural and non-neural physiological compartments of the organism, neither of which is present in exteroceptive systems, plausibly explain the qualitative and subjective aspects of feelings, thus accounting for their conscious nature.
+---

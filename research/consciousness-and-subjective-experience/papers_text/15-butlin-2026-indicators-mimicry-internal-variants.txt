@@ -1,0 +1,14 @@
+PAPER_ID: 15-butlin-2026-indicators-mimicry-internal-variants
+TITLE: Consciousness Indicators, Mimicry, and Internal Variants
+AUTHORS: Patrick Butlin et al.
+YEAR: 2026
+DOI: 10.1016/j.tics.2026.04.006
+SOURCE_URL_REACHED: https://doi.org/10.1016/j.tics.2026.04.006
+RAW_BYTES: 3011
+RAW_SHA256: 6d326e3f4a2ed5035023553db3093f2170eb98535fe70979e0a3704ea3f9e919
+EXTRACTED_TEXT_CHARS: 11
+OPENALEX_ID: https://openalex.org/W7155601139
+CITED_BY_COUNT: 2
+---
+EXTRACTED_SOURCE_TEXT:
+Redirecting

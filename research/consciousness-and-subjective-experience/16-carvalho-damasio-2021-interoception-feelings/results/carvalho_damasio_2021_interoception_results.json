@@ -1,0 +1,25 @@
+{
+  "paper_id": "16-carvalho-damasio-2021-interoception-feelings",
+  "title": "Interoception and the Origin of Feelings: A New Synthesis (Carvalho & Damasio, 2021)",
+  "status": "completed",
+  "elapsed_s": 0.3136,
+  "experiment_e1_interoceptive_homeostatic_feelings_vs_exteroception": {
+    "interoceptive_feeling_regulated": {
+      "survival_rate": 1.0,
+      "mean_homeostatic_deviation": 0.2438,
+      "mean_homeostatic_valence": 6e-05
+    },
+    "exteroceptive_only_no_feelings": {
+      "survival_rate": 0.0,
+      "mean_homeostatic_deviation": 1.2474,
+      "mean_homeostatic_valence": -0.5
+    }
+  },
+  "experiment_e2_myelinated_exteroceptive_vs_unmyelinated_humoral_ins": {
+    "myelinated_exteroceptive_spatial_localization": 1.0,
+    "unmyelinated_ins_spatial_localization": 0.2275,
+    "unmyelinated_ins_holistic_field_spread": 0.7725,
+    "myelinated_exteroceptive_persistence_at_t40": 8e-06,
+    "unmyelinated_ins_persistence_at_t40": 0.2534
+  }
+}

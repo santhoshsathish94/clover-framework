@@ -1,0 +1,32 @@
+{
+  "paper_id": "15-butlin-2026-indicators-mimicry-internal-variants",
+  "title": "Consciousness Indicators, Mimicry, and Internal Variants (Butlin et al., 2026)",
+  "status": "completed",
+  "elapsed_s": 0.0337,
+  "experiment_e1_blackbox_io_equivalence": {
+    "benchmark_stimuli_tested": 64,
+    "m1_lookup_io_accuracy": 1.0,
+    "m2_wrapper_mimic_io_accuracy": 1.0,
+    "m3_genuine_gwt_hot_io_accuracy": 1.0,
+    "blackbox_io_equivalence_agreement": 1.0
+  },
+  "experiment_e2_mechanistic_interventions_expose_internal_variants": {
+    "mechanistic_intervention_results": {
+      "V1_Lookup_Table": {
+        "hot2_noise_monitoring_auroc": 0.5,
+        "gwt2_rank4_bottleneck_retention_acc": 1.0,
+        "hot4_quality_space_smoothness_r": -0.0119
+      },
+      "V2_Wrapper_Theatre_Mimic": {
+        "hot2_noise_monitoring_auroc": 0.0,
+        "gwt2_rank4_bottleneck_retention_acc": 0.0,
+        "hot4_quality_space_smoothness_r": 0.982
+      },
+      "V3_Genuine_GWT_HOT": {
+        "hot2_noise_monitoring_auroc": 1.0,
+        "gwt2_rank4_bottleneck_retention_acc": 1.0,
+        "hot4_quality_space_smoothness_r": 0.982
+      }
+    }
+  }
+}

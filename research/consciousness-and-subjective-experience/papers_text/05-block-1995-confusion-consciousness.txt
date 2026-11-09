@@ -1,0 +1,25 @@
+PAPER_ID: 05-block-1995-confusion-consciousness
+TITLE: On a Confusion about a Function of Consciousness
+AUTHORS: Ned Block
+YEAR: 1995
+DOI: 10.1017/S0140525X00038188
+SOURCE_URL_REACHED: https://www.nyu.edu/gsas/dept/philo/faculty/block/papers/1995.bms.pdf
+RAW_BYTES: 2203
+RAW_SHA256: 229e726fb0cc4c2bedf9c4e3e78ab388e70098846ce54a421178946b464618da
+EXTRACTED_TEXT_CHARS: 157
+OPENALEX_ID: https://openalex.org/W2164446969
+CITED_BY_COUNT: 3528
+---
+CROSSREF_ABSTRACT:
+Abstract
+Consciousness is a mongrel concept: there are a number of very different “consciousnesses.” Phenomenal consciousness is experience; the phenomenally conscious aspect of a state is what it is like to be in that state. The mark of access-consciousness, by contrast, is availability for use in reasoning and rationally guiding speech and action. These concepts are often partly or totally conflated, with bad results. This target article uses as an example a form of reasoning about a function of “consciousness” based on the phenomenon of blindsight. Some information about stimuli in the blind field is represented in the brains of blindsight patients, as shown by their correct “guesses.” They cannot harness this information in the service of action, however, and this is said to show that a function of phenomenal consciousness is somehow to enable information represented in the brain to guide action. But stimuli in the blind field are
+both
+access-unconscious and phenomenally unconscious. The fallacy is: an obvious function of the machinery of accessconsciousness is illicitly transferred to phenomenal consciousness.
+---
+OPENALEX_ABSTRACT:
+Abstract Consciousness is a mongrel concept: there are a number of very different “consciousnesses.” Phenomenal consciousness is experience; the phenomenally conscious aspect of a state is what it is like to be in that state. The mark of access-consciousness, by contrast, is availability for use in reasoning and rationally guiding speech and action. These concepts are often partly or totally conflated, with bad results. This target article uses as an example a form of reasoning about a function of “consciousness” based on the phenomenon of blindsight. Some information about stimuli in the blind field is represented in the brains of blindsight patients, as shown by their correct “guesses.” They cannot harness this information in the service of action, however, and this is said to show that a function of phenomenal consciousness is somehow to enable information represented in the brain to guide action. But stimuli in the blind field are both access-unconscious and phenomenally unconscious. The fallacy is: an obvious function of the machinery of accessconsciousness is illicitly transferred to phenomenal consciousness.
+---
+EXTRACTED_SOURCE_TEXT:
+JavaScript is disabled
+In order to continue, we need to verify that you're not a robot.
+This requires JavaScript. Enable JavaScript and then reload the page.

@@ -1,0 +1,50 @@
+{
+  "paper_id": "09-tsuchiya-2015-no-report-paradigms",
+  "title": "No-Report Paradigms: Extracting the True Neural Correlates of Consciousness (Tsuchiya et al., 2015)",
+  "status": "completed",
+  "elapsed_s": 0.0321,
+  "experiment_e1_ncc_true_vs_ncc_consequences_deconfounding": {
+    "true_ncc_regions": [
+      "V1_V2",
+      "V4_LOC",
+      "MT_V5",
+      "IPS_Posterior"
+    ],
+    "report_only_flagged_regions": [
+      "V1_V2",
+      "V4_LOC",
+      "MT_V5",
+      "IPS_Posterior",
+      "dlPFC",
+      "ACC",
+      "AnteriorInsula",
+      "SMA",
+      "PMd",
+      "M1"
+    ],
+    "report_only_false_positive_ncc_co_count": 6,
+    "no_report_conjunction_flagged_regions": [
+      "V1_V2",
+      "V4_LOC",
+      "MT_V5",
+      "IPS_Posterior"
+    ],
+    "no_report_conjunction_false_positive_count": 0,
+    "dlpfc_t_stat_active_report": 25.749,
+    "dlpfc_t_stat_passive_no_report": 2.032,
+    "dlpfc_signal_reduction_in_no_report_pct": 92.11
+  },
+  "experiment_e2_frassle_2014_binocular_rivalry_okn_pupil_decoding": {
+    "time_bins_simulated": 600,
+    "okn_only_decoding_acc": 0.9933,
+    "pupil_only_decoding_acc": 0.985,
+    "combined_okn_pupil_no_report_decoding_acc": 0.9967
+  },
+  "experiment_e3_subcortical_reflex_confound_under_cortical_blindness": {
+    "v1_lesion_physical_luminance_step_pupil_response": 0.92,
+    "v1_lesion_conscious_percept": 0.0,
+    "uncontrolled_luminance_step_causes_false_positive": true,
+    "constant_retinal_input_rivalry_pupil_modulation": 0.48,
+    "controlled_rivalry_isolates_cortical_percept": true
+  }
+}

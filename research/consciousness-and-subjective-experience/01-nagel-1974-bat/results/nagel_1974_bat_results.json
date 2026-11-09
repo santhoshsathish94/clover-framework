@@ -1,0 +1,27 @@
+{
+  "paper_id": "01-nagel-1974-bat",
+  "title": "What Is It Like to Be a Bat? (Nagel, 1974)",
+  "status": "completed",
+  "elapsed_s": 0.0549,
+  "experiment_e1_reduction_and_pov_loss": {
+    "forward_physical_to_bat_r2": 0.9602,
+    "forward_physical_to_human_r2": 0.9731,
+    "viewpoint_invariant_spatial_to_bat_r2": 0.582,
+    "viewpoint_invariant_spatial_to_human_r2": 0.4954,
+    "sonar_pov_information_lost_by_spatial_reduction_pct": 37.82,
+    "human_visual_metamer_distance": 0.0,
+    "bat_sonar_divergence_on_visual_metamer": 4.1195
+  },
+  "experiment_e2_extrapolation_from_human_primitives": {
+    "human_polynomial_basis_dim": 28,
+    "pairwise_similarity_correlation_human_to_bat": 0.7584,
+    "sonar_unique_dimensions_r2_from_human_basis": 0.0,
+    "unexplained_sonar_phenomenal_variance_pct": 100.0
+  },
+  "experiment_e3_objective_phenomenology_and_gauge_limit": {
+    "mds_structural_recovery_stress": 0.0,
+    "structural_distance_preservation_pct": 100.0,
+    "orthogonal_gauge_distance_diff": 0.0,
+    "intrinsic_qualitative_axis_divergence_under_isometry": 1.8769
+  }
+}

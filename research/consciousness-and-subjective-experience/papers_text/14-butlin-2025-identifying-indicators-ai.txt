@@ -1,0 +1,17 @@
+PAPER_ID: 14-butlin-2025-identifying-indicators-ai
+TITLE: Identifying Indicators of Consciousness in AI Systems
+AUTHORS: Patrick Butlin, Robert Long, Yoshua Bengio, Jonathan Birch, Chris Frith, Ryota Kanai, Colin Klein, Matthias Michel, Liad Mudrik, Megan A. K. Peters, Eric Schwitzgebel, Rufin VanRullen
+YEAR: 2025
+DOI: 10.1016/j.tics.2025.10.011
+SOURCE_URL_REACHED: https://doi.org/10.1016/j.tics.2025.10.011
+RAW_BYTES: 3008
+RAW_SHA256: 41d8ea39d03c5ff3a885affedc1402440011e7e19035474d8b77b66e80a9210d
+EXTRACTED_TEXT_CHARS: 11
+OPENALEX_ID: https://openalex.org/W4416083181
+CITED_BY_COUNT: 104
+---
+OPENALEX_ABSTRACT:
+Rapid progress in artificial intelligence (AI) capabilities has drawn fresh attention to the prospect of consciousness in AI. There is an urgent need for rigorous methods to assess AI systems for consciousness, but significant uncertainty about relevant issues in consciousness science. We present a method for assessing AI systems for consciousness that involves exploring what follows from existing or future neuroscientific theories of consciousness. Indicators derived from such theories can be used to inform credences about whether particular AI systems are conscious. This method allows us to make meaningful progress because some influential theories of consciousness, notably including computational functionalist theories, have implications for AI that can be investigated empirically.
+---
+EXTRACTED_SOURCE_TEXT:
+Redirecting

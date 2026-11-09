@@ -1,0 +1,25 @@
+{
+  "paper_id": "17-varela-thompson-rosch-1991-embodied-mind",
+  "title": "The Embodied Mind: Cognitive Science and Human Experience (Varela, Thompson & Rosch, 1991/1993)",
+  "status": "completed",
+  "elapsed_s": 0.0229,
+  "experiment_e1_held_hein_active_enactive_vs_passive_yoked": {
+    "training_steps": 400,
+    "test_trials": 200,
+    "identical_visual_stream_shared": true,
+    "enactive_self_moving_visual_cliff_acc": 1.0,
+    "yoked_passive_observer_visual_cliff_acc": 0.585
+  },
+  "experiment_e2_autopoietic_sense_making_emergent_affordances": {
+    "physical_zones_evaluated": 40,
+    "organism_a_enacted_weights_xy": [
+      0.8695,
+      -0.8257
+    ],
+    "organism_b_enacted_weights_xy": [
+      -0.8019,
+      0.8346
+    ],
+    "enacted_significance_cosine_similarity": -0.993
+  }
+}

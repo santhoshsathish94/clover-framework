@@ -1,0 +1,53 @@
+{
+  "paper_id": "07-tononi-2004-iit",
+  "title": "An Information Integration Theory of Consciousness (Tononi, 2004)",
+  "status": "completed",
+  "elapsed_s": 0.1088,
+  "experiment_e1_camera_vs_integrated_system": {
+    "elements_n": 6,
+    "camera_external_binary_repertoire_bits": 6.0,
+    "camera_sensor_chip_phi_bits": 0.0,
+    "integrated_network_phi_bits": 43.2551
+  },
+  "experiment_e2_figure2_qualia_space_divergent_vs_chain": {
+    "divergent_phi_bits": 10.0,
+    "chain_phi_bits": 10.0,
+    "chain_alternating_bipartition_02_to_13_ei_bits": 20.0,
+    "qualia_space_ei_matrix_distance": 22.3794
+  },
+  "experiment_e3_figure3_and_4a_thalamocortical_vs_homogeneous_vs_cerebellar": {
+    "specialized_integrated_thalamocortical_phi_bits": 55.7282,
+    "homogeneous_all_to_all_phi_bits": 23.1015,
+    "cerebellar_modular_whole_system_phi_bits": 0.0,
+    "cerebellar_local_module_complex_count": 3,
+    "cerebellar_local_module_phi_bits": 24.5754
+  },
+  "experiment_e4_ports_split_brain_and_aaronson_expander": {
+    "core_complex_phi_bits": 40.3789,
+    "core_plus_afferent_efferent_ports_phi_bits": 20.4576,
+    "intact_brain_main_complex": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "intact_brain_phi_bits": 57.6787,
+    "split_brain_complexes": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        3,
+        4,
+        5
+      ]
+    ],
+    "split_brain_hemisphere_phi_bits": 23.2877,
+    "aaronson_passive_expander_grid_phi_bits": 42.9253,
+    "specialized_cognitive_hierarchy_phi_bits": 12.0362
+  }
+}

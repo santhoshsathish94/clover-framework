@@ -1,0 +1,74 @@
+{
+  "paper_id": "05-block-1995-confusion-consciousness",
+  "title": "On a Confusion about a Function of Consciousness (Block, 1995)",
+  "status": "completed",
+  "elapsed_s": 0.034,
+  "experiment_e1_blindsight_conflation_fallacy": {
+    "confounded_design_matrix_rank": 2,
+    "full_2x2_design_matrix_rank": 3,
+    "fallacious_beta_P_from_blindsight_contrast": 0.9022,
+    "unconfounded_beta_P_on_rational_action": 0.0007,
+    "unconfounded_beta_A_on_rational_action": 0.8948
+  },
+  "experiment_e2_sperling_iconic_overflow": {
+    "display_grid": "3x4 (12 letters)",
+    "access_bottleneck_capacity_k": 4,
+    "mean_whole_report_letters": 2.61,
+    "immediate_partial_report_implied_letters": 9.918,
+    "phenomenal_to_access_overflow_ratio": 3.8,
+    "partial_report_decay_curve": {
+      "0ms": {
+        "mean_cued_row_report_out_of_4": 3.306,
+        "implied_available_letters_out_of_12": 9.918
+      },
+      "150ms": {
+        "mean_cued_row_report_out_of_4": 2.464,
+        "implied_available_letters_out_of_12": 7.392
+      },
+      "300ms": {
+        "mean_cued_row_report_out_of_4": 1.966,
+        "implied_available_letters_out_of_12": 5.898
+      },
+      "500ms": {
+        "mean_cued_row_report_out_of_4": 1.568,
+        "implied_available_letters_out_of_12": 4.704
+      },
+      "1000ms": {
+        "mean_cued_row_report_out_of_4": 1.232,
+        "implied_available_letters_out_of_12": 3.696
+      }
+    }
+  },
+  "experiment_e3_four_cell_dissociation_matrix": {
+    "dissociation_matrix": {
+      "normal_vision_P1_A1": {
+        "P_conscious": 1,
+        "A_conscious": 1,
+        "spontaneous_rational_action_rate": 0.97,
+        "post_cue_iconic_overflow_capacity_items": 10.1,
+        "forced_choice_guess_above_chance": 0.98
+      },
+      "sperling_uncued_items_P1_A0": {
+        "P_conscious": 1,
+        "A_conscious": 0,
+        "spontaneous_rational_action_rate": 0.0,
+        "post_cue_iconic_overflow_capacity_items": 10.1,
+        "forced_choice_guess_above_chance": 0.85
+      },
+      "superblindsight_P0_A1": {
+        "P_conscious": 0,
+        "A_conscious": 1,
+        "spontaneous_rational_action_rate": 0.94,
+        "post_cue_iconic_overflow_capacity_items": 1.0,
+        "forced_choice_guess_above_chance": 0.94
+      },
+      "clinical_blindsight_P0_A0": {
+        "P_conscious": 0,
+        "A_conscious": 0,
+        "spontaneous_rational_action_rate": 0.02,
+        "post_cue_iconic_overflow_capacity_items": 0.0,
+        "forced_choice_guess_above_chance": 0.78
+      }
+    }
+  }
+}

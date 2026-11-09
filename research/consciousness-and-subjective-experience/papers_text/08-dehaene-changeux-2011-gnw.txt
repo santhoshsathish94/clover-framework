@@ -1,0 +1,24 @@
+PAPER_ID: 08-dehaene-changeux-2011-gnw
+TITLE: Experimental and Theoretical Approaches to Conscious Processing
+AUTHORS: Stanislas Dehaene, Jean-Pierre Changeux
+YEAR: 2011
+DOI: 10.1016/j.neuron.2011.03.018
+SOURCE_URL_REACHED: https://hal.science/hal-00836718/document
+RAW_BYTES: 12595
+RAW_SHA256: 6244d4bd64396af22dc9e10a63120e95de8f6e6dd7376e13c1b5cb636207b071
+EXTRACTED_TEXT_CHARS: 1433
+OPENALEX_ID: https://openalex.org/W2015303758
+CITED_BY_COUNT: 2728
+---
+EXTRACTED_SOURCE_TEXT:
+Making sure you're not a bot! sciences sciences
+Making sure you're not a bot!
+Loading...
+You are seeing this because the administrator of this website has set up Anubis to protect the server against the scourge of AI companies aggressively scraping websites. This can and does cause downtime for the websites, which makes their resources inaccessible for everyone.
+Anubis is a compromise. Anubis uses a Proof-of-Work scheme in the vein of Hashcash, a proposed proof-of-work scheme for reducing email spam. The idea is that at individual scales the additional load is ignorable, but at mass scraper levels it adds up and makes scraping much more expensive.
+Ultimately, this is a placeholder solution so that more time can be spent on fingerprinting and identifying headless browsers (EG: via how they do font rendering) so that the challenge proof of work page doesn't need to be presented to users that are much more likely to be legitimate.
+Please note that Anubis requires the use of modern JavaScript features that plugins like JShelter will disable. Please disable JShelter or other such plugins for this domain.
+Sadly, you must enable JavaScript to get past this challenge. This is required because AI companies have changed the social contract around how website hosting works. A no-JS solution is a work-in-progress.
+Protected by Anubis From Techaro .
+Mascot design by CELPHASE .
+This website is running Anubis version devel .

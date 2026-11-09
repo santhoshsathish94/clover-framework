@@ -1,0 +1,92 @@
+{
+  "paper_id": "13-butlin-2023-consciousness-in-ai",
+  "title": "Consciousness in Artificial Intelligence: Insights from the Science of Consciousness (Butlin et al., 2023)",
+  "status": "completed",
+  "elapsed_s": 0.0353,
+  "experiment_e1_case_study_rubric_evaluation": {
+    "systems_evaluated": {
+      "Transformer_LLM_Autoregressive": {
+        "full_indicators_met": 0,
+        "partial_indicators_met": 6,
+        "weighted_indicator_fraction": 0.2143,
+        "theory_family_scores": {
+          "RPT": 0.25,
+          "GWT": 0.375,
+          "HOT": 0.125,
+          "AST": 0.0,
+          "PP": 0.0,
+          "AE": 0.25
+        },
+        "core_neuro_conjunction_score": 0.0
+      },
+      "Perceiver_IO_CrossAttention": {
+        "full_indicators_met": 2,
+        "partial_indicators_met": 4,
+        "weighted_indicator_fraction": 0.2857,
+        "theory_family_scores": {
+          "RPT": 0.5,
+          "GWT": 0.625,
+          "HOT": 0.125,
+          "AST": 0.0,
+          "PP": 0.0,
+          "AE": 0.0
+        },
+        "core_neuro_conjunction_score": 0.0
+      },
+      "DeepMind_Adaptive_Agent_AdA": {
+        "full_indicators_met": 3,
+        "partial_indicators_met": 4,
+        "weighted_indicator_fraction": 0.3571,
+        "theory_family_scores": {
+          "RPT": 0.75,
+          "GWT": 0.125,
+          "HOT": 0.25,
+          "AST": 0.0,
+          "PP": 0.0,
+          "AE": 1.0
+        },
+        "core_neuro_conjunction_score": 0.0
+      },
+      "Merel_Virtual_Rodent": {
+        "full_indicators_met": 2,
+        "partial_indicators_met": 5,
+        "weighted_indicator_fraction": 0.3214,
+        "theory_family_scores": {
+          "RPT": 0.75,
+          "GWT": 0.25,
+          "HOT": 0.125,
+          "AST": 0.0,
+          "PP": 0.0,
+          "AE": 0.75
+        },
+        "core_neuro_conjunction_score": 0.0
+      },
+      "PaLM_E_Embodied_Multimodal": {
+        "full_indicators_met": 1,
+        "partial_indicators_met": 9,
+        "weighted_indicator_fraction": 0.3929,
+        "theory_family_scores": {
+          "RPT": 0.5,
+          "GWT": 0.625,
+          "HOT": 0.25,
+          "AST": 0.0,
+          "PP": 0.0,
+          "AE": 0.5
+        },
+        "core_neuro_conjunction_score": 0.0
+      }
+    }
+  },
+  "experiment_e2_hot2_metacognitive_monitor_and_hot4_quality_space": {
+    "trials_tested": 400,
+    "naive_first_order_hallucination_rate_on_noise": 0.805,
+    "hot2_metacognitive_hallucination_rate_on_noise": 0.0,
+    "hot2_true_stimulus_detection_rate": 1.0,
+    "hot2_reality_monitoring_auroc": 1.0
+  },
+  "experiment_e3_gwt1_to_4_sequential_workspace_querying": {
+    "compositional_tasks_tested": 100,
+    "intact_gwt1_to_4_sequential_query_acc": 1.0,
+    "ablated_gwt4_single_pass_acc": 0.125
+  }
+}

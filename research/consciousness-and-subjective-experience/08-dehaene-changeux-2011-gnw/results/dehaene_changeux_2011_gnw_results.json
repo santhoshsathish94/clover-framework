@@ -1,0 +1,122 @@
+{
+  "paper_id": "08-dehaene-changeux-2011-gnw",
+  "title": "Experimental and Theoretical Approaches to Conscious Processing (Dehaene & Changeux, 2011)",
+  "status": "completed",
+  "elapsed_s": 0.0507,
+  "experiment_e1_nonlinear_ignition_bifurcation": {
+    "duration_sweep": [
+      {
+        "stim_duration_ms": 15,
+        "v1_early_peak": 0.6125,
+        "late_pfc_gnw_activity_300_550ms": 0.0002,
+        "ignited": false
+      },
+      {
+        "stim_duration_ms": 25,
+        "v1_early_peak": 0.7807,
+        "late_pfc_gnw_activity_300_550ms": 0.0004,
+        "ignited": false
+      },
+      {
+        "stim_duration_ms": 35,
+        "v1_early_peak": 0.8651,
+        "late_pfc_gnw_activity_300_550ms": 0.0007,
+        "ignited": false
+      },
+      {
+        "stim_duration_ms": 42,
+        "v1_early_peak": 0.8976,
+        "late_pfc_gnw_activity_300_550ms": 0.0009,
+        "ignited": false
+      },
+      {
+        "stim_duration_ms": 46,
+        "v1_early_peak": 0.9102,
+        "late_pfc_gnw_activity_300_550ms": 0.0011,
+        "ignited": false
+      },
+      {
+        "stim_duration_ms": 50,
+        "v1_early_peak": 0.9198,
+        "late_pfc_gnw_activity_300_550ms": 1.9887,
+        "ignited": true
+      },
+      {
+        "stim_duration_ms": 55,
+        "v1_early_peak": 0.9286,
+        "late_pfc_gnw_activity_300_550ms": 1.9896,
+        "ignited": true
+      },
+      {
+        "stim_duration_ms": 65,
+        "v1_early_peak": 0.9393,
+        "late_pfc_gnw_activity_300_550ms": 1.9905,
+        "ignited": true
+      },
+      {
+        "stim_duration_ms": 80,
+        "v1_early_peak": 0.9462,
+        "late_pfc_gnw_activity_300_550ms": 1.9916,
+        "ignited": true
+      },
+      {
+        "stim_duration_ms": 100,
+        "v1_early_peak": 1.1086,
+        "late_pfc_gnw_activity_300_550ms": 1.9936,
+        "ignited": true
+      }
+    ],
+    "bifurcation_threshold_ms": 48.0,
+    "nonlinear_late_pfc_jump_ratio_50ms_vs_42ms": 2209.67
+  },
+  "experiment_e2_attentional_blink_refractory_competition": {
+    "attentional_blink_soa_curve": {
+      "SOA_100ms": {
+        "t2_v1_early_peak": 0.9405,
+        "t2_late_gnw_peak": 0.0,
+        "t2_conscious_access_ignited": false
+      },
+      "SOA_200ms": {
+        "t2_v1_early_peak": 0.9405,
+        "t2_late_gnw_peak": 0.0002,
+        "t2_conscious_access_ignited": false
+      },
+      "SOA_280ms": {
+        "t2_v1_early_peak": 0.9405,
+        "t2_late_gnw_peak": 0.0092,
+        "t2_conscious_access_ignited": false
+      },
+      "SOA_420ms": {
+        "t2_v1_early_peak": 0.9405,
+        "t2_late_gnw_peak": 1.4537,
+        "t2_conscious_access_ignited": true
+      },
+      "SOA_600ms": {
+        "t2_v1_early_peak": 0.9405,
+        "t2_late_gnw_peak": 1.4537,
+        "t2_conscious_access_ignited": true
+      }
+    }
+  },
+  "experiment_e3_anesthesia_recurrent_disconnection": {
+    "awake": {
+      "stim_duration_ms": 65.0,
+      "v1_early_peak": 0.9393,
+      "late_pfc_gnw_activity_300_550ms": 1.9905,
+      "ignited": true
+    },
+    "light_sedation": {
+      "stim_duration_ms": 65.0,
+      "v1_early_peak": 0.9393,
+      "late_pfc_gnw_activity_300_550ms": 0.953,
+      "ignited": true
+    },
+    "general_anesthesia": {
+      "stim_duration_ms": 65.0,
+      "v1_early_peak": 0.9393,
+      "late_pfc_gnw_activity_300_550ms": 0.1653,
+      "ignited": false
+    },
+    "v1_feedforward_preserved_ratio_under_anesthesia": 1.0
+  }
+}

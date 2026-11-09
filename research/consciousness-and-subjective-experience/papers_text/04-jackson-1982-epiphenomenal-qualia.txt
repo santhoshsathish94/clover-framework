@@ -1,0 +1,12 @@
+PAPER_ID: 04-jackson-1982-epiphenomenal-qualia
+TITLE: Epiphenomenal Qualia
+AUTHORS: Frank Jackson
+YEAR: 1982
+DOI: 10.2307/2219321
+SOURCE_URL_REACHED: metadata_only
+RAW_BYTES: 0
+RAW_SHA256: 
+EXTRACTED_TEXT_CHARS: 0
+OPENALEX_ID: 
+CITED_BY_COUNT: 
+---

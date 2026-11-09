@@ -1,0 +1,26 @@
+{
+  "paper_id": "04-jackson-1982-epiphenomenal-qualia",
+  "title": "Epiphenomenal Qualia (Jackson, 1982)",
+  "status": "completed",
+  "elapsed_s": 0.0299,
+  "experiment_e1_fred_tetrachromat_split_red": {
+    "metameric_tomato_samples": 80,
+    "trichromat_naked_eye_sorting_acc": 0.45,
+    "fred_4cone_sorting_acc": 1.0,
+    "scientist_third_person_prediction_of_fred_acc": 1.0,
+    "trichromat_3d_span_of_fred_4th_dimension_r2": 0.0029
+  },
+  "experiment_e2_marys_room_grounding_and_abilities": {
+    "third_person_physical_law_error_before_release": 0.0,
+    "third_person_physical_law_error_after_release": 0.0,
+    "new_physical_law_parameters_added_on_release": 0,
+    "pre_release_raw_first_person_recognition_acc": 0.25,
+    "post_release_raw_first_person_recognition_acc": 1.0
+  },
+  "experiment_e3_epiphenomenalism_causal_closure_paradox": {
+    "trials_tested": 200,
+    "average_causal_effect_of_qualia_inversion_on_speech": 0.0,
+    "average_causal_effect_of_qualia_ablation_on_speech": 0.0,
+    "epiphenomenal_utterance_independent_of_qualia": true
+  }
+}

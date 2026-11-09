@@ -1,0 +1,133 @@
+PAPER_ID: 06-crick-koch-1990-neurobiological-theory
+TITLE: Towards a Neurobiological Theory of Consciousness
+AUTHORS: Francis Crick, Christof Koch
+YEAR: 1990
+DOI: 
+SOURCE_URL_REACHED: https://resolver.caltech.edu/CaltechAUTHORS:20130816-103136937
+RAW_BYTES: 80564
+RAW_SHA256: 976c1ae5b064c5dc0de711468120caa6c6d27c6ecda69a8f5fafc43dd0671ba1
+EXTRACTED_TEXT_CHARS: 3093
+OPENALEX_ID: https://openalex.org/W2164470519
+CITED_BY_COUNT: 1651
+---
+OPENALEX_ABSTRACT:
+Visual awareness is a favorable form of consciousness to study neurobiologically. We propose that it takes two forms: a very fast form, linked to iconic memory, that may be difficult to study; and a somewhat slower one involving visual attention and short-term memory. In the slower form an attentional \nmechanism transiently binds together all those neurons whose activity relates to the relevant features of a single visual object. We suggest this is done by generating coherent semi-synchronous oscillations, probably in the 40-70 Hz range. These oscillations then activate a transient short-term \n(working) memory. We outfit several lines of experimental work that might advance the understanding of the neural mechanisms involved. The neural basis of very short-term memory especially needs more experimental study. \n
+---
+EXTRACTED_SOURCE_TEXT:
+Towards a neurobiological theory of consciousness | CaltechAUTHORS
+Skip to main
+You are using an outdated browser. Please upgrade your browser to improve your experience.
+Communities
+My dashboard
+Log in
+CaltechAUTHORS
+Published 1990
+| Version Published
+Journal Article
+Open
+Towards a neurobiological theory of consciousness
+Creators
+Crick, Francis
+Koch, Christof
+Abstract
+Visual awareness is a favorable form of consciousness to study neurobiologically. We propose that it takes two forms: a very fast form, linked to iconic memory, that may be difficult to study; and a somewhat slower one involving visual attention and short-term memory. In the slower form an attentional
+mechanism transiently binds together all those neurons whose activity relates to the relevant features of a single visual object. We suggest this is done by generating coherent semi-synchronous oscillations, probably in the 40-70 Hz range. These oscillations then activate a transient short-term
+(working) memory. We outfit several lines of experimental work that might advance the understanding of the neural mechanisms involved. The neural basis of very short-term memory especially needs more experimental study.
+Additional Information
+c1990 by W. B Saunders Company.
+We thank John Allman, Bernard Baars, Patricia
+Churchland, Paul Churchland, Antonio Damasio,
+Charles Gray, BelaJulesz, Dan Kammen, Georg Kreisel,
+and Leslie Orgel for helpful comments on earlier versions
+of the manuscript and thank Jennifer Altman especially
+for extensive improvements to the sumitted manuscript.
+F.C. is supported by the J. W. Kieckhefer Foundation.
+C.K. is supported by the Air Force Office of Scientific
+Research, a Presidential Young Investigator Award from
+NSF and by the James S. McDonnell Foundation.
+Attached Files
+Published - 148.pdf
+Files
+148.pdf
+Files
+(1.2 MB)
+Name
+Size
+148.pdf
+md5:8a1923690f7cdd05c5412da51e7ce2d0
+1.2 MB
+Preview
+Download
+Additional details
+Identifiers
+Eprint ID
+40352
+Resolver ID
+CaltechAUTHORS:20130816-103136937
+Funding
+J.W. Kieckhefer Foundation
+U.S. Air Force Office of Scientific Research
+NSF Presidential Young Investigator Award
+James S. McDonnell Foundation
+Dates
+Created
+2008-01-11
+Created from EPrint's datestamp field
+Updated
+2020-03-03
+Created from EPrint's last_modified field
+Caltech Custom Metadata
+Caltech groups
+Koch Laboratory (KLAB)
+2K
+Views
+760
+Downloads
+Show more details
+All versions
+This version
+Views
+Total views
+1,741
+1,741
+Downloads
+Total downloads
+760
+760
+Data volume
+Total data volume
+926.4 MB
+926.4 MB
+More info on how stats are collected....
+Versions
+Keywords and subjects
+Keywords
+consciousness
+attention
+binding
+40 Hz
+oscillations
+short-term memory
+Details
+Resource type
+Journal Article
+Publisher
+Saunders Scientific Publications
+Published in
+Seminars in the neurosciences, 2, 263-275, ISSN: 1044-5765, 1990.
+Rights
+License
+Other
+No commercial reproduction, distribution, display or performance rights in this work are provided.
+Communities
+Export
+Technical metadata
+Created
+September 15, 2023
+Modified
+October 23, 2023
+Jump up
+About
+Policies
+Help
+Powered by InvenioRDM

@@ -1,0 +1,59 @@
+{
+  "paper_id": "11-seth-bayne-2022-theories-of-consciousness",
+  "title": "Theories of Consciousness (Seth & Bayne, 2022)",
+  "status": "completed",
+  "elapsed_s": 0.0003,
+  "experiment_e1_four_theories_dissociation_matrix": {
+    "condition_verdicts": {
+      "C1_full_awake_perception": {
+        "HOT": true,
+        "GWT": true,
+        "IIT": true,
+        "RPT_PP": true
+      },
+      "C2_subliminal_masked_feedforward": {
+        "HOT": false,
+        "GWT": false,
+        "IIT": false,
+        "RPT_PP": false
+      },
+      "C3_bilateral_pfc_lesion_intact_posterior": {
+        "HOT": false,
+        "GWT": false,
+        "IIT": true,
+        "RPT_PP": true
+      },
+      "C4_silent_inactive_high_phi_lattice": {
+        "HOT": false,
+        "GWT": false,
+        "IIT": true,
+        "RPT_PP": false
+      },
+      "C5_metacognitive_hallucinated_confidence_low_sensory": {
+        "HOT": true,
+        "GWT": false,
+        "IIT": false,
+        "RPT_PP": false
+      },
+      "C6_local_visual_reentry_without_global_broadcast": {
+        "HOT": false,
+        "GWT": false,
+        "IIT": false,
+        "RPT_PP": true
+      },
+      "C7_global_broadcast_feedforward_transformer_zero_reentry": {
+        "HOT": false,
+        "GWT": true,
+        "IIT": false,
+        "RPT_PP": false
+      }
+    }
+  },
+  "experiment_e2_adversarial_collaboration_temporal_profiles": {
+    "stimulus_duration_ms": 1500,
+    "posterior_sustained_epoch_500_1400ms_mean": 0.88,
+    "pfc_sustained_epoch_500_1400ms_mean": 0.1,
+    "pfc_onset_ignition_peak": 1.0,
+    "pfc_offset_ignition_peak": 0.88
+  }
+}

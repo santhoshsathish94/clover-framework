@@ -1,0 +1,12 @@
+PAPER_ID: 03-levine-1983-explanatory-gap
+TITLE: Materialism and Qualia: The Explanatory Gap
+AUTHORS: Joseph Levine
+YEAR: 1983
+DOI: 10.1111/j.1468-0114.1983.tb00207.x
+SOURCE_URL_REACHED: metadata_only
+RAW_BYTES: 0
+RAW_SHA256: 
+EXTRACTED_TEXT_CHARS: 0
+OPENALEX_ID: https://openalex.org/W200020848
+CITED_BY_COUNT: 2221
+---

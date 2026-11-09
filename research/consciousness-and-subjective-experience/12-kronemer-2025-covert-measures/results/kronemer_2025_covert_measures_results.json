@@ -1,0 +1,42 @@
+{
+  "paper_id": "12-kronemer-2025-covert-measures",
+  "title": "Sleuthing Subjectivity: A Review of Covert Measures of Consciousness (Kronemer et al., 2025)",
+  "status": "completed",
+  "elapsed_s": 0.026,
+  "experiment_e1_overt_failure_modes_vs_multimodal_covert_fusion": {
+    "regime_comparison": {
+      "Normal_Cooperative_Awake": {
+        "overt_report_sensitivity": 0.99,
+        "single_channel_pupil_acc": 0.875,
+        "multimodal_4channel_covert_acc": 0.95
+      },
+      "Motor_Paralysis_CMD": {
+        "overt_report_sensitivity": 0.0,
+        "single_channel_pupil_acc": 0.78,
+        "multimodal_4channel_covert_acc": 0.95
+      },
+      "Wilful_Deception_Concealed": {
+        "overt_report_sensitivity": 0.02,
+        "single_channel_pupil_acc": 0.855,
+        "multimodal_4channel_covert_acc": 0.93
+      },
+      "Rapid_Forgetting_Delayed_Query": {
+        "overt_report_sensitivity": 0.17,
+        "single_channel_pupil_acc": 0.77,
+        "multimodal_4channel_covert_acc": 0.93
+      },
+      "REM_Dreaming_State": {
+        "overt_report_sensitivity": 0.0,
+        "single_channel_pupil_acc": 0.77,
+        "multimodal_4channel_covert_acc": 0.935
+      }
+    }
+  },
+  "experiment_e2_conscious_vs_unconscious_autonomic_temporal_separation": {
+    "early_window_50_250ms_true_positive_conscious": 0.8583,
+    "early_window_50_250ms_false_positive_subliminal": 0.775,
+    "late_window_400_950ms_true_positive_conscious": 1.0,
+    "late_window_400_950ms_false_positive_subliminal": 0.0,
+    "late_window_3class_conscious_vs_unconscious_accuracy": 1.0
+  }
+}

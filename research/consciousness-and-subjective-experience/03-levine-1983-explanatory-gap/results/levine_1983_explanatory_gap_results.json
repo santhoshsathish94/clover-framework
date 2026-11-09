@@ -1,0 +1,25 @@
+{
+  "paper_id": "03-levine-1983-explanatory-gap",
+  "title": "Materialism and Qualia: The Explanatory Gap (Levine, 1983)",
+  "status": "completed",
+  "elapsed_s": 0.0312,
+  "experiment_e1_heat_as_molecular_kinetic_energy": {
+    "micro_states_simulated": 80,
+    "particles_per_state": 500,
+    "ideal_gas_pressure_from_kinetic_energy_r2": 1.0,
+    "thermometer_expansion_from_kinetic_energy_r2": 1.0,
+    "unexplained_heat_functional_role_variance": 0.0
+  },
+  "experiment_e2_pain_functional_role_vs_qualitative_gap": {
+    "neural_channels_modeled": 4,
+    "c_fiber_to_nociceptive_functional_role_r2": 0.999987,
+    "qualitative_label_permutations_preserving_behavior": 24,
+    "explanatory_gap_underdetermination_bits": 4.585
+  },
+  "experiment_e3_epistemological_vs_ontological_gap": {
+    "physical_twin_pairs_tested": 200,
+    "ontological_supervenience_violations": 0,
+    "ontological_identity_consistent": true,
+    "epistemic_deductive_gauge_divergence": 3.3467
+  }
+}
