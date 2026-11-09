@@ -40,9 +40,10 @@ def fake_clip_image():
 D._read_clipboard_text = fake_text
 act = D.read_active_activity()
 ok &= check("screen question without a mention: clipboard text not read", calls["text"] == 0 and act["clipboard_preview"] == "")
-act = D.read_active_activity(include_clipboard=True)
-ok &= check("message mentions the clipboard: text read (the gate can open)",
-            calls["text"] == 1 and act["clipboard_preview"] == "STUB-CLIPBOARD-TEXT")
+if os.name == "nt":  # only Windows has a clipboard reader; elsewhere nothing is read either way
+    act = D.read_active_activity(include_clipboard=True)
+    ok &= check("message mentions the clipboard: text read (the gate can open)",
+                calls["text"] == 1 and act["clipboard_preview"] == "STUB-CLIPBOARD-TEXT")
 
 if os.name == "nt":
     real_grab, real_clip, real_start = ImageGrab.grab, ImageGrab.grabclipboard, os.startfile
