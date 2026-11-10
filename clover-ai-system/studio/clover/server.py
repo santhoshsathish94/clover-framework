@@ -244,7 +244,8 @@ class Settings:
                 "csi_url": "",
                 "personal": True,
                 "collective_contribute": False,  # opt-in candidate extraction (research/collective-learning)
-                "collective_receive": False}  # opt-in shared-core updates (research/collective-learning)
+                "collective_receive": False,  # opt-in shared-core updates (research/collective-learning)
+                "tool_deferral": False}  # tool_usage: defer never-called VS Code tools (worse first steps when measured)
 
     def __init__(self, path, engine=None):
         """engine: what this machine supports (hardware.choose): the default, and "cpu" when no usable GPU is found
@@ -288,6 +289,8 @@ class Settings:
             self.data["collective_contribute"] = saved["collective_contribute"]
         if isinstance(saved.get("collective_receive"), bool):
             self.data["collective_receive"] = saved["collective_receive"]
+        if isinstance(saved.get("tool_deferral"), bool):
+            self.data["tool_deferral"] = saved["tool_deferral"]
 
     def get(self):
         with self.lock:
@@ -343,6 +346,10 @@ class Settings:
                 if not isinstance(changes["collective_receive"], bool):
                     raise ValueError("collective_receive must be true or false")
                 self.data["collective_receive"] = changes["collective_receive"]
+            if "tool_deferral" in changes:
+                if not isinstance(changes["tool_deferral"], bool):
+                    raise ValueError("tool_deferral must be true or false")
+                self.data["tool_deferral"] = changes["tool_deferral"]
             self.path.parent.mkdir(parents=True, exist_ok=True)
             tmp = self.path.with_suffix(".tmp")
             tmp.write_text(json.dumps(self.data, indent=2), encoding="utf-8")
@@ -3862,17 +3869,30 @@ class Handler(BaseHTTPRequestHandler):
                 media = save_media([{"kind": "image", "data": u, "name": "image from VS Code"} for u in openai_images(messages)])
             step_gens = []
             if tools and body.get("tool_choice") != "none":
+                deferred, t_use = [], None
+                if S.args is not None and S.settings is not None and S.settings.get().get("tool_deferral"):
+                    import lfm3_native
+                    import tool_usage
+                    t_use = tool_usage.ToolUsage(S.args.base)
+                    deferred = sorted(t_use.deferred(protected=lfm3_native.VSCODE_CORE))
                 t0 = time.perf_counter()
                 with S.turn_lock:
                     S.busy = {"kind": "VS Code step", "since": time.time()}
                     try:
                         out = v1_eng.vscode_step(user_prompt, ws_info, prior_turns, tool_rounds, tools,
-                                                 **({"media": media} if media else {}))
+                                                 **({"media": media} if media else {}),
+                                                 **({"deferred": deferred} if deferred else {}))
                     finally:
                         S.busy = None
                 ms = round((time.perf_counter() - t0) * 1000)
-                print("V1_LFM3_STEP", json.dumps({"ms": ms, "call": out.get("tool_call"),
-                                                  "media": len(media), "trace": out.get("trace")}, ensure_ascii=False)[:3000],
+                if t_use is not None:  # which offered tools this install's VS Code turns actually call
+                    names = {str((t.get("function") or t).get("name") or "") for t in tools}
+                    t_use.record(tool_usage.turn_id(ws_info, user_prompt),
+                                 names & lfm3_native.active_vscode_tools(user_prompt, ws_info, tool_rounds, deferred),
+                                 (out.get("tool_call") or {}).get("name"))
+                print("V1_LFM3_STEP", json.dumps({"ms": ms, "call": out.get("tool_call"), "media": len(media),
+                                                  **({"deferred": len(deferred)} if t_use is not None else {}),
+                                                  "trace": out.get("trace")}, ensure_ascii=False)[:3000],
                       flush=True)
                 step_gens = [tr.get("generation") for tr in out.get("trace") or ()]
                 if out.get("tool_call"):

@@ -188,9 +188,10 @@ _VSCODE_INTEL_CUE = re.compile(
 )
 
 
-def active_vscode_tools(user_prompt="", workspace_info="", tool_rounds=()):
+def active_vscode_tools(user_prompt="", workspace_info="", tool_rounds=(), deferred=()):
     """Selects the non-deferred VS Code tool set for `vscode_step`, activating VS Code's Integrated Browser,
-    Terminal, and Code Intelligence tools whenever the user prompt, shared browser pages, or prior rounds need them."""
+    Terminal, and Code Intelligence tools whenever the user prompt, shared browser pages, or prior rounds need them.
+    `deferred`: tools usage evidence says are never called here (tool_usage); the core and this turn's tools stay."""
     active = set(VSCODE_CORE)
     used = {rd.get("name") for rd in (tool_rounds or ()) if isinstance(rd, dict) and rd.get("name")}
     active |= used
@@ -202,7 +203,7 @@ def active_vscode_tools(user_prompt="", workspace_info="", tool_rounds=()):
         active.update(VSCODE_TERMINAL_TOOLS)
     if _VSCODE_INTEL_CUE.search(combined) or (used & set(VSCODE_CODE_INTEL_TOOLS)):
         active.update(VSCODE_CODE_INTEL_TOOLS)
-    return active
+    return active - (set(deferred) - set(VSCODE_CORE) - used)
 
 
 def repair_vscode_browser_args(call_name, call_args, workspace_info="", tool_rounds=()):
@@ -1288,10 +1289,11 @@ class LFM3Native:
                 "layers": layer_log, "todo_list": op_plan.todos}
 
     # ---------------- VS Code (OpenAI messages + VS Code's tools) ----------------
-    def vscode_step(self, user_prompt, workspace_info, prior_turns, tool_rounds, vs_tools, thinking=True, max_new=1024):
+    def vscode_step(self, user_prompt, workspace_info, prior_turns, tool_rounds, vs_tools, thinking=True, max_new=1024,
+                    deferred=()):
         """One assistant step for VS Code: a VS Code tool call to return, or the final answer."""
         schemas, by_name = [], {}
-        core = active_vscode_tools(user_prompt, workspace_info, tool_rounds)
+        core = active_vscode_tools(user_prompt, workspace_info, tool_rounds, deferred)
         for t in vs_tools:
             fn = t.get("function") if isinstance(t.get("function"), dict) else t
             name = str(fn.get("name") or "").strip()

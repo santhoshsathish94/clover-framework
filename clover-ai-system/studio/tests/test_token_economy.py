@@ -1,5 +1,6 @@
 """Offline checks of what Clover adopted from TokenEconomizer (no engine, no VS Code), item by item:
-1 the /v1 reply's usage is the engine's own count, and every VS Code step and turn is in the usage ledger.
+1 the /v1 reply's usage is the engine's own count, and every VS Code step and turn is in the usage ledger;
+5 usage evidence for the offered VS Code tools, used only when the "tool_deferral" setting is on.
 
 Usage: python tests/test_token_economy.py"""
 import json
@@ -72,6 +73,46 @@ server.S.usage = None
 server.record_usage("turn", gens)
 check("1 no ledger (tests, stand-ins): nothing breaks", True)
 server.S.usage = saved
+
+# ---- 5: usage evidence for the offered tools, behind the "tool_deferral" setting ----
+import lfm3_native as N  # noqa: E402
+import tool_usage as TU  # noqa: E402
+
+cfg = Path(tempfile.mkdtemp(prefix="clover-settings-")) / "settings.json"
+check("5 the setting is off by default", server.Settings(cfg).get()["tool_deferral"] is False)
+cfg.write_text(json.dumps({"tool_deferral": True}), encoding="utf-8")
+st5 = server.Settings(cfg)
+check("5 a saved true is kept", st5.get()["tool_deferral"] is True)
+try:
+    st5.update({"tool_deferral": "yes"})
+    bad_rejected = False
+except ValueError:
+    bad_rejected = True
+st5.update({"tool_deferral": False})
+check("5 only true/false is accepted", bad_rejected and st5.get()["tool_deferral"] is False)
+
+use = TU.ToolUsage(Path(tempfile.mkdtemp(prefix="clover-tools-")))
+offer = {"click_element", "drag_element", "read_file", "run_in_terminal"}
+for k in range(TU.EVIDENCE_TURNS - 1):
+    use.record(f"turn{k}", offer, "click_element" if k == 0 else None)
+check("5 under the evidence: nothing deferred", use.deferred(N.VSCODE_CORE) == set())
+use.record("turn9", offer)
+use.record("turn9", offer, None)
+check("5 a turn's steps count once", use.deferred(N.VSCODE_CORE) == {"drag_element"})
+check("5 the core is never deferred", "read_file" not in use.deferred(N.VSCODE_CORE)
+      and "run_in_terminal" not in use.deferred(N.VSCODE_CORE))
+use.record("turn10", offer, "drag_element")
+check("5 one call makes it ordinary again", use.deferred(N.VSCODE_CORE) == set())
+page = "Use Playwright on the shared page: type Ana in the name box and click Greet."
+check("5 a deferred browser tool leaves the full set", "drag_element" in N.active_vscode_tools(page)
+      and "drag_element" not in N.active_vscode_tools(page, "", (), {"drag_element"}))
+check("5 ...but not when this turn already used it", "drag_element" in
+      N.active_vscode_tools(page, "", [{"name": "drag_element"}], {"drag_element"}))
+check("5 the core stays even if named", "read_file" in N.active_vscode_tools(page, "", (), {"read_file"}))
+ws5 = "I am working in a workspace with the following folders:\n- C:\\work\\calc \n"
+check("5 a turn's steps share one id, other requests do not",
+      TU.turn_id(ws5, "run the tests") == TU.turn_id(ws5.replace("calc ", "Calc"), "run the tests")
+      and TU.turn_id(ws5, "run the tests") != TU.turn_id(ws5, "fix the test"))
 
 print("ALL PASS" if ok else "SOME FAILED")
 sys.exit(0 if ok else 1)

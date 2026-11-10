@@ -1341,9 +1341,9 @@ class OmniNative(N.LFM3Native):
 
     # ---------------- VS Code (OpenAI messages + VS Code's tools) ----------------
     def vscode_step(self, user_prompt, workspace_info, prior_turns, tool_rounds, vs_tools, thinking=True, max_new=1024,
-                    media=()):
+                    media=(), deferred=()):
         schemas, by_name = [], {}
-        active_core = N.active_vscode_tools(user_prompt, workspace_info, tool_rounds)
+        active_core = N.active_vscode_tools(user_prompt, workspace_info, tool_rounds, deferred)
         for t in vs_tools:
             fn = t.get("function") if isinstance(t.get("function"), dict) else t
             name = str(fn.get("name") or "").strip()
