@@ -1,9 +1,9 @@
 {
   "product": "Clover AI Studio",
   "publisher": "Santhosh Narayanan",
-  "release_version": "5.0.1",
+  "release_version": "5.0.2",
   "release_channel": "release",
-  "release_date": "2026-11-09",
+  "release_date": "2026-11-10",
   "generated_by": "release/beta/generate_release_reports.py",
   "cpsl_release_signing": {
     "algorithm": "Ed25519 (RFC 8032)",
@@ -22,8 +22,8 @@
   "android": {
     "store": "Google Play Console (Closed Testing & Internal App Sharing)",
     "package_name": "ai.clover.studio",
-    "version_code": 15,
-    "version_name": "5.0.1",
+    "version_code": 16,
+    "version_name": "5.0.2",
     "min_sdk": 26,
     "target_sdk": 36,
     "compile_sdk": 36,
@@ -46,15 +46,15 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 81162041,
-        "sha256": "52acd3566e3a57aba965544cb2583b9c32bfd5e4b2814782dd278a112f93f253"
+        "size_bytes": 81182832,
+        "sha256": "7cf3d1a074a290718a061446dfc2e65c6358d41ad233f1c7f80f56710fbe0f63"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "mirror": "download/mobile/CloverAIStudio.apk",
         "type": "apk",
-        "size_bytes": 82238716,
-        "sha256": "512dcc0356055de82c54ae3b715f5febdad9269df71b1d9f9d786e492a48dcdc"
+        "size_bytes": 82259445,
+        "sha256": "5026958ac088ace8884b8ab692603c17170775f74526a20648530cc80db97702"
       }
     ],
     "verification": {
@@ -69,15 +69,18 @@
       "google_identity_collective_tests": "32/32 passed",
       "human_usefulness_tests": "not re-run for this release (urllib.error.URLError: <urlopen error [WinError 10061] No connection could be made because)",
       "live_activity_sse_tests": "18/18 passed",
-      "clover_cycles_tests": "passed (exit 0)"
+      "clover_cycles_tests": "passed (exit 0)",
+      "tool_tasks_tests": "18/18 passed",
+      "caution_only_tests": "16/16 passed",
+      "superagent_jev_dory_tests": "passed (exit 0)"
     }
   },
   "windows": {
     "distribution": "Standalone Native C# Win32 Per-User Installer (CloverAIStudio-Setup.exe)",
     "packaging_route": "Native .NET Framework 4.8 x64 GUI Setup & Launcher (csc.exe) with embedded asInvoker manifest, automatic Zone.Identifier unblocking, and embedded TrustedPublisher certificate registration",
     "publisher_display_name": "Santhosh Narayanan",
-    "manifest_version": "5.0.1.0",
-    "display_version": "5.0.1",
+    "manifest_version": "5.0.2.0",
+    "display_version": "5.0.2",
     "architecture": "x64",
     "min_windows_version": "10.0.19041.0",
     "max_windows_version_tested": "10.0.26100.0",
@@ -91,8 +94,8 @@
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "mirror": "download/laptop/CloverAIStudio-Setup.exe",
         "type": "exe",
-        "size_bytes": 9332184,
-        "sha256": "6de21e4e496762e30912de998fb7a31154b67ddc68428cc42e62624e75a55701"
+        "size_bytes": 9349592,
+        "sha256": "62c1dde2a52acc91b5cdd4fdd6962af46473a52646e5d5b3cb516c45c8cf2516"
       },
       {
         "file": "release/beta/windows/CloverFramework-CodeSign.cer",
@@ -114,7 +117,10 @@
       "google_identity_collective_tests": "32/32 passed",
       "human_usefulness_tests": "not re-run for this release (urllib.error.URLError: <urlopen error [WinError 10061] No connection could be made because)",
       "live_activity_sse_tests": "18/18 passed",
-      "clover_cycles_tests": "passed (exit 0)"
+      "clover_cycles_tests": "passed (exit 0)",
+      "tool_tasks_tests": "18/18 passed",
+      "caution_only_tests": "16/16 passed",
+      "superagent_jev_dory_tests": "passed (exit 0)"
     }
   }
 }
