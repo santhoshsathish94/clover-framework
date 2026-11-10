@@ -6,7 +6,7 @@
     "fail_lines": [],
     "summary": "155 checks passed",
     "counted": "155 checks passed",
-    "seconds": 3.1
+    "seconds": 4.5
   },
   "tool_routing_tests": {
     "suite": "tests/test_tool_routing.py",
@@ -15,7 +15,7 @@
     "fail_lines": [],
     "summary": "129 checks passed",
     "counted": "129 checks passed",
-    "seconds": 1.0
+    "seconds": 1.6
   },
   "repo_tests": {
     "suite": "tests/test_clover_repo.py",
@@ -24,7 +24,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 8.7
+    "seconds": 9.1
   },
   "regression_fixes_tests": {
     "suite": "tests/test_regression_fixes.py",
@@ -36,7 +36,7 @@
     ],
     "summary": "SOME FAILED",
     "counted": null,
-    "seconds": 69.5
+    "seconds": 126.5
   },
   "page_fetch_tests": {
     "suite": "tests/test_page_fetch.py",
@@ -45,7 +45,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": "119 checks passed",
-    "seconds": 8.3
+    "seconds": 8.5
   },
   "browser_first_tests": {
     "suite": "tests/test_browser_first.py",
@@ -56,7 +56,7 @@
     ],
     "summary": "SOME FAILED",
     "counted": null,
-    "seconds": 0.2
+    "seconds": 0.4
   },
   "browser_handback_tests": {
     "suite": "tests/test_browser_handback.py",
@@ -65,7 +65,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": "51 checks passed",
-    "seconds": 1.5
+    "seconds": 2.7
   },
   "collective_tests": {
     "suite": "clover/test_collective.py",
@@ -74,7 +74,7 @@
     "fail_lines": [],
     "summary": "35 checks passed",
     "counted": "35 checks passed",
-    "seconds": 17.4
+    "seconds": 20.2
   },
   "google_identity_collective_tests": {
     "suite": "clover/test_google_identity_collective.py",
@@ -83,7 +83,7 @@
     "fail_lines": [],
     "summary": "ALL 32 GOOGLE IDENTITY & COLLECTIVE LEARNING CHECKS PASSED",
     "counted": null,
-    "seconds": 16.8
+    "seconds": 24.8
   },
   "human_usefulness_tests": {
     "suite": "clover/test_human_usefulness.py",
@@ -101,7 +101,7 @@
     "fail_lines": [],
     "summary": "18 checks passed",
     "counted": "18 checks passed",
-    "seconds": 2.2
+    "seconds": 2.8
   },
   "clover_cycles_tests": {
     "suite": "clover/test_clover_cycles.py",
@@ -110,7 +110,7 @@
     "fail_lines": [],
     "summary": "}",
     "counted": null,
-    "seconds": 38.7
+    "seconds": 55.3
   },
   "tool_tasks_tests": {
     "suite": "tests/test_tool_tasks.py",
@@ -119,7 +119,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 0.4
+    "seconds": 0.6
   },
   "caution_only_tests": {
     "suite": "tests/test_caution_only.py",
@@ -128,7 +128,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 0.3
+    "seconds": 0.4
   },
   "superagent_jev_dory_tests": {
     "suite": "tests/test_superagent_jev_dory.py",
@@ -137,6 +137,15 @@
     "fail_lines": [],
     "summary": "OK",
     "counted": null,
-    "seconds": 0.2
+    "seconds": 0.3
+  },
+  "vscode_503_tests": {
+    "suite": "tests/test_vscode_503.py",
+    "exit": 0,
+    "pass_lines": 93,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": null,
+    "seconds": 10.3
   }
 }

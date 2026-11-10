@@ -2,8 +2,8 @@
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `5.0.2`  
-**Version Code**: `16`  
+**Release Version**: `5.0.3`  
+**Version Code**: `17`  
 **Package Name**: `ai.clover.studio`  
 **Build Date**: `2026-11-10`  
 **Build Environment**: `k3` (`/opt/clover-k3/studio-android`), OpenJDK `17.0.20`, Gradle `8.9`, Android Gradle Plugin `8.5.2`, Chaquopy `17.2.0` (CPython `3.12`), Android SDK `36` (`minSdk 26`, `targetSdk 36`, `compileSdk 36`), Android NDK `llvm-strip`.
@@ -14,8 +14,8 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 16`, `targetSdk 36`) | `81,182,832` bytes (`77.42 MB`) | `7cf3d1a074a290718a061446dfc2e65c6358d41ad233f1c7f80f56710fbe0f63` |
-| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 16`, `targetSdk 36`) | `82,259,445` bytes (`78.45 MB`) | `5026958ac088ace8884b8ab692603c17170775f74526a20648530cc80db97702` |
+| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 17`, `targetSdk 36`) | `81,192,527` bytes (`77.43 MB`) | `b60e4fda008f30bd2584a28c1a691df5df1d78466f7bc77a54689e3830b08b8f` |
+| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 17`, `targetSdk 36`) | `82,269,156` bytes (`78.46 MB`) | `7d406f4190356f40f253243ccc316dc5f0acda527976b55039283a837301ed56` |
 
 ---
 
@@ -38,7 +38,7 @@
 ## 3. Package & Manifest Audit (`build.gradle`)
 
 ```text
-package: name='ai.clover.studio' versionCode='16' versionName='5.0.2'
+package: name='ai.clover.studio' versionCode='17' versionName='5.0.3'
 sdkVersion:'26'
 targetSdkVersion:'36'
 compileSdkVersion:'36'
@@ -65,6 +65,7 @@ launchable-activity: name='ai.clover.studio.MainActivity'
 - `python tests/test_tool_tasks.py`: **18/18 passed**.
 - `python tests/test_caution_only.py`: **16/16 passed**.
 - `python tests/test_superagent_jev_dory.py`: **passed (exit 0)**.
+- `python tests/test_vscode_503.py`: **93/93 passed**.
 
 **Google Play Console Links**:
    - Instant Test (Internal App Sharing): `https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs`
