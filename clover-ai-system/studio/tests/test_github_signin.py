@@ -342,8 +342,15 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         check("sign out: no token, no gateway credential, collective consent off",
               code == 200 and not out["github"]["token_set"] and not vault.get(str(base), "collective_gateway")
               and not S.settings.get().get("collective_receive"))
+        code, out, _ = call("POST", "/api/collective/consent", {"contribute": True})
+        check("signed out: contributing needs the GitHub sign-in", code == 400 and "GitHub" in out["error"])
         code, out, _ = call("POST", "/api/collective/consent", {"receive": True})
-        check("signed out: collective learning cannot be switched on", code == 400 and "GitHub" in out["error"])
+        check("signed out: receiving the shared core still works (it is for every Clover user)",
+              code == 200 and out["consent_receive"] is True)
+        code, rel, _ = call("GET", "/api/collective/gateway/releases")
+        check("the gateway hands the shared core to anyone, with no credential", code == 200 and "available" in rel)
+        check("a gateway without the update ('not found') is explained, not shown raw",
+              "k3 update" in server.collective_error(core_sync.CoreSyncError("not found")))
 
         paths.WEB = True  # the website (k3)
         code, out, _ = call("POST", "/api/github/device/start", {})

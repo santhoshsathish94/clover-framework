@@ -6,7 +6,8 @@ search, workspaces, storage, sessions and the repository are the real code; only
 streams a short answer; a message containing "run" calls run_powershell under the real permission store (Allow / Ask /
 Off), so the permission card, tool card, layer tags, Try again and Helpful can be checked in a browser. "code" adds a
 code block and a code-check tag. "search" shows a web search and a page robots.txt refused, each with its "in your
-browser" link; a click on one is printed (OPEN ...), not opened. Nothing here touches the laptop.
+browser" link; a click on one is printed (OPEN ...), not opened. GitHub's sign-in page does open, so Sign in with GitHub
+can be tried with a real account; the memory repository is never pushed to GitHub from here.
 """
 import argparse
 import os
@@ -195,8 +196,15 @@ def main():
     S.engine = FakeEngine(S.perms)
     S.omni_engine = S.engine
     real_open = server.open_in_browser
-    server.open_in_browser = lambda body, start=None: real_open(
-        body, start=lambda u: print("OPEN (recorded, not opened by the harness):", u, flush=True))
+
+    def harness_open(body, start=None):
+        return real_open(body, start=lambda u: os.startfile(u) if u == "https://github.com/login/device" else
+                         print("OPEN (recorded, not opened by the harness):", u, flush=True))
+    server.open_in_browser = harness_open
+
+    def no_push(*_a, **_k):  # a sign-in here is real: pushing would put this scratch memory into the user's repository
+        raise RuntimeError("The test server never pushes memory to GitHub. Use the real Clover AI Studio for that.")
+    server.github_setup = server.sync_repo = no_push
     server.setup_needed = lambda: False
     server.omni_available = lambda _b: (True, "")
     server.gpu_available = lambda _b: (True, "")

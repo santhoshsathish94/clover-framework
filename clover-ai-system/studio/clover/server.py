@@ -760,6 +760,17 @@ def identity_status():
             if d.get("token_set") else "Not signed in"}
 
 
+def collective_error(exc):
+    """A gateway that has not been updated answers the new requests with 'not found' or the old Google wording."""
+    msg = str(exc)
+    if msg.strip().lower() == "not found" or "id_token" in msg or "Google" in msg:
+        return ("Clover's collective learning server has not been updated for GitHub sign-in yet, so it cannot answer. "
+                "It needs the k3 update.")
+    if "timed out" in msg:
+        return "Clover's collective learning server did not answer in time. Try again in a minute."
+    return msg
+
+
 def collective_credential(coll):
     """The collective gateway's own credential for this installation. The gateway checks the GitHub sign-in once and
     the credential is kept (encrypted) until it expires or the user signs in with another account."""
@@ -2848,18 +2859,14 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(302, b"", "text/plain", {"Location": back + "#gh_login=" + S.gh_web.issue(acct)})
                 err = "not_allowed"
             return self._send(302, b"", "text/plain", {"Location": back + "#gh_error=" + quote(err or "failed")})
-        if path == "/api/collective/gateway/releases":
+        if path == "/api/collective/gateway/releases":  # the shared core is for every Clover user: no sign-in
             from urllib.parse import parse_qs
-            import collective_gateway
             q = {k: v[0] for k, v in parse_qs(query).items()}
+            if not _check_auth_rate_limit(self._client_ip()):
+                return self._send(429, {"error": "Too many requests. Please wait a minute and try again."})
             gw_rt = collective_gateway_runtime()
             if gw_rt is None:
                 return self._send(503, {"error": "Collective gateway runtime unavailable"})
-            bearer = self._bearer_token()
-            try:
-                gw_rt["gateway"].authenticate_contributor(bearer)
-            except collective_gateway.GatewaySecurityError as exc:
-                return self._send(exc.status, {"error": exc.message, "code": exc.code})
             with gw_rt["lock"]:
                 bundle = gw_rt["registry"].get_release_bundle(since_version=q.get("since_version"))
             return self._send(200, bundle)
@@ -3801,9 +3808,9 @@ class Handler(BaseHTTPRequestHandler):
                 except RuntimeError as exc:
                     return self._send(409, {"error": str(exc)})
             if path == "/api/settings":
-                if isinstance(body, dict) and (body.get("collective_contribute") is True or body.get("collective_receive") is True):
+                if isinstance(body, dict) and body.get("collective_contribute") is True:
                     if not identity_status()["connected"]:
-                        raise ValueError("Sign in with GitHub first to enable collective learning.")
+                        raise ValueError("Sign in with GitHub first to contribute to collective learning.")
                 before = S.settings.get()
                 new = S.settings.update(body if isinstance(body, dict) else {})
                 if S.mode == "lfm3" and new["engine"] != before["engine"]:
@@ -3884,7 +3891,7 @@ class Handler(BaseHTTPRequestHandler):
                             contribute=c_in,
                             receive=r_in,
                             identity_connected=bool(g_stat.get("connected")),
-                            require_identity=True,
+                            require_identity=c_in is True,  # receiving the shared core needs no sign-in
                         )
                         upd = {}
                         if c_in is not None:
@@ -3910,8 +3917,8 @@ class Handler(BaseHTTPRequestHandler):
                             sync_res = coll.sync_from_registry(str(body["registry_dir"]).strip())
                         else:
                             sync_res = coll.sync_from_gateway(
-                                id_token=collective_credential(coll) if coll.consent_receive else None,
-                                require_identity=True,
+                                id_token=None,
+                                require_identity=False,
                                 gateway_url=body.get("gateway_url"),
                             )
                         try:
@@ -3930,7 +3937,7 @@ class Handler(BaseHTTPRequestHandler):
                         return self._send(200, dict(w_res, view=dict(coll.view(pers, identity=g_stat), personal_enabled=p_on)))
                     return self._send(200, {"candidates": coll.preview_candidates(pers)})
                 except core_sync.CoreSyncError as exc:
-                    return self._send(400, {"error": str(exc), "view": dict(coll.view(pers, identity=g_stat), personal_enabled=p_on)})
+                    return self._send(400, {"error": collective_error(exc), "view": dict(coll.view(pers, identity=g_stat), personal_enabled=p_on)})
             if path == "/api/media/inspect":
                 import image_inspector
                 fname = str(body.get("file") or "").strip()

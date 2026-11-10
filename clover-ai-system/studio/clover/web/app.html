@@ -973,7 +973,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           </button>
           <button type="button" class="row t" data-open-learn="collective">
             <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></span>
-            <span class="row__t">Collective Learning<small>Opt-in shared-core strategies, candidate contributions, and Ed25519-signed releases with your GitHub sign-in</small></span>
+            <span class="row__t">Collective Learning<small>Shared-core strategies learned by all Clover users: receive without signing in, contribute with GitHub</small></span>
             <span class="row__v" id="v-learn-collective">Off by default</span>
             <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
           </button>
@@ -1008,19 +1008,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
       <!-- 2. Collective Learning Sub-view -->
       <div class="learn-subview" id="learn-view-collective" hidden>
-        <p class="lead">Opt-in collective learning uses your GitHub sign-in (the same account as your memory repository) to contribute stripped, zero-user-text structural strategies or receive verified shared-core releases. Clover's gateway checks the account once and keeps only an anonymous id.</p>
-        <div class="glabel">GitHub Account (for Collective Learning)</div>
+        <p class="lead">Collective learning is shared by every Clover user: validated problem-solving strategies, never anyone's words, memory or chats (those stay in each person's own private repository). Receiving the shared core needs no sign-in. Contributing needs a GitHub sign-in so fake contributors stay out; Clover's gateway checks it once and keeps only an anonymous id.</p>
+        <div class="glabel">Contributing (GitHub sign-in)</div>
         <div class="group pad">
           <div class="kv" id="lg-id-kv"><span>GitHub</span><b id="lg-id-status">Not signed in</b></div>
           <div class="btns" style="margin-top:.55rem">
             <button type="button" class="btn pri gh-signin" data-note="lg-note">Sign in with GitHub</button>
           </div>
-          <p class="fine">One GitHub account for memory, Workspaces, k3 models and collective learning. Sign out in Settings &rarr; GitHub Account.</p>
+          <p class="fine">Only needed to contribute. It is the same GitHub sign-in as your memory repository; sign out in Settings &rarr; GitHub Account.</p>
         </div>
         <div class="glabel">Collective Learning Preferences</div>
         <div class="group">
           <label class="row static"><span class="row__t">Contribute to Collective Learning<small>Disabled by default. Requires GitHub sign-in, explicit consent, and per-candidate review before upload.</small></span><span class="switch"><input type="checkbox" id="lg-contribute"><span></span></span></label>
-          <label class="row static"><span class="row__t">Receive Collective Learning<small>Disabled by default. Requires GitHub sign-in and explicit consent; applies Ed25519-signed shared-core releases.</small></span><span class="switch"><input type="checkbox" id="lg-receive"><span></span></span></label>
+          <label class="row static"><span class="row__t">Receive Collective Learning<small>Disabled by default. No sign-in needed: applies the shared core every Clover user receives, after checking its Ed25519 signature.</small></span><span class="switch"><input type="checkbox" id="lg-receive"><span></span></span></label>
         </div>
         <div class="btns" style="margin:.4rem 0 .8rem">
           <button type="button" class="btn sm pri" id="lg-sync-now">Sync collective core now</button>
@@ -2634,8 +2634,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function webDeviceSignIn() {
     return authPost('/api/auth/github/device/start', {}).then(function (r) {
       var until = Date.now() + (r.expires_in || 900) * 1000;
-      setNote('auth-note', 'Your code: ' + r.user_code + '. Enter it on the GitHub page that just opened, then approve. Waiting for GitHub…', true);
-      window.open(r.verification_uri, '_blank', 'noopener,noreferrer');
+      showGitHubCode('auth-note', r.user_code, r.verification_uri);
       (function poll(delay) {
         setTimeout(function () {
           if (Date.now() > until) { setNote('auth-note', 'The code expired. Sign in with GitHub again.'); return; }
@@ -2919,7 +2918,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             desc: 'Opt-in (requires GitHub sign-in). Extracts stripped, zero-verbatim structural strategies from validated problem-solving episodes.' +
               (candN ? ' ' + candN + (candN === 1 ? ' candidate ready.' : ' candidates ready.') : '') },
           { key: 'collective_receive', top: true, name: 'Receive validated shared-core updates',
-            desc: 'Opt-in (requires GitHub sign-in). Applies Ed25519-signed shared-core improvements that passed the 5-gate evaluator.' +
+            desc: 'Opt-in, no sign-in needed. Applies the Ed25519-signed shared core every Clover user receives, after it passed the 5-gate evaluator.' +
               (actN ? ' ' + actN + (actN === 1 ? ' shared rule active.' : ' shared rules active.') : '') }
         ] }
     ];
@@ -2981,7 +2980,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var g = cv.identity || { connected: false, status_text: 'Not signed in' };
     var pOn = sv.personal !== undefined ? !!sv.personal : (cv.personal_enabled !== undefined ? !!cv.personal_enabled : true);
     var cOn = !!(cv.consent_contribute && g.connected);
-    var rOn = !!(cv.consent_receive && g.connected);
+    var rOn = !!cv.consent_receive;
     if ($('v-learning')) {
       var parts = [];
       parts.push(pOn ? 'Personal on' : 'Personal off');
@@ -2991,7 +2990,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if ($('lg-id-status')) $('lg-id-status').textContent = g.status_text || (g.connected ? 'Signed in with GitHub' : 'Not signed in');
     if ($('lg-personal')) $('lg-personal').checked = pOn;
     if ($('lg-contribute')) { $('lg-contribute').checked = !!cv.consent_contribute; $('lg-contribute').disabled = !g.connected; }
-    if ($('lg-receive')) { $('lg-receive').checked = !!cv.consent_receive; $('lg-receive').disabled = !g.connected; }
+    if ($('lg-receive')) { $('lg-receive').checked = !!cv.consent_receive; $('lg-receive').disabled = false; }
     if ($('lg-withdraw')) $('lg-withdraw').hidden = !(cv.consent_contribute || (cv.submitted_count || 0) > 0);
 
     var exps = (pv.experiences || []).length;
@@ -3009,7 +3008,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     if ($('lg-status-kv')) {
       var rows = [
-        ['GitHub account', g.connected ? (g.login ? '@' + g.login + ' (the gateway keeps only an anonymous id)' : 'GitHub token saved') : 'Not signed in (offline mode)'],
+        ['GitHub account (for contributing)', g.connected ? (g.login ? '@' + g.login + ' (the gateway keeps only an anonymous id)' : 'GitHub token saved') : 'Not signed in (receiving still works)'],
         ['Personal learning', pOn ? 'Enabled locally (' + exps + ' exp · ' + habits + ' habits)' : 'Disabled'],
         ['Contribution consent', cv.consent_contribute ? 'Enabled' : (cv.consent_withdrawn_utc ? 'Withdrawn (' + cv.consent_withdrawn_utc + ')' : 'Disabled (default)')],
         ['Receive consent', cv.consent_receive ? 'Enabled' : 'Disabled (default)'],
@@ -3562,14 +3561,26 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (r && r.github) renderWorkspaces(r);
     loadGitHubClient(); loadVscode(); loadCollective();
   }
+  function showGitHubCode(noteId, code, uri) {
+    var n = $(noteId);
+    if (!n) return;
+    n.hidden = false; n.className = 'note ok'; n.textContent = '';
+    n.appendChild(document.createTextNode('Your GitHub code: '));
+    var b = document.createElement('b'); b.textContent = code; n.appendChild(b);
+    n.appendChild(document.createTextNode('. Enter it on GitHub and approve Clover AI Studio ("Continue with Google" works there). Waiting for GitHub…'));
+    var row = el('div', 'btns'), open = btn('btn sm pri', 'Open GitHub'), copy = btn('btn sm', 'Copy code');
+    row.style.marginTop = '.45rem';
+    open.addEventListener('click', function () { openExternalOrApp(uri); });
+    copy.addEventListener('click', function () { copyText(code, copy); });
+    row.appendChild(open); row.appendChild(copy); n.appendChild(row);
+  }
   function githubSignIn(noteId) {
     if (ghFlow) clearTimeout(ghFlow.timer);
     ghFlow = null;
     setNote(noteId, 'Asking GitHub for a sign-in code…', true);
     api('POST', '/api/github/device/start', {}).then(function (r) {
       var flow = ghFlow = { id: r.flow_id, until: Date.now() + (r.expires_in || 900) * 1000, timer: null };
-      setNote(noteId, 'Your code: ' + r.user_code + '. Enter it on the GitHub page that just opened (' + r.verification_uri +
-        '), then approve Clover AI Studio. You can choose "Continue with Google" there. Waiting for GitHub…', true);
+      showGitHubCode(noteId, r.user_code, r.verification_uri);
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(r.user_code).catch(function () {});
       openExternalOrApp(r.verification_uri);
       function poll() {
