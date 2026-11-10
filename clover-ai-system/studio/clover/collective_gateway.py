@@ -11,6 +11,7 @@ installations:
 """
 from __future__ import annotations
 
+import base64
 import hashlib
 import hmac
 import json
@@ -46,6 +47,9 @@ LEARNING_EVENT_SCHEMA = {
     "additionalProperties": False,
 }
 ALLOWED_CATEGORIES = {"semantics", "reasoning-patterns", "problem-solving", "tool-use-patterns"}
+SESSION_PREFIX = "cg1."
+SESSION_TTL_S = 90 * 86400
+_PUBLIC_DEFAULT_SECRET = hashlib.sha256(b"clover-default-ephemeral-gateway-secret-v1").digest()
 
 # Fields that must NEVER be accepted by the gateway at either envelope or package level
 FORBIDDEN_ENVELOPE_FIELDS = frozenset({
@@ -67,8 +71,8 @@ class GatewaySecurityError(ValueError):
 
 class CollectiveGateway:
     """Ingests, validates, deduplicates, and aggregates candidate packages across Clover installations, with
-    authenticated Google OIDC identity validation, pseudonymous contributor IDs, consent records, replay protection,
-    and contribution withdrawal."""
+    authenticated identity (a GitHub sign-in checked once, then the gateway's own credential), pseudonymous
+    contributor IDs, consent records, replay protection, and contribution withdrawal."""
 
     def __init__(
         self,
@@ -86,6 +90,9 @@ class CollectiveGateway:
         self.rate_limit_per_min = int(rate_limit_per_min)
         self.replay_window_s = int(replay_window_s)
         self._gateway_secret = self._init_secret(gateway_secret)
+        # anyone can sign with the public fallback secret, so such a gateway signs credentials with a per-process key
+        self._session_key = (secrets.token_bytes(32) if self._gateway_secret == _PUBLIC_DEFAULT_SECRET else
+                             hmac.new(self._gateway_secret, b"clover-gateway-session-key-v1", hashlib.sha256).digest())
         self.accepted_packages: dict[tuple[str, tuple[str, ...], tuple[str, ...]], dict] = {}
         self.rejected_packages: list[dict] = []
         self.consent_records: dict[str, dict] = {}
@@ -103,7 +110,9 @@ class CollectiveGateway:
             self.state_dir.mkdir(parents=True, exist_ok=True)
             sec_file = self.state_dir / ".gateway_hmac_secret"
             if sec_file.is_file():
-                raw = sec_file.read_bytes().strip()
+                raw = sec_file.read_bytes()
+                if len(raw) != 32:  # random bytes are kept as written; strip only a secret typed in as text
+                    raw = raw.strip()
                 if len(raw) >= 32:
                     return raw
             raw = secrets.token_bytes(32)
@@ -113,7 +122,7 @@ class CollectiveGateway:
             except OSError:
                 pass
             return raw
-        return hashlib.sha256(b"clover-default-ephemeral-gateway-secret-v1").digest()
+        return _PUBLIC_DEFAULT_SECRET
 
     def _load_state(self):
         if self.state_dir is None:
@@ -146,6 +155,55 @@ class CollectiveGateway:
         tmp.write_text(json.dumps(doc, indent=2, sort_keys=True), encoding="utf-8")
         os.replace(tmp, state_file)
 
+    @staticmethod
+    def _github_user_id(github_token: str) -> int:
+        import urllib.error
+        import urllib.request
+        req = urllib.request.Request("https://api.github.com/user", headers={
+            "Authorization": f"Bearer {github_token}", "Accept": "application/vnd.github+json",
+            "User-Agent": "CloverCollectiveGateway/1.0"})
+        try:
+            with urllib.request.urlopen(req, timeout=15) as r:
+                doc = json.loads(r.read().decode("utf-8", "replace"))
+        except urllib.error.HTTPError as exc:
+            raise GatewaySecurityError("invalid_github_token", "GitHub did not accept the sign-in", status=401) from exc
+        except (OSError, ValueError) as exc:
+            raise GatewaySecurityError("github_unreachable", "GitHub could not be reached", status=502) from exc
+        if not isinstance(doc, dict) or not isinstance(doc.get("id"), int):
+            raise GatewaySecurityError("invalid_github_token", "GitHub did not say who signed in", status=401)
+        return doc["id"]
+
+    def issue_session_from_github(self, github_token: str, *, get_user_id=None, now: float | None = None) -> dict:
+        """Checks a GitHub sign-in once and returns the gateway's own credential for the pseudonymous contributor.
+        The GitHub token is used for this one request and never stored; only GitHub's numeric account id enters the
+        HMAC, so the registry never holds a login, an email or a token."""
+        tok = str(github_token or "").strip()
+        if not tok:
+            raise GatewaySecurityError("github_token_required", "Sign in with GitHub first", status=401)
+        uid = (get_user_id or self._github_user_id)(tok)
+        contributor_id = google_identity.derive_pseudonymous_contributor_id(f"github:{int(uid)}", self._gateway_secret)
+        exp = int((now if now is not None else time.time()) + SESSION_TTL_S)
+        body = base64.urlsafe_b64encode(json.dumps({"cid": contributor_id, "exp": exp, "v": 1},
+                                                   sort_keys=True).encode("utf-8")).rstrip(b"=").decode("ascii")
+        sig = hmac.new(self._session_key, body.encode("ascii"), hashlib.sha256).hexdigest()
+        return {"credential": f"{SESSION_PREFIX}{body}.{sig}", "expires_at": exp, "contributor_id": contributor_id}
+
+    def _verify_session(self, credential: str, now: float | None = None) -> str:
+        try:
+            body, sig = credential[len(SESSION_PREFIX):].split(".", 1)
+            want = hmac.new(self._session_key, body.encode("ascii"), hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(sig, want):
+                raise ValueError("signature")
+            doc = json.loads(base64.urlsafe_b64decode(body + "=" * (-len(body) % 4)).decode("utf-8"))
+        except (ValueError, TypeError, UnicodeError) as exc:
+            raise GatewaySecurityError("invalid_session", "Invalid collective credential; sign in with GitHub again",
+                                       status=401) from exc
+        if not isinstance(doc, dict) or not str(doc.get("cid") or "").startswith("contrib_"):
+            raise GatewaySecurityError("invalid_session", "Invalid collective credential", status=401)
+        if (now if now is not None else time.time()) >= int(doc.get("exp") or 0):
+            raise GatewaySecurityError("session_expired", "Collective credential expired; sign in again", status=401)
+        return doc["cid"]
+
     def authenticate_contributor(
         self,
         id_token: str,
@@ -154,8 +212,10 @@ class CollectiveGateway:
         jwks: list[dict] | None = None,
         now: float | None = None,
     ) -> str:
-        """Validate a Google OIDC `id_token` and return the pseudonymous `contributor_id` (`contrib_<hmac>`).
-        Never returns or persists the raw Google `sub` or email."""
+        """Validate the gateway's own credential (`cg1.`, from a GitHub sign-in) or a Google OIDC `id_token` and
+        return the pseudonymous `contributor_id` (`contrib_<hmac>`). Never returns or persists a raw account id."""
+        if str(id_token or "").startswith(SESSION_PREFIX):
+            return self._verify_session(str(id_token), now)
         try:
             claims = google_identity.verify_google_id_token(
                 id_token,

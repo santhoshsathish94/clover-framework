@@ -353,12 +353,14 @@ class Collective:
         contribute: bool | None = None,
         receive: bool | None = None,
         *,
+        identity_connected: bool | None = None,
         google_connected: bool | None = None,
         require_identity: bool = False,
     ) -> dict:
+        connected = identity_connected if identity_connected is not None else google_connected
         with self.lock:
-            if require_identity and (contribute is True or receive is True) and not google_connected:
-                raise CoreSyncError("Sign in with Google first to enable collective learning.")
+            if require_identity and (contribute is True or receive is True) and not connected:
+                raise CoreSyncError("Sign in with GitHub first to enable collective learning.")
             if contribute is not None:
                 self.consent_contribute = bool(contribute)
                 if self.consent_contribute:
@@ -444,6 +446,18 @@ class Collective:
         except Exception as exc:
             raise CoreSyncError(f"Gateway request failed: {exc}") from exc
 
+    def gateway_session(self, *, github_token: str, gateway_url: str | None = None, transport_fn=None) -> dict:
+        """The gateway checks a GitHub sign-in once and answers with its own credential for this contributor
+        (`cg1.`), used for contributions, releases and withdrawal until it expires."""
+        if not github_token or not str(github_token).strip():
+            raise CoreSyncError("GitHub sign-in is required for collective learning.")
+        gw = (gateway_url or self.gateway_url).rstrip("/")
+        resp = self._http_call("POST", f"{gw}/api/collective/gateway/session", id_token=str(github_token).strip(),
+                               body={}, transport_fn=transport_fn)
+        if not str(resp.get("credential") or "").startswith("cg1."):
+            raise CoreSyncError("The collective gateway did not issue a credential.")
+        return resp
+
     def contribute_to_gateway(
         self,
         *,
@@ -461,7 +475,7 @@ class Collective:
                 self._save_sync_state()
                 raise CoreSyncError(err)
             if not id_token or not str(id_token).strip():
-                err = "Google sign-in is required to contribute candidate knowledge."
+                err = "GitHub sign-in is required to contribute candidate knowledge."
                 self.last_sync_error = err
                 self._save_sync_state()
                 raise CoreSyncError(err)
@@ -544,7 +558,7 @@ class Collective:
                 self._save_sync_state()
                 raise CoreSyncError(err)
             if require_identity and (not id_token or not str(id_token).strip()):
-                err = "Google sign-in is required to receive collective learning releases."
+                err = "GitHub sign-in is required to receive collective learning releases."
                 self.last_sync_error = err
                 self._save_sync_state()
                 raise CoreSyncError(err)
@@ -702,7 +716,7 @@ class Collective:
                 out["strategy"] = best["strategy"]
             return out
 
-    def view(self, personal_obj=None, google_status: dict | None = None) -> dict:
+    def view(self, personal_obj=None, google_status: dict | None = None, identity: dict | None = None) -> dict:
         with self.lock:
             cands = self.preview_candidates(personal_obj) if personal_obj is not None else []
             submitted_ids = {x["package_id"] for x in self.submitted_packages}
@@ -711,7 +725,7 @@ class Collective:
                 "enabled": True,
                 "store": str(self.dir),
                 "gateway_url": self.gateway_url,
-                "google_identity": google_status or {"connected": False, "status_text": "Not connected"},
+                "identity": identity or google_status or {"connected": False, "status_text": "Not signed in"},
                 "consent_contribute": self.consent_contribute,
                 "consent_receive": self.consent_receive,
                 "consent_withdrawn_utc": self.consent_withdrawn_utc,

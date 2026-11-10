@@ -19,6 +19,7 @@ import shutil
 import stat
 import subprocess
 import threading
+import time
 from pathlib import Path
 
 import semantics
@@ -188,38 +189,104 @@ def _dpapi(data, protect):
 
 
 class GitHubAuth:
-    """CloverAI\\vault\\github.json: the user's GitHub token for private repositories, typed into Settings on this laptop
-    and kept encrypted for this Windows account (DPAPI). describe() says whether one is set, never the token."""
+    """CloverAI\\vault\\github.json: the user's GitHub sign-in (or a token they pasted) for private repositories, kept
+    encrypted for this Windows account (DPAPI). describe() says who is signed in, never the token. A sign-in token
+    expires after 8 hours and is renewed here with its refresh token."""
 
-    def __init__(self, path):
-        self.path, self.lock, self.token = Path(path), threading.Lock(), None
+    META = ("source", "login", "user_id", "scope", "expires_at", "refresh_expires_at", "signed_in_at")
+    RENEW_EARLY_S = 300
+
+    def __init__(self, path, refresher=None):
+        self.path, self.lock, self._refresher = Path(path), threading.RLock(), refresher
+        self._token, self._refresh_token, self.meta = None, None, {}
         try:
             raw = json.loads(self.path.read_text(encoding="utf-8"))
             t = (_dpapi(base64.b64decode(raw["token_dpapi"]), False).decode("utf-8") if raw.get("token_dpapi")
                  else raw.get("token"))
-            self.token = t if isinstance(t, str) and TOKEN.match(t) else None
+            self._token = t if isinstance(t, str) and TOKEN.match(t) else None
+            if self._token is not None:
+                self.meta = {k: raw[k] for k in self.META if raw.get(k) not in (None, "")}
+                if raw.get("refresh_dpapi"):
+                    r = _dpapi(base64.b64decode(raw["refresh_dpapi"]), False).decode("utf-8")
+                    self._refresh_token = r if TOKEN.match(r) else None
         except (OSError, ValueError, KeyError):
             pass
 
+    @property
+    def token(self):
+        with self.lock:
+            exp = int(self.meta.get("expires_at") or 0)
+            if self._token and self._refresh_token and exp and time.time() >= exp - self.RENEW_EARLY_S:
+                self._renew()
+            return self._token
+
+    @token.setter
+    def token(self, value):
+        with self.lock:
+            self._token = value
+
+    def _renew(self):
+        import github_auth
+        try:
+            rec = (self._refresher or github_auth.refresh)(self._refresh_token)
+        except github_auth.GitHubAuthError as exc:
+            if exc.code != "unreachable":  # GitHub refused the refresh token: the sign-in has ended
+                self._clear()
+                self._save()
+            return
+        self._token, self._refresh_token = rec["access_token"], rec.get("refresh_token") or None
+        self.meta.update(expires_at=rec.get("expires_at") or 0,
+                         refresh_expires_at=rec.get("refresh_expires_at") or self.meta.get("refresh_expires_at") or 0)
+        self._save()  # the old pair stopped working: keep the new one before anything uses it
+
     def describe(self):
-        return {"token_set": self.token is not None,
-                "create_url": "https://github.com/settings/personal-access-tokens/new"}
+        import github_auth
+        with self.lock:
+            out = {"token_set": self._token is not None, "review_url": github_auth.REVIEW_URL,
+                   "create_url": "https://github.com/settings/personal-access-tokens/new"}
+            if self._token is not None:
+                out["source"] = self.meta.get("source") or "token"
+                if self.meta.get("login"):
+                    out["login"] = self.meta["login"]
+            out["signed_in"] = out.get("source") == "signin"
+            return out
 
     def update(self, token=None, forget=False):
         with self.lock:
             if forget:
-                self.token = None
+                self._clear()
             elif token is not None:
                 token = str(token).strip()
                 if not TOKEN.match(token):
                     raise ValueError("that does not look like a GitHub token (20-255 visible characters, no spaces)")
-                self.token = token
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-            tmp = self.path.with_suffix(".tmp")
-            blob = (base64.b64encode(_dpapi(self.token.encode("utf-8"), True)).decode("ascii") if self.token else None)
-            tmp.write_text(json.dumps({"token_dpapi": blob}), encoding="utf-8")
-            tmp.replace(self.path)
+                self._token, self._refresh_token, self.meta = token, None, {"source": "token"}
+            self._save()
         return self.describe()
+
+    def sign_in(self, rec, who):
+        """Keeps a GitHub sign-in: GitHub's token pair (github_auth.token_record) and who it belongs to."""
+        with self.lock:
+            self._token, self._refresh_token = rec["access_token"], rec.get("refresh_token") or None
+            self.meta = {"source": "signin", "login": who["login"], "user_id": who["id"], "scope": rec.get("scope") or "",
+                         "expires_at": rec.get("expires_at") or 0, "refresh_expires_at": rec.get("refresh_expires_at") or 0,
+                         "signed_in_at": int(time.time())}
+            self._save()
+        return self.describe()
+
+    def _clear(self):
+        self._token, self._refresh_token, self.meta = None, None, {}
+
+    def _save(self):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = self.path.with_suffix(".tmp")
+        doc = {"token_dpapi": (base64.b64encode(_dpapi(self._token.encode("utf-8"), True)).decode("ascii")
+                               if self._token else None)}
+        if self._token and self._refresh_token:
+            doc["refresh_dpapi"] = base64.b64encode(_dpapi(self._refresh_token.encode("utf-8"), True)).decode("ascii")
+        if self._token:
+            doc.update(self.meta)
+        tmp.write_text(json.dumps(doc), encoding="utf-8")
+        tmp.replace(self.path)
 
 
 class Workspaces:
@@ -364,11 +431,11 @@ class Workspaces:
             err = (r.stderr or r.stdout or "").strip()
             if re.search(r"could not read Username|Authentication failed|terminal prompts disabled|Repository not found", err):
                 raise ValueError(f"GitHub did not give access to {owner}/{repo}: it does not exist, or it is private"
-                                 + (" and the saved token cannot read it." if token else
-                                    ". For a private repository, add a GitHub token in Settings first."))
+                                 + (" and your GitHub sign-in cannot read it." if token else
+                                    ". For a private repository, sign in with GitHub first."))
             why = [ln.strip() for ln in err.splitlines() if ln.strip().startswith(("fatal:", "remote:", "error:"))]
             msg = _redact(" ".join(why) or err, token)[-300:]
-            hint = "" if token else " If it is a private repository, add a GitHub token in Settings first."
+            hint = "" if token else " If it is a private repository, sign in with GitHub first."
             raise ValueError(f"could not clone {owner}/{repo}: {msg}{hint}")
         return dest.resolve()
 
@@ -969,7 +1036,7 @@ def github_client_status(token: str | None = None, sync_repo_info: dict | None =
             "sync_repo": sync_r,
             "local_repo": lpath,
             "repos": [],
-            "message": "Connected to local repository (clover-ai-studio). Add your GitHub token below to connect directly to your GitHub repositories.",
+            "message": "Using the local repository (clover-ai-studio). Sign in with GitHub to work with your GitHub repositories.",
         }
     code, user_doc = github_client_request("/user", token=token)
     if code != 200 or not isinstance(user_doc, dict) or not user_doc.get("login"):
@@ -981,7 +1048,7 @@ def github_client_status(token: str | None = None, sync_repo_info: dict | None =
             "sync_repo": sync_r,
             "local_repo": lpath,
             "repos": [],
-            "message": f"GitHub token could not sign in ({user_doc.get('message') if isinstance(user_doc, dict) else code}). Using local repository.",
+            "message": f"GitHub did not accept the sign-in ({user_doc.get('message') if isinstance(user_doc, dict) else code}). Using the local repository.",
         }
     _, repos_doc = github_client_request("/user/repos?sort=updated&per_page=30", token=token)
     repos = []

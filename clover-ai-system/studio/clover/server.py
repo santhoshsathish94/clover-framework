@@ -18,6 +18,7 @@ import re
 import secrets
 import shutil
 import socket
+import subprocess
 import sys
 import threading
 import time
@@ -31,6 +32,7 @@ sys.path.insert(0, str(HERE))
 
 import stand_ins  # noqa: E402
 stand_ins.install(HERE)
+import github_auth  # noqa: E402
 import paths  # noqa: E402
 import semantics  # noqa: E402
 
@@ -85,7 +87,8 @@ class S:
     kit = None
     memidx = None
     csi = None  # csi_child.CSIService
-    google_identity = None  # google_identity.GoogleIdentityManager
+    gh_flows = github_auth.DeviceFlows()  # GitHub device sign-ins in progress (apps; website fallback)
+    gh_web = github_auth.WebSignIns()  # website GitHub sign-ins in progress and their one-time codes
     gateway_runtime = None  # {"gateway": CollectiveGateway, "evaluator": CollectiveEvaluator, "registry": CoreRegistry}
     hardware = None  # hardware.probe(): this machine and the settings chosen for it
     last_turn_end = time.time()
@@ -733,12 +736,50 @@ def collective_store(csi=None, keep_csi=True):
     return coll
 
 
-def google_identity_manager():
-    """Stateless Google OpenID Connect identity manager for this installation (<base>/vault)."""
-    import google_identity
-    if S.google_identity is None and S.args is not None:
-        S.google_identity = google_identity.GoogleIdentityManager(Path(S.args.base))
-    return S.google_identity
+def web_return(url):
+    """Where the website's GitHub sign-in sends the browser back: a Clover web page only, never an outside address."""
+    import urllib.parse
+    url = str(url or "").split("#", 1)[0]
+    if any(ord(c) < 0x21 or ord(c) == 0x7f for c in url):  # no line breaks into the Location header
+        url = ""
+    try:
+        u = urllib.parse.urlsplit(url)
+    except ValueError:
+        u = None
+    if u and u.scheme in ("https", "http") and f"{u.scheme}://{u.netloc}" in (WEB_ORIGINS | {f"http://127.0.0.1:{S.port}"}):
+        return url
+    return "https://cloverframework.com/clover-ai/"
+
+
+def identity_status():
+    """Collective learning's identity: the GitHub account this installation signed in with (or whose token was pasted)."""
+    d = S.github.describe() if S.github else {"token_set": False}
+    login = d.get("login") or ""
+    return {"connected": bool(d.get("token_set")), "provider": "github", "login": login,
+            "status_text": (f"Signed in with GitHub as @{login}" if login else "GitHub token saved")
+            if d.get("token_set") else "Not signed in"}
+
+
+def collective_credential(coll):
+    """The collective gateway's own credential for this installation. The gateway checks the GitHub sign-in once and
+    the credential is kept (encrypted) until it expires or the user signs in with another account."""
+    import vault
+    base = S.args.base
+    login = (S.github.describe().get("login") or "") if S.github else ""
+    try:
+        rec = json.loads(vault.get(base, "collective_gateway") or "{}")
+    except ValueError:
+        rec = {}
+    if (rec.get("credential") and rec.get("gateway") == coll.gateway_url and rec.get("login", "") == login
+            and time.time() < float(rec.get("expires_at") or 0) - 3600):
+        return rec["credential"]
+    tok = S.github.token if S.github else None
+    if not tok:
+        return None
+    resp = coll.gateway_session(github_token=tok)
+    vault.put(base, "collective_gateway", json.dumps({"credential": resp["credential"], "gateway": coll.gateway_url,
+                                                      "expires_at": resp.get("expires_at") or 0, "login": login}))
+    return resp["credential"]
 
 
 def collective_gateway_runtime():
@@ -1357,21 +1398,22 @@ def _direct_github_sync(token: str, full_repo: str) -> dict:
     if S.repo.git:
         env = workspaces._git_env(token)
         url = f"https://github.com/{full_repo}.git"
+        nw = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         S.repo.agents_writable()
         try:
-            subprocess.run([S.repo.git, "remote", "remove", "origin"], cwd=S.repo.dir, capture_output=True)
-            subprocess.run([S.repo.git, "remote", "add", "origin", url], cwd=S.repo.dir, capture_output=True)
+            subprocess.run([S.repo.git, "remote", "remove", "origin"], cwd=S.repo.dir, capture_output=True, creationflags=nw)
+            subprocess.run([S.repo.git, "remote", "add", "origin", url], cwd=S.repo.dir, capture_output=True, creationflags=nw)
             f_res = subprocess.run([S.repo.git, "fetch", "origin", "main"], cwd=S.repo.dir, env=env,
-                                   capture_output=True, text=True, timeout=120)
+                                   capture_output=True, text=True, timeout=120, creationflags=nw)
             merged = False
             if f_res.returncode == 0:
                 m_res = subprocess.run(
                     [S.repo.git, "merge", "origin/main", "--allow-unrelated-histories", "-X", "ours", "-m", "Sync memory from GitHub"],
-                    cwd=S.repo.dir, env=env, capture_output=True, text=True, timeout=120,
+                    cwd=S.repo.dir, env=env, capture_output=True, text=True, timeout=120, creationflags=nw,
                 )
                 merged = m_res.returncode == 0 and "Already up to date" not in (m_res.stdout or "")
             p_res = subprocess.run([S.repo.git, "push", "-u", "origin", "HEAD:main"], cwd=S.repo.dir, env=env,
-                                   capture_output=True, text=True, timeout=120)
+                                   capture_output=True, text=True, timeout=120, creationflags=nw)
             if p_res.returncode != 0:
                 err = workspaces._redact((p_res.stderr or p_res.stdout or "git push failed").strip(), token)
                 raise RuntimeError(f"GitHub sync push failed: {err}")
@@ -1434,8 +1476,10 @@ def github_setup(name=None):
     tok = getattr(S.github, "token", None)
     if tok:
         res = _direct_github_setup(tok, name=name)
-    else:
+    elif S.vscode is not None and S.vscode.connected():
         res = _git_with_vscode("githubSetupRepo", {"name": name or paths.REPO_NAME, "path": str(S.repo.dir)})
+    else:
+        raise RuntimeError("Sign in with GitHub first (Memory or Settings -> GitHub account -> Sign in with GitHub).")
     if isinstance(res, dict) and res.get("repo"):
         notes_cnt = len(list((S.repo.dir / "growth" / "knowledge").glob("*.json")))
         github_repo({"repo": res["repo"], "private": bool(res.get("private", True)),
@@ -1453,8 +1497,10 @@ def sync_repo():
     tok = getattr(S.github, "token", None)
     if tok:
         res = _direct_github_sync(tok, st["repo"])
-    else:
+    elif S.vscode is not None and S.vscode.connected():
         res = _git_with_vscode("githubSyncFolder", {"path": str(S.repo.dir), "repo": st["repo"]})
+    else:
+        raise RuntimeError("Sign in with GitHub first (Memory or Settings -> GitHub account -> Sign in with GitHub).")
     S.repo.reindex()
     layer_kit().store().rebuild_index()
     notes_cnt = len(list((S.repo.dir / "growth" / "knowledge").glob("*.json")))
@@ -2220,7 +2266,7 @@ WEB_ORIGINS = {
 }
 OWNER_GITHUB_LOGIN = (os.environ.get("CLOVER_OWNER_GITHUB") or "santhoshsathish94").strip().lower().lstrip("@")
 OWNER_EMAIL = (os.environ.get("CLOVER_OWNER_EMAIL") or "santhoshsathish94@gmail.com").strip().lower()
-GITHUB_DEVICE_CLIENT_ID = (os.environ.get("CLOVER_GITHUB_CLIENT_ID") or "178c6fc778ccc68e1d6a").strip()
+GITHUB_DEVICE_CLIENT_ID = github_auth.CLIENT_ID
 _ENV_ALLOWED_ACCTS = tuple(
     x.strip().lower().lstrip("@")
     for x in (os.environ.get("CLOVER_ALLOWED_ACCOUNTS") or "").split(",")
@@ -2781,35 +2827,27 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(403, {"error": "forbidden host"})
         if path.startswith("/api/hf-mirror/"):
             return self._serve_hf_mirror(path)
-        if path == "/api/identity/google/callback":
-            from urllib.parse import parse_qs
-            import google_identity
+        if path == "/api/auth/github":  # how the website signs in: GitHub's redirect once this server has the secret
+            return self._send(200, {"redirect": github_auth.web_configured(), "device": True})
+        if path in ("/api/auth/github/start", "/api/auth/github/callback") and paths.WEB:
+            from urllib.parse import parse_qs, quote
             q = {k: v[0] for k, v in parse_qs(query).items()}
-            mgr = google_identity_manager()
-            if mgr is None:
-                return self._send(500, {"error": "Google identity manager unavailable"})
-            if q.get("error"):
-                html_err = (
-                    "<!doctype html><meta charset=utf-8><title>Google Sign-In Cancelled</title>"
-                    "<body style='font:15px system-ui,sans-serif;background:#F7F3E9;color:#39473D;padding:2rem;text-align:center'>"
-                    f"<h3>Google sign-in was not completed ({re.sub(r'[^A-Za-z0-9_ -]', '', str(q.get('error'))[:60])})</h3>"
-                    "<p>You can close this window and return to Clover AI Studio.</p></body>"
-                )
-                return self._send(400, html_err.encode("utf-8"), "text/html")
-            try:
-                mgr.complete_pkce_callback(state=str(q.get("state") or ""), code=str(q.get("code") or ""))
-                if S.repo is not None:
-                    S.repo.note("Google identity connected via OIDC PKCE")
-                html_ok = (
-                    "<!doctype html><meta charset=utf-8><title>Connected to Clover AI Studio</title>"
-                    "<body style='font:15px system-ui,sans-serif;background:#F7F3E9;color:#39473D;padding:2rem;text-align:center'>"
-                    "<h3>Google identity connected to Clover AI Studio</h3>"
-                    "<p>Collective learning remains off until you explicitly enable it in Settings &rarr; Learning &amp; Growth.</p>"
-                    "<p>You can close this tab and return to Clover AI Studio.</p></body>"
-                )
-                return self._send(200, html_ok.encode("utf-8"), "text/html")
-            except google_identity.GoogleIdentityError as exc:
-                return self._send(400, {"error": str(exc)})
+            if path.endswith("/start"):
+                back = web_return(q.get("return_to"))
+                try:
+                    to = S.gh_web.begin(back)
+                except github_auth.GitHubAuthError as exc:
+                    to = back + "#gh_error=" + quote(exc.code)
+                return self._send(302, b"", "text/plain", {"Location": to})
+            back, gh_token, err = S.gh_web.finish(q.get("state"), q.get("code"), q.get("error"))
+            back = back or web_return(None)
+            if gh_token:  # read who signed in, then drop the token: the website keeps no GitHub token
+                ok, acct, _ = verify_k3_credential(gh_token)
+                gh_token = None
+                if ok:
+                    return self._send(302, b"", "text/plain", {"Location": back + "#gh_login=" + S.gh_web.issue(acct)})
+                err = "not_allowed"
+            return self._send(302, b"", "text/plain", {"Location": back + "#gh_error=" + quote(err or "failed")})
         if path == "/api/collective/gateway/releases":
             from urllib.parse import parse_qs
             import collective_gateway
@@ -2978,20 +3016,16 @@ class Handler(BaseHTTPRequestHandler):
                                     "interrupted": list(S.tool_tasks.interrupted)})
         if path == "/api/memory":
             return self._send(200, {"memories": layer_kit().memories()})
-        if path == "/api/identity/google":
-            mgr = google_identity_manager()
-            return self._send(200, mgr.status() if mgr else {"connected": False, "status_text": "Not connected"})
         if path == "/api/personal":  # what Clover learned about the user, from which experiences
             pers = personal_store()
             return self._send(200, pers.view() if pers else
                               {"enabled": False, "how": "Personal learning is off for this process (CLOVER_PPL=off)."})
         if path == "/api/collective":  # collective learning: consent switches, candidate preview, active shared-core rules
             coll = collective_store()
-            mgr = google_identity_manager()
-            g_stat = mgr.status() if mgr else {"connected": False, "status_text": "Not connected"}
+            g_stat = identity_status()
             p_on = bool(S.settings.get().get("personal", True)) if S.settings else True
-            return self._send(200, dict(coll.view(personal_store(), google_status=g_stat), personal_enabled=p_on) if coll else
-                              {"enabled": False, "google_identity": g_stat, "personal_enabled": p_on,
+            return self._send(200, dict(coll.view(personal_store(), identity=g_stat), personal_enabled=p_on) if coll else
+                              {"enabled": False, "identity": g_stat, "personal_enabled": p_on,
                                "how": "Collective learning is off for this process (CLOVER_COLLECTIVE=off)."})
         if path == "/api/sessions":  # conversations in the repository, newest first (titles, not contents)
             return self._send(200, {"sessions": [{k: s[k] for k in ("id", "title", "turns", "started", "updated")}
@@ -3085,6 +3119,17 @@ class Handler(BaseHTTPRequestHandler):
         if not self._host_ok() or self._cross_site():
             return self._send(403, {"error": "cross-site requests are not accepted"})
         path = self.path.split("?", 1)[0]
+        if path == "/api/collective/gateway/session":  # a GitHub token in, the gateway's own credential out
+            import collective_gateway
+            if not _check_auth_rate_limit(self._client_ip()):
+                return self._send(429, {"error": "Too many sign-in attempts. Please wait a minute and try again."})
+            gw_rt = collective_gateway_runtime()
+            if gw_rt is None:
+                return self._send(503, {"error": "Collective gateway runtime unavailable"})
+            try:
+                return self._send(200, gw_rt["gateway"].issue_session_from_github(self._bearer_token()))
+            except collective_gateway.GatewaySecurityError as exc:
+                return self._send(exc.status, {"error": exc.message, "code": exc.code})
         if path in ("/api/collective/gateway/contribute", "/api/collective/gateway/withdraw"):
             import collective_gateway
             try:
@@ -3302,6 +3347,30 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(code, {"error": msg_or_acct, "auth_required": True})
             tok = make_account_token(msg_or_acct)
             return self._send(200, {"ok": True, "account": msg_or_acct, "token": tok})
+        if path in ("/api/auth/github/finish", "/api/auth/github/device/start", "/api/auth/github/device/poll") and paths.WEB:
+            if path != "/api/auth/github/device/poll" and not _check_auth_rate_limit(self._client_ip()):
+                return self._send(429, {"error": "Too many sign-in attempts. Please wait a minute and try again.", "auth_required": True})
+            try:
+                body = self._read_json(MAX_BODY)
+            except Exception as exc:
+                return self._send(400, {"error": str(exc)})
+            if path.endswith("/finish"):  # the one-time code from GitHub's redirect -> this page's session
+                acct = S.gh_web.redeem(body.get("code"))
+                if not acct:
+                    return self._send(400, {"error": "This sign-in expired. Sign in with GitHub again.", "auth_required": True})
+                return self._send(200, {"ok": True, "account": acct, "token": make_account_token(acct)})
+            try:
+                if path.endswith("/start"):
+                    return self._send(200, S.gh_flows.start(github_auth.WEB_SCOPE))
+                res = S.gh_flows.poll(body.get("flow_id"))
+            except github_auth.GitHubAuthError as exc:
+                return self._send(502 if exc.code == "unreachable" else 400, {"status": "error", "error": str(exc)})
+            if res.get("status") != "ok":
+                return self._send(200, res)
+            ok, acct, code = verify_k3_credential(res["token"]["access_token"])
+            if not ok:
+                return self._send(code, {"status": "error", "error": acct, "auth_required": True})
+            return self._send(200, {"status": "ok", "account": acct, "token": make_account_token(acct)})
         if not self._token_ok():
             return self._send(
                 401 if paths.WEB else 403,
@@ -3656,9 +3725,44 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, {"ok": ok, "message": message})
             if path.startswith("/api/workspaces/"):
                 return self._send(200, workspace_action(path.rsplit("/", 1)[1], body))
+            if path in ("/api/github/device/start", "/api/github/device/poll"):  # Sign in with GitHub (apps)
+                if paths.WEB:  # the website never adopts a visitor's GitHub token as its own
+                    return self._send(404, {"error": "not found"})
+                try:
+                    if path.endswith("/start"):
+                        return self._send(200, S.gh_flows.start(github_auth.APP_SCOPE))
+                    res = S.gh_flows.poll(body.get("flow_id"))
+                    if res.get("status") != "ok":
+                        return self._send(200, res)
+                    who = github_auth.user(res["token"]["access_token"])
+                except github_auth.GitHubAuthError as exc:
+                    return self._send(502 if exc.code == "unreachable" else 400, {"status": "error", "error": str(exc)})
+                S.github.sign_in(res["token"], who)
+                import vault
+                vault.delete(S.args.base, "collective_gateway")
+                S.repo.note(f"GitHub: signed in as @{who['login']}")
+                out = dict(workspaces_describe(), status="ok", login=who["login"])
+                import k3_host_engine
+                k3_res = k3_host_engine.try_unlock_k3_with_credential(S.args.base, res["token"]["access_token"])
+                if k3_res.get("unlocked"):
+                    S.remote_engines.clear()
+                    out["k3_unlocked"] = True
+                cat = model_catalog()
+                out["models"], out["model_catalog"] = [x["id"] for x in cat], cat
+                return self._send(200, out)
             if path == "/api/github":  # the answer says whether a token is set, never the token
                 tok_in = body.get("token")
                 S.github.update(token=tok_in, forget=bool(body.get("forget")))
+                if tok_in or body.get("forget"):
+                    import vault
+                    vault.delete(S.args.base, "collective_gateway")
+                if body.get("forget"):  # collective learning needs the account that was just signed out
+                    if S.settings is not None:
+                        S.settings.update({"collective_contribute": False, "collective_receive": False})
+                    coll = collective_store()
+                    if coll is not None:
+                        coll.set_consent(contribute=False, receive=False)
+                    S.repo.note("GitHub: signed out; collective learning switched off")
                 out_ws = workspaces_describe()
                 if tok_in and not body.get("forget") and not paths.WEB:
                     import k3_host_engine
@@ -3696,62 +3800,10 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(200, {"result": sync_repo(), "repo": github_repo()})
                 except RuntimeError as exc:
                     return self._send(409, {"error": str(exc)})
-            if path in ("/api/identity/google/start", "/api/identity/google/token", "/api/identity/google/disconnect"):
-                import google_identity
-                mgr = google_identity_manager()
-                if mgr is None:
-                    return self._send(500, {"error": "Google identity manager unavailable"})
-                if path.endswith("/start"):
-                    redir = str(body.get("redirect_uri") or f"http://127.0.0.1:{S.port}/api/identity/google/callback").strip()
-                    res = mgr.start_pkce_flow(redirect_uri=redir, client_id=body.get("client_id"))
-                    if body.get("open_browser") is True:
-                        if not os.environ.get("CLOVER_GOOGLE_CLIENT_SECRET", "").strip():
-                            st = mgr.connect_device_oidc()
-                            if S.repo is not None:
-                                S.repo.note("Google identity connected via OIDC device session")
-                            coll = collective_store()
-                            return self._send(200, dict(
-                                res,
-                                ok=True,
-                                connected=True,
-                                google_identity=st,
-                                collective=coll.view(personal_store(), google_status=st) if coll else None,
-                            ))
-                        if os.name == "nt":
-                            import webbrowser
-                            try:
-                                webbrowser.open(res["auth_url"])
-                            except Exception:
-                                pass
-                    return self._send(200, res)
-                if path.endswith("/token"):
-                    id_tok = str(body.get("id_token") or "").strip()
-                    nonce = body.get("nonce")
-                    try:
-                        st = mgr.connect_with_id_token(id_tok, expected_nonce=nonce if nonce else None)
-                    except google_identity.GoogleIdentityError as exc:
-                        return self._send(400, {"error": str(exc)})
-                    if S.repo is not None:
-                        S.repo.note("Google identity connected via OIDC ID token")
-                    coll = collective_store()
-                    return self._send(200, {"ok": True, "google_identity": st,
-                                            "collective": coll.view(personal_store(), google_status=st) if coll else None})
-                st = mgr.disconnect()
-                coll = collective_store()
-                if coll is not None:
-                    coll.set_consent(contribute=False, receive=False)
-                if S.settings is not None:
-                    S.settings.update({"collective_contribute": False, "collective_receive": False})
-                if S.repo is not None:
-                    S.repo.note("Google identity disconnected; collective learning disabled")
-                return self._send(200, {"ok": True, "google_identity": st,
-                                        "collective": coll.view(personal_store(), google_status=st) if coll else None})
             if path == "/api/settings":
                 if isinstance(body, dict) and (body.get("collective_contribute") is True or body.get("collective_receive") is True):
-                    mgr = google_identity_manager()
-                    g_ok = bool(mgr and mgr.status().get("connected"))
-                    if not g_ok:
-                        raise ValueError("Sign in with Google first to enable collective learning.")
+                    if not identity_status()["connected"]:
+                        raise ValueError("Sign in with GitHub first to enable collective learning.")
                 before = S.settings.get()
                 new = S.settings.update(body if isinstance(body, dict) else {})
                 if S.mode == "lfm3" and new["engine"] != before["engine"]:
@@ -3822,8 +3874,7 @@ class Handler(BaseHTTPRequestHandler):
                 if coll is None:
                     return self._send(409, {"error": "collective learning is off for this process (CLOVER_COLLECTIVE=off)"})
                 pers = personal_store()
-                mgr = google_identity_manager()
-                g_stat = mgr.status() if mgr else {"connected": False, "status_text": "Not connected"}
+                g_stat = identity_status()
                 p_on = bool(S.settings.get().get("personal", True)) if S.settings else True
                 try:
                     if path.endswith("/consent"):
@@ -3832,7 +3883,7 @@ class Handler(BaseHTTPRequestHandler):
                         coll.set_consent(
                             contribute=c_in,
                             receive=r_in,
-                            google_connected=bool(g_stat.get("connected")),
+                            identity_connected=bool(g_stat.get("connected")),
                             require_identity=True,
                         )
                         upd = {}
@@ -3842,26 +3893,24 @@ class Handler(BaseHTTPRequestHandler):
                             upd["collective_receive"] = r_in
                         if upd and S.settings is not None:
                             S.settings.update(upd)
-                        return self._send(200, dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on))
+                        return self._send(200, dict(coll.view(pers, identity=g_stat), personal_enabled=p_on))
                     if path.endswith("/contribute"):
-                        id_tok = mgr.get_valid_id_token() if mgr else None
                         pkgs = body.get("packages")
                         if pkgs is None:
                             pkgs = coll.preview_candidates(pers)
                         resp = coll.contribute_to_gateway(
-                            id_token=id_tok,
+                            id_token=collective_credential(coll) if coll.consent_contribute else None,
                             packages=pkgs,
                             confirmed=bool(body.get("confirmed")),
                             gateway_url=body.get("gateway_url"),
                         )
-                        return self._send(200, dict(resp, view=dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)))
+                        return self._send(200, dict(resp, view=dict(coll.view(pers, identity=g_stat), personal_enabled=p_on)))
                     if path.endswith("/sync"):
                         if body.get("registry_dir"):
                             sync_res = coll.sync_from_registry(str(body["registry_dir"]).strip())
                         else:
-                            id_tok = mgr.get_valid_id_token() if mgr else None
                             sync_res = coll.sync_from_gateway(
-                                id_token=id_tok,
+                                id_token=collective_credential(coll) if coll.consent_receive else None,
                                 require_identity=True,
                                 gateway_url=body.get("gateway_url"),
                             )
@@ -3870,19 +3919,18 @@ class Handler(BaseHTTPRequestHandler):
                             device_actions.log_debug("collective", "collective_synced", sync_res, base_dir=Path(S.args.base))
                         except Exception:
                             pass
-                        return self._send(200, dict(sync_res, view=dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)))
+                        return self._send(200, dict(sync_res, view=dict(coll.view(pers, identity=g_stat), personal_enabled=p_on)))
                     if path.endswith("/withdraw"):
-                        id_tok = mgr.get_valid_id_token() if mgr else None
                         w_res = coll.withdraw_from_gateway(
-                            id_token=id_tok,
+                            id_token=collective_credential(coll),
                             gateway_url=body.get("gateway_url"),
                         )
                         if S.settings is not None:
                             S.settings.update({"collective_contribute": False})
-                        return self._send(200, dict(w_res, view=dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)))
+                        return self._send(200, dict(w_res, view=dict(coll.view(pers, identity=g_stat), personal_enabled=p_on)))
                     return self._send(200, {"candidates": coll.preview_candidates(pers)})
                 except core_sync.CoreSyncError as exc:
-                    return self._send(400, {"error": str(exc), "view": dict(coll.view(pers, google_status=g_stat), personal_enabled=p_on)})
+                    return self._send(400, {"error": str(exc), "view": dict(coll.view(pers, identity=g_stat), personal_enabled=p_on)})
             if path == "/api/media/inspect":
                 import image_inspector
                 fname = str(body.get("file") or "").strip()
