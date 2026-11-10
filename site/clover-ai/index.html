@@ -71,19 +71,22 @@ button { cursor: pointer; }
 .brand__text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
 .brand__title { font-weight: 700; font-size: .95rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .brand__ver { font-size: .73rem; font-weight: 500; color: var(--muted); margin-top: .08rem; }
-.rail__top { position: relative; display: flex; align-items: center; gap: .4rem; padding: .15rem .65rem .45rem .75rem; min-height: 40px; }
-.rail__nav { display: flex; flex-direction: column; gap: 2px; padding: .2rem .55rem .55rem; border-bottom: 1px solid var(--line); }
+.rail__top { position: relative; display: flex; align-items: center; gap: .4rem; padding: .15rem .65rem .45rem .75rem; min-height: 40px; border-bottom: 1px solid var(--line); }
+.rail__nav { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding: .35rem .55rem .65rem; scrollbar-width: thin; scrollbar-color: var(--fill-2) transparent; }
 .rail__nav-btn { width: 100%; display: flex; align-items: center; gap: .65rem; border: 1px solid transparent; background: none; border-radius: 10px;
-  padding: .48rem .7rem; font-size: .9rem; font-weight: 550; color: var(--ink-2); text-align: left; transition: background-color .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease); }
+  padding: .48rem .7rem; font-size: .9rem; font-weight: 550; color: var(--ink-2); text-align: left; transition: background-color .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease); flex: none; }
 .rail__nav-btn .ic { width: 18px; height: 18px; color: var(--muted); transition: color .15s var(--ease); }
+.rail__nav-btn .chev { width: 14px; height: 14px; margin-left: auto; color: var(--faint); transition: transform .18s var(--ease); }
+.rail__nav-btn.sub-open .chev { transform: rotate(90deg); }
 .rail__nav-btn:hover { background: rgba(255, 253, 248, .75); color: var(--ink); }
 .rail__nav-btn:hover .ic { color: var(--accent); }
 .rail__nav-btn.on { background: var(--surface); border-color: rgba(23, 107, 44, .18); color: var(--accent-2); font-weight: 650; box-shadow: var(--shadow-sm); }
 .rail__nav-btn.on .ic { color: var(--accent); }
-.rail__sec { display: flex; align-items: center; justify-content: space-between; padding: .5rem .85rem .2rem; font-size: .7rem; font-weight: 650; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
-.chats { flex: 1; min-height: 0; overflow-y: auto; padding: .15rem .55rem .75rem; display: flex; flex-direction: column; gap: 1px; }
-.chat { display: flex; align-items: center; border-radius: 10px; }
-.chat .open { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: .44rem .65rem; color: var(--ink-2); font-size: .86rem;
+.rail__sub { display: flex; flex-direction: column; gap: 2px; margin: .12rem 0 .35rem .55rem; padding: .2rem 0 .25rem .45rem; border-left: 1.5px solid var(--line-2); }
+.rail__sub[hidden] { display: none !important; }
+.chats { display: flex; flex-direction: column; gap: 1px; padding: .05rem .15rem .15rem 0; }
+.chat { display: flex; align-items: center; border-radius: 9px; }
+.chat .open { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: .38rem .55rem; color: var(--ink-2); font-size: .84rem;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat:hover { background: rgba(255, 253, 248, .7); }
 .chat.on { background: var(--surface); box-shadow: var(--shadow-sm); }
@@ -396,23 +399,26 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 .auth-links a { color: var(--accent); font-weight: 600; text-decoration: none; }
 .auth-links a:hover { text-decoration: underline; }
 
-/* settings: one sheet, pages one level after another */
+/* in-place center section view: replaces the chat screen when any menu is selected */
 .scrim { position: fixed; inset: 0; background: rgba(20, 32, 24, .28); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
 .scrim.on { opacity: 1; pointer-events: auto; }
-.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100%); background: var(--bg); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg);
-  transform: translateX(104%); pointer-events: none; transition: transform .3s cubic-bezier(.2, .8, .2, 1); z-index: 50; display: flex; flex-direction: column; }
-.sheet.on { transform: none; pointer-events: auto; }
-.sheet__head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .3rem; padding: max(.55rem, env(safe-area-inset-top, 0px)) .6rem .35rem; min-height: 56px; }
-.sheet__head h2 { grid-column: 2; margin: 0; font-size: 1rem; font-weight: 650; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app.view-page #stream, .app.view-page .dock { display: none !important; }
+.app.view-page .bar__title { opacity: 0; pointer-events: none; }
+.sheet { flex: 1; min-height: 0; width: 100%; background: var(--bg); display: none; flex-direction: column; overflow: hidden; }
+.sheet.on { display: flex; }
+.sheet__head { width: min(860px, 100%); margin: 0 auto; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .3rem; padding: .35rem 1.25rem .45rem; min-height: 48px; border-bottom: 1px solid var(--line); }
+.sheet.wide .sheet__head { width: min(1060px, 100%); }
+.sheet__head h2 { grid-column: 2; margin: 0; font-size: 1.05rem; font-weight: 650; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .back { grid-column: 1; justify-self: start; display: inline-flex; align-items: center; border: 0; background: none; color: var(--accent); font-size: .92rem; max-width: 100%;
   padding: .35rem .5rem .35rem .15rem; border-radius: 9px; }
 .back:hover { background: var(--fill); }
 .back span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .back .ic { stroke-width: 2.2; }
 .sheet__head .x { grid-column: 3; justify-self: end; }
-.sheet__body { flex: 1; min-height: 0; overflow-y: auto; padding: .4rem 1rem 2rem; }
-.page { animation: push .28s var(--ease) both; }
-.page.from-left { animation-name: pop; }
+.sheet__body { flex: 1; min-height: 0; overflow-y: auto; padding: .85rem 1.25rem 2.2rem; }
+.page { width: min(860px, 100%); margin: 0 auto; animation: rise .22s var(--ease) both; }
+.sheet.wide .page { width: min(1060px, 100%); }
+.page.from-left { animation-name: rise; }
 @keyframes push { from { opacity: 0; transform: translateX(18px); } }
 @keyframes pop { from { opacity: 0; transform: translateX(-18px); } }
 .lead { font-size: .86rem; color: var(--muted); margin: .1rem .3rem 1.1rem; line-height: 1.5; }
@@ -506,6 +512,68 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 .ws__row.open .chev { transform: rotate(90deg); }
 .ws__acts { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0 .95rem .85rem calc(.95rem + 30px + .75rem); }
 .group > .ws + .ws::before { left: 3.6rem; }
+
+/* VS Code-style Workspace Explorer Submenu (in Left Rail) & Center File Viewer + Direct GitHub Client */
+.ws-conn { display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line-2);
+  border-radius: 14px; padding: .6rem .85rem; margin-bottom: .75rem; box-shadow: var(--shadow-sm); }
+.ws-conn__left { display: flex; align-items: center; gap: .55rem; min-width: 0; flex: 1; }
+.ws-conn__badge { display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px; padding: .18rem .62rem; font-size: .74rem; font-weight: 650;
+  background: var(--fill); color: var(--ink-2); white-space: nowrap; flex: none; }
+.ws-conn__badge.ok { background: var(--accent-soft); color: var(--accent-2); }
+.ws-conn__badge .ic { width: 14px; height: 14px; }
+.ws-conn__msg { font-size: .8rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-pills { display: flex; align-items: center; gap: .28rem; flex-wrap: wrap; padding: .15rem .25rem .3rem 0; }
+.ws-pill { display: inline-flex; align-items: center; gap: .32rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
+  padding: .2rem .55rem; font-size: .73rem; font-weight: 550; color: var(--ink-2); box-shadow: var(--shadow-sm); transition: all .15s var(--ease); max-width: 100%; }
+.ws-pill span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-pill:hover { border-color: var(--accent); color: var(--accent-2); }
+.ws-pill.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 650; }
+.ws-pill .ic { width: 13px; height: 13px; flex: none; }
+.vsc-exp__head { display: flex; align-items: center; justify-content: space-between; gap: .25rem; padding: .2rem .25rem .2rem .2rem;
+  font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.vsc-exp__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+.vsc-exp__acts { display: flex; align-items: center; gap: 2px; flex: none; }
+.vsc-exp__acts .ibtn { width: 24px; height: 24px; border-radius: 6px; }
+.vsc-exp__acts .ibtn .ic { width: 13px; height: 13px; }
+.vsc-tree { display: flex; flex-direction: column; gap: 1px; padding: .1rem .15rem .25rem 0; user-select: none; }
+.vsc-node { width: 100%; display: flex; align-items: center; gap: .34rem; border: 0; background: none; border-radius: 7px;
+  padding: .28rem .4rem; font-size: .8rem; color: var(--ink-2); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vsc-node:hover { background: rgba(255, 253, 248, .78); color: var(--ink); }
+.vsc-node.on { background: var(--surface); color: var(--accent-2); font-weight: 600; box-shadow: var(--shadow-sm); }
+.vsc-node .ic { width: 14px; height: 14px; flex: none; color: var(--accent); }
+.vsc-node .chev { width: 12px; height: 12px; color: var(--faint); transition: transform .15s var(--ease); flex: none; }
+.vsc-node.open > .chev { transform: rotate(90deg); }
+.vsc-node__spacer { width: 12px; flex: none; }
+.vsc-node__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.vsc-node__meta { font-size: .66rem; color: var(--faint); font-family: var(--mono); flex: none; margin-left: .2rem; }
+.vsc-children { display: flex; flex-direction: column; gap: 1px; }
+.vsc-view { display: flex; flex-direction: column; min-height: 400px; max-height: 540px; min-width: 0; background: var(--surface);
+  border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.15rem; }
+.vsc-tabbar { display: flex; align-items: center; justify-content: space-between; gap: .45rem; padding: .42rem .75rem;
+  background: var(--fill); border-bottom: 1px solid var(--line); flex-wrap: wrap; min-height: 42px; }
+.vsc-tab { display: inline-flex; align-items: center; gap: .42rem; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 9px; padding: .24rem .62rem; font-size: .82rem; font-weight: 600; color: var(--ink); min-width: 0; max-width: 100%; box-shadow: var(--shadow-sm); }
+.vsc-tab .ic { width: 15px; height: 15px; color: var(--accent); flex: none; }
+.vsc-tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vsc-tab__meta { font-size: .73rem; font-weight: 500; color: var(--muted); white-space: nowrap; }
+.vsc-toolbar { display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+.vsc-body { flex: 1; min-height: 320px; overflow: auto; position: relative; }
+.vsc-body.code-mode { background: var(--code-bg); color: var(--code-ink); }
+.vsc-body.md-mode { background: var(--surface); color: var(--ink); padding: .95rem 1.2rem; }
+.vsc-empty { height: 100%; min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .4rem; color: var(--muted); font-size: .84rem; padding: 1.5rem; text-align: center; }
+.vsc-empty .ic { width: 26px; height: 26px; color: var(--faint); }
+.vsc-code { display: table; width: 100%; font: .8rem/1.54 var(--mono); padding: .6rem 0; }
+.vsc-line { display: table-row; }
+.vsc-line:hover { background: rgba(255, 255, 255, .04); }
+.vsc-ln { display: table-cell; width: 1%; min-width: 42px; padding: 0 .75rem 0 .6rem; text-align: right; color: rgba(237, 241, 233, .36);
+  user-select: none; -webkit-user-select: none; border-right: 1px solid rgba(255, 255, 255, .07); font-variant-numeric: tabular-nums; }
+.vsc-lc { display: table-cell; padding: 0 .9rem; white-space: pre; }
+.gh-repos { display: flex; flex-direction: column; max-height: 220px; overflow-y: auto; border-top: 1px solid var(--line); margin-top: .55rem; padding-top: .35rem; gap: .25rem; }
+.gh-repo-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .42rem .55rem; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+.gh-repo-row__t { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.gh-repo-row__t b { font-size: .84rem; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gh-repo-row__t small { font-size: .73rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Playwright-style Image & UI Visual Inspector */
 .insp-modal { position: fixed; inset: 0; z-index: 95; background: rgba(16, 26, 20, .72); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; padding: 1rem; }
@@ -634,15 +702,27 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       </div>
     </div>
     <nav class="rail__nav" id="rail-nav" aria-label="Studio sections">
-      <button type="button" class="rail__nav-btn on" data-nav="chat"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Chat</span></button>
-      <button type="button" class="rail__nav-btn" data-nav="workspaces"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span>Workspaces</span></button>
+      <button type="button" class="rail__nav-btn on sub-open" data-nav="chat" aria-expanded="true"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Chat</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      <div class="rail__sub" id="rail-chat-sub">
+        <nav class="chats" id="chats" aria-label="Conversations"></nav>
+      </div>
+      <button type="button" class="rail__nav-btn" data-nav="workspaces" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span>Workspaces</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      <div class="rail__sub" id="rail-ws-sub" hidden>
+        <div class="ws-pills" id="ws-source-pills" role="tablist" aria-label="Workspace and repository sources"></div>
+        <div class="vsc-exp__head">
+          <span class="vsc-exp__title" id="vsc-exp-title">EXPLORER · clover-ai-studio</span>
+          <div class="vsc-exp__acts">
+            <button type="button" class="ibtn" id="vsc-exp-refresh" title="Refresh file explorer" aria-label="Refresh file explorer"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+            <button type="button" class="ibtn laptop-only" id="vsc-exp-open-code" title="Open workspace folder in VS Code" aria-label="Open in VS Code"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></button>
+          </div>
+        </div>
+        <div class="vsc-tree" id="vsc-tree" role="tree" aria-label="Files and folders"></div>
+      </div>
       <button type="button" class="rail__nav-btn" data-nav="memory"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg><span>Memory</span></button>
       <button type="button" class="rail__nav-btn" data-nav="tools"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>Tools</span></button>
       <button type="button" class="rail__nav-btn" data-nav="learning"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span>Learning</span></button>
       <button type="button" class="rail__nav-btn" data-nav="settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg><span>Settings</span></button>
     </nav>
-    <div class="rail__sec"><span>Conversations</span></div>
-    <nav class="chats" id="chats" aria-label="Conversations"></nav>
     <div class="rail__foot">
       <div class="status"><span class="dot ok" id="status-dot"></span><span id="status-text">Clover Ready</span></div>
       <div class="rail__ws" id="rail-ws" hidden><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span id="rail-ws-t"></span></div>
@@ -738,93 +818,16 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <div class="sugg" id="sugg" hidden></div>
       </div>
     </div>
-  </section>
-</div>
 
-<div class="auth-gate" id="auth-gate" hidden role="dialog" aria-modal="true" aria-labelledby="auth-gate-h">
-  <div class="auth-card">
-    <img src="icon.png" alt="Clover" width="64" height="64">
-    <h2 id="auth-gate-h">Sign in to Clover AI Studio</h2>
-    <p>Hosted Web Studio access is restricted to approved accounts only.</p>
-    <form class="auth-fields" id="auth-form">
-      <input type="text" id="auth-acct" placeholder="Approved account (username)" autocomplete="username" required>
-      <input type="password" id="auth-key" placeholder="Access key or GitHub token" autocomplete="current-password" required>
-      <button type="submit" class="btn pri" id="auth-submit">Sign in</button>
-    </form>
-    <p class="note" id="auth-note" hidden></p>
-    <div class="auth-links">
-      <a href="../download/laptop/CloverAIStudio-Setup.exe" download="CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
-      <a href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Test on Google Play</a>
-      <a href="https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.2/CloverAIStudio.apk">Download Android (.apk)</a>
-    </div>
-  </div>
-</div>
-
-<div class="scrim" id="scrim"></div>
-
-<div class="insp-modal" id="img-inspector" hidden role="dialog" aria-modal="true" aria-labelledby="insp-h">
-  <div class="insp-card">
-    <div class="insp-head">
-      <div class="insp-title">
-        <svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>
-        <span id="insp-h">Visual Inspector</span>
-        <span class="insp-meta" id="insp-meta"></span>
-      </div>
-      <div style="display:flex;align-items:center;gap:.45rem">
-        <div class="seg sm" id="insp-mode">
-          <button type="button" class="on" data-v="boxes">Interactive [e1..eN]</button>
-          <button type="button" data-v="annotated">Annotated</button>
-          <button type="button" data-v="clean">Original</button>
-        </div>
-        <button type="button" class="ibtn x" id="insp-close" aria-label="Close inspector"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
-      </div>
-    </div>
-    <div class="insp-body">
-      <div class="insp-stage" id="insp-stage">
-        <div class="insp-wrap" id="insp-wrap">
-          <img id="insp-img" alt="Inspected image">
-          <div id="insp-boxes"></div>
-        </div>
-      </div>
-      <div class="insp-side">
-        <div>
-          <div class="insp-sec-h"><span>Dominant Palette (click to copy hex)</span></div>
-          <div class="insp-pal" id="insp-pal"></div>
-        </div>
-        <div>
-          <div class="insp-sec-h"><span>Detected UI &amp; Visual Elements</span><span id="insp-el-count"></span></div>
-          <div class="insp-list" id="insp-els"></div>
-        </div>
-        <div>
-          <div class="insp-sec-h">
-            <span>Extracted OCR Text</span>
-            <span style="display:flex;gap:.35rem">
-              <button type="button" class="btn sm" id="insp-copy-ocr">Copy text</button>
-              <button type="button" class="btn sm pri" id="insp-ask-ocr">Ask Clover</button>
-            </span>
-          </div>
-          <pre class="insp-ocr" id="insp-ocr">Inspecting image…</pre>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h" inert>
+    <aside class="sheet" id="sheet" role="region" aria-labelledby="sheet-h" inert>
   <div class="sheet__head">
     <button type="button" class="back" id="sheet-back" hidden><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg><span id="back-t">Settings</span></button>
     <h2 id="sheet-h">Settings</h2>
-    <button type="button" class="ibtn x" id="sheet-x" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+    <button type="button" class="ibtn x" id="sheet-x" aria-label="Back to chat" title="Back to chat"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
   </div>
   <div class="sheet__body" id="sheet-body">
 
     <section class="page" data-page="home">
-      <div class="group">
-        <button type="button" class="row t" data-go="workspaces"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Workspaces<small>Project folders, GitHub repositories &amp; context files</small></span><span class="row__v" id="v-ws-home"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t" data-go="memory"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg></span><span class="row__t">Memory<small>Your work, knowledge, notes &amp; context</small></span><span class="row__v" id="v-memory">S1–S3</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t" data-go="tools"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">Tools<small>Search, files, code, permissions &amp; apps</small></span><span class="row__v" id="v-tools-home"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t" data-go="learning"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="row__t">Learning &amp; Growth<small>Personal &amp; collective learning, JEPA cycle</small></span><span class="row__v" id="v-learning">Personal on</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-      </div>
       <div class="group">
         <button type="button" class="row t" data-go="model"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-model"/></svg></span><span class="row__t">Model and voice</span><span class="row__v" id="v-model-home"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="account"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg></span><span class="row__t">GitHub account (Memory backup)</span><span class="row__v" id="v-account">Not set up</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
@@ -1118,15 +1121,62 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     </section>
 
     <section class="page" data-page="workspaces" hidden>
-      <p class="lead">Folders and GitHub repositories you work on with Clover. In the one in use, Clover keeps a short context file in each folder and reads them when you ask about the project. It never commits them.</p>
-      <div class="group" id="ws-list" hidden></div>
-      <div class="keyrow"><input type="text" id="ws-src" autocomplete="off" spellcheck="false" placeholder="C:\path\to\project  or  owner/repo" aria-label="Folder path or GitHub repository"><button type="button" class="btn pri" id="ws-add">Add</button></div>
+      <div class="vsc-view" id="vsc-workbench" aria-label="Workspace file viewer">
+        <div class="vsc-tabbar">
+          <div style="display:flex;align-items:center;gap:.5rem;min-width:0;flex:1">
+            <div class="vsc-tab" id="vsc-tab">
+              <svg class="ic" id="vsc-tab-ic" aria-hidden="true"><use href="#i-file"/></svg>
+              <span id="vsc-file-name">Select a file from Workspaces in the left sidebar</span>
+            </div>
+            <span class="vsc-tab__meta" id="vsc-file-meta"></span>
+          </div>
+          <div class="vsc-toolbar">
+            <div class="seg sm" id="vsc-view-mode" hidden>
+              <button type="button" class="on" data-v="code">Code</button>
+              <button type="button" data-v="preview">Preview</button>
+            </div>
+            <button type="button" class="btn sm" id="vsc-file-copy" hidden><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+            <button type="button" class="btn sm pri" id="vsc-file-ask" hidden><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Ask Clover</span></button>
+            <button type="button" class="btn sm laptop-only" id="vsc-file-vscode" hidden title="Open this file in VS Code"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>VS Code</span></button>
+          </div>
+        </div>
+        <div class="vsc-body code-mode" id="vsc-viewer-body">
+          <div class="vsc-empty" id="vsc-viewer-empty">
+            <svg class="ic" aria-hidden="true"><use href="#i-file"/></svg>
+            <span>Select any file in the Workspaces file directory on the left to view it here.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ws-conn" id="ws-conn">
+        <div class="ws-conn__left">
+          <span class="ws-conn__badge" id="ws-conn-badge"><svg class="ic" aria-hidden="true"><use href="#i-branch"/></svg><span id="ws-conn-badge-t">Local Repo</span></span>
+          <span class="ws-conn__msg" id="ws-conn-msg">Using local repository (clover-ai-studio) until you connect your GitHub account.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.35rem">
+          <button type="button" class="btn sm" id="ws-sync-local" title="Sync local repository with GitHub"><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg><span>Sync GitHub</span></button>
+          <button type="button" class="btn sm" data-go="account" title="GitHub account settings"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg><span>Account</span></button>
+        </div>
+      </div>
+
+      <div class="glabel">Add Folder or Connect GitHub Repository</div>
+      <div class="keyrow" style="margin-top:.35rem">
+        <input type="text" id="ws-src" autocomplete="off" spellcheck="false" placeholder="C:\path\to\project  or  owner/repo" aria-label="Folder path or GitHub repository">
+        <button type="button" class="btn" id="ws-browse-gh" title="Browse repository directly via GitHub client without cloning"><svg class="ic" aria-hidden="true"><use href="#i-branch"/></svg><span>Browse GitHub</span></button>
+        <button type="button" class="btn pri" id="ws-add">Add</button>
+      </div>
       <div class="note" id="ws-note" hidden></div>
-      <div class="glabel" style="margin-top:1.4rem">Private repositories</div>
+      <div class="group" id="ws-list" hidden style="margin-top:.65rem"></div>
+
+      <div class="glabel" style="margin-top:1.1rem">GitHub Client &amp; Account Connection</div>
       <div class="group pad">
         <p class="fine" id="gh-help" style="margin-top:0"></p>
-        <div class="keyrow"><input type="password" id="gh-token" autocomplete="off" spellcheck="false" aria-label="GitHub token"><button type="button" class="btn" id="gh-save">Save</button></div>
-        <div class="btns" style="margin-top:.4rem"><button type="button" class="btn danger sm" id="gh-forget" hidden>Remove token</button></div>
+        <div class="keyrow"><input type="password" id="gh-token" autocomplete="off" spellcheck="false" aria-label="GitHub token"><button type="button" class="btn pri" id="gh-save">Connect GitHub</button></div>
+        <div class="btns" style="margin-top:.4rem">
+          <button type="button" class="btn sm laptop-only" id="ws-vsc-gh"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>Sign in via VS Code</span></button>
+          <button type="button" class="btn danger sm" id="gh-forget" hidden>Disconnect token</button>
+        </div>
+        <div class="gh-repos" id="gh-repos-box" hidden></div>
       </div>
     </section>
 
@@ -1139,6 +1189,77 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
   </div>
 </aside>
+  </section>
+</div>
+
+<div class="auth-gate" id="auth-gate" hidden role="dialog" aria-modal="true" aria-labelledby="auth-gate-h">
+  <div class="auth-card">
+    <img src="icon.png" alt="Clover" width="64" height="64">
+    <h2 id="auth-gate-h">Sign in to Clover AI Studio</h2>
+    <p>Hosted Web Studio access is restricted to approved accounts only.</p>
+    <form class="auth-fields" id="auth-form">
+      <input type="text" id="auth-acct" placeholder="Approved account (username)" autocomplete="username" required>
+      <input type="password" id="auth-key" placeholder="Access key or GitHub token" autocomplete="current-password" required>
+      <button type="submit" class="btn pri" id="auth-submit">Sign in</button>
+    </form>
+    <p class="note" id="auth-note" hidden></p>
+    <div class="auth-links">
+      <a href="../download/laptop/CloverAIStudio-Setup.exe" download="CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
+      <a href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Test on Google Play</a>
+      <a href="https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.2/CloverAIStudio.apk">Download Android (.apk)</a>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<div class="insp-modal" id="img-inspector" hidden role="dialog" aria-modal="true" aria-labelledby="insp-h">
+  <div class="insp-card">
+    <div class="insp-head">
+      <div class="insp-title">
+        <svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>
+        <span id="insp-h">Visual Inspector</span>
+        <span class="insp-meta" id="insp-meta"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.45rem">
+        <div class="seg sm" id="insp-mode">
+          <button type="button" class="on" data-v="boxes">Interactive [e1..eN]</button>
+          <button type="button" data-v="annotated">Annotated</button>
+          <button type="button" data-v="clean">Original</button>
+        </div>
+        <button type="button" class="ibtn x" id="insp-close" aria-label="Close inspector"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </div>
+    </div>
+    <div class="insp-body">
+      <div class="insp-stage" id="insp-stage">
+        <div class="insp-wrap" id="insp-wrap">
+          <img id="insp-img" alt="Inspected image">
+          <div id="insp-boxes"></div>
+        </div>
+      </div>
+      <div class="insp-side">
+        <div>
+          <div class="insp-sec-h"><span>Dominant Palette (click to copy hex)</span></div>
+          <div class="insp-pal" id="insp-pal"></div>
+        </div>
+        <div>
+          <div class="insp-sec-h"><span>Detected UI &amp; Visual Elements</span><span id="insp-el-count"></span></div>
+          <div class="insp-list" id="insp-els"></div>
+        </div>
+        <div>
+          <div class="insp-sec-h">
+            <span>Extracted OCR Text</span>
+            <span style="display:flex;gap:.35rem">
+              <button type="button" class="btn sm" id="insp-copy-ocr">Copy text</button>
+              <button type="button" class="btn sm pri" id="insp-ask-ocr">Ask Clover</button>
+            </span>
+          </div>
+          <pre class="insp-ocr" id="insp-ocr">Inspecting image…</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -1357,7 +1478,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var s = state.sessions.map[id];
     var row = el('div', 'chat' + (id === state.sessions.current ? ' on' : ''));
     var open = btn('open'); open.textContent = s.title || 'New chat';
-    open.addEventListener('click', function () { if (state.busy) return; state.sessions.current = id; save(); renderChats(); renderLog(); closeRail(); });
+    open.addEventListener('click', function () { if (state.busy) return; closeSheet(); state.sessions.current = id; save(); renderChats(); renderLog(); closeRail(); });
     var del = btn('del', ic('trash'), 'Delete chat');
     del.addEventListener('click', function (ev) {
       ev.stopPropagation(); if (state.busy) return;
@@ -2721,8 +2842,17 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('q-ask').addEventListener('click', function () { $('confirm-all').hidden = true; setAll('ask').catch(function () {}); });
   $('q-off').addEventListener('click', function () { $('confirm-all').hidden = true; setAll('deny').catch(function () {}); });
 
-  /* ---------- settings sheet: a home page and pages one level after another ---------- */
+  /* ---------- in-place center section view: replaces chat screen when any menu is selected ---------- */
   var stack = ['home'];
+  function setSubmenuOpen(navName, open) {
+    var sub = navName === 'chat' ? $('rail-chat-sub') : navName === 'workspaces' ? $('rail-ws-sub') : null;
+    var btnEl = document.querySelector('.rail__nav-btn[data-nav="' + navName + '"]');
+    if (sub) sub.hidden = !open;
+    if (btnEl) {
+      btnEl.classList.toggle('sub-open', !!open);
+      btnEl.setAttribute('aria-expanded', String(!!open));
+    }
+  }
   function syncRailNav(page) {
     var nav = 'chat';
     if ($('sheet') && $('sheet').classList.contains('on')) {
@@ -2735,6 +2865,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     Array.prototype.forEach.call(document.querySelectorAll('.rail__nav-btn'), function (b) {
       b.classList.toggle('on', b.getAttribute('data-nav') === nav);
     });
+    if (nav === 'workspaces') {
+      setSubmenuOpen('chat', false);
+      setSubmenuOpen('workspaces', true);
+    } else if (nav === 'chat') {
+      setSubmenuOpen('workspaces', false);
+      setSubmenuOpen('chat', true);
+    }
   }
   function showPage(name, dir) {
     Array.prototype.forEach.call(document.querySelectorAll('.page'), function (p) {
@@ -2742,7 +2879,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       p.hidden = !on;
       if (on) { p.classList.remove('from-left'); p.style.animation = 'none'; void p.offsetWidth; p.style.animation = ''; if (dir < 0) p.classList.add('from-left'); }
     });
+    if ($('sheet')) $('sheet').classList.toggle('wide', name === 'workspaces');
     $('sheet-h').textContent = PAGES[name];
+    if ($('chat-title')) $('chat-title').textContent = PAGES[name];
     var prev = stack.length > 1 ? stack[stack.length - 2] : null;
     $('sheet-back').hidden = !prev; $('back-t').textContent = prev ? PAGES[prev] : '';
     $('sheet-body').scrollTop = 0;
@@ -2751,8 +2890,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function go(name) { if (!PAGES[name]) return; stack.push(name); showPage(name, 1); $('sheet-back').focus(); }
   function back() { if (stack.length > 1) { stack.pop(); showPage(stack[stack.length - 1], -1); (stack.length > 1 ? $('sheet-back') : $('sheet-x')).focus(); } }
-  function openSettings(page, asRoot) {
-    closeRail();
+  function openSettings(page, asRoot, keepRail) {
+    if (!keepRail) closeRail();
     if (asRoot && page && PAGES[page]) {
       stack = [page];
     } else {
@@ -2761,13 +2900,17 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       while (p && p !== 'home' && PAGES[p]) { chain.unshift(p); p = PARENT[p]; }
       stack = stack.concat(chain);
     }
-    var sh = $('sheet'); sh.classList.add('on'); sh.inert = false; $('scrim').classList.add('on');
+    var sh = $('sheet'); sh.classList.add('on'); sh.inert = false;
+    if ($('app')) $('app').classList.add('view-page');
+    if (!keepRail) $('scrim').classList.remove('on');
     showPage(stack[stack.length - 1], 0);
-    setTimeout(function () { (stack.length > 1 ? $('sheet-back') : $('sheet-x')).focus(); }, 60);
   }
   function closeSheet() {
-    var sh = $('sheet'); sh.classList.remove('on'); sh.inert = true;
-    $('scrim').classList.remove('on'); $('confirm-all').hidden = true;
+    var sh = $('sheet'); sh.classList.remove('on', 'wide'); sh.inert = true;
+    if ($('app')) $('app').classList.remove('view-page');
+    if (!$('rail').classList.contains('on')) $('scrim').classList.remove('on');
+    $('confirm-all').hidden = true;
+    if ($('chat-title')) $('chat-title').textContent = (cur() && cur().title) || 'New chat';
     syncRailNav('chat');
   }
   function loadPage(name) {
@@ -2990,12 +3133,30 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       });
     });
   }
-  function closeRail() { $('rail').classList.remove('on'); }
+  function closeRail() { $('rail').classList.remove('on'); $('scrim').classList.remove('on'); }
   function openNavSection(sec) {
     if (sec === 'chat') {
-      closeSheet();
+      var alreadyChat = !($('sheet') && $('sheet').classList.contains('on'));
+      if (alreadyChat && $('rail-chat-sub')) {
+        setSubmenuOpen('chat', $('rail-chat-sub').hidden);
+      } else {
+        closeSheet();
+        setSubmenuOpen('chat', true);
+      }
       closeRail();
       if ($('prompt')) $('prompt').focus();
+      return;
+    }
+    if (sec === 'workspaces') {
+      var wsOn = $('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'workspaces';
+      var wsSubHidden = $('rail-ws-sub') ? $('rail-ws-sub').hidden : false;
+      if (wsOn && !wsSubHidden) {
+        setSubmenuOpen('workspaces', false);
+        return;
+      }
+      setSubmenuOpen('workspaces', true);
+      var keepMobileRail = window.matchMedia('(max-width: 860px)').matches && $('rail').classList.contains('on');
+      openSettings('workspaces', true, keepMobileRail);
       return;
     }
     var pageMap = { workspaces: 'workspaces', memory: 'memory', tools: 'tools', learning: 'learning', settings: 'home', layers: 'layers' };
@@ -3012,7 +3173,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   });
   $('sheet-back').addEventListener('click', back);
   $('sheet-x').addEventListener('click', closeSheet);
-  $('scrim').addEventListener('click', function () { closeSheet(); closeRail(); });
+  $('scrim').addEventListener('click', function () { closeRail(); });
   $('set-btn').addEventListener('click', function () { openSettings('home'); });
   $('menu').addEventListener('click', function () {  // collapses on wide screens, slides in on narrow ones
     if (window.matchMedia('(max-width: 860px)').matches) { $('rail').classList.toggle('on'); $('scrim').classList.toggle('on', $('rail').classList.contains('on')); }
@@ -4288,8 +4449,416 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('new-chat').addEventListener('click', startChat);
   $('new-chat-2').addEventListener('click', startChat);
 
-  /* ---------- workspaces: folders and GitHub repositories, and the context files Clover keeps in them ---------- */
-  function loadWorkspaces() { return api('GET', '/api/workspaces').then(renderWorkspaces).catch(function () {}); }
+  /* ---------- workspaces: VS Code-like Explorer tree, File Viewer, Local Repo & Direct GitHub Client ---------- */
+  var wsExp = { target: '__local_repo__', label: 'clover-ai-studio (Local Repo)', rootPath: '', ghDirect: [], file: null, viewMode: 'code', ghStatus: null };
+  var FALLBACK_LOCAL_TREE = {
+    '': [
+      { name: 'config', path: 'config', type: 'dir', size: 0, size_human: '' },
+      { name: 'growth', path: 'growth', type: 'dir', size: 0, size_human: '' },
+      { name: 'sessions', path: 'sessions', type: 'dir', size: 0, size_human: '' },
+      { name: 'AGENTS.md', path: 'AGENTS.md', type: 'file', size: 1240, size_human: '1.2 KB', ext: '.md', kind: 'Markdown' },
+      { name: 'README.md', path: 'README.md', type: 'file', size: 860, size_human: '860 B', ext: '.md', kind: 'Markdown' }
+    ],
+    'config': [
+      { name: 'settings.json', path: 'config/settings.json', type: 'file', size: 320, size_human: '320 B', ext: '.json', kind: 'JSON' },
+      { name: 'workspaces.json', path: 'config/workspaces.json', type: 'file', size: 180, size_human: '180 B', ext: '.json', kind: 'JSON' }
+    ],
+    'growth': [
+      { name: 'knowledge', path: 'growth/knowledge', type: 'dir', size: 0, size_human: '' }
+    ],
+    'growth/knowledge': [],
+    'sessions': []
+  };
+  var FALLBACK_LOCAL_FILES = {
+    'README.md': '# clover-ai-studio (Local Repository)\n\nThis is Clover\'s local git repository (`S1` memory, sessions, outcomes, and settings).\n\n- **Before connecting GitHub**: Clover stores and browses your work right here in this local repository.\n- **Connect GitHub**: Add a GitHub token below (or sign in via VS Code) to browse your GitHub repositories directly and sync this repository across your devices.\n',
+    'AGENTS.md': '# Clover Operating Principles\n\n**Context -> Direction -> Execution -> Outcome -> Growth**\n\n- Read real systems and context files before acting.\n- Verify outcomes against reality.\n- Preserve what was learned in the repository.\n',
+    'config/settings.json': '{\n  "model": "omni",\n  "engine": "gpu",\n  "tools": "ask",\n  "personal": true\n}\n',
+    'config/workspaces.json': '{\n  "active": null,\n  "workspaces": []\n}\n'
+  };
+  function fileIconFor(ext, name) {
+    ext = String(ext || '').toLowerCase();
+    if (!ext && name) { var m = /(\.[a-z0-9]+)$/i.exec(name); ext = m ? m[1].toLowerCase() : ''; }
+    if (/^\.(py|js|jsx|ts|tsx|c|h|cpp|hpp|rs|go|java|kt|cs|ps1|sh|bat|html|css|json|yaml|yml|toml|xml)$/.test(ext)) return 'code';
+    if (/^\.(png|jpg|jpeg|gif|webp|svg|ico)$/.test(ext)) return 'image';
+    if (/^\.(sql|csv|tsv|db|sqlite|jsonl)$/.test(ext)) return 'database';
+    return 'file';
+  }
+  function loadWorkspaces() {
+    return api('GET', '/api/workspaces').then(function (r) {
+      renderWorkspaces(r);
+      loadGitHubClient();
+    }).catch(function () {
+      renderWorkspaces({ active: null, workspaces: [], local_repo: { id: '__local_repo__', name: 'clover-ai-studio', path: 'clover-ai-studio', exists: true }, github: { token_set: false, create_url: 'https://github.com/settings/personal-access-tokens/new' } });
+      renderGitHubClient({ connected: false, login: '', repos: [], message: 'Using local repository (clover-ai-studio) until you connect your GitHub account.' });
+    });
+  }
+  function loadGitHubClient() {
+    return api('POST', '/api/workspaces/github_client', {}).then(renderGitHubClient).catch(function () {
+      renderGitHubClient({ connected: false, login: '', repos: [], message: 'Using local repository (clover-ai-studio) until you connect your GitHub account.' });
+    });
+  }
+  function renderGitHubClient(st) {
+    wsExp.ghStatus = st || {};
+    var badge = $('ws-conn-badge'), badgeT = $('ws-conn-badge-t'), msg = $('ws-conn-msg'), reposBox = $('gh-repos-box');
+    var connected = !!(st && st.connected);
+    if (badge) badge.className = 'ws-conn__badge' + (connected ? ' ok' : '');
+    if (badgeT) badgeT.textContent = connected ? ('GitHub · @' + st.login) : 'Local Repo (clover-ai-studio)';
+    if (msg) {
+      msg.textContent = st && st.message ? st.message
+        : (connected ? ('Connected directly to GitHub as @' + st.login + (st.sync_repo ? ' · synced with ' + st.sync_repo : ''))
+                     : 'Using local repository (clover-ai-studio) until you connect your GitHub account.');
+    }
+    if (reposBox) {
+      var repos = (st && st.repos) || [];
+      reposBox.hidden = !repos.length;
+      reposBox.innerHTML = '';
+      if (repos.length) {
+        var hd = el('div', 'glabel', 'Your GitHub Repositories (' + repos.length + ')');
+        hd.style.margin = '.2rem 0 .25rem';
+        reposBox.appendChild(hd);
+        repos.forEach(function (rp) {
+          var row = el('div', 'gh-repo-row');
+          var t = el('div', 'gh-repo-row__t');
+          var bEl = el('b'); bEl.textContent = rp.full_name + (rp.private ? ' (private)' : '');
+          var sm = el('small'); sm.textContent = (rp.description ? rp.description + ' · ' : '') + (rp.updated_at ? 'updated ' + rp.updated_at : rp.default_branch || 'main');
+          t.appendChild(bEl); t.appendChild(sm);
+          var acts = el('div', '', ''); acts.style.display = 'flex'; acts.style.gap = '.3rem';
+          var brBtn = btn('btn sm', ic('folder') + '<span>Browse</span>', 'Browse ' + rp.full_name + ' in Explorer');
+          brBtn.addEventListener('click', function () {
+            browseDirectGitHub(rp.full_name);
+          });
+          var clBtn = btn('btn sm pri', 'Clone & Use', 'Clone ' + rp.full_name + ' into Workspaces');
+          clBtn.addEventListener('click', function () {
+            wsAct('add', { source: rp.full_name }, 'Cloning ' + rp.full_name + ' from GitHub…');
+          });
+          acts.appendChild(brBtn); acts.appendChild(clBtn);
+          row.appendChild(t); row.appendChild(acts);
+          reposBox.appendChild(row);
+        });
+      }
+    }
+  }
+  function browseDirectGitHub(repoInput) {
+    var clean = String(repoInput || '').trim().replace(/^https?:\/\/github\.com\//i, '').replace(/\.git\/?$/i, '').replace(/^\/+|\/+$/g, '');
+    if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(clean)) {
+      setNote('ws-note', 'Enter a GitHub repository as owner/repo (for example santhoshsathish94/clover-framework) to browse directly.');
+      return;
+    }
+    var target = 'github:' + clean;
+    if (wsExp.ghDirect.indexOf(clean) < 0) wsExp.ghDirect.push(clean);
+    wsExp.target = target;
+    renderSourcePills();
+    loadWorkspaceTree(target, '', null, true);
+  }
+  function renderSourcePills() {
+    var box = $('ws-source-pills'); if (!box) return;
+    box.innerHTML = '';
+    var r = state.ws || {}, list = r.workspaces || [], loc = r.local_repo || { id: '__local_repo__', name: 'clover-ai-studio' };
+    var sources = [
+      { id: '__local_repo__', label: (loc.name || 'clover-ai-studio') + ' (Local Repo)', icon: 'database' }
+    ];
+    list.forEach(function (w) {
+      sources.push({ id: w.name, label: w.name + (w.active ? ' · In use' : ''), icon: w.source === 'github' ? 'branch' : 'folder' });
+    });
+    wsExp.ghDirect.forEach(function (slug) {
+      if (!sources.some(function (s) { return s.id === 'github:' + slug; })) {
+        sources.push({ id: 'github:' + slug, label: slug + ' (GitHub)', icon: 'branch' });
+      }
+    });
+    if (!sources.some(function (s) { return s.id === wsExp.target; })) {
+      var act = list.filter(function (w) { return w.active && w.exists; })[0];
+      wsExp.target = act ? act.name : '__local_repo__';
+    }
+    sources.forEach(function (s) {
+      var b = btn('ws-pill' + (wsExp.target === s.id ? ' on' : ''), ic(s.icon) + '<span></span>');
+      b.querySelector('span').textContent = s.label;
+      b.setAttribute('data-ws-pick', s.id);
+      b.addEventListener('click', function () {
+        wsExp.target = s.id;
+        renderSourcePills();
+        loadWorkspaceTree(s.id, '', null, true);
+      });
+      box.appendChild(b);
+    });
+  }
+  function fetchTreeFromBackendOrFallback(target, subpath) {
+    return api('POST', '/api/workspaces/tree', { workspace: target, path: subpath || '' }).catch(function (err) {
+      if (String(target || '').indexOf('github:') === 0) {
+        var repoSlug = String(target).slice(7);
+        var cleanSub = String(subpath || '').replace(/^\/+|\/+$/g, '');
+        var url = 'https://api.github.com/repos/' + repoSlug + '/contents' + (cleanSub ? '/' + cleanSub : '');
+        return fetch(url, { headers: { 'Accept': 'application/vnd.github+json' } }).then(function (resp) {
+          if (!resp.ok) throw err;
+          return resp.json();
+        }).then(function (arr) {
+          var dirs = [], files = [];
+          (Array.isArray(arr) ? arr : []).forEach(function (it) {
+            if (!it || !it.name) return;
+            if (it.type === 'dir') dirs.push({ name: it.name, path: it.path || it.name, type: 'dir', size: 0, size_human: '' });
+            else if (it.type === 'file') {
+              var ext = (/(\.[a-z0-9]+)$/i.exec(it.name) || ['', ''])[1].toLowerCase();
+              dirs.push;
+              files.push({ name: it.name, path: it.path || it.name, type: 'file', size: it.size || 0, size_human: mb(it.size || 0), ext: ext, kind: ext.slice(1).toUpperCase() || 'file' });
+            }
+          });
+          dirs.sort(function (a, b) { return a.name.localeCompare(b.name); });
+          files.sort(function (a, b) { return a.name.localeCompare(b.name); });
+          return { workspace: target, label: repoSlug + ' (GitHub)', source: 'github_direct', repo: repoSlug, path: cleanSub, entries: dirs.concat(files) };
+        });
+      }
+      if (target === '__local_repo__' || !target) {
+        var entries = FALLBACK_LOCAL_TREE[subpath || ''] || [];
+        return Promise.resolve({ workspace: '__local_repo__', label: 'clover-ai-studio (Local Repo)', source: 'local_repo', root_path: 'clover-ai-studio', path: subpath || '', entries: entries });
+      }
+      throw err;
+    });
+  }
+  function fetchFileFromBackendOrFallback(target, filepath) {
+    return api('POST', '/api/workspaces/file', { workspace: target, path: filepath }).catch(function (err) {
+      if (String(target || '').indexOf('github:') === 0) {
+        var repoSlug = String(target).slice(7);
+        var url = 'https://api.github.com/repos/' + repoSlug + '/contents/' + String(filepath || '').replace(/^\/+/, '');
+        return fetch(url, { headers: { 'Accept': 'application/vnd.github+json' } }).then(function (resp) {
+          if (!resp.ok) throw err;
+          return resp.json();
+        }).then(function (data) {
+          var txt = data && data.content ? decodeURIComponent(escape(atob(String(data.content).replace(/\s+/g, '')))) : '';
+          var nm = (filepath || '').split('/').pop() || filepath;
+          var ext = (/(\.[a-z0-9]+)$/i.exec(nm) || ['', ''])[1].toLowerCase();
+          return { workspace: target, label: repoSlug + ' (GitHub)', source: 'github_direct', repo: repoSlug, path: filepath, name: nm, size: data.size || txt.length, size_human: mb(data.size || txt.length), ext: ext, kind: ext === '.md' ? 'Markdown' : (ext.slice(1).toUpperCase() || 'file'), lines: txt.split('\n').length, binary: false, content: txt };
+        });
+      }
+      if ((target === '__local_repo__' || !target) && FALLBACK_LOCAL_FILES[filepath] != null) {
+        var txt2 = FALLBACK_LOCAL_FILES[filepath];
+        var nm2 = filepath.split('/').pop() || filepath;
+        var ext2 = (/(\.[a-z0-9]+)$/i.exec(nm2) || ['', ''])[1].toLowerCase();
+        return Promise.resolve({ workspace: '__local_repo__', label: 'clover-ai-studio (Local Repo)', source: 'local_repo', path: filepath, name: nm2, size: txt2.length, size_human: txt2.length + ' B', ext: ext2, kind: ext2 === '.md' ? 'Markdown' : 'JSON', lines: txt2.split('\n').length, binary: false, content: txt2 });
+      }
+      throw err;
+    });
+  }
+  function loadWorkspaceTree(target, subpath, containerEl, autoOpenReadme, depth) {
+    target = target || wsExp.target || '__local_repo__';
+    depth = depth || 0;
+    var treeBox = containerEl || $('vsc-tree');
+    if (!treeBox) return;
+    if (!containerEl) {
+      treeBox.innerHTML = '<div class="fine" style="padding:.5rem .65rem">Loading files…</div>';
+    }
+    fetchTreeFromBackendOrFallback(target, subpath || '').then(function (rep) {
+      if (!containerEl) {
+        wsExp.label = rep.label || target;
+        wsExp.rootPath = rep.root_path || '';
+        if ($('vsc-exp-title')) $('vsc-exp-title').textContent = 'EXPLORER · ' + (rep.label || target);
+        treeBox.innerHTML = '';
+      }
+      var entries = rep.entries || [];
+      if (!entries.length && !containerEl) {
+        treeBox.innerHTML = '<div class="fine" style="padding:.55rem .65rem">Folder is empty.</div>';
+        return;
+      }
+      entries.forEach(function (item) {
+        var padLeft = (0.48 + depth * 0.85).toFixed(2) + 'rem';
+        if (item.type === 'dir') {
+          var wrap = el('div');
+          var row = btn('vsc-node', CHEV + ic('folder') + '<span class="vsc-node__name"></span>');
+          row.style.paddingLeft = padLeft;
+          row.querySelector('.vsc-node__name').textContent = item.name;
+          row.setAttribute('role', 'treeitem');
+          row.setAttribute('aria-expanded', 'false');
+          var kids = el('div', 'vsc-children'); kids.hidden = true;
+          var loaded = false;
+          row.addEventListener('click', function () {
+            var open = kids.hidden;
+            kids.hidden = !open;
+            row.classList.toggle('open', open);
+            row.setAttribute('aria-expanded', String(open));
+            if (open && !loaded) {
+              loaded = true;
+              kids.innerHTML = '<div class="fine" style="padding:.2rem 0 .2rem ' + (1.2 + depth * 0.85).toFixed(2) + 'rem">Loading…</div>';
+              loadWorkspaceTree(target, item.path, kids, false, depth + 1);
+            }
+          });
+          wrap.appendChild(row); wrap.appendChild(kids);
+          treeBox.appendChild(wrap);
+        } else {
+          var fIcon = fileIconFor(item.ext, item.name);
+          var fRow = btn('vsc-node', '<span class="vsc-node__spacer"></span>' + ic(fIcon) + '<span class="vsc-node__name"></span><span class="vsc-node__meta"></span>');
+          fRow.style.paddingLeft = padLeft;
+          fRow.querySelector('.vsc-node__name').textContent = item.name;
+          fRow.querySelector('.vsc-node__meta').textContent = item.size_human || '';
+          fRow.setAttribute('role', 'treeitem');
+          fRow.setAttribute('data-file-path', item.path);
+          fRow.addEventListener('click', function () {
+            if (!($('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'workspaces')) {
+              openSettings('workspaces', true);
+            } else {
+              closeRail();
+            }
+            if ($('sheet-body')) $('sheet-body').scrollTop = 0;
+            openWorkspaceFile(target, item.path, fRow);
+          });
+          treeBox.appendChild(fRow);
+        }
+      });
+      if (containerEl && !entries.length) {
+        treeBox.innerHTML = '<div class="fine" style="padding:.2rem 0 .2rem ' + (1.2 + depth * 0.85).toFixed(2) + 'rem">(empty)</div>';
+      }
+      if (autoOpenReadme && !containerEl) {
+        var pickFile = entries.filter(function (e) { return e.type === 'file' && /^(readme\.md|agents\.md|.*-context-index\.md)$/i.test(e.name); })[0]
+          || entries.filter(function (e) { return e.type === 'file'; })[0];
+        if (pickFile) {
+          var btnNode = treeBox.querySelector('[data-file-path="' + pickFile.path.replace(/"/g, '\\"') + '"]');
+          openWorkspaceFile(target, pickFile.path, btnNode);
+        }
+      }
+    }).catch(function (e) {
+      if (!containerEl) {
+        treeBox.innerHTML = '<div class="note" style="padding:.55rem .65rem">' + esc(e.message || 'Could not load folder.') + '</div>';
+      }
+    });
+  }
+  function openWorkspaceFile(target, filepath, rowEl) {
+    target = target || wsExp.target || '__local_repo__';
+    if ($('vsc-tree')) {
+      Array.prototype.forEach.call($('vsc-tree').querySelectorAll('.vsc-node.on'), function (n) { n.classList.remove('on'); });
+    }
+    if (rowEl) rowEl.classList.add('on');
+    if ($('vsc-file-name')) $('vsc-file-name').textContent = filepath;
+    if ($('vsc-file-meta')) $('vsc-file-meta').textContent = 'Loading…';
+    fetchFileFromBackendOrFallback(target, filepath).then(function (rep) {
+      wsExp.file = rep;
+      var isMd = rep.ext === '.md' || /^markdown$/i.test(rep.kind || '');
+      wsExp.viewMode = isMd ? 'preview' : 'code';
+      renderViewerFile();
+    }).catch(function (e) {
+      if ($('vsc-file-meta')) $('vsc-file-meta').textContent = 'Error';
+      if ($('vsc-viewer-body')) {
+        $('vsc-viewer-body').className = 'vsc-body md-mode';
+        $('vsc-viewer-body').innerHTML = '<div class="note">' + esc(e.message || 'Could not read file.') + '</div>';
+      }
+    });
+  }
+  function renderViewerFile() {
+    var rep = wsExp.file, body = $('vsc-viewer-body');
+    if (!rep || !body) return;
+    var fIcon = fileIconFor(rep.ext, rep.name);
+    if ($('vsc-tab-ic')) $('vsc-tab-ic').innerHTML = '<use href="#i-' + fIcon + '"/>';
+    if ($('vsc-file-name')) $('vsc-file-name').textContent = rep.path || rep.name;
+    var metaBits = [];
+    if (rep.kind) metaBits.push(rep.kind);
+    if (rep.lines) metaBits.push(rep.lines + (rep.lines === 1 ? ' line' : ' lines'));
+    if (rep.size_human) metaBits.push(rep.size_human);
+    if (rep.truncated) metaBits.push('first 200 KB');
+    if ($('vsc-file-meta')) $('vsc-file-meta').textContent = metaBits.join(' · ');
+
+    var isMd = (rep.ext === '.md' || /^markdown$/i.test(rep.kind || '')) && !rep.binary && !rep.secret_blocked;
+    if ($('vsc-view-mode')) {
+      $('vsc-view-mode').hidden = !isMd;
+      pick('vsc-view-mode', wsExp.viewMode);
+    }
+    var hasText = !rep.binary && !rep.secret_blocked;
+    if ($('vsc-file-copy')) $('vsc-file-copy').hidden = !hasText;
+    if ($('vsc-file-ask')) $('vsc-file-ask').hidden = !hasText;
+    if ($('vsc-file-vscode')) $('vsc-file-vscode').hidden = !rep.full_path;
+
+    if (rep.secret_blocked) {
+      body.className = 'vsc-body md-mode';
+      body.innerHTML = '<div class="vsc-empty">' + ic('shield') + '<b>Protected File</b><span>' + esc(rep.message || 'Clover does not display secret or credential files.') + '</span></div>';
+      return;
+    }
+    if (rep.binary) {
+      body.className = 'vsc-body md-mode';
+      body.innerHTML = '<div class="vsc-empty">' + ic(fIcon) + '<b>' + esc(rep.name) + '</b><span>Binary or media file (' + esc(rep.size_human || '') + ').</span></div>';
+      return;
+    }
+    if (isMd && wsExp.viewMode === 'preview') {
+      body.className = 'vsc-body md-mode';
+      body.innerHTML = '<div class="md">' + markdown(rep.content || '') + '</div>';
+      return;
+    }
+    body.className = 'vsc-body code-mode';
+    var lines = String(rep.content || '').split(/\r?\n/);
+    var tbl = el('div', 'vsc-code');
+    lines.forEach(function (ln, idx) {
+      var r = el('div', 'vsc-line');
+      var n = el('span', 'vsc-ln'); n.textContent = String(idx + 1);
+      var c = el('span', 'vsc-lc'); c.textContent = ln || ' ';
+      r.appendChild(n); r.appendChild(c); tbl.appendChild(r);
+    });
+    body.innerHTML = '';
+    body.appendChild(tbl);
+  }
+  if ($('vsc-view-mode')) {
+    segClick('vsc-view-mode', function (v) { wsExp.viewMode = v; renderViewerFile(); });
+  }
+  if ($('vsc-exp-refresh')) {
+    $('vsc-exp-refresh').addEventListener('click', function () {
+      loadWorkspaceTree(wsExp.target, '', null, false);
+    });
+  }
+  if ($('vsc-exp-open-code')) {
+    $('vsc-exp-open-code').addEventListener('click', function () {
+      var p = wsExp.rootPath || (state.ws && state.ws.local_repo && state.ws.local_repo.path) || '';
+      if (!p) return;
+      api('POST', '/api/vscode/do', { action: 'open', args: { target: p } }).catch(function (e) { setNote('ws-note', e.message); });
+    });
+  }
+  if ($('vsc-file-copy')) {
+    $('vsc-file-copy').addEventListener('click', function () {
+      if (wsExp.file && wsExp.file.content != null) copyText(wsExp.file.content, $('vsc-file-copy'));
+    });
+  }
+  if ($('vsc-file-ask')) {
+    $('vsc-file-ask').addEventListener('click', function () {
+      var f = wsExp.file; if (!f) return;
+      if (state.files.length < MAX_FILES && f.content) {
+        state.files.push({ name: f.name || f.path, content_text: String(f.content).slice(0, MAX_CHARS) });
+        renderAtt();
+      }
+      closeSheet();
+      var p = $('prompt');
+      if (p && !p.value.trim()) {
+        p.value = 'In ' + (f.path || f.name) + ', explain how this works and check for any issues.';
+        autosize();
+      }
+      if (p) p.focus();
+      updateSend();
+    });
+  }
+  if ($('vsc-file-vscode')) {
+    $('vsc-file-vscode').addEventListener('click', function () {
+      var f = wsExp.file; if (!f || !f.full_path) return;
+      api('POST', '/api/vscode/do', { action: 'open', args: { target: f.full_path } }).catch(function (e) { setNote('ws-note', e.message); });
+    });
+  }
+  if ($('ws-browse-gh')) {
+    $('ws-browse-gh').addEventListener('click', function () {
+      var src = ($('ws-src') && $('ws-src').value || '').trim();
+      if (!src) { if ($('ws-src')) $('ws-src').focus(); return; }
+      browseDirectGitHub(src);
+    });
+  }
+  if ($('ws-sync-local')) {
+    $('ws-sync-local').addEventListener('click', function () {
+      setNote('ws-note', 'Syncing local repository with GitHub…', true);
+      api('POST', '/api/vscode/do', { action: 'githubSetupRepo' }).then(function (r) {
+        var x = r.result || {};
+        setNote('ws-note', 'Synced local repository with ' + (x.repo || 'GitHub') + '.', true);
+        loadWorkspaces(); loadVscode();
+      }).catch(function (e) {
+        setNote('ws-note', e.message || 'Connect your GitHub token below first to sync your local repository.');
+      });
+    });
+  }
+  if ($('ws-vsc-gh')) {
+    $('ws-vsc-gh').addEventListener('click', function () {
+      vscAct('ws-note', 'githubSignIn', 'Continue in VS Code: sign in to GitHub…', function (x) {
+        loadWorkspaces();
+        return 'Signed in to GitHub as ' + x.login + '.';
+      });
+    });
+  }
   function ctxSummary(c) {
     var s = c.written.length ? 'wrote or updated ' + c.written.length + ' context file' + (c.written.length > 1 ? 's' : '') : 'context files up to date';
     if (c.skipped && c.skipped.length) s += '; left alone: ' + c.skipped.join(', ');
@@ -4299,6 +4868,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function wsAct(action, body, busyText) {
     setNote('ws-note', busyText || 'Working…', true);
     return api('POST', '/api/workspaces/' + action, body).then(function (r) {
+      if (action === 'add' && r.active) wsExp.target = r.active;
+      else if (action === 'activate') wsExp.target = body.name || '__local_repo__';
       renderWorkspaces(r);
       setNote('ws-note', r.context ? ctxSummary(r.context) : r.removed ? 'Deleted ' + r.removed.length + ' context files Clover wrote.' : '', true);
       return true;
@@ -4307,7 +4878,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function renderWorkspaces(r) {
     state.ws = r; if (!r) return;
     var list = r.workspaces || [], active = list.filter(function (w) { return w.active; })[0];
-    var wsVal = active ? active.name : list.length ? list.length + ' added' : 'None';
+    var locRepo = r.local_repo || { id: '__local_repo__', name: 'clover-ai-studio' };
+    var wsVal = active ? active.name : list.length ? list.length + ' added' : (locRepo.name || 'Local repo');
     $('v-ws').textContent = wsVal;
     if ($('v-ws-home')) $('v-ws-home').textContent = wsVal;
     $('rail-ws').hidden = !active; $('rail-ws-t').textContent = active ? 'Workspace: ' + active.name : '';
@@ -4323,8 +4895,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       var acts = el('div', 'ws__acts'); acts.hidden = true; head.setAttribute('aria-expanded', 'false');
       head.addEventListener('click', function () { acts.hidden = !acts.hidden; head.classList.toggle('open', !acts.hidden); head.setAttribute('aria-expanded', String(!acts.hidden)); });
       function b(label, fn, cls) { var x = btn('btn sm ' + (cls || ''), esc(label)); x.addEventListener('click', fn); acts.appendChild(x); }
-      if (w.active) b('Stop using', function () { wsAct('activate', { name: null }); });
-      else if (w.exists) b('Use', function () { wsAct('activate', { name: w.name }); }, 'pri');
+      if (w.exists) b('Browse files', function () { wsExp.target = w.name; renderSourcePills(); loadWorkspaceTree(w.name, '', null, true); }, 'pri');
+      if (w.active) b('Switch to Local Repo', function () { wsAct('activate', { name: null }); });
+      else if (w.exists) b('Use in chat', function () { wsAct('activate', { name: w.name }); });
       if (w.exists) b('Refresh context', function () { wsAct('refresh', { name: w.name }, 'Updating the context files…'); });
       if (w.exists && w.source === 'github') b('Pull updates', function () { wsAct('pull', { name: w.name }, 'Pulling (fast-forward only)…'); });
       if (w.exists && (n || w.index)) b('Delete context files', function () {
@@ -4336,12 +4909,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       it.appendChild(head); it.appendChild(acts); box.appendChild(it);
     });
     var gh = r.github || {}, help = $('gh-help');
-    help.textContent = 'A GitHub token with read access lets Clover clone your private repositories. It stays on this laptop and goes only to GitHub. ';
+    help.textContent = 'Until you connect your GitHub account, Workspaces uses your local repository (clover-ai-studio). Add a GitHub token to connect directly to your GitHub repositories and sync across devices. ';
     var a = document.createElement('a'); a.href = gh.create_url; a.target = '_blank'; a.rel = 'noopener noreferrer';
     a.textContent = gh.token_set ? 'Manage tokens' : 'Create a token'; help.appendChild(a);
     $('gh-token').value = '';
-    $('gh-token').placeholder = gh.token_set ? 'Token saved. Paste a new one to replace it' : 'GitHub token';
+    $('gh-token').placeholder = gh.token_set ? 'Token connected. Paste a new one to replace it' : 'GitHub token (ghp_... or github_pat_...)';
     $('gh-forget').hidden = !gh.token_set;
+    renderSourcePills();
+    loadWorkspaceTree(wsExp.target, '', null, !wsExp.file);
   }
   $('ws-add').addEventListener('click', function () {
     var src = $('ws-src').value.trim(); if (!src) { $('ws-src').focus(); return; }
@@ -4352,11 +4927,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('ws-src').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('ws-add').click(); } });
   $('gh-save').addEventListener('click', function () {
     var t = $('gh-token').value.trim(); if (!t) { $('gh-token').focus(); return; }
-    api('POST', '/api/github', { token: t }).then(function (r) { renderWorkspaces(r); setNote('ws-note', 'GitHub token saved on this laptop.', true); })
+    api('POST', '/api/github', { token: t }).then(function (r) { renderWorkspaces(r); loadGitHubClient(); setNote('ws-note', 'GitHub token saved and GitHub client connected.', true); })
       .catch(function (e) { setNote('ws-note', e.message); });
   });
   $('gh-forget').addEventListener('click', function () {
-    api('POST', '/api/github', { forget: true }).then(function (r) { renderWorkspaces(r); setNote('ws-note', 'GitHub token removed.', true); })
+    api('POST', '/api/github', { forget: true }).then(function (r) { renderWorkspaces(r); loadGitHubClient(); setNote('ws-note', 'GitHub token removed. Using local repository.', true); })
       .catch(function (e) { setNote('ws-note', e.message); });
   });
 

@@ -125,13 +125,74 @@ check(
     ".senses-pop.drop-down" in app and "m.classList.toggle('drop-down', dropDown)" in app,
 )
 
-# 4. Dedicated Memory page and consistent cross-platform sync (Laptop, Mobile, Web)
+# 4. Dedicated Memory page, 2-Pane Layout, Left-Pane Submenus, File Viewer, and cross-platform sync
+home_sec = app.split('<section class="page" data-page="home">', 1)[1].split("</section>", 1)[0]
 check(
-    "Dedicated Memory page [data-page='memory'] is present in sheet",
+    "Settings page [data-page='home'] omits duplicate Workspaces/Memory/Tools/Learning rows and keeps Model, Account, Storage, Debug, and Advanced",
+    'data-go="workspaces"' not in home_sec
+    and 'data-go="memory"' not in home_sec
+    and 'data-go="tools"' not in home_sec
+    and 'data-go="learning"' not in home_sec
+    and all(f'data-go="{k}"' in home_sec for k in ("model", "account", "storage", "debug", "advanced")),
+)
+check(
+    "Dedicated Memory page [data-page='memory'] is present in center sheet",
     '<section class="page" data-page="memory" hidden>' in app
     and "memory: 'Memory'" in app
     and 'id="memory-personal-summary"' in app,
 )
+check(
+    "Strict 2-pane layout: #sheet lives inside <section class=\"main\"> and .app.view-page replaces #stream and .dock in the center pane",
+    app.index('<section class="main">') < app.index('id="sheet"')
+    and ".app.view-page .dock { display: none !important; }" in app
+    and 'class="sheet-bd"' not in app,
+)
+check(
+    "Left pane (#rail) has collapsible Chat submenu (#rail-chat-sub -> #chats) and Workspaces submenu (#rail-ws-sub -> #ws-source-pills + #vsc-tree)",
+    'id="rail-chat-sub"' in app
+    and 'id="rail-ws-sub"' in app
+    and app.index('id="rail"') < app.index('id="rail-chat-sub"') < app.index('id="chats"') < app.index('id="rail-ws-sub"') < app.index('id="vsc-tree"') < app.index('<section class="main">'),
+)
+check(
+    "Center pane Workspaces page has VS Code-style File Viewer (#vsc-workbench) and GitHub/Local Repo connection controls",
+    app.index('data-page="workspaces"') < app.index('id="vsc-workbench"')
+    and 'id="vsc-viewer-body"' in app
+    and 'id="vsc-view-mode"' in app
+    and 'id="ws-conn"' in app
+    and 'id="gh-token"' in app
+    and 'id="gh-save"' in app,
+)
+
+# 5. Backend workspace tree, file viewer, local repo fallback, and secret blocking
+import tempfile  # noqa: E402
+
+sys.path.insert(0, str(STUDIO / "clover"))
+sys.path.insert(0, str(STUDIO))
+from clover import workspaces as ws_mod  # noqa: E402
+
+with tempfile.TemporaryDirectory() as td:
+    td_path = Path(td)
+    ws = ws_mod.Workspaces(td_path / "workspaces.json", td_path / "clones", td_path / "app")
+    tree_res = ws.browse_tree("__local_repo__", "", local_repo_dir=REPO)
+    check(
+        "Workspaces.browse_tree lists default local repo (__local_repo__) before GitHub is connected",
+        tree_res.get("source") == "local_repo"
+        and any(e.get("name") == "AGENTS.md" for e in tree_res.get("entries", [])),
+    )
+    file_res = ws.read_workspace_file("__local_repo__", "AGENTS.md", local_repo_dir=REPO)
+    check(
+        "Workspaces.read_workspace_file reads text files with language metadata from local repo",
+        file_res.get("name") == "AGENTS.md"
+        and file_res.get("secret_blocked") is False
+        and len(file_res.get("content", "")) > 100,
+    )
+    secret_res = ws.read_workspace_file("__local_repo__", ".env", local_repo_dir=REPO)
+    vault_res = ws.read_workspace_file("__local_repo__", "vault/keys.json", local_repo_dir=REPO)
+    check(
+        "Workspaces.read_workspace_file blocks secret files and vault directory",
+        secret_res.get("secret_blocked") is True and vault_res.get("secret_blocked") is True,
+    )
+
 check(
     "Android assets/index.html is byte-identical to studio/clover/web/app.html",
     android == app,

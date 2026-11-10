@@ -659,6 +659,353 @@ class Workspaces:
                 used.append(w["index"])
         return "\n\n".join(parts), {"layer": "workspace", "workspace": w["name"], "files": used}
 
+    # ---------------- VS Code-like Explorer Tree, File Viewer & Direct GitHub Client ----------------
+    def _resolve_root(self, target=None, local_repo_dir=None):
+        """Returns (ws_id, label, root_path, source, repo_slug) for local_repo, an added workspace, or github:owner/repo."""
+        t = str(target or "").strip()
+        if t.startswith("github:"):
+            gh_spec = t.split("github:", 1)[1].strip().strip("/")
+            m = GH_URL.match(gh_spec) or GH_SHORT.match(gh_spec)
+            if not m:
+                raise ValueError(f"invalid GitHub repository {gh_spec!r} (expected owner/repo)")
+            slug_repo = f"{m.group(1)}/{m.group(2)}"
+            return f"github:{slug_repo}", f"{slug_repo} (GitHub)", None, "github_direct", slug_repo
+
+        if t in ("__local_repo__", "clover-memory-repo", "local"):
+            lroot = Path(local_repo_dir) if local_repo_dir else (self.app_dir / "clover-ai-studio")
+            return "__local_repo__", f"{lroot.name} (Local Repo)", lroot.resolve(), "local_repo", None
+
+        with self.lock:
+            if t:
+                found = next((w for w in self.items if w["name"] == t), None)
+                if found:
+                    return found["name"], found["name"], Path(found["path"]).resolve(), found.get("source") or "folder", found.get("repo")
+                m = GH_URL.match(t) or GH_SHORT.match(t)
+                if m:
+                    slug_repo = f"{m.group(1)}/{m.group(2)}"
+                    return f"github:{slug_repo}", f"{slug_repo} (GitHub)", None, "github_direct", slug_repo
+                raise ValueError(f"no workspace named {t!r}")
+            act = self.active()
+            if act:
+                return act["name"], act["name"], Path(act["path"]).resolve(), act.get("source") or "folder", act.get("repo")
+        lroot = Path(local_repo_dir) if local_repo_dir else (self.app_dir / "clover-ai-studio")
+        return "__local_repo__", f"{lroot.name} (Local Repo)", lroot.resolve(), "local_repo", None
+
+    def browse_tree(self, target=None, subpath="", local_repo_dir=None):
+        """Lists directory entries (folders first, then files) for VS Code-style Explorer in Workspaces."""
+        ws_id, label, root, source, repo_slug = self._resolve_root(target, local_repo_dir=local_repo_dir)
+        clean_sub = str(subpath or "").replace("\\", "/").strip("/")
+        if clean_sub == ".":
+            clean_sub = ""
+        if any(part in ("..", "") for part in clean_sub.split("/") if clean_sub):
+            raise ValueError("invalid relative path")
+
+        if source == "github_direct":
+            tok = self.auth.token if self.auth else None
+            api_p = f"/repos/{repo_slug}/contents/{clean_sub}" if clean_sub else f"/repos/{repo_slug}/contents"
+            code, data = github_client_request(api_p, token=tok)
+            if code != 200 or not isinstance(data, list):
+                msg = data.get("message") if isinstance(data, dict) else f"HTTP {code}"
+                raise ValueError(f"GitHub could not list {repo_slug}/{clean_sub}: {msg}")
+            dirs, files = [], []
+            for item in data:
+                if not isinstance(item, dict) or not item.get("name"):
+                    continue
+                nm = str(item["name"])
+                rel_p = str(item.get("path") or (f"{clean_sub}/{nm}" if clean_sub else nm))
+                itype = item.get("type")
+                if itype == "dir":
+                    dirs.append({"name": nm, "path": rel_p, "type": "dir", "size": 0, "size_human": ""})
+                elif itype == "file":
+                    sz = int(item.get("size") or 0)
+                    ext = Path(nm).suffix.lower()
+                    files.append({
+                        "name": nm,
+                        "path": rel_p,
+                        "type": "file",
+                        "size": sz,
+                        "size_human": _size(sz),
+                        "ext": ext,
+                        "kind": KINDS.get(ext, "file"),
+                        "secret": bool(SECRETISH.search(nm)),
+                    })
+            dirs.sort(key=lambda x: x["name"].lower())
+            files.sort(key=lambda x: x["name"].lower())
+            return {
+                "workspace": ws_id,
+                "label": label,
+                "source": source,
+                "repo": repo_slug,
+                "path": clean_sub,
+                "entries": dirs + files,
+            }
+
+        if not root or not root.is_dir():
+            raise ValueError(f"workspace folder {root} does not exist")
+        cur = (root / clean_sub).resolve() if clean_sub else root
+        try:
+            cur.relative_to(root)
+        except ValueError:
+            raise ValueError("path is outside the workspace") from None
+        if not cur.is_dir():
+            raise ValueError(f"{clean_sub or '.'} is not a folder")
+
+        dirs, files = [], []
+        try:
+            children = list(cur.iterdir())
+        except OSError as exc:
+            raise ValueError(f"could not read folder: {exc}") from None
+
+        for child in children:
+            nm = child.name
+            if nm in (".git", "vault") or nm.endswith(".tmp") or BACKUP.search(nm):
+                continue
+            rel_p = child.relative_to(root).as_posix()
+            try:
+                is_d = child.is_dir() and not child.is_symlink()
+            except OSError:
+                continue
+            if is_d:
+                if nm.lower() in SKIP_DIRS:
+                    continue
+                dirs.append({"name": nm, "path": rel_p, "type": "dir", "size": 0, "size_human": ""})
+            elif child.is_file():
+                try:
+                    sz = child.stat().st_size
+                except OSError:
+                    sz = 0
+                ext = child.suffix.lower()
+                files.append({
+                    "name": nm,
+                    "path": rel_p,
+                    "type": "file",
+                    "size": sz,
+                    "size_human": _size(sz),
+                    "ext": ext,
+                    "kind": KINDS.get(ext, "file"),
+                    "secret": bool(SECRETISH.search(nm)),
+                })
+        dirs.sort(key=lambda x: x["name"].lower())
+        files.sort(key=lambda x: x["name"].lower())
+        return {
+            "workspace": ws_id,
+            "label": label,
+            "source": source,
+            "repo": repo_slug,
+            "root_path": str(root),
+            "path": clean_sub,
+            "entries": dirs + files,
+        }
+
+    def read_workspace_file(self, target=None, filepath="", local_repo_dir=None, max_bytes=200_000):
+        """Reads a file for the VS Code-style File Viewer in Workspaces (from local_repo, workspace, or GitHub client)."""
+        ws_id, label, root, source, repo_slug = self._resolve_root(target, local_repo_dir=local_repo_dir)
+        clean_p = str(filepath or "").replace("\\", "/").strip("/")
+        if not clean_p or any(part in ("..", "") for part in clean_p.split("/")):
+            raise ValueError("a valid relative file path is required")
+        nm = clean_p.rsplit("/", 1)[-1]
+        ext = Path(nm).suffix.lower()
+        kind = KINDS.get(ext, "file")
+        if SECRETISH.search(nm) or "vault" in [p.lower() for p in clean_p.split("/")]:
+            return {
+                "workspace": ws_id,
+                "label": label,
+                "source": source,
+                "repo": repo_slug,
+                "path": clean_p,
+                "name": nm,
+                "size": 0,
+                "size_human": "—",
+                "ext": ext,
+                "kind": kind,
+                "lines": 0,
+                "binary": False,
+                "secret_blocked": True,
+                "content": "",
+                "message": "Protected file: Clover does not display files whose names suggest secrets, keys, or credentials.",
+            }
+
+        if source == "github_direct":
+            tok = self.auth.token if self.auth else None
+            code, data = github_client_request(f"/repos/{repo_slug}/contents/{clean_p}", token=tok)
+            if code != 200 or not isinstance(data, dict):
+                msg = data.get("message") if isinstance(data, dict) else f"HTTP {code}"
+                raise ValueError(f"GitHub could not read {repo_slug}/{clean_p}: {msg}")
+            sz = int(data.get("size") or 0)
+            b64_content = data.get("content") or ""
+            raw = base64.b64decode(b64_content) if b64_content else b""
+            if b"\x00" in raw[:4096]:
+                return {
+                    "workspace": ws_id,
+                    "label": label,
+                    "source": source,
+                    "repo": repo_slug,
+                    "path": clean_p,
+                    "name": nm,
+                    "size": sz,
+                    "size_human": _size(sz),
+                    "ext": ext,
+                    "kind": kind or "binary",
+                    "lines": 0,
+                    "binary": True,
+                    "secret_blocked": False,
+                    "content": "",
+                    "html_url": data.get("html_url") or f"https://github.com/{repo_slug}/blob/HEAD/{clean_p}",
+                }
+            truncated = len(raw) > max_bytes
+            text = raw[:max_bytes].decode("utf-8", errors="replace")
+            return {
+                "workspace": ws_id,
+                "label": label,
+                "source": source,
+                "repo": repo_slug,
+                "path": clean_p,
+                "name": nm,
+                "size": sz,
+                "size_human": _size(sz),
+                "ext": ext,
+                "kind": kind,
+                "lines": len(text.splitlines()) or (1 if text else 0),
+                "binary": False,
+                "truncated": truncated,
+                "secret_blocked": False,
+                "content": text,
+                "html_url": data.get("html_url") or f"https://github.com/{repo_slug}/blob/HEAD/{clean_p}",
+            }
+
+        if not root or not root.is_dir():
+            raise ValueError(f"workspace folder {root} does not exist")
+        fp = (root / clean_p).resolve()
+        try:
+            fp.relative_to(root)
+        except ValueError:
+            raise ValueError("file path is outside the workspace") from None
+        if not fp.is_file():
+            raise ValueError(f"{clean_p} is not a file")
+        try:
+            sz = fp.stat().st_size
+            with fp.open("rb") as f:
+                raw = f.read(max_bytes + 1)
+        except OSError as exc:
+            raise ValueError(f"could not read {clean_p}: {exc}") from None
+        if b"\x00" in raw[:4096]:
+            return {
+                "workspace": ws_id,
+                "label": label,
+                "source": source,
+                "repo": repo_slug,
+                "path": clean_p,
+                "full_path": str(fp),
+                "name": nm,
+                "size": sz,
+                "size_human": _size(sz),
+                "ext": ext,
+                "kind": kind or "binary",
+                "lines": 0,
+                "binary": True,
+                "secret_blocked": False,
+                "content": "",
+            }
+        truncated = len(raw) > max_bytes
+        text = raw[:max_bytes].decode("utf-8", errors="replace")
+        return {
+            "workspace": ws_id,
+            "label": label,
+            "source": source,
+            "repo": repo_slug,
+            "path": clean_p,
+            "full_path": str(fp),
+            "name": nm,
+            "size": sz,
+            "size_human": _size(sz),
+            "ext": ext,
+            "kind": kind,
+            "lines": len(text.splitlines()) or (1 if text else 0),
+            "binary": False,
+            "truncated": truncated,
+            "secret_blocked": False,
+            "content": text,
+        }
+
+
+def github_client_request(api_path: str, token: str | None = None, method: str = "GET", payload: dict | None = None):
+    """Direct GitHub REST client for browsing repositories, trees, and files with or without a saved token."""
+    import urllib.error
+    import urllib.request
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "CloverAIStudio/5.0",
+    }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    data = json.dumps(payload).encode("utf-8") if payload is not None else None
+    if data is not None:
+        headers["Content-Type"] = "application/json"
+    req = urllib.request.Request(f"https://api.github.com{api_path}", data=data, method=method, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+            return resp.status, (json.loads(raw) if raw.strip() else {})
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace") if exc.fp else ""
+        try:
+            doc = json.loads(raw) if raw.strip() else {}
+        except ValueError:
+            doc = {"message": raw[:200]}
+        return exc.code, doc
+    except OSError as exc:
+        return 503, {"message": f"GitHub unreachable: {exc}"}
+
+
+def github_client_status(token: str | None = None, sync_repo_info: dict | None = None, local_repo_dir: Path | None = None):
+    """Returns GitHub client connection status and accessible repositories, or falls back to the local repository."""
+    lpath = str(local_repo_dir) if local_repo_dir else ""
+    sync_r = (sync_repo_info or {}).get("repo") or ""
+    if not token:
+        return {
+            "connected": False,
+            "login": "",
+            "name": "",
+            "sync_repo": sync_r,
+            "local_repo": lpath,
+            "repos": [],
+            "message": "Connected to local repository (clover-ai-studio). Add your GitHub token below to connect directly to your GitHub repositories.",
+        }
+    code, user_doc = github_client_request("/user", token=token)
+    if code != 200 or not isinstance(user_doc, dict) or not user_doc.get("login"):
+        return {
+            "connected": False,
+            "token_invalid": code in (401, 403),
+            "login": "",
+            "name": "",
+            "sync_repo": sync_r,
+            "local_repo": lpath,
+            "repos": [],
+            "message": f"GitHub token could not sign in ({user_doc.get('message') if isinstance(user_doc, dict) else code}). Using local repository.",
+        }
+    _, repos_doc = github_client_request("/user/repos?sort=updated&per_page=30", token=token)
+    repos = []
+    if isinstance(repos_doc, list):
+        for r in repos_doc:
+            if isinstance(r, dict) and r.get("full_name"):
+                repos.append({
+                    "full_name": r["full_name"],
+                    "name": r.get("name") or r["full_name"].split("/")[-1],
+                    "private": bool(r.get("private")),
+                    "description": r.get("description") or "",
+                    "default_branch": r.get("default_branch") or "main",
+                    "updated_at": (r.get("updated_at") or "")[:10],
+                })
+    return {
+        "connected": True,
+        "login": user_doc.get("login") or "",
+        "name": user_doc.get("name") or user_doc.get("login") or "",
+        "sync_repo": sync_r,
+        "local_repo": lpath,
+        "repos": repos,
+        "message": f"Connected to GitHub as @{user_doc.get('login')} ({len(repos)} repositories).",
+    }
+
 
 def local_context_for_paths(paths_list, workdir=None, active_ws_path=None, budget=1100):
     """Stage 1 (Context): read any context file (`CONTEXT.md`, `*-context.md`, `*-context-index.md`, `TODO.md`) beside

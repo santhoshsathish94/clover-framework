@@ -29,22 +29,30 @@
    - Collaboration pill (`System · Human · AI working together` with `#i-success` checkmark)
    - Keep `Memory`, `Tools`, and `Learning` in the left sidebar navigation only (no duplicate 3-card `.feature-grid` below the composer)
    - Smart `#senses-menu` (`.senses-pop`) positioning: opens downward (`.drop-down`) in `.empty-chat` or when space above `< 240px` with zero scrollbar.
-4. Add a first-class `[data-page="memory"]` view in `#sheet`, expose `Workspaces` across Web, Mobile, and Laptop, and synchronize all three platform targets (`app.html`, `site/clover-ai/index.html`, and `clover-ai-system/mobile/android-app/assets/index.html`).
+4. Strictly 2-Pane Layout (`.rail` Left Pane + `.main` Center Pane) and VS Code-style Workspace Explorer & File Viewer:
+   - **Left Pane (`#rail`)**: Toggled with `#menu` (`#i-sidebar`). Contains collapsible `Chat` submenu (`#rail-chat-sub` → `#chats` conversation list), collapsible `Workspaces` submenu (`#rail-ws-sub` → `#ws-source-pills` + VS Code-style file tree `#vsc-tree`), `Memory`, `Tools`, `Learning`, and `Settings`.
+   - **Center Pane (`.main`)**: Contains `<header class="bar">` at top (`#menu`, `#new-chat-2`, `#chat-title`, `#set-btn`). Below the bar, displays either the Chat view (`#stream` + `.dock`) or the in-place Section view (`#sheet` inside `.main` with `.app.view-page`, zero slide-over drawer or 3rd pane).
+   - **Workspaces File Tree & File Viewer**: Connects to the local repository (`__local_repo__` → `clover-ai-studio`) by default before a GitHub account is connected, or connects directly to GitHub repositories (`github:owner/repo` via `github_client_request` and `github_client_status`) or added local/cloned folders. Clicking any file in `#vsc-tree` loads it into `#vsc-workbench` in the center pane (Code with line numbers, Markdown Preview, Copy, Ask Clover, Open in VS Code), while blocking secret/credential files (`SECRETISH`) and `vault` directories.
+   - **Settings (`[data-page="home"]`)**: Omits the duplicate `Workspaces`, `Memory`, `Tools`, and `Learning & Growth` rows (since each has its own left-pane menu) and shows `Model and voice`, `GitHub account (Memory backup)`, `Storage`, `Debug logs & Senses`, and `Advanced`.
+   - Synchronize all three platform targets (`app.html`, `site/clover-ai/index.html`, and `clover-ai-system/mobile/android-app/assets/index.html`).
 
 ## 3. Execution
-- Updated `clover-ai-system/studio/clover/web/app.html` with the new sidebar navigation, welcome hero, 2-row composer, 5-stage Clover cycle strip, collaboration pill, 3 feature cards, `[data-page="memory"]` hub, and responsive mobile rules (`@media (max-width: 860px)`).
+- Updated `clover-ai-system/studio/clover/web/app.html` with the 2-pane layout (`#rail` + `.main`), left-pane `Chat` and `Workspaces` submenus (`#rail-chat-sub`, `#rail-ws-sub`, `#vsc-tree`), in-place center views (`#sheet` inside `.main`), VS Code-style File Viewer (`#vsc-workbench`), welcome hero (`robo-clover.webp`), 2-row composer, 5-stage Clover cycle strip, collaboration pill, `[data-page="memory"]` hub, streamlined `[data-page="home"]` Settings view, and responsive mobile rules (`@media (max-width: 860px)`).
+- Updated `clover-ai-system/studio/clover/workspaces.py`, `clover-ai-system/studio/clover/server.py`, and `clover-ai-system/mobile/clover_git_memory_repo.py` with `browse_tree`, `read_workspace_file`, `github_client_request`, `github_client_status`, and default local repo (`__local_repo__`) support.
 - Updated `clover-ai-system/studio/studio/build_assets.py` to resolve paths relative to the active worktree/repository root and automatically synchronize both `site/clover-ai/index.html` and `clover-ai-system/mobile/android-app/assets/index.html`.
-- Added `clover-ai-system/studio/tests/test_studio_unified_ui.py` (28 checks).
+- Added and expanded `clover-ai-system/studio/tests/test_studio_unified_ui.py` (37 checks).
 
 ## 4. Outcome & Evidence
 - **Live Server & Browser End-to-End Regression (`ui_harness.py` on `http://127.0.0.1:8798/`)**:
   - Verified desktop (`1280×800`, both sidebar open and `.rail-off` collapsed) and mobile phone (`390×844`, `html.phone`, both empty-chat welcome and active multi-turn chat, plus slide-out drawer `#rail.on` and `window.cloverBack()`) against the live `server.py` HTTP routes via Playwright and screenshots.
+  - Confirmed strict 2-pane layout (`sheetInCenterMain: true`, `treeInRail: true`, `viewerInCenter: true`): clicking `Chat`, `Workspaces`, `Memory`, `Tools`, `Learning`, `Settings`, `#set-btn`, or any file in `#vsc-tree` loads directly in the center pane (`section.main`), and `Chat` / `Workspaces` submenus mutually toggle in the left pane (`#rail`).
+  - Confirmed `Settings` (`[data-page="home"]`) displays only `Model and voice`, `GitHub account (Memory backup)`, `Storage`, `Debug logs & Senses`, and `Advanced` without duplicating `Workspaces` through `Learning`.
   - Confirmed `[data-nav="settings"]` in `#rail` and `#set-btn` in `header.bar` are always present and visible across all viewports (`setBtnDesktopOpen: true`, `railSettingsDesktopOpen: true`, `setBtnDesktopRailOff: true`, `setBtnMobile: true`).
   - Confirmed that while a turn is running (`streamSend`), `.work` displays live steps, and as soon as the work finishes (`finish(ev)` → `botEl(m)`), all `.work` step accordions are collapsed (`allCollapsed: true`, `aria-expanded="false"`, `.work__b.hidden === true`).
   - Confirmed `#senses-menu` opens downward in `.empty-chat` (`top: 551..786` on desktop, `top: 518..753` on mobile) and upward when the composer is docked at the bottom of an active chat (`top: 444..679`), with `scrollHeight === clientHeight` (`234px`, zero scrollbar) in every view.
   - Verified clicking `Workspaces`, `Memory`, `Tools`, `Learning`, `Settings`, and `Chat` in the sidebar and drilling into subpages (`layers`, `model`, `perms`, `personal`, `collective`, `storage`, `debug`, `account`, `vscode`) with `#sheet-back` and `window.cloverBack()`.
 - **Automated Suites**:
-  - `python clover-ai-system/studio/tests/test_studio_unified_ui.py`: **30/30 PASS**
+  - `python clover-ai-system/studio/tests/test_studio_unified_ui.py`: **37/37 PASS**
   - `python clover-ai-system/studio/tests/test_browser_first.py`: **30/30 PASS**
   - `python clover-ai-system/studio/tests/test_browser_handback.py`: **51/51 PASS**
   - `python clover-ai-system/studio/tests/test_tool_tasks.py`: **18/18 PASS**

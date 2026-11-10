@@ -517,13 +517,24 @@ class CloverMemoryGitRepo:
                 "context_at": (r.get("context_at") or r.get("added_at") or "").replace("T", " ").replace("Z", " UTC"),
             })
         tok = self._load_github_token()
+        gh_cfg = self.get_github_sync_config() if hasattr(self, "get_github_sync_config") else {}
         return {
             "active": active_name,
             "workspaces": ws_list,
             "clone_root": str(self.base_dir / "workspaces"),
+            "local_repo": {
+                "id": "__local_repo__",
+                "name": self.default_repo_dir.name,
+                "path": str(self.default_repo_dir),
+                "exists": self.default_repo_dir.is_dir(),
+                "sync_repo": gh_cfg.get("repo") or "",
+                "last_sync": (gh_cfg.get("last_sync") or "").replace("T", " ").replace("Z", " UTC"),
+            },
             "github": {
                 "token_set": bool(tok),
                 "create_url": "https://github.com/settings/personal-access-tokens/new",
+                "sync_repo": gh_cfg.get("repo") or "",
+                "last_sync": (gh_cfg.get("last_sync") or "").replace("T", " ").replace("Z", " UTC"),
             },
         }
 
@@ -547,9 +558,31 @@ class CloverMemoryGitRepo:
             self._save_github_token(t_clean)
         return self.describe_workspaces()
 
+    def _mobile_ws_helper(self):
+        import sys as _sys
+        studio_clover = Path(__file__).resolve().parent.parent / "studio" / "clover"
+        if studio_clover.is_dir() and str(studio_clover) not in _sys.path:
+            _sys.path.insert(0, str(studio_clover))
+        import workspaces as _WS
+        cfg_ws = self.default_repo_dir / "config" / self.device / "workspaces.json"
+        w = _WS.Workspaces(cfg_ws, self.base_dir / "workspaces", self.base_dir)
+        tok = self._load_github_token()
+        if tok:
+            w.auth = type("_Auth", (), {"token": tok, "describe": lambda s: {"token_set": True}})()
+        return _WS, w, tok
+
     def workspace_action(self, action: str, body: dict[str, Any]) -> dict[str, Any]:
         act = (action or "").strip().lower()
         name = str(body.get("name")).strip() if body.get("name") else None
+        if act in ("tree", "file", "github_client"):
+            _WS, w_helper, tok = self._mobile_ws_helper()
+            target = body.get("workspace") if body.get("workspace") is not None else name
+            if act == "tree":
+                return w_helper.browse_tree(target, body.get("path") or "", local_repo_dir=self.default_repo_dir)
+            if act == "file":
+                return w_helper.read_workspace_file(target, body.get("path") or "", local_repo_dir=self.default_repo_dir)
+            gh_cfg = self.get_github_sync_config() if hasattr(self, "get_github_sync_config") else {}
+            return _WS.github_client_status(token=tok, sync_repo_info=gh_cfg, local_repo_dir=self.default_repo_dir)
         if act == "add":
             src = str(body.get("source") or body.get("path_or_url") or "").strip()
             res = self.add_or_switch_workspace_repo(src, name=name)

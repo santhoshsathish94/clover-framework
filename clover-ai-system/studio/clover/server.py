@@ -802,22 +802,64 @@ def inbox_describe():
             "extension_id": browser_host.EXTENSION_ID, "extension_dir": str(ext) if (ext / "manifest.json").is_file() else None}
 
 
+def _local_repo_dir():
+    if getattr(S, "repo", None) and getattr(S.repo, "dir", None):
+        return Path(S.repo.dir)
+    if getattr(S, "args", None) and getattr(S.args, "base", None):
+        return paths.repo_dir(Path(S.args.base))
+    return Path.cwd()
+
+
+def workspaces_describe():
+    desc = dict(S.workspaces.describe())
+    lroot = _local_repo_dir()
+    gh_sync = github_repo() if getattr(S, "args", None) and getattr(S.args, "base", None) else None
+    desc["local_repo"] = {
+        "id": "__local_repo__",
+        "name": lroot.name,
+        "path": str(lroot),
+        "exists": lroot.is_dir(),
+        "sync_repo": (gh_sync or {}).get("repo") or "",
+        "last_sync": (gh_sync or {}).get("last_sync") or "",
+    }
+    if isinstance(desc.get("github"), dict) and gh_sync and gh_sync.get("repo"):
+        desc["github"] = dict(desc["github"], sync_repo=gh_sync.get("repo"), last_sync=gh_sync.get("last_sync") or "")
+    return desc
+
+
 def workspace_action(action, body):
+    import workspaces as WS
     w, name = S.workspaces, (str(body.get("name")) if body.get("name") else None)
+    lroot = _local_repo_dir()
+    if action == "tree":
+        target = body.get("workspace") if body.get("workspace") is not None else name
+        return w.browse_tree(target, body.get("path") or "", local_repo_dir=lroot)
+    if action == "file":
+        target = body.get("workspace") if body.get("workspace") is not None else name
+        return w.read_workspace_file(target, body.get("path") or "", local_repo_dir=lroot)
+    if action == "github_client":
+        tok = getattr(S.github, "token", None) if getattr(S, "github", None) else None
+        gh_sync = github_repo() if getattr(S, "args", None) and getattr(S.args, "base", None) else None
+        return WS.github_client_status(token=tok, sync_repo_info=gh_sync, local_repo_dir=lroot)
     if action == "add":
-        return w.add(body.get("source"), name)
+        res = w.add(body.get("source"), name)
+        return dict(workspaces_describe(), context=res.get("context"))
     if action == "activate":
-        return w.activate(name)
+        w.activate(None if name in ("__local_repo__", "clover-memory-repo") else name)
+        return workspaces_describe()
     if name is None:
         raise ValueError("name is required")
     if action == "refresh":
-        return dict(w.describe(), context=w.refresh(name))
+        return dict(workspaces_describe(), context=w.refresh(name))
     if action == "pull":
-        return w.pull(name)
+        res = w.pull(name)
+        return dict(workspaces_describe(), message=res.get("message"), context=res.get("context"))
     if action == "clean":
-        return w.clean(name)
+        res = w.clean(name)
+        return dict(workspaces_describe(), removed=res.get("removed"))
     if action == "remove":
-        return w.remove(name)
+        w.remove(name)
+        return workspaces_describe()
     raise ValueError(f"unknown workspace action {action!r}")
 
 
@@ -2603,7 +2645,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/inbox":  # pages the user sent from their browser (laptop: the Send to Clover extension)
             return self._send(200, inbox_describe())
         if path == "/api/workspaces":  # whether a GitHub token is set, never the token
-            return self._send(200, S.workspaces.describe())
+            return self._send(200, workspaces_describe())
         if path == "/api/vscode/poll":  # the Clover extension in a VS Code window asks for its next job
             if not S.vscode.check(self.headers.get("X-Clover-Bridge")):
                 return self._send(403, {"error": "bridge token required"})
@@ -3216,7 +3258,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/github":  # the answer says whether a token is set, never the token
                 tok_in = body.get("token")
                 S.github.update(token=tok_in, forget=bool(body.get("forget")))
-                out_ws = S.workspaces.describe()
+                out_ws = workspaces_describe()
                 if tok_in and not body.get("forget") and not paths.WEB:
                     import k3_host_engine
                     k3_res = k3_host_engine.try_unlock_k3_with_credential(S.args.base, tok_in)
