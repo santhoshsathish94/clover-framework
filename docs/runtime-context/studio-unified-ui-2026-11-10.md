@@ -36,7 +36,7 @@
      - `Memory` (`[data-nav="memory"]`) with collapsible submenu `#rail-mem-sub` (`#mem-repo-pill` + `#mem-tree` for Clover's `clover-ai-studio` persistent memory repository: `AGENTS.md`, `CONTEXT.md`, `config/`, `execution/`, `growth/`, `outcomes/`, `sessions/`).
      - `Tools` (`[data-nav="tools"]`) with collapsible submenu `#rail-tools-sub` (`#tools-tree`: `Terminal`, `Browser`, user-added custom tools `#rail-custom-tools`, and `+ Add tool…` `#rail-add-tool-btn`).
      - `Learning` (`[data-nav="learning"]`) with collapsible submenu `#rail-learn-sub` (`#learn-tree`: `Personal Learning`, `Collective Learning`, `Autonomous & JEPA`, `Learning Logs`).
-     - `Settings`.
+     - `Settings` (`[data-nav="settings"]`) with collapsible submenu `#rail-settings-sub` (`#settings-tree`: `Model & Voice`, `GitHub Account`, `Storage`, `Permissions`, `Debug & Senses`, `Advanced`).
    - **Center Pane (`.main`)**: Contains `<header class="bar">` at top (`#menu`, `#new-chat-2`, `#chat-title`, `#set-btn`). Below the bar, displays either the Chat view (`#stream` + `.dock`) or the in-place Section view (`#sheet` inside `.main` with `.app.view-page`, zero slide-over drawer or 3rd pane).
    - **Camera & Voice in the Chat Screen Composer (`#composer`)**:
      - Clicking the image/camera icon (`#screen-btn`) in the chat composer opens the Camera app (`triggerSystemSense('camera')`).
@@ -59,7 +59,9 @@
        - `#learn-view-collective` (`Collective Learning`): Google Identity (`#lg-google-kv`), opt-in contribute/receive switches (`#lg-contribute`, `#lg-receive`), active shared-core rules (`#lg-active-rules`), pending candidates (`#lg-pending-list` + `#lg-review-row` + `#lg-confirm-box`), and submitted contributions (`#lg-submitted-list`).
        - `#learn-view-autonomous` (`Autonomous Cycle & JEPA`): JEPA Epistemic Surprise discovery, Cycle 2 self-repair, verified outcome self-training (`#lg-auto-kv`, `#lg-auto-run`, `#lg-auto-out`), and Clover Layers (`data-go="layers"`).
        - `#learn-view-logs` (`Learning Logs`): live structured logs for JEPA, Collective Learning, Turns, Senses & Settings (`#learn-dbg-cat`, `#learn-dbg-entries`) and Server & Engine Log Files (`#learn-dbg-files`).
-   - **Settings (`[data-page="home"]`)**: Omits the duplicate `Workspaces`, `Memory`, `Tools`, and `Learning & Growth` rows (since each has its own left-pane menu) and shows `Model and voice`, `GitHub account (Memory backup)`, `Storage`, `Debug logs & Senses`, and `Advanced`.
+   - **Settings (`[data-page="home"]` & `#rail-settings-sub`) — Submenus & Center-Pane Views**:
+     - Clicking `Settings` (`[data-nav="settings"]` or `#set-btn`) expands `#rail-settings-sub` (`Model & Voice`, `GitHub Account`, `Storage`, `Permissions`, `Debug & Senses`, `Advanced`) and shows `[data-page="home"]` in the center pane.
+     - Clicking any submenu item in `#settings-tree` (`[data-set-sub="..."]`) or row in `[data-page="home"]` opens `model`, `account`, `storage`, `perms`, `debug`, or `advanced` directly in the center pane and highlights the active item in `#settings-tree`.
    - Synchronize all three platform targets (`app.html`, `site/clover-ai/index.html`, and `clover-ai-system/mobile/android-app/assets/index.html`).
 
 ## 3. Execution

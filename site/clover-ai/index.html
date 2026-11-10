@@ -785,7 +785,17 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           <button type="button" class="vsc-node" role="treeitem" data-learn-sub="logs"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span class="vsc-node__name">Learning Logs</span></button>
         </div>
       </div>
-      <button type="button" class="rail__nav-btn" data-nav="settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg><span>Settings</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="settings" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg><span>Settings</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      <div class="rail__sub" id="rail-settings-sub" hidden>
+        <div class="vsc-tree" id="settings-tree" role="tree" aria-label="Settings sections">
+          <button type="button" class="vsc-node" role="treeitem" data-set-sub="model"><svg class="ic" aria-hidden="true"><use href="#i-model"/></svg><span class="vsc-node__name">Model &amp; Voice</span></button>
+          <button type="button" class="vsc-node" role="treeitem" data-set-sub="account"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg><span class="vsc-node__name">GitHub Account</span></button>
+          <button type="button" class="vsc-node" role="treeitem" data-set-sub="storage"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg><span class="vsc-node__name">Storage</span></button>
+          <button type="button" class="vsc-node" role="treeitem" data-set-sub="perms"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg><span class="vsc-node__name">Permissions</span></button>
+          <button type="button" class="vsc-node" role="treeitem" data-set-sub="debug"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span class="vsc-node__name">Debug &amp; Senses</span></button>
+          <button type="button" class="vsc-node" role="treeitem" data-set-sub="advanced"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg><span class="vsc-node__name">Advanced</span></button>
+        </div>
+      </div>
     </nav>
     <div class="rail__foot">
       <div class="status"><span class="dot ok" id="status-dot"></span><span id="status-text">Clover Ready</span></div>
@@ -896,6 +906,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <button type="button" class="row t" data-go="model"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-model"/></svg></span><span class="row__t">Model and voice</span><span class="row__v" id="v-model-home"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="account"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg></span><span class="row__t">GitHub account (Memory backup)</span><span class="row__v" id="v-account">Not set up</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="storage"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg></span><span class="row__t">Storage</span><span class="row__v" id="v-storage">This laptop</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="perms"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></span><span class="row__t">Permissions</span><span class="row__v" id="v-perms-home"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="debug"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">Debug logs &amp; Senses</span><span class="row__v" id="v-debug">Live</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="advanced"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></span><span class="row__t">Advanced</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
@@ -1663,9 +1674,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   var PAGES = { home: 'Settings', memory: 'Memory', learning: 'Learning & Growth', account: 'GitHub account', storage: 'Storage', debug: 'Debug logs & Senses',
     advanced: 'Advanced', layers: 'Clover layers', model: 'Model and voice', perms: 'Permissions', tools: 'Tools',
     workspaces: 'Workspaces', vscode: 'VS Code', personal: 'What Clover learned', collective: 'Collective learning' };
-  var PARENT = { memory: 'home', learning: 'home', account: 'home', storage: 'home', debug: 'home', advanced: 'home', layers: 'memory',
-    model: 'home', perms: 'tools', tools: 'home', workspaces: 'home', vscode: 'tools',
-    personal: 'memory', collective: 'learning' };
+  var PARENT = { memory: 'home', learning: 'home', account: 'home', storage: 'home', debug: 'home', advanced: 'home', layers: 'learning',
+    model: 'home', perms: 'home', tools: 'home', workspaces: 'home', vscode: 'home',
+    personal: 'learning', collective: 'learning' };
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
@@ -3153,6 +3164,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function renderPerms() {
     var s = permSummary();
     $('v-perms').textContent = s.chip;
+    if ($('v-perms-home')) $('v-perms-home').textContent = s.chip;
     if ($('v-perms-tools')) $('v-perms-tools').textContent = s.chip;
     var sum = $('perm-summary');
     sum.className = 'summary' + (s.cls ? ' ' + s.cls : '');
@@ -3230,7 +3242,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       : navName === 'workspaces' ? $('rail-ws-sub')
       : navName === 'memory' ? $('rail-mem-sub')
       : navName === 'tools' ? $('rail-tools-sub')
-      : navName === 'learning' ? $('rail-learn-sub') : null;
+      : navName === 'learning' ? $('rail-learn-sub')
+      : navName === 'settings' ? $('rail-settings-sub') : null;
     var btnEl = document.querySelector('.rail__nav-btn[data-nav="' + navName + '"]');
     if (sub) sub.hidden = !open;
     if (btnEl) {
@@ -3242,9 +3255,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var nav = 'chat';
     if ($('sheet') && $('sheet').classList.contains('on')) {
       if (page === 'workspaces') nav = 'workspaces';
-      else if (page === 'memory' || page === 'storage' || page === 'account') nav = 'memory';
-      else if (page === 'tools' || page === 'perms' || page === 'vscode') nav = 'tools';
-      else if (page === 'learning' || page === 'personal' || page === 'collective' || page === 'layers' || page === 'debug') nav = 'learning';
+      else if (page === 'memory') nav = 'memory';
+      else if (page === 'tools') nav = 'tools';
+      else if (page === 'learning' || page === 'personal' || page === 'collective' || page === 'layers') nav = 'learning';
       else nav = 'settings';
     }
     Array.prototype.forEach.call(document.querySelectorAll('.rail__nav-btn'), function (b) {
@@ -3255,6 +3268,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     setSubmenuOpen('memory', nav === 'memory');
     setSubmenuOpen('tools', nav === 'tools');
     setSubmenuOpen('learning', nav === 'learning');
+    setSubmenuOpen('settings', nav === 'settings');
+    if ($('settings-tree')) {
+      Array.prototype.forEach.call($('settings-tree').querySelectorAll('.vsc-node'), function (n) {
+        n.classList.toggle('on', nav === 'settings' && n.getAttribute('data-set-sub') === page);
+      });
+    }
   }
   function showPage(name, dir) {
     Array.prototype.forEach.call(document.querySelectorAll('.page'), function (p) {
@@ -3665,9 +3684,36 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       openSettings('learning', true, keepMobileRailLearn);
       return;
     }
+    if (sec === 'settings') {
+      var curTop = stack[stack.length - 1];
+      var setOn = $('sheet') && $('sheet').classList.contains('on') && (curTop === 'home' || curTop === 'model' || curTop === 'account' || curTop === 'storage' || curTop === 'perms' || curTop === 'debug' || curTop === 'advanced' || curTop === 'vscode');
+      var setSubHidden = $('rail-settings-sub') ? $('rail-settings-sub').hidden : false;
+      if (setOn && curTop !== 'home') {
+        openSettings('home', false, true);
+        setSubmenuOpen('settings', true);
+        return;
+      }
+      if (setOn && curTop === 'home' && !setSubHidden) {
+        setSubmenuOpen('settings', false);
+        return;
+      }
+      setSubmenuOpen('settings', true);
+      var keepMobileRailSet = window.matchMedia('(max-width: 860px)').matches && $('rail').classList.contains('on');
+      openSettings('home', false, keepMobileRailSet);
+      return;
+    }
     var pageMap = { workspaces: 'workspaces', memory: 'memory', tools: 'tools', learning: 'learning', settings: 'home', layers: 'layers' };
     var target = pageMap[sec] || sec;
     openSettings(target, target !== 'home');
+  }
+  function openSettingsSub(subPage) {
+    if (!PAGES[subPage]) return;
+    closeRail();
+    stack = subPage === 'home' ? ['home'] : ['home', subPage];
+    var sh = $('sheet'); sh.classList.add('on'); sh.inert = false;
+    if ($('app')) $('app').classList.add('view-page');
+    $('scrim').classList.remove('on');
+    showPage(subPage, 0);
   }
   document.addEventListener('click', function (ev) {
     var r = ev.target.closest && ev.target.closest('[data-go]');
@@ -3680,6 +3726,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (ls) { openLearningSub(ls.getAttribute('data-learn-sub')); return; }
     var ol = ev.target.closest && ev.target.closest('[data-open-learn]');
     if (ol) { openLearningSub(ol.getAttribute('data-open-learn')); return; }
+    var ss = ev.target.closest && ev.target.closest('[data-set-sub]');
+    if (ss) { openSettingsSub(ss.getAttribute('data-set-sub')); return; }
     var nb = ev.target.closest && ev.target.closest('[data-nav]');
     if (nb) { openNavSection(nb.getAttribute('data-nav')); return; }
     var no = ev.target.closest && ev.target.closest('[data-nav-open]');

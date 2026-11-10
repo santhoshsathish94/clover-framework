@@ -128,12 +128,12 @@ check(
 # 4. Dedicated Memory page, 2-Pane Layout, Left-Pane Submenus, File Viewer, and cross-platform sync
 home_sec = app.split('<section class="page" data-page="home">', 1)[1].split("</section>", 1)[0]
 check(
-    "Settings page [data-page='home'] omits duplicate Workspaces/Memory/Tools/Learning rows and keeps Model, Account, Storage, Debug, and Advanced",
+    "Settings page [data-page='home'] omits duplicate Workspaces/Memory/Tools/Learning rows and keeps Model, Account, Storage, Permissions, Debug, and Advanced",
     'data-go="workspaces"' not in home_sec
     and 'data-go="memory"' not in home_sec
     and 'data-go="tools"' not in home_sec
     and 'data-go="learning"' not in home_sec
-    and all(f'data-go="{k}"' in home_sec for k in ("model", "account", "storage", "debug", "advanced")),
+    and all(f'data-go="{k}"' in home_sec for k in ("model", "account", "storage", "perms", "debug", "advanced")),
 )
 check(
     "Dedicated Memory page [data-page='memory'] owns clover-ai-studio persistent memory (#mem-parent-view, #mem-conn, #mem-gh-token, #memory-personal-summary) and has #mem-file-slot for file viewing",
@@ -151,21 +151,24 @@ check(
     and 'class="sheet-bd"' not in app,
 )
 check(
-    "Left pane (#rail) has collapsible Chat submenu (#rail-chat-sub), Workspaces submenu (#rail-ws-sub), Memory submenu (#rail-mem-sub), Tools submenu (#rail-tools-sub), and Learning submenu (#rail-learn-sub -> Personal Learning, Collective Learning, Autonomous & JEPA, Learning Logs)",
+    "Left pane (#rail) has collapsible submenus for all 6 sections: Chat (#rail-chat-sub), Workspaces (#rail-ws-sub), Memory (#rail-mem-sub), Tools (#rail-tools-sub), Learning (#rail-learn-sub), and Settings (#rail-settings-sub)",
     'id="rail-chat-sub"' in app
     and 'id="rail-ws-sub"' in app
     and 'id="rail-mem-sub"' in app
     and 'id="rail-tools-sub"' in app
     and 'id="rail-learn-sub"' in app
+    and 'id="rail-settings-sub"' in app
     and 'data-tool-app="terminal"' in app
     and 'data-tool-app="browser"' in app
     and 'data-tool-app="camera"' not in app
     and 'data-tool-app="microphone"' not in app
     and 'data-tool-app="vscode"' not in app
     and all(f'data-learn-sub="{s}"' in app for s in ("personal", "collective", "autonomous", "logs"))
+    and all(f'data-set-sub="{s}"' in app for s in ("model", "account", "storage", "perms", "debug", "advanced"))
+    and "function openSettingsSub(subPage)" in app
     and 'id="rail-custom-tools"' in app
     and 'id="rail-add-tool-btn"' in app
-    and app.index('id="rail"') < app.index('id="rail-chat-sub"') < app.index('id="chats"') < app.index('id="rail-ws-sub"') < app.index('id="vsc-tree"') < app.index('id="rail-mem-sub"') < app.index('id="mem-tree"') < app.index('id="rail-tools-sub"') < app.index('id="tools-tree"') < app.index('id="rail-learn-sub"') < app.index('id="learn-tree"') < app.index('<section class="main">'),
+    and app.index('id="rail"') < app.index('id="rail-chat-sub"') < app.index('id="chats"') < app.index('id="rail-ws-sub"') < app.index('id="vsc-tree"') < app.index('id="rail-mem-sub"') < app.index('id="mem-tree"') < app.index('id="rail-tools-sub"') < app.index('id="tools-tree"') < app.index('id="rail-learn-sub"') < app.index('id="learn-tree"') < app.index('id="rail-settings-sub"') < app.index('id="settings-tree"') < app.index('<section class="main">'),
 )
 learn_sec = app.split('<section class="page" data-page="learning" hidden>', 1)[1].split("</section>", 1)[0]
 check(
