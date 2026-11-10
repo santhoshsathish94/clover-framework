@@ -464,6 +464,7 @@ def inspect_image(
     crop_bbox: list[int] | tuple[int, int, int, int] | None = None,
     max_elements: int = 18,
     jepa_arch: str = "auto",
+    skip_ocr: bool = False,
 ) -> dict[str, Any]:
     """Run full Playwright-style structured visual, layout, color, OCR, and JEPA visual latent inspection on `img_path`."""
     t0 = time.perf_counter()
@@ -472,11 +473,17 @@ def inspect_image(
         raise FileNotFoundError(f"Image not found: {p}")
 
     cache_path = p.with_suffix(p.suffix + ".inspect.json")
-    if crop_bbox is None and annotate_dir is None and jepa_arch == "auto" and cache_path.is_file():
+    if crop_bbox is None and jepa_arch != "none" and cache_path.is_file():
         try:
             cached = json.loads(cache_path.read_text(encoding="utf-8"))
             if isinstance(cached, dict) and cached.get("width") and "elements" in cached and "jepa_visual" in cached:
-                return cached
+                ann_ok = (
+                    annotate_dir is None
+                    or not cached.get("elements")
+                    or (bool(cached.get("annotated_file")) and (Path(annotate_dir) / str(cached["annotated_file"])).is_file())
+                )
+                if ann_ok:
+                    return cached
         except Exception:
             pass
 
@@ -503,7 +510,7 @@ def inspect_image(
     aspect = f"{W // gcd_v}:{H // gcd_v}" if (W // gcd_v <= 64 and H // gcd_v <= 64) else f"{W / max(1.0, float(H)):.2f}:1"
 
     palette = extract_palette(im, max_colors=6)
-    ocr_lines = extract_ocr_lines(ocr_target)
+    ocr_lines = [] if skip_ocr else extract_ocr_lines(ocr_target)
     elements = detect_visual_regions(im, ocr_lines, max_elements=max_elements)
     full_text = "\n".join(ln["text"] for ln in ocr_lines).strip()
 
@@ -518,6 +525,7 @@ def inspect_image(
                 "attn_flops_ratio": jv["attn_flops_ratio"],
                 "mean_patch_surprise": jv["mean_patch_surprise"],
                 "top_salient_elements": jv["top_salient_elements"],
+                "z_jepa": [round(float(v), 5) for v in jv["z_jepa"].tolist()] if "z_jepa" in jv else None,
                 "ms": jv["ms"],
             }
     except Exception:
@@ -551,7 +559,7 @@ def inspect_image(
         "annotated_file": annotated_file,
         "ms": ms,
     }
-    if crop_bbox is None and annotate_dir is None and jepa_arch == "auto":
+    if crop_bbox is None and jepa_arch != "none":
         try:
             cache_path.write_text(json.dumps(report, ensure_ascii=False), encoding="utf-8")
         except OSError:

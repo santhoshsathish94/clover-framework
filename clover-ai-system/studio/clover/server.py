@@ -1506,9 +1506,11 @@ def load_engine(args):
                                 for k in ("clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3")}
             S.remote_engines.clear()
             try:
+                import jepa_engine
                 import omni_c2_c3
                 progress("C2 HybridAgent, Bridges & C3 11-Level NCM")
                 omni_c2_c3.for_base(Path(args.base))
+                jepa_engine.for_base(Path(args.base))
             except Exception:
                 traceback.print_exc()
             S.engine = engine_for(S.settings.get().get("model"))
@@ -1810,7 +1812,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                            if retry and tools_on else [])
             if tools_on and settings["tools"] == "ask":
                 said = typed
-                if any(m["kind"] == "audio" for m in media) and hasattr(eng, "transcribe"):
+                if not typed.strip() and any(m["kind"] == "audio" for m in media) and hasattr(eng, "transcribe"):
                     said = (said + " " + eng.transcribe(media)).strip()
             only, tools_on = semantics.route(
                 frame, settings["tools"], tools_on, said=said, retry_tools=retry_tools,
@@ -1851,7 +1853,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                             "file": cam["file"],
                             "prompt": "Camera Photo (" + str(cam.get("source") or "camera") + ")",
                             "model": "camera",
-                            "seconds": round(cam.get("ms", 0) / 1000.0, 2),
+                            "seconds": round(cam.get("capture_ms", cam.get("ms", 0)) / 1000.0, 2),
                             "width": cam.get("width"),
                             "height": cam.get("height"),
                         })
@@ -1859,7 +1861,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                         pass
                 elif omni and not media and device_actions.asks_for_video_recording(typed):
                     try:
-                        vid = device_actions.capture_video_recording(Path(S.args.base), duration_s=2, launch_system_app=False)
+                        vid = device_actions.capture_video_recording(Path(S.args.base), duration_s=1.5, launch_system_app=False)
                         media = [{
                             "kind": "video",
                             "file": vid["file"],
@@ -1871,10 +1873,20 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                                 "file": vid["frame_file"],
                                 "prompt": vid.get("name") or "Recorded Video Frame",
                                 "model": "video_recorder",
-                                "seconds": vid.get("duration_s", 2),
+                                "seconds": round(vid.get("capture_ms", vid.get("duration_s", 1.5) * 1000.0) / 1000.0, 2),
                                 "width": vid.get("width"),
                                 "height": vid.get("height"),
                             })
+                    except Exception:
+                        pass
+                elif omni and not media and device_actions.asks_for_microphone_audio(typed):
+                    try:
+                        aud = device_actions.capture_microphone_audio(Path(S.args.base), duration_s=2.0, launch_system_app=False)
+                        media = [{
+                            "kind": "audio",
+                            "file": aud["file"],
+                            "name": aud.get("name") or "Microphone Audio",
+                        }]
                     except Exception:
                         pass
                 elif (omni and not media and device_actions.asks_for_screen_or_activity(typed)

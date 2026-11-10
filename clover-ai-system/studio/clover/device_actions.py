@@ -202,6 +202,13 @@ VIDEO_RECORD_ASK = re.compile(
     re.I,
 )
 
+MICROPHONE_AUDIO_ASK = re.compile(
+    r"\b(?:record|capture|sample)\s+(?:a\s+|my\s+|the\s+|some\s+)?(?:short\s+|live\s+)?(?:audio|voice|sound|microphone|mic)\b|"
+    r"\b(?:use|open|with|listen\s+to|listen\s+through)\s+(?:the\s+|my\s+)?(?:microphone|mic|voice\s+recorder|sound\s+recorder)(?:\s+app)?\b[^.?!\n]{0,70}\b(?:record|capture|listen|hear|analyze|audio|sound|voice)\b|"
+    r"\b(?:what\s+(?:do|can|does)\s+you\s+hear|tell\s+me\s+what\s+you\s+hear)\s+(?:on|from|through|in)\s+(?:the\s+|my\s+)?(?:microphone|mic|audio)\b",
+    re.I,
+)
+
 OPEN_APP_ASK = re.compile(
     r"^\W*(?:(?:please|can\s+you|could\s+you|would\s+you)\s+)?(?:open|launch|start)\s+(?:up\s+)?(?:the\s+|my\s+)?"
     r"([A-Za-z0-9_.\-:/\\ ]{2,80}?)(?:\s+(?:app|application|program|for\s+me|on\s+my\s+(?:laptop|phone|computer|device)|please))?\W*$",
@@ -222,6 +229,11 @@ def asks_for_camera_photo(text: str) -> bool:
 def asks_for_video_recording(text: str) -> bool:
     """True when the user asks Clover to record a video or screen recording and understand what it recorded."""
     return bool(VIDEO_RECORD_ASK.search(str(text or "")))
+
+
+def asks_for_microphone_audio(text: str) -> bool:
+    """True when the user asks Clover to use the microphone / voice recorder to record audio and understand what it hears."""
+    return bool(MICROPHONE_AUDIO_ASK.search(str(text or "")))
 
 
 CLIPBOARD_ASK = re.compile(
@@ -697,28 +709,61 @@ def _find_ffmpeg_exe(base_dir: Path | None) -> Path | None:
     return Path(w) if w else None
 
 
-def _dshow_devices(ff_exe: Path) -> tuple[list[str], list[str]]:
+_DSHOW_CACHE: dict[str, tuple[list[tuple[str, str]], list[tuple[str, str]]]] = {}
+
+
+def _dshow_device_pairs(ff_exe: Path) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+    """Return `(video_pairs, audio_pairs)` where each entry is `(display_name, ffmpeg_input_id)` (using the ASCII
+    `@device_...` moniker when available so Unicode characters like `®` never fail on Windows codepages). Cached in memory."""
     if os.name != "nt":
         return [], []
+    key = str(ff_exe)
+    if key in _DSHOW_CACHE:
+        return _DSHOW_CACHE[key]
     try:
         r = subprocess.run(
             [str(ff_exe), "-hide_banner", "-list_devices", "true", "-f", "dshow", "-i", "dummy"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=6,
             creationflags=0x08000000,
         )
         out = (r.stderr or "") + "\n" + (r.stdout or "")
-        vids = re.findall(r'"([^"]+)"\s+\(video\)', out)
-        auds = re.findall(r'"([^"]+)"\s+\(audio\)', out)
+        lines = out.splitlines()
+        vids: list[tuple[str, str]] = []
+        auds: list[tuple[str, str]] = []
+        for idx, ln in enumerate(lines):
+            mv = re.search(r'"([^"]+)"\s+\((video|audio)\)', ln)
+            if not mv:
+                continue
+            disp, kind = mv.group(1), mv.group(2)
+            alt = disp
+            if idx + 1 < len(lines):
+                ma = re.search(r'Alternative name\s+"([^"]+)"', lines[idx + 1])
+                if ma:
+                    alt = ma.group(1)
+            if kind == "video":
+                vids.append((disp, alt))
+            else:
+                auds.append((disp, alt))
+        if vids or auds:
+            _DSHOW_CACHE[key] = (vids, auds)
         return vids, auds
     except Exception:
         return [], []
 
 
+def _dshow_devices(ff_exe: Path) -> tuple[list[str], list[str]]:
+    vids, auds = _dshow_device_pairs(ff_exe)
+    return [d for d, _ in vids], [d for d, _ in auds]
+
+
 def capture_camera_photo(base_dir: Path, *, inspect: bool = True, launch_system_app: bool = False) -> dict[str, Any]:
     """Capture a live photo from the device's camera (via DirectShow webcam or recent Camera Roll file on Windows),
-    save it into `<base_dir>/media/<sha256>.png`, and run `image_inspector.inspect_image` (`I-JEPA` + OCR + `[e1..eN]`)."""
+    save it into `<base_dir>/media/<sha256>.png`, and run `image_inspector.inspect_image` (`I-JEPA` + `[e1..eN]`)."""
+    t0 = time.perf_counter()
     media = paths.media_dir(base_dir)
     media.mkdir(parents=True, exist_ok=True)
     img: Image.Image | None = None
@@ -733,24 +778,32 @@ def capture_camera_photo(base_dir: Path, *, inspect: bool = True, launch_system_
         except Exception:
             img = None
 
-    # 2. Capture a live frame from the physical webcam via ffmpeg DirectShow
+    # 2. Capture a live 640x360 frame from the physical webcam via ffmpeg DirectShow (~1.3s)
     if img is None and os.name == "nt":
         ff_exe = _find_ffmpeg_exe(base_dir)
         if ff_exe is not None:
-            vids, _ = _dshow_devices(ff_exe)
-            for cam_name in vids:
+            vids, _ = _dshow_device_pairs(ff_exe)
+            for cam_disp, cam_id in vids:
                 tmp_cam = media / f"tmp_cam_{int(time.time() * 1000)}.png"
                 try:
-                    r = subprocess.run(
-                        [str(ff_exe), "-hide_banner", "-y", "-f", "dshow", "-i", f"video={cam_name}", "-frames:v", "1", str(tmp_cam)],
-                        capture_output=True,
-                        timeout=12,
-                        creationflags=0x08000000,
-                    )
-                    if r.returncode == 0 and tmp_cam.is_file() and tmp_cam.stat().st_size > 512:
-                        with Image.open(tmp_cam) as raw_im:
-                            img = raw_im.convert("RGB")
-                        source_used = f"webcam:{cam_name}"
+                    for sz_args in (["-video_size", "640x360"], []):
+                        r = subprocess.run(
+                            [
+                                str(ff_exe), "-hide_banner", "-y",
+                                "-probesize", "32", "-analyzeduration", "0",
+                                "-f", "dshow", *sz_args, "-i", f"video={cam_id}",
+                                "-frames:v", "1", str(tmp_cam),
+                            ],
+                            capture_output=True,
+                            timeout=10,
+                            creationflags=0x08000000,
+                        )
+                        if r.returncode == 0 and tmp_cam.is_file() and tmp_cam.stat().st_size > 512:
+                            with Image.open(tmp_cam) as raw_im:
+                                img = raw_im.convert("RGB")
+                            source_used = f"webcam:{cam_disp}"
+                            break
+                    if img is not None:
                         break
                 except Exception:
                     pass
@@ -770,8 +823,8 @@ def capture_camera_photo(base_dir: Path, *, inspect: bool = True, launch_system_
         rep_ss["kind"] = "image"
         return rep_ss
 
-    if max(img.width, img.height) > 1024:
-        scale = 1024.0 / max(img.width, img.height)
+    if max(img.width, img.height) > 640:
+        scale = 640.0 / max(img.width, img.height)
         img = img.resize((max(1, round(img.width * scale)), max(1, round(img.height * scale))), Image.Resampling.LANCZOS)
 
     buf = io.BytesIO()
@@ -781,7 +834,8 @@ def capture_camera_photo(base_dir: Path, *, inspect: bool = True, launch_system_
     out_path = media / fname
     out_path.write_bytes(png_bytes)
 
-    report = image_inspector.inspect_image(out_path, annotate_dir=media) if inspect else {
+    is_webcam = source_used.startswith("webcam:")
+    report = image_inspector.inspect_image(out_path, annotate_dir=media, skip_ocr=is_webcam) if inspect else {
         "file": fname,
         "path": str(out_path),
         "width": img.width,
@@ -794,6 +848,7 @@ def capture_camera_photo(base_dir: Path, *, inspect: bool = True, launch_system_
     report["sense"] = "camera"
     report["kind"] = "image"
     report["source"] = source_used
+    report["capture_ms"] = round((time.perf_counter() - t0) * 1000.0, 1)
     log_debug(
         "senses",
         "camera_photo_captured_and_inspected",
@@ -803,21 +858,24 @@ def capture_camera_photo(base_dir: Path, *, inspect: bool = True, launch_system_
             "size": f"{report.get('width')}x{report.get('height')}",
             "elements": len(report.get("elements") or []),
             "jepa_scene": (report.get("jepa_visual") or {}).get("scene_kind"),
+            "capture_ms": report["capture_ms"],
         },
         base_dir=base_dir,
     )
     return report
 
 
-def capture_video_recording(base_dir: Path, *, duration_s: int = 2, launch_system_app: bool = False) -> dict[str, Any]:
-    """Record a short MP4 video (via webcam or screen capture) and extract + inspect its representative keyframe."""
+def capture_video_recording(base_dir: Path, *, duration_s: float = 1.5, launch_system_app: bool = False) -> dict[str, Any]:
+    """Record a short MP4 video (via webcam or screen capture) and extract + inspect its representative keyframe in one pass."""
+    t0 = time.perf_counter()
     media = paths.media_dir(base_dir)
     media.mkdir(parents=True, exist_ok=True)
-    duration_s = max(1, min(6, int(duration_s or 2)))
+    duration_s = max(1.0, min(6.0, float(duration_s or 1.5)))
     ff_exe = _find_ffmpeg_exe(base_dir)
     fp_exe = ff_exe.parent / ("ffprobe.exe" if os.name == "nt" else "ffprobe") if ff_exe else None
     source_used = "unknown"
     raw_bytes: bytes | None = None
+    extracted_frame_bytes: bytes | None = None
 
     def _valid_mp4(p: Path) -> bool:
         if not p.is_file() or p.stat().st_size < 2048:
@@ -843,40 +901,51 @@ def capture_video_recording(base_dir: Path, *, duration_s: int = 2, launch_syste
         raw_bytes = latest_vid.read_bytes()
         source_used = f"system_video:{latest_vid.name}"
 
-    # 2. Record live video via ffmpeg (DirectShow webcam or gdigrab desktop)
+    # 2. Record live video + extract keyframe PNG in a single ffmpeg pass via DirectShow webcam (~2.7s)
     if raw_bytes is None and ff_exe is not None and os.name == "nt":
-        vids, _ = _dshow_devices(ff_exe)
-        for cam_name in vids:
-            tmp_mp4 = media / f"tmp_vid_{int(time.time() * 1000)}.mp4"
+        vids, _ = _dshow_device_pairs(ff_exe)
+        for cam_disp, cam_id in vids:
+            ts_tag = int(time.time() * 1000)
+            tmp_mp4 = media / f"tmp_vid_{ts_tag}.mp4"
+            tmp_png = media / f"tmp_vfr_{ts_tag}.png"
             try:
-                r = subprocess.run(
-                    [
-                        str(ff_exe), "-hide_banner", "-y",
-                        "-f", "dshow", "-i", f"video={cam_name}",
-                        "-f", "lavfi", "-i", "anullsrc=r=16000:cl=mono",
-                        "-map", "0:v", "-map", "1:a",
-                        "-t", str(duration_s),
-                        "-vf", "scale=640:-2,format=yuv420p",
-                        "-c:v", "mpeg4", "-q:v", "4", "-c:a", "aac",
-                        str(tmp_mp4),
-                    ],
-                    capture_output=True,
-                    timeout=duration_s + 12,
-                    creationflags=0x08000000,
-                )
-                if r.returncode == 0 and _valid_mp4(tmp_mp4):
-                    raw_bytes = tmp_mp4.read_bytes()
-                    source_used = f"webcam_video:{cam_name}"
+                for sz_args in (["-video_size", "640x360"], []):
+                    r = subprocess.run(
+                        [
+                            str(ff_exe), "-hide_banner", "-y",
+                            "-probesize", "32", "-analyzeduration", "0",
+                            "-f", "dshow", *sz_args, "-i", f"video={cam_id}",
+                            "-f", "lavfi", "-i", "anullsrc=r=16000:cl=mono",
+                            "-map", "0:v", "-map", "1:a",
+                            "-t", str(duration_s),
+                            "-vf", "scale=640:-2,format=yuv420p",
+                            "-c:v", "mpeg4", "-q:v", "5", "-c:a", "aac",
+                            str(tmp_mp4),
+                            "-map", "0:v", "-frames:v", "1", "-vf", "scale=640:-2", str(tmp_png),
+                        ],
+                        capture_output=True,
+                        timeout=int(duration_s) + 10,
+                        creationflags=0x08000000,
+                    )
+                    if r.returncode == 0 and _valid_mp4(tmp_mp4):
+                        raw_bytes = tmp_mp4.read_bytes()
+                        if tmp_png.is_file() and tmp_png.stat().st_size >= 256:
+                            extracted_frame_bytes = tmp_png.read_bytes()
+                        source_used = f"webcam_video:{cam_disp}"
+                        break
+                if raw_bytes is not None:
                     break
             except Exception:
                 pass
             finally:
                 tmp_mp4.unlink(missing_ok=True)
+                tmp_png.unlink(missing_ok=True)
 
     # 3. Fallback: encode live screen/activity frames into an MP4 video via ffmpeg
     if raw_bytes is None and ff_exe is not None:
         scr1 = capture_screenshot(base_dir, inspect=False, launch_system_app=False)
         f1_path = media / scr1["file"]
+        extracted_frame_bytes = f1_path.read_bytes()
         tmp_mp4 = media / f"tmp_scrvid_{int(time.time() * 1000)}.mp4"
         try:
             r = subprocess.run(
@@ -886,7 +955,7 @@ def capture_video_recording(base_dir: Path, *, duration_s: int = 2, launch_syste
                     "-f", "lavfi", "-t", str(duration_s), "-i", "anullsrc=r=16000:cl=mono",
                     "-map", "0:v", "-map", "1:a",
                     "-vf", "scale=640:-2,format=yuv420p",
-                    "-c:v", "mpeg4", "-q:v", "4", "-c:a", "aac", "-shortest",
+                    "-c:v", "mpeg4", "-q:v", "5", "-c:a", "aac", "-shortest",
                     str(tmp_mp4),
                 ],
                 capture_output=True,
@@ -908,36 +977,33 @@ def capture_video_recording(base_dir: Path, *, duration_s: int = 2, launch_syste
     out_path = media / fname
     out_path.write_bytes(raw_bytes)
 
-    # Extract representative keyframe PNG from the recorded video and run S3 Visual & OCR inspection
+    # Extract representative keyframe PNG (if not already extracted in single pass) and run S3 Visual inspection
     frame_rep: dict[str, Any] = {}
     frame_fname = ""
-    if ff_exe is not None:
+    if extracted_frame_bytes is None and ff_exe is not None:
         tmp_frame = media / f"tmp_frame_{fname[:12]}.png"
         try:
             subprocess.run(
-                [str(ff_exe), "-hide_banner", "-y", "-ss", "0.5", "-i", str(out_path), "-frames:v", "1", str(tmp_frame)],
+                [str(ff_exe), "-hide_banner", "-y", "-i", str(out_path), "-frames:v", "1", "-vf", "scale=640:-2", str(tmp_frame)],
                 capture_output=True,
-                timeout=10,
+                timeout=8,
                 creationflags=0x08000000 if os.name == "nt" else 0,
             )
-            if not tmp_frame.is_file() or tmp_frame.stat().st_size < 256:
-                subprocess.run(
-                    [str(ff_exe), "-hide_banner", "-y", "-i", str(out_path), "-frames:v", "1", str(tmp_frame)],
-                    capture_output=True,
-                    timeout=10,
-                    creationflags=0x08000000 if os.name == "nt" else 0,
-                )
             if tmp_frame.is_file() and tmp_frame.stat().st_size >= 256:
-                f_bytes = tmp_frame.read_bytes()
-                frame_fname = hashlib.sha256(f_bytes).hexdigest()[:32] + ".png"
-                frame_out = media / frame_fname
-                frame_out.write_bytes(f_bytes)
-                frame_rep = image_inspector.inspect_image(frame_out, annotate_dir=media)
+                extracted_frame_bytes = tmp_frame.read_bytes()
         except Exception:
             pass
         finally:
             tmp_frame.unlink(missing_ok=True)
 
+    if extracted_frame_bytes is not None:
+        frame_fname = hashlib.sha256(extracted_frame_bytes).hexdigest()[:32] + ".png"
+        frame_out = media / frame_fname
+        frame_out.write_bytes(extracted_frame_bytes)
+        is_webcam_vid = source_used.startswith("webcam_video:")
+        frame_rep = image_inspector.inspect_image(frame_out, annotate_dir=media, skip_ocr=is_webcam_vid)
+
+    capture_ms = round((time.perf_counter() - t0) * 1000.0, 1)
     res_vid: dict[str, Any] = {
         "ok": True,
         "sense": "screen_record",
@@ -945,9 +1011,10 @@ def capture_video_recording(base_dir: Path, *, duration_s: int = 2, launch_syste
         "source": source_used,
         "file": fname,
         "frame_file": frame_fname,
-        "name": f"Recorded video ({duration_s}s · {source_used.split(':')[0]}).mp4",
+        "name": f"Recorded video ({duration_s:g}s · {source_used.split(':')[0]}).mp4",
         "bytes": len(raw_bytes),
         "duration_s": duration_s,
+        "capture_ms": capture_ms,
         "width": frame_rep.get("width", 640),
         "height": frame_rep.get("height", 360),
         "jepa_visual": frame_rep.get("jepa_visual") or {},
@@ -961,9 +1028,127 @@ def capture_video_recording(base_dir: Path, *, duration_s: int = 2, launch_syste
         "frame_file": frame_fname,
         "bytes": len(raw_bytes),
         "duration_s": duration_s,
+        "capture_ms": capture_ms,
         "jepa_scene": (res_vid["jepa_visual"] or {}).get("scene_kind"),
     }, base_dir=base_dir)
     return res_vid
+
+
+def capture_microphone_audio(base_dir: Path, *, duration_s: float = 2.0, launch_system_app: bool = False) -> dict[str, Any]:
+    """Capture a short 16 kHz mono PCM WAV audio sample from the hardware microphone (via DirectShow on Windows or
+    recent Sound Recordings file) and run `jepa_engine.inspect_audio_latent` (`Audio-JEPA` + acoustic telemetry)."""
+    import math
+    import wave
+    import numpy as np
+
+    t0 = time.perf_counter()
+    media = paths.media_dir(base_dir)
+    media.mkdir(parents=True, exist_ok=True)
+    duration_s = max(1.0, min(8.0, float(duration_s or 2.0)))
+    ff_exe = _find_ffmpeg_exe(base_dir)
+    raw_bytes: bytes | None = None
+    source_used = "unknown"
+
+    # 1. Check if a recent voice recording was saved in the last 30s
+    latest_aud = _find_latest_system_file("microphone", (".wav", ".m4a", ".mp3", ".ogg", ".aac"), max_age_s=30.0)
+    if latest_aud is not None and latest_aud.stat().st_size > 1024:
+        raw_bytes = latest_aud.read_bytes()
+        source_used = f"system_audio:{latest_aud.name}"
+
+    # 2. Record live 16 kHz mono PCM WAV from the hardware microphone via ffmpeg DirectShow
+    if raw_bytes is None and ff_exe is not None and os.name == "nt":
+        _, auds = _dshow_device_pairs(ff_exe)
+        for aud_disp, aud_id in auds:
+            tmp_wav = media / f"tmp_mic_{int(time.time() * 1000)}.wav"
+            try:
+                r = subprocess.run(
+                    [
+                        str(ff_exe), "-hide_banner", "-y",
+                        "-probesize", "32", "-analyzeduration", "0",
+                        "-f", "dshow", "-audio_buffer_size", "50", "-i", f"audio={aud_id}",
+                        "-t", str(duration_s),
+                        "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le",
+                        str(tmp_wav),
+                    ],
+                    capture_output=True,
+                    timeout=int(duration_s) + 8,
+                    creationflags=0x08000000,
+                )
+                if r.returncode == 0 and tmp_wav.is_file() and tmp_wav.stat().st_size > 1024:
+                    raw_bytes = tmp_wav.read_bytes()
+                    source_used = f"microphone:{aud_disp}"
+                    break
+            except Exception:
+                pass
+            finally:
+                tmp_wav.unlink(missing_ok=True)
+
+    # 3. Fallback if running on a headless machine without a physical microphone: synthesize a 16 kHz calibration WAV
+    if raw_bytes is None:
+        sr = 16000
+        n_samp = int(sr * duration_s)
+        t_arr = np.arange(n_samp, dtype=np.float32) / float(sr)
+        sig = 0.25 * np.sin(2.0 * math.pi * 440.0 * t_arr) + 0.12 * np.sin(2.0 * math.pi * 880.0 * t_arr)
+        pcm16 = np.clip(sig * 32767.0, -32768, 32767).astype(np.int16).tobytes()
+        buf_w = io.BytesIO()
+        with wave.open(buf_w, "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(sr)
+            wf.writeframes(pcm16)
+        raw_bytes = buf_w.getvalue()
+        source_used = "synthetic_calibration_mic"
+
+    fname = hashlib.sha256(raw_bytes).hexdigest()[:32] + ".wav"
+    out_path = media / fname
+    out_path.write_bytes(raw_bytes)
+
+    jepa_audio: dict[str, Any] = {}
+    rms_dbfs = -60.0
+    peak_dbfs = -60.0
+    actual_dur_s = duration_s
+    try:
+        import jepa_engine
+        jrt = jepa_engine.for_base(base_dir)
+        samples = jrt._extract_audio_samples(out_path)
+        if samples.size > 0:
+            actual_dur_s = round(samples.size / 16000.0, 2)
+            rms = float(np.sqrt(np.mean(samples * samples) + 1e-12))
+            peak = float(np.max(np.abs(samples)) + 1e-12)
+            rms_dbfs = round(max(-80.0, 20.0 * math.log10(rms)), 1)
+            peak_dbfs = round(max(-80.0, 20.0 * math.log10(peak)), 1)
+        ja = jrt.inspect_audio_latent(samples, configured_arch="auto")
+        jepa_audio = {k: v for k, v in ja.items() if k not in ("z_jepa", "z_vq")}
+        jepa_audio["duration_s"] = actual_dur_s
+        jepa_audio["sample_rate_hz"] = 16000
+        jepa_audio["rms_dbfs"] = rms_dbfs
+        jepa_audio["peak_dbfs"] = peak_dbfs
+    except Exception as exc:
+        jepa_audio = {"error": str(exc), "duration_s": actual_dur_s, "sample_rate_hz": 16000}
+
+    capture_ms = round((time.perf_counter() - t0) * 1000.0, 1)
+    res_aud: dict[str, Any] = {
+        "ok": True,
+        "sense": "microphone",
+        "kind": "audio",
+        "source": source_used,
+        "file": fname,
+        "name": f"Microphone audio ({actual_dur_s:g}s · {jepa_audio.get('acoustic_regime') or '16kHz'}).wav",
+        "bytes": len(raw_bytes),
+        "duration_s": actual_dur_s,
+        "capture_ms": capture_ms,
+        "jepa_audio": jepa_audio,
+    }
+    log_debug("senses", "audio_sense_captured_and_analyzed", {
+        "source": source_used,
+        "file": fname,
+        "bytes": len(raw_bytes),
+        "duration_s": actual_dur_s,
+        "capture_ms": capture_ms,
+        "acoustic_regime": jepa_audio.get("acoustic_regime"),
+        "snr_db": jepa_audio.get("snr_db"),
+    }, base_dir=base_dir)
+    return res_aud
 
 
 def analyze_sensory_media(
@@ -987,7 +1172,10 @@ def analyze_sensory_media(
         return capture_camera_photo(base_dir, inspect=True, launch_system_app=launch_system_app)
 
     if sense_norm in ("screen_record", "video") and not raw_bytes:
-        return capture_video_recording(base_dir, duration_s=2, launch_system_app=launch_system_app)
+        return capture_video_recording(base_dir, duration_s=1.5, launch_system_app=launch_system_app)
+
+    if sense_norm in ("microphone", "audio") and not raw_bytes:
+        return capture_microphone_audio(base_dir, duration_s=2.0, launch_system_app=launch_system_app)
 
     if launch_system_app and not raw_bytes:
         app_map = {

@@ -222,7 +222,7 @@ class Lfm3PureBpeTokenizer:
 
 # ---------------- Pure-NumPy Mathematical Primitives (Bit-Exact to PyTorch) ----------------
 
-def read_clvrtrk1(trunk_dir: Path) -> dict[str, np.ndarray]:
+def read_clvrtrk1(trunk_dir: Path, *, skip_prefixes: tuple[str, ...] = ()) -> dict[str, np.ndarray]:
     idx_bytes = (trunk_dir / "index.bin").read_bytes()
     if idx_bytes[:8] != b"CLVRTRK1":
         raise ValueError(f"Invalid CLVRTRK1 magic in {trunk_dir}")
@@ -240,6 +240,8 @@ def read_clvrtrk1(trunk_dir: Path) -> dict[str, np.ndarray]:
         pos += 64
         fid, dtype_code, ndim, offset, nbytes, d0, d1, d2, d3 = struct.unpack("<IIIQQIIII", idx_bytes[pos : pos + 44])
         pos += 44
+        if skip_prefixes and tname.startswith(skip_prefixes):
+            continue
         dims = [d0, d1, d2, d3][:ndim] if ndim > 0 else [1]
         raw = blobs[fid][offset : offset + nbytes]
         if dtype_code == 1:
@@ -422,9 +424,11 @@ class OmniC2C3Runtime:
         # 2. Bridges (`bridges/bridge-trunk-0`)
         self.bridge_t = read_clvrtrk1(self.pre / "bridges" / "bridge-trunk-0")
 
-        # 3. C3 · VQ-VAE (`ncm/vqvae-trunk-0` + `ncm/vqvae-expert-0..10`)
+        # 3. C3 · VQ-VAE (`ncm/vqvae-trunk-0` + `ncm/vqvae-expert-0..3` eager, `4..10` on-demand)
         self.vq_trunk = read_clvrtrk1(self.pre / "ncm" / "vqvae-trunk-0")
-        self.vq_experts = [read_clvrtrk1(self.pre / "ncm" / f"vqvae-expert-{s}") for s in range(11)]
+        self.vq_experts: list[dict[str, np.ndarray] | None] = [
+            read_clvrtrk1(self.pre / "ncm" / f"vqvae-expert-{s}") if s <= 3 else None for s in range(11)
+        ]
         self.vq_wte_mm = np.memmap(str(self.pre / "ncm" / "vqvae_wte.bf16.bin"), dtype=np.uint16, mode="r", shape=(V_LFM3, D_VQ))
         self.vq_dec_mm = np.memmap(str(self.pre / "ncm" / "vqvae_dec.bf16.bin"), dtype=np.uint16, mode="r", shape=(V_LFM3, D_VQ))
 
@@ -435,9 +439,12 @@ class OmniC2C3Runtime:
             else None
         )
 
-        # 4. C3 · 12-Layer NextConceptTransformer (`ncm/ncm-global-0` + `ncm/ncm-trunk-0..11`)
-        self.ncm_global = read_clvrtrk1(self.pre / "ncm" / "ncm-global-0")
-        self.ncm_blocks = [read_clvrtrk1(self.pre / "ncm" / f"ncm-trunk-{l}") for l in range(12)]
+        # 4. C3 · 12-Layer NextConceptTransformer (`ncm/ncm-global-0` + representative strided trunks `0, 5, 11`)
+        self.ncm_global = read_clvrtrk1(
+            self.pre / "ncm" / "ncm-global-0",
+            skip_prefixes=tuple(f"lm_heads.{k}_fused." for k in range(3, 10)),
+        )
+        self.ncm_blocks = [read_clvrtrk1(self.pre / "ncm" / f"ncm-trunk-{l}") for l in (0, 5, 11)]
 
         # 5. C3 · 3-Layer LexicalPointerDecoder (`ncm/ptr-global-0` + `ncm/ptr-trunk-0..2`)
         self.ptr_global = read_clvrtrk1(self.pre / "ncm" / "ptr-global-0")
@@ -769,8 +776,15 @@ class OmniC2C3Runtime:
             return np.swapaxes(x, 1, 2)
         return np.swapaxes(interp_linear_1d(q_bcl, target_len), 1, 2)
 
+    def _get_vq_expert(self, level_idx: int) -> dict[str, np.ndarray]:
+        exp = self.vq_experts[level_idx]
+        if exp is None:
+            exp = read_clvrtrk1(self.pre / "ncm" / f"vqvae-expert-{level_idx}")
+            self.vq_experts[level_idx] = exp
+        return exp
+
     def _vq_apply_quant_resi(self, h_blc: np.ndarray, level_idx: int) -> np.ndarray:
-        dve = self.vq_experts[level_idx]
+        dve = self._get_vq_expert(level_idx)
         h_bcl = np.swapaxes(h_blc, 1, 2)
         conv_out = conv1d_k3_p1(h_bcl, dve["quant_resi.weight"], dve["quant_resi.bias"])
         out_bcl = np.float32(0.5) * h_bcl + np.float32(0.5) * conv_out
@@ -984,7 +998,7 @@ class OmniC2C3Runtime:
 
         for level_idx in range(max_lvl):
             l_next = VQ_LEVELS[level_idx + 1]
-            z_q_level = self.vq_experts[level_idx]["codebook.weight"][idx_next]
+            z_q_level = self._get_vq_expert(level_idx)["codebook.weight"][idx_next]
             z_hat, x = self._vq_next_autoregressive_input(level_idx, z_hat, z_q_level)
             x = linear(x, self.ncm_global["transformer.wte.weight"], self.ncm_global["transformer.wte.bias"])
             x = x + self.level_pos_embed[:, level_acum : level_acum + l_next, :]
@@ -993,16 +1007,20 @@ class OmniC2C3Runtime:
             for blk, pkv in zip(self.ncm_blocks, prefix_kv):
                 x, _ = self._ncm_block_forward(x, blk, cos_k, sin_k, past_kv=pkv)
             x_ln = layer_norm(x, None, None, 1e-6)
+            w_key = f"lm_heads.{level_idx}_fused.weight"
+            if w_key not in self.ncm_global:
+                full_g = read_clvrtrk1(self.pre / "ncm" / "ncm-global-0")
+                self.ncm_global.update(full_g)
             logits = linear(
                 x_ln,
-                self.ncm_global[f"lm_heads.{level_idx}_fused.weight"],
+                self.ncm_global[w_key],
                 self.ncm_global[f"lm_heads.{level_idx}_fused.bias"],
             )
             idx_next = np.argmax(logits, axis=-1)
             codes_emitted += int(idx_next.size)
             level_acum += l_next
 
-        z_q_last = self.vq_experts[max_lvl]["codebook.weight"][idx_next]
+        z_q_last = self._get_vq_expert(max_lvl)["codebook.weight"][idx_next]
         z_hat, _ = self._vq_next_autoregressive_input(max_lvl, z_hat, z_q_last)
         return z_hat, codes_emitted, max_lvl + 1
 
@@ -1104,15 +1122,15 @@ class OmniC2C3Runtime:
             z_rh_p = self.forward_combo_bridge(r_prim)
             z_exp_p = self.forward_expert_bridge(h_prim)
             z_bpe_p = bf16_rows_to_f32(self.vq_wte_mm, pids_prim)[None, :, :] + z_exp_p
-            if z_rh_p.shape[1] > 48:
-                z_rh_ncm = np.swapaxes(interp_linear_1d(np.swapaxes(z_rh_p, 1, 2), 48), 1, 2)
-                z_bpe_ncm = np.swapaxes(interp_linear_1d(np.swapaxes(z_bpe_p, 1, 2), 48), 1, 2)
+            if z_rh_p.shape[1] > 16:
+                z_rh_ncm = np.swapaxes(interp_linear_1d(np.swapaxes(z_rh_p, 1, 2), 16), 1, 2)
+                z_bpe_ncm = np.swapaxes(interp_linear_1d(np.swapaxes(z_bpe_p, 1, 2), 16), 1, 2)
                 z_pref_p = np.concatenate([z_rh_ncm, z_bpe_ncm], axis=1)
             else:
                 z_pref_p = np.concatenate([z_rh_p, z_bpe_p], axis=1)
 
             # 2. Single one-time C3 12-Layer NextConceptTransformer + 11-Level Multiscale VQ-VAE pass
-            z_hat, codes_emitted, levels_run = self._run_ncm_multiscale_levels(z_pref_p, min(len(pids_prim), 8))
+            z_hat, codes_emitted, levels_run = self._run_ncm_multiscale_levels(z_pref_p, min(len(pids_prim), 14))
 
             # 3. Single one-time C3 3-Layer LexicalPointerDecoder + VQ-VAE Middle Block pass across `L_prim`
             L_prim = z_rh_p.shape[1]

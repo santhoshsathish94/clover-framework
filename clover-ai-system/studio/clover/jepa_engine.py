@@ -646,11 +646,12 @@ class CloverJEPARuntime:
         else:
             self.w = _build_default_weights()
 
-        # Fill any missing keys from default weights for forward compatibility
-        defaults = _build_default_weights()
-        for k, v in defaults.items():
-            if k not in self.w or self.w[k].shape != v.shape:
-                self.w[k] = v
+        # Only build default weights if required keys are missing from the loaded trunk
+        if "bridge.lfm3_to_vq.weight" not in self.w or "residual.fc1.weight" not in self.w:
+            defaults = _build_default_weights()
+            for k, v in defaults.items():
+                if k not in self.w or self.w[k].shape != v.shape:
+                    self.w[k] = v
 
         # Load persisted OutcomeResidualAdapter state if present in `<base>/growth/jepa_outcome_adapter.npz`
         self.adapter_path = self.base_dir / "growth" / "jepa_outcome_adapter.npz"
@@ -1630,8 +1631,10 @@ _INST_LOCK = threading.Lock()
 
 
 def for_base(base_dir: str | Path | None = None) -> CloverJEPARuntime:
-    key = str(Path(base_dir).resolve()) if base_dir else "default"
     with _INST_LOCK:
+        if not base_dir and _INSTANCES:
+            return next(iter(_INSTANCES.values()))
+        key = str(Path(base_dir).resolve()) if base_dir else "default"
         inst = _INSTANCES.get(key)
         if inst is None:
             inst = CloverJEPARuntime(base_dir)

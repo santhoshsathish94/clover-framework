@@ -403,7 +403,7 @@ class OmniNative(N.LFM3Native):
         self.engine_kind, self.max_tokens, self.cache = engine, int(max_tokens), None
         # speech on its own CPU instance while chat has the laptop's GPU; a phone has no memory for a second copy
         self.separate_voice = engine == "gpu" and not ANDROID
-        ubatch_sz = 256 if ANDROID else 2048
+        ubatch_sz = 256 if ANDROID else 512
         self.gpu = L.LlamaServer(base_dir, kind, max_tokens, ubatch=ubatch_sz, model=paths["model"], mmproj=paths["mmproj"],
                                  extra_args=extra, name=f"omni-{kind}", timeout_s=300, threads=threads)
         props = self.gpu.props()
@@ -485,7 +485,7 @@ class OmniNative(N.LFM3Native):
     def side_complete(self, msgs, max_new):
         """A short greedy completion (an exchange note) on the CPU instance, never on the chat's slot, so the chat keeps
         its cached prompt. -> text, or None when there is no CPU instance (CPU engine) or a turn or speech started."""
-        if not self.separate_voice or self.side_gate.is_set():
+        if not self.separate_voice or self.side_gate.is_set() or self._voice is None:
             return None
         srv = self._voice_server()
         if srv is None:
@@ -804,12 +804,22 @@ class OmniNative(N.LFM3Native):
             kit.audio_cue_64 = None
         if has_new_audio and jepa_arch_cfg != "none":
             try:
+                import math
+                import numpy as np
                 import jepa_engine
+                aud_blocks = []
+                jrt = jepa_engine.for_base(self.base_dir)
                 for m in media or ():
                     if isinstance(m, dict) and m.get("kind") == "audio" and m.get("file"):
                         aud_fp = Path(self.media_dir) / m["file"]
                         if aud_fp.is_file():
-                            ja = jepa_engine.for_base(self.base_dir).inspect_audio_latent(aud_fp, configured_arch=jepa_arch_cfg)
+                            samples = jrt._extract_audio_samples(aud_fp)
+                            dur_s = round(samples.size / 16000.0, 2) if samples.size > 0 else 0.0
+                            rms_val = float(np.sqrt(np.mean(samples * samples) + 1e-12)) if samples.size > 0 else 1e-6
+                            peak_val = float(np.max(np.abs(samples)) + 1e-12) if samples.size > 0 else 1e-6
+                            rms_dbfs = round(max(-80.0, 20.0 * math.log10(rms_val)), 1)
+                            peak_dbfs = round(max(-80.0, 20.0 * math.log10(peak_val)), 1)
+                            ja = jrt.inspect_audio_latent(samples, configured_arch=jepa_arch_cfg)
                             if ja.get("enabled"):
                                 if kit is not None:
                                     kit.audio_cue_64 = ja.get("z_jepa")
@@ -820,10 +830,29 @@ class OmniNative(N.LFM3Native):
                                     "acoustic_regime": ja["acoustic_regime"],
                                     "snr_db": ja["snr_db"],
                                     "tf_latent_cos": ja["tf_latent_cos"],
+                                    "duration_s": dur_s,
+                                    "rms_dbfs": rms_dbfs,
+                                    "peak_dbfs": peak_dbfs,
                                     "ms": ja["ms"],
                                 }
                                 layer_log.append(info_aud)
                                 emit(dict(info_aud, type="layer"))
+                                aud_blocks.append(
+                                    f"Audio-JEPA Acoustic & Prosody Snapshot ({m.get('name') or m['file']}):\n"
+                                    f"- Duration: {dur_s} s (16,000 Hz mono PCM)\n"
+                                    f"- Acoustic Regime (Audio-JEPA {ja['arch']}): {ja['acoustic_regime']}\n"
+                                    f"- Estimated SNR: {ja['snr_db']} dB | RMS Level: {rms_dbfs} dBFS | Peak Level: {peak_dbfs} dBFS\n"
+                                    f"- Time-Frequency Latent Cosine: {ja['tf_latent_cos']} (inspected in {ja['ms']} ms)"
+                                )
+                if aud_blocks:
+                    recall.append({
+                        "role": "system",
+                        "content": (
+                            "S3 Audio-JEPA Acoustic Analysis (measured on the attached audio recording before C1 inference):\n\n"
+                            + "\n\n".join(aud_blocks)
+                            + "\n\nUse both the audio content and these measured Audio-JEPA acoustic metrics (duration, acoustic regime, SNR dB, RMS/peak dBFS) to answer the user's question."
+                        ),
+                    })
             except Exception:
                 pass
         if has_new_visual:
@@ -894,18 +923,24 @@ class OmniNative(N.LFM3Native):
                                         "height": None,
                                     })
                     if img_fp is not None and img_fp.is_file():
-                        rep = image_inspector.inspect_image(img_fp, annotate_dir=Path(self.media_dir), jepa_arch=jepa_arch_cfg)
+                        is_cam_or_vid = bool(m.get("camera_capture") or m.get("kind") == "video")
+                        rep = image_inspector.inspect_image(
+                            img_fp, annotate_dir=Path(self.media_dir), jepa_arch=jepa_arch_cfg, skip_ocr=is_cam_or_vid
+                        )
                         snap_blocks.append(vid_hdr + image_inspector.format_snapshot_for_prompt(rep))
                         jv = rep.get("jepa_visual") or {}
                         if kit is not None and jv.get("arch"):
-                            try:
-                                import jepa_engine
-                                from PIL import Image
-                                with Image.open(img_fp) as _im:
-                                    _jv_full = jepa_engine.for_base(self.base_dir).inspect_visual_latent(_im.convert("RGB"), configured_arch=jepa_arch_cfg)
-                                    kit.visual_cue_64 = _jv_full.get("z_jepa")
-                            except Exception:
-                                pass
+                            if jv.get("z_jepa") is not None:
+                                kit.visual_cue_64 = jv.get("z_jepa")
+                            else:
+                                try:
+                                    import jepa_engine
+                                    from PIL import Image
+                                    with Image.open(img_fp) as _im:
+                                        _jv_full = jepa_engine.for_base(self.base_dir).inspect_visual_latent(_im.convert("RGB"), configured_arch=jepa_arch_cfg)
+                                        kit.visual_cue_64 = _jv_full.get("z_jepa")
+                                except Exception:
+                                    pass
                         info_img = {
                             "layer": "image_analysis",
                             "file": img_fp.name,

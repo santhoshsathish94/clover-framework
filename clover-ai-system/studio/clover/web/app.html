@@ -4607,6 +4607,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             badge: '\u2713 Inspected' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : ''),
             onClick: ev.file ? function () { openImageInspector({ file: ev.file, name: 'Visual Inspector · ' + ev.file }); } : null
           });
+        } else if (ev.layer === 'jepa_audio') {
+          upsertStep('layer_aud', {
+            icon: 'mic', state: 'ok', name: 'Audio-JEPA Inspector (S3)',
+            detail: (ev.duration_s ? ev.duration_s + 's 16kHz \u00b7 ' : '') +
+              (ev.acoustic_regime || 'audio') + ' \u00b7 SNR ' + (ev.snr_db !== undefined ? ev.snr_db : 0) + ' dB' +
+              (ev.rms_dbfs !== undefined ? ' \u00b7 ' + ev.rms_dbfs + ' dBFS' : '') +
+              (ev.tf_latent_cos !== undefined ? ' \u00b7 cos ' + ev.tf_latent_cos : ''),
+            badge: '\u2713 Inspected' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '')
+          });
         } else if (ev.layer === 'c1_inference') {
           var c1Model = ev.model || (modelInfo(state.settings.model) && modelInfo(state.settings.model).name) || 'LFM3-Omni-2B';
           var c1Desc = ev.layers_desc || (/35b/i.test(c1Model) ? '40-layer BD-GDN/GQA MoE' : /nemotron/i.test(c1Model) ? '88-layer 120B-A12B MoE' : /kimi/i.test(c1Model) ? '93-layer 2.8T MoE' : '24-layer inference');
@@ -4922,6 +4931,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       else if (l.layer === 'ontology') out.push('S2 knowledge graph');
       else if (l.layer === 'ontology_grounding' && l.changed) out.push('S2 grounding fix');
       else if (l.layer === 'image_analysis') out.push('S3 visual inspector (' + (l.elements || 0) + ' regions)');
+      else if (l.layer === 'jepa_audio') out.push('S3 Audio-JEPA (' + (l.acoustic_regime || 'audio') + ')');
       else if (l.layer === 'compiler' && l.checked) out.push(l.ok ? 'S3 code checked' : 'S3 code issue');
       else if (l.layer === 'c1_inference') out.push('C1 Inference' + (l.model ? ' · ' + l.model : ''));
       else if (l.layer === 'c2_hybridagent' && l.ran !== false) out.push('C2 HybridAgent');

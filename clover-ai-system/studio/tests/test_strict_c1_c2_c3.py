@@ -292,11 +292,22 @@ check(
     and isinstance(scr_rep.get("activity"), dict),
 )
 check(
-    "device_actions detects camera photo and video recording requests",
+    "device_actions detects camera photo, video recording, and microphone audio requests",
     device_actions.asks_for_camera_photo("Use the camera app to take a photo and tell me what you see.")
     and device_actions.asks_for_video_recording("Record a video and tell me what it recorded.")
+    and device_actions.asks_for_microphone_audio("Use the microphone to record audio and tell me what you hear.")
     and not device_actions.asks_for_camera_photo("What is a camera?")
-    and not device_actions.asks_for_video_recording("What is a video?"),
+    and not device_actions.asks_for_video_recording("What is a video?")
+    and not device_actions.asks_for_microphone_audio("What is a microphone?"),
+)
+aud_rep = device_actions.capture_microphone_audio(base_tmp, duration_s=1.0)
+check(
+    "device_actions.capture_microphone_audio captures 16kHz WAV and runs Audio-JEPA inspection",
+    bool(aud_rep.get("file"))
+    and (base_tmp / "media" / aud_rep["file"]).is_file()
+    and isinstance(aud_rep.get("jepa_audio"), dict)
+    and bool(aud_rep["jepa_audio"].get("acoustic_regime"))
+    and "Audio-JEPA Inspector (S3)" in app_html,
 )
 check(
     "semantics routes three.js install + 3D visual build to run_powershell and write_file",
