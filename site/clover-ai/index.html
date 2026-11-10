@@ -772,9 +772,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <div class="vsc-tree" id="tools-tree" role="tree" aria-label="Tool apps">
           <button type="button" class="vsc-node" role="treeitem" data-tool-app="terminal"><svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg><span class="vsc-node__name">Terminal</span></button>
           <button type="button" class="vsc-node" role="treeitem" data-tool-app="browser"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg><span class="vsc-node__name">Browser</span></button>
-          <button type="button" class="vsc-node" role="treeitem" data-tool-app="camera"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span class="vsc-node__name">Camera</span></button>
-          <button type="button" class="vsc-node" role="treeitem" data-tool-app="microphone"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span class="vsc-node__name">Microphone</span></button>
-          <button type="button" class="vsc-node laptop-only" role="treeitem" data-tool-app="vscode"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span class="vsc-node__name">VS Code</span></button>
+          <div id="rail-custom-tools"></div>
+          <button type="button" class="vsc-node" id="rail-add-tool-btn" title="Add a tool"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span class="vsc-node__name">Add tool…</span></button>
         </div>
       </div>
       <button type="button" class="rail__nav-btn" data-nav="learning"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span>Learning</span></button>
@@ -829,12 +828,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <div class="composer__bar">
           <div class="composer__tools">
             <button type="button" class="cbtn" id="attach" title="System Senses (Screen Recorder, Camera, Microphone)" aria-label="System senses" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
-            <button type="button" class="cbtn" id="screen-btn" title="System Screenshot / Image inspection (I-JEPA)" aria-label="Capture screen or inspect image"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></button>
+            <button type="button" class="cbtn" id="screen-btn" title="Open Camera app (Photo &amp; Visual Inspection)" aria-label="Open Camera app"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></button>
             <button type="button" class="cbtn" id="clip-btn" title="Attach files, documents, spreadsheets, code or media" aria-label="Attach files or documents"><svg class="ic" aria-hidden="true"><use href="#i-clip"/></svg></button>
           </div>
           <div class="composer__actions">
             <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
-            <button type="button" class="send" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
+            <button type="button" class="send idle" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)"><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
           </div>
         </div>
       </div>
@@ -1167,7 +1166,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
     <section class="page" data-page="tools" hidden>
       <div id="tools-parent-view">
-        <p class="lead">Select a tool app below (or under <b>Tools</b> in the left sidebar) to use <b>Terminal</b>, <b>Browser</b>, <b>Camera</b>, <b>Microphone</b>, or <b>VS Code</b> directly in the center pane.</p>
+        <p class="lead">Clover and you share <b>Terminal</b> (for commands, packages, SSH, Python, and local files) and <b>Browser</b> (for searching and reading the web). Click either tool below or under <b>Tools</b> in the left sidebar to open it in the center pane, or add your own custom tools.</p>
 
         <div class="glabel">When Clover Uses Tools in Chat</div>
         <div class="group pad">
@@ -1175,8 +1174,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           <p class="fine">With <b>When I ask</b>, Clover runs commands or opens pages only when your message asks for it. With <b>Always</b>, Clover decides when a tool is needed. Each tool still follows its <b>Allow / Ask / Off</b> setting below.</p>
         </div>
 
-        <div class="glabel">Core Tool Apps (click Open to use in center pane)</div>
-        <div class="group">
+        <div class="glabel">Tools</div>
+        <div class="group" id="core-tools-group">
           <div class="perm" id="tool-row-terminal">
             <span class="tile" style="cursor:pointer" data-open-tool="terminal"><svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg></span>
             <div>
@@ -1191,7 +1190,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
                   </div>
                 </div>
               </div>
-              <div class="perm__d">Interactive PowerShell &amp; shell console for commands, package installation, SSH, Python scripts, and local file operations.</div>
+              <div class="perm__d">Interactive PowerShell &amp; shell console shared by you and Clover for commands, package installation, SSH, Python scripts, and file operations.</div>
             </div>
           </div>
 
@@ -1209,70 +1208,31 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
                   </div>
                 </div>
               </div>
-              <div class="perm__d">Interactive web reader &amp; search browser for opening URLs, searching the web, and sending pages to Clover.</div>
-            </div>
-          </div>
-
-          <div class="perm" id="tool-row-camera">
-            <span class="tile" style="cursor:pointer" data-open-tool="camera"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></span>
-            <div>
-              <div class="perm__t">
-                <button type="button" class="perm__name" data-open-tool="camera" style="border:0;background:none;padding:0;cursor:pointer;color:var(--ink);text-align:left">Camera</button>
-                <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
-                  <button type="button" class="btn sm pri" data-open-tool="camera">Open Camera</button>
-                  <div class="seg sm" id="tool-perm-camera" role="radiogroup" aria-label="Camera permission">
-                    <button type="button" data-v="allow">Allow</button>
-                    <button type="button" class="on" data-v="ask">Ask</button>
-                    <button type="button" data-v="deny">Off</button>
-                  </div>
-                </div>
-              </div>
-              <div class="perm__d">Interactive Camera, Screenshot, and Screen Recorder studio with <code>I-JEPA</code> visual inspection and OCR.</div>
-            </div>
-          </div>
-
-          <div class="perm" id="tool-row-microphone">
-            <span class="tile" style="cursor:pointer" data-open-tool="microphone"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></span>
-            <div>
-              <div class="perm__t">
-                <button type="button" class="perm__name" data-open-tool="microphone" style="border:0;background:none;padding:0;cursor:pointer;color:var(--ink);text-align:left">Microphone</button>
-                <button type="button" class="btn sm pri" data-open-tool="microphone">Open Microphone</button>
-              </div>
-              <div class="perm__d">Interactive voice &amp; audio recorder for voice chat and <code>Audio-JEPA</code> analysis.</div>
+              <div class="perm__d">Interactive web reader &amp; search browser shared by you and Clover for opening URLs, searching the web, and reading pages.</div>
             </div>
           </div>
         </div>
 
-        <div class="glabel">Connected Apps</div>
-        <div class="group">
-          <div class="perm laptop-only" id="tool-row-vscode">
-            <span class="tile" style="cursor:pointer" data-open-tool="vscode"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span>
-            <div>
-              <div class="perm__t">
-                <button type="button" class="perm__name" data-open-tool="vscode" style="border:0;background:none;padding:0;cursor:pointer;color:var(--ink);text-align:left">VS Code <small id="v-vsc-tools" style="font-weight:500;color:var(--muted);margin-left:.35rem"></small></button>
-                <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
-                  <button type="button" class="btn sm pri" data-open-tool="vscode">Open App</button>
-                  <div class="seg sm" id="tool-perm-vscode" role="radiogroup" aria-label="VS Code permission">
-                    <button type="button" data-v="allow">Allow</button>
-                    <button type="button" class="on" data-v="ask">Ask</button>
-                    <button type="button" data-v="deny">Off</button>
-                  </div>
-                </div>
-              </div>
-              <div class="perm__d">Opens files, clones repositories, installs extensions, and runs tasks in VS Code on this laptop.</div>
-            </div>
-          </div>
+        <div id="custom-tools-wrap" hidden>
+          <div class="glabel">Added Tools</div>
+          <div class="group" id="custom-tools-list"></div>
+        </div>
 
-          <div class="perm" id="tool-row-github">
-            <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-branch"/></svg></span>
-            <div>
-              <div class="perm__t">
-                <span class="perm__name">GitHub <small id="v-gh-tools" style="font-weight:500;color:var(--muted);margin-left:.35rem"></small></span>
-                <button type="button" class="btn sm" data-nav-open="workspaces">Configure</button>
-              </div>
-              <div class="perm__d">Connects directly to your GitHub repositories for Workspaces and syncs your persistent memory repository (<code>clover-ai-studio</code>).</div>
+        <div class="glabel">Add a Tool</div>
+        <div class="group pad" id="add-tool-box">
+          <p class="fine" style="margin-top:0">Add a custom Terminal command tool or Browser web tool to your Tools menu so both you and Clover can launch it in one click.</p>
+          <div class="keyrow" style="margin-top:.4rem">
+            <input type="text" id="tool-add-name" autocomplete="off" spellcheck="false" placeholder="Tool name (e.g. Docker Status, Docs, SSH Server)" aria-label="Tool name">
+            <div class="seg sm" id="tool-add-kind" role="radiogroup" aria-label="Tool type">
+              <button type="button" class="on" data-v="terminal">Terminal</button>
+              <button type="button" data-v="browser">Browser</button>
             </div>
           </div>
+          <div class="keyrow" style="margin-top:.45rem">
+            <input type="text" id="tool-add-target" autocomplete="off" spellcheck="false" placeholder="Command (e.g. git log -n 5) or URL (https://...)" aria-label="Tool command or URL">
+            <button type="button" class="btn pri" id="tool-add-btn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span>Add Tool</span></button>
+          </div>
+          <div class="note" id="tool-add-note" hidden></div>
         </div>
       </div>
 
@@ -1285,7 +1245,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           </div>
           <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
             <button type="button" class="btn sm" id="term-clear"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg><span>Clear</span></button>
-            <button type="button" class="btn sm pri" id="term-ask"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Ask Clover</span></button>
+            <button type="button" class="btn sm pri" id="term-ask"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Send Output to Chat</span></button>
           </div>
         </div>
         <div class="term-chips" id="term-chips">
@@ -1301,6 +1261,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           <input type="text" class="term-input" id="term-input" autocomplete="off" spellcheck="false" placeholder="Type a PowerShell, git, ssh, or python command and press Enter…" aria-label="Terminal command">
           <button type="submit" class="btn pri sm" id="term-run">Run</button>
         </form>
+        <form class="brow-nav" id="term-clover-form" style="border-top:1px solid var(--line);border-bottom:0">
+          <span class="badge on" style="display:inline-flex;align-items:center;gap:.3rem"><svg class="ic" style="width:14px;height:14px" aria-hidden="true"><use href="#i-spark"/></svg>Clover</span>
+          <input type="text" class="brow-url" id="term-clover-input" autocomplete="off" spellcheck="false" placeholder="Ask Clover to run a command or task in Terminal…" aria-label="Ask Clover in Terminal">
+          <button type="submit" class="btn sm pri" id="term-clover-btn">Ask Clover</button>
+        </form>
       </div>
 
       <!-- Interactive Browser App in Center Pane -->
@@ -1311,7 +1276,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             <span class="tool-app__sub" id="brow-sub">Search the web or open any URL</span>
           </div>
           <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
-            <button type="button" class="btn sm pri" id="brow-ask" hidden><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Ask Clover</span></button>
+            <button type="button" class="btn sm pri" id="brow-ask" hidden><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Send Page to Chat</span></button>
             <button type="button" class="btn sm" id="brow-open-ext"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg><span>Open in OS Browser</span></button>
           </div>
         </div>
@@ -1331,9 +1296,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           <div class="vsc-empty" id="brow-empty">
             <svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>
             <b>Clover Browser</b>
-            <span>Type a URL (such as <code>https://en.wikipedia.org/wiki/Trifolium</code>) or a search query above to read pages and search the web right here in the center pane.</span>
+            <span>Type a URL (such as <code>https://en.wikipedia.org/wiki/Trifolium</code>) or a search query above—or ask Clover below—to read pages and search the web right here in the center pane.</span>
           </div>
         </div>
+        <form class="brow-nav" id="brow-clover-form" style="border-top:1px solid var(--line);border-bottom:0">
+          <span class="badge on" style="display:inline-flex;align-items:center;gap:.3rem"><svg class="ic" style="width:14px;height:14px" aria-hidden="true"><use href="#i-spark"/></svg>Clover</span>
+          <input type="text" class="brow-url" id="brow-clover-input" autocomplete="off" spellcheck="false" placeholder="Ask Clover to search or read a web page in Browser…" aria-label="Ask Clover in Browser">
+          <button type="submit" class="btn sm pri" id="brow-clover-btn">Ask Clover</button>
+        </form>
         <div style="padding:.6rem .85rem;background:var(--fill);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:.45rem">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap">
             <span class="fine" style="margin:0;font-weight:600">Default OS Browser Search Engine:</span>
@@ -1345,74 +1315,6 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             <p class="fine" id="handback-help" style="margin:.25rem 0 0"></p>
             <div class="note" id="handback-note" hidden></div>
           </div>
-        </div>
-      </div>
-
-      <!-- Interactive Camera App in Center Pane -->
-      <div class="tool-app" id="tool-app-camera" aria-label="Camera app" hidden>
-        <div class="tool-app__head">
-          <div style="display:flex;align-items:center;gap:.5rem;min-width:0;flex:1">
-            <span class="tool-app__title"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span>Camera &amp; Vision (I-JEPA)</span></span>
-            <span class="tool-app__sub" id="cam-status">Live camera, screenshot &amp; visual inspection</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
-            <button type="button" class="btn sm pri" id="cam-start-btn"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span>Start Camera</span></button>
-            <button type="button" class="btn sm pri" id="cam-snap-btn" hidden>Take Photo</button>
-            <button type="button" class="btn sm danger" id="cam-stop-btn" hidden>Stop Camera</button>
-            <button type="button" class="btn sm" id="cam-shot-btn">Screenshot</button>
-            <button type="button" class="btn sm" id="cam-upload-btn">Upload Image</button>
-            <button type="button" class="btn sm" id="cam-inspect-btn" hidden>Inspect (OCR)</button>
-            <button type="button" class="btn sm pri" id="cam-ask-btn" hidden><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Ask Clover</span></button>
-          </div>
-        </div>
-        <div class="cam-stage" id="cam-stage">
-          <video id="cam-video" autoplay playsinline muted hidden></video>
-          <img id="cam-preview" alt="Captured image" hidden>
-          <div class="vsc-empty" id="cam-empty">
-            <svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>
-            <b>Camera &amp; Visual Senses</b>
-            <span>Click <b>Start Camera</b> for a live camera feed, <b>Screenshot</b> to capture your screen, or <b>Upload Image</b> to inspect an image with <code>I-JEPA</code>.</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Interactive Microphone App in Center Pane -->
-      <div class="tool-app" id="tool-app-microphone" aria-label="Microphone app" hidden>
-        <div class="tool-app__head">
-          <div style="display:flex;align-items:center;gap:.5rem;min-width:0;flex:1">
-            <span class="tool-app__title"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span>Microphone &amp; Voice (Audio-JEPA)</span></span>
-            <span class="tool-app__sub" id="mic-app-status">Ready to record voice or audio</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
-            <button type="button" class="btn sm pri" id="mic-app-rec"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span>Start Recording</span></button>
-            <button type="button" class="btn sm danger" id="mic-app-stop" hidden>Stop Recording</button>
-            <button type="button" class="btn sm" id="mic-app-upload">Upload Audio</button>
-            <button type="button" class="btn sm pri" id="mic-app-ask" hidden><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Ask Clover</span></button>
-          </div>
-        </div>
-        <div class="cam-stage" id="mic-app-stage">
-          <audio id="mic-app-audio" controls hidden style="width:min(420px,100%)"></audio>
-          <div class="vsc-empty" id="mic-app-empty">
-            <svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg>
-            <b>Microphone &amp; Voice Recorder</b>
-            <span>Click <b>Start Recording</b> to record a voice note right here, play it back, and send it to Clover for speech or <code>Audio-JEPA</code> analysis.</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Connected VS Code App in Center Pane -->
-      <div class="tool-app" id="tool-app-vscode" aria-label="VS Code app" hidden>
-        <div class="tool-app__head">
-          <div style="display:flex;align-items:center;gap:.5rem;min-width:0;flex:1">
-            <span class="tool-app__title"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>VS Code Integration</span></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
-            <button type="button" class="btn sm pri" id="tools-vsc-open"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>Launch VS Code</span></button>
-          </div>
-        </div>
-        <div style="padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.8rem">
-          <p class="fine" style="margin:0">Clover connects to VS Code on this laptop to open files and folders, clone repositories, install extensions, inspect diagnostics, and run tasks.</p>
-          <div class="group pad" style="margin:0"><div class="kv" id="tools-vsc-kv"></div></div>
         </div>
       </div>
 
@@ -1640,7 +1542,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function apiUrl(p) { return API_BASE + p; }
   var state = { sessions: { current: '', order: [], map: {} }, files: [], media: [], docs: [], ready: false, busy: false, perms: {}, mode: 'lfm3',
     settings: { model: 'omni', sampling: 'general', thinking: true, budget: 2048, voice: 'female', autospeak: true }, health: null, lastSpeed: 0,
-    turnId: null, waitEl: null, omni: false, inputs: ['text'], speakNext: false, memCount: null, openGroups: {}, catalog: null };
+    turnId: null, waitEl: null, omni: true, inputs: ['text', 'vision', 'audio'], speakNext: false, memCount: null, openGroups: {}, catalog: null };
   var RECENT_CHATS = 5;
   try { state.openGroups = JSON.parse(localStorage.getItem(KEY + '-groups') || '{}') || {}; } catch (e) {}
   var MEDIA_MB = { image: 15, audio: 30, video: 60 }, MAX_MEDIA = 6;
@@ -1978,10 +1880,26 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     });
   }
   function browserLink(t) {
-    if (!browserHref(t)) return null;
+    var isTermTool = t.name === 'run_powershell' || t.name === 'run_python' || t.name === 'vscode_run';
+    var href = browserHref(t);
+    if (!href && !isTermTool) return null;
+    var row = el('div', 'tool__acts');
+    if (isTermTool) {
+      var tb = btn('linkish', ic('terminal') + '<span>Open in Terminal</span>');
+      tb.addEventListener('click', function () { openToolApp('terminal'); });
+      row.appendChild(tb);
+      return row;
+    }
     if (!state.search && !state.searchLoading) { state.searchLoading = true; loadSearch(); }
-    var row = el('div', 'tool__acts'), a = document.createElement('a');
-    a.className = 'linkish'; a.href = browserHref(t); a.target = '_blank'; a.rel = 'noopener noreferrer';
+    var bb = btn('linkish', ic('globe') + '<span>Open in Browser tool</span>');
+    bb.addEventListener('click', function () {
+      openToolApp('browser');
+      var qStr = String(t.args || '').split('\n')[0].trim();
+      if (qStr) navigateBrowserApp(qStr, t.name === 'fetch_url' ? 'read' : 'auto');
+    });
+    row.appendChild(bb);
+    var a = document.createElement('a');
+    a.className = 'linkish'; a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer';
     a.innerHTML = ic('globe') + '<span>' + (t.name === 'web_search' ? 'Search in your browser' : 'Open in your browser') + '</span>';
     a.addEventListener('click', function (e) {
       a.href = browserHref(t);  // the engine picked in Settings may have loaded since
@@ -2585,12 +2503,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (comp) comp.classList.toggle('busy', !!state.busy);
     if (state.busy && state.mode === 'lfm3') return;
     var hasInput = !!($('prompt').value.trim() || state.files.length || state.media.length || state.docs.length);
-    var canVoice = state.omni && state.inputs.indexOf('audio') >= 0;
+    var canVoice = true;
     var b = $('send');
-    b.disabled = !state.ready || state.busy || (!hasInput && !canVoice);
-    b.classList.toggle('idle', !!(state.ready && !state.busy && !hasInput && canVoice));
+    b.disabled = !!state.busy;
+    b.classList.toggle('idle', !!(canVoice && !state.busy && !hasInput));
     if (!state.busy && !b.classList.contains('rec')) {
-      b.title = canVoice ? 'Tap to send · Hold to speak' : 'Send';
+      b.title = 'Tap to send · Hold to speak';
     }
   }
   function pollStatus() {
@@ -3191,8 +3109,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
   /* ---------- in-place center section view: replaces chat screen when any menu is selected ---------- */
   var stack = ['home'];
-  var TOOL_APP_TITLES = { terminal: 'Terminal', browser: 'Browser', camera: 'Camera', microphone: 'Microphone', vscode: 'VS Code' };
-  var toolAppState = { active: '', termCwd: '', termHist: [], termHistIdx: -1, lastTermLog: '', browHist: [], browIdx: -1, browCurrent: null, camStream: null, camMedia: null, micRec: null, micStream: null, micMedia: null };
+  var CUSTOM_TOOLS_KEY = 'clover_custom_tools_v1';
+  var TOOL_APP_TITLES = { terminal: 'Terminal', browser: 'Browser' };
+  var toolAppState = { active: '', termCwd: '', termHist: [], termHistIdx: -1, lastTermLog: '', browHist: [], browIdx: -1, browCurrent: null, addKind: 'terminal', customTools: [] };
   function setSubmenuOpen(navName, open) {
     var sub = navName === 'chat' ? $('rail-chat-sub')
       : navName === 'workspaces' ? $('rail-ws-sub')
@@ -3659,7 +3578,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   if ($('screen-btn')) {
     $('screen-btn').addEventListener('click', function () {
       closeSensesMenu();
-      triggerSystemSense('screenshot');
+      triggerSystemSense('camera');
     });
   }
   if ($('clip-btn')) {
@@ -4133,7 +4052,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
   }
   function startVoiceCapture() {
-    if (rec || nativeRecT0 || state.busy || !state.ready || state.inputs.indexOf('audio') < 0) return;
+    if (rec || nativeRecT0 || state.busy) return;
     recStartedAt = Date.now();
     if (hasNativeAndroidMic()) {
       var st = String(window.CloverAndroidBridge.startAudioCapture() || '');
@@ -4205,7 +4124,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
   }
   function startVoiceHold() {
-    if (!holdActive || rec || nativeRecT0 || state.busy || !state.ready || state.inputs.indexOf('audio') < 0) return;
+    if (!holdActive || rec || nativeRecT0 || state.busy) return;
     holdTriggered = true; suppressSendClick = true;
     startVoiceCapture();
   }
@@ -4217,14 +4136,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (holdTriggered) {
       holdTriggered = false;
       var spokenMs = recStartedAt ? (Date.now() - recStartedAt) : 0;
-      if (spokenMs >= 900) {
+      if (spokenMs >= 600) {
         stopVoiceCapture();
       }
     }
   }
   if ($('mic')) {
     $('mic').addEventListener('click', function () {
-      if (state.busy || !state.ready || state.inputs.indexOf('audio') < 0) return;
+      if (state.busy) return;
       if (nativeRecT0 || (rec && rec.state !== 'inactive')) {
         stopVoiceCapture();
       } else {
@@ -4235,7 +4154,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('send').addEventListener('pointerdown', function (ev) {
     if (ev.button && ev.button !== 0) return;
     if (nativeRecT0 || (rec && rec.state !== 'inactive')) return;
-    if (state.busy || !state.ready || !state.omni || state.inputs.indexOf('audio') < 0) return;
+    if (state.busy) return;
     holdActive = true; holdTriggered = false;
     try { $('send').setPointerCapture(ev.pointerId); } catch (e) {}
     $('send').classList.add('holding');
@@ -4618,6 +4537,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           cd.t.worked = worked; cd.t.summary = sumLine;
           cd.t.why = ev.why || ''; cd.t.result = rawRes;
           cd.card.set(cd.t.state, cd.t.why, cd.t.summary); cd.card.result(cd.t.result);
+          if (ev.ran && (ev.name === 'run_powershell' || ev.name === 'run_python' || ev.name === 'vscode_run')) {
+            logCloverTerminalActivity(ev.name, cd.t.args, rawRes, worked);
+          } else if (ev.ran && (ev.name === 'web_search' || ev.name === 'fetch_url')) {
+            logCloverBrowserActivity(ev.name, cd.t.args);
+          }
           setStage(toolName(ev.name) + (!ev.ran ? ' skipped' : worked ? ' worked' : ' failed'));
         }
         scrollDown();
@@ -5728,11 +5652,104 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }).catch(function (e) { setNote('acct-note', e.message); });
   });
 
-  /* ---------- interactive tool apps in center pane (Terminal, Browser, Camera, Microphone, VS Code) ---------- */
+  /* ---------- interactive tool apps in center pane (Terminal & Browser + Custom Tools + Clover AI Sync) ---------- */
+  function loadCustomTools() {
+    try {
+      var raw = localStorage.getItem(CUSTOM_TOOLS_KEY);
+      toolAppState.customTools = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(toolAppState.customTools)) toolAppState.customTools = [];
+    } catch (e) { toolAppState.customTools = []; }
+    renderCustomTools();
+  }
+  function saveCustomTools() {
+    try { localStorage.setItem(CUSTOM_TOOLS_KEY, JSON.stringify(toolAppState.customTools)); } catch (e) {}
+    renderCustomTools();
+  }
+  function renderCustomTools() {
+    var railBox = $('rail-custom-tools'), listBox = $('custom-tools-list'), wrapBox = $('custom-tools-wrap');
+    if (railBox) railBox.innerHTML = '';
+    if (listBox) listBox.innerHTML = '';
+    var items = toolAppState.customTools || [];
+    if (wrapBox) wrapBox.hidden = !items.length;
+    items.forEach(function (ct) {
+      var iconName = ct.kind === 'browser' ? 'globe' : 'terminal';
+      if (railBox) {
+        var rBtn = btn('vsc-node', ic(iconName) + '<span class="vsc-node__name"></span>');
+        rBtn.querySelector('.vsc-node__name').textContent = ct.name;
+        rBtn.setAttribute('role', 'treeitem');
+        rBtn.setAttribute('data-custom-tool', ct.id);
+        rBtn.addEventListener('click', function () { launchCustomTool(ct); });
+        railBox.appendChild(rBtn);
+      }
+      if (listBox) {
+        var row = el('div', 'perm');
+        row.innerHTML = '<span class="tile">' + ic(iconName) + '</span><div><div class="perm__t"><span class="perm__name"></span><div style="display:flex;gap:.35rem"></div></div><div class="perm__d"></div></div>';
+        row.querySelector('.perm__name').textContent = ct.name;
+        row.querySelector('.perm__d').textContent = (ct.kind === 'browser' ? 'Browser · ' : 'Terminal · ') + ct.target;
+        var acts = row.querySelector('.perm__t > div');
+        var openB = btn('btn sm pri', 'Open');
+        openB.addEventListener('click', function () { launchCustomTool(ct); });
+        var delB = btn('btn sm danger', 'Remove');
+        delB.addEventListener('click', function () {
+          toolAppState.customTools = toolAppState.customTools.filter(function (x) { return x.id !== ct.id; });
+          saveCustomTools();
+        });
+        acts.appendChild(openB);
+        acts.appendChild(delB);
+        listBox.appendChild(row);
+      }
+    });
+  }
+  function launchCustomTool(ct) {
+    if (!ct) return;
+    if (ct.kind === 'browser') {
+      openToolApp('browser');
+      if (ct.target) navigateBrowserApp(ct.target, 'auto');
+    } else {
+      openToolApp('terminal');
+      if (ct.target) runTerminalAppCommand(ct.target);
+    }
+  }
+  if ($('rail-add-tool-btn')) {
+    $('rail-add-tool-btn').addEventListener('click', function () {
+      openSettings('tools', true);
+      showToolsParentView();
+      setTimeout(function () { if ($('tool-add-name')) $('tool-add-name').focus(); }, 40);
+    });
+  }
+  if ($('tool-add-kind')) {
+    segClick('tool-add-kind', function (v) {
+      toolAppState.addKind = v;
+      if ($('tool-add-target')) {
+        $('tool-add-target').placeholder = v === 'browser'
+          ? 'URL or search query (e.g. https://docs.python.org)'
+          : 'Command (e.g. git status -s  or  ssh user@host)';
+      }
+    });
+  }
+  if ($('tool-add-btn')) {
+    $('tool-add-btn').addEventListener('click', function () {
+      var nm = ($('tool-add-name') && $('tool-add-name').value || '').trim();
+      var tg = ($('tool-add-target') && $('tool-add-target').value || '').trim();
+      if (!nm) { if ($('tool-add-name')) $('tool-add-name').focus(); return; }
+      if (!tg) { if ($('tool-add-target')) $('tool-add-target').focus(); return; }
+      toolAppState.customTools.push({
+        id: 'ct_' + Date.now().toString(36),
+        name: nm,
+        kind: toolAppState.addKind || 'terminal',
+        target: tg
+      });
+      saveCustomTools();
+      if ($('tool-add-name')) $('tool-add-name').value = '';
+      if ($('tool-add-target')) $('tool-add-target').value = '';
+      setNote('tool-add-note', 'Added "' + nm + '" to Tools.', true);
+    });
+  }
+
   function showToolsParentView() {
     toolAppState.active = '';
     if ($('tools-parent-view')) $('tools-parent-view').hidden = false;
-    ['terminal', 'browser', 'camera', 'microphone', 'vscode'].forEach(function (k) {
+    ['terminal', 'browser'].forEach(function (k) {
       if ($('tool-app-' + k)) $('tool-app-' + k).hidden = true;
     });
     if ($('tools-tree')) {
@@ -5756,7 +5773,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     setSubmenuOpen('tools', true);
     if ($('tools-parent-view')) $('tools-parent-view').hidden = true;
-    ['terminal', 'browser', 'camera', 'microphone', 'vscode'].forEach(function (k) {
+    ['terminal', 'browser'].forEach(function (k) {
       if ($('tool-app-' + k)) $('tool-app-' + k).hidden = (k !== appName);
     });
     if ($('tools-tree')) {
@@ -5778,18 +5795,16 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       setTimeout(function () { if ($('term-input')) $('term-input').focus(); }, 30);
     } else if (appName === 'browser') {
       setTimeout(function () { if ($('brow-input')) $('brow-input').focus(); }, 30);
-    } else if (appName === 'vscode') {
-      loadVscode();
     }
   }
 
-  /* 1. Terminal App */
+  /* 1. Terminal App (shared by User and Clover) */
   function initTerminalApp() {
     var con = $('term-console');
     if (con && !con.children.length) {
       var welcome = el('div', 'term-entry');
       var m = el('div', 'term-meta');
-      m.textContent = 'Clover Interactive Terminal — run PowerShell, git, ssh, python, or package commands.';
+      m.textContent = 'Clover Interactive Terminal — shared by you and Clover for PowerShell, git, ssh, python, and package commands.';
       welcome.appendChild(m);
       con.appendChild(welcome);
     }
@@ -5801,6 +5816,30 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }).catch(function () {
       if ($('term-cwd-label') && !toolAppState.termCwd) $('term-cwd-label').textContent = '~';
     });
+  }
+  function logCloverTerminalActivity(toolNameStr, cmdText, resultText, worked) {
+    var con = $('term-console');
+    if (!con) return;
+    var entry = el('div', 'term-entry');
+    var cmdLine = el('div', 'term-cmd');
+    var tag = el('span');
+    tag.textContent = 'Clover (' + (toolNameStr === 'run_python' ? 'Python' : 'PowerShell') + ') >';
+    cmdLine.appendChild(tag);
+    cmdLine.appendChild(document.createTextNode(String(cmdText || '').trim()));
+    var outPre = el('pre', 'term-out', String(resultText || '').trim() || '(completed)');
+    var metaDiv = el('div', 'term-meta' + (worked ? '' : ' err'));
+    metaDiv.textContent = worked ? 'executed by Clover' : 'failed';
+    entry.appendChild(cmdLine);
+    entry.appendChild(outPre);
+    entry.appendChild(metaDiv);
+    con.appendChild(entry);
+    con.scrollTop = con.scrollHeight;
+    toolAppState.lastTermLog = '$ ' + cmdText + '\n' + resultText;
+  }
+  function logCloverBrowserActivity(toolNameStr, argText) {
+    var q = String(argText || '').split('\n')[0].trim();
+    if (!q) return;
+    navigateBrowserApp(q, toolNameStr === 'fetch_url' ? 'read' : 'auto');
   }
   function runTerminalAppCommand(cmd) {
     cmd = String(cmd || '').trim();
@@ -5861,6 +5900,23 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       runTerminalAppCommand(c);
     });
   }
+  if ($('term-clover-form')) {
+    $('term-clover-form').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var inp = $('term-clover-input');
+      if (!inp || !inp.value.trim()) return;
+      var q = inp.value.trim();
+      inp.value = '';
+      closeSheet();
+      if ($('prompt')) {
+        $('prompt').value = 'Use PowerShell in the terminal to: ' + q;
+        autosize();
+        updateSend();
+        if (state.ready && !state.busy) send();
+        else $('prompt').focus();
+      }
+    });
+  }
   if ($('term-input')) {
     $('term-input').addEventListener('keydown', function (ev) {
       if (ev.key === 'ArrowUp' && toolAppState.termHist.length) {
@@ -5905,7 +5961,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     });
   }
 
-  /* 2. Browser App */
+  /* 2. Browser App (shared by User and Clover) */
   function navigateBrowserApp(inputStr, actionMode, fromHistory) {
     var q = String(inputStr || '').trim();
     if (!q) return;
@@ -5984,6 +6040,24 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       if (inp && inp.value.trim()) navigateBrowserApp(inp.value.trim(), 'auto');
     });
   }
+  if ($('brow-clover-form')) {
+    $('brow-clover-form').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var inp = $('brow-clover-input');
+      if (!inp || !inp.value.trim()) return;
+      var q = inp.value.trim();
+      inp.value = '';
+      navigateBrowserApp(q, 'auto');
+      closeSheet();
+      if ($('prompt')) {
+        $('prompt').value = 'Search the web and read the best pages for: ' + q;
+        autosize();
+        updateSend();
+        if (state.ready && !state.busy) send();
+        else $('prompt').focus();
+      }
+    });
+  }
   if ($('brow-back')) {
     $('brow-back').addEventListener('click', function () {
       if (toolAppState.browIdx > 0) {
@@ -6047,209 +6121,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       updateSend();
     });
   }
-
-  /* 3. Camera App */
-  function stopCameraAppStream() {
-    if (toolAppState.camStream) {
-      toolAppState.camStream.getTracks().forEach(function (t) { t.stop(); });
-      toolAppState.camStream = null;
-    }
-    if ($('cam-video')) { $('cam-video').srcObject = null; $('cam-video').hidden = true; }
-    if ($('cam-snap-btn')) $('cam-snap-btn').hidden = true;
-    if ($('cam-stop-btn')) $('cam-stop-btn').hidden = true;
-    if ($('cam-start-btn')) $('cam-start-btn').hidden = false;
-  }
-  function showCapturedCameraMedia(item, summaryText) {
-    stopCameraAppStream();
-    toolAppState.camMedia = item;
-    if ($('cam-empty')) $('cam-empty').hidden = true;
-    if ($('cam-preview')) {
-      $('cam-preview').src = item.thumb || ('data:image/png;base64,' + item.data);
-      $('cam-preview').hidden = false;
-    }
-    if ($('cam-status')) $('cam-status').textContent = summaryText || item.name || 'Image captured';
-    if ($('cam-inspect-btn')) $('cam-inspect-btn').hidden = !item.file;
-    if ($('cam-ask-btn')) $('cam-ask-btn').hidden = false;
-  }
-  if ($('cam-start-btn')) {
-    $('cam-start-btn').addEventListener('click', function () {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function (stream) {
-          toolAppState.camStream = stream;
-          if ($('cam-empty')) $('cam-empty').hidden = true;
-          if ($('cam-preview')) $('cam-preview').hidden = true;
-          var v = $('cam-video');
-          if (v) { v.srcObject = stream; v.hidden = false; v.play().catch(function () {}); }
-          if ($('cam-start-btn')) $('cam-start-btn').hidden = true;
-          if ($('cam-snap-btn')) $('cam-snap-btn').hidden = false;
-          if ($('cam-stop-btn')) $('cam-stop-btn').hidden = false;
-          if ($('cam-status')) $('cam-status').textContent = 'Live camera active — click Take Photo to capture';
-        }).catch(function () {
-          if ($('sense-camera-input')) $('sense-camera-input').click();
-        });
-      } else if ($('sense-camera-input')) {
-        $('sense-camera-input').click();
-      }
-    });
-  }
-  if ($('cam-snap-btn')) {
-    $('cam-snap-btn').addEventListener('click', function () {
-      var v = $('cam-video');
-      if (!v || !toolAppState.camStream) return;
-      var c = document.createElement('canvas');
-      c.width = v.videoWidth || 640; c.height = v.videoHeight || 480;
-      c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
-      var dUrl = c.toDataURL('image/png');
-      var b64 = dUrl.slice(dUrl.indexOf(',') + 1);
-      api('POST', '/api/senses/capture', { sense: 'camera', name: 'Camera photo.png', data: b64 }).then(function (rep) {
-        showCapturedCameraMedia({ kind: 'image', name: rep.name || 'Camera photo.png', data: rep.data || b64, thumb: dUrl, file: rep.file }, rep.jepa_summary || 'Camera photo captured');
-      }).catch(function () {
-        showCapturedCameraMedia({ kind: 'image', name: 'Camera photo.png', data: b64, thumb: dUrl }, 'Camera photo captured');
-      });
-    });
-  }
-  if ($('cam-stop-btn')) {
-    $('cam-stop-btn').addEventListener('click', function () {
-      stopCameraAppStream();
-      if (!toolAppState.camMedia && $('cam-empty')) $('cam-empty').hidden = false;
-    });
-  }
-  if ($('cam-shot-btn')) {
-    $('cam-shot-btn').addEventListener('click', function () {
-      if ($('cam-status')) $('cam-status').textContent = 'Capturing system screenshot…';
-      api('POST', '/api/senses/capture', { sense: 'screenshot', launch_system_app: false }).then(function (rep) {
-        var b64 = rep.data || '';
-        var thumb = b64 ? ('data:image/png;base64,' + b64) : (rep.file ? apiUrl('/api/media/file/' + rep.file) : '');
-        showCapturedCameraMedia({ kind: 'image', name: rep.name || 'System screenshot.png', data: b64, thumb: thumb, file: rep.file, screen_capture: true }, rep.jepa_summary || 'Screenshot captured');
-      }).catch(function (e) {
-        if ($('cam-status')) $('cam-status').textContent = e.message || 'Could not capture screenshot';
-      });
-    });
-  }
-  if ($('cam-upload-btn')) {
-    $('cam-upload-btn').addEventListener('click', function () {
-      var inp = document.createElement('input');
-      inp.type = 'file'; inp.accept = 'image/*';
-      inp.onchange = function () {
-        var f = inp.files && inp.files[0]; if (!f) return;
-        var rd = new FileReader();
-        rd.onload = function () {
-          var dUrl = String(rd.result || '');
-          var b64 = dUrl.slice(dUrl.indexOf(',') + 1);
-          api('POST', '/api/senses/capture', { sense: 'camera', name: f.name, data: b64 }).then(function (rep) {
-            showCapturedCameraMedia({ kind: 'image', name: f.name, data: rep.data || b64, thumb: dUrl, file: rep.file }, rep.jepa_summary || f.name);
-          }).catch(function () {
-            showCapturedCameraMedia({ kind: 'image', name: f.name, data: b64, thumb: dUrl }, f.name);
-          });
-        };
-        rd.readAsDataURL(f);
-      };
-      inp.click();
-    });
-  }
-  if ($('cam-inspect-btn')) {
-    $('cam-inspect-btn').addEventListener('click', function () {
-      if (toolAppState.camMedia) openImageInspector(toolAppState.camMedia);
-    });
-  }
-  if ($('cam-ask-btn')) {
-    $('cam-ask-btn').addEventListener('click', function () {
-      if (toolAppState.camMedia && state.media.length < MAX_MEDIA) {
-        state.media.push(toolAppState.camMedia);
-        renderAtt();
-      }
-      closeSheet();
-      var p = $('prompt');
-      if (p && !p.value.trim()) {
-        p.value = 'Inspect this image and tell me what you see.';
-        autosize();
-      }
-      if (p) p.focus();
-      updateSend();
-    });
-  }
-
-  /* 4. Microphone App */
-  if ($('mic-app-rec')) {
-    $('mic-app-rec').addEventListener('click', function () {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        if ($('sense-audio-input')) $('sense-audio-input').click();
-        return;
-      }
-      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
-        toolAppState.micStream = stream;
-        var chunks = [];
-        var mr = new MediaRecorder(stream);
-        toolAppState.micRec = mr;
-        mr.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
-        mr.onstop = function () {
-          stream.getTracks().forEach(function (t) { t.stop(); });
-          var blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
-          var rd = new FileReader();
-          rd.onload = function () {
-            var dUrl = String(rd.result || '');
-            var b64 = dUrl.slice(dUrl.indexOf(',') + 1);
-            toolAppState.micMedia = { kind: 'audio', name: 'Voice recording.webm', data: b64 };
-            if ($('mic-app-empty')) $('mic-app-empty').hidden = true;
-            if ($('mic-app-audio')) { $('mic-app-audio').src = dUrl; $('mic-app-audio').hidden = false; }
-            if ($('mic-app-ask')) $('mic-app-ask').hidden = false;
-            if ($('mic-app-status')) $('mic-app-status').textContent = 'Voice recording ready';
-          };
-          rd.readAsDataURL(blob);
-        };
-        mr.start();
-        if ($('mic-app-rec')) $('mic-app-rec').hidden = true;
-        if ($('mic-app-stop')) $('mic-app-stop').hidden = false;
-        if ($('mic-app-status')) $('mic-app-status').textContent = 'Recording audio… click Stop Recording when done';
-      }).catch(function () {
-        if ($('sense-audio-input')) $('sense-audio-input').click();
-      });
-    });
-  }
-  if ($('mic-app-stop')) {
-    $('mic-app-stop').addEventListener('click', function () {
-      if (toolAppState.micRec && toolAppState.micRec.state !== 'inactive') toolAppState.micRec.stop();
-      if ($('mic-app-stop')) $('mic-app-stop').hidden = true;
-      if ($('mic-app-rec')) $('mic-app-rec').hidden = false;
-    });
-  }
-  if ($('mic-app-upload')) {
-    $('mic-app-upload').addEventListener('click', function () {
-      var inp = document.createElement('input');
-      inp.type = 'file'; inp.accept = 'audio/*';
-      inp.onchange = function () {
-        var f = inp.files && inp.files[0]; if (!f) return;
-        var rd = new FileReader();
-        rd.onload = function () {
-          var dUrl = String(rd.result || '');
-          var b64 = dUrl.slice(dUrl.indexOf(',') + 1);
-          toolAppState.micMedia = { kind: 'audio', name: f.name, data: b64 };
-          if ($('mic-app-empty')) $('mic-app-empty').hidden = true;
-          if ($('mic-app-audio')) { $('mic-app-audio').src = dUrl; $('mic-app-audio').hidden = false; }
-          if ($('mic-app-ask')) $('mic-app-ask').hidden = false;
-          if ($('mic-app-status')) $('mic-app-status').textContent = f.name + ' ready';
-        };
-        rd.readAsDataURL(f);
-      };
-      inp.click();
-    });
-  }
-  if ($('mic-app-ask')) {
-    $('mic-app-ask').addEventListener('click', function () {
-      if (toolAppState.micMedia && state.media.length < MAX_MEDIA) {
-        state.media.push(toolAppState.micMedia);
-        renderAtt();
-      }
-      closeSheet();
-      var p = $('prompt');
-      if (p && !p.value.trim()) {
-        p.value = 'Listen to this audio recording and respond.';
-        autosize();
-      }
-      if (p) p.focus();
-      updateSend();
-    });
-  }
+  loadCustomTools();
 
   function tick() {
     if (!state.busy) pollStatus();

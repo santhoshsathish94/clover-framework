@@ -151,12 +151,18 @@ check(
     and 'class="sheet-bd"' not in app,
 )
 check(
-    "Left pane (#rail) has collapsible Chat submenu (#rail-chat-sub), Workspaces submenu (#rail-ws-sub), Memory submenu (#rail-mem-sub), and Tools submenu (#rail-tools-sub -> Terminal, Browser, Camera, Microphone, VS Code)",
+    "Left pane (#rail) has collapsible Chat submenu (#rail-chat-sub), Workspaces submenu (#rail-ws-sub), Memory submenu (#rail-mem-sub), and Tools submenu (#rail-tools-sub -> Terminal, Browser, custom tools, and + Add tool)",
     'id="rail-chat-sub"' in app
     and 'id="rail-ws-sub"' in app
     and 'id="rail-mem-sub"' in app
     and 'id="rail-tools-sub"' in app
-    and all(f'data-tool-app="{t}"' in app for t in ("terminal", "browser", "camera", "microphone", "vscode"))
+    and 'data-tool-app="terminal"' in app
+    and 'data-tool-app="browser"' in app
+    and 'data-tool-app="camera"' not in app
+    and 'data-tool-app="microphone"' not in app
+    and 'data-tool-app="vscode"' not in app
+    and 'id="rail-custom-tools"' in app
+    and 'id="rail-add-tool-btn"' in app
     and app.index('id="rail"') < app.index('id="rail-chat-sub"') < app.index('id="chats"') < app.index('id="rail-ws-sub"') < app.index('id="vsc-tree"') < app.index('id="rail-mem-sub"') < app.index('id="mem-tree"') < app.index('id="rail-tools-sub"') < app.index('id="tools-tree"') < app.index('<section class="main">'),
 )
 check(
@@ -171,13 +177,21 @@ check(
 )
 tools_sec = app.split('<section class="page" data-page="tools" hidden>', 1)[1].split("</section>", 1)[0]
 check(
-    "Tools page [data-page='tools'] provides interactive center-pane apps (#tool-app-terminal, #tool-app-browser, #tool-app-camera, #tool-app-microphone, #tool-app-vscode) and parent overview (#tools-parent-view)",
-    all(rid in tools_sec for rid in ("tools-parent-view", "tool-row-terminal", "tool-row-browser", "tool-row-camera", "tool-row-microphone", "tool-row-vscode", "tool-row-github"))
-    and all(aid in tools_sec for aid in ("tool-app-terminal", "tool-app-browser", "tool-app-camera", "tool-app-microphone", "tool-app-vscode"))
-    and all(pid in tools_sec for pid in ("tool-perm-terminal", "tool-perm-browser", "tool-perm-camera", "tool-perm-vscode"))
+    "Tools page [data-page='tools'] has only Terminal and Browser built-in tool apps (#tool-app-terminal, #tool-app-browser), an Add Tool form (#add-tool-box, #tool-add-btn), and Clover AI interaction bars (#term-clover-form, #brow-clover-form)",
+    all(rid in tools_sec for rid in ("tools-parent-view", "tool-row-terminal", "tool-row-browser", "add-tool-box", "tool-add-btn", "tool-app-terminal", "tool-app-browser", "term-clover-form", "brow-clover-form"))
+    and all(removed not in tools_sec for removed in ("tool-row-camera", "tool-row-microphone", "tool-row-vscode", "tool-app-camera", "tool-app-microphone", "tool-app-vscode"))
     and "function openToolApp(appName)" in app
+    and "function logCloverTerminalActivity(" in app
+    and "function logCloverBrowserActivity(" in app
     and "/api/tools/terminal" in app
     and "/api/tools/browser" in app,
+)
+check(
+    "Chat screen composer handles Camera (#screen-btn -> triggerSystemSense('camera')) and WhatsApp-style hold-to-speak voice (#send long-press -> startVoiceHold/startVoiceCapture)",
+    'id="screen-btn" title="Open Camera app (Photo &amp; Visual Inspection)"' in app
+    and "triggerSystemSense('camera')" in app
+    and 'id="send" title="Tap to send · Hold to speak"' in app
+    and "holdTimer = setTimeout(startVoiceHold, HOLD_MS)" in app,
 )
 
 # 5. Backend workspace tree, file viewer, local repo fallback, and secret blocking
