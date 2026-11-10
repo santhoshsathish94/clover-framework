@@ -1,128 +1,74 @@
-#!/usr/bin/env python3
-"""
-S3 · Tools — Local Terminal (`sh` / `PowerShell`) & SSH Host Runner (`local_terminal.py`).
-
-Ported from `laptop/clover/local_terminal.py` (`Step 20.1 & 20.2`) and extended for Android Termux / Linux:
-  1. **Process-Tree Termination on Timeout or Stop**:
-     - On Windows: `taskkill /T /F /PID`.
-     - On Android Termux / Linux: spawns in a new process group (`start_new_session=True`) and kills the
-       entire process group (`os.killpg(p.pid, signal.SIGKILL)`) when `timeout_s` elapses or `cancel.is_set()`.
-  2. **1 MB Output Cap & UTF-8 Decoding**:
-     - Reads stdout+stderr in 8 KB chunks up to `OUT_CAP_BYTES = 1_000_000` so a runaway command can never
-       exhaust device RAM.
-  3. **Working Folder (`resolve_cwd`) & Timeout Clamping (`1..600s`)**:
-     - Expands `~` and `$VARS`, resolves relative paths against the active workspace (`workdir`), and formats
-       the final status (`[exit code N]`, `[stopped after T seconds: the time limit]`, or `[stopped: the user stopped the turn]`).
-  4. **SSH Host Management (`SSHHosts`)**:
-     - Generates an Ed25519 key pair on the device (`ssh-keygen -t ed25519`), exposes ONLY the public key
-       (`.pub`) for the user to add on their server, verifies host fingerprints (`ssh-keyscan` + `ssh-keygen -lf`),
-       and NEVER reads, logs, or sends private keys.
-"""
-
-from __future__ import annotations
-
-import json
+"""Commands for Clover's tools: PowerShell on this laptop (and ssh.exe for the SSH tool), run as the user in a hidden
+process. The whole process tree stops when the time limit passes or the user stops the turn; output is read as UTF-8
+and capped, so a command that prints without end cannot fill memory."""
 import os
 import re
-import shutil
-import signal
 import subprocess
 import threading
 import time
-from pathlib import Path
-from typing import Any
 
 MAX_TIMEOUT_S = 600
 DEFAULT_TIMEOUT_S = 60
 OUT_CAP_BYTES = 1_000_000
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-
-PS_HEAD = (
-    "[Console]::OutputEncoding = [Text.Encoding]::UTF8; $OutputEncoding = [Text.Encoding]::UTF8; "
-    "$ProgressPreference = 'SilentlyContinue'\n"
-)
+# PowerShell 5.1 writes in the console's OEM code page unless told otherwise; the last line turns a failure into an exit code
+PS_HEAD = "[Console]::OutputEncoding = [Text.Encoding]::UTF8; $OutputEncoding = [Text.Encoding]::UTF8; " \
+          "$ProgressPreference = 'SilentlyContinue'\n"
 PS_TAIL = "\nif (-not $?) { exit $(if ($LASTEXITCODE) { $LASTEXITCODE } else { 1 }) }"
-# stdin is closed: git must never open an editor, a pager, or a credential prompt (git rebase -i opened Vim and hung 30s)
-QUIET_GIT = {
-    "GIT_EDITOR": "true",
-    "GIT_SEQUENCE_EDITOR": "true",
-    "GIT_PAGER": "cat",
-    "PAGER": "cat",
-    "GIT_TERMINAL_PROMPT": "0",
-    "GCM_INTERACTIVE": "never",
-}
-ANSI = re.compile(r"\x1b(?:\[[0-9;?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[@-Z\\-_])")
-# commands that change history, delete files, or alter the machine: always ask, even when the terminal is on Allow
+# no window can answer an editor, pager or password prompt: `git rebase -i` opened Vim and hung (2026-11-01)
+QUIET_GIT = {"GIT_EDITOR": "true", "GIT_SEQUENCE_EDITOR": "true", "GIT_PAGER": "cat", "PAGER": "cat",
+             "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never"}
+ANSI = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[@-Z\\-_])")
+# commands asked about even when the terminal is allowed: they delete, rewrite git history, publish, or stop the system
 RISKY = (
     (re.compile(r"\bgit\s+(?:rebase|reset|clean|filter-branch|filter-repo|rm)\b|\bgit\s+push\b|"
                 r"\bgit\s+(?:checkout|switch)\s+(?:-f\b|--force\b|--\s|\.\s*$|--discard-changes)|\bgit\s+restore\b|"
                 r"\bgit\s+branch\s+(?:-D|--delete\s+--force)\b|\bgit\s+stash\s+(?:drop|clear)\b|"
                 r"\bgit\s+commit\b[^\n;|]*--amend\b|\bgit\s+reflog\s+(?:expire|delete)\b", re.I),
      "it rewrites git history, discards changes or publishes to a remote"),
-    (re.compile(r"(?:^|[;|&({\s])(?:Remove-Item|ri|rm|rmdir|rd|del|erase|shred|Clear-Content|Clear-RecycleBin)(?=\s|$)", re.I),
+    (re.compile(r"(?:^|[;|&({\s])(?:Remove-Item|ri|rm|rmdir|rd|del|erase|Clear-Content|Clear-RecycleBin)(?=\s|$)", re.I),
      "it deletes files or folders"),
-    (re.compile(r"\b(?:Format-Volume|Clear-Disk|Initialize-Disk|diskpart|mkfs|fdisk|format\s+[a-z]:|bcdedit|vssadmin|cipher\s+/w|"
-                r"Stop-Computer|Restart-Computer|shutdown|reboot|Set-ExecutionPolicy|reg(?:\.exe)?\s+delete|"
+    (re.compile(r"\b(?:Format-Volume|Clear-Disk|Initialize-Disk|diskpart|format\s+[a-z]:|bcdedit|vssadmin|cipher\s+/w|"
+                r"Stop-Computer|Restart-Computer|shutdown(?:\.exe)?\s+/[srp]|Set-ExecutionPolicy|reg(?:\.exe)?\s+delete|"
                 r"Remove-ItemProperty|takeown|icacls\b[^\n;|]*/(?:grant|reset|remove))\b", re.I),
      "it changes the system itself"),
-    (re.compile(r"\b(?:Stop-Process|taskkill|kill|pkill|killall|Uninstall-Package|Uninstall-Module|Remove-AppxPackage)\b|"
-                r"\b(?:winget|choco|pip|npm|pkg)\s+uninstall\b|\bapt(?:-get)?\s+(?:remove|purge)\b", re.I),
+    (re.compile(r"\b(?:Stop-Process|taskkill|kill|Uninstall-Package|Uninstall-Module|Remove-AppxPackage)\b|"
+                r"\bwinget\s+uninstall\b|\bchoco\s+uninstall\b", re.I),
      "it stops programs or uninstalls software"),
 )
 
 
-def strip_ansi(text: str | None) -> str:
-    return ANSI.sub("", text or "")
-
-
-def risky(command: str | None) -> str | None:
-    """Why `command` needs confirmation before it runs (even when shell is on Allow), or None."""
-    c = command or ""
+def risky(command):
+    """Why a command cannot easily be undone (asked about even when commands are allowed), or None."""
     for pat, why in RISKY:
-        if pat.search(c):
+        if pat.search(str(command or "")):
             return why
     return None
 
 
-def clamp_timeout(t: Any) -> int:
+def strip_ansi(text):
+    return ANSI.sub("", str(text or ""))
+
+
+def clamp_timeout(t):
     try:
-        val = int(t)
+        t = int(t)
     except (TypeError, ValueError):
         return DEFAULT_TIMEOUT_S
-    return max(1, min(MAX_TIMEOUT_S, val))
+    return max(1, min(MAX_TIMEOUT_S, t))
 
 
-def run(
-    args: list[str],
-    cwd: str | Path | None = None,
-    timeout_s: int = DEFAULT_TIMEOUT_S,
-    cancel: Any = None,
-    env: dict[str, str] | None = None,
-) -> tuple[str, int | None, str]:
-    """Runs `args` and returns `(output_text, exit_code_or_None, how_ended: 'exit' | 'timeout' | 'stopped')`."""
-    popen_kwargs: dict[str, Any] = {
-        "cwd": str(cwd) if cwd else None,
-        "stdout": subprocess.PIPE,
-        "stderr": subprocess.STDOUT,
-        "stdin": subprocess.DEVNULL,
-        "env": {**os.environ, **QUIET_GIT, **(env or {})},
-    }
-    if os.name == "nt":
-        popen_kwargs["creationflags"] = NO_WINDOW
-    else:
-        popen_kwargs["start_new_session"] = True
+def run(args, cwd=None, timeout_s=DEFAULT_TIMEOUT_S, cancel=None, env=None):
+    """-> (output text, exit code or None, how it ended: "exit" | "timeout" | "stopped")"""
+    p = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                         env=env, creationflags=NO_WINDOW)
+    chunks, size = [], [0]
 
-    p = subprocess.Popen(args, **popen_kwargs)
-    chunks: list[bytes] = []
-    size = [0]
-
-    def reader() -> None:
-        assert p.stdout is not None
+    def reader():
         for b in iter(lambda: p.stdout.read(8192), b""):
             if size[0] < OUT_CAP_BYTES:
                 chunks.append(b)
             size[0] += len(b)
-
     t = threading.Thread(target=reader, daemon=True)
     t.start()
     t0, how = time.time(), "exit"
@@ -134,141 +80,71 @@ def run(
             how = "timeout"
             break
         time.sleep(0.1)
-
     if how != "exit":
-        if os.name == "nt":
-            subprocess.run(["taskkill", "/T", "/F", "/PID", str(p.pid)], capture_output=True, creationflags=NO_WINDOW)
-        else:
-            try:
-                os.killpg(p.pid, signal.SIGKILL)
-            except OSError:
-                p.kill()
+        subprocess.run(["taskkill", "/T", "/F", "/PID", str(p.pid)], capture_output=True, creationflags=NO_WINDOW)
         try:
             p.wait(5)
         except subprocess.TimeoutExpired:
             p.kill()
-
     t.join(3)
-    out = strip_ansi(b"".join(chunks).decode("utf-8", errors="replace").replace("\r\n", "\n"))
+    out = b"".join(chunks).decode("utf-8", errors="replace").replace("\r\n", "\n")
     if size[0] > OUT_CAP_BYTES:
         out += f"\n[output cut: {size[0]:,} bytes printed, the first {OUT_CAP_BYTES:,} kept]"
     return out, (p.returncode if how == "exit" else None), how
 
 
-def result_text(out: str, code: int | None, how: str, timeout_s: int) -> str:
-    out = (out or "").strip()
-    end = {
-        "exit": f"[exit code {code}]",
-        "timeout": f"[stopped after {timeout_s} seconds: the time limit]",
-        "stopped": "[stopped: the user stopped the turn]",
-    }[how]
+def ps51_chain(command):
+    """`a && b` / `a || b` (PowerShell 7 and cmd) in the form Windows PowerShell 5.1 runs: `git add x && git commit`
+    failed as a syntax error and the commit was never made (2026-11-01). Quoted text is left alone."""
+    if "&&" not in command and "||" not in command:
+        return command
+    parts, cur, quote, i = [], "", None, 0
+    while i < len(command):
+        c = command[i]
+        if quote:
+            cur += c
+            if c == quote:
+                quote = None
+        elif c in "'\"":
+            quote, cur = c, cur + c
+        elif command[i:i + 2] in ("&&", "||"):
+            parts.append(cur.strip())
+            parts.append(command[i:i + 2])
+            cur, i = "", i + 2
+            continue
+        else:
+            cur += c
+        i += 1
+    parts.append(cur.strip())
+    out = parts[0]
+    for op, nxt in zip(parts[1::2], parts[2::2]):
+        out = f"{out}; if ({'$?' if op == '&&' else '-not $?'}) {{ {nxt} }}"
+    return out
+
+
+def powershell(command, cwd=None, timeout_s=DEFAULT_TIMEOUT_S, cancel=None):
+    """A PowerShell command -> the text the model sees: output, then the exit code or why it stopped."""
+    t = clamp_timeout(timeout_s)
+    out, code, how = run(["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", PS_HEAD + ps51_chain(command) + PS_TAIL],
+                         cwd=cwd, timeout_s=t, cancel=cancel, env=dict(os.environ, **QUIET_GIT))
+    return result_text(out, code, how, t)
+
+
+def result_text(out, code, how, timeout_s):
+    out = strip_ansi(out).strip()
+    end = {"exit": f"[exit code {code}]", "timeout": f"[stopped after {timeout_s} seconds: the time limit]",
+           "stopped": "[stopped: the user stopped the turn]"}[how]
     return (out + "\n" if out else "(no output)\n") + end
 
 
-def resolve_cwd(raw: str | Path | None, workdir: str | Path | None = None) -> tuple[Path | None, str | None]:
+def resolve_cwd(raw, workdir=None):
+    """The working folder the model asked for: ~ and %VARS% expanded, relative to the workspace; default the workspace
+    or the home folder. -> (path, error)"""
+    from pathlib import Path
     s = str(raw or "").strip()
-    base = Path(workdir) if workdir else Path.home()
-    p = Path(os.path.expandvars(os.path.expanduser(s))) if s else base
+    p = Path(os.path.expandvars(os.path.expanduser(s))) if s else Path(workdir or Path.home())
     if not p.is_absolute():
-        p = base / p
+        p = Path(workdir or Path.home()) / p
     if not p.is_dir():
         return None, f"Error: the folder {p} does not exist."
-    return p.resolve(), None
-
-
-def powershell(command: str, cwd: str | Path | None = None, timeout_s: int = DEFAULT_TIMEOUT_S, cancel: Any = None) -> str:
-    t = clamp_timeout(timeout_s)
-    out, code, how = run(
-        ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", PS_HEAD + command + PS_TAIL],
-        cwd=cwd,
-        timeout_s=t,
-        cancel=cancel,
-    )
-    return result_text(out, code, how, t)
-
-
-def shell(command: str, cwd: str | Path | None = None, timeout_s: int = DEFAULT_TIMEOUT_S, cancel: Any = None) -> str:
-    """Runs a shell command (`sh -c` on Android/Linux, `powershell.exe` on Windows) with full process-tree cleanup."""
-    if os.name == "nt":
-        return powershell(command, cwd=cwd, timeout_s=timeout_s, cancel=cancel)
-    t = clamp_timeout(timeout_s)
-    sh_bin = shutil.which("bash") or shutil.which("sh") or "/bin/sh"
-    out, code, how = run([sh_bin, "-c", str(command or "")], cwd=cwd, timeout_s=t, cancel=cancel)
-    return result_text(out, code, how, t)
-
-
-class SSHHosts:
-    """
-    Manages user-configured SSH hosts (`config/<device>/ssh-hosts.json`) and a dedicated Ed25519 key pair.
-    Clover never reads, displays, or transmits the private key — only the `.pub` public key and host fingerprint.
-    """
-
-    def __init__(self, config_path: Path, ssh_dir: Path | None = None):
-        self.path = Path(config_path)
-        self.ssh_dir = Path(ssh_dir) if ssh_dir else (Path.home() / ".ssh")
-        self.key_path = self.ssh_dir / "id_ed25519_clover"
-        self.pub_path = self.ssh_dir / "id_ed25519_clover.pub"
-        self.known_hosts = self.ssh_dir / "clover_known_hosts"
-        self.lock = threading.RLock()
-        self.hosts: list[dict[str, Any]] = []
-        try:
-            raw = json.loads(self.path.read_text(encoding="utf-8"))
-            self.hosts = [h for h in (raw.get("hosts") or []) if isinstance(h, dict) and h.get("name") and h.get("host")]
-        except (OSError, ValueError):
-            self.hosts = []
-
-    def ensure_keypair(self) -> str:
-        """Generates `id_ed25519_clover` if missing and returns the `.pub` public key line (never the private key)."""
-        self.ssh_dir.mkdir(parents=True, exist_ok=True)
-        try:
-            os.chmod(self.ssh_dir, 0o700)
-        except OSError:
-            pass
-        if not self.pub_path.is_file():
-            keygen = shutil.which("ssh-keygen")
-            if keygen:
-                subprocess.run(
-                    [keygen, "-t", "ed25519", "-N", "", "-C", "clover-ai-studio", "-f", str(self.key_path)],
-                    capture_output=True,
-                    timeout=20,
-                )
-        return self.pub_path.read_text(encoding="utf-8").strip() if self.pub_path.is_file() else ""
-
-    def describe(self) -> dict[str, Any]:
-        with self.lock:
-            return {
-                "public_key": self.ensure_keypair(),
-                "hosts": list(self.hosts),
-            }
-
-    def add_host(self, name: str, host: str, user: str = "root", port: int = 22) -> dict[str, Any]:
-        clean_name = re.sub(r"[^a-zA-Z0-9_-]+", "-", str(name or host).strip()).strip("-")[:40] or "host"
-        clean_host = str(host or "").strip()
-        clean_user = str(user or "root").strip()
-        clean_port = max(1, min(65535, int(port or 22)))
-        if not clean_host:
-            raise ValueError("Host address is required")
-        with self.lock:
-            self.hosts = [h for h in self.hosts if h["name"] != clean_name]
-            self.hosts.append({"name": clean_name, "host": clean_host, "user": clean_user, "port": clean_port})
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-            self.path.write_text(json.dumps({"hosts": self.hosts}, indent=2), encoding="utf-8")
-        return self.describe()
-
-    def run_ssh(self, target: str, command: str, port: int | str = 22, timeout_s: int = DEFAULT_TIMEOUT_S, cancel: Any = None) -> str:
-        t = clamp_timeout(timeout_s)
-        tgt = str(target or "").strip()
-        with self.lock:
-            matched = next((h for h in self.hosts if h["name"] == tgt or h["host"] == tgt), None)
-        if matched:
-            user_host = f"{matched['user']}@{matched['host']}"
-            p_str = str(matched.get("port") or port or 22)
-        else:
-            user_host = tgt
-            p_str = str(port or 22)
-        ssh_args = ["ssh", "-n", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "-p", p_str]
-        if self.key_path.is_file():
-            ssh_args.extend(["-i", str(self.key_path)])
-        ssh_args.extend([user_host, str(command or "")])
-        out, code, how = run(ssh_args, timeout_s=t, cancel=cancel)
-        return result_text(out, code, how, t)
+    return p, None

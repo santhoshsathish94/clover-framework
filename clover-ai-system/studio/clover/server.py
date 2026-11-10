@@ -833,7 +833,7 @@ def run_terminal_tool(body):
             + '[Console]::WriteLine("__CLOVER_CWD__=" + (Get-Location).Path)\n'
             + "exit $__clover_ec\n"
         )
-        args = ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", ps_script]
+        args = ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", ps_script]
     else:
         sh_script = f'{cmd}\n__clover_ec=$?\nprintf "\\n__CLOVER_CWD__=%s\\n" "$(pwd)"\nexit $__clover_ec\n'
         args = ["sh", "-c", sh_script]
@@ -864,8 +864,8 @@ def run_terminal_tool(body):
 
 
 def run_browser_tool(body):
-    """Interactive Browser app in Studio Tools: reads an http(s) web page directly or searches the web and returns
-    structured results + readable page content for the center-pane Browser view."""
+    """Interactive Browser app in Studio Tools: reads an http(s) web page directly, previews a local HTML file, or
+    searches the web and returns structured results + readable page content for the center-pane Browser view."""
     import page_fetch
     import web_search
     raw_in = str((body or {}).get("input") or (body or {}).get("url") or (body or {}).get("query") or "").strip()
@@ -873,6 +873,25 @@ def run_browser_tool(body):
     if not raw_in:
         raise ValueError("Enter a web address (https://...) or a search query.")
     b_engine = S.search.browser_engine() if getattr(S, "search", None) else "google"
+    if raw_in.lower().endswith(".html") and not raw_in.lower().startswith(("http://", "https://")):
+        cand_p = Path(raw_in.replace("file:///", "").replace("file://", ""))
+        if not cand_p.is_file() and getattr(S, "args", None) and getattr(S.args, "base", None):
+            cand_p = Path(S.args.base) / "workspaces" / "threejs-visual" / Path(raw_in).name
+        if cand_p.is_file() and not (getattr(S, "args", None) and paths.read_blocked(S.args.base, cand_p)):
+            html_txt = cand_p.read_text(encoding="utf-8", errors="replace")[:250000]
+            m_t = re.search(r"<title[^>]*>([\s\S]*?)</title>", html_txt, re.I)
+            title = (m_t.group(1).strip() if m_t else cand_p.name)
+            return {
+                "ok": True,
+                "mode": "html_preview",
+                "url": str(cand_p),
+                "title": title,
+                "site": "Local HTML Visual",
+                "html": html_txt,
+                "text": f"Interactive HTML visual preview: {cand_p.name} ({len(html_txt)} chars)",
+                "browser_engine": b_engine,
+                "browser_url": f"file:///{cand_p.resolve().as_posix()}",
+            }
     looks_like_url = (
         action == "read"
         or raw_in.lower().startswith(("http://", "https://"))
@@ -1824,7 +1843,41 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                 act = bool(getattr(frame, "caps", ()))
                 turn_layers = tuple(x for x in layers if x != "ontology") if act else layers
                 import device_actions
-                if (omni and not media and device_actions.asks_for_screen_or_activity(typed)
+                if omni and not media and device_actions.asks_for_camera_photo(typed):
+                    try:
+                        cam = device_actions.capture_camera_photo(Path(S.args.base), inspect=True, launch_system_app=False)
+                        media = [{"kind": "image", "file": cam["file"], "name": "Camera Photo", "camera_capture": True}]
+                        made.append({
+                            "file": cam["file"],
+                            "prompt": "Camera Photo (" + str(cam.get("source") or "camera") + ")",
+                            "model": "camera",
+                            "seconds": round(cam.get("ms", 0) / 1000.0, 2),
+                            "width": cam.get("width"),
+                            "height": cam.get("height"),
+                        })
+                    except Exception:
+                        pass
+                elif omni and not media and device_actions.asks_for_video_recording(typed):
+                    try:
+                        vid = device_actions.capture_video_recording(Path(S.args.base), duration_s=2, launch_system_app=False)
+                        media = [{
+                            "kind": "video",
+                            "file": vid["file"],
+                            "frame_file": vid.get("frame_file") or "",
+                            "name": vid.get("name") or "Recorded Video",
+                        }]
+                        if vid.get("frame_file"):
+                            made.append({
+                                "file": vid["frame_file"],
+                                "prompt": vid.get("name") or "Recorded Video Frame",
+                                "model": "video_recorder",
+                                "seconds": vid.get("duration_s", 2),
+                                "width": vid.get("width"),
+                                "height": vid.get("height"),
+                            })
+                    except Exception:
+                        pass
+                elif (omni and not media and device_actions.asks_for_screen_or_activity(typed)
                         and "vscode.browser" not in (frame.caps or ())):  # a page in VS Code's browser, not the screen (2026-11-10)
                     try:
                         scr = device_actions.capture_screenshot(
@@ -3469,10 +3522,14 @@ class Handler(BaseHTTPRequestHandler):
                     filename=str(body.get("name") or ""),
                     launch_system_app=bool(body.get("launch_system_app", False)),
                 )
-                if rep.get("file") and (media_dir() / rep["file"]).is_file() and rep.get("kind") in ("image", "audio", None):
+                if rep.get("file") and (media_dir() / rep["file"]).is_file() and rep.get("kind") in ("image", "audio", "video", None):
                     f_bytes = (media_dir() / rep["file"]).read_bytes()
                     if len(f_bytes) <= 12 * 1024 * 1024:
                         rep["data"] = base64.b64encode(f_bytes).decode("ascii")
+                if rep.get("frame_file") and (media_dir() / rep["frame_file"]).is_file():
+                    fr_bytes = (media_dir() / rep["frame_file"]).read_bytes()
+                    if len(fr_bytes) <= 4 * 1024 * 1024:
+                        rep["thumb_data"] = base64.b64encode(fr_bytes).decode("ascii")
                 return self._send(200, rep)
             if path == "/api/debug/log":
                 import device_actions

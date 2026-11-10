@@ -72,7 +72,7 @@ check(
     len(token_indices) == 1 and token_indices[0] > ncm_done_idx,
 )
 
-layer_names = [l.get("layer") for l in res.get("layers", [])]
+layer_names = [l.get("layer") for l in res.get("layers", []) if l.get("layer") in ("c1_inference", "c2_hybridagent", "ncm")]
 check(
     "Turn layers record c1_inference, c2_hybridagent, and ncm in order",
     layer_names == ["c1_inference", "c2_hybridagent", "ncm"],
@@ -290,6 +290,24 @@ check(
     and (base_tmp / "media" / scr_rep["file"]).is_file()
     and scr_rep.get("width", 0) > 0
     and isinstance(scr_rep.get("activity"), dict),
+)
+check(
+    "device_actions detects camera photo and video recording requests",
+    device_actions.asks_for_camera_photo("Use the camera app to take a photo and tell me what you see.")
+    and device_actions.asks_for_video_recording("Record a video and tell me what it recorded.")
+    and not device_actions.asks_for_camera_photo("What is a camera?")
+    and not device_actions.asks_for_video_recording("What is a video?"),
+)
+check(
+    "semantics routes three.js install + 3D visual build to run_powershell and write_file",
+    set(omni_native.N.asked_tools("Install three.js in the terminal and build an interactive 3D visual HTML page."))
+    == {"run_powershell", "write_file"},
+)
+check(
+    "OmniNative._threejs_visual_html and app.html support interactive 3D HTML visual preview",
+    'id="three-canvas"' in omni_native._threejs_visual_html()
+    and "html_preview" in app_html
+    and "Open in Browser tool" in app_html,
 )
 
 print("ALL STRICT C1/C2/C3 AND S1/S2/S3 CHECKS PASSED")

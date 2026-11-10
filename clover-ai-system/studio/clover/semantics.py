@@ -82,9 +82,12 @@ ASKS = (
      r"\b(?:my|this|that|these)\s+(?:files?|folders?|documents|desktop|downloads)\b|\b[A-Za-z]:\\|"
      r"\bwhat(?:'s|\s+is|\s+files\s+are)\s+in\b[^.?!\n]{0,40}\b(?:folder|directory|dir|workspace)\b"),
     (("files.write",), rf"\b(?:write|save|create|make)\b[^.?!\n]{{0,40}}\b(?:file|{EXTENSIONS})\b|"
+                       r"\b(?:build|create|write|make)\b[^.?!\n]{0,50}\b(?:3d\s+visuals?|visuals?|3d\s+scene|web\s*page|html\s+page)\b|"
                        r"\b(?:add|append|insert)\b[^.?!\n]{0,60}\b(?:to|into|in)\s+(?:the|that|this|my|it)\b[^.?!\n]{0,20}"
                        r"\b(?:file|list|note|document)\b"),
     (("shell",), r"\b(?:powershell|terminal|command\s+line|shell|cmd\.exe|bash|termux)\b|"
+                 r"\b(?:npm|pip|pnpm|yarn)\s+(?:install|i|add)\b|"
+                 r"\binstall\b[^.?!\n]{0,50}\b(?:librar(?:y|ies)|packages?|modules?|dependencies|three(?:\.js)?)\b|"
                  r"\bgit\s+(?:log|status|diff|show|branch|blame|remote|tag|shortlog|describe)\b|"
                  # "create TODO.md ... then commit it with git" had no terminal and claimed a commit (2026-11-01)
                  r"\b(?:commit|push|pull|merge|stash|checkout|branch)\b[^.?!\n]{0,40}\b(?:with|using|in|to)\s+git\b|"
@@ -483,6 +486,12 @@ def asked_caps(text):
         caps.remove("calc")
     if "vscode.browser" in caps:  # the page in VS Code's browser, not a hidden fetch of it
         caps = [c for c in caps if c not in ("web.search", "web.page") and (c != "vscode.open" or user_paths(t))]
+    if not VSCODE.search(t) and re.search(
+        r"\b(?:npm|pip|pnpm|yarn)\s+(?:install|i|add)\b|\binstall\b[^.?!\n]{0,50}\b(?:librar(?:y|ies)|packages?|modules?|dependencies|three(?:\.js)?)\b",
+        t,
+        re.I,
+    ):
+        caps = [c for c in caps if c not in ("vscode.open", "vscode.clone", "vscode.install", "vscode.run")]
     if VSCODE.search(t):  # "open C:\x.md in VS Code": VS Code's tools, not the hidden ones
         caps = [c for c in caps if c not in ("files.read", "files.list", "shell")]
         # "Open http://127.0.0.1:8799/second.html in VS Code" was fetched with fetch_url instead (2026-11-10)

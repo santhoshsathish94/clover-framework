@@ -125,7 +125,7 @@ def ps51_chain(command):
 def powershell(command, cwd=None, timeout_s=DEFAULT_TIMEOUT_S, cancel=None):
     """A PowerShell command -> the text the model sees: output, then the exit code or why it stopped."""
     t = clamp_timeout(timeout_s)
-    out, code, how = run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", PS_HEAD + ps51_chain(command) + PS_TAIL],
+    out, code, how = run(["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", PS_HEAD + ps51_chain(command) + PS_TAIL],
                          cwd=cwd, timeout_s=t, cancel=cancel, env=dict(os.environ, **QUIET_GIT))
     return result_text(out, code, how, t)
 

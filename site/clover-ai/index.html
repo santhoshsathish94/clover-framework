@@ -1638,7 +1638,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function apiUrl(p) { return API_BASE + p; }
   var state = { sessions: { current: '', order: [], map: {} }, files: [], media: [], docs: [], ready: false, busy: false, perms: {}, mode: 'lfm3',
     settings: { model: 'omni', sampling: 'general', thinking: true, budget: 2048, voice: 'female', autospeak: true }, health: null, lastSpeed: 0,
-    turnId: null, waitEl: null, omni: true, inputs: ['text', 'vision', 'audio'], speakNext: false, memCount: null, openGroups: {}, catalog: null };
+    turnId: null, waitEl: null, omni: true, inputs: ['text', 'vision', 'audio', 'video'], speakNext: false, memCount: null, openGroups: {}, catalog: null };
   var RECENT_CHATS = 5;
   try { state.openGroups = JSON.parse(localStorage.getItem(KEY + '-groups') || '{}') || {}; } catch (e) {}
   var MEDIA_MB = { image: 15, audio: 30, video: 60 }, MAX_MEDIA = 6;
@@ -1980,13 +1980,24 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function browserLink(t) {
     var isTermTool = t.name === 'run_powershell' || t.name === 'run_python' || t.name === 'vscode_run';
+    var argFirst = String(t.args || '').split('\n')[0].trim();
+    var isHtmlFile = t.name === 'write_file' && /\.html\b/i.test(argFirst);
     var href = browserHref(t);
-    if (!href && !isTermTool) return null;
+    if (!href && !isTermTool && !isHtmlFile) return null;
     var row = el('div', 'tool__acts');
     if (isTermTool) {
       var tb = btn('linkish', ic('terminal') + '<span>Open in Terminal</span>');
       tb.addEventListener('click', function () { openToolApp('terminal'); });
       row.appendChild(tb);
+      return row;
+    }
+    if (isHtmlFile) {
+      var hb = btn('linkish', ic('globe') + '<span>Open in Browser tool</span>');
+      hb.addEventListener('click', function () {
+        openToolApp('browser');
+        navigateBrowserApp(argFirst, 'read');
+      });
+      row.appendChild(hb);
       return row;
     }
     if (!state.search && !state.searchLoading) { state.searchLoading = true; loadSearch(); }
@@ -3929,11 +3940,26 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         if (kind === 'image') {
           var sUrl = 'data:image/png;base64,' + rep.data;
           var jv = rep.jepa_visual || {};
-          var label = 'System screenshot (' + (rep.width || '') + '\u00d7' + (rep.height || '') + (jv.scene_kind ? ' · ' + jv.scene_kind : '') + ').png';
-          var item = { kind: 'image', name: label, file: rep.file, data: rep.data, thumb: sUrl, screen_capture: true };
+          var isCam = sense === 'camera' || rep.sense === 'camera';
+          var label = (isCam ? 'Camera photo (' : 'System screenshot (') + (rep.width || '') + '\u00d7' + (rep.height || '') + (jv.scene_kind ? ' · ' + jv.scene_kind : '') + ').png';
+          var item = { kind: 'image', name: label, file: rep.file, data: rep.data, thumb: sUrl, screen_capture: !isCam, camera_capture: isCam };
           state.media.push(item); renderAtt(); updateSend();
           thumb(sUrl).then(function (t) { item.thumb = t; renderAtt(); }).catch(function () {});
-          if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this screenshot and help me with what is on the screen.'; autosize(); updateSend(); }
+          if (!$('prompt').value.trim()) {
+            $('prompt').value = isCam
+              ? 'Look at this photo from the camera and tell me what you see.'
+              : 'Analyze this screenshot and help me with what is on the screen.';
+            autosize(); updateSend();
+          }
+        } else if (kind === 'video') {
+          var vThumb = rep.thumb_data ? ('data:image/png;base64,' + rep.thumb_data) : undefined;
+          var vItem = { kind: 'video', name: rep.name || 'Recorded video.mp4', file: rep.file, data: rep.data, thumb: vThumb };
+          state.media.push(vItem); renderAtt(); updateSend();
+          if (vThumb) thumb(vThumb).then(function (t) { vItem.thumb = t; renderAtt(); }).catch(function () {});
+          if (!$('prompt').value.trim()) {
+            $('prompt').value = 'Watch this recorded video and explain what it recorded.';
+            autosize(); updateSend();
+          }
         } else if (kind === 'audio') {
           var ja = rep.jepa_audio || {};
           var aLabel = (rep.name || 'System audio') + (ja.acoustic_regime ? ' (' + ja.acoustic_regime + ', ' + (ja.snr_db || 0) + ' dB)' : '');
@@ -4758,6 +4784,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             logCloverTerminalActivity(ev.name, cd.t.args, rawRes, worked);
           } else if (ev.ran && (ev.name === 'web_search' || ev.name === 'fetch_url' || ev.name === 'vscode_browser')) {
             logCloverBrowserActivity(ev.name, cd.t.args);
+          } else if (ev.ran && ev.name === 'write_file' && /\.html\b/i.test(String(cd.t.args || '').split('\n')[0])) {
+            logCloverBrowserActivity('fetch_url', String(cd.t.args || '').split('\n')[0]);
           }
           setStage(toolName(ev.name) + (!ev.ran ? ' skipped' : worked ? ' worked' : ' failed'));
         }
@@ -6258,6 +6286,23 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var vp = $('brow-viewport');
     if (!vp || !rep) return;
     vp.innerHTML = '';
+    if (rep.mode === 'html_preview') {
+      if ($('brow-title')) $('brow-title').textContent = rep.title || 'HTML Visual Preview';
+      if ($('brow-sub')) $('brow-sub').textContent = (rep.site ? rep.site + ' · ' : '') + (rep.url || '');
+      if ($('brow-input')) $('brow-input').value = rep.url || '';
+      var frame = document.createElement('iframe');
+      frame.setAttribute('sandbox', 'allow-scripts');
+      frame.style.cssText = 'width:100%;height:420px;border:1px solid var(--line);border-radius:10px;background:#0e1712;display:block';
+      var docSc = document.querySelector('script[nonce]');
+      var nonceVal = docSc ? (docSc.nonce || docSc.getAttribute('nonce') || '') : '';
+      var htmlDoc = String(rep.html || '');
+      if (nonceVal) {
+        htmlDoc = htmlDoc.replace(/<script(?![^>]*\bnonce=)/gi, '<script nonce="' + nonceVal + '"');
+      }
+      frame.srcdoc = htmlDoc;
+      vp.appendChild(frame);
+      return;
+    }
     if (rep.mode === 'page') {
       if ($('brow-title')) $('brow-title').textContent = rep.title || rep.site || 'Web Page';
       if ($('brow-sub')) $('brow-sub').textContent = (rep.site ? rep.site + ' · ' : '') + (rep.url || '');

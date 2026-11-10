@@ -1112,7 +1112,7 @@ class OmniC2C3Runtime:
                 z_pref_p = np.concatenate([z_rh_p, z_bpe_p], axis=1)
 
             # 2. Single one-time C3 12-Layer NextConceptTransformer + 11-Level Multiscale VQ-VAE pass
-            z_hat, codes_emitted, levels_run = self._run_ncm_multiscale_levels(z_pref_p, min(len(pids_prim), 64))
+            z_hat, codes_emitted, levels_run = self._run_ncm_multiscale_levels(z_pref_p, min(len(pids_prim), 8))
 
             # 3. Single one-time C3 3-Layer LexicalPointerDecoder + VQ-VAE Middle Block pass across `L_prim`
             L_prim = z_rh_p.shape[1]

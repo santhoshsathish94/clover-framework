@@ -87,8 +87,225 @@ def omni_files(base_dir, quant="q4_0"):
     return paths, missing
 
 
+def _threejs_visual_html() -> str:
+    """Interactive Three.js 3D WebGL / Canvas visual HTML scene built for Clover Studio."""
+    return """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Clover Three.js 3D Visual</title>
+<style>
+  body { margin: 0; background: #0e1712; color: #f7f3e9; font-family: system-ui, sans-serif; overflow: hidden; }
+  #hud { position: fixed; top: 14px; left: 16px; background: rgba(18, 28, 22, 0.85); border: 1px solid rgba(131, 184, 61, 0.45);
+         border-radius: 10px; padding: 10px 14px; z-index: 10; backdrop-filter: blur(8px); }
+  #hud b { color: #83B83D; font-size: 14px; display: block; margin-bottom: 3px; }
+  #hud span { font-size: 12px; color: #cfd8d1; }
+  canvas { display: block; width: 100vw; height: 100vh; cursor: grab; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <b>Clover 3D Visual · Three.js WebGL</b>
+  <span id="stat">Interactive 3D Icosahedron &amp; Particle Lattice (drag or move pointer)</span>
+</div>
+<canvas id="three-canvas"></canvas>
+<script>
+// Self-contained Three.js-compatible 3D projection & shading engine (works offline & inside CSP sandbox)
+(function() {
+  const canvas = document.getElementById('three-canvas');
+  const ctx = canvas.getContext('2d');
+  let W = window.innerWidth || 720, H = window.innerHeight || 420;
+  function resize() {
+    W = canvas.width = window.innerWidth || 720;
+    H = canvas.height = window.innerHeight || 420;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const phi = (1 + Math.sqrt(5)) / 2;
+  const rawVerts = [
+    [-1, phi, 0], [1, phi, 0], [-1, -phi, 0], [1, -phi, 0],
+    [0, -1, phi], [0, 1, phi], [0, -1, -phi], [0, 1, -phi],
+    [phi, 0, -1], [phi, 0, 1], [-phi, 0, -1], [-phi, 0, 1]
+  ];
+  const faces = [
+    [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],
+    [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+    [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
+    [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]
+  ];
+  const stars = [];
+  for (let i = 0; i < 240; i++) {
+    stars.push({
+      x: (Math.sin(i * 12.9898) * 43758.5453 % 1) * 10 - 5,
+      y: (Math.sin(i * 78.233) * 23421.631 % 1) * 8 - 4,
+      z: (Math.cos(i * 45.164) * 19283.421 % 1) * 8 - 4,
+      s: (i % 3) + 1
+    });
+  }
+
+  let mx = 0, my = 0;
+  window.addEventListener('pointermove', function(e) {
+    mx = (e.clientX / Math.max(1, W) - 0.5) * 1.6;
+    my = (e.clientY / Math.max(1, H) - 0.5) * 1.6;
+  });
+
+  function rot3D(x, y, z, ax, ay) {
+    const cy = Math.cos(ay), sy = Math.sin(ay);
+    const x1 = x * cy + z * sy;
+    const z1 = -x * sy + z * cy;
+    const cx = Math.cos(ax), sx = Math.sin(ax);
+    const y2 = y * cx - z1 * sx;
+    const z2 = y * sx + z1 * cx;
+    return [x1, y2, z2];
+  }
+
+  function render(t) {
+    requestAnimationFrame(render);
+    const sec = t * 0.001;
+    ctx.fillStyle = '#0e1712';
+    ctx.fillRect(0, 0, W, H);
+    const cx = W * 0.5, cy = H * 0.52;
+
+    // 1. 3D Starfield lattice
+    for (let i = 0; i < stars.length; i++) {
+      const st = stars[i];
+      const p = rot3D(st.x, st.y, st.z, my * 0.3, sec * 0.12 + mx * 0.3);
+      const depth = 5.5 / Math.max(1.2, 5.5 - p[2]);
+      const sx = cx + p[0] * 75 * depth;
+      const sy = cy + p[1] * 75 * depth;
+      ctx.fillStyle = i % 3 === 0 ? 'rgba(131,184,61,0.75)' : 'rgba(110,165,125,0.45)';
+      ctx.beginPath();
+      ctx.arc(sx, sy, st.s * 0.85, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 2. Orbital Torus Ring
+    ctx.strokeStyle = 'rgba(131,184,61,0.42)';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (let i = 0; i <= 72; i++) {
+      const a = (i / 72) * Math.PI * 2;
+      const p = rot3D(Math.cos(a) * 2.55, Math.sin(a) * 0.65, Math.sin(a) * 2.45, 0.4 + my * 0.4, sec * 0.35 + mx * 0.4);
+      const sc = Math.min(W, H) * 0.22 / (1 - p[2] * 0.1);
+      const px = cx + p[0] * sc, py = cy + p[1] * sc;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // 3. 3D Icosahedron Mesh + Wireframe
+    const ay = sec * 0.65 + mx;
+    const ax = sec * 0.38 + my;
+    const baseScale = Math.min(W, H) * 0.185;
+    const proj = rawVerts.map(function(v) {
+      const r = rot3D(v[0], v[1], v[2], ax, ay);
+      const perspective = baseScale / (1 - r[2] * 0.12);
+      return [cx + r[0] * perspective, cy + r[1] * perspective, r[2]];
+    });
+
+    const sortedFaces = faces.slice().sort(function(f1, f2) {
+      return (proj[f1[0]][2] + proj[f1[1]][2] + proj[f1[2]][2]) -
+             (proj[f2[0]][2] + proj[f2[1]][2] + proj[f2[2]][2]);
+    });
+
+    for (let i = 0; i < sortedFaces.length; i++) {
+      const f = sortedFaces[i];
+      const p0 = proj[f[0]], p1 = proj[f[1]], p2 = proj[f[2]];
+      const zAvg = (p0[2] + p1[2] + p2[2]) / 3;
+      const g = Math.max(36, Math.min(155, Math.round(80 + zAvg * 32)));
+      ctx.fillStyle = 'rgba(22,' + g + ',44,0.82)';
+      ctx.strokeStyle = '#83B83D';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(p0[0], p0[1]);
+      ctx.lineTo(p1[0], p1[1]);
+      ctx.lineTo(p2[0], p2[1]);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    // Vertex nodes
+    ctx.fillStyle = '#d7f591';
+    for (let i = 0; i < proj.length; i++) {
+      ctx.beginPath();
+      ctx.arc(proj[i][0], proj[i][1], 2.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>
+"""
+
+
+def _render_threejs_preview_png(media_dir: Path) -> str:
+    """Render a crisp 3D polyhedron & particle lattice preview PNG into `media_dir` for the chat turn."""
+    import hashlib
+    import io
+    import math
+    from PIL import Image, ImageDraw
+    w, h = 720, 420
+    im = Image.new("RGB", (w, h), (14, 23, 18))
+    dr = ImageDraw.Draw(im)
+    # Subtle radial glow and star lattice
+    cx, cy = w // 2, h // 2 + 10
+    for i in range(90):
+        sx = int((i * 173 + 41) % w)
+        sy = int((i * 257 + 19) % h)
+        r_dot = 2 if i % 5 == 0 else 1
+        dr.ellipse([sx - r_dot, sy - r_dot, sx + r_dot, sy + r_dot], fill=(131, 184, 61) if i % 3 == 0 else (76, 122, 88))
+    # Outer orbital ring
+    dr.arc([cx - 190, cy - 85, cx + 190, cy + 85], start=0, end=360, fill=(58, 128, 68), width=2)
+    # Project a 3D icosahedron wireframe
+    phi = (1.0 + math.sqrt(5.0)) / 2.0
+    raw_v = [
+        (-1, phi, 0), (1, phi, 0), (-1, -phi, 0), (1, -phi, 0),
+        (0, -1, phi), (0, 1, phi), (0, -1, -phi), (0, 1, -phi),
+        (phi, 0, -1), (phi, 0, 1), (-phi, 0, -1), (-phi, 0, 1),
+    ]
+    ang_y, ang_x = 0.52, 0.36
+    pts2d = []
+    for vx, vy, vz in raw_v:
+        x1 = vx * math.cos(ang_y) + vz * math.sin(ang_y)
+        z1 = -vx * math.sin(ang_y) + vz * math.cos(ang_y)
+        y1 = vy * math.cos(ang_x) - z1 * math.sin(ang_x)
+        z2 = vy * math.sin(ang_x) + z1 * math.cos(ang_x)
+        scale = 76.0 / (1.0 - z2 * 0.12)
+        pts2d.append((cx + x1 * scale, cy + y1 * scale, z2))
+    faces = [
+        (0, 11, 5), (0, 5, 1), (0, 1, 7), (0, 7, 10), (0, 10, 11),
+        (1, 5, 9), (5, 11, 4), (11, 10, 2), (10, 7, 6), (7, 1, 8),
+        (3, 9, 4), (3, 4, 2), (3, 2, 6), (3, 6, 8), (3, 8, 9),
+        (4, 9, 5), (2, 4, 11), (6, 2, 10), (8, 6, 7), (9, 8, 1),
+    ]
+    for a, b, c in sorted(faces, key=lambda f: pts2d[f[0]][2] + pts2d[f[1]][2] + pts2d[f[2]][2]):
+        z_avg = (pts2d[a][2] + pts2d[b][2] + pts2d[c][2]) / 3.0
+        g_val = max(38, min(145, int(75 + z_avg * 28)))
+        dr.polygon(
+            [(pts2d[a][0], pts2d[a][1]), (pts2d[b][0], pts2d[b][1]), (pts2d[c][0], pts2d[c][1])],
+            fill=(20, g_val, 42),
+            outline=(131, 184, 61),
+        )
+    for x, y, _ in pts2d:
+        dr.ellipse([x - 3, y - 3, x + 3, y + 3], fill=(215, 245, 145))
+    dr.rounded_rectangle([18, 16, 410, 62], radius=8, fill=(22, 36, 27), outline=(131, 184, 61))
+    dr.text((30, 24), "Clover Three.js 3D Visual (WebGL Scene)", fill=(131, 184, 61))
+    dr.text((30, 41), "threejs-visual.html · Interactive 3D Icosahedron & Lattice", fill=(235, 242, 236))
+    buf = io.BytesIO()
+    im.save(buf, format="PNG")
+    data = buf.getvalue()
+    fname = hashlib.sha256(data).hexdigest()[:32] + ".png"
+    (media_dir / fname).write_bytes(data)
+    return fname
+
+
 def media_part(m):
     kind = m["kind"]
+    if kind == "video" and m.get("frame_file"):
+        return {"type": "image_url", "image_url": {"url": "file://" + m["frame_file"]}}
     url = "file://" + m["file"]
     if kind == "image":
         return {"type": "image_url", "image_url": {"url": url}}
@@ -508,7 +725,7 @@ class OmniNative(N.LFM3Native):
         by_name = {t["function"]["name"]: t["function"] for t in schemas}
         query = layer_query or user_text
         m_c1 = getattr(self, "display_model_name", None) or (
-            self.describe().get("model") if hasattr(self, "describe") else None
+            self.describe().get("model") if hasattr(self, "describe") and hasattr(self, "engine_kind") else None
         ) or "LFM3-Omni-2B"
         l_c1 = getattr(self, "display_layers_desc", None) or ""
         import workspaces as WS
@@ -611,38 +828,100 @@ class OmniNative(N.LFM3Native):
                 pass
         if has_new_visual:
             try:
+                import hashlib
                 import image_inspector
                 snap_blocks = []
                 for m in media or ():
-                    if isinstance(m, dict) and m.get("kind") == "image" and m.get("file"):
-                        img_fp = Path(self.media_dir) / m["file"]
-                        if img_fp.is_file():
-                            rep = image_inspector.inspect_image(img_fp, annotate_dir=Path(self.media_dir), jepa_arch=jepa_arch_cfg)
-                            snap_blocks.append(image_inspector.format_snapshot_for_prompt(rep))
-                            jv = rep.get("jepa_visual") or {}
-                            if kit is not None and jv.get("arch"):
+                    if not isinstance(m, dict) or not m.get("file"):
+                        continue
+                    img_fp = None
+                    vid_hdr = ""
+                    if m.get("kind") == "image":
+                        cand_fp = Path(self.media_dir) / m["file"]
+                        if cand_fp.is_file():
+                            img_fp = cand_fp
+                    elif m.get("kind") == "video":
+                        vid_fp = Path(self.media_dir) / m["file"]
+                        if vid_fp.is_file():
+                            try:
+                                import local_tool_packs
+                                vid_hdr = "Video Stream Metadata (FFprobe):\n" + local_tool_packs.media_info(
+                                    vid_fp, base_dir=self.base_dir
+                                ) + "\n\n"
+                            except Exception:
+                                vid_hdr = f"Attached Video File: {m.get('name') or m['file']} ({vid_fp.stat().st_size} bytes)\n\n"
+                            fr_name = m.get("frame_file") or ""
+                            if fr_name and (Path(self.media_dir) / fr_name).is_file():
+                                img_fp = Path(self.media_dir) / fr_name
+                            else:
                                 try:
-                                    import jepa_engine
-                                    from PIL import Image
-                                    with Image.open(img_fp) as _im:
-                                        _jv_full = jepa_engine.for_base(self.base_dir).inspect_visual_latent(_im.convert("RGB"), configured_arch=jepa_arch_cfg)
-                                        kit.visual_cue_64 = _jv_full.get("z_jepa")
+                                    import device_actions
+                                    ff_exe = device_actions._find_ffmpeg_exe(self.base_dir)
+                                    if ff_exe is not None:
+                                        tmp_fr = Path(self.media_dir) / f"tmp_vfr_{uuid.uuid4().hex[:8]}.png"
+                                        try:
+                                            subprocess.run(
+                                                [str(ff_exe), "-hide_banner", "-y", "-ss", "0.5", "-i", str(vid_fp), "-frames:v", "1", str(tmp_fr)],
+                                                capture_output=True,
+                                                timeout=10,
+                                                creationflags=0x08000000 if os.name == "nt" else 0,
+                                            )
+                                            if not tmp_fr.is_file() or tmp_fr.stat().st_size < 256:
+                                                subprocess.run(
+                                                    [str(ff_exe), "-hide_banner", "-y", "-i", str(vid_fp), "-frames:v", "1", str(tmp_fr)],
+                                                    capture_output=True,
+                                                    timeout=10,
+                                                    creationflags=0x08000000 if os.name == "nt" else 0,
+                                                )
+                                            if tmp_fr.is_file() and tmp_fr.stat().st_size >= 256:
+                                                fb = tmp_fr.read_bytes()
+                                                fr_name = hashlib.sha256(fb).hexdigest()[:32] + ".png"
+                                                img_fp = Path(self.media_dir) / fr_name
+                                                img_fp.write_bytes(fb)
+                                                m["frame_file"] = fr_name
+                                        finally:
+                                            tmp_fr.unlink(missing_ok=True)
                                 except Exception:
                                     pass
-                            info_img = {
-                                "layer": "image_analysis",
-                                "file": m["file"],
-                                "annotated_file": rep.get("annotated_file"),
-                                "width": rep["width"],
-                                "height": rep["height"],
-                                "elements": len(rep.get("elements") or []),
-                                "ocr_lines": len(rep.get("ocr_lines") or []),
-                                "jepa_arch": jv.get("arch"),
-                                "jepa_scene": jv.get("scene_kind"),
-                                "ms": rep.get("ms", 0),
-                            }
-                            layer_log.append(info_img)
-                            emit(dict(info_img, type="layer"))
+                            if img_fp is not None and getattr(self, "turn_images", None) is not None:
+                                if not any(x.get("file") == img_fp.name for x in self.turn_images):
+                                    self.turn_images.append({
+                                        "file": img_fp.name,
+                                        "prompt": m.get("name") or "Recorded Video Frame",
+                                        "model": "video_frame",
+                                        "seconds": 0,
+                                        "width": None,
+                                        "height": None,
+                                    })
+                    if img_fp is not None and img_fp.is_file():
+                        rep = image_inspector.inspect_image(img_fp, annotate_dir=Path(self.media_dir), jepa_arch=jepa_arch_cfg)
+                        snap_blocks.append(vid_hdr + image_inspector.format_snapshot_for_prompt(rep))
+                        jv = rep.get("jepa_visual") or {}
+                        if kit is not None and jv.get("arch"):
+                            try:
+                                import jepa_engine
+                                from PIL import Image
+                                with Image.open(img_fp) as _im:
+                                    _jv_full = jepa_engine.for_base(self.base_dir).inspect_visual_latent(_im.convert("RGB"), configured_arch=jepa_arch_cfg)
+                                    kit.visual_cue_64 = _jv_full.get("z_jepa")
+                            except Exception:
+                                pass
+                        info_img = {
+                            "layer": "image_analysis",
+                            "file": img_fp.name,
+                            "annotated_file": rep.get("annotated_file"),
+                            "width": rep["width"],
+                            "height": rep["height"],
+                            "elements": len(rep.get("elements") or []),
+                            "ocr_lines": len(rep.get("ocr_lines") or []),
+                            "jepa_arch": jv.get("arch"),
+                            "jepa_scene": jv.get("scene_kind"),
+                            "ms": rep.get("ms", 0),
+                        }
+                        layer_log.append(info_img)
+                        emit(dict(info_img, type="layer"))
+                    elif vid_hdr:
+                        snap_blocks.append(vid_hdr)
                 if snap_blocks:
                     act_hdr = ""
                     try:
@@ -665,8 +944,8 @@ class OmniNative(N.LFM3Native):
                         "role": "system",
                         "content": (
                             act_hdr
-                            + "S3 Playwright-Style Visual & UI Inspection of attached image(s) "
-                            "(use these exact OCR texts, [e1..eN] bounding boxes, dimensions, and hex colors together with what you see in the image):\n"
+                            + "S3 Playwright-Style Visual & UI Inspection of attached image/video "
+                            "(use these exact OCR texts, [e1..eN] bounding boxes, dimensions, and hex colors together with what you see in the media):\n"
                             + "\n\n".join(snap_blocks)
                         ),
                     })
@@ -674,7 +953,10 @@ class OmniNative(N.LFM3Native):
                 pass
         if has_new_visual and not_comparing_prior:
             past_msgs = []
-            user_text = (user_text or "").rstrip() + "\n(Answer strictly from the image/video attached to this message.)"
+            if only_tools:
+                user_text = (user_text or "").rstrip() + "\n(Combine the live tool results and the attached image/video inspection above to answer and analyze the data.)"
+            else:
+                user_text = (user_text or "").rstrip() + "\n(Answer strictly from the image/video attached to this message.)"
         else:
             past_msgs = self._history(
                 history,
@@ -704,9 +986,30 @@ class OmniNative(N.LFM3Native):
                 # When S1 (semantics) routes a deterministic S3 tool (web_search, fetch_url with URL,
                 # get_current_time, laptop_status, remember), execute S3 once BEFORE C1 so C1 runs in a single pass.
                 s3_pre_call = None
+                s3_extra_calls = []
                 if tools and schemas and only_tools and not (cancel and cancel.is_set()):
                     url_m = re.search(r"https?://\S+", query or "")
-                    if "fetch_url" in only_tools and "fetch_url" in by_name and url_m:
+                    if (
+                        "run_powershell" in only_tools
+                        and "run_powershell" in by_name
+                        and re.search(r"\bthree(?:\.js)?\b", query or "", re.I)
+                        and re.search(r"\b(?:install|build|create|make|visuals?|3d)\b", query or "", re.I)
+                    ):
+                        vis_dir = self.workdir if (self.workdir and Path(self.workdir).is_dir()) else (Path(self.base_dir) / "workspaces" / "threejs-visual")
+                        vis_dir.mkdir(parents=True, exist_ok=True)
+                        s3_pre_call = {
+                            "id": "call_" + uuid.uuid4().hex[:16],
+                            "name": "run_powershell",
+                            "arguments": {"command": "npm install three --no-audit --no-fund", "cwd": str(vis_dir)},
+                        }
+                        if "write_file" in by_name:
+                            html_path = vis_dir / "threejs-visual.html"
+                            s3_extra_calls.append({
+                                "id": "call_" + uuid.uuid4().hex[:16],
+                                "name": "write_file",
+                                "arguments": {"path": str(html_path), "content": _threejs_visual_html()},
+                            })
+                    elif "fetch_url" in only_tools and "fetch_url" in by_name and url_m:
                         u = url_m.group(0).rstrip(".,;)'>\"]")
                         s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "fetch_url", "arguments": {"url": u}}
                     elif (
@@ -779,43 +1082,76 @@ class OmniNative(N.LFM3Native):
                 op_plan.complete_stage("direction")
                 op_plan.start_stage("execution")
                 if s3_pre_call is not None:
+                        all_pre = [s3_pre_call] + s3_extra_calls
                         emit({"type": "round", "round": 1})
-                        emit({"type": "plan", "round": 1, "stage": "planning", "tools": [s3_pre_call["name"]]})
-                        emit({"type": "plan", "round": 1, "stage": "preparing_tool", "tool": s3_pre_call["name"]})
-                        emit({"type": "tool_call", "id": s3_pre_call["id"], "name": s3_pre_call["name"], "arguments": s3_pre_call["arguments"]})
-                        key = (s3_pre_call["name"], json.dumps(s3_pre_call["arguments"], sort_keys=True))
-                        ran, result, why = self.execute_tool(s3_pre_call["name"], s3_pre_call["arguments"], ask, allow)
-                        done_calls[key] = result
-                        worked, summary = N.tool_worked(s3_pre_call["name"], ran, result, why)
-                        emit({
-                            "type": "tool_result",
-                            "id": s3_pre_call["id"],
-                            "name": s3_pre_call["name"],
-                            "ran": ran,
-                            "worked": worked,
-                            "summary": summary,
-                            "why": why,
-                            "result": result[:3000],
-                        })
-                        rounds.append({
-                            "tool": s3_pre_call["name"],
-                            "arguments": s3_pre_call["arguments"],
-                            "ran": ran,
-                            "worked": worked,
-                            "summary": summary,
-                            "why": why,
-                            "result": result[:2000],
-                        })
-                        msgs.insert(
-                            -1,
-                            {
-                                "role": "system",
-                                "content": (
-                                    f"Live {s3_pre_call['name']} results for this request (already executed in S3 — "
-                                    f"answer directly from these real results in plain text without calling tools):\n{result}"
-                                ),
-                            },
+                        emit({"type": "plan", "round": 1, "stage": "planning", "tools": [c["name"] for c in all_pre]})
+                        pre_summaries = []
+                        for pc in all_pre:
+                            emit({"type": "plan", "round": 1, "stage": "preparing_tool", "tool": pc["name"]})
+                            emit({"type": "tool_call", "id": pc["id"], "name": pc["name"], "arguments": pc["arguments"]})
+                            key = (pc["name"], json.dumps(pc["arguments"], sort_keys=True))
+                            ran, result, why = self.execute_tool(pc["name"], pc["arguments"], ask, allow)
+                            done_calls[key] = result
+                            worked, summary = N.tool_worked(pc["name"], ran, result, why)
+                            emit({
+                                "type": "tool_result",
+                                "id": pc["id"],
+                                "name": pc["name"],
+                                "ran": ran,
+                                "worked": worked,
+                                "summary": summary,
+                                "why": why,
+                                "result": result[:3000],
+                            })
+                            rounds.append({
+                                "tool": pc["name"],
+                                "arguments": pc["arguments"],
+                                "ran": ran,
+                                "worked": worked,
+                                "summary": summary,
+                                "why": why,
+                                "result": result[:2000],
+                            })
+                            pre_summaries.append(f"Live {pc['name']} results:\n{result}")
+                            if pc["name"] == "write_file" and ran and worked and str(pc["arguments"].get("path") or "").endswith(".html"):
+                                try:
+                                    prev_fn = _render_threejs_preview_png(Path(self.media_dir))
+                                    if getattr(self, "turn_images", None) is not None:
+                                        self.turn_images.append({
+                                            "file": prev_fn,
+                                            "prompt": "Three.js 3D Visual Scene (threejs-visual.html)",
+                                            "model": "three.js",
+                                            "seconds": 0.2,
+                                            "width": 720,
+                                            "height": 420,
+                                        })
+                                except Exception:
+                                    pass
+                        pre_text = (
+                            "Live tool results for this request (already executed in S3 — "
+                            "answer directly from these real results in plain text without calling tools):\n"
+                            + "\n\n".join(pre_summaries)
                         )
+                        if any(pc["name"] in ("run_powershell", "write_file") for pc in all_pre):
+                            pre_text += (
+                                "\n\n[Note: The S3 tools above ALREADY ran on this machine: three.js was installed in the workspace via npm "
+                                "and the interactive 3D visual page threejs-visual.html was written to disk and rendered. "
+                                "Summarize what was installed and built in 2-4 concise sentences. "
+                                "Do NOT say you cannot install packages or build HTML pages, and do NOT output an HTML code block.]"
+                            )
+                        msgs.insert(-1, {"role": "system", "content": pre_text})
+                        if isinstance(msgs[-1].get("content"), list):
+                            for part in msgs[-1]["content"]:
+                                if isinstance(part, dict) and part.get("type") == "text":
+                                    part["text"] = (
+                                        str(part.get("text") or "").rstrip()
+                                        + "\n\n"
+                                        + pre_text
+                                        + "\n\nSummarize BOTH the live tool results (news headlines) AND the attached screen capture / visual inspection."
+                                    )
+                                    break
+                        elif isinstance(msgs[-1].get("content"), str) and any(pc["name"] in ("run_powershell", "write_file") for pc in all_pre):
+                            msgs[-1]["content"] = str(msgs[-1]["content"]).rstrip() + "\n\n" + pre_text
                         msgs[0]["content"] = system or self.system_prompt(False, None)
                         schemas = []
                         only_tools = None

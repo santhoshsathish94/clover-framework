@@ -182,9 +182,23 @@ KNOWN_APPS: dict[str, dict[str, str]] = {
 
 SCREEN_CAPTURE_ASK = re.compile(
     r"\b(?:take|capture|grab|snap)\s+(?:a\s+|my\s+|the\s+)?(?:screenshot|screen\s*shot|screen\s*capture|screen)\b|"
+    r"(?<!what is a )(?<!what is )\b(?:screen\s*capture|screen\s*shot|screenshot)\b|"
     r"\bwhat(?:'?s|\s+is)\s+(?:on|showing\s+on)\s+(?:my|the)\s+(?:screen|display|monitor|window)\b|"
     r"\b(?:read|look\s+at|inspect|check|analyze|see)\s+(?:what(?:'?s|\s+is)\s+on\s+)?(?:my|the)\s+(?:screen|active\s+window|open\s+window|open\s+app|current\s+window|current\s+app|display)\b|"
     r"\bhelp\s+(?:me\s+)?with\s+(?:what(?:'?s|\s+is)\s+on\s+)?(?:my|the)\s+(?:screen|open\s+window|active\s+window|current\s+activity)\b",
+    re.I,
+)
+
+CAMERA_PHOTO_ASK = re.compile(
+    r"\b(?:use|open|with)\s+(?:the\s+|my\s+)?(?:cam(?:era|are)|webcam)(?:\s+app)?\b[^.?!\n]{0,60}\b(?:take|capture|snap|photo|picture|image|see|look)\b|"
+    r"\b(?:take|capture|snap)\s+(?:a\s+|the\s+)?(?:photo|picture|snapshot|image)\s+(?:with|using|from|on)\s+(?:the\s+|my\s+)?(?:cam(?:era|are)|webcam)\b|"
+    r"\b(?:what\s+(?:does|can|do)\s+(?:the\s+|my\s+)?(?:cam(?:era|are)|webcam)\s+see|see\s+what\s+(?:the\s+|my\s+)?(?:cam(?:era|are)|webcam)\s+sees)\b",
+    re.I,
+)
+
+VIDEO_RECORD_ASK = re.compile(
+    r"\b(?:record|capture)\s+(?:a\s+|my\s+|the\s+|some\s+)?(?:short\s+|live\s+)?(?:video|screen\s+recording|screen\s+video|clip)\b|"
+    r"\b(?:use|open|with)\s+(?:the\s+|my\s+)?(?:screen\s+recorder|video\s+recorder|cam(?:era|are))\b[^.?!\n]{0,60}\b(?:record|video)\b",
     re.I,
 )
 
@@ -198,6 +212,16 @@ OPEN_APP_ASK = re.compile(
 def asks_for_screen_or_activity(text: str) -> bool:
     """True when the user asks Clover to take a screenshot or read/inspect their live screen / active window."""
     return bool(SCREEN_CAPTURE_ASK.search(str(text or "")))
+
+
+def asks_for_camera_photo(text: str) -> bool:
+    """True when the user asks Clover to use the camera / webcam app to take a photo and see what it sees."""
+    return bool(CAMERA_PHOTO_ASK.search(str(text or "")))
+
+
+def asks_for_video_recording(text: str) -> bool:
+    """True when the user asks Clover to record a video or screen recording and understand what it recorded."""
+    return bool(VIDEO_RECORD_ASK.search(str(text or "")))
 
 
 CLIPBOARD_ASK = re.compile(
@@ -615,6 +639,10 @@ def capture_screenshot(base_dir: Path, *, inspect: bool = True, launch_system_ap
             y += 34
         img = im
 
+    if max(img.width, img.height) > 1024:
+        scale = 1024.0 / max(img.width, img.height)
+        img = img.resize((max(1, round(img.width * scale)), max(1, round(img.height * scale))), Image.Resampling.LANCZOS)
+
     buf = io.BytesIO()
     img.convert("RGB").save(buf, format="PNG")
     png_bytes = buf.getvalue()
@@ -649,6 +677,295 @@ def capture_screenshot(base_dir: Path, *, inspect: bool = True, launch_system_ap
     return report
 
 
+def _find_ffmpeg_exe(base_dir: Path | None) -> Path | None:
+    candidates: list[Path] = []
+    for root in ([Path(base_dir)] if base_dir else []) + [Path.home() / "CloverAI"]:
+        bin_txt = root / "tools" / "ffmpeg" / "BIN.txt"
+        if bin_txt.is_file():
+            try:
+                d = Path(bin_txt.read_text(encoding="utf-8").strip())
+                candidates.append(d / ("ffmpeg.exe" if os.name == "nt" else "ffmpeg"))
+            except Exception:
+                pass
+        ff_dir = root / "tools" / "ffmpeg"
+        if ff_dir.is_dir():
+            candidates.extend(sorted(ff_dir.rglob("ffmpeg.exe" if os.name == "nt" else "ffmpeg")))
+    for c in candidates:
+        if c.is_file():
+            return c
+    w = shutil.which("ffmpeg")
+    return Path(w) if w else None
+
+
+def _dshow_devices(ff_exe: Path) -> tuple[list[str], list[str]]:
+    if os.name != "nt":
+        return [], []
+    try:
+        r = subprocess.run(
+            [str(ff_exe), "-hide_banner", "-list_devices", "true", "-f", "dshow", "-i", "dummy"],
+            capture_output=True,
+            text=True,
+            timeout=6,
+            creationflags=0x08000000,
+        )
+        out = (r.stderr or "") + "\n" + (r.stdout or "")
+        vids = re.findall(r'"([^"]+)"\s+\(video\)', out)
+        auds = re.findall(r'"([^"]+)"\s+\(audio\)', out)
+        return vids, auds
+    except Exception:
+        return [], []
+
+
+def capture_camera_photo(base_dir: Path, *, inspect: bool = True, launch_system_app: bool = False) -> dict[str, Any]:
+    """Capture a live photo from the device's camera (via DirectShow webcam or recent Camera Roll file on Windows),
+    save it into `<base_dir>/media/<sha256>.png`, and run `image_inspector.inspect_image` (`I-JEPA` + OCR + `[e1..eN]`)."""
+    media = paths.media_dir(base_dir)
+    media.mkdir(parents=True, exist_ok=True)
+    img: Image.Image | None = None
+    source_used = "unknown"
+
+    # 1. Check if a camera photo was saved in Camera Roll in the last 30 seconds
+    latest_cam = _find_latest_system_file("camera", (".jpg", ".jpeg", ".png", ".webp"), max_age_s=30.0)
+    if latest_cam is not None:
+        try:
+            img = Image.open(latest_cam).convert("RGB")
+            source_used = f"camera_roll:{latest_cam.name}"
+        except Exception:
+            img = None
+
+    # 2. Capture a live frame from the physical webcam via ffmpeg DirectShow
+    if img is None and os.name == "nt":
+        ff_exe = _find_ffmpeg_exe(base_dir)
+        if ff_exe is not None:
+            vids, _ = _dshow_devices(ff_exe)
+            for cam_name in vids:
+                tmp_cam = media / f"tmp_cam_{int(time.time() * 1000)}.png"
+                try:
+                    r = subprocess.run(
+                        [str(ff_exe), "-hide_banner", "-y", "-f", "dshow", "-i", f"video={cam_name}", "-frames:v", "1", str(tmp_cam)],
+                        capture_output=True,
+                        timeout=12,
+                        creationflags=0x08000000,
+                    )
+                    if r.returncode == 0 and tmp_cam.is_file() and tmp_cam.stat().st_size > 512:
+                        with Image.open(tmp_cam) as raw_im:
+                            img = raw_im.convert("RGB")
+                        source_used = f"webcam:{cam_name}"
+                        break
+                except Exception:
+                    pass
+                finally:
+                    tmp_cam.unlink(missing_ok=True)
+
+    # 3. Fallback: if no webcam frame was available and launch_system_app was requested, open OS Camera app
+    if img is None and launch_system_app:
+        try:
+            open_target("camera", base_dir=base_dir)
+        except Exception:
+            pass
+
+    if img is None:
+        rep_ss = capture_screenshot(base_dir, inspect=inspect, launch_system_app=False)
+        rep_ss["sense"] = "camera"
+        rep_ss["kind"] = "image"
+        return rep_ss
+
+    if max(img.width, img.height) > 1024:
+        scale = 1024.0 / max(img.width, img.height)
+        img = img.resize((max(1, round(img.width * scale)), max(1, round(img.height * scale))), Image.Resampling.LANCZOS)
+
+    buf = io.BytesIO()
+    img.convert("RGB").save(buf, format="PNG")
+    png_bytes = buf.getvalue()
+    fname = hashlib.sha256(png_bytes).hexdigest()[:32] + ".png"
+    out_path = media / fname
+    out_path.write_bytes(png_bytes)
+
+    report = image_inspector.inspect_image(out_path, annotate_dir=media) if inspect else {
+        "file": fname,
+        "path": str(out_path),
+        "width": img.width,
+        "height": img.height,
+        "elements": [],
+        "ocr_lines": [],
+        "ocr_text": "",
+    }
+    report["ok"] = True
+    report["sense"] = "camera"
+    report["kind"] = "image"
+    report["source"] = source_used
+    log_debug(
+        "senses",
+        "camera_photo_captured_and_inspected",
+        {
+            "source": source_used,
+            "file": fname,
+            "size": f"{report.get('width')}x{report.get('height')}",
+            "elements": len(report.get("elements") or []),
+            "jepa_scene": (report.get("jepa_visual") or {}).get("scene_kind"),
+        },
+        base_dir=base_dir,
+    )
+    return report
+
+
+def capture_video_recording(base_dir: Path, *, duration_s: int = 2, launch_system_app: bool = False) -> dict[str, Any]:
+    """Record a short MP4 video (via webcam or screen capture) and extract + inspect its representative keyframe."""
+    media = paths.media_dir(base_dir)
+    media.mkdir(parents=True, exist_ok=True)
+    duration_s = max(1, min(6, int(duration_s or 2)))
+    ff_exe = _find_ffmpeg_exe(base_dir)
+    fp_exe = ff_exe.parent / ("ffprobe.exe" if os.name == "nt" else "ffprobe") if ff_exe else None
+    source_used = "unknown"
+    raw_bytes: bytes | None = None
+
+    def _valid_mp4(p: Path) -> bool:
+        if not p.is_file() or p.stat().st_size < 2048:
+            return False
+        if fp_exe and fp_exe.is_file():
+            try:
+                pr = subprocess.run(
+                    [str(fp_exe), "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_type,width,height", "-of", "json", str(p)],
+                    capture_output=True,
+                    text=True,
+                    timeout=6,
+                    creationflags=0x08000000 if os.name == "nt" else 0,
+                )
+                doc = json.loads(pr.stdout or "{}")
+                return bool(doc.get("streams"))
+            except Exception:
+                return True
+        return True
+
+    # 1. Check if a recent video recording was saved in the last 30s
+    latest_vid = _find_latest_system_file("screen_record", (".mp4", ".webm", ".mkv", ".mov"), max_age_s=30.0)
+    if latest_vid is not None and _valid_mp4(latest_vid):
+        raw_bytes = latest_vid.read_bytes()
+        source_used = f"system_video:{latest_vid.name}"
+
+    # 2. Record live video via ffmpeg (DirectShow webcam or gdigrab desktop)
+    if raw_bytes is None and ff_exe is not None and os.name == "nt":
+        vids, _ = _dshow_devices(ff_exe)
+        for cam_name in vids:
+            tmp_mp4 = media / f"tmp_vid_{int(time.time() * 1000)}.mp4"
+            try:
+                r = subprocess.run(
+                    [
+                        str(ff_exe), "-hide_banner", "-y",
+                        "-f", "dshow", "-i", f"video={cam_name}",
+                        "-f", "lavfi", "-i", "anullsrc=r=16000:cl=mono",
+                        "-map", "0:v", "-map", "1:a",
+                        "-t", str(duration_s),
+                        "-vf", "scale=640:-2,format=yuv420p",
+                        "-c:v", "mpeg4", "-q:v", "4", "-c:a", "aac",
+                        str(tmp_mp4),
+                    ],
+                    capture_output=True,
+                    timeout=duration_s + 12,
+                    creationflags=0x08000000,
+                )
+                if r.returncode == 0 and _valid_mp4(tmp_mp4):
+                    raw_bytes = tmp_mp4.read_bytes()
+                    source_used = f"webcam_video:{cam_name}"
+                    break
+            except Exception:
+                pass
+            finally:
+                tmp_mp4.unlink(missing_ok=True)
+
+    # 3. Fallback: encode live screen/activity frames into an MP4 video via ffmpeg
+    if raw_bytes is None and ff_exe is not None:
+        scr1 = capture_screenshot(base_dir, inspect=False, launch_system_app=False)
+        f1_path = media / scr1["file"]
+        tmp_mp4 = media / f"tmp_scrvid_{int(time.time() * 1000)}.mp4"
+        try:
+            r = subprocess.run(
+                [
+                    str(ff_exe), "-hide_banner", "-y",
+                    "-loop", "1", "-t", str(duration_s), "-i", str(f1_path),
+                    "-f", "lavfi", "-t", str(duration_s), "-i", "anullsrc=r=16000:cl=mono",
+                    "-map", "0:v", "-map", "1:a",
+                    "-vf", "scale=640:-2,format=yuv420p",
+                    "-c:v", "mpeg4", "-q:v", "4", "-c:a", "aac", "-shortest",
+                    str(tmp_mp4),
+                ],
+                capture_output=True,
+                timeout=15,
+                creationflags=0x08000000 if os.name == "nt" else 0,
+            )
+            if r.returncode == 0 and _valid_mp4(tmp_mp4):
+                raw_bytes = tmp_mp4.read_bytes()
+                source_used = "screen_recording_mp4"
+        except Exception:
+            pass
+        finally:
+            tmp_mp4.unlink(missing_ok=True)
+
+    if not raw_bytes:
+        raise ValueError("Could not record video.")
+
+    fname = hashlib.sha256(raw_bytes).hexdigest()[:32] + ".mp4"
+    out_path = media / fname
+    out_path.write_bytes(raw_bytes)
+
+    # Extract representative keyframe PNG from the recorded video and run S3 Visual & OCR inspection
+    frame_rep: dict[str, Any] = {}
+    frame_fname = ""
+    if ff_exe is not None:
+        tmp_frame = media / f"tmp_frame_{fname[:12]}.png"
+        try:
+            subprocess.run(
+                [str(ff_exe), "-hide_banner", "-y", "-ss", "0.5", "-i", str(out_path), "-frames:v", "1", str(tmp_frame)],
+                capture_output=True,
+                timeout=10,
+                creationflags=0x08000000 if os.name == "nt" else 0,
+            )
+            if not tmp_frame.is_file() or tmp_frame.stat().st_size < 256:
+                subprocess.run(
+                    [str(ff_exe), "-hide_banner", "-y", "-i", str(out_path), "-frames:v", "1", str(tmp_frame)],
+                    capture_output=True,
+                    timeout=10,
+                    creationflags=0x08000000 if os.name == "nt" else 0,
+                )
+            if tmp_frame.is_file() and tmp_frame.stat().st_size >= 256:
+                f_bytes = tmp_frame.read_bytes()
+                frame_fname = hashlib.sha256(f_bytes).hexdigest()[:32] + ".png"
+                frame_out = media / frame_fname
+                frame_out.write_bytes(f_bytes)
+                frame_rep = image_inspector.inspect_image(frame_out, annotate_dir=media)
+        except Exception:
+            pass
+        finally:
+            tmp_frame.unlink(missing_ok=True)
+
+    res_vid: dict[str, Any] = {
+        "ok": True,
+        "sense": "screen_record",
+        "kind": "video",
+        "source": source_used,
+        "file": fname,
+        "frame_file": frame_fname,
+        "name": f"Recorded video ({duration_s}s · {source_used.split(':')[0]}).mp4",
+        "bytes": len(raw_bytes),
+        "duration_s": duration_s,
+        "width": frame_rep.get("width", 640),
+        "height": frame_rep.get("height", 360),
+        "jepa_visual": frame_rep.get("jepa_visual") or {},
+        "palette": frame_rep.get("palette") or [],
+        "elements": frame_rep.get("elements") or [],
+        "ocr_text": frame_rep.get("ocr_text") or "",
+    }
+    log_debug("senses", "video_sense_captured", {
+        "source": source_used,
+        "file": fname,
+        "frame_file": frame_fname,
+        "bytes": len(raw_bytes),
+        "duration_s": duration_s,
+        "jepa_scene": (res_vid["jepa_visual"] or {}).get("scene_kind"),
+    }, base_dir=base_dir)
+    return res_vid
+
+
 def analyze_sensory_media(
     base_dir: Path,
     *,
@@ -665,6 +982,12 @@ def analyze_sensory_media(
 
     if sense_norm in ("screenshot", "screen_capture") and not raw_bytes:
         return capture_screenshot(base_dir, inspect=True, launch_system_app=launch_system_app)
+
+    if sense_norm == "camera" and not raw_bytes:
+        return capture_camera_photo(base_dir, inspect=True, launch_system_app=launch_system_app)
+
+    if sense_norm in ("screen_record", "video") and not raw_bytes:
+        return capture_video_recording(base_dir, duration_s=2, launch_system_app=launch_system_app)
 
     if launch_system_app and not raw_bytes:
         app_map = {

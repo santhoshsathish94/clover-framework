@@ -392,17 +392,21 @@ class WebSearch:
         )
         clean_q = " ".join(clean_q.split()).strip()
         topic_left = re.sub(
-            r"\b(?:top|latest|current|recent|breaking|today'?s?|today|news|headlines|updates?|summary|summari[sz]e|world|in|the|of|for)\b",
+            r"\b(?:top|latest|current|recent|breaking|today'?s?|today|news|headlines|updates?|summary|summari[sz]e|"
+            r"world|in|the|of|for|browse|new|websites?|sites?|web\s*pages?|using|browser|take|capture|grab|snap|"
+            r"screen\s*capture|screen\s*shot|screenshot|screen|analy[sz]e|data|and|get|fetch|read|look|at|check|show|me|please|from)\b",
             " ",
             clean_q,
             flags=re.I,
-        ).strip()
+        )
+        topic_left = " ".join(re.findall(r"[A-Za-z0-9][A-Za-z0-9.\-]*", topic_left)).strip()
+        rss_q = f"{topic_left} news" if topic_left else clean_q
         out = []
         seen_titles = set()
         # 1. Bing News RSS (returns real publisher URLs in the link query and full 1-2 sentence summaries)
         if topic_left:
             try:
-                b_url = "https://www.bing.com/news/search?q=" + urllib.parse.quote(clean_q or q) + "&format=rss"
+                b_url = "https://www.bing.com/news/search?q=" + urllib.parse.quote(rss_q or q) + "&format=rss"
                 req_b = urllib.request.Request(b_url, headers={"User-Agent": BROWSER_UA})
                 with urllib.request.urlopen(req_b, timeout=min(self.timeout, 6)) as rb:
                     b_root = ET.fromstring(rb.read(1_500_000))
@@ -424,7 +428,7 @@ class WebSearch:
         if not topic_left:
             url = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"
         else:
-            url = "https://news.google.com/rss/search?q=" + urllib.parse.quote(clean_q or q) + "&hl=en-US&gl=US&ceid=US:en"
+            url = "https://news.google.com/rss/search?q=" + urllib.parse.quote(rss_q or q) + "&hl=en-US&gl=US&ceid=US:en"
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=min(self.timeout, 8)) as r:
@@ -494,11 +498,16 @@ class WebSearch:
         ))
         search_web = getattr(t, "_search_web", None)
         if want_news:
-            if callable(search_web):
+            explicit_news = bool(re.search(r"\b(?:news|headlines)\b", q, re.I))
+            if explicit_news:
+                for r in self._news_rss_rows(q, max_items=4):
+                    add_row(r["title"], r["url"], r["snippet"])
+            if callable(search_web) and len(rows) < 4:
                 for r in search_web(q, max_items=3):
                     add_row(r["title"], r["url"], r["snippet"])
-            for r in self._news_rss_rows(q, max_items=4):
-                add_row(r["title"], r["url"], r["snippet"])
+            if not explicit_news or len(rows) < 3:
+                for r in self._news_rss_rows(q, max_items=4):
+                    add_row(r["title"], r["url"], r["snippet"])
             self._enrich_top_page(rows, q)
             if len(rows) >= 3:
                 return rows[:5]

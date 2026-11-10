@@ -86,12 +86,30 @@
   - Confirmed `#senses-menu` opens downward in `.empty-chat` (`top: 551..786` on desktop, `top: 518..753` on mobile) and upward when the composer is docked at the bottom of an active chat (`top: 444..679`), with `scrollHeight === clientHeight` (`234px`, zero scrollbar) in every view.
   - Verified clicking `Workspaces`, `Memory`, `Tools`, `Learning`, `Settings`, and `Chat` in the sidebar and drilling into subpages (`layers`, `model`, `perms`, `personal`, `collective`, `storage`, `debug`, `account`, `vscode`) with `#sheet-back` and `window.cloverBack()`.
 - **Automated Suites**:
-  - `python clover-ai-system/studio/tests/test_studio_unified_ui.py`: **37/37 PASS**
+  - `python clover-ai-system/studio/tests/test_studio_unified_ui.py`: **41/41 PASS**
+  - `python clover-ai-system/studio/tests/test_strict_c1_c2_c3.py`: **27/27 PASS**
+  - `python clover-ai-system/studio/tests/test_layers_report_what_ran.py`: **5/5 PASS**
+  - `python clover-ai-system/studio/tests/test_semantics.py`: **155/155 PASS**
   - `python clover-ai-system/studio/tests/test_browser_first.py`: **30/30 PASS**
   - `python clover-ai-system/studio/tests/test_browser_handback.py`: **51/51 PASS**
   - `python clover-ai-system/studio/tests/test_tool_tasks.py`: **18/18 PASS**
   - `python clover-ai-system/studio/tests/test_caution_only.py`: **16/16 PASS**
   - `python scripts/check-site.py`: **10 pages checked, 0 site errors**
+- **Live End-to-End UI Testing on Real `LFM3-Omni-2B` (`llama.cpp` Vulkan on `Intel(R) UHD Graphics`) + `C2 HybridAgent` + `C3 11-Level NCM` + `I-JEPA` + `ffmpeg` + `npm` (`http://127.0.0.1:8798/`)**:
+  1. **Test 1 — Browse News Websites, Screen Capture & Visual Data Analysis**:
+     - Prompted in UI Chat: `"Browse news websites and get the latest news using the browser, take a screen capture, and analyze the data."`
+     - `web_search` fetched live RSS news headlines (`WTTW News`, `USNI News`, `BBC`, `The Japan Times`), `device_actions.capture_screenshot` captured the live screen (`d1629292b5466cfe6de7df263c3d38fe.png`), `S3 Visual Inspector` + `I-JEPA` (`ui_controls`) analyzed the image, the screenshot rendered in Chat and opened in the Visual Inspector modal (`#img-inspector`), and the center-pane `Browser` tool (`#tool-app-browser`) displayed the live news search results.
+  2. **Test 2 — Install `three.js` in Terminal & Build Interactive 3D Visuals**:
+     - Prompted in UI Chat: `"Install three.js in the terminal and build an interactive 3D visual HTML page."`
+     - `run_powershell` ran `npm install three --no-audit --no-fund` (`added 1 package in 8s`, `[exit code 0]`) and logged to the center-pane `Terminal` app (`#term-console`), `write_file` wrote `threejs-visual.html` (`5,194 characters`), the 3D visual preview PNG (`585961dce3f01d7dcf17eda4e61f1da5.png`) rendered in Chat, and clicking `Open in Browser tool` rendered the live interactive 60fps 3D Icosahedron, orbital ring, and 240-particle lattice inside `<iframe srcdoc>` in `#brow-viewport` with zero CSP violations (`115 s · 59 tokens · 9.5 tok/s`).
+  3. **Test 3 — Use Camera App to Take Photo & Analyze What Clover Sees**:
+     - Prompted in UI Chat: `"Use the camera app to take a photo and tell me what you see."`
+     - `device_actions.capture_camera_photo` captured a live `1024×576` frame from `webcam:Integrated Webcam` (`0b85df73fb830e98e636a345d734de09.png`), ran `S3 Visual Inspector` (`1024×576 px · 1 UI/visual regions ([e1..e1]) · JEPA(ijepa): natural_photo · 1448 ms`) + `C1 LFM3-Omni-2B` (`144 tokens · 7.32s`) + `C2 HybridAgent` (`1.60s`) + `C3 11-Level NCM`, rendered the camera photo in Chat & Visual Inspector (`#img-inspector`), and Clover described the dimly lit interior ceiling, frosted dome light fixture, cabinet door handle on the right, and floor baseboard (`123 s · 144 tokens · 6.9 tok/s`).
+  4. **Test 4 — Record Video & Understand What Was Recorded**:
+     - Prompted in UI Chat (`"Record a video and tell me what it recorded."`) and tested via the composer's `System senses -> System Screen Recorder / Video` (`[data-sense="video"]`) menu:
+     - `device_actions.capture_video_recording` recorded a real 2.0-second MP4 video clip (`webcam_video:Integrated Webcam` + `Microphone Array`), extracted & inspected the `640×360` keyframe (`7f20b50ff95106044aecca9b5626390f.png`, `1.04s`) + `ffprobe` metadata, rendered the keyframe in Chat (`Recorded video (2s · webcam_video).mp4`), and Clover explained what the video recorded (`5.79s` C1 inference, `1.77s` C2 plan, `44.66s` C3 decode; total `82 s · 157 tokens · 9.6 tok/s`).
 
 ## 5. Growth
 - `build_assets.py` previously had hardcoded `C:\personal\oss\clover-framework` paths and did not sync `clover-ai-system/mobile/android-app/assets/index.html`; making `REPO_ROOT` worktree-aware and syncing both Web and Android targets in `build_assets.py` prevents cross-platform UI drift when working in git worktrees.
+- On Windows PowerShell 5.1 with default `Restricted` execution policy, invoking `powershell.exe` without `-ExecutionPolicy Bypass` in `local_terminal.py` and `server.py` caused `npm` (`npm.ps1`) to fail; passing `-ExecutionPolicy Bypass` enables `npm`, `npx`, `pnpm`, and `yarn` in both `run_powershell` and the Studio `Terminal` app.
+- Rendering local `.html` visuals inside `<iframe srcdoc>` under Studio's strict `Content-Security-Policy: script-src 'nonce-...'` requires injecting the current document's `<script nonce>` into `srcdoc` (`renderBrowserAppViewport` in `app.html`) and keeping 3D visual scripts self-contained so they work offline without external CDN script loads.
