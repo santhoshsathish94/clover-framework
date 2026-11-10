@@ -186,7 +186,10 @@ class OmniNative(N.LFM3Native):
         self.engine_kind, self.max_tokens, self.cache = engine, int(max_tokens), None
         # speech on its own CPU instance while chat has the laptop's GPU; a phone has no memory for a second copy
         self.separate_voice = engine == "gpu" and not ANDROID
-        ubatch_sz = 256 if ANDROID else 2048
+        # a re-sent prompt is processed again from the last checkpoint, which sits at a ubatch end: the same 4,198-token
+        # VS Code request reprocessed 2,052 tokens at -ub 2048 and 260 at -ub 256, and k3's CPU was not slower cold
+        # (5.6 s vs 6.1 s); a 1,920-token picture and a voice clip still worked at 256 (TokenEconomizer item 3)
+        ubatch_sz = 256 if ANDROID or kind == "cpu" else 2048
         self.gpu = L.LlamaServer(base_dir, kind, max_tokens, ubatch=ubatch_sz, model=paths["model"], mmproj=paths["mmproj"],
                                  extra_args=extra, name=f"omni-{kind}", timeout_s=300, threads=threads)
         props = self.gpu.props()
