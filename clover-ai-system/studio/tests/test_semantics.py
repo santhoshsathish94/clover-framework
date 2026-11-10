@@ -215,7 +215,8 @@ check(N.user_paths is M.user_paths and N.restore_paths is M.restore_paths and N.
       and N.CREATIVE is M.CREATIVE and N.INJECTION_NOTE is M.INJECTION_NOTE, "the laptop's old names are the common ones")
 REAL = {t["function"]["name"] for t in N.STUDIO_TOOLS} | {"remember", "generate_image", "vscode_open", "vscode_clone",
                                                           "vscode_install", "vscode_run", "vscode_github_setup",
-                                                          "vscode_github_sync"}
+                                                          "vscode_github_sync", "vscode_editor", "vscode_diagnostics",
+                                                          "vscode_diff", "vscode_browser"}
 check({n for names in R.tools.values() for n in names} <= REAL, "the laptop runtime names only tools the laptop has")
 
 

@@ -62,6 +62,12 @@
    - **Settings (`[data-page="home"]` & `#rail-settings-sub`) — Submenus & Center-Pane Views**:
      - Clicking `Settings` (`[data-nav="settings"]` or `#set-btn`) expands `#rail-settings-sub` (`Model & Voice`, `GitHub Account`, `Storage`, `Permissions`, `Debug & Senses`, `Advanced`) and shows `[data-page="home"]` in the center pane.
      - Clicking any submenu item in `#settings-tree` (`[data-set-sub="..."]`) or row in `[data-page="home"]` opens `model`, `account`, `storage`, `perms`, `debug`, or `advanced` directly in the center pane and highlights the active item in `#settings-tree`.
+   - **Merged Latest `main` (`v5.0.3` — Commit `070c2f31`) & Integrated into Unified UI**:
+     - Synced `VERSION = 5.0.3`, `STUDIO_VERSION = "5.0.3"`, `.brand__ver` (`v5.0.3`), `#v-version` (`v5.0.3`), and `v5.0.3` release links across Web, Mobile, and Laptop.
+     - Integrated `v5.0.3` VS Code & Playwright features into the unified UI:
+       - SSE `ev.stage === 'vscode_wait'` step (`Waiting for you in VS Code` / `Approve in VS Code…` -> `✓ Answered in VS Code`).
+       - `TOOL_UI` and `fmtArgs` support for `vscode_browser` (including `subaction: 'playwright'` and `code`), `vscode_editor`, `vscode_diagnostics`, `vscode_diff`, `vscode_github_setup`, and `vscode_github_sync`, plus syncing `vscode_browser` activity to the center-pane Browser tool (`logCloverBrowserActivity`).
+       - All `v5.0.3` backend & extension fixes (`clover_cycle.py`, `lfm3_native.py`, `omni_native.py`, `semantics.py`, `server.py`, `vscode_bridge.py`, `extension.js`, `test_vscode_503.py`).
    - Synchronize all three platform targets (`app.html`, `site/clover-ai/index.html`, and `clover-ai-system/mobile/android-app/assets/index.html`).
 
 ## 3. Execution

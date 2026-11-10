@@ -77,6 +77,6 @@ For users who want a one-click install (or whose GitHub Enterprise organization 
 ### Install Locally
 ```bash
 # Symlink or copy into ~/.vscode/extensions/
-cp -r vscode-extension ~/.vscode/extensions/clover-framework.clover-vscode-provider-5.0.2
+cp -r vscode-extension ~/.vscode/extensions/clover-framework.clover-vscode-provider-5.0.3
 ```
 Reload VS Code (`Developer: Reload Window`), open the Chat model picker, and select any of the four Clover models under the **Clover** provider.

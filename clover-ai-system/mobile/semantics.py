@@ -60,6 +60,8 @@ LIVE = (r"\b(?:what(?:'?s|\s+is)|how(?:'?s|\s+is))\s+(?:the\s+)?weather\b|"
         r"\b(?:live|latest|current)\s+(?:score|results?|standings|polls?)\b|"
         r"\bwho\s+is\s+the\s+(?:current|present|new)\s+(?:ceo|president|prime\s+minister|pm|governor|mayor|leader|champion)\b")
 # (capabilities, what a message says when it asks for them); the order is the order tools are offered
+_VSC = r"\b(?:vs\s?code|visual\s+studio\s+code)\b"
+_IN = r"(?:[^.?!\n]|\.(?=\w))"  # within one sentence; a file name's dot does not end it (a.py)
 ASKS = (
     (("web.search", "web.page"),
      r"\b(?:search|google|look\s+(?:it\s+|that\s+|this\s+)?up|browse|web|internet|online|website|web\s*page|url|arxiv|"
@@ -123,6 +125,19 @@ ASKS = (
      r"app|application|program|browser|calculator|calc|notepad|paint|snipping\s+tool|settings|explorer|file\s+explorer|"
      r"task\s+manager|chrome|edge|firefox|brave|spotify|discord|slack|teams|whatsapp|telegram|youtube|gmail|maps|"
      r"calendar|clock|camera|gallery|photos|vlc|zoom|word|excel|powerpoint|outlook|play\s+store)\b"),
+    # VS Code's editor, Problems panel, diff view and browser: "check the problems in broken.json in VS Code" and "open
+    # the page in VS Code's browser" were offered only open/clone/install/run, and the page was read with fetch_url
+    # instead (2026-11-10)
+    (("vscode.editor",), rf"{_VSC}{_IN}{{0,80}}\b(?:(?:active|current|open|opened)\s+(?:file|editor|tabs?)|cursor|selection|"
+                         rf"selected\s+text|symbols?)\b|\b(?:(?:active|current|open)\s+(?:file|editor|tabs?)|"
+                         rf"(?:which|what)\s+(?:file|tab)s?\s+(?:is|are)\s+(?:open|active))\b{_IN}{{0,40}}{_VSC}"),
+    (("vscode.diagnostics",), rf"{_VSC}{_IN}{{0,80}}\b(?:problems?|diagnostics?|errors?|warnings?|lint(?:er|ing)?|squiggl\w*)\b|"
+                              rf"\b(?:problems?|diagnostics?|errors?|warnings?|lint(?:er|ing)?)\b{_IN}{{0,60}}{_VSC}|"
+                              r"\bproblems\s+panel\b"),
+    (("vscode.diff",), rf"{_VSC}{_IN}{{0,80}}\b(?:diff|compare|side[\s-]by[\s-]side)\b|"
+                       rf"\b(?:diff|compare|side[\s-]by[\s-]side)\b{_IN}{{0,60}}{_VSC}"),
+    (("vscode.browser",), rf"{_VSC}{_IN}{{0,80}}\b(?:browser|web\s*page|page|tab)\b|\b(?:browser|web\s*page)\b{_IN}{{0,60}}{_VSC}|"
+                          r"\bintegrated\s+browser\b|\bplaywright\b"),
     (("github.setup", "github.sync"),
      r"^\s*(?:(?:please|can\s+you|could\s+you|would\s+you)\s+)?(?:sync|push|back\s*up|upload)\b[^.?!\n]{0,40}"
      r"\b(?:github|repo|repository|records|memory)\b|"
@@ -161,7 +176,9 @@ ASKS = (
     (("media.frame",),
      r"\bextract_frame\b|\bextract\s+(?:a\s+|the\s+)?frame\b[^.?!\n]{0,60}\.(?:mp4|webm|mkv|avi|mov)\b"),
 )
-VSCODE = re.compile(r"\b(?:vs\s?code|visual\s+studio\s+code)\b", re.I)
+VSCODE = re.compile(_VSC, re.I)
+# the user names the calculator: it is used even for a sum Clover can check itself
+CALC_NAMED = re.compile(r"\b(?:use|using|with)\s+(?:the\s+|a\s+)?(?:calculator|calculate\s+tool)\b|\bcalculator\s+tool\b", re.I)
 # declining a tool without a negated verb, which CSI v0.1r3 reads only in "don't / do not ...": "Without searching the
 # web, explain ..." and "No web search please, just ..." were still offered the web (Studio regression, 2026-11-03)
 _WITHOUT = r"\b(?:without|w/o)\s+(?:(?:searching|googling|browsing|using|running|checking|opening|going)\s+(?:on\s+|to\s+|in\s+)?|" \
@@ -308,7 +325,9 @@ NUMBER = re.compile(r"(?<![\w.])\d[\d,]*(?:\.\d+)?")
 CAP_WORDS = {"web.search": "the web", "web.page": "the web", "python": "Python", "files.read": "files",
              "files.list": "files", "files.write": "files", "shell": "the terminal", "status": "device status",
              "clock": "the clock", "remember": "memory", "image": "a picture", "vscode.open": "VS Code",
-             "vscode.clone": "VS Code", "vscode.install": "VS Code", "vscode.run": "VS Code", "github.setup": "GitHub",
+             "vscode.clone": "VS Code", "vscode.install": "VS Code", "vscode.run": "VS Code", "vscode.editor": "VS Code",
+             "vscode.diagnostics": "VS Code's problems", "vscode.diff": "VS Code's diff", "vscode.browser": "VS Code's browser",
+             "github.setup": "GitHub",
              "github.sync": "GitHub", "ssh": "SSH", "memory.search": "memory",
              "calc": "the calculator", "units": "unit conversion", "files.search": "file search",
              "files.info": "file info", "git.inspect": "Git", "doc.read": "the document",
@@ -319,9 +338,10 @@ READS = {"files.read": "the file", "files.list": "the folder", "web.page": "the 
          "media.info": "the media file"}
 OBSERVES = dict(READS, python="Python", shell="the terminal", status="device status", clock="the clock",
                 ssh="SSH", calc="the calculator", units="unit conversion",
-                **{"vscode.run": "VS Code", "table.analyze": "table analysis"})
+                **{"vscode.run": "VS Code", "vscode.editor": "VS Code", "vscode.diagnostics": "VS Code's problems",
+                   "vscode.browser": "VS Code's browser", "table.analyze": "table analysis"})
 DONE = {"files.write": "file written", "remember": "saved", "image": "picture made", "vscode.open": "opened in VS Code",
-        "vscode.clone": "cloned", "vscode.install": "installed", "table.chart": "chart made",
+        "vscode.clone": "cloned", "vscode.install": "installed", "vscode.diff": "diff opened", "table.chart": "chart made",
         "media.frame": "frame extracted"}
 NO_TOOLS = {"creative writing": " · no tools", "meal": " · no tools", "about the photo": " · no tools",
             "places": " · web only"}
@@ -457,8 +477,17 @@ def asked_caps(text):
     caps = [cap for caps, pattern in ASKS if re.search(pattern, t, re.I) for cap in caps]
     if "files.search" in caps and not re.search(r"\b(?:web|internet|online|google|website|url|arxiv|wikipedia)\b|https?://|www\.", t, re.I):
         caps = [c for c in caps if c not in ("web.search", "web.page")]
+    if "calc" in caps and not CALC_NAMED.search(t) and C.direct_arithmetic_value(t) is not None:
+        # a plain sum is answered directly: Clover checks it after the answer and puts the exact value in, so the
+        # calculator only added a step; it stays for sums Clover cannot check itself (human, 2026-11-10)
+        caps.remove("calc")
+    if "vscode.browser" in caps:  # the page in VS Code's browser, not a hidden fetch of it
+        caps = [c for c in caps if c not in ("web.search", "web.page") and (c != "vscode.open" or user_paths(t))]
     if VSCODE.search(t):  # "open C:\x.md in VS Code": VS Code's tools, not the hidden ones
         caps = [c for c in caps if c not in ("files.read", "files.list", "shell")]
+        # "Open http://127.0.0.1:8799/second.html in VS Code" was fetched with fetch_url instead (2026-11-10)
+        if re.search(r"\b(?:open|show|launch|preview)\b[^?!\n]{0,160}\bin\s+(?:the\s+)?" + _VSC, t, re.I):
+            caps = [c for c in caps if c not in ("web.search", "web.page")]
         # "In VS Code, run git log ... in C:\x\repo" opened the folder in a new window instead (2026-11-01)
         if re.search(r"\b(?:run|execute|type)\b", t, re.I) and not re.search(r"\bopen\b", t, re.I):
             caps = [c for c in caps if c != "vscode.open"]

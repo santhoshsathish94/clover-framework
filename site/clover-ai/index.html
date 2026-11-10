@@ -725,7 +725,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <img src="icon.png" alt="Clover" width="32" height="32">
         <div class="brand__text">
           <span class="brand__title">Clover AI Studio</span>
-          <span class="brand__ver">v5.0.2</span>
+          <span class="brand__ver">v5.0.3</span>
         </div>
       </div>
       <button type="button" class="ibtn" id="new-chat" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
@@ -911,7 +911,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <button type="button" class="row t" data-go="advanced"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></span><span class="row__t">Advanced</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
       <p class="gfoot center">Clover runs on this laptop with the setup that measured best. Nothing leaves it unless you allow it.</p>
-      <p class="gfoot center" id="about-foot">Clover AI Studio <b id="v-version">v5.0.2</b> · <a href="https://cloverframework.com/privacy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> · <a href="https://github.com/santhoshsathish94/clover-framework/issues" target="_blank" rel="noopener noreferrer">Support</a></p>
+      <p class="gfoot center" id="about-foot">Clover AI Studio <b id="v-version">v5.0.3</b> · <a href="https://cloverframework.com/privacy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> · <a href="https://github.com/santhoshsathish94/clover-framework/issues" target="_blank" rel="noopener noreferrer">Support</a></p>
     </section>
 
     <section class="page" data-page="memory" hidden>
@@ -1489,7 +1489,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     </section>
 
     <section class="page" data-page="vscode" hidden>
-      <p class="lead">Clover uses VS Code on this laptop for what VS Code already does: it opens files and web pages, clones repositories, installs an extension when you need one, and runs commands in a terminal you can watch. Each asks under Permissions first.</p>
+      <p class="lead">Clover uses VS Code on this laptop for what VS Code already does: it opens files and web pages, clones repositories, inspects the editor and Problems panel, opens side-by-side diffs, runs Playwright on shared browser pages, and runs commands in a terminal you can watch. Each asks under Permissions first.</p>
       <div class="group pad"><div class="kv" id="vsc-kv"></div></div>
       <div class="btns"><button type="button" class="btn" id="vsc-open">Open VS Code</button></div>
       <div class="note" id="vsc-note" hidden></div>
@@ -1514,7 +1514,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     <div class="auth-links">
       <a href="../download/laptop/CloverAIStudio-Setup.exe" download="CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
       <a href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Test on Google Play</a>
-      <a href="https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.2/CloverAIStudio.apk">Download Android (.apk)</a>
+      <a href="https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.3/CloverAIStudio.apk">Download Android (.apk)</a>
     </div>
   </div>
 </div>
@@ -1662,7 +1662,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     media_info: ['Media info', 'file'], extract_frame: ['Extract frame', 'image'],
     remember: ['Remember', 'database'],
     vscode_open: ['VS Code: open', 'code'], vscode_clone: ['VS Code: clone', 'branch'], vscode_install: ['VS Code: install', 'download'],
-    vscode_run: ['VS Code: run', 'terminal'], generate_image: ['Create picture', 'image']
+    vscode_run: ['VS Code: run', 'terminal'], vscode_editor: ['VS Code: editor', 'code'],
+    vscode_diagnostics: ['VS Code: problems', 'warning'], vscode_diff: ['VS Code: diff', 'code'],
+    vscode_browser: ['VS Code: browser', 'globe'], vscode_github_setup: ['VS Code: GitHub setup', 'branch'],
+    vscode_github_sync: ['VS Code: GitHub sync', 'sync'], generate_image: ['Create picture', 'image']
   };
   var SUGGEST = [
     ['code', 'Calculate with Python', 'Use Python to compute 2^64 and the 50th Fibonacci number.'],
@@ -4482,7 +4485,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     var lastSeq = 0;
     function finishRunningSteps() {
-      ['queue', 'understand', 'plan', 'review', 'draft', 'synth', 'layer_c1', 'layer_c2', 'layer_c3'].forEach(function (k) {
+      ['queue', 'understand', 'plan', 'vscode_wait', 'review', 'draft', 'synth', 'layer_c1', 'layer_c2', 'layer_c3'].forEach(function (k) {
         if (stepMap[k] && stepMap[k].data.state === 'run') {
           stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
         }
@@ -4633,6 +4636,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning (C2 HybridAgent)',
             detail: 'Preparing ' + prepName + ' input\u2026', badge: 'Preparing\u2026' });
           setStage('preparing ' + prepName);
+        } else if (ev.stage === 'vscode_wait') {
+          upsertStep('vscode_wait', { icon: 'clock', state: 'run', name: 'Waiting for you in VS Code',
+            detail: ev.text || 'VS Code is asking you to confirm', badge: 'Approve in VS Code\u2026' });
+          setStage('waiting for your approval in VS Code');
         } else if (ev.stage === 'reviewing') {
           if (stepMap.plan) stepMap.plan.update({ state: 'ok', badge: '\u2713 Planned' });
           upsertStep('review', { icon: 'spark', state: 'run', name: 'Reviewing results',
@@ -4735,6 +4742,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         }));
         scrollDown();
       } else if (ev.type === 'tool_result') {
+        if (stepMap.vscode_wait && stepMap.vscode_wait.data.state === 'run') {
+          stepMap.vscode_wait.update({ state: 'ok', badge: '\u2713 Answered in VS Code' });
+        }
         var cd = cards[ev.id];
         if (cd) {
           var rawRes = String(ev.result || '').slice(0, 3000);
@@ -4746,7 +4756,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           cd.card.set(cd.t.state, cd.t.why, cd.t.summary); cd.card.result(cd.t.result);
           if (ev.ran && (ev.name === 'run_powershell' || ev.name === 'run_python' || ev.name === 'vscode_run')) {
             logCloverTerminalActivity(ev.name, cd.t.args, rawRes, worked);
-          } else if (ev.ran && (ev.name === 'web_search' || ev.name === 'fetch_url')) {
+          } else if (ev.ran && (ev.name === 'web_search' || ev.name === 'fetch_url' || ev.name === 'vscode_browser')) {
             logCloverBrowserActivity(ev.name, cd.t.args);
           }
           setStage(toolName(ev.name) + (!ev.ran ? ' skipped' : worked ? ' worked' : ' failed'));
@@ -4933,6 +4943,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (a.pattern) return a.pattern + (a.path ? ' in ' + a.path : '');
     if (a.action) return a.action + (a.target ? ' ' + a.target : '') + (a.path ? ' (' + a.path + ')' : '');
     if (a.chart_type && a.path) return a.chart_type + ' chart of ' + a.path + (a.y ? ' (' + (a.x ? a.x + ' vs ' : '') + a.y + ')' : '');
+    if (a.subaction === 'playwright' && a.code) return 'playwright: ' + a.code;
+    if (a.subaction) return a.subaction + (a.url ? ' ' + a.url : a.pageId ? ' ' + a.pageId : '') + (a.selector || a.ref ? ' (' + (a.selector || a.ref) + ')' : '');
+    if (a.filePath) return a.filePath + (a.startLine ? ' (lines ' + a.startLine + '-' + (a.endLine || 'end') + ')' : '');
     if (a.code) return a.code;
     if (a.command) return a.command;
     if (a.query) return a.query;

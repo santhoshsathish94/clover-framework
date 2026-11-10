@@ -39,9 +39,17 @@ for token in (
 
 # 2. Left sidebar brand header & 6 primary navigation items using existing icons only
 check(
-    "Left sidebar brand header has Clover AI Studio and v5.0.2",
+    "Left sidebar brand header has Clover AI Studio and v5.0.3 (and #v-version v5.0.3)",
     '<span class="brand__title">Clover AI Studio</span>' in app
-    and '<span class="brand__ver">v5.0.2</span>' in app,
+    and '<span class="brand__ver">v5.0.3</span>' in app
+    and '<b id="v-version">v5.0.3</b>' in app,
+)
+check(
+    "v5.0.3 VS Code & Playwright UI integration (vscode_wait step, vscode_browser TOOL_UI, and Playwright fmtArgs)",
+    "ev.stage === 'vscode_wait'" in app
+    and "stepMap.vscode_wait" in app
+    and "vscode_browser: ['VS Code: browser', 'globe']" in app
+    and "a.subaction === 'playwright'" in app,
 )
 for nav_id, label, icon_id in (
     ("chat", "Chat", "#i-chat"),

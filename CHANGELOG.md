@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## v5.0.3 — 2026-11-10
+
+**Clover v5.0.3 — VS Code and Playwright fixes.** `VERSION` is `5.0.3` and all site `?v=5.0.3` asset cache strings match it. Windows installer, MSIX, Android APK/AAB (`versionCode 17`) and the VS Code and browser extensions are rebuilt at `5.0.3`. Found by testing Clover with VS Code on a laptop (VS Code 1.145.2).
+
+- **Playwright:** Clover can run Playwright code on a page shared in VS Code's browser, from Studio's chat (`vscode_browser` subaction `playwright`: locator hints, a guessed selector replaced by the page's own locator, code written as a function unwrapped) and from VS Code's chat in both the default **Copilot** agent and the **Local** agent (an action example in the tool's code parameter, one prompt back when an asked step was not done, no repeat of a call that already ran, a reload of a shared page becomes a read).
+- **VS Code's default "Copilot" agent works with Clover's laptop model:** the model's declared input limit is 131,072 (the agent refused it at 32,768); the shared pages reach the model (the agent sends no `<userRequest>`); the agent's own tool names (`openBrowserPage`, `runPlaywrightCode`, `view`, `grep`, `powershell`, ...) are recognised; `search_tools` also finds tools already offered.
+- **Safety:** a page is not opened at an address the user never gave while VS Code shares pages (the model had opened `https://clover.com`, a real company's site, for "the Clover test page"); an answer written for VS Code's chat gets no VS Code tools of Studio's own (after the user skipped a page tool in VS Code's chat, it had typed into the page through Studio).
+- **VS Code chat follow-ups:** a new message after a stopped turn is answered (it was dropped and the stopped command repeated).
+- **Studio → VS Code:** a web page asked for "in VS Code" opens in VS Code's browser; VS Code's editor, Problems panel, diff and browser are offered when asked for; a confirmation dialog in VS Code gets four minutes and a note in the chat ("Approve in VS Code"), and a timeout names the dialog; diagnostics open the file first (VS Code reports problems only for open files); "already installed" is said; a screenshot is shown in the chat.
+- **Calculator:** with the default Tools setting, plain sums are answered directly (faster; 9/10 right first time in a 10-sum laptop A/B), and a wrong draft of a plain sum is replaced by Clover's exact answer (`7 * 8 + 3 = 59`). With Tools set to Always the calculator stays offered.
+- Tests: `tests/test_vscode_503.py` (new). Full suite: only failures already present in 5.0.2.
+
 ## v5.0.2 — 2026-11-10
 
 **Clover v5.0.2 — Checked tool steps, and a phone fix.** `VERSION` is `5.0.2` and all site `?v=5.0.2` asset cache strings match it. Windows installer, MSIX, Android APK/AAB (`versionCode 16`) and the VS Code and browser extensions are rebuilt at `5.0.2`.

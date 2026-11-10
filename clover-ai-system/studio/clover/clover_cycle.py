@@ -160,6 +160,22 @@ def direct_arithmetic_value(question):
     return _eval(expr)
 
 
+def direct_arithmetic_answer(question):
+    """'7 * 8 + 3 = 59' for a pure arithmetic question, or None: Clover writes it when the model's draft got the sum
+    wrong, instead of asking the model again (a retry took about 10 s and showed this cycle's wording, 2026-11-10)."""
+    v = direct_arithmetic_value(question)
+    m = _DIRECT_EXPR.match(normalize(question or "").strip())
+    if v is None or not m:
+        return None
+    shown = f"{int(v)}" if float(v).is_integer() else f"{v:g}"
+    return f"{' '.join(m.group(1).split())} = {shown}"
+
+
+def only_arithmetic(findings):
+    """The draft's only problems are arithmetic ones ("you wrote 7 * 8 + 3 = 56, but ...", "the exact value is ...")."""
+    return bool(findings) and all(str(f).startswith("Arithmetic:") for f in findings)
+
+
 def trim_only_value(question, reply):
     """When `question` explicitly asks to return/reply with ONLY a single value (number, year, or code), strips wrapper
     words like 'The archive code is: **CLOVER-7429**' or 'Augusta Ada King — 1815' down to the exact value."""

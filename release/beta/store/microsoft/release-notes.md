@@ -1,5 +1,6 @@
-Clover AI Studio v5.0.2 (Package Version 5.0.2.0) — Release:
-• Checked writes: Clover reads a written file back, and the step says "Checked on disk" only when the file holds what was written.
-• If Clover stopped in the middle of a step (for example the laptop restarted), the next answer says which step did not finish. It is never re-run by itself.
-• Clover's decision helper can only make Clover more careful; it never approves an action on its own.
-• Packaged as an x64 MSIX / `.msixupload` bundle (`SanthoshNarayanan.CloverAIStudio`, `5.0.2.0`) alongside the Authenticode-signed standalone x64 installer (`CloverAIStudio-Setup.exe`).
+Clover AI Studio v5.0.3 (Package Version 5.0.3.0) — Release:
+• Playwright: Clover can run Playwright code on a page shared in VS Code's browser, from Clover AI Studio and from VS Code's chat.
+• VS Code's default Copilot agent works with Clover's laptop model; a message after a stopped turn is answered.
+• Clover does not open a web address you did not give it, and does not act in VS Code behind VS Code's own chat.
+• Plain sums are answered directly (default Tools setting); a wrong sum is corrected with the exact answer.
+• Packaged as an x64 MSIX / `.msixupload` bundle (`SanthoshNarayanan.CloverAIStudio`, `5.0.3.0`) alongside the Authenticode-signed standalone x64 installer (`CloverAIStudio-Setup.exe`).
