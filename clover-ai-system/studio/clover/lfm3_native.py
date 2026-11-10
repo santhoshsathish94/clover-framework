@@ -611,12 +611,17 @@ def typed_hosts(user_text):
 
 
 class LFM3Native:
+    inputs = ["text", "vision", "audio", "video"]
+
     def __init__(self, base_dir, perms, max_tokens=8192, progress=None, engine="cpu"):
         """engine: "cpu" = Clover C engine (bf16), "gpu" = llama.cpp on the Iris Xe (QAD Q4_0, llamacpp_engine)."""
         t0 = time.perf_counter()
         progress = progress or (lambda m: None)
         base_dir = Path(base_dir)
         self.base_dir, self.perms = base_dir, perms
+        self.media_dir = base_dir / "media"
+        self.media_dir.mkdir(parents=True, exist_ok=True)
+        self.turn_images = None
         progress("tokenizer and chat template")
         from transformers import AutoTokenizer
         self.tok = AutoTokenizer.from_pretrained(str(base_dir / "data" / "lfm3" / "hf"))
@@ -1025,7 +1030,7 @@ class LFM3Native:
     def run_turn(self, history, user_text, *, tools=True, sampling="general", thinking=True, max_new=2048,
                  max_rounds=8, on_event=None, ask=None, allow=(), cancel=None, seed=0, system=None,
                  layers=(), kit=None, layer_query=None, final_on_limit=False, force_answer=False, extra_tools=(),
-                 only_tools=None):
+                 media=(), only_tools=None, meaning=None):
         """layers: any of lfm3_layers.LAYERS, run through `kit` (a lfm3_layers.LayerKit).
         final_on_limit: when every tool round is used, ask LFM3 once more to answer from what it has.
         force_answer: when thinking fills max_new, close it and let LFM3 answer (up to 1,024 more tokens).
@@ -1034,8 +1039,9 @@ class LFM3Native:
         only_tools: offer only these tool names (None: all)."""
         emit = on_event or (lambda e: None)
         self.turn_cancel = cancel  # a running command stops when the user stops the turn
+        self.turn_paths = list(meaning.paths) if meaning is not None else user_paths(user_text)
         self.turn_unknown, self.turn_ran, self.turn_web = set(), set(), 0  # per answer, as in OmniNative.run_turn
-        self.turn_hosts = typed_hosts(user_text)
+        self.turn_hosts = typed_hosts(meaning.text if meaning is not None else user_text)
         cfg = SAMPLING[sampling]
         base = [t for t in STUDIO_TOOLS if only_tools is None or t["function"]["name"] in only_tools]
         extra_tools = [t for t in extra_tools if only_tools is None or t["schema"]["function"]["name"] in only_tools]
@@ -1045,6 +1051,7 @@ class LFM3Native:
         by_name = {t["function"]["name"]: t["function"] for t in schemas}
         query = layer_query or user_text
         import clover_cycle as C
+        import omni_native as ON
         import workspaces as WS
         op_plan = C.OperatingCyclePlan(
             emit,
@@ -1064,7 +1071,7 @@ class LFM3Native:
                     layer_log.append(info)
                     emit(dict(info, type="layer"))
         ws_active_p = (kit.workspaces.active() or {}).get("path") if (kit is not None and getattr(kit, "workspaces", None) is not None) else None
-        l_blk, l_info = WS.local_context_for_paths(user_paths(user_text), workdir=self.workdir, active_ws_path=ws_active_p)
+        l_blk, l_info = WS.local_context_for_paths(self.turn_paths, workdir=self.workdir, active_ws_path=ws_active_p)
         if l_blk:
             blocks.append(l_blk)
             layer_log.append(l_info)
@@ -1076,6 +1083,36 @@ class LFM3Native:
             emit(dict(b_emit, type="layer"))
         if blocks:  # Clover appends its observations after the question
             user_text = user_text + "\n\n" + "\n\n".join(blocks)
+        recall_msgs = []
+        if "recall" in layers and kit is not None:
+            block, info = kit.recall_context(query, sum(1 for m in history if m.get("role") == "user"))
+            if block:
+                recall_msgs.append({"role": "system", "content": block})
+            if info:
+                layer_log.append(info)
+                if info.get("refs"):
+                    emit(dict(info, type="layer"))
+        if meaning is not None and getattr(meaning, "guidance", ""):
+            recall_msgs.append({"role": "system", "content": meaning.guidance})
+        media_dir = getattr(self, "media_dir", None) or (Path(getattr(self, "base_dir", Path.cwd())) / "media")
+        sensory_msgs, sensory_layers, has_new_visual, _ = ON.run_s3_sensory_context(
+            getattr(self, "base_dir", Path.cwd()),
+            media_dir,
+            media,
+            query,
+            kit=kit,
+            emit=emit,
+            turn_images=getattr(self, "turn_images", None),
+        )
+        recall_msgs.extend(sensory_msgs)
+        layer_log.extend(sensory_layers)
+        if has_new_visual:
+            user_text = (user_text or "").rstrip() + "\n(Use the S3 visual/video inspection above to answer.)"
+        s3_pre_call, s3_extra_calls = (
+            ON.plan_s3_pre_calls(self, query, only_tools, by_name, meaning=meaning, past_msgs=history)
+            if (tools and schemas and only_tools and not (cancel and cancel.is_set()))
+            else (None, [])
+        )
         ctx_sources = [x.get("layer") for x in layer_log if isinstance(x, dict) and x.get("layer")]
         op_plan.complete_stage(
             "context",
@@ -1083,13 +1120,29 @@ class LFM3Native:
         )
         op_plan.start_stage(
             "direction",
-            "Direction set (" + ("tools: " + ", ".join(only_tools[:4]) if only_tools else "direct reasoning & verification") + ")",
+            "Direction set ("
+            + (f"pre-executing {s3_pre_call['name']}" if s3_pre_call else (
+                "tools: " + ", ".join(only_tools[:4]) if only_tools else "direct reasoning & verification"
+            ))
+            + ")",
         )
         op_plan.complete_stage("direction")
         op_plan.start_stage("execution")
-        msgs = [{"role": "system", "content": system or self.system_prompt(bool(schemas), only_tools)}] + list(history) + [{"role": "user", "content": user_text}]
-        msgs = self._fit(msgs, schemas, thinking, max_new)
+        msgs = ([{"role": "system", "content": system or self.system_prompt(bool(schemas), only_tools)}]
+                + list(history) + recall_msgs + [{"role": "user", "content": user_text}])
         rounds, final, stats_all, reasoning = [], "", [], ""
+        if s3_pre_call is not None:
+            pre_rounds, _, pre_text = ON.execute_s3_pre_calls(
+                self, s3_pre_call, s3_extra_calls, ask=ask, allow=allow, emit=emit
+            )
+            rounds.extend(pre_rounds)
+            msgs.insert(-1, {"role": "system", "content": pre_text})
+            if any(pc["name"] in ("run_powershell", "write_file") for pc in ([s3_pre_call] + s3_extra_calls)):
+                msgs[-1]["content"] = str(msgs[-1]["content"]).rstrip() + "\n\n" + pre_text
+            msgs[0]["content"] = system or self.system_prompt(False, None)
+            schemas = []
+            only_tools = None
+        msgs = self._fit(msgs, schemas, thinking, max_new)
 
         def delta_cb(round_no):
             shown = {"thinking": 0, "answer": 0}

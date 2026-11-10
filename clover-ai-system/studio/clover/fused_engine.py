@@ -90,7 +90,7 @@ def layout(base):
 
 
 class FusedEngine:
-    inputs = ["text"]
+    inputs = ["text", "vision", "audio", "video"]
     engine_kind = "fused"
     gpu = None
     side_gate = None
@@ -188,16 +188,15 @@ class FusedEngine:
                 "tools": [], "max_tokens": 1280, "reasoning": False}
 
     def run_turn(self, hist, prompt, on_event=None, cancel=None, max_new=2048, media=(), layers=(), kit=None,
-                 layer_query=None, meaning=None, **kw):
-        if media:
-            raise ValueError("C1 + C2 + C3 reads text only: switch the engine to the GPU or CPU in Settings for photos, "
-                             "audio and video")
+                 layer_query=None, meaning=None, tools=True, extra_tools=(), only_tools=None, ask=None, allow=(), **kw):
         import clover_cycle as C
+        import lfm3_native as N
+        import omni_native as ON
         import semantics
         import workspaces as WS
         emit = on_event or (lambda e: None)
         query = layer_query or prompt
-        op_plan = C.OperatingCyclePlan(emit, model_name="LFM3-Omni-2B (C1+C2+C3)", query=query, offered_tools=())
+        op_plan = C.OperatingCyclePlan(emit, model_name="LFM3-Omni-2B (C1+C2+C3)", query=query, offered_tools=only_tools or ())
         self.active_op_plan = op_plan
         op_plan.start_stage("context")
         after, layer_log = self._context(layers, kit, query)
@@ -220,6 +219,45 @@ class FusedEngine:
                     emit(dict(info, type="layer"))
         if meaning is not None and getattr(meaning, "guidance", ""):
             before.append(meaning.guidance)
+        sensory_msgs, sensory_layers, _, _ = ON.run_s3_sensory_context(
+            self.base_dir,
+            self.base_dir / "media",
+            media,
+            query,
+            kit=kit,
+            emit=emit,
+            turn_images=getattr(self, "turn_images", None),
+        )
+        for sm in sensory_msgs:
+            if sm.get("content"):
+                before.append(str(sm["content"]))
+        layer_log.extend(sensory_layers)
+
+        base_schemas = [t for t in N.STUDIO_TOOLS if only_tools is None or t["function"]["name"] in only_tools]
+        extra_schemas = [t for t in extra_tools if only_tools is None or t["schema"]["function"]["name"] in only_tools]
+        all_schemas = (base_schemas + [t["schema"] for t in extra_schemas]) if tools else []
+        by_name = {t["function"]["name"]: t["function"] for t in all_schemas}
+        local_runner = object.__new__(ON.OmniNative)
+        local_runner.base_dir = self.base_dir
+        local_runner.media_dir = self.base_dir / "media"
+        local_runner.perms = self.perms
+        local_runner.workdir = getattr(self, "workdir", None)
+        local_runner.workname = getattr(self, "workname", "")
+        local_runner.after_write = getattr(self, "after_write", None)
+        local_runner.turn_images = getattr(self, "turn_images", None)
+        local_runner.turn_cancel = cancel
+        local_runner.turn_paths = list(meaning.paths) if meaning is not None else N.user_paths(prompt)
+        local_runner.turn_hosts = N.typed_hosts(meaning.text if meaning is not None else prompt)
+        local_runner.turn_unknown, local_runner.turn_ran, local_runner.turn_web, local_runner.turn_web_cap = set(), set(), 0, 8
+        local_runner._py, local_runner._web = None, None
+        local_runner._extra = {t["schema"]["function"]["name"]: t for t in extra_schemas} if tools else {}
+        local_runner.tool_tasks = getattr(self, "tool_tasks", None)
+
+        s3_pre_call, s3_extra_calls = (
+            ON.plan_s3_pre_calls(local_runner, query, only_tools, by_name, meaning=meaning, past_msgs=hist or ())
+            if (tools and all_schemas and only_tools and not (cancel and cancel.is_set()))
+            else (None, [])
+        )
         ctx_sources = [x.get("layer") for x in layer_log if isinstance(x, dict) and x.get("layer")]
         op_plan.complete_stage(
             "context",
@@ -228,6 +266,13 @@ class FusedEngine:
         op_plan.start_stage("direction", "Direction set (C2 HybridLink latent planning -> C3 11-level NCM)")
         op_plan.complete_stage("direction")
         op_plan.start_stage("execution", "Executing C1 -> C2 -> C3 fused runtime…")
+        rounds = []
+        if s3_pre_call is not None:
+            pre_rounds, _, pre_text = ON.execute_s3_pre_calls(
+                local_runner, s3_pre_call, s3_extra_calls, ask=ask, allow=allow, emit=emit
+            )
+            rounds.extend(pre_rounds)
+            before.append(pre_text)
         max_clover_cycles = 3
         cycle_history, answers = [], []
         cur_prompt = "\n\n".join(before + [prompt] + after)
@@ -293,7 +338,7 @@ class FusedEngine:
         op_plan.complete_stage("growth", "Growth preserved · context updated")
         if on_event:
             on_event({"type": "token", "round": len(answers), "kind": "answer", "text": reply})
-        return {"reply": reply, "tool_calls": [], "rounds": len(answers),
+        return {"reply": reply, "tool_calls": rounds, "rounds": len(answers),
                 "generation": [self._generation(a) for a in answers],
                 "layers": layer_log + [self._fused_layer(answers)],
                 "todo_list": op_plan.todos}
@@ -304,14 +349,20 @@ class FusedEngine:
         web search, no Python solution, no compiler check): each rewrite and each independent solution is one call.
         The first regression run had no cycle on this engine ("That's not right, try again" went as a new question)."""
         import clover_cycle as C
-        if media:
-            raise ValueError("C1 + C2 + C3 reads text only: switch the engine to the GPU or CPU in Settings for photos, "
-                             "audio and video")
+        import omni_native as ON
         emit = on_event or (lambda e: None)
         op_plan = C.OperatingCyclePlan(emit, model_name="LFM3-Omni-2B (C1+C2+C3)", query=question, offered_tools=())
         self.active_op_plan = op_plan
         op_plan.start_stage("context", f"Re-establishing Context from user feedback: {str(feedback)[:80]}")
         blocks, layer_log = self._context(layers, kit, question)  # Context gathered again for the question
+        if media:
+            sensory_msgs, sensory_layers, _, _ = ON.run_s3_sensory_context(
+                self.base_dir, self.base_dir / "media", media, question, kit=kit, emit=emit
+            )
+            for sm in sensory_msgs:
+                if sm.get("content"):
+                    blocks.append(str(sm["content"]))
+            layer_log.extend(sensory_layers)
         notes = ("\n\n" + "\n\n".join(blocks)) if blocks else ""
         op_plan.complete_stage("context")
         op_plan.start_stage("direction", "Setting corrected Direction for independent solve")

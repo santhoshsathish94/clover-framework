@@ -318,6 +318,375 @@ def user_content(text, media, media_dir):
     return parts + [{"type": "text", "text": text}] if parts else text
 
 
+def run_s3_sensory_context(base_dir, media_dir, media, query, *, kit=None, emit=None, turn_images=None):
+    """Model-agnostic S3 sensory analysis (`Audio-JEPA` for audio, `image_inspector` + `I-JEPA` + `FFprobe` + keyframe
+    extraction for images & video, and `read_active_activity` for screen captures).
+    Runs identically across all models (`OmniNative`, `LFM3Native`, `K3HostEngine`, `RemoteOmniEngine`, `FusedEngine`).
+    Returns `(sensory_system_msgs, sensory_layers, has_new_visual, has_new_audio)`.
+    """
+    emit = emit or (lambda e: None)
+    base_p = Path(base_dir) if base_dir else Path.cwd()
+    media_p = Path(media_dir) if media_dir else (base_p / "media")
+    has_new_visual = any(m.get("kind") in ("image", "video") for m in media or () if isinstance(m, dict))
+    has_new_audio = any(m.get("kind") == "audio" for m in media or () if isinstance(m, dict))
+    jepa_arch_cfg = getattr(kit, "jepa_arch", "auto") if kit is not None else "auto"
+    if kit is not None:
+        kit.visual_cue_64 = None
+        kit.audio_cue_64 = None
+
+    sensory_msgs = []
+    sensory_layers = []
+
+    if has_new_audio and jepa_arch_cfg != "none":
+        try:
+            import math
+            import numpy as np
+            import jepa_engine
+            aud_blocks = []
+            jrt = jepa_engine.for_base(base_p)
+            for m in media or ():
+                if isinstance(m, dict) and m.get("kind") == "audio" and m.get("file"):
+                    aud_fp = media_p / m["file"]
+                    if aud_fp.is_file():
+                        samples = jrt._extract_audio_samples(aud_fp)
+                        dur_s = round(samples.size / 16000.0, 2) if samples.size > 0 else 0.0
+                        rms_val = float(np.sqrt(np.mean(samples * samples) + 1e-12)) if samples.size > 0 else 1e-6
+                        peak_val = float(np.max(np.abs(samples)) + 1e-12) if samples.size > 0 else 1e-6
+                        rms_dbfs = round(max(-80.0, 20.0 * math.log10(rms_val)), 1)
+                        peak_dbfs = round(max(-80.0, 20.0 * math.log10(peak_val)), 1)
+                        ja = jrt.inspect_audio_latent(samples, configured_arch=jepa_arch_cfg)
+                        if ja.get("enabled"):
+                            if kit is not None:
+                                kit.audio_cue_64 = ja.get("z_jepa")
+                            info_aud = {
+                                "layer": "jepa_audio",
+                                "arch": ja["arch"],
+                                "file": m["file"],
+                                "acoustic_regime": ja["acoustic_regime"],
+                                "snr_db": ja["snr_db"],
+                                "tf_latent_cos": ja["tf_latent_cos"],
+                                "duration_s": dur_s,
+                                "rms_dbfs": rms_dbfs,
+                                "peak_dbfs": peak_dbfs,
+                                "ms": ja["ms"],
+                            }
+                            sensory_layers.append(info_aud)
+                            emit(dict(info_aud, type="layer"))
+                            aud_blocks.append(
+                                f"Audio-JEPA Acoustic & Prosody Snapshot ({m.get('name') or m['file']}):\n"
+                                f"- Duration: {dur_s} s (16,000 Hz mono PCM)\n"
+                                f"- Acoustic Regime (Audio-JEPA {ja['arch']}): {ja['acoustic_regime']}\n"
+                                f"- Estimated SNR: {ja['snr_db']} dB | RMS Level: {rms_dbfs} dBFS | Peak Level: {peak_dbfs} dBFS\n"
+                                f"- Time-Frequency Latent Cosine: {ja['tf_latent_cos']} (inspected in {ja['ms']} ms)"
+                            )
+            if aud_blocks:
+                sensory_msgs.append({
+                    "role": "system",
+                    "content": (
+                        "S3 Audio-JEPA Acoustic Analysis (measured on the attached audio recording before C1 inference):\n\n"
+                        + "\n\n".join(aud_blocks)
+                        + "\n\nUse both the audio content and these measured Audio-JEPA acoustic metrics (duration, acoustic regime, SNR dB, RMS/peak dBFS) to answer the user's question."
+                    ),
+                })
+        except Exception:
+            pass
+
+    if has_new_visual:
+        try:
+            import hashlib
+            import os
+            import subprocess
+            import image_inspector
+            snap_blocks = []
+            for m in media or ():
+                if not isinstance(m, dict) or not m.get("file"):
+                    continue
+                img_fp = None
+                vid_hdr = ""
+                if m.get("kind") == "image":
+                    cand_fp = media_p / m["file"]
+                    if cand_fp.is_file():
+                        img_fp = cand_fp
+                elif m.get("kind") == "video":
+                    vid_fp = media_p / m["file"]
+                    if vid_fp.is_file():
+                        try:
+                            import local_tool_packs
+                            vid_hdr = "Video Stream Metadata (FFprobe):\n" + local_tool_packs.media_info(
+                                vid_fp, base_dir=base_p
+                            ) + "\n\n"
+                        except Exception:
+                            vid_hdr = f"Attached Video File: {m.get('name') or m['file']} ({vid_fp.stat().st_size} bytes)\n\n"
+                        fr_name = m.get("frame_file") or ""
+                        if fr_name and (media_p / fr_name).is_file():
+                            img_fp = media_p / fr_name
+                        else:
+                            try:
+                                import device_actions
+                                ff_exe = device_actions._find_ffmpeg_exe(base_p)
+                                if ff_exe is not None:
+                                    tmp_fr = media_p / f"tmp_vfr_{uuid.uuid4().hex[:8]}.png"
+                                    try:
+                                        subprocess.run(
+                                            [str(ff_exe), "-hide_banner", "-y", "-ss", "0.5", "-i", str(vid_fp), "-frames:v", "1", str(tmp_fr)],
+                                            capture_output=True,
+                                            timeout=10,
+                                            creationflags=0x08000000 if os.name == "nt" else 0,
+                                        )
+                                        if not tmp_fr.is_file() or tmp_fr.stat().st_size < 256:
+                                            subprocess.run(
+                                                [str(ff_exe), "-hide_banner", "-y", "-i", str(vid_fp), "-frames:v", "1", str(tmp_fr)],
+                                                capture_output=True,
+                                                timeout=10,
+                                                creationflags=0x08000000 if os.name == "nt" else 0,
+                                            )
+                                        if tmp_fr.is_file() and tmp_fr.stat().st_size >= 256:
+                                            fb = tmp_fr.read_bytes()
+                                            fr_name = hashlib.sha256(fb).hexdigest()[:32] + ".png"
+                                            img_fp = media_p / fr_name
+                                            img_fp.write_bytes(fb)
+                                            m["frame_file"] = fr_name
+                                    finally:
+                                        tmp_fr.unlink(missing_ok=True)
+                            except Exception:
+                                pass
+                        if img_fp is not None and turn_images is not None:
+                            if not any(x.get("file") == img_fp.name for x in turn_images):
+                                turn_images.append({
+                                    "file": img_fp.name,
+                                    "prompt": m.get("name") or "Recorded Video Frame",
+                                    "model": "video_frame",
+                                    "seconds": 0,
+                                    "width": None,
+                                    "height": None,
+                                })
+                if img_fp is not None and img_fp.is_file():
+                    is_cam_or_vid = bool(m.get("camera_capture") or m.get("kind") == "video")
+                    rep = image_inspector.inspect_image(
+                        img_fp, annotate_dir=media_p, jepa_arch=jepa_arch_cfg, skip_ocr=is_cam_or_vid
+                    )
+                    snap_blocks.append(vid_hdr + image_inspector.format_snapshot_for_prompt(rep))
+                    jv = rep.get("jepa_visual") or {}
+                    if kit is not None and jv.get("arch"):
+                        if jv.get("z_jepa") is not None:
+                            kit.visual_cue_64 = jv.get("z_jepa")
+                        else:
+                            try:
+                                import jepa_engine
+                                from PIL import Image
+                                with Image.open(img_fp) as _im:
+                                    _jv_full = jepa_engine.for_base(base_p).inspect_visual_latent(_im.convert("RGB"), configured_arch=jepa_arch_cfg)
+                                    kit.visual_cue_64 = _jv_full.get("z_jepa")
+                            except Exception:
+                                pass
+                    info_img = {
+                        "layer": "image_analysis",
+                        "file": img_fp.name,
+                        "annotated_file": rep.get("annotated_file"),
+                        "width": rep["width"],
+                        "height": rep["height"],
+                        "elements": len(rep.get("elements") or []),
+                        "ocr_lines": len(rep.get("ocr_lines") or []),
+                        "jepa_arch": jv.get("arch"),
+                        "jepa_scene": jv.get("scene_kind"),
+                        "ms": rep.get("ms", 0),
+                    }
+                    sensory_layers.append(info_img)
+                    emit(dict(info_img, type="layer"))
+                elif vid_hdr:
+                    snap_blocks.append(vid_hdr)
+            if snap_blocks:
+                act_hdr = ""
+                try:
+                    import device_actions
+                    if device_actions.asks_for_screen_or_activity(query) or any(m.get("screen_capture") for m in media or () if isinstance(m, dict)):
+                        act = device_actions.read_active_activity(
+                            include_clipboard=device_actions.mentions_clipboard(query))
+                        parts_a = []
+                        if act.get("foreground_window"):
+                            parts_a.append(f"- Active Foreground Window: {act['foreground_window']}")
+                        if act.get("open_windows"):
+                            parts_a.append("- Open Application Windows: " + "; ".join(act["open_windows"][:10]))
+                        if act.get("clipboard_preview"):
+                            parts_a.append(f"- Clipboard Text Preview: {act['clipboard_preview'][:400]}")
+                        if parts_a:
+                            act_hdr = "Live Device Activity Context:\n" + "\n".join(parts_a) + "\n\n"
+                except Exception:
+                    pass
+                sensory_msgs.append({
+                    "role": "system",
+                    "content": (
+                        act_hdr
+                        + "S3 Playwright-Style Visual & UI Inspection of attached image/video "
+                        "(use these exact OCR texts, [e1..eN] bounding boxes, dimensions, and hex colors together with what you see in the media):\n"
+                        + "\n\n".join(snap_blocks)
+                    ),
+                })
+        except Exception:
+            pass
+
+    return sensory_msgs, sensory_layers, has_new_visual, has_new_audio
+
+
+def plan_s3_pre_calls(engine, query, only_tools, by_name, *, meaning=None, past_msgs=()):
+    """Plan deterministic S3 pre-calls (`npm install three` + `write_file` `threejs-visual.html`, `fetch_url`, `web_search`,
+    `get_current_time`, `laptop_status`, `run_python`, `remember`, `vscode_open`, `read_file`) across all model engines."""
+    s3_pre_call = None
+    s3_extra_calls = []
+    if not only_tools or not by_name:
+        return None, []
+    url_m = re.search(r"https?://\S+", query or "")
+    base_p = Path(getattr(engine, "base_dir", None) or Path.cwd())
+    workdir = getattr(engine, "workdir", None)
+    if (
+        "run_powershell" in only_tools
+        and "run_powershell" in by_name
+        and re.search(r"\bthree(?:\.js)?\b", query or "", re.I)
+        and re.search(r"\b(?:install|build|create|make|visuals?|3d)\b", query or "", re.I)
+    ):
+        vis_dir = Path(workdir) if (workdir and Path(workdir).is_dir()) else (base_p / "workspaces" / "threejs-visual")
+        vis_dir.mkdir(parents=True, exist_ok=True)
+        s3_pre_call = {
+            "id": "call_" + uuid.uuid4().hex[:16],
+            "name": "run_powershell",
+            "arguments": {"command": "npm install three --no-audit --no-fund", "cwd": str(vis_dir)},
+        }
+        if "write_file" in by_name:
+            html_path = vis_dir / "threejs-visual.html"
+            s3_extra_calls.append({
+                "id": "call_" + uuid.uuid4().hex[:16],
+                "name": "write_file",
+                "arguments": {"path": str(html_path), "content": _threejs_visual_html()},
+            })
+    elif "fetch_url" in only_tools and "fetch_url" in by_name and url_m:
+        u = url_m.group(0).rstrip(".,;)'>\"]")
+        s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "fetch_url", "arguments": {"url": u}}
+    elif (
+        "web_search" in only_tools
+        and "web_search" in by_name
+        and set(only_tools) <= {"web_search", "fetch_url"}
+        and not url_m
+    ):
+        ws_q = query
+        if meaning is not None and getattr(meaning, "follow_up", False) and past_msgs:
+            prev_u = next(
+                (str(m.get("content") or "") for m in reversed(past_msgs)
+                 if m.get("role") == "user" and isinstance(m.get("content"), str)),
+                "",
+            )
+            if prev_u and len((query or "").split()) <= 6:
+                ws_q = f"{prev_u.strip()} {query.strip()}".strip()[:200]
+        s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "web_search", "arguments": {"query": ws_q}}
+    elif list(only_tools) == ["get_current_time"] and "get_current_time" in by_name:
+        s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "get_current_time", "arguments": {}}
+    elif list(only_tools) == ["laptop_status"] and "laptop_status" in by_name:
+        s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "laptop_status", "arguments": {}}
+    elif "run_python" in only_tools and "run_python" in by_name and re.search(r"```(?:python|py)\b", query or "", re.I):
+        import lfm3_layers
+        py_code = lfm3_layers.extract_python(query or "")
+        if py_code.strip():
+            s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "run_python", "arguments": {"code": py_code.strip()}}
+    elif list(only_tools) == ["remember"] and "remember" in by_name and meaning is not None and getattr(meaning, "remember", ""):
+        note = str(meaning.remember).strip()
+        if note:
+            s3_pre_call = {
+                "id": "call_" + uuid.uuid4().hex[:16],
+                "name": "remember",
+                "arguments": {"text": note[0].upper() + note[1:] + ("" if note.endswith(".") else ".")},
+            }
+    elif "vscode_open" in only_tools and "vscode_open" in by_name and not semantics.VSCODE.search(query or ""):
+        import device_actions
+        m_app = device_actions.OPEN_APP_ASK.match(query or "")
+        if m_app:
+            tgt = m_app.group(1).strip()
+            if device_actions.is_standalone_app_target(tgt):
+                s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "vscode_open", "arguments": {"target": tgt}}
+    elif (
+        "read_file" in only_tools
+        and "read_file" in by_name
+        and "write_file" not in only_tools
+        and getattr(engine, "turn_paths", None)
+        and getattr(engine, "perms", None) is not None
+        and engine.perms.get().get("files") == "allow"
+    ):
+        cand_p = engine._path(engine.turn_paths[0])
+        if cand_p.is_file() and not paths.read_blocked(base_p, cand_p):
+            s3_pre_call = {
+                "id": "call_" + uuid.uuid4().hex[:16],
+                "name": "read_file",
+                "arguments": {"path": str(cand_p), "start_line": 1, "end_line": 120},
+            }
+    return s3_pre_call, s3_extra_calls
+
+
+def execute_s3_pre_calls(engine, s3_pre_call, s3_extra_calls, *, ask=None, allow=(), emit=None):
+    """Execute planned S3 pre-calls (`[s3_pre_call] + s3_extra_calls`) across any model engine, emitting tool cards and
+    rendering 3D visual previews when an HTML visual is written. Returns `(rounds, done_calls, pre_text)`."""
+    emit = emit or (lambda e: None)
+    all_pre = [s3_pre_call] + list(s3_extra_calls or ())
+    emit({"type": "round", "round": 1})
+    emit({"type": "plan", "round": 1, "stage": "planning", "tools": [c["name"] for c in all_pre]})
+    pre_summaries = []
+    rounds = []
+    done_calls = {}
+    media_dir = Path(getattr(engine, "media_dir", None) or (Path(getattr(engine, "base_dir", Path.cwd())) / "media"))
+    media_dir.mkdir(parents=True, exist_ok=True)
+    for pc in all_pre:
+        emit({"type": "plan", "round": 1, "stage": "preparing_tool", "tool": pc["name"]})
+        emit({"type": "tool_call", "id": pc["id"], "name": pc["name"], "arguments": pc["arguments"]})
+        key = (pc["name"], json.dumps(pc["arguments"], sort_keys=True))
+        ran, result, why = engine.execute_tool(pc["name"], pc["arguments"], ask, allow)
+        done_calls[key] = result
+        worked, summary = N.tool_worked(pc["name"], ran, result, why)
+        emit({
+            "type": "tool_result",
+            "id": pc["id"],
+            "name": pc["name"],
+            "ran": ran,
+            "worked": worked,
+            "summary": summary,
+            "why": why,
+            "result": result[:3000],
+        })
+        rounds.append({
+            "tool": pc["name"],
+            "arguments": pc["arguments"],
+            "ran": ran,
+            "worked": worked,
+            "summary": summary,
+            "why": why,
+            "result": result[:2000],
+        })
+        pre_summaries.append(f"Live {pc['name']} results:\n{result}")
+        if pc["name"] == "write_file" and ran and worked and str(pc["arguments"].get("path") or "").endswith(".html"):
+            try:
+                prev_fn = _render_threejs_preview_png(media_dir)
+                if getattr(engine, "turn_images", None) is not None:
+                    engine.turn_images.append({
+                        "file": prev_fn,
+                        "prompt": "Three.js 3D Visual Scene (threejs-visual.html)",
+                        "model": "three.js",
+                        "seconds": 0.2,
+                        "width": 720,
+                        "height": 420,
+                    })
+            except Exception:
+                pass
+    pre_text = (
+        "Live tool results for this request (already executed in S3 — "
+        "answer directly from these real results in plain text without calling tools):\n"
+        + "\n\n".join(pre_summaries)
+    )
+    if any(pc["name"] in ("run_powershell", "write_file") for pc in all_pre):
+        pre_text += (
+            "\n\n[Note: The S3 tools above ALREADY ran on this machine: three.js was installed in the workspace via npm "
+            "and the interactive 3D visual page threejs-visual.html was written to disk and rendered. "
+            "Summarize what was installed and built in 2-4 concise sentences. "
+            "Do NOT say you cannot install packages or build HTML pages, and do NOT output an HTML code block.]"
+        )
+    return rounds, done_calls, pre_text
+
+
 def speakable(text, limit=1200):
     """Answer text for speech: no code blocks, links or markdown marks."""
     t = re.sub(r"```[\s\S]*?```", " (code shown on screen) ", text or "")
@@ -799,197 +1168,18 @@ class OmniNative(N.LFM3Native):
             recall.append({"role": "system", "content": meaning.guidance})
         sys_txt = system or self.system_prompt(bool(schemas), only_tools)
         keep_last_media = bool(meaning is not None and getattr(meaning, "seen", ()) and not media)
-        has_new_visual = any(m.get("kind") in ("image", "video") for m in media or () if isinstance(m, dict))
-        has_new_audio = any(m.get("kind") == "audio" for m in media or () if isinstance(m, dict))
         not_comparing_prior = not re.search(r"\b(?:previous|earlier|first|prior|other|both|compare|same\s+as)\b", query or "", re.I)
-        jepa_arch_cfg = getattr(kit, "jepa_arch", "auto") if kit is not None else "auto"
-        if kit is not None:
-            kit.visual_cue_64 = None
-            kit.audio_cue_64 = None
-        if has_new_audio and jepa_arch_cfg != "none":
-            try:
-                import math
-                import numpy as np
-                import jepa_engine
-                aud_blocks = []
-                jrt = jepa_engine.for_base(self.base_dir)
-                for m in media or ():
-                    if isinstance(m, dict) and m.get("kind") == "audio" and m.get("file"):
-                        aud_fp = Path(self.media_dir) / m["file"]
-                        if aud_fp.is_file():
-                            samples = jrt._extract_audio_samples(aud_fp)
-                            dur_s = round(samples.size / 16000.0, 2) if samples.size > 0 else 0.0
-                            rms_val = float(np.sqrt(np.mean(samples * samples) + 1e-12)) if samples.size > 0 else 1e-6
-                            peak_val = float(np.max(np.abs(samples)) + 1e-12) if samples.size > 0 else 1e-6
-                            rms_dbfs = round(max(-80.0, 20.0 * math.log10(rms_val)), 1)
-                            peak_dbfs = round(max(-80.0, 20.0 * math.log10(peak_val)), 1)
-                            ja = jrt.inspect_audio_latent(samples, configured_arch=jepa_arch_cfg)
-                            if ja.get("enabled"):
-                                if kit is not None:
-                                    kit.audio_cue_64 = ja.get("z_jepa")
-                                info_aud = {
-                                    "layer": "jepa_audio",
-                                    "arch": ja["arch"],
-                                    "file": m["file"],
-                                    "acoustic_regime": ja["acoustic_regime"],
-                                    "snr_db": ja["snr_db"],
-                                    "tf_latent_cos": ja["tf_latent_cos"],
-                                    "duration_s": dur_s,
-                                    "rms_dbfs": rms_dbfs,
-                                    "peak_dbfs": peak_dbfs,
-                                    "ms": ja["ms"],
-                                }
-                                layer_log.append(info_aud)
-                                emit(dict(info_aud, type="layer"))
-                                aud_blocks.append(
-                                    f"Audio-JEPA Acoustic & Prosody Snapshot ({m.get('name') or m['file']}):\n"
-                                    f"- Duration: {dur_s} s (16,000 Hz mono PCM)\n"
-                                    f"- Acoustic Regime (Audio-JEPA {ja['arch']}): {ja['acoustic_regime']}\n"
-                                    f"- Estimated SNR: {ja['snr_db']} dB | RMS Level: {rms_dbfs} dBFS | Peak Level: {peak_dbfs} dBFS\n"
-                                    f"- Time-Frequency Latent Cosine: {ja['tf_latent_cos']} (inspected in {ja['ms']} ms)"
-                                )
-                if aud_blocks:
-                    recall.append({
-                        "role": "system",
-                        "content": (
-                            "S3 Audio-JEPA Acoustic Analysis (measured on the attached audio recording before C1 inference):\n\n"
-                            + "\n\n".join(aud_blocks)
-                            + "\n\nUse both the audio content and these measured Audio-JEPA acoustic metrics (duration, acoustic regime, SNR dB, RMS/peak dBFS) to answer the user's question."
-                        ),
-                    })
-            except Exception:
-                pass
-        if has_new_visual:
-            try:
-                import hashlib
-                import image_inspector
-                snap_blocks = []
-                for m in media or ():
-                    if not isinstance(m, dict) or not m.get("file"):
-                        continue
-                    img_fp = None
-                    vid_hdr = ""
-                    if m.get("kind") == "image":
-                        cand_fp = Path(self.media_dir) / m["file"]
-                        if cand_fp.is_file():
-                            img_fp = cand_fp
-                    elif m.get("kind") == "video":
-                        vid_fp = Path(self.media_dir) / m["file"]
-                        if vid_fp.is_file():
-                            try:
-                                import local_tool_packs
-                                vid_hdr = "Video Stream Metadata (FFprobe):\n" + local_tool_packs.media_info(
-                                    vid_fp, base_dir=self.base_dir
-                                ) + "\n\n"
-                            except Exception:
-                                vid_hdr = f"Attached Video File: {m.get('name') or m['file']} ({vid_fp.stat().st_size} bytes)\n\n"
-                            fr_name = m.get("frame_file") or ""
-                            if fr_name and (Path(self.media_dir) / fr_name).is_file():
-                                img_fp = Path(self.media_dir) / fr_name
-                            else:
-                                try:
-                                    import device_actions
-                                    ff_exe = device_actions._find_ffmpeg_exe(self.base_dir)
-                                    if ff_exe is not None:
-                                        tmp_fr = Path(self.media_dir) / f"tmp_vfr_{uuid.uuid4().hex[:8]}.png"
-                                        try:
-                                            subprocess.run(
-                                                [str(ff_exe), "-hide_banner", "-y", "-ss", "0.5", "-i", str(vid_fp), "-frames:v", "1", str(tmp_fr)],
-                                                capture_output=True,
-                                                timeout=10,
-                                                creationflags=0x08000000 if os.name == "nt" else 0,
-                                            )
-                                            if not tmp_fr.is_file() or tmp_fr.stat().st_size < 256:
-                                                subprocess.run(
-                                                    [str(ff_exe), "-hide_banner", "-y", "-i", str(vid_fp), "-frames:v", "1", str(tmp_fr)],
-                                                    capture_output=True,
-                                                    timeout=10,
-                                                    creationflags=0x08000000 if os.name == "nt" else 0,
-                                                )
-                                            if tmp_fr.is_file() and tmp_fr.stat().st_size >= 256:
-                                                fb = tmp_fr.read_bytes()
-                                                fr_name = hashlib.sha256(fb).hexdigest()[:32] + ".png"
-                                                img_fp = Path(self.media_dir) / fr_name
-                                                img_fp.write_bytes(fb)
-                                                m["frame_file"] = fr_name
-                                        finally:
-                                            tmp_fr.unlink(missing_ok=True)
-                                except Exception:
-                                    pass
-                            if img_fp is not None and getattr(self, "turn_images", None) is not None:
-                                if not any(x.get("file") == img_fp.name for x in self.turn_images):
-                                    self.turn_images.append({
-                                        "file": img_fp.name,
-                                        "prompt": m.get("name") or "Recorded Video Frame",
-                                        "model": "video_frame",
-                                        "seconds": 0,
-                                        "width": None,
-                                        "height": None,
-                                    })
-                    if img_fp is not None and img_fp.is_file():
-                        is_cam_or_vid = bool(m.get("camera_capture") or m.get("kind") == "video")
-                        rep = image_inspector.inspect_image(
-                            img_fp, annotate_dir=Path(self.media_dir), jepa_arch=jepa_arch_cfg, skip_ocr=is_cam_or_vid
-                        )
-                        snap_blocks.append(vid_hdr + image_inspector.format_snapshot_for_prompt(rep))
-                        jv = rep.get("jepa_visual") or {}
-                        if kit is not None and jv.get("arch"):
-                            if jv.get("z_jepa") is not None:
-                                kit.visual_cue_64 = jv.get("z_jepa")
-                            else:
-                                try:
-                                    import jepa_engine
-                                    from PIL import Image
-                                    with Image.open(img_fp) as _im:
-                                        _jv_full = jepa_engine.for_base(self.base_dir).inspect_visual_latent(_im.convert("RGB"), configured_arch=jepa_arch_cfg)
-                                        kit.visual_cue_64 = _jv_full.get("z_jepa")
-                                except Exception:
-                                    pass
-                        info_img = {
-                            "layer": "image_analysis",
-                            "file": img_fp.name,
-                            "annotated_file": rep.get("annotated_file"),
-                            "width": rep["width"],
-                            "height": rep["height"],
-                            "elements": len(rep.get("elements") or []),
-                            "ocr_lines": len(rep.get("ocr_lines") or []),
-                            "jepa_arch": jv.get("arch"),
-                            "jepa_scene": jv.get("scene_kind"),
-                            "ms": rep.get("ms", 0),
-                        }
-                        layer_log.append(info_img)
-                        emit(dict(info_img, type="layer"))
-                    elif vid_hdr:
-                        snap_blocks.append(vid_hdr)
-                if snap_blocks:
-                    act_hdr = ""
-                    try:
-                        import device_actions
-                        if device_actions.asks_for_screen_or_activity(query) or any(m.get("screen_capture") for m in media or () if isinstance(m, dict)):
-                            act = device_actions.read_active_activity(
-                                include_clipboard=device_actions.mentions_clipboard(query))
-                            parts_a = []
-                            if act.get("foreground_window"):
-                                parts_a.append(f"- Active Foreground Window: {act['foreground_window']}")
-                            if act.get("open_windows"):
-                                parts_a.append("- Open Application Windows: " + "; ".join(act["open_windows"][:10]))
-                            if act.get("clipboard_preview"):
-                                parts_a.append(f"- Clipboard Text Preview: {act['clipboard_preview'][:400]}")
-                            if parts_a:
-                                act_hdr = "Live Device Activity Context:\n" + "\n".join(parts_a) + "\n\n"
-                    except Exception:
-                        pass
-                    recall.append({
-                        "role": "system",
-                        "content": (
-                            act_hdr
-                            + "S3 Playwright-Style Visual & UI Inspection of attached image/video "
-                            "(use these exact OCR texts, [e1..eN] bounding boxes, dimensions, and hex colors together with what you see in the media):\n"
-                            + "\n\n".join(snap_blocks)
-                        ),
-                    })
-            except Exception:
-                pass
+        sensory_msgs, sensory_layers, has_new_visual, has_new_audio = run_s3_sensory_context(
+            getattr(self, "base_dir", None),
+            getattr(self, "media_dir", None),
+            media,
+            query,
+            kit=kit,
+            emit=emit,
+            turn_images=getattr(self, "turn_images", None),
+        )
+        recall.extend(sensory_msgs)
+        layer_log.extend(sensory_layers)
         if has_new_visual and not_comparing_prior:
             past_msgs = []
             if only_tools:
@@ -1023,88 +1213,12 @@ class OmniNative(N.LFM3Native):
             try:
                 # One-time flow S1 -> S2 -> S3 -> C1 -> C2 -> C3:
                 # When S1 (semantics) routes a deterministic S3 tool (web_search, fetch_url with URL,
-                # get_current_time, laptop_status, remember), execute S3 once BEFORE C1 so C1 runs in a single pass.
-                s3_pre_call = None
-                s3_extra_calls = []
-                if tools and schemas and only_tools and not (cancel and cancel.is_set()):
-                    url_m = re.search(r"https?://\S+", query or "")
-                    if (
-                        "run_powershell" in only_tools
-                        and "run_powershell" in by_name
-                        and re.search(r"\bthree(?:\.js)?\b", query or "", re.I)
-                        and re.search(r"\b(?:install|build|create|make|visuals?|3d)\b", query or "", re.I)
-                    ):
-                        vis_dir = self.workdir if (self.workdir and Path(self.workdir).is_dir()) else (Path(self.base_dir) / "workspaces" / "threejs-visual")
-                        vis_dir.mkdir(parents=True, exist_ok=True)
-                        s3_pre_call = {
-                            "id": "call_" + uuid.uuid4().hex[:16],
-                            "name": "run_powershell",
-                            "arguments": {"command": "npm install three --no-audit --no-fund", "cwd": str(vis_dir)},
-                        }
-                        if "write_file" in by_name:
-                            html_path = vis_dir / "threejs-visual.html"
-                            s3_extra_calls.append({
-                                "id": "call_" + uuid.uuid4().hex[:16],
-                                "name": "write_file",
-                                "arguments": {"path": str(html_path), "content": _threejs_visual_html()},
-                            })
-                    elif "fetch_url" in only_tools and "fetch_url" in by_name and url_m:
-                        u = url_m.group(0).rstrip(".,;)'>\"]")
-                        s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "fetch_url", "arguments": {"url": u}}
-                    elif (
-                        "web_search" in only_tools
-                        and "web_search" in by_name
-                        and set(only_tools) <= {"web_search", "fetch_url"}
-                        and not url_m
-                    ):
-                        ws_q = query
-                        if meaning is not None and getattr(meaning, "follow_up", False) and past_msgs:
-                            prev_u = next(
-                                (str(m.get("content") or "") for m in reversed(past_msgs)
-                                 if m.get("role") == "user" and isinstance(m.get("content"), str)),
-                                "",
-                            )
-                            if prev_u and len((query or "").split()) <= 6:
-                                ws_q = f"{prev_u.strip()} {query.strip()}".strip()[:200]
-                        s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "web_search", "arguments": {"query": ws_q}}
-                    elif list(only_tools) == ["get_current_time"] and "get_current_time" in by_name:
-                        s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "get_current_time", "arguments": {}}
-                    elif list(only_tools) == ["laptop_status"] and "laptop_status" in by_name:
-                        s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "laptop_status", "arguments": {}}
-                    elif "run_python" in only_tools and "run_python" in by_name and re.search(r"```(?:python|py)\b", query or "", re.I):
-                        import lfm3_layers
-                        py_code = lfm3_layers.extract_python(query or "")
-                        if py_code.strip():
-                            s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "run_python", "arguments": {"code": py_code.strip()}}
-                    elif list(only_tools) == ["remember"] and "remember" in by_name and meaning is not None and getattr(meaning, "remember", ""):
-                        note = str(meaning.remember).strip()
-                        if note:
-                            s3_pre_call = {
-                                "id": "call_" + uuid.uuid4().hex[:16],
-                                "name": "remember",
-                                "arguments": {"text": note[0].upper() + note[1:] + ("" if note.endswith(".") else ".")},
-                            }
-                    elif "vscode_open" in only_tools and "vscode_open" in by_name and not semantics.VSCODE.search(query or ""):
-                        import device_actions
-                        m_app = device_actions.OPEN_APP_ASK.match(query or "")
-                        if m_app:
-                            tgt = m_app.group(1).strip()
-                            if device_actions.is_standalone_app_target(tgt):
-                                s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "vscode_open", "arguments": {"target": tgt}}
-                    elif (
-                        "read_file" in only_tools
-                        and "read_file" in by_name
-                        and "write_file" not in only_tools
-                        and self.turn_paths
-                        and self.perms.get().get("files") == "allow"
-                    ):
-                        cand_p = self._path(self.turn_paths[0])
-                        if cand_p.is_file() and not paths.read_blocked(self.base_dir, cand_p):
-                            s3_pre_call = {
-                                "id": "call_" + uuid.uuid4().hex[:16],
-                                "name": "read_file",
-                                "arguments": {"path": str(cand_p), "start_line": 1, "end_line": 120},
-                            }
+                # get_current_time, laptop_status, remember, or three.js build), execute S3 once BEFORE C1.
+                s3_pre_call, s3_extra_calls = (
+                    plan_s3_pre_calls(self, query, only_tools, by_name, meaning=meaning, past_msgs=past_msgs)
+                    if (tools and schemas and only_tools and not (cancel and cancel.is_set()))
+                    else (None, [])
+                )
                 ctx_sources = [x.get("layer") for x in layer_log if isinstance(x, dict) and x.get("layer")]
                 op_plan.complete_stage(
                     "context",
@@ -1121,79 +1235,29 @@ class OmniNative(N.LFM3Native):
                 op_plan.complete_stage("direction")
                 op_plan.start_stage("execution")
                 if s3_pre_call is not None:
-                        all_pre = [s3_pre_call] + s3_extra_calls
-                        emit({"type": "round", "round": 1})
-                        emit({"type": "plan", "round": 1, "stage": "planning", "tools": [c["name"] for c in all_pre]})
-                        pre_summaries = []
-                        for pc in all_pre:
-                            emit({"type": "plan", "round": 1, "stage": "preparing_tool", "tool": pc["name"]})
-                            emit({"type": "tool_call", "id": pc["id"], "name": pc["name"], "arguments": pc["arguments"]})
-                            key = (pc["name"], json.dumps(pc["arguments"], sort_keys=True))
-                            ran, result, why = self.execute_tool(pc["name"], pc["arguments"], ask, allow)
-                            done_calls[key] = result
-                            worked, summary = N.tool_worked(pc["name"], ran, result, why)
-                            emit({
-                                "type": "tool_result",
-                                "id": pc["id"],
-                                "name": pc["name"],
-                                "ran": ran,
-                                "worked": worked,
-                                "summary": summary,
-                                "why": why,
-                                "result": result[:3000],
-                            })
-                            rounds.append({
-                                "tool": pc["name"],
-                                "arguments": pc["arguments"],
-                                "ran": ran,
-                                "worked": worked,
-                                "summary": summary,
-                                "why": why,
-                                "result": result[:2000],
-                            })
-                            pre_summaries.append(f"Live {pc['name']} results:\n{result}")
-                            if pc["name"] == "write_file" and ran and worked and str(pc["arguments"].get("path") or "").endswith(".html"):
-                                try:
-                                    prev_fn = _render_threejs_preview_png(Path(self.media_dir))
-                                    if getattr(self, "turn_images", None) is not None:
-                                        self.turn_images.append({
-                                            "file": prev_fn,
-                                            "prompt": "Three.js 3D Visual Scene (threejs-visual.html)",
-                                            "model": "three.js",
-                                            "seconds": 0.2,
-                                            "width": 720,
-                                            "height": 420,
-                                        })
-                                except Exception:
-                                    pass
-                        pre_text = (
-                            "Live tool results for this request (already executed in S3 — "
-                            "answer directly from these real results in plain text without calling tools):\n"
-                            + "\n\n".join(pre_summaries)
-                        )
-                        if any(pc["name"] in ("run_powershell", "write_file") for pc in all_pre):
-                            pre_text += (
-                                "\n\n[Note: The S3 tools above ALREADY ran on this machine: three.js was installed in the workspace via npm "
-                                "and the interactive 3D visual page threejs-visual.html was written to disk and rendered. "
-                                "Summarize what was installed and built in 2-4 concise sentences. "
-                                "Do NOT say you cannot install packages or build HTML pages, and do NOT output an HTML code block.]"
-                            )
-                        msgs.insert(-1, {"role": "system", "content": pre_text})
-                        if isinstance(msgs[-1].get("content"), list):
-                            for part in msgs[-1]["content"]:
-                                if isinstance(part, dict) and part.get("type") == "text":
-                                    part["text"] = (
-                                        str(part.get("text") or "").rstrip()
-                                        + "\n\n"
-                                        + pre_text
-                                        + "\n\nSummarize BOTH the live tool results (news headlines) AND the attached screen capture / visual inspection."
-                                    )
-                                    break
-                        elif isinstance(msgs[-1].get("content"), str) and any(pc["name"] in ("run_powershell", "write_file") for pc in all_pre):
-                            msgs[-1]["content"] = str(msgs[-1]["content"]).rstrip() + "\n\n" + pre_text
-                        msgs[0]["content"] = system or self.system_prompt(False, None)
-                        schemas = []
-                        only_tools = None
+                    pre_rounds, pre_done, pre_text = execute_s3_pre_calls(
+                        self, s3_pre_call, s3_extra_calls, ask=ask, allow=allow, emit=emit
+                    )
+                    rounds.extend(pre_rounds)
+                    done_calls.update(pre_done)
+                    msgs.insert(-1, {"role": "system", "content": pre_text})
+                    if isinstance(msgs[-1].get("content"), list):
+                        for part in msgs[-1]["content"]:
+                            if isinstance(part, dict) and part.get("type") == "text":
+                                part["text"] = (
+                                    str(part.get("text") or "").rstrip()
+                                    + "\n\n"
+                                    + pre_text
+                                    + "\n\nSummarize BOTH the live tool results (news headlines) AND the attached screen capture / visual inspection."
+                                )
+                                break
+                    elif isinstance(msgs[-1].get("content"), str) and any(
+                        pc["name"] in ("run_powershell", "write_file") for pc in ([s3_pre_call] + s3_extra_calls)
+                    ):
+                        msgs[-1]["content"] = str(msgs[-1]["content"]).rstrip() + "\n\n" + pre_text
+                    msgs[0]["content"] = system or self.system_prompt(False, None)
+                    schemas = []
+                    only_tools = None
 
                 def _auto_verify_py(code_str):
                     if cancel and cancel.is_set():

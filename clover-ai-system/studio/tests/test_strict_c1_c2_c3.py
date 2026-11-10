@@ -321,4 +321,129 @@ check(
     and "Open in Browser tool" in app_html,
 )
 
+# 6. Verify S3 Visual Inspector, Audio-JEPA, and S3 Pre-Calls apply across ALL model engines
+#    (LFM3Native, K3HostEngine [Clover-35B-A3B, Nemotron 3.5, Kimi K3.1 Pro], RemoteOmniEngine, FusedEngine)
+import shutil
+import fused_engine
+import k3_host_engine
+import permissions
+
+perms = permissions.PermissionStore(base_tmp / "permissions.json")
+media_sub = base_tmp / "media"
+media_sub.mkdir(parents=True, exist_ok=True)
+shutil.copyfile(img_tmp, media_sub / "ui_test_screen.png")
+
+# 6a. LFM3Native (LFM3-1.7B)
+lfm_eng = object.__new__(omni_native.N.LFM3Native)
+lfm_eng.base_dir = base_tmp
+lfm_eng.media_dir = media_sub
+lfm_eng.perms = perms
+lfm_eng.workdir, lfm_eng.workname, lfm_eng.after_write = None, "", None
+lfm_eng.turn_images = []
+lfm_eng.lock = omni_native.threading.Lock()
+lfm_eng.stage = {"name": "idle", "since": 0.0}
+lfm_eng._py = lfm_eng._web = None
+lfm_eng._fit = lambda msgs, schemas, thinking, max_new: msgs
+lfm_seen_prompts = []
+lfm_eng._render = lambda msgs, schemas, thinking: "\n".join(str(m.get("content") or "") for m in msgs)
+def _fake_lfm_gen(prompt, cfg, max_new, thinking, on_delta, cancel, seed):
+    lfm_seen_prompts.append(prompt)
+    return "</think>\nThe screenshot shows the Clover AI Studio Dashboard header and two buttons, and the audio clip is 1.0s.", {
+        "prompt_tokens": 64, "reused_tokens": 0, "new_tokens": 16, "prefill_s": 0.02, "decode_s": 0.05, "finish": "stop"
+    }
+lfm_eng.generate = _fake_lfm_gen
+lfm_ev = []
+lfm_res = lfm_eng.run_turn(
+    [],
+    "Inspect this screenshot and audio.",
+    tools=False,
+    media=[
+        {"kind": "image", "file": "ui_test_screen.png", "name": "ui_test_screen.png"},
+        {"kind": "audio", "file": aud_rep["file"], "name": "mic.wav"},
+    ],
+    layers=("ncm",),
+    kit=kit,
+    on_event=lfm_ev.append,
+)
+lfm_layer_names = [l.get("layer") for l in lfm_res.get("layers", [])]
+check(
+    "LFM3Native (LFM3-1.7B) runs S3 Visual Inspector and Audio-JEPA and injects snapshots into prompt",
+    "image_analysis" in lfm_layer_names
+    and "jepa_audio" in lfm_layer_names
+    and any("Playwright-Style Visual & UI Snapshot" in p and "Audio-JEPA Acoustic & Prosody Snapshot" in p for p in lfm_seen_prompts),
+)
+
+# 6b. K3HostEngine (Clover-35B-A3B, Nemotron 3.5 Super VL, Kimi K3.1 Pro)
+for k3_key in ("clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3"):
+    k3_eng = k3_host_engine.K3HostEngine(k3_key, None, base_tmp, perms)
+    k3_eng.turn_images = []
+    k3_seen = []
+    def _fake_k3_worker(sid, prompt, history, media=(), _seen=k3_seen):
+        _seen.append({"prompt": prompt, "media": list(media)})
+        return {"reply": "The dashboard has two buttons and the audio is 1.0s.", "plans": ["plan"], "n_tokens": 12}
+    k3_eng._call_worker = _fake_k3_worker
+    k3_ev = []
+    k3_res = k3_eng.run_turn(
+        [],
+        "Inspect this screenshot and audio.",
+        tools=False,
+        media=[
+            {"kind": "image", "file": "ui_test_screen.png", "name": "ui_test_screen.png"},
+            {"kind": "audio", "file": aud_rep["file"], "name": "mic.wav"},
+        ],
+        layers=("ncm",),
+        kit=kit,
+        on_event=k3_ev.append,
+    )
+    k3_layers = [l.get("layer") for l in k3_res.get("layers", [])]
+    check(
+        f"K3HostEngine ({k3_key}) runs S3 Visual Inspector + Audio-JEPA and forwards media",
+        "image_analysis" in k3_layers
+        and "jepa_audio" in k3_layers
+        and bool(k3_seen)
+        and "Playwright-Style Visual & UI Snapshot" in k3_seen[0]["prompt"]
+        and "Audio-JEPA Acoustic & Prosody Snapshot" in k3_seen[0]["prompt"]
+        and len(k3_seen[0]["media"]) == 2,
+    )
+
+# 6c. RemoteOmniEngine (OpenAI-compatible & Clover remote models) + FusedEngine
+rem_eng = k3_host_engine.RemoteOmniEngine(
+    {"id": "custom:vllm", "name": "Custom-vLLM", "url": "http://127.0.0.1:9999/v1", "kind": "openai"},
+    base_tmp,
+    perms,
+)
+check(
+    "RemoteOmniEngine & FusedEngine expose full ['text', 'vision', 'audio', 'video'] inputs across all models",
+    rem_eng.inputs == ["text", "vision", "audio", "video"]
+    and fused_engine.FusedEngine.inputs == ["text", "vision", "audio", "video"],
+)
+
+fus_eng = object.__new__(fused_engine.FusedEngine)
+fus_eng.base_dir = base_tmp
+fus_eng.perms = perms
+fus_eng.layer = 3
+fus_eng.turn_images = []
+fus_seen = []
+def _fake_fus_ask(text, history, max_new):
+    fus_seen.append(text)
+    return {"reply": "Inspected screenshot and audio on fused C1+C2+C3.", "input_tokens": 48, "generated_tokens": 10, "seconds": 0.05}
+fus_eng._ask = _fake_fus_ask
+fus_res = fus_eng.run_turn(
+    [],
+    "Inspect this screenshot and audio.",
+    media=[
+        {"kind": "image", "file": "ui_test_screen.png", "name": "ui_test_screen.png"},
+        {"kind": "audio", "file": aud_rep["file"], "name": "mic.wav"},
+    ],
+    layers=("ncm",),
+    kit=kit,
+)
+fus_layers = [l.get("layer") for l in fus_res.get("layers", [])]
+check(
+    "FusedEngine (C1+C2+C3) runs S3 Visual Inspector + Audio-JEPA without rejecting media",
+    "image_analysis" in fus_layers
+    and "jepa_audio" in fus_layers
+    and any("Playwright-Style Visual & UI Snapshot" in p and "Audio-JEPA Acoustic & Prosody Snapshot" in p for p in fus_seen),
+)
+
 print("ALL STRICT C1/C2/C3 AND S1/S2/S3 CHECKS PASSED")

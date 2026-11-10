@@ -1701,15 +1701,13 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
     if eng is None:
         raise EngineNotReady(S.load.get("error") or f"engine is loading ({S.load.get('step')})")
     omni = getattr(eng, "inputs", None) is not None
-    if media and not omni:
-        raise ValueError("LFM3-1.7B reads text only: switch the model to LFM3-Omni-2B in Settings to send images, audio or video")
     hist = lfm3_history(sid, body.get("history"))
     sampling = body.get("sampling") if body.get("sampling") in ("general", "math", "greedy") else "general"
     settings = S.settings.get()
     on = settings["layers"]
     ws = S.workspaces.active() if S.workspaces else None
     typed = prompt if ask_text is None else ask_text
-    want_recall = (on["recall"] or lfm3_layers.needs_recall(typed)) and omni and S.memidx is not None
+    want_recall = (on["recall"] or lfm3_layers.needs_recall(typed)) and S.memidx is not None
     layers = (tuple(k for k in ("memory", "ontology", "compiler", "ncm") if on[k]) + (("workspace",) if ws else ())
               + (("records",) if S.repo else ()) + (("recall",) if want_recall else ()))
     kit = layer_kit() if layers else None
@@ -1853,7 +1851,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                 act = bool(getattr(frame, "caps", ()))
                 turn_layers = tuple(x for x in layers if x != "ontology") if act else layers
                 import device_actions
-                if omni and not media and device_actions.asks_for_camera_photo(typed):
+                if not media and device_actions.asks_for_camera_photo(typed):
                     try:
                         cam = device_actions.capture_camera_photo(Path(S.args.base), inspect=True, launch_system_app=False)
                         media = [{"kind": "image", "file": cam["file"], "name": "Camera Photo", "camera_capture": True}]
@@ -1867,7 +1865,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                         })
                     except Exception:
                         pass
-                elif omni and not media and device_actions.asks_for_video_recording(typed):
+                elif not media and device_actions.asks_for_video_recording(typed):
                     try:
                         vid = device_actions.capture_video_recording(Path(S.args.base), duration_s=1.5, launch_system_app=False)
                         media = [{
@@ -1887,7 +1885,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                             })
                     except Exception:
                         pass
-                elif omni and not media and device_actions.asks_for_microphone_audio(typed):
+                elif not media and device_actions.asks_for_microphone_audio(typed):
                     try:
                         aud = device_actions.capture_microphone_audio(Path(S.args.base), duration_s=2.0, launch_system_app=False)
                         media = [{
@@ -1897,7 +1895,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                         }]
                     except Exception:
                         pass
-                elif (omni and not media and device_actions.asks_for_screen_or_activity(typed)
+                elif (not media and device_actions.asks_for_screen_or_activity(typed)
                         and "vscode.browser" not in (frame.caps or ())):  # a page in VS Code's browser, not the screen (2026-11-10)
                     try:
                         scr = device_actions.capture_screenshot(
@@ -3482,10 +3480,11 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, {"ok": bool(cancelled_ids), "cancelled_turns": cancelled_ids})
             if path == "/api/chat":
                 prompt = str(body.get("prompt") or "").strip()
-                if not prompt:
+                if not prompt and not body.get("media") and not body.get("documents"):
                     return self._send(400, {"error": "prompt is required"})
                 sid = re.sub(r"[^A-Za-z0-9_\-]", "_", str(body.get("session_id") or uuid.uuid4().hex))[:96]
                 if S.mode == "lfm3":
+                    media = save_media(body.get("media"))
                     docs = save_documents(body.get("documents"))
                     tid_c = str(body.get("turn_id") or uuid.uuid4().hex)
                     t_c = {"turn_id": tid_c, "session_id": sid, "cancel": threading.Event(), "pending": {}, "events": [], "seq": 0, "done": False}
@@ -3493,7 +3492,7 @@ class Handler(BaseHTTPRequestHandler):
                         S.active[tid_c] = t_c
                     try:
                         return self._send(200, lfm3_turn(sid, build_prompt(prompt, body.get("attached_files"), docs), body,
-                                                         cancel=t_c["cancel"], ask_text=prompt, docs=docs))
+                                                         cancel=t_c["cancel"], media=media, ask_text=prompt, docs=docs))
                     finally:
                         with S.turns_lock:
                             S.active.pop(tid_c, None)

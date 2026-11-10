@@ -2695,7 +2695,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function applyMode() { renderSettings(); }
   function setModel(name, inputs) {
-    var omni = WEB || /omni|clover-35b|nemotron|kimi/i.test(name) || inputs.indexOf('vision') >= 0;
+    inputs = (inputs && inputs.length) ? inputs.slice() : ['text', 'vision', 'audio', 'video'];
+    ['vision', 'audio', 'video'].forEach(function (k) { if (inputs.indexOf(k) < 0) inputs.push(k); });
+    var omni = true;
     var modelChanged = state.lastModelName !== name;
     var changed = modelChanged || omni !== state.omni || inputs.join() !== state.inputs.join();
     state.lastModelName = name;

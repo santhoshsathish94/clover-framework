@@ -281,6 +281,10 @@ class RemoteLlamaClient:
                             b64 = base64.b64encode(fpath.read_bytes()).decode("ascii")
                             new_parts.append({"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64}"}})
                             continue
+                        else:
+                            # Generic OpenAI servers do not read local file:// audio/video URLs; S3 Audio-JEPA /
+                            # Visual Inspector snapshots are already injected into the system prompt.
+                            continue
                 new_parts.append(part)
             new_msgs.append(dict(m, content=new_parts))
         return new_msgs, media_files
@@ -370,7 +374,7 @@ class RemoteOmniEngine(omni_native.OmniNative):
             kind=self.entry.get("kind") or "openai",
             device_label=self.entry.get("host") or urllib.parse.urlparse(urls[0]).hostname or "remote",
         )
-        self.inputs = ["text", "vision", "audio", "video"] if self.entry.get("kind") == "clover" else ["text", "vision"]
+        self.inputs = ["text", "vision", "audio", "video"]
         self.lock = threading.Lock()
         self.stage = {"name": "idle", "since": time.time()}
         self._voice, self._voice_busy, self._voice_used, self._voice_error = None, 0, 0.0, None
@@ -402,7 +406,13 @@ class RemoteOmniEngine(omni_native.OmniNative):
             "speech": "Local LFM3-Omni-2B voice" if self.local_omni else f"Hosted on {host}",
             "speech_error": None,
             "tools": [t["function"]["name"] for t in N.STUDIO_TOOLS],
-            "layers": [f"C1 {self.entry.get('name')} ({host})", "local Studio tools"],
+            "layers": [
+                f"C1 {self.entry.get('name')} ({host})",
+                "C2 HybridAgent (HybridLink2048 + Lfm3NativeHybridLink, plan-trunk-0)",
+                "Bridges (Lfm3ComboBridge + Lfm3ExpertBridge, bridge-trunk-0)",
+                "C3 11-level NCM (VQ-VAE + 12L NextConceptTransformer + 3L PointerDecoder)",
+                "S1 Memory & Records · S2 Recall & Ontology · S3 Tools & Compiler · CSI & PPL",
+            ],
             "reasoning": False,
         }
 
@@ -550,6 +560,10 @@ class K3HostEngine:
             b64 = f"data:{mime};base64," + base64.b64encode(p.read_bytes()).decode("ascii")
             if kind == "image" and image_b64 is None:
                 image_b64 = b64
+            elif kind == "video" and image_b64 is None and md.get("frame_file"):
+                fr_p = self.media_dir / str(md["frame_file"])
+                if fr_p.is_file():
+                    image_b64 = "data:image/png;base64," + base64.b64encode(fr_p.read_bytes()).decode("ascii")
             atts.append({"name": md.get("name") or p.name, "type": mime, "content_text": "", "data_b64": b64})
         payload = {
             "session_id": sid,
@@ -675,7 +689,7 @@ class K3HostEngine:
                                 norm_buls.append(s)
                         draft_for_k3 = "\n".join(norm_buls)
                     wr = self._call_worker("k3-" + uuid.uuid4().hex[:10],
-                                           f"{user_text}\n\n[VERIFIED_STUDIO_DRAFT]\n{draft_for_k3}", history, media=())
+                                           f"{user_text}\n\n[VERIFIED_STUDIO_DRAFT]\n{draft_for_k3}", history, media=media)
                     k3_reply = self._identity_fix(_clean_reply(wr.get("reply") or ""), user_text)
                     want_nums = _nums(omni_reply)
                     has_code_or_table = bool(re.search(r"```|\n\|.+\|", omni_reply))
@@ -749,7 +763,46 @@ class K3HostEngine:
                     emit(dict(info, type="layer"))
         if meaning is not None and getattr(meaning, "guidance", ""):
             before.append(meaning.guidance)
-        full_prompt = "\n\n".join(before + [user_text] + blocks)
+        sensory_msgs, sensory_layers, _, _ = omni_native.run_s3_sensory_context(
+            self.base_dir,
+            self.media_dir,
+            media,
+            query,
+            kit=kit,
+            emit=emit,
+            turn_images=self.turn_images,
+        )
+        for sm in sensory_msgs:
+            if sm.get("content"):
+                before.append(str(sm["content"]))
+        layer_log.extend(sensory_layers)
+
+        base_schemas = [t for t in N.STUDIO_TOOLS if only_tools is None or t["function"]["name"] in only_tools]
+        extra_schemas = [t for t in extra_tools if only_tools is None or t["schema"]["function"]["name"] in only_tools]
+        all_schemas = (base_schemas + [t["schema"] for t in extra_schemas]) if tools else []
+        by_name = {t["function"]["name"]: t["function"] for t in all_schemas}
+
+        local_runner = object.__new__(omni_native.OmniNative)
+        local_runner.base_dir = self.base_dir
+        local_runner.media_dir = self.media_dir
+        local_runner.perms = self.perms
+        local_runner.workdir = self.workdir
+        local_runner.workname = self.workname
+        local_runner.after_write = self.after_write
+        local_runner.turn_images = self.turn_images
+        local_runner.turn_cancel = cancel
+        local_runner.turn_paths = list(meaning.paths) if meaning is not None else N.user_paths(user_text)
+        local_runner.turn_hosts = N.typed_hosts(meaning.text if meaning is not None else user_text)
+        local_runner.turn_unknown, local_runner.turn_ran, local_runner.turn_web, local_runner.turn_web_cap = set(), set(), 0, 8
+        local_runner._py, local_runner._web = None, None
+        local_runner._extra = {t["schema"]["function"]["name"]: t for t in extra_schemas} if tools else {}
+        local_runner.tool_tasks = getattr(self, "tool_tasks", None)
+
+        s3_pre_call, s3_extra_calls = (
+            omni_native.plan_s3_pre_calls(local_runner, query, only_tools, by_name, meaning=meaning, past_msgs=history or ())
+            if (tools and all_schemas and only_tools and not (cancel and cancel.is_set()))
+            else (None, [])
+        )
         ctx_sources = [x.get("layer") for x in layer_log if isinstance(x, dict) and x.get("layer")]
         op_plan.complete_stage(
             "context",
@@ -757,7 +810,9 @@ class K3HostEngine:
         )
         op_plan.start_stage(
             "direction",
-            f"Direction set ({self.spec['model']} on k3 · intent: {getattr(meaning, 'intent', 'general')})",
+            f"Direction set ({self.spec['model']} on k3 · "
+            + (f"pre-executing {s3_pre_call['name']}" if s3_pre_call else f"intent: {getattr(meaning, 'intent', 'general')}")
+            + ")",
         )
         op_plan.complete_stage("direction")
         op_plan.start_stage("execution", f"Executing with {self.spec['model']} on k3…")
@@ -765,6 +820,13 @@ class K3HostEngine:
         max_clover_cycles = 3
         cycle_history = []
         rounds = []
+        if s3_pre_call is not None:
+            pre_rounds, _, pre_text = omni_native.execute_s3_pre_calls(
+                local_runner, s3_pre_call, s3_extra_calls, ask=ask, allow=allow, emit=emit
+            )
+            rounds.extend(pre_rounds)
+            before.append(pre_text)
+        full_prompt = "\n\n".join(before + [user_text] + blocks)
         stats_all = []
         reply = ""
         plans = []
