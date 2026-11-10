@@ -99,3 +99,38 @@
 - A test that compares against a sibling checkout cannot pass from a worktree. Check where its reference comes from
   before calling it a regression.
 - One failure in a full run is not a regression until it is re-run and its cause is found (the hand-back test above).
+- When handing a human a test server, say in the same sentence what is fake in it. I gave the harness URL and
+  noted "stand-in model" only under "Not tested"; the human then judged the real chat by its echo replies.
+
+## Accounts and sign-in (2026-11-11)
+
+### Context
+- The human: the chat does not work properly, connecting GitHub is hard, Google is simple. Can one account (Google,
+  or any single account) do the memory repo sync, Workspaces and collective learning?
+- Their page was the harness on port 8797. Its stand-in model echoes the message ("Hello from the harness. You
+  said: …"). `POST /api/vscode/do` returned 409 because no VS Code is connected to the harness. Harness stopped.
+
+### Findings (each checked on 2026-11-11)
+- GitHub repositories accept only GitHub credentials; a Google token cannot sync them. GitHub's own sign-in page
+  offers "Continue with Google" (github.com/login), so a GitHub sign-in can use a Google login on GitHub's side.
+  Whether that links to an existing GitHub account is GitHub's rule; not tested.
+- **"Sign in with Google" (Learning → Collective) does not sign in with Google.**
+  - Google rejects the built-in client ID `google_identity.DEFAULT_GOOGLE_CLIENT_ID` with "The OAuth client was not
+    found. Error 401: invalid_client".
+  - Without `CLOVER_GOOGLE_CLIENT_SECRET`, `/api/identity/google/start` calls `connect_device_oidc()`. That issues a
+    token claiming `iss=https://accounts.google.com`, signed with a key that `_get_device_oidc_keypair()` derives from
+    fixed seeds in the public source (added in 0dade942).
+  - `fetch_google_jwks()` always adds that key to Google's keys. The collective gateway
+    (`authenticate_contributor`, `jwks=None`) therefore accepts tokens anyone can make for any `sub`, which means
+    unlimited pseudonymous contributors and no per-contributor rate limit.
+  - The same code is in k3's running web studio (`grep` only; no request was sent to the service).
+- `/api/admin/github/device/*` uses `server.GITHUB_DEVICE_CLIENT_ID` = the GitHub CLI's OAuth app (added in
+  f7f6396c; the ID matches `oauthClientID` in cli/cli `internal/authflow/flow.go`). GitHub's approval page would say
+  "GitHub CLI".
+
+### Proposed (waiting for the human's direction)
+- One GitHub account for everything: memory repo sync, Workspaces, the collective identity and k3 access (k3 access
+  already accepts GitHub).
+  - Sign-in uses Clover's own GitHub OAuth App with the device flow: the Studio shows a code and GitHub opens, where
+    "Continue with Google" works. No token pasting, no VS Code, and no client secret in the app.
+- Stop trusting the computed key whatever account is chosen. Deploying that to k3 needs separate approval.
