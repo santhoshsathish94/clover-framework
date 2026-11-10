@@ -321,6 +321,10 @@ class LayerKit:
             and it.entry.status != "contested"
             and it.entry.epistemic_status != "hypothesis"
             and (
+                "learning" not in it.entry.tags
+                or len(qt & topic_terms((it.entry.summary or "") + " " + (it.entry.content or ""))) >= 2
+            )
+            and (
                 it.entry.id == top_id
                 or getattr(it, "depth", 0) > 0
                 or (

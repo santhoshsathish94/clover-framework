@@ -141,6 +141,7 @@ import k3_host_engine as K3  # noqa: E402
 cat_names = [(x["id"], x["name"], x["badge"]) for x in K3.owner_k3_models()]
 check("k3 dropdown entries have short, clear names and k3 badge",
       cat_names == [("k3:omni", "LFM3-Omni (k3)", "k3"),
+                    ("k3:clover-35b-a3b", "Clover-35B-A3B", "k3"),
                     ("k3:nemotron-3.5-super-vl", "Nemotron 3.5", "k3"),
                     ("k3:kimi-k3", "Kimi K3.1 Pro", "k3")])
 with tempfile.TemporaryDirectory() as d:

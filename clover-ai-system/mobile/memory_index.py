@@ -350,7 +350,8 @@ class MemoryIndex:
             cos_txt = e @ qv
             best_cos = float(cos_txt.max()) if len(cos_txt) else 0.0
             best_bm25 = float(bm25_txt.max()) if len(bm25_txt) else 0.0
-            if not force and (best_bm25 < 2.5 or best_cos < 0.62):
+            min_cos = 0.28 if isinstance(self.emb, SubwordHashEmbedder) else 0.62
+            if not force and (best_bm25 < 1.2 or best_cos < min_cos):
                 return None, {"layer": "recall", "refs": [], "chats": 0, "candidates": len(cands),
                               "best_cosine": round(best_cos, 4), "ms": round((time.perf_counter() - t0) * 1000, 1)}
             lists = [bm25_txt, cos_txt]
