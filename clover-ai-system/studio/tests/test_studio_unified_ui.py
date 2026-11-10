@@ -154,8 +154,12 @@ check(
     and app.index('id="rail"') < app.index('id="rail-chat-sub"') < app.index('id="chats"') < app.index('id="rail-ws-sub"') < app.index('id="vsc-tree"') < app.index('<section class="main">'),
 )
 check(
-    "Center pane Workspaces page has VS Code-style File Viewer (#vsc-workbench) and GitHub/Local Repo connection controls",
-    app.index('data-page="workspaces"') < app.index('id="vsc-workbench"')
+    "Center pane Workspaces page separates parent workspace settings (#ws-parent-view) from File Viewer (#vsc-workbench hidden by default) so workspace controls are not shown inside each file",
+    app.index('data-page="workspaces"') < app.index('id="ws-parent-view"') < app.index('id="vsc-workbench"')
+    and 'id="vsc-workbench" aria-label="Workspace file viewer" hidden' in app
+    and "#ws-parent-view[hidden], .vsc-view[hidden] { display: none !important; }" in app
+    and "function showWorkspaceParentView()" in app
+    and "function showWorkspaceFileViewer(fileTitle)" in app
     and 'id="vsc-viewer-body"' in app
     and 'id="vsc-view-mode"' in app
     and 'id="ws-conn"' in app
