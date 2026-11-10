@@ -1,4 +1,4 @@
-# Builds the Microsoft Store MSIX package (SanthoshNarayanan.CloverAIStudio_5.0.2.0_x64.msix),
+# Builds the Microsoft Store MSIX package (SanthoshNarayanan.CloverAIStudio_5.0.3.0_x64.msix),
 # the Partner Center .msixupload bundle (clover-ai-studio-beta.msixupload),
 # and copies the standalone installer (clover-ai-studio-beta-setup.exe) into release/beta/windows/.
 $ErrorActionPreference = 'Stop'
@@ -203,7 +203,7 @@ $manifestXml = @'
   <Identity
     Name="SanthoshNarayanan.CloverAIStudio"
     Publisher="CN=A0DCEEB8-49DB-4CD8-8D07-BC439E69B9AF"
-    Version="5.0.2.0"
+    Version="5.0.3.0"
     ProcessorArchitecture="x64" />
 
   <Properties>
@@ -250,7 +250,7 @@ $manifestXml = @'
 [IO.File]::WriteAllText((Join-Path $layout 'AppxManifest.xml'), $manifestXml, (New-Object System.Text.UTF8Encoding($false)))
 
 # 5. Build .msix using makeappx.exe
-$msixName = 'SanthoshNarayanan.CloverAIStudio_5.0.2.0_x64.msix'
+$msixName = 'SanthoshNarayanan.CloverAIStudio_5.0.3.0_x64.msix'
 $msixPath = Join-Path $outWin $msixName
 $msixBetaPath = Join-Path $outWin 'clover-ai-studio-beta.msix'
 $msixUploadPath = Join-Path $outWin 'clover-ai-studio-beta.msixupload'
