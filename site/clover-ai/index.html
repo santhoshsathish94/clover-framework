@@ -555,7 +555,6 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   .app:not(.rail-off) #new-chat-2 { display: none; }
   .app:not(.rail-off) .scrim { left: 264px; }
 }
-#set-btn { display: none !important; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -658,7 +657,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       </div>
       <div class="bar__title" id="chat-title">New chat</div>
       <div class="bar__side end">
-        <button type="button" class="ibtn" id="set-btn" aria-label="Settings" title="Settings" hidden><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></button>
+        <button type="button" class="ibtn" id="set-btn" aria-label="Settings" title="Settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></button>
       </div>
     </header>
 
@@ -1672,8 +1671,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var body = el('div', 'b__body');
     var hasWork = !!(m.thinking || (m.tools || []).length || (m.used || []).length || (m.steps || []).length || m.opCycle);
     if (hasWork) {
-      var openByDefault = !!((m.tools || []).length || m.thinking);
-      var w = workEl(openByDefault, false); w.label(workSummary(m));
+      var w = workEl(false, false); w.label(workSummary(m));
       if (m.opCycle && Array.isArray(m.opCycle.stages)) {
         var ocBar = el('div', 'op-cycle');
         renderOpCycleBar(ocBar, m.opCycle);
@@ -4053,10 +4051,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     function finish(ev) {
       if (finished) return; finished = true;
-      finishRunningSteps();
-      Object.keys(stepMap).forEach(function (k) {
-        if (stepMap[k].data.state === 'run') stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
-      });
+      if (ev.error && !lastSeq && !tools.length && !thinking.trim() && !lastOpCycle && !(ev.layers || []).length) {
+        stepsList = [];
+      } else {
+        finishRunningSteps();
+        Object.keys(stepMap).forEach(function (k) {
+          if (stepMap[k].data.state === 'run') stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
+        });
+      }
       clearInterval(ticker); clearInterval(poll); state.busy = false; state.waitEl = null; state.stageText = ''; setStop(false); updateSend(); pollStatus();
       var secs = Math.round((Date.now() - t0) / 1000);
       var gens = ev.generation || [];

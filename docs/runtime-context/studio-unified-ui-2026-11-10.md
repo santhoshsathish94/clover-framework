@@ -21,7 +21,8 @@
    - Footer status (`Clover Ready` with green `.dot.ok`) and active workspace indicator (`#rail-ws`).
 3. Upgrade the Welcome / Empty-Chat Main View (`#hero`, `#composer`, `#hero-below`) with:
    - Keep `icon.png` in the top-left sidebar logo place (`.rail__brand .brand`) and display the Robo Clover mascot (`robo-clover.webp`, `.mascot`) in the center `#hero` above `Clover` (`#greet`) and `Work · Create · Learn · Grow`
-   - Keep `header.bar` pinned at `top: 0` at all times (using `.app.empty-chat .stream { margin-top: auto; }` and `.app.empty-chat .dock { margin-bottom: auto; }` instead of `.main { justify-content: center; }`), and hide the redundant `#set-btn` gear icon across **both** mobile and desktop views (`#set-btn { display: none !important; }` and `hidden` attribute) since `Settings` is in the sidebar/drawer navigation (`[data-nav="settings"]`)
+   - Keep `header.bar` pinned at `top: 0` at all times (using `.app.empty-chat .stream { margin-top: auto; }` and `.app.empty-chat .dock { margin-bottom: auto; }` instead of `.main { justify-content: center; }`), and keep both `[data-nav="settings"]` in the left sidebar (`#rail`) and `#set-btn` in `<header class="bar">` always present across Web, Mobile, and Laptop (never hidden or removed)
+   - Keep the `.work` steps accordion **always collapsed** after work is done (`botEl` calls `workEl(false, false)` so `aria-expanded="false"` and `.work__b.hidden === true` once a turn finishes, and connection errors before any server event arrives do not leave a synthetic `Understanding` step)
    - Unify `/api/browser/open` calls in `app.html` into a single click-handler helper `openBrowserClick(body, fallbackUrl)` so `test_browser_first.py` passes 30/30 (`app.count("/api/browser/open") == 1`)
    - Centered 2-row rounded Composer card (`What would you like to do?` placeholder, bottom toolbar with `+` `#attach` for System Senses `screen_record` / `camera` / `microphone`, image/screenshot `#screen-btn`, file attachment `#clip-btn`, and `#send` button — with no duplicate File or Screenshot rows inside `#senses-menu`)
    - 5-Stage Clover Cycle Strip (`Context / Understand` › `Direction / Plan together` › `Execution / Do the work` › `Outcome / Check the result` › `Growth / Learn and improve`)
@@ -38,11 +39,12 @@
 ## 4. Outcome & Evidence
 - **Live Server & Browser End-to-End Regression (`ui_harness.py` on `http://127.0.0.1:8798/`)**:
   - Verified desktop (`1280×800`, both sidebar open and `.rail-off` collapsed) and mobile phone (`390×844`, `html.phone`, both empty-chat welcome and active multi-turn chat, plus slide-out drawer `#rail.on` and `window.cloverBack()`) against the live `server.py` HTTP routes via Playwright and screenshots.
-  - Confirmed `#set-btn` is hidden across all viewports (`setBtnVisible: false` on desktop open, desktop `.rail-off`, mobile empty-chat, and mobile active-chat).
+  - Confirmed `[data-nav="settings"]` in `#rail` and `#set-btn` in `header.bar` are always present and visible across all viewports (`setBtnDesktopOpen: true`, `railSettingsDesktopOpen: true`, `setBtnDesktopRailOff: true`, `setBtnMobile: true`).
+  - Confirmed that while a turn is running (`streamSend`), `.work` displays live steps, and as soon as the work finishes (`finish(ev)` → `botEl(m)`), all `.work` step accordions are collapsed (`allCollapsed: true`, `aria-expanded="false"`, `.work__b.hidden === true`).
   - Confirmed `#senses-menu` opens downward in `.empty-chat` (`top: 551..786` on desktop, `top: 518..753` on mobile) and upward when the composer is docked at the bottom of an active chat (`top: 444..679`), with `scrollHeight === clientHeight` (`234px`, zero scrollbar) in every view.
   - Verified clicking `Workspaces`, `Memory`, `Tools`, `Learning`, `Settings`, and `Chat` in the sidebar and drilling into subpages (`layers`, `model`, `perms`, `personal`, `collective`, `storage`, `debug`, `account`, `vscode`) with `#sheet-back` and `window.cloverBack()`.
 - **Automated Suites**:
-  - `python clover-ai-system/studio/tests/test_studio_unified_ui.py`: **29/29 PASS**
+  - `python clover-ai-system/studio/tests/test_studio_unified_ui.py`: **30/30 PASS**
   - `python clover-ai-system/studio/tests/test_browser_first.py`: **30/30 PASS**
   - `python clover-ai-system/studio/tests/test_browser_handback.py`: **51/51 PASS**
   - `python clover-ai-system/studio/tests/test_tool_tasks.py`: **18/18 PASS**

@@ -70,11 +70,17 @@ check(
     and "Work &middot; Create &middot; Learn &middot; Grow" in app,
 )
 check(
-    "Top bar stays pinned at top in empty-chat (.stream margin-top:auto, .dock margin-bottom:auto) and hides duplicate #set-btn across both mobile and desktop views",
+    "Top bar stays pinned at top in empty-chat (.stream margin-top:auto, .dock margin-bottom:auto) and keeps #set-btn always present across Web, Mobile, and Laptop",
     ".app.empty-chat .stream { flex: 0 0 auto; overflow: visible; margin-top: auto; }" in app
     and ".app.empty-chat .dock { margin-bottom: auto; }" in app
-    and "#set-btn { display: none !important; }" in app
-    and 'id="set-btn" aria-label="Settings" title="Settings" hidden' in app,
+    and 'id="set-btn" aria-label="Settings" title="Settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></button>' in app
+    and "#set-btn { display: none" not in app
+    and ".app:not(.rail-off) #set-btn" not in app,
+)
+check(
+    "Steps box (.work) is always collapsed after work is done (botEl calls workEl(false, false))",
+    "var w = workEl(false, false); w.label(workSummary(m));" in app
+    and "openByDefault" not in app,
 )
 check(
     "Single click-only /api/browser/open helper (openBrowserClick) preserves browser-first invariant",
