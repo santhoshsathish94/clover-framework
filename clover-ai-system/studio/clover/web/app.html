@@ -552,10 +552,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   .cycle-arr { display: none; }
 }
 @media (min-width: 861px) {
-  .app:not(.rail-off) #new-chat-2,
-  .app:not(.rail-off) #set-btn { display: none; }
+  .app:not(.rail-off) #new-chat-2 { display: none; }
   .app:not(.rail-off) .scrim { left: 264px; }
 }
+#set-btn { display: none !important; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -658,7 +658,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       </div>
       <div class="bar__title" id="chat-title">New chat</div>
       <div class="bar__side end">
-        <button type="button" class="ibtn" id="set-btn" aria-label="Settings" title="Settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></button>
+        <button type="button" class="ibtn" id="set-btn" aria-label="Settings" title="Settings" hidden><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></button>
       </div>
     </header>
 
@@ -1542,6 +1542,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     return t.name === 'fetch_url' && /^https?:\/\/\S+$/i.test(a) ? a : '';
   }
+  function openBrowserClick(body, fallbackUrl) {
+    return api('POST', '/api/browser/open', body).catch(function () {
+      if (fallbackUrl) window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+    });
+  }
   function browserLink(t) {
     if (!browserHref(t)) return null;
     if (!state.search && !state.searchLoading) { state.searchLoading = true; loadSearch(); }
@@ -1552,8 +1557,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       a.href = browserHref(t);  // the engine picked in Settings may have loaded since
       if (PHONE || WEB) return;
       e.preventDefault();
-      api('POST', '/api/browser/open', t.name === 'web_search' ? { query: String(t.args || '').split('\n')[0] } : { url: a.href })
-        .catch(function () { window.open(a.href, '_blank', 'noopener'); });
+      openBrowserClick(t.name === 'web_search' ? { query: String(t.args || '').split('\n')[0] } : { url: a.href }, a.href);
     });
     row.appendChild(a);
     return row;
@@ -3117,9 +3121,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         return;
       }
       if (!PHONE && !WEB) {
-        api('POST', '/api/browser/open', { url: href }).catch(function () {
-          window.open(href, '_blank', 'noopener,noreferrer');
-        });
+        openBrowserClick({ url: href }, href);
         return;
       }
       window.open(href, '_blank', 'noopener,noreferrer');

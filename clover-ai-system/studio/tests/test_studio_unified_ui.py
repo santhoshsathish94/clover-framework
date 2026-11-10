@@ -70,10 +70,15 @@ check(
     and "Work &middot; Create &middot; Learn &middot; Grow" in app,
 )
 check(
-    "Top bar stays pinned at top in empty-chat (.stream margin-top:auto, .dock margin-bottom:auto) and hides duplicate #set-btn when sidebar is open on desktop",
+    "Top bar stays pinned at top in empty-chat (.stream margin-top:auto, .dock margin-bottom:auto) and hides duplicate #set-btn across both mobile and desktop views",
     ".app.empty-chat .stream { flex: 0 0 auto; overflow: visible; margin-top: auto; }" in app
     and ".app.empty-chat .dock { margin-bottom: auto; }" in app
-    and ".app:not(.rail-off) #set-btn { display: none; }" in app,
+    and "#set-btn { display: none !important; }" in app
+    and 'id="set-btn" aria-label="Settings" title="Settings" hidden' in app,
+)
+check(
+    "Single click-only /api/browser/open helper (openBrowserClick) preserves browser-first invariant",
+    app.count("/api/browser/open") == 1 and "function openBrowserClick(body, fallbackUrl)" in app,
 )
 check(
     "Composer has 'What would you like to do?' placeholder and bottom toolbar (#attach, #screen-btn, #clip-btn, #send) without duplicating files/screenshot in #senses-menu",
