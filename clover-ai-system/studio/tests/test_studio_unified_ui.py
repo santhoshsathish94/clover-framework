@@ -136,10 +136,13 @@ check(
     and all(f'data-go="{k}"' in home_sec for k in ("model", "account", "storage", "debug", "advanced")),
 )
 check(
-    "Dedicated Memory page [data-page='memory'] is present in center sheet",
+    "Dedicated Memory page [data-page='memory'] owns clover-ai-studio persistent memory (#mem-parent-view, #mem-conn, #mem-gh-token, #memory-personal-summary) and has #mem-file-slot for file viewing",
     '<section class="page" data-page="memory" hidden>' in app
-    and "memory: 'Memory'" in app
-    and 'id="memory-personal-summary"' in app,
+    and 'id="mem-parent-view"' in app
+    and 'id="mem-conn"' in app
+    and 'id="mem-gh-token"' in app
+    and 'id="memory-personal-summary"' in app
+    and 'id="mem-file-slot"' in app,
 )
 check(
     "Strict 2-pane layout: #sheet lives inside <section class=\"main\"> and .app.view-page replaces #stream and .dock in the center pane",
@@ -148,23 +151,27 @@ check(
     and 'class="sheet-bd"' not in app,
 )
 check(
-    "Left pane (#rail) has collapsible Chat submenu (#rail-chat-sub -> #chats) and Workspaces submenu (#rail-ws-sub -> #ws-source-pills + #vsc-tree)",
+    "Left pane (#rail) has collapsible Chat submenu (#rail-chat-sub -> #chats), Workspaces submenu (#rail-ws-sub -> #vsc-tree for user project repos), and Memory submenu (#rail-mem-sub -> #mem-tree for clover-ai-studio persistent memory)",
     'id="rail-chat-sub"' in app
     and 'id="rail-ws-sub"' in app
-    and app.index('id="rail"') < app.index('id="rail-chat-sub"') < app.index('id="chats"') < app.index('id="rail-ws-sub"') < app.index('id="vsc-tree"') < app.index('<section class="main">'),
+    and 'id="rail-mem-sub"' in app
+    and app.index('id="rail"') < app.index('id="rail-chat-sub"') < app.index('id="chats"') < app.index('id="rail-ws-sub"') < app.index('id="vsc-tree"') < app.index('id="rail-mem-sub"') < app.index('id="mem-tree"') < app.index('<section class="main">'),
 )
 check(
-    "Center pane Workspaces page separates parent workspace settings (#ws-parent-view) from File Viewer (#vsc-workbench hidden by default) so workspace controls are not shown inside each file",
+    "Center pane Workspaces page is scoped to user's own project repos and separates parent workspace settings (#ws-parent-view) from File Viewer (#vsc-workbench hidden by default)",
     app.index('data-page="workspaces"') < app.index('id="ws-parent-view"') < app.index('id="vsc-workbench"')
     and 'id="vsc-workbench" aria-label="Workspace file viewer" hidden' in app
-    and "#ws-parent-view[hidden], .vsc-view[hidden] { display: none !important; }" in app
+    and "#ws-parent-view[hidden], #mem-parent-view[hidden], .vsc-view[hidden] { display: none !important; }" in app
     and "function showWorkspaceParentView()" in app
     and "function showWorkspaceFileViewer(fileTitle)" in app
-    and 'id="vsc-viewer-body"' in app
-    and 'id="vsc-view-mode"' in app
-    and 'id="ws-conn"' in app
-    and 'id="gh-token"' in app
-    and 'id="gh-save"' in app,
+    and "function showMemoryParentView()" in app
+    and "function showMemoryFileViewer(fileTitle)" in app,
+)
+tools_sec = app.split('<section class="page" data-page="tools" hidden>', 1)[1].split("</section>", 1)[0]
+check(
+    "Streamlined Tools page [data-page='tools'] focuses on Terminal, Browser, Camera, Microphone, and Connected Apps (VS Code, GitHub)",
+    all(rid in tools_sec for rid in ("tool-row-terminal", "tool-row-browser", "tool-row-camera", "tool-row-microphone", "tool-row-vscode", "tool-row-github"))
+    and all(pid in tools_sec for pid in ("tool-perm-terminal", "tool-perm-browser", "tool-perm-camera", "tool-perm-vscode")),
 )
 
 # 5. Backend workspace tree, file viewer, local repo fallback, and secret blocking

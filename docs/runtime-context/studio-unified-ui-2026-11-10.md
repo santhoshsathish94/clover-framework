@@ -29,12 +29,21 @@
    - Collaboration pill (`System · Human · AI working together` with `#i-success` checkmark)
    - Keep `Memory`, `Tools`, and `Learning` in the left sidebar navigation only (no duplicate 3-card `.feature-grid` below the composer)
    - Smart `#senses-menu` (`.senses-pop`) positioning: opens downward (`.drop-down`) in `.empty-chat` or when space above `< 240px` with zero scrollbar.
-4. Strictly 2-Pane Layout (`.rail` Left Pane + `.main` Center Pane) and VS Code-style Workspace Explorer & File Viewer:
-   - **Left Pane (`#rail`)**: Toggled with `#menu` (`#i-sidebar`). Contains collapsible `Chat` submenu (`#rail-chat-sub` → `#chats` conversation list), collapsible `Workspaces` submenu (`#rail-ws-sub` → `#ws-source-pills` + VS Code-style file tree `#vsc-tree`), `Memory`, `Tools`, `Learning`, and `Settings`.
+4. Strictly 2-Pane Layout (`.rail` Left Pane + `.main` Center Pane), Persistent Memory under `Memory`, User Project Repos under `Workspaces`, and Streamlined `Tools`:
+   - **Left Pane (`#rail`)**: Toggled with `#menu` (`#i-sidebar`). Contains:
+     - `Chat` (`[data-nav="chat"]`) with collapsible submenu `#rail-chat-sub` (`#chats` conversation list).
+     - `Workspaces` (`[data-nav="workspaces"]`) with collapsible submenu `#rail-ws-sub` (`#ws-source-pills` + `#vsc-tree` for the user's own local or connected GitHub project repositories — never `clover-ai-studio`).
+     - `Memory` (`[data-nav="memory"]`) with collapsible submenu `#rail-mem-sub` (`#mem-repo-pill` + `#mem-tree` for Clover's `clover-ai-studio` persistent memory repository: `AGENTS.md`, `CONTEXT.md`, `config/`, `execution/`, `growth/`, `outcomes/`, `sessions/`).
+     - `Tools`, `Learning`, and `Settings`.
    - **Center Pane (`.main`)**: Contains `<header class="bar">` at top (`#menu`, `#new-chat-2`, `#chat-title`, `#set-btn`). Below the bar, displays either the Chat view (`#stream` + `.dock`) or the in-place Section view (`#sheet` inside `.main` with `.app.view-page`, zero slide-over drawer or 3rd pane).
-   - **Workspaces Parent View vs. File Viewer**:
-     - Clicking `Workspaces` (`[data-nav="workspaces"]`) or a parent workspace pill (`clover-ai-studio (Local Repo)` in `#ws-source-pills`) opens `#ws-parent-view` in the center pane (`#ws-conn`, `Add Folder or Connect GitHub Repository`, `GitHub Client & Account Connection`) with `#vsc-workbench` hidden.
-     - Clicking any file in `#vsc-tree` opens `#vsc-workbench` (the File Viewer: Code with line numbers, Markdown Preview, Copy, Ask Clover, Open in VS Code) in the center pane with `#ws-parent-view` hidden so workspace connection controls are never shown inside each file, while blocking secret/credential files (`SECRETISH`) and `vault` directories.
+   - **Memory (`[data-page="memory"]`)**:
+     - Clicking `Memory` or `#mem-repo-pill` (`clover-ai-studio (Local Repo)`) opens `#mem-parent-view` in the center pane (`#mem-conn` status banner, `Persistent Memory Repository (GitHub Sync & Backup)` with `#mem-gh-token` / `Sign in via VS Code` / `Set up private repository`, and `Saved Memory & What Clover Learned About You` `#memory-personal-summary` + `#mem-personal-forget`), with non-memory items removed.
+     - Clicking any file in `#mem-tree` mounts `#vsc-workbench` in `#mem-file-slot` and hides `#mem-parent-view`.
+   - **Workspaces (`[data-page="workspaces"]`)**:
+     - Scoped strictly to the user's own project folders (`C:\path\to\project`) and GitHub repositories (`owner/repo`).
+     - Clicking `Workspaces` or a project source pill opens `#ws-parent-view`; clicking a file in `#vsc-tree` mounts `#vsc-workbench` in `#ws-file-slot` with `#ws-parent-view` hidden.
+   - **Tools (`[data-page="tools"]`)**:
+     - Streamlined to **Terminal** (`#tool-row-terminal`: PowerShell/shell commands, package installation, SSH, Python scripts & local file operations), **Browser** (`#tool-row-browser`: viewing and reading the web, browser search engine `#s-browser`, Chrome/Edge `Send to Clover` extension), **Camera** (`#tool-row-camera`: System Camera, Screenshot & Screen Recorder `I-JEPA`), **Microphone** (`#tool-row-microphone`: System Microphone & Voice Recorder `Audio-JEPA`), and **Connected Apps** (**VS Code** `#tool-row-vscode` and **GitHub** `#tool-row-github`).
    - **Settings (`[data-page="home"]`)**: Omits the duplicate `Workspaces`, `Memory`, `Tools`, and `Learning & Growth` rows (since each has its own left-pane menu) and shows `Model and voice`, `GitHub account (Memory backup)`, `Storage`, `Debug logs & Senses`, and `Advanced`.
    - Synchronize all three platform targets (`app.html`, `site/clover-ai/index.html`, and `clover-ai-system/mobile/android-app/assets/index.html`).
 

@@ -547,7 +547,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 .vsc-node__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .vsc-node__meta { font-size: .66rem; color: var(--faint); font-family: var(--mono); flex: none; margin-left: .2rem; }
 .vsc-children { display: flex; flex-direction: column; gap: 1px; }
-#ws-parent-view[hidden], .vsc-view[hidden] { display: none !important; }
+#ws-parent-view[hidden], #mem-parent-view[hidden], .vsc-view[hidden] { display: none !important; }
 .vsc-view { display: flex; flex-direction: column; min-height: calc(100vh - 175px); min-width: 0; background: var(--surface);
   border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: .5rem; }
 .vsc-tabbar { display: flex; align-items: center; justify-content: space-between; gap: .45rem; padding: .42rem .75rem;
@@ -711,7 +711,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="rail__sub" id="rail-ws-sub" hidden>
         <div class="ws-pills" id="ws-source-pills" role="tablist" aria-label="Workspace and repository sources"></div>
         <div class="vsc-exp__head">
-          <span class="vsc-exp__title" id="vsc-exp-title">EXPLORER · clover-ai-studio</span>
+          <span class="vsc-exp__title" id="vsc-exp-title">EXPLORER · WORKSPACES</span>
           <div class="vsc-exp__acts">
             <button type="button" class="ibtn" id="vsc-exp-refresh" title="Refresh file explorer" aria-label="Refresh file explorer"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
             <button type="button" class="ibtn laptop-only" id="vsc-exp-open-code" title="Open workspace folder in VS Code" aria-label="Open in VS Code"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></button>
@@ -719,7 +719,20 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         </div>
         <div class="vsc-tree" id="vsc-tree" role="tree" aria-label="Files and folders"></div>
       </div>
-      <button type="button" class="rail__nav-btn" data-nav="memory"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg><span>Memory</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="memory" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg><span>Memory</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      <div class="rail__sub" id="rail-mem-sub" hidden>
+        <div class="ws-pills" id="mem-source-pills" role="tablist" aria-label="Persistent memory repository">
+          <button type="button" class="ws-pill on" id="mem-repo-pill" data-mem-pick="__local_repo__"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg><span id="mem-repo-pill-t">clover-ai-studio (Memory)</span></button>
+        </div>
+        <div class="vsc-exp__head">
+          <span class="vsc-exp__title" id="mem-exp-title">MEMORY · clover-ai-studio</span>
+          <div class="vsc-exp__acts">
+            <button type="button" class="ibtn" id="mem-exp-refresh" title="Refresh memory files" aria-label="Refresh memory files"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+            <button type="button" class="ibtn laptop-only" id="mem-exp-open-code" title="Open persistent memory folder in VS Code" aria-label="Open memory in VS Code"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></button>
+          </div>
+        </div>
+        <div class="vsc-tree" id="mem-tree" role="tree" aria-label="Persistent memory files and folders"></div>
+      </div>
       <button type="button" class="rail__nav-btn" data-nav="tools"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>Tools</span></button>
       <button type="button" class="rail__nav-btn" data-nav="learning"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span>Learning</span></button>
       <button type="button" class="rail__nav-btn" data-nav="settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg><span>Settings</span></button>
@@ -841,16 +854,41 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     </section>
 
     <section class="page" data-page="memory" hidden>
-      <p class="lead">Your work, knowledge, notes, and context across Personal Memory (<code>S1</code>), Knowledge Graph &amp; Earlier Chats (<code>S2</code>), and Grounded Verification (<code>S3</code>).</p>
-      <div class="group">
-        <button type="button" class="row t" data-go="personal"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="row__t">What Clover learned about you<small>Saved preferences, corrections &amp; personal notes</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t" data-go="layers"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg></span><span class="row__t">Clover Context &amp; Layers<small>S1 Memory · S2 Knowledge Graph &amp; Recall · S3 Grounding · C1–C3</small></span><span class="row__v">3 core · 3 supporting</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t" data-go="workspaces"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Workspaces &amp; Project Context<small>Folders, GitHub repos &amp; local context files</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t" data-go="account"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg></span><span class="row__t">GitHub Memory Backup<small>Sync your S1 memory repository across devices</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t" data-go="storage"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg></span><span class="row__t">Storage &amp; Repository Paths<small>Where chats, notes, media &amp; models live</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      <div id="mem-parent-view">
+        <p class="lead">Clover's persistent memory lives in your <code>clover-ai-studio</code> repository (local by default, or synced with your private GitHub repository). Select any file under <b>Memory</b> in the left sidebar to inspect <code>AGENTS.md</code>, <code>CONTEXT.md</code>, sessions, outcomes, or growth records.</p>
+
+        <div class="ws-conn" id="mem-conn">
+          <div class="ws-conn__left">
+            <span class="ws-conn__badge" id="mem-conn-badge"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg><span id="mem-conn-badge-t">clover-ai-studio (Local Repo)</span></span>
+            <span class="ws-conn__msg" id="mem-conn-msg">Using local persistent memory repository (clover-ai-studio) until you connect your GitHub account.</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.35rem">
+            <button type="button" class="btn sm" id="mem-sync-local" title="Sync persistent memory repository with GitHub"><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg><span>Sync GitHub</span></button>
+          </div>
+        </div>
+
+        <div class="glabel">Persistent Memory Repository (GitHub Sync &amp; Backup)</div>
+        <div class="group pad">
+          <p class="fine" id="mem-gh-help" style="margin-top:0">Until you connect your GitHub account, Clover stores all persistent memory locally in <code>clover-ai-studio</code>. Add a GitHub token (or sign in via VS Code) to back up and sync <code>clover-ai-studio</code> across your devices.</p>
+          <div class="keyrow">
+            <input type="password" id="mem-gh-token" autocomplete="off" spellcheck="false" placeholder="GitHub token (ghp_... or github_pat_...)" aria-label="GitHub token for persistent memory">
+            <button type="button" class="btn pri" id="mem-gh-save">Connect GitHub</button>
+          </div>
+          <div class="btns" style="margin-top:.4rem">
+            <button type="button" class="btn sm laptop-only" id="mem-vsc-gh"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>Sign in via VS Code</span></button>
+            <button type="button" class="btn sm" id="mem-vsc-repo"><svg class="ic" aria-hidden="true"><use href="#i-branch"/></svg><span>Set up private repository</span></button>
+            <button type="button" class="btn danger sm" id="mem-gh-forget" hidden>Disconnect token</button>
+          </div>
+          <div class="note" id="mem-note" hidden></div>
+        </div>
+
+        <div class="glabel">Saved Memory &amp; What Clover Learned About You</div>
+        <div class="group pad" id="memory-personal-summary">Loading your memory &amp; context…</div>
+        <div class="group">
+          <button type="button" class="row t danger" id="mem-personal-forget"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></span><span class="row__t">Forget everything Clover learned about you</span></button>
+        </div>
       </div>
-      <div class="glabel">Saved Memory &amp; Learned Notes</div>
-      <div class="group pad" id="memory-personal-summary">Loading your memory &amp; context…</div>
+      <div id="mem-file-slot"></div>
     </section>
 
     <section class="page" data-page="learning" hidden>
@@ -1085,18 +1123,120 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     </section>
 
     <section class="page" data-page="tools" hidden>
-      <div class="group">
-        <button type="button" class="row t" data-go="perms"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></span><span class="row__t">Permissions<small>Control Allow, Ask, or Off for every tool</small></span><span class="row__v" id="v-perms-tools"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t" data-go="debug"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></span><span class="row__t">System Senses &amp; Logs<small>Screenshot, Screen Recorder, Camera &amp; Microphone (S3)</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t laptop-only" data-go="vscode"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">VS Code Integration<small>Open files, clone repos &amp; run tasks in VS Code</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-      </div>
-      <div class="glabel">Tools</div>
+      <p class="lead">Clover uses four core tools—<b>Terminal</b>, <b>Browser</b>, <b>Camera</b>, and <b>Microphone</b>—plus connected apps like <b>VS Code</b> and <b>GitHub</b>.</p>
+
+      <div class="glabel">When Clover Uses Tools</div>
       <div class="group pad">
         <div class="seg full" id="s-tools"><button type="button" data-v="ask">When I ask</button><button type="button" data-v="always">Always</button></div>
-        <p class="fine">Clover searches the web, runs code or opens files only when your message asks for it ("search the web for…", "use Python to…", "read C:\…"). With Always, it decides by itself. Each tool still follows Permissions.</p>
+        <p class="fine">With <b>When I ask</b>, Clover runs commands or opens pages only when your message asks for it. With <b>Always</b>, Clover decides when a tool is needed. Each tool still follows its <b>Allow / Ask / Off</b> setting below.</p>
       </div>
-      <div class="glabel">Web search</div>
-      <div class="group pad">
+
+      <div class="glabel">Core Tools</div>
+      <div class="group">
+        <div class="perm" id="tool-row-terminal">
+          <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg></span>
+          <div>
+            <div class="perm__t">
+              <span class="perm__name">Terminal</span>
+              <div class="seg sm" id="tool-perm-terminal" role="radiogroup" aria-label="Terminal permission">
+                <button type="button" data-v="allow">Allow</button>
+                <button type="button" class="on" data-v="ask">Ask</button>
+                <button type="button" data-v="deny">Off</button>
+              </div>
+            </div>
+            <div class="perm__d">Handles PowerShell &amp; shell commands, package installation, SSH, Python scripts, and local file operations.</div>
+          </div>
+        </div>
+
+        <div class="perm" id="tool-row-browser">
+          <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></span>
+          <div>
+            <div class="perm__t">
+              <span class="perm__name">Browser</span>
+              <div class="seg sm" id="tool-perm-browser" role="radiogroup" aria-label="Browser permission">
+                <button type="button" data-v="allow">Allow</button>
+                <button type="button" class="on" data-v="ask">Ask</button>
+                <button type="button" data-v="deny">Off</button>
+              </div>
+            </div>
+            <div class="perm__d">Handles viewing and reading web pages, opening web searches in your browser, and receiving pages you send to Clover.</div>
+            <div style="margin-top:.55rem">
+              <div class="seg full" id="s-browser" style="flex-wrap:wrap"><button type="button" data-v="google">Google</button><button type="button" data-v="bing">Bing</button><button type="button" data-v="duckduckgo">DuckDuckGo</button><button type="button" data-v="brave">Brave</button><button type="button" data-v="startpage">Startpage</button><button type="button" data-v="ecosia">Ecosia</button></div>
+              <div class="group pad laptop-only" style="margin:.5rem 0 0;background:var(--bg);box-shadow:none;border:1px solid var(--line)">
+                <p class="fine" id="handback-state" style="margin:0 0 .35rem">Checking…</p>
+                <div class="btns" style="margin:0"><button type="button" class="btn sm" id="handback-on">Set up Chrome &amp; Edge extension</button><button type="button" class="btn sm danger" id="handback-off" hidden>Remove extension</button></div>
+                <p class="fine" id="handback-help" style="margin:.25rem 0 0"></p>
+                <div class="note" id="handback-note" hidden></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="perm" id="tool-row-camera">
+          <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></span>
+          <div>
+            <div class="perm__t">
+              <span class="perm__name">Camera</span>
+              <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+                <button type="button" class="btn sm" data-test-sense="camera">Camera</button>
+                <button type="button" class="btn sm" data-test-sense="screenshot">Screenshot</button>
+                <div class="seg sm" id="tool-perm-camera" role="radiogroup" aria-label="Camera permission">
+                  <button type="button" data-v="allow">Allow</button>
+                  <button type="button" class="on" data-v="ask">Ask</button>
+                  <button type="button" data-v="deny">Off</button>
+                </div>
+              </div>
+            </div>
+            <div class="perm__d">Connects to your system Camera, Screenshot, and Screen Recorder for visual inspection (<code>I-JEPA</code>).</div>
+          </div>
+        </div>
+
+        <div class="perm" id="tool-row-microphone">
+          <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></span>
+          <div>
+            <div class="perm__t">
+              <span class="perm__name">Microphone</span>
+              <button type="button" class="btn sm" data-test-sense="microphone">Test Microphone</button>
+            </div>
+            <div class="perm__d">Connects to your system Microphone and Voice Recorder for voice chat and audio analysis (<code>Audio-JEPA</code>).</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glabel">Connected Apps</div>
+      <div class="group">
+        <div class="perm laptop-only" id="tool-row-vscode">
+          <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span>
+          <div>
+            <div class="perm__t">
+              <span class="perm__name">VS Code <small id="v-vsc-tools" style="font-weight:500;color:var(--muted);margin-left:.35rem"></small></span>
+              <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+                <button type="button" class="btn sm" id="tools-vsc-open">Open VS Code</button>
+                <div class="seg sm" id="tool-perm-vscode" role="radiogroup" aria-label="VS Code permission">
+                  <button type="button" data-v="allow">Allow</button>
+                  <button type="button" class="on" data-v="ask">Ask</button>
+                  <button type="button" data-v="deny">Off</button>
+                </div>
+              </div>
+            </div>
+            <div class="perm__d">Opens files, clones repositories, installs extensions, and runs tasks in VS Code on this laptop.</div>
+          </div>
+        </div>
+
+        <div class="perm" id="tool-row-github">
+          <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-branch"/></svg></span>
+          <div>
+            <div class="perm__t">
+              <span class="perm__name">GitHub <small id="v-gh-tools" style="font-weight:500;color:var(--muted);margin-left:.35rem"></small></span>
+              <button type="button" class="btn sm" data-nav-open="workspaces">Configure</button>
+            </div>
+            <div class="perm__d">Connects directly to your GitHub repositories for Workspaces and syncs your persistent memory repository (<code>clover-ai-studio</code>).</div>
+          </div>
+        </div>
+      </div>
+
+      <div hidden aria-hidden="true">
+        <span id="v-perms-tools"></span>
         <div class="seg full" id="s-search"><button type="button" data-v="wikipedia">Wikipedia</button><button type="button" data-v="tavily">Tavily</button><button type="button" data-v="brave">Brave</button></div>
         <p class="fine" id="search-help"></p>
         <div class="keyrow" id="search-key-row" hidden>
@@ -1106,35 +1246,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <div class="btns"><button type="button" class="btn" id="search-test">Test search</button><button type="button" class="btn danger" id="search-forget" hidden>Remove key</button></div>
         <div class="note" id="search-note" hidden></div>
       </div>
-      <p class="gfoot">The search text goes to the service you pick. Keys stay on this laptop.</p>
-      <div class="glabel">Search in your browser</div>
-      <div class="group pad">
-        <div class="seg full" id="s-browser" style="flex-wrap:wrap"><button type="button" data-v="google">Google</button><button type="button" data-v="bing">Bing</button><button type="button" data-v="duckduckgo">DuckDuckGo</button><button type="button" data-v="brave">Brave</button><button type="button" data-v="startpage">Startpage</button><button type="button" data-v="ecosia">Ecosia</button></div>
-        <p class="fine">For the whole web, Clover opens the search in your own browser with this engine when you click "Search in your browser" on a web search. You choose the pages; Clover reads them on this laptop.</p>
-      </div>
-      <div class="glabel laptop-only">Send pages from your browser</div>
-      <div class="group pad laptop-only">
-        <p class="fine" id="handback-state">Checking…</p>
-        <div class="btns"><button type="button" class="btn" id="handback-on">Set up for Chrome and Edge</button><button type="button" class="btn danger" id="handback-off" hidden>Remove</button></div>
-        <p class="fine" id="handback-help"></p>
-        <div class="note" id="handback-note" hidden></div>
-      </div>
     </section>
 
     <section class="page" data-page="workspaces" hidden>
       <div id="ws-parent-view">
+        <p class="lead">Work on your own local project folders or GitHub repositories. Add a folder on this laptop or connect your GitHub account to browse and clone your repositories.</p>
         <div class="ws-conn" id="ws-conn">
           <div class="ws-conn__left">
-            <span class="ws-conn__badge" id="ws-conn-badge"><svg class="ic" aria-hidden="true"><use href="#i-branch"/></svg><span id="ws-conn-badge-t">Local Repo</span></span>
-            <span class="ws-conn__msg" id="ws-conn-msg">Using local repository (clover-ai-studio) until you connect your GitHub account.</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:.35rem">
-            <button type="button" class="btn sm" id="ws-sync-local" title="Sync local repository with GitHub"><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg><span>Sync GitHub</span></button>
-            <button type="button" class="btn sm" data-go="account" title="GitHub account settings"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg><span>Account</span></button>
+            <span class="ws-conn__badge" id="ws-conn-badge"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span id="ws-conn-badge-t">Project Workspaces</span></span>
+            <span class="ws-conn__msg" id="ws-conn-msg">Add a local project folder or connect your GitHub account to work on your repositories.</span>
           </div>
         </div>
 
-        <div class="glabel">Add Folder or Connect GitHub Repository</div>
+        <div class="glabel">Add Project Folder or Connect GitHub Repository</div>
         <div class="keyrow" style="margin-top:.35rem">
           <input type="text" id="ws-src" autocomplete="off" spellcheck="false" placeholder="C:\path\to\project  or  owner/repo" aria-label="Folder path or GitHub repository">
           <button type="button" class="btn" id="ws-browse-gh" title="Browse repository directly via GitHub client without cloning"><svg class="ic" aria-hidden="true"><use href="#i-branch"/></svg><span>Browse GitHub</span></button>
@@ -1143,7 +1267,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <div class="note" id="ws-note" hidden></div>
         <div class="group" id="ws-list" hidden style="margin-top:.65rem"></div>
 
-        <div class="glabel" style="margin-top:1.1rem">GitHub Client &amp; Account Connection</div>
+        <div class="glabel" style="margin-top:1.1rem">GitHub Client (Your Repositories)</div>
         <div class="group pad">
           <p class="fine" id="gh-help" style="margin-top:0"></p>
           <div class="keyrow"><input type="password" id="gh-token" autocomplete="off" spellcheck="false" aria-label="GitHub token"><button type="button" class="btn pri" id="gh-save">Connect GitHub</button></div>
@@ -1155,29 +1279,31 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         </div>
       </div>
 
-      <div class="vsc-view" id="vsc-workbench" aria-label="Workspace file viewer" hidden>
-        <div class="vsc-tabbar">
-          <div style="display:flex;align-items:center;gap:.5rem;min-width:0;flex:1">
-            <div class="vsc-tab" id="vsc-tab">
-              <svg class="ic" id="vsc-tab-ic" aria-hidden="true"><use href="#i-file"/></svg>
-              <span id="vsc-file-name">Select a file from Workspaces in the left sidebar</span>
+      <div id="ws-file-slot">
+        <div class="vsc-view" id="vsc-workbench" aria-label="Workspace file viewer" hidden>
+          <div class="vsc-tabbar">
+            <div style="display:flex;align-items:center;gap:.5rem;min-width:0;flex:1">
+              <div class="vsc-tab" id="vsc-tab">
+                <svg class="ic" id="vsc-tab-ic" aria-hidden="true"><use href="#i-file"/></svg>
+                <span id="vsc-file-name">Select a file from the left sidebar</span>
+              </div>
+              <span class="vsc-tab__meta" id="vsc-file-meta"></span>
             </div>
-            <span class="vsc-tab__meta" id="vsc-file-meta"></span>
-          </div>
-          <div class="vsc-toolbar">
-            <div class="seg sm" id="vsc-view-mode" hidden>
-              <button type="button" class="on" data-v="code">Code</button>
-              <button type="button" data-v="preview">Preview</button>
+            <div class="vsc-toolbar">
+              <div class="seg sm" id="vsc-view-mode" hidden>
+                <button type="button" class="on" data-v="code">Code</button>
+                <button type="button" data-v="preview">Preview</button>
+              </div>
+              <button type="button" class="btn sm" id="vsc-file-copy" hidden><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+              <button type="button" class="btn sm pri" id="vsc-file-ask" hidden><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Ask Clover</span></button>
+              <button type="button" class="btn sm laptop-only" id="vsc-file-vscode" hidden title="Open this file in VS Code"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>VS Code</span></button>
             </div>
-            <button type="button" class="btn sm" id="vsc-file-copy" hidden><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
-            <button type="button" class="btn sm pri" id="vsc-file-ask" hidden><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Ask Clover</span></button>
-            <button type="button" class="btn sm laptop-only" id="vsc-file-vscode" hidden title="Open this file in VS Code"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>VS Code</span></button>
           </div>
-        </div>
-        <div class="vsc-body code-mode" id="vsc-viewer-body">
-          <div class="vsc-empty" id="vsc-viewer-empty">
-            <svg class="ic" aria-hidden="true"><use href="#i-file"/></svg>
-            <span>Select any file in the Workspaces file directory on the left to view it here.</span>
+          <div class="vsc-body code-mode" id="vsc-viewer-body">
+            <div class="vsc-empty" id="vsc-viewer-empty">
+              <svg class="ic" aria-hidden="true"><use href="#i-file"/></svg>
+              <span>Select any file in the file directory on the left to view it here.</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1367,7 +1493,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   ];
   if (PHONE || WEB) SUGGEST[2] = ['clock', 'Plan my day', 'Help me plan a calm, productive day with three priorities.'];
   var PAGES = { home: 'Settings', memory: 'Memory', learning: 'Learning & Growth', account: 'GitHub account', storage: 'Storage', debug: 'Debug logs & Senses',
-    advanced: 'Advanced', layers: 'Clover layers', model: 'Model and voice', perms: 'Permissions', tools: 'Tools and search',
+    advanced: 'Advanced', layers: 'Clover layers', model: 'Model and voice', perms: 'Permissions', tools: 'Tools',
     workspaces: 'Workspaces', vscode: 'VS Code', personal: 'What Clover learned', collective: 'Collective learning' };
   var PARENT = { memory: 'home', learning: 'home', account: 'home', storage: 'home', debug: 'home', advanced: 'home', layers: 'memory',
     model: 'home', perms: 'tools', tools: 'home', workspaces: 'home', vscode: 'tools',
@@ -2838,6 +2964,43 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       row.querySelector('.perm__t').appendChild(seg);
       list.appendChild(row);
     });
+    var termMode = (state.perms.shell && state.perms.shell.mode) || (state.perms.code && state.perms.code.mode) || 'ask';
+    var browMode = (state.perms.internet && state.perms.internet.mode) || 'ask';
+    var camMode = (state.perms.media && state.perms.media.mode) || 'ask';
+    var vscMode = (state.perms.vscode && state.perms.vscode.mode) || 'ask';
+    if ($('tool-perm-terminal')) pick('tool-perm-terminal', termMode);
+    if ($('tool-row-terminal')) $('tool-row-terminal').className = 'perm m-' + termMode;
+    if ($('tool-perm-browser')) pick('tool-perm-browser', browMode);
+    if ($('tool-row-browser')) $('tool-row-browser').className = 'perm m-' + browMode;
+    if ($('tool-perm-camera')) pick('tool-perm-camera', camMode);
+    if ($('tool-row-camera')) $('tool-row-camera').className = 'perm m-' + camMode;
+    if ($('tool-perm-vscode')) pick('tool-perm-vscode', vscMode);
+    if ($('tool-row-vscode')) $('tool-row-vscode').className = 'perm laptop-only m-' + vscMode;
+  }
+  if ($('tool-perm-terminal')) {
+    segClick('tool-perm-terminal', function (v) {
+      setPerms({ shell: v, code: v, files: v, edit_files: v }).catch(function () {});
+    });
+  }
+  if ($('tool-perm-browser')) {
+    segClick('tool-perm-browser', function (v) {
+      setPerms({ internet: v }).catch(function () {});
+    });
+  }
+  if ($('tool-perm-camera')) {
+    segClick('tool-perm-camera', function (v) {
+      setPerms({ media: v }).catch(function () {});
+    });
+  }
+  if ($('tool-perm-vscode')) {
+    segClick('tool-perm-vscode', function (v) {
+      setPerms({ vscode: v }).catch(function () {});
+    });
+  }
+  if ($('tools-vsc-open')) {
+    $('tools-vsc-open').addEventListener('click', function () {
+      $('vsc-open').click();
+    });
   }
   $('q-allow').addEventListener('click', function () { $('confirm-all').hidden = false; $('confirm-yes').focus(); });
   $('confirm-no').addEventListener('click', function () { $('confirm-all').hidden = true; });
@@ -2848,7 +3011,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   /* ---------- in-place center section view: replaces chat screen when any menu is selected ---------- */
   var stack = ['home'];
   function setSubmenuOpen(navName, open) {
-    var sub = navName === 'chat' ? $('rail-chat-sub') : navName === 'workspaces' ? $('rail-ws-sub') : null;
+    var sub = navName === 'chat' ? $('rail-chat-sub') : navName === 'workspaces' ? $('rail-ws-sub') : navName === 'memory' ? $('rail-mem-sub') : null;
     var btnEl = document.querySelector('.rail__nav-btn[data-nav="' + navName + '"]');
     if (sub) sub.hidden = !open;
     if (btnEl) {
@@ -2870,10 +3033,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     });
     if (nav === 'workspaces') {
       setSubmenuOpen('chat', false);
+      setSubmenuOpen('memory', false);
       setSubmenuOpen('workspaces', true);
+    } else if (nav === 'memory') {
+      setSubmenuOpen('chat', false);
+      setSubmenuOpen('workspaces', false);
+      setSubmenuOpen('memory', true);
     } else if (nav === 'chat') {
       setSubmenuOpen('workspaces', false);
+      setSubmenuOpen('memory', false);
       setSubmenuOpen('chat', true);
+    } else {
+      setSubmenuOpen('workspaces', false);
+      setSubmenuOpen('memory', false);
     }
   }
   function showPage(name, dir) {
@@ -2882,16 +3054,21 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       p.hidden = !on;
       if (on) { p.classList.remove('from-left'); p.style.animation = 'none'; void p.offsetWidth; p.style.animation = ''; if (dir < 0) p.classList.add('from-left'); }
     });
-    if ($('sheet')) $('sheet').classList.toggle('wide', name === 'workspaces');
-    var pageTitle = (name === 'workspaces' && typeof wsExp !== 'undefined' && wsExp.mode === 'file' && wsExp.file)
+    if ($('sheet')) $('sheet').classList.toggle('wide', name === 'workspaces' || name === 'memory');
+    var inWsFile = (name === 'workspaces' && typeof wsExp !== 'undefined' && wsExp.mode === 'file' && wsExp.section === 'workspaces' && wsExp.file);
+    var inMemFile = (name === 'memory' && typeof wsExp !== 'undefined' && wsExp.mode === 'file' && wsExp.section === 'memory' && wsExp.file);
+    var pageTitle = (inWsFile || inMemFile)
       ? (wsExp.file.path || wsExp.file.name || PAGES[name])
       : PAGES[name];
     $('sheet-h').textContent = pageTitle;
     if ($('chat-title')) $('chat-title').textContent = pageTitle;
     var prev = stack.length > 1 ? stack[stack.length - 2] : null;
-    if (name === 'workspaces' && typeof wsExp !== 'undefined' && wsExp.mode === 'file') {
+    if (inWsFile) {
       $('sheet-back').hidden = false;
       $('back-t').textContent = wsExp.label || PAGES.workspaces;
+    } else if (inMemFile) {
+      $('sheet-back').hidden = false;
+      $('back-t').textContent = 'clover-ai-studio (Memory)';
     } else {
       $('sheet-back').hidden = !prev;
       $('back-t').textContent = prev ? PAGES[prev] : '';
@@ -2900,10 +3077,21 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     syncRailNav(name);
     loadPage(name);
   }
-  function go(name) { if (!PAGES[name]) return; if (name === 'workspaces' && typeof showWorkspaceParentView === 'function') showWorkspaceParentView(); stack.push(name); showPage(name, 1); $('sheet-back').focus(); }
+  function go(name) {
+    if (!PAGES[name]) return;
+    if (name === 'workspaces' && typeof showWorkspaceParentView === 'function') showWorkspaceParentView();
+    if (name === 'memory' && typeof showMemoryParentView === 'function') showMemoryParentView();
+    stack.push(name);
+    showPage(name, 1);
+    $('sheet-back').focus();
+  }
   function back() {
     if (stack[stack.length - 1] === 'workspaces' && typeof wsExp !== 'undefined' && wsExp.mode === 'file') {
       showWorkspaceParentView();
+      return;
+    }
+    if (stack[stack.length - 1] === 'memory' && typeof wsExp !== 'undefined' && wsExp.mode === 'file') {
+      showMemoryParentView();
       return;
     }
     if (stack.length > 1) { stack.pop(); showPage(stack[stack.length - 1], -1); (stack.length > 1 ? $('sheet-back') : $('sheet-x')).focus(); }
@@ -2944,7 +3132,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     else if (name === 'collective') loadCollective();
     else if (name === 'model') { renderEngine(); renderSettings(); loadServerSettings(); loadHealth(); }
     else if (name === 'perms') loadPerms();
-    else if (name === 'tools') { loadServerSettings(); loadPerms(); loadSearch(); loadInbox(); }
+    else if (name === 'tools') { loadServerSettings(); loadPerms(); loadSearch(); loadInbox(); loadVscode(); loadWorkspaces(); }
     else if (name === 'workspaces') loadWorkspaces();
   }
   var dbgCat = 'all';
@@ -3183,6 +3371,24 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       openSettings('workspaces', true, keepMobileRail);
       return;
     }
+    if (sec === 'memory') {
+      var memOn = $('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'memory';
+      var memSubHidden = $('rail-mem-sub') ? $('rail-mem-sub').hidden : false;
+      if (memOn && wsExp.mode === 'file') {
+        showMemoryParentView();
+        setSubmenuOpen('memory', true);
+        return;
+      }
+      if (memOn && !memSubHidden) {
+        setSubmenuOpen('memory', false);
+        return;
+      }
+      showMemoryParentView();
+      setSubmenuOpen('memory', true);
+      var keepMobileRailMem = window.matchMedia('(max-width: 860px)').matches && $('rail').classList.contains('on');
+      openSettings('memory', true, keepMobileRailMem);
+      return;
+    }
     var pageMap = { workspaces: 'workspaces', memory: 'memory', tools: 'tools', learning: 'learning', settings: 'home', layers: 'layers' };
     var target = pageMap[sec] || sec;
     openSettings(target, target !== 'home');
@@ -3210,6 +3416,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if ($('img-inspector') && !$('img-inspector').hidden) { closeImageInspector(); return true; }
     if ($('sheet').classList.contains('on')) {
       if (stack[stack.length - 1] === 'workspaces' && wsExp.mode === 'file') { showWorkspaceParentView(); return true; }
+      if (stack[stack.length - 1] === 'memory' && wsExp.mode === 'file') { showMemoryParentView(); return true; }
       if (stack.length > 1) back(); else closeSheet();
       return true;
     }
@@ -4477,10 +4684,16 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('new-chat').addEventListener('click', startChat);
   $('new-chat-2').addEventListener('click', startChat);
 
-  /* ---------- workspaces: VS Code-like Explorer tree, File Viewer, Local Repo & Direct GitHub Client ---------- */
-  var wsExp = { target: '__local_repo__', loadedTarget: '', label: 'clover-ai-studio (Local Repo)', rootPath: '', ghDirect: [], file: null, viewMode: 'code', ghStatus: null, mode: 'parent' };
+  /* ---------- workspaces (user's own project repos) & memory (clover-ai-studio persistent memory) ---------- */
+  var wsExp = { target: '', loadedTarget: '', label: 'Workspaces', rootPath: '', memRootPath: '', memLoaded: false, ghDirect: [], file: null, viewMode: 'code', ghStatus: null, mode: 'parent', section: 'workspaces' };
+  function mountFileViewerTo(slotId) {
+    var wb = $('vsc-workbench'), slot = $(slotId);
+    if (wb && slot && wb.parentNode !== slot) slot.appendChild(wb);
+  }
   function showWorkspaceParentView() {
     wsExp.mode = 'parent';
+    wsExp.section = 'workspaces';
+    mountFileViewerTo('ws-file-slot');
     if ($('ws-parent-view')) $('ws-parent-view').hidden = false;
     if ($('vsc-workbench')) $('vsc-workbench').hidden = true;
     if ($('vsc-tree')) {
@@ -4497,6 +4710,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function showWorkspaceFileViewer(fileTitle) {
     wsExp.mode = 'file';
+    wsExp.section = 'workspaces';
+    mountFileViewerTo('ws-file-slot');
     if ($('ws-parent-view')) $('ws-parent-view').hidden = true;
     if ($('vsc-workbench')) $('vsc-workbench').hidden = false;
     var t = fileTitle || (wsExp.file && (wsExp.file.path || wsExp.file.name)) || 'File Viewer';
@@ -4507,6 +4722,38 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       $('back-t').textContent = wsExp.label || PAGES.workspaces;
     }
     renderSourcePills();
+  }
+  function showMemoryParentView() {
+    wsExp.mode = 'parent';
+    wsExp.section = 'memory';
+    if ($('mem-parent-view')) $('mem-parent-view').hidden = false;
+    if ($('vsc-workbench')) $('vsc-workbench').hidden = true;
+    if ($('mem-repo-pill')) $('mem-repo-pill').classList.add('on');
+    if ($('mem-tree')) {
+      Array.prototype.forEach.call($('mem-tree').querySelectorAll('.vsc-node.on'), function (n) { n.classList.remove('on'); });
+    }
+    if ($('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'memory') {
+      $('sheet-h').textContent = PAGES.memory;
+      if ($('chat-title')) $('chat-title').textContent = PAGES.memory;
+      var prev = stack.length > 1 ? stack[stack.length - 2] : null;
+      $('sheet-back').hidden = !prev;
+      $('back-t').textContent = prev ? PAGES[prev] : '';
+    }
+  }
+  function showMemoryFileViewer(fileTitle) {
+    wsExp.mode = 'file';
+    wsExp.section = 'memory';
+    mountFileViewerTo('mem-file-slot');
+    if ($('mem-parent-view')) $('mem-parent-view').hidden = true;
+    if ($('vsc-workbench')) $('vsc-workbench').hidden = false;
+    if ($('mem-repo-pill')) $('mem-repo-pill').classList.remove('on');
+    var t = fileTitle || (wsExp.file && (wsExp.file.path || wsExp.file.name)) || 'Memory File';
+    if ($('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'memory') {
+      $('sheet-h').textContent = t;
+      if ($('chat-title')) $('chat-title').textContent = t;
+      $('sheet-back').hidden = false;
+      $('back-t').textContent = 'clover-ai-studio (Memory)';
+    }
   }
   var FALLBACK_LOCAL_TREE = {
     '': [
@@ -4556,14 +4803,32 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function renderGitHubClient(st) {
     wsExp.ghStatus = st || {};
-    var badge = $('ws-conn-badge'), badgeT = $('ws-conn-badge-t'), msg = $('ws-conn-msg'), reposBox = $('gh-repos-box');
     var connected = !!(st && st.connected);
-    if (badge) badge.className = 'ws-conn__badge' + (connected ? ' ok' : '');
-    if (badgeT) badgeT.textContent = connected ? ('GitHub · @' + st.login) : 'Local Repo (clover-ai-studio)';
+    var r = state.ws || {}, list = r.workspaces || [], active = list.filter(function (w) { return w.active; })[0];
+    var badge = $('ws-conn-badge'), badgeT = $('ws-conn-badge-t'), msg = $('ws-conn-msg'), reposBox = $('gh-repos-box');
+    if (badge) badge.className = 'ws-conn__badge' + ((connected || active) ? ' ok' : '');
+    if (badgeT) {
+      badgeT.textContent = active ? ('Active · ' + active.name) : connected ? ('GitHub · @' + st.login) : 'Project Workspaces';
+    }
     if (msg) {
-      msg.textContent = st && st.message ? st.message
-        : (connected ? ('Connected directly to GitHub as @' + st.login + (st.sync_repo ? ' · synced with ' + st.sync_repo : ''))
-                     : 'Using local repository (clover-ai-studio) until you connect your GitHub account.');
+      msg.textContent = active
+        ? ('Working in ' + active.name + ' (' + active.path + ')' + (connected ? ' · GitHub connected as @' + st.login : ''))
+        : connected
+          ? ('Connected to GitHub as @' + st.login + '. Pick a repository below to browse or clone, or add a local folder.')
+          : 'Add a local project folder on this laptop or connect your GitHub account to work on your repositories.';
+    }
+    var memBadge = $('mem-conn-badge'), memBadgeT = $('mem-conn-badge-t'), memMsg = $('mem-conn-msg');
+    if (memBadge) memBadge.className = 'ws-conn__badge' + (connected ? ' ok' : '');
+    if (memBadgeT) {
+      memBadgeT.textContent = connected ? ('Synced · ' + (st.sync_repo || ('@' + st.login + '/clover-ai-studio'))) : 'clover-ai-studio (Local Repo)';
+    }
+    if (memMsg) {
+      memMsg.textContent = connected
+        ? ('Persistent memory repository (clover-ai-studio) connected to GitHub as @' + st.login + (st.sync_repo ? ' (' + st.sync_repo + ').' : '.'))
+        : 'Using local persistent memory repository (clover-ai-studio) until you connect your GitHub account.';
+    }
+    if ($('mem-repo-pill-t')) {
+      $('mem-repo-pill-t').textContent = connected ? 'clover-ai-studio (Synced)' : 'clover-ai-studio (Local Repo)';
     }
     if (reposBox) {
       var repos = (st && st.repos) || [];
@@ -4611,10 +4876,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function renderSourcePills() {
     var box = $('ws-source-pills'); if (!box) return;
     box.innerHTML = '';
-    var r = state.ws || {}, list = r.workspaces || [], loc = r.local_repo || { id: '__local_repo__', name: 'clover-ai-studio' };
-    var sources = [
-      { id: '__local_repo__', label: (loc.name || 'clover-ai-studio') + ' (Local Repo)', icon: 'database' }
-    ];
+    var r = state.ws || {}, list = r.workspaces || [];
+    var sources = [];
     list.forEach(function (w) {
       sources.push({ id: w.name, label: w.name + (w.active ? ' · In use' : ''), icon: w.source === 'github' ? 'branch' : 'folder' });
     });
@@ -4624,9 +4887,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       }
     });
     if (!sources.some(function (s) { return s.id === wsExp.target; })) {
-      var act = list.filter(function (w) { return w.active && w.exists; })[0];
-      wsExp.target = act ? act.name : '__local_repo__';
+      var act = list.filter(function (w) { return w.active && w.exists; })[0] || list[0];
+      wsExp.target = act ? act.name : (sources[0] ? sources[0].id : '');
     }
+    box.hidden = !sources.length;
     sources.forEach(function (s) {
       var b = btn('ws-pill' + (wsExp.target === s.id && wsExp.mode !== 'file' ? ' on' : ''), ic(s.icon) + '<span></span>');
       b.querySelector('span').textContent = s.label;
@@ -4703,10 +4967,16 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     });
   }
   function loadWorkspaceTree(target, subpath, containerEl, autoOpenReadme, depth) {
-    target = target || wsExp.target || '__local_repo__';
+    target = target !== undefined ? target : wsExp.target;
     depth = depth || 0;
     var treeBox = containerEl || $('vsc-tree');
     if (!treeBox) return;
+    if (!target) {
+      wsExp.loadedTarget = '';
+      if ($('vsc-exp-title')) $('vsc-exp-title').textContent = 'EXPLORER · WORKSPACES';
+      treeBox.innerHTML = '<div class="fine" style="padding:.45rem .55rem;line-height:1.45">No project workspace added yet. Add a local folder or connect a GitHub repository in Workspaces.</div>';
+      return;
+    }
     if (!containerEl) {
       treeBox.innerHTML = '<div class="fine" style="padding:.5rem .65rem">Loading files…</div>';
     }
@@ -4763,7 +5033,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             }
             showWorkspaceFileViewer(item.path || item.name);
             if ($('sheet-body')) $('sheet-body').scrollTop = 0;
-            openWorkspaceFile(target, item.path, fRow);
+            openWorkspaceFile(target, item.path, fRow, 'workspaces');
           });
           treeBox.appendChild(fRow);
         }
@@ -4776,9 +5046,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           || entries.filter(function (e) { return e.type === 'file'; })[0];
         if (pickFile) {
           var btnNode = treeBox.querySelector('[data-file-path="' + pickFile.path.replace(/"/g, '\\"') + '"]');
-          openWorkspaceFile(target, pickFile.path, btnNode);
+          openWorkspaceFile(target, pickFile.path, btnNode, 'workspaces');
         }
-      } else if (!containerEl && wsExp.mode === 'file' && wsExp.file && wsExp.file.path && $('vsc-tree')) {
+      } else if (!containerEl && wsExp.mode === 'file' && wsExp.section === 'workspaces' && wsExp.file && wsExp.file.path && $('vsc-tree')) {
         var activeNode = $('vsc-tree').querySelector('[data-file-path="' + wsExp.file.path.replace(/"/g, '\\"') + '"]');
         if (activeNode) activeNode.classList.add('on');
       }
@@ -4788,11 +5058,92 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       }
     });
   }
-  function openWorkspaceFile(target, filepath, rowEl) {
+  function loadMemoryTree(subpath, containerEl, depth) {
+    depth = depth || 0;
+    var treeBox = containerEl || $('mem-tree');
+    if (!treeBox) return;
+    if (!containerEl) {
+      treeBox.innerHTML = '<div class="fine" style="padding:.5rem .65rem">Loading memory files…</div>';
+    }
+    fetchTreeFromBackendOrFallback('__local_repo__', subpath || '').then(function (rep) {
+      if (!containerEl) {
+        wsExp.memLoaded = true;
+        wsExp.memRootPath = rep.root_path || '';
+        if ($('mem-exp-title')) $('mem-exp-title').textContent = 'MEMORY · ' + (rep.label || 'clover-ai-studio');
+        treeBox.innerHTML = '';
+      }
+      var entries = rep.entries || [];
+      if (!entries.length && !containerEl) {
+        treeBox.innerHTML = '<div class="fine" style="padding:.55rem .65rem">Memory repository is empty.</div>';
+        return;
+      }
+      entries.forEach(function (item) {
+        var padLeft = (0.48 + depth * 0.85).toFixed(2) + 'rem';
+        if (item.type === 'dir') {
+          var wrap = el('div');
+          var row = btn('vsc-node', CHEV + ic('folder') + '<span class="vsc-node__name"></span>');
+          row.style.paddingLeft = padLeft;
+          row.querySelector('.vsc-node__name').textContent = item.name;
+          row.setAttribute('role', 'treeitem');
+          row.setAttribute('aria-expanded', 'false');
+          var kids = el('div', 'vsc-children'); kids.hidden = true;
+          var loaded = false;
+          row.addEventListener('click', function () {
+            var open = kids.hidden;
+            kids.hidden = !open;
+            row.classList.toggle('open', open);
+            row.setAttribute('aria-expanded', String(open));
+            if (open && !loaded) {
+              loaded = true;
+              kids.innerHTML = '<div class="fine" style="padding:.2rem 0 .2rem ' + (1.2 + depth * 0.85).toFixed(2) + 'rem">Loading…</div>';
+              loadMemoryTree(item.path, kids, depth + 1);
+            }
+          });
+          wrap.appendChild(row); wrap.appendChild(kids);
+          treeBox.appendChild(wrap);
+        } else {
+          var fIcon = fileIconFor(item.ext, item.name);
+          var fRow = btn('vsc-node', '<span class="vsc-node__spacer"></span>' + ic(fIcon) + '<span class="vsc-node__name"></span><span class="vsc-node__meta"></span>');
+          fRow.style.paddingLeft = padLeft;
+          fRow.querySelector('.vsc-node__name').textContent = item.name;
+          fRow.querySelector('.vsc-node__meta').textContent = item.size_human || '';
+          fRow.setAttribute('role', 'treeitem');
+          fRow.setAttribute('data-file-path', item.path);
+          fRow.addEventListener('click', function () {
+            if (!($('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'memory')) {
+              openSettings('memory', true);
+            } else {
+              closeRail();
+            }
+            showMemoryFileViewer(item.path || item.name);
+            if ($('sheet-body')) $('sheet-body').scrollTop = 0;
+            openWorkspaceFile('__local_repo__', item.path, fRow, 'memory');
+          });
+          treeBox.appendChild(fRow);
+        }
+      });
+      if (containerEl && !entries.length) {
+        treeBox.innerHTML = '<div class="fine" style="padding:.2rem 0 .2rem ' + (1.2 + depth * 0.85).toFixed(2) + 'rem">(empty)</div>';
+      } else if (!containerEl && wsExp.mode === 'file' && wsExp.section === 'memory' && wsExp.file && wsExp.file.path && $('mem-tree')) {
+        var activeNode = $('mem-tree').querySelector('[data-file-path="' + wsExp.file.path.replace(/"/g, '\\"') + '"]');
+        if (activeNode) activeNode.classList.add('on');
+      }
+    }).catch(function (e) {
+      if (!containerEl) {
+        treeBox.innerHTML = '<div class="note" style="padding:.55rem .65rem">' + esc(e.message || 'Could not load memory files.') + '</div>';
+      }
+    });
+  }
+  function openWorkspaceFile(target, filepath, rowEl, sectionName) {
     target = target || wsExp.target || '__local_repo__';
-    showWorkspaceFileViewer(filepath);
+    var isMem = sectionName === 'memory' || target === '__local_repo__';
+    if (isMem) showMemoryFileViewer(filepath);
+    else showWorkspaceFileViewer(filepath);
     if ($('vsc-tree')) {
       Array.prototype.forEach.call($('vsc-tree').querySelectorAll('.vsc-node.on'), function (n) { n.classList.remove('on'); });
+    }
+    if ($('mem-tree')) {
+      Array.prototype.forEach.call($('mem-tree').querySelectorAll('.vsc-node.on'), function (n) { n.classList.remove('on'); });
     }
     if (rowEl) rowEl.classList.add('on');
     if ($('vsc-file-name')) $('vsc-file-name').textContent = filepath;
@@ -4870,9 +5221,85 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   if ($('vsc-exp-open-code')) {
     $('vsc-exp-open-code').addEventListener('click', function () {
-      var p = wsExp.rootPath || (state.ws && state.ws.local_repo && state.ws.local_repo.path) || '';
+      var p = wsExp.rootPath || '';
       if (!p) return;
       api('POST', '/api/vscode/do', { action: 'open', args: { target: p } }).catch(function (e) { setNote('ws-note', e.message); });
+    });
+  }
+  if ($('mem-repo-pill')) {
+    $('mem-repo-pill').addEventListener('click', function () {
+      var keepMobileRail = window.matchMedia('(max-width: 860px)').matches && $('rail').classList.contains('on');
+      if (!($('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'memory')) {
+        openSettings('memory', true, keepMobileRail);
+      }
+      showMemoryParentView();
+      if (!wsExp.memLoaded || !$('mem-tree') || !$('mem-tree').children.length) {
+        loadMemoryTree();
+      }
+    });
+  }
+  if ($('mem-exp-refresh')) {
+    $('mem-exp-refresh').addEventListener('click', function () {
+      loadMemoryTree();
+    });
+  }
+  if ($('mem-exp-open-code')) {
+    $('mem-exp-open-code').addEventListener('click', function () {
+      var p = wsExp.memRootPath || (state.ws && state.ws.local_repo && state.ws.local_repo.path) || '';
+      if (!p) return;
+      api('POST', '/api/vscode/do', { action: 'open', args: { target: p } }).catch(function (e) { setNote('mem-note', e.message); });
+    });
+  }
+  if ($('mem-sync-local')) {
+    $('mem-sync-local').addEventListener('click', function () {
+      setNote('mem-note', 'Syncing persistent memory repository (clover-ai-studio) with GitHub…', true);
+      api('POST', '/api/vscode/do', { action: 'githubSetupRepo' }).then(function (r) {
+        var x = r.result || {};
+        setNote('mem-note', 'Synced persistent memory repository with ' + (x.repo || 'GitHub') + '.', true);
+        loadWorkspaces(); loadVscode(); loadMemoryTree();
+      }).catch(function (e) {
+        setNote('mem-note', e.message || 'Connect your GitHub token below first to sync your persistent memory repository.');
+      });
+    });
+  }
+  if ($('mem-gh-save')) {
+    $('mem-gh-save').addEventListener('click', function () {
+      var t = ($('mem-gh-token') && $('mem-gh-token').value || '').trim();
+      if (!t) { if ($('mem-gh-token')) $('mem-gh-token').focus(); return; }
+      api('POST', '/api/github', { token: t }).then(function (r) {
+        if ($('mem-gh-token')) $('mem-gh-token').value = '';
+        renderWorkspaces(r); loadGitHubClient(); loadVscode();
+        setNote('mem-note', 'GitHub token saved. Tap "Set up private repository" or "Sync GitHub" to sync clover-ai-studio.', true);
+      }).catch(function (e) { setNote('mem-note', e.message); });
+    });
+  }
+  if ($('mem-gh-forget')) {
+    $('mem-gh-forget').addEventListener('click', function () {
+      api('POST', '/api/github', { forget: true }).then(function (r) {
+        renderWorkspaces(r); loadGitHubClient(); loadVscode();
+        setNote('mem-note', 'GitHub token removed. Using local clover-ai-studio repository.', true);
+      }).catch(function (e) { setNote('mem-note', e.message); });
+    });
+  }
+  if ($('mem-vsc-gh')) {
+    $('mem-vsc-gh').addEventListener('click', function () {
+      vscAct('mem-note', 'githubSignIn', 'Continue in VS Code: sign in to GitHub…', function (x) {
+        loadWorkspaces(); loadGitHubClient();
+        return 'Signed in to GitHub as ' + x.login + '.';
+      });
+    });
+  }
+  if ($('mem-vsc-repo')) {
+    $('mem-vsc-repo').addEventListener('click', function () {
+      vscAct('mem-note', 'githubSetupRepo', 'Setting up private clover-ai-studio persistent memory repository…', function (x) {
+        loadWorkspaces(); loadGitHubClient(); loadMemoryTree();
+        return (x.created ? 'Created ' : 'Using ') + x.repo + ' (private), synced to ' + x.path + '.';
+      });
+    });
+  }
+  if ($('mem-personal-forget')) {
+    $('mem-personal-forget').addEventListener('click', function () {
+      $('personal-forget').click();
     });
   }
   if ($('vsc-file-copy')) {
@@ -4940,7 +5367,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     setNote('ws-note', busyText || 'Working…', true);
     return api('POST', '/api/workspaces/' + action, body).then(function (r) {
       if (action === 'add' && r.active) wsExp.target = r.active;
-      else if (action === 'activate') wsExp.target = body.name || '__local_repo__';
+      else if (action === 'activate') wsExp.target = body.name || '';
       wsExp.loadedTarget = '';
       renderWorkspaces(r);
       setNote('ws-note', r.context ? ctxSummary(r.context) : r.removed ? 'Deleted ' + r.removed.length + ' context files Clover wrote.' : '', true);
@@ -4950,8 +5377,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function renderWorkspaces(r) {
     state.ws = r; if (!r) return;
     var list = r.workspaces || [], active = list.filter(function (w) { return w.active; })[0];
-    var locRepo = r.local_repo || { id: '__local_repo__', name: 'clover-ai-studio' };
-    var wsVal = active ? active.name : list.length ? list.length + ' added' : (locRepo.name || 'Local repo');
+    var wsVal = active ? active.name : list.length ? list.length + ' added' : 'None';
     $('v-ws').textContent = wsVal;
     if ($('v-ws-home')) $('v-ws-home').textContent = wsVal;
     $('rail-ws').hidden = !active; $('rail-ws-t').textContent = active ? 'Workspace: ' + active.name : '';
@@ -4968,7 +5394,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       head.addEventListener('click', function () { acts.hidden = !acts.hidden; head.classList.toggle('open', !acts.hidden); head.setAttribute('aria-expanded', String(!acts.hidden)); });
       function b(label, fn, cls) { var x = btn('btn sm ' + (cls || ''), esc(label)); x.addEventListener('click', fn); acts.appendChild(x); }
       if (w.exists) b('Browse files', function () { wsExp.target = w.name; setSubmenuOpen('workspaces', true); renderSourcePills(); loadWorkspaceTree(w.name, '', null, false); }, 'pri');
-      if (w.active) b('Switch to Local Repo', function () { wsAct('activate', { name: null }); });
+      if (w.active) b('Stop using in chat', function () { wsAct('activate', { name: null }); });
       else if (w.exists) b('Use in chat', function () { wsAct('activate', { name: w.name }); });
       if (w.exists) b('Refresh context', function () { wsAct('refresh', { name: w.name }, 'Updating the context files…'); });
       if (w.exists && w.source === 'github') b('Pull updates', function () { wsAct('pull', { name: w.name }, 'Pulling (fast-forward only)…'); });
@@ -4981,15 +5407,23 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       it.appendChild(head); it.appendChild(acts); box.appendChild(it);
     });
     var gh = r.github || {}, help = $('gh-help');
-    help.textContent = 'Until you connect your GitHub account, Workspaces uses your local repository (clover-ai-studio). Add a GitHub token to connect directly to your GitHub repositories and sync across devices. ';
+    help.textContent = 'Connect a GitHub Personal Access Token to browse or clone your GitHub repositories directly in Workspaces. ';
     var a = document.createElement('a'); a.href = gh.create_url; a.target = '_blank'; a.rel = 'noopener noreferrer';
     a.textContent = gh.token_set ? 'Manage tokens' : 'Create a token'; help.appendChild(a);
     $('gh-token').value = '';
     $('gh-token').placeholder = gh.token_set ? 'Token connected. Paste a new one to replace it' : 'GitHub token (ghp_... or github_pat_...)';
     $('gh-forget').hidden = !gh.token_set;
+    if ($('mem-gh-token')) {
+      $('mem-gh-token').value = '';
+      $('mem-gh-token').placeholder = gh.token_set ? 'Token connected. Paste a new one to replace it' : 'GitHub token (ghp_... or github_pat_...)';
+    }
+    if ($('mem-gh-forget')) $('mem-gh-forget').hidden = !gh.token_set;
     renderSourcePills();
     if (wsExp.loadedTarget !== wsExp.target || !$('vsc-tree') || !$('vsc-tree').children.length) {
       loadWorkspaceTree(wsExp.target, '', null, false);
+    }
+    if (!wsExp.memLoaded || !$('mem-tree') || !$('mem-tree').children.length) {
+      loadMemoryTree();
     }
   }
   $('ws-add').addEventListener('click', function () {
@@ -5018,7 +5452,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var rows = [['Status', status]];
     if (c && c.version) rows.push(['Version', c.version]);
     $('vsc-kv').innerHTML = kvHtml(rows);
-    $('v-vsc').textContent = c ? 'Connected' : r.installed === false ? 'Not installed' : 'Not open';
+    var vscLabel = c ? 'Connected' : r.installed === false ? 'Not installed' : 'Not open';
+    $('v-vsc').textContent = vscLabel;
+    if ($('v-vsc-tools')) $('v-vsc-tools').textContent = '· ' + vscLabel;
+    if ($('v-gh-tools')) $('v-gh-tools').textContent = '· ' + (gh.token_set ? 'Connected' : (c ? 'Via VS Code' : 'Not connected'));
     $('acct-kv').innerHTML = kvHtml([
       ['GitHub token', gh.token_set ? 'Saved in local vault' : (c ? 'Via VS Code' : 'Not set')],
       ['Private repository', repo.repo || 'Not set up'],
