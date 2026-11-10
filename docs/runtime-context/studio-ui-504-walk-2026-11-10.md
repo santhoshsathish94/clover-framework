@@ -148,3 +148,18 @@
   - Users can review or revoke the app at `https://github.com/settings/connections/applications/<client_id>`.
 - Next: build the sign-in once the human sends the Client ID. The client secret is not needed and must not be
   generated or shared.
+
+### Website sign-in (human question, 2026-11-11)
+- The human asked how the website would work with `http://127.0.0.1/callback`, and why the callback is not on
+  Clover's own domain. The device flow uses no callback on any platform, so that URI was only a filler for the form.
+  The admin console on the website already signs in with the device flow (`site/admin/index.html`).
+- Agreed with the human: the website gets the normal redirect sign-in, with no code to type.
+  - Callback: `https://api.cloverframework.com/api/auth/github/callback`. On 2026-11-11 that host resolved to
+    Cloudflare and was answered by Clover's own server: `/api/health` returned its JSON "Sign in with an approved
+    account" 401. `cloverframework.com` is the static GitHub Pages site (`site/CNAME`), so it cannot finish a
+    sign-in.
+  - GitHub requires `client_secret` to exchange the code in the redirect flow. It lives only on k3 and is put
+    there by the human, never in chat, the page, the apps or the repo. This corrects "no secret" above for the
+    website only.
+- The laptop and phone apps keep the device flow. Their server is on the user's own machine; a callback on
+  api.cloverframework.com would put the user's GitHub token on k3 instead of the device.
