@@ -34,7 +34,8 @@
      - `Chat` (`[data-nav="chat"]`) with collapsible submenu `#rail-chat-sub` (`#chats` conversation list).
      - `Workspaces` (`[data-nav="workspaces"]`) with collapsible submenu `#rail-ws-sub` (`#ws-source-pills` + `#vsc-tree` for the user's own local or connected GitHub project repositories — never `clover-ai-studio`).
      - `Memory` (`[data-nav="memory"]`) with collapsible submenu `#rail-mem-sub` (`#mem-repo-pill` + `#mem-tree` for Clover's `clover-ai-studio` persistent memory repository: `AGENTS.md`, `CONTEXT.md`, `config/`, `execution/`, `growth/`, `outcomes/`, `sessions/`).
-     - `Tools`, `Learning`, and `Settings`.
+     - `Tools` (`[data-nav="tools"]`) with collapsible submenu `#rail-tools-sub` (`#tools-tree`: `Terminal`, `Browser`, `Camera`, `Microphone`, `VS Code`).
+     - `Learning`, and `Settings`.
    - **Center Pane (`.main`)**: Contains `<header class="bar">` at top (`#menu`, `#new-chat-2`, `#chat-title`, `#set-btn`). Below the bar, displays either the Chat view (`#stream` + `.dock`) or the in-place Section view (`#sheet` inside `.main` with `.app.view-page`, zero slide-over drawer or 3rd pane).
    - **Memory (`[data-page="memory"]`)**:
      - Clicking `Memory` or `#mem-repo-pill` (`clover-ai-studio (Local Repo)`) opens `#mem-parent-view` in the center pane (`#mem-conn` status banner, `Persistent Memory Repository (GitHub Sync & Backup)` with `#mem-gh-token` / `Sign in via VS Code` / `Set up private repository`, and `Saved Memory & What Clover Learned About You` `#memory-personal-summary` + `#mem-personal-forget`), with non-memory items removed.
@@ -42,8 +43,14 @@
    - **Workspaces (`[data-page="workspaces"]`)**:
      - Scoped strictly to the user's own project folders (`C:\path\to\project`) and GitHub repositories (`owner/repo`).
      - Clicking `Workspaces` or a project source pill opens `#ws-parent-view`; clicking a file in `#vsc-tree` mounts `#vsc-workbench` in `#ws-file-slot` with `#ws-parent-view` hidden.
-   - **Tools (`[data-page="tools"]`)**:
-     - Streamlined to **Terminal** (`#tool-row-terminal`: PowerShell/shell commands, package installation, SSH, Python scripts & local file operations), **Browser** (`#tool-row-browser`: viewing and reading the web, browser search engine `#s-browser`, Chrome/Edge `Send to Clover` extension), **Camera** (`#tool-row-camera`: System Camera, Screenshot & Screen Recorder `I-JEPA`), **Microphone** (`#tool-row-microphone`: System Microphone & Voice Recorder `Audio-JEPA`), and **Connected Apps** (**VS Code** `#tool-row-vscode` and **GitHub** `#tool-row-github`).
+   - **Tools (`[data-page="tools"]`) & Interactive Center-Pane Tool Apps**:
+     - Clicking `Tools` in the left pane expands `#rail-tools-sub` (`Terminal`, `Browser`, `Camera`, `Microphone`, `VS Code`) and shows `#tools-parent-view`.
+     - Clicking **Terminal** (`[data-tool-app="terminal"]`), **Browser** (`[data-tool-app="browser"]`), **Camera** (`[data-tool-app="camera"]`), **Microphone** (`[data-tool-app="microphone"]`), or **VS Code** (`[data-tool-app="vscode"]`) directly loads that interactive app in the center pane:
+       - `#tool-app-terminal`: Interactive PowerShell/shell console (`POST /api/tools/terminal` via `server.run_terminal_tool`) with working directory tracking, command input (`#term-input`), command history, quick chips, `Clear`, and `Ask Clover`.
+       - `#tool-app-browser`: Interactive web reader & search browser (`POST /api/tools/browser` via `server.run_browser_tool`) with Back/Reload/Address bar (`#brow-input`), clickable search results, live article reader (`#brow-viewport`), `Ask Clover`, `Open in OS Browser`, `#s-browser`, and Chrome/Edge `Send to Clover` extension setup.
+       - `#tool-app-camera`: Interactive Camera & Vision (`I-JEPA`) app with live WebRTC camera stream (`Start Camera` / `Take Photo` / `Stop Camera`), `Screenshot`, `Upload Image`, `Inspect (OCR)`, and `Ask Clover`.
+       - `#tool-app-microphone`: Interactive Microphone & Voice (`Audio-JEPA`) recorder with `Start Recording` / `Stop Recording`, playback (`#mic-app-audio`), `Upload Audio`, and `Ask Clover`.
+       - `#tool-app-vscode`: Connected VS Code app view (`Launch VS Code` and connection status).
    - **Settings (`[data-page="home"]`)**: Omits the duplicate `Workspaces`, `Memory`, `Tools`, and `Learning & Growth` rows (since each has its own left-pane menu) and shows `Model and voice`, `GitHub account (Memory backup)`, `Storage`, `Debug logs & Senses`, and `Advanced`.
    - Synchronize all three platform targets (`app.html`, `site/clover-ai/index.html`, and `clover-ai-system/mobile/android-app/assets/index.html`).
 

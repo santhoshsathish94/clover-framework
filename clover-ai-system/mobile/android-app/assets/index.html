@@ -547,9 +547,43 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 .vsc-node__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .vsc-node__meta { font-size: .66rem; color: var(--faint); font-family: var(--mono); flex: none; margin-left: .2rem; }
 .vsc-children { display: flex; flex-direction: column; gap: 1px; }
-#ws-parent-view[hidden], #mem-parent-view[hidden], .vsc-view[hidden] { display: none !important; }
+#ws-parent-view[hidden], #mem-parent-view[hidden], #tools-parent-view[hidden], .vsc-view[hidden], .tool-app[hidden] { display: none !important; }
 .vsc-view { display: flex; flex-direction: column; min-height: calc(100vh - 175px); min-width: 0; background: var(--surface);
   border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: .5rem; }
+.tool-app { display: flex; flex-direction: column; min-height: calc(100vh - 185px); min-width: 0; background: var(--surface);
+  border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: .5rem; }
+.tool-app__head { display: flex; align-items: center; justify-content: space-between; gap: .55rem; padding: .55rem .85rem;
+  background: var(--fill); border-bottom: 1px solid var(--line); flex-wrap: wrap; min-height: 46px; }
+.tool-app__title { display: inline-flex; align-items: center; gap: .45rem; font-size: .86rem; font-weight: 650; color: var(--ink); min-width: 0; }
+.tool-app__title .ic { width: 16px; height: 16px; color: var(--accent); flex: none; }
+.tool-app__sub { font-size: .75rem; font-weight: 500; color: var(--muted); font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 380px; }
+.term-chips { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; padding: .42rem .85rem; background: var(--bg); border-bottom: 1px solid var(--line); }
+.term-chip { border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px; padding: .16rem .58rem; font: 550 .74rem/1.3 var(--mono); color: var(--ink-2); cursor: pointer; }
+.term-chip:hover { border-color: var(--accent); color: var(--accent-2); }
+.term-console { flex: 1; min-height: 320px; max-height: calc(100vh - 310px); overflow-y: auto; background: var(--code-bg); color: var(--code-ink);
+  font: .82rem/1.55 var(--mono); padding: .85rem 1rem; display: flex; flex-direction: column; gap: .65rem; }
+.term-entry { display: flex; flex-direction: column; gap: .22rem; border-bottom: 1px solid rgba(255, 255, 255, .06); padding-bottom: .55rem; }
+.term-entry:last-child { border-bottom: 0; padding-bottom: 0; }
+.term-cmd { color: #83B83D; font-weight: 600; word-break: break-all; }
+.term-cmd span { color: rgba(237, 241, 233, .55); font-weight: 450; margin-right: .35rem; }
+.term-out { white-space: pre-wrap; word-break: break-word; color: var(--code-ink); margin: 0; }
+.term-meta { font-size: .71rem; color: rgba(237, 241, 233, .45); }
+.term-meta.err { color: #FCA5A5; }
+.term-bar { display: flex; align-items: center; gap: .5rem; padding: .55rem .85rem; background: #121B15; border-top: 1px solid rgba(255, 255, 255, .1); }
+.term-ps { font: 700 .82rem/1 var(--mono); color: #83B83D; white-space: nowrap; user-select: none; }
+.term-input { flex: 1; min-width: 0; border: 0; background: transparent; color: #EDF1E9; font: .84rem/1.4 var(--mono); outline: none; }
+.term-input::placeholder { color: rgba(237, 241, 233, .4); }
+.brow-nav { display: flex; align-items: center; gap: .4rem; padding: .5rem .75rem; background: var(--bg); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.brow-url { flex: 1; min-width: 180px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface); padding: .38rem .85rem; font-size: .86rem; color: var(--ink); outline: none; }
+.brow-url:focus { border-color: var(--leaf); box-shadow: 0 0 0 2px rgba(131, 184, 61, .22); }
+.brow-viewport { flex: 1; min-height: 320px; overflow-y: auto; padding: 1rem 1.2rem; background: var(--surface); display: flex; flex-direction: column; gap: .8rem; }
+.brow-res { padding: .7rem .85rem; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); display: flex; flex-direction: column; gap: .25rem; }
+.brow-res__title { font-size: .92rem; font-weight: 650; color: var(--accent-2); cursor: pointer; text-align: left; border: 0; background: none; padding: 0; }
+.brow-res__title:hover { text-decoration: underline; }
+.brow-res__url { font-size: .73rem; color: var(--muted); font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brow-res__snip { font-size: .83rem; color: var(--ink-2); line-height: 1.48; }
+.cam-stage { flex: 1; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .85rem; padding: 1.2rem; background: var(--bg); text-align: center; }
+.cam-stage video, .cam-stage img { max-width: min(680px, 100%); max-height: 380px; border-radius: 14px; border: 1px solid var(--line-2); box-shadow: var(--shadow); background: #121915; }
 .vsc-tabbar { display: flex; align-items: center; justify-content: space-between; gap: .45rem; padding: .42rem .75rem;
   background: var(--fill); border-bottom: 1px solid var(--line); flex-wrap: wrap; min-height: 42px; }
 .vsc-tab { display: inline-flex; align-items: center; gap: .42rem; background: var(--surface); border: 1px solid var(--line);
@@ -733,7 +767,16 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         </div>
         <div class="vsc-tree" id="mem-tree" role="tree" aria-label="Persistent memory files and folders"></div>
       </div>
-      <button type="button" class="rail__nav-btn" data-nav="tools"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>Tools</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="tools" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>Tools</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      <div class="rail__sub" id="rail-tools-sub" hidden>
+        <div class="vsc-tree" id="tools-tree" role="tree" aria-label="Tool apps">
+          <button type="button" class="vsc-node" role="treeitem" data-tool-app="terminal"><svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg><span class="vsc-node__name">Terminal</span></button>
+          <button type="button" class="vsc-node" role="treeitem" data-tool-app="browser"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg><span class="vsc-node__name">Browser</span></button>
+          <button type="button" class="vsc-node" role="treeitem" data-tool-app="camera"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span class="vsc-node__name">Camera</span></button>
+          <button type="button" class="vsc-node" role="treeitem" data-tool-app="microphone"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span class="vsc-node__name">Microphone</span></button>
+          <button type="button" class="vsc-node laptop-only" role="treeitem" data-tool-app="vscode"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span class="vsc-node__name">VS Code</span></button>
+        </div>
+      </div>
       <button type="button" class="rail__nav-btn" data-nav="learning"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span>Learning</span></button>
       <button type="button" class="rail__nav-btn" data-nav="settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg><span>Settings</span></button>
     </nav>
@@ -1123,115 +1166,253 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     </section>
 
     <section class="page" data-page="tools" hidden>
-      <p class="lead">Clover uses four core tools—<b>Terminal</b>, <b>Browser</b>, <b>Camera</b>, and <b>Microphone</b>—plus connected apps like <b>VS Code</b> and <b>GitHub</b>.</p>
+      <div id="tools-parent-view">
+        <p class="lead">Select a tool app below (or under <b>Tools</b> in the left sidebar) to use <b>Terminal</b>, <b>Browser</b>, <b>Camera</b>, <b>Microphone</b>, or <b>VS Code</b> directly in the center pane.</p>
 
-      <div class="glabel">When Clover Uses Tools</div>
-      <div class="group pad">
-        <div class="seg full" id="s-tools"><button type="button" data-v="ask">When I ask</button><button type="button" data-v="always">Always</button></div>
-        <p class="fine">With <b>When I ask</b>, Clover runs commands or opens pages only when your message asks for it. With <b>Always</b>, Clover decides when a tool is needed. Each tool still follows its <b>Allow / Ask / Off</b> setting below.</p>
-      </div>
-
-      <div class="glabel">Core Tools</div>
-      <div class="group">
-        <div class="perm" id="tool-row-terminal">
-          <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg></span>
-          <div>
-            <div class="perm__t">
-              <span class="perm__name">Terminal</span>
-              <div class="seg sm" id="tool-perm-terminal" role="radiogroup" aria-label="Terminal permission">
-                <button type="button" data-v="allow">Allow</button>
-                <button type="button" class="on" data-v="ask">Ask</button>
-                <button type="button" data-v="deny">Off</button>
-              </div>
-            </div>
-            <div class="perm__d">Handles PowerShell &amp; shell commands, package installation, SSH, Python scripts, and local file operations.</div>
-          </div>
+        <div class="glabel">When Clover Uses Tools in Chat</div>
+        <div class="group pad">
+          <div class="seg full" id="s-tools"><button type="button" data-v="ask">When I ask</button><button type="button" data-v="always">Always</button></div>
+          <p class="fine">With <b>When I ask</b>, Clover runs commands or opens pages only when your message asks for it. With <b>Always</b>, Clover decides when a tool is needed. Each tool still follows its <b>Allow / Ask / Off</b> setting below.</p>
         </div>
 
-        <div class="perm" id="tool-row-browser">
-          <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></span>
-          <div>
-            <div class="perm__t">
-              <span class="perm__name">Browser</span>
-              <div class="seg sm" id="tool-perm-browser" role="radiogroup" aria-label="Browser permission">
-                <button type="button" data-v="allow">Allow</button>
-                <button type="button" class="on" data-v="ask">Ask</button>
-                <button type="button" data-v="deny">Off</button>
-              </div>
-            </div>
-            <div class="perm__d">Handles viewing and reading web pages, opening web searches in your browser, and receiving pages you send to Clover.</div>
-            <div style="margin-top:.55rem">
-              <div class="seg full" id="s-browser" style="flex-wrap:wrap"><button type="button" data-v="google">Google</button><button type="button" data-v="bing">Bing</button><button type="button" data-v="duckduckgo">DuckDuckGo</button><button type="button" data-v="brave">Brave</button><button type="button" data-v="startpage">Startpage</button><button type="button" data-v="ecosia">Ecosia</button></div>
-              <div class="group pad laptop-only" style="margin:.5rem 0 0;background:var(--bg);box-shadow:none;border:1px solid var(--line)">
-                <p class="fine" id="handback-state" style="margin:0 0 .35rem">Checking…</p>
-                <div class="btns" style="margin:0"><button type="button" class="btn sm" id="handback-on">Set up Chrome &amp; Edge extension</button><button type="button" class="btn sm danger" id="handback-off" hidden>Remove extension</button></div>
-                <p class="fine" id="handback-help" style="margin:.25rem 0 0"></p>
-                <div class="note" id="handback-note" hidden></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="perm" id="tool-row-camera">
-          <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></span>
-          <div>
-            <div class="perm__t">
-              <span class="perm__name">Camera</span>
-              <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
-                <button type="button" class="btn sm" data-test-sense="camera">Camera</button>
-                <button type="button" class="btn sm" data-test-sense="screenshot">Screenshot</button>
-                <div class="seg sm" id="tool-perm-camera" role="radiogroup" aria-label="Camera permission">
-                  <button type="button" data-v="allow">Allow</button>
-                  <button type="button" class="on" data-v="ask">Ask</button>
-                  <button type="button" data-v="deny">Off</button>
+        <div class="glabel">Core Tool Apps (click Open to use in center pane)</div>
+        <div class="group">
+          <div class="perm" id="tool-row-terminal">
+            <span class="tile" style="cursor:pointer" data-open-tool="terminal"><svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg></span>
+            <div>
+              <div class="perm__t">
+                <button type="button" class="perm__name" data-open-tool="terminal" style="border:0;background:none;padding:0;cursor:pointer;color:var(--ink);text-align:left">Terminal</button>
+                <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+                  <button type="button" class="btn sm pri" data-open-tool="terminal">Open Terminal</button>
+                  <div class="seg sm" id="tool-perm-terminal" role="radiogroup" aria-label="Terminal permission">
+                    <button type="button" data-v="allow">Allow</button>
+                    <button type="button" class="on" data-v="ask">Ask</button>
+                    <button type="button" data-v="deny">Off</button>
+                  </div>
                 </div>
               </div>
+              <div class="perm__d">Interactive PowerShell &amp; shell console for commands, package installation, SSH, Python scripts, and local file operations.</div>
             </div>
-            <div class="perm__d">Connects to your system Camera, Screenshot, and Screen Recorder for visual inspection (<code>I-JEPA</code>).</div>
+          </div>
+
+          <div class="perm" id="tool-row-browser">
+            <span class="tile" style="cursor:pointer" data-open-tool="browser"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></span>
+            <div>
+              <div class="perm__t">
+                <button type="button" class="perm__name" data-open-tool="browser" style="border:0;background:none;padding:0;cursor:pointer;color:var(--ink);text-align:left">Browser</button>
+                <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+                  <button type="button" class="btn sm pri" data-open-tool="browser">Open Browser</button>
+                  <div class="seg sm" id="tool-perm-browser" role="radiogroup" aria-label="Browser permission">
+                    <button type="button" data-v="allow">Allow</button>
+                    <button type="button" class="on" data-v="ask">Ask</button>
+                    <button type="button" data-v="deny">Off</button>
+                  </div>
+                </div>
+              </div>
+              <div class="perm__d">Interactive web reader &amp; search browser for opening URLs, searching the web, and sending pages to Clover.</div>
+            </div>
+          </div>
+
+          <div class="perm" id="tool-row-camera">
+            <span class="tile" style="cursor:pointer" data-open-tool="camera"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></span>
+            <div>
+              <div class="perm__t">
+                <button type="button" class="perm__name" data-open-tool="camera" style="border:0;background:none;padding:0;cursor:pointer;color:var(--ink);text-align:left">Camera</button>
+                <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+                  <button type="button" class="btn sm pri" data-open-tool="camera">Open Camera</button>
+                  <div class="seg sm" id="tool-perm-camera" role="radiogroup" aria-label="Camera permission">
+                    <button type="button" data-v="allow">Allow</button>
+                    <button type="button" class="on" data-v="ask">Ask</button>
+                    <button type="button" data-v="deny">Off</button>
+                  </div>
+                </div>
+              </div>
+              <div class="perm__d">Interactive Camera, Screenshot, and Screen Recorder studio with <code>I-JEPA</code> visual inspection and OCR.</div>
+            </div>
+          </div>
+
+          <div class="perm" id="tool-row-microphone">
+            <span class="tile" style="cursor:pointer" data-open-tool="microphone"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></span>
+            <div>
+              <div class="perm__t">
+                <button type="button" class="perm__name" data-open-tool="microphone" style="border:0;background:none;padding:0;cursor:pointer;color:var(--ink);text-align:left">Microphone</button>
+                <button type="button" class="btn sm pri" data-open-tool="microphone">Open Microphone</button>
+              </div>
+              <div class="perm__d">Interactive voice &amp; audio recorder for voice chat and <code>Audio-JEPA</code> analysis.</div>
+            </div>
           </div>
         </div>
 
-        <div class="perm" id="tool-row-microphone">
-          <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></span>
-          <div>
-            <div class="perm__t">
-              <span class="perm__name">Microphone</span>
-              <button type="button" class="btn sm" data-test-sense="microphone">Test Microphone</button>
+        <div class="glabel">Connected Apps</div>
+        <div class="group">
+          <div class="perm laptop-only" id="tool-row-vscode">
+            <span class="tile" style="cursor:pointer" data-open-tool="vscode"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span>
+            <div>
+              <div class="perm__t">
+                <button type="button" class="perm__name" data-open-tool="vscode" style="border:0;background:none;padding:0;cursor:pointer;color:var(--ink);text-align:left">VS Code <small id="v-vsc-tools" style="font-weight:500;color:var(--muted);margin-left:.35rem"></small></button>
+                <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+                  <button type="button" class="btn sm pri" data-open-tool="vscode">Open App</button>
+                  <div class="seg sm" id="tool-perm-vscode" role="radiogroup" aria-label="VS Code permission">
+                    <button type="button" data-v="allow">Allow</button>
+                    <button type="button" class="on" data-v="ask">Ask</button>
+                    <button type="button" data-v="deny">Off</button>
+                  </div>
+                </div>
+              </div>
+              <div class="perm__d">Opens files, clones repositories, installs extensions, and runs tasks in VS Code on this laptop.</div>
             </div>
-            <div class="perm__d">Connects to your system Microphone and Voice Recorder for voice chat and audio analysis (<code>Audio-JEPA</code>).</div>
+          </div>
+
+          <div class="perm" id="tool-row-github">
+            <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-branch"/></svg></span>
+            <div>
+              <div class="perm__t">
+                <span class="perm__name">GitHub <small id="v-gh-tools" style="font-weight:500;color:var(--muted);margin-left:.35rem"></small></span>
+                <button type="button" class="btn sm" data-nav-open="workspaces">Configure</button>
+              </div>
+              <div class="perm__d">Connects directly to your GitHub repositories for Workspaces and syncs your persistent memory repository (<code>clover-ai-studio</code>).</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="glabel">Connected Apps</div>
-      <div class="group">
-        <div class="perm laptop-only" id="tool-row-vscode">
-          <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span>
-          <div>
-            <div class="perm__t">
-              <span class="perm__name">VS Code <small id="v-vsc-tools" style="font-weight:500;color:var(--muted);margin-left:.35rem"></small></span>
-              <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
-                <button type="button" class="btn sm" id="tools-vsc-open">Open VS Code</button>
-                <div class="seg sm" id="tool-perm-vscode" role="radiogroup" aria-label="VS Code permission">
-                  <button type="button" data-v="allow">Allow</button>
-                  <button type="button" class="on" data-v="ask">Ask</button>
-                  <button type="button" data-v="deny">Off</button>
-                </div>
-              </div>
-            </div>
-            <div class="perm__d">Opens files, clones repositories, installs extensions, and runs tasks in VS Code on this laptop.</div>
+      <!-- Interactive Terminal App in Center Pane -->
+      <div class="tool-app" id="tool-app-terminal" aria-label="Terminal app" hidden>
+        <div class="tool-app__head">
+          <div style="display:flex;align-items:center;gap:.55rem;min-width:0;flex:1">
+            <span class="tool-app__title"><svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg><span>Terminal</span></span>
+            <span class="tool-app__sub" id="term-cwd-label" title="Current working directory">Loading folder…</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+            <button type="button" class="btn sm" id="term-clear"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg><span>Clear</span></button>
+            <button type="button" class="btn sm pri" id="term-ask"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Ask Clover</span></button>
           </div>
         </div>
+        <div class="term-chips" id="term-chips">
+          <button type="button" class="term-chip" data-term-cmd="Get-Location">pwd</button>
+          <button type="button" class="term-chip" data-term-cmd="Get-ChildItem | Select-Object -First 15 Mode, Length, Name">ls</button>
+          <button type="button" class="term-chip" data-term-cmd="git status -s">git status</button>
+          <button type="button" class="term-chip" data-term-cmd="python --version">python --version</button>
+          <button type="button" class="term-chip" data-term-cmd="Get-Date">Get-Date</button>
+        </div>
+        <div class="term-console" id="term-console" aria-live="polite"></div>
+        <form class="term-bar" id="term-form">
+          <span class="term-ps" id="term-ps">PS &gt;</span>
+          <input type="text" class="term-input" id="term-input" autocomplete="off" spellcheck="false" placeholder="Type a PowerShell, git, ssh, or python command and press Enter…" aria-label="Terminal command">
+          <button type="submit" class="btn pri sm" id="term-run">Run</button>
+        </form>
+      </div>
 
-        <div class="perm" id="tool-row-github">
-          <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-branch"/></svg></span>
-          <div>
-            <div class="perm__t">
-              <span class="perm__name">GitHub <small id="v-gh-tools" style="font-weight:500;color:var(--muted);margin-left:.35rem"></small></span>
-              <button type="button" class="btn sm" data-nav-open="workspaces">Configure</button>
-            </div>
-            <div class="perm__d">Connects directly to your GitHub repositories for Workspaces and syncs your persistent memory repository (<code>clover-ai-studio</code>).</div>
+      <!-- Interactive Browser App in Center Pane -->
+      <div class="tool-app" id="tool-app-browser" aria-label="Browser app" hidden>
+        <div class="tool-app__head">
+          <div style="display:flex;align-items:center;gap:.5rem;min-width:0;flex:1">
+            <span class="tool-app__title"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg><span id="brow-title">Browser</span></span>
+            <span class="tool-app__sub" id="brow-sub">Search the web or open any URL</span>
           </div>
+          <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+            <button type="button" class="btn sm pri" id="brow-ask" hidden><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Ask Clover</span></button>
+            <button type="button" class="btn sm" id="brow-open-ext"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg><span>Open in OS Browser</span></button>
+          </div>
+        </div>
+        <form class="brow-nav" id="brow-form">
+          <button type="button" class="ibtn" id="brow-back" title="Back" aria-label="Back" disabled><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+          <button type="button" class="ibtn" id="brow-reload" title="Reload" aria-label="Reload"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+          <input type="text" class="brow-url" id="brow-input" autocomplete="off" spellcheck="false" placeholder="Enter URL (https://...) or search query…" aria-label="URL or search query">
+          <button type="submit" class="btn pri sm" id="brow-go">Go</button>
+        </form>
+        <div class="term-chips">
+          <button type="button" class="term-chip" data-brow-q="https://en.wikipedia.org/wiki/Trifolium">wikipedia.org/wiki/Trifolium</button>
+          <button type="button" class="term-chip" data-brow-q="latest AI research breakthroughs">Search: AI research</button>
+          <button type="button" class="term-chip" data-brow-q="https://news.ycombinator.com">news.ycombinator.com</button>
+          <button type="button" class="term-chip" data-brow-q="weather today">Weather today</button>
+        </div>
+        <div class="brow-viewport" id="brow-viewport">
+          <div class="vsc-empty" id="brow-empty">
+            <svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>
+            <b>Clover Browser</b>
+            <span>Type a URL (such as <code>https://en.wikipedia.org/wiki/Trifolium</code>) or a search query above to read pages and search the web right here in the center pane.</span>
+          </div>
+        </div>
+        <div style="padding:.6rem .85rem;background:var(--fill);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:.45rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap">
+            <span class="fine" style="margin:0;font-weight:600">Default OS Browser Search Engine:</span>
+            <div class="seg sm" id="s-browser" style="flex-wrap:wrap"><button type="button" data-v="google">Google</button><button type="button" data-v="bing">Bing</button><button type="button" data-v="duckduckgo">DuckDuckGo</button><button type="button" data-v="brave">Brave</button><button type="button" data-v="startpage">Startpage</button><button type="button" data-v="ecosia">Ecosia</button></div>
+          </div>
+          <div class="group pad laptop-only" style="margin:0;background:var(--surface);box-shadow:none;border:1px solid var(--line)">
+            <p class="fine" id="handback-state" style="margin:0 0 .35rem">Checking…</p>
+            <div class="btns" style="margin:0"><button type="button" class="btn sm" id="handback-on">Set up Chrome &amp; Edge extension</button><button type="button" class="btn sm danger" id="handback-off" hidden>Remove extension</button></div>
+            <p class="fine" id="handback-help" style="margin:.25rem 0 0"></p>
+            <div class="note" id="handback-note" hidden></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Camera App in Center Pane -->
+      <div class="tool-app" id="tool-app-camera" aria-label="Camera app" hidden>
+        <div class="tool-app__head">
+          <div style="display:flex;align-items:center;gap:.5rem;min-width:0;flex:1">
+            <span class="tool-app__title"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span>Camera &amp; Vision (I-JEPA)</span></span>
+            <span class="tool-app__sub" id="cam-status">Live camera, screenshot &amp; visual inspection</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+            <button type="button" class="btn sm pri" id="cam-start-btn"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span>Start Camera</span></button>
+            <button type="button" class="btn sm pri" id="cam-snap-btn" hidden>Take Photo</button>
+            <button type="button" class="btn sm danger" id="cam-stop-btn" hidden>Stop Camera</button>
+            <button type="button" class="btn sm" id="cam-shot-btn">Screenshot</button>
+            <button type="button" class="btn sm" id="cam-upload-btn">Upload Image</button>
+            <button type="button" class="btn sm" id="cam-inspect-btn" hidden>Inspect (OCR)</button>
+            <button type="button" class="btn sm pri" id="cam-ask-btn" hidden><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Ask Clover</span></button>
+          </div>
+        </div>
+        <div class="cam-stage" id="cam-stage">
+          <video id="cam-video" autoplay playsinline muted hidden></video>
+          <img id="cam-preview" alt="Captured image" hidden>
+          <div class="vsc-empty" id="cam-empty">
+            <svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>
+            <b>Camera &amp; Visual Senses</b>
+            <span>Click <b>Start Camera</b> for a live camera feed, <b>Screenshot</b> to capture your screen, or <b>Upload Image</b> to inspect an image with <code>I-JEPA</code>.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Microphone App in Center Pane -->
+      <div class="tool-app" id="tool-app-microphone" aria-label="Microphone app" hidden>
+        <div class="tool-app__head">
+          <div style="display:flex;align-items:center;gap:.5rem;min-width:0;flex:1">
+            <span class="tool-app__title"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span>Microphone &amp; Voice (Audio-JEPA)</span></span>
+            <span class="tool-app__sub" id="mic-app-status">Ready to record voice or audio</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+            <button type="button" class="btn sm pri" id="mic-app-rec"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span>Start Recording</span></button>
+            <button type="button" class="btn sm danger" id="mic-app-stop" hidden>Stop Recording</button>
+            <button type="button" class="btn sm" id="mic-app-upload">Upload Audio</button>
+            <button type="button" class="btn sm pri" id="mic-app-ask" hidden><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Ask Clover</span></button>
+          </div>
+        </div>
+        <div class="cam-stage" id="mic-app-stage">
+          <audio id="mic-app-audio" controls hidden style="width:min(420px,100%)"></audio>
+          <div class="vsc-empty" id="mic-app-empty">
+            <svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg>
+            <b>Microphone &amp; Voice Recorder</b>
+            <span>Click <b>Start Recording</b> to record a voice note right here, play it back, and send it to Clover for speech or <code>Audio-JEPA</code> analysis.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connected VS Code App in Center Pane -->
+      <div class="tool-app" id="tool-app-vscode" aria-label="VS Code app" hidden>
+        <div class="tool-app__head">
+          <div style="display:flex;align-items:center;gap:.5rem;min-width:0;flex:1">
+            <span class="tool-app__title"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>VS Code Integration</span></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+            <button type="button" class="btn sm pri" id="tools-vsc-open"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>Launch VS Code</span></button>
+          </div>
+        </div>
+        <div style="padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.8rem">
+          <p class="fine" style="margin:0">Clover connects to VS Code on this laptop to open files and folders, clone repositories, install extensions, inspect diagnostics, and run tasks.</p>
+          <div class="group pad" style="margin:0"><div class="kv" id="tools-vsc-kv"></div></div>
         </div>
       </div>
 
@@ -3010,8 +3191,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
   /* ---------- in-place center section view: replaces chat screen when any menu is selected ---------- */
   var stack = ['home'];
+  var TOOL_APP_TITLES = { terminal: 'Terminal', browser: 'Browser', camera: 'Camera', microphone: 'Microphone', vscode: 'VS Code' };
+  var toolAppState = { active: '', termCwd: '', termHist: [], termHistIdx: -1, lastTermLog: '', browHist: [], browIdx: -1, browCurrent: null, camStream: null, camMedia: null, micRec: null, micStream: null, micMedia: null };
   function setSubmenuOpen(navName, open) {
-    var sub = navName === 'chat' ? $('rail-chat-sub') : navName === 'workspaces' ? $('rail-ws-sub') : navName === 'memory' ? $('rail-mem-sub') : null;
+    var sub = navName === 'chat' ? $('rail-chat-sub')
+      : navName === 'workspaces' ? $('rail-ws-sub')
+      : navName === 'memory' ? $('rail-mem-sub')
+      : navName === 'tools' ? $('rail-tools-sub') : null;
     var btnEl = document.querySelector('.rail__nav-btn[data-nav="' + navName + '"]');
     if (sub) sub.hidden = !open;
     if (btnEl) {
@@ -3031,22 +3217,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     Array.prototype.forEach.call(document.querySelectorAll('.rail__nav-btn'), function (b) {
       b.classList.toggle('on', b.getAttribute('data-nav') === nav);
     });
-    if (nav === 'workspaces') {
-      setSubmenuOpen('chat', false);
-      setSubmenuOpen('memory', false);
-      setSubmenuOpen('workspaces', true);
-    } else if (nav === 'memory') {
-      setSubmenuOpen('chat', false);
-      setSubmenuOpen('workspaces', false);
-      setSubmenuOpen('memory', true);
-    } else if (nav === 'chat') {
-      setSubmenuOpen('workspaces', false);
-      setSubmenuOpen('memory', false);
-      setSubmenuOpen('chat', true);
-    } else {
-      setSubmenuOpen('workspaces', false);
-      setSubmenuOpen('memory', false);
-    }
+    setSubmenuOpen('chat', nav === 'chat');
+    setSubmenuOpen('workspaces', nav === 'workspaces');
+    setSubmenuOpen('memory', nav === 'memory');
+    setSubmenuOpen('tools', nav === 'tools');
   }
   function showPage(name, dir) {
     Array.prototype.forEach.call(document.querySelectorAll('.page'), function (p) {
@@ -3054,12 +3228,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       p.hidden = !on;
       if (on) { p.classList.remove('from-left'); p.style.animation = 'none'; void p.offsetWidth; p.style.animation = ''; if (dir < 0) p.classList.add('from-left'); }
     });
-    if ($('sheet')) $('sheet').classList.toggle('wide', name === 'workspaces' || name === 'memory');
+    if ($('sheet')) $('sheet').classList.toggle('wide', name === 'workspaces' || name === 'memory' || name === 'tools');
     var inWsFile = (name === 'workspaces' && typeof wsExp !== 'undefined' && wsExp.mode === 'file' && wsExp.section === 'workspaces' && wsExp.file);
     var inMemFile = (name === 'memory' && typeof wsExp !== 'undefined' && wsExp.mode === 'file' && wsExp.section === 'memory' && wsExp.file);
+    var inToolApp = (name === 'tools' && toolAppState.active && TOOL_APP_TITLES[toolAppState.active]);
     var pageTitle = (inWsFile || inMemFile)
       ? (wsExp.file.path || wsExp.file.name || PAGES[name])
-      : PAGES[name];
+      : inToolApp
+        ? TOOL_APP_TITLES[toolAppState.active]
+        : PAGES[name];
     $('sheet-h').textContent = pageTitle;
     if ($('chat-title')) $('chat-title').textContent = pageTitle;
     var prev = stack.length > 1 ? stack[stack.length - 2] : null;
@@ -3069,6 +3246,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     } else if (inMemFile) {
       $('sheet-back').hidden = false;
       $('back-t').textContent = 'clover-ai-studio (Memory)';
+    } else if (inToolApp) {
+      $('sheet-back').hidden = false;
+      $('back-t').textContent = PAGES.tools;
     } else {
       $('sheet-back').hidden = !prev;
       $('back-t').textContent = prev ? PAGES[prev] : '';
@@ -3081,6 +3261,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (!PAGES[name]) return;
     if (name === 'workspaces' && typeof showWorkspaceParentView === 'function') showWorkspaceParentView();
     if (name === 'memory' && typeof showMemoryParentView === 'function') showMemoryParentView();
+    if (name === 'tools' && typeof showToolsParentView === 'function') showToolsParentView();
     stack.push(name);
     showPage(name, 1);
     $('sheet-back').focus();
@@ -3092,6 +3273,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     if (stack[stack.length - 1] === 'memory' && typeof wsExp !== 'undefined' && wsExp.mode === 'file') {
       showMemoryParentView();
+      return;
+    }
+    if (stack[stack.length - 1] === 'tools' && toolAppState.active) {
+      showToolsParentView();
       return;
     }
     if (stack.length > 1) { stack.pop(); showPage(stack[stack.length - 1], -1); (stack.length > 1 ? $('sheet-back') : $('sheet-x')).focus(); }
@@ -3389,6 +3574,24 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       openSettings('memory', true, keepMobileRailMem);
       return;
     }
+    if (sec === 'tools') {
+      var toolsOn = $('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'tools';
+      var toolsSubHidden = $('rail-tools-sub') ? $('rail-tools-sub').hidden : false;
+      if (toolsOn && toolAppState.active) {
+        showToolsParentView();
+        setSubmenuOpen('tools', true);
+        return;
+      }
+      if (toolsOn && !toolsSubHidden) {
+        setSubmenuOpen('tools', false);
+        return;
+      }
+      showToolsParentView();
+      setSubmenuOpen('tools', true);
+      var keepMobileRailTools = window.matchMedia('(max-width: 860px)').matches && $('rail').classList.contains('on');
+      openSettings('tools', true, keepMobileRailTools);
+      return;
+    }
     var pageMap = { workspaces: 'workspaces', memory: 'memory', tools: 'tools', learning: 'learning', settings: 'home', layers: 'layers' };
     var target = pageMap[sec] || sec;
     openSettings(target, target !== 'home');
@@ -3396,6 +3599,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   document.addEventListener('click', function (ev) {
     var r = ev.target.closest && ev.target.closest('[data-go]');
     if (r) { go(r.getAttribute('data-go')); return; }
+    var ta = ev.target.closest && ev.target.closest('[data-tool-app]');
+    if (ta) { openToolApp(ta.getAttribute('data-tool-app')); return; }
+    var ot = ev.target.closest && ev.target.closest('[data-open-tool]');
+    if (ot) { openToolApp(ot.getAttribute('data-open-tool')); return; }
     var nb = ev.target.closest && ev.target.closest('[data-nav]');
     if (nb) { openNavSection(nb.getAttribute('data-nav')); return; }
     var no = ev.target.closest && ev.target.closest('[data-nav-open]');
@@ -3417,6 +3624,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if ($('sheet').classList.contains('on')) {
       if (stack[stack.length - 1] === 'workspaces' && wsExp.mode === 'file') { showWorkspaceParentView(); return true; }
       if (stack[stack.length - 1] === 'memory' && wsExp.mode === 'file') { showMemoryParentView(); return true; }
+      if (stack[stack.length - 1] === 'tools' && toolAppState.active) { showToolsParentView(); return true; }
       if (stack.length > 1) back(); else closeSheet();
       return true;
     }
@@ -5451,6 +5659,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var status = c ? 'Connected' + (c.title ? ' (' + c.title + ')' : '') : r.installed === false ? 'Not installed' : 'Not open';
     var rows = [['Status', status]];
     if (c && c.version) rows.push(['Version', c.version]);
+    if ($('tools-vsc-kv')) $('tools-vsc-kv').innerHTML = kvHtml(rows);
     $('vsc-kv').innerHTML = kvHtml(rows);
     var vscLabel = c ? 'Connected' : r.installed === false ? 'Not installed' : 'Not open';
     $('v-vsc').textContent = vscLabel;
@@ -5518,6 +5727,529 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       loadVscode();
     }).catch(function (e) { setNote('acct-note', e.message); });
   });
+
+  /* ---------- interactive tool apps in center pane (Terminal, Browser, Camera, Microphone, VS Code) ---------- */
+  function showToolsParentView() {
+    toolAppState.active = '';
+    if ($('tools-parent-view')) $('tools-parent-view').hidden = false;
+    ['terminal', 'browser', 'camera', 'microphone', 'vscode'].forEach(function (k) {
+      if ($('tool-app-' + k)) $('tool-app-' + k).hidden = true;
+    });
+    if ($('tools-tree')) {
+      Array.prototype.forEach.call($('tools-tree').querySelectorAll('.vsc-node.on'), function (n) { n.classList.remove('on'); });
+    }
+    if ($('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'tools') {
+      $('sheet-h').textContent = PAGES.tools;
+      if ($('chat-title')) $('chat-title').textContent = PAGES.tools;
+      var prev = stack.length > 1 ? stack[stack.length - 2] : null;
+      $('sheet-back').hidden = !prev;
+      $('back-t').textContent = prev ? PAGES[prev] : '';
+    }
+  }
+  function openToolApp(appName) {
+    if (!TOOL_APP_TITLES[appName]) return;
+    toolAppState.active = appName;
+    if (!($('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'tools')) {
+      openSettings('tools', true);
+    } else {
+      closeRail();
+    }
+    setSubmenuOpen('tools', true);
+    if ($('tools-parent-view')) $('tools-parent-view').hidden = true;
+    ['terminal', 'browser', 'camera', 'microphone', 'vscode'].forEach(function (k) {
+      if ($('tool-app-' + k)) $('tool-app-' + k).hidden = (k !== appName);
+    });
+    if ($('tools-tree')) {
+      Array.prototype.forEach.call($('tools-tree').querySelectorAll('.vsc-node'), function (n) {
+        n.classList.toggle('on', n.getAttribute('data-tool-app') === appName);
+      });
+    }
+    var title = TOOL_APP_TITLES[appName] || PAGES.tools;
+    if ($('sheet-h')) $('sheet-h').textContent = title;
+    if ($('chat-title')) $('chat-title').textContent = title;
+    if ($('sheet-back')) {
+      $('sheet-back').hidden = false;
+      $('back-t').textContent = PAGES.tools;
+    }
+    if ($('sheet-body')) $('sheet-body').scrollTop = 0;
+
+    if (appName === 'terminal') {
+      initTerminalApp();
+      setTimeout(function () { if ($('term-input')) $('term-input').focus(); }, 30);
+    } else if (appName === 'browser') {
+      setTimeout(function () { if ($('brow-input')) $('brow-input').focus(); }, 30);
+    } else if (appName === 'vscode') {
+      loadVscode();
+    }
+  }
+
+  /* 1. Terminal App */
+  function initTerminalApp() {
+    var con = $('term-console');
+    if (con && !con.children.length) {
+      var welcome = el('div', 'term-entry');
+      var m = el('div', 'term-meta');
+      m.textContent = 'Clover Interactive Terminal — run PowerShell, git, ssh, python, or package commands.';
+      welcome.appendChild(m);
+      con.appendChild(welcome);
+    }
+    api('POST', '/api/tools/terminal', { action: 'info', cwd: toolAppState.termCwd || '' }).then(function (r) {
+      if (r && r.cwd) {
+        toolAppState.termCwd = r.cwd;
+        if ($('term-cwd-label')) $('term-cwd-label').textContent = r.cwd;
+      }
+    }).catch(function () {
+      if ($('term-cwd-label') && !toolAppState.termCwd) $('term-cwd-label').textContent = '~';
+    });
+  }
+  function runTerminalAppCommand(cmd) {
+    cmd = String(cmd || '').trim();
+    if (!cmd) return;
+    if (cmd.toLowerCase() === 'clear' || cmd.toLowerCase() === 'cls') {
+      if ($('term-console')) $('term-console').innerHTML = '';
+      if ($('term-input')) $('term-input').value = '';
+      return;
+    }
+    toolAppState.termHist.push(cmd);
+    toolAppState.termHistIdx = toolAppState.termHist.length;
+    var con = $('term-console');
+    var entry = el('div', 'term-entry');
+    var cmdLine = el('div', 'term-cmd');
+    var cwdTag = el('span');
+    cwdTag.textContent = (toolAppState.termCwd ? toolAppState.termCwd : 'PS') + ' >';
+    cmdLine.appendChild(cwdTag);
+    cmdLine.appendChild(document.createTextNode(cmd));
+    var outPre = el('pre', 'term-out', 'Running…');
+    var metaDiv = el('div', 'term-meta');
+    entry.appendChild(cmdLine);
+    entry.appendChild(outPre);
+    entry.appendChild(metaDiv);
+    if (con) {
+      con.appendChild(entry);
+      con.scrollTop = con.scrollHeight;
+    }
+    if ($('term-run')) $('term-run').disabled = true;
+    api('POST', '/api/tools/terminal', { command: cmd, cwd: toolAppState.termCwd || '' }).then(function (r) {
+      if ($('term-run')) $('term-run').disabled = false;
+      if (r.cwd) {
+        toolAppState.termCwd = r.cwd;
+        if ($('term-cwd-label')) $('term-cwd-label').textContent = r.cwd;
+      }
+      var outText = r.output != null && String(r.output).trim() !== '' ? String(r.output) : '(completed with no output)';
+      outPre.textContent = outText;
+      var okExit = r.exit_code === 0 && r.status === 'exit';
+      metaDiv.className = 'term-meta' + (okExit ? '' : ' err');
+      metaDiv.textContent = 'exit ' + r.exit_code + (r.elapsed_ms != null ? ' · ' + r.elapsed_ms + ' ms' : '');
+      toolAppState.lastTermLog = '$ ' + cmd + '\n' + outText + '\n[exit ' + r.exit_code + ']';
+      if (con) con.scrollTop = con.scrollHeight;
+    }).catch(function (e) {
+      if ($('term-run')) $('term-run').disabled = false;
+      outPre.textContent = e.message || 'Command failed.';
+      metaDiv.className = 'term-meta err';
+      metaDiv.textContent = 'error';
+      if (con) con.scrollTop = con.scrollHeight;
+    });
+  }
+  if ($('term-form')) {
+    $('term-form').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var inp = $('term-input');
+      if (!inp) return;
+      var c = inp.value.trim();
+      if (!c) return;
+      inp.value = '';
+      runTerminalAppCommand(c);
+    });
+  }
+  if ($('term-input')) {
+    $('term-input').addEventListener('keydown', function (ev) {
+      if (ev.key === 'ArrowUp' && toolAppState.termHist.length) {
+        ev.preventDefault();
+        toolAppState.termHistIdx = Math.max(0, toolAppState.termHistIdx - 1);
+        this.value = toolAppState.termHist[toolAppState.termHistIdx] || '';
+      } else if (ev.key === 'ArrowDown' && toolAppState.termHist.length) {
+        ev.preventDefault();
+        toolAppState.termHistIdx = Math.min(toolAppState.termHist.length, toolAppState.termHistIdx + 1);
+        this.value = toolAppState.termHist[toolAppState.termHistIdx] || '';
+      }
+    });
+  }
+  if ($('term-chips')) {
+    $('term-chips').addEventListener('click', function (ev) {
+      var b = ev.target.closest && ev.target.closest('[data-term-cmd]');
+      if (!b) return;
+      runTerminalAppCommand(b.getAttribute('data-term-cmd'));
+    });
+  }
+  if ($('term-clear')) {
+    $('term-clear').addEventListener('click', function () {
+      if ($('term-console')) $('term-console').innerHTML = '';
+      toolAppState.lastTermLog = '';
+    });
+  }
+  if ($('term-ask')) {
+    $('term-ask').addEventListener('click', function () {
+      var txt = toolAppState.lastTermLog || ($('term-console') && $('term-console').innerText) || '';
+      if (txt && state.files.length < MAX_FILES) {
+        state.files.push({ name: 'terminal-output.txt', content_text: String(txt).slice(-MAX_CHARS) });
+        renderAtt();
+      }
+      closeSheet();
+      var p = $('prompt');
+      if (p && !p.value.trim()) {
+        p.value = 'Look at my terminal output and help me with the next step.';
+        autosize();
+      }
+      if (p) p.focus();
+      updateSend();
+    });
+  }
+
+  /* 2. Browser App */
+  function navigateBrowserApp(inputStr, actionMode, fromHistory) {
+    var q = String(inputStr || '').trim();
+    if (!q) return;
+    if ($('brow-input')) $('brow-input').value = q;
+    var vp = $('brow-viewport');
+    if (vp) vp.innerHTML = '<div class="vsc-empty">' + SPIN + '<span>Loading ' + esc(q) + '…</span></div>';
+    if ($('brow-sub')) $('brow-sub').textContent = 'Loading…';
+    api('POST', '/api/tools/browser', { input: q, action: actionMode || 'auto' }).then(function (rep) {
+      toolAppState.browCurrent = rep;
+      if (!fromHistory) {
+        toolAppState.browHist = toolAppState.browHist.slice(0, toolAppState.browIdx + 1);
+        toolAppState.browHist.push({ input: q, action: actionMode || 'auto' });
+        toolAppState.browIdx = toolAppState.browHist.length - 1;
+      }
+      if ($('brow-back')) $('brow-back').disabled = toolAppState.browIdx <= 0;
+      if ($('brow-ask')) $('brow-ask').hidden = false;
+      renderBrowserAppViewport(rep);
+    }).catch(function (e) {
+      if ($('brow-sub')) $('brow-sub').textContent = 'Could not load';
+      if (vp) {
+        vp.innerHTML = '<div class="note">' + esc(e.message || 'Could not load page or search.') + '</div>';
+      }
+    });
+  }
+  function renderBrowserAppViewport(rep) {
+    var vp = $('brow-viewport');
+    if (!vp || !rep) return;
+    vp.innerHTML = '';
+    if (rep.mode === 'page') {
+      if ($('brow-title')) $('brow-title').textContent = rep.title || rep.site || 'Web Page';
+      if ($('brow-sub')) $('brow-sub').textContent = (rep.site ? rep.site + ' · ' : '') + (rep.url || '');
+      if ($('brow-input')) $('brow-input').value = rep.url || '';
+      var headCard = el('div', 'brow-res');
+      var hTitle = el('b'); hTitle.style.fontSize = '1.02rem'; hTitle.textContent = rep.title || rep.url;
+      var hMeta = el('div', 'brow-res__url');
+      hMeta.textContent = [rep.site, rep.published ? 'Published ' + rep.published : '', rep.url].filter(Boolean).join(' · ');
+      headCard.appendChild(hTitle);
+      headCard.appendChild(hMeta);
+      vp.appendChild(headCard);
+      var bodyDiv = el('div', 'md');
+      bodyDiv.innerHTML = markdown(rep.text || '(No readable text extracted from this page.)');
+      vp.appendChild(bodyDiv);
+      return;
+    }
+    if ($('brow-title')) $('brow-title').textContent = 'Search: ' + (rep.query || '');
+    if ($('brow-sub')) $('brow-sub').textContent = (rep.provider || 'Web search') + (rep.note ? ' · ' + rep.note : '');
+    var results = rep.results || [];
+    if (!results.length) {
+      vp.innerHTML = '<div class="vsc-empty">' + ic('globe') + '<b>No results found</b><span>Click "Open in OS Browser" above to search in your system browser.</span></div>';
+      return;
+    }
+    results.forEach(function (r) {
+      var card = el('div', 'brow-res');
+      var tBtn = btn('brow-res__title', esc(r.title || r.url || 'Result'));
+      if (r.url) {
+        tBtn.addEventListener('click', function () {
+          navigateBrowserApp(r.url, 'read');
+        });
+      }
+      card.appendChild(tBtn);
+      if (r.url) {
+        var uDiv = el('div', 'brow-res__url'); uDiv.textContent = r.url;
+        card.appendChild(uDiv);
+      }
+      if (r.snippet) {
+        var sDiv = el('div', 'brow-res__snip'); sDiv.textContent = r.snippet;
+        card.appendChild(sDiv);
+      }
+      vp.appendChild(card);
+    });
+  }
+  if ($('brow-form')) {
+    $('brow-form').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var inp = $('brow-input');
+      if (inp && inp.value.trim()) navigateBrowserApp(inp.value.trim(), 'auto');
+    });
+  }
+  if ($('brow-back')) {
+    $('brow-back').addEventListener('click', function () {
+      if (toolAppState.browIdx > 0) {
+        toolAppState.browIdx--;
+        var item = toolAppState.browHist[toolAppState.browIdx];
+        if (item) navigateBrowserApp(item.input, item.action, true);
+      }
+    });
+  }
+  if ($('brow-reload')) {
+    $('brow-reload').addEventListener('click', function () {
+      var inp = $('brow-input');
+      if (inp && inp.value.trim()) navigateBrowserApp(inp.value.trim(), 'auto', true);
+    });
+  }
+  if ($('tool-app-browser')) {
+    $('tool-app-browser').addEventListener('click', function (ev) {
+      var qChip = ev.target.closest && ev.target.closest('[data-brow-q]');
+      if (qChip) {
+        navigateBrowserApp(qChip.getAttribute('data-brow-q'), 'auto');
+        return;
+      }
+      var mdLink = ev.target.closest && ev.target.closest('#brow-viewport a[href]');
+      if (mdLink) {
+        var href = mdLink.getAttribute('href') || '';
+        if (/^https?:\/\//i.test(href)) {
+          ev.preventDefault();
+          navigateBrowserApp(href, 'read');
+        }
+      }
+    });
+  }
+  if ($('brow-open-ext')) {
+    $('brow-open-ext').addEventListener('click', function () {
+      var curRep = toolAppState.browCurrent;
+      var raw = ($('brow-input') && $('brow-input').value || '').trim();
+      var url = (curRep && curRep.browser_url) || (/^https?:\/\//i.test(raw) ? raw : 'https://www.google.com');
+      openBrowserClick(/^https?:\/\//i.test(raw) ? { url: raw } : (raw ? { query: raw } : { url: url }), url);
+    });
+  }
+  if ($('brow-ask')) {
+    $('brow-ask').addEventListener('click', function () {
+      var curRep = toolAppState.browCurrent;
+      if (!curRep) return;
+      var content = curRep.mode === 'page'
+        ? ('URL: ' + curRep.url + '\nTitle: ' + curRep.title + '\n\n' + (curRep.text || ''))
+        : ('Search Query: ' + curRep.query + '\n\n' + (curRep.results || []).map(function (r) { return '• ' + r.title + ' (' + r.url + '): ' + r.snippet; }).join('\n'));
+      if (state.files.length < MAX_FILES && content) {
+        state.files.push({ name: (curRep.title || curRep.query || 'browser-page') + '.md', content_text: content.slice(0, MAX_CHARS) });
+        renderAtt();
+      }
+      closeSheet();
+      var p = $('prompt');
+      if (p && !p.value.trim()) {
+        p.value = curRep.mode === 'page'
+          ? ('Summarize ' + (curRep.title || curRep.url) + ' and highlight the key points.')
+          : ('Based on the search results for "' + curRep.query + '", summarize the findings.');
+        autosize();
+      }
+      if (p) p.focus();
+      updateSend();
+    });
+  }
+
+  /* 3. Camera App */
+  function stopCameraAppStream() {
+    if (toolAppState.camStream) {
+      toolAppState.camStream.getTracks().forEach(function (t) { t.stop(); });
+      toolAppState.camStream = null;
+    }
+    if ($('cam-video')) { $('cam-video').srcObject = null; $('cam-video').hidden = true; }
+    if ($('cam-snap-btn')) $('cam-snap-btn').hidden = true;
+    if ($('cam-stop-btn')) $('cam-stop-btn').hidden = true;
+    if ($('cam-start-btn')) $('cam-start-btn').hidden = false;
+  }
+  function showCapturedCameraMedia(item, summaryText) {
+    stopCameraAppStream();
+    toolAppState.camMedia = item;
+    if ($('cam-empty')) $('cam-empty').hidden = true;
+    if ($('cam-preview')) {
+      $('cam-preview').src = item.thumb || ('data:image/png;base64,' + item.data);
+      $('cam-preview').hidden = false;
+    }
+    if ($('cam-status')) $('cam-status').textContent = summaryText || item.name || 'Image captured';
+    if ($('cam-inspect-btn')) $('cam-inspect-btn').hidden = !item.file;
+    if ($('cam-ask-btn')) $('cam-ask-btn').hidden = false;
+  }
+  if ($('cam-start-btn')) {
+    $('cam-start-btn').addEventListener('click', function () {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function (stream) {
+          toolAppState.camStream = stream;
+          if ($('cam-empty')) $('cam-empty').hidden = true;
+          if ($('cam-preview')) $('cam-preview').hidden = true;
+          var v = $('cam-video');
+          if (v) { v.srcObject = stream; v.hidden = false; v.play().catch(function () {}); }
+          if ($('cam-start-btn')) $('cam-start-btn').hidden = true;
+          if ($('cam-snap-btn')) $('cam-snap-btn').hidden = false;
+          if ($('cam-stop-btn')) $('cam-stop-btn').hidden = false;
+          if ($('cam-status')) $('cam-status').textContent = 'Live camera active — click Take Photo to capture';
+        }).catch(function () {
+          if ($('sense-camera-input')) $('sense-camera-input').click();
+        });
+      } else if ($('sense-camera-input')) {
+        $('sense-camera-input').click();
+      }
+    });
+  }
+  if ($('cam-snap-btn')) {
+    $('cam-snap-btn').addEventListener('click', function () {
+      var v = $('cam-video');
+      if (!v || !toolAppState.camStream) return;
+      var c = document.createElement('canvas');
+      c.width = v.videoWidth || 640; c.height = v.videoHeight || 480;
+      c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+      var dUrl = c.toDataURL('image/png');
+      var b64 = dUrl.slice(dUrl.indexOf(',') + 1);
+      api('POST', '/api/senses/capture', { sense: 'camera', name: 'Camera photo.png', data: b64 }).then(function (rep) {
+        showCapturedCameraMedia({ kind: 'image', name: rep.name || 'Camera photo.png', data: rep.data || b64, thumb: dUrl, file: rep.file }, rep.jepa_summary || 'Camera photo captured');
+      }).catch(function () {
+        showCapturedCameraMedia({ kind: 'image', name: 'Camera photo.png', data: b64, thumb: dUrl }, 'Camera photo captured');
+      });
+    });
+  }
+  if ($('cam-stop-btn')) {
+    $('cam-stop-btn').addEventListener('click', function () {
+      stopCameraAppStream();
+      if (!toolAppState.camMedia && $('cam-empty')) $('cam-empty').hidden = false;
+    });
+  }
+  if ($('cam-shot-btn')) {
+    $('cam-shot-btn').addEventListener('click', function () {
+      if ($('cam-status')) $('cam-status').textContent = 'Capturing system screenshot…';
+      api('POST', '/api/senses/capture', { sense: 'screenshot', launch_system_app: false }).then(function (rep) {
+        var b64 = rep.data || '';
+        var thumb = b64 ? ('data:image/png;base64,' + b64) : (rep.file ? apiUrl('/api/media/file/' + rep.file) : '');
+        showCapturedCameraMedia({ kind: 'image', name: rep.name || 'System screenshot.png', data: b64, thumb: thumb, file: rep.file, screen_capture: true }, rep.jepa_summary || 'Screenshot captured');
+      }).catch(function (e) {
+        if ($('cam-status')) $('cam-status').textContent = e.message || 'Could not capture screenshot';
+      });
+    });
+  }
+  if ($('cam-upload-btn')) {
+    $('cam-upload-btn').addEventListener('click', function () {
+      var inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*';
+      inp.onchange = function () {
+        var f = inp.files && inp.files[0]; if (!f) return;
+        var rd = new FileReader();
+        rd.onload = function () {
+          var dUrl = String(rd.result || '');
+          var b64 = dUrl.slice(dUrl.indexOf(',') + 1);
+          api('POST', '/api/senses/capture', { sense: 'camera', name: f.name, data: b64 }).then(function (rep) {
+            showCapturedCameraMedia({ kind: 'image', name: f.name, data: rep.data || b64, thumb: dUrl, file: rep.file }, rep.jepa_summary || f.name);
+          }).catch(function () {
+            showCapturedCameraMedia({ kind: 'image', name: f.name, data: b64, thumb: dUrl }, f.name);
+          });
+        };
+        rd.readAsDataURL(f);
+      };
+      inp.click();
+    });
+  }
+  if ($('cam-inspect-btn')) {
+    $('cam-inspect-btn').addEventListener('click', function () {
+      if (toolAppState.camMedia) openImageInspector(toolAppState.camMedia);
+    });
+  }
+  if ($('cam-ask-btn')) {
+    $('cam-ask-btn').addEventListener('click', function () {
+      if (toolAppState.camMedia && state.media.length < MAX_MEDIA) {
+        state.media.push(toolAppState.camMedia);
+        renderAtt();
+      }
+      closeSheet();
+      var p = $('prompt');
+      if (p && !p.value.trim()) {
+        p.value = 'Inspect this image and tell me what you see.';
+        autosize();
+      }
+      if (p) p.focus();
+      updateSend();
+    });
+  }
+
+  /* 4. Microphone App */
+  if ($('mic-app-rec')) {
+    $('mic-app-rec').addEventListener('click', function () {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if ($('sense-audio-input')) $('sense-audio-input').click();
+        return;
+      }
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+        toolAppState.micStream = stream;
+        var chunks = [];
+        var mr = new MediaRecorder(stream);
+        toolAppState.micRec = mr;
+        mr.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+        mr.onstop = function () {
+          stream.getTracks().forEach(function (t) { t.stop(); });
+          var blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
+          var rd = new FileReader();
+          rd.onload = function () {
+            var dUrl = String(rd.result || '');
+            var b64 = dUrl.slice(dUrl.indexOf(',') + 1);
+            toolAppState.micMedia = { kind: 'audio', name: 'Voice recording.webm', data: b64 };
+            if ($('mic-app-empty')) $('mic-app-empty').hidden = true;
+            if ($('mic-app-audio')) { $('mic-app-audio').src = dUrl; $('mic-app-audio').hidden = false; }
+            if ($('mic-app-ask')) $('mic-app-ask').hidden = false;
+            if ($('mic-app-status')) $('mic-app-status').textContent = 'Voice recording ready';
+          };
+          rd.readAsDataURL(blob);
+        };
+        mr.start();
+        if ($('mic-app-rec')) $('mic-app-rec').hidden = true;
+        if ($('mic-app-stop')) $('mic-app-stop').hidden = false;
+        if ($('mic-app-status')) $('mic-app-status').textContent = 'Recording audio… click Stop Recording when done';
+      }).catch(function () {
+        if ($('sense-audio-input')) $('sense-audio-input').click();
+      });
+    });
+  }
+  if ($('mic-app-stop')) {
+    $('mic-app-stop').addEventListener('click', function () {
+      if (toolAppState.micRec && toolAppState.micRec.state !== 'inactive') toolAppState.micRec.stop();
+      if ($('mic-app-stop')) $('mic-app-stop').hidden = true;
+      if ($('mic-app-rec')) $('mic-app-rec').hidden = false;
+    });
+  }
+  if ($('mic-app-upload')) {
+    $('mic-app-upload').addEventListener('click', function () {
+      var inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'audio/*';
+      inp.onchange = function () {
+        var f = inp.files && inp.files[0]; if (!f) return;
+        var rd = new FileReader();
+        rd.onload = function () {
+          var dUrl = String(rd.result || '');
+          var b64 = dUrl.slice(dUrl.indexOf(',') + 1);
+          toolAppState.micMedia = { kind: 'audio', name: f.name, data: b64 };
+          if ($('mic-app-empty')) $('mic-app-empty').hidden = true;
+          if ($('mic-app-audio')) { $('mic-app-audio').src = dUrl; $('mic-app-audio').hidden = false; }
+          if ($('mic-app-ask')) $('mic-app-ask').hidden = false;
+          if ($('mic-app-status')) $('mic-app-status').textContent = f.name + ' ready';
+        };
+        rd.readAsDataURL(f);
+      };
+      inp.click();
+    });
+  }
+  if ($('mic-app-ask')) {
+    $('mic-app-ask').addEventListener('click', function () {
+      if (toolAppState.micMedia && state.media.length < MAX_MEDIA) {
+        state.media.push(toolAppState.micMedia);
+        renderAtt();
+      }
+      closeSheet();
+      var p = $('prompt');
+      if (p && !p.value.trim()) {
+        p.value = 'Listen to this audio recording and respond.';
+        autosize();
+      }
+      if (p) p.focus();
+      updateSend();
+    });
+  }
 
   function tick() {
     if (!state.busy) pollStatus();

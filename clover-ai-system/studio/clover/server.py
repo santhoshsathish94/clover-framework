@@ -802,6 +802,118 @@ def inbox_describe():
             "extension_id": browser_host.EXTENSION_ID, "extension_dir": str(ext) if (ext / "manifest.json").is_file() else None}
 
 
+def run_terminal_tool(body):
+    """Interactive Terminal app in Studio Tools: runs a PowerShell / shell command in the active workspace or chosen cwd
+    and returns output, exit code, elapsed_ms, and updated cwd."""
+    import local_terminal
+    ws = S.workspaces.active() if getattr(S, "workspaces", None) else None
+    default_cwd = Path(ws["path"]) if (ws and Path(ws["path"]).is_dir()) else _local_repo_dir()
+    req_cwd = str((body or {}).get("cwd") or "").strip()
+    cwd_path, err = local_terminal.resolve_cwd(req_cwd, workdir=default_cwd) if req_cwd else (default_cwd, None)
+    if cwd_path is None:
+        cwd_path = default_cwd
+    if str((body or {}).get("action") or "") == "info":
+        return {
+            "ok": True,
+            "cwd": str(cwd_path),
+            "shell": "PowerShell" if os.name == "nt" else "sh",
+            "err": err or "",
+        }
+    cmd = str((body or {}).get("command") or "").strip()
+    if not cmd:
+        return {"ok": True, "command": "", "output": "", "exit_code": 0, "status": "exit", "cwd": str(cwd_path), "elapsed_ms": 0.0}
+    timeout_s = local_terminal.clamp_timeout((body or {}).get("timeout_s") or 60)
+    t0 = time.perf_counter()
+    if os.name == "nt":
+        ps_script = (
+            local_terminal.PS_HEAD
+            + local_terminal.ps51_chain(cmd)
+            + "\n$__clover_ec = if (-not $?) { if ($LASTEXITCODE) { $LASTEXITCODE } else { 1 } } else { if ($LASTEXITCODE) { $LASTEXITCODE } else { 0 } }\n"
+            + '[Console]::WriteLine("__CLOVER_CWD__=" + (Get-Location).Path)\n'
+            + "exit $__clover_ec\n"
+        )
+        args = ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", ps_script]
+    else:
+        sh_script = f'{cmd}\n__clover_ec=$?\nprintf "\\n__CLOVER_CWD__=%s\\n" "$(pwd)"\nexit $__clover_ec\n'
+        args = ["sh", "-c", sh_script]
+    out, code, how = local_terminal.run(
+        args,
+        cwd=str(cwd_path),
+        timeout_s=timeout_s,
+        env=dict(os.environ, **local_terminal.QUIET_GIT),
+    )
+    elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 1)
+    clean = local_terminal.strip_ansi(out)
+    new_cwd = str(cwd_path)
+    m_cwd = re.search(r"(?:^|\n)__CLOVER_CWD__=([^\r\n]+)\s*$", clean)
+    if m_cwd:
+        cand_cwd = m_cwd.group(1).strip()
+        if cand_cwd and Path(cand_cwd).is_dir():
+            new_cwd = str(Path(cand_cwd).resolve())
+        clean = clean[:m_cwd.start()].rstrip("\r\n")
+    return {
+        "ok": True,
+        "command": cmd,
+        "output": clean,
+        "exit_code": int(code) if code is not None else -1,
+        "status": how,
+        "cwd": new_cwd,
+        "elapsed_ms": elapsed_ms,
+    }
+
+
+def run_browser_tool(body):
+    """Interactive Browser app in Studio Tools: reads an http(s) web page directly or searches the web and returns
+    structured results + readable page content for the center-pane Browser view."""
+    import page_fetch
+    import web_search
+    raw_in = str((body or {}).get("input") or (body or {}).get("url") or (body or {}).get("query") or "").strip()
+    action = str((body or {}).get("action") or "auto").strip().lower()
+    if not raw_in:
+        raise ValueError("Enter a web address (https://...) or a search query.")
+    b_engine = S.search.browser_engine() if getattr(S, "search", None) else "google"
+    looks_like_url = (
+        action == "read"
+        or raw_in.lower().startswith(("http://", "https://"))
+        or (" " not in raw_in and "." in raw_in and not raw_in.startswith("?") and bool(re.match(r"^[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?:[/:?#].*)?$", raw_in)))
+    )
+    if looks_like_url and action != "search":
+        url = raw_in if raw_in.lower().startswith(("http://", "https://")) else ("https://" + raw_in)
+        try:
+            page = page_fetch.read_page(url, typed=page_fetch.typed_hosts(url), robots=False, max_chars=40000)
+            return {
+                "ok": True,
+                "mode": "page",
+                "url": page["url"],
+                "title": page.get("title") or page["url"],
+                "site": page.get("site") or "",
+                "published": page.get("published") or "",
+                "modified": page.get("modified") or "",
+                "description": page.get("description") or "",
+                "text": page.get("text") or "",
+                "chars": page.get("chars") or 0,
+                "truncated": bool(page.get("truncated")),
+                "browser_engine": b_engine,
+                "browser_url": page["url"],
+            }
+        except page_fetch.FetchError as exc:
+            if action == "read" or raw_in.lower().startswith(("http://", "https://")):
+                raise ValueError(str(exc)) from None
+    ws_search = web_search.WebSearch(getattr(S, "search", None))
+    rows, provider_label, note = ws_search.search(raw_in, typed=page_fetch.typed_hosts(raw_in))
+    b_url = web_search.browser_search_url(raw_in, b_engine)
+    return {
+        "ok": True,
+        "mode": "search",
+        "query": raw_in,
+        "provider": provider_label,
+        "note": note,
+        "results": rows or [],
+        "browser_engine": b_engine,
+        "browser_url": b_url,
+    }
+
+
 def _local_repo_dir():
     if getattr(S, "repo", None) and getattr(S.repo, "dir", None):
         return Path(S.repo.dir)
@@ -3131,6 +3243,10 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/search":  # the answer reports whether a key is set, never the key
                 return self._send(200, S.search.update(provider=body.get("provider"), key=body.get("key"),
                                                        forget=body.get("forget"), browser=body.get("browser")))
+            if path == "/api/tools/terminal":
+                return self._send(200, run_terminal_tool(body))
+            if path == "/api/tools/browser":
+                return self._send(200, run_browser_tool(body))
             if path == "/api/browser/open":
                 return self._send(200, {"opened": open_in_browser(body)})
             if path == "/api/app/open":

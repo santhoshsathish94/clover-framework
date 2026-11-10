@@ -151,17 +151,19 @@ check(
     and 'class="sheet-bd"' not in app,
 )
 check(
-    "Left pane (#rail) has collapsible Chat submenu (#rail-chat-sub -> #chats), Workspaces submenu (#rail-ws-sub -> #vsc-tree for user project repos), and Memory submenu (#rail-mem-sub -> #mem-tree for clover-ai-studio persistent memory)",
+    "Left pane (#rail) has collapsible Chat submenu (#rail-chat-sub), Workspaces submenu (#rail-ws-sub), Memory submenu (#rail-mem-sub), and Tools submenu (#rail-tools-sub -> Terminal, Browser, Camera, Microphone, VS Code)",
     'id="rail-chat-sub"' in app
     and 'id="rail-ws-sub"' in app
     and 'id="rail-mem-sub"' in app
-    and app.index('id="rail"') < app.index('id="rail-chat-sub"') < app.index('id="chats"') < app.index('id="rail-ws-sub"') < app.index('id="vsc-tree"') < app.index('id="rail-mem-sub"') < app.index('id="mem-tree"') < app.index('<section class="main">'),
+    and 'id="rail-tools-sub"' in app
+    and all(f'data-tool-app="{t}"' in app for t in ("terminal", "browser", "camera", "microphone", "vscode"))
+    and app.index('id="rail"') < app.index('id="rail-chat-sub"') < app.index('id="chats"') < app.index('id="rail-ws-sub"') < app.index('id="vsc-tree"') < app.index('id="rail-mem-sub"') < app.index('id="mem-tree"') < app.index('id="rail-tools-sub"') < app.index('id="tools-tree"') < app.index('<section class="main">'),
 )
 check(
     "Center pane Workspaces page is scoped to user's own project repos and separates parent workspace settings (#ws-parent-view) from File Viewer (#vsc-workbench hidden by default)",
     app.index('data-page="workspaces"') < app.index('id="ws-parent-view"') < app.index('id="vsc-workbench"')
     and 'id="vsc-workbench" aria-label="Workspace file viewer" hidden' in app
-    and "#ws-parent-view[hidden], #mem-parent-view[hidden], .vsc-view[hidden] { display: none !important; }" in app
+    and "#ws-parent-view[hidden], #mem-parent-view[hidden], #tools-parent-view[hidden], .vsc-view[hidden], .tool-app[hidden] { display: none !important; }" in app
     and "function showWorkspaceParentView()" in app
     and "function showWorkspaceFileViewer(fileTitle)" in app
     and "function showMemoryParentView()" in app
@@ -169,9 +171,13 @@ check(
 )
 tools_sec = app.split('<section class="page" data-page="tools" hidden>', 1)[1].split("</section>", 1)[0]
 check(
-    "Streamlined Tools page [data-page='tools'] focuses on Terminal, Browser, Camera, Microphone, and Connected Apps (VS Code, GitHub)",
-    all(rid in tools_sec for rid in ("tool-row-terminal", "tool-row-browser", "tool-row-camera", "tool-row-microphone", "tool-row-vscode", "tool-row-github"))
-    and all(pid in tools_sec for pid in ("tool-perm-terminal", "tool-perm-browser", "tool-perm-camera", "tool-perm-vscode")),
+    "Tools page [data-page='tools'] provides interactive center-pane apps (#tool-app-terminal, #tool-app-browser, #tool-app-camera, #tool-app-microphone, #tool-app-vscode) and parent overview (#tools-parent-view)",
+    all(rid in tools_sec for rid in ("tools-parent-view", "tool-row-terminal", "tool-row-browser", "tool-row-camera", "tool-row-microphone", "tool-row-vscode", "tool-row-github"))
+    and all(aid in tools_sec for aid in ("tool-app-terminal", "tool-app-browser", "tool-app-camera", "tool-app-microphone", "tool-app-vscode"))
+    and all(pid in tools_sec for pid in ("tool-perm-terminal", "tool-perm-browser", "tool-perm-camera", "tool-perm-vscode"))
+    and "function openToolApp(appName)" in app
+    and "/api/tools/terminal" in app
+    and "/api/tools/browser" in app,
 )
 
 # 5. Backend workspace tree, file viewer, local repo fallback, and secret blocking
