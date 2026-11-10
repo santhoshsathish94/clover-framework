@@ -92,6 +92,7 @@ class S:
     args = None
     sessions = {}
     chat_dirs = {}  # chat id -> the folder its commands run in (the last repository cloned in that chat)
+    turn_ctx = {}  # chat id -> {"emit", "made"} of its running turn: VS Code waits and screenshots reach that chat
     sess_lock = threading.Lock()
     turn_lock = threading.Lock()
     turns_lock = threading.Lock()
@@ -824,7 +825,8 @@ def workspace_action(action, body):
 # ---------- VS Code: Clover asks, VS Code does the work with its own UI, sign-in and confirmations ----------
 VSCODE_TIMEOUTS = {"open": 60, "clone": 600, "install": 300, "run": 900, "githubSignIn": 300, "githubSetupRepo": 600,
                    "githubSyncFolder": 300, "status": 20, "editor": 30, "diagnostics": 30, "diff": 30,
-                   "browser": 60, "terminals": 30}
+                   "browser": 90, "terminals": 30}
+VSCODE_APPROVAL_S = 240  # a VS Code confirmation ("Open Browser Page?", "Run Playwright code?") waits for the user
 UI_VSCODE_ACTIONS = ("status", "open", "githubSignIn", "githubSetupRepo", "editor", "diagnostics", "diff", "browser", "terminals")
 
 
@@ -836,21 +838,76 @@ def vscode_exe():
     return None
 
 
-def vscode_do(action, args=None):
+def vscode_do(action, args=None, prefer_vscode=True, on_wait=None):
+    """prefer_vscode: a web page opens in VS Code's browser (the message asked for VS Code); otherwise "open youtube.com"
+    goes to the device's own browser. on_wait(note): VS Code is waiting for the user to confirm something."""
     if action == "open":
         import device_actions
         target = str((args or {}).get("target") or "").strip()
-        if device_actions.is_standalone_app_target(target) or S.vscode is None or not S.vscode.ensure(vscode_exe()):
+        to_device = device_actions.is_standalone_app_target(target) and not (prefer_vscode and OPEN_URL.fullmatch(target))
+        if to_device or S.vscode is None or not S.vscode.ensure(vscode_exe()):
             return device_actions.open_target(target, Path(S.args.base) if S.args else None)
     if S.vscode is None or not S.vscode.ensure(vscode_exe()):
         raise RuntimeError("VS Code with the Clover extension is not running and could not be started")
-    return S.vscode.call(action, args or {}, timeout=VSCODE_TIMEOUTS.get(action, 120))
+    # a window Studio just started is still loading its extensions: the first diagnostics after a cold start took over
+    # 30 s (2026-11-10)
+    cold = 60 if time.time() - getattr(S.vscode, "started_at", 0.0) < 120 else 0
+    return S.vscode.call(action, args or {}, timeout=VSCODE_TIMEOUTS.get(action, 120) + cold,
+                         approval_timeout=VSCODE_APPROVAL_S, on_wait=on_wait)
 
 
-def vscode_tool(action):
-    def run(a):
+def save_vscode_images(images, made):
+    """Screenshots VS Code returned, saved to media and shown with the answer (`made`: the turn's pictures). -> count."""
+    n = 0
+    for im in images or ():
+        mime = str((im or {}).get("mimeType") or "").lower()
+        ext = {"image/png": "png", "image/jpeg": "jpg"}.get(mime)
+        if ext is None or made is None:
+            continue
         try:
-            return json.dumps(vscode_do(action, a), ensure_ascii=False)[:8000]
+            data = base64.b64decode(str(im.get("data") or ""), validate=True)
+        except ValueError:
+            continue
+        if not data or len(data) > MEDIA_LIMITS["image"] or _sniff("image", data) not in ("png", "jpg", "jpeg"):
+            continue
+        name = hashlib.sha256(data).hexdigest()[:32] + "." + ext
+        (media_dir() / name).write_bytes(data)
+        made.append({"file": name, "prompt": "VS Code browser screenshot", "model": "VS Code", "seconds": 0,
+                     "width": None, "height": None})
+        n += 1
+    return n
+
+
+def vscode_result_text(action, res, made=None):
+    """A VS Code result as the model reads it."""
+    if isinstance(res, dict):
+        images = res.pop("images", None)
+        if images:  # base64 cut at 8000 characters was all the model got, and the user saw nothing (2026-11-10)
+            shown = save_vscode_images(images, made)
+            res["output"] = (str(res.get("output") or "") + ("\n[Clover shows the screenshot with your answer; do not add an "
+                                                         "image or link for it.]" if shown
+                                                         else "\n[A screenshot was taken but could not be shown.]")).strip()
+        if action == "install" and res.get("already"):  # the model said "successfully installed" (2026-11-10)
+            res["note"] = "It was already installed; nothing new was installed."
+        if res.get("subaction") == "playwright" and not re.search(r"^Result:", str(res.get("output") or ""), re.M):
+            res["note"] = ("The code returned no value" + (" and the page did not change" if "<unchanged>" in
+                                                         str(res.get("output") or "") else "") + ": do not report a result "
+                           "it did not give.")
+            if re.match(r"\s*(?:Code execution failed|[\w.]+: Timeout \d+ms exceeded|Error)", str(res.get("output") or "")):
+                return "Error: the Playwright code failed. " + json.dumps(res, ensure_ascii=False)[:7900]
+    return json.dumps(res, ensure_ascii=False)[:8000]
+
+
+def vscode_tool(action, sid=None, prefer_vscode=True):
+    def run(a):
+        ctx = S.turn_ctx.get(sid) if sid else None
+        on_wait = None
+        if ctx is not None:
+            def on_wait(note):
+                ctx["emit"]({"type": "plan", "round": 0, "stage": "vscode_wait", "text": str(note)[:300]})
+        try:
+            res = vscode_do(action, a, prefer_vscode=prefer_vscode, on_wait=on_wait)
+            return vscode_result_text(action, res, ctx["made"] if ctx else None)
         except RuntimeError as exc:
             return f"Error: {exc}"
     return run
@@ -862,12 +919,56 @@ def chat_dir(sid):
     return ws["path"] if ws else S.chat_dirs.get(sid)
 
 
-def vscode_tools(sid=None):
+def vscode_shared_pages():
+    """The browser pages VS Code shares with Clover now, as list_browser_pages writes them; "" when none or no VS Code."""
+    if S.vscode is None or not S.vscode.connected():
+        return ""
+    try:
+        out = str((S.vscode.call("browser", {"subaction": "list"}, timeout=8) or {}).get("output") or "")
+    except RuntimeError:
+        return ""
+    return "" if "[" not in out else out[:900]
+
+
+def unasked_address(url, said):
+    """True when `url` is not an address the user gave: neither it nor its host is in their message."""
+    from urllib.parse import urlparse
+    low = (said or "").lower()
+    host = (urlparse(url).hostname or "").lower()
+    host = host[4:] if host.startswith("www.") else host
+    return bool(url) and url.lower() not in low and not (host and host in low)
+
+
+def playwright_locators(snapshot, limit=16):
+    """Playwright locators for the elements of a read_page snapshot (lfm3_native, which VS Code chat's step uses too)."""
+    import lfm3_native
+    return lfm3_native.playwright_locators(snapshot, limit)
+
+
+def repair_playwright_code(code, failed, snapshot):
+    """`code` with the selector that timed out (`failed`, e.g. button.Greet) replaced by the locator of the one page
+    element whose name it contains; the same code when no single element matches. Clicks and fills only."""
+    els = re.findall(r"^\s*-\s*([a-z]+)\s+\"([^\"]{1,80})\"", snapshot or "", re.M)
+    words = {w.lower() for w in re.findall(r"[A-Za-z][\w-]{1,40}", failed or "")} - {
+        "button", "input", "a", "div", "span", "text", "has", "link", "textbox"}
+    hits = [(role, name) for role, name in els if role in ("button", "link", "textbox", "checkbox", "tab", "menuitem")
+            and (name.lower() in words or any(w == name.lower().replace(" ", "-") for w in words))]
+    if len(hits) != 1:
+        return code
+    role, name = hits[0]
+    q = re.escape(failed)
+    loc = f"page.getByLabel({name!r})" if role == "textbox" else f"page.getByRole({role!r}, {{ name: {name!r} }})"
+    code = re.sub(rf"page\.click\(\s*(['\"`]){q}\1\s*\)", f"{loc}.click()", code)
+    return re.sub(rf"page\.fill\(\s*(['\"`]){q}\1\s*,", f"{loc}.fill(", code)
+
+
+def vscode_tools(sid=None, vscode_asked=True, pages="", playwright=False):
+    """vscode_asked: the message names VS Code, so a web page vscode_open gets opens in VS Code's browser."""
     import lfm3_native
     s = {"type": "string"}
 
     def clone(a):
-        out = vscode_tool("clone")(a)
+        out = vscode_tool("clone", sid)(a)
         try:
             path = json.loads(out).get("path")
         except (ValueError, AttributeError):
@@ -879,8 +980,55 @@ def vscode_tools(sid=None):
     def run(a):
         import local_terminal
         where = a.get("cwd") or chat_dir(sid)
-        out = vscode_tool("run")(dict(a, cwd=where) if where else a)
+        out = vscode_tool("run", sid)(dict(a, cwd=where) if where else a)
         return re.sub(r"\\u001b(?:\[[0-?]*[ -/]*[@-~]|[@-Z\\\\-_])", "", local_terminal.strip_ansi(out))
+
+    def browser(a):
+        said = (S.turn_ctx.get(sid) or {}).get("text", "") if sid else ""
+        if a.get("subaction") == "open" and pages and unasked_address(str(a.get("url") or ""), said):
+            # "the Clover VS Code test page" was opened as https://clover.com, a shop's site, and clicked through (2026-11-10)
+            return ("Error: the user did not give this address, so it was not opened. Pages shared with you now:\n" + pages +
+                    "\nUse the pageId of the page the user means (subaction read, click, type or playwright).")
+        if a.get("subaction") == "playwright" and not str(a.get("code") or "").strip():
+            # the model sent playwright without code, then tried to install a Playwright extension (2026-11-10)
+            try:
+                snap = str((vscode_do("browser", {"subaction": "read", "pageId": a.get("pageId"), "url": a.get("url")})
+                            or {}).get("output") or "")
+            except RuntimeError:
+                snap = ""
+            loc = playwright_locators(snap)
+            return ("Error: nothing was run: subaction playwright needs code, the body of async (page) => { ... } ending "
+                    "with return of what the user asked for. Playwright is built into VS Code's browser; nothing needs "
+                    "installing." + (" Locators on this page:\n" + loc if loc else ""))
+        if a.get("subaction") == "playwright":
+            import lfm3_native
+            a = dict(a, code=lfm3_native.playwright_body(str(a.get("code"))))
+            out = vscode_tool("browser", sid)(a)
+            failed = re.search(r"Timeout \d+ms exceeded[\s\S]{0,200}?waiting for locator\((['\"])(.{1,120}?)\1\)", out)
+            if failed:
+                # 'button.Greet' timed out; the page's own locators let the code name the button (2026-11-10)
+                try:
+                    snap = str((vscode_do("browser", {"subaction": "read", "pageId": a.get("pageId"), "url": a.get("url")})
+                                or {}).get("output") or "")
+                except RuntimeError:
+                    snap = ""
+                fixed = repair_playwright_code(a["code"], failed.group(2), snap)
+                if fixed != a["code"]:
+                    again = vscode_tool("browser", sid)(dict(a, code=fixed))
+                    return (f"The selector {failed.group(2)!r} matched nothing; Clover ran the code again with the page's "
+                            f"own locator:\n{fixed}\nResult of that run: {again}")[:8000]
+                loc = playwright_locators(snap)
+                if loc:
+                    out = out[:6000] + "\nA locator did not match. Locators on this page:\n" + loc
+            return out
+        return vscode_tool("browser", sid)(a)
+    browser_desc = ("Use VS Code's Integrated Browser (shared with the agent): open a URL, list shared browser tabs, read "
+                    "the accessibility tree of a shared page, click, type, navigate, capture a screenshot, or run "
+                    "Playwright code on the page. Open only an address the user gave.")
+    if pages:
+        browser_desc += " Pages shared with you now (use their pageId):\n" + pages
+    if playwright:
+        browser_desc += "\nThe user asked for Playwright: use subaction playwright with code."
     return [
         {"schema": lfm3_native._fn("vscode_open", "Open a file, folder or web page in VS Code on this laptop. Files open in "
                                  "the right viewer (Markdown preview, images, video, code with its checks); web pages open "
@@ -888,7 +1036,7 @@ def vscode_tools(sid=None):
                                  {"target": dict(s, description="full path or http(s) URL"),
                                   "line": {"type": "integer", "description": "line to show (files)"}}, ["target"]),
          "permission": "vscode", "detail": lambda a: "Open in VS Code: " + str(a.get("target") or ""),
-         "run": vscode_tool("open")},
+         "run": vscode_tool("open", sid, prefer_vscode=vscode_asked)},
         {"schema": lfm3_native._fn("vscode_clone", "Clone a GitHub repository with VS Code (private ones use the user's "
                                  "GitHub sign-in in VS Code).",
                                  {"repository": dict(s, description="owner/repo or its https://github.com URL")},
@@ -900,7 +1048,7 @@ def vscode_tools(sid=None):
                                  {"extension": dict(s, description="extension id publisher.name, e.g. ms-python.python")},
                                  ["extension"]),
          "permission": "vscode", "detail": lambda a: "Install the VS Code extension " + str(a.get("extension") or ""),
-         "run": vscode_tool("install")},
+         "run": vscode_tool("install", sid)},
         {"schema": lfm3_native._fn("vscode_run", "Run a PowerShell command in a VS Code terminal the user can watch "
                                  "(install a library, build, run tests) and get its output and exit code.",
                                  {"command": dict(s, description="the PowerShell command line"),
@@ -914,32 +1062,39 @@ def vscode_tools(sid=None):
                                   "startLine": {"type": "integer", "description": "optional 1-based start line"},
                                   "endLine": {"type": "integer", "description": "optional 1-based end line"}}, []),
          "permission": "vscode", "detail": lambda a: "Inspect VS Code File Viewer" + (f": {a.get('filePath')}" if a.get("filePath") else ""),
-         "run": vscode_tool("editor")},
+         "run": vscode_tool("editor", sid)},
         {"schema": lfm3_native._fn("vscode_diagnostics", "Get live Language Server compile and lint errors/warnings "
                                  "from VS Code's Problems panel.",
                                  {"filePath": dict(s, description="optional file path to filter diagnostics")}, []),
          "permission": "vscode", "detail": lambda a: "Read VS Code diagnostics" + (f" for {a.get('filePath')}" if a.get("filePath") else ""),
-         "run": vscode_tool("diagnostics")},
+         "run": vscode_tool("diagnostics", sid)},
         {"schema": lfm3_native._fn("vscode_diff", "Open a side-by-side visual diff in VS Code's File Viewer comparing "
                                  "an existing file with proposed content or another file.",
                                  {"filePath": dict(s, description="path to the original file"),
                                   "proposedContent": dict(s, description="proposed new content to compare side-by-side"),
                                   "otherFilePath": dict(s, description="or path to a second file to compare")}, ["filePath"]),
          "permission": "vscode", "detail": lambda a: "Open side-by-side diff in VS Code: " + str(a.get("filePath") or ""),
-         "run": vscode_tool("diff")},
-        {"schema": lfm3_native._fn("vscode_browser", "Use VS Code's Integrated Browser (shared with the agent): open a URL, "
-                                 "list shared browser tabs, read the accessibility tree of a shared page, click, type, "
-                                 "navigate, or capture a screenshot.",
-                                 {"subaction": {"type": "string", "enum": ["open", "list", "read", "click", "type", "navigate", "screenshot"],
+         "run": vscode_tool("diff", sid)},
+        {"schema": lfm3_native._fn("vscode_browser", browser_desc,
+                                 {"subaction": {"type": "string", "enum": ["open", "list", "read", "click", "type", "navigate", "screenshot",
+                                                                         "playwright"],
                                                 "description": "browser action to run in VS Code"},
                                   "url": dict(s, description="URL to open or navigate to"),
                                   "pageId": dict(s, description="shared browser page ID from list/open"),
                                   "ref": dict(s, description="element ref (e.g. e1) from read_page"),
                                   "selector": dict(s, description="Playwright selector when ref is not used"),
                                   "element": dict(s, description="description of the element to click/type"),
-                                  "text": dict(s, description="text to type")}, ["subaction"]),
-         "permission": "vscode", "detail": lambda a: f"VS Code Integrated Browser ({a.get('subaction') or 'open'}): {a.get('url') or a.get('pageId') or ''}".strip(),
-         "run": vscode_tool("browser")},
+                                  "text": dict(s, description="text to type"),
+                                  "code": dict(s, description="playwright: the body of async (page) => { ... }; use `page` and "
+                                               "return what you need, e.g. await page.fill('#name', 'Ana'); await "
+                                               "page.click('text=Greet'); return await page.textContent('#status');"),
+                                  "timeoutMs": {"type": "integer", "description": "playwright: how long the code may run (ms)"}},
+                                 ["subaction"]),
+         "permission": "vscode",
+         "detail": lambda a: (f"Run Playwright code in VS Code's browser:\n{str(a.get('code') or '')[:600]}"
+                              if a.get("subaction") == "playwright" else
+                              f"VS Code Integrated Browser ({a.get('subaction') or 'open'}): {a.get('url') or a.get('pageId') or ''}".strip()),
+         "run": browser},
         {"schema": lfm3_native._fn("vscode_github_setup", "Create (or connect) the user's private GitHub repository for "
                                  "Clover's records and push them. VS Code asks the user to sign in and to confirm.", {}),
          "permission": "vscode", "detail": lambda a: "Set up your private GitHub repository for Clover's records",
@@ -1406,8 +1561,15 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
             {"text": {"type": "string", "description": "what to remember, in one or two sentences"}}, ["text"]),
             "permission": "memory", "detail": lambda a: str(a.get("text") or ""),
             "run": lambda a: remember_note(str(a.get("text") or ""), sid, on["memory"])})
-    if S.vscode is not None:
-        extra += vscode_tools(sid)
+    if kind == "VS Code answer":
+        # VS Code's own chat asked, with its own tools and approvals: after the user skipped opening a page there, this
+        # answer typed into the shared page and clicked Greet through the bridge, unseen in that chat (laptop, 2026-11-10)
+        pass
+    elif S.vscode is not None:
+        browser_asked = "vscode.browser" in (frame.caps or ())
+        extra += vscode_tools(sid, vscode_asked=bool(semantics.VSCODE.search(typed or "")),
+                              pages=vscode_shared_pages() if browser_asked else "",
+                              playwright=browser_asked and bool(re.search(r"\bplaywright\b", typed or "", re.I)))
     else:
         open_t = dict(vscode_tools(sid)[0])
         if paths.ANDROID or paths.WEB:
@@ -1468,6 +1630,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
             else (Path(cdir), Path(cdir).name, None) if cdir else (None, "", None))
         eng.tool_tasks = S.tool_tasks
         try:
+            S.turn_ctx[sid] = {"emit": emit, "made": made, "text": typed}
             tools_on, said = bool(body.get("tools", True)), None
             # trying again where the question or this message asks for a tool (a search): answered again with it
             retry_tools = (lfm3_native.asked_tools(retry["question"]) + lfm3_native.asked_tools(typed)
@@ -1507,7 +1670,8 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                 act = bool(getattr(frame, "caps", ()))
                 turn_layers = tuple(x for x in layers if x != "ontology") if act else layers
                 import device_actions
-                if omni and not media and device_actions.asks_for_screen_or_activity(typed):
+                if (omni and not media and device_actions.asks_for_screen_or_activity(typed)
+                        and "vscode.browser" not in (frame.caps or ())):  # a page in VS Code's browser, not the screen (2026-11-10)
                     try:
                         scr = device_actions.capture_screenshot(
                             Path(S.args.base), use_clipboard_image=device_actions.mentions_clipboard(typed))
@@ -1570,6 +1734,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
             raise
         finally:
             S.busy = None
+            S.turn_ctx.pop(sid, None)
             S.turns += 1
             S.last_turn_end = time.time()
             if kit is not None:
@@ -1651,6 +1816,20 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
 
 
 # --- clover-chat-server.py (d0c535a) /v1/chat/completions message walk, text-only (LFM3 has no image input) ---
+# "Continue" after VS Code stopped a long tool loop carries on with the same request and its tool results
+CONTINUE_ASK = re.compile(r"^\W*(?:please\s+)?(?:continue|go\s+on|keep\s+going|carry\s+on|proceed|resume|try\s+again|"
+                          r"retry|go\s+ahead)\W*$", re.I)
+
+
+def unfinished_reply(tool_rounds):
+    """What a turn that ended without an answer had done, as its reply: a follow-up can ask about what a tool returned."""
+    steps = []
+    for rd in tool_rounds[-4:]:
+        out = " ".join(str(rd.get("output") or "").split())
+        steps.append(f"{rd.get('name')}({str(rd.get('arguments') or '')[:160]}) returned: {out[:500]}")
+    return "(No answer: the user stopped this turn after these tool calls.)\n" + "\n".join(steps)
+
+
 def parse_openai_messages(messages):
     workspace_info_chunks = []
 
@@ -1692,8 +1871,13 @@ def parse_openai_messages(messages):
             if att_blocks:
                 return "---\n".join(att_blocks[:2]) + ATTACH_MARKER + core_q
             return core_q
+        # VS Code's "Copilot" agent has no <userRequest>: its shared pages came only as this attachment and were
+        # dropped, so the model guessed an address for "the shared test page" (laptop, 2026-11-10)
+        for m_att in re.finditer(r"<attachment\b([^>]*)>\s*([\s\S]*?)\s*</attachment>", u_text, flags=re.IGNORECASE):
+            if "Browser Pages" in m_att.group(1) or "browser pages are currently shared" in m_att.group(2)[:160]:
+                workspace_info_chunks.append("Browser Pages:\n" + m_att.group(2).strip()[:1200])
         cleaned = re.sub(
-            r"<(?:context|environment_info|workspace_info|reminderInstructions|instructions|toolUseInstructions|editFileInstructions|outputFormatting|memoryInstructions|userMemory|sessionMemory|repoMemory|conversation-summary)>[\s\S]*?</(?:context|environment_info|workspace_info|reminderInstructions|instructions|toolUseInstructions|editFileInstructions|outputFormatting|memoryInstructions|userMemory|sessionMemory|repoMemory|conversation-summary)>",
+            r"<(?:context|environment_info|workspace_info|reminderInstructions|instructions|toolUseInstructions|editFileInstructions|outputFormatting|memoryInstructions|userMemory|sessionMemory|repoMemory|conversation-summary|current_datetime|system_reminder|system_notification)>[\s\S]*?</(?:context|environment_info|workspace_info|reminderInstructions|instructions|toolUseInstructions|editFileInstructions|outputFormatting|memoryInstructions|userMemory|sessionMemory|repoMemory|conversation-summary|current_datetime|system_reminder|system_notification)>",
             "", u_text, flags=re.IGNORECASE)
         cleaned = re.sub(r"<attachment\b[^>]*>[\s\S]*?</attachment>", "", cleaned, flags=re.IGNORECASE)
         cleaned = re.sub(r"Relevant context from VS Code editor:\s*(?:The following browser pages[^\r\n]*\s*(?:-\s*[^\r\n]*\s*)*)?",
@@ -1701,7 +1885,8 @@ def parse_openai_messages(messages):
         return cleaned
 
     user_prompt, prior_turns, tool_rounds, call_id_to_meta, pending_u = "", [], [], {}, ""
-    for m in messages:
+    last_i = len(messages) - 1
+    for i_m, m in enumerate(messages):
         if not isinstance(m, dict):
             continue
         role = str(m.get("role") or "").lower()
@@ -1713,6 +1898,14 @@ def parse_openai_messages(messages):
                     tool_rounds.clear()
                     pending_u = user_prompt = cleaned_u
                 elif not tool_rounds:
+                    pending_u = user_prompt = cleaned_u
+                elif ((re.search(r"<userRequest>", txt_c, re.I)
+                       or (i_m == last_i and re.sub(r"<[^<>]{1,80}>", "", cleaned_u).strip()))
+                      and not CONTINUE_ASK.match(cleaned_u)):
+                    # a new request after a turn that ended without an answer (the user stopped or skipped a tool):
+                    # "Do not run anything ..." was dropped and the model repeated the skipped command (2026-11-10)
+                    prior_turns.append({"user": pending_u, "reply": unfinished_reply(tool_rounds), "plans": []})
+                    tool_rounds.clear()
                     pending_u = user_prompt = cleaned_u
         elif role == "assistant":
             t_calls = m.get("tool_calls") or []
@@ -3232,6 +3425,11 @@ class Handler(BaseHTTPRequestHandler):
                 if not S.vscode.check(self.headers.get("X-Clover-Bridge")):
                     return self._send(403, {"error": "bridge token required"})
                 S.vscode.result(str(body.get("id") or ""), bool(body.get("ok")), body.get("result"), body.get("error"))
+                return self._send(200, {"ok": True})
+            if path == "/api/vscode/progress":  # VS Code is waiting for the user to confirm something for this job
+                if not S.vscode.check(self.headers.get("X-Clover-Bridge")):
+                    return self._send(403, {"error": "bridge token required"})
+                S.vscode.progress(str(body.get("id") or ""), str(body.get("note") or "")[:300])
                 return self._send(200, {"ok": True})
             if path == "/api/vscode/do":  # buttons in Settings
                 action = str(body.get("action") or "")

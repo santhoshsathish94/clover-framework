@@ -431,10 +431,14 @@ def test_permissions_and_routing():
         only_u, _ = semantics.route(f_unit, "ask", True, said="Convert 72 F to C", offer=all_tools)
         check("convert_units" in (only_u or []), f"'Convert 72 F to C' routes to convert_units: {only_u}")
 
-        # "Calculate 137 * 29 + 46" -> calculate
+        # "Calculate 137 * 29 + 46": a plain sum Clover checks itself, answered without the calculator (2026-11-10);
+        # naming the calculator still uses it
         f_calc = semantics.interpret("Calculate 137 * 29 + 46", rt)
         only_c, _ = semantics.route(f_calc, "ask", True, said="Calculate 137 * 29 + 46", offer=all_tools)
-        check("calculate" in (only_c or []), f"'Calculate 137 * 29 + 46' routes to calculate: {only_c}")
+        check("calculate" not in (only_c or []), f"'Calculate 137 * 29 + 46' is answered directly: {only_c}")
+        said_n = "Use the calculator to work out 137 * 29 + 46"
+        only_n, _ = semantics.route(semantics.interpret(said_n, rt), "ask", True, said=said_n, offer=all_tools)
+        check("calculate" in (only_n or []), f"'{said_n}' routes to calculate: {only_n}")
 
         # "Give me the SHA256 hash and file size of notes.txt" -> file_info
         f_info = semantics.interpret("Give me the SHA256 hash and file size of notes.txt", rt)

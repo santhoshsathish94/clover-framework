@@ -19,7 +19,8 @@ class Bridge:
     def __init__(self, token_path):
         self.path = Path(token_path)
         self.cv = threading.Condition()
-        self.queue, self.results, self.windows = [], {}, {}
+        self.queue, self.results, self.windows, self.waiting = [], {}, {}, {}
+        self.started_at = 0.0  # when ensure() last started VS Code itself
         self.token = self._token()
 
     def _token(self):
@@ -66,27 +67,53 @@ class Bridge:
                 del self.results[k]
             self.cv.notify_all()
 
+    def progress(self, job_id, note):
+        """VS Code is showing the user a confirmation for this job ("Open Browser Page?") and waits for the answer."""
+        with self.cv:
+            self.waiting[str(job_id)] = str(note or "VS Code is waiting for your confirmation")
+            self.cv.notify_all()
+
     def connected(self):
         with self.cv:
             p = self._preferred(time.time())
             return dict(self.windows[p], id=p) if p else None
 
-    def call(self, action, args=None, timeout=120.0):
-        """Runs `action` in VS Code and returns its result; RuntimeError when no window is connected or it failed."""
+    def call(self, action, args=None, timeout=120.0, approval_timeout=None, on_wait=None):
+        """Runs `action` in VS Code and returns its result; RuntimeError when no window is connected or it failed.
+        A job VS Code reports as waiting for the user's confirmation gets `approval_timeout` seconds from then, and
+        on_wait(note) is called once (outside the lock) so the user hears about it."""
         with self.cv:
             if self._preferred(time.time()) is None:
                 raise RuntimeError("VS Code is not open on this laptop (the Clover extension connects when it starts)")
             job = {"id": uuid.uuid4().hex, "action": action, "args": args or {}}
             self.queue.append(job)
             self.cv.notify_all()
-            deadline = time.time() + timeout
-            while job["id"] not in self.results:
-                left = deadline - time.time()
-                if left <= 0:
-                    self.queue = [j for j in self.queue if j["id"] != job["id"]]
-                    raise RuntimeError(f"VS Code did not finish within {int(timeout)} s")
-                self.cv.wait(min(left, 1.0))
-            res = self.results.pop(job["id"])
+        deadline, told = time.time() + timeout, None
+        try:
+            while True:
+                note = None
+                with self.cv:
+                    if job["id"] in self.results:
+                        res = self.results.pop(job["id"])
+                        break
+                    if told is None and job["id"] in self.waiting:
+                        told = note = self.waiting[job["id"]]
+                        if approval_timeout:
+                            deadline = max(deadline, time.time() + approval_timeout)
+                    left = deadline - time.time()
+                    if left <= 0:
+                        self.queue = [j for j in self.queue if j["id"] != job["id"]]
+                        if told:  # VS Code's dialog stayed unanswered: the user cannot see it in Clover (2026-11-10)
+                            raise RuntimeError(f"VS Code is still waiting for your approval ({told}). Approve or cancel "
+                                               "it in VS Code, then ask again.")
+                        raise RuntimeError(f"VS Code did not finish within {int(timeout)} s")
+                    if note is None:
+                        self.cv.wait(min(left, 1.0))
+                if note is not None and on_wait is not None:
+                    on_wait(note)
+        finally:
+            with self.cv:
+                self.waiting.pop(job["id"], None)
         if not res["ok"]:
             raise RuntimeError(res["error"] or "VS Code could not do it")
         return res["result"]
@@ -97,6 +124,7 @@ class Bridge:
             return True
         if not code_exe or not Path(code_exe).is_file():
             return False
+        self.started_at = time.time()
         subprocess.Popen([str(code_exe), "--new-window"], close_fds=True,
                          creationflags=getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
         end = time.time() + timeout

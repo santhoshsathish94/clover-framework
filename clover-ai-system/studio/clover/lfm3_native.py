@@ -97,6 +97,8 @@ RUNTIME = semantics.Runtime(tools={
     "status": ("laptop_status",), "clock": ("get_current_time",), "remember": ("remember",), "image": ("generate_image",),
     "vscode.open": ("vscode_open",), "vscode.clone": ("vscode_clone",), "vscode.install": ("vscode_install",),
     "vscode.run": ("vscode_run",), "github.setup": ("vscode_github_setup",), "github.sync": ("vscode_github_sync",),
+    "vscode.editor": ("vscode_editor",), "vscode.diagnostics": ("vscode_diagnostics",), "vscode.diff": ("vscode_diff",),
+    "vscode.browser": ("vscode_browser",),
     "calc": ("calculate",), "units": ("convert_units",), "files.search": ("search_files",), "files.info": ("file_info",),
     "git.inspect": ("git_inspect",), "doc.read": ("read_document",), "table.analyze": ("analyze_table",),
     "table.chart": ("chart_table",), "media.info": ("media_info",), "media.frame": ("extract_frame",)},
@@ -139,9 +141,37 @@ VSCODE_CORE = ["read_file", "list_dir", "file_search", "grep_search", "semantic_
 VSCODE_BROWSER_TOOLS = ["open_browser_page", "list_browser_pages", "read_page", "click_element", "type_in_page",
                         "navigate_page", "screenshot_page", "hover_element", "drag_element", "handle_dialog",
                         "run_playwright_code", "fetch_webpage"]
+# VS Code's default "Copilot" agent names the same browser tools in camelCase (openBrowserPage, runPlaywrightCode): none
+# was recognised, so they stayed behind search_tools and got no pageId or code repair (laptop, 2026-11-10)
+VSCODE_BROWSER_CAMEL = {re.sub(r"_([a-z])", lambda m: m.group(1).upper(), n): n for n in VSCODE_BROWSER_TOOLS}
+
+
+def browser_tool(name):
+    """The Local agent's name of a VS Code browser tool (open_browser_page for openBrowserPage); others unchanged."""
+    return VSCODE_BROWSER_CAMEL.get(name, name)
+
+
+def vscode_tool_params(name, params):
+    """VS Code's parameters as the model sees them. run_playwright_code's only example reads document.title, and for
+    "type Maya in the name box, click Greet" LFM3-Omni-2B wrote code that only read the page (laptop, 2026-11-10)."""
+    if browser_tool(name) != "run_playwright_code" or not isinstance(((params or {}).get("properties") or {}).get("code"), dict):
+        return params
+    p = json.loads(json.dumps(params))
+    p["properties"]["code"]["description"] = (
+        "Playwright code, the body of async (page) => { ... }: do every step and return the result, e.g. await "
+        "page.getByLabel('Name').fill('Ana'); await page.getByRole('button', { name: 'Send' }).click(); return await "
+        "page.locator('body').innerText();")
+    return p
+
+
 VSCODE_TERMINAL_TOOLS = ["run_in_terminal", "get_terminal_output", "send_to_terminal", "kill_terminal",
                          "terminal_last_command", "terminal_selection"]
 VSCODE_CODE_INTEL_TOOLS = ["vscode_listCodeUsages", "vscode_renameSymbol", "view_image", "multi_replace_string_in_file"]
+# VS Code's "Copilot" agent names its core tools differently: all of them sat behind search_tools, and "Run git --version
+# in the terminal" searched four times without running anything (laptop, 2026-11-10)
+VSCODE_CORE += ["view", "glob", "grep", "powershell", "bash", "problems", "edit", "create"]
+VSCODE_TERMINAL_TOOLS += ["read_powershell", "stop_powershell", "list_powershell", "read_bash", "stop_bash", "list_bash"]
+VSCODE_CODE_INTEL_TOOLS += ["usages"]
 _VSCODE_BROWSER_CUE = re.compile(
     r"\b(?:browser|web\s*page|page\s+id|shared\s+with\s+you|open_browser_page|read_page|click_element|"
     r"type_in_page|screenshot_page|navigate_page|playwright|localhost|127\.0\.0\.1|https?://|dom\b|ui\s+page)\b",
@@ -165,8 +195,9 @@ def active_vscode_tools(user_prompt="", workspace_info="", tool_rounds=()):
     used = {rd.get("name") for rd in (tool_rounds or ()) if isinstance(rd, dict) and rd.get("name")}
     active |= used
     combined = f"{user_prompt or ''}\n{workspace_info or ''}"
-    if _VSCODE_BROWSER_CUE.search(combined) or (used & set(VSCODE_BROWSER_TOOLS)):
+    if _VSCODE_BROWSER_CUE.search(combined) or ({browser_tool(n) for n in used} & set(VSCODE_BROWSER_TOOLS)):
         active.update(VSCODE_BROWSER_TOOLS)
+        active.update(VSCODE_BROWSER_CAMEL)
     if _VSCODE_TERM_CUE.search(combined) or (used & set(VSCODE_TERMINAL_TOOLS)):
         active.update(VSCODE_TERMINAL_TOOLS)
     if _VSCODE_INTEL_CUE.search(combined) or (used & set(VSCODE_CODE_INTEL_TOOLS)):
@@ -179,7 +210,8 @@ def repair_vscode_browser_args(call_name, call_args, workspace_info="", tool_rou
     always include `pageId` (from shared browser pages or prior rounds) and `ref` (matched from the accessibility snapshot
     in `read_page` / `open_browser_page` output when the model only supplied `element`)."""
     args = dict(call_args or {})
-    if call_name not in VSCODE_BROWSER_TOOLS or call_name in ("open_browser_page", "list_browser_pages", "fetch_webpage"):
+    base = browser_tool(call_name)
+    if base not in VSCODE_BROWSER_TOOLS or base in ("open_browser_page", "list_browser_pages", "fetch_webpage"):
         return args
     if not args.get("pageId"):
         for rd in reversed(list(tool_rounds or ())):
@@ -194,7 +226,7 @@ def repair_vscode_browser_args(call_name, call_args, workspace_info="", tool_rou
             m_pg = re.search(r"-\s*\[([A-Za-z0-9_.\-]+)\]\s+", workspace_info)
             if m_pg:
                 args["pageId"] = m_pg.group(1)
-    if call_name in ("click_element", "type_in_page", "hover_element") and not args.get("ref") and not args.get("selector"):
+    if base in ("click_element", "type_in_page", "hover_element") and not args.get("ref") and not args.get("selector"):
         el_desc = str(args.get("element") or "").strip().lower()
         el_words = [w for w in re.findall(r"[a-z0-9]+", el_desc) if w not in ("button", "link", "input", "box", "field", "the", "a", "an")]
         for rd in reversed(list(tool_rounds or ())):
@@ -214,7 +246,132 @@ def repair_vscode_browser_args(call_name, call_args, workspace_info="", tool_rou
             if best_ref:
                 args["ref"] = best_ref
                 break
+    if base == "run_playwright_code" and args.get("code"):
+        args["code"] = playwright_body(str(args["code"]))
     return args
+
+
+_SHARED_PAGE = re.compile(r"^\s*-\s*\[([A-Za-z0-9_.\-]+)\]\s+(.+?)\s+\(([a-z][\w+.-]*:[^)\s]*)\)(?:\s+\(active\))?\s*$", re.M)
+
+
+def unshared_open(call_name, call_args, said="", workspace_info="", tool_rounds=()):
+    """What the model reads instead of VS Code opening a page at an address nobody gave while VS Code shares pages;
+    None when the call may go to VS Code. For "the shared Clover VS Code test page" the model asked to open
+    https://clover.com (a real company's site) and then file:///shared/clover/shared.html (laptop, 2026-11-10)."""
+    from urllib.parse import urlparse
+    base = browser_tool(call_name)
+    url = str((call_args or {}).get("url") or "").strip()
+    pages = _SHARED_PAGE.findall(workspace_info or "")
+    if base != "open_browser_page" or not url or not pages:
+        return None
+    known = "\n".join([said or "", workspace_info or ""] + [str(rd.get("output") or "") for rd in tool_rounds or ()]).lower()
+    host = (urlparse(url).hostname or "").lower()
+    host = host[4:] if host.startswith("www.") else host
+    if url.lower() in known or (host and host in known):
+        return None
+    use = ("readPage, clickElement, typeInPage or runPlaywrightCode" if base != call_name
+           else "read_page, click_element, type_in_page or run_playwright_code")
+    listed = "\n".join(f"- [{pid}] {title} ({u})" for pid, title, u in pages)
+    return (f"Not opened: the user did not give the address {url}. These pages are already shared with you:\n{listed}\n"
+            f"Use the pageId of the page the user means with {use}.")
+
+
+def playwright_locators(snapshot, limit=16):
+    """Playwright locators for the elements of a read_page snapshot, so a small model can write the code. A label's
+    text is left out when it names a control: given both, the model typed into getByText('Your name')."""
+    roles = ("button", "link", "checkbox", "radio", "combobox", "tab", "menuitem", "heading")
+    named = {m.lower() for m in re.findall(r"^\s*-\s*[a-z]+\s+\"([^\"]{1,80})\"", snapshot or "", re.M)}
+    out = []
+    for ln in (snapshot or "").splitlines():
+        m = re.match(r"\s*-\s*([a-z]+)\s+\"([^\"]{1,80})\"", ln)
+        if m and m.group(1) in ("textbox", "searchbox"):
+            out.append(f"{m.group(1)} {m.group(2)!r}: page.getByLabel({m.group(2)!r})")
+        elif m and m.group(1) in roles:
+            out.append(f"{m.group(1)} {m.group(2)!r}: page.getByRole({m.group(1)!r}, {{ name: {m.group(2)!r} }})")
+        else:
+            t = re.match(r"\s*-\s*(?:paragraph|text|generic)(?:\s+\[[^\]]*\])*:\s*(.{1,80})$", ln)
+            if t and t.group(1).strip() and t.group(1).strip().lower() not in named:
+                out.append(f"text {t.group(1).strip()!r}: page.getByText({t.group(1).strip()!r})")
+        if len(out) >= limit:
+            break
+    return "\n".join(out)
+
+
+_RELOAD_ASK = re.compile(r"\b(?:reload|refresh|re-?open|open\s+(?:it|the\s+page)\s+again|navigate)\b", re.I)
+
+
+def shared_page_read(call_name, call_args, said="", workspace_info="", tool_names=()):
+    """The read to make instead of navigating a shared page to the address it already shows; None otherwise. The Local
+    agent's first step for "type Ravi ... click Greet" was that navigation: it reset the page and needed an approval
+    (laptop, 2026-11-10)."""
+    args = call_args or {}
+    if browser_tool(call_name) != "navigate_page" or args.get("type", "url") != "url" or _RELOAD_ASK.search(said or ""):
+        return None
+    url = str(args.get("url") or "").strip().rstrip("/")
+    pid = next((p for p, _t, u in _SHARED_PAGE.findall(workspace_info or "") if u.rstrip("/") == url
+                and (not args.get("pageId") or args.get("pageId") == p)), None)
+    read = next((n for n in tool_names if browser_tool(n) == "read_page"), None)
+    return {"name": read, "arguments": {"pageId": pid}} if url and pid and read else None
+
+
+# "...test page: type Maya in the name box, click Greet, and tell me": a step the user wants done on the page
+_PAGE_STEP_ASK = re.compile(r"(?:^|[.:;,!?]\s*|\b(?:and|then|please)\s+)(?:type|enter|fill|click|press|tap|select|check|submit)\b", re.I)
+_PAGE_STEP_CODE = re.compile(r"\.(?:fill|click|dblclick|type|press|check|uncheck|selectOption|setInputFiles|tap)\s*\(|keyboard\.")
+_PAGE_STEP_TOOLS = {"click_element", "type_in_page", "hover_element", "drag_element", "navigate_page", "handle_dialog"}
+_USER_DECLINED = re.compile(r"\buser\s+(?:rejected|denied|declined|skipped|cancell?ed)\b", re.I)
+# "type Ravi in the name box": the text the user wants typed (Local agent, 2026-11-10: it reloaded the page, clicked
+# Greet without typing and answered "After typing Ravi ... the page says Hello, Clover")
+_TYPED_TEXT = re.compile(r"\b(?:type|enter|fill\s+in|write)\s+[\"'\u201c]?(.{1,40}?)[\"'\u201d]?\s+(?:in|into)\s+(?:the\s+)?\w", re.I)
+
+
+def unfinished_page_steps(user_prompt, workspace_info, tool_rounds, tool_names):
+    """What sends the model back to a shared page when it answers before doing the steps the user asked for there; ""
+    when nothing is missing or the user declined a tool. Asked to type Maya and click Greet with Playwright,
+    LFM3-Omni-2B read the page text and answered (laptop, 2026-11-10)."""
+    pw = next((n for n in tool_names if browser_tool(n) == "run_playwright_code"), None)
+    if not pw or not _SHARED_PAGE.search(workspace_info or "") or not _PAGE_STEP_ASK.search(user_prompt or ""):
+        return ""
+    rounds = list(tool_rounds or ())
+    if (sum(browser_tool(rd.get("name") or "") in VSCODE_BROWSER_TOOLS for rd in rounds) >= 3
+            or any(_USER_DECLINED.search(str(rd.get("output") or "")[:400]) for rd in rounds)):
+        return ""
+    done = " ".join(str(rd.get("arguments") or "") for rd in rounds
+                    if browser_tool(rd.get("name") or "") in _PAGE_STEP_TOOLS
+                    or (browser_tool(rd.get("name") or "") == "run_playwright_code"
+                        and _PAGE_STEP_CODE.search(str(rd.get("arguments") or ""))))
+    typed = [t.strip() for t in _TYPED_TEXT.findall(user_prompt or "")
+             if not re.match(r"(?:your|my|the|a|an|some|it)\b", t.strip(), re.I)]
+    missing = [t for t in typed if t.lower() not in done.lower()]
+    if done and not missing:
+        return ""
+    snap = next((str(rd.get("output") or "") for rd in reversed(rounds) if "[ref=" in str(rd.get("output") or "")), "")
+    loc = playwright_locators(snap)
+    what = (" and ".join(repr(t) for t in missing) + " was never typed into the page" if done
+            else "the user asked for steps on the page and nothing has been typed or clicked")
+    return (f"Not done yet: {what}. Call {pw} now with code that does every step the user asked, in order, and "
+            "returns what they want to know." + (" Locators on this page:\n" + loc if loc else ""))
+
+
+def repeats_round(call_name, call_args, tool_rounds):
+    """True when this exact call already ran in this turn: sent back to the page, the model repeated its read of it."""
+    for rd in tool_rounds or ():
+        try:
+            prev = json.loads(rd.get("arguments") or "{}") if isinstance(rd.get("arguments"), str) else rd.get("arguments")
+        except ValueError:
+            continue
+        if rd.get("name") == call_name and prev == call_args:
+            return True
+    return False
+
+
+_PW_WRAP = re.compile(r"^\s*(?:async\s+)?(?:function\s*\w*\s*\(\s*page\s*\)|\(\s*page\s*\)\s*=>|page\s*=>)\s*\{([\s\S]*)\}\s*;?\s*$")
+
+
+def playwright_body(code):
+    """The function body VS Code's run_playwright_code wants: code written as `async (page) => { ... }` was only
+    defined, never run, and the model reported the page as if it had clicked (2026-11-10)."""
+    m = _PW_WRAP.match(code or "")
+    return m.group(1).strip() if m else (code or "")
 
 
 class EngineCache:
@@ -1066,6 +1223,15 @@ class LFM3Native:
                     break
                 if first_cycle_findings is None:
                     first_cycle_findings = list(findings)
+                fixed = C.direct_arithmetic_answer(query) if C.only_arithmetic(findings) else None
+                if fixed:  # a plain sum: Clover has the exact value, so it writes the answer itself
+                    emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
+                    final = fixed
+                    emit({"type": "token", "round": 1, "kind": "answer", "text": final})
+                    op_plan.complete_stage("outcome", C.outcome_label(c_meta["checks"], attempt + 1))
+                    layer_log.append({"layer": "outcome", "checks": list(c_meta["checks"]), "passed": True})
+                    emit({"type": "cycle", "cycle": attempt + 1, "stage": "verified", "cycles_used": attempt + 1})
+                    break
                 if attempt + 1 < max_clover_cycles:
                     emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
                     op_plan.retry_from_context(attempt + 2, findings[0])
@@ -1132,7 +1298,7 @@ class LFM3Native:
             if not name or name == "vscode_askQuestions" or name in by_name:
                 continue
             desc = str(fn.get("description") or "").split("\n")[0][:240]
-            params = fn.get("parameters") or fn.get("inputSchema") or {"type": "object", "properties": {}}
+            params = vscode_tool_params(name, fn.get("parameters") or fn.get("inputSchema") or {"type": "object", "properties": {}})
             f = {"name": name, "description": desc, "parameters": params}
             by_name[name] = f
             entry = {"type": "function", "function": f}
@@ -1166,6 +1332,7 @@ class LFM3Native:
                 {"id": cid, "type": "function", "function": {"name": rd["name"], "arguments": args if isinstance(args, dict) else {}}}]})
             msgs.append({"role": "tool", "tool_call_id": cid, "content": _clip(rd.get("output") or "", 5000)})
         trace = []
+        nudged, answer = False, ""
         with self.lock:
             try:
                 for _ in range(4):
@@ -1175,7 +1342,9 @@ class LFM3Native:
                     trace.append({"generation": st, "calls": [c["name"] for c in calls], "text": text[-400:]})
                     if calls and calls[0]["name"] == "search_tools":
                         q = str(calls[0]["arguments"].get("query") or "").lower().split()
-                        scored = sorted(deferred, key=lambda f: -sum(w in (f["name"] + " " + f["description"]).lower() for w in q))
+                        # offered tools too: a search for the Playwright tool it already had found nothing, four times
+                        pool = [f for n, f in by_name.items() if n != "search_tools"]
+                        scored = sorted(pool, key=lambda f: -sum(w in (f["name"] + " " + f["description"]).lower() for w in q))
                         found = [f["name"] for f in scored[:3] if any(w in (f["name"] + " " + f["description"]).lower() for w in q)]
                         msgs.append({"role": "assistant", "content": content, "reasoning_content": reasoning, "tool_calls": [
                             {"id": calls[0]["id"], "type": "function", "function": {"name": "search_tools", "arguments": calls[0]["arguments"]}}]})
@@ -1184,8 +1353,28 @@ class LFM3Native:
                         continue
                     if calls:
                         c = calls[0]
+                        refused = unshared_open(c["name"], c["arguments"], "\n".join(
+                            [user_prompt] + [str(h.get("user") or "") for h in prior_turns[-3:]]), workspace_info, tool_rounds)
+                        if refused:
+                            trace[-1]["refused"] = str(c["arguments"].get("url"))[:200]
+                            msgs.append({"role": "assistant", "content": content, "reasoning_content": reasoning, "tool_calls": [
+                                {"id": c["id"], "type": "function", "function": {"name": c["name"], "arguments": c["arguments"]}}]})
+                            msgs.append({"role": "tool", "tool_call_id": c["id"], "content": refused})
+                            continue
+                        read = shared_page_read(c["name"], c["arguments"], user_prompt, workspace_info, by_name)
+                        if read:
+                            trace[-1]["read_instead"] = True
+                            return {"tool_call": {"name": read["name"], "arguments": json.dumps(read["arguments"])}, "trace": trace}
                         c_args = repair_vscode_browser_args(c["name"], c["arguments"], workspace_info, tool_rounds)
+                        if nudged and repeats_round(c["name"], c_args, tool_rounds):
+                            return {"content": answer or "(Clover did not finish an answer in time.)", "trace": trace}
                         return {"tool_call": {"name": c["name"], "arguments": json.dumps(c_args)}, "trace": trace}
+                    nudge = "" if nudged else unfinished_page_steps(user_prompt, workspace_info, tool_rounds, by_name)
+                    if nudge:
+                        nudged = trace[-1]["nudged"] = True
+                        answer = (content + after).strip()
+                        msgs += [{"role": "assistant", "content": content}, {"role": "user", "content": nudge}]
+                        continue
                     final = (content + after).strip() if (not thinking or "</think>" in text) else ""
                     return {"content": final or "(Clover did not finish an answer in time.)", "trace": trace}
                 return {"content": "(Clover kept searching for tools without choosing one.)", "trace": trace}

@@ -1048,6 +1048,20 @@ class OmniNative(N.LFM3Native):
                             except Exception:
                                 c1_first_failed = None
 
+                    fixed = C.direct_arithmetic_answer(query) if C.only_arithmetic(findings) else None
+                    if fixed:  # a plain sum: Clover has the exact value, so it writes the answer itself
+                        emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
+                        final = fixed
+                        emit({"type": "token", "round": 1, "kind": "answer", "text": final})
+                        op_plan.complete_stage("outcome", C.outcome_label(c_meta["checks"], attempt + 1))
+                        layer_log.append({"layer": "outcome", "checks": list(c_meta["checks"]), "passed": True})
+                        layer_log.append({"layer": "cycle", "trigger": "auto", "action": "corrected", "cycles_used": attempt + 1,
+                                          "first_findings": list(findings), "final_findings": [], "tools": [],
+                                          "lesson": C.lesson_text(query, [findings[0][:240]], "", passed=True),
+                                          "lesson_kind": "verified"})
+                        emit({"type": "cycle", "cycle": attempt + 1, "stage": "verified", "cycles_used": attempt + 1})
+                        break
+
                     if attempt + 1 < max_clover_cycles:
                         emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
                         op_plan.retry_from_context(attempt + 2, findings[0])
@@ -1332,7 +1346,8 @@ class OmniNative(N.LFM3Native):
             if not name or name == "vscode_askQuestions" or name in by_name:
                 continue
             f = {"name": name, "description": str(fn.get("description") or "").split("\n")[0][:240],
-                 "parameters": fn.get("parameters") or fn.get("inputSchema") or {"type": "object", "properties": {}}}
+                 "parameters": N.vscode_tool_params(name, fn.get("parameters") or fn.get("inputSchema")
+                                                    or {"type": "object", "properties": {}})}
             by_name[name] = f
             entry = {"type": "function", "function": f}
             if name not in active_core:
@@ -1361,6 +1376,7 @@ class OmniNative(N.LFM3Native):
                 {"id": cid, "type": "function", "function": {"name": rd["name"], "arguments": rd.get("arguments") or "{}"}}]})
             msgs.append({"role": "tool", "tool_call_id": cid, "content": N._clip(rd.get("output") or "", 5000)})
         trace = []
+        nudged, answer = False, ""
         with self.lock:
             try:
                 for _ in range(4):
@@ -1368,7 +1384,9 @@ class OmniNative(N.LFM3Native):
                     trace.append({"generation": st, "calls": [c["name"] for c in calls], "text": content[-400:]})
                     if calls and calls[0]["name"] == "search_tools":
                         q = str(calls[0]["arguments"].get("query") or "").lower().split()
-                        scored = sorted(deferred, key=lambda f: -sum(w in (f["name"] + " " + f["description"]).lower() for w in q))
+                        # offered tools too: a search for the Playwright tool it already had found nothing, four times
+                        pool = [f for n, f in by_name.items() if n != "search_tools"]
+                        scored = sorted(pool, key=lambda f: -sum(w in (f["name"] + " " + f["description"]).lower() for w in q))
                         found = [f["name"] for f in scored[:3] if any(w in (f["name"] + " " + f["description"]).lower() for w in q)]
                         msgs.append({"role": "assistant", "content": content, "tool_calls": [
                             {"id": calls[0]["id"], "type": "function",
@@ -1378,8 +1396,29 @@ class OmniNative(N.LFM3Native):
                         continue
                     if calls:
                         c = calls[0]
+                        refused = N.unshared_open(c["name"], c["arguments"], "\n".join(
+                            [user_prompt] + [str(h.get("user") or "") for h in prior_turns[-3:]]), workspace_info, tool_rounds)
+                        if refused:
+                            trace[-1]["refused"] = str(c["arguments"].get("url"))[:200]
+                            msgs.append({"role": "assistant", "content": content, "tool_calls": [
+                                {"id": c["id"], "type": "function",
+                                 "function": {"name": c["name"], "arguments": json.dumps(c["arguments"])}}]})
+                            msgs.append({"role": "tool", "tool_call_id": c["id"], "content": refused})
+                            continue
+                        read = N.shared_page_read(c["name"], c["arguments"], user_prompt, workspace_info, by_name)
+                        if read:
+                            trace[-1]["read_instead"] = True
+                            return {"tool_call": {"name": read["name"], "arguments": json.dumps(read["arguments"])}, "trace": trace}
                         c_args = N.repair_vscode_browser_args(c["name"], c["arguments"], workspace_info, tool_rounds)
+                        if nudged and N.repeats_round(c["name"], c_args, tool_rounds):
+                            return {"content": answer or "(Clover did not finish an answer in time.)", "trace": trace}
                         return {"tool_call": {"name": c["name"], "arguments": json.dumps(c_args)}, "trace": trace}
+                    nudge = "" if nudged else N.unfinished_page_steps(user_prompt, workspace_info, tool_rounds, by_name)
+                    if nudge:
+                        nudged = trace[-1]["nudged"] = True
+                        answer = content.strip()
+                        msgs += [{"role": "assistant", "content": content}, {"role": "user", "content": nudge}]
+                        continue
                     return {"content": content.strip() or "(Clover did not finish an answer in time.)", "trace": trace}
                 return {"content": "(Clover kept searching for tools without choosing one.)", "trace": trace}
             finally:

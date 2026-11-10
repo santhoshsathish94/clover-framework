@@ -70,7 +70,7 @@ check("Clover" in L.LINKS_AND_PATHS.sub(" ", r"What is Clover? see C:\Users\sant
 with tempfile.TemporaryDirectory() as d:
     calls = []
 
-    def fake_tool(action):
+    def fake_tool(action, *_ctx, **_kw):
         def run(a):
             calls.append((action, dict(a)))
             return json.dumps({"repository": "o/r", "path": d} if action == "clone" else {"exitCode": 0})

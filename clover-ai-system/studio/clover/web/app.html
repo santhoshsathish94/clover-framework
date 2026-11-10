@@ -3690,6 +3690,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning (C2 HybridAgent)',
             detail: 'Preparing ' + prepName + ' input\u2026', badge: 'Preparing\u2026' });
           setStage('preparing ' + prepName);
+        } else if (ev.stage === 'vscode_wait') {
+          upsertStep('vscode_wait', { icon: 'clock', state: 'run', name: 'Waiting for you in VS Code',
+            detail: ev.text || 'VS Code is asking you to confirm', badge: 'Approve in VS Code\u2026' });
+          setStage('waiting for your approval in VS Code');
         } else if (ev.stage === 'reviewing') {
           if (stepMap.plan) stepMap.plan.update({ state: 'ok', badge: '\u2713 Planned' });
           upsertStep('review', { icon: 'spark', state: 'run', name: 'Reviewing results',
@@ -3792,6 +3796,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         }));
         scrollDown();
       } else if (ev.type === 'tool_result') {
+        if (stepMap.vscode_wait && stepMap.vscode_wait.data.state === 'run') {
+          stepMap.vscode_wait.update({ state: 'ok', badge: '\u2713 Answered in VS Code' });
+        }
         var cd = cards[ev.id];
         if (cd) {
           var rawRes = String(ev.result || '').slice(0, 3000);
