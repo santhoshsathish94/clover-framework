@@ -5378,8 +5378,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         wsExp.label = rep.label || target;
         wsExp.rootPath = rep.root_path || '';
         if ($('vsc-exp-title')) $('vsc-exp-title').textContent = 'EXPLORER · ' + (rep.label || target);
-        treeBox.innerHTML = '';
       }
+      treeBox.innerHTML = '';
       var entries = rep.entries || [];
       if (!entries.length && !containerEl) {
         treeBox.innerHTML = '<div class="fine" style="padding:.55rem .65rem">Folder is empty.</div>';
@@ -5445,9 +5445,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         if (activeNode) activeNode.classList.add('on');
       }
     }).catch(function (e) {
-      if (!containerEl) {
-        treeBox.innerHTML = '<div class="note" style="padding:.55rem .65rem">' + esc(e.message || 'Could not load folder.') + '</div>';
-      }
+      var pad = containerEl ? '.2rem 0 .2rem ' + (1.2 + depth * 0.85).toFixed(2) + 'rem' : '.55rem .65rem';
+      treeBox.innerHTML = '<div class="note" style="padding:' + pad + '">' + esc(e.message || 'Could not load folder.') + '</div>';
     });
   }
   function loadMemoryTree(subpath, containerEl, depth) {
@@ -5462,8 +5461,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         wsExp.memLoaded = true;
         wsExp.memRootPath = rep.root_path || '';
         if ($('mem-exp-title')) $('mem-exp-title').textContent = 'MEMORY · ' + (rep.label || 'clover-ai-studio');
-        treeBox.innerHTML = '';
       }
+      treeBox.innerHTML = '';
       var entries = rep.entries || [];
       if (!entries.length && !containerEl) {
         treeBox.innerHTML = '<div class="fine" style="padding:.55rem .65rem">Memory repository is empty.</div>';
@@ -5521,9 +5520,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         if (activeNode) activeNode.classList.add('on');
       }
     }).catch(function (e) {
-      if (!containerEl) {
-        treeBox.innerHTML = '<div class="note" style="padding:.55rem .65rem">' + esc(e.message || 'Could not load memory files.') + '</div>';
-      }
+      var pad = containerEl ? '.2rem 0 .2rem ' + (1.2 + depth * 0.85).toFixed(2) + 'rem' : '.55rem .65rem';
+      treeBox.innerHTML = '<div class="note" style="padding:' + pad + '">' + esc(e.message || 'Could not load memory files.') + '</div>';
     });
   }
   function openWorkspaceFile(target, filepath, rowEl, sectionName) {

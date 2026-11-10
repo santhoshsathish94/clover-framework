@@ -834,10 +834,13 @@ def run_terminal_tool(body):
     timeout_s = local_terminal.clamp_timeout((body or {}).get("timeout_s") or 60)
     t0 = time.perf_counter()
     if os.name == "nt":
+        # Windows PowerShell 5.1 printed nothing for Get-Location, Select-Object or `cd ..; Get-Location` when the
+        # script ended with `exit` (2026-11-10): the command's output is formatted inside the script, before the exit
         ps_script = (
             local_terminal.PS_HEAD
-            + local_terminal.ps51_chain(cmd)
-            + "\n$__clover_ec = if (-not $?) { if ($LASTEXITCODE) { $LASTEXITCODE } else { 1 } } else { if ($LASTEXITCODE) { $LASTEXITCODE } else { 0 } }\n"
+            + "& {\n" + local_terminal.ps51_chain(cmd) + "\n$global:__clover_ok = $?\n}"
+            + " | Out-String -Stream | ForEach-Object { [Console]::WriteLine($_) }\n"
+            + "$__clover_ec = if (-not $global:__clover_ok) { if ($LASTEXITCODE) { $LASTEXITCODE } else { 1 } } else { if ($LASTEXITCODE) { $LASTEXITCODE } else { 0 } }\n"
             + '[Console]::WriteLine("__CLOVER_CWD__=" + (Get-Location).Path)\n'
             + "exit $__clover_ec\n"
         )
