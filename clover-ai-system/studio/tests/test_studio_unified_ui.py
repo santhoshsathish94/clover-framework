@@ -93,17 +93,14 @@ check(
     "Tagline pill shows 'System · Human · AI working together'",
     "System &middot; Human &middot; AI working together" in app,
 )
-
-for card_nav, title, desc in (
-    ("memory", "Memory", "Your work, knowledge and context"),
-    ("tools", "Tools", "Search, files, code and apps"),
-    ("learning", "Learning", "Gets better with you"),
-):
-    check(
-        f"Bottom feature card '{title}' ({desc}) navigates to {card_nav}",
-        f'class="fcard" data-nav-open="{card_nav}"' in app
-        and f"<b>{title}</b><small>{desc}</small>" in app,
-    )
+check(
+    "Main screen does not duplicate Memory, Tools, and Learning cards (single navigation in sidebar)",
+    'class="feature-grid"' not in app and 'class="fcard"' not in app,
+)
+check(
+    "#senses-menu flips downward (.drop-down) when space above is limited or in empty-chat so it never clips",
+    ".senses-pop.drop-down" in app and "m.classList.toggle('drop-down', dropDown)" in app,
+)
 
 # 4. Dedicated Memory page and consistent cross-platform sync (Laptop, Mobile, Web)
 check(

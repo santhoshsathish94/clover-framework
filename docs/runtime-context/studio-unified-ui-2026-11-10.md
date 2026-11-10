@@ -24,7 +24,8 @@
    - Centered 2-row rounded Composer card (`What would you like to do?` placeholder, bottom toolbar with `+` `#attach`, image/screenshot `#screen-btn`, file attachment `#clip-btn`, and `#send` button)
    - 5-Stage Clover Cycle Strip (`Context / Understand` › `Direction / Plan together` › `Execution / Do the work` › `Outcome / Check the result` › `Growth / Learn and improve`)
    - Collaboration pill (`System · Human · AI working together` with `#i-success` checkmark)
-   - 3 Feature Cards (`Memory — Your work, knowledge and context`, `Tools — Search, files, code and apps`, `Learning — Gets better with you`).
+   - Keep `Memory`, `Tools`, and `Learning` in the left sidebar navigation only (no duplicate 3-card `.feature-grid` below the composer, which previously added `210px` of vertical height, pushed the composer up to `y = 227px` on mobile, and caused `#senses-menu` and `#hero` to clip off the top of the viewport)
+   - Smart `#senses-menu` (`.senses-pop`) positioning: opens downward (`.drop-down`) in `.empty-chat` or when space above `< 320px`, and caps `max-height` to available viewport height so the `+` menu and `Clover` emblem are 100% visible on every screen.
 4. Add a first-class `[data-page="memory"]` view in `#sheet`, expose `Workspaces` across Web, Mobile, and Laptop, and synchronize all three platform targets (`app.html`, `site/clover-ai/index.html`, and `clover-ai-system/mobile/android-app/assets/index.html`).
 
 ## 3. Execution

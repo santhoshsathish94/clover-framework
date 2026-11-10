@@ -140,17 +140,6 @@ button { cursor: pointer; }
 .collab-pill { display: inline-flex; align-items: center; gap: .45rem; background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px;
   padding: .34rem .95rem; font-size: .82rem; font-weight: 600; color: var(--ink-2); box-shadow: var(--shadow-sm); }
 .collab-pill .ic { width: 16px; height: 16px; color: var(--accent); }
-.feature-grid { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
-.fcard { border: 1px solid var(--line-2); background: var(--surface); border-radius: 15px; padding: .75rem .85rem; box-shadow: var(--shadow-sm);
-  display: flex; align-items: center; gap: .65rem; text-align: left; transition: border-color .15s var(--ease), transform .15s var(--ease), box-shadow .15s var(--ease); }
-.fcard:hover { border-color: var(--accent); background: #fff; transform: translateY(-1px); box-shadow: var(--shadow); }
-.fcard__ic { width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; flex: none; }
-.fcard__ic .ic { width: 19px; height: 19px; }
-.fcard__t { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.28; }
-.fcard__t b { font-size: .9rem; font-weight: 650; color: var(--ink); }
-.fcard__t small { font-size: .75rem; color: var(--muted); margin-top: .1rem; }
-.fcard .chev { width: 15px; height: 15px; color: var(--faint); flex: none; }
-.fcard:hover .chev { color: var(--accent); transform: translateX(2px); }
 .sugg { display: flex; flex-wrap: wrap; justify-content: center; gap: .45rem; margin-top: .1rem; }
 .sugg button { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
   padding: .4rem .82rem; font-size: .82rem; color: var(--ink-2); box-shadow: var(--shadow-sm); transition: border-color .15s, color .15s, background-color .15s; }
@@ -367,8 +356,9 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
   display: inline-flex; align-items: center; justify-content: center; transition: background-color .15s, color .15s; }
 .cbtn:hover { background: var(--fill); color: var(--ink); }
 .cbtn .ic { width: 19px; height: 19px; }
-.senses-pop { position: absolute; left: .4rem; bottom: calc(100% + .5rem); width: min(310px, calc(100vw - 2rem)); background: var(--surface);
-  border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow-lg); padding: .38rem; z-index: 35; display: flex; flex-direction: column; gap: .15rem; }
+.senses-pop { position: absolute; left: .4rem; bottom: calc(100% + .5rem); width: min(310px, calc(100vw - 2rem)); max-height: min(340px, calc(100vh - 120px)); overflow-y: auto; background: var(--surface);
+  border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow-lg); padding: .38rem; z-index: 60; display: flex; flex-direction: column; gap: .15rem; }
+.senses-pop.drop-down { bottom: auto; top: calc(100% + .5rem); }
 .senses-pop[hidden] { display: none !important; }
 .senses-hd { font-size: .72rem; font-weight: 680; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: .35rem .6rem .2rem; }
 .senses-item { border: 0; background: none; color: var(--ink); border-radius: 11px; padding: .5rem .65rem; text-align: left; display: flex; align-items: center; gap: .6rem; cursor: pointer; transition: background-color .14s; }
@@ -557,11 +547,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   .rail { position: fixed; inset: 0 auto 0 0; width: min(290px, 84vw); z-index: 55; transform: translateX(-104%); transition: transform .25s var(--ease); }
   .rail.on { transform: none; box-shadow: var(--shadow-lg); }
   .u { max-width: 88%; }
-  .app.empty-chat .main { justify-content: flex-start; }
   .cycle-strip { flex-wrap: wrap; justify-content: center; gap: .35rem .25rem; padding: .55rem .65rem; }
   .cycle-step { flex: 1 1 42%; min-width: 128px; }
   .cycle-arr { display: none; }
-  .feature-grid { grid-template-columns: 1fr; gap: .5rem; }
 }
 @media (min-width: 861px) {
   .app:not(.rail-off) #new-chat-2 { display: none; }
@@ -748,24 +736,6 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <div class="collab-pill">
           <svg class="ic" aria-hidden="true"><use href="#i-success"/></svg>
           <span>System &middot; Human &middot; AI working together</span>
-        </div>
-
-        <div class="feature-grid">
-          <button type="button" class="fcard" data-nav-open="memory">
-            <span class="fcard__ic"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg></span>
-            <span class="fcard__t"><b>Memory</b><small>Your work, knowledge and context</small></span>
-            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
-          </button>
-          <button type="button" class="fcard" data-nav-open="tools">
-            <span class="fcard__ic"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span>
-            <span class="fcard__t"><b>Tools</b><small>Search, files, code and apps</small></span>
-            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
-          </button>
-          <button type="button" class="fcard" data-nav-open="learning">
-            <span class="fcard__ic"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span>
-            <span class="fcard__t"><b>Learning</b><small>Gets better with you</small></span>
-            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
-          </button>
         </div>
 
         <div class="sugg" id="sugg" hidden></div>
@@ -3068,6 +3038,17 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var m = $('senses-menu');
     if (!m) { $('file-input').click(); return; }
     var show = m.hidden;
+    if (show) {
+      var comp = $('composer') || document.querySelector('.composer');
+      var rect = comp ? comp.getBoundingClientRect() : null;
+      var spaceAbove = rect ? (rect.top - 56) : 400;
+      var spaceBelow = rect ? (window.innerHeight - rect.bottom - 16) : 400;
+      var isEmptyChat = $('app') && $('app').classList.contains('empty-chat');
+      var dropDown = (isEmptyChat && spaceBelow >= 220) || (spaceAbove < 320 && spaceBelow > spaceAbove);
+      m.classList.toggle('drop-down', dropDown);
+      var avail = Math.max(180, (dropDown ? spaceBelow : spaceAbove) - 12);
+      m.style.maxHeight = Math.min(340, avail) + 'px';
+    }
     m.hidden = !show;
     $('attach').setAttribute('aria-expanded', String(show));
   });
