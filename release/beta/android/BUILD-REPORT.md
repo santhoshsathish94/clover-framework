@@ -2,8 +2,8 @@
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `5.0.3`  
-**Version Code**: `17`  
+**Release Version**: `5.0.4`  
+**Version Code**: `18`  
 **Package Name**: `ai.clover.studio`  
 **Build Date**: `2026-11-10`  
 **Build Environment**: `k3` (`/opt/clover-k3/studio-android`), OpenJDK `17.0.20`, Gradle `8.9`, Android Gradle Plugin `8.5.2`, Chaquopy `17.2.0` (CPython `3.12`), Android SDK `36` (`minSdk 26`, `targetSdk 36`, `compileSdk 36`), Android NDK `llvm-strip`.
@@ -14,8 +14,8 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 17`, `targetSdk 36`) | `81,192,527` bytes (`77.43 MB`) | `b60e4fda008f30bd2584a28c1a691df5df1d78466f7bc77a54689e3830b08b8f` |
-| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 17`, `targetSdk 36`) | `82,269,156` bytes (`78.46 MB`) | `7d406f4190356f40f253243ccc316dc5f0acda527976b55039283a837301ed56` |
+| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 18`, `targetSdk 36`) | `81,252,849` bytes (`77.49 MB`) | `7528db58bafe080df65a86a25ae43c66edb2eeaf419a3f41f9a69e4f056b4133` |
+| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 18`, `targetSdk 36`) | `82,329,449` bytes (`78.52 MB`) | `d277a2fbad70793a67cc56011b9989545330819e17a62178651a8394aee14c4d` |
 
 ---
 
@@ -38,7 +38,7 @@
 ## 3. Package & Manifest Audit (`build.gradle`)
 
 ```text
-package: name='ai.clover.studio' versionCode='17' versionName='5.0.3'
+package: name='ai.clover.studio' versionCode='18' versionName='5.0.4'
 sdkVersion:'26'
 targetSdkVersion:'36'
 compileSdkVersion:'36'
@@ -53,9 +53,9 @@ launchable-activity: name='ai.clover.studio.MainActivity'
 - `python tests/test_semantics.py`: **155/155 passed**.
 - `python tests/test_tool_routing.py`: **129/129 passed**.
 - `python tests/test_clover_repo.py`: **27/27 passed**.
-- `python tests/test_regression_fixes.py`: **71/73 passed (2 failed: ...and out of an unrelated price; k3 dropdown entries have short, clear names and k3 badge)**.
+- `python tests/test_regression_fixes.py`: **73/73 passed**.
 - `python tests/test_page_fetch.py`: **119/119 passed**.
-- `python tests/test_browser_first.py`: **29/30 passed (1 failed: nothing opens by itself: only a click handler calls /api/browser/open)**.
+- `python tests/test_browser_first.py`: **30/30 passed**.
 - `python tests/test_browser_handback.py`: **51/51 passed**.
 - `python clover/test_collective.py`: **35/35 passed**.
 - `python clover/test_google_identity_collective.py`: **32/32 passed**.
@@ -66,6 +66,9 @@ launchable-activity: name='ai.clover.studio.MainActivity'
 - `python tests/test_caution_only.py`: **16/16 passed**.
 - `python tests/test_superagent_jev_dory.py`: **passed (exit 0)**.
 - `python tests/test_vscode_503.py`: **93/93 passed**.
+- `python tests/test_token_economy.py`: **21/21 passed**.
+- `python tests/test_studio_unified_ui.py`: **41/41 passed**.
+- `python tests/test_strict_c1_c2_c3.py`: **34/34 passed**.
 
 **Google Play Console Links**:
    - Instant Test (Internal App Sharing): `https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs`

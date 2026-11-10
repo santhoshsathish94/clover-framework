@@ -219,9 +219,10 @@ class FusedEngine:
                     emit(dict(info, type="layer"))
         if meaning is not None and getattr(meaning, "guidance", ""):
             before.append(meaning.guidance)
+        b_dir = Path(getattr(self, "base_dir", None) or Path.cwd())
         sensory_msgs, sensory_layers, _, _ = ON.run_s3_sensory_context(
-            self.base_dir,
-            self.base_dir / "media",
+            b_dir,
+            b_dir / "media",
             media,
             query,
             kit=kit,
@@ -238,9 +239,9 @@ class FusedEngine:
         all_schemas = (base_schemas + [t["schema"] for t in extra_schemas]) if tools else []
         by_name = {t["function"]["name"]: t["function"] for t in all_schemas}
         local_runner = object.__new__(ON.OmniNative)
-        local_runner.base_dir = self.base_dir
-        local_runner.media_dir = self.base_dir / "media"
-        local_runner.perms = self.perms
+        local_runner.base_dir = b_dir
+        local_runner.media_dir = b_dir / "media"
+        local_runner.perms = getattr(self, "perms", None)
         local_runner.workdir = getattr(self, "workdir", None)
         local_runner.workname = getattr(self, "workname", "")
         local_runner.after_write = getattr(self, "after_write", None)

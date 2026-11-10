@@ -6,7 +6,7 @@
     "fail_lines": [],
     "summary": "155 checks passed",
     "counted": "155 checks passed",
-    "seconds": 4.5
+    "seconds": 3.1
   },
   "tool_routing_tests": {
     "suite": "tests/test_tool_routing.py",
@@ -15,7 +15,7 @@
     "fail_lines": [],
     "summary": "129 checks passed",
     "counted": "129 checks passed",
-    "seconds": 1.6
+    "seconds": 1.1
   },
   "repo_tests": {
     "suite": "tests/test_clover_repo.py",
@@ -24,19 +24,16 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 9.1
+    "seconds": 9.5
   },
   "regression_fixes_tests": {
     "suite": "tests/test_regression_fixes.py",
-    "exit": 1,
-    "pass_lines": 71,
-    "fail_lines": [
-      "FAIL ...and out of an unrelated price",
-      "FAIL k3 dropdown entries have short, clear names and k3 badge"
-    ],
-    "summary": "SOME FAILED",
+    "exit": 0,
+    "pass_lines": 73,
+    "fail_lines": [],
+    "summary": "ALL PASS",
     "counted": null,
-    "seconds": 126.5
+    "seconds": 19.2
   },
   "page_fetch_tests": {
     "suite": "tests/test_page_fetch.py",
@@ -45,18 +42,16 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": "119 checks passed",
-    "seconds": 8.5
+    "seconds": 4.9
   },
   "browser_first_tests": {
     "suite": "tests/test_browser_first.py",
-    "exit": 1,
-    "pass_lines": 29,
-    "fail_lines": [
-      "FAIL nothing opens by itself: only a click handler calls /api/browser/open"
-    ],
-    "summary": "SOME FAILED",
-    "counted": null,
-    "seconds": 0.4
+    "exit": 0,
+    "pass_lines": 30,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": "30 checks passed",
+    "seconds": 0.3
   },
   "browser_handback_tests": {
     "suite": "tests/test_browser_handback.py",
@@ -65,7 +60,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": "51 checks passed",
-    "seconds": 2.7
+    "seconds": 1.8
   },
   "collective_tests": {
     "suite": "clover/test_collective.py",
@@ -74,7 +69,7 @@
     "fail_lines": [],
     "summary": "35 checks passed",
     "counted": "35 checks passed",
-    "seconds": 20.2
+    "seconds": 19.1
   },
   "google_identity_collective_tests": {
     "suite": "clover/test_google_identity_collective.py",
@@ -83,7 +78,7 @@
     "fail_lines": [],
     "summary": "ALL 32 GOOGLE IDENTITY & COLLECTIVE LEARNING CHECKS PASSED",
     "counted": null,
-    "seconds": 24.8
+    "seconds": 21.2
   },
   "human_usefulness_tests": {
     "suite": "clover/test_human_usefulness.py",
@@ -101,7 +96,7 @@
     "fail_lines": [],
     "summary": "18 checks passed",
     "counted": "18 checks passed",
-    "seconds": 2.8
+    "seconds": 2.5
   },
   "clover_cycles_tests": {
     "suite": "clover/test_clover_cycles.py",
@@ -110,7 +105,7 @@
     "fail_lines": [],
     "summary": "}",
     "counted": null,
-    "seconds": 55.3
+    "seconds": 4.5
   },
   "tool_tasks_tests": {
     "suite": "tests/test_tool_tasks.py",
@@ -119,7 +114,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 0.6
+    "seconds": 0.5
   },
   "caution_only_tests": {
     "suite": "tests/test_caution_only.py",
@@ -147,5 +142,32 @@
     "summary": "ALL PASS",
     "counted": null,
     "seconds": 10.3
+  },
+  "token_economy_tests": {
+    "suite": "tests/test_token_economy.py",
+    "exit": 0,
+    "pass_lines": 21,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": null,
+    "seconds": 0.5
+  },
+  "studio_unified_ui_tests": {
+    "suite": "tests/test_studio_unified_ui.py",
+    "exit": 0,
+    "pass_lines": 41,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": "41 checks passed",
+    "seconds": 0.2
+  },
+  "strict_c1_c2_c3_tests": {
+    "suite": "tests/test_strict_c1_c2_c3.py",
+    "exit": 0,
+    "pass_lines": 34,
+    "fail_lines": [],
+    "summary": "ALL STRICT C1/C2/C3 AND S1/S2/S3 CHECKS PASSED",
+    "counted": null,
+    "seconds": 70.2
   }
 }

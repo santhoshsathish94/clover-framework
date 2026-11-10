@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-11-08T23:18:42Z",
-  "version": "5.0.0",
-  "elapsed_s": 74.37,
+  "timestamp": "2026-11-10T14:56:34Z",
+  "version": "5.0.4",
+  "elapsed_s": 25.26,
   "goal_1_stabilize_v5": {
     "status": "passed",
-    "version": "5.0.0",
+    "version": "5.0.4",
     "checked_manifests": [
       "VERSION",
       "server.STUDIO_VERSION",
@@ -37,7 +37,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261109-044738-ba91e8"
+          "learned LRN-20261110-202610-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       },
@@ -59,7 +59,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261109-044748-ba91e8"
+          "learned LRN-20261110-202612-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       },
@@ -81,7 +81,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261109-044758-ba91e8"
+          "learned LRN-20261110-202613-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       },
@@ -103,7 +103,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261109-044811-ba91e8"
+          "learned LRN-20261110-202614-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       }
@@ -136,7 +136,7 @@
         "CWE-362"
       ],
       "with_bridge_from_memory": [
-        "MEM-USER-20261109-044813-64053c"
+        "MEM-USER-20261110-202616-64053c"
       ],
       "without_bridge_entities": []
     },
@@ -452,7 +452,7 @@
     "status": "passed",
     "ablation_matrix": [
       {
-        "configuration": "Full Clover v5.0.0 System (All 5 Stages + Meaning Bridge + JEPA Prior + 3-Cycle Retry + CPSL)",
+        "configuration": "Full Clover v5.0.4 System (All 5 Stages + Meaning Bridge + JEPA Prior + 3-Cycle Retry + CPSL)",
         "multi_cycle_4model": "4/4 (100.0%)",
         "meaning_bridge_6tasks": "6/6 (100.0%)",
         "collective_transfer_4tasks": "4/4 (100.0%)",

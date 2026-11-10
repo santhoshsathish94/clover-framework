@@ -10,7 +10,7 @@
 | **Publisher Distinguished Name** | `CN=A0DCEEB8-49DB-4CD8-8D07-BC439E69B9AF` |
 | **Store ID** | `9P2KP2XGF5LG` |
 | **Package Family Name** | `SanthoshNarayanan.CloverAIStudio_ffvna78masvs2` |
-| **Package Version (`AppxManifest.xml`)** | `5.0.3.0` (Display Version: `5.0.3`) |
+| **Package Version (`AppxManifest.xml`)** | `5.0.4.0` (Display Version: `5.0.4`) |
 | **Target Architecture** | `x64` (`Windows.Desktop`, `MinVersion="10.0.19041.0"`, `MaxVersionTested="10.0.26100.0"`) |
 
 ---
@@ -20,12 +20,12 @@
 - **Partner Center Upload Bundle (Recommended — Option A)**: `release/beta/windows/clover-ai-studio-beta.msixupload`
   - Size: `4,738,436` bytes (`4.52 MB`)
   - SHA-256: `a1eba69e325dbfe64cdd9fdcf6f91d7f9fed790cdd41a41e405c04a1b929b621`
-- **Standalone MSIX Package (`x64`)**: `release/beta/windows/SanthoshNarayanan.CloverAIStudio_5.0.3.0_x64.msix` (also copied as `clover-ai-studio-beta.msix`)
+- **Standalone MSIX Package (`x64`)**: `release/beta/windows/SanthoshNarayanan.CloverAIStudio_5.0.4.0_x64.msix` (also copied as `clover-ai-studio-beta.msix`)
   - Size: `4,786,629` bytes (`4.56 MB`)
   - SHA-256: `061797c889d2a3ffc26b0b8dac148b4e9780cf617d7cf73831b228fe904cbb21`
 - **Standalone Direct-Download Setup EXE (`x64`)**: `release/beta/windows/clover-ai-studio-beta-setup.exe`
-  - Size: `9,361,880` bytes (`8.93 MB`)
-  - SHA-256: `d3c3752891e9181aa0542451986653ea6520e6874b9b5a56f03f9560dad0ccf4`
+  - Size: `9,410,520` bytes (`8.97 MB`)
+  - SHA-256: `ee7b50fe60479e1fbc73329cb641108c201e85e5bc2cfd1c5ac3348e6c7d16ee`
 
 ---
 
@@ -90,6 +90,6 @@
 3. Open **Pricing and availability** → set Price to **Free** and Visibility to **Private audience** (or **Direct link only — hidden in Store**).
 4. Open **Properties** → select Category **Developer tools**, enter Privacy Policy URL (`https://cloverframework.com/privacy/`) and Support URL (`https://github.com/santhoshsathish94/clover-framework/issues`), and provide the `runFullTrust` declaration above.
 5. Open **Age ratings** → complete the IARC questionnaire and save.
-6. Open **Packages** → drag and drop `release/beta/windows/clover-ai-studio-beta.msixupload` (or `SanthoshNarayanan.CloverAIStudio_5.0.3.0_x64.msix`), verify Partner Center parses `SanthoshNarayanan.CloverAIStudio` `5.0.3.0` (`x64`), and click **Save**.
+6. Open **Packages** → drag and drop `release/beta/windows/clover-ai-studio-beta.msixupload` (or `SanthoshNarayanan.CloverAIStudio_5.0.4.0_x64.msix`), verify Partner Center parses `SanthoshNarayanan.CloverAIStudio` `5.0.4.0` (`x64`), and click **Save**.
 7. Open **Store listings → English (United States)** → paste the contents of `listing/short-description.txt`, `listing/full-description.txt`, and `release-notes.md`, and upload the 4 desktop screenshots (`1920x1080`) and `app-icon-300x300.png` from `screenshots/`.
 8. Open **Submission options** → paste the **Notes for certification** above → click **Submit to the Store**.

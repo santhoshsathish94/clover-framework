@@ -763,14 +763,16 @@ class K3HostEngine:
                     emit(dict(info, type="layer"))
         if meaning is not None and getattr(meaning, "guidance", ""):
             before.append(meaning.guidance)
+        b_dir = getattr(self, "base_dir", None) or Path.cwd()
+        m_dir = getattr(self, "media_dir", None) or (Path(b_dir) / "media")
         sensory_msgs, sensory_layers, _, _ = omni_native.run_s3_sensory_context(
-            self.base_dir,
-            self.media_dir,
+            b_dir,
+            m_dir,
             media,
             query,
             kit=kit,
             emit=emit,
-            turn_images=self.turn_images,
+            turn_images=getattr(self, "turn_images", None),
         )
         for sm in sensory_msgs:
             if sm.get("content"):
@@ -783,13 +785,13 @@ class K3HostEngine:
         by_name = {t["function"]["name"]: t["function"] for t in all_schemas}
 
         local_runner = object.__new__(omni_native.OmniNative)
-        local_runner.base_dir = self.base_dir
-        local_runner.media_dir = self.media_dir
-        local_runner.perms = self.perms
-        local_runner.workdir = self.workdir
-        local_runner.workname = self.workname
-        local_runner.after_write = self.after_write
-        local_runner.turn_images = self.turn_images
+        local_runner.base_dir = b_dir
+        local_runner.media_dir = m_dir
+        local_runner.perms = getattr(self, "perms", None)
+        local_runner.workdir = getattr(self, "workdir", None)
+        local_runner.workname = getattr(self, "workname", "")
+        local_runner.after_write = getattr(self, "after_write", None)
+        local_runner.turn_images = getattr(self, "turn_images", None)
         local_runner.turn_cancel = cancel
         local_runner.turn_paths = list(meaning.paths) if meaning is not None else N.user_paths(user_text)
         local_runner.turn_hosts = N.typed_hosts(meaning.text if meaning is not None else user_text)

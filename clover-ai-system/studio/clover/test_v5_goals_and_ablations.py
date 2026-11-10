@@ -704,13 +704,13 @@ def run_goal5_independent_validation_and_ablations(
         kit = lfm3_layers.LayerKit(tmp, memory_root=tmp / "growth" / "knowledge")
 
         def _always_wrong_chat(msgs, tools, max_new, by_name, on_delta=None, cancel=None, seed=0, tool_choice=None, on_plan=None):
-            # Persistently outputs wrong arithmetic across all 3 cycles
-            return "The product is 17 * 23 = 381.", [], {
+            # Persistently outputs broken Python syntax + wrong arithmetic across all 3 cycles
+            return "```python\ndef mul(a, b)\n    return a * b\n```\nThe product is 17 * 23 = 381.", [], {
                 "prompt_tokens": 50, "reused_tokens": 0, "new_tokens": 12, "prefill_s": 0.01, "decode_s": 0.01, "finish": "stop"
             }
 
         eng._chat = _always_wrong_chat
-        res_unconf = eng.run_turn([], "What is 17 * 23?", tools=False, layers=("compiler",), kit=kit)
+        res_unconf = eng.run_turn([], "Write mul(a, b) in Python and compute 17 * 23.", tools=False, layers=("compiler",), kit=kit)
         cyc_unconf = next((x for x in (res_unconf.get("layers") or []) if x.get("layer") == "cycle"), None)
         assert cyc_unconf and cyc_unconf.get("action") == "unconfirmed" and cyc_unconf.get("cycles_used") == 3, (
             f"Expected persistent failure across 3 cycles to be marked 'unconfirmed', got {cyc_unconf}"
