@@ -215,3 +215,31 @@
   Give stores a stub renewer in tests, and compare expiry with the real clock in route tests.
 - The test server's request log is block-buffered when piped through Tee-Object. Read the page's resource timings
   to see what it really requested.
+
+### The human's first real sign-in (2026-11-11, commit b569763c)
+- **Sign-in worked:** the code sign-in worked end to end with the human's real account (source `signin`).
+- **GitHub did not open by itself:** the test server only prints links, by design, so GitHub's page never opened.
+  - Fixed: the code note now has "Open GitHub" and "Copy code" buttons, and the test server opens GitHub's sign-in
+    page for real.
+- **Collective learning said "not found":** k3 still runs the old server, with no `/api/collective/gateway/session`
+  and no `github_auth.py` (`grep` on k3).
+  - k3's log: POST `/api/collective/gateway/session` 404 at 00:24:07 (the human's attempt); GET
+    `/api/collective/gateway/releases` 401 at 00:37:05 (my check).
+  - My client saw no answer within 20 s on that check.
+  - Needs the k3 update.
+- **Direction (human):** collective learning is for every user; personal memory and learning stay in each user's
+  own repository.
+  - Done: receiving needs no sign-in (consent, settings, sync and the gateway's releases endpoint); contributing
+    still needs the GitHub sign-in; the page text says so.
+- **Incident:** "Set up private repository" pressed on the test server pushed its scratch memory into the human's
+  real memory repository (commits 301ff4c..23978c3, merged with `-X ours`).
+  - Compared with the last commit from the real Studio (29dff04), 7 files differ.
+  - The 5 generated CONTEXT.md summaries were replaced by the test server's: the device name changed, and the
+    "Learnings" and "Did not work" sections are missing.
+  - 2 small files named after this PC were added.
+  - No records were deleted.
+  - The test server now refuses to push (409 checked in the browser).
+  - Repair needs the human's approval to push. The real device's next sync would restore the summaries (its side
+    wins the merge); the two files would stay.
+- **Growth:** a test server that can sign in for real must not be able to write to the real account. Block the
+  writes in the harness itself; a warning in a message is not enough.
