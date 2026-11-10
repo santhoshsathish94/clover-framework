@@ -115,14 +115,13 @@ button { cursor: pointer; }
 .ibtn:hover { background: var(--fill); color: var(--ink); }
 
 .stream { flex: 1; min-height: 0; overflow-y: auto; }
-.app.empty-chat .stream { flex: 0 0 auto; overflow: visible; }
-.app.empty-chat .main { justify-content: center; }
+.app.empty-chat .stream { flex: 0 0 auto; overflow: visible; margin-top: auto; }
+.app.empty-chat .dock { margin-bottom: auto; }
 .col { width: min(820px, 100%); margin: 0 auto; padding: .75rem 1.25rem 1.5rem; }
-.app.empty-chat .col { padding-bottom: .35rem; }
+.app.empty-chat .col { padding-top: .25rem; padding-bottom: .35rem; }
 .log { display: flex; flex-direction: column; gap: 1.4rem; }
-.hero { text-align: center; padding: .5rem .5rem .65rem; max-width: 640px; margin: 0 auto; animation: rise .45s var(--ease) both; }
-.hero__logo { width: 64px; height: 64px; display: block; margin: 0 auto .55rem; filter: drop-shadow(0 4px 12px rgba(23, 107, 44, .14)); }
-.mascot { width: 220px; height: auto; display: block; margin: 0 auto .4rem; }
+.hero { text-align: center; padding: .25rem .5rem .55rem; max-width: 640px; margin: 0 auto; animation: rise .45s var(--ease) both; }
+.mascot { width: 196px; height: auto; display: block; margin: 0 auto .35rem; }
 .hero h1 { font-size: 2.05rem; line-height: 1.15; letter-spacing: -.025em; font-weight: 700; margin: 0 0 .3rem; color: var(--ink); }
 .hero__tagline { margin: 0 auto .2rem; color: var(--ink-2); font-size: 1rem; font-weight: 500; letter-spacing: .01em; }
 .hero p#hero-p { margin: .15rem auto 0; color: var(--muted); font-size: .82rem; max-width: 480px; }
@@ -547,12 +546,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   .rail { position: fixed; inset: 0 auto 0 0; width: min(290px, 84vw); z-index: 55; transform: translateX(-104%); transition: transform .25s var(--ease); }
   .rail.on { transform: none; box-shadow: var(--shadow-lg); }
   .u { max-width: 88%; }
+  .mascot { width: 164px; }
   .cycle-strip { flex-wrap: wrap; justify-content: center; gap: .35rem .25rem; padding: .55rem .65rem; }
   .cycle-step { flex: 1 1 42%; min-width: 128px; }
   .cycle-arr { display: none; }
 }
 @media (min-width: 861px) {
-  .app:not(.rail-off) #new-chat-2 { display: none; }
+  .app:not(.rail-off) #new-chat-2,
+  .app:not(.rail-off) #set-btn { display: none; }
   .app:not(.rail-off) .scrim { left: 264px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
@@ -664,8 +665,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     <div class="stream" id="stream">
       <div class="col">
         <div class="hero" id="hero">
-          <img class="hero__logo" src="icon.png" alt="Clover" width="64" height="64">
-          <img class="mascot" src="robo-clover.webp" alt="" width="220" height="188" hidden>
+          <img class="mascot" src="robo-clover.webp" alt="Robo Clover" width="196" height="168">
           <h1 id="greet">Clover</h1>
           <p class="hero__tagline">Work &middot; Create &middot; Learn &middot; Grow</p>
           <p id="hero-p" hidden>Clover runs here on your laptop. Nothing leaves it unless you allow it.</p>
@@ -683,10 +683,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <input type="file" id="sense-camera-input" accept="image/*" capture="environment" hidden>
         <input type="file" id="sense-video-input" accept="video/*" capture="environment" hidden>
         <input type="file" id="sense-audio-input" accept="audio/*" capture hidden>
-        <div class="senses-pop" id="senses-menu" hidden role="menu" aria-label="Add files or connect system senses">
-          <div class="senses-hd">Files &amp; System Senses (S3)</div>
-          <button type="button" class="senses-item" data-sense="files"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span class="senses-item__t"><b>Add files, documents or media</b><small>Attach Excel, CSV, PDF, Word, code, photos, audio or video</small></span></button>
-          <button type="button" class="senses-item" data-sense="screenshot"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span class="senses-item__t"><b>System Screenshot app</b><small>Use OS Screenshot / Snipping Tool &amp; inspect with I-JEPA</small></span></button>
+        <div class="senses-pop" id="senses-menu" hidden role="menu" aria-label="Connect system senses">
+          <div class="senses-hd">System Senses (S3)</div>
           <button type="button" class="senses-item" data-sense="screen_record"><svg class="ic" aria-hidden="true"><use href="#i-video"/></svg><span class="senses-item__t"><b>System Screen Recorder / Video</b><small>Use OS Screen Recorder or Video Capture for visual analysis</small></span></button>
           <button type="button" class="senses-item" data-sense="camera"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span class="senses-item__t"><b>System Camera app</b><small>Capture a live photo with OS Camera for I-JEPA inspection</small></span></button>
           <button type="button" class="senses-item" data-sense="microphone"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span class="senses-item__t"><b>System Microphone / Voice Recorder</b><small>Capture audio via OS Mic / Recorder for Audio-JEPA analysis</small></span></button>
@@ -694,9 +692,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <textarea id="prompt" rows="1" placeholder="What would you like to do?" aria-label="Message"></textarea>
         <div class="composer__bar">
           <div class="composer__tools">
-            <button type="button" class="cbtn" id="attach" title="Add files or use System Senses (Screenshot, Screen Recorder, Camera, Microphone)" aria-label="Add files or system senses" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
-            <button type="button" class="cbtn" id="screen-btn" title="Capture screen or attach image to inspect &amp; ask Clover" aria-label="Capture screen or attach image"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></button>
-            <button type="button" class="cbtn" id="clip-btn" title="Attach document, spreadsheet or code file" aria-label="Attach file"><svg class="ic" aria-hidden="true"><use href="#i-clip"/></svg></button>
+            <button type="button" class="cbtn" id="attach" title="System Senses (Screen Recorder, Camera, Microphone)" aria-label="System senses" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+            <button type="button" class="cbtn" id="screen-btn" title="System Screenshot / Image inspection (I-JEPA)" aria-label="Capture screen or inspect image"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></button>
+            <button type="button" class="cbtn" id="clip-btn" title="Attach files, documents, spreadsheets, code or media" aria-label="Attach files or documents"><svg class="ic" aria-hidden="true"><use href="#i-clip"/></svg></button>
           </div>
           <div class="composer__actions">
             <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
@@ -3042,12 +3040,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       var comp = $('composer') || document.querySelector('.composer');
       var rect = comp ? comp.getBoundingClientRect() : null;
       var spaceAbove = rect ? (rect.top - 56) : 400;
-      var spaceBelow = rect ? (window.innerHeight - rect.bottom - 16) : 400;
+      var spaceBelow = rect ? (window.innerHeight - rect.bottom - 10) : 400;
       var isEmptyChat = $('app') && $('app').classList.contains('empty-chat');
-      var dropDown = (isEmptyChat && spaceBelow >= 220) || (spaceAbove < 320 && spaceBelow > spaceAbove);
+      var dropDown = (isEmptyChat && spaceBelow >= 236) || (spaceAbove < 240 && spaceBelow > spaceAbove);
       m.classList.toggle('drop-down', dropDown);
-      var avail = Math.max(180, (dropDown ? spaceBelow : spaceAbove) - 12);
-      m.style.maxHeight = Math.min(340, avail) + 'px';
+      var avail = (dropDown ? spaceBelow : spaceAbove) - 4;
+      m.style.maxHeight = avail < 236 ? Math.max(180, avail) + 'px' : '';
     }
     m.hidden = !show;
     $('attach').setAttribute('aria-expanded', String(show));

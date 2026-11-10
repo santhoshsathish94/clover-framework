@@ -20,12 +20,13 @@
    - Scrollable `Conversations` list (`#chats`)
    - Footer status (`Clover Ready` with green `.dot.ok`) and active workspace indicator (`#rail-ws`).
 3. Upgrade the Welcome / Empty-Chat Main View (`#hero`, `#composer`, `#hero-below`) with:
-   - Centered Clover emblem (`icon.png`), `Clover` heading (`#greet`), and `Work · Create · Learn · Grow` subtitle
-   - Centered 2-row rounded Composer card (`What would you like to do?` placeholder, bottom toolbar with `+` `#attach`, image/screenshot `#screen-btn`, file attachment `#clip-btn`, and `#send` button)
+   - Keep `icon.png` in the top-left sidebar logo place (`.rail__brand .brand`) and display the Robo Clover mascot (`robo-clover.webp`, `.mascot`) in the center `#hero` above `Clover` (`#greet`) and `Work · Create · Learn · Grow`
+   - Keep `header.bar` pinned at `top: 0` at all times (using `.app.empty-chat .stream { margin-top: auto; }` and `.app.empty-chat .dock { margin-bottom: auto; }` instead of `.main { justify-content: center; }`), and hide the redundant `#set-btn` gear icon on desktop when the sidebar is open (`.app:not(.rail-off) #set-btn { display: none; }`)
+   - Centered 2-row rounded Composer card (`What would you like to do?` placeholder, bottom toolbar with `+` `#attach` for System Senses `screen_record` / `camera` / `microphone`, image/screenshot `#screen-btn`, file attachment `#clip-btn`, and `#send` button — with no duplicate File or Screenshot rows inside `#senses-menu`)
    - 5-Stage Clover Cycle Strip (`Context / Understand` › `Direction / Plan together` › `Execution / Do the work` › `Outcome / Check the result` › `Growth / Learn and improve`)
    - Collaboration pill (`System · Human · AI working together` with `#i-success` checkmark)
-   - Keep `Memory`, `Tools`, and `Learning` in the left sidebar navigation only (no duplicate 3-card `.feature-grid` below the composer, which previously added `210px` of vertical height, pushed the composer up to `y = 227px` on mobile, and caused `#senses-menu` and `#hero` to clip off the top of the viewport)
-   - Smart `#senses-menu` (`.senses-pop`) positioning: opens downward (`.drop-down`) in `.empty-chat` or when space above `< 320px`, and caps `max-height` to available viewport height so the `+` menu and `Clover` emblem are 100% visible on every screen.
+   - Keep `Memory`, `Tools`, and `Learning` in the left sidebar navigation only (no duplicate 3-card `.feature-grid` below the composer)
+   - Smart `#senses-menu` (`.senses-pop`) positioning: opens downward (`.drop-down`) in `.empty-chat` or when space above `< 240px` with zero scrollbar.
 4. Add a first-class `[data-page="memory"]` view in `#sheet`, expose `Workspaces` across Web, Mobile, and Laptop, and synchronize all three platform targets (`app.html`, `site/clover-ai/index.html`, and `clover-ai-system/mobile/android-app/assets/index.html`).
 
 ## 3. Execution

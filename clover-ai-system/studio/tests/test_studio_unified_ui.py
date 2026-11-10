@@ -61,20 +61,32 @@ check(
     'id="status-dot"' in app and 'id="status-text">Clover Ready</span>' in app,
 )
 
-# 3. Welcome Hero, Composer, 5-Stage Clover Cycle Strip, Collab Pill, and 3 Feature Cards
+# 3. Welcome Hero, Composer, 5-Stage Clover Cycle Strip, and Collab Pill
 check(
-    "Welcome Hero displays Clover emblem, Clover title, and Work · Create · Learn · Grow tagline",
-    'class="hero__logo" src="icon.png"' in app
+    "Welcome Hero displays Robo Clover mascot in center (and icon.png in sidebar brand), Clover title, and Work · Create · Learn · Grow tagline",
+    '<img class="mascot" src="robo-clover.webp"' in app
+    and 'class="hero__logo"' not in app
     and '<h1 id="greet">Clover</h1>' in app
     and "Work &middot; Create &middot; Learn &middot; Grow" in app,
 )
 check(
-    "Composer has 'What would you like to do?' placeholder and bottom toolbar (#attach, #screen-btn, #clip-btn, #send)",
+    "Top bar stays pinned at top in empty-chat (.stream margin-top:auto, .dock margin-bottom:auto) and hides duplicate #set-btn when sidebar is open on desktop",
+    ".app.empty-chat .stream { flex: 0 0 auto; overflow: visible; margin-top: auto; }" in app
+    and ".app.empty-chat .dock { margin-bottom: auto; }" in app
+    and ".app:not(.rail-off) #set-btn { display: none; }" in app,
+)
+check(
+    "Composer has 'What would you like to do?' placeholder and bottom toolbar (#attach, #screen-btn, #clip-btn, #send) without duplicating files/screenshot in #senses-menu",
     'placeholder="What would you like to do?"' in app
     and 'id="attach"' in app
     and 'id="screen-btn"' in app
     and 'id="clip-btn"' in app
-    and 'id="send"' in app,
+    and 'id="send"' in app
+    and 'data-sense="files"' not in app
+    and 'data-sense="screenshot"' not in app
+    and 'data-sense="screen_record"' in app
+    and 'data-sense="camera"' in app
+    and 'data-sense="microphone"' in app,
 )
 
 for stage, subtitle, icon_id in (
