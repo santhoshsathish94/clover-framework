@@ -35,7 +35,8 @@
      - `Workspaces` (`[data-nav="workspaces"]`) with collapsible submenu `#rail-ws-sub` (`#ws-source-pills` + `#vsc-tree` for the user's own local or connected GitHub project repositories — never `clover-ai-studio`).
      - `Memory` (`[data-nav="memory"]`) with collapsible submenu `#rail-mem-sub` (`#mem-repo-pill` + `#mem-tree` for Clover's `clover-ai-studio` persistent memory repository: `AGENTS.md`, `CONTEXT.md`, `config/`, `execution/`, `growth/`, `outcomes/`, `sessions/`).
      - `Tools` (`[data-nav="tools"]`) with collapsible submenu `#rail-tools-sub` (`#tools-tree`: `Terminal`, `Browser`, user-added custom tools `#rail-custom-tools`, and `+ Add tool…` `#rail-add-tool-btn`).
-     - `Learning`, and `Settings`.
+     - `Learning` (`[data-nav="learning"]`) with collapsible submenu `#rail-learn-sub` (`#learn-tree`: `Personal Learning`, `Collective Learning`, `Autonomous & JEPA`, `Learning Logs`).
+     - `Settings`.
    - **Center Pane (`.main`)**: Contains `<header class="bar">` at top (`#menu`, `#new-chat-2`, `#chat-title`, `#set-btn`). Below the bar, displays either the Chat view (`#stream` + `.dock`) or the in-place Section view (`#sheet` inside `.main` with `.app.view-page`, zero slide-over drawer or 3rd pane).
    - **Camera & Voice in the Chat Screen Composer (`#composer`)**:
      - Clicking the image/camera icon (`#screen-btn`) in the chat composer opens the Camera app (`triggerSystemSense('camera')`).
@@ -51,6 +52,13 @@
      - Clicking **Terminal** (`[data-tool-app="terminal"]`) or **Browser** (`[data-tool-app="browser"]`) loads that interactive app in the center pane:
        - `#tool-app-terminal`: Interactive PowerShell/shell console (`POST /api/tools/terminal` via `server.run_terminal_tool`) shared by the user and Clover (`logCloverTerminalActivity` automatically logs Clover's `run_powershell` / `run_python` commands & outputs into `#term-console`, plus `#term-clover-form` to ask Clover directly from Terminal, and `Open in Terminal` on chat tool cards).
        - `#tool-app-browser`: Interactive web reader & search browser (`POST /api/tools/browser` via `server.run_browser_tool`) shared by the user and Clover (`logCloverBrowserActivity` syncs Clover's `web_search` / `fetch_url` into `#brow-viewport`, plus `#brow-clover-form` to ask Clover directly from Browser, and `Open in Browser tool` on chat tool cards).
+   - **Learning (`[data-page="learning"]`) — Submenus & Center-Pane Views**:
+     - Clicking `Learning` in the left pane expands `#rail-learn-sub` (`Personal Learning`, `Collective Learning`, `Autonomous & JEPA`, `Learning Logs`) and shows `#learn-parent-view` in the center pane.
+     - Clicking any submenu item loads its dedicated view in the center pane:
+       - `#learn-view-personal` (`Personal Learning`): what Clover personally learned from your chats, preferences, corrections, and experiences (`#learn-personal-list`) + `Forget everything Clover learned about you` (`#learn-personal-forget`).
+       - `#learn-view-collective` (`Collective Learning`): Google Identity (`#lg-google-kv`), opt-in contribute/receive switches (`#lg-contribute`, `#lg-receive`), active shared-core rules (`#lg-active-rules`), pending candidates (`#lg-pending-list` + `#lg-review-row` + `#lg-confirm-box`), and submitted contributions (`#lg-submitted-list`).
+       - `#learn-view-autonomous` (`Autonomous Cycle & JEPA`): JEPA Epistemic Surprise discovery, Cycle 2 self-repair, verified outcome self-training (`#lg-auto-kv`, `#lg-auto-run`, `#lg-auto-out`), and Clover Layers (`data-go="layers"`).
+       - `#learn-view-logs` (`Learning Logs`): live structured logs for JEPA, Collective Learning, Turns, Senses & Settings (`#learn-dbg-cat`, `#learn-dbg-entries`) and Server & Engine Log Files (`#learn-dbg-files`).
    - **Settings (`[data-page="home"]`)**: Omits the duplicate `Workspaces`, `Memory`, `Tools`, and `Learning & Growth` rows (since each has its own left-pane menu) and shows `Model and voice`, `GitHub account (Memory backup)`, `Storage`, `Debug logs & Senses`, and `Advanced`.
    - Synchronize all three platform targets (`app.html`, `site/clover-ai/index.html`, and `clover-ai-system/mobile/android-app/assets/index.html`).
 

@@ -547,7 +547,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 .vsc-node__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .vsc-node__meta { font-size: .66rem; color: var(--faint); font-family: var(--mono); flex: none; margin-left: .2rem; }
 .vsc-children { display: flex; flex-direction: column; gap: 1px; }
-#ws-parent-view[hidden], #mem-parent-view[hidden], #tools-parent-view[hidden], .vsc-view[hidden], .tool-app[hidden] { display: none !important; }
+#ws-parent-view[hidden], #mem-parent-view[hidden], #tools-parent-view[hidden], #learn-parent-view[hidden], .learn-subview[hidden], .vsc-view[hidden], .tool-app[hidden] { display: none !important; }
 .vsc-view { display: flex; flex-direction: column; min-height: calc(100vh - 175px); min-width: 0; background: var(--surface);
   border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: .5rem; }
 .tool-app { display: flex; flex-direction: column; min-height: calc(100vh - 185px); min-width: 0; background: var(--surface);
@@ -776,7 +776,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           <button type="button" class="vsc-node" id="rail-add-tool-btn" title="Add a tool"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span class="vsc-node__name">Add tool…</span></button>
         </div>
       </div>
-      <button type="button" class="rail__nav-btn" data-nav="learning"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span>Learning</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="learning" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span>Learning</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      <div class="rail__sub" id="rail-learn-sub" hidden>
+        <div class="vsc-tree" id="learn-tree" role="tree" aria-label="Learning sections">
+          <button type="button" class="vsc-node" role="treeitem" data-learn-sub="personal"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span class="vsc-node__name">Personal Learning</span></button>
+          <button type="button" class="vsc-node" role="treeitem" data-learn-sub="collective"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg><span class="vsc-node__name">Collective Learning</span></button>
+          <button type="button" class="vsc-node" role="treeitem" data-learn-sub="autonomous"><svg class="ic" aria-hidden="true"><use href="#i-graph"/></svg><span class="vsc-node__name">Autonomous &amp; JEPA</span></button>
+          <button type="button" class="vsc-node" role="treeitem" data-learn-sub="logs"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span class="vsc-node__name">Learning Logs</span></button>
+        </div>
+      </div>
       <button type="button" class="rail__nav-btn" data-nav="settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg><span>Settings</span></button>
     </nav>
     <div class="rail__foot">
@@ -934,54 +942,131 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     </section>
 
     <section class="page" data-page="learning" hidden>
-      <p class="lead">Personal learning stays local on this laptop and works offline without signing in. Opt-in collective learning uses Google OpenID Connect (no separate Clover account) to contribute or receive verified shared-core strategies.</p>
-      <div class="glabel">Google Identity (for Collective Learning)</div>
-      <div class="group pad">
-        <div class="kv" id="lg-google-kv"><span>Google status</span><b id="lg-google-status">Not connected</b></div>
-        <div class="btns" style="margin-top:.55rem">
-          <button type="button" class="btn pri" id="lg-google-connect">Sign in with Google</button>
-          <button type="button" class="btn danger" id="lg-google-disconnect" hidden>Disconnect Google</button>
+      <div id="learn-parent-view">
+        <p class="lead">Understand what Clover has <b>personally learned</b> from your work, what is <b>collectively learned</b> across verified shared-core strategies, how Clover self-trains with <b>JEPA / RPRE</b>, and inspect live <b>learning logs</b>.</p>
+
+        <div class="glabel">Learning &amp; Growth Sections</div>
+        <div class="group" id="learn-overview-group">
+          <button type="button" class="row t" data-open-learn="personal">
+            <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span>
+            <span class="row__t">Personal Learning<small>What Clover personally learned about your habits, preferences, corrections &amp; experiences (stays on this device)</small></span>
+            <span class="row__v" id="v-learn-personal">Always on</span>
+            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          </button>
+          <button type="button" class="row t" data-open-learn="collective">
+            <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></span>
+            <span class="row__t">Collective Learning<small>Opt-in shared-core strategies, candidate contributions, and Ed25519-signed releases via Google OpenID Connect</small></span>
+            <span class="row__v" id="v-learn-collective">Off by default</span>
+            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          </button>
+          <button type="button" class="row t" data-open-learn="autonomous">
+            <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-graph"/></svg></span>
+            <span class="row__t">Autonomous Cycle &amp; JEPA<small>JEPA Epistemic Surprise discovery, Cycle 2 self-repair, verified outcome self-training &amp; Clover layers</small></span>
+            <span class="row__v" id="v-learn-autonomous">JEPA / RPRE</span>
+            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          </button>
+          <button type="button" class="row t" data-open-learn="logs">
+            <span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span>
+            <span class="row__t">Learning Logs<small>Live structured logs for JEPA, Collective Learning, Turns, Senses &amp; engine log files</small></span>
+            <span class="row__v">Live</span>
+            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          </button>
         </div>
-        <p class="fine">Clover uses Google OpenID Connect (`sub` identifier only) to authenticate collective contributions and releases with the Clover Collective Gateway (no GitHub account needed). For backing up your personal memory (`S1`) to a private GitHub repository, use <b>Settings &rarr; GitHub account</b>.</p>
       </div>
-      <div class="glabel">Learning Preferences</div>
-      <div class="group">
-        <div class="row static"><span class="row__t">Personal Learning<small>Always enabled locally. Learns your habits and answer preferences offline; never leaves this device.</small></span><span class="badge on">Always on</span></div>
-        <label class="row static"><span class="row__t">Contribute to Collective Learning<small>Disabled by default. Requires Google sign-in, explicit consent, and per-candidate review before upload.</small></span><span class="switch"><input type="checkbox" id="lg-contribute"><span></span></span></label>
-        <label class="row static"><span class="row__t">Receive Collective Learning<small>Disabled by default. Requires Google sign-in and explicit consent; applies Ed25519-signed shared-core releases.</small></span><span class="switch"><input type="checkbox" id="lg-receive"><span></span></span></label>
-      </div>
-      <div class="btns" style="margin:.4rem 0 .8rem">
-        <button type="button" class="btn sm" data-go="personal">View personal learning</button>
-        <button type="button" class="btn sm" id="lg-sync-now">Sync collective core now</button>
-        <button type="button" class="btn sm danger" id="lg-withdraw" hidden>Withdraw contribution consent</button>
-      </div>
-      <div class="note" id="lg-note" hidden></div>
-      <div class="glabel">Synchronization &amp; Transparency</div>
-      <div class="group pad"><div class="kv" id="lg-status-kv"></div></div>
-      <div class="glabel">Pending Candidate Contributions (stripped, zero user text)</div>
-      <div class="group pad" id="lg-pending-list"></div>
-      <div class="btns" id="lg-review-row" hidden style="margin-top:.4rem">
-        <button type="button" class="btn pri" id="lg-review-btn">Review &amp; Contribute…</button>
-      </div>
-      <div class="confirm" id="lg-confirm-box" hidden style="margin-top:.6rem">
-        <b>Confirm candidate contribution</b>
-        <p class="fine" style="margin:.35rem 0">Review the exact candidate package below. Only closed-vocabulary trigger lemmas, target capabilities, and local support counts leave this device—never prompts, files, memories, or conversation histories.</p>
-        <pre id="lg-confirm-json" style="max-height:180px;overflow:auto;font-size:.78rem;background:var(--bg);padding:.55rem;border-radius:8px;border:1px solid var(--line)"></pre>
-        <div class="ask__b"><button type="button" class="btn pri" id="lg-confirm-upload">Confirm &amp; Upload</button><button type="button" class="btn" id="lg-confirm-cancel">Cancel</button></div>
-      </div>
-      <div class="glabel">Submitted Contributions</div>
-      <div class="group pad" id="lg-submitted-list"></div>
-      <div class="glabel">Active Shared-Core Rules</div>
-      <div class="group pad" id="lg-active-rules"></div>
-      <div class="glabel">Autonomous Clover Cycle &amp; Self-Training (JEPA / RPRE)</div>
-      <div class="group pad">
-        <p class="fine" style="margin-top:0">Clover discovers high-surprise problems via JEPA Epistemic Surprise, repairs Cycle 1 failures autonomously in Cycle 2, and self-trains its local <code>idm</code> and <code>OutcomeResidualAdapter</code> only on externally verified outcomes.</p>
-        <div class="kv" id="lg-auto-kv" style="margin-top:.5rem"></div>
-        <div class="btns" style="margin-top:.6rem">
-          <button type="button" class="btn pri sm" id="lg-auto-run">Run Autonomous Cycle &amp; Self-Train</button>
-          <button type="button" class="btn sm" data-go="debug">Open Debug Logs</button>
+
+      <!-- 1. Personal Learning Sub-view -->
+      <div class="learn-subview" id="learn-view-personal" hidden>
+        <p class="lead">Personal learning stays local on this laptop and works offline without signing in. Clover learns your habits, phrasing, and preferences from your corrections and requests—and never sends them anywhere.</p>
+        <div class="glabel">Status</div>
+        <div class="group">
+          <div class="row static"><span class="row__t">Personal Learning<small>Always enabled locally. Deleting a chat also deletes the experiences learned from that chat.</small></span><span class="badge on">Always on</span></div>
         </div>
-        <pre class="dbg-pre" id="lg-auto-out" hidden></pre>
+        <div class="glabel">What Clover Personally Learned About You</div>
+        <div class="group pad" id="learn-personal-list">Loading personal learning…</div>
+        <div class="group">
+          <button type="button" class="row t danger" id="learn-personal-forget"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></span><span class="row__t">Forget everything Clover learned about you</span></button>
+        </div>
+      </div>
+
+      <!-- 2. Collective Learning Sub-view -->
+      <div class="learn-subview" id="learn-view-collective" hidden>
+        <p class="lead">Opt-in collective learning uses Google OpenID Connect (no separate Clover account) to contribute stripped, zero-user-text structural strategies or receive verified shared-core releases.</p>
+        <div class="glabel">Google Identity (for Collective Learning)</div>
+        <div class="group pad">
+          <div class="kv" id="lg-google-kv"><span>Google status</span><b id="lg-google-status">Not connected</b></div>
+          <div class="btns" style="margin-top:.55rem">
+            <button type="button" class="btn pri" id="lg-google-connect">Sign in with Google</button>
+            <button type="button" class="btn danger" id="lg-google-disconnect" hidden>Disconnect Google</button>
+          </div>
+          <p class="fine">Clover uses Google OpenID Connect (`sub` identifier only) to authenticate collective contributions and releases with the Clover Collective Gateway.</p>
+        </div>
+        <div class="glabel">Collective Learning Preferences</div>
+        <div class="group">
+          <label class="row static"><span class="row__t">Contribute to Collective Learning<small>Disabled by default. Requires Google sign-in, explicit consent, and per-candidate review before upload.</small></span><span class="switch"><input type="checkbox" id="lg-contribute"><span></span></span></label>
+          <label class="row static"><span class="row__t">Receive Collective Learning<small>Disabled by default. Requires Google sign-in and explicit consent; applies Ed25519-signed shared-core releases.</small></span><span class="switch"><input type="checkbox" id="lg-receive"><span></span></span></label>
+        </div>
+        <div class="btns" style="margin:.4rem 0 .8rem">
+          <button type="button" class="btn sm pri" id="lg-sync-now">Sync collective core now</button>
+          <button type="button" class="btn sm danger" id="lg-withdraw" hidden>Withdraw contribution consent</button>
+        </div>
+        <div class="note" id="lg-note" hidden></div>
+        <div class="glabel">Synchronization &amp; Transparency</div>
+        <div class="group pad"><div class="kv" id="lg-status-kv"></div></div>
+        <div class="glabel">Active Shared-Core Rules (Collectively Learned)</div>
+        <div class="group pad" id="lg-active-rules"></div>
+        <div class="glabel">Pending Candidate Contributions (stripped, zero user text)</div>
+        <div class="group pad" id="lg-pending-list"></div>
+        <div class="btns" id="lg-review-row" hidden style="margin-top:.4rem">
+          <button type="button" class="btn pri" id="lg-review-btn">Review &amp; Contribute…</button>
+        </div>
+        <div class="confirm" id="lg-confirm-box" hidden style="margin-top:.6rem">
+          <b>Confirm candidate contribution</b>
+          <p class="fine" style="margin:.35rem 0">Review the exact candidate package below. Only closed-vocabulary trigger lemmas, target capabilities, and local support counts leave this device—never prompts, files, memories, or conversation histories.</p>
+          <pre id="lg-confirm-json" style="max-height:180px;overflow:auto;font-size:.78rem;background:var(--bg);padding:.55rem;border-radius:8px;border:1px solid var(--line)"></pre>
+          <div class="ask__b"><button type="button" class="btn pri" id="lg-confirm-upload">Confirm &amp; Upload</button><button type="button" class="btn" id="lg-confirm-cancel">Cancel</button></div>
+        </div>
+        <div class="glabel">Submitted Contributions</div>
+        <div class="group pad" id="lg-submitted-list"></div>
+      </div>
+
+      <!-- 3. Autonomous Cycle & JEPA Sub-view -->
+      <div class="learn-subview" id="learn-view-autonomous" hidden>
+        <p class="lead">Clover discovers high-surprise problems via JEPA Epistemic Surprise, repairs Cycle 1 failures autonomously in Cycle 2, and self-trains its local <code>idm</code> and <code>OutcomeResidualAdapter</code> only on externally verified outcomes.</p>
+        <div class="glabel">Autonomous Clover Cycle &amp; Self-Training (JEPA / RPRE)</div>
+        <div class="group pad">
+          <div class="kv" id="lg-auto-kv"></div>
+          <div class="btns" style="margin-top:.6rem">
+            <button type="button" class="btn pri sm" id="lg-auto-run">Run Autonomous Cycle &amp; Self-Train</button>
+            <button type="button" class="btn sm" data-go="layers">Inspect Clover Layers (C1–C3 &amp; S1–S3)</button>
+          </div>
+          <pre class="dbg-pre" id="lg-auto-out" hidden></pre>
+        </div>
+      </div>
+
+      <!-- 4. Learning Logs Sub-view -->
+      <div class="learn-subview" id="learn-view-logs" hidden>
+        <p class="lead">Live structured logs for JEPA self-training, Collective Learning synchronization, turns, and system senses, plus server &amp; engine log files.</p>
+        <div class="glabel">Structured Learning &amp; System Logs</div>
+        <div class="group pad">
+          <div class="seg full" id="learn-dbg-cat" style="flex-wrap:wrap;margin-bottom:.5rem">
+            <button type="button" class="on" data-v="all">All</button>
+            <button type="button" data-v="jepa">JEPA</button>
+            <button type="button" data-v="collective">Collective</button>
+            <button type="button" data-v="turn">Turns</button>
+            <button type="button" data-v="senses">Senses</button>
+            <button type="button" data-v="settings">Settings</button>
+          </div>
+          <div class="btns" style="margin-top:0;margin-bottom:.45rem">
+            <button type="button" class="btn sm pri" id="learn-dbg-refresh">Refresh</button>
+            <button type="button" class="btn sm" id="learn-dbg-copy">Copy logs</button>
+            <button type="button" class="btn sm danger" id="learn-dbg-clear">Clear logs</button>
+          </div>
+          <pre class="dbg-pre" id="learn-dbg-entries">Loading learning &amp; system logs…</pre>
+        </div>
+        <div class="glabel">Server &amp; Engine Log Files</div>
+        <div class="group pad">
+          <pre class="dbg-pre" id="learn-dbg-files">No log files loaded yet.</pre>
+        </div>
       </div>
     </section>
 
@@ -2811,6 +2896,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var pending = cv.pending_candidates || cv.candidate_preview || [];
     var submitted = cv.submitted_packages || [];
     var rules = cv.active_rules || cv.rules || [];
+    if ($('v-learn-personal')) {
+      $('v-learn-personal').textContent = (habits || exps) ? (habits + ' habits · ' + exps + ' exp') : 'Always on';
+    }
+    if ($('v-learn-collective')) {
+      $('v-learn-collective').textContent = (cv.consent_contribute || cv.consent_receive)
+        ? (rules.length + ' shared rules')
+        : (g.connected ? 'Connected (opt-in)' : 'Off by default');
+    }
     if ($('lg-status-kv')) {
       var rows = [
         ['Google connection', g.connected ? 'Connected (OIDC sub verified)' : 'Not connected (offline mode)'],
@@ -2900,19 +2993,24 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   $('personal-forget').addEventListener('click', function () {
     if (!confirm('Forget everything Clover learned about you? The experiences and what was learned from them are deleted from this computer.')) return;
-    api('POST', '/api/personal/forget', { confirm: true }).then(function (r) { state.personal = r.view || {}; renderPersonal(); renderLayers(); })
+    api('POST', '/api/personal/forget', { confirm: true }).then(function (r) { state.personal = r.view || {}; renderPersonal(); renderLayers(); renderLearningGrowth(); })
       .catch(function (e) { alert('Could not forget: ' + e.message); });
   });
+  if ($('learn-personal-forget')) {
+    $('learn-personal-forget').addEventListener('click', function () {
+      $('personal-forget').click();
+    });
+  }
   /* what personal learning holds: what was learned and the experiences behind it; forget all of it */
   function renderPersonal() {
-    var box = $('personal-list'), memBox = $('memory-personal-summary');
+    var box = $('personal-list'), memBox = $('memory-personal-summary'), learnBox = $('learn-personal-list');
     var pv = state.personal || {};
     var kn = pv.learned || [], pr = (pv.preferences || []).filter(function (p) { return p.in_use; }), ex = pv.experiences || [];
-    function fillBox(target) {
+    function fillBox(target, detailed) {
       if (!target) return;
       target.innerHTML = '';
       if (!kn.length && !pr.length && !ex.length) {
-        target.appendChild(el('p', 'fine', 'No saved personal notes or learned habits yet. As you work with Clover, your preferences and notes appear here.'));
+        target.appendChild(el('p', 'fine', 'No saved personal notes or learned habits yet. As you work with Clover, your preferences, corrections, and learned habits appear here.'));
         return;
       }
       kn.forEach(function (h) {
@@ -2925,10 +3023,23 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         var r = el('div', 'row static'); var t = el('span', 'row__t');
         t.textContent = 'You prefer ' + String(p.value).replace(/_/g, ' ') + ' (' + p.dimension + ')'; r.appendChild(t); target.appendChild(r);
       });
+      if (detailed && ex.length) {
+        ex.slice(0, 10).forEach(function (eItem) {
+          var r = el('div', 'row static'); var t = el('span', 'row__t');
+          var summary = eItem.summary || eItem.lesson || eItem.outcome || ((eItem.when_you_say || []).join(' ') ? ('Learned from: ' + (eItem.when_you_say || []).join(' ')) : 'Validated interaction experience');
+          t.textContent = summary;
+          if (eItem.ts || eItem.session_id) {
+            var sm = el('small'); sm.textContent = [eItem.ts, eItem.session_id].filter(Boolean).join(' · ');
+            t.appendChild(sm);
+          }
+          r.appendChild(t); target.appendChild(r);
+        });
+      }
       var n = el('p', 'fine'); n.textContent = ex.length + (ex.length === 1 ? ' experience' : ' experiences') + ' from your chats are kept on this computer.'; target.appendChild(n);
     }
-    fillBox(box);
-    fillBox(memBox);
+    fillBox(box, false);
+    fillBox(memBox, false);
+    fillBox(learnBox, true);
   }
 
   /* ---------- web search provider (the key goes to this laptop's server and is never shown again) ---------- */
@@ -3111,12 +3222,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   var stack = ['home'];
   var CUSTOM_TOOLS_KEY = 'clover_custom_tools_v1';
   var TOOL_APP_TITLES = { terminal: 'Terminal', browser: 'Browser' };
+  var LEARN_SUB_TITLES = { personal: 'Personal Learning', collective: 'Collective Learning', autonomous: 'Autonomous Cycle & JEPA', logs: 'Learning Logs' };
   var toolAppState = { active: '', termCwd: '', termHist: [], termHistIdx: -1, lastTermLog: '', browHist: [], browIdx: -1, browCurrent: null, addKind: 'terminal', customTools: [] };
+  var learnState = { active: '' };
   function setSubmenuOpen(navName, open) {
     var sub = navName === 'chat' ? $('rail-chat-sub')
       : navName === 'workspaces' ? $('rail-ws-sub')
       : navName === 'memory' ? $('rail-mem-sub')
-      : navName === 'tools' ? $('rail-tools-sub') : null;
+      : navName === 'tools' ? $('rail-tools-sub')
+      : navName === 'learning' ? $('rail-learn-sub') : null;
     var btnEl = document.querySelector('.rail__nav-btn[data-nav="' + navName + '"]');
     if (sub) sub.hidden = !open;
     if (btnEl) {
@@ -3128,9 +3242,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var nav = 'chat';
     if ($('sheet') && $('sheet').classList.contains('on')) {
       if (page === 'workspaces') nav = 'workspaces';
-      else if (page === 'memory' || page === 'personal' || page === 'storage' || page === 'layers' || page === 'account') nav = 'memory';
-      else if (page === 'tools' || page === 'perms' || page === 'vscode' || page === 'debug') nav = 'tools';
-      else if (page === 'learning' || page === 'collective') nav = 'learning';
+      else if (page === 'memory' || page === 'storage' || page === 'account') nav = 'memory';
+      else if (page === 'tools' || page === 'perms' || page === 'vscode') nav = 'tools';
+      else if (page === 'learning' || page === 'personal' || page === 'collective' || page === 'layers' || page === 'debug') nav = 'learning';
       else nav = 'settings';
     }
     Array.prototype.forEach.call(document.querySelectorAll('.rail__nav-btn'), function (b) {
@@ -3140,6 +3254,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     setSubmenuOpen('workspaces', nav === 'workspaces');
     setSubmenuOpen('memory', nav === 'memory');
     setSubmenuOpen('tools', nav === 'tools');
+    setSubmenuOpen('learning', nav === 'learning');
   }
   function showPage(name, dir) {
     Array.prototype.forEach.call(document.querySelectorAll('.page'), function (p) {
@@ -3147,15 +3262,18 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       p.hidden = !on;
       if (on) { p.classList.remove('from-left'); p.style.animation = 'none'; void p.offsetWidth; p.style.animation = ''; if (dir < 0) p.classList.add('from-left'); }
     });
-    if ($('sheet')) $('sheet').classList.toggle('wide', name === 'workspaces' || name === 'memory' || name === 'tools');
+    if ($('sheet')) $('sheet').classList.toggle('wide', name === 'workspaces' || name === 'memory' || name === 'tools' || name === 'learning');
     var inWsFile = (name === 'workspaces' && typeof wsExp !== 'undefined' && wsExp.mode === 'file' && wsExp.section === 'workspaces' && wsExp.file);
     var inMemFile = (name === 'memory' && typeof wsExp !== 'undefined' && wsExp.mode === 'file' && wsExp.section === 'memory' && wsExp.file);
     var inToolApp = (name === 'tools' && toolAppState.active && TOOL_APP_TITLES[toolAppState.active]);
+    var inLearnSub = (name === 'learning' && learnState.active && LEARN_SUB_TITLES[learnState.active]);
     var pageTitle = (inWsFile || inMemFile)
       ? (wsExp.file.path || wsExp.file.name || PAGES[name])
       : inToolApp
         ? TOOL_APP_TITLES[toolAppState.active]
-        : PAGES[name];
+        : inLearnSub
+          ? LEARN_SUB_TITLES[learnState.active]
+          : PAGES[name];
     $('sheet-h').textContent = pageTitle;
     if ($('chat-title')) $('chat-title').textContent = pageTitle;
     var prev = stack.length > 1 ? stack[stack.length - 2] : null;
@@ -3168,6 +3286,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     } else if (inToolApp) {
       $('sheet-back').hidden = false;
       $('back-t').textContent = PAGES.tools;
+    } else if (inLearnSub) {
+      $('sheet-back').hidden = false;
+      $('back-t').textContent = PAGES.learning;
     } else {
       $('sheet-back').hidden = !prev;
       $('back-t').textContent = prev ? PAGES[prev] : '';
@@ -3181,6 +3302,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (name === 'workspaces' && typeof showWorkspaceParentView === 'function') showWorkspaceParentView();
     if (name === 'memory' && typeof showMemoryParentView === 'function') showMemoryParentView();
     if (name === 'tools' && typeof showToolsParentView === 'function') showToolsParentView();
+    if (name === 'learning' && typeof showLearningParentView === 'function') showLearningParentView();
     stack.push(name);
     showPage(name, 1);
     $('sheet-back').focus();
@@ -3196,6 +3318,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     if (stack[stack.length - 1] === 'tools' && toolAppState.active) {
       showToolsParentView();
+      return;
+    }
+    if (stack[stack.length - 1] === 'learning' && learnState.active) {
+      showLearningParentView();
       return;
     }
     if (stack.length > 1) { stack.pop(); showPage(stack[stack.length - 1], -1); (stack.length > 1 ? $('sheet-back') : $('sheet-x')).focus(); }
@@ -3243,31 +3369,41 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function loadDebugLogs() {
     api('GET', '/api/debug/logs?category=' + encodeURIComponent(dbgCat) + '&limit=120').then(function (r) {
       var entries = r.entries || [];
-      if ($('dbg-entries')) {
-        $('dbg-entries').textContent = entries.length
-          ? entries.map(function (e) {
-              var det = typeof e.detail === 'object' ? JSON.stringify(e.detail) : String(e.detail || '');
-              return '[' + (e.ts || '') + '] [' + (e.category || 'log').toUpperCase() + '] ' + (e.event || '') + (det ? ' — ' + det : '');
-            }).join('\n')
-          : '(No debug events recorded yet for category "' + dbgCat + '".)';
-      }
-      if ($('dbg-files')) {
-        var tails = r.file_tails || {}, names = Object.keys(tails);
-        $('dbg-files').textContent = names.length
-          ? names.map(function (n) { return '=== ' + n + ' ===\n' + tails[n]; }).join('\n\n')
-          : '(No log files found in <base>/logs/.)';
-      }
+      var entTxt = entries.length
+        ? entries.map(function (e) {
+            var det = typeof e.detail === 'object' ? JSON.stringify(e.detail) : String(e.detail || '');
+            return '[' + (e.ts || '') + '] [' + (e.category || 'log').toUpperCase() + '] ' + (e.event || '') + (det ? ' — ' + det : '');
+          }).join('\n')
+        : '(No debug events recorded yet for category "' + dbgCat + '".)';
+      if ($('dbg-entries')) $('dbg-entries').textContent = entTxt;
+      if ($('learn-dbg-entries')) $('learn-dbg-entries').textContent = entTxt;
+      var tails = r.file_tails || {}, names = Object.keys(tails);
+      var filesTxt = names.length
+        ? names.map(function (n) { return '=== ' + n + ' ===\n' + tails[n]; }).join('\n\n')
+        : '(No log files found in <base>/logs/.)';
+      if ($('dbg-files')) $('dbg-files').textContent = filesTxt;
+      if ($('learn-dbg-files')) $('learn-dbg-files').textContent = filesTxt;
     }).catch(function (e) {
       if ($('dbg-entries')) $('dbg-entries').textContent = 'Error loading debug logs: ' + e.message;
+      if ($('learn-dbg-entries')) $('learn-dbg-entries').textContent = 'Error loading debug logs: ' + e.message;
     });
   }
-  if ($('dbg-cat')) segClick('dbg-cat', function (v) { dbgCat = v; loadDebugLogs(); });
+  if ($('dbg-cat')) segClick('dbg-cat', function (v) { dbgCat = v; if ($('learn-dbg-cat')) pick('learn-dbg-cat', v); loadDebugLogs(); });
+  if ($('learn-dbg-cat')) segClick('learn-dbg-cat', function (v) { dbgCat = v; if ($('dbg-cat')) pick('dbg-cat', v); loadDebugLogs(); });
   if ($('dbg-refresh')) $('dbg-refresh').addEventListener('click', loadDebugLogs);
+  if ($('learn-dbg-refresh')) $('learn-dbg-refresh').addEventListener('click', loadDebugLogs);
   if ($('dbg-copy')) $('dbg-copy').addEventListener('click', function () {
     var txt = (($('dbg-entries') && $('dbg-entries').textContent) || '') + '\n\n' + (($('dbg-files') && $('dbg-files').textContent) || '');
     copyText(txt, $('dbg-copy'));
   });
+  if ($('learn-dbg-copy')) $('learn-dbg-copy').addEventListener('click', function () {
+    var txt = (($('learn-dbg-entries') && $('learn-dbg-entries').textContent) || '') + '\n\n' + (($('learn-dbg-files') && $('learn-dbg-files').textContent) || '');
+    copyText(txt, $('learn-dbg-copy'));
+  });
   if ($('dbg-clear')) $('dbg-clear').addEventListener('click', function () {
+    api('POST', '/api/debug/logs/clear', {}).then(loadDebugLogs).catch(function () {});
+  });
+  if ($('learn-dbg-clear')) $('learn-dbg-clear').addEventListener('click', function () {
     api('POST', '/api/debug/logs/clear', {}).then(loadDebugLogs).catch(function () {});
   });
   function loadAutonomous() {
@@ -3511,6 +3647,24 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       openSettings('tools', true, keepMobileRailTools);
       return;
     }
+    if (sec === 'learning') {
+      var learnOn = $('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'learning';
+      var learnSubHidden = $('rail-learn-sub') ? $('rail-learn-sub').hidden : false;
+      if (learnOn && learnState.active) {
+        showLearningParentView();
+        setSubmenuOpen('learning', true);
+        return;
+      }
+      if (learnOn && !learnSubHidden) {
+        setSubmenuOpen('learning', false);
+        return;
+      }
+      showLearningParentView();
+      setSubmenuOpen('learning', true);
+      var keepMobileRailLearn = window.matchMedia('(max-width: 860px)').matches && $('rail').classList.contains('on');
+      openSettings('learning', true, keepMobileRailLearn);
+      return;
+    }
     var pageMap = { workspaces: 'workspaces', memory: 'memory', tools: 'tools', learning: 'learning', settings: 'home', layers: 'layers' };
     var target = pageMap[sec] || sec;
     openSettings(target, target !== 'home');
@@ -3522,6 +3676,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (ta) { openToolApp(ta.getAttribute('data-tool-app')); return; }
     var ot = ev.target.closest && ev.target.closest('[data-open-tool]');
     if (ot) { openToolApp(ot.getAttribute('data-open-tool')); return; }
+    var ls = ev.target.closest && ev.target.closest('[data-learn-sub]');
+    if (ls) { openLearningSub(ls.getAttribute('data-learn-sub')); return; }
+    var ol = ev.target.closest && ev.target.closest('[data-open-learn]');
+    if (ol) { openLearningSub(ol.getAttribute('data-open-learn')); return; }
     var nb = ev.target.closest && ev.target.closest('[data-nav]');
     if (nb) { openNavSection(nb.getAttribute('data-nav')); return; }
     var no = ev.target.closest && ev.target.closest('[data-nav-open]');
@@ -3544,6 +3702,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       if (stack[stack.length - 1] === 'workspaces' && wsExp.mode === 'file') { showWorkspaceParentView(); return true; }
       if (stack[stack.length - 1] === 'memory' && wsExp.mode === 'file') { showMemoryParentView(); return true; }
       if (stack[stack.length - 1] === 'tools' && toolAppState.active) { showToolsParentView(); return true; }
+      if (stack[stack.length - 1] === 'learning' && learnState.active) { showLearningParentView(); return true; }
       if (stack.length > 1) back(); else closeSheet();
       return true;
     }
@@ -5762,6 +5921,54 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       $('sheet-back').hidden = !prev;
       $('back-t').textContent = prev ? PAGES[prev] : '';
     }
+  }
+  function showLearningParentView() {
+    learnState.active = '';
+    if ($('learn-parent-view')) $('learn-parent-view').hidden = false;
+    ['personal', 'collective', 'autonomous', 'logs'].forEach(function (k) {
+      if ($('learn-view-' + k)) $('learn-view-' + k).hidden = true;
+    });
+    if ($('learn-tree')) {
+      Array.prototype.forEach.call($('learn-tree').querySelectorAll('.vsc-node.on'), function (n) { n.classList.remove('on'); });
+    }
+    if ($('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'learning') {
+      $('sheet-h').textContent = PAGES.learning;
+      if ($('chat-title')) $('chat-title').textContent = PAGES.learning;
+      var prev = stack.length > 1 ? stack[stack.length - 2] : null;
+      $('sheet-back').hidden = !prev;
+      $('back-t').textContent = prev ? PAGES[prev] : '';
+    }
+  }
+  function openLearningSub(subName) {
+    if (!LEARN_SUB_TITLES[subName]) return;
+    learnState.active = subName;
+    if (!($('sheet') && $('sheet').classList.contains('on') && stack[stack.length - 1] === 'learning')) {
+      openSettings('learning', true);
+    } else {
+      closeRail();
+    }
+    setSubmenuOpen('learning', true);
+    if ($('learn-parent-view')) $('learn-parent-view').hidden = true;
+    ['personal', 'collective', 'autonomous', 'logs'].forEach(function (k) {
+      if ($('learn-view-' + k)) $('learn-view-' + k).hidden = (k !== subName);
+    });
+    if ($('learn-tree')) {
+      Array.prototype.forEach.call($('learn-tree').querySelectorAll('.vsc-node'), function (n) {
+        n.classList.toggle('on', n.getAttribute('data-learn-sub') === subName);
+      });
+    }
+    var title = LEARN_SUB_TITLES[subName] || PAGES.learning;
+    if ($('sheet-h')) $('sheet-h').textContent = title;
+    if ($('chat-title')) $('chat-title').textContent = title;
+    if ($('sheet-back')) {
+      $('sheet-back').hidden = false;
+      $('back-t').textContent = PAGES.learning;
+    }
+    if ($('sheet-body')) $('sheet-body').scrollTop = 0;
+    if (subName === 'personal') loadPersonal();
+    else if (subName === 'collective') loadCollective();
+    else if (subName === 'autonomous') loadAutonomous();
+    else if (subName === 'logs') loadDebugLogs();
   }
   function openToolApp(appName) {
     if (!TOOL_APP_TITLES[appName]) return;

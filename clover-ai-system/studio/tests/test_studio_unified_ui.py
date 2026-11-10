@@ -151,25 +151,34 @@ check(
     and 'class="sheet-bd"' not in app,
 )
 check(
-    "Left pane (#rail) has collapsible Chat submenu (#rail-chat-sub), Workspaces submenu (#rail-ws-sub), Memory submenu (#rail-mem-sub), and Tools submenu (#rail-tools-sub -> Terminal, Browser, custom tools, and + Add tool)",
+    "Left pane (#rail) has collapsible Chat submenu (#rail-chat-sub), Workspaces submenu (#rail-ws-sub), Memory submenu (#rail-mem-sub), Tools submenu (#rail-tools-sub), and Learning submenu (#rail-learn-sub -> Personal Learning, Collective Learning, Autonomous & JEPA, Learning Logs)",
     'id="rail-chat-sub"' in app
     and 'id="rail-ws-sub"' in app
     and 'id="rail-mem-sub"' in app
     and 'id="rail-tools-sub"' in app
+    and 'id="rail-learn-sub"' in app
     and 'data-tool-app="terminal"' in app
     and 'data-tool-app="browser"' in app
     and 'data-tool-app="camera"' not in app
     and 'data-tool-app="microphone"' not in app
     and 'data-tool-app="vscode"' not in app
+    and all(f'data-learn-sub="{s}"' in app for s in ("personal", "collective", "autonomous", "logs"))
     and 'id="rail-custom-tools"' in app
     and 'id="rail-add-tool-btn"' in app
-    and app.index('id="rail"') < app.index('id="rail-chat-sub"') < app.index('id="chats"') < app.index('id="rail-ws-sub"') < app.index('id="vsc-tree"') < app.index('id="rail-mem-sub"') < app.index('id="mem-tree"') < app.index('id="rail-tools-sub"') < app.index('id="tools-tree"') < app.index('<section class="main">'),
+    and app.index('id="rail"') < app.index('id="rail-chat-sub"') < app.index('id="chats"') < app.index('id="rail-ws-sub"') < app.index('id="vsc-tree"') < app.index('id="rail-mem-sub"') < app.index('id="mem-tree"') < app.index('id="rail-tools-sub"') < app.index('id="tools-tree"') < app.index('id="rail-learn-sub"') < app.index('id="learn-tree"') < app.index('<section class="main">'),
+)
+learn_sec = app.split('<section class="page" data-page="learning" hidden>', 1)[1].split("</section>", 1)[0]
+check(
+    "Learning page [data-page='learning'] has overview (#learn-parent-view) and dedicated center-pane subviews for Personal Learning, Collective Learning, Autonomous & JEPA, and Learning Logs",
+    all(lid in learn_sec for lid in ("learn-parent-view", "learn-view-personal", "learn-view-collective", "learn-view-autonomous", "learn-view-logs", "learn-personal-list", "lg-active-rules", "lg-pending-list", "lg-auto-kv", "learn-dbg-entries"))
+    and "function openLearningSub(subName)" in app
+    and "function showLearningParentView()" in app,
 )
 check(
     "Center pane Workspaces page is scoped to user's own project repos and separates parent workspace settings (#ws-parent-view) from File Viewer (#vsc-workbench hidden by default)",
     app.index('data-page="workspaces"') < app.index('id="ws-parent-view"') < app.index('id="vsc-workbench"')
     and 'id="vsc-workbench" aria-label="Workspace file viewer" hidden' in app
-    and "#ws-parent-view[hidden], #mem-parent-view[hidden], #tools-parent-view[hidden], .vsc-view[hidden], .tool-app[hidden] { display: none !important; }" in app
+    and "#ws-parent-view[hidden], #mem-parent-view[hidden], #tools-parent-view[hidden], #learn-parent-view[hidden], .learn-subview[hidden], .vsc-view[hidden], .tool-app[hidden] { display: none !important; }" in app
     and "function showWorkspaceParentView()" in app
     and "function showWorkspaceFileViewer(fileTitle)" in app
     and "function showMemoryParentView()" in app
