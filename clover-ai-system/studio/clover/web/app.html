@@ -64,13 +64,26 @@ button { cursor: pointer; }
 .app { display: grid; grid-template-columns: 264px 1fr; height: 100%; transition: grid-template-columns .25s var(--ease); }
 .app.rail-off { grid-template-columns: 0 1fr; }
 .app.rail-off .rail { visibility: hidden; }
-.rail { background: var(--rail); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
-.rail__top { position: relative; display: flex; align-items: center; gap: .4rem; padding: max(.6rem, env(safe-area-inset-top, 0px)) .5rem .4rem .85rem; min-height: 56px; }
-.brand { flex: none; display: flex; align-items: center; gap: .45rem; font-weight: 650; font-size: 1rem; letter-spacing: -.01em; }
-.brand img { width: 24px; height: 24px; display: block; }
-.chats { flex: 1; min-height: 0; overflow-y: auto; padding: .2rem .5rem .75rem; display: flex; flex-direction: column; gap: 1px; }
+.rail { background: var(--rail); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; z-index: 52; }
+.rail__brand { display: flex; align-items: center; justify-content: space-between; gap: .55rem; padding: max(.75rem, env(safe-area-inset-top, 0px)) .65rem .45rem .9rem; }
+.brand { flex: 1; min-width: 0; display: flex; align-items: center; gap: .6rem; font-weight: 650; font-size: .96rem; letter-spacing: -.01em; color: var(--ink); }
+.brand img { width: 32px; height: 32px; display: block; flex: none; border-radius: 8px; }
+.brand__text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.brand__title { font-weight: 700; font-size: .95rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand__ver { font-size: .73rem; font-weight: 500; color: var(--muted); margin-top: .08rem; }
+.rail__top { position: relative; display: flex; align-items: center; gap: .4rem; padding: .15rem .65rem .45rem .75rem; min-height: 40px; }
+.rail__nav { display: flex; flex-direction: column; gap: 2px; padding: .2rem .55rem .55rem; border-bottom: 1px solid var(--line); }
+.rail__nav-btn { width: 100%; display: flex; align-items: center; gap: .65rem; border: 1px solid transparent; background: none; border-radius: 10px;
+  padding: .48rem .7rem; font-size: .9rem; font-weight: 550; color: var(--ink-2); text-align: left; transition: background-color .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease); }
+.rail__nav-btn .ic { width: 18px; height: 18px; color: var(--muted); transition: color .15s var(--ease); }
+.rail__nav-btn:hover { background: rgba(255, 253, 248, .75); color: var(--ink); }
+.rail__nav-btn:hover .ic { color: var(--accent); }
+.rail__nav-btn.on { background: var(--surface); border-color: rgba(23, 107, 44, .18); color: var(--accent-2); font-weight: 650; box-shadow: var(--shadow-sm); }
+.rail__nav-btn.on .ic { color: var(--accent); }
+.rail__sec { display: flex; align-items: center; justify-content: space-between; padding: .5rem .85rem .2rem; font-size: .7rem; font-weight: 650; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
+.chats { flex: 1; min-height: 0; overflow-y: auto; padding: .15rem .55rem .75rem; display: flex; flex-direction: column; gap: 1px; }
 .chat { display: flex; align-items: center; border-radius: 10px; }
-.chat .open { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: .5rem .65rem; color: var(--ink-2); font-size: .9rem;
+.chat .open { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: .44rem .65rem; color: var(--ink-2); font-size: .86rem;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat:hover { background: rgba(255, 253, 248, .7); }
 .chat.on { background: var(--surface); box-shadow: var(--shadow-sm); }
@@ -80,38 +93,69 @@ button { cursor: pointer; }
 .chat:hover .del, .chat.on .del, .chat .del:focus-visible { opacity: 1; }
 .chat .del:hover { background: var(--danger-soft); color: var(--danger); }
 .chat .del .ic { width: 15px; height: 15px; }
-.rail__foot { padding: .75rem 1rem max(.9rem, env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); font-size: .78rem; color: var(--muted); display: flex; flex-direction: column; gap: .3rem; }
+.rail__foot { padding: .7rem .95rem max(.85rem, env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); font-size: .8rem; font-weight: 550; color: var(--ink-2); display: flex; flex-direction: column; gap: .3rem; }
 .status, .rail__ws { display: flex; align-items: center; gap: .5rem; min-width: 0; }
 .status span:last-child, .rail__ws span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rail__ws { color: var(--faint); }
-.rail__ws .ic { width: 14px; height: 14px; }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); flex: none; }
-.dot.ok { background: var(--leaf); }
+.rail__ws { color: var(--muted); font-size: .75rem; font-weight: 500; }
+.rail__ws .ic { width: 14px; height: 14px; color: var(--accent); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
+.dot.ok { background: var(--leaf); box-shadow: 0 0 0 3px rgba(131, 184, 61, .2); }
 .dot.busy { background: #C9A227; animation: pulse 1.4s ease-in-out infinite; }
 .dot.err { background: var(--danger); }
 @keyframes pulse { 50% { opacity: .35; } }
 
-.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.bar { display: grid; grid-template-columns: 1fr minmax(0, 2.2fr) 1fr; align-items: center; padding: max(.5rem, env(safe-area-inset-top, 0px)) .7rem .5rem; min-height: 56px; }
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow-y: auto; }
+.bar { display: grid; grid-template-columns: 1fr minmax(0, 2.2fr) 1fr; align-items: center; padding: max(.5rem, env(safe-area-inset-top, 0px)) .7rem .5rem; min-height: 52px; flex: none; }
 .bar__side { display: flex; align-items: center; gap: .2rem; }
 .bar__side.end { justify-content: flex-end; }
-.bar__title { min-width: 0; text-align: center; font-weight: 600; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar__title { min-width: 0; text-align: center; font-weight: 600; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
+.app.empty-chat .bar__title { opacity: 0; pointer-events: none; }
 .ibtn { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 0; background: none;
   color: var(--ink-2); flex: none; padding: 0; transition: background-color .15s var(--ease); }
 .ibtn:hover { background: var(--fill); color: var(--ink); }
 
 .stream { flex: 1; min-height: 0; overflow-y: auto; }
-.col { width: min(760px, 100%); margin: 0 auto; padding: .75rem 1.25rem 1.5rem; }
+.app.empty-chat .stream { flex: 0 0 auto; overflow: visible; }
+.app.empty-chat .main { justify-content: center; }
+.col { width: min(820px, 100%); margin: 0 auto; padding: .75rem 1.25rem 1.5rem; }
+.app.empty-chat .col { padding-bottom: .35rem; }
 .log { display: flex; flex-direction: column; gap: 1.4rem; }
-.hero { text-align: center; padding: 5vh .5rem 1rem; max-width: 560px; margin: 0 auto; animation: rise .5s var(--ease) both; }
+.hero { text-align: center; padding: .5rem .5rem .65rem; max-width: 640px; margin: 0 auto; animation: rise .45s var(--ease) both; }
+.hero__logo { width: 64px; height: 64px; display: block; margin: 0 auto .55rem; filter: drop-shadow(0 4px 12px rgba(23, 107, 44, .14)); }
 .mascot { width: 220px; height: auto; display: block; margin: 0 auto .4rem; }
-.hero h1 { font-size: 1.75rem; line-height: 1.2; letter-spacing: -.02em; font-weight: 650; margin: 0 0 .45rem; }
-.hero p { margin: 0 auto 1.5rem; color: var(--muted); max-width: 420px; }
-.sugg { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
-.sugg button { display: inline-flex; align-items: center; gap: .45rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
-  padding: .5rem .95rem; font-size: .88rem; color: var(--ink-2); box-shadow: var(--shadow-sm); transition: border-color .15s, color .15s; }
-.sugg button:hover { border-color: var(--accent); color: var(--accent-2); }
-.sugg .ic { width: 17px; height: 17px; color: var(--accent); }
+.hero h1 { font-size: 2.05rem; line-height: 1.15; letter-spacing: -.025em; font-weight: 700; margin: 0 0 .3rem; color: var(--ink); }
+.hero__tagline { margin: 0 auto .2rem; color: var(--ink-2); font-size: 1rem; font-weight: 500; letter-spacing: .01em; }
+.hero p#hero-p { margin: .15rem auto 0; color: var(--muted); font-size: .82rem; max-width: 480px; }
+.hero-below { width: min(820px, 100%); margin: .85rem auto 0; display: flex; flex-direction: column; align-items: center; gap: .75rem; animation: rise .5s var(--ease) both; }
+.cycle-strip { width: 100%; background: var(--surface); border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow-sm);
+  padding: .58rem .7rem; display: flex; align-items: center; justify-content: space-between; gap: .18rem; }
+.cycle-step { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: .42rem; padding: .26rem .32rem; border-radius: 11px; border: 0; background: none; text-align: left; transition: background-color .15s var(--ease); }
+.cycle-step:hover { background: var(--accent-tint); }
+.cycle-step__ic { width: 29px; height: 29px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.cycle-step__ic .ic { width: 16px; height: 16px; }
+.cycle-step__t { display: flex; flex-direction: column; min-width: 0; line-height: 1.22; }
+.cycle-step__t b { font-size: .81rem; font-weight: 650; color: var(--ink); white-space: nowrap; }
+.cycle-step__t small { font-size: .7rem; color: var(--muted); white-space: nowrap; }
+.cycle-arr { width: 13px; height: 13px; color: var(--faint); flex: none; }
+.collab-pill { display: inline-flex; align-items: center; gap: .45rem; background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px;
+  padding: .34rem .95rem; font-size: .82rem; font-weight: 600; color: var(--ink-2); box-shadow: var(--shadow-sm); }
+.collab-pill .ic { width: 16px; height: 16px; color: var(--accent); }
+.feature-grid { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
+.fcard { border: 1px solid var(--line-2); background: var(--surface); border-radius: 15px; padding: .75rem .85rem; box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: .65rem; text-align: left; transition: border-color .15s var(--ease), transform .15s var(--ease), box-shadow .15s var(--ease); }
+.fcard:hover { border-color: var(--accent); background: #fff; transform: translateY(-1px); box-shadow: var(--shadow); }
+.fcard__ic { width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.fcard__ic .ic { width: 19px; height: 19px; }
+.fcard__t { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.28; }
+.fcard__t b { font-size: .9rem; font-weight: 650; color: var(--ink); }
+.fcard__t small { font-size: .75rem; color: var(--muted); margin-top: .1rem; }
+.fcard .chev { width: 15px; height: 15px; color: var(--faint); flex: none; }
+.fcard:hover .chev { color: var(--accent); transform: translateX(2px); }
+.sugg { display: flex; flex-wrap: wrap; justify-content: center; gap: .45rem; margin-top: .1rem; }
+.sugg button { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
+  padding: .4rem .82rem; font-size: .82rem; color: var(--ink-2); box-shadow: var(--shadow-sm); transition: border-color .15s, color .15s, background-color .15s; }
+.sugg button:hover { border-color: var(--accent); color: var(--accent-2); background: var(--accent-tint); }
+.sugg .ic { width: 15px; height: 15px; color: var(--accent); }
 
 /* messages */
 .u { align-self: flex-end; max-width: 78%; background: var(--accent); color: #fff; border-radius: 20px 20px 6px 20px; padding: .65rem 1rem;
@@ -293,9 +337,9 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 
 /* composer */
 .dock { padding: .25rem 1.25rem max(1rem, env(safe-area-inset-bottom, 0px)); }
-.notice { width: min(760px, 100%); margin: 0 auto .55rem; display: flex; align-items: center; justify-content: center; gap: .5rem; font-size: .84rem; color: var(--muted); }
+.notice { width: min(820px, 100%); margin: 0 auto .55rem; display: flex; align-items: center; justify-content: center; gap: .5rem; font-size: .84rem; color: var(--muted); }
 .notice.err { color: var(--danger); }
-.attachments { width: min(760px, 100%); margin: 0 auto .5rem; display: flex; gap: .4rem; flex-wrap: wrap; }
+.attachments { width: min(820px, 100%); margin: 0 auto .5rem; display: flex; gap: .4rem; flex-wrap: wrap; }
 .att { display: inline-flex; align-items: center; gap: .4rem; background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px;
   padding: .2rem .3rem .2rem .7rem; font-size: .8rem; box-shadow: var(--shadow-sm); }
 .att button { border: 0; background: none; color: var(--muted); display: flex; padding: .15rem; border-radius: 50%; }
@@ -306,21 +350,23 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 #inbox .att .linkish { font-size: .8rem; padding: 0 .1rem; }
 @property --beam-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
 @keyframes beam-clockwise { to { --beam-angle: 360deg; } }
-.composer { position: relative; width: min(760px, 100%); margin: 0 auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 26px; box-shadow: var(--shadow);
-  padding: .4rem; display: flex; align-items: flex-end; gap: .25rem; transition: border-color .18s var(--ease), box-shadow .18s var(--ease); }
+.composer { position: relative; width: min(820px, 100%); margin: 0 auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 20px; box-shadow: var(--shadow);
+  padding: .65rem .75rem .5rem; display: flex; flex-direction: column; gap: .3rem; transition: border-color .18s var(--ease), box-shadow .18s var(--ease); }
 .composer:focus-within { border-color: rgba(23, 107, 44, .45); box-shadow: 0 8px 28px rgba(23, 107, 44, .12); }
 .composer.busy { border-color: rgba(23, 107, 44, .22); box-shadow: 0 8px 28px rgba(23, 107, 44, .10); }
-.composer.busy::before { content: ""; position: absolute; inset: -1.5px; border-radius: 27.5px; padding: 2px; pointer-events: none; z-index: 2;
+.composer.busy::before { content: ""; position: absolute; inset: -1.5px; border-radius: 21.5px; padding: 2px; pointer-events: none; z-index: 2;
   background: conic-gradient(from var(--beam-angle, 0deg), transparent 0deg, transparent 270deg, rgba(23, 107, 44, .2) 300deg, var(--leaf) 336deg, var(--accent) 354deg, transparent 360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
   animation: beam-clockwise 2s linear infinite; }
-.composer textarea { flex: 1; min-width: 0; border: 0; background: none; resize: none; font-size: 1rem; padding: .48rem .3rem; max-height: 220px; min-height: 38px; line-height: 1.45; }
+.composer textarea { width: 100%; border: 0; background: none; resize: none; font-size: 1rem; padding: .2rem .25rem .35rem; max-height: 220px; min-height: 36px; line-height: 1.45; }
 .composer textarea:focus { outline: none; }
 .composer textarea::placeholder { color: var(--faint); }
-.cbtn { width: 38px; height: 38px; flex: none; border-radius: 50%; border: 0; background: none; color: var(--muted); padding: 0;
+.composer__bar { display: flex; align-items: center; justify-content: space-between; gap: .4rem; padding-top: .1rem; }
+.composer__tools, .composer__actions { display: flex; align-items: center; gap: .2rem; }
+.cbtn { width: 34px; height: 34px; flex: none; border-radius: 10px; border: 0; background: none; color: var(--muted); padding: 0;
   display: inline-flex; align-items: center; justify-content: center; transition: background-color .15s, color .15s; }
 .cbtn:hover { background: var(--fill); color: var(--ink); }
-.cbtn .ic { width: 22px; height: 22px; }
+.cbtn .ic { width: 19px; height: 19px; }
 .senses-pop { position: absolute; left: .4rem; bottom: calc(100% + .5rem); width: min(310px, calc(100vw - 2rem)); background: var(--surface);
   border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow-lg); padding: .38rem; z-index: 35; display: flex; flex-direction: column; gap: .15rem; }
 .senses-pop[hidden] { display: none !important; }
@@ -364,7 +410,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 /* settings: one sheet, pages one level after another */
 .scrim { position: fixed; inset: 0; background: rgba(20, 32, 24, .28); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
 .scrim.on { opacity: 1; pointer-events: auto; }
-.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100%); background: var(--bg); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg);
+.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100%); background: var(--bg); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg);
   transform: translateX(104%); pointer-events: none; transition: transform .3s cubic-bezier(.2, .8, .2, 1); z-index: 50; display: flex; flex-direction: column; }
 .sheet.on { transform: none; pointer-events: auto; }
 .sheet__head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .3rem; padding: max(.55rem, env(safe-area-inset-top, 0px)) .6rem .35rem; min-height: 56px; }
@@ -508,11 +554,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 @media (max-width: 860px) {
   .app, .app.rail-off { grid-template-columns: 1fr; }
   .app.rail-off .rail { visibility: visible; }
-  .rail { position: fixed; inset: 0 auto 0 0; width: min(290px, 84vw); z-index: 45; transform: translateX(-104%); transition: transform .25s var(--ease); }
+  .rail { position: fixed; inset: 0 auto 0 0; width: min(290px, 84vw); z-index: 55; transform: translateX(-104%); transition: transform .25s var(--ease); }
   .rail.on { transform: none; box-shadow: var(--shadow-lg); }
   .u { max-width: 88%; }
+  .app.empty-chat .main { justify-content: flex-start; }
+  .cycle-strip { flex-wrap: wrap; justify-content: center; gap: .35rem .25rem; padding: .55rem .65rem; }
+  .cycle-step { flex: 1 1 42%; min-width: 128px; }
+  .cycle-arr { display: none; }
+  .feature-grid { grid-template-columns: 1fr; gap: .5rem; }
 }
-@media (min-width: 861px) { .app:not(.rail-off) #new-chat-2 { display: none; } }
+@media (min-width: 861px) {
+  .app:not(.rail-off) #new-chat-2 { display: none; }
+  .app:not(.rail-off) .scrim { left: 264px; }
+}
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -573,19 +627,36 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   </defs>
 </svg>
 
-<div class="app" id="app">
-  <aside class="rail" id="rail" aria-label="Chats">
+<div class="app empty-chat" id="app">
+  <aside class="rail" id="rail" aria-label="Navigation and chats">
+    <div class="rail__brand">
+      <div class="brand">
+        <img src="icon.png" alt="Clover" width="32" height="32">
+        <div class="brand__text">
+          <span class="brand__title">Clover AI Studio</span>
+          <span class="brand__ver">v5.0.2</span>
+        </div>
+      </div>
+      <button type="button" class="ibtn" id="new-chat" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
+    </div>
     <div class="rail__top">
-      <div class="brand"><img src="icon.png" alt="" width="24" height="24"><span>Clover</span></div>
       <div class="mpick" id="mpick">
         <button type="button" class="mpick__btn" id="model-btn" aria-haspopup="listbox" aria-expanded="false" title="Select model"><span id="model-btn-t">LFM3-Omni</span><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <div class="mpick__menu" id="model-menu" role="listbox" aria-label="Models" hidden></div>
       </div>
-      <button type="button" class="ibtn" id="new-chat" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
     </div>
-    <nav class="chats" id="chats"></nav>
+    <nav class="rail__nav" id="rail-nav" aria-label="Studio sections">
+      <button type="button" class="rail__nav-btn on" data-nav="chat"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Chat</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="workspaces"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span>Workspaces</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="memory"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg><span>Memory</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="tools"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>Tools</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="learning"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span>Learning</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg><span>Settings</span></button>
+    </nav>
+    <div class="rail__sec"><span>Conversations</span></div>
+    <nav class="chats" id="chats" aria-label="Conversations"></nav>
     <div class="rail__foot">
-      <div class="status"><span class="dot" id="status-dot"></span><span id="status-text">Connecting…</span></div>
+      <div class="status"><span class="dot ok" id="status-dot"></span><span id="status-text">Clover Ready</span></div>
       <div class="rail__ws" id="rail-ws" hidden><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span id="rail-ws-t"></span></div>
     </div>
   </aside>
@@ -593,7 +664,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   <section class="main">
     <header class="bar">
       <div class="bar__side">
-        <button type="button" class="ibtn" id="menu" aria-label="Show or hide chats" title="Chats"><svg class="ic" aria-hidden="true"><use href="#i-sidebar"/></svg></button>
+        <button type="button" class="ibtn" id="menu" aria-label="Show or hide sidebar" title="Sidebar"><svg class="ic" aria-hidden="true"><use href="#i-sidebar"/></svg></button>
         <button type="button" class="ibtn" id="new-chat-2" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
       </div>
       <div class="bar__title" id="chat-title">New chat</div>
@@ -604,11 +675,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
     <div class="stream" id="stream">
       <div class="col">
-        <div class="hero" id="hero" hidden>
-          <img class="mascot" src="robo-clover.webp" alt="" width="220" height="188">
-          <h1 id="greet">Hello.</h1>
-          <p id="hero-p">Clover runs here on your laptop. Nothing leaves it unless you allow it.</p>
-          <div class="sugg" id="sugg"></div>
+        <div class="hero" id="hero">
+          <img class="hero__logo" src="icon.png" alt="Clover" width="64" height="64">
+          <img class="mascot" src="robo-clover.webp" alt="" width="220" height="188" hidden>
+          <h1 id="greet">Clover</h1>
+          <p class="hero__tagline">Work &middot; Create &middot; Learn &middot; Grow</p>
+          <p id="hero-p" hidden>Clover runs here on your laptop. Nothing leaves it unless you allow it.</p>
         </div>
         <div class="log" id="log" aria-live="polite"></div>
       </div>
@@ -631,10 +703,72 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           <button type="button" class="senses-item" data-sense="camera"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span class="senses-item__t"><b>System Camera app</b><small>Capture a live photo with OS Camera for I-JEPA inspection</small></span></button>
           <button type="button" class="senses-item" data-sense="microphone"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span class="senses-item__t"><b>System Microphone / Voice Recorder</b><small>Capture audio via OS Mic / Recorder for Audio-JEPA analysis</small></span></button>
         </div>
-        <button type="button" class="cbtn" id="attach" title="Add files or use System Senses (Screenshot, Screen Recorder, Camera, Microphone)" aria-label="Add files or system senses" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
-        <textarea id="prompt" rows="1" placeholder="Message Clover" aria-label="Message"></textarea>
-        <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
-        <button type="button" class="send" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
+        <textarea id="prompt" rows="1" placeholder="What would you like to do?" aria-label="Message"></textarea>
+        <div class="composer__bar">
+          <div class="composer__tools">
+            <button type="button" class="cbtn" id="attach" title="Add files or use System Senses (Screenshot, Screen Recorder, Camera, Microphone)" aria-label="Add files or system senses" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+            <button type="button" class="cbtn" id="screen-btn" title="Capture screen or attach image to inspect &amp; ask Clover" aria-label="Capture screen or attach image"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></button>
+            <button type="button" class="cbtn" id="clip-btn" title="Attach document, spreadsheet or code file" aria-label="Attach file"><svg class="ic" aria-hidden="true"><use href="#i-clip"/></svg></button>
+          </div>
+          <div class="composer__actions">
+            <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
+            <button type="button" class="send" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-below" id="hero-below">
+        <div class="cycle-strip" role="group" aria-label="Clover 5-stage operating cycle">
+          <button type="button" class="cycle-step" data-nav-open="memory" title="Context — Read real systems, files, memory and grounding">
+            <span class="cycle-step__ic"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg></span>
+            <span class="cycle-step__t"><b>Context</b><small>Understand</small></span>
+          </button>
+          <svg class="ic cycle-arr" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          <button type="button" class="cycle-step" data-nav-open="workspaces" title="Direction — Plan together in your workspace">
+            <span class="cycle-step__ic"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg></span>
+            <span class="cycle-step__t"><b>Direction</b><small>Plan together</small></span>
+          </button>
+          <svg class="ic cycle-arr" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          <button type="button" class="cycle-step" data-nav-open="tools" title="Execution — Run verified tools, code and search">
+            <span class="cycle-step__ic"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span>
+            <span class="cycle-step__t"><b>Execution</b><small>Do the work</small></span>
+          </button>
+          <svg class="ic cycle-arr" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          <button type="button" class="cycle-step" data-nav-open="layers" title="Outcome — Check and verify the result">
+            <span class="cycle-step__ic"><svg class="ic" aria-hidden="true"><use href="#i-success"/></svg></span>
+            <span class="cycle-step__t"><b>Outcome</b><small>Check the result</small></span>
+          </button>
+          <svg class="ic cycle-arr" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          <button type="button" class="cycle-step" data-nav-open="learning" title="Growth — Learn and improve with you">
+            <span class="cycle-step__ic"><svg class="ic" aria-hidden="true"><use href="#i-graph"/></svg></span>
+            <span class="cycle-step__t"><b>Growth</b><small>Learn and improve</small></span>
+          </button>
+        </div>
+
+        <div class="collab-pill">
+          <svg class="ic" aria-hidden="true"><use href="#i-success"/></svg>
+          <span>System &middot; Human &middot; AI working together</span>
+        </div>
+
+        <div class="feature-grid">
+          <button type="button" class="fcard" data-nav-open="memory">
+            <span class="fcard__ic"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg></span>
+            <span class="fcard__t"><b>Memory</b><small>Your work, knowledge and context</small></span>
+            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          </button>
+          <button type="button" class="fcard" data-nav-open="tools">
+            <span class="fcard__ic"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span>
+            <span class="fcard__t"><b>Tools</b><small>Search, files, code and apps</small></span>
+            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          </button>
+          <button type="button" class="fcard" data-nav-open="learning">
+            <span class="fcard__ic"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span>
+            <span class="fcard__t"><b>Learning</b><small>Gets better with you</small></span>
+            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          </button>
+        </div>
+
+        <div class="sugg" id="sugg" hidden></div>
       </div>
     </div>
   </section>
@@ -719,16 +853,33 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
     <section class="page" data-page="home">
       <div class="group">
-        <button type="button" class="row t" data-go="account"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg></span><span class="row__t">GitHub account (Memory backup)</span><span class="row__v" id="v-account">Not set up</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="workspaces"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Workspaces<small>Project folders, GitHub repositories &amp; context files</small></span><span class="row__v" id="v-ws-home"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="memory"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg></span><span class="row__t">Memory<small>Your work, knowledge, notes &amp; context</small></span><span class="row__v" id="v-memory">S1–S3</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="tools"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">Tools<small>Search, files, code, permissions &amp; apps</small></span><span class="row__v" id="v-tools-home"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="learning"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="row__t">Learning &amp; Growth<small>Personal &amp; collective learning, JEPA cycle</small></span><span class="row__v" id="v-learning">Personal on</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
       <div class="group">
-        <button type="button" class="row t" data-go="learning"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="row__t">Learning &amp; Growth</span><span class="row__v" id="v-learning">Personal on</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t" data-go="storage"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Storage</span><span class="row__v" id="v-storage">This laptop</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="model"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-model"/></svg></span><span class="row__t">Model and voice</span><span class="row__v" id="v-model-home"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="account"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg></span><span class="row__t">GitHub account (Memory backup)</span><span class="row__v" id="v-account">Not set up</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="storage"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg></span><span class="row__t">Storage</span><span class="row__v" id="v-storage">This laptop</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="debug"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">Debug logs &amp; Senses</span><span class="row__v" id="v-debug">Live</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="advanced"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></span><span class="row__t">Advanced</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
       <p class="gfoot center">Clover runs on this laptop with the setup that measured best. Nothing leaves it unless you allow it.</p>
       <p class="gfoot center" id="about-foot">Clover AI Studio <b id="v-version">v5.0.2</b> · <a href="https://cloverframework.com/privacy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> · <a href="https://github.com/santhoshsathish94/clover-framework/issues" target="_blank" rel="noopener noreferrer">Support</a></p>
+    </section>
+
+    <section class="page" data-page="memory" hidden>
+      <p class="lead">Your work, knowledge, notes, and context across Personal Memory (<code>S1</code>), Knowledge Graph &amp; Earlier Chats (<code>S2</code>), and Grounded Verification (<code>S3</code>).</p>
+      <div class="group">
+        <button type="button" class="row t" data-go="personal"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="row__t">What Clover learned about you<small>Saved preferences, corrections &amp; personal notes</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="layers"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg></span><span class="row__t">Clover Context &amp; Layers<small>S1 Memory · S2 Knowledge Graph &amp; Recall · S3 Grounding · C1–C3</small></span><span class="row__v">3 core · 3 supporting</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="workspaces"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Workspaces &amp; Project Context<small>Folders, GitHub repos &amp; local context files</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="account"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg></span><span class="row__t">GitHub Memory Backup<small>Sync your S1 memory repository across devices</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="storage"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg></span><span class="row__t">Storage &amp; Repository Paths<small>Where chats, notes, media &amp; models live</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      </div>
+      <div class="glabel">Saved Memory &amp; Learned Notes</div>
+      <div class="group pad" id="memory-personal-summary">Loading your memory &amp; context…</div>
     </section>
 
     <section class="page" data-page="learning" hidden>
@@ -821,9 +972,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <button type="button" class="row t" data-go="tools"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg></span><span class="row__t">Tools and search</span><span class="row__v" id="v-tools"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="debug"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">Debug logs &amp; System Senses</span><span class="row__v">Live</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
-      <div class="group laptop-only">
+      <div class="group">
         <button type="button" class="row t" data-go="workspaces"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Workspaces</span><span class="row__v" id="v-ws">None</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t" data-go="vscode"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">VS Code</span><span class="row__v" id="v-vsc"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t laptop-only" data-go="vscode"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">VS Code</span><span class="row__v" id="v-vsc"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
     </section>
 
@@ -963,6 +1114,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     </section>
 
     <section class="page" data-page="tools" hidden>
+      <div class="group">
+        <button type="button" class="row t" data-go="perms"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></span><span class="row__t">Permissions<small>Control Allow, Ask, or Off for every tool</small></span><span class="row__v" id="v-perms-tools"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="debug"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></span><span class="row__t">System Senses &amp; Logs<small>Screenshot, Screen Recorder, Camera &amp; Microphone (S3)</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t laptop-only" data-go="vscode"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">VS Code Integration<small>Open files, clone repos &amp; run tasks in VS Code</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      </div>
       <div class="glabel">Tools</div>
       <div class="group pad">
         <div class="seg full" id="s-tools"><button type="button" data-v="ask">When I ask</button><button type="button" data-v="always">Always</button></div>
@@ -1027,7 +1183,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   var $ = function (id) { return document.getElementById(id); };
   // the same page on Laptop (windows), in the Android app (android), and on the Web (web, hosted on k3)
   var PLATFORM = (document.querySelector('meta[name="clover-platform"]') || {}).content || '';
-  if (PLATFORM === '__CLOVER_PLATFORM__') PLATFORM = /^(127\.0\.0\.1|localhost)$/i.test(location.hostname || '') ? 'windows' : 'web';
+  if (PLATFORM === '__CLOVER_PLATFORM__') PLATFORM = (location.protocol === 'file:' || /^(127\.0\.0\.1|localhost)$/i.test(location.hostname || '')) ? 'windows' : 'web';
   var PHONE = PLATFORM === 'android', WEB = PLATFORM === 'web';
   if (PHONE || WEB) {
     document.documentElement.classList.add(PHONE ? 'phone' : 'web');
@@ -1119,12 +1275,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     ['pencil', 'Write an email', 'Write a short, friendly email inviting my team to lunch on Friday.']
   ];
   if (PHONE || WEB) SUGGEST[2] = ['clock', 'Plan my day', 'Help me plan a calm, productive day with three priorities.'];
-  var PAGES = { home: 'Settings', learning: 'Learning & Growth', account: 'GitHub account', storage: 'Storage', debug: 'Debug logs & Senses',
+  var PAGES = { home: 'Settings', memory: 'Memory', learning: 'Learning & Growth', account: 'GitHub account', storage: 'Storage', debug: 'Debug logs & Senses',
     advanced: 'Advanced', layers: 'Clover layers', model: 'Model and voice', perms: 'Permissions', tools: 'Tools and search',
     workspaces: 'Workspaces', vscode: 'VS Code', personal: 'What Clover learned', collective: 'Collective learning' };
-  var PARENT = { learning: 'home', account: 'home', storage: 'home', debug: 'home', advanced: 'home', layers: 'advanced',
-    model: 'advanced', perms: 'advanced', tools: 'advanced', workspaces: 'advanced', vscode: 'advanced',
-    personal: 'learning', collective: 'layers' };
+  var PARENT = { memory: 'home', learning: 'home', account: 'home', storage: 'home', debug: 'home', advanced: 'home', layers: 'memory',
+    model: 'home', perms: 'tools', tools: 'home', workspaces: 'home', vscode: 'tools',
+    personal: 'memory', collective: 'learning' };
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
@@ -1649,6 +1805,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     var empty = !c || !c.messages.length;
     $('hero').hidden = !empty;
+    if ($('hero-below')) $('hero-below').hidden = !empty;
+    if ($('app')) $('app').classList.toggle('empty-chat', !!empty);
     if (!empty) c.messages.forEach(function (m) { log.appendChild(m.role === 'user' ? userEl(m) : botEl(m)); });
     $('chat-title').textContent = (c && c.title) || 'New chat';
     scrollDown();
@@ -1666,8 +1824,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1100);
   });
   function renderHero() {
-    var h = new Date().getHours();
-    $('greet').textContent = h < 5 ? 'Up late?' : h < 12 ? 'Good morning.' : h < 18 ? 'Good afternoon.' : 'Good evening.';
+    $('greet').textContent = 'Clover';
     var box = $('sugg'); box.innerHTML = '';
     (state.omni ? SUGGEST.slice(0, 3).concat([['image', 'Look at a photo', 'What is in this picture?', true]]) : SUGGEST).forEach(function (s) {
       var b = btn('', ic(s[0]) + '<span></span>'); b.querySelector('span').textContent = s[1]; b.title = s[2];
@@ -1778,6 +1935,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if ($('model-btn-t')) $('model-btn-t').textContent = info.name;
     if ($('model-d')) $('model-d').innerHTML = '<b>' + esc(info.name) + '</b> · ' + esc(info.desc || '');
     if ($('v-model')) $('v-model').textContent = info.name;
+    if ($('v-model-home')) $('v-model-home').textContent = info.name;
     if ($('model-menu')) {
       var html = cat.map(function (x) {
         return '<button type="button" class="mpick__opt' + (x.id === m ? ' on' : '') + '" role="option" data-v="' + esc(x.id) + '">' +
@@ -1973,7 +2131,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function updatePlaceholder() {
     var p = $('prompt');
     if (!p) return;
-    p.placeholder = (state.omni && !isMobileView()) ? 'Message Clover, or add a photo, sound or video' : 'Message Clover';
+    p.placeholder = 'What would you like to do?';
   }
   window.addEventListener('resize', updatePlaceholder);
   function showAuthGate(show, msg) {
@@ -2069,10 +2227,22 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           if (state.waitEl) state.waitEl.textContent = (st.busy.stage || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s);
         }
       }
-      else if (WEB || isRemote) setStatus('ok', 'Ready · ' + info.name + (info.host && info.host !== 'local' ? ' · ' + info.host : ''));
-      else setStatus('ok', 'Ready · ' + info.name + ' · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU'));
+      else if (WEB || isRemote) {
+        setStatus('ok', 'Clover Ready');
+        $('status-text').title = 'Clover Ready · ' + info.name + (info.host && info.host !== 'local' ? ' · ' + info.host : '');
+      }
+      else {
+        setStatus('ok', 'Clover Ready');
+        $('status-text').title = 'Clover Ready · ' + info.name + ' · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU');
+      }
       updateSend();
     }).catch(function (e) {
+      if (location.protocol === 'file:') {
+        state.ready = true;
+        setStatus('ok', 'Clover Ready', '');
+        updateSend();
+        return;
+      }
       state.ready = false;
       var authReq = e && (e.status === 401 || (e.body && e.body.auth_required));
       if (WEB && authReq) {
@@ -2138,7 +2308,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function toolsValue() {
     var st = state.server && state.server.settings;
-    if (st) $('v-tools').textContent = st.tools === 'always' ? 'Always' : 'When you ask';
+    if (st) {
+      var tv = st.tools === 'always' ? 'Always' : 'When you ask';
+      $('v-tools').textContent = tv;
+      if ($('v-tools-home')) $('v-tools-home').textContent = tv;
+    }
   }
   function renderServerSettings() {
     var sv = state.server; if (!sv || !sv.settings) return;
@@ -2412,21 +2586,30 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   });
   /* what personal learning holds: what was learned and the experiences behind it; forget all of it */
   function renderPersonal() {
-    var box = $('personal-list'); if (!box) return;
-    var pv = state.personal || {}; box.innerHTML = '';
+    var box = $('personal-list'), memBox = $('memory-personal-summary');
+    var pv = state.personal || {};
     var kn = pv.learned || [], pr = (pv.preferences || []).filter(function (p) { return p.in_use; }), ex = pv.experiences || [];
-    if (!kn.length && !pr.length && !ex.length) { box.appendChild(el('p', 'fine', 'Nothing learned yet.')); return; }
-    kn.forEach(function (h) {
-      var r = el('div', 'row static'); var t = el('span', 'row__t');
-      t.textContent = 'When you say “' + (h.when_you_say || []).join(' ') + '” you usually mean ' + (h.you_mean || []).join(', ') +
-        (h.status === 'validated' ? '' : ' (still checking)');
-      r.appendChild(t); box.appendChild(r);
-    });
-    pr.forEach(function (p) {
-      var r = el('div', 'row static'); var t = el('span', 'row__t');
-      t.textContent = 'You prefer ' + String(p.value).replace(/_/g, ' ') + ' (' + p.dimension + ')'; r.appendChild(t); box.appendChild(r);
-    });
-    var n = el('p', 'fine'); n.textContent = ex.length + (ex.length === 1 ? ' experience' : ' experiences') + ' from your chats are kept on this computer.'; box.appendChild(n);
+    function fillBox(target) {
+      if (!target) return;
+      target.innerHTML = '';
+      if (!kn.length && !pr.length && !ex.length) {
+        target.appendChild(el('p', 'fine', 'No saved personal notes or learned habits yet. As you work with Clover, your preferences and notes appear here.'));
+        return;
+      }
+      kn.forEach(function (h) {
+        var r = el('div', 'row static'); var t = el('span', 'row__t');
+        t.textContent = 'When you say “' + (h.when_you_say || []).join(' ') + '” you usually mean ' + (h.you_mean || []).join(', ') +
+          (h.status === 'validated' ? '' : ' (still checking)');
+        r.appendChild(t); target.appendChild(r);
+      });
+      pr.forEach(function (p) {
+        var r = el('div', 'row static'); var t = el('span', 'row__t');
+        t.textContent = 'You prefer ' + String(p.value).replace(/_/g, ' ') + ' (' + p.dimension + ')'; r.appendChild(t); target.appendChild(r);
+      });
+      var n = el('p', 'fine'); n.textContent = ex.length + (ex.length === 1 ? ' experience' : ' experiences') + ' from your chats are kept on this computer.'; target.appendChild(n);
+    }
+    fillBox(box);
+    fillBox(memBox);
   }
 
   /* ---------- web search provider (the key goes to this laptop's server and is never shown again) ---------- */
@@ -2540,6 +2723,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function renderPerms() {
     var s = permSummary();
     $('v-perms').textContent = s.chip;
+    if ($('v-perms-tools')) $('v-perms-tools').textContent = s.chip;
     var sum = $('perm-summary');
     sum.className = 'summary' + (s.cls ? ' ' + s.cls : '');
     sum.innerHTML = '<div class="big">' + ic(s.icon) + '</div><div><b></b><span></span></div>';
@@ -2569,6 +2753,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
   /* ---------- settings sheet: a home page and pages one level after another ---------- */
   var stack = ['home'];
+  function syncRailNav(page) {
+    var nav = 'chat';
+    if ($('sheet') && $('sheet').classList.contains('on')) {
+      if (page === 'workspaces') nav = 'workspaces';
+      else if (page === 'memory' || page === 'personal' || page === 'storage' || page === 'layers' || page === 'account') nav = 'memory';
+      else if (page === 'tools' || page === 'perms' || page === 'vscode' || page === 'debug') nav = 'tools';
+      else if (page === 'learning' || page === 'collective') nav = 'learning';
+      else nav = 'settings';
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('.rail__nav-btn'), function (b) {
+      b.classList.toggle('on', b.getAttribute('data-nav') === nav);
+    });
+  }
   function showPage(name, dir) {
     Array.prototype.forEach.call(document.querySelectorAll('.page'), function (p) {
       var on = p.getAttribute('data-page') === name;
@@ -2579,16 +2776,21 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var prev = stack.length > 1 ? stack[stack.length - 2] : null;
     $('sheet-back').hidden = !prev; $('back-t').textContent = prev ? PAGES[prev] : '';
     $('sheet-body').scrollTop = 0;
+    syncRailNav(name);
     loadPage(name);
   }
   function go(name) { if (!PAGES[name]) return; stack.push(name); showPage(name, 1); $('sheet-back').focus(); }
   function back() { if (stack.length > 1) { stack.pop(); showPage(stack[stack.length - 1], -1); (stack.length > 1 ? $('sheet-back') : $('sheet-x')).focus(); } }
-  function openSettings(page) {
+  function openSettings(page, asRoot) {
     closeRail();
-    stack = ['home'];
-    var chain = [], p = page;
-    while (p && p !== 'home' && PAGES[p]) { chain.unshift(p); p = PARENT[p]; }
-    stack = stack.concat(chain);
+    if (asRoot && page && PAGES[page]) {
+      stack = [page];
+    } else {
+      stack = ['home'];
+      var chain = [], p = page;
+      while (p && p !== 'home' && PAGES[p]) { chain.unshift(p); p = PARENT[p]; }
+      stack = stack.concat(chain);
+    }
     var sh = $('sheet'); sh.classList.add('on'); sh.inert = false; $('scrim').classList.add('on');
     showPage(stack[stack.length - 1], 0);
     setTimeout(function () { (stack.length > 1 ? $('sheet-back') : $('sheet-x')).focus(); }, 60);
@@ -2596,9 +2798,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function closeSheet() {
     var sh = $('sheet'); sh.classList.remove('on'); sh.inert = true;
     $('scrim').classList.remove('on'); $('confirm-all').hidden = true;
+    syncRailNav('chat');
   }
   function loadPage(name) {
-    if (name === 'home') { loadVscode(); loadStorage(); loadPersonal(); loadCollective(); }
+    if (name === 'home') { loadVscode(); loadStorage(); loadPersonal(); loadCollective(); loadWorkspaces(); loadServerSettings(); loadPerms(); }
+    else if (name === 'memory') { loadPersonal(); loadMemoryCount(); loadVscode(); loadStorage(); loadWorkspaces(); }
     else if (name === 'learning') { loadServerSettings(); loadPersonal(); loadCollective(); loadAutonomous(); }
     else if (name === 'account' || name === 'vscode') loadVscode();
     else if (name === 'storage') loadStorage();
@@ -2609,7 +2813,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     else if (name === 'collective') loadCollective();
     else if (name === 'model') { renderEngine(); renderSettings(); loadServerSettings(); loadHealth(); }
     else if (name === 'perms') loadPerms();
-    else if (name === 'tools') { loadServerSettings(); loadSearch(); loadInbox(); }
+    else if (name === 'tools') { loadServerSettings(); loadPerms(); loadSearch(); loadInbox(); }
     else if (name === 'workspaces') loadWorkspaces();
   }
   var dbgCat = 'all';
@@ -2817,7 +3021,25 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     });
   }
   function closeRail() { $('rail').classList.remove('on'); }
-  document.addEventListener('click', function (ev) { var r = ev.target.closest && ev.target.closest('[data-go]'); if (r) go(r.getAttribute('data-go')); });
+  function openNavSection(sec) {
+    if (sec === 'chat') {
+      closeSheet();
+      closeRail();
+      if ($('prompt')) $('prompt').focus();
+      return;
+    }
+    var pageMap = { workspaces: 'workspaces', memory: 'memory', tools: 'tools', learning: 'learning', settings: 'home', layers: 'layers' };
+    var target = pageMap[sec] || sec;
+    openSettings(target, target !== 'home');
+  }
+  document.addEventListener('click', function (ev) {
+    var r = ev.target.closest && ev.target.closest('[data-go]');
+    if (r) { go(r.getAttribute('data-go')); return; }
+    var nb = ev.target.closest && ev.target.closest('[data-nav]');
+    if (nb) { openNavSection(nb.getAttribute('data-nav')); return; }
+    var no = ev.target.closest && ev.target.closest('[data-nav-open]');
+    if (no) { openNavSection(no.getAttribute('data-nav-open')); return; }
+  });
   $('sheet-back').addEventListener('click', back);
   $('sheet-x').addEventListener('click', closeSheet);
   $('scrim').addEventListener('click', function () { closeSheet(); closeRail(); });
@@ -2849,6 +3071,18 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     m.hidden = !show;
     $('attach').setAttribute('aria-expanded', String(show));
   });
+  if ($('screen-btn')) {
+    $('screen-btn').addEventListener('click', function () {
+      closeSensesMenu();
+      triggerSystemSense('screenshot');
+    });
+  }
+  if ($('clip-btn')) {
+    $('clip-btn').addEventListener('click', function () {
+      closeSensesMenu();
+      if ($('file-input')) $('file-input').click();
+    });
+  }
   document.addEventListener('click', function (ev) {
     if ($('senses-menu') && !$('senses-menu').hidden && !$('senses-menu').contains(ev.target) && ev.target !== $('attach')) {
       closeSensesMenu();
@@ -4067,7 +4301,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (state.busy && state.mode === 'lfm3') { if (state.turnId) api('POST', '/api/cancel', { turn_id: state.turnId }).catch(function () {}); return; }
     send();
   });
-  function startChat() { if (!state.busy) { newChat(); closeRail(); $('scrim').classList.remove('on'); } }
+  function startChat() { if (!state.busy) { closeSheet(); newChat(); closeRail(); $('scrim').classList.remove('on'); } }
   $('new-chat').addEventListener('click', startChat);
   $('new-chat-2').addEventListener('click', startChat);
 
@@ -4090,7 +4324,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function renderWorkspaces(r) {
     state.ws = r; if (!r) return;
     var list = r.workspaces || [], active = list.filter(function (w) { return w.active; })[0];
-    $('v-ws').textContent = active ? active.name : list.length ? list.length + ' added' : 'None';
+    var wsVal = active ? active.name : list.length ? list.length + ' added' : 'None';
+    $('v-ws').textContent = wsVal;
+    if ($('v-ws-home')) $('v-ws-home').textContent = wsVal;
     $('rail-ws').hidden = !active; $('rail-ws-t').textContent = active ? 'Workspace: ' + active.name : '';
     var box = $('ws-list'); box.innerHTML = ''; box.hidden = !list.length;
     list.forEach(function (w) {

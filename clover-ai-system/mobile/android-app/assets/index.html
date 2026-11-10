@@ -64,13 +64,26 @@ button { cursor: pointer; }
 .app { display: grid; grid-template-columns: 264px 1fr; height: 100%; transition: grid-template-columns .25s var(--ease); }
 .app.rail-off { grid-template-columns: 0 1fr; }
 .app.rail-off .rail { visibility: hidden; }
-.rail { background: var(--rail); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
-.rail__top { position: relative; display: flex; align-items: center; gap: .4rem; padding: max(.6rem, env(safe-area-inset-top, 0px)) .5rem .4rem .85rem; min-height: 56px; }
-.brand { flex: none; display: flex; align-items: center; gap: .45rem; font-weight: 650; font-size: 1rem; letter-spacing: -.01em; }
-.brand img { width: 24px; height: 24px; display: block; }
-.chats { flex: 1; min-height: 0; overflow-y: auto; padding: .2rem .5rem .75rem; display: flex; flex-direction: column; gap: 1px; }
+.rail { background: var(--rail); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; z-index: 52; }
+.rail__brand { display: flex; align-items: center; justify-content: space-between; gap: .55rem; padding: max(.75rem, env(safe-area-inset-top, 0px)) .65rem .45rem .9rem; }
+.brand { flex: 1; min-width: 0; display: flex; align-items: center; gap: .6rem; font-weight: 650; font-size: .96rem; letter-spacing: -.01em; color: var(--ink); }
+.brand img { width: 32px; height: 32px; display: block; flex: none; border-radius: 8px; }
+.brand__text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.brand__title { font-weight: 700; font-size: .95rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand__ver { font-size: .73rem; font-weight: 500; color: var(--muted); margin-top: .08rem; }
+.rail__top { position: relative; display: flex; align-items: center; gap: .4rem; padding: .15rem .65rem .45rem .75rem; min-height: 40px; }
+.rail__nav { display: flex; flex-direction: column; gap: 2px; padding: .2rem .55rem .55rem; border-bottom: 1px solid var(--line); }
+.rail__nav-btn { width: 100%; display: flex; align-items: center; gap: .65rem; border: 1px solid transparent; background: none; border-radius: 10px;
+  padding: .48rem .7rem; font-size: .9rem; font-weight: 550; color: var(--ink-2); text-align: left; transition: background-color .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease); }
+.rail__nav-btn .ic { width: 18px; height: 18px; color: var(--muted); transition: color .15s var(--ease); }
+.rail__nav-btn:hover { background: rgba(255, 253, 248, .75); color: var(--ink); }
+.rail__nav-btn:hover .ic { color: var(--accent); }
+.rail__nav-btn.on { background: var(--surface); border-color: rgba(23, 107, 44, .18); color: var(--accent-2); font-weight: 650; box-shadow: var(--shadow-sm); }
+.rail__nav-btn.on .ic { color: var(--accent); }
+.rail__sec { display: flex; align-items: center; justify-content: space-between; padding: .5rem .85rem .2rem; font-size: .7rem; font-weight: 650; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
+.chats { flex: 1; min-height: 0; overflow-y: auto; padding: .15rem .55rem .75rem; display: flex; flex-direction: column; gap: 1px; }
 .chat { display: flex; align-items: center; border-radius: 10px; }
-.chat .open { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: .5rem .65rem; color: var(--ink-2); font-size: .9rem;
+.chat .open { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: .44rem .65rem; color: var(--ink-2); font-size: .86rem;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat:hover { background: rgba(255, 253, 248, .7); }
 .chat.on { background: var(--surface); box-shadow: var(--shadow-sm); }
@@ -80,47 +93,79 @@ button { cursor: pointer; }
 .chat:hover .del, .chat.on .del, .chat .del:focus-visible { opacity: 1; }
 .chat .del:hover { background: var(--danger-soft); color: var(--danger); }
 .chat .del .ic { width: 15px; height: 15px; }
-.rail__foot { padding: .75rem 1rem max(.9rem, env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); font-size: .78rem; color: var(--muted); display: flex; flex-direction: column; gap: .3rem; }
+.rail__foot { padding: .7rem .95rem max(.85rem, env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); font-size: .8rem; font-weight: 550; color: var(--ink-2); display: flex; flex-direction: column; gap: .3rem; }
 .status, .rail__ws { display: flex; align-items: center; gap: .5rem; min-width: 0; }
 .status span:last-child, .rail__ws span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rail__ws { color: var(--faint); }
-.rail__ws .ic { width: 14px; height: 14px; }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); flex: none; }
-.dot.ok { background: var(--leaf); }
+.rail__ws { color: var(--muted); font-size: .75rem; font-weight: 500; }
+.rail__ws .ic { width: 14px; height: 14px; color: var(--accent); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
+.dot.ok { background: var(--leaf); box-shadow: 0 0 0 3px rgba(131, 184, 61, .2); }
 .dot.busy { background: #C9A227; animation: pulse 1.4s ease-in-out infinite; }
 .dot.err { background: var(--danger); }
 @keyframes pulse { 50% { opacity: .35; } }
 
-.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.bar { display: grid; grid-template-columns: 1fr minmax(0, 2.2fr) 1fr; align-items: center; padding: max(.5rem, env(safe-area-inset-top, 0px)) .7rem .5rem; min-height: 56px; }
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow-y: auto; }
+.bar { display: grid; grid-template-columns: 1fr minmax(0, 2.2fr) 1fr; align-items: center; padding: max(.5rem, env(safe-area-inset-top, 0px)) .7rem .5rem; min-height: 52px; flex: none; }
 .bar__side { display: flex; align-items: center; gap: .2rem; }
 .bar__side.end { justify-content: flex-end; }
-.bar__title { min-width: 0; text-align: center; font-weight: 600; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar__title { min-width: 0; text-align: center; font-weight: 600; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
+.app.empty-chat .bar__title { opacity: 0; pointer-events: none; }
 .ibtn { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 0; background: none;
   color: var(--ink-2); flex: none; padding: 0; transition: background-color .15s var(--ease); }
 .ibtn:hover { background: var(--fill); color: var(--ink); }
 
 .stream { flex: 1; min-height: 0; overflow-y: auto; }
-.col { width: min(760px, 100%); margin: 0 auto; padding: .75rem 1.25rem 1.5rem; }
+.app.empty-chat .stream { flex: 0 0 auto; overflow: visible; }
+.app.empty-chat .main { justify-content: center; }
+.col { width: min(820px, 100%); margin: 0 auto; padding: .75rem 1.25rem 1.5rem; }
+.app.empty-chat .col { padding-bottom: .35rem; }
 .log { display: flex; flex-direction: column; gap: 1.4rem; }
-.hero { text-align: center; padding: 5vh .5rem 1rem; max-width: 560px; margin: 0 auto; animation: rise .5s var(--ease) both; }
+.hero { text-align: center; padding: .5rem .5rem .65rem; max-width: 640px; margin: 0 auto; animation: rise .45s var(--ease) both; }
+.hero__logo { width: 64px; height: 64px; display: block; margin: 0 auto .55rem; filter: drop-shadow(0 4px 12px rgba(23, 107, 44, .14)); }
 .mascot { width: 220px; height: auto; display: block; margin: 0 auto .4rem; }
-.hero h1 { font-size: 1.75rem; line-height: 1.2; letter-spacing: -.02em; font-weight: 650; margin: 0 0 .45rem; }
-.hero p { margin: 0 auto 1.5rem; color: var(--muted); max-width: 420px; }
-.sugg { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
-.sugg button { display: inline-flex; align-items: center; gap: .45rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
-  padding: .5rem .95rem; font-size: .88rem; color: var(--ink-2); box-shadow: var(--shadow-sm); transition: border-color .15s, color .15s; }
-.sugg button:hover { border-color: var(--accent); color: var(--accent-2); }
-.sugg .ic { width: 17px; height: 17px; color: var(--accent); }
+.hero h1 { font-size: 2.05rem; line-height: 1.15; letter-spacing: -.025em; font-weight: 700; margin: 0 0 .3rem; color: var(--ink); }
+.hero__tagline { margin: 0 auto .2rem; color: var(--ink-2); font-size: 1rem; font-weight: 500; letter-spacing: .01em; }
+.hero p#hero-p { margin: .15rem auto 0; color: var(--muted); font-size: .82rem; max-width: 480px; }
+.hero-below { width: min(820px, 100%); margin: .85rem auto 0; display: flex; flex-direction: column; align-items: center; gap: .75rem; animation: rise .5s var(--ease) both; }
+.cycle-strip { width: 100%; background: var(--surface); border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow-sm);
+  padding: .58rem .7rem; display: flex; align-items: center; justify-content: space-between; gap: .18rem; }
+.cycle-step { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: .42rem; padding: .26rem .32rem; border-radius: 11px; border: 0; background: none; text-align: left; transition: background-color .15s var(--ease); }
+.cycle-step:hover { background: var(--accent-tint); }
+.cycle-step__ic { width: 29px; height: 29px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.cycle-step__ic .ic { width: 16px; height: 16px; }
+.cycle-step__t { display: flex; flex-direction: column; min-width: 0; line-height: 1.22; }
+.cycle-step__t b { font-size: .81rem; font-weight: 650; color: var(--ink); white-space: nowrap; }
+.cycle-step__t small { font-size: .7rem; color: var(--muted); white-space: nowrap; }
+.cycle-arr { width: 13px; height: 13px; color: var(--faint); flex: none; }
+.collab-pill { display: inline-flex; align-items: center; gap: .45rem; background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px;
+  padding: .34rem .95rem; font-size: .82rem; font-weight: 600; color: var(--ink-2); box-shadow: var(--shadow-sm); }
+.collab-pill .ic { width: 16px; height: 16px; color: var(--accent); }
+.feature-grid { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
+.fcard { border: 1px solid var(--line-2); background: var(--surface); border-radius: 15px; padding: .75rem .85rem; box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: .65rem; text-align: left; transition: border-color .15s var(--ease), transform .15s var(--ease), box-shadow .15s var(--ease); }
+.fcard:hover { border-color: var(--accent); background: #fff; transform: translateY(-1px); box-shadow: var(--shadow); }
+.fcard__ic { width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.fcard__ic .ic { width: 19px; height: 19px; }
+.fcard__t { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.28; }
+.fcard__t b { font-size: .9rem; font-weight: 650; color: var(--ink); }
+.fcard__t small { font-size: .75rem; color: var(--muted); margin-top: .1rem; }
+.fcard .chev { width: 15px; height: 15px; color: var(--faint); flex: none; }
+.fcard:hover .chev { color: var(--accent); transform: translateX(2px); }
+.sugg { display: flex; flex-wrap: wrap; justify-content: center; gap: .45rem; margin-top: .1rem; }
+.sugg button { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px;
+  padding: .4rem .82rem; font-size: .82rem; color: var(--ink-2); box-shadow: var(--shadow-sm); transition: border-color .15s, color .15s, background-color .15s; }
+.sugg button:hover { border-color: var(--accent); color: var(--accent-2); background: var(--accent-tint); }
+.sugg .ic { width: 15px; height: 15px; color: var(--accent); }
 
 /* messages */
 .u { align-self: flex-end; max-width: 78%; background: var(--accent); color: #fff; border-radius: 20px 20px 6px 20px; padding: .65rem 1rem;
   white-space: pre-wrap; word-wrap: break-word; animation: rise .25s var(--ease) both; }
 .u .files { font-size: .78rem; opacity: .85; margin-top: .3rem; display: flex; align-items: center; gap: .3rem; }
 .u .files .ic { width: 14px; height: 14px; }
-.u .media { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .4rem; }
+.u .media { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .45rem; }
 .u .media span { display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; opacity: .9; }
-.u .media img { width: 76px; height: 76px; object-fit: cover; border-radius: 12px; }
+.u .media img { max-width: 180px; max-height: 140px; width: auto; height: auto; object-fit: cover; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,.25); transition: transform .15s; }
+.u .media img:hover { transform: scale(1.02); }
 .u .media .ic { width: 15px; height: 15px; }
 .b { min-width: 0; animation: rise .25s var(--ease) both; }
 .b__body { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
@@ -132,7 +177,18 @@ button { cursor: pointer; }
 .md p { margin: 0 0 .7rem; } .md p:last-child { margin-bottom: 0; }
 .md ul, .md ol { margin: .3rem 0 .7rem 1.3rem; padding: 0; } .md li { margin: .2rem 0; }
 .md strong { font-weight: 650; }
-.md h4 { margin: 1rem 0 .35rem; font-size: 1rem; }
+.md em { font-style: italic; }
+.md del { opacity: .75; text-decoration: line-through; }
+.md h1, .md h2, .md h3, .md h4 { margin: .95rem 0 .35rem; font-weight: 650; line-height: 1.35; }
+.md h1 { font-size: 1.18rem; } .md h2 { font-size: 1.1rem; } .md h3 { font-size: 1.03rem; } .md h4 { font-size: .98rem; }
+.md blockquote.md-quote { margin: .5rem 0 .7rem; padding: .4rem .85rem; border-left: 3px solid var(--accent); background: var(--fill); border-radius: 0 8px 8px 0; color: var(--ink-2); }
+.md hr.md-hr { border: 0; border-top: 1px solid var(--line); margin: .75rem 0; }
+.md a.md-link { color: var(--accent-2); text-decoration: underline; text-underline-offset: 2px; font-weight: 550; cursor: pointer; word-break: break-word; }
+.md a.md-link:hover { color: var(--accent); background: var(--accent-soft); border-radius: 4px; }
+.md a.md-app-btn { display: inline-flex; align-items: center; gap: .35rem; background: var(--accent-soft); color: var(--accent-2); border: 1px solid rgba(23, 107, 44, .24); border-radius: 999px; padding: .22rem .72rem; font-size: .82rem; font-weight: 600; text-decoration: none; margin: .18rem .25rem .18rem 0; cursor: pointer; transition: transform .12s, background .12s; }
+.md a.md-app-btn:hover { background: var(--accent); color: #fff; transform: translateY(-1px); }
+.md img.md-img { max-width: min(100%, 460px); max-height: 320px; width: auto; height: auto; border-radius: 12px; border: 1px solid var(--line); margin: .45rem 0; cursor: pointer; display: block; transition: transform .15s; }
+.md img.md-img:hover { transform: scale(1.01); }
 .md code { font-family: var(--mono); font-size: .86em; background: var(--fill); padding: .05rem .35rem; border-radius: 6px; }
 .code { position: relative; margin: .6rem 0 .8rem; border-radius: 12px; overflow: hidden; }
 .code pre { margin: 0; padding: 2.1rem 1.1rem 1rem; overflow: auto; background: var(--code-bg); color: var(--code-ink); font: .84rem/1.55 var(--mono); }
@@ -187,7 +243,22 @@ button { cursor: pointer; }
 .step-ic .spin { width: 14px; height: 14px; }
 .step-ic.ok { background: var(--accent-soft); color: var(--accent-2); }
 .step-ic.run { background: var(--warn-soft); color: var(--warn); }
+.step-ic.wait { background: var(--fill); color: var(--faint); }
 .step-ic.no, .step-ic.fail { background: var(--danger-soft); color: var(--danger); }
+.op-cycle { display: flex; flex-direction: column; gap: .32rem; padding: .38rem .56rem; border-radius: 11px;
+  background: var(--surface); border: 1px solid var(--line); font-size: .74rem; line-height: 1.35; }
+.op-cycle__row { display: flex; align-items: center; gap: .26rem; flex-wrap: wrap; }
+.op-cycle__lbl { font-weight: 700; color: var(--accent-2); margin-right: .18rem; white-space: nowrap; }
+.op-stage { display: inline-flex; align-items: center; gap: .22rem; padding: .1rem .44rem; border-radius: 999px; font-weight: 600;
+  background: var(--fill); color: var(--faint); white-space: nowrap; transition: all .15s var(--ease); }
+.op-stage.in-progress { background: var(--warn-soft); color: var(--warn); box-shadow: 0 0 0 1px var(--warn-line); }
+.op-stage.completed { background: var(--accent-soft); color: var(--accent-2); }
+.op-arr { color: var(--faint); font-size: .68rem; user-select: none; }
+.op-todos { display: flex; flex-direction: column; gap: .18rem; border-top: 1px dashed var(--line); padding-top: .28rem; font-size: .73rem; }
+.op-todo { display: flex; align-items: center; gap: .36rem; color: var(--muted); }
+.op-todo.in-progress { color: var(--warn); font-weight: 600; }
+.op-todo.completed { color: var(--accent-2); }
+.op-todo__mark { font-weight: 700; width: .95rem; text-align: center; flex: none; }
 .step-name { font-weight: 600; color: var(--ink); white-space: nowrap; }
 .step-det { flex: 1; min-width: 0; color: var(--muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .md.live.stale { opacity: .45; }
@@ -208,6 +279,8 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
   margin: -.1rem 0 .45rem; max-height: 240px; overflow: auto; white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
 .tool { border: 1px solid var(--line); background: var(--surface); border-radius: 11px; margin: 0; overflow: hidden; box-shadow: none; animation: rise .18s var(--ease) both; }
 .tool__head { display: flex; align-items: center; gap: .5rem; padding: .38rem .56rem; cursor: pointer; font-size: .81rem; }
+.tool__acts { padding: 0 .56rem .3rem 2.05rem; }
+.tool__acts .linkish { font-size: .78rem; padding: .1rem 0; }
 .tool__head:hover { background: #fff; }
 .tool__head > .ic { color: var(--accent); width: 15px; height: 15px; }
 .tool__name { font-weight: 600; white-space: nowrap; color: var(--ink); }
@@ -216,6 +289,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 .state { font-size: .71rem; font-weight: 600; border-radius: 999px; padding: .08rem .52rem; background: var(--fill); color: var(--muted); white-space: nowrap; }
 .state.run { color: var(--warn); background: var(--warn-soft); }
 .state.ok { color: var(--accent-2); background: var(--accent-soft); }
+.state.wait { color: var(--faint); background: var(--fill); }
 .state.no, .state.fail { color: var(--danger); background: var(--danger-soft); }
 .state.skip { color: var(--warn); background: var(--warn-soft); }
 .tool__body { border-top: 1px solid var(--line); padding: .6rem .75rem .25rem; }
@@ -263,32 +337,47 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 
 /* composer */
 .dock { padding: .25rem 1.25rem max(1rem, env(safe-area-inset-bottom, 0px)); }
-.notice { width: min(760px, 100%); margin: 0 auto .55rem; display: flex; align-items: center; justify-content: center; gap: .5rem; font-size: .84rem; color: var(--muted); }
+.notice { width: min(820px, 100%); margin: 0 auto .55rem; display: flex; align-items: center; justify-content: center; gap: .5rem; font-size: .84rem; color: var(--muted); }
 .notice.err { color: var(--danger); }
-.attachments { width: min(760px, 100%); margin: 0 auto .5rem; display: flex; gap: .4rem; flex-wrap: wrap; }
+.attachments { width: min(820px, 100%); margin: 0 auto .5rem; display: flex; gap: .4rem; flex-wrap: wrap; }
 .att { display: inline-flex; align-items: center; gap: .4rem; background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px;
   padding: .2rem .3rem .2rem .7rem; font-size: .8rem; box-shadow: var(--shadow-sm); }
 .att button { border: 0; background: none; color: var(--muted); display: flex; padding: .15rem; border-radius: 50%; }
 .att button:hover { color: var(--danger); background: var(--danger-soft); }
 .att .ic { width: 14px; height: 14px; }
 .att img { width: 24px; height: 24px; object-fit: cover; border-radius: 6px; margin-left: -.45rem; }
+#inbox .att { border-style: dashed; }
+#inbox .att .linkish { font-size: .8rem; padding: 0 .1rem; }
 @property --beam-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
 @keyframes beam-clockwise { to { --beam-angle: 360deg; } }
-.composer { position: relative; width: min(760px, 100%); margin: 0 auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 26px; box-shadow: var(--shadow);
-  padding: .4rem; display: flex; align-items: flex-end; gap: .25rem; transition: border-color .18s var(--ease), box-shadow .18s var(--ease); }
+.composer { position: relative; width: min(820px, 100%); margin: 0 auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 20px; box-shadow: var(--shadow);
+  padding: .65rem .75rem .5rem; display: flex; flex-direction: column; gap: .3rem; transition: border-color .18s var(--ease), box-shadow .18s var(--ease); }
 .composer:focus-within { border-color: rgba(23, 107, 44, .45); box-shadow: 0 8px 28px rgba(23, 107, 44, .12); }
 .composer.busy { border-color: rgba(23, 107, 44, .22); box-shadow: 0 8px 28px rgba(23, 107, 44, .10); }
-.composer.busy::before { content: ""; position: absolute; inset: -1.5px; border-radius: 27.5px; padding: 2px; pointer-events: none; z-index: 2;
+.composer.busy::before { content: ""; position: absolute; inset: -1.5px; border-radius: 21.5px; padding: 2px; pointer-events: none; z-index: 2;
   background: conic-gradient(from var(--beam-angle, 0deg), transparent 0deg, transparent 270deg, rgba(23, 107, 44, .2) 300deg, var(--leaf) 336deg, var(--accent) 354deg, transparent 360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
   animation: beam-clockwise 2s linear infinite; }
-.composer textarea { flex: 1; min-width: 0; border: 0; background: none; resize: none; font-size: 1rem; padding: .48rem .3rem; max-height: 220px; min-height: 38px; line-height: 1.45; }
+.composer textarea { width: 100%; border: 0; background: none; resize: none; font-size: 1rem; padding: .2rem .25rem .35rem; max-height: 220px; min-height: 36px; line-height: 1.45; }
 .composer textarea:focus { outline: none; }
 .composer textarea::placeholder { color: var(--faint); }
-.cbtn { width: 38px; height: 38px; flex: none; border-radius: 50%; border: 0; background: none; color: var(--muted); padding: 0;
+.composer__bar { display: flex; align-items: center; justify-content: space-between; gap: .4rem; padding-top: .1rem; }
+.composer__tools, .composer__actions { display: flex; align-items: center; gap: .2rem; }
+.cbtn { width: 34px; height: 34px; flex: none; border-radius: 10px; border: 0; background: none; color: var(--muted); padding: 0;
   display: inline-flex; align-items: center; justify-content: center; transition: background-color .15s, color .15s; }
 .cbtn:hover { background: var(--fill); color: var(--ink); }
-.cbtn .ic { width: 22px; height: 22px; }
+.cbtn .ic { width: 19px; height: 19px; }
+.senses-pop { position: absolute; left: .4rem; bottom: calc(100% + .5rem); width: min(310px, calc(100vw - 2rem)); background: var(--surface);
+  border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow-lg); padding: .38rem; z-index: 35; display: flex; flex-direction: column; gap: .15rem; }
+.senses-pop[hidden] { display: none !important; }
+.senses-hd { font-size: .72rem; font-weight: 680; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: .35rem .6rem .2rem; }
+.senses-item { border: 0; background: none; color: var(--ink); border-radius: 11px; padding: .5rem .65rem; text-align: left; display: flex; align-items: center; gap: .6rem; cursor: pointer; transition: background-color .14s; }
+.senses-item:hover { background: var(--fill); }
+.senses-item .ic { width: 18px; height: 18px; color: var(--accent); flex: none; }
+.senses-item__t { display: flex; flex-direction: column; min-width: 0; }
+.senses-item__t b { font-size: .85rem; font-weight: 600; color: var(--ink); }
+.senses-item__t small { font-size: .74rem; color: var(--muted); line-height: 1.3; }
+.dbg-pre { max-height: 280px; overflow: auto; font: .76rem/1.45 var(--mono); background: var(--surface); padding: .65rem; border-radius: 10px; border: 1px solid var(--line); white-space: pre-wrap; word-break: break-word; margin: .35rem 0; }
 .mic.rec { background: var(--accent-soft); color: var(--accent-2); animation: ring 1.3s ease-in-out infinite; }
 @keyframes ring { 50% { box-shadow: 0 0 0 5px rgba(23, 107, 44, .16); } }
 .send { width: 38px; height: 38px; flex: none; border-radius: 50%; border: 0; background: var(--accent); color: #fff; padding: 0; touch-action: none; user-select: none; -webkit-user-select: none;
@@ -321,7 +410,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 /* settings: one sheet, pages one level after another */
 .scrim { position: fixed; inset: 0; background: rgba(20, 32, 24, .28); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
 .scrim.on { opacity: 1; pointer-events: auto; }
-.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100%); background: var(--bg); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg);
+.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100%); background: var(--bg); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg);
   transform: translateX(104%); pointer-events: none; transition: transform .3s cubic-bezier(.2, .8, .2, 1); z-index: 50; display: flex; flex-direction: column; }
 .sheet.on { transform: none; pointer-events: auto; }
 .sheet__head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .3rem; padding: max(.55rem, env(safe-area-inset-top, 0px)) .6rem .35rem; min-height: 56px; }
@@ -429,14 +518,55 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 .ws__acts { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0 .95rem .85rem calc(.95rem + 30px + .75rem); }
 .group > .ws + .ws::before { left: 3.6rem; }
 
+/* Playwright-style Image & UI Visual Inspector */
+.insp-modal { position: fixed; inset: 0; z-index: 95; background: rgba(16, 26, 20, .72); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.insp-modal[hidden] { display: none !important; }
+.insp-card { width: min(1140px, 96vw); height: min(760px, 90vh); background: var(--bg); color: var(--ink); border-radius: 18px; border: 1px solid var(--line); box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; }
+.insp-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .75rem 1rem; border-bottom: 1px solid var(--line); background: var(--card); flex-wrap: wrap; }
+.insp-title { font-weight: 650; font-size: .95rem; display: flex; align-items: center; gap: .5rem; }
+.insp-meta { font-size: .78rem; color: var(--muted); font-weight: 450; }
+.insp-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.35fr 1fr; overflow: hidden; }
+.insp-stage { background: #121915; display: flex; align-items: center; justify-content: center; padding: 1rem; overflow: auto; position: relative; }
+.insp-wrap { position: relative; display: inline-block; max-width: 100%; max-height: 100%; line-height: 0; }
+.insp-wrap img { max-width: 100%; max-height: calc(90vh - 120px); width: auto; height: auto; border-radius: 8px; display: block; }
+.insp-box { position: absolute; border: 2px solid #10B981; background: rgba(16, 185, 129, .10); border-radius: 4px; cursor: pointer; transition: background .12s, box-shadow .12s; }
+.insp-box:hover, .insp-box.active { background: rgba(16, 185, 129, .26); box-shadow: 0 0 0 2px #fff; z-index: 5; }
+.insp-box span { position: absolute; top: -17px; left: -2px; background: #176B2C; color: #fff; font: 600 10px/14px var(--mono); padding: 0 4px; border-radius: 3px; white-space: nowrap; }
+.insp-side { border-left: 1px solid var(--line); overflow-y: auto; padding: .85rem 1rem; display: flex; flex-direction: column; gap: .8rem; background: var(--bg); }
+.insp-sec-h { font-size: .74rem; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: .35rem; display: flex; align-items: center; justify-content: space-between; }
+.insp-pal { display: flex; flex-wrap: wrap; gap: .35rem; }
+.insp-swatch { display: inline-flex; align-items: center; gap: .35rem; padding: .22rem .5rem; border-radius: 8px; background: var(--card); border: 1px solid var(--line); font-size: .76rem; cursor: pointer; }
+.insp-swatch i { width: 13px; height: 13px; border-radius: 4px; border: 1px solid rgba(0,0,0,.18); display: inline-block; }
+.insp-list { display: flex; flex-direction: column; gap: .35rem; }
+.insp-el { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .48rem .65rem; font-size: .8rem; cursor: pointer; display: flex; flex-direction: column; gap: .22rem; transition: border-color .12s; }
+.insp-el:hover, .insp-el.active { border-color: var(--accent); background: var(--accent-soft); }
+.insp-el__top { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
+.insp-el__ref { font-family: var(--mono); font-weight: 700; color: var(--accent-2); background: rgba(23,107,44,.12); padding: .05rem .35rem; border-radius: 5px; font-size: .74rem; }
+.insp-el__role { font-weight: 600; color: var(--ink); }
+.insp-el__coords { font-family: var(--mono); font-size: .72rem; color: var(--muted); }
+.insp-el__txt { color: var(--ink-2); font-size: .79rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.insp-ocr { font: .78rem/1.45 var(--mono); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .55rem .7rem; max-height: 160px; overflow: auto; white-space: pre-wrap; margin: 0; }
+@media (max-width: 860px) {
+  .insp-body { grid-template-columns: 1fr; grid-template-rows: 46% 54%; }
+  .insp-side { border-left: 0; border-top: 1px solid var(--line); }
+}
+
 @media (max-width: 860px) {
   .app, .app.rail-off { grid-template-columns: 1fr; }
   .app.rail-off .rail { visibility: visible; }
-  .rail { position: fixed; inset: 0 auto 0 0; width: min(290px, 84vw); z-index: 45; transform: translateX(-104%); transition: transform .25s var(--ease); }
+  .rail { position: fixed; inset: 0 auto 0 0; width: min(290px, 84vw); z-index: 55; transform: translateX(-104%); transition: transform .25s var(--ease); }
   .rail.on { transform: none; box-shadow: var(--shadow-lg); }
   .u { max-width: 88%; }
+  .app.empty-chat .main { justify-content: flex-start; }
+  .cycle-strip { flex-wrap: wrap; justify-content: center; gap: .35rem .25rem; padding: .55rem .65rem; }
+  .cycle-step { flex: 1 1 42%; min-width: 128px; }
+  .cycle-arr { display: none; }
+  .feature-grid { grid-template-columns: 1fr; gap: .5rem; }
 }
-@media (min-width: 861px) { .app:not(.rail-off) #new-chat-2 { display: none; } }
+@media (min-width: 861px) {
+  .app:not(.rail-off) #new-chat-2 { display: none; }
+  .app:not(.rail-off) .scrim { left: 264px; }
+}
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -497,19 +627,36 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   </defs>
 </svg>
 
-<div class="app" id="app">
-  <aside class="rail" id="rail" aria-label="Chats">
+<div class="app empty-chat" id="app">
+  <aside class="rail" id="rail" aria-label="Navigation and chats">
+    <div class="rail__brand">
+      <div class="brand">
+        <img src="icon.png" alt="Clover" width="32" height="32">
+        <div class="brand__text">
+          <span class="brand__title">Clover AI Studio</span>
+          <span class="brand__ver">v5.0.2</span>
+        </div>
+      </div>
+      <button type="button" class="ibtn" id="new-chat" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
+    </div>
     <div class="rail__top">
-      <div class="brand"><img src="icon.png" alt="" width="24" height="24"><span>Clover</span></div>
       <div class="mpick" id="mpick">
         <button type="button" class="mpick__btn" id="model-btn" aria-haspopup="listbox" aria-expanded="false" title="Select model"><span id="model-btn-t">LFM3-Omni</span><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <div class="mpick__menu" id="model-menu" role="listbox" aria-label="Models" hidden></div>
       </div>
-      <button type="button" class="ibtn" id="new-chat" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
     </div>
-    <nav class="chats" id="chats"></nav>
+    <nav class="rail__nav" id="rail-nav" aria-label="Studio sections">
+      <button type="button" class="rail__nav-btn on" data-nav="chat"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span>Chat</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="workspaces"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span>Workspaces</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="memory"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg><span>Memory</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="tools"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>Tools</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="learning"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span>Learning</span></button>
+      <button type="button" class="rail__nav-btn" data-nav="settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg><span>Settings</span></button>
+    </nav>
+    <div class="rail__sec"><span>Conversations</span></div>
+    <nav class="chats" id="chats" aria-label="Conversations"></nav>
     <div class="rail__foot">
-      <div class="status"><span class="dot" id="status-dot"></span><span id="status-text">Connecting…</span></div>
+      <div class="status"><span class="dot ok" id="status-dot"></span><span id="status-text">Clover Ready</span></div>
       <div class="rail__ws" id="rail-ws" hidden><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span id="rail-ws-t"></span></div>
     </div>
   </aside>
@@ -517,7 +664,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   <section class="main">
     <header class="bar">
       <div class="bar__side">
-        <button type="button" class="ibtn" id="menu" aria-label="Show or hide chats" title="Chats"><svg class="ic" aria-hidden="true"><use href="#i-sidebar"/></svg></button>
+        <button type="button" class="ibtn" id="menu" aria-label="Show or hide sidebar" title="Sidebar"><svg class="ic" aria-hidden="true"><use href="#i-sidebar"/></svg></button>
         <button type="button" class="ibtn" id="new-chat-2" aria-label="New chat" title="New chat"><svg class="ic" aria-hidden="true"><use href="#i-compose"/></svg></button>
       </div>
       <div class="bar__title" id="chat-title">New chat</div>
@@ -528,11 +675,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
     <div class="stream" id="stream">
       <div class="col">
-        <div class="hero" id="hero" hidden>
-          <img class="mascot" src="robo-clover.webp" alt="" width="220" height="188">
-          <h1 id="greet">Hello.</h1>
-          <p id="hero-p">Clover runs here on your laptop. Nothing leaves it unless you allow it.</p>
-          <div class="sugg" id="sugg"></div>
+        <div class="hero" id="hero">
+          <img class="hero__logo" src="icon.png" alt="Clover" width="64" height="64">
+          <img class="mascot" src="robo-clover.webp" alt="" width="220" height="188" hidden>
+          <h1 id="greet">Clover</h1>
+          <p class="hero__tagline">Work &middot; Create &middot; Learn &middot; Grow</p>
+          <p id="hero-p" hidden>Clover runs here on your laptop. Nothing leaves it unless you allow it.</p>
         </div>
         <div class="log" id="log" aria-live="polite"></div>
       </div>
@@ -540,13 +688,87 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
     <div class="dock">
       <div class="notice" id="notice" hidden><svg class="spin" id="notice-spin" aria-hidden="true"><use href="#clover-spin"/></svg><span id="notice-t"></span></div>
+      <div class="attachments" id="inbox" hidden></div>
       <div class="attachments" id="attachments" hidden></div>
       <div class="composer" id="composer">
         <input type="file" id="file-input" multiple hidden>
-        <button type="button" class="cbtn" id="attach" title="Add files" aria-label="Add files"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
-        <textarea id="prompt" rows="1" placeholder="Message Clover" aria-label="Message"></textarea>
-        <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
-        <button type="button" class="send" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
+        <input type="file" id="sense-camera-input" accept="image/*" capture="environment" hidden>
+        <input type="file" id="sense-video-input" accept="video/*" capture="environment" hidden>
+        <input type="file" id="sense-audio-input" accept="audio/*" capture hidden>
+        <div class="senses-pop" id="senses-menu" hidden role="menu" aria-label="Add files or connect system senses">
+          <div class="senses-hd">Files &amp; System Senses (S3)</div>
+          <button type="button" class="senses-item" data-sense="files"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span class="senses-item__t"><b>Add files, documents or media</b><small>Attach Excel, CSV, PDF, Word, code, photos, audio or video</small></span></button>
+          <button type="button" class="senses-item" data-sense="screenshot"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span class="senses-item__t"><b>System Screenshot app</b><small>Use OS Screenshot / Snipping Tool &amp; inspect with I-JEPA</small></span></button>
+          <button type="button" class="senses-item" data-sense="screen_record"><svg class="ic" aria-hidden="true"><use href="#i-video"/></svg><span class="senses-item__t"><b>System Screen Recorder / Video</b><small>Use OS Screen Recorder or Video Capture for visual analysis</small></span></button>
+          <button type="button" class="senses-item" data-sense="camera"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span class="senses-item__t"><b>System Camera app</b><small>Capture a live photo with OS Camera for I-JEPA inspection</small></span></button>
+          <button type="button" class="senses-item" data-sense="microphone"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span class="senses-item__t"><b>System Microphone / Voice Recorder</b><small>Capture audio via OS Mic / Recorder for Audio-JEPA analysis</small></span></button>
+        </div>
+        <textarea id="prompt" rows="1" placeholder="What would you like to do?" aria-label="Message"></textarea>
+        <div class="composer__bar">
+          <div class="composer__tools">
+            <button type="button" class="cbtn" id="attach" title="Add files or use System Senses (Screenshot, Screen Recorder, Camera, Microphone)" aria-label="Add files or system senses" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+            <button type="button" class="cbtn" id="screen-btn" title="Capture screen or attach image to inspect &amp; ask Clover" aria-label="Capture screen or attach image"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></button>
+            <button type="button" class="cbtn" id="clip-btn" title="Attach document, spreadsheet or code file" aria-label="Attach file"><svg class="ic" aria-hidden="true"><use href="#i-clip"/></svg></button>
+          </div>
+          <div class="composer__actions">
+            <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
+            <button type="button" class="send" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)" disabled><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-below" id="hero-below">
+        <div class="cycle-strip" role="group" aria-label="Clover 5-stage operating cycle">
+          <button type="button" class="cycle-step" data-nav-open="memory" title="Context — Read real systems, files, memory and grounding">
+            <span class="cycle-step__ic"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg></span>
+            <span class="cycle-step__t"><b>Context</b><small>Understand</small></span>
+          </button>
+          <svg class="ic cycle-arr" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          <button type="button" class="cycle-step" data-nav-open="workspaces" title="Direction — Plan together in your workspace">
+            <span class="cycle-step__ic"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg></span>
+            <span class="cycle-step__t"><b>Direction</b><small>Plan together</small></span>
+          </button>
+          <svg class="ic cycle-arr" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          <button type="button" class="cycle-step" data-nav-open="tools" title="Execution — Run verified tools, code and search">
+            <span class="cycle-step__ic"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span>
+            <span class="cycle-step__t"><b>Execution</b><small>Do the work</small></span>
+          </button>
+          <svg class="ic cycle-arr" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          <button type="button" class="cycle-step" data-nav-open="layers" title="Outcome — Check and verify the result">
+            <span class="cycle-step__ic"><svg class="ic" aria-hidden="true"><use href="#i-success"/></svg></span>
+            <span class="cycle-step__t"><b>Outcome</b><small>Check the result</small></span>
+          </button>
+          <svg class="ic cycle-arr" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          <button type="button" class="cycle-step" data-nav-open="learning" title="Growth — Learn and improve with you">
+            <span class="cycle-step__ic"><svg class="ic" aria-hidden="true"><use href="#i-graph"/></svg></span>
+            <span class="cycle-step__t"><b>Growth</b><small>Learn and improve</small></span>
+          </button>
+        </div>
+
+        <div class="collab-pill">
+          <svg class="ic" aria-hidden="true"><use href="#i-success"/></svg>
+          <span>System &middot; Human &middot; AI working together</span>
+        </div>
+
+        <div class="feature-grid">
+          <button type="button" class="fcard" data-nav-open="memory">
+            <span class="fcard__ic"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg></span>
+            <span class="fcard__t"><b>Memory</b><small>Your work, knowledge and context</small></span>
+            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          </button>
+          <button type="button" class="fcard" data-nav-open="tools">
+            <span class="fcard__ic"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span>
+            <span class="fcard__t"><b>Tools</b><small>Search, files, code and apps</small></span>
+            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          </button>
+          <button type="button" class="fcard" data-nav-open="learning">
+            <span class="fcard__ic"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span>
+            <span class="fcard__t"><b>Learning</b><small>Gets better with you</small></span>
+            <svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
+          </button>
+        </div>
+
+        <div class="sugg" id="sugg" hidden></div>
       </div>
     </div>
   </section>
@@ -564,14 +786,62 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     </form>
     <p class="note" id="auth-note" hidden></p>
     <div class="auth-links">
-      <a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/laptop/CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
-      <a href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNRoJQ1q2vSWcsS_HamuIOmmlbmpz4YZmTRB6qoomiOmSj5pK7Qz75RY537EnOpdUc1h4mT_pQkTYd3smKNS" target="_blank" rel="noopener noreferrer">Test on Google Play</a>
-      <a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download Android (.apk)</a>
+      <a href="../download/laptop/CloverAIStudio-Setup.exe" download="CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
+      <a href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Test on Google Play</a>
+      <a href="https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.2/CloverAIStudio.apk">Download Android (.apk)</a>
     </div>
   </div>
 </div>
 
 <div class="scrim" id="scrim"></div>
+
+<div class="insp-modal" id="img-inspector" hidden role="dialog" aria-modal="true" aria-labelledby="insp-h">
+  <div class="insp-card">
+    <div class="insp-head">
+      <div class="insp-title">
+        <svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>
+        <span id="insp-h">Visual Inspector</span>
+        <span class="insp-meta" id="insp-meta"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.45rem">
+        <div class="seg sm" id="insp-mode">
+          <button type="button" class="on" data-v="boxes">Interactive [e1..eN]</button>
+          <button type="button" data-v="annotated">Annotated</button>
+          <button type="button" data-v="clean">Original</button>
+        </div>
+        <button type="button" class="ibtn x" id="insp-close" aria-label="Close inspector"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </div>
+    </div>
+    <div class="insp-body">
+      <div class="insp-stage" id="insp-stage">
+        <div class="insp-wrap" id="insp-wrap">
+          <img id="insp-img" alt="Inspected image">
+          <div id="insp-boxes"></div>
+        </div>
+      </div>
+      <div class="insp-side">
+        <div>
+          <div class="insp-sec-h"><span>Dominant Palette (click to copy hex)</span></div>
+          <div class="insp-pal" id="insp-pal"></div>
+        </div>
+        <div>
+          <div class="insp-sec-h"><span>Detected UI &amp; Visual Elements</span><span id="insp-el-count"></span></div>
+          <div class="insp-list" id="insp-els"></div>
+        </div>
+        <div>
+          <div class="insp-sec-h">
+            <span>Extracted OCR Text</span>
+            <span style="display:flex;gap:.35rem">
+              <button type="button" class="btn sm" id="insp-copy-ocr">Copy text</button>
+              <button type="button" class="btn sm pri" id="insp-ask-ocr">Ask Clover</button>
+            </span>
+          </div>
+          <pre class="insp-ocr" id="insp-ocr">Inspecting image…</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h" inert>
   <div class="sheet__head">
@@ -582,22 +852,99 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   <div class="sheet__body" id="sheet-body">
 
     <section class="page" data-page="home">
-      <div class="group laptop-only">
-        <button type="button" class="row t" data-go="account"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg></span><span class="row__t">GitHub account</span><span class="row__v" id="v-account">Not set up</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      <div class="group">
+        <button type="button" class="row t" data-go="workspaces"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Workspaces<small>Project folders, GitHub repositories &amp; context files</small></span><span class="row__v" id="v-ws-home"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="memory"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg></span><span class="row__t">Memory<small>Your work, knowledge, notes &amp; context</small></span><span class="row__v" id="v-memory">S1–S3</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="tools"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">Tools<small>Search, files, code, permissions &amp; apps</small></span><span class="row__v" id="v-tools-home"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="learning"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="row__t">Learning &amp; Growth<small>Personal &amp; collective learning, JEPA cycle</small></span><span class="row__v" id="v-learning">Personal on</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
       <div class="group">
-        <button type="button" class="row t" data-go="storage"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Storage</span><span class="row__v" id="v-storage">This laptop</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="model"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-model"/></svg></span><span class="row__t">Model and voice</span><span class="row__v" id="v-model-home"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="account"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg></span><span class="row__t">GitHub account (Memory backup)</span><span class="row__v" id="v-account">Not set up</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="storage"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg></span><span class="row__t">Storage</span><span class="row__v" id="v-storage">This laptop</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="debug"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">Debug logs &amp; Senses</span><span class="row__v" id="v-debug">Live</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="advanced"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></span><span class="row__t">Advanced</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
       <p class="gfoot center">Clover runs on this laptop with the setup that measured best. Nothing leaves it unless you allow it.</p>
-      <p class="gfoot center" id="about-foot">Clover AI Studio <b id="v-version">v0.5.0-beta.1 (Beta)</b> · <a href="https://cloverframework.com/privacy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> · <a href="https://github.com/santhoshsathish94/clover-framework/issues" target="_blank" rel="noopener noreferrer">Support</a></p>
+      <p class="gfoot center" id="about-foot">Clover AI Studio <b id="v-version">v5.0.2</b> · <a href="https://cloverframework.com/privacy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> · <a href="https://github.com/santhoshsathish94/clover-framework/issues" target="_blank" rel="noopener noreferrer">Support</a></p>
+    </section>
+
+    <section class="page" data-page="memory" hidden>
+      <p class="lead">Your work, knowledge, notes, and context across Personal Memory (<code>S1</code>), Knowledge Graph &amp; Earlier Chats (<code>S2</code>), and Grounded Verification (<code>S3</code>).</p>
+      <div class="group">
+        <button type="button" class="row t" data-go="personal"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="row__t">What Clover learned about you<small>Saved preferences, corrections &amp; personal notes</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="layers"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-models"/></svg></span><span class="row__t">Clover Context &amp; Layers<small>S1 Memory · S2 Knowledge Graph &amp; Recall · S3 Grounding · C1–C3</small></span><span class="row__v">3 core · 3 supporting</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="workspaces"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Workspaces &amp; Project Context<small>Folders, GitHub repos &amp; local context files</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="account"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-profile"/></svg></span><span class="row__t">GitHub Memory Backup<small>Sync your S1 memory repository across devices</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="storage"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg></span><span class="row__t">Storage &amp; Repository Paths<small>Where chats, notes, media &amp; models live</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      </div>
+      <div class="glabel">Saved Memory &amp; Learned Notes</div>
+      <div class="group pad" id="memory-personal-summary">Loading your memory &amp; context…</div>
+    </section>
+
+    <section class="page" data-page="learning" hidden>
+      <p class="lead">Personal learning stays local on this laptop and works offline without signing in. Opt-in collective learning uses Google OpenID Connect (no separate Clover account) to contribute or receive verified shared-core strategies.</p>
+      <div class="glabel">Google Identity (for Collective Learning)</div>
+      <div class="group pad">
+        <div class="kv" id="lg-google-kv"><span>Google status</span><b id="lg-google-status">Not connected</b></div>
+        <div class="btns" style="margin-top:.55rem">
+          <button type="button" class="btn pri" id="lg-google-connect">Sign in with Google</button>
+          <button type="button" class="btn danger" id="lg-google-disconnect" hidden>Disconnect Google</button>
+        </div>
+        <p class="fine">Clover uses Google OpenID Connect (`sub` identifier only) to authenticate collective contributions and releases with the Clover Collective Gateway (no GitHub account needed). For backing up your personal memory (`S1`) to a private GitHub repository, use <b>Settings &rarr; GitHub account</b>.</p>
+      </div>
+      <div class="glabel">Learning Preferences</div>
+      <div class="group">
+        <div class="row static"><span class="row__t">Personal Learning<small>Always enabled locally. Learns your habits and answer preferences offline; never leaves this device.</small></span><span class="badge on">Always on</span></div>
+        <label class="row static"><span class="row__t">Contribute to Collective Learning<small>Disabled by default. Requires Google sign-in, explicit consent, and per-candidate review before upload.</small></span><span class="switch"><input type="checkbox" id="lg-contribute"><span></span></span></label>
+        <label class="row static"><span class="row__t">Receive Collective Learning<small>Disabled by default. Requires Google sign-in and explicit consent; applies Ed25519-signed shared-core releases.</small></span><span class="switch"><input type="checkbox" id="lg-receive"><span></span></span></label>
+      </div>
+      <div class="btns" style="margin:.4rem 0 .8rem">
+        <button type="button" class="btn sm" data-go="personal">View personal learning</button>
+        <button type="button" class="btn sm" id="lg-sync-now">Sync collective core now</button>
+        <button type="button" class="btn sm danger" id="lg-withdraw" hidden>Withdraw contribution consent</button>
+      </div>
+      <div class="note" id="lg-note" hidden></div>
+      <div class="glabel">Synchronization &amp; Transparency</div>
+      <div class="group pad"><div class="kv" id="lg-status-kv"></div></div>
+      <div class="glabel">Pending Candidate Contributions (stripped, zero user text)</div>
+      <div class="group pad" id="lg-pending-list"></div>
+      <div class="btns" id="lg-review-row" hidden style="margin-top:.4rem">
+        <button type="button" class="btn pri" id="lg-review-btn">Review &amp; Contribute…</button>
+      </div>
+      <div class="confirm" id="lg-confirm-box" hidden style="margin-top:.6rem">
+        <b>Confirm candidate contribution</b>
+        <p class="fine" style="margin:.35rem 0">Review the exact candidate package below. Only closed-vocabulary trigger lemmas, target capabilities, and local support counts leave this device—never prompts, files, memories, or conversation histories.</p>
+        <pre id="lg-confirm-json" style="max-height:180px;overflow:auto;font-size:.78rem;background:var(--bg);padding:.55rem;border-radius:8px;border:1px solid var(--line)"></pre>
+        <div class="ask__b"><button type="button" class="btn pri" id="lg-confirm-upload">Confirm &amp; Upload</button><button type="button" class="btn" id="lg-confirm-cancel">Cancel</button></div>
+      </div>
+      <div class="glabel">Submitted Contributions</div>
+      <div class="group pad" id="lg-submitted-list"></div>
+      <div class="glabel">Active Shared-Core Rules</div>
+      <div class="group pad" id="lg-active-rules"></div>
+      <div class="glabel">Autonomous Clover Cycle &amp; Self-Training (JEPA / RPRE)</div>
+      <div class="group pad">
+        <p class="fine" style="margin-top:0">Clover discovers high-surprise problems via JEPA Epistemic Surprise, repairs Cycle 1 failures autonomously in Cycle 2, and self-trains its local <code>idm</code> and <code>OutcomeResidualAdapter</code> only on externally verified outcomes.</p>
+        <div class="kv" id="lg-auto-kv" style="margin-top:.5rem"></div>
+        <div class="btns" style="margin-top:.6rem">
+          <button type="button" class="btn pri sm" id="lg-auto-run">Run Autonomous Cycle &amp; Self-Train</button>
+          <button type="button" class="btn sm" data-go="debug">Open Debug Logs</button>
+        </div>
+        <pre class="dbg-pre" id="lg-auto-out" hidden></pre>
+      </div>
     </section>
 
     <section class="page" data-page="account" hidden>
-      <p class="lead">Keep a copy of Clover's memory in a private GitHub repository of yours, so it is backed up and can come back on another computer.</p>
+      <p class="lead">Keep a copy of Clover's personal memory (`S1` git repository) in a private GitHub repository of yours, so it is backed up and can sync across your devices. (Collective Learning uses Google Sign-In in Learning &amp; Growth and does not require GitHub.)</p>
       <div class="group pad"><div class="kv" id="acct-kv"></div></div>
-      <div class="btns"><button type="button" class="btn" id="vsc-gh">Sign in to GitHub</button><button type="button" class="btn pri" id="vsc-repo">Set up private repository</button><button type="button" class="btn" id="vsc-sync" hidden><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg>Sync now</button></div>
-      <p class="fine">You sign in through VS Code on this laptop, and the GitHub token stays in VS Code.</p>
+      <div class="glabel">GitHub Personal Access Token (direct sync on any device)</div>
+      <div class="group pad">
+        <p class="fine" style="margin-top:0">Paste a GitHub Personal Access Token (with <code>repo</code> scope) to create and sync your private <code>clover-ai-studio</code> memory repository directly—without needing VS Code open.</p>
+        <div class="keyrow"><input type="password" id="acct-gh-token" autocomplete="off" spellcheck="false" placeholder="ghp_... or github_pat_..." aria-label="GitHub token for memory sync"><button type="button" class="btn pri" id="acct-gh-save">Save token</button></div>
+        <div class="btns" style="margin-top:.4rem"><button type="button" class="btn danger sm" id="acct-gh-forget" hidden>Remove token</button></div>
+      </div>
+      <div class="btns"><button type="button" class="btn laptop-only" id="vsc-gh">Sign in via VS Code</button><button type="button" class="btn pri" id="vsc-repo">Set up private repository</button><button type="button" class="btn" id="vsc-sync" hidden><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg>Sync now</button></div>
+      <p class="fine">Tokens are encrypted in your local device vault and never leave this device except to authenticate with GitHub.</p>
       <div class="note" id="acct-note" hidden></div>
     </section>
 
@@ -623,21 +970,71 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="group">
         <button type="button" class="row t" data-go="perms"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></span><span class="row__t">Permissions</span><span class="row__v" id="v-perms"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
         <button type="button" class="row t" data-go="tools"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg></span><span class="row__t">Tools and search</span><span class="row__v" id="v-tools"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="debug"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">Debug logs &amp; System Senses</span><span class="row__v">Live</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
-      <div class="group laptop-only">
+      <div class="group">
         <button type="button" class="row t" data-go="workspaces"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg></span><span class="row__t">Workspaces</span><span class="row__v" id="v-ws">None</span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-        <button type="button" class="row t" data-go="vscode"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">VS Code</span><span class="row__v" id="v-vsc"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t laptop-only" data-go="vscode"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">VS Code</span><span class="row__v" id="v-vsc"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </div>
     </section>
 
     <section class="page" data-page="layers" hidden>
       <p class="lead">Clover is three core stages, inference, plan and decode, with three supporting layers that serve them. What is on is the setup that measured best on Clover's tasks.</p>
+      <div class="glabel">Predictive World Model (JEPA / RPRE)</div>
+      <div class="group pad">
+        <div class="seg full" id="s-jepa" style="flex-wrap:wrap">
+          <button type="button" data-v="auto">Auto</button>
+          <button type="button" data-v="clover_rpre">Clover RPRE</button>
+          <button type="button" data-v="ijepa">I-JEPA</button>
+          <button type="button" data-v="audio_jepa">Audio-JEPA</button>
+          <button type="button" data-v="eb_jepa">EB-JEPA</button>
+          <button type="button" data-v="mjepa">MJEPA</button>
+          <button type="button" data-v="none">Off</button>
+        </div>
+        <p class="fine" id="jepa-d">Selects the Joint-Embedding Predictive Architecture across S3 Visual (<code>I-JEPA</code>), S3 Audio (<code>Audio-JEPA</code>), S2 Multimodal Recall (<code>MJEPA</code>), C2 Latent Planning with ETH Chain Contraction (<code>EB-JEPA</code> / <code>RPRE</code>), and Closed-Loop Outcome Growth.</p>
+        <div class="kv" id="jepa-kv" style="margin-top:.55rem"></div>
+      </div>
       <div class="glabel">Core</div>
       <div class="group" id="layers-core"></div>
       <div class="glabel">Supporting</div>
       <div class="group" id="layers-support"></div>
       <div class="glabel">Semantics</div>
       <div class="group" id="layers-semantics"></div>
+    </section>
+
+    <section class="page" data-page="debug" hidden>
+      <p class="lead">Live structured debug logs and OS System Senses (`S3` Screenshot, Screen Recorder, Camera, and Microphone). Clover connects to your system apps as sensory inputs rather than capturing its own window.</p>
+      <div class="glabel">System Senses (OS Apps &rarr; S3 Sensory Analysis)</div>
+      <div class="group pad">
+        <div class="btns" style="margin-top:0">
+          <button type="button" class="btn sm pri" data-test-sense="screenshot">System Screenshot</button>
+          <button type="button" class="btn sm" data-test-sense="screen_record">System Screen Recorder</button>
+          <button type="button" class="btn sm" data-test-sense="camera">System Camera</button>
+          <button type="button" class="btn sm" data-test-sense="microphone">System Microphone</button>
+        </div>
+        <p class="fine">Invokes the OS system app (Snipping Tool / Smart Capture, Screen Recorder, Camera, Voice Recorder / Mic) and inspects the captured media with <code>I-JEPA</code>, <code>Audio-JEPA</code>, and <code>LFM3-Omni-2B</code>.</p>
+      </div>
+      <div class="glabel">Structured Debug Logs</div>
+      <div class="group pad">
+        <div class="seg full" id="dbg-cat" style="flex-wrap:wrap;margin-bottom:.5rem">
+          <button type="button" class="on" data-v="all">All</button>
+          <button type="button" data-v="turn">Turns</button>
+          <button type="button" data-v="senses">Senses</button>
+          <button type="button" data-v="jepa">JEPA</button>
+          <button type="button" data-v="collective">Collective</button>
+          <button type="button" data-v="settings">Settings</button>
+        </div>
+        <div class="btns" style="margin-top:0;margin-bottom:.45rem">
+          <button type="button" class="btn sm pri" id="dbg-refresh">Refresh</button>
+          <button type="button" class="btn sm" id="dbg-copy">Copy logs</button>
+          <button type="button" class="btn sm danger" id="dbg-clear">Clear logs</button>
+        </div>
+        <pre class="dbg-pre" id="dbg-entries">Loading debug logs…</pre>
+      </div>
+      <div class="glabel">Server &amp; Engine Log Files</div>
+      <div class="group pad">
+        <pre class="dbg-pre" id="dbg-files">No log files loaded yet.</pre>
+      </div>
     </section>
 
     <section class="page" data-page="personal" hidden>
@@ -666,9 +1063,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       <div class="glabel">Hosted models</div>
       <div class="group" id="rm-list" hidden></div>
       <div class="group pad">
-        <p class="fine" style="margin-top:0">Host your own model (a Clover server, llama-server, Ollama, vLLM or any OpenAI-compatible server) on any machine and connect it here. By default Clover runs LFM3-Omni-2B locally on this laptop.</p>
-        <div class="keyrow" style="margin-top:.55rem"><input type="text" id="rm-url" autocomplete="off" spellcheck="false" placeholder="Server URL (e.g. http://192.168.1.50:8080)" aria-label="Model server URL"></div>
-        <div class="keyrow" style="margin-top:.45rem"><input type="password" id="rm-key" autocomplete="off" spellcheck="false" placeholder="Access key / API key (optional)" aria-label="Access key or API key"></div>
+        <p class="fine" style="margin-top:0">Unlock the hosted <code>k3</code> models (<b>Clover-35B-A3B</b>, <b>Nemotron 3.5 Super VL</b>, <b>Kimi K3.1 Pro</b>) by entering <code>k3</code> (or your approved Gmail / GitHub username) and your GitHub token or access key—or connect any OpenAI-compatible server.</p>
+        <div class="keyrow" style="margin-top:.55rem"><input type="text" id="rm-url" autocomplete="off" spellcheck="false" placeholder="k3, your Gmail/GitHub username, or Server URL" aria-label="Model server URL or approved account"></div>
+        <div class="keyrow" style="margin-top:.45rem"><input type="password" id="rm-key" autocomplete="off" spellcheck="false" placeholder="GitHub token, Google token, or Access key" aria-label="Access key or API key"></div>
         <div class="keyrow" style="margin-top:.45rem"><input type="text" id="rm-model" autocomplete="off" spellcheck="false" placeholder="Model ID (optional, auto-detected)" aria-label="Model ID"><button type="button" class="btn pri" id="rm-add">Add model</button></div>
         <div class="note" id="rm-note" hidden></div>
       </div>
@@ -717,6 +1114,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     </section>
 
     <section class="page" data-page="tools" hidden>
+      <div class="group">
+        <button type="button" class="row t" data-go="perms"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></span><span class="row__t">Permissions<small>Control Allow, Ask, or Off for every tool</small></span><span class="row__v" id="v-perms-tools"></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t" data-go="debug"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg></span><span class="row__t">System Senses &amp; Logs<small>Screenshot, Screen Recorder, Camera &amp; Microphone (S3)</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        <button type="button" class="row t laptop-only" data-go="vscode"><span class="tile"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg></span><span class="row__t">VS Code Integration<small>Open files, clone repos &amp; run tasks in VS Code</small></span><svg class="ic chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      </div>
       <div class="glabel">Tools</div>
       <div class="group pad">
         <div class="seg full" id="s-tools"><button type="button" data-v="ask">When I ask</button><button type="button" data-v="always">Always</button></div>
@@ -734,6 +1136,18 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <div class="note" id="search-note" hidden></div>
       </div>
       <p class="gfoot">The search text goes to the service you pick. Keys stay on this laptop.</p>
+      <div class="glabel">Search in your browser</div>
+      <div class="group pad">
+        <div class="seg full" id="s-browser" style="flex-wrap:wrap"><button type="button" data-v="google">Google</button><button type="button" data-v="bing">Bing</button><button type="button" data-v="duckduckgo">DuckDuckGo</button><button type="button" data-v="brave">Brave</button><button type="button" data-v="startpage">Startpage</button><button type="button" data-v="ecosia">Ecosia</button></div>
+        <p class="fine">For the whole web, Clover opens the search in your own browser with this engine when you click "Search in your browser" on a web search. You choose the pages; Clover reads them on this laptop.</p>
+      </div>
+      <div class="glabel laptop-only">Send pages from your browser</div>
+      <div class="group pad laptop-only">
+        <p class="fine" id="handback-state">Checking…</p>
+        <div class="btns"><button type="button" class="btn" id="handback-on">Set up for Chrome and Edge</button><button type="button" class="btn danger" id="handback-off" hidden>Remove</button></div>
+        <p class="fine" id="handback-help"></p>
+        <div class="note" id="handback-note" hidden></div>
+      </div>
     </section>
 
     <section class="page" data-page="workspaces" hidden>
@@ -769,6 +1183,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   var $ = function (id) { return document.getElementById(id); };
   // the same page on Laptop (windows), in the Android app (android), and on the Web (web, hosted on k3)
   var PLATFORM = (document.querySelector('meta[name="clover-platform"]') || {}).content || '';
+  if (PLATFORM === '__CLOVER_PLATFORM__') PLATFORM = (location.protocol === 'file:' || /^(127\.0\.0\.1|localhost)$/i.test(location.hostname || '')) ? 'windows' : 'web';
   var PHONE = PLATFORM === 'android', WEB = PLATFORM === 'web';
   if (PHONE || WEB) {
     document.documentElement.classList.add(PHONE ? 'phone' : 'web');
@@ -860,11 +1275,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     ['pencil', 'Write an email', 'Write a short, friendly email inviting my team to lunch on Friday.']
   ];
   if (PHONE || WEB) SUGGEST[2] = ['clock', 'Plan my day', 'Help me plan a calm, productive day with three priorities.'];
-  var PAGES = { home: 'Settings', account: 'GitHub account', storage: 'Storage', advanced: 'Advanced', layers: 'Clover layers',
-    model: 'Model and voice', perms: 'Permissions', tools: 'Tools and search', workspaces: 'Workspaces', vscode: 'VS Code',
-    personal: 'What Clover learned', collective: 'Collective learning' };
-  var PARENT = { account: 'home', storage: 'home', advanced: 'home', layers: 'advanced', model: 'advanced', perms: 'advanced',
-    tools: 'advanced', workspaces: 'advanced', vscode: 'advanced', personal: 'layers', collective: 'layers' };
+  var PAGES = { home: 'Settings', memory: 'Memory', learning: 'Learning & Growth', account: 'GitHub account', storage: 'Storage', debug: 'Debug logs & Senses',
+    advanced: 'Advanced', layers: 'Clover layers', model: 'Model and voice', perms: 'Permissions', tools: 'Tools and search',
+    workspaces: 'Workspaces', vscode: 'VS Code', personal: 'What Clover learned', collective: 'Collective learning' };
+  var PARENT = { memory: 'home', learning: 'home', account: 'home', storage: 'home', debug: 'home', advanced: 'home', layers: 'memory',
+    model: 'home', perms: 'tools', tools: 'home', workspaces: 'home', vscode: 'tools',
+    personal: 'memory', collective: 'learning' };
 
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
@@ -909,7 +1325,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function fromRecords(list) {
     return list.map(function (m) {
       if (m.role === 'user') return { role: 'user', text: m.text || '', files: m.files || [],
-        media: (m.media || []).map(function (x) { return { kind: x.kind, name: x.name || x.file }; }) };
+        media: (m.media || []).map(function (x) { return { kind: x.kind, name: x.name || x.file, file: x.file }; }) };
       return { role: 'bot', text: m.text || '', turn: m.n };
     });
   }
@@ -992,7 +1408,59 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
 
   /* ---------- rendering ---------- */
-  function inline(t) { return t.replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'); }
+  function safeHref(rawUrl) {
+    var u = String(rawUrl || '').replace(/&amp;/g, '&').trim();
+    if (/^(?:https?:\/\/|mailto:|tel:|app:\/\/|file:\/\/\/|\/api\/media\/file\/)/i.test(u)) return u;
+    if (/^www\.[a-z0-9.-]+\.[a-z]{2,}/i.test(u)) return 'https://' + u;
+    return '';
+  }
+  function inline(t) {
+    var codes = [], imgs = [], links = [];
+    // 1. Protect inline `code` spans first
+    t = String(t || '').replace(/`([^`]+)`/g, function (_, c) {
+      var id = codes.length; codes.push('<code>' + c + '</code>'); return '\u0001C' + id + '\u0001';
+    });
+    // 2. Markdown images ![alt](url)
+    t = t.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, function (full, alt, url) {
+      var h = safeHref(url);
+      if (!h) return full;
+      var id = imgs.length;
+      imgs.push('<img class="md-img" src="' + esc(h) + '" data-inspect-src="' + esc(h) + '" alt="' + (alt || 'Image') + '" title="Click to inspect or view full size" loading="lazy">');
+      return '\u0001I' + id + '\u0001';
+    });
+    // 3. Markdown links [label](url)
+    t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (full, label, url) {
+      var h = safeHref(url);
+      if (!h) return full;
+      var isApp = /^app:\/\//i.test(h) || /^open\s+/i.test(label.trim());
+      var cls = isApp ? 'md-app-btn' : 'md-link';
+      var id = links.length;
+      links.push('<a href="' + esc(h) + '" class="' + cls + '" target="_blank" rel="noopener noreferrer">' + label + (isApp ? ' \u2197' : '') + '</a>');
+      return '\u0001L' + id + '\u0001';
+    });
+    // 4. Bare URLs (https://..., http://..., www....)
+    t = t.replace(/(^|[\s(>])((?:https?:\/\/|www\.[a-z0-9.-]+\.[a-z]{2,})[^\s<>"']*)/gi, function (full, pre, rawUrl) {
+      var trail = '';
+      while (/[.,;:!?]$/.test(rawUrl) || (rawUrl.slice(-1) === ')' && (rawUrl.match(/\(/g) || []).length < (rawUrl.match(/\)/g) || []).length)) {
+        trail = rawUrl.slice(-1) + trail;
+        rawUrl = rawUrl.slice(0, -1);
+      }
+      var h = safeHref(rawUrl);
+      if (!h) return full;
+      var id = links.length;
+      links.push('<a href="' + esc(h) + '" class="md-link" target="_blank" rel="noopener noreferrer">' + rawUrl + '</a>');
+      return pre + '\u0001L' + id + '\u0001' + trail;
+    });
+    // 5. Bold, italic, strikethrough
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+         .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>')
+         .replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
+    // 6. Restore placeholders
+    t = t.replace(/\u0001L(\d+)\u0001/g, function (_, i) { return links[+i] || ''; })
+         .replace(/\u0001I(\d+)\u0001/g, function (_, i) { return imgs[+i] || ''; })
+         .replace(/\u0001C(\d+)\u0001/g, function (_, i) { return codes[+i] || ''; });
+    return t;
+  }
   function markdown(text) {
     var out = [];
     String(text || '').split(/```/).forEach(function (part, i) {
@@ -1017,11 +1485,24 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         if (/^\|.*\|$/.test(t)) { flush(); rows.push(t); return; }
         if (rows.length && !t) return;  // the model leaves blank lines between table rows
         flushTable();
-        var h = t.match(/^#{1,4}\s+(.*)$/);
+        if (/^(?:-{3,}|\*{3,}|_{3,})$/.test(t)) { flush(); out.push('<hr class="md-hr">'); return; }
+        var bq = t.match(/^&gt;\s?(.*)$/);
+        if (bq) { flush(); out.push('<blockquote class="md-quote">' + inline(bq[1]) + '</blockquote>'); return; }
+        var h = t.match(/^(#{1,4})\s+(.*)$/);
         var m = t.match(/^([-*•]|\d+[.)])\s+(.*)$/);
-        if (m) { var o = /\d/.test(m[1]); if (list.length && o !== ordered) flush(); ordered = o; list.push('<li>' + inline(m[2]) + '</li>'); return; }
+        if (m) {
+          var o = /\d/.test(m[1]);
+          if (list.length && o !== ordered) flush();
+          ordered = o;
+          var itemBody = m[2].replace(/^\[([ xX])\]\s+/, function (_, ck) { return (ck.toLowerCase() === 'x' ? '\u2611 ' : '\u2610 '); });
+          list.push('<li>' + inline(itemBody) + '</li>');
+          return;
+        }
         flush();
-        if (h) out.push('<h4>' + inline(h[1]) + '</h4>');
+        if (h) {
+          var lvl = Math.min(4, Math.max(1, h[1].length));
+          out.push('<h' + lvl + '>' + inline(h[2]) + '</h' + lvl + '>');
+        }
         else if (t) out.push('<p>' + inline(t) + '</p>');
       });
       flushTable();
@@ -1035,7 +1516,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (m.media && m.media.length) {
       var box = el('div', 'media');
       m.media.forEach(function (md) {
-        if (md.thumb && /^data:image\/jpeg;base64,/.test(md.thumb)) { var im = document.createElement('img'); im.src = md.thumb; im.alt = md.name || 'image'; box.appendChild(im); return; }
+        var imgSrc = (md.thumb && /^data:image\/jpeg;base64,/.test(md.thumb))
+          ? md.thumb
+          : (md.kind === 'image' && md.file ? apiUrl('/api/media/file/' + md.file) : '');
+        if (imgSrc) {
+          var im = document.createElement('img');
+          im.src = imgSrc; im.alt = md.name || 'image';
+          im.title = 'Click to open Playwright-style Visual & OCR Inspector';
+          im.addEventListener('click', function () {
+            openImageInspector({ file: md.file, data: md.data, thumb: md.thumb, name: md.name || 'Attached image' });
+          });
+          box.appendChild(im);
+          return;
+        }
         var s = el('span', '', ic(md.kind === 'video' ? 'video' : md.kind === 'audio' ? 'wave' : 'image')); s.appendChild(document.createTextNode(md.name || md.kind)); box.appendChild(s);
       });
       u.appendChild(box);
@@ -1069,6 +1562,34 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     update(s);
     return { el: row, update: update, data: s };
   }
+  /* browser-first search: the user's own browser searches the whole web and shows the pages; the user clicks, Clover
+     never opens a tab by itself. Windows goes through this laptop's server (the app window has its own Edge profile);
+     the phone app and the Web page open links in the user's browser themselves. */
+  function browserHref(t) {
+    var a = String(t.args || '').split('\n')[0].trim();
+    if (!a) return '';
+    if (t.name === 'web_search') {
+      var s = state.search, b = s && s.browsers && s.browsers[s.browser];
+      return (b ? b.url : 'https://www.google.com/search?q=') + encodeURIComponent(a).replace(/%20/g, '+');
+    }
+    return t.name === 'fetch_url' && /^https?:\/\/\S+$/i.test(a) ? a : '';
+  }
+  function browserLink(t) {
+    if (!browserHref(t)) return null;
+    if (!state.search && !state.searchLoading) { state.searchLoading = true; loadSearch(); }
+    var row = el('div', 'tool__acts'), a = document.createElement('a');
+    a.className = 'linkish'; a.href = browserHref(t); a.target = '_blank'; a.rel = 'noopener noreferrer';
+    a.innerHTML = ic('globe') + '<span>' + (t.name === 'web_search' ? 'Search in your browser' : 'Open in your browser') + '</span>';
+    a.addEventListener('click', function (e) {
+      a.href = browserHref(t);  // the engine picked in Settings may have loaded since
+      if (PHONE || WEB) return;
+      e.preventDefault();
+      api('POST', '/api/browser/open', t.name === 'web_search' ? { query: String(t.args || '').split('\n')[0] } : { url: a.href })
+        .catch(function () { window.open(a.href, '_blank', 'noopener'); });
+    });
+    row.appendChild(a);
+    return row;
+  }
   function toolEl(t) {
     var ui = TOOL_UI[t.name] || [t.name || 'Tool', 'code'];
     var box = el('div', 'tool');
@@ -1089,6 +1610,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     head.addEventListener('click', toggle);
     head.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
     box.appendChild(head); box.appendChild(body);
+    var acts = browserLink(t);
+    if (acts) box.insertBefore(acts, body);
     var api_ = {
       el: box,
       set: function (s, why, summary) {
@@ -1096,8 +1619,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         icBox.className = 'step-ic ' + (cls === 'skip' ? 'no' : cls);
         icBox.innerHTML = s === 'run' ? SPIN : ic(ui[1]);
         st.className = 'state ' + cls;
-        st.textContent = s === 'run' ? 'Running\u2026' : s === 'ok' ? '\u2713 Worked' : s === 'fail' ? '\u2715 Failed' : 'Skipped';
-        st.title = why || summary || '';
+        // a write Clover read back and found as written (tool_tasks): said in the badge, which a phone does not cut off
+        var onDisk = s === 'ok' && / \u00b7 checked on disk$/.test(summary || '');
+        if (onDisk) summary = summary.replace(/ \u00b7 checked on disk$/, '');
+        st.textContent = s === 'run' ? 'Running\u2026' : onDisk ? '\u2713 Checked on disk' : s === 'ok' ? '\u2713 Worked' : s === 'fail' ? '\u2715 Failed' : 'Skipped';
+        st.title = onDisk ? 'Clover read the file back and it holds what was written' : (why || summary || '');
         var sumTxt = summary || (s === 'no' && why ? why : '');
         if (sumTxt) {
           argEl.innerHTML = esc(argLine ? argLine.slice(0, 56) + '  \u2192  ' : '') + '<span class="tool__sum">' + esc(sumTxt) + '</span>';
@@ -1131,6 +1657,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function workSummary(m) {
     var parts = [];
+    if (m.opCycle && m.opCycle.cycle > 1) parts.push('Cycle ' + m.opCycle.cycle);
     if (m.thinking) parts.push('thought ' + Math.max(1, m.thinkSecs || 1) + ' s');
     var names = [];
     (m.tools || []).forEach(function (t) {
@@ -1142,13 +1669,44 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (!parts.length && (m.used || []).length) parts.push(m.used.slice(0, 2).join(' \u00b7 '));
     return (stepCnt > 1 ? stepCnt + ' steps' : 'Steps') + (parts.length ? ' \u00b7 ' + parts.join(' \u00b7 ') : '');
   }
+  function renderOpCycleBar(box, oc) {
+    if (!box || !oc || !Array.isArray(oc.stages)) return;
+    box.hidden = false;
+    var cycNum = oc.cycle || 1;
+    var html = '<div class="op-cycle__row"><span class="op-cycle__lbl">Clover Cycle' + (cycNum > 1 ? ' ' + cycNum : '') + ':</span>';
+    oc.stages.forEach(function (st, idx) {
+      if (idx > 0) html += '<span class="op-arr" aria-hidden="true">&rarr;</span>';
+      var status = st.status || 'not-started';
+      var mark = status === 'completed' ? '\u2713 ' : status === 'in-progress' ? '\u25cf ' : '\u25cb ';
+      var shortName = (st.title || st.id || '').replace(/^\d+\.\s*/, '');
+      html += '<span class="op-stage ' + esc(status) + '" title="' + esc((st.title || shortName) + (st.detail ? ' — ' + st.detail : '')) + '">' +
+        mark + esc(shortName) + '</span>';
+    });
+    html += '</div>';
+    if (Array.isArray(oc.todos) && oc.todos.length) {
+      html += '<div class="op-todos">';
+      oc.todos.forEach(function (td, i) {
+        var tst = td.status || 'not-started';
+        var tmk = tst === 'completed' ? '\u2713' : tst === 'in-progress' ? '\u25cf' : '\u25cb';
+        html += '<div class="op-todo ' + esc(tst) + '"><span class="op-todo__mark">' + tmk + '</span><span>' +
+          esc((td.id || (i + 1)) + '. ' + (td.title || '')) + '</span></div>';
+      });
+      html += '</div>';
+    }
+    box.innerHTML = html;
+  }
   function botEl(m) {
     var wrap = el('div', 'b');
     var body = el('div', 'b__body');
-    var hasWork = !!(m.thinking || (m.tools || []).length || (m.used || []).length || (m.steps || []).length);
+    var hasWork = !!(m.thinking || (m.tools || []).length || (m.used || []).length || (m.steps || []).length || m.opCycle);
     if (hasWork) {
       var openByDefault = !!((m.tools || []).length || m.thinking);
       var w = workEl(openByDefault, false); w.label(workSummary(m));
+      if (m.opCycle && Array.isArray(m.opCycle.stages)) {
+        var ocBar = el('div', 'op-cycle');
+        renderOpCycleBar(ocBar, m.opCycle);
+        w.inner.appendChild(ocBar);
+      }
       var stBox = el('div', 'step-tl');
       (m.steps || []).forEach(function (s) {
         stBox.appendChild(stepRowEl({ icon: s.icon || 'check', state: s.state || 'ok', name: s.name, detail: s.detail, badge: s.badge }).el);
@@ -1180,11 +1738,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     body.appendChild(el('div', 'md' + (m.isNotice ? ' notice' : ''), markdown(m.text)));
     (m.images || []).forEach(function (im) {
-      if (!/^[0-9a-f]{32}\.png$/.test(im.file || '')) return;
+      if (!/^(?:[0-9a-f]{32}|annotated_[0-9a-f]{16})\.(?:png|jpg|jpeg|gif|webp)$/.test(im.file || '')) return;
       var fig = el('figure', 'figure'), img = document.createElement('img');
       img.src = apiUrl('/api/media/file/' + im.file); img.alt = im.prompt || 'Picture Clover made'; img.loading = 'lazy';
+      img.style.cursor = 'pointer'; img.title = 'Click to open Visual Inspector';
+      img.addEventListener('click', function () { openImageInspector({ file: im.file, name: im.prompt || im.file }); });
       fig.appendChild(img);
-      var cap = el('figcaption'); cap.textContent = [im.model, im.seconds ? im.seconds + ' s' : ''].filter(Boolean).join(' · ');
+      var cap = el('figcaption'); cap.textContent = [im.model, im.seconds ? im.seconds + ' s' : '', 'Click to inspect'].filter(Boolean).join(' · ');
       fig.appendChild(cap); body.appendChild(fig);
     });
     (m.media || []).forEach(function (md) {
@@ -1245,6 +1805,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     var empty = !c || !c.messages.length;
     $('hero').hidden = !empty;
+    if ($('hero-below')) $('hero-below').hidden = !empty;
+    if ($('app')) $('app').classList.toggle('empty-chat', !!empty);
     if (!empty) c.messages.forEach(function (m) { log.appendChild(m.role === 'user' ? userEl(m) : botEl(m)); });
     $('chat-title').textContent = (c && c.title) || 'New chat';
     scrollDown();
@@ -1262,8 +1824,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1100);
   });
   function renderHero() {
-    var h = new Date().getHours();
-    $('greet').textContent = h < 5 ? 'Up late?' : h < 12 ? 'Good morning.' : h < 18 ? 'Good afternoon.' : 'Good evening.';
+    $('greet').textContent = 'Clover';
     var box = $('sugg'); box.innerHTML = '';
     (state.omni ? SUGGEST.slice(0, 3).concat([['image', 'Look at a photo', 'What is in this picture?', true]]) : SUGGEST).forEach(function (s) {
       var b = btn('', ic(s[0]) + '<span></span>'); b.querySelector('span').textContent = s[1]; b.title = s[2];
@@ -1374,6 +1935,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if ($('model-btn-t')) $('model-btn-t').textContent = info.name;
     if ($('model-d')) $('model-d').innerHTML = '<b>' + esc(info.name) + '</b> · ' + esc(info.desc || '');
     if ($('v-model')) $('v-model').textContent = info.name;
+    if ($('v-model-home')) $('v-model-home').textContent = info.name;
     if ($('model-menu')) {
       var html = cat.map(function (x) {
         return '<button type="button" class="mpick__opt' + (x.id === m ? ' on' : '') + '" role="option" data-v="' + esc(x.id) + '">' +
@@ -1525,6 +2087,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('s-think').addEventListener('change', function () { state.settings.thinking = this.checked; saveSettings(); });
   $('s-autospeak').addEventListener('change', function () { state.settings.autospeak = this.checked; saveSettings(); });
   segClick('s-tools', function (v) { saveServer({ tools: v }); });
+  if ($('s-jepa')) segClick('s-jepa', function (v) { saveServer({ jepa_arch: v }); });
   $('s-kv').addEventListener('change', function () { saveServer({ layers: { kv_slots: this.checked } }); });
   segClick('s-engine', function (v) {
     if (state.server && state.server.settings.engine === v) return;
@@ -1568,7 +2131,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function updatePlaceholder() {
     var p = $('prompt');
     if (!p) return;
-    p.placeholder = (state.omni && !isMobileView()) ? 'Message Clover, or add a photo, sound or video' : 'Message Clover';
+    p.placeholder = 'What would you like to do?';
   }
   window.addEventListener('resize', updatePlaceholder);
   function showAuthGate(show, msg) {
@@ -1633,14 +2196,25 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     api('GET', '/api/status').then(function (st) {
       if (WEB) showAuthGate(false);
       if (st.status === 'setup' && !WEB) { location.replace('/'); return; }
+      if (typeof st.inbox === 'number' && st.inbox !== state.inboxCount) { state.inboxCount = st.inbox; loadInbox(); }
       state.ready = st.status === 'ready';
       if (st.model_catalog && st.model_catalog.length) {
         state.catalog = st.model_catalog;
         if (state.server) state.server.model_catalog = st.model_catalog;
-        renderModelPicker();
       }
+      if (st.model_key) {
+        state.settings.model = st.model_key;
+        if (state.server && state.server.settings) state.server.settings.model = st.model_key;
+      }
+      renderModelPicker();
       if (st.mode && st.mode !== state.mode) { state.mode = st.mode; applyMode(); }
-      if (state.health && st.engine && state.health.engine && state.health.engine.engine !== st.engine) state.health = null;
+      if (state.health && state.health.engine && (
+        (st.engine && state.health.engine.engine !== st.engine) ||
+        (st.model && state.health.engine.model !== st.model)
+      )) {
+        state.health = null;
+        loadHealth();
+      }
       if (state.ready && st.model) setModel(st.model, st.inputs || ['text']);
       var info = modelInfo(st.model_key || state.settings.model);
       var isRemote = !info.local && !WEB;
@@ -1653,10 +2227,22 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           if (state.waitEl) state.waitEl.textContent = (st.busy.stage || 'working') + ' · ' + fmtSecs(st.busy.elapsed_s);
         }
       }
-      else if (WEB || isRemote) setStatus('ok', 'Ready · ' + info.name + (info.host && info.host !== 'local' ? ' · ' + info.host : ''));
-      else setStatus('ok', 'Ready · ' + info.name + ' · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU'));
+      else if (WEB || isRemote) {
+        setStatus('ok', 'Clover Ready');
+        $('status-text').title = 'Clover Ready · ' + info.name + (info.host && info.host !== 'local' ? ' · ' + info.host : '');
+      }
+      else {
+        setStatus('ok', 'Clover Ready');
+        $('status-text').title = 'Clover Ready · ' + info.name + ' · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU');
+      }
       updateSend();
     }).catch(function (e) {
+      if (location.protocol === 'file:') {
+        state.ready = true;
+        setStatus('ok', 'Clover Ready', '');
+        updateSend();
+        return;
+      }
       state.ready = false;
       var authReq = e && (e.status === 401 || (e.body && e.body.auth_required));
       if (WEB && authReq) {
@@ -1680,15 +2266,24 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function applyMode() { renderSettings(); }
   function setModel(name, inputs) {
-    var omni = WEB || /omni|nemotron|kimi/i.test(name) || inputs.indexOf('vision') >= 0;
-    var changed = omni !== state.omni || inputs.join() !== state.inputs.join();
+    var omni = WEB || /omni|clover-35b|nemotron|kimi/i.test(name) || inputs.indexOf('vision') >= 0;
+    var modelChanged = state.lastModelName !== name;
+    var changed = modelChanged || omni !== state.omni || inputs.join() !== state.inputs.join();
+    state.lastModelName = name;
     state.omni = omni; state.inputs = inputs;
     updatePlaceholder();
+    if (state.health && state.health.engine && state.health.engine.model !== name) {
+      state.health = null;
+      loadHealth();
+    }
+    var info = modelInfo(state.settings.model);
+    var isRemote = info && !info.local && !WEB;
+    $('hero-p').textContent = isRemote
+      ? ('Clover is connected to ' + info.name + ' on ' + (info.host || 'k3') + '. ' + (info.desc || ''))
+      : (omni ? 'Clover runs here on your laptop. It can see, hear and speak. Nothing leaves it unless you allow it.'
+              : 'Clover runs here on your laptop. Nothing leaves it unless you allow it.');
     if (!changed) return;
-    if (state.health && state.health.engine && state.health.engine.model !== name) state.health = null;
-    $('hero-p').textContent = omni ? 'Clover runs here on your laptop. It can see, hear and speak. Nothing leaves it unless you allow it.'
-      : 'Clover runs here on your laptop. Nothing leaves it unless you allow it.';
-    $('mic').hidden = true;
+    if ($('mic')) $('mic').hidden = true;
     updateSend(); renderSettings(); renderHero(); if (!state.busy) renderLog();
   }
 
@@ -1713,16 +2308,24 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   function toolsValue() {
     var st = state.server && state.server.settings;
-    if (st) $('v-tools').textContent = st.tools === 'always' ? 'Always' : 'When you ask';
+    if (st) {
+      var tv = st.tools === 'always' ? 'Always' : 'When you ask';
+      $('v-tools').textContent = tv;
+      if ($('v-tools-home')) $('v-tools-home').textContent = tv;
+    }
   }
   function renderServerSettings() {
     var sv = state.server; if (!sv || !sv.settings) return;
     var st = sv.settings, running = (state.health && state.health.engine && state.health.engine.engine) || st.engine;
+    var info = modelInfo(st.model);
+    var isRemote = info && !info.local && !WEB;
     setNote('model-note', sv.omni_available === false ? 'LFM3-Omni-2B not installed: ' + sv.omni_reason : '');
     $('engine-d').textContent = WEB
-      ? 'Runs on the k3 server (AMD Ryzen 9 7950X3D, 124 GB RAM): LFM3-Omni-2B in llama.cpp (Zen 4 AVX-512), Nemotron 3.5 Super VL (88-layer C engine + NCM) and Kimi K3.1 Pro 2.8T MoE (93-layer C/Rust engine + Gated DSA + NCM).'
-      : 'GPU and CPU run LFM3-Omni-2B with 4-bit weights in llama.cpp; the GPU (' + gpuName() + ') reads your message several times faster. ' +
-        'C1 + C2 + C3 runs our trained model with its planner (HybridLink) and decoder (NCM) together on the CPU: text only, no tools, slower; being measured.';
+      ? 'Runs on the k3 server (AMD Ryzen 9 7950X3D, 124 GB RAM): LFM3-Omni-2B in llama.cpp (Zen 4 AVX-512), Clover-35B-A3B (40-layer BD-GDN/GQA MoE), Nemotron 3.5 Super VL (88-layer C engine + NCM) and Kimi K3.1 Pro 2.8T MoE (93-layer C/Rust engine + Gated DSA + NCM).'
+      : isRemote
+        ? (info.name + ' hosted on ' + (info.host || 'k3') + ' — ' + (info.desc || 'Connected remote engine.') + ' Local tools, permissions, memory and Clover Cycle run on this device.')
+        : 'GPU and CPU run LFM3-Omni-2B with 4-bit weights in llama.cpp; the GPU (' + gpuName() + ') reads your message several times faster. ' +
+          'C1 + C2 + C3 runs our trained model with its planner (HybridLink) and decoder (NCM) together on the CPU: text only, no tools, slower; being measured.';
     $('s-engine').children[0].textContent = gpuName();
     Array.prototype.forEach.call($('s-engine').children, function (b) {
       var v = b.getAttribute('data-v'); b.classList.toggle('on', v === st.engine);
@@ -1731,80 +2334,83 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     setNote('engine-note', sv.warning || (sv.gpu_available === false && !WEB ? 'GPU engine not installed: ' + sv.gpu_reason : '') ||
       (st.engine !== 'fused' && !sv.fused_available ? '' : '') || (running && st.engine && running !== st.engine ? 'Switching engine…' : ''));
     pick('s-tools', st.tools || 'ask');
+    if ($('s-jepa')) pick('s-jepa', st.jepa_arch || 'auto');
     $('s-kv').checked = !!(st.layers && st.layers.kv_slots);
     renderModelPicker();
     toolsValue(); renderLayers();
+    if ($('jepa-kv') && sv.jepa_status) {
+      var js = sv.jepa_status, fr = js.flow_routing || {};
+      var jRows = [
+        ['Configured architecture', js.configured_arch || st.jepa_arch || 'auto'],
+        ['Weights source', String(js.weights_source || 'clvrtrk1').split(/[/\\]/).pop()],
+        ['Outcome adapter updates', String(js.cycle_updates || 0) + ' verified cycles'],
+        ['Flow routing', 'S3 Vis: ' + (fr.visual_s3 || 'ijepa') + ' · S3 Aud: ' + (fr.audio_s3 || 'audio_jepa') + ' · S2: ' + (fr.multimodal_s2 || 'mjepa') + ' · C2: ' + (fr.c2_plan || 'eb_jepa')]
+      ];
+      $('jepa-kv').innerHTML = jRows.map(function (r) { return '<span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b>'; }).join('');
+    }
   }
 
-  /* Clover layers: 3 core (inference, plan, decode) and 3 supporting (memory, relationships, tools), each with what it
-     does on this laptop now. Switches only where a part can be turned on or off. */
+  /* Clover layers: 3 core (C1 inference, C2 HybridAgent plan, C3 Bridges + 11-level NCM decode), 3 supporting
+     (S1 memory, S2 relationships, S3 tools & compiler), and semantics (CSI & PPL) are always on; only CPSL
+     (Collective Learning) has opt-in toggle switches. */
   function renderLayers() {
     var sv = state.server; if (!sv || !sv.settings) return;
     var st = sv.settings, L = st.layers || {}, info = modelInfo(st.model);
     var omni = true, k3Big = /nemotron|kimi/i.test(st.model || '');
     var mLabel = info ? info.name : 'LFM3-Omni-2B';
     var rec = (state.health && state.health.recall) || null, mc = state.memCount;
-    var recallNote = !omni ? ' Works with LFM3-Omni-2B.'
-      : !rec || !L.recall ? '' : rec.state === 'ready' ? ' ' + Number(rec.messages || 0).toLocaleString() + ' messages indexed.'
-      : rec.state === 'loading' ? ' Getting ready…' : rec.state === 'error' ? ' Could not start: ' + (rec.error || 'error') + '.'
-      : /embedder/.test(rec.state) ? ' Needs its embedding model: run Clover AI Studio setup again.' : '';
+    var recallNote = !rec ? '' : rec.state === 'ready' ? ' ' + Number(rec.messages || 0).toLocaleString() + ' messages indexed.'
+      : rec.state === 'loading' ? ' Getting ready…' : '';
     var whereDesc = (info && info.host && info.host !== 'local') ? ('hosted on ' + info.host) : ('the ' + (st.engine === 'gpu' ? gpuName() : 'CPU'));
-    var fusedOk = !!sv.fused_available, fusedActive = !k3Big && st.engine === 'fused' && fusedOk;
+    var fusedOk = !!sv.fused_available, c2c3Ok = sv.c2c3_available !== false || fusedOk || k3Big;
     var core = [
       { tag: 'C1', name: 'Inference', badge: 'On', on: true,
-        desc: mLabel + ' on ' + whereDesc + '. The model itself.',
+        desc: mLabel + ' on ' + whereDesc + '. Performs model inference only (planning is C2 HybridAgent; decoding is C3 NCM).',
         links: [['model', 'Model and voice']] },
-      { tag: 'C2', name: 'Plan', badge: (k3Big || fusedActive) ? 'On' : 'Try again', on: true, part: !(k3Big || fusedActive),
-        desc: k3Big ? ('HybridAgent planner + Studio tool loop running on k3 for ' + mLabel + ', plus Try again when you say an answer is not right.')
-          : fusedOk ? ('Try again: when you say an answer is not right, Clover checks it with outside evidence and solves it again. ' +
-            'The precomputed C2 planner for LFM3-Omni-2B is installed on this laptop' + (fusedActive ? ' and active in C1 + C2 + C3 mode.' : ' (switch to C1 + C2 + C3 in Model and voice to turn it on).'))
-          : ('Try again: when you say an answer is not right, Clover checks it with outside evidence and solves it again. ' +
-            'The optional precomputed C2 planner for LFM3-Omni-2B is not installed on this laptop (' + (sv.fused_reason || 'optional component c2c3') + ').') },
-      { tag: 'C3', name: 'Decode', badge: (k3Big || fusedActive) ? 'On' : (fusedOk ? 'Installed' : 'Not installed'), on: (k3Big || fusedActive),
-        desc: k3Big ? ('11-level Neural Concept Machine (NCM) concept renderer running on k3 for ' + mLabel + '.')
-          : fusedOk ? ('The precomputed 11-level NCM concept renderer for LFM3-Omni-2B is installed on this laptop' + (fusedActive ? ' and active.' : ' and switches on with C1 + C2 + C3.'))
-          : ('The optional precomputed 11-level NCM concept renderer for LFM3-Omni-2B is not installed on this laptop (' + (sv.fused_reason || 'optional component c2c3') + ').') }
+      { tag: 'C2', name: 'Plan · HybridAgent', badge: 'On', on: true,
+        desc: c2c3Ok
+          ? ('HybridAgent (HybridLink2048 + Lfm3NativeHybridLink, plan-trunk-0) continuous latent planning & Studio tool loop for ' + mLabel + ', plus Try again verification cycle.')
+          : ('HybridAgent planner for LFM3-Omni-2B is not installed on this laptop (' + (sv.c2c3_reason || sv.fused_reason || 'downloading c2c3') + ').') },
+      { tag: 'C3', name: 'Decode · Bridges & 11-Level NCM', badge: 'On', on: true,
+        desc: c2c3Ok
+          ? ('Lfm3ComboBridge(2048\u2192384) + Lfm3ExpertBridge(2048\u2192384) (bridge-trunk-0) into 11-level multiscale VQ-VAE, 12-layer NextConceptTransformer & 3-layer LexicalPointerDecoder.')
+          : ('The precomputed 11-level NCM concept renderer for LFM3-Omni-2B is not installed on this laptop (' + (sv.c2c3_reason || sv.fused_reason || 'downloading c2c3') + ').') }
     ];
     var support = [
-      { tag: 'S1', name: 'Memory', on: !!L.memory,
-        subs: [{ key: 'memory', name: 'Remember', desc: 'What you ask Clover to remember, and what it learned when you said an answer was not right.' +
-          (mc == null ? '' : ' Now ' + mc + (mc === 1 ? ' item.' : ' items.')) }],
-        desc: 'Your chats are always kept on this laptop.', links: [['storage', 'Where it is kept']] },
-      { tag: 'S2', name: 'Relationships', on: !!((L.recall && omni) || L.ontology), part: !(L.recall && omni && L.ontology),
-        subs: [{ key: 'recall', name: 'Earlier chats', disabled: !omni,
-                 desc: 'Brings back what you said in earlier conversations. Off by default: with unrelated earlier chats it lowered Clover\'s test score (40 instead of 47 of 65).' + recallNote },
-               { key: 'ontology', name: 'Knowledge graph', desc: 'Grounds answers about Clover in its verified records.' }] },
-      { tag: 'S3', name: 'Tools', on: true,
-        desc: 'Web search, Python, PowerShell, files and VS Code, ' + (st.tools === 'always' ? 'when Clover decides to use them.' : 'when you ask for them.') + ' Each follows Permissions.',
-        subs: [{ key: 'compiler', name: 'Code check', desc: 'Checks Python in answers and lets the model fix it.' }],
+      { tag: 'S1', name: 'Memory', badge: 'On', on: true,
+        desc: 'Always on. Remembers what you ask Clover to remember and what it learned from verification outcomes, plus full git-backed session records.' +
+          (mc == null ? '' : ' Now ' + mc + (mc === 1 ? ' item.' : ' items.')),
+        links: [['storage', 'Where it is kept']] },
+      { tag: 'S2', name: 'Relationships · Recall & Knowledge Graph', badge: 'On', on: true,
+        desc: 'Always on. Turn-level earlier-chat recall (BM25 + bge-small-en-v1.5 RRF)' + recallNote + ' and deterministic Ontology Knowledge Graph grounding.' },
+      { tag: 'S3', name: 'Tools & Generative Compiler', badge: 'On', on: true,
+        desc: 'Always on. Web search, Python, PowerShell, files, VS Code and statement-level Python Generative Compiler code check.',
         links: [['tools', 'Tools and search'], ['perms', 'Permissions']] }
     ];
     fillLayers($('layers-core'), core, L); fillLayers($('layers-support'), support, L);
     var cs = sv.csi_status || {}, pv = state.personal || {}, cv = state.collective || {};
-    var csiNote = !st.csi ? '' : cs.state === 'ready' ? ' Ready (' + (cs.parser || 'parser') + ', ' + (cs.lemmatiser || '') + ').'
-      : cs.state === 'starting' ? ' Starting: ' + (cs.detail || '') + '.' : cs.state === 'missing' ? ' ' + cs.detail + '.'
-      : cs.state === 'failed' ? ' Could not start: ' + (cs.detail || '') + '.' : '';
+    var csiNote = cs.state === 'ready' ? ' Ready (' + (cs.parser || 'parser') + ', ' + (cs.lemmatiser || 'morph-verb-v1.1') + ', Open English WordNet 2025).'
+      : cs.state === 'starting' ? ' Starting: ' + (cs.detail || '') + '.' : '';
     var learned = (pv.learned || []).filter(function (h) { return h.status === 'validated'; }).length +
       (pv.preferences || []).filter(function (p) { return p.in_use; }).length, exps = (pv.experiences || []).length;
     var collOn = !!(st.collective_contribute || st.collective_receive);
     var collPart = !!(st.collective_contribute) !== !!(st.collective_receive);
     var candN = (cv.candidate_preview || []).length, actN = (cv.active_rules || []).length + (cv.active_defaults || []).length;
     var sem = [
-      { tag: 'CSI', name: 'Structure of what you say', on: !!st.csi && cs.state === 'ready', part: !!st.csi && cs.state !== 'ready',
-        subs: [{ key: 'csi', top: true, name: 'Read each message\'s structure',
-                 desc: 'A parser and dictionary on this computer read which tools you turn down ("don\'t search the web") and whether an answer claims something was done.' + csiNote }] },
-      { tag: 'PPL', name: 'How you usually mean things', on: !!st.personal, links: exps ? [['personal', 'What Clover learned']] : null,
-        subs: [{ key: 'personal', top: true, name: 'Learn from my corrections',
-                 desc: 'When you correct Clover ("No, look it up online", "Shorter, please") it learns how you usually mean things and how you like answers. Kept only on this computer; turn it off any time.' +
-                   (exps ? ' ' + exps + (exps === 1 ? ' experience, ' : ' experiences, ') + learned + ' learned.' : '') }] },
+      { tag: 'CSI', name: 'Structure of what you say', badge: 'On', on: true,
+        desc: 'Always on. Reads each message\'s syntactic structure, declined tools ("don\'t search the web"), and action claims using morph-verb-v1.1 and Open English WordNet 2025.' + csiNote },
+      { tag: 'PPL', name: 'How you usually mean things', badge: 'On', on: true,
+        links: [['personal', 'What Clover learned']],
+        desc: 'Always on locally. Learns from your corrections and preferences ("No, look it up online", "Shorter, please") and stays on this device.' +
+          (exps ? ' ' + exps + (exps === 1 ? ' experience, ' : ' experiences, ') + learned + ' learned.' : '') },
       { tag: 'CPSL', name: 'Collective problem-solving', on: collOn, part: collPart,
-        links: [['collective', 'Shared core & candidate preview']],
+        links: [['learning', 'Learning & Growth settings'], ['collective', 'Shared core & candidate preview']],
         subs: [
           { key: 'collective_contribute', top: true, name: 'Contribute candidate strategies',
-            desc: 'Extracts stripped, zero-verbatim structural strategies from validated problem-solving episodes (never raw prompts or paths).' +
+            desc: 'Opt-in (requires Google sign-in). Extracts stripped, zero-verbatim structural strategies from validated problem-solving episodes.' +
               (candN ? ' ' + candN + (candN === 1 ? ' candidate ready.' : ' candidates ready.') : '') },
           { key: 'collective_receive', top: true, name: 'Receive validated shared-core updates',
-            desc: 'Applies signed shared-core improvements that passed the 5-gate evaluator without overriding your personal rules.' +
+            desc: 'Opt-in (requires Google sign-in). Applies Ed25519-signed shared-core improvements that passed the 5-gate evaluator.' +
               (actN ? ' ' + actN + (actN === 1 ? ' shared rule active.' : ' shared rules active.') : '') }
         ] }
     ];
@@ -1824,8 +2430,22 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         var inp = sub.querySelector('input'), top = state.server && state.server.settings;
         inp.checked = (s.top ? !!(top && top[s.key]) : !!L[s.key]) && !s.disabled; inp.disabled = !!s.disabled; inp.setAttribute('aria-label', s.name);
         inp.addEventListener('change', function () {
+          var elCb = this, val = this.checked;
+          if (s.key === 'collective_contribute' || s.key === 'collective_receive') {
+            var body = {}; body[s.key === 'collective_contribute' ? 'contribute' : 'receive'] = val;
+            api('POST', '/api/collective/consent', body).then(function (r) {
+              state.collective = r;
+              if (state.server && state.server.settings) state.server.settings[s.key] = val;
+              renderLayers(); renderCollective(); renderLearningGrowth();
+            }).catch(function (e) {
+              elCb.checked = !val;
+              openSettings('learning');
+              setNote('lg-note', e.message);
+            });
+            return;
+          }
           var ch = { layers: {} };
-          if (s.top) { ch = {}; ch[s.key] = this.checked; } else ch.layers[s.key] = this.checked;
+          if (s.top) { ch = {}; ch[s.key] = val; } else ch.layers[s.key] = val;
           saveServer(ch).then(loadHealth).then(loadPersonal).then(loadCollective);
         });
         row.appendChild(sub);
@@ -1842,10 +2462,91 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     return api('GET', '/api/memory').then(function (r) { state.memCount = (r.memories || []).length; renderLayers(); }).catch(function () {});
   }
   function loadPersonal() {
-    return api('GET', '/api/personal').then(function (r) { state.personal = r; renderLayers(); renderPersonal(); }).catch(function () {});
+    return api('GET', '/api/personal').then(function (r) { state.personal = r; renderLayers(); renderPersonal(); renderLearningGrowth(); }).catch(function () {});
   }
   function loadCollective() {
-    return api('GET', '/api/collective').then(function (r) { state.collective = r; renderLayers(); renderCollective(); }).catch(function () {});
+    return api('GET', '/api/collective').then(function (r) { state.collective = r; renderLayers(); renderCollective(); renderLearningGrowth(); }).catch(function () {});
+  }
+  function renderLearningGrowth() {
+    var cv = state.collective || {}, pv = state.personal || {}, sv = (state.server && state.server.settings) || {};
+    var g = cv.google_identity || { connected: false, status_text: 'Not connected' };
+    var pOn = sv.personal !== undefined ? !!sv.personal : (cv.personal_enabled !== undefined ? !!cv.personal_enabled : true);
+    var cOn = !!(cv.consent_contribute && g.connected);
+    var rOn = !!(cv.consent_receive && g.connected);
+    if ($('v-learning')) {
+      var parts = [];
+      parts.push(pOn ? 'Personal on' : 'Personal off');
+      if (cOn || rOn) parts.push('Collective on');
+      $('v-learning').textContent = parts.join(' · ');
+    }
+    if ($('lg-google-status')) $('lg-google-status').textContent = g.status_text || (g.connected ? 'Connected with Google (OIDC)' : 'Not connected');
+    if ($('lg-google-connect')) $('lg-google-connect').hidden = !!g.connected;
+    if ($('lg-google-disconnect')) $('lg-google-disconnect').hidden = !g.connected;
+    if ($('lg-personal')) $('lg-personal').checked = pOn;
+    if ($('lg-contribute')) { $('lg-contribute').checked = !!cv.consent_contribute; $('lg-contribute').disabled = !g.connected; }
+    if ($('lg-receive')) { $('lg-receive').checked = !!cv.consent_receive; $('lg-receive').disabled = !g.connected; }
+    if ($('lg-withdraw')) $('lg-withdraw').hidden = !(cv.consent_contribute || (cv.submitted_count || 0) > 0);
+
+    var exps = (pv.experiences || []).length;
+    var habits = (pv.learned || []).filter(function (h) { return h.status === 'validated'; }).length;
+    var pending = cv.pending_candidates || cv.candidate_preview || [];
+    var submitted = cv.submitted_packages || [];
+    var rules = cv.active_rules || cv.rules || [];
+    if ($('lg-status-kv')) {
+      var rows = [
+        ['Google connection', g.connected ? 'Connected (OIDC sub verified)' : 'Not connected (offline mode)'],
+        ['Personal learning', pOn ? 'Enabled locally (' + exps + ' exp · ' + habits + ' habits)' : 'Disabled'],
+        ['Contribution consent', cv.consent_contribute ? 'Enabled' : (cv.consent_withdrawn_utc ? 'Withdrawn (' + cv.consent_withdrawn_utc + ')' : 'Disabled (default)')],
+        ['Receive consent', cv.consent_receive ? 'Enabled' : 'Disabled (default)'],
+        ['Pending candidate contributions', String(pending.length)],
+        ['Contributions submitted', String(submitted.length)],
+        ['Current collective core version', cv.version ? ('v' + cv.version + ' (' + rules.length + ' rules)') : 'None'],
+        ['Last successful synchronization', cv.last_sync_utc || 'Never'],
+        ['Synchronization errors', cv.last_sync_error || 'None']
+      ];
+      $('lg-status-kv').innerHTML = rows.map(function (r) { return '<span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b>'; }).join('');
+    }
+    var pendBox = $('lg-pending-list');
+    if (pendBox) {
+      pendBox.innerHTML = '';
+      if (!pending.length) {
+        pendBox.appendChild(el('p', 'fine', 'No pending candidate contributions. Candidates are extracted only from validated local problem-solving episodes and stripped of all user text.'));
+        if ($('lg-review-row')) $('lg-review-row').hidden = true;
+      } else {
+        pending.forEach(function (c) {
+          var r = el('div', 'row static'); var t = el('span', 'row__t');
+          t.textContent = (c.category || 'strategy') + ': [' + (c.trigger || c.key || []).join(', ') + '] \u2192 [' + (c.target || []).join(', ') + '] (support ' + (c.local_support_count || c.validated || 0) + ', precision ' + Math.round((c.local_precision || 1) * 100) + '%)';
+          r.appendChild(t); pendBox.appendChild(r);
+        });
+        if ($('lg-review-row')) $('lg-review-row').hidden = !(g.connected && cv.consent_contribute);
+      }
+    }
+    var subBox = $('lg-submitted-list');
+    if (subBox) {
+      subBox.innerHTML = '';
+      if (!submitted.length) {
+        subBox.appendChild(el('p', 'fine', 'No contributions submitted from this installation.'));
+      } else {
+        submitted.forEach(function (s) {
+          var r = el('div', 'row static'); var t = el('span', 'row__t');
+          t.textContent = (s.category || 'strategy') + ': [' + (s.trigger || []).join(', ') + '] \u2192 [' + (s.target || []).join(', ') + '] · ' + (s.submitted_utc || '');
+          r.appendChild(t); subBox.appendChild(r);
+        });
+      }
+    }
+    var actRulesBox = $('lg-active-rules');
+    if (actRulesBox) {
+      actRulesBox.innerHTML = '';
+      if (!rules.length) {
+        actRulesBox.appendChild(el('p', 'fine', cv.consent_receive ? 'No shared-core rules installed yet. Tap "Sync collective core now" to check for releases.' : 'Receive Collective Learning is disabled.'));
+      } else {
+        rules.forEach(function (h) {
+          var r = el('div', 'row static'); var t = el('span', 'row__t');
+          t.textContent = (h.kind || h.category || 'strategy') + ': [' + (h.key || h.trigger || []).join(', ') + '] \u2192 [' + (h.target || []).join(', ') + ']';
+          r.appendChild(t); actRulesBox.appendChild(r);
+        });
+      }
+    }
   }
   function renderCollective() {
     var actBox = $('collective-active'), candBox = $('collective-candidates');
@@ -1854,11 +2555,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     actBox.innerHTML = ''; candBox.innerHTML = '';
     var rules = cv.active_rules || [], defs = cv.active_defaults || [];
     if (!rules.length && !defs.length) {
-      actBox.appendChild(el('p', 'fine', cv.consent_receive ? 'No shared-core rules installed yet.' : 'Turn on "Receive validated shared-core updates" in Clover layers to apply verified shared rules.'));
+      actBox.appendChild(el('p', 'fine', cv.consent_receive ? 'No shared-core rules installed yet.' : 'Turn on "Receive Collective Learning" in Settings \u2192 Learning & Growth to apply verified shared rules.'));
     } else {
       rules.forEach(function (h) {
         var r = el('div', 'row static'); var t = el('span', 'row__t');
-        t.textContent = 'Shared strategy (' + (h.kind || 'verb_to_capability') + '): ' + (h.key || []).join(' ') + ' \u2192 ' + (h.target || []).join(', ');
+        t.textContent = 'Shared strategy (' + (h.kind || 'verb_to_capability') + '): ' + (h.key || h.trigger || []).join(' ') + ' \u2192 ' + (h.target || []).join(', ');
         r.appendChild(t); actBox.appendChild(r);
       });
       defs.forEach(function (d) {
@@ -1873,7 +2574,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     } else {
       cands.forEach(function (c) {
         var r = el('div', 'row static'); var t = el('span', 'row__t');
-        t.textContent = (c.kind || 'strategy') + ': [' + (c.key || []).join(', ') + '] \u2192 [' + (c.target || []).join(', ') + '] (validated ' + (c.validated || 0) + ')';
+        t.textContent = (c.kind || c.category || 'strategy') + ': [' + (c.key || c.trigger || []).join(', ') + '] \u2192 [' + (c.target || []).join(', ') + '] (validated ' + (c.validated || c.local_support_count || 0) + ')';
         r.appendChild(t); candBox.appendChild(r);
       });
     }
@@ -1885,21 +2586,30 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   });
   /* what personal learning holds: what was learned and the experiences behind it; forget all of it */
   function renderPersonal() {
-    var box = $('personal-list'); if (!box) return;
-    var pv = state.personal || {}; box.innerHTML = '';
+    var box = $('personal-list'), memBox = $('memory-personal-summary');
+    var pv = state.personal || {};
     var kn = pv.learned || [], pr = (pv.preferences || []).filter(function (p) { return p.in_use; }), ex = pv.experiences || [];
-    if (!kn.length && !pr.length && !ex.length) { box.appendChild(el('p', 'fine', 'Nothing learned yet.')); return; }
-    kn.forEach(function (h) {
-      var r = el('div', 'row static'); var t = el('span', 'row__t');
-      t.textContent = 'When you say “' + (h.when_you_say || []).join(' ') + '” you usually mean ' + (h.you_mean || []).join(', ') +
-        (h.status === 'validated' ? '' : ' (still checking)');
-      r.appendChild(t); box.appendChild(r);
-    });
-    pr.forEach(function (p) {
-      var r = el('div', 'row static'); var t = el('span', 'row__t');
-      t.textContent = 'You prefer ' + String(p.value).replace(/_/g, ' ') + ' (' + p.dimension + ')'; r.appendChild(t); box.appendChild(r);
-    });
-    var n = el('p', 'fine'); n.textContent = ex.length + (ex.length === 1 ? ' experience' : ' experiences') + ' from your chats are kept on this computer.'; box.appendChild(n);
+    function fillBox(target) {
+      if (!target) return;
+      target.innerHTML = '';
+      if (!kn.length && !pr.length && !ex.length) {
+        target.appendChild(el('p', 'fine', 'No saved personal notes or learned habits yet. As you work with Clover, your preferences and notes appear here.'));
+        return;
+      }
+      kn.forEach(function (h) {
+        var r = el('div', 'row static'); var t = el('span', 'row__t');
+        t.textContent = 'When you say “' + (h.when_you_say || []).join(' ') + '” you usually mean ' + (h.you_mean || []).join(', ') +
+          (h.status === 'validated' ? '' : ' (still checking)');
+        r.appendChild(t); target.appendChild(r);
+      });
+      pr.forEach(function (p) {
+        var r = el('div', 'row static'); var t = el('span', 'row__t');
+        t.textContent = 'You prefer ' + String(p.value).replace(/_/g, ' ') + ' (' + p.dimension + ')'; r.appendChild(t); target.appendChild(r);
+      });
+      var n = el('p', 'fine'); n.textContent = ex.length + (ex.length === 1 ? ' experience' : ' experiences') + ' from your chats are kept on this computer.'; target.appendChild(n);
+    }
+    fillBox(box);
+    fillBox(memBox);
   }
 
   /* ---------- web search provider (the key goes to this laptop's server and is never shown again) ---------- */
@@ -1909,6 +2619,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     sel = sel || s.provider; var p = s.providers[sel] || {};
     state.searchPick = sel;
     pick('s-search', sel);
+    if (s.browser) pick('s-browser', s.browser);
     var help = $('search-help');
     help.textContent = (p.detail || '') + (sel === s.provider ? ' In use now.' : ' Not in use yet.');
     if (p.signup) {
@@ -1939,11 +2650,60 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   });
   $('search-key').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('search-save').click(); } });
   $('search-forget').addEventListener('click', function () { saveSearch({ forget: state.searchPick }); });
+  segClick('s-browser', function (v) {
+    api('POST', '/api/search', { browser: v }).then(function (r) {
+      state.search = r; renderSearch(); setNote('search-note', r.browsers[r.browser].label + ' opens your browser searches.', true);
+    }).catch(function (e) { setNote('search-note', e.message); });
+  });
   $('search-test').addEventListener('click', function () {
     setNote('search-note', 'Searching…', true);
     api('POST', '/api/search/test', {}).then(function (r) { setNote('search-note', (r.ok ? 'Works: ' : 'Did not work: ') + r.message, r.ok); })
       .catch(function (e) { setNote('search-note', e.message); });
   });
+
+  /* ---------- pages from the user's browser (laptop: the Send to Clover extension; nothing is read until they click) ---------- */
+  function loadInbox() {
+    if (PHONE || WEB) return;
+    api('GET', '/api/inbox').then(function (r) { state.inbox = r; renderInbox(); renderHandback(); }).catch(function () {});
+  }
+  function renderInbox() {
+    var box = $('inbox'), pages = (state.inbox && state.inbox.pages) || [];
+    box.innerHTML = ''; box.hidden = !pages.length;
+    pages.slice(0, 3).forEach(function (p) {
+      var c = el('span', 'att'), t = el('span');
+      t.textContent = 'From your browser: ' + (p.title || p.site) + (p.selection ? ' (with your selection)' : '');
+      t.title = p.url;
+      var add = btn('linkish', 'Add to message', 'Add this page to your next message');
+      add.addEventListener('click', function () {
+        if (state.docs.length >= MAX_DOCS) { alert('Up to ' + MAX_DOCS + ' documents per message.'); return; }
+        api('POST', '/api/inbox/take', { id: p.id }).then(function (r) {
+          state.docs.push(r.document); renderAtt(); updateSend(); loadInbox();
+        }).catch(function (e) { alert(e.message); loadInbox(); });
+      });
+      var x = btn('', ic('x'), 'Dismiss');
+      x.addEventListener('click', function () { api('POST', '/api/inbox/dismiss', { id: p.id }).then(loadInbox).catch(loadInbox); });
+      c.innerHTML = ic('globe'); c.appendChild(t); c.appendChild(add); c.appendChild(x); box.appendChild(c);
+    });
+  }
+  function renderHandback() {
+    var r = state.inbox; if (!r || !r.available) return;
+    $('handback-state').textContent = r.registered
+      ? 'Set up: Chrome and Edge can pass a page to Clover when you click the Send to Clover button.'
+      : 'Not set up. With the Send to Clover extension, you click its button on a page and Clover gets that page.';
+    $('handback-on').hidden = !!r.registered; $('handback-off').hidden = !r.registered;
+    $('handback-help').textContent = r.extension_dir
+      ? 'Add the extension: open chrome://extensions or edge://extensions, turn on Developer mode, choose Load unpacked and pick ' + r.extension_dir + ' (its ID is ' + r.extension_id + ').'
+      : 'The Send to Clover extension is not included in this install yet.';
+  }
+  function setHandback(on) {
+    api('POST', '/api/browser/register', { on: on }).then(function (r) {
+      state.inbox = r; renderHandback(); renderInbox();
+      setNote('handback-note', on ? 'Set up for Chrome and Edge on this Windows account.' : 'Removed.', true);
+    }).catch(function (e) { setNote('handback-note', e.message); });
+  }
+  $('handback-on').addEventListener('click', function () { setHandback(true); });
+  $('handback-off').addEventListener('click', function () { setHandback(false); });
+  window.addEventListener('focus', function () { if (!PHONE && !WEB) pollStatus(); });  // back from the browser
 
   /* ---------- permissions ---------- */
   function loadPerms() { return api('GET', '/api/permissions').then(function (r) { state.perms = phonePerms(r.permissions || {}); renderPerms(); }).catch(function () {}); }
@@ -1963,6 +2723,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function renderPerms() {
     var s = permSummary();
     $('v-perms').textContent = s.chip;
+    if ($('v-perms-tools')) $('v-perms-tools').textContent = s.chip;
     var sum = $('perm-summary');
     sum.className = 'summary' + (s.cls ? ' ' + s.cls : '');
     sum.innerHTML = '<div class="big">' + ic(s.icon) + '</div><div><b></b><span></span></div>';
@@ -1992,6 +2753,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
   /* ---------- settings sheet: a home page and pages one level after another ---------- */
   var stack = ['home'];
+  function syncRailNav(page) {
+    var nav = 'chat';
+    if ($('sheet') && $('sheet').classList.contains('on')) {
+      if (page === 'workspaces') nav = 'workspaces';
+      else if (page === 'memory' || page === 'personal' || page === 'storage' || page === 'layers' || page === 'account') nav = 'memory';
+      else if (page === 'tools' || page === 'perms' || page === 'vscode' || page === 'debug') nav = 'tools';
+      else if (page === 'learning' || page === 'collective') nav = 'learning';
+      else nav = 'settings';
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('.rail__nav-btn'), function (b) {
+      b.classList.toggle('on', b.getAttribute('data-nav') === nav);
+    });
+  }
   function showPage(name, dir) {
     Array.prototype.forEach.call(document.querySelectorAll('.page'), function (p) {
       var on = p.getAttribute('data-page') === name;
@@ -2002,16 +2776,21 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var prev = stack.length > 1 ? stack[stack.length - 2] : null;
     $('sheet-back').hidden = !prev; $('back-t').textContent = prev ? PAGES[prev] : '';
     $('sheet-body').scrollTop = 0;
+    syncRailNav(name);
     loadPage(name);
   }
   function go(name) { if (!PAGES[name]) return; stack.push(name); showPage(name, 1); $('sheet-back').focus(); }
   function back() { if (stack.length > 1) { stack.pop(); showPage(stack[stack.length - 1], -1); (stack.length > 1 ? $('sheet-back') : $('sheet-x')).focus(); } }
-  function openSettings(page) {
+  function openSettings(page, asRoot) {
     closeRail();
-    stack = ['home'];
-    var chain = [], p = page;
-    while (p && p !== 'home' && PAGES[p]) { chain.unshift(p); p = PARENT[p]; }
-    stack = stack.concat(chain);
+    if (asRoot && page && PAGES[page]) {
+      stack = [page];
+    } else {
+      stack = ['home'];
+      var chain = [], p = page;
+      while (p && p !== 'home' && PAGES[p]) { chain.unshift(p); p = PARENT[p]; }
+      stack = stack.concat(chain);
+    }
     var sh = $('sheet'); sh.classList.add('on'); sh.inert = false; $('scrim').classList.add('on');
     showPage(stack[stack.length - 1], 0);
     setTimeout(function () { (stack.length > 1 ? $('sheet-back') : $('sheet-x')).focus(); }, 60);
@@ -2019,22 +2798,248 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function closeSheet() {
     var sh = $('sheet'); sh.classList.remove('on'); sh.inert = true;
     $('scrim').classList.remove('on'); $('confirm-all').hidden = true;
+    syncRailNav('chat');
   }
   function loadPage(name) {
-    if (name === 'home') { loadVscode(); loadStorage(); }
+    if (name === 'home') { loadVscode(); loadStorage(); loadPersonal(); loadCollective(); loadWorkspaces(); loadServerSettings(); loadPerms(); }
+    else if (name === 'memory') { loadPersonal(); loadMemoryCount(); loadVscode(); loadStorage(); loadWorkspaces(); }
+    else if (name === 'learning') { loadServerSettings(); loadPersonal(); loadCollective(); loadAutonomous(); }
     else if (name === 'account' || name === 'vscode') loadVscode();
     else if (name === 'storage') loadStorage();
+    else if (name === 'debug') loadDebugLogs();
     else if (name === 'advanced') { loadServerSettings(); loadPerms(); loadSearch(); loadWorkspaces(); loadVscode(); }
-    else if (name === 'layers') { loadServerSettings(); loadHealth(); loadMemoryCount(); loadPersonal(); loadCollective(); }
+    else if (name === 'layers') { loadServerSettings(); loadHealth(); loadMemoryCount(); loadPersonal(); loadCollective(); loadAutonomous(); }
     else if (name === 'personal') loadPersonal();
     else if (name === 'collective') loadCollective();
     else if (name === 'model') { renderEngine(); renderSettings(); loadServerSettings(); loadHealth(); }
     else if (name === 'perms') loadPerms();
-    else if (name === 'tools') { loadServerSettings(); loadSearch(); }
+    else if (name === 'tools') { loadServerSettings(); loadPerms(); loadSearch(); loadInbox(); }
     else if (name === 'workspaces') loadWorkspaces();
   }
+  var dbgCat = 'all';
+  function loadDebugLogs() {
+    api('GET', '/api/debug/logs?category=' + encodeURIComponent(dbgCat) + '&limit=120').then(function (r) {
+      var entries = r.entries || [];
+      if ($('dbg-entries')) {
+        $('dbg-entries').textContent = entries.length
+          ? entries.map(function (e) {
+              var det = typeof e.detail === 'object' ? JSON.stringify(e.detail) : String(e.detail || '');
+              return '[' + (e.ts || '') + '] [' + (e.category || 'log').toUpperCase() + '] ' + (e.event || '') + (det ? ' — ' + det : '');
+            }).join('\n')
+          : '(No debug events recorded yet for category "' + dbgCat + '".)';
+      }
+      if ($('dbg-files')) {
+        var tails = r.file_tails || {}, names = Object.keys(tails);
+        $('dbg-files').textContent = names.length
+          ? names.map(function (n) { return '=== ' + n + ' ===\n' + tails[n]; }).join('\n\n')
+          : '(No log files found in <base>/logs/.)';
+      }
+    }).catch(function (e) {
+      if ($('dbg-entries')) $('dbg-entries').textContent = 'Error loading debug logs: ' + e.message;
+    });
+  }
+  if ($('dbg-cat')) segClick('dbg-cat', function (v) { dbgCat = v; loadDebugLogs(); });
+  if ($('dbg-refresh')) $('dbg-refresh').addEventListener('click', loadDebugLogs);
+  if ($('dbg-copy')) $('dbg-copy').addEventListener('click', function () {
+    var txt = (($('dbg-entries') && $('dbg-entries').textContent) || '') + '\n\n' + (($('dbg-files') && $('dbg-files').textContent) || '');
+    copyText(txt, $('dbg-copy'));
+  });
+  if ($('dbg-clear')) $('dbg-clear').addEventListener('click', function () {
+    api('POST', '/api/debug/logs/clear', {}).then(loadDebugLogs).catch(function () {});
+  });
+  function loadAutonomous() {
+    api('GET', '/api/autonomous').then(function (r) {
+      var j = r.jepa || {}, cm = r.collective_jepa_metrics || {};
+      if ($('lg-auto-kv')) {
+        var rows = [
+          ['JEPA architecture', j.configured_arch || 'auto'],
+          ['Verified outcome updates', String(j.cycle_updates || 0)],
+          ['8x RTX 3090 collective round', cm.round ? ('Round ' + cm.round + ' (' + (cm.verified_outcomes_count || 0) + ' verified trajectories)') : 'Sync collective core to load'],
+          ['Collective IDM / Trans MSE', cm.idm_mse_after != null ? (cm.idm_mse_after + ' / ' + cm.trans_mse_after) : '—']
+        ];
+        $('lg-auto-kv').innerHTML = rows.map(function (x) { return '<span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b>'; }).join('');
+      }
+      if (r.last_autonomous_run && $('lg-auto-out')) {
+        $('lg-auto-out').hidden = false;
+        $('lg-auto-out').textContent = JSON.stringify(r.last_autonomous_run, null, 2);
+      }
+    }).catch(function () {});
+  }
+  if ($('lg-auto-run')) {
+    $('lg-auto-run').addEventListener('click', function () {
+      var b = $('lg-auto-run'); b.disabled = true; b.textContent = 'Running Autonomous Cycle…';
+      api('POST', '/api/autonomous/run', {}).then(function (r) {
+        b.disabled = false; b.textContent = 'Run Autonomous Cycle & Self-Train';
+        if ($('lg-auto-out')) {
+          $('lg-auto-out').hidden = false;
+          $('lg-auto-out').textContent = JSON.stringify(r, null, 2);
+        }
+        loadAutonomous(); loadServerSettings();
+      }).catch(function (e) {
+        b.disabled = false; b.textContent = 'Run Autonomous Cycle & Self-Train';
+        setNote('lg-note', e.message);
+      });
+    });
+  }
+  if ($('lg-google-connect')) {
+    $('lg-google-connect').addEventListener('click', function () {
+      setNote('lg-note', 'Starting Google OpenID Connect sign-in…', true);
+      api('POST', '/api/identity/google/start', { open_browser: true }).then(function (r) {
+        if (r && r.connected) {
+          setNote('lg-note', 'Connected with Google. You can now opt into Collective Learning below.', true);
+          loadCollective();
+          return;
+        }
+        if (window.CloverAndroidBridge && window.CloverAndroidBridge.startGoogleSignIn) {
+          window.CloverAndroidBridge.startGoogleSignIn(r.auth_url || '', r.nonce || '');
+        } else if (PHONE && r.auth_url) {
+          window.open(r.auth_url, '_blank');
+        }
+        setNote('lg-note', 'Complete Google sign-in in the browser window. Collective learning remains off until you turn it on below.', true);
+        var tries = 0, pollG = setInterval(function () {
+          tries++;
+          if (tries > 60) { clearInterval(pollG); return; }
+          api('GET', '/api/identity/google').then(function (st) {
+            if (st && st.connected) {
+              clearInterval(pollG);
+              setNote('lg-note', 'Connected with Google. You can now opt into Collective Learning below.', true);
+              loadCollective();
+            }
+          }).catch(function () {});
+        }, 2000);
+      }).catch(function (e) { setNote('lg-note', e.message); });
+    });
+  }
+  window.__cloverOnGoogleIdToken = function (idToken, nonce) {
+    api('POST', '/api/identity/google/token', { id_token: idToken, nonce: nonce }).then(function () {
+      setNote('lg-note', 'Connected with Google. Collective learning stays off until you enable it.', true);
+      loadCollective();
+    }).catch(function (e) { setNote('lg-note', e.message); });
+  };
+  if ($('lg-google-disconnect')) {
+    $('lg-google-disconnect').addEventListener('click', function () {
+      if (!confirm('Disconnect Google from Clover AI Studio? Collective contribution and receiving will be turned off.')) return;
+      api('POST', '/api/identity/google/disconnect', {}).then(function () {
+        setNote('lg-note', 'Disconnected from Google. Collective learning is off.', true);
+        loadServerSettings(); loadCollective();
+      }).catch(function (e) { setNote('lg-note', e.message); });
+    });
+  }
+  if ($('lg-personal')) {
+    $('lg-personal').addEventListener('change', function () {
+      var val = this.checked;
+      saveServer({ personal: val }).then(function () {
+        setNote('lg-note', val ? 'Personal learning enabled locally.' : 'Personal learning paused locally.', true);
+        loadPersonal(); loadCollective();
+      });
+    });
+  }
+  if ($('lg-contribute')) {
+    $('lg-contribute').addEventListener('change', function () {
+      var elCb = this, val = this.checked;
+      api('POST', '/api/collective/consent', { contribute: val }).then(function (r) {
+        state.collective = r;
+        if (state.server && state.server.settings) state.server.settings.collective_contribute = val;
+        setNote('lg-note', val ? 'Contribution consent enabled. Review pending candidates below before uploading.' : 'Contribution consent disabled.', true);
+        renderLayers(); renderCollective(); renderLearningGrowth();
+      }).catch(function (e) {
+        elCb.checked = !val;
+        setNote('lg-note', e.message);
+      });
+    });
+  }
+  if ($('lg-receive')) {
+    $('lg-receive').addEventListener('change', function () {
+      var elCb = this, val = this.checked;
+      api('POST', '/api/collective/consent', { receive: val }).then(function (r) {
+        state.collective = r;
+        if (state.server && state.server.settings) state.server.settings.collective_receive = val;
+        setNote('lg-note', val ? 'Receive consent enabled. Tap "Sync collective core now" to download verified releases.' : 'Receive consent disabled.', true);
+        renderLayers(); renderCollective(); renderLearningGrowth();
+      }).catch(function (e) {
+        elCb.checked = !val;
+        setNote('lg-note', e.message);
+      });
+    });
+  }
+  if ($('lg-review-btn')) {
+    $('lg-review-btn').addEventListener('click', function () {
+      var cv = state.collective || {};
+      var pending = cv.pending_candidates || cv.candidate_preview || [];
+      if (!pending.length) return;
+      $('lg-confirm-json').textContent = JSON.stringify(pending, null, 2);
+      $('lg-confirm-box').hidden = false;
+      $('lg-confirm-upload').focus();
+    });
+  }
+  if ($('lg-confirm-cancel')) {
+    $('lg-confirm-cancel').addEventListener('click', function () { $('lg-confirm-box').hidden = true; });
+  }
+  if ($('lg-confirm-upload')) {
+    $('lg-confirm-upload').addEventListener('click', function () {
+      var cv = state.collective || {};
+      var pending = cv.pending_candidates || cv.candidate_preview || [];
+      $('lg-confirm-box').hidden = true;
+      setNote('lg-note', 'Uploading confirmed candidate packages to Collective Gateway…', true);
+      api('POST', '/api/collective/contribute', { packages: pending, confirmed: true }).then(function (r) {
+        if (r.view) state.collective = r.view;
+        setNote('lg-note', 'Contributed ' + (r.accepted_count || 0) + ' candidate package(s).' + (r.release_version ? ' Latest release: v' + r.release_version + '.' : ''), true);
+        renderLayers(); renderCollective(); renderLearningGrowth();
+      }).catch(function (e) {
+        if (e.body && e.body.view) state.collective = e.body.view;
+        setNote('lg-note', e.message);
+        renderLearningGrowth();
+      });
+    });
+  }
+  if ($('lg-sync-now')) {
+    $('lg-sync-now').addEventListener('click', function () {
+      setNote('lg-note', 'Synchronizing and verifying Ed25519 collective release…', true);
+      api('POST', '/api/collective/sync', {}).then(function (r) {
+        if (r.view) state.collective = r.view;
+        setNote('lg-note', r.version ? ('Synchronized collective release v' + r.version + ' (' + (r.rules_count || 0) + ' active rules).') : 'Collective core is up to date.', true);
+        renderLayers(); renderCollective(); renderLearningGrowth();
+      }).catch(function (e) {
+        if (e.body && e.body.view) state.collective = e.body.view;
+        setNote('lg-note', e.message);
+        renderLearningGrowth();
+      });
+    });
+  }
+  if ($('lg-withdraw')) {
+    $('lg-withdraw').addEventListener('click', function () {
+      if (!confirm('Withdraw contribution consent and remove your contributed candidates from the collective gateway?')) return;
+      setNote('lg-note', 'Withdrawing contribution consent…', true);
+      api('POST', '/api/collective/withdraw', {}).then(function (r) {
+        if (r.view) state.collective = r.view;
+        if (state.server && state.server.settings) state.server.settings.collective_contribute = false;
+        setNote('lg-note', 'Contribution consent withdrawn and candidate packages purged from the gateway.', true);
+        renderLayers(); renderCollective(); renderLearningGrowth();
+      }).catch(function (e) {
+        setNote('lg-note', e.message);
+      });
+    });
+  }
   function closeRail() { $('rail').classList.remove('on'); }
-  document.addEventListener('click', function (ev) { var r = ev.target.closest && ev.target.closest('[data-go]'); if (r) go(r.getAttribute('data-go')); });
+  function openNavSection(sec) {
+    if (sec === 'chat') {
+      closeSheet();
+      closeRail();
+      if ($('prompt')) $('prompt').focus();
+      return;
+    }
+    var pageMap = { workspaces: 'workspaces', memory: 'memory', tools: 'tools', learning: 'learning', settings: 'home', layers: 'layers' };
+    var target = pageMap[sec] || sec;
+    openSettings(target, target !== 'home');
+  }
+  document.addEventListener('click', function (ev) {
+    var r = ev.target.closest && ev.target.closest('[data-go]');
+    if (r) { go(r.getAttribute('data-go')); return; }
+    var nb = ev.target.closest && ev.target.closest('[data-nav]');
+    if (nb) { openNavSection(nb.getAttribute('data-nav')); return; }
+    var no = ev.target.closest && ev.target.closest('[data-nav-open]');
+    if (no) { openNavSection(no.getAttribute('data-nav-open')); return; }
+  });
   $('sheet-back').addEventListener('click', back);
   $('sheet-x').addEventListener('click', closeSheet);
   $('scrim').addEventListener('click', function () { closeSheet(); closeRail(); });
@@ -2043,17 +3048,236 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (window.matchMedia('(max-width: 860px)').matches) { $('rail').classList.toggle('on'); $('scrim').classList.toggle('on', $('rail').classList.contains('on')); }
     else $('app').classList.toggle('rail-off');
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeSheet(); closeRail(); $('scrim').classList.remove('on'); } });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if ($('img-inspector') && !$('img-inspector').hidden) { closeImageInspector(); return; } closeSheet(); closeRail(); $('scrim').classList.remove('on'); } });
   // the phone's back gesture (the Android app asks here first): a settings page back, the sheet or the chat list closed;
   // false when there is nothing to close, and the app goes to the background
   window.cloverBack = function () {
+    if ($('img-inspector') && !$('img-inspector').hidden) { closeImageInspector(); return true; }
     if ($('sheet').classList.contains('on')) { if (stack.length > 1) back(); else closeSheet(); return true; }
     if ($('rail').classList.contains('on')) { closeRail(); $('scrim').classList.remove('on'); return true; }
     return false;
   };
 
-  /* ---------- attachments: text and code; photos, audio and video with LFM3-Omni ---------- */
-  $('attach').addEventListener('click', function () { $('file-input').click(); });
+  /* ---------- attachments & System Senses (S3: Screenshot, Screen Recorder, Camera, Microphone) ---------- */
+  function closeSensesMenu() {
+    if ($('senses-menu')) $('senses-menu').hidden = true;
+    if ($('attach')) $('attach').setAttribute('aria-expanded', 'false');
+  }
+  $('attach').addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    var m = $('senses-menu');
+    if (!m) { $('file-input').click(); return; }
+    var show = m.hidden;
+    m.hidden = !show;
+    $('attach').setAttribute('aria-expanded', String(show));
+  });
+  if ($('screen-btn')) {
+    $('screen-btn').addEventListener('click', function () {
+      closeSensesMenu();
+      triggerSystemSense('screenshot');
+    });
+  }
+  if ($('clip-btn')) {
+    $('clip-btn').addEventListener('click', function () {
+      closeSensesMenu();
+      if ($('file-input')) $('file-input').click();
+    });
+  }
+  document.addEventListener('click', function (ev) {
+    if ($('senses-menu') && !$('senses-menu').hidden && !$('senses-menu').contains(ev.target) && ev.target !== $('attach')) {
+      closeSensesMenu();
+    }
+    var ts = ev.target.closest && ev.target.closest('[data-test-sense]');
+    if (ts) {
+      closeSheet();
+      triggerSystemSense(ts.getAttribute('data-test-sense'));
+    }
+  });
+  if ($('senses-menu')) {
+    $('senses-menu').addEventListener('click', function (ev) {
+      var b = ev.target.closest && ev.target.closest('[data-sense]');
+      if (!b) return;
+      var s = b.getAttribute('data-sense');
+      closeSensesMenu();
+      if (s === 'files') { $('file-input').click(); return; }
+      triggerSystemSense(s);
+    });
+  }
+  ['sense-camera-input', 'sense-video-input', 'sense-audio-input'].forEach(function (id) {
+    if ($(id)) {
+      $(id).addEventListener('change', function (ev) {
+        Array.prototype.forEach.call(ev.target.files || [], addFile);
+        ev.target.value = '';
+      });
+    }
+  });
+  function openExternalOrApp(href, meta) {
+    if (!href) return;
+    meta = meta || {};
+    var mMedia = /^\/api\/media\/file\/((?:[0-9a-f]{32}|annotated_[0-9a-f]{16})\.(?:png|jpg|jpeg|gif|webp))$/i.exec(href);
+    if (mMedia) {
+      openImageInspector({ file: mMedia[1], name: meta.label || mMedia[1] });
+      return;
+    }
+    if (/^app:\/\//i.test(href)) {
+      var appName = href.replace(/^app:\/\//i, '').trim();
+      if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.openApp === 'function') {
+        var okA = window.CloverAndroidBridge.openApp(appName, meta.android_pkg || '', meta.android_uri || '', meta.web_url || '');
+        if (okA) return;
+      }
+      api('POST', '/api/app/open', { target: appName }).then(function (r) {
+        if (WEB && (r.web_url || /^https?:\/\//i.test(r.action_link || ''))) {
+          window.open(r.web_url || r.action_link, '_blank', 'noopener,noreferrer');
+        }
+      }).catch(function (e) { alert(e.message); });
+      return;
+    }
+    if (/^https?:\/\//i.test(href)) {
+      if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.openExternal === 'function') {
+        window.CloverAndroidBridge.openExternal(href);
+        return;
+      }
+      if (!PHONE && !WEB) {
+        api('POST', '/api/browser/open', { url: href }).catch(function () {
+          window.open(href, '_blank', 'noopener,noreferrer');
+        });
+        return;
+      }
+      window.open(href, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (/^file:\/\/\//i.test(href) && !PHONE && !WEB) {
+      api('POST', '/api/app/open', { target: decodeURIComponent(href.replace(/^file:\/\/\//i, '')) }).catch(function (e) { alert(e.message); });
+    }
+  }
+  $('log').addEventListener('click', function (ev) {
+    var im = ev.target.closest && ev.target.closest('img.md-img');
+    if (im) {
+      ev.preventDefault();
+      var src = im.getAttribute('data-inspect-src') || im.getAttribute('src') || '';
+      var mFile = /\/api\/media\/file\/((?:[0-9a-f]{32}|annotated_[0-9a-f]{16})\.(?:png|jpg|jpeg|gif|webp))/i.exec(src);
+      openImageInspector(mFile ? { file: mFile[1], name: im.alt || mFile[1] } : { thumb: src, name: im.alt || 'Image' });
+      return;
+    }
+    var a = ev.target.closest && ev.target.closest('a.md-link, a.md-app-btn');
+    if (a) {
+      var href = a.getAttribute('href') || '';
+      if (!href) return;
+      if (/^app:\/\/|^file:\/\/\/|^\/api\/media\/file\//i.test(href) || (!WEB && /^https?:\/\//i.test(href))) {
+        ev.preventDefault();
+        openExternalOrApp(href, { label: a.textContent || '' });
+      }
+    }
+  });
+  function triggerSystemSense(sense) {
+    sense = String(sense || 'screenshot').toLowerCase();
+    if (state.media.length >= MAX_MEDIA) {
+      alert('Up to ' + MAX_MEDIA + ' attachments per message.');
+      return;
+    }
+    api('POST', '/api/debug/log', { category: 'senses', event: 'ui_trigger_system_sense', detail: { sense: sense, platform: PLATFORM } }).catch(function () {});
+
+    // On Android, delegate to native CloverAndroidBridge.launchSystemSense so Android opens the OS Camera,
+    // Video/Screen Recorder, Voice Recorder, or System Screenshot picker and returns the media to the WebView.
+    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.launchSystemSense === 'function') {
+      var launched = window.CloverAndroidBridge.launchSystemSense(sense);
+      if (launched) return;
+    }
+    // On Phone WebView when native bridge method is not yet present, use HTML5 capture inputs for camera/video/audio
+    if (PHONE && sense === 'camera' && $('sense-camera-input')) { $('sense-camera-input').click(); return; }
+    if (PHONE && sense === 'screen_record' && $('sense-video-input')) { $('sense-video-input').click(); return; }
+    if (PHONE && sense === 'microphone' && $('sense-audio-input')) { $('sense-audio-input').click(); return; }
+
+    if (WEB && sense === 'screenshot' && navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+      navigator.mediaDevices.getDisplayMedia({ video: true }).then(function (stream) {
+        var v = document.createElement('video');
+        v.srcObject = stream;
+        v.onloadedmetadata = function () {
+          v.play().then(function () {
+            var c = document.createElement('canvas');
+            c.width = v.videoWidth || 1280; c.height = v.videoHeight || 720;
+            c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+            stream.getTracks().forEach(function (t) { t.stop(); });
+            var sUrl = c.toDataURL('image/png');
+            var item = { kind: 'image', name: 'System screenshot.png', data: sUrl.slice(sUrl.indexOf(',') + 1), thumb: sUrl, screen_capture: true };
+            state.media.push(item); renderAtt(); updateSend();
+            if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this screenshot and help me with what is on the screen.'; autosize(); updateSend(); }
+          });
+        };
+      }).catch(function () {});
+      return;
+    }
+
+    setStatus('busy', 'Connecting to system ' + sense + '…', 'Connecting to OS system ' + sense + ' app & running JEPA sensory analysis…');
+    api('POST', '/api/senses/capture', { sense: sense, launch_system_app: true }).then(function (rep) {
+      setStatus('ok', $('status-text').textContent, '');
+      pollStatus();
+      if (rep && rep.data) {
+        var kind = rep.kind || (sense === 'microphone' ? 'audio' : sense === 'screen_record' ? 'video' : 'image');
+        if (kind === 'image') {
+          var sUrl = 'data:image/png;base64,' + rep.data;
+          var jv = rep.jepa_visual || {};
+          var label = 'System screenshot (' + (rep.width || '') + '\u00d7' + (rep.height || '') + (jv.scene_kind ? ' · ' + jv.scene_kind : '') + ').png';
+          var item = { kind: 'image', name: label, file: rep.file, data: rep.data, thumb: sUrl, screen_capture: true };
+          state.media.push(item); renderAtt(); updateSend();
+          thumb(sUrl).then(function (t) { item.thumb = t; renderAtt(); }).catch(function () {});
+          if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this screenshot and help me with what is on the screen.'; autosize(); updateSend(); }
+        } else if (kind === 'audio') {
+          var ja = rep.jepa_audio || {};
+          var aLabel = (rep.name || 'System audio') + (ja.acoustic_regime ? ' (' + ja.acoustic_regime + ', ' + (ja.snr_db || 0) + ' dB)' : '');
+          state.media.push({ kind: 'audio', name: aLabel, file: rep.file, data: rep.data });
+          renderAtt(); updateSend();
+          if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this audio recording and tell me what you hear.'; autosize(); updateSend(); }
+        }
+      } else if (rep && rep.message) {
+        setStatus('ok', rep.message, rep.message);
+        setTimeout(pollStatus, 4000);
+      }
+    }).catch(function (e) {
+      setStatus('err', 'Sense capture failed', e.message);
+      setTimeout(pollStatus, 3500);
+    });
+  }
+  window.__cloverOnSystemSenseMedia = function (sense, fileName, mimeType, base64Data) {
+    if (!base64Data) return;
+    api('POST', '/api/senses/capture', { sense: sense, name: fileName || '', data: base64Data, launch_system_app: false }).then(function (rep) {
+      var kind = rep.kind || (/^audio\//i.test(mimeType) ? 'audio' : /^video\//i.test(mimeType) ? 'video' : 'image');
+      if (kind === 'image') {
+        var dUrl = 'data:' + (mimeType || 'image/png') + ';base64,' + (rep.data || base64Data);
+        var jv = rep.jepa_visual || {};
+        var item = {
+          kind: 'image',
+          name: (fileName || 'System image') + (jv.scene_kind ? ' · ' + jv.scene_kind : ''),
+          file: rep.file,
+          data: rep.data || base64Data,
+          thumb: dUrl,
+          screen_capture: sense === 'screenshot'
+        };
+        state.media.push(item); renderAtt(); updateSend();
+        thumb(dUrl).then(function (t) { item.thumb = t; renderAtt(); }).catch(function () {});
+        if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this image and help me with it.'; autosize(); updateSend(); }
+      } else if (kind === 'audio') {
+        var ja = rep.jepa_audio || {};
+        state.media.push({
+          kind: 'audio',
+          name: (fileName || 'System audio') + (ja.acoustic_regime ? ' (' + ja.acoustic_regime + ')' : ''),
+          file: rep.file,
+          data: base64Data
+        });
+        renderAtt(); updateSend();
+        if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this audio recording.'; autosize(); updateSend(); }
+      } else if (kind === 'video') {
+        state.media.push({
+          kind: 'video',
+          name: fileName || 'System screen recording.mp4',
+          file: rep.file,
+          data: base64Data
+        });
+        renderAtt(); updateSend();
+        if (!$('prompt').value.trim()) { $('prompt').value = 'Analyze this video / screen recording.'; autosize(); updateSend(); }
+      }
+    }).catch(function () {});
+  };
   function mediaKind(f) { var m = /^(image|video|audio)\//.exec(f.type || ''); return m ? m[1] : null; }
   function addFile(f) {
     var kind = mediaKind(f);
@@ -2138,6 +3362,135 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   });
   document.querySelector('.dock').addEventListener('dragover', function (ev) { ev.preventDefault(); });
   document.querySelector('.dock').addEventListener('drop', function (ev) { ev.preventDefault(); Array.prototype.forEach.call((ev.dataTransfer && ev.dataTransfer.files) || [], addFile); });
+  var inspState = { rep: null, mode: 'boxes', spec: null };
+  function closeImageInspector() {
+    var m = $('img-inspector');
+    if (m) m.hidden = true;
+  }
+  function renderInspectorView() {
+    var rep = inspState.rep, mode = inspState.mode || 'boxes';
+    if (!rep) return;
+    pick('insp-mode', mode);
+    var img = $('insp-img'), boxesEl = $('insp-boxes');
+    boxesEl.innerHTML = '';
+    if (mode === 'annotated' && rep.annotated_file) {
+      img.src = apiUrl('/api/media/file/' + rep.annotated_file);
+    } else if (rep.file) {
+      img.src = apiUrl('/api/media/file/' + rep.file);
+    } else if (inspState.spec && inspState.spec.thumb) {
+      img.src = inspState.spec.thumb;
+    }
+    if (mode === 'boxes' && rep.width && rep.height) {
+      (rep.elements || []).forEach(function (elItem) {
+        var bx = elItem.bbox || [0, 0, 1, 1];
+        var d = el('div', 'insp-box', '<span>' + esc(elItem.ref) + '</span>');
+        d.setAttribute('data-ref', elItem.ref);
+        d.style.left = (bx[0] * 100 / rep.width).toFixed(2) + '%';
+        d.style.top = (bx[1] * 100 / rep.height).toFixed(2) + '%';
+        d.style.width = Math.max(1.5, bx[2] * 100 / rep.width).toFixed(2) + '%';
+        d.style.height = Math.max(1.5, bx[3] * 100 / rep.height).toFixed(2) + '%';
+        d.title = '[' + elItem.ref + '] ' + elItem.role + ' (' + bx.join(',') + ')' + (elItem.text ? ': ' + elItem.text : '');
+        d.addEventListener('click', function () { highlightInspRef(elItem.ref, true); });
+        boxesEl.appendChild(d);
+      });
+    }
+  }
+  function highlightInspRef(ref, scrollCard) {
+    Array.prototype.forEach.call($('insp-boxes').children, function (b) {
+      b.classList.toggle('active', b.getAttribute('data-ref') === ref);
+    });
+    Array.prototype.forEach.call($('insp-els').children, function (c) {
+      var on = c.getAttribute('data-ref') === ref;
+      c.classList.toggle('active', on);
+      if (on && scrollCard && c.scrollIntoView) c.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+  }
+  function openImageInspector(spec) {
+    if (!spec) return;
+    inspState.spec = spec; inspState.rep = null; inspState.mode = 'boxes';
+    var modal = $('img-inspector'); if (!modal) return;
+    modal.hidden = false;
+    $('insp-h').textContent = spec.name || spec.file || 'Visual Inspector';
+    $('insp-meta').textContent = 'Analyzing image structure & OCR…';
+    $('insp-pal').innerHTML = '';
+    $('insp-els').innerHTML = '';
+    $('insp-el-count').textContent = '';
+    $('insp-ocr').textContent = 'Running Playwright-style visual & OCR inspection…';
+    $('insp-boxes').innerHTML = '';
+    if (spec.file) $('insp-img').src = apiUrl('/api/media/file/' + spec.file);
+    else if (spec.thumb) $('insp-img').src = spec.thumb;
+    else if (spec.data) $('insp-img').src = 'data:image/png;base64,' + spec.data;
+
+    var req = spec.file
+      ? api('GET', '/api/media/inspect?file=' + encodeURIComponent(spec.file))
+      : api('POST', '/api/media/inspect', { data: spec.data || spec.thumb || '', name: spec.name || 'image.png' });
+    req.then(function (rep) {
+      inspState.rep = rep;
+      if (spec.item && rep.file) spec.item.file = rep.file;
+      var jv = rep.jepa_visual || {};
+      var jepaTag = jv.scene_kind ? (' \u00b7 JEPA(' + (jv.arch || 'ijepa') + '): ' + jv.scene_kind) : '';
+      $('insp-meta').textContent = rep.width + '\u00d7' + rep.height + ' px \u00b7 ' + (rep.format || 'PNG') + jepaTag + ' \u00b7 ' + (rep.ms || 0) + ' ms';
+      var palBox = $('insp-pal'); palBox.innerHTML = '';
+      (rep.palette || []).forEach(function (c) {
+        var sw = el('button', 'insp-swatch', '<i style="background:' + esc(c.hex) + '"></i><span>' + esc(c.hex) + ' \u00b7 ' + esc(c.name) + ' (' + c.pct + '%)</span>');
+        sw.type = 'button';
+        sw.addEventListener('click', function () { copyText(c.hex, sw); });
+        palBox.appendChild(sw);
+      });
+      var elsBox = $('insp-els'), els = rep.elements || [];
+      elsBox.innerHTML = '';
+      $('insp-el-count').textContent = els.length + ' regions';
+      els.forEach(function (elItem) {
+        var bx = elItem.bbox || [0, 0, 0, 0];
+        var card = el('div', 'insp-el');
+        card.setAttribute('data-ref', elItem.ref);
+        var top = el('div', 'insp-el__top');
+        var salStr = elItem.jepa_salience != null ? (' \u00b7 salience ' + elItem.jepa_salience) : '';
+        var left = el('span', '', '<span class="insp-el__ref">[' + esc(elItem.ref) + ']</span> <span class="insp-el__role">' + esc(elItem.role) + '</span> <span class="insp-el__coords">(' + esc(elItem.zone) + ' \u00b7 ' + bx[0] + ',' + bx[1] + ' ' + bx[2] + '\u00d7' + bx[3] + salStr + ')</span>');
+        var askBtn = btn('btn sm', 'Ask Clover');
+        askBtn.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+          closeImageInspector();
+          var p = $('prompt');
+          var refTxt = '[ref=' + elItem.ref + ' ' + elItem.role + ' at ' + bx.join(',') + (elItem.text ? ' "' + elItem.text.slice(0, 40) + '"' : '') + '] ';
+          p.value = (p.value ? p.value.replace(/\s*$/, ' ') : '') + refTxt;
+          autosize(); p.focus(); updateSend();
+        });
+        top.appendChild(left); top.appendChild(askBtn);
+        card.appendChild(top);
+        var metaLine = el('div', 'insp-el__coords');
+        metaLine.textContent = 'bg ' + elItem.bg_hex + ' \u00b7 fg ' + elItem.fg_hex + ' \u00b7 contrast ' + elItem.contrast + ':1' + (elItem.wcag_aa ? ' (WCAG AA)' : ' (Low contrast)');
+        card.appendChild(metaLine);
+        if (elItem.text) {
+          var tDiv = el('div', 'insp-el__txt');
+          tDiv.textContent = '\u201c' + elItem.text + '\u201d';
+          card.appendChild(tDiv);
+        }
+        card.addEventListener('mouseenter', function () { highlightInspRef(elItem.ref, false); });
+        card.addEventListener('click', function () { highlightInspRef(elItem.ref, false); });
+        elsBox.appendChild(card);
+      });
+      $('insp-ocr').textContent = (rep.ocr_text && rep.ocr_text.trim()) ? rep.ocr_text : '(No text detected by OCR — see visual regions above.)';
+      renderInspectorView();
+    }).catch(function (e) {
+      $('insp-meta').textContent = 'Inspection error';
+      $('insp-ocr').textContent = 'Could not inspect image: ' + e.message;
+    });
+  }
+  if ($('insp-close')) $('insp-close').addEventListener('click', closeImageInspector);
+  if ($('img-inspector')) $('img-inspector').addEventListener('click', function (ev) { if (ev.target === $('img-inspector')) closeImageInspector(); });
+  if ($('insp-mode')) segClick('insp-mode', function (v) { inspState.mode = v; renderInspectorView(); });
+  if ($('insp-copy-ocr')) $('insp-copy-ocr').addEventListener('click', function () {
+    if (inspState.rep && inspState.rep.ocr_text) copyText(inspState.rep.ocr_text, $('insp-copy-ocr'));
+  });
+  if ($('insp-ask-ocr')) $('insp-ask-ocr').addEventListener('click', function () {
+    var txt = (inspState.rep && inspState.rep.ocr_text || '').trim();
+    closeImageInspector();
+    var p = $('prompt');
+    p.value = (p.value ? p.value + '\n' : '') + (txt ? 'From the image OCR text:\n' + txt.slice(0, 800) + '\n\n' : 'Analyze the UI elements and layout of this image.');
+    autosize(); p.focus(); updateSend();
+  });
+
   function renderAtt() {
     var box = $('attachments'); box.innerHTML = ''; box.hidden = !state.files.length && !state.media.length && !state.docs.length;
     state.docs.forEach(function (d, i) {
@@ -2149,9 +3502,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     });
     state.media.forEach(function (m, i) {
       var c = el('span', 'att');
-      if (m.thumb) { var im = document.createElement('img'); im.src = m.thumb; im.alt = ''; c.appendChild(im); }
+      if (m.thumb) {
+        var im = document.createElement('img'); im.src = m.thumb; im.alt = '';
+        im.style.cursor = 'pointer'; im.title = 'Click to inspect image (Playwright view)';
+        im.addEventListener('click', function () { openImageInspector({ item: m, file: m.file, data: m.data, thumb: m.thumb, name: m.name }); });
+        c.appendChild(im);
+      }
       else c.appendChild(el('span', '', ic(m.kind === 'video' ? 'video' : m.kind === 'audio' ? 'wave' : 'image')));
-      var t = el('span'); t.textContent = m.name; c.appendChild(t);
+      var t = el('span'); t.textContent = m.name;
+      if (m.kind === 'image') {
+        t.style.cursor = 'pointer'; t.title = 'Click to open Visual Inspector';
+        t.addEventListener('click', function () { openImageInspector({ item: m, file: m.file, data: m.data, thumb: m.thumb, name: m.name }); });
+      }
+      c.appendChild(t);
       var x = btn('', ic('x'), 'Remove ' + m.name);
       x.addEventListener('click', function () { state.media.splice(i, 1); renderAtt(); updateSend(); });
       c.appendChild(x); box.appendChild(c);
@@ -2164,53 +3527,131 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     });
   }
 
-  /* ---------- voice: hold Send button for 1.2s to speak, release to stop & send (tap is normal Send) ---------- */
-  var rec = null, holdTimer = null, holdActive = false, holdTriggered = false, suppressSendClick = false, HOLD_MS = 1200;
-  function startVoiceHold() {
-    if (!holdActive || rec || state.busy || !state.ready || state.inputs.indexOf('audio') < 0) return;
-    if (!navigator.mediaDevices || !window.MediaRecorder) { alert('This window cannot record audio.'); return; }
-    holdTriggered = true; suppressSendClick = true;
+  /* ---------- voice: hold Send button to speak, release (or tap Send) to stop & send ---------- */
+  var rec = null, recStartedAt = 0, nativeRecT0 = 0, holdTimer = null, holdActive = false, holdTriggered = false, suppressSendClick = false, HOLD_MS = 450;
+  function hasNativeAndroidMic() {
+    return !!(window.CloverAndroidBridge && typeof window.CloverAndroidBridge.startAudioCapture === 'function');
+  }
+  function finishVoiceData(base64Wav, secs) {
+    if (!base64Wav) return;
+    state.media.push({ kind: 'audio', name: 'Voice message · ' + Math.max(1, secs || 1) + ' s', data: base64Wav, voice: true });
+    renderAtt(); updateSend();
+    if (state.ready && !state.busy) send();
+  }
+  function setVoiceUi(recording) {
     var b = $('send');
-    b.classList.remove('holding', 'idle'); b.classList.add('rec'); b.innerHTML = ic('mic'); b.title = 'Recording — release to send';
+    if (recording) {
+      b.classList.remove('holding', 'idle'); b.classList.add('rec'); b.innerHTML = ic('mic'); b.title = 'Recording — release or tap Send to finish';
+      setStatus('busy', 'Listening…', 'Listening — speak now, then release or tap Send.');
+    } else {
+      b.classList.remove('rec', 'holding'); b.innerHTML = SEND_HTML;
+      setStatus('ok', $('status-text').textContent, '');
+      updateSend();
+    }
+  }
+  function startVoiceCapture() {
+    if (rec || nativeRecT0 || state.busy || !state.ready || state.inputs.indexOf('audio') < 0) return;
+    recStartedAt = Date.now();
+    if (hasNativeAndroidMic()) {
+      var st = String(window.CloverAndroidBridge.startAudioCapture() || '');
+      if (st === 'OK') {
+        nativeRecT0 = Date.now();
+        setVoiceUi(true);
+        return;
+      }
+      if (st === 'PERMISSION_REQUESTED') {
+        holdActive = false; holdTriggered = false; recStartedAt = 0;
+        setStatus('busy', 'Allow microphone', 'Allow microphone access when prompted, then hold Send again to speak.');
+        setTimeout(pollStatus, 3000);
+        return;
+      }
+      // Fall through to WebView getUserMedia if native AudioRecord returned an error
+    }
+    if (!navigator.mediaDevices || !window.MediaRecorder) {
+      recStartedAt = 0;
+      setStatus('err', 'No microphone', 'This window cannot record audio.');
+      setTimeout(pollStatus, 3500);
+      return;
+    }
+    setVoiceUi(true);
     navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
-      if (!holdActive) {
+      if (!holdActive && !rec && !$('send').classList.contains('rec')) {
         stream.getTracks().forEach(function (t) { t.stop(); });
-        b.classList.remove('rec'); b.innerHTML = SEND_HTML; updateSend();
+        setVoiceUi(false);
         return;
       }
       var chunks = [], t0 = Date.now(), r = new MediaRecorder(stream);
-      rec = r;
+      rec = r; recStartedAt = t0;
       r.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
       r.onstop = function () {
         stream.getTracks().forEach(function (t) { t.stop(); });
-        rec = null; b.classList.remove('rec', 'holding'); b.innerHTML = SEND_HTML; updateSend();
+        rec = null; recStartedAt = 0; setVoiceUi(false);
         var secs = Math.max(1, Math.round((Date.now() - t0) / 1000));
         if (!chunks.length) return;
         new Blob(chunks).arrayBuffer().then(toWav16k).then(function (data) {
-          state.media.push({ kind: 'audio', name: 'Voice message · ' + secs + ' s', data: data, voice: true });
-          renderAtt(); updateSend();
-          if (state.ready && !state.busy) send();
-        }).catch(function (e) { alert('Could not read the recording: ' + e.message); });
+          finishVoiceData(data, secs);
+        }).catch(function (e) {
+          setStatus('err', 'Audio error', 'Could not read the recording: ' + e.message);
+          setTimeout(pollStatus, 4000);
+        });
       };
       r.start();
     }).catch(function (e) {
-      holdActive = false; holdTriggered = false;
-      b.classList.remove('rec', 'holding'); b.innerHTML = SEND_HTML; updateSend();
-      alert('Microphone not available: ' + e.message);
+      holdActive = false; holdTriggered = false; recStartedAt = 0;
+      setVoiceUi(false);
+      setStatus('err', 'Microphone unavailable', 'Microphone could not start (' + (e && e.message ? e.message : 'check app permissions') + ').');
+      setTimeout(pollStatus, 4500);
     });
   }
+  function stopVoiceCapture() {
+    recStartedAt = 0;
+    if (nativeRecT0 && hasNativeAndroidMic()) {
+      var secs = Math.max(1, Math.round((Date.now() - nativeRecT0) / 1000));
+      nativeRecT0 = 0;
+      setVoiceUi(false);
+      var b64 = String(window.CloverAndroidBridge.stopAudioCapture() || '');
+      if (b64 && b64.indexOf('ERROR:') !== 0) {
+        finishVoiceData(b64, secs);
+      }
+      return;
+    }
+    if (rec && rec.state !== 'inactive') {
+      rec.stop();
+    } else {
+      setVoiceUi(false);
+    }
+  }
+  function startVoiceHold() {
+    if (!holdActive || rec || nativeRecT0 || state.busy || !state.ready || state.inputs.indexOf('audio') < 0) return;
+    holdTriggered = true; suppressSendClick = true;
+    startVoiceCapture();
+  }
   function endVoiceHold() {
-    if (!holdActive && !rec) return;
+    if (!holdActive && !rec && !nativeRecT0) return;
     holdActive = false;
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     $('send').classList.remove('holding');
     if (holdTriggered) {
       holdTriggered = false;
-      if (rec && rec.state !== 'inactive') rec.stop();
+      var spokenMs = recStartedAt ? (Date.now() - recStartedAt) : 0;
+      if (spokenMs >= 900) {
+        stopVoiceCapture();
+      }
     }
+  }
+  if ($('mic')) {
+    $('mic').addEventListener('click', function () {
+      if (state.busy || !state.ready || state.inputs.indexOf('audio') < 0) return;
+      if (nativeRecT0 || (rec && rec.state !== 'inactive')) {
+        stopVoiceCapture();
+      } else {
+        startVoiceCapture();
+      }
+    });
   }
   $('send').addEventListener('pointerdown', function (ev) {
     if (ev.button && ev.button !== 0) return;
+    if (nativeRecT0 || (rec && rec.state !== 'inactive')) return;
     if (state.busy || !state.ready || !state.omni || state.inputs.indexOf('audio') < 0) return;
     holdActive = true; holdTriggered = false;
     try { $('send').setPointerCapture(ev.pointerId); } catch (e) {}
@@ -2221,7 +3662,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (evName) {
     $('send').addEventListener(evName, endVoiceHold);
   });
-  $('send').addEventListener('contextmenu', function (ev) { if (holdActive || holdTriggered || rec) ev.preventDefault(); });
+  $('send').addEventListener('contextmenu', function (ev) { if (holdActive || holdTriggered || rec || nativeRecT0) ev.preventDefault(); });
   function toWav16k(buf) {
     var AC = window.AudioContext || window.webkitAudioContext, ac = new AC();
     return ac.decodeAudioData(buf).then(function (audio) {
@@ -2295,6 +3736,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var c = inp.c, live = liveTurn(), body = live.body;
     var work = workEl(true, true); work.label('Understanding your message\u2026'); work.meta('0:00');
     body.insertBefore(work.box, live.wait);
+    var opCycleBox = el('div', 'op-cycle'); opCycleBox.hidden = true; work.inner.appendChild(opCycleBox);
+    var lastOpCycle = null;
     var stepsBox = el('div', 'step-tl'); work.inner.appendChild(stepsBox);
     var thBox = el('div', 'thinkbox'); thBox.hidden = true; work.inner.appendChild(thBox);
     var toolsBox = el('div', 'step-tl'); work.inner.appendChild(toolsBox);
@@ -2330,7 +3773,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     var lastSeq = 0;
     function finishRunningSteps() {
-      ['queue', 'understand', 'plan', 'review', 'draft', 'synth'].forEach(function (k) {
+      ['queue', 'understand', 'plan', 'review', 'draft', 'synth', 'layer_c1', 'layer_c2', 'layer_c3'].forEach(function (k) {
         if (stepMap[k] && stepMap[k].data.state === 'run') {
           stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
         }
@@ -2352,6 +3795,28 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         stepMap.queue.update({ state: 'ok', badge: '\u2713 Ready' });
       }
       if (ev.type === 'start') state.turnId = ev.turn_id;
+      else if (ev.type === 'operating_cycle') {
+        var prevTodos = (lastOpCycle && lastOpCycle.todos) || [];
+        lastOpCycle = {
+          cycle: ev.cycle || 1,
+          active_stage: ev.active_stage || '',
+          model: ev.model || '',
+          stages: ev.stages || [],
+          todos: Array.isArray(ev.todos) && ev.todos.length ? ev.todos : prevTodos
+        };
+        renderOpCycleBar(opCycleBox, lastOpCycle);
+        var actSt = (ev.stages || []).find(function (s) { return s.id === ev.active_stage; });
+        if (actSt && actSt.detail && actSt.status === 'in-progress') {
+          setStage(actSt.detail.replace(/…$/, ''));
+        }
+        scrollDown();
+      }
+      else if (ev.type === 'todo_list') {
+        if (!lastOpCycle) lastOpCycle = { cycle: ev.cycle || 1, active_stage: '', model: '', stages: [], todos: [] };
+        lastOpCycle.todos = ev.items || [];
+        renderOpCycleBar(opCycleBox, lastOpCycle);
+        scrollDown();
+      }
       else if (ev.type === 'semantics') {
         var semBits = [];
         if (ev.understood) semBits.push(ev.understood);
@@ -2379,14 +3844,51 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           upsertStep('layer_ont', { icon: 'graph', state: 'ok', name: 'Knowledge graph (S2)',
             detail: 'Grounded in ' + (ev.n_evidence || 'verified') + ' records', badge: '\u2713 Grounded' });
         } else if (ev.layer === 'workspace' && ev.workspace) {
-          upsertStep('layer_ws', { icon: 'folder', state: 'ok', name: 'Workspace',
-            detail: 'Loaded context from ' + ev.workspace, badge: '\u2713 Loaded' });
+          upsertStep('layer_ws', { icon: 'folder', state: 'ok', name: 'Workspace context',
+            detail: 'Loaded context from ' + ev.workspace + ((ev.files && ev.files.length) ? ' (' + ev.files.slice(0, 2).join(', ') + ')' : ''), badge: '\u2713 Loaded' });
+        } else if (ev.layer === 'local_context' && (ev.files || []).length) {
+          upsertStep('layer_loc_ctx', { icon: 'folder', state: 'ok', name: 'Context files',
+            detail: 'Read context file(s) beside target folder', badge: '\u2713 Read' });
         } else if (ev.layer === 'recall' && (ev.refs || []).length) {
           upsertStep('layer_rec', { icon: 'clock', state: 'ok', name: 'Earlier chats (S2)',
             detail: 'Recalled ' + ev.refs.length + ' notes from ' + (ev.chats || 1) + ' chat(s)', badge: '\u2713 Recalled' });
         } else if (ev.layer === 'records' && (ev.parts || []).length) {
           upsertStep('layer_records', { icon: 'database', state: 'ok', name: 'Records (S1)',
             detail: 'Checked ' + ev.parts.join(', '), badge: '\u2713 Checked' });
+        } else if (ev.layer === 'image_analysis') {
+          var lastU = c.messages && c.messages.length >= 1 ? c.messages[c.messages.length - 1] : null;
+          if (lastU && lastU.role === 'user' && lastU.media) {
+            lastU.media.forEach(function (md) { if (md.kind === 'image' && !md.file && ev.file) md.file = ev.file; });
+            save();
+          }
+          upsertStep('layer_img', {
+            icon: 'image', state: 'ok', name: 'Visual Inspector (S3)',
+            detail: (ev.width && ev.height ? ev.width + '\u00d7' + ev.height + ' px \u00b7 ' : '') +
+              (ev.elements || 0) + ' UI/visual regions ([e1..e' + (ev.elements || 1) + ']) \u00b7 ' +
+              (ev.ocr_lines || 0) + ' OCR lines (click to inspect)',
+            badge: '\u2713 Inspected' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : ''),
+            onClick: ev.file ? function () { openImageInspector({ file: ev.file, name: 'Visual Inspector · ' + ev.file }); } : null
+          });
+        } else if (ev.layer === 'c1_inference') {
+          var c1Model = ev.model || (modelInfo(state.settings.model) && modelInfo(state.settings.model).name) || 'LFM3-Omni-2B';
+          var c1Desc = ev.layers_desc || (/35b/i.test(c1Model) ? '40-layer BD-GDN/GQA MoE' : /nemotron/i.test(c1Model) ? '88-layer 120B-A12B MoE' : /kimi/i.test(c1Model) ? '93-layer 2.8T MoE' : '24-layer inference');
+          upsertStep('layer_c1', { icon: 'model', state: 'ok', name: 'C1 Inference (' + c1Model + ')',
+            detail: (ev.tokens ? ev.tokens + ' tokens \u00b7 ' : '') + c1Desc + ' (' + (ev.window_tokens || 512) + '-tok window)',
+            badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
+        } else if (ev.layer === 'c2_hybridagent' && ev.ran === false) {
+          upsertStep('layer_c2', { icon: 'models', state: 'no', name: 'C2 Plan (HybridAgent)',
+            detail: ev.reason || 'Not run', badge: 'Not run' });
+        } else if (ev.layer === 'c2_hybridagent') {
+          upsertStep('layer_c2', { icon: 'models', state: 'ok', name: 'C2 Plan (HybridAgent)',
+            detail: (ev.module || 'HybridLink') + ' \u00b7 ' + (ev.latent_steps || 3) + ' latent steps' + (ev.hybridlink_cos ? ' \u00b7 cos ' + ev.hybridlink_cos : ''),
+            badge: '\u2713 Planned' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
+        } else if (ev.layer === 'ncm' && ev.ran === false) {
+          upsertStep('layer_c3', { icon: 'spark', state: 'no', name: 'C3 Decode (Bridges + 11L NCM)',
+            detail: ev.reason || 'Not run', badge: 'Not run' });
+        } else if (ev.layer === 'ncm') {
+          upsertStep('layer_c3', { icon: 'spark', state: 'ok', name: 'C3 Decode (Bridges + 11L NCM)',
+            detail: (ev.bridges || 'ComboBridge + ExpertBridge') + (ev.codes ? ' \u2192 ' + ev.codes + ' VQ codes' : '') + ' (' + (ev.window_tokens || 512) + '-tok window)',
+            badge: '\u2713 Decoded' + (ev.s ? ' \u00b7 ' + ev.s + 's' : '') });
         } else if (ev.layer === 'compiler') {
           if (ev.ok || !ev.feedback) {
             upsertStep('compiler', { icon: 'code', state: 'ok', name: 'Code check (S3)',
@@ -2414,12 +3916,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         }
         if (ev.stage === 'planning') {
           var plTools = (ev.tools || []).slice(0, 5).map(toolName);
-          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning',
+          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning (C2 HybridAgent)',
             detail: plTools.length ? 'Choosing how to use ' + plTools.join(', ') : 'Formulating response plan\u2026', badge: 'Planning\u2026' });
           setStage(plTools.length ? 'planning \u00b7 ' + plTools.join(', ') : 'planning response');
         } else if (ev.stage === 'preparing_tool' && ev.tool) {
           var prepName = toolName(ev.tool);
-          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning',
+          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning (C2 HybridAgent)',
             detail: 'Preparing ' + prepName + ' input\u2026', badge: 'Preparing\u2026' });
           setStage('preparing ' + prepName);
         } else if (ev.stage === 'reviewing') {
@@ -2431,6 +3933,38 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           upsertStep('draft', { icon: 'models', state: 'run', name: 'Verifying facts & tools',
             detail: 'Checking local tools & context before ' + (ev.model || 'synthesis'), badge: 'Checking\u2026' });
           setStage('verifying facts & tools');
+        } else if (ev.stage === 'c1_inference') {
+          var pModel = ev.model || (modelInfo(state.settings.model) && modelInfo(state.settings.model).name) || 'LFM3-Omni-2B';
+          var pDesc = ev.layers_desc || (/35b/i.test(pModel) ? 'Running 40-layer BD-GDN + Gated GQA + 256-expert MoE inference\u2026' : /nemotron/i.test(pModel) ? 'Running 88-layer 120B-A12B MoE inference\u2026' : /kimi/i.test(pModel) ? 'Running 93-layer 2.8T MoE + Gated DSA inference\u2026' : 'Running 24-layer model inference (no direct decoding)\u2026');
+          upsertStep('layer_c1', { icon: 'model', state: 'run', name: 'C1 Inference (' + pModel + ')',
+            detail: pDesc, badge: 'Inferring\u2026' });
+          setStage('C1 inference \u00b7 ' + pModel);
+        } else if (ev.stage === 'c1_done') {
+          if (stepMap.layer_c1 && stepMap.layer_c1.data.state === 'run') {
+            stepMap.layer_c1.update({ state: 'ok', badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
+          }
+        } else if (ev.stage === 'c2_plan') {
+          if (stepMap.layer_c1 && stepMap.layer_c1.data.state === 'run') {
+            stepMap.layer_c1.update({ state: 'ok', badge: '\u2713 Inferred' });
+          }
+          upsertStep('layer_c2', { icon: 'models', state: 'run', name: 'C2 Plan (HybridAgent)',
+            detail: 'Running HybridLink2048 + Lfm3NativeHybridLink continuous latent planning\u2026', badge: 'Planning\u2026' });
+          setStage('planning with C2 HybridAgent');
+        } else if (ev.stage === 'c2_done') {
+          if (stepMap.layer_c2 && stepMap.layer_c2.data.state === 'run') {
+            stepMap.layer_c2.update({ state: 'ok', badge: '\u2713 Planned' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
+          }
+        } else if (ev.stage === 'ncm_decode') {
+          if (stepMap.layer_c2 && stepMap.layer_c2.data.state === 'run') {
+            stepMap.layer_c2.update({ state: 'ok', badge: '\u2713 Planned' });
+          }
+          upsertStep('layer_c3', { icon: 'spark', state: 'run', name: 'C3 Decode (Bridges + 11L NCM)',
+            detail: 'Running ComboBridge + ExpertBridge \u2192 11-level VQ-VAE & NextConceptTransformer\u2026', badge: 'Decoding\u2026' });
+          setStage('decoding with C3 (11-level NCM)');
+        } else if (ev.stage === 'ncm_done') {
+          if (stepMap.layer_c3 && stepMap.layer_c3.data.state === 'run') {
+            stepMap.layer_c3.update({ state: 'ok', badge: '\u2713 Decoded' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(1) + 's' : '') });
+          }
         } else if (ev.stage === 'k3_synthesis' || ev.stage === 'fused_c1_c2_c3') {
           if (stepMap.draft) stepMap.draft.update({ state: 'ok', badge: '\u2713 Verified' });
           if (stepMap.plan) stepMap.plan.update({ state: 'ok', badge: '\u2713 Planned' });
@@ -2506,15 +4040,22 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         scrollDown();
       } else if (ev.type === 'cycle') {
         var cycText = ev.stage === 'check' ? 'checking the earlier answer'
+          : ev.stage === 'verified' ? ('Outcome verified in ' + (ev.cycles_used || 1) + ((ev.cycles_used || 1) === 1 ? ' Clover cycle' : ' Clover cycles'))
           : ev.stage === 'search' ? 'searching the web and reading the best pages'
           : ev.stage === 'python' ? 'writing a Python program to calculate it'
           : ev.stage === 'second' ? 'solving it again on its own (1 of 2)' : ev.stage === 'third' ? 'solving it again another way (2 of 2)'
           : ev.stage === 'rewrite' ? (ev.how === 'recheck' ? 'checking each step of the answer again'
             : ev.how === 'another' ? 'writing a different version' : 'writing a new answer from what you said')
-          : 'correcting: ' + String((ev.findings || [''])[0]).slice(0, 90);
-        upsertStep('cycle_' + ev.stage, { icon: 'refresh', state: 'run', name: 'Verification cycle', detail: cap(cycText), badge: 'Checking\u2026' });
+          : 'Cycle ' + (ev.cycle || 2) + ' · returning to Context & fixing: ' + String((ev.findings || [''])[0]).slice(0, 90);
+        upsertStep('cycle_' + ev.stage + (ev.cycle ? '_' + ev.cycle : ''), {
+          icon: 'refresh',
+          state: ev.stage === 'verified' ? 'ok' : 'run',
+          name: ev.cycle ? ('Clover Cycle ' + ev.cycle) : 'Verification cycle',
+          detail: cap(cycText),
+          badge: ev.stage === 'verified' ? '\u2713 Verified' : 'Cycle ' + (ev.cycle || 2) + '\u2026'
+        });
         Object.keys(stepMap).forEach(function (k) {
-          if (k.indexOf('cycle_') === 0 && k !== 'cycle_' + ev.stage && stepMap[k].data.state === 'run') {
+          if (k.indexOf('cycle_') === 0 && k !== 'cycle_' + ev.stage + (ev.cycle ? '_' + ev.cycle : '') && stepMap[k].data.state === 'run') {
             stepMap[k].update({ state: 'ok', badge: '\u2713 Done' });
           }
         });
@@ -2522,6 +4063,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         live.wait.hidden = false;
         if (ev.stage === 'retry' || ev.stage === 'rewrite') dim();
         scrollDown();
+      } else if (ev.type === 'app_action') {
+        if ((PHONE || WEB) && ev.action_link) {
+          openExternalOrApp(ev.action_link, ev);
+        }
       } else if (ev.type === 'done') finish(ev);
       else if (ev.type === 'error') finish({ reply: 'Clover stopped with an error: ' + ev.error, error: true });
     }
@@ -2537,10 +4082,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       var newTok = gens.reduce(function (s, g) { return s + (g.new_tokens || 0); }, 0);
       var decS = gens.reduce(function (s, g) { return s + (g.decode_s || 0); }, 0);
       var speed = decS ? newTok / decS : 0; if (speed) state.lastSpeed = speed;
+      if (lastOpCycle && Array.isArray(lastOpCycle.stages)) {
+        lastOpCycle.stages.forEach(function (st) {
+          if (st.status === 'in-progress') st.status = 'completed';
+        });
+      }
       var m = { role: 'bot', text: ev.reply || '', isNotice: !!ev.error, turn: ev.turn,
         meta: secs + ' s' + (newTok ? ' · ' + newTok + ' tokens' : '') + (speed ? ' · ' + speed.toFixed(1) + ' tok/s' : ''),
         thinking: thinking.trim(), thinkSecs: tFirst ? Math.round((tLast - tFirst) / 1000) : 0,
-        tools: tools, steps: stepsList, used: layersUsed(ev),
+        tools: tools, steps: stepsList, opCycle: lastOpCycle, used: layersUsed(ev),
         images: (ev.images || []).map(function (x) { return { file: x.file, prompt: x.prompt, model: x.model, seconds: x.seconds }; }) };
       c.messages.push(m); save();
       live.turn.replaceWith(botEl(m)); scrollDown();
@@ -2615,8 +4165,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       else if (l.layer === 'recall' && (l.refs || []).length) out.push('S2 earlier chats · ' + l.chats);
       else if (l.layer === 'ontology') out.push('S2 knowledge graph');
       else if (l.layer === 'ontology_grounding' && l.changed) out.push('S2 grounding fix');
+      else if (l.layer === 'image_analysis') out.push('S3 visual inspector (' + (l.elements || 0) + ' regions)');
       else if (l.layer === 'compiler' && l.checked) out.push(l.ok ? 'S3 code checked' : 'S3 code issue');
-      else if (l.layer === 'ncm' && l.windows) out.push('C3 NCM');
+      else if (l.layer === 'c1_inference') out.push('C1 Inference' + (l.model ? ' · ' + l.model : ''));
+      else if (l.layer === 'c2_hybridagent' && l.ran !== false) out.push('C2 HybridAgent');
+      else if (l.layer === 'ncm' && l.windows && l.ran !== false) out.push('C3 11L NCM' + (l.model && !/^11-Level/i.test(l.model) ? ' · ' + l.model : ''));
       else if (l.layer === 'workspace') out.push('workspace ' + l.workspace);
       else if (l.layer === 'cycle' && l.trigger === 'user') {
         out.push({
@@ -2625,6 +4178,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           rewritten: 'Answered again', unconfirmed: 'Answered again · not confirmed', redone: 'Answered again with tools'
         }[l.action] || 'Answered again');
         (l.tools || []).forEach(function (t) { out.push(t === 'a web search' ? 'searched the web' : t === 'a Python calculation' ? 'calculated in Python' : t); });
+      }
+      else if (l.layer === 'cycle') {
+        if (l.action === 'corrected' || l.action === 'compiler_repaired' || (l.cycles_used || 1) > 1) {
+          out.push('Clover Cycle · repaired in ' + (l.cycles_used || 2) + ' cycles');
+        } else if (l.action === 'unconfirmed') {
+          out.push('Clover Cycle · ' + (l.cycles_used || 3) + ' cycles');
+        }
       }
     });
     if (ev.growth && ev.growth.length) out.push('growth · ' + ev.growth.length + (ev.growth.length === 1 ? ' update' : ' updates'));
@@ -2737,10 +4297,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('prompt').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
   $('send').addEventListener('click', function () {
     if (suppressSendClick) { suppressSendClick = false; return; }
+    if (nativeRecT0 || (rec && rec.state !== 'inactive')) { stopVoiceCapture(); return; }
     if (state.busy && state.mode === 'lfm3') { if (state.turnId) api('POST', '/api/cancel', { turn_id: state.turnId }).catch(function () {}); return; }
     send();
   });
-  function startChat() { if (!state.busy) { newChat(); closeRail(); $('scrim').classList.remove('on'); } }
+  function startChat() { if (!state.busy) { closeSheet(); newChat(); closeRail(); $('scrim').classList.remove('on'); } }
   $('new-chat').addEventListener('click', startChat);
   $('new-chat-2').addEventListener('click', startChat);
 
@@ -2763,7 +4324,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function renderWorkspaces(r) {
     state.ws = r; if (!r) return;
     var list = r.workspaces || [], active = list.filter(function (w) { return w.active; })[0];
-    $('v-ws').textContent = active ? active.name : list.length ? list.length + ' added' : 'None';
+    var wsVal = active ? active.name : list.length ? list.length + ' added' : 'None';
+    $('v-ws').textContent = wsVal;
+    if ($('v-ws-home')) $('v-ws-home').textContent = wsVal;
     $('rail-ws').hidden = !active; $('rail-ws-t').textContent = active ? 'Workspace: ' + active.name : '';
     var box = $('ws-list'); box.innerHTML = ''; box.hidden = !list.length;
     list.forEach(function (w) {
@@ -2818,17 +4381,48 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function kvHtml(rows) { return rows.map(function (x) { return '<span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b>'; }).join(''); }
   function renderVscode(r) {
     if (!r) return;
-    var c = r.connected, repo = r.repo || {};
+    var c = r.connected, repo = r.repo || {}, gh = r.github || {};
     var status = c ? 'Connected' + (c.title ? ' (' + c.title + ')' : '') : r.installed === false ? 'Not installed' : 'Not open';
     var rows = [['Status', status]];
     if (c && c.version) rows.push(['Version', c.version]);
     $('vsc-kv').innerHTML = kvHtml(rows);
     $('v-vsc').textContent = c ? 'Connected' : r.installed === false ? 'Not installed' : 'Not open';
-    $('acct-kv').innerHTML = kvHtml([['Private repository', repo.repo || 'Not set up'],
-      ['Memory synced', repo.last_sync ? repo.last_sync + (repo.notes != null ? ' · ' + repo.notes + ' notes' : '') : '—']]);
-    $('v-account').textContent = repo.repo || 'Not set up';
+    $('acct-kv').innerHTML = kvHtml([
+      ['GitHub token', gh.token_set ? 'Saved in local vault' : (c ? 'Via VS Code' : 'Not set')],
+      ['Private repository', repo.repo || 'Not set up'],
+      ['Memory synced', repo.last_sync ? repo.last_sync + (repo.notes != null ? ' · ' + repo.notes + ' notes' : '') : '—']
+    ]);
+    if ($('acct-gh-token')) $('acct-gh-token').placeholder = gh.token_set ? 'Token saved (paste a new one to replace)' : 'ghp_... or github_pat_...';
+    if ($('acct-gh-forget')) $('acct-gh-forget').hidden = !gh.token_set;
+    $('v-account').textContent = repo.repo || (gh.token_set ? 'Token saved' : 'Not set up');
     $('vsc-sync').hidden = !repo.repo;
     $('vsc-repo').textContent = repo.repo ? 'Set up again' : 'Set up private repository';
+  }
+  if ($('acct-gh-save')) {
+    $('acct-gh-save').addEventListener('click', function () {
+      var t = ($('acct-gh-token') && $('acct-gh-token').value || '').trim();
+      if (!t) { if ($('acct-gh-token')) $('acct-gh-token').focus(); return; }
+      api('POST', '/api/github', { token: t }).then(function (r) {
+        if ($('acct-gh-token')) $('acct-gh-token').value = '';
+        if (r.model_catalog) {
+          state.catalog = r.model_catalog;
+          if (state.server) state.server.model_catalog = r.model_catalog;
+          renderModelPicker();
+        }
+        renderWorkspaces(r); loadVscode();
+        setNote('acct-note', r.k3_unlocked
+          ? 'GitHub token saved and k3 models (Clover-35B-A3B, Nemotron 3.5, Kimi K3.1 Pro) unlocked!'
+          : 'GitHub token saved in encrypted vault. Tap "Set up private repository" to sync your memory.', true);
+      }).catch(function (e) { setNote('acct-note', e.message); });
+    });
+  }
+  if ($('acct-gh-forget')) {
+    $('acct-gh-forget').addEventListener('click', function () {
+      api('POST', '/api/github', { forget: true }).then(function (r) {
+        renderWorkspaces(r); loadVscode();
+        setNote('acct-note', 'GitHub token removed.', true);
+      }).catch(function (e) { setNote('acct-note', e.message); });
+    });
   }
   function loadVscode() { return api('GET', '/api/vscode').then(renderVscode).catch(function () {}); }
   function vscAct(noteId, action, busy, done) {

@@ -10,12 +10,13 @@ import shutil
 import zipfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent          # laptop/
-EXT = ROOT / "vscode-extension"
+ROOT = Path(__file__).resolve().parent.parent          # clover-ai-system/studio (or laptop/)
+REPO_ROOT = ROOT.parent.parent if (ROOT.parent.parent / "site").is_dir() else Path(r"C:\personal\oss\clover-framework")
+EXT = (ROOT / "vscode-extension") if (ROOT / "vscode-extension").is_dir() else (ROOT.parent / "vscode-extension")
 DIST = ROOT / "studio" / "dist"
 WEB = ROOT / "clover" / "web"
-PACK = Path(r"C:\personal\oss\clover-framework\assets\clover-yellow-flower-icon-pack")
-ROBO_PACK = Path(r"C:\personal\oss\clover-framework\assets\robo-icon")
+PACK = REPO_ROOT / "assets" / "robo-icon"
+ROBO_PACK = REPO_ROOT / "assets" / "robo-icon"
 CREAM = (247, 243, 233)  # the pack's surface colour, the Studio page background
 
 
@@ -114,11 +115,15 @@ def build_vsix():
 
 
 def build_web_site():
-    site_ai = Path(r"C:\personal\oss\clover-framework\site\clover-ai")
+    raw_html = (WEB / "app.html").read_text(encoding="utf-8")
+    android_assets = ROOT.parent / "mobile" / "android-app" / "assets"
+    if android_assets.is_dir():
+        (android_assets / "index.html").write_text(raw_html, encoding="utf-8", newline="\n")
+        print("android:", android_assets / "index.html", len(raw_html), "chars")
+    site_ai = REPO_ROOT / "site" / "clover-ai"
     if not site_ai.is_dir():
         return
-    html = (WEB / "app.html").read_text(encoding="utf-8")
-    html = html.replace("__CLOVER_PLATFORM__", "web").replace(' nonce="__CSP_NONCE__"', "")
+    html = raw_html.replace("__CLOVER_PLATFORM__", "web").replace(' nonce="__CSP_NONCE__"', "")
     (site_ai / "index.html").write_text(html, encoding="utf-8", newline="\n")
     for name in ("icon.png", "favicon.svg", "robo-clover.webp"):
         shutil.copyfile(WEB / name, site_ai / name)
