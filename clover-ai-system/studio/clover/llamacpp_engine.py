@@ -114,7 +114,7 @@ class LlamaServer:
         if not paths.ANDROID:
             args += ["-b", str(batch_sz)]
         args += ["-np", "1", "--no-webui", "-ngl", "99" if kind == "vulkan" else "0",
-                 "--slot-save-path", str(self.slots_dir), "--checkpoint-min-step", "256", "-ub", str(int(ubatch))]
+                 "--slot-save-path", str(self.slots_dir), "--checkpoint-min-step", "0", "-ub", str(int(ubatch))]
         if mmproj:
             args += ["--mmproj", str(mmproj)]
         args += [str(a) for a in extra_args]
