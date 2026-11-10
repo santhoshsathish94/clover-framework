@@ -543,7 +543,10 @@ class Repo:
                 except Exception:
                     pass
             rec = {"at": iso(), "session": sid, "n": n, "result": "stopped" if stopped else "answered"}
-            for k, v in (("tools", tools), ("checks", checks), ("used", used), ("lesson", lesson)):
+            import usage_ledger
+            spent = usage_ledger.totals(res.get("generation"))
+            spent = {k: v for k, v in spent.items() if k != "model_calls"} if spent["model_calls"] else None
+            for k, v in (("tools", tools), ("checks", checks), ("used", used), ("lesson", lesson), ("usage", spent)):
                 if v:
                     rec[k] = v
             self._append(self._outcomes_file(), rec)

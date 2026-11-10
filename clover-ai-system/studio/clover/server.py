@@ -81,6 +81,7 @@ class S:
     vscode = None
     repo = None
     tool_tasks = None  # tool_tasks.ToolTasks: every tool call as a verified task, kept across restarts
+    usage = None  # usage_ledger.Ledger: the engine's real tokens and seconds for every reply
     kit = None
     memidx = None
     csi = None  # csi_child.CSIService
@@ -1764,6 +1765,8 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
         res["turn"] = n
     elif ppl_growth:
         res["growth"] = list(ppl_growth)
+    record_usage("turn", res.get("generation"), turn_kind=kind, model=body.get("model"),
+                 ms=round((time.perf_counter() - t0) * 1000))
     if ws and S.workspaces is not None and not res.get("cancelled"):
         try:
             cyc_l = next((x for x in (res.get("layers") or []) if x.get("layer") == "cycle" and x.get("lesson")), None)
@@ -1947,6 +1950,17 @@ def openai_images(messages):
         if urls:
             return urls[:MEDIA_ITEMS]
     return []
+
+
+def v1_usage(generations):
+    import usage_ledger
+    return usage_ledger.openai_usage(usage_ledger.totals(generations))
+
+
+def record_usage(kind, generations, **fields):
+    if S.usage is not None:
+        import usage_ledger
+        S.usage.record(kind, usage_ledger.totals(generations), **fields)
 
 
 def with_tool_outputs(user_prompt, tool_rounds):
@@ -3846,6 +3860,7 @@ class Handler(BaseHTTPRequestHandler):
             media = []
             if "vision" in (getattr(v1_eng, "inputs", None) or []):
                 media = save_media([{"kind": "image", "data": u, "name": "image from VS Code"} for u in openai_images(messages)])
+            step_gens = []
             if tools and body.get("tool_choice") != "none":
                 t0 = time.perf_counter()
                 with S.turn_lock:
@@ -3855,17 +3870,22 @@ class Handler(BaseHTTPRequestHandler):
                                                  **({"media": media} if media else {}))
                     finally:
                         S.busy = None
-                print("V1_LFM3_STEP", json.dumps({"ms": round((time.perf_counter() - t0) * 1000), "call": out.get("tool_call"),
+                ms = round((time.perf_counter() - t0) * 1000)
+                print("V1_LFM3_STEP", json.dumps({"ms": ms, "call": out.get("tool_call"),
                                                   "media": len(media), "trace": out.get("trace")}, ensure_ascii=False)[:3000],
                       flush=True)
+                step_gens = [tr.get("generation") for tr in out.get("trace") or ()]
                 if out.get("tool_call"):
-                    return self._openai_reply(None, out["tool_call"], stream, user_prompt)
+                    record_usage("vscode_step", step_gens, model=body.get("model"), tool=out["tool_call"]["name"], ms=ms)
+                    return self._openai_reply(None, out["tool_call"], stream, user_prompt, usage=v1_usage(step_gens))
                 draft_c = out.get("content") or ""
                 if draft_c:
                     import clover_cycle as C
                     findings, _ = C.verify_turn_outcome(user_prompt, draft_c, [], kit=layer_kit(), layers=("compiler",))
                     if not findings:
-                        return self._openai_reply(draft_c, None, stream, user_prompt)
+                        record_usage("vscode_answer", step_gens, model=body.get("model"), ms=ms)
+                        return self._openai_reply(draft_c, None, stream, user_prompt, usage=v1_usage(step_gens))
+                record_usage("vscode_step", step_gens, model=body.get("model"), ms=ms)
             hist = []
             for h in prior_turns[-6:]:
                 hist.append({"user": h["user"], "reply": h["reply"]})
@@ -3878,7 +3898,8 @@ class Handler(BaseHTTPRequestHandler):
             if skipped:
                 text += ("\n\n_Note: Clover could not use " + ", ".join(skipped) +
                          " (permission). You can change it in Clover AI Studio → Permissions._")
-            return self._openai_reply(text, None, stream, user_prompt)
+            return self._openai_reply(text, None, stream, user_prompt,
+                                      usage=v1_usage(step_gens + list(res.get("generation") or [])))
         return self._v1_chat_clover(body, messages, stream, tools, user_prompt, prior_turns, tool_rounds, ws_info)
 
     def _v1_chat_clover(self, body, messages, stream, tools, user_prompt, prior_turns, tool_rounds, ws_info):
@@ -3911,10 +3932,11 @@ class Handler(BaseHTTPRequestHandler):
             text += f"\n\n![{m['title'] or 'Clover visual'}]({m['data_url']})"
         return self._openai_reply(text, None, stream, user_prompt, int(res.get("n_k3_tokens") or 0))
 
-    def _openai_reply(self, text, call, stream, user_prompt, n_tok=0):
+    def _openai_reply(self, text, call, stream, user_prompt, n_tok=0, usage=None):
         cid, created = "chatcmpl-" + uuid.uuid4().hex[:24], int(time.time())
-        p_tok = max(1, len(user_prompt.split()))
-        usage = {"prompt_tokens": p_tok, "completion_tokens": n_tok or 24, "total_tokens": p_tok + (n_tok or 24)}
+        if usage is None:  # an engine that reports no counts (the K3 worker): the old estimate
+            p_tok = max(1, len(user_prompt.split()))
+            usage = {"prompt_tokens": p_tok, "completion_tokens": n_tok or 24, "total_tokens": p_tok + (n_tok or 24)}
         if call is not None:
             tc = {"id": "call_" + uuid.uuid4().hex[:16], "type": "function",
                   "function": {"name": call["name"], "arguments": call["arguments"]}}
@@ -4012,6 +4034,8 @@ def main():
     except Exception as exc:  # Clover runs without the task record rather than not at all
         S.tool_tasks = None
         S.repo.note(f"tool task log off: {type(exc).__name__}: {exc}")
+    import usage_ledger
+    S.usage = usage_ledger.Ledger(base, paths.DEVICE_WORD)
     import memory_index
     S.memidx = memory_index.MemoryIndex(base, S.repo, is_idle=studio_idle, note_writer=write_note,
                                         recall=S.settings.get()["layers"]["recall"])
