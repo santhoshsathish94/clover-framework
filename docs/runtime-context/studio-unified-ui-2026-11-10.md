@@ -62,12 +62,13 @@
    - **Settings (`[data-page="home"]` & `#rail-settings-sub`) — Submenus & Center-Pane Views**:
      - Clicking `Settings` (`[data-nav="settings"]` or `#set-btn`) expands `#rail-settings-sub` (`Model & Voice`, `GitHub Account`, `Storage`, `Permissions`, `Debug & Senses`, `Advanced`) and shows `[data-page="home"]` in the center pane.
      - Clicking any submenu item in `#settings-tree` (`[data-set-sub="..."]`) or row in `[data-page="home"]` opens `model`, `account`, `storage`, `perms`, `debug`, or `advanced` directly in the center pane and highlights the active item in `#settings-tree`.
-   - **Merged Latest `main` (`v5.0.3` — Commit `070c2f31`) & Integrated into Unified UI**:
+   - **Merged Latest `main` (`v5.0.3` `070c2f31` + TokenEconomizer `df4fcfc4`) & Integrated into Unified UI**:
      - Synced `VERSION = 5.0.3`, `STUDIO_VERSION = "5.0.3"`, `.brand__ver` (`v5.0.3`), `#v-version` (`v5.0.3`), and `v5.0.3` release links across Web, Mobile, and Laptop.
      - Integrated `v5.0.3` VS Code & Playwright features into the unified UI:
        - SSE `ev.stage === 'vscode_wait'` step (`Waiting for you in VS Code` / `Approve in VS Code…` -> `✓ Answered in VS Code`).
        - `TOOL_UI` and `fmtArgs` support for `vscode_browser` (including `subaction: 'playwright'` and `code`), `vscode_editor`, `vscode_diagnostics`, `vscode_diff`, `vscode_github_setup`, and `vscode_github_sync`, plus syncing `vscode_browser` activity to the center-pane Browser tool (`logCloverBrowserActivity`).
        - All `v5.0.3` backend & extension fixes (`clover_cycle.py`, `lfm3_native.py`, `omni_native.py`, `semantics.py`, `server.py`, `vscode_bridge.py`, `extension.js`, `test_vscode_503.py`).
+     - Integrated `df4fcfc4` (`main` TokenEconomizer items 1, 3, and 5): `usage_ledger.py` (`/v1` real token usage + `<base>/logs/usage/*.jsonl` ledger), `ubatch_sz = 256` on CPU and GPU in `omni_native.py`, `tool_usage.py` behind the `tool_deferral` setting (off by default), and `test_token_economy.py`.
    - Synchronize all three platform targets (`app.html`, `site/clover-ai/index.html`, and `clover-ai-system/mobile/android-app/assets/index.html`).
 
 ## 3. Execution
@@ -87,13 +88,19 @@
   - Verified clicking `Workspaces`, `Memory`, `Tools`, `Learning`, `Settings`, and `Chat` in the sidebar and drilling into subpages (`layers`, `model`, `perms`, `personal`, `collective`, `storage`, `debug`, `account`, `vscode`) with `#sheet-back` and `window.cloverBack()`.
 - **Automated Suites**:
   - `python clover-ai-system/studio/tests/test_studio_unified_ui.py`: **41/41 PASS**
-  - `python clover-ai-system/studio/tests/test_strict_c1_c2_c3.py`: **27/27 PASS**
+  - `python clover-ai-system/studio/tests/test_strict_c1_c2_c3.py`: **28/28 PASS**
+  - `python clover-ai-system/studio/tests/test_token_economy.py`: **21/21 PASS**
+  - `python clover-ai-system/studio/tests/test_vscode_503.py`: **ALL PASS**
+  - `python clover-ai-system/studio/tests/test_arithmetic_findings_layout.py`: **ALL PASS**
+  - `python clover-ai-system/studio/tests/test_regression_fixes.py`: **ALL PASS**
+  - `python clover-ai-system/studio/tests/test_hardware.py`: **12/12 PASS**
   - `python clover-ai-system/studio/tests/test_layers_report_what_ran.py`: **5/5 PASS**
   - `python clover-ai-system/studio/tests/test_semantics.py`: **155/155 PASS**
   - `python clover-ai-system/studio/tests/test_browser_first.py`: **30/30 PASS**
   - `python clover-ai-system/studio/tests/test_browser_handback.py`: **51/51 PASS**
   - `python clover-ai-system/studio/tests/test_tool_tasks.py`: **18/18 PASS**
   - `python clover-ai-system/studio/tests/test_caution_only.py`: **16/16 PASS**
+  - `python clover-ai-system/mobile/test_mobile_s1_s2_s3.py`: **13/13 PASS**
   - `python scripts/check-site.py`: **10 pages checked, 0 site errors**
 - **Live End-to-End UI Testing on Real `LFM3-Omni-2B` (`llama.cpp` Vulkan on `Intel(R) UHD Graphics`) + `C2 HybridAgent` + `C3 11-Level NCM` + `I-JEPA` + `ffmpeg` + `npm` (`http://127.0.0.1:8798/`)**:
   1. **Test 1 — Browse News Websites, Screen Capture & Visual Data Analysis**:
