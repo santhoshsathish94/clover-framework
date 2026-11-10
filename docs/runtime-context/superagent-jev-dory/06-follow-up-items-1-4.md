@@ -17,7 +17,7 @@
 | 3. Check the Dory engine against an independent implementation | Done, pre-registered. **PASS:** at fp32 the standalone engine matches the llama.cpp Dory PR at K = 1, 2, 4. Both deliberate defects fail, as they should. bf16 is weaker: bf16 rounding alone flips the top-1 token on up to 6 of 24 prompts. |
 | 4. Wire the SuperAgent into Studio | Done. Every tool call is a SuperAgent task. A file write completes only after Clover reads the file back. A call cut off by a stop is reported once on the next start. Validated on the laptop (Windows, Iris Xe) and the S23 (Android). Device testing found three defects, all fixed and re-validated (section 5). |
 
-The devices run 5.0.2 **test builds**, built locally and not published. Publishing them needs a decision (section 7).
+5.0.2 was published on 2026-11-10 with these changes (section 10). Both devices run the published builds.
 
 ## 2. Item 1: caution only
 
@@ -132,13 +132,7 @@ Repository suites: `test_tool_tasks` 18/18 and `test_caution_only` 16/16 pass. T
 
 ## 7. For Direction
 
-- **Publishing 5.0.2.** The phone fix in section 5 (2) is the strongest reason to publish soon: published 5.0.0 and 5.0.1 phone apps carry the mismatch. Publishing needs approval. Still to do:
-  - the GitHub release
-  - site download links
-  - CHANGELOG
-  - store notes
-  - MSIX
-  - regenerated release reports
+- **Store submissions.** 5.0.2 is published on GitHub and the site (section 10). Uploading the AAB to Google Play and the `.msixupload` to Partner Center is done in the store consoles; the notes are in `release/beta/store/`.
 - **k3's Android build tree is synced by hand and had drifted.** Five files were stale. A scripted full sync with a list of deliberate variants would prevent a repeat.
 - **The routing reading stays off.** Any later attempt needs a model that can identify `clarify` on plain messages, and a fresh pre-registered gate.
 - **Dory loops.** The engine can now be trusted at fp32. A loop policy still needs held-out tasks with the probe counted, and bf16 results should not be compared to the third decimal.
@@ -146,15 +140,15 @@ Repository suites: `test_tool_tasks` 18/18 and `test_caution_only` 16/16 pass. T
 ## 8. What changed
 
 - **main:** `301b21a6` (tool tasks, `tool_tasks.py`, hooks, `/api/tasks`, tests), `269a038c` (caution only, `caution.py`, tests), `200585c0` (note kept out of model history), `41ab8cef` (badge). Research folders `05-plain-message-routing/` and `06-dory-parity/`, and this record.
-- **Local branch `release/5.0.2`**, not pushed: version bump `d89874bb` plus cherry-picks `9cbec6bc` and `f066aad1`. Release notes, CHANGELOG and store notes are not updated.
+- **Release 5.0.2** (approved 2026-11-10, "go ahead publish"): `1cce2df4` (version everywhere, CHANGELOG, store notes, report inputs) and `925361c2` (installers, reports, checksums, site); tag `v5.0.2` at `925361c2`.
 - **k3 Android build tree** (`/opt/clover-k3/studio-android`). Each step was guarded by hashes and backed up first:
   - items 1-4: 9 files (`backup-items14-20261109T181455Z`)
   - note fix: 2 files (`backup-notefix-20261109T182810Z`)
   - stale-file sync: 5 files (`backup-c2sync-20261109T230009Z`)
   - badge: 1 file (`backup-badge-20261109T232413Z`)
   - `build.gradle` set to versionCode 16 / 5.0.2
-- **Laptop:** 5.0.2 test build installed. The test sessions and files were deleted, and the test server was stopped (Studio was not running before). The tool-task logs stay in `logs/tool-tasks`. The Setup is in Downloads.
-- **S23:** 5.0.2 test build installed. Five test chats remain in the chat list, and three test files remain in the app's storage. "Stay awake while charging" was on during the test and is back to off.
+- **Laptop:** the published 5.0.2 Setup is installed (section 10). The test sessions and files were deleted, and the test server was stopped (Studio was not running before). The tool-task logs stay in `logs/tool-tasks`. The published Setup is in Downloads.
+- **S23:** the published 5.0.2 APK is installed. Five test chats remain in the chat list, and three test files remain in the app's storage. "Stay awake while charging" was on during the test and is back to off.
 
 ## 9. Growth
 
@@ -163,3 +157,20 @@ Repository suites: `test_tool_tasks` 18/18 and `test_caution_only` 16/16 pass. T
 - **Measured in an API is not seen by a person.** The summary carried "checked on disk" on both devices, but no phone screen ever showed it.
 - **Text shown once still sits in the model's context.** A note appended to an answer is read back by the model on the next turn, unless it is removed from the model's copy.
 - **A pre-registered prediction can fail usefully.** The Markdown-template prediction was wrong, and the reason (most messages read as `gather`) is the clearest picture of how this model behaves on plain messages.
+
+## 10. Release 5.0.2 (2026-11-10)
+
+- **Published:** [GitHub release v5.0.2](https://github.com/santhoshsathish94/clover-framework/releases/tag/v5.0.2) (Latest), with the same 12 assets as v5.0.1, and the site.
+- **Windows:** Setup `62c1dde2…` (9,349,592 bytes, Authenticode Valid, `843BC847…`). Its payload equals the Studio source: 12 key files compared, and no source `.py` is missing. MSIX and `.msixupload` identity is `5.0.2.0`. This Setup is a rebuild of the tested sources (no code change since the device runs), so it was installed again on the laptop.
+- **Android:** APK `5026958a…` (versionCode 16, v2+v3 signed with the release certificate), the same file tested on the S23. The AAB is `7cf3d1a0…`, and its bundled Python equals k3's Android tree.
+- **Checks after publishing:**
+  - Every asset's GitHub digest equals the committed file.
+  - Downloading the public links (v5.0.2 assets, the "latest" APK, and the raw `main` Setup) gives the committed hashes.
+  - CI "Validate repository" and the Pages deploy succeeded.
+  - The live site shows "v5.0.2 build 16", and its web Studio page has the new badge.
+  - The raw `SHA256SUMS.txt` differs from the release asset only in line endings.
+- **On the devices:**
+  - The laptop downloaded the published Setup from the public link (hash and signer match), installed it, and ran a checked write through the API: completed, "file read back".
+  - The S23's installed package hashes to the published APK (`5026958a`).
+- **Release run tests** (`release/beta/verification-results.json`): the three new suites pass, and Goal 1 (one version everywhere) passes. `test_regression_fixes` 71/73 and `test_browser_first` 29/30 are as before. `test_human_usefulness` was not re-run (needs a live Studio).
+- **Also synced:** the shipped laptop copy (`scratch-agents/lfm3-hybridagent/laptop`), 19 files, each replaced only if it still equalled its v5.0.1 version.
