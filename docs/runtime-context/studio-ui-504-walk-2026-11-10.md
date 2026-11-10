@@ -163,3 +163,55 @@
     website only.
 - The laptop and phone apps keep the device flow. Their server is on the user's own machine; a callback on
   api.cloverframework.com would put the user's GitHub token on k3 instead of the device.
+
+### Execution (2026-11-11, commit 88ce731f)
+- **Client ID check:** the human sent the Client ID `Ov23li2tK8VKBD0fTYGG`. Asking `github.com/login/device/code`
+  with it returned 200 with a device code, a `XXXX-XXXX` user code and `https://github.com/login/device`. So the app
+  exists and has the device flow on.
+- **Apps:** `github_auth.py` handles the device flow and renewal. `workspaces.GitHubAuth` keeps the sign-in
+  encrypted (who signed in, token pair, expiry) and renews it when it is used.
+  - Routes: `/api/github/device/start|poll`; sign out is `/api/github {forget}`.
+  - Memory sync, Workspaces and k3 unlock read `S.github.token`, so they use the sign-in unchanged.
+- **Website:** `/api/auth/github`, `/api/auth/github/start`, `/api/auth/github/callback` and
+  `/api/auth/github/finish`, plus `/api/auth/github/device/start|poll` for when the server has no secret.
+  - The return address must be a Clover origin with no control characters.
+  - The callback runs `verify_k3_credential` once, then drops the token.
+- **Collective learning:** `POST /api/collective/gateway/session` checks a GitHub token once and returns the
+  gateway's `cg1.` HMAC credential. The Studio keeps it in the vault, tied to the login and the gateway.
+  `core_sync` is unchanged in shape: `identity_connected` was added and `google_connected` still works.
+- **Security:**
+  - `google_identity.py` is restored from the mobile copy (no self-made key).
+  - The Google routes, the UI and `google_identity_manager` are gone.
+  - The admin flow uses `github_auth.CLIENT_ID`.
+- **Bugs found while testing:**
+  - `server.py` had no `import subprocess`, so memory sync with a token raised NameError.
+  - `CollectiveGateway._init_secret` read the secret with `.strip()`; 10 of 300 restarts in a probe replaced it,
+    0 of 300 after the fix.
+
+### Outcome
+- New `tests/test_github_signin.py`: 64 checks, offline against a stand-in GitHub. It covers the device flow,
+  renewal, the encrypted store, the redirect and one-time codes, the gateway credential, and the routes through the
+  real server, including the website mode.
+- All Studio suites: 35 of 38 passed; the 3 that fail are the same known ones.
+- The Studio copies of `test_google_identity_collective.py` (32 checks) and `test_collective.py` (35 checks) pass.
+  The mobile copies fail with "No module named 'vault'", the same as before the change.
+- Browser check on the test server (stand-in model, real GitHub for the sign-in):
+  - the new buttons appear on all four pages;
+  - "Sign in with GitHub" got a real code from GitHub and showed it;
+  - the test server recorded the open of github.com/login/device;
+  - the page polled about every 5.5 s.
+  - One bug fixed: the clipboard write was rejected without the page focused.
+- **Not verified:**
+  - a real approval with the human's account, and memory setup against real GitHub;
+  - renewal against real GitHub;
+  - the website redirect with the real secret on k3 (not deployed);
+  - the Android app;
+  - that the registered redirect URI is exactly the callback above.
+- **Found, not changed:** in website mode, `POST /api/github` lets any approved account replace or remove the
+  server's own GitHub token.
+
+### Growth
+- A test clock far from real time made a token look expired, and the store tried a real renewal at github.com.
+  Give stores a stub renewer in tests, and compare expiry with the real clock in route tests.
+- The test server's request log is block-buffered when piped through Tee-Object. Read the page's resource timings
+  to see what it really requested.
