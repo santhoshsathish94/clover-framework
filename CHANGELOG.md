@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## v5.0.4 — 2026-11-10
+
+**Clover v5.0.4 — Unified 2-Pane Studio UI, Cross-Model S3 Sensory Inspection (Camera, Video, Microphone Audio-JEPA), Interactive 3D Visuals, and Token Economy.** `VERSION` is `5.0.4` and all site `?v=5.0.4` asset cache strings match it. Windows installer, MSIX, Android APK/AAB (`versionCode 18`) and the VS Code and browser extensions are rebuilt at `5.0.4`.
+
+- **Unified 2-Pane Studio UI (`web/app.html`):** left navigation rail with collapsible submenus for `Chat`, `Workspaces`, `Memory`, `Tools` (`Terminal` & `Browser` shared by the user and Clover, plus `+ Add Tool`), `Learning` (`Personal Learning`, `Collective Learning`, `Autonomous & JEPA`, `Learning Logs`), and `Settings`; centered Robo Clover welcome hero, 2-row composer, and 5-stage Clover Cycle strip (`Context → Direction → Execution → Outcome → Growth`).
+- **Cross-Model S3 Sensory Capture & Inspection (`device_actions.py`, `image_inspector.py`, `omni_native.py`):** live Camera photo capture (`capture_camera_photo`), single-pass MP4 + keyframe Video recording (`capture_video_recording`), 16 kHz PCM Microphone recording with `Audio-JEPA` (`capture_microphone_audio`), `Visual Inspector (S3)` (`I-JEPA` + `[e1..eN]`), and interactive Three.js 3D HTML visual previews (`html_preview` in `#tool-app-browser`), wired uniformly across `LFM3-Omni-2B`, `LFM3-1.7B`, `Clover-35B-A3B`, `Nemotron 3.5 Super VL`, `Kimi K3.1 Pro`, `RemoteOmniEngine`, and `FusedEngine`.
+- **Memory Footprint & Token Economy (`usage_ledger.py`, `tool_usage.py`, `omni_c2_c3.py`, `hardware.py`):** real token/time usage in `/v1` replies and `<base>/logs/usage/*.jsonl` (`usage_ledger.py`), `ubatch 256` on CPU and GPU for faster prompt cache reuse, `tool_deferral` setting (off by default), guarded background `side_complete` so idle note writing never cold-spawns a second CPU `llama-server`, and cached `.inspect.json` + DirectShow `@device_...` monikers.
+- Tests: `tests/test_studio_unified_ui.py` (41/41), `tests/test_strict_c1_c2_c3.py` (34/34), `tests/test_token_economy.py` (21/21), `tests/test_regression_fixes.py` (all pass), `mobile/test_mobile_s1_s2_s3.py` (13/13).
+
 ## v5.0.3 — 2026-11-10
 
 **Clover v5.0.3 — VS Code and Playwright fixes.** `VERSION` is `5.0.3` and all site `?v=5.0.3` asset cache strings match it. Windows installer, MSIX, Android APK/AAB (`versionCode 17`) and the VS Code and browser extensions are rebuilt at `5.0.3`. Found by testing Clover with VS Code on a laptop (VS Code 1.145.2).

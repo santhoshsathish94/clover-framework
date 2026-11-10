@@ -35,7 +35,7 @@ import paths  # noqa: E402
 import semantics  # noqa: E402
 
 MODEL_ID = "lfm3-omni-2b"
-STUDIO_VERSION = "5.0.3"
+STUDIO_VERSION = "5.0.4"
 RELEASE_CHANNEL = "release"
 PRIVACY_URL = "https://cloverframework.com/privacy/"
 SUPPORT_URL = "https://github.com/santhoshsathish94/clover-framework/issues"
