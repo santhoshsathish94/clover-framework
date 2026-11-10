@@ -134,3 +134,17 @@
   - Sign-in uses Clover's own GitHub OAuth App with the device flow: the Studio shows a code and GitHub opens, where
     "Continue with Google" works. No token pasting, no VS Code, and no client secret in the app.
 - Stop trusting the computed key whatever account is chosen. Deploying that to k3 needs separate approval.
+
+### Direction (human, 2026-11-11)
+- One account: GitHub alone. The Google sign-in goes, including the self-made token and the trust in its key.
+- OAuth app registration, from GitHub's "Authorizing OAuth apps" page (read 2026-11-11):
+  - The device flow needs only the client ID; "the client_secret is not needed for the device flow".
+  - Expiring tokens: the access token lasts 8 hours and the refresh token lasts 6 months without use. Refreshing
+    needs `client_secret` "unless the token was generated using the device flow", so Clover can keep "Expire user
+    access tokens" on without a secret. A used refresh token and its old access token stop working, so a refresh
+    must save the new pair before anything else uses it.
+  - The redirect URI is not used by the device flow. Wildcard matching sends codes to any subdomain or path; leave
+    it off.
+  - Users can review or revoke the app at `https://github.com/settings/connections/applications/<client_id>`.
+- Next: build the sign-in once the human sends the Client ID. The client secret is not needed and must not be
+  generated or shared.
