@@ -318,12 +318,11 @@ class FusedEngine:
             if c_meta.get("compiler_info") is not None:
                 layer_log.append(c_meta["compiler_info"])
         else:
-            plan_budget = ON._plan_token_budget(query, max_new, has_s3_pre_call=bool(s3_pre_call), has_media=bool(media))
             for attempt in range(max_clover_cycles):
                 cycle_num = attempt + 1
                 emit({"type": "plan", "round": len(answers) + 1, "stage": "c1_inference", "model": "LFM3-Omni-2B", "cycle": cycle_num})
                 emit({"type": "plan", "round": len(answers) + 1, "stage": "fused_c1_c2_c3", "model": "LFM3-Omni-2B", "cycle": cycle_num})
-                ans = self._ask(cur_prompt, cur_hist, plan_budget)
+                ans = self._ask(cur_prompt, cur_hist, max_new)
                 answers.append(ans)
                 emit({"type": "plan", "round": len(answers), "stage": "fused_done", "model": "LFM3-Omni-2B",
                       "ms": round((ans.get("seconds") or 0) * 1000), "cycle": cycle_num})

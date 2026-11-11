@@ -44,6 +44,17 @@ def looping(text):
     return len(text) >= 4 * LOOP_TAIL and text.count(text[-LOOP_TAIL:], 0, len(text) - LOOP_TAIL) >= 2
 
 
+def trim_loop(text):
+    """One copy of the repeated text, ending at its last full sentence: the fixed cut ended a story on "grew lou"
+    (2026-11-11). Inside an unclosed code block the cut stays where it is."""
+    tail = text[-LOOP_TAIL:]
+    kept = text[:text.find(tail) + LOOP_TAIL]
+    if kept.count("```") % 2:
+        return kept
+    ends = [m.end() for m in re.finditer(r"[.!?][\"')\]”’]*(?=\s|$)", kept)]
+    return kept[:ends[-1]] if ends else kept
+
+
 # a paragraph that closes an answer: "Just let me know what you'd like to do!", "I'm here to help!"
 SIGN_OFF = re.compile(r"\blet\s+me\s+know\b|\bfeel\s+free\s+to\b|\bi'?m\s+(?:here|ready)\s+to\s+help\b|\bhappy\s+to\s+help\b|"
                       r"\banything\s+else\b|\bwhat\s+would\s+you\s+like\s+to\s+(?:do|work\s+on)\b|\bready\s+when\s+you\s+are\b", re.I)
@@ -79,22 +90,6 @@ VOICE_THREADS = 10
 # C1 inference only: one request carries the whole conversation and must fit in one ubatch (ubatch = context)
 C1_INFER_CTX = 8192
 MEDIA_WORD = {"image_url": "image", "input_audio": "audio", "input_video": "video"}
-
-
-def _plan_token_budget(query: str, max_new: int, *, has_s3_pre_call: bool = False, has_media: bool = False) -> int:
-    """Compact Kimi-K3-style window plan token budget so C1/C2 never rambles past C3's 512-token window capacity."""
-    q = (query or "").strip()
-    low = q.lower()
-    cap = int(max_new or 2048)
-    if cap <= 256:
-        return cap
-    if re.search(r"\b(?:def|class|function|script|implement|program|code|html|css|sql|json|yaml|table|schedule|timetable|sudoku|step-by-step|all\s+\d+)\b|```", low):
-        return cap
-    if any(b in low for b in ("one sentence", "1 sentence", "one clear sentence", "single sentence", "two sentences", "2 sentences", "briefly", "in short")):
-        return min(cap, 128)
-    if has_s3_pre_call or has_media:
-        return min(cap, 320)
-    return min(cap, 512)
 
 
 def _direct_s3_or_concept_plan(query: str, s3_pre_call: dict | None, s3_extra_calls: list | tuple, rounds: list) -> str | None:
@@ -1082,8 +1077,7 @@ class OmniNative(N.LFM3Native):
                 if finish == "tool_calls" and "</tool_call>" in content:
                     break
                 if looped:  # closing the stream stops llama-server; one copy of the repeated text is kept
-                    tail = content[-LOOP_TAIL:]
-                    content, finish = content[:content.find(tail) + LOOP_TAIL], "stop"
+                    content, finish = trim_loop(content), "stop"
                     break
                 if cut is not None:
                     content, finish = content[:cut], "stop"
@@ -1424,23 +1418,18 @@ class OmniNative(N.LFM3Native):
                                 "c1": "inference only",
                             }
                         else:
-                            plan_budget = (
-                                _plan_token_budget(query, max_new, has_s3_pre_call=bool(s3_pre_call), has_media=bool(media))
-                                if (is_live_gpu and "ncm" in layers)
-                                else max_new
-                            )
                             chat_kw = ({"on_plan": lambda tname, rn=r + 1: emit({"type": "plan", "round": rn, "stage": "preparing_tool", "tool": tname})}
                                        if schemas else {})
                             try:
                                 content, calls, st = self._chat(
-                                    msgs, schemas, plan_budget, by_name,
+                                    msgs, schemas, max_new, by_name,
                                     None, cancel,
                                     seed + 100 * attempt + r, forced,
                                     **chat_kw,
                                 )
                             except TypeError:
                                 content, calls, st = self._chat(
-                                    msgs, schemas, plan_budget, by_name,
+                                    msgs, schemas, max_new, by_name,
                                     None, cancel,
                                     seed + 100 * attempt + r, forced,
                                 )

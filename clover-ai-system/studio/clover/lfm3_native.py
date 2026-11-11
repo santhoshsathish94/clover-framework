@@ -1243,12 +1243,7 @@ class LFM3Native:
                             "c1": "inference only",
                         }
                     else:
-                        plan_budget = (
-                            ON._plan_token_budget(query, max_new, has_s3_pre_call=bool(s3_pre_call), has_media=bool(media))
-                            if (is_live_gen and "ncm" in layers)
-                            else max_new
-                        )
-                        text, st = self.generate(prompt, cfg, plan_budget, thinking, cb, cancel, seed + 100 * attempt + r)
+                        text, st = self.generate(prompt, cfg, max_new, thinking, cb, cancel, seed + 100 * attempt + r)
                     stats_all.append(st)
                     if force_answer and thinking and st["finish"] == "length" and "</think>" not in text:
                         forced = text + "\n</think>\n\n"
