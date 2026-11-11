@@ -271,7 +271,7 @@ def process(root, api, *, signing_key, now: float | None = None, min_installatio
         handled.append((num, res, reason, login))
     numbers = ", ".join(f"#{h[0]}" for h in handled)
     release = build_release(root, signing_key=signing_key, min_installations=min_installations,
-                            note=f"Requests {numbers}" if numbers else "Scheduled check")
+                            note=f"Requests {numbers}" if numbers else "No new requests")
     committed = False
     if _git(root, "status", "--porcelain").strip():
         _git(root, "add", "-A")

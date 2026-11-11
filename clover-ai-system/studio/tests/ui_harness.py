@@ -205,6 +205,15 @@ def main():
     def no_push(*_a, **_k):  # a sign-in here is real: pushing would put this scratch memory into the user's repository
         raise RuntimeError("The test server never pushes memory to GitHub. Use the real Clover AI Studio for that.")
     server.github_setup = server.sync_repo = no_push
+    import core_sync
+    real_http = core_sync.Collective._http
+
+    def no_public_issue(self, method, url, **kw):  # a contribution here would be a real public issue, under the user's name
+        if method.upper() != "GET":
+            raise core_sync.CoreSyncError("The test server never opens GitHub issues. Use the real Clover AI Studio "
+                                          "to contribute.")
+        return real_http(self, method, url, **kw)
+    core_sync.Collective._http = no_public_issue
     server.setup_needed = lambda: False
     server.omni_available = lambda _b: (True, "")
     server.gpu_available = lambda _b: (True, "")

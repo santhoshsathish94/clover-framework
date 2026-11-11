@@ -32,7 +32,7 @@ import semantics
 
 # Official 32-byte RFC 8032 Ed25519 public verification key for Clover Collective Core releases. The private key is a
 # secret of the clover-collective repository, used only by its GitHub Actions automation.
-DEFAULT_VERIFY_PUBLIC_KEY = "dba3f7e2e969a26c57a24d50e2ecd654249b42e25eecc1f9140a514d7dcedb8a"
+DEFAULT_VERIFY_PUBLIC_KEY = "a4d9d040035a19a5f1214bd30881b40842d4b06d0990c1bfdd6252fd90280283"
 DEFAULT_COLLECTIVE_REPO = "santhoshsathish94/clover-collective"
 RAW_URL = "https://raw.githubusercontent.com/{repo}/main/"
 API_URL = "https://api.github.com"
