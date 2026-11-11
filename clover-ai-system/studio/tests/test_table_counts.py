@@ -6,6 +6,7 @@ Like the numeric totals, the counts now come from the Studio, over all rows.
 """
 import base64
 import collections
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -46,5 +47,6 @@ xlsx = inputs / "q1-sales.xlsx"
 xdoc = documents.save([{"name": xlsx.name, "data": base64.b64encode(xlsx.read_bytes()).decode()}], store)[0]
 xblk = documents.block(xdoc)
 check("a spreadsheet's text columns get counts too", "- Region:" in xblk and "- Product:" in xblk)
+shutil.rmtree(NR.SANDBOX, ignore_errors=True)  # make_files() writes its inputs into the user's home folder
 print("ALL PASS" if not bad else f"{bad} FAILED")
 sys.exit(1 if bad else 0)
