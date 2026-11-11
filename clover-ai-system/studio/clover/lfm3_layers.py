@@ -42,7 +42,9 @@ DEVICE_PHRASE = re.compile(r"\b(?:on|in|with|from|to|for)\s+my\s+(?:phone|mobile
 THIS_CHAT_REF = re.compile(
     r"\byou\s+(?:just\s+)?(?:wrote|written|said|told\s+me|gave|suggested|described|listed|made|drew|answered|found)\b|"
     r"\b(?:your|the)\s+(?:last|previous|above|earlier)\s+(?:answer|reply|message|story|list|summary|table|chart|code)\b|"
-    r"\b(?:above|this\s+chat|this\s+conversation)\b", re.I
+    r"\b(?:above|this\s+chat|this\s+conversation)\b|"
+    # "Split that between 3 friends" took $694 from another chat's maths problem (2026-11-11)
+    r"^\s*(?:and\s+|so\s+|now\s+|then\s+)?(?:\w+\s+){0,3}(?:that|it|this|those|these|them)\b", re.I
 )
 PAST_CUE = re.compile(
     r"\b(?:earlier|last\s+time|previous(?:ly)?|before|remember|another\s+chat|other\s+chat|"
@@ -59,13 +61,16 @@ def needs_recall(text):
 
 
 def other_chats_wanted(text, history_turns):
-    """A chat with turns already in the prompt adds other chats only for a question or an explicit cue about the past,
-    never for a follow-up about this conversation or a task built on it."""
+    """A chat with turns already in the prompt adds other chats for an explicit cue about the past, or for a question
+    that is not a follow-up about this conversation."""
     if not history_turns:
         return True
-    if THIS_CHAT_REF.search(text or ""):
-        return bool(re.search(r"\b(?:another|other)\s+chat\b", text or "", re.I))
-    return bool(PAST_CUE.search(text or "") or QUESTION.search(text or ""))
+    t = text or ""
+    if PAST_CUE.search(t) or re.search(r"\b(?:another|other)\s+chat\b", t, re.I):
+        return True
+    if THIS_CHAT_REF.search(t):
+        return False
+    return bool(QUESTION.search(t))
 STOP = set("the a an and or of to in on for with is are was were be been it this that these those my your our their "
            "i you we they he she me us them what which who when where why how about from at by as into than then".split())
 # words that say nothing about a topic: "much" alone pulled a lesson on pens into "how much free disk space" (2026-11-01)

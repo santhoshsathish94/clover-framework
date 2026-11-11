@@ -2,7 +2,8 @@
 
 Observed 2026-11-11 on the full system: "Summarize what you wrote in one sentence." (after a stopped story) and
 "Write me a short summary I can paste into an email to my manager." (after four turns about a sales sheet) were both
-answered from another chat's lines, which the recall block shows as "Clover: ...".
+answered from another chat's lines, which the recall block shows as "Clover: ..."; then "Split that between 3
+friends - how much each?" divided $694, the answer to a maths problem in another chat.
 """
 import sys
 from pathlib import Path
@@ -27,6 +28,9 @@ cases = [
     ("Can you shorten the story you just wrote?", 2, False),
     ("Turn your last answer into a table.", 3, False),
     ("Make a bar chart of revenue by region.", 3, False),
+    ("Split that between 3 friends - how much each?", 2, False),
+    ("And how much is it in euros?", 2, False),
+    ("Tell me about that trip we discussed last week.", 2, True),
     ("What did you say in another chat about my sister?", 2, True),
     ("When is my sister Anjali's birthday?", 0, True),
     ("Write me a short summary I can paste into an email to my manager.", 0, True),
