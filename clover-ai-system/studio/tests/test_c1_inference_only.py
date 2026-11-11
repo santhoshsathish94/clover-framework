@@ -179,4 +179,163 @@ for cand in (Path("/opt/clover-k3/web-studio"), Path.home() / "CloverAI"):
         break
 else:
     print("SKIP the real C2/C3 parts are not on this machine")
+
+# 7. Verify c1_inference_only and zero-decode S3/Concept-Plan fast path across ALL model engines:
+#    - LFM3Native (LFM3-1.7B)
+#    - K3HostEngine (clover-35b-a3b, nemotron-3.5-super-vl, kimi-k3) — both standalone and omni-backed
+#    - RemoteOmniEngine (k3:omni & OpenAI-compatible)
+#    - FusedEngine (LFM3-Omni-2B C1+C2+C3 fused runtime)
+import fused_engine
+import k3_host_engine
+import permissions
+
+tmp_all = Path(tempfile.mkdtemp())
+perms_all = permissions.PermissionStore(tmp_all / "perms.json")
+perms_all.update({"code": "allow", "files": "allow", "edit_files": "allow", "internet": "allow", "shell": "allow"})
+
+# 7a. LFM3Native (LFM3-1.7B) in c1_inference_only mode and zero-decode S3 mode
+lfm = object.__new__(omni_native.N.LFM3Native)
+lfm.base_dir = tmp_all
+lfm.media_dir = tmp_all / "media"
+lfm.media_dir.mkdir(parents=True, exist_ok=True)
+lfm.perms = perms_all
+lfm.lock = threading.Lock()
+lfm.stage = {"name": "idle"}
+lfm.workdir, lfm.workname, lfm.after_write = None, "", None
+lfm.turn_images = []
+lfm._py = lfm._web = None
+lfm._fit = lambda msgs, schemas, thinking, max_new: msgs
+lfm._render = lambda msgs, schemas, thinking: "\n".join(str(m.get("content") or "") for m in msgs)
+lfm.c1_inference_only = True
+lfm_srv = FakeServer()
+lfm._c1_server = lambda: lfm_srv
+lfm._c1_prompt = lambda srv, bef, nh, tt: omni_native.OmniNative._c1_prompt(lfm, srv, bef, nh, tt)
+lfm._plain_text = omni_native.OmniNative._plain_text
+lfm.generate = lambda *a, **k: (_ for _ in ()).throw(AssertionError("LFM3Native called generate in c1_inference_only"))
+kit_lfm, ev_lfm = FakeKit(), []
+res_lfm = lfm.run_turn([], "How do C1, C2, and C3 work?", tools=False, layers=("ncm",), kit=kit_lfm, on_event=ev_lfm.append, system="SYS")
+stages_lfm = [e["stage"] for e in ev_lfm if e.get("type") == "plan" and e.get("stage")]
+check(
+    "LFM3Native (LFM3-1.7B): c1_inference_only runs C1 -> C2 -> C3 with 0 generated tokens",
+    stages_lfm == ["c1_inference", "c1_done", "c2_plan", "c2_done", "ncm_decode", "ncm_done"]
+    and res_lfm["generation"][0]["new_tokens"] == 0
+    and res_lfm["generation"][0]["c1"] == "inference only"
+    and res_lfm["reply"].startswith("C3 decoded:"),
+)
+
+# LFM3Native zero-decode S3/concept-plan turn in normal mode (c1_inference_only = False)
+lfm.c1_inference_only = False
+lfm.__dict__.pop("generate", None)
+lfm.gpu = object()
+kit_lfm2 = FakeKit()
+kit_lfm2.c1_infer = lambda raw, stats=None, model=None, layers_desc=None: ({"stage": "c1_inference", "raw_text": raw}, {"layer": "c1_inference", "ms": 1.0})
+res_lfm_s3 = lfm.run_turn([], "What time is it?", tools=True, only_tools=["get_current_time"], layers=("ncm",), kit=kit_lfm2, system="SYS")
+check(
+    "LFM3Native (LFM3-1.7B): zero-decode S3 fast path skips generate (new_tokens=0, c1='inference only')",
+    res_lfm_s3["generation"][0]["new_tokens"] == 0
+    and res_lfm_s3["generation"][0].get("c1") == "inference only"
+    and res_lfm_s3["reply"].startswith("C3 decoded: The current local time is"),
+)
+
+# 7b. K3HostEngine across all 3 k3 models (clover-35b-a3b, nemotron-3.5-super-vl, kimi-k3)
+for m_key in ("clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3"):
+    # Standalone mode + c1_inference_only
+    k3_e = k3_host_engine.K3HostEngine(m_key, None, tmp_all, perms_all)
+    k3_e.turn_images = []
+    k3_e.c1_inference_only = True
+    k3_srv = FakeServer()
+    k3_e._c1_server = lambda _s=k3_srv: _s
+    k3_e._call_worker = lambda *a, **k: (_ for _ in ()).throw(AssertionError(f"{m_key} called worker in c1_inference_only"))
+    kit_k3, ev_k3 = FakeKit(), []
+    res_k3 = k3_e.run_turn([], "Explain C1, C2, and C3.", tools=False, layers=("ncm",), kit=kit_k3, on_event=ev_k3.append, system="SYS")
+    st_k3 = [e["stage"] for e in ev_k3 if e.get("type") == "plan" and e.get("stage")]
+    check(
+        f"K3HostEngine ({m_key}, standalone): c1_inference_only runs C1 -> C2 -> C3 with 0 generated tokens",
+        st_k3 == ["c1_inference", "c1_done", "c2_plan", "c2_done", "ncm_decode", "ncm_done"]
+        and res_k3["generation"][0]["new_tokens"] == 0
+        and res_k3["generation"][0]["c1"] == "inference only"
+        and res_k3["reply"].startswith("C3 decoded:"),
+    )
+
+    # Standalone mode + zero-decode S3/concept-plan turn
+    k3_e.c1_inference_only = False
+    kit_k3_s3, ev_k3_s3 = FakeKit(), []
+    kit_k3_s3.c1_infer = lambda raw, stats=None, model=None, layers_desc=None: ({"stage": "c1_inference", "raw_text": raw}, {"layer": "c1_inference", "model": model, "ms": 1.0})
+    res_k3_s3 = k3_e.run_turn([], "What time is it?", tools=True, only_tools=["get_current_time"], layers=("ncm",), kit=kit_k3_s3, on_event=ev_k3_s3.append, system="SYS")
+    st_k3_s3 = [e["stage"] for e in ev_k3_s3 if e.get("type") == "plan" and e.get("stage") in ("c1_inference", "c1_done", "c2_plan", "c2_done", "ncm_decode", "ncm_done")]
+    check(
+        f"K3HostEngine ({m_key}, standalone): zero-decode S3 fast path runs C1 -> C2 -> C3 without calling worker",
+        st_k3_s3 == ["c1_inference", "c1_done", "c2_plan", "c2_done", "ncm_decode", "ncm_done"]
+        and res_k3_s3["generation"][0]["new_tokens"] == 0
+        and res_k3_s3["generation"][0].get("c1") == "inference only"
+        and res_k3_s3["reply"].startswith("C3 decoded: The current local time is"),
+    )
+
+    # Omni-backed mode + c1_inference_only
+    omni_backing = engine()
+    k3_ob = k3_host_engine.K3HostEngine(m_key, omni_backing, tmp_all, perms_all)
+    k3_ob.c1_inference_only = True
+    k3_ob._call_worker = lambda *a, **k: (_ for _ in ()).throw(AssertionError(f"{m_key} (omni-backed) called worker in c1_inference_only"))
+    kit_ob, ev_ob = FakeKit(), []
+    res_ob = k3_ob.run_turn([], "Explain C1, C2, and C3.", tools=False, layers=("ncm",), kit=kit_ob, on_event=ev_ob.append, system="SYS")
+    st_ob = [e["stage"] for e in ev_ob if e.get("type") == "plan" and e.get("stage")]
+    check(
+        f"K3HostEngine ({m_key}, omni-backed): c1_inference_only runs C1 -> C2 -> C3 without calling worker",
+        st_ob == ["c1_inference", "c1_done", "c2_plan", "c2_done", "ncm_decode", "ncm_done"]
+        and res_ob["generation"][0]["new_tokens"] == 0
+        and res_ob["generation"][0]["c1"] == "inference only",
+    )
+
+# 7c. RemoteOmniEngine (k3:omni & custom OpenAI)
+rem_e = k3_host_engine.RemoteOmniEngine(
+    {"id": "k3:omni", "name": "LFM3-Omni (k3)", "url": "http://127.0.0.1:9999", "host": "k3", "kind": "clover"},
+    tmp_all,
+    perms_all,
+)
+rem_e.c1_inference_only = True
+rem_srv = FakeServer()
+rem_e._c1_server = lambda: rem_srv
+rem_e._chat = lambda *a, **k: (_ for _ in ()).throw(AssertionError("RemoteOmniEngine called _chat in c1_inference_only"))
+kit_rem, ev_rem = FakeKit(), []
+res_rem = rem_e.run_turn([], "Explain C1, C2, and C3.", tools=False, layers=("ncm",), kit=kit_rem, on_event=ev_rem.append, system="SYS")
+st_rem = [e["stage"] for e in ev_rem if e.get("type") == "plan" and e.get("stage")]
+check(
+    "RemoteOmniEngine (k3:omni): c1_inference_only runs C1 -> C2 -> C3 with 0 generated tokens",
+    st_rem == ["c1_inference", "c1_done", "c2_plan", "c2_done", "ncm_decode", "ncm_done"]
+    and res_rem["generation"][0]["new_tokens"] == 0
+    and res_rem["generation"][0]["c1"] == "inference only",
+)
+
+# 7d. FusedEngine (LFM3-Omni-2B C1+C2+C3 fused runtime)
+fus_e = object.__new__(fused_engine.FusedEngine)
+fus_e.base_dir = tmp_all
+fus_e.perms = perms_all
+fus_e.layer = 3
+fus_e.turn_images = []
+fus_e.c1_inference_only = True
+fus_srv = FakeServer()
+fus_e._c1_server = lambda: fus_srv
+fus_e._ask = lambda *a, **k: (_ for _ in ()).throw(AssertionError("FusedEngine called _ask in c1_inference_only"))
+kit_fus, ev_fus = FakeKit(), []
+res_fus = fus_e.run_turn([], "Explain C1, C2, and C3.", tools=False, layers=("ncm",), kit=kit_fus, on_event=ev_fus.append)
+st_fus = [e["stage"] for e in ev_fus if e.get("type") == "plan" and e.get("stage")]
+check(
+    "FusedEngine: c1_inference_only runs C1 -> C2 -> C3 with 0 generated tokens",
+    st_fus == ["c1_inference", "c1_done", "c2_plan", "c2_done", "ncm_decode", "ncm_done"]
+    and res_fus["generation"][0]["new_tokens"] == 0
+    and res_fus["generation"][0]["c1"] == "inference only",
+)
+
+fus_e.c1_inference_only = False
+kit_fus_s3, ev_fus_s3 = FakeKit(), []
+kit_fus_s3.c1_infer = lambda raw, stats=None, model=None, layers_desc=None: ({"stage": "c1_inference", "raw_text": raw}, {"layer": "c1_inference", "model": model, "ms": 1.0})
+res_fus_s3 = fus_e.run_turn([], "What time is it?", tools=True, only_tools=["get_current_time"], layers=("ncm",), kit=kit_fus_s3, on_event=ev_fus_s3.append)
+st_fus_s3 = [e["stage"] for e in ev_fus_s3 if e.get("type") == "plan" and e.get("stage") in ("c1_inference", "c1_done", "c2_plan", "c2_done", "ncm_decode", "ncm_done")]
+check(
+    "FusedEngine: zero-decode S3 fast path runs C1 -> C2 -> C3 without calling _ask",
+    st_fus_s3 == ["c1_inference", "c1_done", "c2_plan", "c2_done", "ncm_decode", "ncm_done"]
+    and res_fus_s3["generation"][0]["new_tokens"] == 0
+    and res_fus_s3["generation"][0].get("c1") == "inference only"
+    and res_fus_s3["reply"].startswith("C3 decoded: The current local time is"),
+)
 print("ALL PASS")

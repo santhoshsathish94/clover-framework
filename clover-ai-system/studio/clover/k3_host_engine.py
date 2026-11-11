@@ -483,6 +483,7 @@ class K3HostEngine:
         self.stage = {"name": "idle", "since": time.time()}
         self.workdir, self.workname, self.after_write = None, "", None
         self.turn_images = None
+        self.c1_inference_only = False
         self.display_model_name = self.spec["model"]
         self.display_layers_desc = self.spec["layers"][0]
         if self.omni is not None:
@@ -646,9 +647,11 @@ class K3HostEngine:
             self.omni.turn_images = self.turn_images
             self.omni.display_model_name = self.spec["model"]
             self.omni.display_layers_desc = self.spec["layers"][0]
+            self.omni.c1_inference_only = bool(getattr(self, "c1_inference_only", False))
             tool_Events = []
             sys_txt = system or self.system_prompt(bool(tools), only_tools)
-            emit({"type": "plan", "round": 1, "stage": "drafting", "model": self.spec["model"]})
+            if not self.omni.c1_inference_only:
+                emit({"type": "plan", "round": 1, "stage": "drafting", "model": self.spec["model"]})
 
             def _k3_ev(ev):
                 if isinstance(ev, dict):
@@ -667,12 +670,15 @@ class K3HostEngine:
                 extra_tools=extra_tools, media=media, only_tools=only_tools, meaning=meaning,
             )
             for l_item in res_omni.get("layers") or ():
-                if isinstance(l_item, dict) and l_item.get("layer") == "c1_inference":
+                if isinstance(l_item, dict) and l_item.get("layer") in ("c1_inference", "ncm"):
                     l_item["model"] = self.spec["model"]
-                    l_item["layers_desc"] = self.spec["layers"][0]
+                    if l_item.get("layer") == "c1_inference":
+                        l_item["layers_desc"] = self.spec["layers"][0]
             rounds = res_omni.get("tool_calls") or []
             omni_reply = self._identity_fix(_clean_reply(res_omni.get("reply") or ""), user_text)
-            if omni_reply and not (cancel and cancel.is_set()):
+            gen0 = (res_omni.get("generation") or [{}])[0]
+            is_c1_infer_only = bool(self.omni.c1_inference_only or gen0.get("c1") == "inference only")
+            if omni_reply and not is_c1_infer_only and not (cancel and cancel.is_set()):
                 try:
                     t0 = time.perf_counter()
                     emit({"type": "plan", "round": 1, "stage": "k3_synthesis", "model": self.spec["model"],
@@ -822,81 +828,138 @@ class K3HostEngine:
         max_clover_cycles = 3
         cycle_history = []
         rounds = []
+        pre_text = ""
         if s3_pre_call is not None:
             pre_rounds, _, pre_text = omni_native.execute_s3_pre_calls(
                 local_runner, s3_pre_call, s3_extra_calls, ask=ask, allow=allow, emit=emit
             )
             rounds.extend(pre_rounds)
             before.append(pre_text)
+
+        if getattr(self, "c1_inference_only", False) and kit is not None and hasattr(kit, "c1_infer_states"):
+            if hasattr(self, "_c1_server"):
+                local_runner._c1_server = self._c1_server
+            before_c1i = [b for b in before if b != pre_text]
+            msgs_k3 = (
+                [{"role": "system", "content": system or self.system_prompt(False, None)}]
+                + list(history or ())
+                + [{"role": "user", "content": "\n\n".join(before_c1i + [user_text] + blocks)}]
+            )
+            planned_t = [rd["tool"] for rd in rounds if rd.get("ran")] or (
+                list(only_tools) if only_tools is not None else ["run_python", "web_search"]
+            )
+            res_c1i = local_runner._c1_inference_turn(
+                msgs_k3, len(history or ()), pre_text, query, kit, layers, emit, cancel,
+                op_plan, rounds, layer_log, meaning, self.spec["model"], self.spec["layers"][0], planned_t,
+            )
+            res_c1i["reply"] = self._identity_fix(res_c1i.get("reply") or "", user_text)
+            for l_item in res_c1i.get("layers") or ():
+                if isinstance(l_item, dict) and l_item.get("layer") in ("c1_inference", "ncm"):
+                    l_item["model"] = self.spec["model"]
+            return res_c1i
+
         full_prompt = "\n\n".join(before + [user_text] + blocks)
         stats_all = []
         reply = ""
         plans = []
         cur_prompt = full_prompt
         cur_hist = list(history or ())
+        direct_plan = omni_native._direct_s3_or_concept_plan(query, s3_pre_call, s3_extra_calls, rounds)
 
-        for attempt in range(max_clover_cycles):
-            cycle_num = attempt + 1
-            emit({"type": "round", "round": len(stats_all) + 1, "cycle": cycle_num})
-            emit({"type": "plan", "round": len(stats_all) + 1, "stage": "k3_synthesis", "model": self.spec["model"],
-                  "full_name": self.spec.get("full_name") or self.spec["model"], "cycle": cycle_num})
-            t0 = time.perf_counter()
-            with self.lock:
-                wr = self._call_worker("k3-" + uuid.uuid4().hex[:10], cur_prompt, cur_hist, media=media if attempt == 0 else ())
-            wall_s = round(time.perf_counter() - t0, 2)
-            emit({"type": "plan", "round": len(stats_all) + 1, "stage": "k3_done", "model": self.spec["model"],
-                  "ms": round(wall_s * 1000), "cycle": cycle_num})
-            plans = wr.get("plans") or []
-            if plans:
-                emit({"type": "token", "round": len(stats_all) + 1, "kind": "thinking", "text": "\n".join(str(p) for p in plans)})
-            for tc in wr.get("tool_calls") or []:
-                if not isinstance(tc, dict):
-                    continue
-                tname = {"python": "run_python", "search": "web_search"}.get(tc.get("tool"), str(tc.get("tool") or "tool"))
-                tid = "call_" + uuid.uuid4().hex[:12]
-                targs = {"query": tc.get("input")} if tname == "web_search" else {"code": tc.get("input")}
-                tres = str(tc.get("result") or "")[:3000]
-                worked, summary = N.tool_worked(tname, True, tres, "k3 agent loop")
-                emit({"type": "tool_call", "id": tid, "name": tname, "arguments": targs})
-                emit({"type": "tool_result", "id": tid, "name": tname, "ran": True, "worked": worked, "summary": summary,
-                      "why": "k3 agent loop", "result": tres})
-                rounds.append({"tool": tname, "arguments": targs, "ran": True, "worked": worked, "summary": summary,
-                               "why": "k3 agent loop", "result": tres[:2000]})
-                op_plan.advance_execution_step(tname)
-            self._save_worker_media(wr.get("media"))
-            reply = self._identity_fix(_clean_reply(wr.get("reply") or ""), user_text)
+        if direct_plan is not None:
+            emit({"type": "round", "round": 1, "cycle": 1})
+            emit({"type": "plan", "round": 1, "stage": "c1_inference", "model": self.spec["model"],
+                  "layers_desc": self.spec["layers"][0], "cycle": 1})
+            reply = self._identity_fix(_clean_reply(direct_plan), user_text)
+            plans = [reply]
             if "ontology" in layers and kit is not None:
                 reply, changed = kit.grounding_filter(query, reply)
-                layer_log.append({"layer": "ontology_grounding", "changed": changed, "cycle": cycle_num})
-            n_tok = int(wr.get("n_k3_tokens_1cand") or wr.get("n_tokens") or max(1, len(reply.split())))
-            dec_s = round(float(wr.get("ncm_1cand_ms") or (wall_s * 1000)) / 1000.0, 2) or wall_s
+                layer_log.append({"layer": "ontology_grounding", "changed": changed, "cycle": 1})
             stats_all.append({
-                "prompt_tokens": len(cur_prompt.split()),
-                "new_tokens": n_tok,
-                "prefill_s": round(float(wr.get("plan_lat_ms") or 0) / 1000.0, 2),
-                "decode_s": dec_s,
-                "decode_tok_s": round(n_tok / wall_s, 2) if wall_s > 0 else None,
+                "prompt_tokens": max(1, len((query or "").split())),
+                "reused_tokens": 0,
+                "new_tokens": 0,
+                "prefill_s": 0.0,
+                "decode_s": 0.0,
+                "decode_tok_s": None,
                 "finish": "stop",
+                "c1": "inference only",
             })
             op_plan.complete_stage("execution")
-            op_plan.start_stage("outcome", f"Cycle {cycle_num} Outcome: verifying output against reality…")
-            emit({"type": "plan", "round": len(stats_all), "stage": "outcome_check", "cycle": cycle_num})
+            op_plan.start_stage("outcome", "Cycle 1 Outcome: verifying output against reality…")
+            emit({"type": "plan", "round": 1, "stage": "outcome_check", "cycle": 1})
             findings, c_meta = C.verify_turn_outcome(query, reply, rounds, kit=kit, layers=layers, meaning=meaning)
-            c_meta["cycle"] = cycle_num
+            c_meta["cycle"] = 1
             c_meta["findings"] = list(findings)
             c_meta["ok"] = not bool(findings)
             cycle_history.append(c_meta)
             if c_meta.get("compiler_info") is not None:
                 layer_log.append(c_meta["compiler_info"])
-            if not findings or (cancel and cancel.is_set()):
-                break
-            if attempt + 1 >= max_clover_cycles:
-                break
-            op_plan.retry_from_context(cycle_num + 1, findings[0])
-            emit({"type": "cycle", "step": "outcome_retry", "cycle": cycle_num + 1, "findings": findings})
-            repair_prompt = C.AUTO_CYCLE_FIX.format(findings="\n".join("- " + f for f in findings))
-            cur_hist = cur_hist + [{"role": "user", "content": cur_prompt}, {"role": "assistant", "content": reply}]
-            cur_prompt = repair_prompt
+        else:
+            for attempt in range(max_clover_cycles):
+                cycle_num = attempt + 1
+                emit({"type": "round", "round": len(stats_all) + 1, "cycle": cycle_num})
+                emit({"type": "plan", "round": len(stats_all) + 1, "stage": "c1_inference", "model": self.spec["model"],
+                      "layers_desc": self.spec["layers"][0], "cycle": cycle_num})
+                emit({"type": "plan", "round": len(stats_all) + 1, "stage": "k3_synthesis", "model": self.spec["model"],
+                      "full_name": self.spec.get("full_name") or self.spec["model"], "cycle": cycle_num})
+                t0 = time.perf_counter()
+                with self.lock:
+                    wr = self._call_worker("k3-" + uuid.uuid4().hex[:10], cur_prompt, cur_hist, media=media if attempt == 0 else ())
+                wall_s = round(time.perf_counter() - t0, 2)
+                emit({"type": "plan", "round": len(stats_all) + 1, "stage": "k3_done", "model": self.spec["model"],
+                      "ms": round(wall_s * 1000), "cycle": cycle_num})
+                plans = wr.get("plans") or []
+                if plans:
+                    emit({"type": "token", "round": len(stats_all) + 1, "kind": "thinking", "text": "\n".join(str(p) for p in plans)})
+                for tc in wr.get("tool_calls") or []:
+                    if not isinstance(tc, dict):
+                        continue
+                    tname = {"python": "run_python", "search": "web_search"}.get(tc.get("tool"), str(tc.get("tool") or "tool"))
+                    tid = "call_" + uuid.uuid4().hex[:12]
+                    targs = {"query": tc.get("input")} if tname == "web_search" else {"code": tc.get("input")}
+                    tres = str(tc.get("result") or "")[:3000]
+                    worked, summary = N.tool_worked(tname, True, tres, "k3 agent loop")
+                    emit({"type": "tool_call", "id": tid, "name": tname, "arguments": targs})
+                    emit({"type": "tool_result", "id": tid, "name": tname, "ran": True, "worked": worked, "summary": summary,
+                          "why": "k3 agent loop", "result": tres})
+                    rounds.append({"tool": tname, "arguments": targs, "ran": True, "worked": worked, "summary": summary,
+                                   "why": "k3 agent loop", "result": tres[:2000]})
+                    op_plan.advance_execution_step(tname)
+                self._save_worker_media(wr.get("media"))
+                reply = self._identity_fix(_clean_reply(wr.get("reply") or ""), user_text)
+                if "ontology" in layers and kit is not None:
+                    reply, changed = kit.grounding_filter(query, reply)
+                    layer_log.append({"layer": "ontology_grounding", "changed": changed, "cycle": cycle_num})
+                n_tok = int(wr.get("n_k3_tokens_1cand") or wr.get("n_tokens") or max(1, len(reply.split())))
+                dec_s = round(float(wr.get("ncm_1cand_ms") or (wall_s * 1000)) / 1000.0, 2) or wall_s
+                stats_all.append({
+                    "prompt_tokens": len(cur_prompt.split()),
+                    "new_tokens": n_tok,
+                    "prefill_s": round(float(wr.get("plan_lat_ms") or 0) / 1000.0, 2),
+                    "decode_s": dec_s,
+                    "decode_tok_s": round(n_tok / wall_s, 2) if wall_s > 0 else None,
+                    "finish": "stop",
+                })
+                op_plan.complete_stage("execution")
+                op_plan.start_stage("outcome", f"Cycle {cycle_num} Outcome: verifying output against reality…")
+                emit({"type": "plan", "round": len(stats_all), "stage": "outcome_check", "cycle": cycle_num})
+                findings, c_meta = C.verify_turn_outcome(query, reply, rounds, kit=kit, layers=layers, meaning=meaning)
+                c_meta["cycle"] = cycle_num
+                c_meta["findings"] = list(findings)
+                c_meta["ok"] = not bool(findings)
+                cycle_history.append(c_meta)
+                if c_meta.get("compiler_info") is not None:
+                    layer_log.append(c_meta["compiler_info"])
+                if not findings or (cancel and cancel.is_set()):
+                    break
+                if attempt + 1 >= max_clover_cycles:
+                    break
+                op_plan.retry_from_context(cycle_num + 1, findings[0])
+                emit({"type": "cycle", "step": "outcome_retry", "cycle": cycle_num + 1, "findings": findings})
+                repair_prompt = C.AUTO_CYCLE_FIX.format(findings="\n".join("- " + f for f in findings))
+                cur_hist = cur_hist + [{"role": "user", "content": cur_prompt}, {"role": "assistant", "content": reply}]
+                cur_prompt = repair_prompt
 
         if len(cycle_history) > 1 or (cycle_history and cycle_history[0].get("findings")):
             first_f = (cycle_history[0].get("findings") or [""])[0]
@@ -929,6 +992,8 @@ class K3HostEngine:
         op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
         if not reply:
             reply = "(Clover finished without writing an answer.)"
+        rnd_n = len(stats_all) or 1
+        ncm_appended = False
         if kit is not None and not (cancel and cancel.is_set()):
             try:
                 c1_state, c1_info = kit.c1_infer(
@@ -936,19 +1001,32 @@ class K3HostEngine:
                 )
                 layer_log.append(c1_info)
                 emit(dict(c1_info, type="layer"))
+                emit({"type": "plan", "round": rnd_n, "stage": "c1_done", "ms": c1_info.get("ms")})
                 planned_t = [rd["tool"] for rd in rounds if rd.get("ran")] or (
                     list(only_tools) if only_tools is not None else ["run_python", "web_search"]
                 )
-                _, c2_info = kit.c2_plan_state(query, c1_state=c1_state, offered_tools=planned_t)
+                emit({"type": "plan", "round": rnd_n, "stage": "c2_plan", "model": "HybridAgent"})
+                c2_state, c2_info = kit.c2_plan_state(query, c1_state=c1_state, offered_tools=planned_t)
                 layer_log.append(c2_info)
                 emit(dict(c2_info, type="layer"))
+                emit({"type": "plan", "round": rnd_n, "stage": "c2_done", "ms": c2_info.get("ms")})
                 if hasattr(kit, "jepa_record_outcome"):
                     kit.jepa_record_outcome(c1_obs_state=c1_state, is_baseline=(len(cycle_history) <= 1))
+                if "ncm" in layers and (hasattr(kit, "c3_decode") or hasattr(kit, "ncm_render")):
+                    emit({"type": "plan", "round": rnd_n, "stage": "ncm_decode", "model": "11-Level NCM"})
+                    reply, ncm_info = kit.c3_decode(c2_state) if hasattr(kit, "c3_decode") else kit.ncm_render(reply)
+                    ncm_info["model"] = self.spec["model"]
+                    layer_log.append(ncm_info)
+                    emit(dict(ncm_info, type="layer"))
+                    emit({"type": "plan", "round": rnd_n, "stage": "ncm_done",
+                          "ms": round((ncm_info.get("s") or 0) * 1000)})
+                    ncm_appended = True
             except Exception:
                 pass
         op_plan.complete_stage("growth", "Growth preserved · context updated")
-        emit({"type": "token", "round": len(stats_all), "kind": "answer", "text": reply})
-        layer_log.append({"layer": "ncm", "windows": max(1, len(plans)), "model": self.spec["model"]})
+        emit({"type": "token", "round": rnd_n, "kind": "answer", "text": reply})
+        if not ncm_appended:
+            layer_log.append({"layer": "ncm", "windows": max(1, len(plans)), "model": self.spec["model"]})
         return {"reply": reply, "tool_calls": rounds, "rounds": max(1, len(stats_all)), "generation": stats_all,
                 "layers": layer_log, "todo_list": op_plan.todos}
 

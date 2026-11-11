@@ -129,6 +129,36 @@ def _direct_s3_or_concept_plan(query: str, s3_pre_call: dict | None, s3_extra_ca
     return None
 
 
+class _EmbeddingStateServer:
+    """Fallback C1 state server using OmniC2C3Runtime's 2048-d embedding table when no local llama-server GGUF is running."""
+    ctx = C1_INFER_CTX
+    proc = None
+
+    def __init__(self, base_dir):
+        import omni_c2_c3
+        self.rt = omni_c2_c3.for_base(base_dir) if base_dir else None
+
+    def apply_template(self, messages):
+        return (
+            "".join(f"<|im_start|>{m.get('role', 'user')}\n{m.get('content', '')}<|im_end|>\n" for m in (messages or ()))
+            + "<|im_start|>assistant\n"
+        )
+
+    def tokenize(self, text):
+        if self.rt is not None:
+            return self.rt.tok.encode(str(text or ""), allow_special=True)
+        return [max(1, len(w)) for w in str(text or "").split()]
+
+    def hidden_states(self, ids):
+        if self.rt is not None:
+            return self.rt.token_embeddings_2048(list(ids))
+        import numpy as np
+        return np.zeros((len(ids), 2048), dtype=np.float32)
+
+    def close(self):
+        pass
+
+
 def omni_files(base_dir, quant="q4_0"):
     """-> (paths, missing names) for the Omni on llama.cpp."""
     base_dir = Path(base_dir)
@@ -1682,11 +1712,20 @@ class OmniNative(N.LFM3Native):
     # ---------------- C1 inference only (setting c1_inference_only) ----------------
     def _c1_server(self):
         """The same model as an inference-only llama-server (hidden states, never a sampled token), started on first use."""
-        if getattr(self, "_c1_srv", None) is None or self._c1_srv.proc.poll() is not None:
-            ctx = min(int(self.max_tokens), C1_INFER_CTX)
-            self._c1_srv = L.LlamaServer(self.base_dir, self.gpu.kind, ctx, ubatch=ctx, model=self._paths["model"],
-                                         extra_args=["-b", str(ctx)], name=f"omni-c1-inference-{self.gpu.kind}",
+        if getattr(self, "local_omni", None) is not None and hasattr(self.local_omni, "_c1_server"):
+            return self.local_omni._c1_server()
+        srv = getattr(self, "_c1_srv", None)
+        if srv is not None and (getattr(srv, "proc", None) is None or srv.proc.poll() is None):
+            return srv
+        model_p = (getattr(self, "_paths", None) or {}).get("model") or getattr(getattr(self, "gpu", None), "model", None)
+        gpu_kind = getattr(getattr(self, "gpu", None), "kind", "cpu")
+        if model_p and Path(model_p).is_file() and gpu_kind in ("vulkan", "cpu"):
+            ctx = min(int(getattr(self, "max_tokens", C1_INFER_CTX)), C1_INFER_CTX)
+            self._c1_srv = L.LlamaServer(self.base_dir, gpu_kind, ctx, ubatch=ctx, model=model_p,
+                                         extra_args=["-b", str(ctx)], name=f"omni-c1-inference-{gpu_kind}",
                                          timeout_s=300, threads=getattr(self, "_threads", None), embeddings=True)
+        else:
+            self._c1_srv = _EmbeddingStateServer(getattr(self, "base_dir", None))
         return self._c1_srv
 
     @staticmethod

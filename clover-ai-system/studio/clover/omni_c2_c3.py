@@ -714,6 +714,7 @@ class OmniC2C3Runtime:
             "(answer strictly from the image/video",
             "(combine the live tool results",
             "summarize both the live tool results",
+            "live tool results for this request",
             "live web_search results:",
             "live fetch_url results:",
             "live laptop_status results:",

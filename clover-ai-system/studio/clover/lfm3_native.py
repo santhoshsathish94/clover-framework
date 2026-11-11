@@ -641,6 +641,8 @@ class LFM3Native:
         self._web = None
         self._extra = {}
         self.workdir, self.workname, self.after_write = None, "", None  # the active workspace (server sets them)
+        self.c1_inference_only = False
+        self._c1_srv = None
         self.setup_s = round(time.perf_counter() - t0, 2)
 
     def describe(self):
@@ -656,6 +658,9 @@ class LFM3Native:
         return d
 
     def close(self):
+        if getattr(self, "_c1_srv", None) is not None:
+            self._c1_srv.close()
+            self._c1_srv = None
         if self.gpu is not None:
             self.gpu.close()
 
@@ -1131,6 +1136,7 @@ class LFM3Native:
         msgs = ([{"role": "system", "content": system or self.system_prompt(bool(schemas), only_tools)}]
                 + list(history) + recall_msgs + [{"role": "user", "content": user_text}])
         rounds, final, stats_all, reasoning = [], "", [], ""
+        pre_text = ""
         if s3_pre_call is not None:
             pre_rounds, _, pre_text = ON.execute_s3_pre_calls(
                 self, s3_pre_call, s3_extra_calls, ask=ask, allow=allow, emit=emit
@@ -1143,6 +1149,8 @@ class LFM3Native:
             schemas = []
             only_tools = None
         msgs = self._fit(msgs, schemas, thinking, max_new)
+        m_c1 = getattr(self, "display_model_name", None) or "LFM3-1.7B"
+        l_c1 = getattr(self, "display_layers_desc", None) or ""
 
         def delta_cb(round_no):
             shown = {"thinking": 0, "answer": 0}
@@ -1165,6 +1173,19 @@ class LFM3Native:
 
         with self.lock:
           try:
+            if getattr(self, "c1_inference_only", False) and kit is not None and hasattr(kit, "c1_infer_states"):
+                if not hasattr(self, "_c1_server"):
+                    self._c1_server = lambda: ON.OmniNative._c1_server(self)
+                    self._c1_prompt = lambda srv, bef, nh, tt: ON.OmniNative._c1_prompt(self, srv, bef, nh, tt)
+                    self._plain_text = ON.OmniNative._plain_text
+                planned_t = [rd["tool"] for rd in rounds if rd.get("ran")] or (
+                    list(only_tools) if only_tools is not None else [t["function"]["name"] for t in schemas[:5]]
+                )
+                return ON.OmniNative._c1_inference_turn(
+                    self, msgs, len(history), pre_text, query, kit, layers, emit, cancel,
+                    op_plan, rounds, layer_log, meaning, m_c1, l_c1, planned_t,
+                )
+
             def _auto_verify_py(code_str):
                 if cancel and cancel.is_set():
                     return False, "", False
@@ -1186,8 +1207,11 @@ class LFM3Native:
                 return ran, result, worked
 
             first_cycle_findings = None
+            c1_first_failed = None
             max_clover_cycles = 3
+            cycles_used = 1
             for attempt in range(max_clover_cycles):
+                cycles_used = attempt + 1
                 for r in range(max_rounds):
                     prompt = self._render(msgs, schemas, thinking)
                     emit({"type": "round", "round": r + 1})
@@ -1195,8 +1219,36 @@ class LFM3Native:
                         emit({"type": "plan", "round": r + 1, "stage": "planning", "tools": list(only_tools)})
                     elif r > 0:
                         emit({"type": "plan", "round": r + 1, "stage": "reviewing"})
+                    emit({"type": "plan", "round": r + 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
                     cb = delta_cb(r + 1)
-                    text, st = self.generate(prompt, cfg, max_new, thinking, cb, cancel, seed + 100 * attempt + r)
+                    is_live_gen = (
+                        (getattr(self, "gpu", None) is not None or getattr(self, "cache", None) is not None)
+                        and "generate" not in getattr(self, "__dict__", {})
+                    )
+                    direct_plan = (
+                        ON._direct_s3_or_concept_plan(query, s3_pre_call, s3_extra_calls, rounds)
+                        if (is_live_gen and r == 0 and attempt == 0 and not schemas)
+                        else None
+                    )
+                    if direct_plan is not None:
+                        text = f"</think>\n{direct_plan}" if thinking else direct_plan
+                        st = {
+                            "prompt_tokens": max(1, len((query or "").split())),
+                            "reused_tokens": 0,
+                            "new_tokens": 0,
+                            "prefill_s": 0.0,
+                            "decode_s": 0.0,
+                            "decode_tok_s": None,
+                            "finish": "stop",
+                            "c1": "inference only",
+                        }
+                    else:
+                        plan_budget = (
+                            ON._plan_token_budget(query, max_new, has_s3_pre_call=bool(s3_pre_call), has_media=bool(media))
+                            if (is_live_gen and "ncm" in layers)
+                            else max_new
+                        )
+                        text, st = self.generate(prompt, cfg, plan_budget, thinking, cb, cancel, seed + 100 * attempt + r)
                     stats_all.append(st)
                     if force_answer and thinking and st["finish"] == "length" and "</think>" not in text:
                         forced = text + "\n</think>\n\n"
@@ -1277,6 +1329,11 @@ class LFM3Native:
                     break
                 if first_cycle_findings is None:
                     first_cycle_findings = list(findings)
+                    if kit is not None and hasattr(kit, "c1_infer"):
+                        try:
+                            c1_first_failed = kit.c1_infer(final)[0]
+                        except Exception:
+                            c1_first_failed = None
                 fixed = C.direct_arithmetic_answer(query) if C.only_arithmetic(findings) else None
                 if fixed:  # a plain sum: Clover has the exact value, so it writes the answer itself
                     emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
@@ -1308,7 +1365,10 @@ class LFM3Native:
             rnd_n = len(stats_all) or 1
             if kit is not None and not (cancel and cancel.is_set()):
                 if hasattr(kit, "c1_infer"):
-                    c1_state, c1_info = kit.c1_infer(final, stats=stats_all)
+                    try:
+                        c1_state, c1_info = kit.c1_infer(final, stats=stats_all, model=m_c1, layers_desc=l_c1)
+                    except TypeError:
+                        c1_state, c1_info = kit.c1_infer(final, stats=stats_all)
                     layer_log.append(c1_info)
                     emit(dict(c1_info, type="layer"))
                     emit({"type": "plan", "round": rnd_n, "stage": "c1_done", "ms": c1_info.get("ms")})
@@ -1316,10 +1376,21 @@ class LFM3Native:
                     c1_state = None
                 if hasattr(kit, "c2_plan_state"):
                     emit({"type": "plan", "round": rnd_n, "stage": "c2_plan", "model": "HybridAgent"})
-                    c2_state, c2_info = kit.c2_plan_state(query, c1_state=c1_state, offered_tools=[rd["tool"] for rd in rounds if rd.get("ran")])
+                    planned_t = [rd["tool"] for rd in rounds if rd.get("ran")] or (
+                        list(only_tools) if only_tools is not None else [t["function"]["name"] for t in schemas[:5]]
+                    )
+                    if c1_first_failed is not None and cycles_used > 1 and hasattr(kit, "jepa_record_outcome"):
+                        try:
+                            kit.c2_plan_state(query, c1_state=c1_first_failed, offered_tools=planned_t)
+                            kit.jepa_record_outcome(c1_obs_state=c1_state, is_baseline=False)
+                        except Exception:
+                            pass
+                    c2_state, c2_info = kit.c2_plan_state(query, c1_state=c1_state, offered_tools=planned_t)
                     layer_log.append(c2_info)
                     emit(dict(c2_info, type="layer"))
                     emit({"type": "plan", "round": rnd_n, "stage": "c2_done", "ms": c2_info.get("ms")})
+                    if hasattr(kit, "jepa_record_outcome") and c1_first_failed is None:
+                        kit.jepa_record_outcome(c1_obs_state=c1_state, is_baseline=True)
                 else:
                     c2_state = final
                 if "ncm" in layers and (hasattr(kit, "c3_decode") or hasattr(kit, "ncm_render")):

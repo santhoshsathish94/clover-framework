@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-11-11T02:29:23Z",
+  "timestamp": "2026-11-11T03:18:40Z",
   "version": "5.0.5",
-  "elapsed_s": 27.79,
+  "elapsed_s": 25.57,
   "goal_1_stabilize_v5": {
     "status": "passed",
     "version": "5.0.5",
@@ -37,7 +37,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261111-075857-ba91e8"
+          "learned LRN-20261111-084816-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       },
@@ -59,7 +59,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261111-075859-ba91e8"
+          "learned LRN-20261111-084818-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       },
@@ -81,7 +81,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261111-075900-ba91e8"
+          "learned LRN-20261111-084819-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       },
@@ -103,7 +103,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261111-075901-ba91e8"
+          "learned LRN-20261111-084820-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       }
@@ -136,7 +136,7 @@
         "CWE-362"
       ],
       "with_bridge_from_memory": [
-        "MEM-USER-20261111-075903-64053c"
+        "MEM-USER-20261111-084822-64053c"
       ],
       "without_bridge_entities": []
     },
