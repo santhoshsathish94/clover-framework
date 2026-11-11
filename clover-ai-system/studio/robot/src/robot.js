@@ -964,8 +964,9 @@ function buildVisemeTimeline(text, durationSeconds) {
 function startLipSync(text, durationSeconds = Math.max(0.8, String(text || '').length / 12)) {
   const clean = String(text || '').trim();
   if (!clean) { speechState = null; return; }
+  const prevPose = speechPoseAt(simT);
   const duration = Math.max(0.15, Number(durationSeconds) || 0.15);
-  speechState = { text: clean, start: simT, duration, timeline: buildVisemeTimeline(clean, duration) };
+  speechState = { text: clean, start: simT, duration, timeline: buildVisemeTimeline(clean, duration), prevPose };
 }
 function stopLipSync() { speechState = null; }
 function speechPoseAt(t) {
@@ -975,18 +976,32 @@ function speechPoseAt(t) {
     if (elapsed > speechState.duration) speechState = null;
     return null;
   }
-  const segment = speechState.timeline.find((item) => elapsed >= item.start && elapsed < item.end);
-  if (!segment) return VISEMES.rest;
+  const idx = speechState.timeline.findIndex((item) => elapsed >= item.start && elapsed < item.end);
+  if (idx < 0) return VISEMES.rest;
+  const segment = speechState.timeline[idx];
   const pose = VISEMES[segment.viseme] || VISEMES.soft;
-  // Ease the mouth in/out around each phoneme to avoid hard visual snapping.
-  const edge = Math.min(1, (elapsed - segment.start) / 0.035, (segment.end - elapsed) / 0.035);
-  const blend = THREE.MathUtils.smoothstep(Math.max(0, edge), 0, 1);
-  return { width: THREE.MathUtils.lerp(VISEMES.rest.width, pose.width, blend),
-    open: THREE.MathUtils.lerp(VISEMES.rest.open, pose.open, blend) };
+  const prev = idx > 0
+    ? (VISEMES[speechState.timeline[idx - 1].viseme] || VISEMES.soft)
+    : (speechState.prevPose || VISEMES.rest);
+  const next = idx + 1 < speechState.timeline.length
+    ? (VISEMES[speechState.timeline[idx + 1].viseme] || VISEMES.soft)
+    : VISEMES.rest;
+  // Smoothly coarticulate between adjacent visemes instead of snapping to rest between every character/word.
+  const inBlend = THREE.MathUtils.smoothstep(Math.min(1, (elapsed - segment.start) / 0.045), 0, 1);
+  const outBlend = idx + 1 === speechState.timeline.length
+    ? THREE.MathUtils.smoothstep(Math.min(1, (segment.end - elapsed) / 0.055), 0, 1)
+    : 1;
+  const w = THREE.MathUtils.lerp(prev.width, pose.width, inBlend);
+  const o = THREE.MathUtils.lerp(prev.open, pose.open, inBlend);
+  return {
+    width: THREE.MathUtils.lerp(next.width, w, outBlend),
+    open: THREE.MathUtils.lerp(next.open, o, outBlend)
+  };
 }
 
 function setReaction(type) {
   if (!reactionDuration[type]) return;
+  if (oneShot && oneShot.type === type && (simT - oneShot.start) < reactionDuration[type] * 0.85) return;
   oneShot = { type, start: simT };
   notify(reactionCopy[type]);
 }
@@ -1020,7 +1035,9 @@ function setAction(type) {
   actionStart = simT;
   notify(actionCopy[type]);
 }
-renderer.domElement.addEventListener('pointerdown', () => setReaction('wave'));
+renderer.domElement.addEventListener('pointerdown', () => {
+  if (!stateRx && !speechState) setReaction('wave');
+});
 addEventListener('pointermove', (event) => {
   const rect = renderer.domElement.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
@@ -1058,7 +1075,7 @@ function smoothRange(value, start, end) {
 function reactionValues(t) {
   const values = {
     wave: 0, happy: 0, nod: 0, sleepy: 0, thinking: 0, working: 0,
-    reading: 0, answering: 0, listening: 0, u: 0, jump: 0
+    reading: 0, answering: 0, listening: 0, u: 0, stateU: 0, jump: 0
   };
   // A lasting state's phase keeps growing (u > 1) so its periodic motion never jumps back.
   if (stateFade) {
@@ -1067,12 +1084,14 @@ function reactionValues(t) {
     else {
       values[stateFade.type] = k;
       values.u = (t - stateFade.start) / reactionDuration[stateFade.type];
+      values.stateU = values.u;
     }
   }
   if (stateRx) {
     const elapsed = Math.max(0, t - stateRx.start);
     values[stateRx.type] = Math.max(values[stateRx.type], smoothRange(elapsed, 0, STATE_ENTER));
     values.u = elapsed / reactionDuration[stateRx.type];
+    values.stateU = values.u;
   }
   if (!oneShot) return values;
 
@@ -1087,13 +1106,14 @@ function reactionValues(t) {
 
   const u = THREE.MathUtils.clamp(elapsed / duration, 0, 1);
   const sustained = ['thinking', 'working', 'reading', 'sleepy', 'listening'].includes(oneShot.type);
-  const enter = sustained ? 0.42 : oneShot.type === 'nod' ? 0.18 : 0.32;
-  const exit = sustained ? 0.62 : oneShot.type === 'nod' ? 0.25 : 0.48;
+  const enter = sustained ? 0.42 : oneShot.type === 'nod' ? 0.24 : 0.32;
+  const exit = sustained ? 0.62 : oneShot.type === 'nod' ? 0.32 : 0.48;
   const fadeIn = smoothRange(elapsed, 0, enter);
   const fadeOut = 1 - smoothRange(elapsed, duration - exit, duration);
   const envelope = fadeIn * fadeOut;
 
   values.u = u;
+  if (!stateRx && !stateFade) values.stateU = u;
   values[oneShot.type] = Math.max(values[oneShot.type], envelope);
   if (oneShot.type === 'happy') {
     // A soft anticipation, one small hop, then a cushioned landing.
@@ -1107,6 +1127,7 @@ function sample(t) {
   const slow = Math.sin((t / 8.2) * TAU) * motion;
   const halfLoop = (1 - Math.cos((t / DURATION) * TAU)) * motion;
   const r = reactionValues(t);
+  const sU = r.stateU || r.u;
   const a = actionWeights(t);
   const sit = a.sit;
   const dance = a.dance;
@@ -1114,7 +1135,7 @@ function sample(t) {
   const danceBeat = Math.sin((t / 1.72) * TAU);
   const wave = r.wave * motion;
   const liveListen = r.listening * levelSmooth;
-  const nodDip = r.nod * Math.sin(r.u * TAU * 1.5) * 0.15 * motion;
+  const nodDip = r.nod * Math.sin(r.u * TAU * 1.5) * 0.11 * motion;
   const activity = Math.max(r.thinking, r.working, r.reading, r.answering, r.listening);
   const walkPhase = (t / 1.28) * TAU;
   const activityMotion = (1 - r.sleepy * 0.85) * (1 - activity * 0.78) * a.walk;
@@ -1122,11 +1143,10 @@ function sample(t) {
   const armFollow = Math.sin(walkPhase - 0.45) * motion * activityMotion;
   const walkBob = (0.5 - Math.cos(walkPhase * 2) * 0.5) * 0.032 * motion * activityMotion;
   const handWave = Math.sin(r.u * TAU * 2.6);
-  const talk = 0.3 + Math.abs(Math.sin(r.u * TAU * 3.4)) * 0.85;
+  const talk = 0.3 + Math.abs(Math.sin(sU * TAU * 3.4)) * 0.85;
 
   character.position.y = r.jump + walkBob - sit * 0.52 - r.working * 0.12
-    + Math.abs(Math.sin((t / 1.2) * TAU)) * 0.07 * danceMove
-    + liveListen * Math.sin(t * 6.2) * 0.016 * motion;
+    + Math.abs(Math.sin((t / 1.2) * TAU)) * 0.07 * danceMove;
   character.rotation.y = slow * 0.018 + danceMove * danceBeat * 0.07;
   character.rotation.z = walk * 0.012 + idle * 0.006 + danceMove * danceBeat * 0.045;
   chair.visible = sit > 0.04;
@@ -1136,20 +1156,20 @@ function sample(t) {
   torso.scale.set(1 + idle * 0.006, 1 - idle * 0.004, 0.76 * (1 + idle * 0.008));
   head.position.x = idle * 0.012;
   head.position.y = HEAD_Y + idle * 0.022 + halfLoop * 0.018 + r.happy * 0.045 - r.sleepy * 0.085 - r.reading * 0.045 + r.working * 0.018
-    + r.listening * (0.03 + levelSmooth * 0.028);
-  head.rotation.y = look.x * 0.23 + slow * 0.018 + r.thinking * 0.14 + Math.sin(r.u * TAU * 1.7) * r.answering * 0.028
-    + Math.sin(t * 2.2) * liveListen * 0.035;
+    + r.listening * (0.03 + levelSmooth * 0.018);
+  head.rotation.y = look.x * 0.23 + slow * 0.018 + r.thinking * 0.14 + Math.sin(sU * TAU * 1.7) * r.answering * 0.028
+    + Math.sin(t * 1.8) * liveListen * 0.025;
   head.rotation.x = -look.y * 0.085 + r.sleepy * 0.085 + Math.sin(walkPhase * 2 - 0.3) * 0.01 * motion
     + r.reading * 0.2 - r.thinking * 0.065 + r.working * 0.045
-    + Math.sin(r.u * TAU * 1.7) * r.answering * 0.035 - r.listening * (0.05 + levelSmooth * 0.06)
-    + Math.sin(t * 5.2) * liveListen * 0.038 + nodDip;
+    + Math.sin(sU * TAU * 1.7) * r.answering * 0.035 - r.listening * (0.05 + levelSmooth * 0.04)
+    + Math.sin(t * 3.0) * liveListen * 0.028 + nodDip;
   head.rotation.z = r.sleepy * 0.14 - wave * 0.045 - walk * 0.025 + slow * 0.012 - r.thinking * 0.1 + r.working * 0.018
-    + r.listening * (0.08 + levelSmooth * 0.055 + Math.sin(t * 3.4) * levelSmooth * 0.03);
+    + r.listening * (0.08 + levelSmooth * 0.035);
   cape.rotation.x = 0.02 + armFollow * 0.04 + sit * 0.08 + danceMove * danceBeat * 0.04;
   cape.rotation.z = slow * 0.018 - walk * 0.028 + danceMove * danceBeat * 0.05;
   antenna.rotation.z = Math.sin(t * 1.15) * 0.025 * motion + wave * handWave * 0.035 + danceMove * danceBeat * 0.025
-    + r.listening * levelSmooth * 0.11 + r.nod * 0.07;
-  antenna.rotation.x = Math.sin(t * 0.8) * 0.012 * motion + liveListen * 0.04;
+    + r.listening * levelSmooth * 0.09 + r.nod * 0.05;
+  antenna.rotation.x = Math.sin(t * 0.8) * 0.012 * motion + liveListen * 0.03;
 
   legs.forEach(({ leg, lower, foot, side }) => {
     const stride = -walk * side * 0.31;
@@ -1345,7 +1365,8 @@ function frame() {
       acc -= STEP;
       simT += STEP;
       look.lerp(pointer, 0.075);
-      levelSmooth += (level - levelSmooth) * 0.2;
+      // Fast rise, gentle release so syllable gaps never make the body/head/smile chatter.
+      levelSmooth += (level - levelSmooth) * (level > levelSmooth ? 0.14 : 0.045);
     }
     sample(simT);
   }

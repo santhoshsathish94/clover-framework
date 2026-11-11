@@ -460,7 +460,7 @@ def run_s3_sensory_context(base_dir, media_dir, media, query, *, kit=None, emit=
                                 f"- Estimated SNR: {ja['snr_db']} dB | RMS Level: {rms_dbfs} dBFS | Peak Level: {peak_dbfs} dBFS\n"
                                 f"- Time-Frequency Latent Cosine: {ja['tf_latent_cos']} (inspected in {ja['ms']} ms)"
                             )
-            if aud_blocks:
+            if aud_blocks and (query or "").strip():
                 sensory_msgs.append({
                     "role": "system",
                     "content": (
@@ -1346,7 +1346,7 @@ class OmniNative(N.LFM3Native):
                     schemas = []
                     only_tools = None
 
-                if getattr(self, "c1_inference_only", False) and kit is not None and hasattr(kit, "c1_infer_states"):
+                if getattr(self, "c1_inference_only", False) and (not media or not getattr(self, "gpu", None)) and kit is not None and hasattr(kit, "c1_infer_states"):
                     planned_t = [rd["tool"] for rd in rounds if rd.get("ran")] or (
                         list(only_tools) if only_tools is not None else [t["function"]["name"] for t in schemas[:5]])
                     return self._c1_inference_turn(msgs, len(past_msgs), pre_text, query, kit, layers, emit, cancel,

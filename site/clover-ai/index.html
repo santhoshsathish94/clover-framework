@@ -4801,7 +4801,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if (rms > listen.thr) listen.loudVals.push(rms);
     if (rms > Math.max(listen.thr * 0.7, quantile(listen.loudVals, 0.5) * 0.25)) {
       listen.voicedMs += ms;
-      if (listen.voicedMs - (listen.lastPhraseNodMs || 0) >= 480 && voice.robot && Date.now() - (listen.lastNodAt || 0) >= 900) {
+      if (listen.voicedMs >= 480 && !listen.lastPhraseNodMs && voice.robot && Date.now() - (listen.lastNodAt || 0) >= 2400) {
         listen.lastPhraseNodMs = listen.voicedMs;
         listen.lastNodAt = Date.now();
         voice.robot.react('nod');
@@ -4809,7 +4809,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       listen.quietMs = 0;
     } else {
       listen.quietMs += ms;
-      if (listen.quietMs >= 160 && listen.quietMs < 250 && listen.voicedMs >= 380 && voice.robot && Date.now() - (listen.lastNodAt || 0) >= 900) {
+      if (listen.quietMs >= 200 && listen.quietMs < 280 && listen.voicedMs >= 600 && voice.robot && Date.now() - (listen.lastNodAt || 0) >= 2400) {
         listen.lastNodAt = Date.now();
         voice.robot.react('nod');
       }
