@@ -1008,7 +1008,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
       <!-- 2. Collective Learning Sub-view -->
       <div class="learn-subview" id="learn-view-collective" hidden>
-        <p class="lead">Collective learning is shared by every Clover user: validated problem-solving strategies, never anyone's words, memory or chats (those stay in each person's own private repository). Receiving the shared core needs no sign-in. Contributing needs a GitHub sign-in so fake contributors stay out; Clover's gateway checks it once and keeps only an anonymous id.</p>
+        <p class="lead">Collective learning is shared by every Clover user through a public GitHub repository, <a id="lg-repo-link" href="https://github.com/santhoshsathish94/clover-collective" target="_blank" rel="noopener noreferrer">santhoshsathish94/clover-collective</a>, with no server: validated problem-solving strategies, never anyone's words, memory or chats (those stay in each person's own private repository). Receiving needs no sign-in: Clover downloads the signed shared core from GitHub and checks its signature. Contributing is public: Clover opens a GitHub issue under your GitHub name with the patterns you review, and the repository's automation adds a pattern once enough different accounts send it.</p>
         <div class="glabel">Contributing (GitHub sign-in)</div>
         <div class="group pad">
           <div class="kv" id="lg-id-kv"><span>GitHub</span><b id="lg-id-status">Not signed in</b></div>
@@ -1019,8 +1019,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         </div>
         <div class="glabel">Collective Learning Preferences</div>
         <div class="group">
-          <label class="row static"><span class="row__t">Contribute to Collective Learning<small>Disabled by default. Requires GitHub sign-in, explicit consent, and per-candidate review before upload.</small></span><span class="switch"><input type="checkbox" id="lg-contribute"><span></span></span></label>
-          <label class="row static"><span class="row__t">Receive Collective Learning<small>Disabled by default. No sign-in needed: applies the shared core every Clover user receives, after checking its Ed25519 signature.</small></span><span class="switch"><input type="checkbox" id="lg-receive"><span></span></span></label>
+          <label class="row static"><span class="row__t">Contribute to Collective Learning<small>Disabled by default. Needs the GitHub sign-in. Each contribution is a public GitHub issue under your name, sent only after you review it.</small></span><span class="switch"><input type="checkbox" id="lg-contribute"><span></span></span></label>
+          <label class="row static"><span class="row__t">Receive Collective Learning<small>Disabled by default. No sign-in needed: downloads the shared core from the public GitHub repository and checks its Ed25519 signature.</small></span><span class="switch"><input type="checkbox" id="lg-receive"><span></span></span></label>
         </div>
         <div class="btns" style="margin:.4rem 0 .8rem">
           <button type="button" class="btn sm pri" id="lg-sync-now">Sync collective core now</button>
@@ -1037,10 +1037,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           <button type="button" class="btn pri" id="lg-review-btn">Review &amp; Contribute…</button>
         </div>
         <div class="confirm" id="lg-confirm-box" hidden style="margin-top:.6rem">
-          <b>Confirm candidate contribution</b>
-          <p class="fine" style="margin:.35rem 0">Review the exact candidate package below. Only closed-vocabulary trigger lemmas, target capabilities, and local support counts leave this device—never prompts, files, memories, or conversation histories.</p>
+          <b>Confirm a public contribution</b>
+          <p class="fine" style="margin:.35rem 0">These exact patterns will be posted publicly as a GitHub issue under your GitHub name: only closed-vocabulary words, tool names and local counts, never prompts, files, memories or conversations. Withdrawing later removes them from future releases, but the issue stays public on GitHub.</p>
           <pre id="lg-confirm-json" style="max-height:180px;overflow:auto;font-size:.78rem;background:var(--bg);padding:.55rem;border-radius:8px;border:1px solid var(--line)"></pre>
-          <div class="ask__b"><button type="button" class="btn pri" id="lg-confirm-upload">Confirm &amp; Upload</button><button type="button" class="btn" id="lg-confirm-cancel">Cancel</button></div>
+          <div class="ask__b"><button type="button" class="btn pri" id="lg-confirm-upload">Post publicly &amp; contribute</button><button type="button" class="btn" id="lg-confirm-cancel">Cancel</button></div>
         </div>
         <div class="glabel">Submitted Contributions</div>
         <div class="group pad" id="lg-submitted-list"></div>
@@ -1096,7 +1096,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <div class="keyrow"><input type="password" id="acct-gh-token" autocomplete="off" spellcheck="false" placeholder="ghp_... or github_pat_..." aria-label="GitHub token for memory sync"><button type="button" class="btn pri" id="acct-gh-save">Save token</button></div>
         <div class="btns" style="margin-top:.4rem"><button type="button" class="btn laptop-only" id="vsc-gh">Sign in via VS Code</button></div>
       </details>
-      <p class="fine">Your GitHub sign-in is encrypted in this device's vault. It goes only to GitHub, and once to Clover's collective gateway if you join collective learning. <a id="acct-gh-review" href="https://github.com/settings/applications" target="_blank" rel="noopener noreferrer">Review or revoke Clover's access on GitHub</a></p>
+      <p class="fine">Your GitHub sign-in is encrypted in this device's vault and goes only to GitHub. Collective learning contributions you confirm are posted as public GitHub issues under your name. <a id="acct-gh-review" href="https://github.com/settings/applications" target="_blank" rel="noopener noreferrer">Review or revoke Clover's access on GitHub</a></p>
       <div class="note" id="acct-note" hidden></div>
     </section>
 
@@ -1703,6 +1703,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function btn(cls, html, title) { var b = el('button', cls, html); b.type = 'button'; if (title) { b.title = title; b.setAttribute('aria-label', title); } return b; }
   function pick(segId, value) { Array.prototype.forEach.call($(segId).children, function (b) { b.classList.toggle('on', b.getAttribute('data-v') === String(value)); }); }
   function setNote(id, text, ok) { var n = $(id); n.hidden = !text; n.textContent = text || ''; n.className = 'note' + (ok ? ' ok' : ''); }
+  function noteLink(id, href, label) {
+    if (!/^https:\/\/github\.com\/[\w.\-\/]+$/.test(href || '')) return;
+    var a = el('a', ''); a.textContent = label; a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    $(id).appendChild(document.createTextNode(' ')); $(id).appendChild(a);
+  }
 
   function api(method, path, body) {
     var opt = { method: method, headers: hostHeaders() };
@@ -2992,6 +2997,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     if ($('lg-contribute')) { $('lg-contribute').checked = !!cv.consent_contribute; $('lg-contribute').disabled = !g.connected; }
     if ($('lg-receive')) { $('lg-receive').checked = !!cv.consent_receive; $('lg-receive').disabled = false; }
     if ($('lg-withdraw')) $('lg-withdraw').hidden = !(cv.consent_contribute || (cv.submitted_count || 0) > 0);
+    if ($('lg-repo-link') && /^https:\/\/github\.com\//.test(cv.repo_url || '')) { $('lg-repo-link').href = cv.repo_url; $('lg-repo-link').textContent = cv.repo; }
 
     var exps = (pv.experiences || []).length;
     var habits = (pv.learned || []).filter(function (h) { return h.status === 'validated'; }).length;
@@ -3008,7 +3014,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
     if ($('lg-status-kv')) {
       var rows = [
-        ['GitHub account (for contributing)', g.connected ? (g.login ? '@' + g.login + ' (the gateway keeps only an anonymous id)' : 'GitHub token saved') : 'Not signed in (receiving still works)'],
+        ['GitHub account (for contributing)', g.connected ? (g.login ? '@' + g.login + ' (contributions are public issues under this name)' : 'GitHub token saved') : 'Not signed in (receiving still works)'],
+        ['Shared core repository', cv.repo || 'Not set'],
         ['Personal learning', pOn ? 'Enabled locally (' + exps + ' exp · ' + habits + ' habits)' : 'Disabled'],
         ['Contribution consent', cv.consent_contribute ? 'Enabled' : (cv.consent_withdrawn_utc ? 'Withdrawn (' + cv.consent_withdrawn_utc + ')' : 'Disabled (default)')],
         ['Receive consent', cv.consent_receive ? 'Enabled' : 'Disabled (default)'],
@@ -3674,10 +3681,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       var cv = state.collective || {};
       var pending = cv.pending_candidates || cv.candidate_preview || [];
       $('lg-confirm-box').hidden = true;
-      setNote('lg-note', 'Uploading confirmed candidate packages to Collective Gateway…', true);
+      setNote('lg-note', 'Opening a public GitHub issue with the confirmed patterns…', true);
       api('POST', '/api/collective/contribute', { packages: pending, confirmed: true }).then(function (r) {
         if (r.view) state.collective = r.view;
-        setNote('lg-note', 'Contributed ' + (r.accepted_count || 0) + ' candidate package(s).' + (r.release_version ? ' Latest release: v' + r.release_version + '.' : ''), true);
+        setNote('lg-note', 'Sent ' + (r.sent_count || 0) + ' pattern(s) as public issue #' + r.issue_number + '. The repository\'s automation checks them within a few minutes and replies there.', true);
+        noteLink('lg-note', r.issue_url, 'Open the issue');
         renderLayers(); renderCollective(); renderLearningGrowth();
       }).catch(function (e) {
         if (e.body && e.body.view) state.collective = e.body.view;
@@ -3688,7 +3696,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   if ($('lg-sync-now')) {
     $('lg-sync-now').addEventListener('click', function () {
-      setNote('lg-note', 'Synchronizing and verifying Ed25519 collective release…', true);
+      setNote('lg-note', 'Downloading and checking the signed shared core from GitHub…', true);
       api('POST', '/api/collective/sync', {}).then(function (r) {
         if (r.view) state.collective = r.view;
         setNote('lg-note', r.version ? ('Synchronized collective release v' + r.version + ' (' + (r.rules_count || 0) + ' active rules).') : 'Collective core is up to date.', true);
@@ -3702,12 +3710,13 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   }
   if ($('lg-withdraw')) {
     $('lg-withdraw').addEventListener('click', function () {
-      if (!confirm('Withdraw contribution consent and remove your contributed candidates from the collective gateway?')) return;
+      if (!confirm('Stop contributing? If you are signed in, Clover opens a public GitHub issue asking the repository to remove your patterns from future releases. Earlier issues stay public on GitHub.')) return;
       setNote('lg-note', 'Withdrawing contribution consent…', true);
       api('POST', '/api/collective/withdraw', {}).then(function (r) {
         if (r.view) state.collective = r.view;
         if (state.server && state.server.settings) state.server.settings.collective_contribute = false;
-        setNote('lg-note', 'Contribution consent withdrawn and candidate packages purged from the gateway.', true);
+        setNote('lg-note', r.issue_number ? ('Contributing switched off. Withdrawal sent as public issue #' + r.issue_number + '; the next release leaves out your patterns.') : 'Contributing switched off on this device.', true);
+        noteLink('lg-note', r.issue_url, 'Open the issue');
         renderLayers(); renderCollective(); renderLearningGrowth();
       }).catch(function (e) {
         setNote('lg-note', e.message);

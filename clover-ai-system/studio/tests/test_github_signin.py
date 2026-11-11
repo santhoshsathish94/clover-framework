@@ -1,7 +1,7 @@
 """Sign in with GitHub: one account for the memory repository, Workspaces, k3 access and collective learning (human
 direction 2026-11-11). Offline: GitHub is a stand-in that answers like github.com, so no real account is touched.
-Checks the device flow, token renewal, the encrypted store, the website's redirect sign-in, the collective gateway's
-own credential, and that the self-made "Google" key is gone. Usage: python tests/test_github_signin.py"""
+Checks the device flow, token renewal, the encrypted store, the website's redirect sign-in, and that collective learning
+uses the sign-in to open its public GitHub issues (no gateway). Usage: python tests/test_github_signin.py"""
 import argparse
 import hashlib
 import base64
@@ -18,10 +18,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "clover"))
 sys.path.insert(0, str(HERE))
-import collective_gateway  # noqa: E402
+import collective  # noqa: E402
 import core_sync  # noqa: E402
 import github_auth as G  # noqa: E402
-import google_identity  # noqa: E402
 import server  # noqa: E402
 import ui_harness  # noqa: E402
 import workspaces as WS  # noqa: E402
@@ -195,42 +194,10 @@ try:
 finally:
     os.environ.pop("CLOVER_GITHUB_CLIENT_SECRET", None)
 
-# ---------------- collective gateway credential ----------------
-with tempfile.TemporaryDirectory() as d:
-    gw = collective_gateway.CollectiveGateway(state_dir=Path(d) / "gw")
-    sess = gw.issue_session_from_github(ACCESS, get_user_id=lambda t: 4242, now=1000.0)
-    check("the gateway answers with its own credential and a pseudonymous id",
-          sess["credential"].startswith("cg1.") and sess["contributor_id"].startswith("contrib_")
-          and ACCESS not in json.dumps(sess) and "4242" not in sess["credential"])
-    check("the credential authenticates the same contributor",
-          gw.authenticate_contributor(sess["credential"], now=2000.0) == sess["contributor_id"])
-    same = gw.issue_session_from_github("ghp_" + "z" * 36, get_user_id=lambda t: 4242, now=1000.0)
-    check("the same GitHub account is the same contributor whatever the token",
-          same["contributor_id"] == sess["contributor_id"])
-    for label, cred, when in (("a changed credential", sess["credential"][:-1] + ("0" if sess["credential"][-1] != "0" else "1"), 2000.0),
-                              ("an expired credential", sess["credential"], 1000.0 + collective_gateway.SESSION_TTL_S + 1),
-                              ("non-ASCII rubbish", "cg1.\u00e9\u00e9.\u00e9", 2000.0)):
-        try:
-            gw.authenticate_contributor(cred, now=when)
-            check(f"{label} is refused", False)
-        except collective_gateway.GatewaySecurityError as exc:
-            check(f"{label} is refused", exc.status == 401)
-    gw2 = collective_gateway.CollectiveGateway(state_dir=Path(d) / "gw")
-    check("a restarted gateway still accepts it (its secret is kept)",
-          gw2.authenticate_contributor(sess["credential"], now=2000.0) == sess["contributor_id"])
-    body = sess["credential"][4:].split(".")[0]
-    forged = "cg1." + body + "." + __import__("hmac").new(
-        __import__("hmac").new(collective_gateway._PUBLIC_DEFAULT_SECRET, b"clover-gateway-session-key-v1",
-                               hashlib.sha256).digest(), body.encode(), hashlib.sha256).hexdigest()
-    os.environ.pop("CLOVER_GATEWAY_SECRET", None)
-    try:
-        collective_gateway.CollectiveGateway().authenticate_contributor(forged, now=2000.0)
-        check("a gateway on the public fallback secret does not accept credentials made with it", False)
-    except collective_gateway.GatewaySecurityError:
-        check("a gateway on the public fallback secret does not accept credentials made with it", True)
-check("the self-made 'Google' key is gone from google_identity",
-      not hasattr(google_identity, "issue_device_oidc_id_token") and not hasattr(google_identity, "_get_device_oidc_keypair")
-      and not hasattr(google_identity.GoogleIdentityManager, "connect_device_oidc"))
+# ---------------- collective learning: the store ----------------
+check("the gateway and its Google identity layer are retired",
+      not (HERE.parent / "clover" / "google_identity.py").exists() and not hasattr(server, "collective_gateway_runtime")
+      and not hasattr(core_sync.Collective, "gateway_session"))
 
 with tempfile.TemporaryDirectory() as d:
     store = core_sync.for_process(str(Path(d) / "collective"), "laptop", None)
@@ -240,19 +207,13 @@ with tempfile.TemporaryDirectory() as d:
     except core_sync.CoreSyncError as exc:
         check("collective consent needs the GitHub sign-in", "GitHub" in str(exc))
     view = store.view(None, identity={"connected": True, "provider": "github", "login": "octo"})
-    check("the collective view carries the GitHub identity", view["identity"]["login"] == "octo"
-          and "google_identity" not in view)
-    got = store.gateway_session(github_token=ACCESS, gateway_url="https://gw.example",
-                                transport_fn=lambda m, u, id_token=None, body=None: {
-                                    "credential": "cg1.x.y", "expires_at": 5} if (m, u, id_token) == (
-                                    "POST", "https://gw.example/api/collective/gateway/session", ACCESS) else {})
-    check("the client asks the gateway for its credential with the GitHub token", got["credential"] == "cg1.x.y")
+    check("the collective view carries the GitHub identity and the repository", view["identity"]["login"] == "octo"
+          and "google_identity" not in view and view["repo"] == core_sync.DEFAULT_COLLECTIVE_REPO)
 
 # ---------------- the routes, through the real server ----------------
 saved = {k: getattr(server.S, k) for k in ("args", "port", "perms", "settings", "search", "github", "workspaces",
-                                            "vscode", "repo", "gh_flows", "gh_web", "gateway_runtime", "token")}
-saved_fns = (server.layer_kit, server.verify_k3_credential, G.user,
-             collective_gateway.CollectiveGateway.__dict__["_github_user_id"])
+                                            "vscode", "repo", "gh_flows", "gh_web", "token")}
+saved_fns = (server.layer_kit, server.verify_k3_credential, G.user, core_sync.Collective._http)
 import k3_host_engine  # noqa: E402
 import paths  # noqa: E402
 saved_unlock, saved_web = k3_host_engine.try_unlock_k3_with_credential, paths.WEB
@@ -282,14 +243,20 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         kit = ui_harness.FakeKit()
         server.layer_kit = lambda: kit
         S.repo = clover_repo.Repo(base, HERE.parent / "clover" / "AGENTS.md", kit=server.layer_kit)
-        S.token, S.gateway_runtime = "", None
+        S.token = ""
         rclock, rgh = Clock(), FakeGitHub()
         rclock.t = __import__("time").time()  # token expiry is compared with the real clock
         S.gh_flows, S.gh_web = G.DeviceFlows(post=rgh, clock=rclock), G.WebSignIns(post=rgh, clock=rclock)
         G.user = lambda token, timeout=15: {"login": "octo", "id": 42, "name": "Octo"}
         k3_host_engine.try_unlock_k3_with_credential = lambda *a, **k: {"unlocked": False}
-        user_ids = []
-        collective_gateway.CollectiveGateway._github_user_id = staticmethod(lambda t: user_ids.append(t) or 4242)
+        to_github = []
+
+        def fake_github(self, method, url, token=None, body=None, transport_fn=None):
+            to_github.append((method, url, token, body))
+            if url.startswith("https://raw.githubusercontent.com/"):
+                raise core_sync.CoreSyncError("The shared core has no release yet.")
+            return {"number": 9, "html_url": f"https://github.com/{self.repo}/issues/9"}
+        core_sync.Collective._http = fake_github
         httpd = server.StudioHTTPServer(("127.0.0.1", 0), server.Handler)
         httpd.daemon_threads = True
         S.port = httpd.server_address[1]
@@ -329,28 +296,33 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         code, cv, _ = call("GET", "/api/collective")
         check("collective learning sees the GitHub account", code == 200 and cv["identity"]["connected"]
               and cv["identity"]["login"] == "octo")
-        coll = server.collective_store()
-        coll.gateway_url = root
-        cred = server.collective_credential(coll)
-        cred2 = server.collective_credential(coll)
-        check("the gateway checks GitHub once and its credential is reused",
-              cred.startswith("cg1.") and cred2 == cred and user_ids == [ACCESS])
-        gw_rt = server.collective_gateway_runtime()
-        check("... and it authenticates at the gateway", gw_rt["gateway"].authenticate_contributor(cred).startswith("contrib_"))
+        code, out, _ = call("POST", "/api/collective/consent", {"contribute": True})
+        target = sorted(["python", "web.page", "web.search"])
+        pkg = {"package_id": "cand_route", "schema_version": collective.SCHEMA_VERSION, "installation_id": "device-id-1",
+               "category": "problem-solving", "trigger": ["tok=corroborate"], "target": target,
+               "strategy": collective.STRATEGY_GUIDANCE.get(tuple(target), ""), "local_support_count": 3,
+               "local_contra_count": 0, "local_precision": 1.0, "cross_context_generalised": True}
+        code, out, _ = call("POST", "/api/collective/contribute", {"packages": [pkg], "confirmed": True})
+        check("contribute: one public issue in the shared repository, opened with the GitHub sign-in",
+              code == 200 and out["issue_number"] == 9 and to_github[-1][:3] == (
+                  "POST", f"https://api.github.com/repos/{core_sync.DEFAULT_COLLECTIVE_REPO}/issues", ACCESS)
+              and "device-id-1" not in to_github[-1][3]["body"] and ACCESS not in json.dumps(out))
         code, out, _ = call("POST", "/api/github", {"forget": True})
-        import vault
-        check("sign out: no token, no gateway credential, collective consent off",
-              code == 200 and not out["github"]["token_set"] and not vault.get(str(base), "collective_gateway")
-              and not S.settings.get().get("collective_receive"))
+        check("sign out: no token, contributing off, receiving left as it was",
+              code == 200 and not out["github"]["token_set"] and not S.settings.get().get("collective_contribute")
+              and not server.collective_store().consent_contribute)
         code, out, _ = call("POST", "/api/collective/consent", {"contribute": True})
         check("signed out: contributing needs the GitHub sign-in", code == 400 and "GitHub" in out["error"])
         code, out, _ = call("POST", "/api/collective/consent", {"receive": True})
         check("signed out: receiving the shared core still works (it is for every Clover user)",
               code == 200 and out["consent_receive"] is True)
-        code, rel, _ = call("GET", "/api/collective/gateway/releases")
-        check("the gateway hands the shared core to anyone, with no credential", code == 200 and "available" in rel)
-        check("a gateway without the update ('not found') is explained, not shown raw",
-              "k3 update" in server.collective_error(core_sync.CoreSyncError("not found")))
+        code, out, _ = call("POST", "/api/collective/sync", {})
+        check("sync: straight from the repository's raw files, with no sign-in and no server",
+              code == 400 and "no release yet" in out["error"] and to_github[-1][1] ==
+              f"https://raw.githubusercontent.com/{core_sync.DEFAULT_COLLECTIVE_REPO}/main/releases/manifest.json"
+              and to_github[-1][2] is None)
+        code, _, _ = call("GET", "/api/collective/gateway/releases")
+        check("the old gateway route is gone", code == 404)
 
         paths.WEB = True  # the website (k3)
         code, out, _ = call("POST", "/api/github/device/start", {})
@@ -383,6 +355,15 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
                             {"Origin": "https://cloverframework.com"})
         check("website: the page trades the one-time code for its session", code == 200 and fin["account"] == "octo"
               and fin["token"].startswith("acct:octo:"))
+        S.token = "web-check-token"  # an owner device's key: "octo" is not on the approved list
+        web_auth = {"X-Clover-Token": S.token, "Origin": "https://cloverframework.com"}
+        code, out, _ = call("POST", "/api/collective/contribute", {"packages": [pkg], "confirmed": True}, web_auth)
+        check("website: contributing is refused (the server holds no visitor's GitHub sign-in)",
+              code == 409 and "app" in out["error"])
+        code, cv, _ = call("GET", "/api/collective", None, web_auth)
+        check("website: no GitHub account is shown for collective learning", code == 200
+              and not cv["identity"]["connected"] and cv["identity"]["login"] == "")
+        S.token = ""
         code, fin, _ = call("POST", "/api/auth/github/finish", {"code": frag.split("=", 1)[1]},
                             {"Origin": "https://cloverframework.com"})
         check("website: the one-time code works once", code == 400)
@@ -412,7 +393,7 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         os.environ.pop("CLOVER_GITHUB_CLIENT_SECRET", None)
         k3_host_engine.try_unlock_k3_with_credential = saved_unlock
         server.layer_kit, server.verify_k3_credential, G.user = saved_fns[0], saved_fns[1], saved_fns[2]
-        collective_gateway.CollectiveGateway._github_user_id = saved_fns[3]
+        core_sync.Collective._http = saved_fns[3]
         for k, v in saved.items():
             setattr(server.S, k, v)
 

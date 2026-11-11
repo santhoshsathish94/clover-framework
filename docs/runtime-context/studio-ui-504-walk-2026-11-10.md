@@ -243,3 +243,35 @@
     wins the merge); the two files would stay.
 - **Growth:** a test server that can sign in for real must not be able to write to the real account. Block the
   writes in the harness itself; a warning in a message is not enough.
+
+## Collective learning without a server (2026-11-11)
+
+### Context (checked)
+- **Today:** every client talks to the gateway on k3 (`api.cloverframework.com/api/collective/gateway/*`).
+  - The gateway checks contributions, keeps them on k3, and signs a release after each one. Its signing key is a
+    file in k3's vault.
+- **k3's shared core:** release 1.0.327 (2026-11-07), 5 rules, from 3 installations (probably test runs): audit,
+  benchmark, corroborate, forecast, reconcile. The registry has 328 commits.
+- **k3's gateway state:** 15 accepted packages from 3 pseudonymous contributors.
+- **The code chain is stdlib only:** `collective_gateway` → `collective`, `personal`, `semantics`, `clover_cycle`;
+  `collective_evaluator`; `core_registry`.
+  - `build_setup.ps1` copies mobile's `core_sync`, `collective_gateway` and `core_registry` over the Studio's copies,
+    so the two copies must stay identical.
+- **Security finding:** a rule's `strategy` text goes into `frame.guidance`, which is prompt text. The gateway
+  accepted any string up to 300 characters, so a contributor could have put arbitrary text into every client's
+  prompt.
+- **Evaluator limit:** gate G3 only passes rules that match at least 2 of its held-out probes, and the probes cover
+  only the 5 current verbs. A new kind of rule needs probes added before it can ever be promoted.
+- **GitHub facts used:**
+  - `issues` events run workflows from the default branch.
+  - Unauthenticated downloads from raw.githubusercontent.com are rate limited (GitHub changelog, 2025-05-08), so a
+    sync makes at most 2 requests.
+
+### Direction (human, 2026-11-11)
+- **No server.** A public repository, `santhoshsathish94/clover-collective`; GitHub, not Hugging Face, so
+  contributors need only one account.
+- **Contributions are public:** a GitHub issue under the contributor's GitHub name, with readable patterns.
+- **Signing key:** generated on this PC and stored straight into the repository secret; the value is never shown.
+- **Retire the gateway:** the Studio's gateway routes and the tests that exercise them.
+- **First release:** k3's 5 rules, re-signed. k3's 15 pending contributions stay on k3, because they were given
+  under the server's privacy terms.

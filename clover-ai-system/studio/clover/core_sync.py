@@ -8,18 +8,21 @@ Manages:
    public verification key and can never manufacture or sign shared-core releases.
 3. Runtime interpretation (`Collective.interpret(text, frame)`), hooked into `semantics.Runtime.collective` and called
    ONLY when no validated personal habit overrides the message (`Personal > Collective > General`).
+4. The shared core lives in a public GitHub repository, with no server: releases are downloaded from it without a
+   sign-in, and a contribution or withdrawal is a public GitHub issue opened with the person's GitHub sign-in, which
+   the repository's automation (`collective_repo.py`) checks.
 """
 from __future__ import annotations
 
 import hashlib
 import json
 import os
-import secrets
+import re
+import shutil
 import sys
 import threading
 import time
 import urllib.error
-import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -27,10 +30,15 @@ import collective as C_EXT
 import personal
 import semantics
 
-# Official 32-byte RFC 8032 Ed25519 public verification key for Clover Collective Core releases.
-# The corresponding private signing key is held exclusively in the protected release environment vault.
+# Official 32-byte RFC 8032 Ed25519 public verification key for Clover Collective Core releases. The private key is a
+# secret of the clover-collective repository, used only by its GitHub Actions automation.
 DEFAULT_VERIFY_PUBLIC_KEY = "dba3f7e2e969a26c57a24d50e2ecd654249b42e25eecc1f9140a514d7dcedb8a"
-DEFAULT_GATEWAY_URL = "https://api.cloverframework.com"
+DEFAULT_COLLECTIVE_REPO = "santhoshsathish94/clover-collective"
+RAW_URL = "https://raw.githubusercontent.com/{repo}/main/"
+API_URL = "https://api.github.com"
+_REPO_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]{0,38}/(?!\.{1,2}$)[A-Za-z0-9._-]{1,100}")
+_VERSION_RE = re.compile(r"\d{1,6}\.\d{1,6}\.\d{1,9}")
+_CORE_FILE_RE = re.compile(r"core/[a-z][a-z-]{1,40}/[A-Za-z0-9_-]{1,80}\.json")
 
 _Q = 2**255 - 19
 _L = 2**252 + 27742317777372353535851937790883648493
@@ -239,7 +247,7 @@ class CoreSync:
 
 class Collective:
     """One installation's collective learning state: consent switches, verified shared core rules, candidate preview,
-    and remote gateway synchronization."""
+    and the public GitHub repository that holds the shared core."""
 
     def __init__(
         self,
@@ -247,18 +255,16 @@ class Collective:
         device: str = "",
         csi=None,
         verify_key: str | bytes | None = None,
-        gateway_url: str | None = None,
+        repo: str | None = None,
     ):
         self.dir = Path(root)
         self.dir.mkdir(parents=True, exist_ok=True)
         self.device = device
         self.csi = csi
         self.syncer = CoreSync(verify_key=verify_key)
-        self.gateway_url = (
-            gateway_url
-            or os.environ.get("CLOVER_COLLECTIVE_GATEWAY_URL", "").strip()
-            or DEFAULT_GATEWAY_URL
-        ).rstrip("/")
+        self.repo = repo or os.environ.get("CLOVER_COLLECTIVE_REPO", "").strip() or DEFAULT_COLLECTIVE_REPO
+        if not _REPO_RE.fullmatch(self.repo):
+            raise ValueError(f"the collective repository must be owner/name, not {self.repo!r}")
         self.lock = threading.RLock()
         self.version: str | None = None
         self.rules: list[dict] = []
@@ -305,8 +311,6 @@ class Collective:
                 self.last_sync_utc = sdata.get("last_sync_utc")
                 self.last_sync_error = str(sdata.get("last_sync_error") or "")
                 self.consent_withdrawn_utc = sdata.get("consent_withdrawn_utc")
-                if sdata.get("gateway_url"):
-                    self.gateway_url = str(sdata["gateway_url"]).rstrip("/")
             except Exception:
                 pass
 
@@ -336,7 +340,7 @@ class Collective:
         self._sync_state_path.write_text(
             json.dumps(
                 {
-                    "gateway_url": self.gateway_url,
+                    "repo": self.repo,
                     "submitted_packages": self.submitted_packages,
                     "last_sync_utc": self.last_sync_utc,
                     "last_sync_error": self.last_sync_error,
@@ -413,69 +417,58 @@ class Collective:
                 "jepa_growth_synced": bool(self.consent_receive and isinstance(res.get("jepa_growth"), dict)),
             }
 
-    def _http_call(
-        self,
-        method: str,
-        url: str,
-        *,
-        id_token: str | None = None,
-        body: dict | None = None,
-        transport_fn=None,
-    ) -> dict:
+    def _http(self, method: str, url: str, *, token: str | None = None, body: dict | None = None,
+              transport_fn=None) -> dict:
+        """One HTTPS call to GitHub -> its JSON answer. transport_fn(method, url, token=, body=) stands in for the
+        network in tests."""
         if transport_fn is not None:
-            return transport_fn(method, url, id_token=id_token, body=body)
-        headers = {"Accept": "application/json", "User-Agent": "CloverAIStudio/5.0"}
-        if id_token:
-            headers["Authorization"] = f"Bearer {id_token}"
+            return transport_fn(method, url, token=token, body=body)
+        headers = {"Accept": "application/vnd.github+json", "User-Agent": "CloverAIStudio/5.0",
+                   "X-GitHub-Api-Version": "2022-11-28"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
         data = None
         if body is not None:
             headers["Content-Type"] = "application/json; charset=utf-8"
             data = json.dumps(body).encode("utf-8")
         req = urllib.request.Request(url, data=data, headers=headers, method=method.upper())
         try:
-            with urllib.request.urlopen(req, timeout=20) as resp:
+            with urllib.request.urlopen(req, timeout=30) as resp:
                 return json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             raw_err = exc.read().decode("utf-8", errors="replace")
             try:
-                err_obj = json.loads(raw_err)
-                msg = err_obj.get("error") or err_obj.get("message") or raw_err[:240]
-            except Exception:
-                msg = raw_err[:240] or f"HTTP {exc.code}"
-            raise CoreSyncError(msg) from exc
-        except Exception as exc:
-            raise CoreSyncError(f"Gateway request failed: {exc}") from exc
+                msg = str(json.loads(raw_err).get("message") or "")
+            except (ValueError, AttributeError):
+                msg = raw_err[:240]
+            if exc.code == 401:
+                msg = "GitHub did not accept the sign-in. Sign in with GitHub again."
+            elif exc.code == 404 and url.startswith("https://raw.githubusercontent.com/"):
+                msg = "The shared core has no release yet."
+            elif exc.code in (403, 429):
+                msg = f"GitHub refused or limited the request for now ({msg or exc.code}). Try again later."
+            raise CoreSyncError(msg or f"GitHub answered HTTP {exc.code}") from exc
+        except (OSError, ValueError) as exc:
+            raise CoreSyncError(f"GitHub could not be reached: {exc}") from exc
 
-    def gateway_session(self, *, github_token: str, gateway_url: str | None = None, transport_fn=None) -> dict:
-        """The gateway checks a GitHub sign-in once and answers with its own credential for this contributor
-        (`cg1.`), used for contributions, releases and withdrawal until it expires."""
-        if not github_token or not str(github_token).strip():
-            raise CoreSyncError("GitHub sign-in is required for collective learning.")
-        gw = (gateway_url or self.gateway_url).rstrip("/")
-        resp = self._http_call("POST", f"{gw}/api/collective/gateway/session", id_token=str(github_token).strip(),
-                               body={}, transport_fn=transport_fn)
-        if not str(resp.get("credential") or "").startswith("cg1."):
-            raise CoreSyncError("The collective gateway did not issue a credential.")
-        return resp
-
-    def contribute_to_gateway(
+    def contribute_to_repo(
         self,
         *,
-        id_token: str | None,
+        github_token: str | None,
         packages: list[dict],
         confirmed: bool = False,
-        gateway_url: str | None = None,
         transport_fn=None,
     ) -> dict:
-        """Upload explicitly confirmed, privacy-scrubbed candidate packages to the remote Collective Gateway."""
+        """Open a public GitHub issue in the collective repository, under the person's GitHub account, carrying the
+        candidate packages they reviewed. The repository's automation checks them and replies on the issue."""
         with self.lock:
             if not self.consent_contribute:
                 err = "Contribution consent is disabled. Enable 'Contribute to Collective Learning' first."
                 self.last_sync_error = err
                 self._save_sync_state()
                 raise CoreSyncError(err)
-            if not id_token or not str(id_token).strip():
-                err = "GitHub sign-in is required to contribute candidate knowledge."
+            if not github_token or not str(github_token).strip():
+                err = "Sign in with GitHub to contribute: a contribution is a public GitHub issue under your account."
                 self.last_sync_error = err
                 self._save_sync_state()
                 raise CoreSyncError(err)
@@ -489,6 +482,8 @@ class Collective:
 
             # Validate every candidate locally before transmission so unapproved/personal data can never leave
             import collective_gateway
+            if len(packages) > collective_gateway.MAX_REQUEST_PACKAGES:
+                raise CoreSyncError(f"Send at most {collective_gateway.MAX_REQUEST_PACKAGES} patterns at a time.")
             local_validator = collective_gateway.CollectiveGateway()
             clean_packages = []
             for p in packages:
@@ -502,146 +497,116 @@ class Collective:
                     raise CoreSyncError(err)
                 clean_packages.append(p)
 
-            gw = (gateway_url or self.gateway_url).rstrip("/")
-            payload = {
-                "confirmed": True,
-                "consent_contribute": True,
-                "nonce": secrets.token_urlsafe(18),
-                "timestamp": time.time(),
-                "packages": clean_packages,
-            }
+            n = len(clean_packages)
+            issue = {"title": f"Collective learning: {n} pattern{'' if n == 1 else 's'}",
+                     "body": collective_gateway.request_body("contribute", clean_packages)}
             try:
-                resp = self._http_call(
-                    "POST",
-                    f"{gw}/api/collective/gateway/contribute",
-                    id_token=id_token,
-                    body=payload,
-                    transport_fn=transport_fn,
-                )
+                resp = self._http("POST", f"{API_URL}/repos/{self.repo}/issues", token=str(github_token).strip(),
+                                  body=issue, transport_fn=transport_fn)
+                if not isinstance(resp.get("number"), int):
+                    raise CoreSyncError("GitHub did not open the issue.")
             except CoreSyncError as exc:
                 self.last_sync_error = str(exc)
                 self._save_sync_state()
                 raise
 
             now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-            accepted_set = set(resp.get("accepted_package_ids") or ())
             existing_ids = {x["package_id"] for x in self.submitted_packages}
             for p in clean_packages:
-                if p["package_id"] in accepted_set and p["package_id"] not in existing_ids:
+                if p["package_id"] not in existing_ids:
                     self.submitted_packages.append({
                         "package_id": p["package_id"],
                         "category": p["category"],
                         "trigger": list(p["trigger"]),
                         "target": list(p["target"]),
                         "submitted_utc": now_iso,
+                        "issue": resp["number"],
                     })
             self.last_sync_utc = now_iso
             self.last_sync_error = ""
             self._save_sync_state()
-            return resp
+            return {"ok": True, "sent_count": n, "issue_number": resp["number"], "issue_url": resp.get("html_url")}
 
-    def sync_from_gateway(
-        self,
-        *,
-        id_token: str | None = None,
-        require_identity: bool = True,
-        gateway_url: str | None = None,
-        transport_fn=None,
-        now_utc: str | None = None,
-    ) -> dict:
-        """Fetch an incremental or full Ed25519-signed collective release from the remote gateway, verify its
-        cryptographic signature, file hashes, expiry, and revocation status, and apply it locally."""
+    def sync_from_repo(self, *, token: str | None = None, transport_fn=None, now_utc: str | None = None) -> dict:
+        """Download the shared core's signed release from the public repository (no sign-in: the manifest, then that
+        version's bundle, from raw.githubusercontent.com), check its Ed25519 signature, file hashes, expiry and
+        revocation, and apply it. token: optional, only for GitHub's higher download limits."""
         with self.lock:
             if not self.consent_receive:
                 err = "Receive consent is disabled. Enable 'Receive Collective Learning' first."
                 self.last_sync_error = err
                 self._save_sync_state()
                 raise CoreSyncError(err)
-            if require_identity and (not id_token or not str(id_token).strip()):
-                err = "GitHub sign-in is required to receive collective learning releases."
-                self.last_sync_error = err
-                self._save_sync_state()
-                raise CoreSyncError(err)
-
-            gw = (gateway_url or self.gateway_url).rstrip("/")
+            base = RAW_URL.format(repo=self.repo)
             mirror = self._mirror_dir
-            since = self.version if (self.version and (mirror / "releases" / "manifest.json").is_file()) else ""
-            q = f"?{urllib.parse.urlencode({'since_version': since})}" if since else ""
             try:
-                bundle = self._http_call(
-                    "GET",
-                    f"{gw}/api/collective/gateway/releases{q}",
-                    id_token=id_token,
-                    transport_fn=transport_fn,
-                )
+                manifest = self._http("GET", base + "releases/manifest.json", token=token, transport_fn=transport_fn)
+                ver = str(manifest.get("version") or "") if isinstance(manifest, dict) else ""
+                if not _VERSION_RE.fullmatch(ver):
+                    raise CoreSyncError("The shared core's manifest has no valid version.")
+                if ver == self.version and (mirror / "releases" / "manifest.json").is_file():
+                    self.last_sync_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                    self.last_sync_error = ""
+                    self._save_sync_state()
+                    return {"synced": True, "up_to_date": True, "version": self.version, "rules_count": len(self.rules)}
+                bundle = self._http("GET", base + f"releases/history/v{ver}.json", token=token,
+                                    transport_fn=transport_fn)
             except CoreSyncError as exc:
                 self.last_sync_error = str(exc)
                 self._save_sync_state()
                 raise
 
-            if not bundle.get("available") or not bundle.get("manifest"):
-                self.last_sync_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-                self.last_sync_error = ""
+            # Stage the files in a fresh folder and verify them there before anything is applied
+            stage = self.dir / "remote_mirror.new"
+            shutil.rmtree(stage, ignore_errors=True)
+            try:
+                b_manifest = bundle.get("manifest") if isinstance(bundle, dict) else None
+                files = bundle.get("files") if isinstance(bundle, dict) else None
+                if not isinstance(b_manifest, dict) or str(b_manifest.get("version")) != ver or not isinstance(files, dict):
+                    raise CoreSyncError("The release bundle does not match the manifest.")
+                for rel_path in (b_manifest.get("file_hashes") or {}):
+                    if not _CORE_FILE_RE.fullmatch(str(rel_path)) or rel_path not in files:
+                        raise CoreSyncError(f"Unsafe or missing file in the release bundle: {rel_path!r}")
+                    dest = stage / rel_path
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    dest.write_bytes(str(files[rel_path]).encode("utf-8"))
+                (stage / "releases").mkdir(parents=True, exist_ok=True)
+                (stage / "releases" / "manifest.json").write_bytes(
+                    json.dumps(b_manifest, indent=2, sort_keys=True).encode("utf-8"))
+                res = self.sync_from_registry(stage, now_utc=now_utc)
+            except CoreSyncError as exc:
+                shutil.rmtree(stage, ignore_errors=True)
+                self.last_sync_error = str(exc)
                 self._save_sync_state()
-                return {"synced": True, "up_to_date": True, "version": self.version, "rules_count": len(self.rules)}
-
-            # Stage files in a temporary directory or mirror, then verify before activating
-            (mirror / "releases").mkdir(parents=True, exist_ok=True)
-            for rel_rm in bundle.get("removed_files") or []:
-                rm_path = (mirror / rel_rm).resolve()
-                if str(rm_path).startswith(str(mirror.resolve())) and rm_path.is_file():
-                    rm_path.unlink()
-            for rel_path, content in (bundle.get("files") or {}).items():
-                dest = (mirror / rel_path).resolve()
-                if not str(dest).startswith(str(mirror.resolve())):
-                    raise CoreSyncError(f"Unsafe file path in release bundle: {rel_path!r}")
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_bytes(str(content).encode("utf-8"))
-            (mirror / "releases" / "manifest.json").write_bytes(
-                json.dumps(bundle["manifest"], indent=2, sort_keys=True).encode("utf-8"),
-            )
-
-            res = self.sync_from_registry(mirror, now_utc=now_utc)
-            res["up_to_date"] = bool(bundle.get("up_to_date"))
-            res["incremental"] = bool(bundle.get("incremental"))
+                raise
+            shutil.rmtree(mirror, ignore_errors=True)
+            try:
+                stage.rename(mirror)
+            except OSError:  # the mirror is only a cache of what was applied
+                shutil.rmtree(stage, ignore_errors=True)
+            res["up_to_date"] = False
             return res
 
-    def withdraw_from_gateway(
-        self,
-        *,
-        id_token: str | None,
-        gateway_url: str | None = None,
-        transport_fn=None,
-    ) -> dict:
-        """Withdraw future contribution consent and remove previously contributed candidates on the remote gateway."""
+    def withdraw_from_repo(self, *, github_token: str | None, transport_fn=None) -> dict:
+        """Stop contributing. Signed in, this also opens a public "withdraw" issue so the repository's automation
+        removes this account's patterns from future releases; earlier issues stay public on GitHub."""
         with self.lock:
             now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-            gw_resp = {}
-            if id_token and str(id_token).strip():
-                gw = (gateway_url or self.gateway_url).rstrip("/")
-                payload = {
-                    "nonce": secrets.token_urlsafe(18),
-                    "timestamp": time.time(),
-                }
-                gw_resp = self._http_call(
-                    "POST",
-                    f"{gw}/api/collective/gateway/withdraw",
-                    id_token=id_token,
-                    body=payload,
-                    transport_fn=transport_fn,
-                )
+            issue = {}
+            if github_token and str(github_token).strip():
+                import collective_gateway
+                resp = self._http("POST", f"{API_URL}/repos/{self.repo}/issues", token=str(github_token).strip(),
+                                  body={"title": "Collective learning: withdraw my contributions",
+                                        "body": collective_gateway.request_body("withdraw")},
+                                  transport_fn=transport_fn)
+                issue = {"issue_number": resp.get("number"), "issue_url": resp.get("html_url")}
             self.consent_contribute = False
             self.submitted_packages = []
             self.consent_withdrawn_utc = now_iso
             self.last_sync_error = ""
             self._save_consent()
             self._save_sync_state()
-            return {
-                "ok": True,
-                "consent_contribute": False,
-                "consent_withdrawn_utc": now_iso,
-                "gateway": gw_resp,
-            }
+            return dict({"ok": True, "consent_contribute": False, "consent_withdrawn_utc": now_iso}, **issue)
 
     def preview_candidates(self, personal_obj, extraction_mode: str = "mismatch_only") -> list[dict]:
         with self.lock:
@@ -724,7 +689,8 @@ class Collective:
             return {
                 "enabled": True,
                 "store": str(self.dir),
-                "gateway_url": self.gateway_url,
+                "repo": self.repo,
+                "repo_url": f"https://github.com/{self.repo}",
                 "identity": identity or google_status or {"connected": False, "status_text": "Not signed in"},
                 "consent_contribute": self.consent_contribute,
                 "consent_receive": self.consent_receive,

@@ -89,7 +89,6 @@ class S:
     csi = None  # csi_child.CSIService
     gh_flows = github_auth.DeviceFlows()  # GitHub device sign-ins in progress (apps; website fallback)
     gh_web = github_auth.WebSignIns()  # website GitHub sign-ins in progress and their one-time codes
-    gateway_runtime = None  # {"gateway": CollectiveGateway, "evaluator": CollectiveEvaluator, "registry": CoreRegistry}
     hardware = None  # hardware.probe(): this machine and the settings chosen for it
     last_turn_end = time.time()
     kv_sid = None
@@ -752,67 +751,16 @@ def web_return(url):
 
 
 def identity_status():
-    """Collective learning's identity: the GitHub account this installation signed in with (or whose token was pasted)."""
+    """Collective learning's identity: the GitHub account this installation signed in with (or whose token was pasted).
+    The website shows no account: the server's own GitHub token is not a visitor's."""
+    if paths.WEB:
+        return {"connected": False, "provider": "github", "login": "",
+                "status_text": "Contribute from the Clover app on your laptop or phone"}
     d = S.github.describe() if S.github else {"token_set": False}
     login = d.get("login") or ""
     return {"connected": bool(d.get("token_set")), "provider": "github", "login": login,
             "status_text": (f"Signed in with GitHub as @{login}" if login else "GitHub token saved")
             if d.get("token_set") else "Not signed in"}
-
-
-def collective_error(exc):
-    """A gateway that has not been updated answers the new requests with 'not found' or the old Google wording."""
-    msg = str(exc)
-    if msg.strip().lower() == "not found" or "id_token" in msg or "Google" in msg:
-        return ("Clover's collective learning server has not been updated for GitHub sign-in yet, so it cannot answer. "
-                "It needs the k3 update.")
-    if "timed out" in msg:
-        return "Clover's collective learning server did not answer in time. Try again in a minute."
-    return msg
-
-
-def collective_credential(coll):
-    """The collective gateway's own credential for this installation. The gateway checks the GitHub sign-in once and
-    the credential is kept (encrypted) until it expires or the user signs in with another account."""
-    import vault
-    base = S.args.base
-    login = (S.github.describe().get("login") or "") if S.github else ""
-    try:
-        rec = json.loads(vault.get(base, "collective_gateway") or "{}")
-    except ValueError:
-        rec = {}
-    if (rec.get("credential") and rec.get("gateway") == coll.gateway_url and rec.get("login", "") == login
-            and time.time() < float(rec.get("expires_at") or 0) - 3600):
-        return rec["credential"]
-    tok = S.github.token if S.github else None
-    if not tok:
-        return None
-    resp = coll.gateway_session(github_token=tok)
-    vault.put(base, "collective_gateway", json.dumps({"credential": resp["credential"], "gateway": coll.gateway_url,
-                                                      "expires_at": resp.get("expires_at") or 0, "login": login}))
-    return resp["credential"]
-
-
-def collective_gateway_runtime():
-    """Remote Collective Learning Gateway & Signed Registry runtime (hosted on k3 or local gateway mode)."""
-    import collective_evaluator
-    import collective_gateway
-    import core_registry
-    if S.gateway_runtime is None and S.args is not None:
-        base = Path(S.args.base)
-        gw = collective_gateway.CollectiveGateway(state_dir=base / "collective-gateway")
-        min_inst = int(os.environ.get("CLOVER_CPSL_MIN_INSTALLATIONS") or 2)
-        ev = collective_evaluator.CollectiveEvaluator(min_installations=min_inst, min_agreement=0.75)
-        vault_key = Path("/opt/clover-k3/web-studio/vault/cpsl_release_ed25519.key")
-        sig_key = None
-        if (paths.WEB or os.environ.get("CLOVER_CPSL_USE_SERVER_VAULT") == "1") and vault_key.is_file():
-            try:
-                sig_key = vault_key.read_text(encoding="utf-8").strip()
-            except Exception:
-                sig_key = None
-        reg = core_registry.CoreRegistry(base / "clover-collective", signing_key=sig_key)
-        S.gateway_runtime = {"gateway": gw, "evaluator": ev, "registry": reg, "lock": threading.RLock()}
-    return S.gateway_runtime
 
 
 def personal_step(pers, method, *args):
@@ -2859,17 +2807,6 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(302, b"", "text/plain", {"Location": back + "#gh_login=" + S.gh_web.issue(acct)})
                 err = "not_allowed"
             return self._send(302, b"", "text/plain", {"Location": back + "#gh_error=" + quote(err or "failed")})
-        if path == "/api/collective/gateway/releases":  # the shared core is for every Clover user: no sign-in
-            from urllib.parse import parse_qs
-            q = {k: v[0] for k, v in parse_qs(query).items()}
-            if not _check_auth_rate_limit(self._client_ip()):
-                return self._send(429, {"error": "Too many requests. Please wait a minute and try again."})
-            gw_rt = collective_gateway_runtime()
-            if gw_rt is None:
-                return self._send(503, {"error": "Collective gateway runtime unavailable"})
-            with gw_rt["lock"]:
-                bundle = gw_rt["registry"].get_release_bundle(since_version=q.get("since_version"))
-            return self._send(200, bundle)
         if path in ("/admin", "/admin/", "/admin/index.html"):
             admin_fp = HERE / "web" / "admin.html"
             if not admin_fp.is_file():
@@ -3126,51 +3063,6 @@ class Handler(BaseHTTPRequestHandler):
         if not self._host_ok() or self._cross_site():
             return self._send(403, {"error": "cross-site requests are not accepted"})
         path = self.path.split("?", 1)[0]
-        if path == "/api/collective/gateway/session":  # a GitHub token in, the gateway's own credential out
-            import collective_gateway
-            if not _check_auth_rate_limit(self._client_ip()):
-                return self._send(429, {"error": "Too many sign-in attempts. Please wait a minute and try again."})
-            gw_rt = collective_gateway_runtime()
-            if gw_rt is None:
-                return self._send(503, {"error": "Collective gateway runtime unavailable"})
-            try:
-                return self._send(200, gw_rt["gateway"].issue_session_from_github(self._bearer_token()))
-            except collective_gateway.GatewaySecurityError as exc:
-                return self._send(exc.status, {"error": exc.message, "code": exc.code})
-        if path in ("/api/collective/gateway/contribute", "/api/collective/gateway/withdraw"):
-            import collective_gateway
-            try:
-                body = self._read_json(MAX_BODY)
-            except Exception as exc:
-                return self._send(400, {"error": str(exc)})
-            gw_rt = collective_gateway_runtime()
-            if gw_rt is None:
-                return self._send(503, {"error": "Collective gateway runtime unavailable"})
-            bearer = self._bearer_token()
-            try:
-                with gw_rt["lock"]:
-                    jepa_growth_in = body.pop("jepa_growth", None) if isinstance(body, dict) else None
-                    if path.endswith("/contribute"):
-                        res = gw_rt["gateway"].submit_authenticated_contribution(id_token=bearer, payload=body)
-                    else:
-                        res = gw_rt["gateway"].withdraw_authenticated_contributor(id_token=bearer, payload=body)
-                    agg = gw_rt["gateway"].aggregate_candidates()
-                    eval_res = gw_rt["evaluator"].evaluate_all(agg)
-                    res["evaluated_count"] = eval_res["total_evaluated"]
-                    res["promoted_count"] = eval_res["promoted_count"]
-                    if gw_rt["registry"]._seed is not None:
-                        note = "Collective gateway evaluation" if path.endswith("/contribute") else "Contributor withdrawal re-evaluation"
-                        manifest = gw_rt["registry"].publish_release(
-                            eval_res,
-                            note=note,
-                            jepa_growth=jepa_growth_in if isinstance(jepa_growth_in, dict) else None,
-                        )
-                        res["release_version"] = manifest["version"]
-                return self._send(200, res)
-            except collective_gateway.GatewaySecurityError as exc:
-                return self._send(exc.status, {"error": exc.message, "code": exc.code})
-            except Exception as exc:
-                return self._send(500, {"error": f"{type(exc).__name__}: {exc}"})
         if path == "/api/admin/github/device/start":
             if not _check_auth_rate_limit(self._client_ip()):
                 return self._send(429, {"ok": False, "error": "Too many authentication requests. Please wait a minute and try again."})
@@ -3745,8 +3637,6 @@ class Handler(BaseHTTPRequestHandler):
                 except github_auth.GitHubAuthError as exc:
                     return self._send(502 if exc.code == "unreachable" else 400, {"status": "error", "error": str(exc)})
                 S.github.sign_in(res["token"], who)
-                import vault
-                vault.delete(S.args.base, "collective_gateway")
                 S.repo.note(f"GitHub: signed in as @{who['login']}")
                 out = dict(workspaces_describe(), status="ok", login=who["login"])
                 import k3_host_engine
@@ -3760,16 +3650,13 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/github":  # the answer says whether a token is set, never the token
                 tok_in = body.get("token")
                 S.github.update(token=tok_in, forget=bool(body.get("forget")))
-                if tok_in or body.get("forget"):
-                    import vault
-                    vault.delete(S.args.base, "collective_gateway")
-                if body.get("forget"):  # collective learning needs the account that was just signed out
+                if body.get("forget"):  # contributing needs the account that was just signed out; receiving does not
                     if S.settings is not None:
-                        S.settings.update({"collective_contribute": False, "collective_receive": False})
+                        S.settings.update({"collective_contribute": False})
                     coll = collective_store()
                     if coll is not None:
-                        coll.set_consent(contribute=False, receive=False)
-                    S.repo.note("GitHub: signed out; collective learning switched off")
+                        coll.set_consent(contribute=False)
+                    S.repo.note("GitHub: signed out; contributing to collective learning switched off")
                 out_ws = workspaces_describe()
                 if tok_in and not body.get("forget") and not paths.WEB:
                     import k3_host_engine
@@ -3901,26 +3788,24 @@ class Handler(BaseHTTPRequestHandler):
                         if upd and S.settings is not None:
                             S.settings.update(upd)
                         return self._send(200, dict(coll.view(pers, identity=g_stat), personal_enabled=p_on))
+                    if path.endswith("/contribute") or path.endswith("/withdraw"):
+                        if paths.WEB:  # the website holds no visitor's GitHub sign-in to open the issue with
+                            return self._send(409, {"error": "On the website, contribute from the Clover app on your "
+                                                             "laptop or phone: a contribution is a public GitHub issue "
+                                                             "under your own account."})
+                        tok = S.github.token if S.github else None
                     if path.endswith("/contribute"):
                         pkgs = body.get("packages")
                         if pkgs is None:
                             pkgs = coll.preview_candidates(pers)
-                        resp = coll.contribute_to_gateway(
-                            id_token=collective_credential(coll) if coll.consent_contribute else None,
-                            packages=pkgs,
-                            confirmed=bool(body.get("confirmed")),
-                            gateway_url=body.get("gateway_url"),
-                        )
+                        resp = coll.contribute_to_repo(github_token=tok, packages=pkgs,
+                                                       confirmed=bool(body.get("confirmed")))
                         return self._send(200, dict(resp, view=dict(coll.view(pers, identity=g_stat), personal_enabled=p_on)))
                     if path.endswith("/sync"):
                         if body.get("registry_dir"):
                             sync_res = coll.sync_from_registry(str(body["registry_dir"]).strip())
                         else:
-                            sync_res = coll.sync_from_gateway(
-                                id_token=None,
-                                require_identity=False,
-                                gateway_url=body.get("gateway_url"),
-                            )
+                            sync_res = coll.sync_from_repo(token=None if paths.WEB or not S.github else S.github.token)
                         try:
                             import device_actions
                             device_actions.log_debug("collective", "collective_synced", sync_res, base_dir=Path(S.args.base))
@@ -3928,16 +3813,13 @@ class Handler(BaseHTTPRequestHandler):
                             pass
                         return self._send(200, dict(sync_res, view=dict(coll.view(pers, identity=g_stat), personal_enabled=p_on)))
                     if path.endswith("/withdraw"):
-                        w_res = coll.withdraw_from_gateway(
-                            id_token=collective_credential(coll),
-                            gateway_url=body.get("gateway_url"),
-                        )
+                        w_res = coll.withdraw_from_repo(github_token=tok)
                         if S.settings is not None:
                             S.settings.update({"collective_contribute": False})
                         return self._send(200, dict(w_res, view=dict(coll.view(pers, identity=g_stat), personal_enabled=p_on)))
                     return self._send(200, {"candidates": coll.preview_candidates(pers)})
                 except core_sync.CoreSyncError as exc:
-                    return self._send(400, {"error": collective_error(exc), "view": dict(coll.view(pers, identity=g_stat), personal_enabled=p_on)})
+                    return self._send(400, {"error": str(exc), "view": dict(coll.view(pers, identity=g_stat), personal_enabled=p_on)})
             if path == "/api/media/inspect":
                 import image_inspector
                 fname = str(body.get("file") or "").strip()
