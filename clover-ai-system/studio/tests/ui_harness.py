@@ -95,7 +95,17 @@ class FakeEngine:
             emit({"type": "token", "round": 1, "kind": "thinking",
                   "text": "Understanding the request and checking which local tools and context notes apply."})
             time.sleep(0.15)
-        reply = "Hello from the harness. You said: " + user_text[:80]
+        has_voice = any(isinstance(m, dict) and m.get("kind") == "audio" for m in (kw.get("media") or ()))
+        if not user_text.strip() and has_voice:
+            emit({"type": "plan", "round": 1, "stage": "c1_inference", "model": "LFM3-Omni-2B"})
+            emit({"type": "layer", "layer": "c1_inference", "model": "LFM3-Omni-2B", "tokens": 64, "window_tokens": 512, "ms": 38})
+            emit({"type": "plan", "round": 1, "stage": "c2_plan"})
+            emit({"type": "layer", "layer": "c2_hybridagent", "ran": True, "module": "HybridLink2048", "latent_steps": 3, "ms": 14})
+            emit({"type": "plan", "round": 1, "stage": "ncm_decode"})
+            emit({"type": "layer", "layer": "ncm", "ran": True, "bridges": "ComboBridge + ExpertBridge", "codes": 11, "window_tokens": 512, "s": "0.15"})
+            reply = "I heard you clearly! The live 3D Clover Robot is listening and ready for your next question."
+        else:
+            reply = "Hello from the harness. You said: " + user_text[:80]
         if "run" in low:
             emit({"type": "plan", "round": 1, "stage": "preparing_tool", "tool": "run_powershell"})
             emit({"type": "tool_call", "id": "t1", "name": "run_powershell", "arguments": {"command": "Get-Date"}})

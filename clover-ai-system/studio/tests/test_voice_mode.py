@@ -36,8 +36,12 @@ check("robot.js is loaded only when voice mode is first turned on", app.count("s
 check("no external host appears in robot.js", not re.search(r"https?://(?!www\.w3\.org)[a-z0-9.-]+\.[a-z]{2,}/", built))
 
 # ---------------- toggle and stage ----------------
-check("a clover button sits beside Settings", re.search(r'id="voice-btn"[^>]*>.*?#i-clover.*?\n\s*<button[^>]*id="set-btn"', app, re.S) is not None)
-check("the clover icon exists in the sprite", '<symbol id="i-clover"' in app)
+check("a clover button with the small multipetal app logo sits beside Settings",
+      re.search(r'id="voice-btn"[^>]*><img class="voice-logo" src="icon\.png"[^>]*></button>\s*\n\s*<button[^>]*id="set-btn"', app) is not None)
+check("icon.png is the multipetal app logo (not the 5-leaf version)",
+      (STUDIO / "clover" / "web" / "icon.png").read_bytes()
+      == (STUDIO.parent.parent / "assets" / "clover-yellow-flower-icon-pack" / "web" / "favicons" / "clover-256.png").read_bytes()
+      and '<symbol id="i-clover"' not in app)
 check("chat mode is the default (the button starts unpressed, the stage hidden)",
       'id="voice-btn" aria-pressed="false"' in app and 'id="voice-stage" hidden' in app and "var voice = { on: false" in app)
 check("the stage takes no clicks in chat mode; in voice mode a tap on the robot talks, sends or stops its speech",

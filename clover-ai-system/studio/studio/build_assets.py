@@ -15,17 +15,16 @@ REPO_ROOT = ROOT.parent.parent if (ROOT.parent.parent / "site").is_dir() else Pa
 EXT = (ROOT / "vscode-extension") if (ROOT / "vscode-extension").is_dir() else (ROOT.parent / "vscode-extension")
 DIST = ROOT / "studio" / "dist"
 WEB = ROOT / "clover" / "web"
-PACK = REPO_ROOT / "assets" / "robo-icon"
+PACK = REPO_ROOT / "assets" / "clover-yellow-flower-icon-pack"
 ROBO_PACK = REPO_ROOT / "assets" / "robo-icon"
 CREAM = (247, 243, 233)  # the pack's surface colour, the Studio page background
 
 
 def build_icons():
-    copies = {"app/windows/clover.ico": ROOT / "studio" / "clover.ico",
-              "brand/clover-mark-128.png": EXT / "icon.png",
-              "brand/clover-mark-256.png": WEB / "icon.png",
-              "brand/clover-mark.svg": WEB / "favicon.svg",
-              "brand/clover-mark-512.png": ROOT / "studio" / "icon-512.png"}
+    copies = {"web/favicons/favicon.ico": ROOT / "studio" / "clover.ico",
+              "web/favicons/clover-128.png": EXT / "icon.png",
+              "web/favicons/clover-256.png": WEB / "icon.png",
+              "web/favicons/clover-512.png": ROOT / "studio" / "icon-512.png"}
     for name, dest in copies.items():
         if dest.parent.is_dir() and (PACK / name).is_file():
             shutil.copyfile(PACK / name, dest)
