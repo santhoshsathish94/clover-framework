@@ -275,3 +275,72 @@
 - **Retire the gateway:** the Studio's gateway routes and the tests that exercise them.
 - **First release:** k3's 5 rules, re-signed. k3's 15 pending contributions stay on k3, because they were given
   under the server's privacy terms.
+
+### Execution (commits c00a4f93 and 20dd3e70, plus the new repository)
+- **`collective_repo.py` (new), the repository's automation.**
+  - It checks every open request issue. Ordinary issues are left alone.
+  - It refuses bots and accounts younger than 30 days.
+  - It checks every package again: closed vocabulary, no personal fields, known tools, canonical strategy only.
+  - It keeps accepted packages per GitHub account and evaluates them (at least 3 accounts, gates G1 to G5).
+  - Seed rules stay until contributions replace them.
+  - It signs a release only when the rules change. Then it commits, pushes, replies and closes.
+- **`core_sync.py`:**
+  - `sync_from_repo` downloads 2 files from raw.githubusercontent.com, stages them and verifies them before applying.
+  - `contribute_to_repo` and `withdraw_from_repo` open public issues with the GitHub sign-in. The device's own id
+    stays on the device.
+- **`collective_gateway.py`** is now only the validator and aggregator, plus the issue format.
+- **Retired:** the gateway routes, runtime and credential in `server.py`; `google_identity.py`; the gateway
+  end-to-end tests.
+- **Website:** it refuses contributions and shows no account.
+- **Signing out** stops contributing only; receiving stays as it was.
+- **The test server** now also refuses every GitHub call that is not a GET, so it can never open an issue.
+- **The repository `santhoshsathish94/clover-collective`** (public, Apache-2.0):
+  - `engine/`: 8 stdlib-only modules whose blob ids equal framework commit 20dd3e70, recorded in `engine/SOURCE.md`.
+  - The workflow, with actions/checkout v7.0.1 pinned by SHA.
+  - `seed/rules.json`: k3's 5 rules, with their original strategy texts kept as provenance.
+  - A README.
+- **Signing key:** generated on this PC straight into the Actions secret `CLOVER_CPSL_PRIVATE_KEY`, never shown,
+  with no other copy. Public key `a4d9d040…0283`, pinned in `core_sync.py` and in the README.
+
+### Outcome (checked 2026-11-11)
+- **On GitHub, run by hand:** the workflow published release 1.0.1 (the 5 seed rules) in 11 s. A second run changed
+  nothing and committed nothing.
+- **From raw.githubusercontent.com, with the app's own code and the pinned key:**
+  - 1.0.1 with 5 rules was verified and applied.
+  - The next sync made 1 request and found the core up to date.
+  - A tampered rule file and a wrong key were both refused.
+- **The test server's page:** a real sync shows v1.0.1 with 5 rules. A contribution there is refused, and the
+  repository has 0 issues.
+- **Tests:**
+
+  | Test | Result |
+  | --- | --- |
+  | `test_collective_repo` (new, offline) | 48 checks pass; 3 mutants each caught (strategy check, account age, bundle path) |
+  | `test_github_signin` | 59 checks pass |
+  | `test_collective`, Studio | 35 checks pass |
+  | `test_collective`, mobile | 35 checks pass; it failed on the vault import before |
+  | All suites | 36 of 39 pass; the same 3 known failures |
+
+- **Finding:** k3's 1.0.327 rules carry strategy texts that no app produces, such as "…run python_interpreter to
+  verify row totals…". The old gateway accepted any text, and that text goes into every receiving app's prompt.
+  The new releases use the canonical text:
+
+  | Rules | Strategy text in the new releases |
+  | --- | --- |
+  | audit, reconcile | inspect the file, then Python |
+  | corroborate, forecast | web sources, then Python |
+  | benchmark | none |
+
+### Not verified
+- **The issue path on GitHub:** issue → workflow → account check → reply and close → signed release has run only
+  offline. No real issue was opened, because it would be public under the human's name.
+- **Apps and the website:** no app with this code has been built or released. Installed apps and k3's website still
+  run the old code.
+- **A research script:** `research/predictive-representation-engine/scripts/run_gpu_collective_self_trainer.py`
+  still imports the retired `google_identity`. It already depended on the removed self-made OIDC key.
+
+### Growth
+- **A field that reaches prompts is a security boundary.** The gateway's "any 300 characters" strategy field had
+  already let text that no app produces into the live shared core. Check such fields against a fixed set.
+- **A test server that holds a real sign-in needs a block for every new write path.** Here that was public issues.
+  Add the block together with the feature, not after an incident.
