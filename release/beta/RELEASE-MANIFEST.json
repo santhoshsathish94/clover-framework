@@ -1,14 +1,14 @@
 {
   "product": "Clover AI Studio",
   "publisher": "Santhosh Narayanan",
-  "release_version": "5.0.4",
+  "release_version": "5.0.5",
   "release_channel": "release",
-  "release_date": "2026-11-10",
+  "release_date": "2026-11-11",
   "generated_by": "release/beta/generate_release_reports.py",
   "cpsl_release_signing": {
     "algorithm": "Ed25519 (RFC 8032)",
-    "public_key_hex": "dba3f7e2e969a26c57a24d50e2ecd654249b42e25eecc1f9140a514d7dcedb8a",
-    "private_key_location": "Protected release server vault (/opt/clover-k3/web-studio/vault/cpsl_release_ed25519.key, mode 0600, never in client builds or Git)"
+    "public_key_hex": "a4d9d040035a19a5f1214bd30881b40842d4b06d0990c1bfdd6252fd90280283",
+    "private_key_location": "GitHub Actions secret CLOVER_CPSL_PRIVATE_KEY of santhoshsathish94/clover-collective (generated straight into the secret; never in client builds or Git)"
   },
   "urls": {
     "website": "https://cloverframework.com/",
@@ -22,8 +22,8 @@
   "android": {
     "store": "Google Play Console (Closed Testing & Internal App Sharing)",
     "package_name": "ai.clover.studio",
-    "version_code": 18,
-    "version_name": "5.0.4",
+    "version_code": 19,
+    "version_name": "5.0.5",
     "min_sdk": 26,
     "target_sdk": 36,
     "compile_sdk": 36,
@@ -46,15 +46,15 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 81252849,
-        "sha256": "7528db58bafe080df65a86a25ae43c66edb2eeaf419a3f41f9a69e4f056b4133"
+        "size_bytes": 81248813,
+        "sha256": "76db5ea39fb4baa8c793ba320641d6e9fc37ae625c1b266dc4b9da894a89a5e8"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "mirror": "download/mobile/CloverAIStudio.apk",
         "type": "apk",
-        "size_bytes": 82329449,
-        "sha256": "d277a2fbad70793a67cc56011b9989545330819e17a62178651a8394aee14c4d"
+        "size_bytes": 82325409,
+        "sha256": "55bedb8edeac487577337fc330edc3ee179c85436ddb2f0b9510584ec271553a"
       }
     ],
     "verification": {
@@ -66,7 +66,9 @@
       "browser_first_tests": "30/30 passed",
       "browser_handback_tests": "51/51 passed",
       "collective_tests": "35/35 passed",
-      "google_identity_collective_tests": "32/32 passed",
+      "collective_repo_tests": "48/48 passed",
+      "github_signin_tests": "59/59 passed",
+      "terminal_tree_fixes_tests": "14/14 passed",
       "human_usefulness_tests": "not re-run for this release (urllib.error.URLError: <urlopen error [WinError 10061] No connection could be made because)",
       "live_activity_sse_tests": "18/18 passed",
       "clover_cycles_tests": "passed (exit 0)",
@@ -83,8 +85,8 @@
     "distribution": "Standalone Native C# Win32 Per-User Installer (CloverAIStudio-Setup.exe)",
     "packaging_route": "Native .NET Framework 4.8 x64 GUI Setup & Launcher (csc.exe) with embedded asInvoker manifest, automatic Zone.Identifier unblocking, and embedded TrustedPublisher certificate registration",
     "publisher_display_name": "Santhosh Narayanan",
-    "manifest_version": "5.0.4.0",
-    "display_version": "5.0.4",
+    "manifest_version": "5.0.5.0",
+    "display_version": "5.0.5",
     "architecture": "x64",
     "min_windows_version": "10.0.19041.0",
     "max_windows_version_tested": "10.0.26100.0",
@@ -98,8 +100,8 @@
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "mirror": "download/laptop/CloverAIStudio-Setup.exe",
         "type": "exe",
-        "size_bytes": 9410520,
-        "sha256": "ee7b50fe60479e1fbc73329cb641108c201e85e5bc2cfd1c5ac3348e6c7d16ee"
+        "size_bytes": 9404376,
+        "sha256": "32cc83692b3ce8b69daed3e28942ded9a1bf101e6490718e02e87217fe409fbc"
       },
       {
         "file": "release/beta/windows/CloverFramework-CodeSign.cer",
@@ -118,7 +120,9 @@
       "browser_first_tests": "30/30 passed",
       "browser_handback_tests": "51/51 passed",
       "collective_tests": "35/35 passed",
-      "google_identity_collective_tests": "32/32 passed",
+      "collective_repo_tests": "48/48 passed",
+      "github_signin_tests": "59/59 passed",
+      "terminal_tree_fixes_tests": "14/14 passed",
       "human_usefulness_tests": "not re-run for this release (urllib.error.URLError: <urlopen error [WinError 10061] No connection could be made because)",
       "live_activity_sse_tests": "18/18 passed",
       "clover_cycles_tests": "passed (exit 0)",

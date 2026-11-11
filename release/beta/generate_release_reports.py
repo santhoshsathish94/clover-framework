@@ -69,7 +69,7 @@ def generate_all() -> dict:
     assert _sha256_and_size(win_cer_dl) == (cer_sha, cer_size)
     assert _sha256_and_size(and_apk_dl) == (apk_sha, apk_size)
 
-    cpsl_ed25519_pub = "dba3f7e2e969a26c57a24d50e2ecd654249b42e25eecc1f9140a514d7dcedb8a"
+    cpsl_ed25519_pub = "a4d9d040035a19a5f1214bd30881b40842d4b06d0990c1bfdd6252fd90280283"
     android_cert_sha256_colon = "88:C0:E8:32:66:FF:ED:34:73:F5:1A:A1:02:C0:D5:EC:98:CA:4E:85:F4:D9:5F:FE:70:68:46:57:E1:9C:40:F7"
     android_cert_sha256_hex = android_cert_sha256_colon.replace(":", "").lower()
     android_cert_sha1_colon = "CB:D4:BF:0E:FC:81:1F:18:DB:52:A7:26:C2:46:67:0B:44:B0:1A:A3"
@@ -87,7 +87,7 @@ def generate_all() -> dict:
         "cpsl_release_signing": {
             "algorithm": "Ed25519 (RFC 8032)",
             "public_key_hex": cpsl_ed25519_pub,
-            "private_key_location": "Protected release server vault (/opt/clover-k3/web-studio/vault/cpsl_release_ed25519.key, mode 0600, never in client builds or Git)"
+            "private_key_location": "GitHub Actions secret CLOVER_CPSL_PRIVATE_KEY of santhoshsathish94/clover-collective (generated straight into the secret; never in client builds or Git)"
         },
         "urls": {
             "website": "https://cloverframework.com/",

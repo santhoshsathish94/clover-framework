@@ -131,7 +131,7 @@ if (Test-Path $target) { Remove-Item $target -Force }
 if ($LASTEXITCODE -or -not (Test-Path $target)) { throw "csc Setup.cs failed ($LASTEXITCODE)" }
 Set-AuthenticodeSignature -FilePath $target -Certificate $cert -HashAlgorithm SHA256 -IncludeChain All | Out-Null
 Unblock-File -Path $target -ErrorAction SilentlyContinue
-foreach ($repoRoot in @('C:\personal\oss\clover-framework', 'C:\personal\oss\clover-collective-wt')) {
+foreach ($repoRoot in @($fw)) {  # only the checkout this build came from, never another worktree
     if (Test-Path (Join-Path $repoRoot 'download\laptop')) {
         Copy-Item $target (Join-Path $repoRoot 'download\laptop\CloverAIStudio-Setup.exe') -Force
         Copy-Item $cerPath (Join-Path $repoRoot 'download\laptop\CloverFramework-CodeSign.cer') -Force

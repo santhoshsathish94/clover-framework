@@ -2,10 +2,10 @@
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `5.0.4`  
-**Version Code**: `18`  
+**Release Version**: `5.0.5`  
+**Version Code**: `19`  
 **Package Name**: `ai.clover.studio`  
-**Build Date**: `2026-11-10`  
+**Build Date**: `2026-11-11`  
 **Build Environment**: `k3` (`/opt/clover-k3/studio-android`), OpenJDK `17.0.20`, Gradle `8.9`, Android Gradle Plugin `8.5.2`, Chaquopy `17.2.0` (CPython `3.12`), Android SDK `36` (`minSdk 26`, `targetSdk 36`, `compileSdk 36`), Android NDK `llvm-strip`.
 
 ---
@@ -14,8 +14,8 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 18`, `targetSdk 36`) | `81,252,849` bytes (`77.49 MB`) | `7528db58bafe080df65a86a25ae43c66edb2eeaf419a3f41f9a69e4f056b4133` |
-| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 18`, `targetSdk 36`) | `82,329,449` bytes (`78.52 MB`) | `d277a2fbad70793a67cc56011b9989545330819e17a62178651a8394aee14c4d` |
+| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 19`, `targetSdk 36`) | `81,248,813` bytes (`77.48 MB`) | `76db5ea39fb4baa8c793ba320641d6e9fc37ae625c1b266dc4b9da894a89a5e8` |
+| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 19`, `targetSdk 36`) | `82,325,409` bytes (`78.51 MB`) | `55bedb8edeac487577337fc330edc3ee179c85436ddb2f0b9510584ec271553a` |
 
 ---
 
@@ -31,14 +31,14 @@
 - **AAB Verification (`jarsigner -verify -certs`)**:
   - `jar verified.`
 - **CPSL Ed25519 Asymmetric Release Verification**:
-  - Client builds embed only the 32-byte RFC 8032 Ed25519 public verification key (`dba3f7e2e969a26c57a24d50e2ecd654249b42e25eecc1f9140a514d7dcedb8a`) in `core_sync.py`.
+  - Client builds embed only the 32-byte RFC 8032 Ed25519 public verification key (`a4d9d040035a19a5f1214bd30881b40842d4b06d0990c1bfdd6252fd90280283`) in `core_sync.py`.
 
 ---
 
 ## 3. Package & Manifest Audit (`build.gradle`)
 
 ```text
-package: name='ai.clover.studio' versionCode='18' versionName='5.0.4'
+package: name='ai.clover.studio' versionCode='19' versionName='5.0.5'
 sdkVersion:'26'
 targetSdkVersion:'36'
 compileSdkVersion:'36'
@@ -58,7 +58,9 @@ launchable-activity: name='ai.clover.studio.MainActivity'
 - `python tests/test_browser_first.py`: **30/30 passed**.
 - `python tests/test_browser_handback.py`: **51/51 passed**.
 - `python clover/test_collective.py`: **35/35 passed**.
-- `python clover/test_google_identity_collective.py`: **32/32 passed**.
+- `python tests/test_collective_repo.py`: **48/48 passed**.
+- `python tests/test_github_signin.py`: **59/59 passed**.
+- `python tests/test_terminal_tree_fixes.py`: **14/14 passed**.
 - `python clover/test_human_usefulness.py`: **not re-run for this release (urllib.error.URLError: <urlopen error [WinError 10061] No connection could be made because)**.
 - `python clover/test_live_activity_sse.py`: **18/18 passed**.
 - `python clover/test_clover_cycles.py`: **passed (exit 0)**.

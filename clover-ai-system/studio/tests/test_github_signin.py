@@ -397,5 +397,5 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         for k, v in saved.items():
             setattr(server.S, k, v)
 
-print("ALL PASS" if ok else "SOME FAILED")
-sys.exit(0 if ok else 1)
+print("ALL PASS" if ok else "SOME FAILED", flush=True)
+os._exit(0 if ok else 1)  # the server's daemon threads crashed interpreter teardown once in four runs (0xC0000409)

@@ -3,15 +3,15 @@
 ## 1. Release Artifacts & Signing
 
 - **Upload Artifact (Google Play Console)**: `release/beta/android/clover-ai-studio-beta.aab`
-  - Size: `81,252,849` bytes (`77.49 MB`)
-  - SHA-256: `7528db58bafe080df65a86a25ae43c66edb2eeaf419a3f41f9a69e4f056b4133`
+  - Size: `81,248,813` bytes (`77.48 MB`)
+  - SHA-256: `76db5ea39fb4baa8c793ba320641d6e9fc37ae625c1b266dc4b9da894a89a5e8`
 - **Direct ADB / Tester APK**: `release/beta/android/clover-ai-studio-beta.apk`
-  - Size: `82,329,449` bytes (`78.52 MB`)
-  - SHA-256: `d277a2fbad70793a67cc56011b9989545330819e17a62178651a8394aee14c4d`
+  - Size: `82,325,409` bytes (`78.51 MB`)
+  - SHA-256: `55bedb8edeac487577337fc330edc3ee179c85436ddb2f0b9510584ec271553a`
 - **Package Identity**:
   - `applicationId`: `ai.clover.studio`
-  - `versionCode`: `18`
-  - `versionName`: `5.0.4`
+  - `versionCode`: `19`
+  - `versionName`: `5.0.5`
   - `minSdk`: `26` (Android 8.0)
   - `targetSdk` / `compileSdk`: `36` (Android 16)
 - **Upload Keystore Certificate (`cloverstudio`)**:
@@ -77,7 +77,7 @@
 1. Open **Google Play Console** → Create or select app **Clover AI Studio** (`ai.clover.studio`).
 2. Navigate to **Test and release → Testing → Closed testing** → select the **Alpha / Closed Beta** track → **Create new release**.
 3. Under **App integrity / App signing**, confirm Play App Signing is active.
-4. Upload `release/beta/android/clover-ai-studio-beta.aab` (`versionCode 18`, `versionName 5.0.4`, `targetSdk 36`).
+4. Upload `release/beta/android/clover-ai-studio-beta.aab` (`versionCode 19`, `versionName 5.0.5`, `targetSdk 36`).
 5. Paste the contents of `release/beta/store/google-play/release-notes.md` into **Release notes (`en-US`)**.
 6. Under **Testers**, select your beta tester email list / Google Group and copy the **Join on Android / Join on the Web** opt-in link.
 7. Click **Next** → **Save and publish** to submit for Google Play Closed Testing review.

@@ -6,7 +6,7 @@
     "fail_lines": [],
     "summary": "155 checks passed",
     "counted": "155 checks passed",
-    "seconds": 3.1
+    "seconds": 4.9
   },
   "tool_routing_tests": {
     "suite": "tests/test_tool_routing.py",
@@ -15,7 +15,7 @@
     "fail_lines": [],
     "summary": "129 checks passed",
     "counted": "129 checks passed",
-    "seconds": 1.1
+    "seconds": 1.5
   },
   "repo_tests": {
     "suite": "tests/test_clover_repo.py",
@@ -24,7 +24,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 9.5
+    "seconds": 10.3
   },
   "regression_fixes_tests": {
     "suite": "tests/test_regression_fixes.py",
@@ -33,7 +33,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 19.2
+    "seconds": 6.6
   },
   "page_fetch_tests": {
     "suite": "tests/test_page_fetch.py",
@@ -42,7 +42,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": "119 checks passed",
-    "seconds": 4.9
+    "seconds": 5.0
   },
   "browser_first_tests": {
     "suite": "tests/test_browser_first.py",
@@ -51,7 +51,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": "30 checks passed",
-    "seconds": 0.3
+    "seconds": 0.4
   },
   "browser_handback_tests": {
     "suite": "tests/test_browser_handback.py",
@@ -60,7 +60,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": "51 checks passed",
-    "seconds": 1.8
+    "seconds": 2.7
   },
   "collective_tests": {
     "suite": "clover/test_collective.py",
@@ -69,16 +69,34 @@
     "fail_lines": [],
     "summary": "35 checks passed",
     "counted": "35 checks passed",
-    "seconds": 19.1
+    "seconds": 28.1
   },
-  "google_identity_collective_tests": {
-    "suite": "clover/test_google_identity_collective.py",
+  "collective_repo_tests": {
+    "suite": "tests/test_collective_repo.py",
     "exit": 0,
-    "pass_lines": 32,
+    "pass_lines": 48,
     "fail_lines": [],
-    "summary": "ALL 32 GOOGLE IDENTITY & COLLECTIVE LEARNING CHECKS PASSED",
+    "summary": "ALL PASS",
     "counted": null,
-    "seconds": 21.2
+    "seconds": 16.1
+  },
+  "github_signin_tests": {
+    "suite": "tests/test_github_signin.py",
+    "exit": 0,
+    "pass_lines": 59,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": null,
+    "seconds": 5.2
+  },
+  "terminal_tree_fixes_tests": {
+    "suite": "tests/test_terminal_tree_fixes.py",
+    "exit": 0,
+    "pass_lines": 14,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": null,
+    "seconds": 7.9
   },
   "human_usefulness_tests": {
     "suite": "clover/test_human_usefulness.py",
@@ -87,7 +105,7 @@
     "fail_lines": [],
     "summary": "urllib.error.URLError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
     "counted": null,
-    "seconds": 2.3
+    "seconds": 2.4
   },
   "live_activity_sse_tests": {
     "suite": "clover/test_live_activity_sse.py",
@@ -96,7 +114,7 @@
     "fail_lines": [],
     "summary": "18 checks passed",
     "counted": "18 checks passed",
-    "seconds": 2.5
+    "seconds": 2.9
   },
   "clover_cycles_tests": {
     "suite": "clover/test_clover_cycles.py",
@@ -114,7 +132,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 0.5
+    "seconds": 0.8
   },
   "caution_only_tests": {
     "suite": "tests/test_caution_only.py",
@@ -123,7 +141,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 0.4
+    "seconds": 0.6
   },
   "superagent_jev_dory_tests": {
     "suite": "tests/test_superagent_jev_dory.py",
@@ -141,7 +159,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 10.3
+    "seconds": 10.6
   },
   "token_economy_tests": {
     "suite": "tests/test_token_economy.py",
@@ -150,7 +168,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 0.5
+    "seconds": 0.4
   },
   "studio_unified_ui_tests": {
     "suite": "tests/test_studio_unified_ui.py",
@@ -168,6 +186,6 @@
     "fail_lines": [],
     "summary": "ALL STRICT C1/C2/C3 AND S1/S2/S3 CHECKS PASSED",
     "counted": null,
-    "seconds": 70.2
+    "seconds": 12.4
   }
 }
