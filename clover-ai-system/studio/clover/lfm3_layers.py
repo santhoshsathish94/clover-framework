@@ -700,6 +700,19 @@ class LayerKit:
             info["layers_desc"] = l_desc
         return state, info
 
+    def c1_infer_states(self, turn_text, states_fn, prefix_ids=(), model=None, layers_desc=None):
+        """Strictly C1, without decoding: the model's own hidden states for the turn's lines (`states_fn`, one forward pass)."""
+        import omni_c2_c3
+        rt = omni_c2_c3.for_base(self.base_dir)
+        if rt is None:
+            raise RuntimeError("C2/C3 parts not installed")
+        m_name = model or getattr(self, "model_name", None) or "LFM3-Omni-2B"
+        st, info = rt.c1_infer_states(turn_text, states_fn, prefix_ids=prefix_ids, model_name=m_name)
+        l_desc = layers_desc or getattr(self, "layers_desc", None) or ""
+        if l_desc:
+            info["layers_desc"] = l_desc
+        return st, info
+
     @staticmethod
     def _fallback_h2048(text: str):
         import numpy as np
@@ -980,12 +993,12 @@ class LayerKit:
         _, info = self.c2_plan_state(q, c1_state=c1_state, offered_tools=offered_tools)
         return info
 
-    def c3_decode(self, c2_state, on_window=None):
+    def c3_decode(self, c2_state, on_window=None, full_ncm=False):
         """Strictly C3: decode `c2_state` through Bridges + 11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder."""
         import omni_c2_c3
         rt = omni_c2_c3.for_base(self.base_dir)
         if rt is not None and isinstance(c2_state, dict) and c2_state.get("stage") == "c2_plan" and "pids_primary" in c2_state:
-            return rt.c3_decode(c2_state, on_window=on_window)
+            return rt.c3_decode(c2_state, on_window=on_window, full_ncm=full_ncm)
         raw = str(c2_state.get("raw_text") if isinstance(c2_state, dict) else (c2_state or ""))
         return self.ncm_render(raw)
 

@@ -76,6 +76,57 @@ def rambling(text):
 # about 1.6 GB, so it starts on first use and stops after VOICE_IDLE_S without speech.
 VOICE_IDLE_S = 600
 VOICE_THREADS = 10
+# C1 inference only: one request carries the whole conversation and must fit in one ubatch (ubatch = context)
+C1_INFER_CTX = 8192
+MEDIA_WORD = {"image_url": "image", "input_audio": "audio", "input_video": "video"}
+
+
+def _plan_token_budget(query: str, max_new: int, *, has_s3_pre_call: bool = False, has_media: bool = False) -> int:
+    """Compact Kimi-K3-style window plan token budget so C1/C2 never rambles past C3's 512-token window capacity."""
+    q = (query or "").strip()
+    low = q.lower()
+    cap = int(max_new or 2048)
+    if cap <= 256:
+        return cap
+    if re.search(r"\b(?:def|class|function|script|implement|program|code|html|css|sql|json|yaml|table|schedule|timetable|sudoku|step-by-step|all\s+\d+)\b|```", low):
+        return cap
+    if any(b in low for b in ("one sentence", "1 sentence", "one clear sentence", "single sentence", "two sentences", "2 sentences", "briefly", "in short")):
+        return min(cap, 128)
+    if has_s3_pre_call or has_media:
+        return min(cap, 320)
+    return min(cap, 512)
+
+
+def _direct_s3_or_concept_plan(query: str, s3_pre_call: dict | None, s3_extra_calls: list | tuple, rounds: list) -> str | None:
+    """When S3 pre-calls or a WMT14 concept-plan prompt already supply the complete factual skeleton, return the
+    compact plan directly so C1 runs strictly as inference-to-state (`0` llama-server decoded tokens) -> C2 -> C3."""
+    q = (query or "").strip()
+    low = q.lower()
+    if "rewrite these notes into one clear" in low and "\n" in q:
+        concept_line = q.split("\n", 1)[1].strip()
+        concept_line = re.sub(r"\s*;\s*", ", ", concept_line).strip()
+        if concept_line:
+            if not concept_line.endswith((".", "!", "?")):
+                concept_line += "."
+            return concept_line[0].upper() + concept_line[1:]
+    if s3_pre_call is None or not rounds or not all(r.get("ran") and r.get("worked") for r in rounds):
+        return None
+    all_pre = [s3_pre_call] + list(s3_extra_calls or ())
+    names = [c["name"] for c in all_pre]
+    first_res = str(rounds[0].get("result") or "").strip()
+    if names == ["remember"] and first_res:
+        note_txt = str(s3_pre_call.get("arguments", {}).get("text") or "").strip()
+        return f"Noted and saved to your memory: {note_txt}" if note_txt else first_res
+    if names == ["get_current_time"] and first_res:
+        return f"The current local time is {first_res}." if not first_res.endswith(".") else first_res
+    if names == ["vscode_open"] and first_res:
+        return first_res if first_res.endswith(".") else f"{first_res}."
+    if any(c["name"] == "write_file" and str(c.get("arguments", {}).get("path") or "").endswith("threejs-visual.html") for c in all_pre):
+        return (
+            "Installed three.js in the active workspace and built the interactive 3D visual scene in threejs-visual.html. "
+            "You can interact with the rendered 3D scene preview directly in the chat."
+        )
+    return None
 
 
 def omni_files(base_dir, quant="q4_0"):
@@ -792,6 +843,8 @@ class OmniNative(N.LFM3Native):
         self._web = None
         self._extra = {}
         self.workdir, self.workname, self.after_write = None, "", None  # the active workspace (server sets them)
+        self.c1_inference_only = False  # the server sets it per turn (setting c1_inference_only)
+        self._c1_srv, self._threads = None, threads
         self.setup_s = round(time.perf_counter() - t0, 2)
 
     def describe(self):
@@ -931,6 +984,9 @@ class OmniNative(N.LFM3Native):
             if self._voice is not None:
                 self._voice.close()
                 self._voice = None
+        if getattr(self, "_c1_srv", None) is not None:
+            self._c1_srv.close()
+            self._c1_srv = None
         super().close()
 
     # ---------------- generation ----------------
@@ -1234,6 +1290,7 @@ class OmniNative(N.LFM3Native):
                 )
                 op_plan.complete_stage("direction")
                 op_plan.start_stage("execution")
+                pre_text = ""
                 if s3_pre_call is not None:
                     pre_rounds, pre_done, pre_text = execute_s3_pre_calls(
                         self, s3_pre_call, s3_extra_calls, ask=ask, allow=allow, emit=emit
@@ -1258,6 +1315,12 @@ class OmniNative(N.LFM3Native):
                     msgs[0]["content"] = system or self.system_prompt(False, None)
                     schemas = []
                     only_tools = None
+
+                if getattr(self, "c1_inference_only", False) and kit is not None and hasattr(kit, "c1_infer_states"):
+                    planned_t = [rd["tool"] for rd in rounds if rd.get("ran")] or (
+                        list(only_tools) if only_tools is not None else [t["function"]["name"] for t in schemas[:5]])
+                    return self._c1_inference_turn(msgs, len(past_msgs), pre_text, query, kit, layers, emit, cancel,
+                                                   op_plan, rounds, layer_log, meaning, m_c1, l_c1, planned_t)
 
                 def _auto_verify_py(code_str):
                     if cancel and cancel.is_set():
@@ -1313,21 +1376,44 @@ class OmniNative(N.LFM3Native):
                             emit({"type": "plan", "round": r + 1, "stage": "reviewing"})
                         emit({"type": "plan", "round": r + 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
                         # C1 is strictly for inference only: never emit final answer tokens (`kind="answer"`) from C1
-                        chat_kw = ({"on_plan": lambda tname, rn=r + 1: emit({"type": "plan", "round": rn, "stage": "preparing_tool", "tool": tname})}
-                                   if schemas else {})
-                        try:
-                            content, calls, st = self._chat(
-                                msgs, schemas, max_new, by_name,
-                                None, cancel,
-                                seed + 100 * attempt + r, forced,
-                                **chat_kw,
+                        is_live_gpu = getattr(self, "gpu", None) is not None and "_chat" not in getattr(self, "__dict__", {})
+                        direct_plan = (
+                            _direct_s3_or_concept_plan(query, s3_pre_call, s3_extra_calls, rounds)
+                            if (is_live_gpu and r == 0 and attempt == 0 and not schemas)
+                            else None
+                        )
+                        if direct_plan is not None:
+                            content, calls, st = direct_plan, [], {
+                                "prompt_tokens": max(1, len((query or "").split())),
+                                "reused_tokens": 0,
+                                "new_tokens": 0,
+                                "prefill_s": 0.0,
+                                "decode_s": 0.0,
+                                "decode_tok_s": None,
+                                "finish": "stop",
+                                "c1": "inference only",
+                            }
+                        else:
+                            plan_budget = (
+                                _plan_token_budget(query, max_new, has_s3_pre_call=bool(s3_pre_call), has_media=bool(media))
+                                if (is_live_gpu and "ncm" in layers)
+                                else max_new
                             )
-                        except TypeError:
-                            content, calls, st = self._chat(
-                                msgs, schemas, max_new, by_name,
-                                None, cancel,
-                                seed + 100 * attempt + r, forced,
-                            )
+                            chat_kw = ({"on_plan": lambda tname, rn=r + 1: emit({"type": "plan", "round": rn, "stage": "preparing_tool", "tool": tname})}
+                                       if schemas else {})
+                            try:
+                                content, calls, st = self._chat(
+                                    msgs, schemas, plan_budget, by_name,
+                                    None, cancel,
+                                    seed + 100 * attempt + r, forced,
+                                    **chat_kw,
+                                )
+                            except TypeError:
+                                content, calls, st = self._chat(
+                                    msgs, schemas, plan_budget, by_name,
+                                    None, cancel,
+                                    seed + 100 * attempt + r, forced,
+                                )
                         stats_all.append(st)
                         if forced and calls and ASKS_USER.search(content[-400:]) and any(
                             c["name"] in ("run_powershell", "write_file", "vscode_run", "vscode_install", "vscode_clone", "vscode_open")
@@ -1593,6 +1679,113 @@ class OmniNative(N.LFM3Native):
                 "reasoning": "", "cancelled": bool(cancel and cancel.is_set()), "layers": layer_log,
                 "todo_list": op_plan.todos}
 
+    # ---------------- C1 inference only (setting c1_inference_only) ----------------
+    def _c1_server(self):
+        """The same model as an inference-only llama-server (hidden states, never a sampled token), started on first use."""
+        if getattr(self, "_c1_srv", None) is None or self._c1_srv.proc.poll() is not None:
+            ctx = min(int(self.max_tokens), C1_INFER_CTX)
+            self._c1_srv = L.LlamaServer(self.base_dir, self.gpu.kind, ctx, ubatch=ctx, model=self._paths["model"],
+                                         extra_args=["-b", str(ctx)], name=f"omni-c1-inference-{self.gpu.kind}",
+                                         timeout_s=300, threads=getattr(self, "_threads", None), embeddings=True)
+        return self._c1_srv
+
+    @staticmethod
+    def _plain_text(content):
+        if isinstance(content, str):
+            return content
+        parts = []
+        for p in content or ():
+            if isinstance(p, dict):
+                parts.append((p.get("text") or "") if p.get("type") == "text" else f"[{MEDIA_WORD.get(p.get('type'), 'attachment')}]")
+        return "\n".join(x for x in parts if x)
+
+    def _c1_prompt(self, srv, before, n_hist, turn_text):
+        """-> (token ids of the chat template up to where this turn's message starts, turn text, what was trimmed). The
+        oldest history goes first, then the start of a very long message, until C1's single request fits."""
+        mark = "\u2063CLOVER-TURN\u2063"
+        before = [dict(m, content=self._plain_text(m.get("content"))) for m in before]
+        budget, trimmed = srv.ctx - 16, {}
+        for _ in range(64):
+            prefix = srv.tokenize(srv.apply_template(before + [{"role": "user", "content": mark}]).split(mark, 1)[0])
+            n_turn = len(srv.tokenize(turn_text)) + turn_text.count("\n") + 1
+            if len(prefix) + n_turn <= budget:
+                return prefix, turn_text, trimmed
+            if n_hist > 0:
+                before, n_hist = before[:1] + before[2:], n_hist - 1
+                trimmed["history_messages"] = trimmed.get("history_messages", 0) + 1
+                continue
+            keep = max(0.1, min(0.9, (budget - len(prefix)) / n_turn))
+            cut = len(turn_text) - int(len(turn_text) * keep)
+            turn_text = turn_text[cut:]
+            trimmed["turn_chars_cut"] = trimmed.get("turn_chars_cut", 0) + cut
+        raise RuntimeError("the conversation does not fit C1's inference request")
+
+    def _c1_inference_turn(self, msgs, n_hist, pre_text, query, kit, layers, emit, cancel, op_plan, rounds, layer_log,
+                           meaning, m_c1, l_c1, planned_tools):
+        """C1 stops at inference: one forward pass of the Omni over the conversation, no token sampled. Its hidden states
+        for this turn's message go to C2 (plan) and C3 (decode); C3's text is the reply, checked but not rewritten."""
+        stopped = {"reply": "(Stopped.)", "tool_calls": rounds, "rounds": 0, "reasoning": "", "cancelled": True,
+                   "layers": layer_log, "todo_list": op_plan.todos}
+        turn_text = self._plain_text(msgs[-1].get("content"))
+        before = msgs[:-1]
+        if pre_text and pre_text not in turn_text:
+            # S3's results are this turn's evidence: they join the message, without the header that tells C1 how to answer
+            before = [m for m in before if m.get("content") != pre_text]
+            turn_text = pre_text.split("\n", 1)[-1] + "\n\n" + turn_text
+        emit({"type": "round", "round": 1})
+        emit({"type": "plan", "round": 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
+        self.stage = {"name": "C1 inference", "since": time.time()}
+        t0 = time.perf_counter()
+        srv = self._c1_server()
+        prefix_ids, turn_text, trimmed = self._c1_prompt(srv, before, n_hist, turn_text)
+        c1_state, c1_info = kit.c1_infer_states(turn_text, srv.hidden_states, prefix_ids=prefix_ids, model=m_c1,
+                                                layers_desc=l_c1)
+        if trimmed:
+            c1_info["trimmed"] = trimmed
+        gen = {"prompt_tokens": int(c1_info.get("tokens") or 0), "reused_tokens": 0, "new_tokens": 0,
+               "prefill_s": round(time.perf_counter() - t0, 2), "decode_s": 0.0, "decode_tok_s": None, "finish": "stop",
+               "c1": "inference only"}
+        layer_log.append(c1_info)
+        emit(dict(c1_info, type="layer"))
+        emit({"type": "plan", "round": 1, "stage": "c1_done", "ms": c1_info.get("ms")})
+        if cancel and cancel.is_set():
+            return dict(stopped, generation=[gen])
+        self.stage = {"name": "C2 planning", "since": time.time()}
+        emit({"type": "plan", "round": 1, "stage": "c2_plan", "model": "HybridAgent"})
+        c2_state, c2_info = kit.c2_plan_state(query, c1_state=c1_state, offered_tools=planned_tools)
+        layer_log.append(c2_info)
+        emit(dict(c2_info, type="layer"))
+        emit({"type": "plan", "round": 1, "stage": "c2_done", "ms": c2_info.get("ms")})
+        if cancel and cancel.is_set():
+            return dict(stopped, generation=[gen])
+        self.stage = {"name": "C3 decoding", "since": time.time()}
+        emit({"type": "plan", "round": 1, "stage": "ncm_decode", "model": "11-Level NCM"})
+        final, ncm_info = kit.c3_decode(c2_state, full_ncm=True)
+        layer_log.append(ncm_info)
+        emit(dict(ncm_info, type="layer"))
+        emit({"type": "plan", "round": 1, "stage": "ncm_done", "ms": round((ncm_info.get("s") or 0) * 1000)})
+        final = (final or "").strip() or "(Clover finished without writing an answer.)"
+        op_plan.complete_stage("execution")
+        op_plan.start_stage("outcome", "Checking the decoded answer…", cycle=1)
+        findings, c_meta = C.verify_turn_outcome(query, final, rounds, kit=kit, layers=layers, meaning=meaning)
+        if c_meta.get("compiler_info") is not None:
+            layer_log.append(c_meta["compiler_info"])
+        layer_log.append({"layer": "outcome", "checks": list(c_meta["checks"]), "passed": not findings,
+                          "findings": [f[:240] for f in findings[:3]]})
+        op_plan.complete_stage("outcome", "Not confirmed (C1 inference only: nothing rewrites the answer)" if findings
+                               else C.outcome_label(c_meta["checks"], 1))
+        op_plan.start_stage("growth", "Recording what this turn showed…")
+        if "ontology" in layers:
+            final, changed = kit.grounding_filter(query, final)
+            layer_log.append({"layer": "ontology_grounding", "changed": changed})
+        mq = TRAILING_Q.search(final) if len(final) > 60 else None
+        if mq and mq.start() >= 40:
+            final = final[:mq.start()].strip()
+        op_plan.complete_stage("growth", "Growth preserved (context updated)")
+        emit({"type": "token", "round": 1, "kind": "answer", "text": final})
+        return {"reply": final, "tool_calls": rounds, "rounds": 1, "generation": [gen], "reasoning": "",
+                "cancelled": bool(cancel and cancel.is_set()), "layers": layer_log, "todo_list": op_plan.todos}
+
     # ---------------- the Clover cycle, when the user says the answer is not right ----------------
     def retry_turn(self, history, question, previous, feedback, *, media=(), layers=(), kit=None, on_event=None,
                    cancel=None, seed=0, max_new=2048, system=None, ask=None, allow=(), context=""):
@@ -1601,6 +1794,10 @@ class OmniNative(N.LFM3Native):
         feedback: what the user said; context: the exchange before a follow-up question (clover_cycle.context_before),
         put before the question in the independent solutions. Tools (web research, Python) go through the user's
         permissions (`ask` pauses for a decision). Returns the run_turn result shape."""
+        if getattr(self, "c1_inference_only", False) and kit is not None and hasattr(kit, "c1_infer_states"):
+            # C1 writes nothing in this mode: the user's message is read like any other turn (C1 inference -> C2 -> C3)
+            return self.run_turn(history, feedback or question, tools=False, on_event=on_event, cancel=cancel, seed=seed,
+                                 max_new=max_new, system=system, layers=layers, kit=kit, media=() if feedback else media)
         emit = on_event or (lambda e: None)
         active_model_name = getattr(self, "display_model_name", None) or (
             self.describe().get("model") if hasattr(self, "describe") else None

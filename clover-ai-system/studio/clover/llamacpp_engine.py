@@ -97,7 +97,7 @@ def _no_power_throttling(proc):
 class LlamaServer:
     # Larger token window and ubatch size for faster one-time C1 prefill across longer prompts
     def __init__(self, base_dir, kind="vulkan", ctx=32768, timeout_s=180, ubatch=1024, model=None, mmproj=None,
-                 extra_args=(), name=None, threads=None):
+                 extra_args=(), name=None, threads=None, embeddings=False):
         base_dir = Path(base_dir)
         self.exe = server_exe(base_dir, kind)
         self.model = Path(model) if model else base_dir / "data" / "lfm3" / "gguf" / GGUF
@@ -117,6 +117,8 @@ class LlamaServer:
                  "--slot-save-path", str(self.slots_dir), "--checkpoint-min-step", "0", "-ub", str(int(ubatch))]
         if mmproj:
             args += ["--mmproj", str(mmproj)]
+        if embeddings:  # inference only: every token's last-layer state, never a sampled token; a request must fit one ubatch
+            args += ["--embeddings", "--pooling", "none"]
         args += [str(a) for a in extra_args]
         # llama-server allows any web origin; a per-launch key keeps web pages in the user's browser from using it
         self._key = secrets.token_urlsafe(24)
@@ -151,7 +153,10 @@ class LlamaServer:
                 raise TimeoutError(f"llama-server did not become ready in {timeout_s} s; see {self.log_path}")
             time.sleep(0.4)
         # the first prompt otherwise pays the GPU kernel set-up (4.6 s for 12 tokens in the first test)
-        self._request("POST", "/completion", {"prompt": "Hello. " * 160, "n_predict": 2, "cache_prompt": False}, timeout=180)
+        if embeddings:
+            self._request("POST", "/embedding", {"content": "Hello. " * 160}, timeout=180)
+        else:
+            self._request("POST", "/completion", {"prompt": "Hello. " * 160, "n_predict": 2, "cache_prompt": False}, timeout=180)
 
     def _list_device(self, env):
         """-> (description, llama.cpp device name) of the GPU this server uses; ("CPU", None) for the CPU."""
@@ -213,6 +218,26 @@ class LlamaServer:
     def props(self):
         status, data = self._request("GET", "/props", timeout=30)
         return json.loads(data) if status == 200 else {}
+
+    def _post_json(self, path, body, timeout=600):
+        status, data = self._request("POST", path, body, timeout=timeout)
+        if status != 200:
+            raise RuntimeError(f"llama-server {path} HTTP {status}: {data[:300]!r}")
+        return json.loads(data)
+
+    def hidden_states(self, ids):
+        """One forward pass over these token ids (used as given, no BOS added) -> a list of last-layer state vectors, one
+        per token. Needs an embeddings=True instance."""
+        res = self._post_json("/embedding", {"content": list(map(int, ids))})
+        return (res[0] if isinstance(res, list) else res)["embedding"]
+
+    def tokenize(self, text):
+        """Token ids of `text` with the model's own tokenizer; special-token text (the chat template's markers) is parsed."""
+        return self._post_json("/tokenize", {"content": text, "add_special": False, "parse_special": True}, timeout=60)["tokens"]
+
+    def apply_template(self, messages):
+        """The prompt text the model's chat template makes of `messages` (no inference)."""
+        return self._post_json("/apply-template", {"messages": messages}, timeout=60)["prompt"]
 
     def chat_stream(self, body, cancel=None):
         """Yields the OpenAI chunks of /v1/chat/completions; {"cancelled": True} last when `cancel` is set."""

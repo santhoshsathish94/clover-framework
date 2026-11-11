@@ -247,7 +247,8 @@ class Settings:
                 "personal": True,
                 "collective_contribute": False,  # opt-in candidate extraction (research/collective-learning)
                 "collective_receive": False,  # opt-in shared-core updates (research/collective-learning)
-                "tool_deferral": False}  # tool_usage: defer never-called VS Code tools (worse first steps when measured)
+                "tool_deferral": False,  # tool_usage: defer never-called VS Code tools (worse first steps when measured)
+                "c1_inference_only": False}  # C1 reads, C2 plans, C3 writes the reply (measured before any default)
 
     def __init__(self, path, engine=None):
         """engine: what this machine supports (hardware.choose): the default, and "cpu" when no usable GPU is found
@@ -293,6 +294,8 @@ class Settings:
             self.data["collective_receive"] = saved["collective_receive"]
         if isinstance(saved.get("tool_deferral"), bool):
             self.data["tool_deferral"] = saved["tool_deferral"]
+        if isinstance(saved.get("c1_inference_only"), bool):
+            self.data["c1_inference_only"] = saved["c1_inference_only"]
 
     def get(self):
         with self.lock:
@@ -352,6 +355,10 @@ class Settings:
                 if not isinstance(changes["tool_deferral"], bool):
                     raise ValueError("tool_deferral must be true or false")
                 self.data["tool_deferral"] = changes["tool_deferral"]
+            if "c1_inference_only" in changes:
+                if not isinstance(changes["c1_inference_only"], bool):
+                    raise ValueError("c1_inference_only must be true or false")
+                self.data["c1_inference_only"] = changes["c1_inference_only"]
             self.path.parent.mkdir(parents=True, exist_ok=True)
             tmp = self.path.with_suffix(".tmp")
             tmp.write_text(json.dumps(self.data, indent=2), encoding="utf-8")
@@ -1766,6 +1773,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
         extra.append(open_t)
     made = []
     eng.turn_images = made  # pictures and charts made in this turn (image tool, Python's PNG files)
+    eng.c1_inference_only = bool(settings.get("c1_inference_only"))
     extra.append(image_tool(sid, cancel, made))
     t0 = time.perf_counter()
     if S.turn_lock.locked() and on_event:

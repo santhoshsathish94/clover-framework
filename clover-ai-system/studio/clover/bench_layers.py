@@ -124,6 +124,7 @@ def main():
     ap.add_argument("--ids", default="")
     # recall (Layer 2) needs a user history: Clover chat files (sessions/<month>/<chat>.jsonl) under this folder
     ap.add_argument("--recall-memory", default=None)
+    ap.add_argument("--c1-inference-only", action="store_true")
     a = ap.parse_args()
     base = Path(a.base)
     tasks = json.loads((HERE / "tasks70.json").read_text(encoding="utf-8"))
@@ -143,6 +144,7 @@ def main():
     if a.engine.startswith("omni"):
         import omni_native
         eng = omni_native.OmniNative(base, perms, engine="cpu" if a.engine == "omni-cpu" else "gpu", quant=a.quant)
+        eng.c1_inference_only = bool(a.c1_inference_only)
     else:
         eng = N.LFM3Native(base, perms, engine=a.engine)
     eng._web = ReplayWeb(a.web_cache or (out.parent / "web-cache.jsonl"), a.web_mode, base)
