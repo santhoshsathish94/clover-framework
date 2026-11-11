@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e9f5f1">
+  <link rel="icon" href="data:,">
+  <title>Clover Robo — A tiny interactive companion</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: oklch(28% 0.035 215);
+      --muted: oklch(46% 0.035 215);
+      --glass: oklch(98% 0.012 155 / 0.72);
+      --line: oklch(75% 0.035 165 / 0.48);
+      --accent: oklch(55% 0.16 147);
+      --focus: oklch(52% 0.17 245);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+    body {
+      min-height: 100dvh;
+      background: #e9f5f1;
+      color: var(--ink);
+      font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    #fallback {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 42%, oklch(97% 0.025 180) 0 18%, transparent 48%),
+        linear-gradient(155deg, oklch(96% 0.025 180), oklch(91% 0.035 165));
+    }
+    .fallback-clover {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      filter: drop-shadow(0 24px 22px #377f6b33);
+    }
+    .fallback-clover span {
+      position: absolute;
+      width: 76px;
+      height: 76px;
+      background: linear-gradient(145deg, #62c983, #1c8e48);
+      border-radius: 50% 50% 16% 50%;
+    }
+    .fallback-clover span:nth-child(1) { top: 0; left: 37px; transform: rotate(45deg); }
+    .fallback-clover span:nth-child(2) { top: 37px; right: 0; transform: rotate(135deg); }
+    .fallback-clover span:nth-child(3) { bottom: 0; left: 37px; transform: rotate(225deg); }
+    .fallback-clover span:nth-child(4) { top: 37px; left: 0; transform: rotate(315deg); }
+    canvas {
+      position: fixed;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+    .brand {
+      position: fixed;
+      z-index: 2;
+      top: max(24px, env(safe-area-inset-top));
+      left: max(24px, env(safe-area-inset-left));
+      pointer-events: none;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(20px, 2.2vw, 28px);
+      line-height: 1.1;
+      letter-spacing: -0.045em;
+      font-weight: 700;
+    }
+    .brand p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      letter-spacing: 0.01em;
+    }
+    .status {
+      position: fixed;
+      z-index: 2;
+      top: max(28px, env(safe-area-inset-top));
+      right: max(24px, env(safe-area-inset-right));
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px oklch(55% 0.16 147 / 0.12);
+    }
+    .controls {
+      position: fixed;
+      z-index: 3;
+      left: 50%;
+      bottom: max(24px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: max-content;
+      max-width: calc(100vw - 32px);
+    }
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      text-align: center;
+      pointer-events: none;
+    }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      max-width: min(680px, calc(100vw - 32px));
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--glass);
+      box-shadow: 0 12px 35px oklch(40% 0.04 190 / 0.10);
+      backdrop-filter: blur(16px);
+    }
+    button {
+      min-width: 78px;
+      min-height: 44px;
+      padding: 0 17px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink);
+      font: 600 13px/1 "Avenir Next", "Trebuchet MS", sans-serif;
+      cursor: pointer;
+      transition: background-color 160ms ease-out, color 160ms ease-out, transform 160ms ease-out;
+    }
+    button:hover { background: oklch(88% 0.04 165 / 0.75); }
+    button:active { transform: scale(0.95); }
+    button[aria-pressed="true"] { background: var(--ink); color: oklch(97% 0.015 160); }
+    button:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    @media (max-width: 520px) {
+      .brand { top: max(20px, env(safe-area-inset-top)); left: 20px; }
+      .brand p { font-size: 12px; }
+      .status { top: max(76px, calc(env(safe-area-inset-top) + 64px)); right: 20px; bottom: auto; }
+      .controls { bottom: max(18px, env(safe-area-inset-bottom)); }
+      .buttons { max-width: 340px; gap: 4px; padding: 5px; }
+      button { min-width: 74px; padding: 0 11px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      button { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="fallback" aria-hidden="true"><div class="fallback-clover"><span></span><span></span><span></span><span></span></div></div>
+  <header class="brand">
+    <h1>Clover robo</h1>
+    <p>A little luck, brought to life.</p>
+  </header>
+  <div class="status" aria-hidden="true"><span class="status-dot"></span><span id="status-text">Ready when you are</span></div>
+  <div class="controls">
+    <p class="hint">Move to catch Clover’s eye · Tap Clover to say hello</p>
+    <div class="buttons action-buttons" role="group" aria-label="Choose a body action">
+      <button type="button" data-action="stand" aria-pressed="true">Stand</button>
+      <button type="button" data-action="sit" aria-pressed="false">Sit</button>
+      <button type="button" data-action="walk" aria-pressed="false">Walk</button>
+      <button type="button" data-action="dance" aria-pressed="false">Dance</button>
+    </div>
+    <div class="buttons" role="group" aria-label="Choose a reaction">
+      <button type="button" data-reaction="wave" aria-pressed="false">Wave</button>
+      <button type="button" data-reaction="happy" aria-pressed="false">Happy</button>
+      <button type="button" data-reaction="thinking" aria-pressed="false">Thinking</button>
+      <button type="button" data-reaction="working" aria-pressed="false">Working</button>
+      <button type="button" data-reaction="reading" aria-pressed="false">Reading</button>
+      <button type="button" data-reaction="answering" aria-pressed="false">Answering</button>
+      <button type="button" data-reaction="sleepy" aria-pressed="false">Sleepy</button>
+    </div>
+  </div>
+  <p class="sr-only" id="announcement" aria-live="polite">Your clover buddy is ready.</p>
+  <script type="module">
+    import robot from './src/robot.js';
+    const statusText = document.getElementById('status-text');
+    const announcement = document.getElementById('announcement');
+    const press = (selector, value, attr) => document.querySelectorAll(selector).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset[attr] === value)));
+    robot.onStatus((status, spoken) => { statusText.textContent = status; announcement.textContent = spoken; });
+    document.querySelectorAll('[data-action]').forEach((b) => b.addEventListener('click', () => {
+      robot.setAction(b.dataset.action); press('[data-action]', b.dataset.action, 'action');
+    }));
+    document.querySelectorAll('[data-reaction]').forEach((b) => b.addEventListener('click', () => robot.react(b.dataset.reaction)));
+    robot.mount(document.body);
+    const t = new URLSearchParams(location.search).get('t');
+    if (t === null) robot.start(); else robot.seek(t);
+    document.getElementById('fallback')?.remove();
+    window.__robot = robot;
+  </script>
+</body>
+</html>

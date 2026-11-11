@@ -118,6 +118,20 @@ button { cursor: pointer; }
 .ibtn:hover { background: var(--fill); color: var(--ink); }
 
 .stream { flex: 1; min-height: 0; overflow-y: auto; }
+/* voice mode: Clover's robot in front, the chat behind it transparent; the composer stays as it is */
+.stage-wrap { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; }
+html:not(.voice) .app.empty-chat .stage-wrap { flex: 0 0 auto; overflow: visible; margin-top: auto; }
+.voice-stage { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.voice-stage[hidden] { display: none; }
+html.voice .voice-stage { pointer-events: auto; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+html.voice .stream .col { opacity: .22; transition: opacity .3s var(--ease); }
+html.voice .stream:hover .col { opacity: .5; }
+html.voice .hero, html.voice .hero-below { display: none !important; }
+#voice-btn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.voice-caption { position: absolute; z-index: 2; left: 50%; bottom: .6rem; transform: translateX(-50%); width: max-content; max-width: min(640px, 92%);
+  padding: .45rem .95rem; border-radius: 14px; background: rgba(255, 253, 248, .9); box-shadow: 0 6px 22px rgba(27, 39, 31, .1);
+  color: var(--ink); font-size: .95rem; line-height: 1.4; text-align: center; }
+.voice-caption[hidden] { display: none; }
 .app.empty-chat .stream { flex: 0 0 auto; overflow: visible; margin-top: auto; }
 .app.empty-chat .dock { margin-bottom: auto; }
 .col { width: min(820px, 100%); margin: 0 auto; padding: .75rem 1.25rem 1.5rem; }
@@ -406,7 +420,7 @@ pre.trace { white-space: pre-wrap; word-break: break-word; background: var(--sur
 /* in-place center section view: replaces the chat screen when any menu is selected */
 .scrim { position: fixed; inset: 0; background: rgba(20, 32, 24, .28); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
 .scrim.on { opacity: 1; pointer-events: auto; }
-.app.view-page #stream, .app.view-page .dock { display: none !important; }
+.app.view-page .stage-wrap, .app.view-page #stream, .app.view-page .dock { display: none !important; }
 .app.view-page .bar__title { opacity: 0; pointer-events: none; }
 .sheet { flex: 1; min-height: 0; width: 100%; background: var(--bg); display: none; flex-direction: column; overflow: hidden; }
 .sheet.on { display: flex; }
@@ -708,6 +722,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
     <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.8a9 9 0 0 1 0 12.4"/></symbol>
     <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></symbol>
+    <symbol id="i-clover" viewBox="0 0 24 24"><g transform="translate(12 12)"><path d="M0 0C-1.3-1-3.6-3.2-2.7-5.2C-2-6.6-.6-6.4 0-5.5C.6-6.4 2-6.6 2.7-5.2C3.6-3.2 1.3-1 0 0z"/><path transform="rotate(72)" d="M0 0C-1.3-1-3.6-3.2-2.7-5.2C-2-6.6-.6-6.4 0-5.5C.6-6.4 2-6.6 2.7-5.2C3.6-3.2 1.3-1 0 0z"/><path transform="rotate(144)" d="M0 0C-1.3-1-3.6-3.2-2.7-5.2C-2-6.6-.6-6.4 0-5.5C.6-6.4 2-6.6 2.7-5.2C3.6-3.2 1.3-1 0 0z"/><path transform="rotate(216)" d="M0 0C-1.3-1-3.6-3.2-2.7-5.2C-2-6.6-.6-6.4 0-5.5C.6-6.4 2-6.6 2.7-5.2C3.6-3.2 1.3-1 0 0z"/><path transform="rotate(288)" d="M0 0C-1.3-1-3.6-3.2-2.7-5.2C-2-6.6-.6-6.4 0-5.5C.6-6.4 2-6.6 2.7-5.2C3.6-3.2 1.3-1 0 0z"/></g></symbol>
     <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
     <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3v8M6.3 6.3a8 8 0 1 0 11.4 0"/></symbol>
     <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></symbol>
@@ -815,10 +830,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       </div>
       <div class="bar__title" id="chat-title">New chat</div>
       <div class="bar__side end">
+        <button type="button" class="ibtn" id="voice-btn" aria-pressed="false" aria-label="Voice mode" title="Voice mode"><svg class="ic" aria-hidden="true"><use href="#i-clover"/></svg></button>
         <button type="button" class="ibtn" id="set-btn" aria-label="Settings" title="Settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></button>
       </div>
     </header>
 
+    <div class="stage-wrap">
     <div class="stream" id="stream">
       <div class="col">
         <div class="hero" id="hero">
@@ -829,6 +846,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         </div>
         <div class="log" id="log" aria-live="polite"></div>
       </div>
+    </div>
+    <div class="voice-stage" id="voice-stage" hidden><div class="voice-caption" id="voice-caption" aria-live="polite" hidden></div></div>
     </div>
 
     <div class="dock">
@@ -1582,6 +1601,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 <script nonce="__CSP_NONCE__">
 (function () {
   'use strict';
+  var SCRIPT_NONCE = (document.currentScript && document.currentScript.nonce) || '';  // for scripts this page loads later
   var KEY = 'clover_studio_sessions_v1', SKEY = 'clover_studio_settings_v1';
   var MAX_FILES = 2, MAX_CHARS = 2400;
   // documents go whole to the server, which reads them (tables: exact totals; text: pages) and saves them for Python
@@ -2203,7 +2223,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     cp.addEventListener('click', function () { copyText(m.text || '', cp); });
     acts.appendChild(cp);
     if (state.omni) { var sv = btn('', ic('speaker'), 'Listen (Clover\'s voice)'); sv.addEventListener('click', function () { speakOmni(m.text, sv); }); acts.appendChild(sv); }
-    else if (localVoice()) { var sp = btn('', ic('speaker'), 'Read aloud (offline voice)'); sp.addEventListener('click', function () { speak(m.text); }); acts.appendChild(sp); }
+    else if (localVoice()) { var sp = btn('', ic('speaker'), 'Read aloud (offline voice)'); sp.addEventListener('click', function () { speakDevice(m.text); }); acts.appendChild(sp); }
     if (state.mode === 'lfm3' && !m.isNotice) {  // the Outcome is not right: the user starts the Clover cycle
       var rd = btn('redo', ic('refresh') + '<span>Try again</span>', 'Not right? Clover checks this answer again');
       rd.addEventListener('click', function () {
@@ -2277,17 +2297,78 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     });
   }
 
-  /* ---------- offline voice (Windows voices only; no audio leaves the laptop) ---------- */
-  function localVoice() {
+  /* ---------- this device's own voice (no audio leaves the device): voice mode answers with it at once ---------- */
+  function localVoice() {  // an on-device English voice: the device's default, else the page's language, else US English
     if (!window.speechSynthesis) return null;
     var vs = speechSynthesis.getVoices().filter(function (v) { return v.localService && /^en/i.test(v.lang); });
-    return vs[0] || null;
+    var tag = function (v) { return String(v.lang).toLowerCase().replace('_', '-'); };
+    var want = String(navigator.language || 'en-US').toLowerCase();
+    return vs.filter(function (v) { return v.default; })[0] || vs.filter(function (v) { return tag(v) === want; })[0]
+      || vs.filter(function (v) { return tag(v) === 'en-us'; })[0] || vs[0] || null;
   }
-  function speak(text) {
-    var v = localVoice(); if (!v) return;
-    speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(String(text || '').replace(/```[\s\S]*?```/g, ' code block ').slice(0, 4000));
-    u.voice = v; speechSynthesis.speak(u);
+  function deviceVoice() {  // the phone app's Android voice, else the browser's on-device voice
+    if (window.CloverAndroidBridge && typeof window.CloverAndroidBridge.ttsSpeak === 'function') return 'android';
+    return localVoice() ? 'web' : '';
+  }
+  function speechParts(text) {  // sentences (long ones cut at a comma), so the caption and the mouth follow each one
+    var t = String(text || '').replace(/```[\s\S]*?```/g, ' (code shown on screen) ').replace(/`([^`]*)`/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/[*_#>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 4000);
+    var parts = [], buf = '';
+    t.split(/(\s+)/).forEach(function (w) {
+      buf += w;
+      if (/[.!?\u2026]["')\]]?$/.test(w)) { parts.push(buf.trim()); buf = ''; }
+    });
+    if (buf.trim()) parts.push(buf.trim());
+    var out = [];
+    parts.forEach(function (s) {
+      while (s.length > 220) { var cut = s.lastIndexOf(', ', 200); cut = cut > 60 ? cut + 1 : 200; out.push(s.slice(0, cut).trim()); s = s.slice(cut).trim(); }
+      if (s) out.push(s);
+    });
+    return out;
+  }
+  var ttsHandlers = {};
+  window.cloverTtsEvent = function (id, kind, at) { var h = ttsHandlers[id]; if (h) h(String(kind), Number(at) || 0); };
+  function speakDevice(text) {
+    var kind = deviceVoice(), parts = speechParts(text);
+    if (!kind || !parts.length) return false;
+    stopSpeech();
+    var me = { cancelled: false, stop: function () {
+      me.cancelled = true; ttsHandlers = {};
+      if (kind === 'android') window.CloverAndroidBridge.ttsStop(); else speechSynthesis.cancel();
+      voiceLips(null);
+    } };
+    var v = kind === 'web' ? localVoice() : null, i = 0;
+    function secs(s) { return Math.max(0.4, s.length / 12); }  // a little long: the end event stops the mouth
+    function end() { me.cancelled = true; ttsHandlers = {}; if (speech === me) speech = null; voiceSpoken(); }
+    function next() {
+      if (me.cancelled) return true;
+      if (i >= parts.length) { end(); return true; }
+      var part = parts[i++];
+      function on(ev, at) {
+        if (me.cancelled) return;
+        if (ev === 'start') voiceLips(part, secs(part));
+        else if (ev === 'word' && at > 0 && voice.robot) { var rest = part.slice(at); if (rest.trim()) voice.robot.startLipSync(rest, secs(rest)); }
+        else if (ev === 'end' || ev === 'error') { if (!next()) end(); }
+      }
+      if (kind === 'android') {
+        var id = 'p' + Date.now() + '-' + i;
+        ttsHandlers = {}; ttsHandlers[id] = on;
+        return String(window.CloverAndroidBridge.ttsSpeak(id, part)) === 'OK';
+      }
+      var u = me.u = new SpeechSynthesisUtterance(part);  // kept referenced: Chrome drops events of collected ones
+      u.voice = v;
+      u.onstart = function () { on('start'); };
+      u.onboundary = function (e) { if (e.name === 'word') on('word', e.charIndex); };
+      u.onend = function () { on('end'); };
+      u.onerror = function () { on('error'); };
+      speechSynthesis.speak(u);
+      return true;
+    }
+    speech = me;
+    if (next()) return true;
+    me.cancelled = true; ttsHandlers = {};
+    if (speech === me) speech = null;
+    return false;  // the Android voice is not ready: the caller uses Clover's own voice
   }
   if (window.speechSynthesis) speechSynthesis.onvoiceschanged = function () { if (!state.busy) renderLog(); };
 
@@ -2300,7 +2381,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function speakOmni(text, b) {
     var again = speech && b && speech.button === b; stopSpeech(); if (again) return;
     var me = { button: b, cancelled: false, audio: null, stop: function () {
-      me.cancelled = true; if (me.audio) me.audio.pause(); if (b) b.classList.remove('busy'); } };
+      me.cancelled = true; if (me.audio) me.audio.pause(); if (b) b.classList.remove('busy'); voiceLips(null); } };
     speech = me;
     if (b) { b.classList.add('busy'); b.title = 'Stop'; }
     function wav(part) {
@@ -2316,26 +2397,29 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         return cur;
       });
     }
-    function play(blobs, i) {
+    function play(blobs, i, parts) {
       if (i >= blobs.length || me.cancelled) return Promise.resolve();
       return blobs[i].then(function (blob) {
         if (me.cancelled) return;
         var url = URL.createObjectURL(blob), a = new Audio(url); me.audio = a;
+        a.onplaying = function () { voiceLips(parts[i], a.duration); };
         return new Promise(function (res, rej) { a.onended = res; a.onerror = function () { rej(new Error('audio playback failed')); }; a.play().catch(rej); })
-          .then(function () { URL.revokeObjectURL(url); return play(blobs, i + 1); },
+          .then(function () { URL.revokeObjectURL(url); return play(blobs, i + 1, parts); },
                 function (e) { URL.revokeObjectURL(url); throw e; });
       });
     }
     api('POST', '/api/tts/parts', { text: text }).then(function (r) {
       var parts = r.parts || [];
       if (!parts.length) throw new Error('nothing to speak');
-      return play(synthAll(parts), 0);
+      return play(synthAll(parts), 0, parts);
     }).then(function () {
       if (speech === me) speech = null;
       if (b) { b.classList.remove('busy'); b.title = 'Listen (Clover\'s voice)'; }
+      voiceSpoken();
     }, function (e) {
       if (speech === me) speech = null;
       if (b) { b.classList.remove('busy'); b.title = me.cancelled ? 'Listen (Clover\'s voice)' : 'Could not speak: ' + e.message; }
+      voiceSpoken();
     });
   }
 
@@ -2727,6 +2811,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         loadHealth();
       }
       if (state.ready && st.model) setModel(st.model, st.inputs || ['text']);
+      if (voice.robot && !listen.on && canListen()) voiceListen();
       var info = modelInfo(st.model_key || state.settings.model);
       var isRemote = !info.local && !WEB;
       if (st.status === 'error') setStatus('err', 'Engine error', 'Clover could not start: ' + (st.error || 'unknown error'));
@@ -4399,7 +4484,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
   }
   function startVoiceCapture() {
-    if (rec || nativeRecT0 || state.busy) return;
+    if (listen.on || rec || nativeRecT0 || state.busy) return;
     recStartedAt = Date.now();
     if (hasNativeAndroidMic()) {
       var st = String(window.CloverAndroidBridge.startAudioCapture() || '');
@@ -4516,20 +4601,242 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var AC = window.AudioContext || window.webkitAudioContext, ac = new AC();
     return ac.decodeAudioData(buf).then(function (audio) {
       ac.close();
-      var off = new OfflineAudioContext(1, Math.max(1, Math.ceil(audio.duration * 16000)), 16000);
-      var src = off.createBufferSource(); src.buffer = audio; src.connect(off.destination); src.start();
-      return off.startRendering();
-    }).then(function (rb) {
-      var d = rb.getChannelData(0), v = new DataView(new ArrayBuffer(44 + d.length * 2));
-      function w(o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
-      w(0, 'RIFF'); v.setUint32(4, 36 + d.length * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true);
-      v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 16000, true); v.setUint32(28, 32000, true);
-      v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, d.length * 2, true);
-      for (var i = 0; i < d.length; i++) { var x = Math.max(-1, Math.min(1, d[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7fff, true); }
-      var bytes = new Uint8Array(v.buffer), s = '';
-      for (var j = 0; j < bytes.length; j += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(j, j + 0x8000));
-      return btoa(s);
+      return resample16k(audio);
+    }).then(function (rb) { return wavBase64(rb.getChannelData(0)); });
+  }
+  function resample16k(audio) {
+    var off = new OfflineAudioContext(1, Math.max(1, Math.ceil(audio.duration * 16000)), 16000);
+    var src = off.createBufferSource(); src.buffer = audio; src.connect(off.destination); src.start();
+    return off.startRendering();
+  }
+  function wavBase64(d) {  // 16 kHz mono float samples -> base64 16-bit PCM WAV
+    var v = new DataView(new ArrayBuffer(44 + d.length * 2));
+    function w(o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
+    w(0, 'RIFF'); v.setUint32(4, 36 + d.length * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 16000, true); v.setUint32(28, 32000, true);
+    v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, d.length * 2, true);
+    for (var i = 0; i < d.length; i++) { var x = Math.max(-1, Math.min(1, d[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7fff, true); }
+    var bytes = new Uint8Array(v.buffer), s = '';
+    for (var j = 0; j < bytes.length; j += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(j, j + 0x8000));
+    return btoa(s);
+  }
+
+  /* ---------- voice mode: the robot in front, the chat transparent behind it (chat mode is the default) ---------- */
+  var voice = { on: false, robot: null, loading: null };
+  function loadRobot() {  // robot.js (three.js bundled) loads only the first time voice mode is turned on
+    if (window.CloverRobot) return Promise.resolve(window.CloverRobot);
+    if (!voice.loading) {
+      voice.loading = new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = 'robot.js'; s.nonce = SCRIPT_NONCE; s.async = true;
+        s.onload = function () { if (window.CloverRobot) resolve(window.CloverRobot); else reject(new Error('the robot could not start on this device (WebGL)')); };
+        s.onerror = function () { reject(new Error('robot.js could not be loaded')); };
+        document.head.appendChild(s);
+      }).catch(function (e) { voice.loading = null; throw e; });
+    }
+    return voice.loading;
+  }
+  function setVoiceMode(on) {
+    voice.on = !!on;
+    listen.blocked = false;
+    if (voice.on && $('sheet') && $('sheet').classList.contains('on')) closeSheet();
+    document.documentElement.classList.toggle('voice', voice.on);
+    $('voice-btn').setAttribute('aria-pressed', String(voice.on));
+    $('voice-btn').title = voice.on ? 'Back to chat' : 'Voice mode';
+    $('voice-stage').hidden = !voice.on;
+    if (!voice.on) {
+      voiceStopListening(); stopSpeech(); voiceCaption('');
+      if (voice.robot) voice.robot.stop();
+      return;
+    }
+    loadRobot().then(function (robot) {
+      if (!voice.on) return;
+      voice.robot = robot;
+      robot.mount($('voice-stage'));
+      robot.onStatus(function (status) { if (!speech && state.busy) voiceCaption(status); });  // listening keeps its own caption
+      robot.start();
+      dwell.shown = '';
+      voiceState(state.busy ? 'thinking' : 'idle');
+      robot.react('wave');
+      if (canListen()) voiceListen();
+      else if (!state.busy) voiceCaption(state.omni ? 'Clover is starting…' : 'Listening needs LFM3-Omni (Settings › Model). You can type, and Clover will answer aloud.');
+    }).catch(function (e) {
+      setVoiceMode(false);
+      setStatus('err', 'Voice mode unavailable', e.message);
+      setTimeout(pollStatus, 4000);
     });
+  }
+  $('voice-btn').addEventListener('click', function () { setVoiceMode(!voice.on); });
+  $('voice-stage').addEventListener('click', function () {  // a tap on the robot: talk, send now, or stop its speech
+    if (!voice.on) return;
+    if (speech) { stopSpeech(); voiceSpoken(); return; }
+    if (!listen.on) { if (canListen()) voiceListen(); return; }
+    if (listen.phase === 'speaking') finishUtterance();
+    else if (listen.phase === 'waiting') startUtterance(true);
+  });
+  $('voice-stage').addEventListener('wheel', function (e) { $('stream').scrollBy(0, e.deltaY); }, { passive: true });
+  document.addEventListener('visibilitychange', function () {
+    if (!voice.on || !voice.robot) return;
+    if (document.hidden) voice.robot.stop(); else voice.robot.start();
+  });
+  // what Clover is doing in a turn, as the robot shows it
+  var READ_TOOLS = /^(web_search|fetch_url|read_file|list_directory|read_document|search_files|file_info|git_inspect|media_info|analyze_table)$/;
+  var dwell = { shown: '', since: 0, want: '', timer: null };
+  function voiceState(name) {  // a step shows for at least 0.9 s: a burst of quick events would make the robot twitch
+    if (!voice.on || !voice.robot) return;
+    dwell.want = name;
+    var left = 900 - (Date.now() - dwell.since);
+    if (name !== dwell.shown && left > 0 && name !== 'answering' && name !== 'idle' && dwell.shown !== 'idle') {
+      if (!dwell.timer) dwell.timer = setTimeout(function () { dwell.timer = null; voiceState(dwell.want); }, left);
+      return;
+    }
+    if (dwell.timer) { clearTimeout(dwell.timer); dwell.timer = null; }
+    if (name !== dwell.shown) { dwell.shown = name; dwell.since = Date.now(); }
+    voice.robot.setState(name);
+  }
+  function voiceTurnEvent(ev) {
+    if (!voice.on || !voice.robot || !ev) return;
+    var t = ev.type;
+    if (t === 'semantics' || t === 'round' || t === 'tool_result') voiceState('thinking');
+    else if (t === 'plan') voiceState(/synthesis|fused/.test(ev.stage || '') ? 'working' : 'thinking');
+    else if (t === 'layer') voiceState(ev.layer === 'compiler' ? 'working' : 'reading');
+    else if (t === 'tool_call') voiceState(READ_TOOLS.test(ev.name || '') ? 'reading' : 'working');
+    else if (t === 'cycle') voiceState(ev.stage === 'search' ? 'reading' : ev.stage === 'python' ? 'working' : 'thinking');
+    else if (t === 'token') voiceState(ev.kind === 'thinking' ? 'thinking' : 'answering');
+    else if (t === 'permission') { voiceState('idle'); voice.robot.react('wave'); }
+  }
+  function voiceCaption(text) {
+    var c = $('voice-caption');
+    c.textContent = text || ''; c.hidden = !text;
+  }
+  function voiceLips(text, seconds) {  // each spoken part: the robot's mouth and the caption follow it
+    if (!voice.on || !voice.robot) return;
+    if (!text) { voice.robot.stopLipSync(); return; }
+    voiceState('answering');
+    voice.robot.startLipSync(text, seconds && isFinite(seconds) ? seconds : Math.max(0.8, text.length / 14));
+    voiceCaption(text);
+  }
+  function voiceSpoken() {
+    if (!voice.robot) return;
+    voice.robot.stopLipSync();
+    if (voice.on && !state.busy) { voiceState('idle'); voiceCaption(''); setTimeout(voiceListen, 400); }
+  }
+  /* hands-free listening: the microphone is open only while Clover listens (not while it thinks or speaks, so it never
+     hears itself); the words go to the Omni on this device like a held-Send voice message. Levels follow the room: what
+     was heard 0.5-3.5 s ago is the room (not the speaker's own first words). A loud room (a video, people talking)
+     pauses hands-free and a tap on the robot starts; while it hears you, a tap sends. */
+  var listen = { on: false, phase: 'off', stream: null, ctx: null, src: null, node: null, rate: 48000,
+    pre: [], preMs: 0, frames: [], hist: [], heardMs: 0, thr: 0.015, noisy: false, tapped: false,
+    loudMs: 0, loudVals: [], voicedMs: 0, quietMs: 0, startedAt: 0, lastNodAt: 0, lastPhraseNodMs: 0 };
+  var VAD = { calibrateMs: 1000, preMs: 500, startMs: 200, endMs: 800, minMs: 400, maxMs: 20000, lagMs: 500, roomMs: 3000,
+    minLevel: 0.015, noisyLevel: 0.08 };  // calibrateMs > lagMs: the first decision needs some room heard
+  function canListen() {
+    return voice.on && !listen.blocked && state.ready && !state.busy && !speech && state.omni && state.inputs.indexOf('audio') >= 0;
+  }
+  function voiceListen() {
+    if (listen.on || !canListen()) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { voiceCaption('This window cannot use the microphone: hold Send to talk.'); return; }
+    listen.on = true; listen.phase = 'starting';
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }).then(function (stream) {
+      if (!listen.on || !canListen()) { stream.getTracks().forEach(function (t) { t.stop(); }); listen.on = false; listen.phase = 'off'; return; }
+      var AC = window.AudioContext || window.webkitAudioContext, ctx = new AC();
+      var src = ctx.createMediaStreamSource(stream), node = ctx.createScriptProcessor(2048, 1, 1);
+      Object.assign(listen, { stream: stream, ctx: ctx, src: src, node: node, rate: ctx.sampleRate, phase: 'waiting',
+        pre: [], preMs: 0, frames: [], hist: [], heardMs: 0, thr: VAD.minLevel, noisy: false, tapped: false,
+        loudMs: 0, loudVals: [], voicedMs: 0, quietMs: 0, lastNodAt: 0, lastPhraseNodMs: 0 });
+      node.onaudioprocess = onMicFrame;
+      src.connect(node); node.connect(ctx.destination);  // a processor runs only when connected; it outputs silence
+      voiceState('listening'); voiceCaption('');  // the caption comes once the room has been heard (calibrateMs)
+    }).catch(function (e) {
+      listen.on = false; listen.phase = 'off'; listen.blocked = true;  // asked again only when voice mode is turned on again
+      voiceCaption('Microphone unavailable (' + ((e && e.message) || 'not allowed') + '): hold Send to talk.');
+    });
+  }
+  function voiceStopListening() {
+    listen.on = false; listen.phase = 'off';
+    if (listen.node) { listen.node.onaudioprocess = null; try { listen.node.disconnect(); listen.src.disconnect(); } catch (e) {} }
+    if (listen.stream) listen.stream.getTracks().forEach(function (t) { t.stop(); });
+    if (listen.ctx) listen.ctx.close().catch(function () {});
+    listen.stream = listen.ctx = listen.src = listen.node = null; listen.pre = []; listen.frames = []; listen.hist = [];
+    if (voice.robot) voice.robot.setLevel(0);
+  }
+  function quantile(a, q) {
+    if (!a.length) return 0;
+    var s = a.slice().sort(function (x, y) { return x - y; });
+    return s[Math.min(s.length - 1, Math.floor(q * s.length))];
+  }
+  function listenCaption() {
+    voiceCaption(listen.phase === 'speaking' ? 'Hearing you\u2026 tap to send'
+      : listen.noisy ? 'It\u2019s noisy here. Tap me to talk.' : 'Listening\u2026');
+  }
+  function startUtterance(tapped) {
+    Object.assign(listen, { phase: 'speaking', tapped: tapped, frames: listen.pre, pre: [], preMs: 0, loudVals: [],
+      voicedMs: tapped ? 0 : listen.loudMs, quietMs: 0, startedAt: Date.now(), lastNodAt: 0, lastPhraseNodMs: 0 });
+    listenCaption();
+  }
+  function onMicFrame(e) {
+    if (!listen.on || (listen.phase !== 'waiting' && listen.phase !== 'speaking')) return;
+    var frame = new Float32Array(e.inputBuffer.getChannelData(0)), sum = 0;
+    for (var i = 0; i < frame.length; i++) sum += frame[i] * frame[i];
+    var rms = Math.sqrt(sum / frame.length), ms = frame.length / listen.rate * 1000;
+    if (listen.phase === 'waiting') {
+      var lag = Math.round(VAD.lagMs / ms), room = listen.hist.length > lag ? listen.hist.slice(0, -lag) : [];
+      listen.hist.push(rms);
+      if (listen.hist.length > lag + Math.round(VAD.roomMs / ms)) listen.hist.shift();
+      listen.thr = Math.max(VAD.minLevel, quantile(room, 0.2) * 4, quantile(room, 0.95) * 1.5);
+      if (voice.robot) voice.robot.setLevel(Math.min(1, rms / (listen.thr * 2.5)));
+      listen.pre.push(frame); listen.preMs += ms;
+      while (listen.preMs > VAD.preMs && listen.pre.length > 1) listen.preMs -= listen.pre.shift().length / listen.rate * 1000;
+      var calibrating = listen.heardMs < VAD.calibrateMs;
+      listen.heardMs += ms;
+      if (listen.heardMs < VAD.calibrateMs) return;
+      var noisy = listen.thr > VAD.noisyLevel;
+      if (calibrating || noisy !== listen.noisy) { listen.noisy = noisy; listenCaption(); }
+      listen.loudMs = !noisy && rms > listen.thr ? listen.loudMs + ms : 0;
+      if (listen.loudMs >= VAD.startMs) startUtterance(false);
+      return;
+    }
+    if (voice.robot) voice.robot.setLevel(Math.min(1, rms / (listen.thr * 2.5)));
+    listen.frames.push(frame);
+    if (rms > listen.thr) listen.loudVals.push(rms);
+    if (rms > Math.max(listen.thr * 0.7, quantile(listen.loudVals, 0.5) * 0.25)) {
+      listen.voicedMs += ms;
+      if (listen.voicedMs - (listen.lastPhraseNodMs || 0) >= 480 && voice.robot && Date.now() - (listen.lastNodAt || 0) >= 900) {
+        listen.lastPhraseNodMs = listen.voicedMs;
+        listen.lastNodAt = Date.now();
+        voice.robot.react('nod');
+      }
+      listen.quietMs = 0;
+    } else {
+      listen.quietMs += ms;
+      if (listen.quietMs >= 160 && listen.quietMs < 250 && listen.voicedMs >= 380 && voice.robot && Date.now() - (listen.lastNodAt || 0) >= 900) {
+        listen.lastNodAt = Date.now();
+        voice.robot.react('nod');
+      }
+    }
+    if (Date.now() - listen.startedAt >= VAD.maxMs) { finishUtterance(); return; }
+    if (listen.quietMs < VAD.endMs) return;
+    if (listen.tapped && (listen.thr > VAD.noisyLevel || listen.voicedMs < VAD.minMs)) return;  // after a tap: a tap sends
+    if (listen.voicedMs < VAD.minMs) {  // a click or a cough: keep listening
+      Object.assign(listen, { phase: 'waiting', frames: [], loudMs: 0 });
+      listenCaption();
+      return;
+    }
+    finishUtterance();
+  }
+  function finishUtterance() {
+    var rate = listen.rate, frames = listen.frames, tail = Math.floor((VAD.endMs - 250) / 1000 * rate / 2048);
+    var trim = listen.quietMs >= VAD.endMs;
+    voiceStopListening();
+    if (trim) frames = frames.slice(0, Math.max(1, frames.length - tail));  // most of the closing silence
+    var n = frames.reduce(function (s, f) { return s + f.length; }, 0), at = 0;
+    if (n < rate * 0.3) { voiceSpoken(); return; }  // two quick taps: nothing to send, listen again
+    var buf = new AudioBuffer({ length: n, numberOfChannels: 1, sampleRate: rate }), d = buf.getChannelData(0);
+    frames.forEach(function (f) { d.set(f, at); at += f.length; });
+    voiceState('thinking'); voiceCaption('');
+    resample16k(buf).then(function (rb) {
+      finishVoiceData(wavBase64(rb.getChannelData(0)), Math.max(1, Math.round(n / rate)));
+    }).catch(function (e) { voiceCaption('Could not read what I heard: ' + e.message); voiceSpoken(); });
   }
 
   /* ---------- sending ---------- */
@@ -4581,7 +4888,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
   function streamSend() {
     var inp = takeInput(); if (!inp) return;
-    if (state.speakNext && state.settings.autospeak && state.omni) api('POST', '/api/tts/warm', {}).catch(function () {});
+    if (state.omni && (voice.on ? !deviceVoice() : state.speakNext && state.settings.autospeak)) api('POST', '/api/tts/warm', {}).catch(function () {});
     var c = inp.c, live = liveTurn(), body = live.body;
     var work = workEl(true, true); work.label('Understanding your message\u2026'); work.meta('0:00');
     body.insertBefore(work.box, live.wait);
@@ -4593,6 +4900,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var asks = el('div'); body.insertBefore(asks, live.wait);  // permission cards wait for the person: never folded
     var ans = el('div', 'md live'); body.appendChild(ans);
     state.busy = true; state.turnId = null; setStop(true);
+    voiceStopListening();
+    voiceState('thinking');
     var ticker = startTurnTicker(work);
     var poll = setInterval(pollStatus, 2000);
     var t0 = state.turnStart, tFirst = 0, tLast = 0, words = 0, answer = '', thinking = '', tools = [], cards = {}, finished = false, stale = false;
@@ -4640,6 +4949,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         if (ev.seq <= lastSeq) return;
         lastSeq = ev.seq;
       }
+      voiceTurnEvent(ev);
       if (ev.type !== 'plan' && ev.type !== 'start' && stepMap.queue && stepMap.queue.data.state === 'run') {
         stepMap.queue.update({ state: 'ok', badge: '\u2713 Ready' });
       }
@@ -4970,9 +5280,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         images: (ev.images || []).map(function (x) { return { file: x.file, prompt: x.prompt, model: x.model, seconds: x.seconds }; }) };
       c.messages.push(m); save();
       live.turn.replaceWith(botEl(m)); scrollDown();
-      var speakIt = state.speakNext && state.settings.autospeak && state.omni && !ev.error && !ev.cancelled;
+      var speakIt = (voice.on || (state.speakNext && state.settings.autospeak)) && !ev.error && !ev.cancelled && !!m.text;
       state.speakNext = false;
-      if (speakIt) speakOmni(m.text);
+      if (speakIt && voice.on && speakDevice(m.text)) return;  // voice mode: this device's voice, at once
+      if (speakIt && state.omni) speakOmni(m.text);
+      else voiceSpoken();
     }
     function parseSseChunk(chunk) {
       var lines = chunk.split(/\r?\n/);

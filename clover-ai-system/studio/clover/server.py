@@ -51,7 +51,8 @@ ATTACH_MARKER = "\n\nUsing the attached content / session context above, answer 
 DATA_URL_RE = re.compile(r"^data:image/(?:png|jpeg|gif|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$")
 # files of the Studio page (clover/web, built by studio/build_assets.py from the Clover icon pack)
 STATIC = {"/icon.png": ("icon.png", "image/png"), "/favicon.ico": ("icon.png", "image/png"),
-          "/favicon.svg": ("favicon.svg", "image/svg+xml"), "/robo-clover.webp": ("robo-clover.webp", "image/webp")}
+          "/favicon.svg": ("favicon.svg", "image/svg+xml"), "/robo-clover.webp": ("robo-clover.webp", "image/webp"),
+          "/robot.js": ("robot.js", "text/javascript")}  # voice mode's 3D robot (studio/robot, npm run build:studio)
 
 
 def setup_stdio(log_path):

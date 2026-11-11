@@ -435,3 +435,16 @@
   a worktree, read where it writes.
 - **When parallel sessions share a production host, re-check it after a deploy, and keep checking.** Here the
   overwrite came 5 minutes later, from an older release's script in another session.
+
+### 2026-11-11 — 3D Three.js Clover Robot Voice Mode + Live While-Speaking Interactivity on `main`
+- **Context:** The procedural Three.js Clover Robot (`studio/robot/src/robot.js`, bundled to `clover/web/robot.js`) lived on unmerged branch `feature/voice-mode` (`clover-voice-wt` at `5995840e`, branched from `2da65822` before the v5.0.2–v5.0.5 unified Studio UI). In `src/robot.js`, `listening` had only a static head tilt and ear-pod ring scale.
+- **Direction & Execution:**
+  - Ported `studio/robot/`, `clover/web/robot.js`, `server.py` (`STATIC["/robot.js"]`), `tests/ui_harness.py` (`warm_voice`, `tts`), and the voice-mode stage/toggle/hands-free VAD/on-device + Omni TTS loop into `main`'s unified v5.0.5 `clover/web/app.html` (and synced `mobile/android-app/assets/index.html`, `site/clover-ai/index.html`, and `robot.js`).
+  - Enhanced `studio/robot/src/robot.js` and `clover/web/app.html` so the 3D robot is dynamically interactive **while the user is speaking into the microphone live**:
+    - Real-time speech-envelope reactivity (`liveListen = r.listening * levelSmooth`): forward torso lean-in (`torso.rotation.x`), head pitch/yaw/tilt following the speaker's cadence, right-arm/hand attentive listening gesture, glowing side audio-pod torus rings (`podGlow`, `podRings`) and 5-leaf chest clover pulse (`chestGlow`, `chestClover`), attentive eye widening, and a warm encouraging listening smile (`listenSmile`).
+    - Added `nod` one-shot backchannel reaction (`reactionCopy.nod`, `reactionDuration.nod = 1.05`, `nodDip` two-beat head nod + warm eye squint + smile layered on top of `stateRx = 'listening'`, automatically cleared when leaving `listening`), triggered automatically in `onMicFrame` during sustained user speech (`>= 480 ms`) and clause pauses (`160–250 ms`).
+- **Outcome (verified):**
+  - `python tests/test_voice_mode.py`: `48/48` checks passed (including fresh Vite build equality check between `studio/robot/src/robot.js` and `clover/web/robot.js`).
+  - `python tests/test_studio_unified_ui.py`: `41/41` checks passed.
+  - `python tests/test_c1_inference_only.py` (`36/36`) and `python tests/test_strict_c1_c2_c3.py`: all passed.
+  - Live browser harness check (`ui_harness.py --port 8797 --fresh`): WebGL Three.js robot mounted (`157,116` triangles), calibrated quiet room (`caption="Listening…"`, `state="listening"`), reacted live during 600 ms user microphone speech (`caption="Hearing you… tap to send"`, `state="listening"`, `reaction="nod"`, `nodWeight=1.0`, `torsoLean=0.09`, `podRingScale=1.16`, `podGlowIntensity=8.85`, `mouthVisible=True`, `mouthSmile=1.143`), and completed the voice turn after 900 ms silence (`turnCompleted=1`, `micStoppedCount=1`).

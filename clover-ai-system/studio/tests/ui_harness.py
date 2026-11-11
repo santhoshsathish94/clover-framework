@@ -56,6 +56,16 @@ class FakeEngine:
         return {"model": "LFM3-Omni-2B", "mode": "omni", "engine": "gpu", "device": "Harness GPU", "backend": "ui harness",
                 "weights": "none", "inputs": self.inputs, "outputs": ["text", "speech"], "max_tokens": 32768, "setup_s": 0.2}
 
+    def warm_voice(self):
+        return None
+
+    def tts(self, text, voice="female"):
+        """A silent 16 kHz WAV as long as the words would take (voice mode's lip sync follows its duration)."""
+        import struct
+        n = int(16000 * max(0.4, len(text) / 14))
+        return (b"RIFF" + struct.pack("<I", 36 + 2 * n) + b"WAVEfmt " + struct.pack("<IHHIIHH", 16, 1, 1, 16000, 32000, 2, 16)
+                + b"data" + struct.pack("<I", 2 * n) + bytes(2 * n))
+
     def _stream(self, emit, text, cancel):
         """-> (text written, stopped): a stopped answer keeps only what was written, as in the real engines."""
         done = []
