@@ -288,20 +288,21 @@ def block(doc):
     head = f"Document: {doc['name']} ({doc['kind']}, {_size(doc['bytes'])}) saved at {doc['path']}"
     text, hint = preview(doc), ""
     if doc["kind"] in DATA_KINDS:
-        p = doc["path"]
+        # forward slashes: re-escaping "C:\...\te-study\..." the model wrote "\\e-study" in all 7 tries (2026-11-11)
+        p = Path(doc["path"]).as_posix()
         if doc["kind"] == "spreadsheet":
             # one table per sheet: sheet_name=None returns a dict of all sheets, and the model then called .loc and
             # .groupby on the dict ("'dict' object has no attribute 'loc'", Studio regression 2026-11-03)
             m = re.search(r"^Sheets: (.+)$", text, re.M)
             sheets = [s.strip() for s in m.group(1).split(",")] if m else []
             first = sheets[0] if sheets else "Sheet1"
-            how = f"df = pandas.read_excel(r\"{p}\", sheet_name={first!r})"
+            how = f"df = pandas.read_excel(\"{p}\", sheet_name={first!r})"
             if len(sheets) > 1:
                 how += " (the other sheets: " + ", ".join(f"sheet_name={s!r}" for s in sheets[1:6]) + ")"
         elif doc["kind"] == "JSON":
-            how = f"df = pandas.read_json(r\"{p}\")"
+            how = f"df = pandas.read_json(\"{p}\")"
         else:
-            how = f"df = pandas.read_csv(r\"{p}\"{', sep=chr(9)' if p.lower().endswith('.tsv') else ''})"
+            how = f"df = pandas.read_csv(\"{p}\"{', sep=chr(9)' if p.lower().endswith('.tsv') else ''})"
         hint = ("\nThe totals above are exact. For any other figure (per group, per month, filtered, ranked), compute it "
                 f"with run_python on the whole file: {how}, then use the column names shown above; a figure that is not "
                 "a column (e.g. revenue) is computed from the columns. Do not add up numbers by reading them.")
