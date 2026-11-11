@@ -3,7 +3,8 @@ PowerPoint (.pptx), JSON and plain text. The browser's file type is not trusted:
 
 Each document is saved under <media>/documents/<content hash>/<its own name> (the user's name kept, so Python and the
 answer can refer to it), and read here into a block the model sees: for tables, every sheet's size, columns, first
-rows and exact totals of the numeric columns over all rows; for text documents, the text of the first pages. The block
+rows, exact totals of the numeric columns and exact value counts of the text columns over all rows; for text
+documents, the text of the first pages. The block
 names the saved path, so Python (when the user allows it) can work on the whole file for figures the preview does not
 give. Exact numbers come from here or from Python, never from the model reading digits.
 """
@@ -25,6 +26,8 @@ PREVIEW_CHARS = 6000
 PREVIEW_ROWS = 12
 MAX_SHEETS = 6
 SCAN_ROWS = 200_000
+# text columns with this many distinct values or fewer get exact value counts (IDs and dates have one row per value)
+TOP_DISTINCT, TOP_SHOWN = 50, 8
 KINDS = {".xlsx": "spreadsheet", ".xlsm": "spreadsheet", ".xls": "spreadsheet", ".csv": "table", ".tsv": "table",
          ".pdf": "PDF", ".docx": "Word document", ".pptx": "PowerPoint", ".json": "JSON",
          ".txt": "text", ".md": "text"}
@@ -131,7 +134,7 @@ def table_summary(title, rows):
         return f"{title}: empty"
     ncol = len(header)
     first, n = [], 0
-    stats = [{"n": 0, "sum": 0.0, "min": None, "max": None, "text": 0} for _ in range(ncol)]
+    stats = [{"n": 0, "sum": 0.0, "min": None, "max": None, "text": 0, "values": {}} for _ in range(ncol)]
     for r in it:
         if n >= SCAN_ROWS:
             break
@@ -146,6 +149,12 @@ def table_summary(title, rows):
             if x is None:
                 if c not in (None, ""):
                     stats[i]["text"] += 1
+                    vals = stats[i]["values"]
+                    if vals is not None:
+                        v = _cell(c)
+                        vals[v] = vals.get(v, 0) + 1
+                        if len(vals) > TOP_DISTINCT:
+                            stats[i]["values"] = None
                 continue
             s = stats[i]
             s["n"] += 1
@@ -162,6 +171,17 @@ def table_summary(title, rows):
         lines.append("Numeric columns over all rows (exact):")
         lines += [f"- {h}: count {s['n']}, total {_fmt(s['sum'])}, min {_fmt(s['min'])}, max {_fmt(s['max'])}, "
                   f"mean {_fmt(s['sum'] / s['n'])}" for h, s in nums]
+    # "Which customer ordered the most times?": the model's own count printed the second row (index[1]) and named it
+    # (2026-11-11); exact counts here, like the totals
+    cats = [(header[i], s["values"]) for i, s in enumerate(stats)
+            if s["values"] and s["text"] > max(1, s["n"]) and s["text"] > len(s["values"])]
+    if cats:
+        lines.append("Text columns, rows per value over all rows (exact, most first):")
+        for h, vals in cats:
+            top = sorted(vals.items(), key=lambda kv: (-kv[1], kv[0]))
+            shown = ", ".join(f"{name} {count}" for name, count in top[:TOP_SHOWN])
+            more = f", ... ({len(top) - TOP_SHOWN} more values)" if len(top) > TOP_SHOWN else ""
+            lines.append(f"- {h}: {len(top)} distinct; {shown}{more}")
     return "\n".join(lines)
 
 
@@ -303,9 +323,9 @@ def block(doc):
             how = f"df = pandas.read_json(\"{p}\")"
         else:
             how = f"df = pandas.read_csv(\"{p}\"{', sep=chr(9)' if p.lower().endswith('.tsv') else ''})"
-        hint = ("\nThe totals above are exact. For any other figure (per group, per month, filtered, ranked), compute it "
-                f"with run_python on the whole file: {how}, then use the column names shown above; a figure that is not "
-                "a column (e.g. revenue) is computed from the columns. Do not add up numbers by reading them.")
+        hint = ("\nThe totals and value counts above are exact. For any other figure (per group, per month, filtered, "
+                f"ranked), compute it with run_python on the whole file: {how}, then use the column names shown above; a "
+                "figure that is not a column (e.g. revenue) is computed from the columns. Do not add up numbers by reading them.")
         # a worked groupby/chart line here (tried 2026-11-03 for the chart turn) did not fix the chart and made the first
         # CSV question run four 2,048-token rounds of unfinished tool calls: 445 s and 414 s instead of 11-13 s
     return f"{head}\n{text}{hint}"
