@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## v5.0.5 — 2026-11-11
+
+**Clover v5.0.5 — one GitHub account for everything, collective learning without a server, and UI fixes.** `VERSION` is `5.0.5` and all site `?v=5.0.5` asset cache strings match it. Windows installer, MSIX, Android APK/AAB (`versionCode 19`) and the VS Code and browser extensions are rebuilt at `5.0.5`.
+
+- **Sign in with GitHub (`github_auth.py`, `workspaces.py`, `server.py`, `web/app.html`):** Clover's own GitHub OAuth app (client ID `Ov23li2tK8VKBD0fTYGG`). The laptop and the phone sign in with a code (device flow, no client secret); the sign-in renews itself (8-hour token, 6-month refresh) and is stored encrypted. One sign-in covers the private memory repository, Workspaces, k3 model access and collective learning. The website signs in with GitHub through `api.cloverframework.com` (with a code until the server has its client secret).
+- **Google sign-in removed (security):** without a real client secret it issued its own tokens with a key built from public values, so the collective gateway accepted forged contributors.
+- **Collective learning without a server (`collective_repo.py`, `core_sync.py`, `collective_gateway.py`):** the shared core is the public repository [`santhoshsathish94/clover-collective`](https://github.com/santhoshsathish94/clover-collective). Receiving downloads its signed release from GitHub with no account. Contributing opens a public GitHub issue under the contributor's name. GitHub Actions checks, aggregates, evaluates and signs. New pinned release key `a4d9d040035a19a5f1214bd30881b40842d4b06d0990c1bfdd6252fd90280283`. The k3 gateway is retired.
+- **Security:** a collective rule's strategy text becomes prompt guidance in every app, so only the fixed text for the rule's tools is accepted (the old gateway accepted any 300 characters).
+- **Fixes:** the Terminal tool lost Windows PowerShell table output (`Get-Location`, `Select-Object`); the Workspaces and Memory trees stayed on "Loading…"; the code sign-in has Open GitHub and Copy code buttons; memory sync with a GitHub token failed on a missing import.
+- Tests: `tests/test_collective_repo.py` (48), `tests/test_github_signin.py` (59), `tests/test_terminal_tree_fixes.py`, `clover/test_collective.py` (35, Studio and mobile).
+
 ## v5.0.4 — 2026-11-10
 
 **Clover v5.0.4 — Unified 2-Pane Studio UI, Cross-Model S3 Sensory Inspection (Camera, Video, Microphone Audio-JEPA), Interactive 3D Visuals, and Token Economy.** `VERSION` is `5.0.4` and all site `?v=5.0.4` asset cache strings match it. Windows installer, MSIX, Android APK/AAB (`versionCode 18`) and the VS Code and browser extensions are rebuilt at `5.0.4`.

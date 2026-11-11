@@ -1,4 +1,4 @@
-Clover AI Studio v5.0.4 (versionCode 18, targetSdk 36) — Release:
-• Unified 2-pane Studio UI with Chat, Workspaces, Memory, Tools (Terminal & Browser), Learning, and Settings.
-• Cross-model S3 Camera, Video, Microphone Audio-JEPA, Visual Inspector, and 3D visual previews.
-• Faster prompt cache reuse (ubatch 256) and reduced memory footprint.
+Clover AI Studio v5.0.5 (versionCode 19, targetSdk 36) — Release:
+• One GitHub sign-in for the memory repository, Workspaces, k3 models and collective learning.
+• Collective learning from a public GitHub repository: receive with no account; contributions are public GitHub issues.
+• Fixes for the Terminal tool and the Workspaces and Memory trees.

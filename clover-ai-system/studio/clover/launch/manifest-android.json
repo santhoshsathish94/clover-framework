@@ -1,6 +1,6 @@
 {
   "about": "What the Clover AI Studio Android app downloads on first start, pinned like the laptop's manifest.json: each file is checked against the SHA-256 Hugging Face lists for it before it is used. llama.cpp is inside the app. Read by clover/setup_fetch.py.",
-  "version": "5.0.4-android",
+  "version": "5.0.5-android",
   "archives": [],
   "files": [
     {"component": "core", "name": "LFM3-Omni-2B (Q4_0)", "dest": "data/omni/gguf/LFM3-Omni-2B-Q4_0.gguf",

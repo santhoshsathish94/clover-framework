@@ -1,5 +1,6 @@
-Clover AI Studio v5.0.4 (Package Version 5.0.4.0) — Release:
-• Unified 2-pane Studio UI with collapsible left-pane submenus for Chat, Workspaces, Memory, Tools (Terminal & Browser + Add Tool), Learning, and Settings.
-• Cross-model S3 sensory capture & inspection: live Camera photo capture, single-pass MP4 + keyframe Video recording, 16 kHz Microphone Audio-JEPA analysis, Visual Inspector, and interactive Three.js 3D HTML visual previews across all local and remote models.
-• Token economy & memory optimizations: real token/time usage ledger (/v1 and logs/usage), ubatch 256 prompt cache reuse on GPU and CPU, and reduced memory footprint on 16 GB laptops.
-• Packaged as an x64 MSIX / `.msixupload` bundle (`SanthoshNarayanan.CloverAIStudio`, `5.0.4.0`) alongside the Authenticode-signed standalone x64 installer (`CloverAIStudio-Setup.exe`).
+Clover AI Studio v5.0.5 (Package Version 5.0.5.0) — Release:
+• One GitHub sign-in (Clover's own GitHub app, a code on this PC) for the private memory repository, Workspaces, k3 models and collective learning; it renews itself and is stored encrypted.
+• Collective learning without a server: the shared core comes from a public GitHub repository with no account, and contributions are public GitHub issues under your name, checked by GitHub Actions.
+• Security: Google sign-in removed; collective strategy text limited to fixed wording.
+• Fixes: Terminal tool table output, Workspaces and Memory trees, sign-in buttons.
+• Packaged as an x64 MSIX / `.msixupload` bundle (`SanthoshNarayanan.CloverAIStudio`, `5.0.5.0`) alongside the Authenticode-signed standalone x64 installer (`CloverAIStudio-Setup.exe`).

@@ -21,8 +21,8 @@ using Microsoft.Win32;
 [assembly: AssemblyCompany("Santhosh Narayanan")]
 [assembly: AssemblyProduct("Clover AI Studio")]
 [assembly: AssemblyCopyright("Copyright (c) 2026 Santhosh Narayanan")]
-[assembly: AssemblyVersion("5.0.4.0")]
-[assembly: AssemblyFileVersion("5.0.4.0")]
+[assembly: AssemblyVersion("5.0.5.0")]
+[assembly: AssemblyFileVersion("5.0.5.0")]
 [assembly: ComVisible(false)]
 
 namespace CloverAIStudioSetup
@@ -59,7 +59,7 @@ namespace CloverAIStudioSetup
 
     internal static class Program
     {
-        private const string VersionString = "5.0.4";
+        private const string VersionString = "5.0.5";
         private static string LogPath;
         private static readonly object LogLock = new object();
 

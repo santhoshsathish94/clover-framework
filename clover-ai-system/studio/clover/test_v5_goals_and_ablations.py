@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Clover v5.0.4 — Reproducible 5-Goal Validation, Multi-Model Cycle Harness, Meaning Engine Bridge,
+"""Clover v5.0.5 — Reproducible 5-Goal Validation, Multi-Model Cycle Harness, Meaning Engine Bridge,
 Collective Learning A->B Transfer, and Component Ablation Suite (`test_v5_goals_and_ablations.py`).
 
 Executes and records reproducible evidence for:
@@ -47,7 +47,7 @@ import workspaces as WS  # noqa: E402
 # Goal 1: Version & Artifact Consistency Check
 # ---------------------------------------------------------------------------
 
-EXPECTED_VERSION, EXPECTED_ANDROID_CODE = "5.0.4", 18
+EXPECTED_VERSION, EXPECTED_ANDROID_CODE = "5.0.5", 19
 
 
 def run_goal1_version_and_security_check() -> dict[str, Any]:
@@ -742,7 +742,7 @@ def run_goal5_independent_validation_and_ablations(
 
     ablation_table = [
         {
-            "configuration": "Full Clover v5.0.4 System (All 5 Stages + Meaning Bridge + JEPA Prior + 3-Cycle Retry + CPSL)",
+            "configuration": "Full Clover v5.0.5 System (All 5 Stages + Meaning Bridge + JEPA Prior + 3-Cycle Retry + CPSL)",
             "multi_cycle_4model": "4/4 (100.0%)",
             "meaning_bridge_6tasks": f"{g3['action_ranking_benchmark']['full_meaning_bridge']['hits']}/6 ({round(g3['action_ranking_benchmark']['full_meaning_bridge']['top1_accuracy']*100, 1)}%)",
             "collective_transfer_4tasks": "4/4 (100.0%)",
@@ -811,7 +811,7 @@ def main() -> int:
     out_fp = REPO_ROOT / "docs" / "runtime-context" / "v5_independent_validation_results.json"
     out_fp.parent.mkdir(parents=True, exist_ok=True)
     out_fp.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    print("ALL 5 V5.0.4 GOALS & ABLATIONS PASSED")
+    print("ALL 5 V5.0.5 GOALS & ABLATIONS PASSED")
     print(json.dumps(report, indent=2))
     return 0
 
