@@ -2,7 +2,7 @@
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `5.0.5` (`5.0.5.0` Win32 PE `AssemblyVersion`)  
+**Release Version**: `5.0.6` (`5.0.6.0` Win32 PE `AssemblyVersion`)  
 **Product Name**: `Clover AI Studio`  
 **Publisher**: `Santhosh Narayanan`  
 **Distribution Model**: Standalone Native C# Win32 Per-User Installer (`CloverAIStudio-Setup.exe` / `clover-ai-studio-beta-setup.exe`)  
@@ -16,7 +16,7 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/windows/clover-ai-studio-beta-setup.exe` | `download/laptop/CloverAIStudio-Setup.exe` | Standalone direct-download Windows x64 installer | `9,404,376` bytes (`8.97 MB`) | `32cc83692b3ce8b69daed3e28942ded9a1bf101e6490718e02e87217fe409fbc` |
+| `release/beta/windows/clover-ai-studio-beta-setup.exe` | `download/laptop/CloverAIStudio-Setup.exe` | Standalone direct-download Windows x64 installer | `9,572,824` bytes (`9.13 MB`) | `e97cb11bfdf3cff2383f97270f5fc96ca8f054cc84444c1f76267e0d16b25c45` |
 | `release/beta/windows/CloverFramework-CodeSign.cer` | `download/laptop/CloverFramework-CodeSign.cer` | Authenticode code-signing public certificate | `832` bytes | `9365ec5d455b0ef8179ccf1c061cf481c86dad234b9f3dc62244e487c659072d` |
 
 ---
@@ -57,3 +57,10 @@
 - `python tests/test_token_economy.py`: **21/21 passed**.
 - `python tests/test_studio_unified_ui.py`: **41/41 passed**.
 - `python tests/test_strict_c1_c2_c3.py`: **34/34 passed**.
+- `python tests/test_recall_scope.py`: **16/16 passed**.
+- `python tests/test_answer_length.py`: **4/4 passed**.
+- `python tests/test_loop_trim.py`: **6/6 passed**.
+- `python tests/test_direct_replies.py`: **4/4 passed**.
+- `python tests/test_document_paths.py`: **3/3 passed**.
+- `python tests/test_table_counts.py`: **6/6 passed**.
+- `python tests/test_tool_call_loops.py`: **5/5 passed**.

@@ -2,8 +2,8 @@
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `5.0.5`  
-**Version Code**: `19`  
+**Release Version**: `5.0.6`  
+**Version Code**: `20`  
 **Package Name**: `ai.clover.studio`  
 **Build Date**: `2026-11-11`  
 **Build Environment**: `k3` (`/opt/clover-k3/studio-android`), OpenJDK `17.0.20`, Gradle `8.9`, Android Gradle Plugin `8.5.2`, Chaquopy `17.2.0` (CPython `3.12`), Android SDK `36` (`minSdk 26`, `targetSdk 36`, `compileSdk 36`), Android NDK `llvm-strip`.
@@ -14,8 +14,8 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 19`, `targetSdk 36`) | `81,248,813` bytes (`77.48 MB`) | `76db5ea39fb4baa8c793ba320641d6e9fc37ae625c1b266dc4b9da894a89a5e8` |
-| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 19`, `targetSdk 36`) | `82,325,409` bytes (`78.51 MB`) | `55bedb8edeac487577337fc330edc3ee179c85436ddb2f0b9510584ec271553a` |
+| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 20`, `targetSdk 36`) | `81,543,910` bytes (`77.77 MB`) | `8acceab16e52ef34f47a7486749a6bb121169ebd9ac09ee3e8690fe7f6aab4f8` |
+| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 20`, `targetSdk 36`) | `82,620,434` bytes (`78.79 MB`) | `300e98ff051e82fdaccfa77ea937661e0d5fcd7f46f2b3cfb411e2acab2eaa0e` |
 
 ---
 
@@ -38,7 +38,7 @@
 ## 3. Package & Manifest Audit (`build.gradle`)
 
 ```text
-package: name='ai.clover.studio' versionCode='19' versionName='5.0.5'
+package: name='ai.clover.studio' versionCode='20' versionName='5.0.6'
 sdkVersion:'26'
 targetSdkVersion:'36'
 compileSdkVersion:'36'
@@ -71,6 +71,13 @@ launchable-activity: name='ai.clover.studio.MainActivity'
 - `python tests/test_token_economy.py`: **21/21 passed**.
 - `python tests/test_studio_unified_ui.py`: **41/41 passed**.
 - `python tests/test_strict_c1_c2_c3.py`: **34/34 passed**.
+- `python tests/test_recall_scope.py`: **16/16 passed**.
+- `python tests/test_answer_length.py`: **4/4 passed**.
+- `python tests/test_loop_trim.py`: **6/6 passed**.
+- `python tests/test_direct_replies.py`: **4/4 passed**.
+- `python tests/test_document_paths.py`: **3/3 passed**.
+- `python tests/test_table_counts.py`: **6/6 passed**.
+- `python tests/test_tool_call_loops.py`: **5/5 passed**.
 
 **Google Play Console Links**:
    - Instant Test (Internal App Sharing): `https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs`

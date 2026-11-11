@@ -1,7 +1,7 @@
 {
   "product": "Clover AI Studio",
   "publisher": "Santhosh Narayanan",
-  "release_version": "5.0.5",
+  "release_version": "5.0.6",
   "release_channel": "release",
   "release_date": "2026-11-11",
   "generated_by": "release/beta/generate_release_reports.py",
@@ -22,8 +22,8 @@
   "android": {
     "store": "Google Play Console (Closed Testing & Internal App Sharing)",
     "package_name": "ai.clover.studio",
-    "version_code": 19,
-    "version_name": "5.0.5",
+    "version_code": 20,
+    "version_name": "5.0.6",
     "min_sdk": 26,
     "target_sdk": 36,
     "compile_sdk": 36,
@@ -46,15 +46,15 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 81248813,
-        "sha256": "76db5ea39fb4baa8c793ba320641d6e9fc37ae625c1b266dc4b9da894a89a5e8"
+        "size_bytes": 81543910,
+        "sha256": "8acceab16e52ef34f47a7486749a6bb121169ebd9ac09ee3e8690fe7f6aab4f8"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "mirror": "download/mobile/CloverAIStudio.apk",
         "type": "apk",
-        "size_bytes": 82325409,
-        "sha256": "55bedb8edeac487577337fc330edc3ee179c85436ddb2f0b9510584ec271553a"
+        "size_bytes": 82620434,
+        "sha256": "300e98ff051e82fdaccfa77ea937661e0d5fcd7f46f2b3cfb411e2acab2eaa0e"
       }
     ],
     "verification": {
@@ -78,15 +78,22 @@
       "vscode_503_tests": "93/93 passed",
       "token_economy_tests": "21/21 passed",
       "studio_unified_ui_tests": "41/41 passed",
-      "strict_c1_c2_c3_tests": "34/34 passed"
+      "strict_c1_c2_c3_tests": "34/34 passed",
+      "recall_scope_tests": "16/16 passed",
+      "answer_length_tests": "4/4 passed",
+      "loop_trim_tests": "6/6 passed",
+      "direct_replies_tests": "4/4 passed",
+      "document_paths_tests": "3/3 passed",
+      "table_counts_tests": "6/6 passed",
+      "tool_call_loops_tests": "5/5 passed"
     }
   },
   "windows": {
     "distribution": "Standalone Native C# Win32 Per-User Installer (CloverAIStudio-Setup.exe)",
     "packaging_route": "Native .NET Framework 4.8 x64 GUI Setup & Launcher (csc.exe) with embedded asInvoker manifest, automatic Zone.Identifier unblocking, and embedded TrustedPublisher certificate registration",
     "publisher_display_name": "Santhosh Narayanan",
-    "manifest_version": "5.0.5.0",
-    "display_version": "5.0.5",
+    "manifest_version": "5.0.6.0",
+    "display_version": "5.0.6",
     "architecture": "x64",
     "min_windows_version": "10.0.19041.0",
     "max_windows_version_tested": "10.0.26100.0",
@@ -100,8 +107,8 @@
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "mirror": "download/laptop/CloverAIStudio-Setup.exe",
         "type": "exe",
-        "size_bytes": 9404376,
-        "sha256": "32cc83692b3ce8b69daed3e28942ded9a1bf101e6490718e02e87217fe409fbc"
+        "size_bytes": 9572824,
+        "sha256": "e97cb11bfdf3cff2383f97270f5fc96ca8f054cc84444c1f76267e0d16b25c45"
       },
       {
         "file": "release/beta/windows/CloverFramework-CodeSign.cer",
@@ -132,7 +139,14 @@
       "vscode_503_tests": "93/93 passed",
       "token_economy_tests": "21/21 passed",
       "studio_unified_ui_tests": "41/41 passed",
-      "strict_c1_c2_c3_tests": "34/34 passed"
+      "strict_c1_c2_c3_tests": "34/34 passed",
+      "recall_scope_tests": "16/16 passed",
+      "answer_length_tests": "4/4 passed",
+      "loop_trim_tests": "6/6 passed",
+      "direct_replies_tests": "4/4 passed",
+      "document_paths_tests": "3/3 passed",
+      "table_counts_tests": "6/6 passed",
+      "tool_call_loops_tests": "5/5 passed"
     }
   }
 }

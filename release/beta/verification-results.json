@@ -6,7 +6,7 @@
     "fail_lines": [],
     "summary": "155 checks passed",
     "counted": "155 checks passed",
-    "seconds": 4.9
+    "seconds": 3.5
   },
   "tool_routing_tests": {
     "suite": "tests/test_tool_routing.py",
@@ -15,7 +15,7 @@
     "fail_lines": [],
     "summary": "129 checks passed",
     "counted": "129 checks passed",
-    "seconds": 1.5
+    "seconds": 1.1
   },
   "repo_tests": {
     "suite": "tests/test_clover_repo.py",
@@ -24,7 +24,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 10.3
+    "seconds": 8.2
   },
   "regression_fixes_tests": {
     "suite": "tests/test_regression_fixes.py",
@@ -33,7 +33,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 6.6
+    "seconds": 3.8
   },
   "page_fetch_tests": {
     "suite": "tests/test_page_fetch.py",
@@ -42,7 +42,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": "119 checks passed",
-    "seconds": 5.0
+    "seconds": 8.9
   },
   "browser_first_tests": {
     "suite": "tests/test_browser_first.py",
@@ -51,7 +51,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": "30 checks passed",
-    "seconds": 0.4
+    "seconds": 0.2
   },
   "browser_handback_tests": {
     "suite": "tests/test_browser_handback.py",
@@ -60,7 +60,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": "51 checks passed",
-    "seconds": 2.7
+    "seconds": 1.4
   },
   "collective_tests": {
     "suite": "clover/test_collective.py",
@@ -69,7 +69,7 @@
     "fail_lines": [],
     "summary": "35 checks passed",
     "counted": "35 checks passed",
-    "seconds": 28.1
+    "seconds": 15.9
   },
   "collective_repo_tests": {
     "suite": "tests/test_collective_repo.py",
@@ -78,7 +78,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 16.1
+    "seconds": 11.2
   },
   "github_signin_tests": {
     "suite": "tests/test_github_signin.py",
@@ -87,7 +87,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 5.2
+    "seconds": 3.1
   },
   "terminal_tree_fixes_tests": {
     "suite": "tests/test_terminal_tree_fixes.py",
@@ -96,7 +96,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 7.9
+    "seconds": 6.3
   },
   "human_usefulness_tests": {
     "suite": "clover/test_human_usefulness.py",
@@ -105,7 +105,7 @@
     "fail_lines": [],
     "summary": "urllib.error.URLError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
     "counted": null,
-    "seconds": 2.4
+    "seconds": 2.2
   },
   "live_activity_sse_tests": {
     "suite": "clover/test_live_activity_sse.py",
@@ -114,7 +114,7 @@
     "fail_lines": [],
     "summary": "18 checks passed",
     "counted": "18 checks passed",
-    "seconds": 2.9
+    "seconds": 2.2
   },
   "clover_cycles_tests": {
     "suite": "clover/test_clover_cycles.py",
@@ -123,7 +123,7 @@
     "fail_lines": [],
     "summary": "}",
     "counted": null,
-    "seconds": 4.5
+    "seconds": 2.6
   },
   "tool_tasks_tests": {
     "suite": "tests/test_tool_tasks.py",
@@ -132,7 +132,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 0.8
+    "seconds": 0.6
   },
   "caution_only_tests": {
     "suite": "tests/test_caution_only.py",
@@ -141,7 +141,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 0.6
+    "seconds": 0.4
   },
   "superagent_jev_dory_tests": {
     "suite": "tests/test_superagent_jev_dory.py",
@@ -159,7 +159,7 @@
     "fail_lines": [],
     "summary": "ALL PASS",
     "counted": null,
-    "seconds": 10.6
+    "seconds": 10.0
   },
   "token_economy_tests": {
     "suite": "tests/test_token_economy.py",
@@ -186,6 +186,69 @@
     "fail_lines": [],
     "summary": "ALL STRICT C1/C2/C3 AND S1/S2/S3 CHECKS PASSED",
     "counted": null,
-    "seconds": 12.4
+    "seconds": 10.0
+  },
+  "recall_scope_tests": {
+    "suite": "tests/test_recall_scope.py",
+    "exit": 0,
+    "pass_lines": 16,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": null,
+    "seconds": 0.1
+  },
+  "answer_length_tests": {
+    "suite": "tests/test_answer_length.py",
+    "exit": 0,
+    "pass_lines": 4,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": null,
+    "seconds": 0.5
+  },
+  "loop_trim_tests": {
+    "suite": "tests/test_loop_trim.py",
+    "exit": 0,
+    "pass_lines": 6,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": null,
+    "seconds": 0.3
+  },
+  "direct_replies_tests": {
+    "suite": "tests/test_direct_replies.py",
+    "exit": 0,
+    "pass_lines": 4,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": null,
+    "seconds": 0.4
+  },
+  "document_paths_tests": {
+    "suite": "tests/test_document_paths.py",
+    "exit": 0,
+    "pass_lines": 3,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": null,
+    "seconds": 1.0
+  },
+  "table_counts_tests": {
+    "suite": "tests/test_table_counts.py",
+    "exit": 0,
+    "pass_lines": 6,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": null,
+    "seconds": 0.7
+  },
+  "tool_call_loops_tests": {
+    "suite": "tests/test_tool_call_loops.py",
+    "exit": 0,
+    "pass_lines": 5,
+    "fail_lines": [],
+    "summary": "ALL PASS",
+    "counted": null,
+    "seconds": 0.5
   }
 }
