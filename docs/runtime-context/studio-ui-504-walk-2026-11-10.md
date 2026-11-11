@@ -344,3 +344,60 @@
   already let text that no app produces into the live shared core. Check such fields against a fixed set.
 - **A test server that holds a real sign-in needs a block for every new write path.** Here that was public issues.
   Add the block together with the feature, not after an incident.
+
+## Release 5.0.5 (2026-11-11)
+
+### Direction (human: "yes do all of them")
+1. Open one test "withdraw" issue in the collective repository.
+2. Push and merge the branch, and build the apps.
+3. Remove k3's gateway when k3 is updated.
+4. Push the repair commit to the memory repository.
+
+### Execution and outcome (each checked)
+- **Test issue:** issue #1 was opened with exactly the body the app sends.
+  - The issue started the workflow, which handled 1 request.
+  - The reply came from github-actions: "Removed 0 of your patterns…". The issue was closed as completed.
+  - Not exercised: the account-age check and signing from an issue run (a withdraw changes nothing).
+- **Memory repository:** commit 4a2edc8 restored the 5 summaries from 29dff04 and removed the test server's 2 files.
+  - The repository's tree now equals 29dff04's exactly.
+  - My temporary clone was deleted.
+- **Version 5.0.5 (commit f61fab0f):** the same 31 files as the 5.0.4 bump, with Android versionCode 19.
+  - The bundled extension clover-local-5.0.5.vsix was built from the laptop staging tree, as for 5.0.4.
+- **Windows build:**
+
+  | Artefact | Result |
+  | --- | --- |
+  | Setup.exe | 9,404,376 B, Authenticode valid (843BC847…) |
+  | MSIX | `5.0.5.0` |
+  | `.msixupload` | contains the MSIX |
+  | Payload | 219 files, equal to the sources; the retired files are absent; the pinned collective key is inside |
+
+  - **Side effect, fixed:** `build_setup.ps1` copied the installer into two hard-coded checkouts, the main worktree
+    and `clover-collective-wt`, whatever it was built from.
+    - Both were restored. The main worktree is clean. clover-collective-wt's untracked output got the 5.0.4
+      installer back.
+    - The script now copies only into the checkout it builds from.
+- **Before deploying:** k3's copies of the changed files were checked against the 5.0.4 versions, both web and
+  Android, using normalised SHA-256. All were equal.
+- **Android build on k3:**
+  - Backup taken; versionCode 19.
+  - APK: 82,325,409 B, SHA-256 55bedb8e…; signer certificate 88c0e832…, the expected one.
+  - AAB: "jar verified".
+  - The bundled sources equal the deployed ones, with STUDIO_VERSION 5.0.5 and the pinned key; `google_identity`
+    is absent.
+- **Website server on k3:**
+  - Backup in `backup-v505-20261111T022023Z`; the service is active at 5.0.5.
+  - Public `GET /api/auth/github` answers `{"redirect": false, "device": true}`.
+  - The public device start gives a GitHub user code, and never the device code.
+  - The old gateway route now answers 401 like any private route.
+- **k3 gateway removed:**
+  - Shredded: the old release signing key, the gateway secret, and the gateway state (15 contributions).
+  - Deleted: the gateway folder and the old registry (86 MB).
+  - Left: the service's `CLOVER_CPSL_USE_SERVER_VAULT=1` setting (now unused) and a research script that names
+    the old routes, `web-studio/clover/run_gpu_collective_self_trainer.py`.
+- **Release reports:** regenerated from the built files. The collective key in them is now the repository's.
+  - The release's cited suites pass, except `test_human_usefulness`, which needs a live server, as in 5.0.4.
+  - `test_github_signin` crashed during interpreter teardown once in four runs, after all 59 checks had passed. It
+    now ends with `os._exit`.
+  - `test_v5_goals_and_ablations` passes. Suites: 36 of 39 pass, the same 3 known failures.
+- **Build commit:** ff1468d7.
