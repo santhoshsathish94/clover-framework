@@ -401,3 +401,37 @@
     now ends with `os._exit`.
   - `test_v5_goals_and_ablations` passes. Suites: 36 of 39 pass, the same 3 known failures.
 - **Build commit:** ff1468d7.
+
+### Published (2026-11-11, checked live)
+- **The branch** was pushed. GitHub release `v5.0.5` was created at f98f986a with 12 assets.
+  - Every asset's size and SHA-256 match the local files. It is marked latest.
+  - It was created before `main` moved, so the site's links worked as soon as GitHub Pages deployed.
+- **`main`** was fast-forwarded on GitHub from 3facab25 to f98f986a, which equals tag v5.0.5. The local main worktree
+  was not touched and is still at 3facab25.
+- **Live checks:**
+  - The Pages deploy for f98f986a succeeded.
+  - `cloverframework.com/clover-ai/` shows v5.0.5, the GitHub sign-in button and the collective repository.
+    `/ai-system/` links `releases/download/v5.0.5/…`. Neither page mentions 5.0.4.
+  - The site's `SHA256SUMS.txt` equals the release's, and the site's `Setup.exe` has the build's SHA-256.
+  - The release links for `CloverAIStudio.apk` and `Setup.exe` answer 200.
+- **The collective repository** records the engine as v5.0.5's (the blob ids are unchanged).
+
+### k3 was overwritten by another session (not fixed, by the human's choice)
+- **What happened:** at 02:25:37–02:25:45 UTC, 5 minutes after my k3 deploy, another session on this PC re-ran the old
+  5.0.4 deploy script (`/tmp/clover-504/k3_build504.sh`). It used the same SSH key and fresh `deploy504_*.tar` files
+  built from the main worktree, which is still at 5.0.4.
+- **What it overwrote:** the web studio's `server.py`, `app.html`, `workspaces.py` and other files with 5.0.4. My
+  5.0.5 `core_sync.py`, `collective_gateway.py` and `github_auth.py` stayed, so the server is now a mix.
+  - Effect: on the website, GitHub sign-in (`/api/auth/github` answers 401) and collective learning don't work.
+    Chat works.
+- **The Android build tree** is back to 5.0.4 code with versionCode 19. k3's `out/CloverAIStudio-5.0.5-phone-release.apk`
+  (82,328,990 B) is that 5.0.4 code under the 5.0.5 name.
+  - The published APK (82,325,409 B, SHA-256 55bedb8e…) was fetched before the overwrite and is correct.
+- **Direction (human):** leave k3 as it is. I did not touch it again.
+- **Still removed:** the gateway data on k3 (key, secret, contributions, registry).
+
+### Growth
+- **A build script that writes into fixed paths reaches other checkouts.** Before running a shared build script from
+  a worktree, read where it writes.
+- **When parallel sessions share a production host, re-check it after a deploy, and keep checking.** Here the
+  overwrite came 5 minutes later, from an older release's script in another session.
