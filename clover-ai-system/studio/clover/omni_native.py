@@ -93,17 +93,9 @@ MEDIA_WORD = {"image_url": "image", "input_audio": "audio", "input_video": "vide
 
 
 def _direct_s3_or_concept_plan(query: str, s3_pre_call: dict | None, s3_extra_calls: list | tuple, rounds: list) -> str | None:
-    """When S3 pre-calls or a WMT14 concept-plan prompt already supply the complete factual skeleton, return the
-    compact plan directly so C1 runs strictly as inference-to-state (`0` llama-server decoded tokens) -> C2 -> C3."""
-    q = (query or "").strip()
-    low = q.lower()
-    if "rewrite these notes into one clear" in low and "\n" in q:
-        concept_line = q.split("\n", 1)[1].strip()
-        concept_line = re.sub(r"\s*;\s*", ", ", concept_line).strip()
-        if concept_line:
-            if not concept_line.endswith((".", "!", "?")):
-                concept_line += "."
-            return concept_line[0].upper() + concept_line[1:]
+    """When S3 pre-calls already supply the complete factual answer, return it directly so C1 runs strictly as
+    inference-to-state (`0` llama-server decoded tokens) -> C2 -> C3. Notes to rewrite go to the model: joining them
+    with commas answered "one clear sentence" with the notes themselves (2026-11-11)."""
     if s3_pre_call is None or not rounds or not all(r.get("ran") and r.get("worked") for r in rounds):
         return None
     all_pre = [s3_pre_call] + list(s3_extra_calls or ())
