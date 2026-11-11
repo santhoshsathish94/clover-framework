@@ -1021,6 +1021,7 @@ class OmniNative(N.LFM3Native):
         t0 = time.perf_counter()
         t_first = None
         looped, checked, cut = False, 0, None
+        args_checked, args_looped = 0, False
         self.stage = {"name": "planning" if tool_choice else "C1 inference", "since": time.time()}
         stream = self.gpu.chat_stream(body, cancel)
         try:
@@ -1065,8 +1066,15 @@ class OmniNative(N.LFM3Native):
                             self.stage = {"name": f"preparing {slot['name']}", "since": time.time()}
                             if on_plan:
                                 on_plan(slot["name"])
+                        # code that printed one line 60 times ran each round to 4,096 tokens (330 s, 2026-11-11)
+                        if len(slot["arguments"]) - args_checked >= 200:
+                            args_checked = len(slot["arguments"])
+                            args_looped = args_looped or looping(slot["arguments"])
                     finish = ch.get("finish_reason") or finish
                 if finish == "tool_calls" and "</tool_call>" in content:
+                    break
+                if args_looped:  # the call's text repeats: closing the stream stops llama-server
+                    finish = "stop"
                     break
                 if looped:  # closing the stream stops llama-server; one copy of the repeated text is kept
                     content, finish = trim_loop(content), "stop"
@@ -1099,6 +1107,7 @@ class OmniNative(N.LFM3Native):
                                 "prefill_s": round(prefill_s, 2), "decode_s": round(decode_s, 2),
                                 "decode_tok_s": round(n_new / decode_s, 2) if decode_s > 0 and n_new else None,
                                 "finish": reason, **({"looped": True} if looped else {}),
+                                **({"tool_args_looped": True} if args_looped else {}),
                                 **({"rambling": True} if cut is not None else {})}
 
     def _history(self, history, keep_last_media=False, strip_attached=False, current_query=None, is_follow_up=False):
@@ -1476,7 +1485,13 @@ class OmniNative(N.LFM3Native):
                             for c in calls:
                                 emit({"type": "tool_call", "id": c["id"], "name": c["name"], "arguments": c["arguments"]})
                                 key = (c["name"], json.dumps(c["arguments"], sort_keys=True))
-                                if key in done_calls:
+                                if isinstance(c["arguments"], dict) and "_raw" in c["arguments"]:
+                                    # "(no output)" from running nothing taught the model nothing; it wrote the same call
+                                    ran, why = False, "the call's arguments were not complete JSON"
+                                    result = ("Not run: the arguments of this call were cut off or repeated themselves, so "
+                                              "they are not complete JSON. Write the call again, short: each line once, "
+                                              "and print only the figures the question needs.")
+                                elif key in done_calls:
                                     ran, why = False, "same call already made in this answer"
                                     result = ("You already made this exact call in this answer; its result is above. Do not "
                                               "repeat it: answer from the results you have, or try something different.")
