@@ -25,6 +25,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -85,7 +86,7 @@ def turn(sid, prompt, files=(), media=(), documents=(), allow=(), deny_note=True
         out = {"error": f"HTTP {r.status}: {r.read()[:400].decode('utf-8', 'replace')}"}
         conn.close()
         return dict(out, events=[], permissions=[], seconds=round(time.time() - t0, 1))
-    events, perms, done, turn_id, cancelled = [], [], None, None, False
+    events, perms, done, turn_id, stopper = [], [], None, None, None
     while done is None:
         line = r.readline()
         if not line:
@@ -96,16 +97,20 @@ def turn(sid, prompt, files=(), media=(), documents=(), allow=(), deny_note=True
         events.append(ev.get("type"))
         if ev["type"] == "start":
             turn_id = ev.get("turn_id")
+            if cancel_after:  # the answer appears only after C3, so Stop is pressed on time, not on a token
+                stopper = threading.Timer(max(0.0, cancel_after - (time.time() - t0)), call,
+                                          ("POST", "/api/cancel", {"turn_id": turn_id}))
+                stopper.daemon = True
+                stopper.start()
         if ev["type"] == "permission":
             decision = "once" if ev.get("tool") in allow else "deny"
             perms.append({"tool": ev.get("tool"), "detail": str(ev.get("detail") or "")[:300], "decision": decision,
                           "risky": ev.get("risky")})
             call("POST", "/api/decision", {"turn_id": ev["turn_id"], "request_id": ev["request_id"], "decision": decision})
-        if cancel_after and not cancelled and turn_id and time.time() - t0 > cancel_after and ev["type"] == "token":
-            call("POST", "/api/cancel", {"turn_id": turn_id})
-            cancelled = True
         if ev["type"] in ("done", "error"):
             done = ev
+    if stopper is not None:
+        stopper.cancel()
     conn.close()
     done = done or {"error": "stream ended without a result"}
     return dict(done, events=events, permissions=perms, seconds=round(time.time() - t0, 1))
@@ -485,14 +490,15 @@ def scenarios(inputs):
               not_offered("web_search"), no_tool()),
             T("Don't search the web, just tell me what a black hole is in two sentences.", has_any("gravity", "light"),
               not_offered("web_search"), no_tool(), chat="csi-form")]),
-        S("personal-habit", "personal learning on by default: a habit learned from two corrections, then the switch", [
+        S("personal-habit", "personal learning always on: a habit learned from two corrections, kept when asked off", [
             T("Dig into the history of the bicycle.", answered(), chat="ppl-1"),
             T("No, look it up online.", tool_ran("web_search", "fetch_url"), chat="ppl-1", allow=("internet",)),
             T("Dig into the history of the telescope.", answered(), chat="ppl-2"),
             T("No, look it up online.", tool_ran("web_search", "fetch_url"), chat="ppl-2", allow=("internet",)),
             T("Dig into the history of the printing press.", personal_used(), tool_ran("web_search", "fetch_url"),
               chat="ppl-3", allow=("internet",), after="personal-view"),
-            T("Dig into the history of the radio.", answered(), chat="ppl-4", allow=("internet",), after="personal-off")]),
+            T("Dig into the history of the radio.", answered(), chat="ppl-4", allow=("internet",),
+              after="personal-always-on")]),
         S("pictures", "a picture when asked, after the user allows it", [
             T("Draw a picture of a red bicycle leaning against a blue wall.", permission_asked("media"),
               lambda res: (bool(res.get("images")), "a picture came back"), allow=("media",))]),
@@ -521,20 +527,18 @@ def after_personal_view(ctx):
     return ok, "personal view: " + learned
 
 
-def after_personal_off(ctx):
+def after_personal_always_on(ctx):
+    """Personal learning is always on (v5.0.0): asking to switch it off leaves it on and the habit still applies."""
     call("POST", "/api/settings", {"personal": False})
-    try:
-        sid = f"{RUN}-ppl-off"
-        SIDS.append(sid)
-        res = turn(sid, "Dig into the history of the radio.", allow=("internet",))
-        v = call("GET", "/api/personal")
-        ok = not personal_reading(res) and v.get("learning") is False
-        return ok, f"learning off: personal reading {personal_reading(res)}, learning {v.get('learning')}"
-    finally:
-        call("POST", "/api/settings", {"personal": True})
+    sid = f"{RUN}-ppl-off"
+    SIDS.append(sid)
+    res = turn(sid, "Dig into the history of the radio.", allow=("internet",))
+    v = call("GET", "/api/personal")
+    ok = personal_reading(res) and v.get("learning") is not False
+    return ok, f"always on: personal reading {personal_reading(res)}, learning {v.get('learning')}"
 
 
-AFTER.update({"personal-view": after_personal_view, "personal-off": after_personal_off})
+AFTER.update({"personal-view": after_personal_view, "personal-always-on": after_personal_always_on})
 
 
 # ---------------------------------------------------------------- run
