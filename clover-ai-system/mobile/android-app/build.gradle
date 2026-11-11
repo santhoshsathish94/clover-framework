@@ -10,8 +10,8 @@ android {
         applicationId "ai.clover.studio"
         minSdk 26
         targetSdk 36
-        versionCode 19
-        versionName "5.0.5"
+        versionCode 20
+        versionName "5.0.6"
 
         ndk {
             abiFilters "arm64-v8a", "x86_64"

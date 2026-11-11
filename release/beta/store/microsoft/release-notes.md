@@ -1,6 +1,7 @@
-Clover AI Studio v5.0.5 (Package Version 5.0.5.0) — Release:
-• One GitHub sign-in (Clover's own GitHub app, a code on this PC) for the private memory repository, Workspaces, k3 models and collective learning; it renews itself and is stored encrypted.
-• Collective learning without a server: the shared core comes from a public GitHub repository with no account, and contributions are public GitHub issues under your name, checked by GitHub Actions.
-• Security: Google sign-in removed; collective strategy text limited to fixed wording.
-• Fixes: Terminal tool table output, Workspaces and Memory trees, sign-in buttons.
-• Packaged as an x64 MSIX / `.msixupload` bundle (`SanthoshNarayanan.CloverAIStudio`, `5.0.5.0`) alongside the Authenticode-signed standalone x64 installer (`CloverAIStudio-Setup.exe`).
+Clover AI Studio v5.0.6 (Package Version 5.0.6.0) — Release:
+• Long answers are no longer cut at 512 tokens; an answer that repeats itself ends on its last full sentence, and a runaway Python tool call is stopped early.
+• A chat answers from its own conversation: other chats are recalled only when you ask about the past.
+• Attached spreadsheets and CSV files: exact counts per value, and Python opens the file reliably.
+• Notes to rewrite into a sentence are written by the model.
+• 3D Clover Robot voice mode for hands-free conversation.
+• Packaged as an x64 MSIX / `.msixupload` bundle (`SanthoshNarayanan.CloverAIStudio`, `5.0.6.0`) alongside the Authenticode-signed standalone x64 installer (`CloverAIStudio-Setup.exe`).

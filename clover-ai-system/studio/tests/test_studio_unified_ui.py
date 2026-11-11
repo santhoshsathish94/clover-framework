@@ -39,10 +39,10 @@ for token in (
 
 # 2. Left sidebar brand header & 6 primary navigation items using existing icons only
 check(
-    "Left sidebar brand header has Clover AI Studio and v5.0.5 (and #v-version v5.0.5)",
+    "Left sidebar brand header has Clover AI Studio and v5.0.6 (and #v-version v5.0.6)",
     '<span class="brand__title">Clover AI Studio</span>' in app
-    and '<span class="brand__ver">v5.0.5</span>' in app
-    and '<b id="v-version">v5.0.5</b>' in app,
+    and '<span class="brand__ver">v5.0.6</span>' in app
+    and '<b id="v-version">v5.0.6</b>' in app,
 )
 check(
     "v5.0.3 VS Code & Playwright UI integration (vscode_wait step, vscode_browser TOOL_UI, and Playwright fmtArgs)",
