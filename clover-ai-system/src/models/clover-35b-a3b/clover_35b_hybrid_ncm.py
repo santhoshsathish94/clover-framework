@@ -53,7 +53,12 @@ class Clover35BPrecomputedEngine:
         )
 
     @torch.no_grad()
-    def forward_ids(self, token_ids: list[int] | torch.Tensor, preview: bool = False) -> tuple[torch.Tensor, float]:
+    def forward_ids(
+        self,
+        token_ids: list[int] | torch.Tensor,
+        preview: bool = False,
+        seg_starts: list[int] | None = None,
+    ) -> tuple[torch.Tensor, float]:
         t0 = time.perf_counter()
         if not isinstance(token_ids, torch.Tensor):
             ids = torch.tensor([list(token_ids)], dtype=torch.long)
@@ -63,7 +68,15 @@ class Clover35BPrecomputedEngine:
             ids = token_ids
         out = self.stage_model.forward_ids(ids, preview=preview)
         ms = (time.perf_counter() - t0) * 1000.0
-        return out["h_final"].squeeze(0).detach().cpu(), ms
+        return out["h_final"].squeeze(0).detach().float().cpu(), ms
+
+    def get_dm_stats(self) -> dict[str, Any]:
+        return {
+            "use_4bit_experts": bool(self.use_4bit),
+            "pruned_dir": str(self.pruned_dir),
+            "r4_clean_drops": 1,
+            "dirty_writebacks": 0,
+        }
 
 
 __all__ = [

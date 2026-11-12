@@ -2834,6 +2834,11 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, self._admin_users_payload())
         if not paths.WEB and not self._token_ok():
             return self._send(403, {"error": "token required"})
+        if path == "/api/multi-node/status":
+            import multi_node_coordinator
+            base_dir = Path(S.args.base) if S.args else HERE.parent
+            coord = multi_node_coordinator.K3MultiNodeCoordinator(base_dir)
+            return self._send(200, coord.topology_status())
         if path in ("/", "/index.html") and setup_needed():
             nonce = secrets.token_urlsafe(18)
             html = (HERE / "web" / "setup.html").read_text(encoding="utf-8").replace("__CSP_NONCE__", nonce)
@@ -3072,6 +3077,20 @@ class Handler(BaseHTTPRequestHandler):
         if not self._host_ok() or self._cross_site():
             return self._send(403, {"error": "cross-site requests are not accepted"})
         path = self.path.split("?", 1)[0]
+        if path in ("/api/multi-node/turn", "/api/multi-node/sync", "/api/multi-node/client-turn"):
+            import multi_node_coordinator
+            try:
+                body = self._read_json(CHAT_BODY)
+            except Exception as exc:
+                return self._send(400, {"ok": False, "error": str(exc)})
+            base_dir = Path(S.args.base) if S.args else HERE.parent
+            coord = multi_node_coordinator.K3MultiNodeCoordinator(base_dir)
+            if path == "/api/multi-node/sync":
+                return self._send(200, coord.sync_client_offline_events(body.get("events") or []))
+            if path == "/api/multi-node/turn":
+                return self._send(200, coord.run_coordinated_turn(body))
+            router = multi_node_coordinator.ClientNodeRouter(base_dir, k3_coordinator=coord)
+            return self._send(200, router.run_client_turn(body, k3_reachable=bool(body.get("k3_reachable", True))))
         if path == "/api/admin/github/device/start":
             if not _check_auth_rate_limit(self._client_ip()):
                 return self._send(429, {"ok": False, "error": "Too many authentication requests. Please wait a minute and try again."})

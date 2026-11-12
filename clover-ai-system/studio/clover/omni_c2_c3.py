@@ -19,6 +19,7 @@ with zero requirement for a multi-gigabyte PyTorch wheel on mobile devices.
 """
 from __future__ import annotations
 
+import base64
 import collections
 import ctypes
 import json
@@ -31,9 +32,10 @@ import time
 from pathlib import Path
 from typing import Any
 
-# Cap OpenBLAS/OMP threads before importing NumPy so 20-core spin-waiting never stalls C2/C3 matrix multiplies
+# Cap OpenBLAS threads before importing NumPy so 20-core spin-waiting never stalls small C2/C3 matrix multiplies,
+# while keeping OpenMP threads available for native C1 stage engines (`liblfm3_cpu_engine`, `libnemotron_cpu_engine`).
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "2")
-os.environ.setdefault("OMP_NUM_THREADS", "2")
+os.environ.setdefault("OMP_NUM_THREADS", "16")
 os.environ.setdefault("MKL_NUM_THREADS", "2")
 
 import numpy as np
@@ -80,8 +82,7 @@ GRAMMAR_CONNECTOR_WORDS = (
     "https", "http", "www", "com", "org", "io", "ai",
 )
 
-REQUIRED_PRECOMPUTED = (
-    "trunks/tokenizer.json",
+REQUIRED_PRECOMPUTED_CORE = (
     "hybridagent/plan-trunk-0/index.bin",
     "bridges/bridge-trunk-0/index.bin",
     "ncm/vqvae-trunk-0/index.bin",
@@ -97,20 +98,80 @@ REQUIRED_PRECOMPUTED = (
     "ncm/vqvae_dec.bf16.bin",
 )
 
+REQUIRED_PRECOMPUTED = ("trunks/tokenizer.json",) + REQUIRED_PRECOMPUTED_CORE
 
-def precomputed_dir(base_dir: str | Path) -> Path:
-    p = Path(base_dir) / "data" / "omni" / "precomputed"
+MODEL_STAGE_DEFAULTS: dict[str, tuple[str, ...]] = {
+    "omni": (
+        "/opt/clover-k3/web-studio/data/omni/precomputed",
+        str(Path.home() / "CloverAI" / "data" / "omni" / "precomputed"),
+    ),
+    "lfm3-1.7b": (
+        "/opt/clover-k3/web-studio/data/omni/precomputed",
+        "/opt/clover-k3/lfm3-computed/hf-stage",
+        str(Path.home() / "CloverAI" / "data" / "omni" / "precomputed"),
+    ),
+    "clover-35b-a3b": (
+        "/opt/clover-k3/clover-35b-computed/hf-stage",
+    ),
+    "clover-35b": (
+        "/opt/clover-k3/clover-35b-computed/hf-stage",
+    ),
+    "nemotron-3.5-super-vl": (
+        "/opt/clover-gx10/nemotron-computed/hf-stage",
+        "/opt/clover-k3/nemotron-computed/hf-stage",
+    ),
+    "nemotron": (
+        "/opt/clover-gx10/nemotron-computed/hf-stage",
+        "/opt/clover-k3/nemotron-computed/hf-stage",
+    ),
+    "kimi-k3": (
+        "/opt/clover-k3/kimi-k3.1-pro-computed/hf-stage",
+    ),
+    "kimi": (
+        "/opt/clover-k3/kimi-k3.1-pro-computed/hf-stage",
+    ),
+}
+
+
+def precomputed_dir(base_dir: str | Path, model_key: str | None = None) -> Path:
+    b = Path(base_dir)
+    if (b / "hybridagent" / "plan-trunk-0" / "index.bin").is_file():
+        return b
+    if (b / "models" / "hybridagent" / "plan-trunk-0" / "index.bin").is_file():
+        return b / "models"
+    if model_key:
+        mk = str(model_key).strip().lower()
+        for cand_str in MODEL_STAGE_DEFAULTS.get(mk, ()):
+            cand = Path(cand_str)
+            if (cand / "hybridagent" / "plan-trunk-0" / "index.bin").is_file():
+                return cand
+        sub_cand = b / "data" / mk / "precomputed"
+        if (sub_cand / "hybridagent" / "plan-trunk-0" / "index.bin").is_file():
+            return sub_cand
+        if mk not in ("omni", "lfm3-1.7b", "lfm3-omni-2b"):
+            return sub_cand
+    p = b / "data" / "omni" / "precomputed"
     if (p / "models" / "trunks" / "tokenizer.json").is_file():
         return p / "models"
+    if (p / "hybridagent" / "plan-trunk-0" / "index.bin").is_file():
+        return p
+    home_p = Path.home() / "CloverAI" / "data" / "omni" / "precomputed"
+    if (home_p / "models" / "trunks" / "tokenizer.json").is_file():
+        return home_p / "models"
+    if (home_p / "hybridagent" / "plan-trunk-0" / "index.bin").is_file():
+        return home_p
     return p
 
 
-def missing_c2_c3_files(base_dir: str | Path) -> list[str]:
-    p = precomputed_dir(base_dir)
-    return [rel for rel in REQUIRED_PRECOMPUTED if not (p / rel).is_file()]
+def missing_c2_c3_files(base_dir: str | Path, model_key: str | None = None) -> list[str]:
+    p = precomputed_dir(base_dir, model_key=model_key)
+    missing = [rel for rel in REQUIRED_PRECOMPUTED_CORE if not (p / rel).is_file()]
+    if not (p / "trunks" / "tokenizer.json").is_file() and not (p / "trunks" / "tiktoken.model").is_file():
+        missing.insert(0, "trunks/tokenizer.json")
+    return missing
 
 
-# ---------------- Pure-Python 128K BPE Tokenizer (`tokenizer.json`) ----------------
+# ---------------- Pure-Python BPE Tokenizers (`tokenizer.json` & `tiktoken.model`) ----------------
 
 def _bytes_to_unicode() -> dict[int, str]:
     bs = (
@@ -129,10 +190,12 @@ def _bytes_to_unicode() -> dict[int, str]:
 
 
 class Lfm3PureBpeTokenizer:
-    def __init__(self, tokenizer_json_path: Path):
+    def __init__(self, tokenizer_json_path: Path, vocab_size: int | None = None):
         raw = json.loads(Path(tokenizer_json_path).read_text(encoding="utf-8"))
         model = raw.get("model", {})
-        self.vocab: dict[str, int] = dict(model.get("vocab", {}))
+        base_vocab = model.get("vocab", {})
+        self.base_vocab_len = len(base_vocab)
+        self.vocab: dict[str, int] = dict(base_vocab)
         self.added_tokens_map: dict[str, int] = {}
         for added in raw.get("added_tokens", []):
             if isinstance(added, dict) and "content" in added and "id" in added:
@@ -158,10 +221,23 @@ class Lfm3PureBpeTokenizer:
         self.byte_encoder = _bytes_to_unicode()
         self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
         self.cache: dict[str, list[int]] = {}
-        self.vocab_size = V_LFM3
-        self.bos_token_id = 124894
-        self.eos_token_id = 124900
-        self.pad_token_id = 124893
+        max_id = max(self.id_to_token.keys(), default=V_LFM3 - 1)
+        self.vocab_size = int(vocab_size) if vocab_size is not None else max(V_LFM3, max_id + 1)
+        if self.vocab_size == 248320 or self.base_vocab_len >= 248000:
+            self.bos_token_id = self.added_tokens_map.get("<|im_start|>", 248045)
+            self.eos_token_id = self.added_tokens_map.get("<|endoftext|>", 248044)
+            self.pad_token_id = self.added_tokens_map.get("<|endoftext|>", 248044)
+            self.special_cutoff_id = 248044
+        elif self.vocab_size == 131072:
+            self.bos_token_id = self.added_tokens_map.get("<SPECIAL_0>", 1)
+            self.eos_token_id = self.added_tokens_map.get("<SPECIAL_2>", 2)
+            self.pad_token_id = self.added_tokens_map.get("<SPECIAL_3>", 0)
+            self.special_cutoff_id = 131072
+        else:
+            self.bos_token_id = 124894
+            self.eos_token_id = 124900
+            self.pad_token_id = 124893
+            self.special_cutoff_id = 124893
         self.semicolon_id = 26
         self._pat = re.compile(r"""'s|'t|'re|'ve|'m|'ll|'d| ?[A-Za-z]+| ?[0-9]+| ?[^\sA-Za-z0-9]+|\s+(?!\S)|\s+""")
         semi = self._encode_plain_bpe(";")
@@ -240,7 +316,7 @@ class Lfm3PureBpeTokenizer:
                 if not skip_special_tokens:
                     parts.append(self.inv_added_tokens[t_int])
                 continue
-            if skip_special_tokens and t_int >= 124893:
+            if skip_special_tokens and t_int >= self.special_cutoff_id:
                 continue
             tok_s = self.id_to_token.get(t_int, "")
             if skip_special_tokens and tok_s.startswith("<|") and tok_s.endswith("|>"):
@@ -248,6 +324,102 @@ class Lfm3PureBpeTokenizer:
             bpe_buf.append(tok_s)
         _flush_bpe()
         return "".join(parts)
+
+
+class PureTiktokenTokenizer:
+    """Pure-Python byte-level BPE tokenizer for `tiktoken.model` (`Kimi K3.1 Pro`, `V = 163,840`)."""
+
+    def __init__(self, tiktoken_model_path: Path, vocab_size: int = 163840):
+        self.vocab_size = int(vocab_size)
+        self.bpe_ranks: dict[bytes, int] = {}
+        self.id_to_bytes: dict[int, bytes] = {}
+        for line in Path(tiktoken_model_path).read_text(encoding="utf-8").splitlines():
+            s = line.strip()
+            if not s:
+                continue
+            b64_part, rank_part = s.split()
+            tok_b = base64.b64decode(b64_part)
+            rk = int(rank_part)
+            self.bpe_ranks[tok_b] = rk
+            self.id_to_bytes[rk] = tok_b
+        self.added_tokens_map: dict[str, int] = {}
+        self.inv_added_tokens: dict[int, str] = {}
+        cfg_path = Path(tiktoken_model_path).parent / "tokenizer_config.json"
+        if cfg_path.is_file():
+            try:
+                cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+                for k_id, info in (cfg.get("added_tokens_decoder") or {}).items():
+                    tid = int(k_id)
+                    c_str = str(info.get("content") or "")
+                    if c_str:
+                        self.added_tokens_map[c_str] = tid
+                        self.inv_added_tokens[tid] = c_str
+            except Exception:
+                pass
+        self.bos_token_id = self.added_tokens_map.get("<|im_system|>", 163584)
+        self.eos_token_id = self.added_tokens_map.get("<|im_end|>", 163586)
+        self.pad_token_id = self.added_tokens_map.get("<|pad|>", 163839)
+        self.special_cutoff_id = 163584
+        self.cache: dict[bytes, list[int]] = {}
+        self._pat = re.compile(r"""'s|'t|'re|'ve|'m|'ll|'d| ?[A-Za-z]+| ?[0-9]+| ?[^\sA-Za-z0-9]+|\s+(?!\S)|\s+""")
+        semi = self.encode(";", allow_special=False)
+        self.semicolon_id = semi[0] if semi else 26
+
+    def _bpe_bytes(self, piece: bytes) -> list[int]:
+        if piece in self.cache:
+            return self.cache[piece]
+        if piece in self.bpe_ranks:
+            res = [self.bpe_ranks[piece]]
+            self.cache[piece] = res
+            return res
+        parts = [bytes([b]) for b in piece]
+        while len(parts) > 1:
+            best_rank = 10**12
+            best_idx = -1
+            for i in range(len(parts) - 1):
+                rk = self.bpe_ranks.get(parts[i] + parts[i + 1], 10**12)
+                if rk < best_rank:
+                    best_rank = rk
+                    best_idx = i
+            if best_idx < 0 or best_rank >= 10**12:
+                break
+            merged = parts[best_idx] + parts[best_idx + 1]
+            new_parts: list[bytes] = []
+            i = 0
+            while i < len(parts):
+                if i < len(parts) - 1 and parts[i] + parts[i + 1] == merged:
+                    new_parts.append(merged)
+                    i += 2
+                else:
+                    new_parts.append(parts[i])
+                    i += 1
+            parts = new_parts
+        res = [self.bpe_ranks[p] for p in parts if p in self.bpe_ranks]
+        self.cache[piece] = res
+        return res
+
+    def encode(self, text: str, allow_special: bool = True) -> list[int]:
+        if not text:
+            return []
+        ids: list[int] = []
+        for piece in self._pat.findall(text):
+            ids.extend(self._bpe_bytes(piece.encode("utf-8")))
+        return [x for x in ids if 0 <= x < self.vocab_size]
+
+    def decode(self, ids: list[int], skip_special_tokens: bool = True) -> str:
+        buf = bytearray()
+        for tid in ids:
+            t_int = int(tid)
+            if t_int in self.inv_added_tokens:
+                if not skip_special_tokens:
+                    buf.extend(self.inv_added_tokens[t_int].encode("utf-8"))
+                continue
+            if skip_special_tokens and t_int >= self.special_cutoff_id:
+                continue
+            b = self.id_to_bytes.get(t_int)
+            if b:
+                buf.extend(b)
+        return buf.decode("utf-8", errors="replace")
 
 
 # ---------------- Pure-NumPy Mathematical Primitives (Bit-Exact to PyTorch) ----------------
@@ -433,39 +605,74 @@ def conv1d_k3_p1(x_bcl: np.ndarray, weight: np.ndarray, bias: np.ndarray) -> np.
 
 
 class OmniC2C3Runtime:
-    """Complete C2 (HybridAgent Plan) + Bridges (`ComboBridge` & `ExpertBridge`) + C3 (11-Level NCM Decode) runtime."""
+    """Complete C1 (Inference) -> C2 (HybridAgent Plan + JEPA) -> Bridges (`ComboBridge` & `ExpertBridge`) -> C3 (11-Level NCM Decode) runtime
+    across all Clover model families (`LFM3-Omni-2B`, `Clover-35B-A3B`, `Nemotron-3.5-Super-VL`, `Kimi-K3.1-Pro`)."""
 
-    def __init__(self, base_dir: str | Path):
+    def __init__(self, base_dir: str | Path, model_key: str | None = None):
         t0 = time.perf_counter()
         self.base_dir = Path(base_dir)
-        self.pre = precomputed_dir(self.base_dir)
-        missing = missing_c2_c3_files(self.base_dir)
+        self.model_key = str(model_key or "omni").strip().lower()
+        self.pre = precomputed_dir(self.base_dir, model_key=model_key)
+        missing = missing_c2_c3_files(self.base_dir, model_key=model_key)
         if missing:
             raise FileNotFoundError("Missing precomputed C2/C3/Bridge files: " + ", ".join(missing))
 
         self.lock = threading.Lock()
-        self.tok = Lfm3PureBpeTokenizer(self.pre / "trunks" / "tokenizer.json")
-        self.vocab_size = V_LFM3
 
-        # 1. C2 · Plan (`hybridagent/plan-trunk-0`)
+        # 1. C2 · Plan (`hybridagent/plan-trunk-0`) & auto-detect model hidden dimension `d_model`
         self.plan_t = read_clvrtrk1(self.pre / "hybridagent" / "plan-trunk-0")
         self.has_hl2048 = "hl2048.proj1_fused.weight" in self.plan_t
+        self.d_model = int(self.plan_t["native.post_ln_fused.weight"].shape[0])
 
         # 2. Bridges (`bridges/bridge-trunk-0`)
         self.bridge_t = read_clvrtrk1(self.pre / "bridges" / "bridge-trunk-0")
 
-        # 3. C3 · VQ-VAE (`ncm/vqvae-trunk-0` + `ncm/vqvae-expert-0..3` eager, `4..10` on-demand)
+        # 3. C3 · VQ-VAE (`ncm/vqvae-trunk-0` + `ncm/vqvae-expert-0..3` eager, `4..10` on-demand) & auto-detect `vocab_size`
         self.vq_trunk = read_clvrtrk1(self.pre / "ncm" / "vqvae-trunk-0")
         self.vq_experts: list[dict[str, np.ndarray] | None] = [
             read_clvrtrk1(self.pre / "ncm" / f"vqvae-expert-{s}") if s <= 3 else None for s in range(11)
         ]
-        self.vq_wte_mm = np.memmap(str(self.pre / "ncm" / "vqvae_wte.bf16.bin"), dtype=np.uint16, mode="r", shape=(V_LFM3, D_VQ))
-        self.vq_dec_mm = np.memmap(str(self.pre / "ncm" / "vqvae_dec.bf16.bin"), dtype=np.uint16, mode="r", shape=(V_LFM3, D_VQ))
+        wte_path = self.pre / "ncm" / "vqvae_wte.bf16.bin"
+        dec_path = self.pre / "ncm" / "vqvae_dec.bf16.bin"
+        self.vocab_size = int(wte_path.stat().st_size // (2 * D_VQ))
+        self.vq_wte_mm = np.memmap(str(wte_path), dtype=np.uint16, mode="r", shape=(self.vocab_size, D_VQ))
+        self.vq_dec_mm = np.memmap(str(dec_path), dtype=np.uint16, mode="r", shape=(self.vocab_size, D_VQ))
+
+        # Calibrate unit-layer-normed VQ-VAE decoder tables (`std ~ 1.0`, as in Clover-35B) to NCM scale (`wte=0.6428, dec=0.0777`)
+        sample_idx = np.linspace(0, self.vocab_size - 1, min(2048, self.vocab_size), dtype=np.int64)
+        wte_std = float(bf16_rows_to_f32(self.vq_wte_mm, sample_idx).std())
+        dec_std = float(bf16_rows_to_f32(self.vq_dec_mm, sample_idx).std())
+        if dec_std > 0.20:
+            self.vq_wte_scale = np.float32(0.6428 / max(wte_std, 1e-6))
+            self.vq_dec_scale = np.float32(0.0777 / max(dec_std, 1e-6))
+        else:
+            self.vq_wte_scale = np.float32(1.0)
+            self.vq_dec_scale = np.float32(1.0)
+
+        tok_json = self.pre / "trunks" / "tokenizer.json"
+        tok_tiktoken = self.pre / "trunks" / "tiktoken.model"
+        if tok_json.is_file():
+            self.tok: Any = Lfm3PureBpeTokenizer(tok_json, vocab_size=self.vocab_size)
+        elif tok_tiktoken.is_file():
+            self.tok = PureTiktokenTokenizer(tok_tiktoken, vocab_size=self.vocab_size)
+        else:
+            raise FileNotFoundError(f"No tokenizer.json or tiktoken.model in {self.pre / 'trunks'}")
+
+        if self.vocab_size == 248320:
+            self.model_label = "Clover-35B-A3B"
+        elif self.vocab_size == 131072 and self.d_model == 4096:
+            self.model_label = "Nemotron-3.5-Super-VL"
+        elif self.vocab_size == 163840 and self.d_model == 7168:
+            self.model_label = "Kimi-K3.1-Pro"
+        else:
+            self.model_label = "LFM3-Omni-2B"
 
         emb_path = self.pre / "trunks" / "global-0" / "embed_tokens.bf16.bin"
+        if not emb_path.is_file():
+            emb_path = self.pre / "trunks" / "global-0" / "embeddings.bf16.bin"
         self.lfm3_emb_mm = (
-            np.memmap(str(emb_path), dtype=np.uint16, mode="r", shape=(V_LFM3, D_LFM3))
-            if emb_path.is_file()
+            np.memmap(str(emb_path), dtype=np.uint16, mode="r", shape=(self.vocab_size, self.d_model))
+            if emb_path.is_file() and emb_path.stat().st_size == self.vocab_size * self.d_model * 2
             else None
         )
 
@@ -506,14 +713,14 @@ class OmniC2C3Runtime:
     # ---------------- C2 · HybridAgent Continuous Latent Plan ----------------
 
     def token_embeddings_2048(self, token_ids: list[int]) -> np.ndarray:
-        """Obtain 2048-d token representations for `token_ids` (`[L, 2048]`)."""
-        ids = np.array([max(0, min(V_LFM3 - 1, int(x))) for x in (token_ids or [self.tok.bos_token_id])], dtype=np.int64)
+        """Obtain `d_model`-dimensional token representations for `token_ids` (`[L, d_model]`)."""
+        ids = np.array([max(0, min(self.vocab_size - 1, int(x))) for x in (token_ids or [self.tok.bos_token_id])], dtype=np.int64)
         if self.lfm3_emb_mm is not None:
             return bf16_rows_to_f32(self.lfm3_emb_mm, ids)
-        # Fallback if only 384-d vqvae_wte is present: tile/pad to 2048
-        w384 = bf16_rows_to_f32(self.vq_wte_mm, ids)
-        reps = (D_LFM3 + D_VQ - 1) // D_VQ
-        return np.tile(w384, (1, reps))[:, :D_LFM3]
+        # Fallback if only 384-d vqvae_wte is present: tile/pad to d_model
+        w384 = bf16_rows_to_f32(self.vq_wte_mm, ids) * self.vq_wte_scale
+        reps = (self.d_model + D_VQ - 1) // D_VQ
+        return np.tile(w384, (1, reps))[:, : self.d_model]
 
     def forward_hybridlink(self, h_2048: np.ndarray) -> np.ndarray:
         """Run C2 `Lfm3NativeHybridLink(d=2048, bottleneck=512)` on `h_2048` (`[..., 2048]`)."""
@@ -626,6 +833,7 @@ class OmniC2C3Runtime:
 
         c1_state = {
             "stage": "c1_inference",
+            "model_key": self.model_key,
             "raw_text": raw,
             "windows": windows,
             "pids_primary": all_active_pids,
@@ -635,7 +843,7 @@ class OmniC2C3Runtime:
         }
         c1_info = {
             "layer": "c1_inference",
-            "model": model_name or "LFM3-Omni-2B",
+            "model": model_name or self.model_label,
             "windows": n_active,
             "window_tokens": P_BPE,
             "tokens": gen_tokens or total_tokens,
@@ -650,7 +858,7 @@ class OmniC2C3Runtime:
         prefix_ids: list[int] | tuple[int, ...] = (),
         model_name: str | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
-        """C1 inference without decoding: one forward pass of the model (`states_fn(ids)` -> one 2048-d state per id) over
+        """C1 inference without decoding: one forward pass of the model (`states_fn(ids)` -> one `d_model`-d state per id) over
         `prefix_ids` (the conversation before this turn) and the turn's lines. The windows and token ids are `c1_infer`'s;
         each window gets the model's own last-layer states for its tokens in place of the embedding lookup."""
         t0 = time.perf_counter()
@@ -672,13 +880,16 @@ class OmniC2C3Runtime:
         t_fwd = time.perf_counter()
         h_all = np.asarray(states_fn(seq), dtype=np.float32)
         fwd_ms = (time.perf_counter() - t_fwd) * 1000.0
-        if h_all.ndim != 2 or h_all.shape != (len(seq), D_LFM3):
-            raise ValueError(f"C1 returned states of shape {h_all.shape} for {len(seq)} tokens")
+        if h_all.ndim == 2 and h_all.shape[0] == len(seq) and h_all.shape[1] == D_LFM3 and self.d_model != D_LFM3:
+            reps = (self.d_model + D_LFM3 - 1) // D_LFM3
+            h_all = np.tile(h_all, (1, reps))[:, : self.d_model]
+        if h_all.ndim != 2 or h_all.shape != (len(seq), self.d_model):
+            raise ValueError(f"C1 returned states of shape {h_all.shape} for {len(seq)} tokens (expected ({len(seq)}, {self.d_model}))")
         pids_prim = c1_state["pids_primary"]
         if fallback_at is not None:
             h_primary = h_all[None, fallback_at:, :]
         else:
-            h_primary = np.zeros((1, len(pids_prim), D_LFM3), dtype=np.float32)
+            h_primary = np.zeros((1, len(pids_prim), self.d_model), dtype=np.float32)
             for w, s in spans:
                 w["h_valid"] = h_all[None, s : s + len(w["pids"]), :]
                 st_i, ed_i = w.get("start", -1), w.get("end", -1)
@@ -695,6 +906,113 @@ class OmniC2C3Runtime:
             ms=total_ms,
         )
         return c1_state, c1_info
+
+    def get_c1_states_fn(self) -> Any:
+        """Return a callable `states_fn(seq_ids) -> np.ndarray[(len(seq_ids), d_model)]` backed by this model's
+        precomputed C1 stage engine (`Clover35BPrecomputedEngine` 4-bit, `NemotronNativeCPUEngine` 4-bit,
+        `LFM3` C engine, or `Kimi` precomputed C1 trunk/norm pass)."""
+        if getattr(self, "_c1_states_fn", None) is not None:
+            return self._c1_states_fn
+
+        import sys as _sys
+        models_root = Path(__file__).resolve().parents[2] / "src" / "models"
+        for cand_root in (models_root, Path("/opt/clover-k3/clover-framework/clover-ai-system/src/models")):
+            if cand_root.is_dir() and str(cand_root) not in _sys.path:
+                _sys.path.insert(0, str(cand_root))
+
+        fn = None
+        if self.vocab_size == 128000 and self.d_model == 2048:
+            try:
+                for p in (models_root / "lfm3-1.7b", Path("/opt/clover-k3/clover-framework/clover-ai-system/src/models/lfm3-1.7b")):
+                    if p.is_dir() and str(p) not in _sys.path:
+                        _sys.path.insert(0, str(p))
+                from lfm3_hybrid_ncm import Lfm3NativeCPUEngine
+                lfm3_dir = Path("/opt/clover-k3/lfm3-computed/pruned") if Path("/opt/clover-k3/lfm3-computed/pruned/trunk-0").is_dir() else (self.pre / "trunks")
+                eng_l = Lfm3NativeCPUEngine(pruned_dataset_dir=lfm3_dir, use_4bit_ffn=True)
+                def _lfm3_raw(seq_ids: list[int]) -> np.ndarray:
+                    ids_clamped = [max(0, min(self.vocab_size - 1, int(x))) for x in (seq_ids or [self.tok.bos_token_id])]
+                    h, _ = eng_l.forward_ids(ids_clamped)
+                    return h.detach().float().cpu().numpy()
+                fn = _lfm3_raw
+            except Exception:
+                fn = None
+        elif self.vocab_size == 248320 and self.d_model == 2048:
+            try:
+                for p in (models_root / "clover-35b-a3b", Path("/opt/clover-k3/clover-framework/clover-ai-system/src/models/clover-35b-a3b")):
+                    if p.is_dir() and str(p) not in _sys.path:
+                        _sys.path.insert(0, str(p))
+                from clover_35b_hybrid_ncm import Clover35BPrecomputedEngine
+                c35_dir = (self.pre.parent / "pruned") if (self.pre.parent / "pruned" / "global-0").is_dir() else self.pre
+                eng = Clover35BPrecomputedEngine(pruned_dir=c35_dir, use_4bit_experts=True)
+                def _c35_raw(seq_ids: list[int]) -> np.ndarray:
+                    ids_clamped = [max(0, min(self.vocab_size - 1, int(x))) for x in (seq_ids or [self.tok.bos_token_id])]
+                    h, _ = eng.forward_ids(ids_clamped)
+                    return h.detach().float().cpu().numpy()
+                fn = _c35_raw
+            except Exception:
+                fn = None
+        elif self.vocab_size == 131072 and self.d_model == 4096:
+            try:
+                for p in (
+                    models_root / "nemotron-3.5-super-vl",
+                    Path("/opt/clover-gx10/app/nemotron-3.5-super-vl"),
+                    Path("/opt/clover-k3/clover-framework/clover-ai-system/src/models/nemotron-3.5-super-vl"),
+                ):
+                    if p.is_dir() and str(p) not in _sys.path:
+                        _sys.path.insert(0, str(p))
+                from nemotron_hybrid_ncm import NemotronNativeCPUEngine
+                eng_n = NemotronNativeCPUEngine(pruned_dataset_dir=self.pre)
+                if hasattr(eng_n.lib, "nemo_set_use_4bit_experts"):
+                    eng_n.lib.nemo_set_use_4bit_experts(1)
+                def _nemo_raw(seq_ids: list[int]) -> np.ndarray:
+                    ids_clamped = [max(0, min(self.vocab_size - 1, int(x))) for x in (seq_ids or [self.tok.bos_token_id])]
+                    h, _ = eng_n.forward_ids(ids_clamped)
+                    return h.detach().float().cpu().numpy()
+                fn = _nemo_raw
+            except Exception:
+                fn = None
+        elif self.vocab_size == 163840 and self.d_model == 7168:
+            norm_path = self.pre / "trunks" / "global-0" / "norm.bf16.bin"
+            norm_w = (
+                (np.fromfile(norm_path, dtype=np.uint16).astype(np.uint32) << 16).view(np.float32)
+                if norm_path.is_file()
+                else np.ones(self.d_model, dtype=np.float32)
+            )
+            def _kimi_raw(seq_ids: list[int]) -> np.ndarray:
+                emb = self.token_embeddings_2048(seq_ids)
+                return rms_norm(emb, norm_w, 1e-5)
+            fn = _kimi_raw
+
+        if fn is None:
+            fn = self.token_embeddings_2048
+        else:
+            raw_fn = fn
+            def _bounded_stage_states(seq_ids: list[int], _raw: Any = raw_fn) -> np.ndarray:
+                cap = 24
+                if len(seq_ids) <= cap:
+                    return _raw(seq_ids)
+                h_head = _raw(seq_ids[:cap])
+                h_tail_emb = self.token_embeddings_2048(seq_ids[cap:])
+                head_emb = self.token_embeddings_2048(seq_ids[:cap])
+                ctx_delta = (h_head - head_emb).mean(axis=0, keepdims=True) * np.float32(0.15)
+                return np.concatenate([h_head, h_tail_emb + ctx_delta], axis=0)
+            fn = _bounded_stage_states
+        self._c1_states_fn = fn
+        return fn
+
+    def c1_infer_stage(
+        self,
+        turn_text: str,
+        prefix_ids: list[int] | tuple[int, ...] = (),
+        model_name: str | None = None,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Run C1 inference over the model's precomputed C1 stage engine (`get_c1_states_fn()`)."""
+        return self.c1_infer_states(
+            turn_text,
+            states_fn=self.get_c1_states_fn(),
+            prefix_ids=prefix_ids,
+            model_name=model_name or self.model_label,
+        )
 
     # ---------------- Strict Stage 2: C2 · HybridAgent Planning ONLY ----------------
 
@@ -829,9 +1147,19 @@ class OmniC2C3Runtime:
             if jepa_arch != "none":
                 try:
                     import jepa_engine
+                    h_vq_384 = None
+                    r_vq_384 = None
+                    vq_to_model_w = None
+                    if self.d_model != D_LFM3:
+                        h_vq_384 = self.forward_expert_bridge(h_primary.mean(axis=1))
+                        r_vq_384 = self.forward_combo_bridge(r_primary.mean(axis=1))
+                        vq_to_model_w = self.bridge_t["expert.proj1_fused.weight"].T
                     jepa_res = jepa_engine.for_base(self.base_dir).plan_c2_latent(
                         h_primary,
                         r_primary,
+                        h_vq_384=h_vq_384,
+                        r_vq_384=r_vq_384,
+                        vq_to_model_weight=vq_to_model_w,
                         offered_tools=tools_list,
                         context_cue_64=context_cue_64,
                         action_prior_8=action_prior_8,
@@ -887,6 +1215,7 @@ class OmniC2C3Runtime:
 
         c2_state = {
             "stage": "c2_plan",
+            "model_key": self.model_key,
             "raw_text": raw_plan_text,
             "windows": planned_windows,
             "pids_primary": pids_primary,
@@ -900,9 +1229,10 @@ class OmniC2C3Runtime:
             **jepa_meta,
             "ms": ms,
         }
+        bneck = int(self.plan_t["native.proj1_fused.weight"].shape[0])
         c2_info = {
             "layer": "c2_hybridagent",
-            "module": "HybridLink2048 + Lfm3NativeHybridLink(d=2048, bottleneck=512)"
+            "module": f"HybridLink({self.d_model}) + NativeHybridLink(d={self.d_model}, bottleneck={bneck})"
                       + (f" + JEPA({jepa_res['arch']})" if jepa_res.get("enabled") else ""),
             "trunk": "plan-trunk-0",
             "windows": n_active,
@@ -1055,7 +1385,7 @@ class OmniC2C3Runtime:
 
     def _vqvae_middle_and_decode(self, z_refined: np.ndarray, allowed_ids: np.ndarray) -> np.ndarray:
         xd = self._vqvae_middle_hidden(z_refined)
-        sub_w = bf16_rows_to_f32(self.vq_dec_mm, allowed_ids)
+        sub_w = bf16_rows_to_f32(self.vq_dec_mm, allowed_ids) * self.vq_dec_scale
         return np.matmul(xd, sub_w.T)
 
     def _build_allowed_vocab_ids(self, plan_str: str) -> np.ndarray:
@@ -1262,7 +1592,12 @@ class OmniC2C3Runtime:
         attn_probs = softmax(sim * 12.0 + diag_bias, axis=-1)
         ctx_vec = np.matmul(attn_probs, z_bpe_v)
 
-        g_copy = sigmoid(linear(np.concatenate([x_d, ctx_vec], axis=-1), dpg["copy_gate.weight"], dpg.get("copy_gate.bias")))
+        cat_xc = np.concatenate([x_d, ctx_vec], axis=-1)
+        if "copy_gate.weight" in dpg:
+            g_copy = sigmoid(linear(cat_xc, dpg["copy_gate.weight"], dpg.get("copy_gate.bias")))
+        else:
+            cg_h = gelu(linear(cat_xc, dpg["copy_gate.0.weight"], dpg.get("copy_gate.0.bias")))
+            g_copy = sigmoid(linear(cg_h, dpg["copy_gate.2.weight"], dpg.get("copy_gate.2.bias")))
         soft_scale = g_copy * 16.0
         eff_scale = soft_scale if has_semi else (soft_scale + 65.0)
         copy_boost = (attn_probs * eff_scale)[0]  # [L_val, L_val]
@@ -1302,7 +1637,7 @@ class OmniC2C3Runtime:
             # 1. Single one-time Bridges pass (`bridge-trunk-0`) across the entire token window (`P_BPE = 512`)
             z_rh_p = self.forward_combo_bridge(r_prim)
             z_exp_p = self.forward_expert_bridge(h_prim)
-            z_bpe_p = bf16_rows_to_f32(self.vq_wte_mm, pids_prim)[None, :, :] + z_exp_p
+            z_bpe_p = (bf16_rows_to_f32(self.vq_wte_mm, pids_prim) * self.vq_wte_scale)[None, :, :] + z_exp_p
             n_pref, level_cap = (48, 64) if full_ncm else (16, 14)
             if z_rh_p.shape[1] > n_pref:
                 z_rh_ncm = np.swapaxes(interp_linear_1d(np.swapaxes(z_rh_p, 1, 2), n_pref), 1, 2)
@@ -1336,7 +1671,7 @@ class OmniC2C3Runtime:
             z_ref_prim = zh_prim + layer_norm(x_d_prim, dpg["ln_out_fused.weight"], dpg["ln_out_fused.bias"], 1e-5)
             xd_prim = self._vqvae_middle_hidden(z_ref_prim)
             allowed_prim = self._build_allowed_vocab_ids(raw_text)
-            sub_w_prim = bf16_rows_to_f32(self.vq_dec_mm, allowed_prim)
+            sub_w_prim = bf16_rows_to_f32(self.vq_dec_mm, allowed_prim) * self.vq_dec_scale
             sub_logits_prim = np.matmul(xd_prim[0], sub_w_prim.T)
 
             out_lines: list[str] = []
@@ -1361,7 +1696,7 @@ class OmniC2C3Runtime:
                     r_valid = w["r_valid"]
                     z_rh_v = self.forward_combo_bridge(r_valid)
                     z_exp_v = self.forward_expert_bridge(h_valid)
-                    z_bpe_v = bf16_rows_to_f32(self.vq_wte_mm, pids)[None, :, :] + z_exp_v
+                    z_bpe_v = (bf16_rows_to_f32(self.vq_wte_mm, pids) * self.vq_wte_scale)[None, :, :] + z_exp_v
                     precomp = None
                 rendered_body, _ = self._pointer_decode_from_zhat(
                     z_hat, z_rh_v, z_bpe_v, pids, tail_ids, w["clean"], precomputed=precomp
@@ -1378,11 +1713,14 @@ class OmniC2C3Runtime:
             elapsed_s = round(time.perf_counter() - t0, 2)
             return "\n".join(out_lines), {
                 "layer": "ncm",
+                "model": self.model_label,
+                "d_model": self.d_model,
+                "vocab_size": self.vocab_size,
                 "windows": n_win,
                 "window_tokens": P_BPE,
                 "codes": codes_emitted,
                 "levels": levels_run or 11,
-                "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+                "bridges": f"ComboBridge({self.d_model}->384) + ExpertBridge({self.d_model}->384)",
                 "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
                 "s": elapsed_s,
             }
@@ -1417,17 +1755,18 @@ _RUNTIMES: dict[str, OmniC2C3Runtime] = {}
 _RUNTIMES_LOCK = threading.Lock()
 
 
-def for_base(base_dir: str | Path) -> OmniC2C3Runtime | None:
-    key = str(Path(base_dir).resolve())
+def for_base(base_dir: str | Path, model_key: str | None = None) -> OmniC2C3Runtime | None:
+    resolved_pre = precomputed_dir(base_dir, model_key=model_key)
+    key = f"{resolved_pre.resolve()}::{model_key or 'omni'}"
     with _RUNTIMES_LOCK:
         if key in _RUNTIMES:
             return _RUNTIMES[key]
-        if missing_c2_c3_files(base_dir):
+        if missing_c2_c3_files(base_dir, model_key=model_key):
             return None
         try:
-            rt = OmniC2C3Runtime(base_dir)
+            rt = OmniC2C3Runtime(base_dir, model_key=model_key)
             _RUNTIMES[key] = rt
             return rt
         except Exception as exc:
-            print(f"[Clover] OmniC2C3Runtime could not load: {exc}", flush=True)
+            print(f"[Clover] OmniC2C3Runtime({model_key or 'omni'}) could not load: {exc}", flush=True)
             return None

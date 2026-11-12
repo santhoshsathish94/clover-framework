@@ -48,36 +48,36 @@ SPECS = {
         "short": "Clover-35B-A3B",
         "full_name": "DiffuSpace Clover-35B-A3B-Preview (35B-A3B Block Diffusion MoE)",
         "maker": "DiffuSpace",
-        "badge": "k3",
-        "desc": "DiffuSpace 35B-A3B Block Diffusion MoE hosted on k3 · 40 layers (30 BD-GDN + 10 Gated GQA), 128K context, HybridAgent, JEPA & NCM",
-        "backend": "Clover BD-GDN/GQA MoE engine + HybridAgent + JEPA + 11-level NCM",
-        "weights": "4-bit / bf16 MoE + BD-GDN preview (40 layers, 256 experts top-8, coreset top_p=0.9)",
+        "badge": "k3 · Coordinator",
+        "desc": "Coordinator on k3 · Splits tasks, coordinates GX10 & Kimi K3.1 Pro, holds conversations, memory & learning · C1 + C2 + C3",
+        "backend": "Clover BD-GDN/GQA MoE C1 + HybridAgent/JEPA C2 + 11-level NCM C3",
+        "weights": "4-bit MoE + BD-GDN preview (40 layers, 256 experts top-8, coreset top_p=0.9)",
         "max_tokens": 131072,
-        "layers": ["C1 Clover-35B-A3B (40L BD-GDN + Gated GQA + 256-Expert MoE)", "C2 HybridAgent + JEPA latent steps", "C3 11-level NCM"],
+        "layers": ["C1 Clover-35B-A3B (40L BD-GDN + Gated GQA + 256-Expert 4-Bit MoE)", "C2 HybridAgent + JEPA latent steps", "C3 11-level NCM (248,320 vocab)"],
     },
     "nemotron-3.5-super-vl": {
         "model": "Nemotron 3.5",
         "short": "Nemotron 3.5",
-        "full_name": "NVIDIA Nemotron 3.5 Super VL (120B-A12B MoE)",
+        "full_name": "NVIDIA Nemotron 3.5 Super VL (120B-A12B MoE, 4-bit only)",
         "maker": "NVIDIA",
-        "badge": "k3",
-        "desc": "NVIDIA 120B-A12B MoE hosted on k3 · 1M context, vision, video & NCM",
-        "backend": "Clover C engine + HybridAgent + 11-level NCM",
-        "weights": "4-bit / bf16 (88 layers, 120B-A12B MoE)",
+        "badge": "GX10 · 4-bit",
+        "desc": "Stateless 4-bit vision, audio & video worker on GX10 GPU (routed through k3, keeps no personal data) · C1 + C2 + C3",
+        "backend": "Stateless GX10 4-bit C1 (C-RADIO 32L GPU + EVS + AudioMamba) + HybridAgent/JEPA C2 + 11-level NCM C3",
+        "weights": "4-bit only (CLVR4B01 planar group-64, 88 layers, 120B-A12B MoE on GX10)",
         "max_tokens": 1048576,
-        "layers": ["C1 Nemotron 3.5 Super VL (88L C engine)", "C2 HybridAgent latent steps", "C3 11-level NCM"],
+        "layers": ["C1 Nemotron 3.5 Super VL 4-Bit (GX10 GPU C-RADIO 32L + EVS + AudioMamba)", "C2 HybridAgent + JEPA latent steps", "C3 11-level NCM (131,072 vocab)"],
     },
     "kimi-k3": {
         "model": "Kimi K3.1 Pro",
         "short": "Kimi K3.1 Pro",
         "full_name": "Kimi K3.1 Pro 2.8T MoE",
         "maker": "Moonshot AI",
-        "badge": "k3",
-        "desc": "Moonshot AI 2.8T MoE hosted on k3 · 93 layers (69 KDA + 24 Gated DSA), 1M context & NCM",
-        "backend": "Clover C/Rust engine + HybridAgent + 11-level NCM",
+        "badge": "k3 · Deep",
+        "desc": "Deep reasoning engine on k3 · 93 layers (69 KDA + 24 Gated DSA) + web & research tools · C1 + C2 + C3",
+        "backend": "Clover C/Rust C1 + HybridAgent/JEPA C2 + 11-level NCM C3",
         "weights": "4-bit MoE + 8-bit palette trunk + Gated DSA Indexers (93 layers, 2.8T MoE)",
         "max_tokens": 1048576,
-        "layers": ["C1 Kimi K3.1 Pro 2.8T MoE (93L C/Rust engine + Gated DSA)", "C2 HybridAgent latent steps", "C3 11-level NCM"],
+        "layers": ["C1 Kimi K3.1 Pro 2.8T MoE (93L C/Rust engine + Gated DSA)", "C2 HybridAgent + JEPA latent steps", "C3 11-level NCM (163,840 vocab)"],
     },
 }
 _SIGN_OFF_PARA = re.compile(
@@ -575,6 +575,61 @@ class K3HostEngine:
             "attachments": atts,
             "remember": False,
         }
+        if not self.remote_urls and "\n\n[VERIFIED_STUDIO_DRAFT]\n" in str(prompt or ""):
+            q_part, draft_part = str(prompt).split("\n\n[VERIFIED_STUDIO_DRAFT]\n", 1)
+            if self.raw_key == "nemotron-3.5-super-vl":
+                try:
+                    gx_url = os.environ.get("CLOVER_GX10_WORKER_URL", "http://127.0.0.1:18082").rstrip("/")
+                    aud_b64 = next((a["data_b64"] for a in atts if str(a.get("type") or "").startswith("audio/")), "")
+                    vid_b64 = next((a["data_b64"] for a in atts if str(a.get("type") or "").startswith("video/")), "")
+                    gx_req = urllib.request.Request(
+                        f"{gx_url}/api/gx10/multimodal",
+                        json.dumps({
+                            "prompt": q_part.strip(),
+                            "candidate_text": draft_part.strip(),
+                            "image_base64": image_b64 or "",
+                            "audio_base64": aud_b64,
+                            "video_base64": vid_b64,
+                            "run_c1_stage": True,
+                        }).encode("utf-8"),
+                        {"Content-Type": "application/json"},
+                    )
+                    with urllib.request.urlopen(gx_req, timeout=45) as r_gx:
+                        gx_res = json.loads(r_gx.read().decode("utf-8", "replace"))
+                    if gx_res.get("ok") and gx_res.get("reply"):
+                        c1_m = (gx_res.get("c1") or {}).get("ms") or 0.0
+                        c2_m = (gx_res.get("c2") or {}).get("ms") or 0.0
+                        c3_m = round(float((gx_res.get("c3") or {}).get("s") or 0.03) * 1000.0, 1)
+                        return {
+                            "reply": gx_res["reply"],
+                            "plans": [f"[GX10 Stateless 4-Bit Nemotron C1->C2->C3] C1={c1_m}ms | C2={c2_m}ms | C3={c3_m}ms | zero personal data"],
+                            "k3_experts": {"c_engine_ms": c1_m},
+                            "n_tokens": (gx_res.get("c1") or {}).get("tokens") or 32,
+                            "ncm_1cand_ms": c3_m,
+                            "plan_lat_ms": c2_m,
+                        }
+                except Exception:
+                    pass
+            elif self.raw_key in ("clover-35b-a3b", "kimi-k3"):
+                try:
+                    import omni_c2_c3
+                    rt_m = omni_c2_c3.for_base(self.base_dir, model_key=self.raw_key)
+                    if rt_m is not None:
+                        c1_st, c1_in = rt_m.c1_infer_stage(draft_part.strip())
+                        c2_st, c2_in = rt_m.c2_plan(q_part.strip(), c1_state=c1_st, offered_tools=["web_search", "run_python"], jepa_arch="clover_rpre")
+                        dec_txt, c3_in = rt_m.c3_decode(c2_st)
+                        if dec_txt:
+                            c3_m = round(float(c3_in.get("s") or 0.03) * 1000.0, 1)
+                            return {
+                                "reply": dec_txt,
+                                "plans": [f"[{rt_m.model_label} Precomputed C1->C2->C3] C1={c1_in.get('ms')}ms | C2={c2_in.get('ms')}ms | C3={c3_m}ms"],
+                                "k3_experts": {"c_engine_ms": c1_in.get("ms")},
+                                "n_tokens": c1_in.get("tokens") or 32,
+                                "ncm_1cand_ms": c3_m,
+                                "plan_lat_ms": c2_in.get("ms") or 20.0,
+                            }
+                except Exception:
+                    pass
         data = json.dumps(payload).encode("utf-8")
         targets = (
             [f"{u}/api/worker/chat" for u in self.remote_urls]

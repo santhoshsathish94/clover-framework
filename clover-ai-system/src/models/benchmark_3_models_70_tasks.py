@@ -260,6 +260,57 @@ class ModelSpecificNCMRenderer:
             self.hybrid_link.load_state_dict(sd_m["lfm3_native_hybrid_link"])
             self.combo_bridge.load_state_dict(sd_m["lfm3_combo_bridge"])
             self.expert_bridge.load_state_dict(sd_m["lfm3_expert_bridge"])
+        elif model_key == "clover-35b-a3b":
+            clv35_dir = SCRIPT_DIR / "clover-35b-a3b"
+            if clv35_dir.exists() and str(clv35_dir) not in sys.path:
+                sys.path.insert(0, str(clv35_dir))
+            from clover_35b_hybrid_ncm import (
+                D_CLOVER35B,
+                V_CLOVER35B,
+                Clover35BComboBridge,
+                Clover35BExpertBridge,
+                Clover35BNativeHybridLink,
+                Clover35BPrecomputedEngine,
+            )
+            self.vocab_size = V_CLOVER35B
+            self.hidden_size = D_CLOVER35B
+            pruned_dir = Path("/opt/clover-k3/clover-35b-computed/pruned")
+            hf_stage_dir = Path("/opt/clover-k3/clover-35b-computed/hf-stage")
+            ckpt_p = hf_stage_dir / "bridges" / "clover_35b_hybrid_ncm_bridges.pt"
+
+            self.tok = HFModelTokenizerAdapter(pruned_dir, V_CLOVER35B, eos_id=248046, pad_id=248044, semicolon_id=26)
+            semi_ids = self.tok.encode(";")
+            if semi_ids:
+                self.tok.semicolon_id = semi_ids[0]
+            self.c_engine = Clover35BPrecomputedEngine(pruned_dir, device="cpu", use_4bit_experts=True)
+            self.lm_head_w = self.c_engine.stage_model.lm_head_w.detach().cpu()
+
+            self.vqvae.in_vocab_size = V_CLOVER35B
+            self.vqvae.encoder.wte = nn.Embedding(V_CLOVER35B, D_VQ)
+            self.vqvae.decoder.output_layer = nn.Linear(D_VQ, V_CLOVER35B, bias=False)
+
+            wte_p = hf_stage_dir / "ncm" / "vqvae_wte.bf16.bin"
+            dec_p = hf_stage_dir / "ncm" / "vqvae_dec.bf16.bin"
+            with torch.no_grad():
+                if wte_p.is_file():
+                    w_t = lfm3_bytes_to_tensor(wte_p.read_bytes(), LFM3_BF16, (V_CLOVER35B, D_VQ)).float()
+                    if float(w_t.std().item()) > 0.8:
+                        w_t = w_t * (0.6428 / max(1e-6, float(w_t.std().item())))
+                    self.vqvae.encoder.wte.weight.copy_(w_t)
+                if dec_p.is_file():
+                    d_t = lfm3_bytes_to_tensor(dec_p.read_bytes(), LFM3_BF16, (V_CLOVER35B, D_VQ)).float()
+                    if float(d_t.std().item()) > 0.2:
+                        d_t = d_t * (0.0777 / max(1e-6, float(d_t.std().item())))
+                    self.vqvae.decoder.output_layer.weight.copy_(d_t)
+            self.vqvae.eval()
+
+            sd_m = torch.load(str(ckpt_p), map_location="cpu", weights_only=False)
+            self.hybrid_link = Clover35BNativeHybridLink(d=D_CLOVER35B, bottleneck=512).eval()
+            self.combo_bridge = Clover35BComboBridge(D_CLOVER35B, D_VQ).eval()
+            self.expert_bridge = Clover35BExpertBridge(D_CLOVER35B, D_VQ).eval()
+            self.hybrid_link.load_state_dict(sd_m["clover_35b_native_hybrid_link"])
+            self.combo_bridge.load_state_dict(sd_m["clover_35b_combo_bridge"])
+            self.expert_bridge.load_state_dict(sd_m["clover_35b_expert_bridge"])
         else:
             raise ValueError(f"Unsupported model_key: {model_key}")
 

@@ -1210,20 +1210,47 @@ class CloverJEPARuntime:
         gate = np.tanh(self.w["residual.gate"][0])
         return anom_gate * gate * out
 
-    def encode_semantic_bridge_cue(self, h_bridge_2048: np.ndarray, configured_arch: str = "auto") -> np.ndarray:
-        """Project a 2048-d representation of bridged `Memory Graph + Ontology Graph` symbolic evidence into the 64-d
-        JEPA latent state space (`semantic_cue_64`) via `bridge.lfm3_to_vq` (`2048 -> 384`), `state_adapter` (`384 -> 64`),
-        and the 4-layer hierarchical JEPA Transformer encoder.
+    @staticmethod
+    def _fold_to_2048(vec_bd: np.ndarray) -> np.ndarray:
+        d = int(vec_bd.shape[-1])
+        if d == D_LFM3:
+            return vec_bd
+        if d > D_LFM3 and d % D_LFM3 == 0:
+            return vec_bd.reshape(vec_bd.shape[0], -1, D_LFM3).mean(axis=1)
+        if d > D_LFM3:
+            n_full = d // D_LFM3
+            folded = vec_bd[:, : n_full * D_LFM3].reshape(vec_bd.shape[0], n_full, D_LFM3).mean(axis=1)
+            rem = d - n_full * D_LFM3
+            if rem > 0:
+                folded[:, :rem] = 0.5 * (folded[:, :rem] + vec_bd[:, n_full * D_LFM3 :])
+            return folded
+        reps = (D_LFM3 + d - 1) // d
+        return np.tile(vec_bd, (1, reps))[:, :D_LFM3]
+
+    def encode_semantic_bridge_cue(
+        self,
+        h_bridge_2048: np.ndarray,
+        configured_arch: str = "auto",
+        *,
+        h_vq_384: np.ndarray | None = None,
+    ) -> np.ndarray:
+        """Project a representation of bridged `Memory Graph + Ontology Graph` symbolic evidence into the 64-d
+        JEPA latent state space (`semantic_cue_64`) via `bridge.lfm3_to_vq` (`2048 -> 384`) or the model's `h_vq_384`,
+        `state_adapter` (`384 -> 64`), and the 4-layer hierarchical JEPA Transformer encoder.
         """
         arch = self.choose_architecture("c2_plan", configured_arch, has_outcome_feedback=True)
         if arch == "none":
             arch = "clover_rpre"
-        h_mean = np.asarray(h_bridge_2048, dtype=np.float32)
-        if h_mean.ndim == 3:
-            h_mean = h_mean.mean(axis=1)
-        elif h_mean.ndim == 1:
-            h_mean = h_mean.reshape(1, -1)
-        h_vq = _layer_norm(_linear(h_mean, self.w["bridge.lfm3_to_vq.weight"], self.w["bridge.lfm3_to_vq.bias"]))
+        if h_vq_384 is not None:
+            h_vq = _layer_norm(np.asarray(h_vq_384, dtype=np.float32).reshape(1, D_VQ))
+        else:
+            h_mean = np.asarray(h_bridge_2048, dtype=np.float32)
+            if h_mean.ndim == 3:
+                h_mean = h_mean.mean(axis=1)
+            elif h_mean.ndim == 1:
+                h_mean = h_mean.reshape(1, -1)
+            h_mean = self._fold_to_2048(h_mean)
+            h_vq = _layer_norm(_linear(h_mean, self.w["bridge.lfm3_to_vq.weight"], self.w["bridge.lfm3_to_vq.bias"]))
         s_tok = _linear(h_vq, self._wt("state_adapter.weight", arch), self._wt("state_adapter.bias", arch)) + self._wt("state_mod_token", arch)
         z_enc, _ = self._run_encoder_blocks(s_tok, return_hierarchical=True, arch=arch)
         return _layer_norm(z_enc).squeeze(0)
@@ -1234,6 +1261,9 @@ class CloverJEPARuntime:
         r_primary_2048: np.ndarray,
         *,
         goal_vq_384: np.ndarray | None = None,
+        h_vq_384: np.ndarray | None = None,
+        r_vq_384: np.ndarray | None = None,
+        vq_to_model_weight: np.ndarray | None = None,
         offered_tools: list[str] | None = None,
         context_cue_64: np.ndarray | None = None,
         action_prior_8: np.ndarray | None = None,
@@ -1252,11 +1282,17 @@ class CloverJEPARuntime:
             return {"enabled": False, "arch": "none", "r_refined_2048": r_primary_2048}
 
         t0 = time.perf_counter()
-        h_mean_2048 = np.asarray(h_primary_2048, dtype=np.float32).mean(axis=1)  # [1, 2048]
-        r_mean_2048 = np.asarray(r_primary_2048, dtype=np.float32).mean(axis=1)  # [1, 2048]
+        h_mean_2048 = np.asarray(h_primary_2048, dtype=np.float32).mean(axis=1)  # [1, D_model]
+        r_mean_2048 = np.asarray(r_primary_2048, dtype=np.float32).mean(axis=1)  # [1, D_model]
 
-        h_vq = _layer_norm(_linear(h_mean_2048, self.w["bridge.lfm3_to_vq.weight"], self.w["bridge.lfm3_to_vq.bias"]))
-        r_vq = _layer_norm(_linear(r_mean_2048, self.w["bridge.lfm3_to_vq.weight"], self.w["bridge.lfm3_to_vq.bias"]))
+        if h_vq_384 is not None:
+            h_vq = _layer_norm(np.asarray(h_vq_384, dtype=np.float32).reshape(1, D_VQ))
+        else:
+            h_vq = _layer_norm(_linear(self._fold_to_2048(h_mean_2048), self.w["bridge.lfm3_to_vq.weight"], self.w["bridge.lfm3_to_vq.bias"]))
+        if r_vq_384 is not None:
+            r_vq = _layer_norm(np.asarray(r_vq_384, dtype=np.float32).reshape(1, D_VQ))
+        else:
+            r_vq = _layer_norm(_linear(self._fold_to_2048(r_mean_2048), self.w["bridge.lfm3_to_vq.weight"], self.w["bridge.lfm3_to_vq.bias"]))
 
         z_init = _layer_norm(_linear(h_vq, self._wt("state_adapter.weight", arch), self._wt("state_adapter.bias", arch)) + self._wt("state_mod_token", arch))  # [1, 64]
         if goal_vq_384 is not None:
@@ -1384,8 +1420,16 @@ class CloverJEPARuntime:
                 best_z_final = z_cur[elite_idx[0] : elite_idx[0] + 1]
 
         z_delta_vq = _linear(best_z_final - z_init, self._wt("bridge.jepa_to_vq.weight", arch), self._wt("bridge.jepa_to_vq.bias", arch))
-        r_delta_2048 = _linear(z_delta_vq, self.w["bridge.vq_to_lfm3.weight"], self.w["bridge.vq_to_lfm3.bias"])[:, None, :]
         r_arr = np.asarray(r_primary_2048, dtype=np.float32)
+        d_target = int(r_arr.shape[-1])
+        if d_target == D_LFM3:
+            r_delta_2048 = _linear(z_delta_vq, self.w["bridge.vq_to_lfm3.weight"], self.w["bridge.vq_to_lfm3.bias"])[:, None, :]
+        elif vq_to_model_weight is not None and vq_to_model_weight.shape == (d_target, D_VQ):
+            r_delta_2048 = _linear(z_delta_vq, vq_to_model_weight, None)[:, None, :]
+        else:
+            r_base_2048 = _linear(z_delta_vq, self.w["bridge.vq_to_lfm3.weight"], self.w["bridge.vq_to_lfm3.bias"])
+            reps = (d_target + D_LFM3 - 1) // D_LFM3
+            r_delta_2048 = np.tile(r_base_2048, (1, reps))[:, :d_target][:, None, :]
         r_norm = float(np.linalg.norm(r_arr)) + 1e-6
         d_norm = float(np.linalg.norm(r_delta_2048)) * math.sqrt(max(1, r_arr.shape[1])) + 1e-6
         scale_r = np.float32(0.15 * r_norm / d_norm)

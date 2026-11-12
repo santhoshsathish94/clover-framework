@@ -26,6 +26,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 MODELS_DIR = SCRIPT_DIR.parent
 REPO_ROOT = MODELS_DIR.parents[2]
 STUDIO_CLOVER = REPO_ROOT / "clover-ai-system" / "studio" / "clover"
+if not STUDIO_CLOVER.is_dir() and Path("/opt/clover-k3/web-studio/clover").is_dir():
+    STUDIO_CLOVER = Path("/opt/clover-k3/web-studio/clover")
 for p in (str(SCRIPT_DIR), str(MODELS_DIR), str(STUDIO_CLOVER)):
     if p not in sys.path:
         sys.path.insert(0, p)

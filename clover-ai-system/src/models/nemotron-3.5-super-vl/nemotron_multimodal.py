@@ -145,11 +145,17 @@ class NemotronCRadioVisionVideoEncoder:
     EVS-pruned `[N_retained, 4096]` shapes when running in standalone CPU/CI environments without the 21 GB shards.
     """
 
-    def __init__(self, model_dir: Path = DEFAULT_NEMO_MODEL_DIR):
+    def __init__(self, model_dir: Path = DEFAULT_NEMO_MODEL_DIR, precomputed_vision_dir: Path | None = None):
         self.model_dir = Path(model_dir)
+        self.precomputed_vision_dir = precomputed_vision_dir
         self.has_real_weights = False
+        self.has_precomputed_trunks = False
         self.vision_model = None
         self.vision_projector = None
+        self._vg: dict[str, torch.Tensor] | None = None
+        self._vtrunks: list[dict[str, torch.Tensor]] | None = None
+        self._vdev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self._vdtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
         self._load_error: str | None = None
 
         torch.manual_seed(42)
@@ -161,6 +167,111 @@ class NemotronCRadioVisionVideoEncoder:
         nn.init.normal_(self._fallback_video_proj.weight, std=0.02)
         nn.init.normal_(self._fallback_mlp1_l1.weight, std=0.02)
         nn.init.normal_(self._fallback_mlp1_l2.weight, std=0.02)
+
+    @staticmethod
+    def _read_clvrtrk1_torch(trunk_dir: Path, device: torch.device, dtype: torch.dtype) -> dict[str, torch.Tensor]:
+        idx_bytes = (trunk_dir / "index.bin").read_bytes()
+        if idx_bytes[:8] != b"CLVRTRK1":
+            raise ValueError(f"Invalid CLVRTRK1 magic in {trunk_dir}")
+        _, _, n_entries = struct.unpack("<III", idx_bytes[8:20])
+        fnames = {0: "common.bin", 1: "operator.bin", 3: "ffn.bin"}
+        blobs: dict[int, memoryview] = {}
+        for fid, fn in fnames.items():
+            fp = trunk_dir / fn
+            if fp.exists() and fp.stat().st_size > 0:
+                blobs[fid] = memoryview(fp.read_bytes())
+        out_t: dict[str, torch.Tensor] = {}
+        pos = 20
+        for _ in range(n_entries):
+            tname = idx_bytes[pos : pos + 64].split(b"\x00", 1)[0].decode("utf-8")
+            pos += 64
+            fid, dtype_code, ndim, offset, nbytes, d0, d1, d2, d3 = struct.unpack("<IIIQQIIII", idx_bytes[pos : pos + 44])
+            pos += 44
+            dims = [d0, d1, d2, d3][:ndim] if ndim > 0 else [1]
+            raw = blobs[fid][offset : offset + nbytes]
+            if dtype_code == 1:
+                u16 = np.frombuffer(raw, dtype=np.uint16)
+                f32 = (u16.astype(np.uint32) << 16).view(np.float32).copy().reshape(dims)
+            else:
+                f32 = np.frombuffer(raw, dtype=np.float32).copy().reshape(dims)
+            out_t[tname] = torch.from_numpy(f32).to(device=device, dtype=dtype)
+        return out_t
+
+    def _ensure_precomputed_trunks_loaded(self) -> bool:
+        if self.has_precomputed_trunks:
+            return True
+        cands = []
+        if self.precomputed_vision_dir is not None:
+            cands.append(Path(self.precomputed_vision_dir))
+        cands.extend([
+            Path("/opt/clover-gx10/nemotron-computed/hf-stage/ncm"),
+            Path("/opt/clover-k3/nemotron-computed/hf-stage/ncm"),
+            self.model_dir / "ncm",
+        ])
+        for root in cands:
+            vg_dir = root / "vision-global-0"
+            vt0_dir = root / "vision-trunk-0"
+            if (vg_dir / "index.bin").is_file() and (vt0_dir / "index.bin").is_file():
+                try:
+                    self._vg = self._read_clvrtrk1_torch(vg_dir, self._vdev, self._vdtype)
+                    self._vtrunks = [
+                        self._read_clvrtrk1_torch(root / f"vision-trunk-{l}", self._vdev, self._vdtype)
+                        for l in range(32)
+                        if (root / f"vision-trunk-{l}" / "index.bin").is_file()
+                    ]
+                    if len(self._vtrunks) > 0:
+                        self.has_precomputed_trunks = True
+                        return True
+                except Exception as exc:
+                    self._load_error = str(exc)
+        return False
+
+    @torch.no_grad()
+    def _forward_precomputed_cradio(self, patches_in: torch.Tensor, is_video: bool = False) -> torch.Tensor:
+        assert self._vg is not None and self._vtrunks is not None
+        vg = self._vg
+        B = patches_in.shape[0]
+        x_in = patches_in.to(device=self._vdev, dtype=self._vdtype)
+        proj_w = vg["patch_generator.video_embedder.weight"] if is_video else vg["patch_generator.embedder.weight"]
+        tok_spatial = F.linear(x_in, proj_w) + vg["patch_generator.pos_embed"][:, 10:1034, :]
+        cls_tok = vg["patch_generator.cls_token"].unsqueeze(0).expand(B, -1, -1) + vg["patch_generator.pos_embed"][:, :10, :]
+        x = torch.cat([cls_tok, tok_spatial], dim=1)  # [B, 1034, 1280]
+        T_seq = x.shape[1]
+        for blk in self._vtrunks:
+            xn1 = F.layer_norm(x.float(), (1280,), eps=1e-6).to(self._vdtype)
+            qkv = F.linear(xn1, blk["attn.qkv_fused.weight"], blk["attn.qkv_fused.bias"])
+            q, k, v = qkv.chunk(3, dim=-1)
+            q = q.view(B, T_seq, 16, 80).transpose(1, 2)
+            k = k.view(B, T_seq, 16, 80).transpose(1, 2)
+            v = v.view(B, T_seq, 16, 80).transpose(1, 2)
+            attn_out = F.scaled_dot_product_attention(q, k, v).transpose(1, 2).reshape(B, T_seq, 1280)
+            x = x + F.linear(attn_out, blk["attn.proj.weight"], blk["attn.proj.bias"])
+            xn2 = F.layer_norm(x.float(), (1280,), eps=1e-6).to(self._vdtype)
+            mlp_h = F.gelu(F.linear(xn2, blk["mlp.fc1_fused.weight"], blk["mlp.fc1_fused.bias"]))
+            x = x + F.linear(mlp_h, blk["mlp.fc2.weight"], blk["mlp.fc2.bias"])
+        sp = x[:, 10:, :].float()
+        sp = F.layer_norm(
+            sp,
+            (1280,),
+            weight=vg["vision_projector.final_ln.weight"].float(),
+            bias=vg["vision_projector.final_ln.bias"].float(),
+            eps=1e-6,
+        )
+        grid = sp.view(B, 32, 32, 1280)
+        ps_x = (
+            grid.view(B, 32, 16, 2560)
+            .permute(0, 2, 1, 3)
+            .contiguous()
+            .view(B, 16, 16, 5120)
+            .permute(0, 2, 1, 3)
+            .contiguous()
+        )
+        ps_flat = ps_x.view(B, 256, 5120).to(self._vdtype)
+        rms = torch.rsqrt(ps_flat.float().pow(2).mean(-1, keepdim=True) + 1e-5).to(self._vdtype)
+        normed = ps_flat * rms * vg["mlp1.0.weight"]
+        h = F.relu(F.linear(normed, vg["mlp1.1.weight"])).pow(2)
+        out = F.linear(h, vg["mlp1.3.weight"]).float().cpu()
+        return out.view(B, 16, 16, D_NEMO) if is_video else out.view(B, 256, D_NEMO)
 
     def _ensure_loaded_if_available(self) -> bool:
         if self.has_real_weights:
@@ -278,7 +389,11 @@ class NemotronCRadioVisionVideoEncoder:
         """
         t0 = time.perf_counter()
         px = self.preprocess_pil_image(pil_img, target_side=512)
-        if use_real_weights_if_present and self._ensure_loaded_if_available():
+        if use_real_weights_if_present and self._ensure_precomputed_trunks_loaded():
+            patches = px.reshape(1, 3, 32, 16, 32, 16).permute(0, 2, 4, 1, 3, 5).reshape(1, 1024, 768)
+            img_embeds = self._forward_precomputed_cradio(patches, is_video=False)
+            mode = f"c_radio_32_layer_precomputed_clvrtrk1_{self._vdev.type}"
+        elif use_real_weights_if_present and self._ensure_loaded_if_available():
             px_bf16 = px.to(torch.bfloat16)
             img_embeds = self.vision_projector(px_bf16, self.vision_model).float()  # [1, 256, 4096]
             mode = "c_radio_32_layer_real_bf16"
@@ -335,7 +450,12 @@ class NemotronCRadioVisionVideoEncoder:
         n_frames = int(video_px.shape[0])
         t_groups = n_frames // 2
 
-        if use_real_weights_if_present and self._ensure_loaded_if_available():
+        if use_real_weights_if_present and self._ensure_precomputed_trunks_loaded():
+            paired = video_px.view(t_groups, 2, 3, 32, 16, 32, 16)
+            patches = paired.permute(0, 3, 5, 1, 2, 4, 6).reshape(t_groups, 1024, 1536)
+            video_grid = self._forward_precomputed_cradio(patches, is_video=True)
+            mode = f"c_radio_video_evs_precomputed_clvrtrk1_{self._vdev.type}"
+        elif use_real_weights_if_present and self._ensure_loaded_if_available():
             video_grid = self.vision_projector.forward_video(
                 video_px.to(torch.bfloat16), self.vision_model
             ).float()  # [T_groups, 16, 16, 4096]

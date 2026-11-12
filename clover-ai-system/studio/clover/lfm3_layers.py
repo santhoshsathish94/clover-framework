@@ -709,12 +709,32 @@ class LayerKit:
                 "diagnostics": [d.format_concise() for d in v.diagnostics[:3]]}
         return (None if v.ok else v.format_feedback()), info
 
-    def c1_infer(self, raw_reply, stats=None, model=None, layers_desc=None):
-        """Strictly C1: extract 2048-d C1 inference representations (`c1_state`, `c1_info`) without planning or decoding."""
+    def _runtime_for(self, model=None, state=None):
         import omni_c2_c3
+        mk = None
+        if isinstance(state, dict) and state.get("model_key"):
+            mk = str(state["model_key"]).strip().lower()
+        if not mk:
+            raw_m = str(model or getattr(self, "active_model_key", None) or getattr(self, "model_name", None) or "").strip().lower()
+            if "35b" in raw_m:
+                mk = "clover-35b-a3b"
+            elif "nemotron" in raw_m:
+                mk = "nemotron-3.5-super-vl"
+            elif "kimi" in raw_m or "k3" in raw_m:
+                mk = "kimi-k3"
+            elif raw_m:
+                mk = "omni"
+        if mk and mk != "omni":
+            rt_m = omni_c2_c3.for_base(self.base_dir, model_key=mk)
+            if rt_m is not None:
+                return rt_m
+        return omni_c2_c3.for_base(self.base_dir)
+
+    def c1_infer(self, raw_reply, stats=None, model=None, layers_desc=None):
+        """Strictly C1: extract model-native C1 inference representations (`c1_state`, `c1_info`) without planning or decoding."""
         m_name = model or getattr(self, "model_name", None) or "LFM3-Omni-2B"
         l_desc = layers_desc or getattr(self, "layers_desc", None) or ""
-        rt = omni_c2_c3.for_base(self.base_dir)
+        rt = self._runtime_for(model=m_name)
         if rt is not None:
             st, info = rt.c1_infer(raw_reply, generation_stats=stats, model_name=m_name)
             info["model"] = m_name
@@ -733,11 +753,10 @@ class LayerKit:
 
     def c1_infer_states(self, turn_text, states_fn, prefix_ids=(), model=None, layers_desc=None):
         """Strictly C1, without decoding: the model's own hidden states for the turn's lines (`states_fn`, one forward pass)."""
-        import omni_c2_c3
-        rt = omni_c2_c3.for_base(self.base_dir)
+        m_name = model or getattr(self, "model_name", None) or "LFM3-Omni-2B"
+        rt = self._runtime_for(model=m_name)
         if rt is None:
             raise RuntimeError("C2/C3 parts not installed")
-        m_name = model or getattr(self, "model_name", None) or "LFM3-Omni-2B"
         st, info = rt.c1_infer_states(turn_text, states_fn, prefix_ids=prefix_ids, model_name=m_name)
         l_desc = layers_desc or getattr(self, "layers_desc", None) or ""
         if l_desc:
@@ -913,7 +932,7 @@ class LayerKit:
             for rt_name in self.last_meaning_bridge.get("recommended_tools") or ():
                 if rt_name not in tools_in and rt_name not in declined:
                     tools_in.append(rt_name)
-        rt = omni_c2_c3.for_base(self.base_dir)
+        rt = self._runtime_for(state=c1_state)
         if rt is not None:
             c2_state, c2_info = rt.c2_plan(
                 q,
@@ -996,7 +1015,9 @@ class LayerKit:
             if z_obs_64 is not None:
                 z_obs = np.asarray(z_obs_64, dtype=np.float32)
             elif isinstance(c1_obs_state, dict) and "h_primary" in c1_obs_state:
-                h_mean_2048 = np.asarray(c1_obs_state["h_primary"], dtype=np.float32).mean(axis=1)
+                h_mean_2048 = jepa_engine.CloverJEPARuntime._fold_to_2048(
+                    np.asarray(c1_obs_state["h_primary"], dtype=np.float32).mean(axis=1)
+                )
                 h_vq = jepa_engine._layer_norm(jepa_engine._linear(h_mean_2048, jrt.w["bridge.lfm3_to_vq.weight"], jrt.w["bridge.lfm3_to_vq.bias"]))
                 z_obs = jepa_engine._layer_norm(jepa_engine._linear(h_vq, jrt.w["state_adapter.weight"], jrt.w["state_adapter.bias"]) + jrt.w["state_mod_token"]).squeeze(0)
             else:
@@ -1026,8 +1047,7 @@ class LayerKit:
 
     def c3_decode(self, c2_state, on_window=None, full_ncm=False):
         """Strictly C3: decode `c2_state` through Bridges + 11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder."""
-        import omni_c2_c3
-        rt = omni_c2_c3.for_base(self.base_dir)
+        rt = self._runtime_for(state=c2_state if isinstance(c2_state, dict) else None)
         if rt is not None and isinstance(c2_state, dict) and c2_state.get("stage") == "c2_plan" and "pids_primary" in c2_state:
             return rt.c3_decode(c2_state, on_window=on_window, full_ncm=full_ncm)
         raw = str(c2_state.get("raw_text") if isinstance(c2_state, dict) else (c2_state or ""))
@@ -1039,8 +1059,7 @@ class LayerKit:
         windows = answer_windows(reply)
         if not windows:
             return reply, {"layer": "ncm", "windows": 0}
-        import omni_c2_c3
-        rt = omni_c2_c3.for_base(self.base_dir)
+        rt = self._runtime_for()
         if rt is not None:
             return rt.render_reply(reply, windows=windows)
         if self._ncm is None and (self.base_dir / "data" / "ncm" / "config.yaml").is_file():

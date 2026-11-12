@@ -552,51 +552,69 @@ static void rms_norm_bf16(
 int nemo_engine_init(const char *pruned_dataset_dir)
 {
     if (g_nemo.initialized) return 0;
-    char path[1024];
-    snprintf(path, sizeof(path), "%s/global-0/embeddings.bf16.bin", pruned_dataset_dir);
+    char path[2048];
+    char trunks_dir[960];
+    char experts_dir[960];
+    snprintf(path, sizeof(path), "%s/trunks/global-0/embeddings.bf16.bin", pruned_dataset_dir);
+    if (access(path, R_OK) == 0) {
+        snprintf(trunks_dir, sizeof(trunks_dir), "%s/trunks", pruned_dataset_dir);
+        snprintf(experts_dir, sizeof(experts_dir), "%s/experts", pruned_dataset_dir);
+    } else {
+        snprintf(trunks_dir, sizeof(trunks_dir), "%s", pruned_dataset_dir);
+        snprintf(experts_dir, sizeof(experts_dir), "%s", pruned_dataset_dir);
+    }
+
+    snprintf(path, sizeof(path), "%s/global-0/embeddings.bf16.bin", trunks_dir);
     if (mmap_readonly(path, &g_nemo.emb_mf) != 0) return -1;
 
-    snprintf(path, sizeof(path), "%s/global-0/lm_head.bf16.bin", pruned_dataset_dir);
+    snprintf(path, sizeof(path), "%s/global-0/lm_head.bf16.bin", trunks_dir);
     if (access(path, R_OK) == 0) {
         mmap_readonly(path, &g_nemo.lm_head_mf);
     }
 
-    snprintf(path, sizeof(path), "%s/global-0/norm_f.bf16.bin", pruned_dataset_dir);
+    snprintf(path, sizeof(path), "%s/global-0/norm_f.bf16.bin", trunks_dir);
     if (mmap_readonly(path, &g_nemo.norm_f_mf) != 0) return -2;
 
-    snprintf(path, sizeof(path), "%s/trunk-0", pruned_dataset_dir);
+    snprintf(path, sizeof(path), "%s/trunk-0", trunks_dir);
     if (load_nemo_trunk(path, &g_nemo.trunk0_mamba) != 0) return -3;
 
-    snprintf(path, sizeof(path), "%s/trunk-1", pruned_dataset_dir);
+    snprintf(path, sizeof(path), "%s/trunk-1", trunks_dir);
     if (load_nemo_trunk(path, &g_nemo.trunk1_moe) != 0) return -4;
 
-    snprintf(path, sizeof(path), "%s/expert-1/experts.direct", pruned_dataset_dir);
-    if (mmap_readonly(path, &g_nemo.expert1_direct_mf) != 0) return -5;
+    snprintf(path, sizeof(path), "%s/expert-1/experts.direct", experts_dir);
+    if (access(path, R_OK) == 0) {
+        mmap_readonly(path, &g_nemo.expert1_direct_mf);
+    }
 
-    snprintf(path, sizeof(path), "%s/expert-1/experts.4bit.direct", pruned_dataset_dir);
+    snprintf(path, sizeof(path), "%s/expert-1/experts.4bit.direct", experts_dir);
     if (access(path, R_OK) == 0) {
         mmap_readonly(path, &g_nemo.expert1_4bit_mf);
     }
 
-    snprintf(path, sizeof(path), "%s/trunk-7", pruned_dataset_dir);
+    if (g_nemo.expert1_direct_mf.ptr == NULL && g_nemo.expert1_4bit_mf.ptr == NULL) return -5;
+    if (g_nemo.expert1_4bit_mf.ptr != NULL && g_nemo.expert1_direct_mf.ptr == NULL) {
+        g_nemo.use_4bit_experts = 1;
+    }
+
+    snprintf(path, sizeof(path), "%s/trunk-7", trunks_dir);
     if (load_nemo_trunk(path, &g_nemo.trunk7_gqa) != 0) return -6;
 
-    snprintf(path, sizeof(path), "%s/trunk-mtp-0", pruned_dataset_dir);
+    snprintf(path, sizeof(path), "%s/trunk-mtp-0", trunks_dir);
     if (access(path, R_OK) == 0) {
         load_nemo_trunk(path, &g_nemo.trunk_mtp0_gqa);
     }
 
-    snprintf(path, sizeof(path), "%s/trunk-mtp-1", pruned_dataset_dir);
+    snprintf(path, sizeof(path), "%s/trunk-mtp-1", trunks_dir);
     if (access(path, R_OK) == 0) {
         load_nemo_trunk(path, &g_nemo.trunk_mtp1_moe);
     }
 
-    snprintf(path, sizeof(path), "%s/expert-mtp-1/experts.direct", pruned_dataset_dir);
+    snprintf(path, sizeof(path), "%s/expert-mtp-1/experts.direct", experts_dir);
     if (access(path, R_OK) == 0) {
         mmap_readonly(path, &g_nemo.expert_mtp1_direct_mf);
     }
 
-    snprintf(path, sizeof(path), "%s/expert-mtp-1/experts.4bit.direct", pruned_dataset_dir);
+    snprintf(path, sizeof(path), "%s/expert-mtp-1/experts.4bit.direct", experts_dir);
     if (access(path, R_OK) == 0) {
         mmap_readonly(path, &g_nemo.expert_mtp1_4bit_mf);
     }
@@ -815,7 +833,7 @@ static void nemo_latent_moe_generic_forward(
         if (!in_pool) nemo_slotcache_acquire(e, active_mask, expert_weight_sum[e]);
     }
 
-    const int use_q4 = (g_nemo.use_4bit_experts && q4_mf && q4_mf->ptr != NULL);
+    const int use_q4 = (q4_mf && q4_mf->ptr != NULL && (g_nemo.use_4bit_experts || !bf16_mf || bf16_mf->ptr == NULL));
     const size_t up_elems = (size_t)NEMO_MOE_INTER * NEMO_LATENT;
     const size_t stride_bf16 = (size_t)11010048;
     const size_t stride_q4 = (size_t)2853376;

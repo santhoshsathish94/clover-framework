@@ -21,17 +21,18 @@ from typing import Any
 # 1. CloverModelBackendFactory (Factory Pattern — Single Responsibility & Open/Closed)
 # ============================================================================
 
-CANONICAL_MODELS = ("nemotron-3.5-super-vl", "lfm3-1.7b", "kimi-k3")
+CANONICAL_MODELS = ("nemotron-3.5-super-vl", "lfm3-1.7b", "clover-35b-a3b", "kimi-k3")
 DEFAULT_CANONICAL_MODEL = "nemotron-3.5-super-vl"
 
 
 class CloverModelBackendFactory:
     """
     Central Factory for resolving model identifiers/aliases and building OpenAI-compatible
-    and Clover Studio capability descriptors across all three switchable Layer-1 models:
+    and Clover Studio capability descriptors across all four switchable Layer-1 models:
       - `nemotron-3.5-super-vl` (NVIDIA Nemotron 3.5 Super VL 120B-A12B, Default)
       - `lfm3-1.7b`             (Liquid AI LFM3-1.7B 24-Layer Tri-Hybrid)
-      - `kimi-k3`               (MoonshotAI Kimi K3 93-Layer 2.78T MoE)
+      - `clover-35b-a3b`        (DiffuSpace Clover-35B-A3B-Preview 40-Layer BD-GDN + Gated GQA MoE)
+      - `kimi-k3`               (MoonshotAI Kimi K3.1 Pro 93-Layer 2.8T MoE)
     """
 
     @staticmethod
@@ -47,6 +48,8 @@ class CloverModelBackendFactory:
         if not raw:
             return default_model if default_model in CANONICAL_MODELS else DEFAULT_CANONICAL_MODEL
 
+        if "35b" in raw or "a3b" in raw or "diffuspace" in raw or raw in ("clover-35b", "clover-35b-a3b", "k3:clover-35b-a3b"):
+            return "clover-35b-a3b"
         if "nemotron" in raw or "super-vl" in raw or "120b" in raw:
             return "nemotron-3.5-super-vl"
         if "lfm3" in raw or "lmf3" in raw or "liquid" in raw or "1.7b" in raw or "s23" in raw or "omni" in raw:
@@ -67,6 +70,17 @@ class CloverModelBackendFactory:
         cat = capabilities_catalog if isinstance(capabilities_catalog, dict) else {}
         shared_caps = {"toolCalling": True, "vision": True, "streaming": True}
         return [
+            {
+                "id": "clover-35b-a3b",
+                "name": "Clover — DiffuSpace Clover-35B-A3B (40L BD-GDN/GQA MoE)",
+                "object": "model",
+                "created": int(created_timestamp),
+                "owned_by": "clover-framework",
+                "context_length": 131072,
+                "max_input_tokens": 115072,
+                "max_output_tokens": 16000,
+                "capabilities": cat.get("clover-35b-a3b", shared_caps),
+            },
             {
                 "id": "nemotron-3.5-super-vl",
                 "name": "Clover — Nemotron 3.5 Super VL (120B-A12B)",

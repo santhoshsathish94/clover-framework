@@ -2406,7 +2406,7 @@ class MultiGPUCloverCoordinator:
                 req = batch[0]
                 t0 = time.perf_counter()
                 req_model_key = getattr(req, "model_key", "nemotron-3.5-super-vl") or "nemotron-3.5-super-vl"
-                alt_renderer = self._get_or_load_model_renderer(req_model_key) if req_model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b") else None
+                alt_renderer = self._get_or_load_model_renderer(req_model_key) if req_model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b", "clover-35b-a3b") else None
 
                 # Clover Cycle User-Triggered Retry Check:
                 # If the user says the previous answer in this session was wrong ("try again", "that's wrong", or re-asks),
@@ -2585,7 +2585,7 @@ class MultiGPUCloverCoordinator:
                 batch_model_key = getattr(batch[0], "model_key", "nemotron-3.5-super-vl") or "nemotron-3.5-super-vl"
                 alt_renderer = (
                     self._get_or_load_model_renderer(batch_model_key)
-                    if batch_model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b")
+                    if batch_model_key in ("nemotron-3.5-super-vl", "lfm3-1.7b", "clover-35b-a3b")
                     else None
                 )
                 if alt_renderer is not None:
@@ -2668,6 +2668,8 @@ class MultiGPUCloverCoordinator:
                 self._alt_model_renderers[model_key] = ModelSpecificNCMRenderer("nemotron-3.5-super-vl")
             elif model_key == "lfm3-1.7b" and os.path.isdir("/opt/clover-k3/lfm3-computed/pruned"):
                 self._alt_model_renderers[model_key] = ModelSpecificNCMRenderer("lfm3-1.7b")
+            elif model_key == "clover-35b-a3b" and os.path.isdir("/opt/clover-k3/clover-35b-computed/pruned"):
+                self._alt_model_renderers[model_key] = ModelSpecificNCMRenderer("clover-35b-a3b")
             else:
                 self._alt_model_renderers[model_key] = None
         except Exception:
