@@ -381,9 +381,15 @@ _UNIT_RAW = {
 
     # Speed (base: m/s)
     "m/s": ("speed", "1", "m/s"), "mps": ("speed", "1", "m/s"),
+    "meter_per_second": ("speed", "1", "m/s"), "meters_per_second": ("speed", "1", "m/s"),
+    "metre_per_second": ("speed", "1", "m/s"), "metres_per_second": ("speed", "1", "m/s"),
     "km/h": ("speed", "0.27777777777777777778", "km/h"), "kph": ("speed", "0.27777777777777777778", "km/h"), "kmh": ("speed", "0.27777777777777777778", "km/h"),
+    "kilometer_per_hour": ("speed", "0.27777777777777777778", "km/h"), "kilometers_per_hour": ("speed", "0.27777777777777777778", "km/h"),
+    "kilometre_per_hour": ("speed", "0.27777777777777777778", "km/h"), "kilometres_per_hour": ("speed", "0.27777777777777777778", "km/h"),
     "mph": ("speed", "0.44704", "mph"),
+    "mile_per_hour": ("speed", "0.44704", "mph"), "miles_per_hour": ("speed", "0.44704", "mph"),
     "ft/s": ("speed", "0.3048", "ft/s"), "fps": ("speed", "0.3048", "ft/s"),
+    "foot_per_second": ("speed", "0.3048", "ft/s"), "feet_per_second": ("speed", "0.3048", "ft/s"),
     "kn": ("speed", "0.51444444444444444444", "kn"), "knot": ("speed", "0.51444444444444444444", "kn"), "knots": ("speed", "0.51444444444444444444", "kn"),
 }
 

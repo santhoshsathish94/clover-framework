@@ -150,10 +150,11 @@ ASKS = (
     (("ssh",), r"\b(?:ssh|remote\s+(?:host|machine|server|box))\b|\bon\s+[a-z0-9._-]+@[a-z0-9._-]+"),
     (("calc",),
      r"\b(?:use\s+(?:the\s+)?calculator|with\s+calculate)\b|"
+     r"\bcompounded\s+(?:annually|semi[\s-]?annually|quarterly|monthly|daily)\b|"
      r"\b(?:calculate|compute|evaluate)\s+\(?-?\d[\d,.]*\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*|"
      r"^\s*(?:(?:what(?:'?s|\s+is|\s+are)|calculate|compute|evaluate)\s+)?\(?-?\d[\d,.]*\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*(?:\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*)*\)?\s*[?.!]*(?:\s+(?:and\s+)?(?:return|reply\s+with|output|give|provide|write|respond\s+with)\s+(?:only|just)\b[\s\S]*)?$"),
     (("units",),
-     r"\bconvert_units\b|\bconvert\s+-?\d[\d.,]*\s*[a-z\u00b0/\u00b2\u00b3]+\s+(?:to|into|in)\s+[a-z\u00b0/\u00b2\u00b3]+\b|"
+     r"\bconvert_units\b|\bconvert\s+-?\d[\d.,]*\s*(?:degrees?\s+)?[a-z\u00b0/\u00b2\u00b3]+(?:\s+(?:per|square|cubic)\s+[a-z\u00b0/\u00b2\u00b3]+|\s+[a-z\u00b0/\u00b2\u00b3]+)?\s+(?:to|into|in)\s+(?:degrees?\s+)?[a-z\u00b0/\u00b2\u00b3]+|"
      r"\bhow\s+many\s+(?:km|kilometers?|kilometres?|miles?|meters?|metres?|cm|mm|feet|ft|inches|yards?|kg|kilograms?|grams?|"
      r"pounds?|lbs?|ounces?|oz|celsius|fahrenheit|kelvin|liters?|litres?|ml|gallons?|cups?|tbsp|tsp|mb|gb|tb|kb|mib|gib|tib|kib)\s+"
      r"(?:are\s+)?in\s+-?\d"),

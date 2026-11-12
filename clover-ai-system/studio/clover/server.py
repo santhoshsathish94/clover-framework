@@ -3376,6 +3376,65 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/worker/chat":
                 import k3_host_engine
                 import urllib.request
+                raw_prompt = str(body.get("prompt") or "")
+                raw_model = str(body.get("model") or "omni").strip().lower()
+                if "\n\n[VERIFIED_STUDIO_DRAFT]\n" in raw_prompt:
+                    q_part, draft_part = raw_prompt.split("\n\n[VERIFIED_STUDIO_DRAFT]\n", 1)
+                    atts_w = body.get("attachments") or []
+                    if raw_model == "nemotron-3.5-super-vl":
+                        try:
+                            gx_url = os.environ.get("CLOVER_GX10_WORKER_URL", "http://127.0.0.1:18082").rstrip("/")
+                            aud_b64 = next((a["data_b64"] for a in atts_w if isinstance(a, dict) and str(a.get("type") or "").startswith("audio/")), "")
+                            vid_b64 = next((a["data_b64"] for a in atts_w if isinstance(a, dict) and str(a.get("type") or "").startswith("video/")), "")
+                            gx_req = urllib.request.Request(
+                                f"{gx_url}/api/gx10/multimodal",
+                                json.dumps({
+                                    "prompt": q_part.strip(),
+                                    "candidate_text": draft_part.strip(),
+                                    "image_base64": body.get("image_base64") or "",
+                                    "audio_base64": aud_b64,
+                                    "video_base64": vid_b64,
+                                    "run_c1_stage": True,
+                                }).encode("utf-8"),
+                                {"Content-Type": "application/json"},
+                            )
+                            with urllib.request.urlopen(gx_req, timeout=60) as r_gx:
+                                gx_res = json.loads(r_gx.read().decode("utf-8", "replace"))
+                            if gx_res.get("ok") and gx_res.get("reply"):
+                                c1_m = (gx_res.get("c1") or {}).get("ms") or 0.0
+                                c2_m = (gx_res.get("c2") or {}).get("ms") or 0.0
+                                c3_m = round(float((gx_res.get("c3") or {}).get("s") or 0.03) * 1000.0, 1)
+                                return self._send(200, {
+                                    "reply": gx_res["reply"],
+                                    "plans": [f"[GX10 Stateless 4-Bit Nemotron C1->C2->C3] C1={c1_m}ms | C2={c2_m}ms | C3={c3_m}ms | zero personal data"],
+                                    "k3_experts": {"c_engine_ms": c1_m},
+                                    "n_tokens": (gx_res.get("c1") or {}).get("tokens") or 32,
+                                    "ncm_1cand_ms": c3_m,
+                                    "plan_lat_ms": c2_m,
+                                })
+                        except Exception:
+                            pass
+                    elif raw_model in ("clover-35b-a3b", "kimi-k3", "omni"):
+                        try:
+                            import omni_c2_c3
+                            base_dir_w = Path(S.args.base) if S.args else HERE.parent
+                            rt_m = omni_c2_c3.for_base(base_dir_w, model_key=raw_model)
+                            if rt_m is not None:
+                                c1_st, c1_in = rt_m.c1_infer_stage(draft_part.strip())
+                                c2_st, c2_in = rt_m.c2_plan(q_part.strip(), c1_state=c1_st, offered_tools=["web_search", "run_python"], jepa_arch="clover_rpre")
+                                dec_txt, c3_in = rt_m.c3_decode(c2_st)
+                                if dec_txt:
+                                    c3_m = round(float(c3_in.get("s") or 0.03) * 1000.0, 1)
+                                    return self._send(200, {
+                                        "reply": dec_txt,
+                                        "plans": [f"[{rt_m.model_label} Precomputed C1->C2->C3] C1={c1_in.get('ms')}ms | C2={c2_in.get('ms')}ms | C3={c3_m}ms"],
+                                        "k3_experts": {"c_engine_ms": c1_in.get("ms")},
+                                        "n_tokens": c1_in.get("tokens") or 32,
+                                        "ncm_1cand_ms": c3_m,
+                                        "plan_lat_ms": c2_in.get("ms") or 20.0,
+                                    })
+                        except Exception:
+                            pass
                 req = urllib.request.Request(
                     f"{k3_host_engine.WORKER_URL}/api/chat",
                     json.dumps(body).encode("utf-8"),

@@ -53,7 +53,8 @@ _SHARED = {}
 _SHARED_LOCK = threading.Lock()
 _FILLER = set("""one take takes taken get gets give gives find tell explain true false means did done make makes like
 heavier lighter bigger smaller larger longer shorter greater whole has have had when where why know both other according
-based result results while during""".split())
+based result results while during search searching web internet online google browse look lookup regarding introduced
+please check show summarize summary""".split())
 
 
 class SearchError(Exception):
@@ -320,7 +321,7 @@ def keywords(q, n=8):
     """A short keyword query for Wikipedia's search, which matches whole questions poorly ("how many grams heavier is
     one liter of milk..." found an article on a nuclear test; "speed sound air 20 degrees" finds Speed of sound)."""
     out, seen = [], set()
-    for w in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-']*", q or ""):
+    for w in re.findall(r"\d+\.\d+(?:\.\d+)?|[A-Za-z0-9][A-Za-z0-9\-']*", q or ""):
         lw = w.lower().strip("'")
         if lw in _STOP or lw in _FILLER or len(lw) < 2 or lw in seen:
             continue
@@ -489,7 +490,7 @@ class WebSearch:
             add_row(r["title"], r["url"], r["snippet"])
         want_news = bool(re.search(
             r"\b(?:news|latest|today|yesterday|current|recent|202[567]|price|rate|score|won|match|launch|update|release|"
-            r"headline|midterms?|elections?|polls?|results?|senate|congress|parliament|winner|standings)\b",
+            r"introduced|added|headline|midterms?|elections?|polls?|results?|senate|congress|parliament|winner|standings)\b",
             q, re.I,
         ))
         want_places = bool(re.search(
@@ -498,17 +499,23 @@ class WebSearch:
         ))
         search_web = getattr(t, "_search_web", None)
         if want_news:
+            kw_news = keywords(q) or q
             explicit_news = bool(re.search(r"\b(?:news|headlines)\b", q, re.I))
             if explicit_news:
-                for r in self._news_rss_rows(q, max_items=4):
+                for r in self._news_rss_rows(kw_news, max_items=4):
                     add_row(r["title"], r["url"], r["snippet"])
             if callable(search_web) and len(rows) < 4:
-                for r in search_web(q, max_items=3):
+                for r in search_web(kw_news, max_items=3):
                     add_row(r["title"], r["url"], r["snippet"])
             if not explicit_news or len(rows) < 3:
-                for r in self._news_rss_rows(q, max_items=4):
+                for r in self._news_rss_rows(kw_news, max_items=4):
                     add_row(r["title"], r["url"], r["snippet"])
-            self._enrich_top_page(rows, q)
+            if len(rows) < 5:
+                for line in t._search_wikipedia(kw_news, max_items=2):
+                    m = re.match(r"(.*?) \((https?://[^)]+)\): (.*)$", line)
+                    if m:
+                        add_row(m.group(1), m.group(2), m.group(3))
+            self._enrich_top_page(rows, kw_news)
             if len(rows) >= 3:
                 return rows[:5]
         if want_places and callable(search_web):
@@ -520,9 +527,10 @@ class WebSearch:
                 m = re.search(r"Link: (\S+)", line)
                 add_row(line.split(" — ")[0], m.group(1) if m else "", line)
         if callable(search_web) and len(rows) < 3:
-            for r in search_web(q, max_items=3):
+            kw_q = keywords(q) or q
+            for r in search_web(kw_q, max_items=4):
                 add_row(r["title"], r["url"], r["snippet"])
-            self._enrich_top_page(rows, q)
+            self._enrich_top_page(rows, kw_q)
         for line in t._search_wikipedia(keywords(q) or q, max_items=max(2, 5 - len(rows))):
             m = re.match(r"(.*?) \((https?://[^)]+)\): (.*)$", line)
             if m:

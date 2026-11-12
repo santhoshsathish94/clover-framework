@@ -108,6 +108,10 @@ def _direct_s3_or_concept_plan(query: str, s3_pre_call: dict | None, s3_extra_ca
         return f"The current local time is {first_res}." if not first_res.endswith(".") else first_res
     if names == ["vscode_open"] and first_res:
         return first_res if first_res.endswith(".") else f"{first_res}."
+    if all(n == "convert_units" for n in names) and rounds and all(r.get("ran") and r.get("worked") for r in rounds):
+        parts = [str(r.get("result") or "").strip().rstrip(".") for r in rounds if str(r.get("result") or "").strip()]
+        if parts:
+            return (parts[0] + ".") if len(parts) == 1 else ("; ".join(parts) + ".")
     if any(c["name"] == "write_file" and str(c.get("arguments", {}).get("path") or "").endswith("threejs-visual.html") for c in all_pre):
         return (
             "Installed three.js in the active workspace and built the interactive 3D visual scene in threejs-visual.html. "
@@ -586,7 +590,8 @@ def run_s3_sensory_context(base_dir, media_dir, media, query, *, kit=None, emit=
                     "content": (
                         act_hdr
                         + "S3 Playwright-Style Visual & UI Inspection of attached image/video "
-                        "(use these exact OCR texts, [e1..eN] bounding boxes, dimensions, and hex colors together with what you see in the media):\n"
+                        "(use these exact OCR texts, [e1..eN] bounding boxes, dimensions, and hex colors together with what you see in the media; "
+                        "describe the image naturally and never call the image a 'Playwright-Style snapshot'):\n"
                         + "\n\n".join(snap_blocks)
                     ),
                 })
@@ -649,6 +654,45 @@ def plan_s3_pre_calls(engine, query, only_tools, by_name, *, meaning=None, past_
         s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "get_current_time", "arguments": {}}
     elif list(only_tools) == ["laptop_status"] and "laptop_status" in by_name:
         s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "laptop_status", "arguments": {}}
+    elif "convert_units" in only_tools and "convert_units" in by_name:
+        m_u = re.search(
+            r"\bconvert\s+(-?\d[\d.,]*)\s+([A-Za-z\u00b0/\u00b2\u00b3]+(?:\s+(?:per|square|cubic)\s+[A-Za-z\u00b0/\u00b2\u00b3]+|\s+[A-Za-z\u00b0/\u00b2\u00b3]+)?)\s+(?:to|into|in)\s+([A-Za-z\u00b0/\u00b2\u00b3\s]+?)(?:[?.!]|$)",
+            query or "",
+            re.I,
+        )
+        if m_u:
+            val_u = float(m_u.group(1).replace(",", ""))
+            from_u = m_u.group(2).strip()
+            to_raw = m_u.group(3).strip()
+            to_parts = [p.strip() for p in re.split(r"\s+and\s+|\s*,\s*", to_raw) if p.strip()]
+            if to_parts:
+                s3_pre_call = {
+                    "id": "call_" + uuid.uuid4().hex[:16],
+                    "name": "convert_units",
+                    "arguments": {"value": val_u, "from_unit": from_u, "to_unit": to_parts[0]},
+                }
+                for extra_to in to_parts[1:3]:
+                    s3_extra_calls.append({
+                        "id": "call_" + uuid.uuid4().hex[:16],
+                        "name": "convert_units",
+                        "arguments": {"value": val_u, "from_unit": from_u, "to_unit": extra_to},
+                    })
+    elif "calculate" in only_tools and "calculate" in by_name:
+        ci = C.parse_compound_interest(query or "")
+        if ci is not None:
+            P, r_pct, n_yr, years, _ = ci
+            expr_final = f"round({P} * (1 + ({r_pct} / 100) / {n_yr}) ** ({n_yr} * {years}), 2)"
+            expr_int = f"round({P} * (1 + ({r_pct} / 100) / {n_yr}) ** ({n_yr} * {years}) - {P}, 2)"
+            s3_pre_call = {
+                "id": "call_" + uuid.uuid4().hex[:16],
+                "name": "calculate",
+                "arguments": {"expression": expr_final},
+            }
+            s3_extra_calls.append({
+                "id": "call_" + uuid.uuid4().hex[:16],
+                "name": "calculate",
+                "arguments": {"expression": expr_int},
+            })
     elif "run_python" in only_tools and "run_python" in by_name and re.search(r"```(?:python|py)\b", query or "", re.I):
         import lfm3_layers
         py_code = lfm3_layers.extract_python(query or "")
@@ -1334,7 +1378,8 @@ class OmniNative(N.LFM3Native):
                                 )
                                 break
                     elif isinstance(msgs[-1].get("content"), str) and any(
-                        pc["name"] in ("run_powershell", "write_file") for pc in ([s3_pre_call] + s3_extra_calls)
+                        pc["name"] in ("run_powershell", "write_file", "calculate", "convert_units")
+                        for pc in ([s3_pre_call] + s3_extra_calls)
                     ):
                         msgs[-1]["content"] = str(msgs[-1]["content"]).rstrip() + "\n\n" + pre_text
                     msgs[0]["content"] = system or self.system_prompt(False, None)
@@ -1527,7 +1572,24 @@ class OmniNative(N.LFM3Native):
                             content, _, st = self._chat(msgs, [], max_new, by_name, None, cancel,
                                                         seed + 100 * attempt + r + 1)
                             stats_all.append(st)
-                            final = (lead + content.strip()) if content.strip() else ""
+                            cleaned_c = re.sub(
+                                r"^(?:Here is what I can tell you:\s*)?(?:(?:According to|Based on)\s+the\s+(?:provided\s+|live\s+)?(?:tool|search)\s+results,\s*)?",
+                                "",
+                                content.strip(),
+                                flags=re.I,
+                            ).strip()
+                            if cleaned_c:
+                                cleaned_c = cleaned_c[0].upper() + cleaned_c[1:]
+                            final = cleaned_c
+                        if final:
+                            final = re.sub(
+                                r"^(?:Here is what I can tell you:\s*)?(?:(?:According to|Based on)\s+the\s+(?:provided\s+|live\s+)?(?:tool|search)\s+results,\s*)?",
+                                "",
+                                final,
+                                flags=re.I,
+                            ).strip()
+                            if final:
+                                final = final[0].upper() + final[1:]
                         if not final:
                             final = {"length": "(Clover ran out of room before answering. Ask for a shorter answer.)",
                                      "cancelled": "(Stopped.)"}.get(st["finish"], "(Clover finished without writing an answer.)")

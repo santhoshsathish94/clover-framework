@@ -106,8 +106,9 @@ class LiveWebSearchTool:
                 data = json.loads(r.read().decode("utf-8", errors="ignore"))
             for item in data.get("query", {}).get("search", [])[:max_items]:
                 title = item.get("title", "")
-                snip = re.sub(r"<[^>]+>", "", item.get("snippet", ""))
-                snip = html.unescape(" ".join(snip.split()))
+                raw_snip = re.sub(r"<[^>]+>", "", item.get("snippet", ""))
+                search_snip = html.unescape(" ".join(raw_snip.split()))
+                snip = search_snip
                 wiki_url = "https://en.wikipedia.org/wiki/" + urllib.parse.quote(title.replace(" ", "_"))
                 try:
                     sum_url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + urllib.parse.quote(title.replace(" ", "_"))
@@ -126,18 +127,17 @@ class LiveWebSearchTool:
                                     s_item += "."
                             if not s_item:
                                 continue
-                            if kept_sents and cur_chars + len(s_item) > 420:
+                            if kept_sents and cur_chars + len(s_item) > 360:
                                 break
                             kept_sents.append(s_item)
                             cur_chars += len(s_item)
-                            if len(kept_sents) >= 3:
+                            if len(kept_sents) >= 2:
                                 break
-                        if kept_sents:
-                            snip = " ".join(kept_sents)
-                        elif len(extract_txt) > 320:
-                            snip = extract_txt[:317].rsplit(" ", 1)[0].rstrip(" ,;(") + "."
+                        sum_txt = " ".join(kept_sents) if kept_sents else extract_txt[:300]
+                        if search_snip and search_snip[:40].lower() not in sum_txt.lower():
+                            snip = f"{search_snip} ... {sum_txt}"
                         else:
-                            snip = extract_txt
+                            snip = sum_txt
                 except Exception:
                     pass
                 out.append(f"{title} ({wiki_url}): {snip}")
@@ -191,7 +191,9 @@ class LiveWebSearchTool:
         except Exception:
             pass
 
-        # 2. Bing Web RSS fallback
+        # 2. Bing Web RSS fallback (keep only results matching at least max(2, len(q_terms) - 1) query terms)
+        q_terms = {w.lower() for w in re.findall(r"\d+\.\d+|[A-Za-z0-9]{2,}", clean_q)}
+        min_match = (max(2, min(3, len(q_terms) - 1)) if len(q_terms) >= 3 else len(q_terms)) if q_terms else 0
         try:
             b_url = "https://www.bing.com/search?q=" + urllib.parse.quote(clean_q) + "&format=rss"
             req_b = urllib.request.Request(b_url, headers={"User-Agent": browser_ua})
@@ -202,7 +204,9 @@ class LiveWebSearchTool:
                 u = (it.findtext("link") or "").strip()
                 s_clean = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", it.findtext("description") or "")).split())
                 u_norm = u.rstrip("/").lower()
-                if t_clean and s_clean and u.startswith("http") and u_norm not in seen_urls:
+                hay = f"{t_clean} {s_clean}".lower()
+                matched = sum(1 for qt in q_terms if qt in hay)
+                if t_clean and s_clean and u.startswith("http") and u_norm not in seen_urls and matched >= min_match:
                     seen_urls.add(u_norm)
                     out.append({"title": t_clean, "url": u, "snippet": s_clean[:600]})
                 if len(out) >= max_items:

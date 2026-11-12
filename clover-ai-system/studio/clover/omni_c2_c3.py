@@ -1581,14 +1581,9 @@ class OmniC2C3Runtime:
         ck = ck / (np.linalg.norm(ck, axis=-1, keepdims=True) + 1e-8)
         sim = np.matmul(cq, np.swapaxes(ck, -1, -2))  # [1, L_val, L_val]
 
-        has_semi = any(pid == self.tok.semicolon_id for pid in pids)
-        expected_T = min(float(VQ_LEVELS[-1]), max(4.0, L_val * 1.25 + 2.0)) if has_semi else float(L_val)
         t_pos_idx = np.arange(L_val, dtype=np.float32)[None, :, None]
         p_pos_idx = np.arange(L_val, dtype=np.float32)[None, None, :]
-        if has_semi:
-            diag_bias = -2.5 * (((t_pos_idx / expected_T) - (p_pos_idx / max(1.0, float(L_val)))) ** 2)
-        else:
-            diag_bias = -45.0 * ((t_pos_idx - p_pos_idx) ** 2)
+        diag_bias = -45.0 * ((t_pos_idx - p_pos_idx) ** 2)
         attn_probs = softmax(sim * 12.0 + diag_bias, axis=-1)
         ctx_vec = np.matmul(attn_probs, z_bpe_v)
 
@@ -1599,7 +1594,7 @@ class OmniC2C3Runtime:
             cg_h = gelu(linear(cat_xc, dpg["copy_gate.0.weight"], dpg.get("copy_gate.0.bias")))
             g_copy = sigmoid(linear(cg_h, dpg["copy_gate.2.weight"], dpg.get("copy_gate.2.bias")))
         soft_scale = g_copy * 16.0
-        eff_scale = soft_scale if has_semi else (soft_scale + 65.0)
+        eff_scale = soft_scale + 65.0
         copy_boost = (attn_probs * eff_scale)[0]  # [L_val, L_val]
 
         id_to_col = {int(tid): col for col, tid in enumerate(allowed_ids.tolist())}

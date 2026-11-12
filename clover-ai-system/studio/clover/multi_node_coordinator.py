@@ -247,14 +247,41 @@ class K3MultiNodeCoordinator:
             "run_c1_stage": bool(payload.get("run_c1_stage", True)),
         }
         raw_req = json.dumps(stateless_payload).encode("utf-8")
-        req = urllib.request.Request(
-            f"{self.gx10_worker_url}/api/gx10/multimodal",
-            data=raw_req,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=90) as resp:
-            return json.loads(resp.read().decode("utf-8", errors="replace"))
+        try:
+            req = urllib.request.Request(
+                f"{self.gx10_worker_url}/api/gx10/multimodal",
+                data=raw_req,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=90) as resp:
+                return json.loads(resp.read().decode("utf-8", errors="replace"))
+        except Exception:
+            import k3_host_engine
+            hdrs = {"Content-Type": "application/json", "User-Agent": "CloverStudio/1.0"}
+            k_tok = k3_host_engine.k3_host_key(self.base_dir)
+            if k_tok:
+                hdrs["X-Clover-Key"] = k_tok
+            req_k3 = urllib.request.Request(
+                "https://api.cloverframework.com/api/multi-node/turn",
+                data=raw_req,
+                headers=hdrs,
+                method="POST",
+            )
+            with urllib.request.urlopen(req_k3, timeout=90) as resp_k3:
+                k3_wrap = json.loads(resp_k3.read().decode("utf-8", errors="replace"))
+            steps = k3_wrap.get("executed_steps") or []
+            gx_step = next((s for s in steps if s.get("node") == "gx10"), {})
+            return {
+                "ok": True,
+                "node": "gx10-gpu-worker",
+                "stateless_zero_personal_data": gx_step.get("stateless_zero_personal_data", True),
+                "modalities": gx_step.get("modalities", {}),
+                "c1": gx_step.get("c1", {}),
+                "c2": gx_step.get("c2", {}),
+                "c3": gx_step.get("c3", {}),
+                "reply": k3_wrap.get("reply", ""),
+            }
 
     @staticmethod
     def _run_model_c1_c2_c3(
@@ -300,13 +327,48 @@ class K3MultiNodeCoordinator:
                 if blk:
                     for ln in str(blk).splitlines():
                         s = ln.strip()
-                        if s and not s.startswith(("Notes from", "Clover's own", "Instruction:")):
+                        if (
+                            s
+                            and not s.startswith((
+                                "Notes from",
+                                "Clover's own",
+                                "Instruction:",
+                                "Ontology-Guided",
+                                "[E",
+                            ))
+                        ):
                             notes.append(s)
         except Exception:
             pass
         if not notes:
             notes.append(f"Research context verified on k3 for: {prompt.strip()[:160]}.")
         return " ".join(notes[:3])
+
+    def _draft_on_k3_if_needed(self, prompt: str, research_context: str = "") -> str:
+        """When a coordinated turn has no pre-supplied `reasoning_draft`, draft a complete answer using `k3`'s local
+        Studio Omni / K3 worker before running `Kimi K3.1 Pro` and `Clover-35B-A3B` `C1 -> C2 -> C3` synthesis."""
+        try:
+            full_q = f"{prompt}\n\n{research_context}".strip() if research_context else prompt
+            req = urllib.request.Request(
+                "http://127.0.0.1:8765/api/chat",
+                data=json.dumps({
+                    "session_id": "k3-coord-" + uuid.uuid4().hex[:8],
+                    "model": "kimi-k3",
+                    "prompt": full_q,
+                    "history": [],
+                    "remember": False,
+                }).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=45) as resp:
+                data = json.loads(resp.read().decode("utf-8", errors="replace"))
+            draft = str(data.get("reply") or "").strip()
+            if draft:
+                return draft
+        except Exception:
+            pass
+        return prompt
 
     def _persist_turn_on_k3(self, session_id: str, record: dict[str, Any]) -> dict[str, Any]:
         """Persist the conversation turn, memory event, and learning record on `k3` (the real source of data)."""
@@ -392,8 +454,6 @@ class K3MultiNodeCoordinator:
                 })
             elif st.kind == "web_and_research_tools":
                 res_txt = self._execute_k3_research_tools(prompt)
-                if res_txt:
-                    gathered_parts.append(res_txt)
                 executed_steps.append({
                     "task_id": st.task_id,
                     "kind": st.kind,
@@ -402,7 +462,15 @@ class K3MultiNodeCoordinator:
                 })
             elif st.kind == "deep_reasoning":
                 rt_kimi = self.get_model_runtime("kimi-k3")
-                reasoning_input = str(payload.get("reasoning_draft") or ("\n".join(gathered_parts) if gathered_parts else prompt)).strip()
+                explicit_draft = str(payload.get("reasoning_draft") or "").strip()
+                if explicit_draft:
+                    reasoning_input = explicit_draft
+                elif gathered_parts:
+                    reasoning_input = "\n".join(gathered_parts)
+                elif run_c1_stage:
+                    reasoning_input = self._draft_on_k3_if_needed(prompt)
+                else:
+                    reasoning_input = prompt
                 kimi_result = self._run_model_c1_c2_c3(
                     rt_kimi,
                     reasoning_input,

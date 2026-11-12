@@ -212,10 +212,10 @@ class StatelessGX10NemotronWorker:
                     context_cues_64.append(np.asarray(jepa_vis["z_jepa"], dtype=np.float32))
                 summary_txt = str(insp.get("summary") or "").strip()
                 ocr_txt = str(insp.get("ocr_text") or "").strip()
-                scene_kind = str(jepa_vis.get("scene_kind") or insp.get("kind") or "visual_scene")
-                line_parts = [f"Image {idx + 1} ({pil_img.width}x{pil_img.height}, scene={scene_kind}): {summary_txt}"]
+                scene_kind = str(jepa_vis.get("scene_kind") or insp.get("kind") or "visual_scene").replace("_", " ")
+                line_parts = [f"The attached image ({pil_img.width}x{pil_img.height} px, {scene_kind} layout) shows {summary_txt.lower()}."]
                 if ocr_txt:
-                    line_parts.append(f"Visible text: {ocr_txt}.")
+                    line_parts.append(f"Visible text reads: {ocr_txt}.")
                 evidence_lines.append(" ".join(line_parts))
                 vis_reports.append({
                     "mode": cradio_out["mode"],

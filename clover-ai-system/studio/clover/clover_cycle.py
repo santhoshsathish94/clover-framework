@@ -390,10 +390,50 @@ def _final_number_text(text):
     return nums[-1] if nums else None
 
 
+def parse_compound_interest(question):
+    """Extract `(P, r_pct, n_per_year, years, freq_word)` from a compound-interest question, or None."""
+    q = question or ""
+    m_freq = re.search(r"\bcompounded\s+(annually|semi[\s-]?annually|quarterly|monthly|daily)\b", q, re.I)
+    if not m_freq:
+        return None
+    m_p = re.search(r"[$\u20ac\u00a3\u20b9]\s*(\d[\d,]*(?:\.\d+)?)|\b(?:invest|principal|deposit|borrow)\s+(?:of\s+)?(\d[\d,]*(?:\.\d+)?)", q, re.I)
+    m_r = re.search(r"(\d+(?:\.\d+)?)\s*%", q)
+    m_t = re.search(r"\bfor\s+(\d+(?:\.\d+)?)\s+years?\b", q, re.I)
+    if not (m_p and m_r and m_t):
+        return None
+    p_val = _num(m_p.group(1) or m_p.group(2))
+    r_pct = float(m_r.group(1))
+    years = float(m_t.group(1))
+    fw = m_freq.group(1).lower().replace("-", "").replace(" ", "")
+    n_map = {"annually": 1, "semiannually": 2, "quarterly": 4, "monthly": 12, "daily": 365}
+    n_yr = n_map.get(fw, 1)
+    return p_val, r_pct, n_yr, years, m_freq.group(1).lower()
+
+
+def compound_interest_findings(question, answer, applied=None):
+    parsed = parse_compound_interest(question)
+    if not parsed:
+        return []
+    P, r_pct, n_yr, years, freq_word = parsed
+    _applied(applied, "arithmetic")
+    final_amt = round(P * ((1.0 + (r_pct / 100.0) / n_yr) ** (n_yr * years)), 2)
+    interest_amt = round(final_amt - P, 2)
+    ans_nums = [_num(m.group(0)) for m in re.finditer(r"\d[\d,]*(?:\.\d+)?", answer or "")]
+    has_final = any(abs(v - final_amt) <= 0.02 for v in ans_nums)
+    asks_interest = bool(re.search(r"\btotal\s+interest|\binterest\s+earned\b", question or "", re.I))
+    has_interest = (not asks_interest) or any(abs(v - interest_amt) <= 0.02 for v in ans_nums)
+    if has_final and has_interest:
+        return []
+    return [
+        f"Arithmetic: for ${P:,.2f} at {r_pct:g}% compounded {freq_word} for {years:g} years, "
+        f"the exact final amount is ${final_amt:,.2f} and the total interest earned is ${interest_amt:,.2f}."
+    ]
+
+
 def outcome_findings(question, answer, applied=None):
     """What the deterministic Outcome checks found in `answer` for `question` (empty: nothing found, which is not the
     same as checked: `applied` gets the checks that ran)."""
-    return arithmetic_findings(answer, applied) + format_findings(question, answer, applied)
+    return arithmetic_findings(answer, applied) + compound_interest_findings(question, answer, applied) + format_findings(question, answer, applied)
 
 
 def outcome_label(checks, cycles=1):

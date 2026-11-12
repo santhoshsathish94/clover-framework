@@ -220,6 +220,18 @@ def _clean_reply(text):
     m = _SIGN_OFF_PARA.search(text)
     if m and m.start() >= 20:
         text = text[:m.start()].strip()
+    text = re.sub(
+        r"The image is a Playwright-Style (?:visual\s*(?:&|and|/)\s*UI|visual|UI)\s+snapshot\s+with\s+the\s+following\s+",
+        "The image shows the following ",
+        text,
+        flags=re.I,
+    )
+    text = re.sub(r"Playwright-Style\s+(?:Visual\s*(?:&|and|/)\s*UI\s+)?Snapshot", "Visual layout", text, flags=re.I)
+    text = re.sub(
+        r"(?<![A-Z])(?<!\be\.g)(?<!\bi\.e)(?<!\bvs)(?<!\betc)\.\s+([a-z])",
+        lambda m: ". " + m.group(1).upper(),
+        text,
+    )
     return text
 
 
@@ -738,17 +750,7 @@ class K3HostEngine:
                     t0 = time.perf_counter()
                     emit({"type": "plan", "round": 1, "stage": "k3_synthesis", "model": self.spec["model"],
                           "full_name": self.spec.get("full_name") or self.spec["model"]})
-                    bullet_lines = [ln.strip() for ln in omni_reply.splitlines() if re.match(r"^\s*[-*•]\s+\S", ln)]
                     draft_for_k3 = omni_reply
-                    if bullet_lines:
-                        norm_buls = []
-                        for ln in omni_reply.splitlines():
-                            s = ln.strip()
-                            if re.match(r"^[-*•]\s+\S", s) and not s.endswith((".", "!", "?")):
-                                s += "."
-                            if s:
-                                norm_buls.append(s)
-                        draft_for_k3 = "\n".join(norm_buls)
                     wr = self._call_worker("k3-" + uuid.uuid4().hex[:10],
                                            f"{user_text}\n\n[VERIFIED_STUDIO_DRAFT]\n{draft_for_k3}", history, media=media)
                     k3_reply = self._identity_fix(_clean_reply(wr.get("reply") or ""), user_text)
@@ -756,10 +758,6 @@ class K3HostEngine:
                     has_code_or_table = bool(re.search(r"```|\n\|.+\|", omni_reply))
                     used_k3 = False
                     if k3_reply and not has_code_or_table and (not want_nums or want_nums <= _nums(k3_reply)):
-                        if bullet_lines:
-                            k3_paras = [p.strip() for p in k3_reply.splitlines() if p.strip()]
-                            if len(k3_paras) == len(bullet_lines):
-                                k3_reply = "\n".join(p if re.match(r"^[-*•]\s+", p) else f"- {p}" for p in k3_paras)
                         import clover_cycle as C
                         k3_fb, _ = C.verify_turn_outcome(query, k3_reply, rounds, kit=kit, layers=layers)
                         if not k3_fb:
