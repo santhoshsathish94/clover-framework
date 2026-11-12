@@ -2835,7 +2835,9 @@ class Handler(BaseHTTPRequestHandler):
         if not paths.WEB and not self._token_ok():
             return self._send(403, {"error": "token required"})
         if path == "/api/multi-node/status":
+            import importlib
             import multi_node_coordinator
+            importlib.reload(multi_node_coordinator)
             base_dir = Path(S.args.base) if S.args else HERE.parent
             coord = multi_node_coordinator.K3MultiNodeCoordinator(base_dir)
             return self._send(200, coord.topology_status())
@@ -3078,7 +3080,9 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(403, {"error": "cross-site requests are not accepted"})
         path = self.path.split("?", 1)[0]
         if path in ("/api/multi-node/turn", "/api/multi-node/sync", "/api/multi-node/client-turn"):
+            import importlib
             import multi_node_coordinator
+            importlib.reload(multi_node_coordinator)
             try:
                 body = self._read_json(CHAT_BODY)
             except Exception as exc:
@@ -3089,7 +3093,11 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, coord.sync_client_offline_events(body.get("events") or []))
             if path == "/api/multi-node/turn":
                 return self._send(200, coord.run_coordinated_turn(body))
-            router = multi_node_coordinator.ClientNodeRouter(base_dir, k3_coordinator=coord)
+            router = multi_node_coordinator.ClientNodeRouter(
+                base_dir,
+                k3_coordinator=coord if paths.WEB else None,
+                k3_url="" if paths.WEB else "https://api.cloverframework.com",
+            )
             return self._send(200, router.run_client_turn(body, k3_reachable=bool(body.get("k3_reachable", True))))
         if path == "/api/admin/github/device/start":
             if not _check_auth_rate_limit(self._client_ip()):

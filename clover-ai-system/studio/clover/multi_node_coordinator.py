@@ -489,7 +489,11 @@ class K3MultiNodeCoordinator:
         # If running on a client (Laptop/Phone), query k3 for remote k3 + GX10 topology readiness
         if "clover-35b-a3b" not in models_ready and not gx10_status.get("ok"):
             try:
-                with urllib.request.urlopen("https://api.cloverframework.com/api/multi-node/status", timeout=8) as rk:
+                req_k = urllib.request.Request(
+                    "https://api.cloverframework.com/api/multi-node/status",
+                    headers={"User-Agent": "CloverStudio/1.0"},
+                )
+                with urllib.request.urlopen(req_k, timeout=8) as rk:
                     k3_topo = json.loads(rk.read().decode("utf-8", errors="replace"))
                 for mk, minfo in (k3_topo.get("models_c1_c2_c3") or {}).items():
                     if mk not in models_ready:
@@ -595,10 +599,15 @@ class ClientNodeRouter:
             return True
         if self.k3_url:
             try:
+                import k3_host_engine
+                hdrs = {"Content-Type": "application/json", "User-Agent": "CloverStudio/1.0"}
+                k_tok = k3_host_engine.k3_host_key(self.base_dir)
+                if k_tok:
+                    hdrs["X-Clover-Key"] = k_tok
                 req = urllib.request.Request(
                     f"{self.k3_url}/api/multi-node/sync",
                     data=json.dumps({"events": events}).encode("utf-8"),
-                    headers={"Content-Type": "application/json"},
+                    headers=hdrs,
                     method="POST",
                 )
                 with urllib.request.urlopen(req, timeout=15) as r:
@@ -703,10 +712,15 @@ class ClientNodeRouter:
         if self.k3_coordinator is not None:
             k3_res = self.k3_coordinator.run_coordinated_turn(payload)
         elif self.k3_url:
+            import k3_host_engine
+            hdrs = {"Content-Type": "application/json", "User-Agent": "CloverStudio/1.0"}
+            k_tok = k3_host_engine.k3_host_key(self.base_dir)
+            if k_tok:
+                hdrs["X-Clover-Key"] = k_tok
             req = urllib.request.Request(
                 f"{self.k3_url}/api/multi-node/turn",
                 data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
+                headers=hdrs,
                 method="POST",
             )
             with urllib.request.urlopen(req, timeout=120) as r:
