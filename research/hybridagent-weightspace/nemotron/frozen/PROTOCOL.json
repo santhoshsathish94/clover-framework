@@ -1,0 +1,29 @@
+{
+  "deployment_eligible": false,
+  "gate": "lower mean NTP with no per-example NTP/text loss, alignment, or correct-token regression; float tolerance 1e-6",
+  "policies": {
+    "native_092": [
+      1.0,
+      0.92
+    ],
+    "native_108": [
+      1.0,
+      1.08
+    ],
+    "original": [
+      1.0,
+      1.0
+    ],
+    "standard_092": [
+      0.92,
+      1.0
+    ],
+    "standard_108": [
+      1.08,
+      1.0
+    ]
+  },
+  "scope": "new arithmetic diagnostic trajectories on the saved 3-stage backbone, not full-model validation",
+  "selection": "discovery only, then frozen candidate on reserved validation",
+  "validation_significance": "paired one-sided sign p<=0.05, in addition to zero meaningful per-example regressions"
+}

@@ -1,0 +1,57 @@
+{
+  "all_trials_restored": true,
+  "deployment_eligible": false,
+  "discovery_runs": 40,
+  "model": "nemotron",
+  "outcome": "reject_all_calibrations",
+  "results": {
+    "native_092": {
+      "broken_token_cases": 0,
+      "mean_ntp": 5.597498714923859,
+      "native_alignment_worse_cases": 0,
+      "ntp_worse_cases": 5,
+      "qualifies": false,
+      "standard_alignment_worse_cases": 0,
+      "text_worse_cases": 5
+    },
+    "native_108": {
+      "broken_token_cases": 0,
+      "mean_ntp": 5.595039963722229,
+      "native_alignment_worse_cases": 0,
+      "ntp_worse_cases": 5,
+      "qualifies": false,
+      "standard_alignment_worse_cases": 0,
+      "text_worse_cases": 6
+    },
+    "original": {
+      "broken_token_cases": 0,
+      "mean_ntp": 5.595700800418854,
+      "native_alignment_worse_cases": 0,
+      "ntp_worse_cases": 0,
+      "qualifies": false,
+      "standard_alignment_worse_cases": 0,
+      "text_worse_cases": 0
+    },
+    "standard_092": {
+      "broken_token_cases": 0,
+      "mean_ntp": 5.595140218734741,
+      "native_alignment_worse_cases": 0,
+      "ntp_worse_cases": 4,
+      "qualifies": false,
+      "standard_alignment_worse_cases": 0,
+      "text_worse_cases": 4
+    },
+    "standard_108": {
+      "broken_token_cases": 0,
+      "mean_ntp": 5.601897895336151,
+      "native_alignment_worse_cases": 0,
+      "ntp_worse_cases": 7,
+      "qualifies": false,
+      "standard_alignment_worse_cases": 0,
+      "text_worse_cases": 7
+    }
+  },
+  "sources_checked": 18,
+  "validation_opened": false,
+  "verified": true
+}

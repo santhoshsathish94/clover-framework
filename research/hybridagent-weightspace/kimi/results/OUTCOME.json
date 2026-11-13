@@ -1,0 +1,8 @@
+{
+  "baseline": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/baseline/checkpoint-clover-true-hybrid-agent-ncm.pt",
+  "calibration_gate_passed": false,
+  "candidate": null,
+  "deployment_eligible": false,
+  "scope": "existing all-layer CPU engine captures and next-embedding prediction, not completed task or end-to-end quality",
+  "selected": null
+}

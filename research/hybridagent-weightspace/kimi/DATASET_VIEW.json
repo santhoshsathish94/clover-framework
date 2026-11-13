@@ -1,0 +1,2167 @@
+{
+  "entries": {
+    "expert-1": {
+      "data_files": {
+        "build-verification.json": 940,
+        "constants.bin": 15880,
+        "expert-constant-palette.h": 748,
+        "expert-map-constants.h": 54960,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 23756,
+        "model-integration-sequential.json": 988,
+        "model-integration.json": 1924,
+        "native-verification.json": 336,
+        "original-header.bin": 818704,
+        "root-1.json": 2530,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1139391,
+        "source-retired.json": 276,
+        "source-retirement-plan.json": 897
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-1",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-1"
+    },
+    "expert-10": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 606,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22614,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-10",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-10"
+    },
+    "expert-11": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 800,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22656,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-11",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-11"
+    },
+    "expert-12": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 664,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22436,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-12",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-12"
+    },
+    "expert-13": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 1088,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22202,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-13",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-13"
+    },
+    "expert-14": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 1160,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22468,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-14",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-14"
+    },
+    "expert-15": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 1382,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22380,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-15",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-15"
+    },
+    "expert-16": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 1538,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22581,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-16",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-16"
+    },
+    "expert-17": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 1152,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22562,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-17",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-17"
+    },
+    "expert-18": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 896,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22556,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-18",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-18"
+    },
+    "expert-19": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 788,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22535,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-19",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-19"
+    },
+    "expert-2": {
+      "data_files": {
+        "build-verification.json": 673,
+        "constants.bin": 994,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22193,
+        "model-integration-sequential.json": 988,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 818704,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1292405,
+        "source-retired.json": 277,
+        "source-retirement-plan.json": 898
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-2",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-2"
+    },
+    "expert-20": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 950,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22593,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-20",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-20"
+    },
+    "expert-21": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 1638,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22469,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-21",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-21"
+    },
+    "expert-22": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 1340,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22565,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-22",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-22"
+    },
+    "expert-23": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 648,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22577,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-23",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-23"
+    },
+    "expert-24": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 680,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 20894,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-24",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-24"
+    },
+    "expert-25": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 768,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22330,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-25",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-25"
+    },
+    "expert-26": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 842,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22549,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-26",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-26"
+    },
+    "expert-27": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 704,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22607,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-27",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-27"
+    },
+    "expert-28": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 1260,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22575,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 278,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-28",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-28"
+    },
+    "expert-29": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 806,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22545,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 279,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-29",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-29"
+    },
+    "expert-3": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 1088,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 21742,
+        "model-integration-sequential.json": 988,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 817616,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1292206,
+        "source-retired.json": 277,
+        "source-retirement-plan.json": 898
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-3",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-3"
+    },
+    "expert-30": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 1086,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22600,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 279,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-30",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-30"
+    },
+    "expert-31": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 670,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22570,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 279,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-31",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-31"
+    },
+    "expert-32": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 1006,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22589,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 279,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-32",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-32"
+    },
+    "expert-33": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 818,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22608,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 279,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-33",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-33"
+    },
+    "expert-34": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 962,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22598,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 279,
+        "source-retirement-plan.json": 903
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-34",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-34"
+    },
+    "expert-35": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 682,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22613,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-35",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-35"
+    },
+    "expert-36": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 628,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22522,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-36",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-36"
+    },
+    "expert-37": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 680,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22571,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-37",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-37"
+    },
+    "expert-38": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 352,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19805,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-38",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-38"
+    },
+    "expert-39": {
+      "data_files": {
+        "build-verification.json": 673,
+        "constants.bin": 348,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19805,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-39",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-39"
+    },
+    "expert-4": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 822,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 21425,
+        "model-integration-sequential.json": 988,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 818704,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1292405,
+        "source-retired.json": 277,
+        "source-retirement-plan.json": 898
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-4",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-4"
+    },
+    "expert-40": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 140,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19538,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-40",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-40"
+    },
+    "expert-41": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 140,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19538,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-41",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-41"
+    },
+    "expert-42": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 226,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19672,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-42",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-42"
+    },
+    "expert-43": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 140,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19538,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-43",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-43"
+    },
+    "expert-44": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 176,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19583,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-44",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-44"
+    },
+    "expert-45": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 140,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19538,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-45",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-45"
+    },
+    "expert-46": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 588,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 21691,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-46",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-46"
+    },
+    "expert-47": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 510,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19980,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-47",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-47"
+    },
+    "expert-48": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 440,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19893,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-48",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-48"
+    },
+    "expert-49": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 332,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19893,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-49",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-49"
+    },
+    "expert-5": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 822,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22151,
+        "model-integration-sequential.json": 988,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 818704,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1292405,
+        "source-retired.json": 277,
+        "source-retirement-plan.json": 898
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-5",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-5"
+    },
+    "expert-50": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 404,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19893,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-50",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-50"
+    },
+    "expert-51": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 472,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19938,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-51",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-51"
+    },
+    "expert-52": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 174,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-52",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-52"
+    },
+    "expert-53": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 140,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19538,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-53",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-53"
+    },
+    "expert-54": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 174,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-54",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-54"
+    },
+    "expert-55": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-55",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-55"
+    },
+    "expert-56": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-56",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-56"
+    },
+    "expert-57": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-57",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-57"
+    },
+    "expert-58": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-58",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-58"
+    },
+    "expert-59": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-59",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-59"
+    },
+    "expert-6": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 716,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22297,
+        "model-integration-sequential.json": 988,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 818704,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1292405,
+        "source-retired.json": 277,
+        "source-retirement-plan.json": 898
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-6",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-6"
+    },
+    "expert-60": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 174,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 18840,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-60",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-60"
+    },
+    "expert-61": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 19133,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-61",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-61"
+    },
+    "expert-62": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 300,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19760,
+        "model-integration-direct.json": 19421,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-62",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-62"
+    },
+    "expert-63": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 174,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 19712,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-63",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-63"
+    },
+    "expert-64": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 20002,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-64",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-64"
+    },
+    "expert-65": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 20290,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-65",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-65"
+    },
+    "expert-66": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 20580,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-66",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-66"
+    },
+    "expert-67": {
+      "data_files": {
+        "build-verification.json": 673,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 20871,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-67",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-67"
+    },
+    "expert-68": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 21161,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-68",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-68"
+    },
+    "expert-69": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 21450,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-69",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-69"
+    },
+    "expert-7": {
+      "data_files": {
+        "build-verification.json": 673,
+        "constants.bin": 804,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22490,
+        "model-integration-sequential.json": 988,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 817616,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1292206,
+        "source-retired.json": 277,
+        "source-retirement-plan.json": 898
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-7",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-7"
+    },
+    "expert-70": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 21741,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-70",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-70"
+    },
+    "expert-71": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 22028,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-71",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-71"
+    },
+    "expert-72": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 22320,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-72",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-72"
+    },
+    "expert-73": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 22609,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-73",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-73"
+    },
+    "expert-74": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 22898,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-74",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-74"
+    },
+    "expert-75": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 23191,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-75",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-75"
+    },
+    "expert-76": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 23480,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-76",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-76"
+    },
+    "expert-77": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 23767,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-77",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-77"
+    },
+    "expert-78": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 24059,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-78",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-78"
+    },
+    "expert-79": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 24351,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-79",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-79"
+    },
+    "expert-8": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 700,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22621,
+        "model-integration-sequential.json": 988,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 818704,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1292405,
+        "source-retired.json": 277,
+        "source-retirement-plan.json": 898
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-8",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-8"
+    },
+    "expert-80": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 24641,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-80",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-80"
+    },
+    "expert-81": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 24929,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-81",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-81"
+    },
+    "expert-82": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 25219,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-82",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-82"
+    },
+    "expert-83": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 25509,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-83",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-83"
+    },
+    "expert-84": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 25800,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-84",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-84"
+    },
+    "expert-85": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 26091,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-85",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-85"
+    },
+    "expert-86": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 26377,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-86",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-86"
+    },
+    "expert-87": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 26672,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-87",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-87"
+    },
+    "expert-88": {
+      "data_files": {
+        "build-verification.json": 674,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 26960,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-88",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-88"
+    },
+    "expert-89": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 27251,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-89",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-89"
+    },
+    "expert-9": {
+      "data_files": {
+        "build-verification.json": 672,
+        "constants.bin": 828,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 22646,
+        "model-integration-sequential.json": 988,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 818704,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1292405,
+        "source-retired.json": 277,
+        "source-retirement-plan.json": 898
+      },
+      "source": "/opt/clover-k3/datasets/computed/expert-9",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-9"
+    },
+    "expert-90": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 27540,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 824112,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297782,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-90",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-90"
+    },
+    "expert-91": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 222,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19628,
+        "model-integration-direct.json": 27829,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-91",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-91"
+    },
+    "expert-92": {
+      "data_files": {
+        "build-verification.json": 675,
+        "constants.bin": 186,
+        "experts.bin": 1094944,
+        "experts.direct": 15722348544,
+        "maps.json": 19584,
+        "model-integration-direct.json": 28120,
+        "model-integration-sequential.json": 990,
+        "native-recovery.stderr": 0,
+        "original-header.bin": 823016,
+        "source-layout.bin": 736536,
+        "source-recovery.json": 1297583,
+        "source-retired.json": 280,
+        "source-retirement-plan.json": 904
+      },
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/expert-92",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/expert-92"
+    },
+    "trunk-0": {
+      "index_sha256": "dd58a012a1e795a959f14f2c8bf114921018e7cecd668bf505e966cdd4868722",
+      "source": "/opt/clover-k3/datasets/computed/trunk-0",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-0"
+    },
+    "trunk-1": {
+      "index_sha256": "0c4e7f4afd0abfc9f422e5de54757586cf1a075230ce14d8597ef270bac2dbb4",
+      "source": "/opt/clover-k3/datasets/computed/trunk-1",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-1"
+    },
+    "trunk-10": {
+      "index_sha256": "1343ad67edd7f48efa27ddb72e65b524a7f755d28cd437959d1ad2526a56bdb2",
+      "source": "/opt/clover-k3/datasets/computed/trunk-10",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-10"
+    },
+    "trunk-11": {
+      "index_sha256": "0cdeb99559821711e1bc31db84b44b06267093cb120eb096939584efee5d0b21",
+      "source": "/opt/clover-k3/datasets/computed/trunk-11",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-11"
+    },
+    "trunk-12": {
+      "index_sha256": "a65bd2ff53e568560befe63cd2c715f1e6a810649af461cfad47d0df649f784c",
+      "source": "/opt/clover-k3/datasets/computed/trunk-12",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-12"
+    },
+    "trunk-13": {
+      "index_sha256": "37cd150dc927062121623d14b7d38f7ef7e659d48c1a9722c061d15cbbe90c76",
+      "source": "/opt/clover-k3/datasets/computed/trunk-13",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-13"
+    },
+    "trunk-14": {
+      "index_sha256": "166ee5c16c54100529dd67c8b3e64aec179567657ec4f23a5676a2f8d9adcef8",
+      "source": "/opt/clover-k3/datasets/computed/trunk-14",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-14"
+    },
+    "trunk-15": {
+      "index_sha256": "b645d151894566afe6e44249f3898ee5196cc4148580eda4c3fc6642e2d47914",
+      "source": "/opt/clover-k3/datasets/computed/trunk-15",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-15"
+    },
+    "trunk-16": {
+      "index_sha256": "4eb5d7c94eacdf03c6f236b81dc90ca3046acfe6e0122290e73cfcae06c7a44e",
+      "source": "/opt/clover-k3/datasets/computed/trunk-16",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-16"
+    },
+    "trunk-17": {
+      "index_sha256": "e9c93ce816127c7bcc166951f98a2f90c5265b3fab19142b50bb4fc1662d1f31",
+      "source": "/opt/clover-k3/datasets/computed/trunk-17",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-17"
+    },
+    "trunk-18": {
+      "index_sha256": "d6d1b217ae3a0ede28a7a5a8b5947b4da4a4a6559b4884655d368cd86076ac9e",
+      "source": "/opt/clover-k3/datasets/computed/trunk-18",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-18"
+    },
+    "trunk-19": {
+      "index_sha256": "5f22d66e16b59c009fb92de914f91dfd99bc7049afd5c5f3ecd0efcbed842ef1",
+      "source": "/opt/clover-k3/datasets/computed/trunk-19",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-19"
+    },
+    "trunk-2": {
+      "index_sha256": "cf80a9dc70794ea26b92ff1cc7dc3587a387a01dd1a38c17e0fb714bfb6e42a0",
+      "source": "/opt/clover-k3/datasets/computed/trunk-2",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-2"
+    },
+    "trunk-20": {
+      "index_sha256": "67ca9d557f0d141625633b38638700d646689106def8fdaef8dd897cb9190d5f",
+      "source": "/opt/clover-k3/datasets/computed/trunk-20",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-20"
+    },
+    "trunk-21": {
+      "index_sha256": "0de52e8f1045d6141efd455dc6769f07163b5f66a74a3a73fb277e0d5f3323e3",
+      "source": "/opt/clover-k3/datasets/computed/trunk-21",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-21"
+    },
+    "trunk-22": {
+      "index_sha256": "b8f007d26a20dc296cbf2f60ae59fb8207d5c40423b5ca5eb4c68bbecd92bbc0",
+      "source": "/opt/clover-k3/datasets/computed/trunk-22",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-22"
+    },
+    "trunk-23": {
+      "index_sha256": "e2e92014549d051eab9983dcbc5f877e2db28b68eefbb423d1a294dc9e377d75",
+      "source": "/opt/clover-k3/datasets/computed/trunk-23",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-23"
+    },
+    "trunk-24": {
+      "index_sha256": "cb460ecedf81a223fc06fe6e449ce06d19bc6246132c4f99b374c257218cc927",
+      "source": "/opt/clover-k3/datasets/computed/trunk-24",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-24"
+    },
+    "trunk-25": {
+      "index_sha256": "9a30fdab8a050e09e8f82332e4ceb8d69f342855ca73eff1b6ff09a2781b646d",
+      "source": "/opt/clover-k3/datasets/computed/trunk-25",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-25"
+    },
+    "trunk-26": {
+      "index_sha256": "ca908b164ec037c33bca3c081a79da8accbde2e9ab2d64f71d627412b9136f58",
+      "source": "/opt/clover-k3/datasets/computed/trunk-26",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-26"
+    },
+    "trunk-27": {
+      "index_sha256": "21550f0d79db8cb329ba95f6160de98d37952e250845ac17fdd73442857a4a85",
+      "source": "/opt/clover-k3/datasets/computed/trunk-27",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-27"
+    },
+    "trunk-28": {
+      "index_sha256": "8fa23484cda2970b9ac0e4cb92feeec02f7a568ee5f2f1c283730273b6b9d83a",
+      "source": "/opt/clover-k3/datasets/computed/trunk-28",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-28"
+    },
+    "trunk-29": {
+      "index_sha256": "5ea380635e07acfcf38e20b52062d9af4be91141126320eecc253d7e40e7a2f1",
+      "source": "/opt/clover-k3/datasets/computed/trunk-29",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-29"
+    },
+    "trunk-3": {
+      "index_sha256": "9cc36734357ea00d1251c8d35ef447e898f2de75db5f3282b5472cbcd5919f47",
+      "source": "/opt/clover-k3/datasets/computed/trunk-3",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-3"
+    },
+    "trunk-30": {
+      "index_sha256": "724ba11c10242a815f261f164a44be03e860a3b7a433ac50b8e32a3349124207",
+      "source": "/opt/clover-k3/datasets/computed/trunk-30",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-30"
+    },
+    "trunk-31": {
+      "index_sha256": "60785a65f82c6a0f556614b1e576e6f1397c6e43ea9996a0b1d358c168c6ce5e",
+      "source": "/opt/clover-k3/datasets/computed/trunk-31",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-31"
+    },
+    "trunk-32": {
+      "index_sha256": "a537dc475c8701d474c79eb03e7738b366a45730c155de5950ea809a22c576b5",
+      "source": "/opt/clover-k3/datasets/computed/trunk-32",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-32"
+    },
+    "trunk-33": {
+      "index_sha256": "f7e973f8e2535e27c278f79c07180f5c50a7a04ec9e27dddbba25a5353eb2644",
+      "source": "/opt/clover-k3/datasets/computed/trunk-33",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-33"
+    },
+    "trunk-34": {
+      "index_sha256": "2e86d0e6ff357ba13a814ceb8574d0b2552cb3e19bf42bb033ea9e89f8124719",
+      "source": "/opt/clover-k3/datasets/computed/trunk-34",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-34"
+    },
+    "trunk-35": {
+      "index_sha256": "41cb2483df96aa5f8dc59e05c573a4ae2c16a159ca6ccd99978aa3242a155504",
+      "source": "/opt/clover-k3/datasets/computed/trunk-35",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-35"
+    },
+    "trunk-36": {
+      "index_sha256": "fe1e218bfad92e4d72726d49d0ecbbb023356550854aec0431096c6e509ae224",
+      "source": "/opt/clover-k3/datasets/computed/trunk-36",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-36"
+    },
+    "trunk-37": {
+      "index_sha256": "fb2642f244b37e21c683b4bdcdd27b27deb6ed8ffdf2c5c121700616d1041ee7",
+      "source": "/opt/clover-k3/datasets/computed/trunk-37",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-37"
+    },
+    "trunk-38": {
+      "index_sha256": "dc26eff5c54b39cdb49e5807313b5025ad18548f3fe08c67513872aa6c41c9da",
+      "source": "/opt/clover-k3/datasets/computed/trunk-38",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-38"
+    },
+    "trunk-39": {
+      "index_sha256": "8a1024caea2b8d9b524727c682ca4d871ef92f44670254516176a0379fc85203",
+      "source": "/opt/clover-k3/datasets/computed/trunk-39",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-39"
+    },
+    "trunk-4": {
+      "index_sha256": "cbb43fe1e21bb9c7a98d1cbdad265d5e260845f7f2ed0e876f10a54a716d70b7",
+      "source": "/opt/clover-k3/datasets/computed/trunk-4",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-4"
+    },
+    "trunk-40": {
+      "index_sha256": "c0d08348d963417d573333b2fb85f74ceac387bf9caf7cd16133ac185ee7be7c",
+      "source": "/opt/clover-k3/datasets/computed/trunk-40",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-40"
+    },
+    "trunk-41": {
+      "index_sha256": "c15b7f82ed018d9dfb8a4c3350be3b762003efcd5faea06d25ee4805c6a08005",
+      "source": "/opt/clover-k3/datasets/computed/trunk-41",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-41"
+    },
+    "trunk-42": {
+      "index_sha256": "f00a194b8221096da02c3f63a8322d3a501aeca0df1eaa3e1339c00ac412554e",
+      "source": "/opt/clover-k3/datasets/computed/trunk-42",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-42"
+    },
+    "trunk-43": {
+      "index_sha256": "55dbf61defa3db515f28686e90ba730c454b2e658a56ad41c1131be1688d3410",
+      "source": "/opt/clover-k3/datasets/computed/trunk-43",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-43"
+    },
+    "trunk-44": {
+      "index_sha256": "5da17ee368dec1406224dc5ced11dd515de75c6e6ef5b71956ed3f8bece173f4",
+      "source": "/opt/clover-k3/datasets/computed/trunk-44",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-44"
+    },
+    "trunk-45": {
+      "index_sha256": "55e6eeea6e68c1876671dc2216624e35768f6b57598553f872891b0d09f19a72",
+      "source": "/opt/clover-k3/datasets/computed/trunk-45",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-45"
+    },
+    "trunk-46": {
+      "index_sha256": "eb3f1823d015af5b429f6162c5ec48b5b4f28492934dd5379d962b74ebe55e24",
+      "source": "/opt/clover-k3/datasets/computed/trunk-46",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-46"
+    },
+    "trunk-47": {
+      "index_sha256": "c10ab2caf51381d5108df5af15816816d17d33fde5adfb57cf502c5d30dfbf42",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-47",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-47"
+    },
+    "trunk-48": {
+      "index_sha256": "9fa41640732e3ad2395fdbedee912d8a5dc3fe5f1c24ac2a21aa6f517570faef",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-48",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-48"
+    },
+    "trunk-49": {
+      "index_sha256": "ec597974b5d1a53dc33a941d387919f2775d52f1e897cc04600b322ceb9ef9f8",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-49",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-49"
+    },
+    "trunk-5": {
+      "index_sha256": "dcc875db3aa49f49f7e4b0179b1888089c5b346473da3ca78f6b1c17fa33bd22",
+      "source": "/opt/clover-k3/datasets/computed/trunk-5",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-5"
+    },
+    "trunk-50": {
+      "index_sha256": "83a4a019febc294cd4d80309ff18114a94ac8d36b50928852bb9dcc1ed5cdd71",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-50",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-50"
+    },
+    "trunk-51": {
+      "index_sha256": "2da329877f65a4d3ab848b510677164a8d4156687de1e0b0412be1a1836d3569",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-51",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-51"
+    },
+    "trunk-52": {
+      "index_sha256": "13e3665c41b4bd0e2931dd87eeaafecc52a7fb811dd8d20c3e03c4537e770976",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-52",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-52"
+    },
+    "trunk-53": {
+      "index_sha256": "87f33fc9a29795661a7c0fdbd25aa98ffcc795e2ecce01c2e4bb5b4f278e8747",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-53",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-53"
+    },
+    "trunk-54": {
+      "index_sha256": "58738f61d1bce092e1f1b8315aba8a33fad0c9f28fc7e8d099894166e9c71d0e",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-54",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-54"
+    },
+    "trunk-55": {
+      "index_sha256": "d3b24993ab80932ba9ada166088ab4d91d70a0c93dd23567f9be598819de5df1",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-55",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-55"
+    },
+    "trunk-56": {
+      "index_sha256": "6a339a4c6867b05a931036e4c5b367b14a3e00e72b11d2b830fb8c494f9e5be6",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-56",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-56"
+    },
+    "trunk-57": {
+      "index_sha256": "215f129acd07337931c0678944331659d6e8bdc30b92d5bbefc668b74df2536b",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-57",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-57"
+    },
+    "trunk-58": {
+      "index_sha256": "092918ca7eea0dce36ec5d3d7c9325ff7140c749d2e8c11ce4639c3f93f5b8f5",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-58",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-58"
+    },
+    "trunk-59": {
+      "index_sha256": "be26481c488ba8e986860d8af55c356f36711b3900d22c2ebfa003cb29caa4cf",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-59",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-59"
+    },
+    "trunk-6": {
+      "index_sha256": "b5dad147716b468941585492eb07a6f7abd8e7296b3f0003f6127463c0cf1884",
+      "source": "/opt/clover-k3/datasets/computed/trunk-6",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-6"
+    },
+    "trunk-60": {
+      "index_sha256": "c59c127d2e1614f28d0b2abb5335cc430b7a656880a4ec1115f05317f850e3cb",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-60",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-60"
+    },
+    "trunk-61": {
+      "index_sha256": "6b29a6ddadd5aa2ccbd9999caea2a70302adffa0636e21af814c056fa11b3302",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-61",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-61"
+    },
+    "trunk-62": {
+      "index_sha256": "09c190215d861846417047ab1d6646db7200c43944e710e62d1fcce0a1ce4e24",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-62",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-62"
+    },
+    "trunk-63": {
+      "index_sha256": "1dc0d02cffe3088c6bf2c32bb60da05ba61e279ed720ba83e6faba362beef53e",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-63",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-63"
+    },
+    "trunk-64": {
+      "index_sha256": "1f43cb3ff090a9493f98833e1b79e67c995f633e8b65a1b537110bf730064d92",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-64",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-64"
+    },
+    "trunk-65": {
+      "index_sha256": "3407f01c8fe0cc98fa7c3e6c2cb8e023acf2715716b349caf61fd171d78811f1",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-65",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-65"
+    },
+    "trunk-66": {
+      "index_sha256": "3bc321e2cdf452983d462e9cb8013ca0c5f72fe77c6789fc4e8b589bdfa031b8",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-66",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-66"
+    },
+    "trunk-67": {
+      "index_sha256": "4309284895f3a2c85da45492767e05ac8a65e7061caf215d8a4d2e9d6820c9d3",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-67",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-67"
+    },
+    "trunk-68": {
+      "index_sha256": "476f5259c9fbbb5f2e457588b3770dc2f3a4b7dff1b2c8c9bbec03ffe2dce722",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-68",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-68"
+    },
+    "trunk-69": {
+      "index_sha256": "682e27989421b71c0a9d019d3e95ec4f95f3b778d08c9e7078c3c919ec542453",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-69",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-69"
+    },
+    "trunk-7": {
+      "index_sha256": "de579352004a89535851fa35c635d1db50266e0d3d3176496ef8b5d7649801b9",
+      "source": "/opt/clover-k3/datasets/computed/trunk-7",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-7"
+    },
+    "trunk-70": {
+      "index_sha256": "6fae8ddf8435f9668541e0763237ea7b188c75a5b3c0aa5ef8052e7247d55bb3",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-70",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-70"
+    },
+    "trunk-71": {
+      "index_sha256": "a41f7808f1a03f7cde437b44a6bdc8946bb522c39b9c2d12d980bc1a157db9d3",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-71",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-71"
+    },
+    "trunk-72": {
+      "index_sha256": "2fc55a12e251523ac30a7022c3747e173cbec528dd25d240f727cae81c0f7ce1",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-72",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-72"
+    },
+    "trunk-73": {
+      "index_sha256": "78fd6766ff030af79f547e34e83fafe348856b779bcdfa6136dca4cf440e6d5c",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-73",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-73"
+    },
+    "trunk-74": {
+      "index_sha256": "2291779428e464c7649b72381d309b56220a8f04686fb750d336a9124d613821",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-74",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-74"
+    },
+    "trunk-75": {
+      "index_sha256": "74661f755906a20d0b715c16af050fe8f79bc546c5f7a425c7c2169041777cdf",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-75",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-75"
+    },
+    "trunk-76": {
+      "index_sha256": "b8546864e874c600b7ca33d70fcba5efb840118f6117f2c908d43129cb86272c",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-76",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-76"
+    },
+    "trunk-77": {
+      "index_sha256": "29058ecd5ec08bc209d37895269b60776a357b286e16723914f92fdae81027f8",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-77",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-77"
+    },
+    "trunk-78": {
+      "index_sha256": "21b7f7aae58c1282881a3350fddc5e400af30fcc9e1a9d65e8b0dbbb3c8cfdaa",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-78",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-78"
+    },
+    "trunk-79": {
+      "index_sha256": "f8b93f9a492dd10c8add735ecaf740082862e93099b46ade0f1f71443dd17d51",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-79",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-79"
+    },
+    "trunk-8": {
+      "index_sha256": "4208168e8db57b3d715529610733893b63dacb6d34ddae3c6b505fbb99893617",
+      "source": "/opt/clover-k3/datasets/computed/trunk-8",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-8"
+    },
+    "trunk-80": {
+      "index_sha256": "71fff385bdbdfedc1bde83c18909183d27eb3e9b99d56064e06cd2229d363985",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-80",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-80"
+    },
+    "trunk-81": {
+      "index_sha256": "59090599526f79b94115c87171cc9e53476c69269aa130829c374f41bbd56d30",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-81",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-81"
+    },
+    "trunk-82": {
+      "index_sha256": "b0c3cf216d804712fd95b86d9fc70aaa6c19f6d9e7a4eb8e465c181d3ee7b91c",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-82",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-82"
+    },
+    "trunk-83": {
+      "index_sha256": "ce072592537aa0b7e14393fcdc959606105116f63a6f7fd537b50f8ea5e91b6e",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-83",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-83"
+    },
+    "trunk-84": {
+      "index_sha256": "0961901206a1272b75634e6ebbe6bb14dc33476f1a7e612d00fa54c0dc35c513",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-84",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-84"
+    },
+    "trunk-85": {
+      "index_sha256": "c9ee316a6bd1879391594f990a906f457845a1de25bc640dcc9df2010786c5bd",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-85",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-85"
+    },
+    "trunk-86": {
+      "index_sha256": "2a61067c7b4d8689b39de948422618f788770dcec826ff1a3bfa4e07eb77991d",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-86",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-86"
+    },
+    "trunk-87": {
+      "index_sha256": "a96c801cfbbcbd6c57c2caa4e55767f4a3a5883a1e9bd82b6a26620f42b35551",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-87",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-87"
+    },
+    "trunk-88": {
+      "index_sha256": "5c6a182d44a748517b56ae6712332807efeca08694c9359fa1fd16944c1c20c3",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-88",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-88"
+    },
+    "trunk-89": {
+      "index_sha256": "8392a580b0b10537e281ef45922117460fe25adb6596481d591dc1165330a904",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-89",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-89"
+    },
+    "trunk-9": {
+      "index_sha256": "4b33c85e372206bcd79d701c4a3ce6b34b794eee061361ac88caa32f06aa1342",
+      "source": "/opt/clover-k3/datasets/computed/trunk-9",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-9"
+    },
+    "trunk-90": {
+      "index_sha256": "8ee78e68dca2b51665add36c726b4e5cdf5d8c278e67426b00fbe77bfbeffe38",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-90",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-90"
+    },
+    "trunk-91": {
+      "index_sha256": "bc57da293138552d23a05a7fe2e70b414d3c76d970f5150632664c1b26764c4e",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-91",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-91"
+    },
+    "trunk-92": {
+      "index_sha256": "b7f3a09059bf19cff861b812f74cf80c1f36b71eb4f89f2299eff8027cbdd64c",
+      "source": "/mnt/nvme1/clover-k3/datasets/computed/trunk-92",
+      "view": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete/trunk-92"
+    }
+  },
+  "read_only_backbone_view": true,
+  "roots": [
+    "/opt/clover-k3/datasets/computed",
+    "/mnt/nvme1/clover-k3/datasets/computed"
+  ]
+}

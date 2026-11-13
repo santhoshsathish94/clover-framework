@@ -1,0 +1,92 @@
+{
+  "dataset": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete",
+  "layer_mode": "all",
+  "library_sha256": "70fb766532b5118e952892627490e4076bf6309304552522f51d92475c262990",
+  "records": [
+    {
+      "milliseconds": 92287.5859375,
+      "routed_layers": 92,
+      "sha256": "166034890522d058e532441b6aeb2ed959b3818fcbe59850a96ce48c04939842",
+      "tokens": 8,
+      "window": 0
+    },
+    {
+      "milliseconds": 94789.8984375,
+      "routed_layers": 92,
+      "sha256": "8f7b21b43c56ee8123aba8ae65deef22e8aef2adadc8b8accc8cb26cb7bbd76c",
+      "tokens": 8,
+      "window": 1
+    },
+    {
+      "milliseconds": 92418.125,
+      "routed_layers": 92,
+      "sha256": "bc2e54d35b657687f6a7850a7606710854d1051d90bacb01374ed41175d97546",
+      "tokens": 8,
+      "window": 2
+    },
+    {
+      "milliseconds": 99703.484375,
+      "routed_layers": 92,
+      "sha256": "bdcce69656c1bbc1e7371ac125561a2222a8681441c4953e57f731809507f916",
+      "tokens": 8,
+      "window": 3
+    },
+    {
+      "milliseconds": 102974.640625,
+      "routed_layers": 92,
+      "sha256": "5eb9d62e4e5b9114fce9f43796fc737efbce36e0185f93937225accb8847897a",
+      "tokens": 8,
+      "window": 4
+    },
+    {
+      "milliseconds": 100752.8125,
+      "routed_layers": 92,
+      "sha256": "2ad97fd9cc4a625511dee913dad981072123a365af9dd8c72c37d92e17856d71",
+      "tokens": 8,
+      "window": 5
+    },
+    {
+      "milliseconds": 105287.7890625,
+      "routed_layers": 92,
+      "sha256": "e606d9f2829144943e49a8c71093c60ca1ec90cb7d2085b2edcd0a2e8cef8a2b",
+      "tokens": 8,
+      "window": 6
+    },
+    {
+      "milliseconds": 107138.8046875,
+      "routed_layers": 92,
+      "sha256": "dcb3554a4e202bbcefb9c6e50fe473b5aea051057c137a2747be2553d0cfad81",
+      "tokens": 8,
+      "window": 7
+    },
+    {
+      "milliseconds": 99242.0078125,
+      "routed_layers": 92,
+      "sha256": "96639e668173b4b0ba714f84a551835bd6e28a103762ba435443627efd830428",
+      "tokens": 8,
+      "window": 8
+    },
+    {
+      "milliseconds": 105287.53125,
+      "routed_layers": 92,
+      "sha256": "6408f77a09db326e453346e8edc27b410926009bd9fea33f09df960a74c11f92",
+      "tokens": 8,
+      "window": 9
+    },
+    {
+      "milliseconds": 98091.8125,
+      "routed_layers": 92,
+      "sha256": "01ec1680f298342cf42447e4c8b72b46159f12fde50f0430247e3e50ebcbe2f0",
+      "tokens": 8,
+      "window": 10
+    },
+    {
+      "milliseconds": 97253.8515625,
+      "routed_layers": 92,
+      "sha256": "cb5e07e1027da6d1eb028111e3018315ebe7bc5dab335a80968f0185a1006ce0",
+      "tokens": 8,
+      "window": 11
+    }
+  ],
+  "scope": "existing CPU engine state capture, not independent official-runtime parity"
+}

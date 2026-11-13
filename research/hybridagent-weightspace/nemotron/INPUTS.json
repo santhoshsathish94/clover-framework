@@ -1,0 +1,124 @@
+{
+  "files": [
+    {
+      "bytes": 1073741824,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/global-0/embeddings.bf16.bin",
+      "distinct_inode": true,
+      "sha256": "724a17323b9f831a83241f1237a3f2caefa2a509531cd910398a010ad7d197cd",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/global-0/embeddings.bf16.bin"
+    },
+    {
+      "bytes": 1073741824,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/global-0/lm_head.bf16.bin",
+      "distinct_inode": true,
+      "sha256": "641786386e97f89e2294435c49e1def4338f476492e617e047a1ef37cbba76fe",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/global-0/lm_head.bf16.bin"
+    },
+    {
+      "bytes": 8192,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/global-0/norm_f.bf16.bin",
+      "distinct_inode": true,
+      "sha256": "325ef319a6b3557b04862e90cf9127cb0596370481ae5d103319ced55ed24e09",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/global-0/norm_f.bf16.bin"
+    },
+    {
+      "bytes": 1816,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/trunk-0/index.bin",
+      "distinct_inode": true,
+      "sha256": "c6bace589515781a1a51c7ad7c20bc806cecd9759bda095836486c5c32dff455",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/trunk-0/index.bin"
+    },
+    {
+      "bytes": 67125248,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/trunk-0/common.bin",
+      "distinct_inode": true,
+      "sha256": "bcd0176abcdba11ea5fbb9317efb6e63c13dbf9a3d5fd34286a231342f7e5c4a",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/trunk-0/common.bin"
+    },
+    {
+      "bytes": 152155200,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/trunk-0/operator.bin",
+      "distinct_inode": true,
+      "sha256": "bf201373f4a8ec128fedac061c56564fdb47466afd989de14dea2d40c6c5f491",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/trunk-0/operator.bin"
+    },
+    {
+      "bytes": 1672,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/trunk-1/index.bin",
+      "distinct_inode": true,
+      "sha256": "7655be956517ab279309e8024a221b32cd66500ba5bd677044dfb55aec611d60",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/trunk-1/index.bin"
+    },
+    {
+      "bytes": 8192,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/trunk-1/common.bin",
+      "distinct_inode": true,
+      "sha256": "e2d7e2c6d23f6fa115bb74cfaf2b0ab42daca1d56a46587ab25c745c746286d0",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/trunk-1/common.bin"
+    },
+    {
+      "bytes": 113248256,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/trunk-1/routed-shared.bin",
+      "distinct_inode": true,
+      "sha256": "779273fb492393a6463b931b74212457569fc17d5d51e7ae5bd50544e370c535",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/trunk-1/routed-shared.bin"
+    },
+    {
+      "bytes": 1528,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/trunk-7/index.bin",
+      "distinct_inode": true,
+      "sha256": "6a74c65817a8e7a77e780f473b176971ebf9bbc8f91fa772c634a1594b11635f",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/trunk-7/index.bin"
+    },
+    {
+      "bytes": 33554432,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/trunk-7/common.bin",
+      "distinct_inode": true,
+      "sha256": "5435dc86a23ffa4fa592623253e13da8148b718905d3231f778d8f46b6642b35",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/trunk-7/common.bin"
+    },
+    {
+      "bytes": 37756992,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/trunk-7/operator.bin",
+      "distinct_inode": true,
+      "sha256": "0cc42853e375b99c6a6ccc39a3a0c67723103e0135af5493d750292737da6359",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/trunk-7/operator.bin"
+    },
+    {
+      "bytes": 5637144576,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned/expert-1/experts.direct",
+      "distinct_inode": true,
+      "sha256": "92018b9c2c152cdc1f04eac03555c5f97baed873e431bea3e0c8c7d32cc451c8",
+      "source": "/opt/clover-k3/nemotron-computed/pruned/expert-1/experts.direct"
+    },
+    {
+      "bytes": 17077366,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/tokenizer/tokenizer.json",
+      "distinct_inode": true,
+      "sha256": "d0432ad8b1c2984a2e2dca82e1933e3fd5628df6e95c51fba4c3ee9950dce299",
+      "source": "/opt/clover-k3/models/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16/tokenizer.json"
+    },
+    {
+      "bytes": 619,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/tokenizer/tokenizer_config.json",
+      "distinct_inode": true,
+      "sha256": "89fa70d31734c0c75ffdcee4114449f8cf8abd64bc233d420b58e25763f91aba",
+      "source": "/opt/clover-k3/models/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16/tokenizer_config.json"
+    },
+    {
+      "bytes": 5723,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/tokenizer/config.json",
+      "distinct_inode": true,
+      "sha256": "be121eafe4c174c8bc7204da2cd063baa0392c0adfd41dd82fc9e0bba5b0f9a0",
+      "source": "/opt/clover-k3/models/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16/config.json"
+    },
+    {
+      "bytes": 12927,
+      "copy": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/tokenizer/chat_template.jinja",
+      "distinct_inode": true,
+      "sha256": "1369e90b19976f99ce2070eb21ade8fcb4af640f008e14e82af5c5e89a9cc816",
+      "source": "/opt/clover-k3/models/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16/chat_template.jinja"
+    }
+  ],
+  "scope": "three-stage training backbone, not full 88-layer model"
+}

@@ -1,0 +1,30 @@
+{
+  "capture_windows": 12,
+  "deployment_eligible": false,
+  "discovery_windows": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "edit": "k3_hybridlink.out_scale only",
+  "gate": "strictly lower mean per-window MSE; no per-window MSE/cosine regression; beat zero-input MSE on every validation window and >=5 improving windows",
+  "policies": {
+    "gain092": 0.92,
+    "gain108": 1.08,
+    "original": 1.0
+  },
+  "provenance_limit": "reserved from this calibration; original training membership of staged windows is unknown",
+  "scope": "existing all-layer CPU engine captures and next-embedding prediction, not completed task or end-to-end quality",
+  "tokens_per_window": 8,
+  "validation_windows": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ]
+}

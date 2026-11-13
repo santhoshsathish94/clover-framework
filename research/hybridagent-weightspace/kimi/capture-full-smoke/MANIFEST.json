@@ -1,0 +1,15 @@
+{
+  "dataset": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete",
+  "layer_mode": "all",
+  "library_sha256": "70fb766532b5118e952892627490e4076bf6309304552522f51d92475c262990",
+  "records": [
+    {
+      "milliseconds": 87810.5546875,
+      "routed_layers": 92,
+      "sha256": "166034890522d058e532441b6aeb2ed959b3818fcbe59850a96ce48c04939842",
+      "tokens": 8,
+      "window": 0
+    }
+  ],
+  "scope": "existing CPU engine state capture, not independent official-runtime parity"
+}

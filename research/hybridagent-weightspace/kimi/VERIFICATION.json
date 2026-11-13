@@ -1,0 +1,39 @@
+{
+  "all_trials_restored": true,
+  "captured_windows": 12,
+  "deployment_eligible": false,
+  "limit": "native adapter prediction on existing-engine captures; no new task-level quality claim",
+  "model": "kimi",
+  "outcome": "reject_all_calibrations",
+  "results": {
+    "gain092": {
+      "cosine_worse_windows": 0,
+      "fails_zero_control_windows": 3,
+      "mean_cosine": 0.24034767970442772,
+      "mean_mse": 0.0006458784118876792,
+      "mse_worse_windows": 0,
+      "qualifies": false
+    },
+    "gain108": {
+      "cosine_worse_windows": 0,
+      "fails_zero_control_windows": 4,
+      "mean_cosine": 0.24034767970442772,
+      "mean_mse": 0.0007503578235628083,
+      "mse_worse_windows": 4,
+      "qualifies": false
+    },
+    "original": {
+      "cosine_worse_windows": 0,
+      "fails_zero_control_windows": 3,
+      "mean_cosine": 0.24034767970442772,
+      "mean_mse": 0.0006953087577130646,
+      "mse_worse_windows": 0,
+      "qualifies": false
+    }
+  },
+  "routed_layers_per_window": 92,
+  "sources_checked": 4,
+  "validation_opened": false,
+  "verified": true,
+  "zero_mean_mse": 0.00048127619811566547
+}

@@ -1,0 +1,10 @@
+{
+  "/opt/clover-k3/hybridagent-weightspace-20261112/artifacts.py": "0767cb7ca1deaaa6b1c6147ae92a47f048cd3c90f0d5f649e6a37fb69c897317",
+  "/opt/clover-k3/hybridagent-weightspace-20261112/capture_kimi.py": "e750e3eb87069e6afd251510df7b723e6b7957e52b47ae156f6ad2f10e07429f",
+  "/opt/clover-k3/hybridagent-weightspace-20261112/kimi.py": "45041ae4137737e42de71f012e5b614380de0e2942828bcd2769a68152c4b628",
+  "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/DATASET_VIEW.json": "0eed0c0aa440d9d05ca0c402e788e3bc13108eb18e2eaaa84ab19cf73417dd9d",
+  "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/OBSERVATION.json": "358cbb2c9d1734cf24b6eff9ed29d3c8d3b25b357ad04d175d5c0665f1a9c630",
+  "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/RUNTIME_INPUTS.json": "3d2ae254f357b5c88aaf486eb8cadb3f909b69f053911100948548101bcdb0dc",
+  "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/frozen/PROTOCOL.json": "feecaa4187092cf86b694b63a27f754de882e16148f7f7dd14787e286442e9b5",
+  "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/native_source.py": "d5a75351384e718539e904c29d963d7087c585da63295405e3dcf2c6f0eb8532"
+}

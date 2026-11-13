@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "branch": "research/astra-lfm3-weightspace-20261111",
+  "ssh_host": "k3",
+  "study_root": "/opt/clover-k3/hybridagent-weightspace-20261112",
+  "execution_order": ["nemotron", "kimi"],
+  "models": {
+    "nemotron": {
+      "model": "NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+      "outcome": "no_accepted_candidate",
+      "baseline": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/baseline/nemotron_hybridagent_final.pt",
+      "baseline_sha256": "21f72954f07a67b4cc68443d6bfe4661afd711c98cece3f3e33a369f27d9e5cb",
+      "candidate": null,
+      "deployment_eligible": false,
+      "evidence": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/VERIFICATION.json",
+      "test_data": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/frozen/cases.json",
+      "backbone_inputs": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/inputs/pruned",
+      "checkpoint_components": ["hybrid_link", "nemo_native_hybrid_link", "special_emb_delta", "special_lm_delta", "norm_f_delta"],
+      "limits": [
+        "Training and test graph uses three backbone stages, not all 88 layers.",
+        "All tested gain changes failed per-example non-degradation on discovery.",
+        "The workstation loader may prefer a HybridLink from its bridge checkpoint, so a standalone path override alone does not prove it is being used.",
+        "Reserved validation was not opened; no full-model or end-to-end improvement claim."
+      ]
+    },
+    "kimi": {
+      "model": "Kimi K3 native HybridLink",
+      "outcome": "no_accepted_candidate",
+      "baseline": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/baseline/checkpoint-clover-true-hybrid-agent-ncm.pt",
+      "baseline_sha256": "fc72938b380d19485a372d158cfd5d213c5cce19f7ee61ff63dadeba81872be5",
+      "candidate": null,
+      "deployment_eligible": false,
+      "evidence": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/VERIFICATION.json",
+      "test_data": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/capture-calibration",
+      "backbone_inputs": "/opt/clover-k3/hybridagent-weightspace-20261112/kimi/dataset_view_complete",
+      "checkpoint_components": ["k3_hybridlink"],
+      "limits": [
+        "Twelve eight-token windows captured through the existing CPU engine with all 92 MoE layers active.",
+        "Gain candidates failed the zero-vector/non-degradation discovery gate; reserved windows were not used for candidate evaluation.",
+        "Capture is not independent official-runtime parity or a completed task-level evaluation.",
+        "The large expert dataset is a read-only view, not a new physical checkpoint copy.",
+        "The separate Qwen-based planner was not loaded or modified."
+      ]
+    }
+  },
+  "restored_trials_are_not_candidates": true,
+  "production_changed": false
+}

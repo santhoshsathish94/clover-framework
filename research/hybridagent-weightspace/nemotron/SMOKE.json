@@ -1,0 +1,11 @@
+{
+  "metrics": {
+    "cos_nat": 0.16649097204208374,
+    "cos_std": 0.11189162731170654,
+    "l_align": 0.8608927726745605,
+    "l_ntp": 4.08096981048584,
+    "loss": 4.167058944702148,
+    "special_acc": 1.0
+  },
+  "scope": "structural token smoke only; no natural-language quality claim"
+}

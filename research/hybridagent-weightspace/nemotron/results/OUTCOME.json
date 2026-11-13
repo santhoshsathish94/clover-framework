@@ -1,0 +1,8 @@
+{
+  "baseline": "/opt/clover-k3/hybridagent-weightspace-20261112/nemotron/baseline/nemotron_hybridagent_final.pt",
+  "candidate": null,
+  "deployment_eligible": false,
+  "scope": "reduced-stage diagnostic only",
+  "selected": null,
+  "stage_gate_passed": false
+}

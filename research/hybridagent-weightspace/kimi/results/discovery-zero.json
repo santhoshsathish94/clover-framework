@@ -1,0 +1,30 @@
+[
+  {
+    "cosine": 0.0,
+    "mse": 0.000500342866871506,
+    "positions": 7,
+    "prediction_rms": 0.0,
+    "window": 0
+  },
+  {
+    "cosine": 0.0,
+    "mse": 0.0004508343990892172,
+    "positions": 7,
+    "prediction_rms": 0.0,
+    "window": 1
+  },
+  {
+    "cosine": 0.0,
+    "mse": 0.0005235455464571714,
+    "positions": 7,
+    "prediction_rms": 0.0,
+    "window": 2
+  },
+  {
+    "cosine": 0.0,
+    "mse": 0.00045038198004476726,
+    "positions": 7,
+    "prediction_rms": 0.0,
+    "window": 3
+  }
+]
