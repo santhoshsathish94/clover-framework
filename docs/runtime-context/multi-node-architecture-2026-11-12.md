@@ -123,9 +123,15 @@ Per the human's direction (*"can you buld the current version into the apps so I
      - **Coding, debugging, algorithms, compound-interest/math proofs & study/research plans** $\rightarrow$ **`Kimi K3.1 Pro`** (`k3:kimi-k3`)
      - **Comparisons (`X vs Y`), task splitting, coordination, workflows & multi-step synthesis** $\rightarrow$ **`Clover-35B-A3B`** (`k3:clover-35b-a3b`)
      - **Everyday chat, short writing, quick arithmetic, unit conversion & local device tools** $\rightarrow$ **`LFM3-Omni`** (`omni`)
-3. **Built & Verified Native App Packages (`Windows` & `Android`)**:
-   - **Windows Laptop Installer**: [download/laptop/CloverAIStudio-Setup.exe](../../download/laptop/CloverAIStudio-Setup.exe) (`9,592,280` bytes, `SHA-256: 1ac5091885360d4fcd3eff0f0209fd25de7b4c556eda306928ebcff74ca2603b`, Authenticode Valid) + updated `$HOME\CloverAI` in place.
-   - **Android Phone APK & AAB (`versionCode 20`, `targetSdk 36`, `5.0.6`)**: Built on `k3` (`build_apk.sh phone release`), verified byte-identical `clover.zip` inside `assets/chaquopy/app.imy`, and staged at [download/mobile/CloverAIStudio.apk](../../download/mobile/CloverAIStudio.apk) (`82,639,595` bytes, `SHA-256: 4568fca5d957ed5eaf4c789879e8224dae820393b97a03e7ccab3596e1083d3a`) and `https://api.cloverframework.com/download/mobile/CloverAIStudio.apk`.
+3. **Built & Verified Native App Packages (`Windows` & `Android`) & Live Site Links**:
+   - **Windows Laptop Installer**: [download/laptop/CloverAIStudio-Setup.exe](../../download/laptop/CloverAIStudio-Setup.exe) and [site/download/laptop/CloverAIStudio-Setup.exe](../../site/download/laptop/CloverAIStudio-Setup.exe) (`9,592,280` bytes, `SHA-256: 1ac5091885360d4fcd3eff0f0209fd25de7b4c556eda306928ebcff74ca2603b`, Authenticode Valid) + updated `$HOME\CloverAI` in place.
+   - **Android Phone APK & AAB (`versionCode 20`, `targetSdk 36`, `5.0.6`)**: Built on `k3` (`build_apk.sh phone release`), verified byte-identical `clover.zip` inside `assets/chaquopy/app.imy`, and staged at [download/mobile/CloverAIStudio.apk](../../download/mobile/CloverAIStudio.apk) (`82,639,595` bytes, `SHA-256: 4568fca5d957ed5eaf4c789879e8224dae820393b97a03e7ccab3596e1083d3a`) and [download/mobile/CloverAIStudio.aab](../../download/mobile/CloverAIStudio.aab) (`81,563,089` bytes, `SHA-256: c895d129af80bb0ce21e87e4e971bfa585b18ef20adb73ce660dc87b721e4f6b`).
+   - **Live Site & GitHub Release Links Verified**:
+     - `https://cloverframework.com/download/laptop/CloverAIStudio-Setup.exe` (`HTTP 200`, `9,592,280` bytes, `SHA-256: 1ac5091885360d4fcd3eff0f0209fd25de7b4c556eda306928ebcff74ca2603b`)
+     - `https://cloverframework.com/download/SHA256SUMS.txt` (`HTTP 200`, updated hashes)
+     - `https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.6/CloverAIStudio-Setup.exe` (`HTTP 200`, `9,592,280` bytes)
+     - `https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.6/CloverAIStudio.apk` (`HTTP 200`, `82,639,595` bytes)
+     - `https://api.cloverframework.com/download/mobile/CloverAIStudio.apk` (`HTTP 200`, `82,639,595` bytes)
 
 ---
 
