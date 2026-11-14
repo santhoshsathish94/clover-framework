@@ -136,6 +136,10 @@ foreach ($repoRoot in @($fw)) {  # only the checkout this build came from, never
         Copy-Item $target (Join-Path $repoRoot 'download\laptop\CloverAIStudio-Setup.exe') -Force
         Copy-Item $cerPath (Join-Path $repoRoot 'download\laptop\CloverFramework-CodeSign.cer') -Force
     }
+    if (Test-Path (Join-Path $repoRoot 'site\download\laptop')) {
+        Copy-Item $target (Join-Path $repoRoot 'site\download\laptop\CloverAIStudio-Setup.exe') -Force
+        Copy-Item $cerPath (Join-Path $repoRoot 'site\download\laptop\CloverFramework-CodeSign.cer') -Force
+    }
     if (Test-Path (Join-Path $repoRoot 'release\beta\windows')) {
         Copy-Item $target (Join-Path $repoRoot 'release\beta\windows\clover-ai-studio-beta-setup.exe') -Force
         Copy-Item $cerPath (Join-Path $repoRoot 'release\beta\windows\CloverFramework-CodeSign.cer') -Force

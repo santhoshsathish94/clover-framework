@@ -46,15 +46,15 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 81543910,
-        "sha256": "8acceab16e52ef34f47a7486749a6bb121169ebd9ac09ee3e8690fe7f6aab4f8"
+        "size_bytes": 81563089,
+        "sha256": "c895d129af80bb0ce21e87e4e971bfa585b18ef20adb73ce660dc87b721e4f6b"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "mirror": "download/mobile/CloverAIStudio.apk",
         "type": "apk",
-        "size_bytes": 82620434,
-        "sha256": "300e98ff051e82fdaccfa77ea937661e0d5fcd7f46f2b3cfb411e2acab2eaa0e"
+        "size_bytes": 82639595,
+        "sha256": "4568fca5d957ed5eaf4c789879e8224dae820393b97a03e7ccab3596e1083d3a"
       }
     ],
     "verification": {
@@ -107,8 +107,8 @@
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "mirror": "download/laptop/CloverAIStudio-Setup.exe",
         "type": "exe",
-        "size_bytes": 9572824,
-        "sha256": "e97cb11bfdf3cff2383f97270f5fc96ca8f054cc84444c1f76267e0d16b25c45"
+        "size_bytes": 9592280,
+        "sha256": "1ac5091885360d4fcd3eff0f0209fd25de7b4c556eda306928ebcff74ca2603b"
       },
       {
         "file": "release/beta/windows/CloverFramework-CodeSign.cer",

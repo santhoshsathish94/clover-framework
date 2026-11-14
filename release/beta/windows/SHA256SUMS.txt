@@ -1,2 +1,2 @@
-e97cb11bfdf3cff2383f97270f5fc96ca8f054cc84444c1f76267e0d16b25c45  clover-ai-studio-beta-setup.exe
+1ac5091885360d4fcd3eff0f0209fd25de7b4c556eda306928ebcff74ca2603b  clover-ai-studio-beta-setup.exe
 9365ec5d455b0ef8179ccf1c061cf481c86dad234b9f3dc62244e487c659072d  CloverFramework-CodeSign.cer
