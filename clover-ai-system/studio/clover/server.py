@@ -123,12 +123,14 @@ IMAGE_MODELS = ("sd15-lcm", "sd15")  # image_gen.presets; the default is the bes
 JEPA_ARCHS = ("auto", "clover_rpre", "ijepa", "audio_jepa", "eb_jepa", "mjepa", "none")
 # gpu / cpu: LFM3-Omni-2B on llama.cpp; fused: C1 + C2 + C3, the phone's fused runtime on the CPU (fused_engine.py)
 ENGINES = ("gpu", "cpu", "fused")
-WEB_MODELS = ("omni", "clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3")
-MODELS = WEB_MODELS if paths.WEB else ("omni",)
+WEB_MODELS = ("auto", "omni", "clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3")
+MODELS = WEB_MODELS if paths.WEB else ("auto", "omni")
 
 
 def _norm_model(val):
     s = str(val or "").strip()
+    if s.lower() in ("auto", "smart"):
+        return "auto"
     return "omni" if s in ("omni", "lfm3-omni-2b", "lfm3-1.7b") else s
 
 
@@ -159,27 +161,39 @@ def _clean_remote_models(items):
 
 def model_catalog(remote_models=None, base=None):
     """All selectable models for this Studio instance:
-    - On Laptop & Mobile: local LFM3-Omni-2B is always first and the default; on owner devices (or when unlocked),
-      the 3 models hosted on k3 follow; then any user-added remote models.
-    - On Web (k3): the 3 models hosted on k3, plus any user-added remote models."""
+    - Auto (Smart): smartly switches between the 4 models based on what question is asked.
+    - On Laptop & Mobile: local LFM3-Omni-2B + all 4 models hosted on k3 + any user-added remote models.
+    - On Web (k3): all 4 models hosted on k3 + any user-added remote models."""
     import k3_host_engine
     base_dir = Path(base) if base else (Path(S.args.base) if S.args else None)
     rm = _clean_remote_models(
         remote_models if remote_models is not None else ((S.settings.get().get("remote_models") or []) if S.settings else [])
     )
+    auto_entry = {
+        "id": "auto",
+        "name": "Auto (Smart)",
+        "badge": "Smart",
+        "desc": "Smartly switches between LFM3-Omni, Clover-35B-A3B, Nemotron 3.5 & Kimi K3.1 Pro on k3 based on your question",
+        "host": "k3",
+        "local": not paths.WEB,
+        "smart": True,
+    }
     if paths.WEB:
-        cat = list(k3_host_engine.owner_k3_models())
+        cat = [auto_entry] + list(k3_host_engine.owner_k3_models())
     else:
         badge = "This phone" if paths.ANDROID else "This laptop"
         dev_name = "this phone" if paths.ANDROID else "this laptop"
-        cat = [{
-            "id": "omni",
-            "name": "LFM3-Omni",
-            "badge": badge,
-            "desc": f"Local · 24-layer Liquid AI Omni on {dev_name} · Text, images, audio, video & speech",
-            "host": "local",
-            "local": True,
-        }]
+        cat = [
+            auto_entry,
+            {
+                "id": "omni",
+                "name": "LFM3-Omni",
+                "badge": badge,
+                "desc": f"Local · 24-layer Liquid AI Omni on {dev_name} · Text, images, audio, video & speech",
+                "host": "local",
+                "local": True,
+            },
+        ]
         if k3_host_engine.is_owner_device(base_dir):
             cat.extend(k3_host_engine.owner_k3_models())
     seen = {x["id"] for x in cat}
@@ -194,7 +208,7 @@ def engine_for(model_key=None):
     import k3_host_engine
     import vault
     m = _norm_model(model_key or (S.settings.get().get("model") if S.settings else "omni"))
-    if m == "omni":
+    if m in ("omni", "auto"):
         return S.omni_engine or S.engine
     if paths.WEB and m in S.k3_engines:
         return S.k3_engines[m]
@@ -269,7 +283,7 @@ class Settings:
         if paths.WEB and saved_m in WEB_MODELS:
             self.data["model"] = saved_m
         elif not paths.WEB and saved_m and (
-            saved_m in ("omni", "k3:omni", "k3:clover-35b-a3b", "k3:nemotron-3.5-super-vl", "k3:kimi-k3")
+            saved_m in ("auto", "omni", "k3:omni", "k3:clover-35b-a3b", "k3:nemotron-3.5-super-vl", "k3:kimi-k3")
             or any(x.get("id") == saved_m for x in self.data["remote_models"])
         ):
             self.data["model"] = saved_m
@@ -1711,18 +1725,36 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
     they say the last answer was not right. docs: documents saved for this message (save_documents)."""
     import clover_cycle as C
     import documents
+    import k3_host_engine
     import lfm3_layers
     import lfm3_native
-    eng = engine_for(body.get("model") if isinstance(body, dict) and body.get("model") else None)
+    req_model_raw = body.get("model") if isinstance(body, dict) and body.get("model") else None
+    req_model = _norm_model(req_model_raw or (S.settings.get().get("model") if S.settings else "omni"))
+    typed = prompt if ask_text is None else ask_text
+    attached = bool((body.get("attached_files") if isinstance(body, dict) else None) or docs)
+    settings = S.settings.get()
+    smart_routed = None
+    is_live_omni = type(S.omni_engine).__name__ == "OmniNative" and not bool(settings.get("c1_inference_only"))
+    if req_model == "auto" or (
+        req_model == "omni"
+        and is_live_omni
+        and bool(body.get("smart_switch", True) if isinstance(body, dict) else True)
+        and k3_host_engine.is_owner_device(Path(S.args.base) if S.args else None)
+    ):
+        sm_id, sm_name, sm_reason = k3_host_engine.select_smart_model_for_turn(
+            typed, media=media, docs=docs, attached=attached, web_mode=paths.WEB
+        )
+        smart_routed = {"model": sm_id, "name": sm_name, "reason": sm_reason}
+        eng = engine_for(sm_id)
+    else:
+        eng = engine_for(req_model_raw)
     if eng is None:
         raise EngineNotReady(S.load.get("error") or f"engine is loading ({S.load.get('step')})")
     omni = getattr(eng, "inputs", None) is not None
     hist = lfm3_history(sid, body.get("history"))
     sampling = body.get("sampling") if body.get("sampling") in ("general", "math", "greedy") else "general"
-    settings = S.settings.get()
     on = settings["layers"]
     ws = S.workspaces.active() if S.workspaces else None
-    typed = prompt if ask_text is None else ask_text
     want_recall = (on["recall"] or lfm3_layers.needs_recall(typed)) and S.memidx is not None
     layers = (tuple(k for k in ("memory", "ontology", "compiler", "ncm") if on[k]) + (("workspace",) if ws else ())
               + (("records",) if S.repo else ()) + (("recall",) if want_recall else ()))
@@ -1734,7 +1766,6 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
             (desc_e.get("layers") or [""])[0] if isinstance(desc_e.get("layers"), list) else ""
         )
     rt = laptop_runtime()
-    attached = bool(body.get("attached_files") or docs)
     ppl_growth = []
     if rt.personal is not None:  # what this message shows about the last answer, before it is read
         last = C.last_exchange(hist) if hist and not media and not attached else None
@@ -1859,7 +1890,11 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                                      allow=[str(x) for x in body.get("allow_once") or []])
                 only, tools_on = [], False
             else:
-                emit(dict(frame.layer(), type="semantics"))
+                if smart_routed is not None:
+                    note_sm = f"Smart Switch → {smart_routed['name']} ({smart_routed['reason']})"
+                    if note_sm not in frame.notes:
+                        frame.notes.append(note_sm)
+                emit(dict(frame.layer(), type="semantics", **(dict(smart_routed=smart_routed) if smart_routed else {})))
                 emit({"type": "tools", "offered": only if only is not None else ("all" if tools_on else []),
                       "mode": settings["tools"]})
                 # a message asking for a tool is not a question about Clover's knowledge: the ontology layer matched
@@ -2033,6 +2068,8 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
         S.memidx.wake()
     m_id = getattr(eng, "model_key", None) or MODEL_ID
     res.update(session_id=sid, model=m_id, mode="lfm3", wall_ms=round((time.perf_counter() - t0) * 1000.0, 1))
+    if smart_routed is not None:
+        res["smart_routed"] = smart_routed
     try:
         import device_actions
         c2_l = next((x for x in (res.get("layers") or []) if x.get("layer") == "c2_hybridagent"), {})

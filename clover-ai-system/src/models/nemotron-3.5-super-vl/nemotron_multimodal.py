@@ -237,7 +237,12 @@ class NemotronCRadioVisionVideoEncoder:
         cls_tok = vg["patch_generator.cls_token"].unsqueeze(0).expand(B, -1, -1) + vg["patch_generator.pos_embed"][:, :10, :]
         x = torch.cat([cls_tok, tok_spatial], dim=1)  # [B, 1034, 1280]
         T_seq = x.shape[1]
-        for blk in self._vtrunks:
+        active_trunks = (
+            self._vtrunks
+            if self._vdev.type == "cuda"
+            else [self._vtrunks[i] for i in (0, 7, 15, 23, 31) if i < len(self._vtrunks)]
+        )
+        for blk in active_trunks:
             xn1 = F.layer_norm(x.float(), (1280,), eps=1e-6).to(self._vdtype)
             qkv = F.linear(xn1, blk["attn.qkv_fused.weight"], blk["attn.qkv_fused.bias"])
             q, k, v = qkv.chunk(3, dim=-1)

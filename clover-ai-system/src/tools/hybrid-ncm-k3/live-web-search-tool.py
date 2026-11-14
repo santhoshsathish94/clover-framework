@@ -18,13 +18,16 @@ class LiveWebSearchTool:
     def trigger_tag(self) -> str:
         return "search"
 
-    def fetch_url_content(self, url: str, max_chars: int = 1600) -> str:
-        """Fetches and extracts readable text from a live HTTP/HTTPS URL (including automatic conversion
-        of GitHub `/blob/` links to `raw.githubusercontent.com` and clean HTML-to-text extraction for web pages)."""
+    def fetch_url_content(self, url: str, max_chars: int = 1600, typed=()) -> str:
+        """Readable text of a live http/https page, read on this device by page_fetch: public addresses only unless the
+        user typed the host, robots.txt honoured when Clover reads on its own, with the site and date for a citation.
+        GitHub `/blob/` links are read from `raw.githubusercontent.com`. typed: page_fetch.typed_hosts() of the user's
+        message."""
+        import page_fetch
         u = (url or "").strip().rstrip(".,;)>\"'")
         if not u:
             return ""
-        if not u.startswith(("http://", "https://")):
+        if not re.match(r"https?://", u, re.I):
             u = "https://" + u
 
         fetch_target = u
@@ -35,67 +38,23 @@ class LiveWebSearchTool:
             fetch_target = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path_part}"
 
         try:
-            req = urllib.request.Request(fetch_target, headers={"User-Agent": self.user_agent})
-            with urllib.request.urlopen(req, timeout=10) as r:
-                ctype = (r.headers.get("Content-Type") or "").lower()
-                raw_bytes = r.read(350_000)
-            body = raw_bytes.decode("utf-8", errors="ignore")
-        except Exception as e:
+            page = page_fetch.read_page(fetch_target, typed=typed, max_chars=max_chars)
+        except page_fetch.FetchError as e:
             return f"[URL Fetch Error for {u}: {e}]"
-
-        # If raw markdown / plain text / code (e.g. raw.githubusercontent.com or .md / .txt / .py)
-        if "text/html" not in ctype and not body.lstrip().lower().startswith(("<!doctype html", "<html")):
-            lines = []
-            for ln in body.splitlines():
-                s = ln.strip()
-                if not s or s in ("---", "***"):
-                    continue
-                s = re.sub(r"^#+\s*", "", s)
-                s = re.sub(r"\*\*([^*]+)\*\*", r"\1", s)
-                lines.append(s)
-            cleaned_md = "\n".join(lines)[:max_chars]
-            return f"[Live Content from {u}]:\n{cleaned_md}"
-
-        # Parse HTML page into clean headings + paragraphs + bullet items
-        title_m = re.search(r"<title[^>]*>(.*?)</title>", body, flags=re.IGNORECASE | re.DOTALL)
-        page_title = html.unescape(re.sub(r"<[^>]+>", "", title_m.group(1)).strip()) if title_m else u
-        body_clean = re.sub(r"<(script|style|svg|noscript|header|footer|nav)[^>]*>[\s\S]*?</\1>", " ", body, flags=re.IGNORECASE)
-        blocks = []
-        for m_blk in re.finditer(r"<(h1|h2|h3|p|li|dt|dd)[^>]*>([\s\S]*?)</\1>", body_clean, flags=re.IGNORECASE):
-            tag = m_blk.group(1).lower()
-            inner = html.unescape(re.sub(r"<[^>]+>", " ", m_blk.group(2)))
-            inner = " ".join(inner.split()).strip()
-            if len(inner) < 4:
-                continue
-            if tag in ("h1", "h2", "h3"):
-                blocks.append(f"\n{inner}:")
-            elif tag == "li":
-                blocks.append(f"• {inner}")
-            else:
-                blocks.append(inner)
-        if not blocks:
-            plain = html.unescape(re.sub(r"<[^>]+>", " ", body_clean))
-            blocks = [" ".join(plain.split())]
-        extracted = "\n".join(blocks).strip()[:max_chars]
-        return f"[Live Webpage: {page_title} — Link: {u}]\n{extracted}"
+        return page_fetch.cite_text(page, link=u if fetch_target != u else None)
 
     def _search_arxiv(self, query: str, max_items: int = 4) -> list[str]:
-        """Queries the live arXiv API for research papers matching `query`."""
-        q_low = query.lower()
-        wants_latest = any(k in q_low for k in ("latest", "recent", "newest", "new "))
-        is_ai = any(k in q_low for k in ("ai", "artificial intelligence", "llm", "language model", "foundation model", "agent", "neural", "transformer"))
-        clean_q = re.sub(r"\b(can you|find|relevant|research|on|recent|latest|papers|paper|about|search|for|the|web|online)\b", " ", q_low)
-        words = [w for w in re.findall(r"[a-z0-9]+", clean_q) if len(w) >= 2]
-        if words:
-            kw_expr = " AND ".join(f"all:{w}" for w in words[:5])
-            q_expr = f"(cat:cs.AI OR cat:cs.CL OR cat:cs.LG) AND ({kw_expr})" if is_ai else kw_expr
+        """Queries the live arXiv API for recent research papers matching `query`."""
+        clean_q = re.sub(r"\b(can you|find|relevant|research|on|recent|latest|papers|about|search|for|the)\b", " ", query.lower())
+        clean_q = " ".join(clean_q.split()).strip() or query.strip()
+        if any(k in clean_q for k in ("ai", "artificial intelligence", "llm", "language model", "agent")):
+            q_expr = f'(cat:cs.AI OR cat:cs.CL OR cat:cs.LG) AND all:"{clean_q}"'
         else:
-            q_expr = f"all:{query.strip()}"
-        sort_by = "submittedDate" if wants_latest else "relevance"
+            q_expr = f"all:{clean_q}"
         url = (
             "http://export.arxiv.org/api/query?search_query="
             + urllib.parse.quote(q_expr)
-            + f"&sortBy={sort_by}&sortOrder=descending&max_results={max_items}"
+            + f"&sortBy=submittedDate&sortOrder=descending&max_results={max_items}"
         )
         out = []
         try:
@@ -147,8 +106,9 @@ class LiveWebSearchTool:
                 data = json.loads(r.read().decode("utf-8", errors="ignore"))
             for item in data.get("query", {}).get("search", [])[:max_items]:
                 title = item.get("title", "")
-                snip = re.sub(r"<[^>]+>", "", item.get("snippet", ""))
-                snip = html.unescape(" ".join(snip.split()))
+                raw_snip = re.sub(r"<[^>]+>", "", item.get("snippet", ""))
+                search_snip = html.unescape(" ".join(raw_snip.split()))
+                snip = search_snip
                 wiki_url = "https://en.wikipedia.org/wiki/" + urllib.parse.quote(title.replace(" ", "_"))
                 try:
                     sum_url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + urllib.parse.quote(title.replace(" ", "_"))
@@ -167,18 +127,17 @@ class LiveWebSearchTool:
                                     s_item += "."
                             if not s_item:
                                 continue
-                            if kept_sents and cur_chars + len(s_item) > 420:
+                            if kept_sents and cur_chars + len(s_item) > 360:
                                 break
                             kept_sents.append(s_item)
                             cur_chars += len(s_item)
-                            if len(kept_sents) >= 3:
+                            if len(kept_sents) >= 2:
                                 break
-                        if kept_sents:
-                            snip = " ".join(kept_sents)
-                        elif len(extract_txt) > 320:
-                            snip = extract_txt[:317].rsplit(" ", 1)[0].rstrip(" ,;(") + "."
+                        sum_txt = " ".join(kept_sents) if kept_sents else extract_txt[:300]
+                        if search_snip and search_snip[:40].lower() not in sum_txt.lower():
+                            snip = f"{search_snip} ... {sum_txt}"
                         else:
-                            snip = extract_txt
+                            snip = sum_txt
                 except Exception:
                     pass
                 out.append(f"{title} ({wiki_url}): {snip}")
@@ -186,8 +145,84 @@ class LiveWebSearchTool:
             pass
         return out
 
+    def _search_web(self, query: str, max_items: int = 4) -> list[dict]:
+        """Queries live full-web search (Yahoo Search HTML + Bing Web RSS fallback) and extracts real destination URLs,
+        page titles, and text snippets without requiring an API key."""
+        clean_q = re.sub(
+            r"^\s*(?:can you\s+|please\s+|do\s+a?\s*)?(?:google\s+search|search\s+google|search\s+the\s+web|search|find|look\s+up|google)\s*(?:for|on|about)?\s*",
+            "",
+            query.strip(),
+            flags=re.IGNORECASE,
+        ).strip() or query.strip()
+        browser_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+        out = []
+        seen_urls = set()
+
+        # 1. Yahoo Search HTML (organic web results across the entire internet with real destination URLs in /RU=.../RK=)
+        try:
+            y_url = "https://search.yahoo.com/search?p=" + urllib.parse.quote(clean_q)
+            req = urllib.request.Request(
+                y_url,
+                headers={"User-Agent": browser_ua, "Accept": "text/html", "Accept-Language": "en-US,en;q=0.9"},
+            )
+            with urllib.request.urlopen(req, timeout=8) as r:
+                page = r.read(1_500_000).decode("utf-8", errors="ignore")
+            rx = re.compile(
+                r'<a[^>]*href="([^"]+)"[^>]*>(?:(?!<a\b)[\s\S])*?<h3[^>]*class="[^"]*\btitle\b[^"]*"[^>]*>([\s\S]*?)</h3></a>'
+                r'[\s\S]{0,220}?<div[^>]*class="[^"]*\bcompText\b[^"]*"[^>]*>([\s\S]*?)</div>',
+                re.I,
+            )
+            for m in rx.finditer(page):
+                raw_u, raw_t, raw_s = m.group(1), m.group(2), m.group(3)
+                ru = re.search(r"/RU=([^/]+)/RK=", raw_u)
+                u = urllib.parse.unquote(ru.group(1)) if ru else html.unescape(raw_u).strip()
+                if not u.startswith("http") or "yahoo.com/search" in u or "yahoo.com/scout" in u or "bing.com/aclick" in u:
+                    continue
+                u_norm = u.rstrip("/").lower()
+                if u_norm in seen_urls:
+                    continue
+                t_clean = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", raw_t)).split())
+                s_clean = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", raw_s)).split())
+                if t_clean and s_clean:
+                    seen_urls.add(u_norm)
+                    out.append({"title": t_clean, "url": u, "snippet": s_clean[:600]})
+                if len(out) >= max_items:
+                    return out
+        except Exception:
+            pass
+
+        # 2. Bing Web RSS fallback (keep only results matching at least max(2, len(q_terms) - 1) query terms)
+        q_terms = {w.lower() for w in re.findall(r"\d+\.\d+|[A-Za-z0-9]{2,}", clean_q)}
+        min_match = (max(2, min(3, len(q_terms) - 1)) if len(q_terms) >= 3 else len(q_terms)) if q_terms else 0
+        try:
+            b_url = "https://www.bing.com/search?q=" + urllib.parse.quote(clean_q) + "&format=rss"
+            req_b = urllib.request.Request(b_url, headers={"User-Agent": browser_ua})
+            with urllib.request.urlopen(req_b, timeout=6) as rb:
+                b_root = ET.fromstring(rb.read(1_000_000))
+            for it in b_root.findall(".//item"):
+                t_clean = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", it.findtext("title") or "")).split())
+                u = (it.findtext("link") or "").strip()
+                s_clean = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", it.findtext("description") or "")).split())
+                u_norm = u.rstrip("/").lower()
+                hay = f"{t_clean} {s_clean}".lower()
+                matched = sum(1 for qt in q_terms if qt in hay)
+                if t_clean and s_clean and u.startswith("http") and u_norm not in seen_urls and matched >= min_match:
+                    seen_urls.add(u_norm)
+                    out.append({"title": t_clean, "url": u, "snippet": s_clean[:600]})
+                if len(out) >= max_items:
+                    break
+        except Exception:
+            pass
+        return out
+
     def _search_ddg(self, query: str, max_items: int = 3) -> list[str]:
-        """Queries DuckDuckGo HTML search endpoint for live web pages and extracts destination URLs."""
+        """Queries live web search (`_search_web` with DuckDuckGo HTML fallback) and formats destination URLs."""
+        web_rows = self._search_web(query, max_items=max_items)
+        if web_rows:
+            return [
+                f"[Web: {r['title']} — Link: {r['url']}] {r['snippet']}" if r.get("url") else f"[Web: {r['title']}] {r['snippet']}"
+                for r in web_rows[:max_items]
+            ]
         clean_q = re.sub(
             r"^\s*(?:can you\s+|please\s+|do\s+a?\s*)?(?:google\s+search|search\s+google|search\s+the\s+web|search|find|look\s+up|google)\s*(?:for|on|about)?\s*",
             "",

@@ -112,6 +112,21 @@ We tested the live Studio Web App (`http://127.0.0.1:8765/`) across 10 real-worl
    - *Fix*: Clarified the S3 system prompt in `omni_native.py` and filtered echoed snapshot headers in `k3_host_engine.py`.
    - *Verified after fix*: Cleanly describes the receipt banner (`"CLOVERCAFE RECEIPT - TOTAL $42.50"`), red box (`"2x Espresso $8.00"`), green box (`"1x Sandwich $14.50"`), and palette in `12.74 s`.
 
+### 3.5 Cycle 5 — All 4 Models Running Natively on `k3`, Smart Model Switching (`Auto (Smart)`), & App Builds (`Windows` + `Android`)
+Per the human's direction (*"can you buld the current version into the apps so I can test in my actual device"* and *"have all the 4 models run in k3 and have all the models available for me in the app and it can smartly switch between models based on what the question is asked"*):
+1. **All 4 Models Running Natively on `k3` (`C1 -> C2 -> C3`)**:
+   - Enabled and started `clover-nemotron-k3.service` on `k3` (`127.0.0.1:18082`, backed by `/opt/clover-k3/nemotron-computed/hf-stage` with `libnemotron_cpu_engine.so` 4-bit `experts.4bit.direct` + 32-layer `C-RADIO` `vision-trunk-0..31` + `EVS` video pruning + `AudioMambaBridge`), alongside `LFM3-Omni-2B`, `Clover-35B-A3B`, and `Kimi K3.1 Pro` on `k3`.
+2. **All Models Available Out-of-the-Box + Smart Model Switching (`select_smart_model_for_turn`)**:
+   - Added `Auto (Smart)` (`id: "auto"`) and unlocked all 4 `k3` models (`LFM3-Omni (k3)`, `Clover-35B-A3B`, `Nemotron 3.5`, `Kimi K3.1 Pro`) plus local `LFM3-Omni` in `model_catalog()` ([server.py](../../clover-ai-system/studio/clover/server.py), [k3_host_engine.py](../../clover-ai-system/studio/clover/k3_host_engine.py)).
+   - Implemented `select_smart_model_for_turn()` in `k3_host_engine.py` and wired it into `lfm3_turn()` in `server.py`:
+     - **Images, video, audio & visual layout questions** $\rightarrow$ **`Nemotron 3.5`** (`k3:nemotron-3.5-super-vl`)
+     - **Coding, debugging, algorithms, compound-interest/math proofs & study/research plans** $\rightarrow$ **`Kimi K3.1 Pro`** (`k3:kimi-k3`)
+     - **Comparisons (`X vs Y`), task splitting, coordination, workflows & multi-step synthesis** $\rightarrow$ **`Clover-35B-A3B`** (`k3:clover-35b-a3b`)
+     - **Everyday chat, short writing, quick arithmetic, unit conversion & local device tools** $\rightarrow$ **`LFM3-Omni`** (`omni`)
+3. **Built & Verified Native App Packages (`Windows` & `Android`)**:
+   - **Windows Laptop Installer**: [download/laptop/CloverAIStudio-Setup.exe](../../download/laptop/CloverAIStudio-Setup.exe) (`9,592,280` bytes, `SHA-256: 1ac5091885360d4fcd3eff0f0209fd25de7b4c556eda306928ebcff74ca2603b`, Authenticode Valid) + updated `$HOME\CloverAI` in place.
+   - **Android Phone APK & AAB (`versionCode 20`, `targetSdk 36`, `5.0.6`)**: Built on `k3` (`build_apk.sh phone release`), verified byte-identical `clover.zip` inside `assets/chaquopy/app.imy`, and staged at [download/mobile/CloverAIStudio.apk](../../download/mobile/CloverAIStudio.apk) (`82,639,595` bytes, `SHA-256: 4568fca5d957ed5eaf4c789879e8224dae820393b97a03e7ccab3596e1083d3a`) and `https://api.cloverframework.com/download/mobile/CloverAIStudio.apk`.
+
 ---
 
 ## 4. Growth (Lessons Recorded)

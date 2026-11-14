@@ -81,9 +81,12 @@ _FILLER = {"a", "an", "the", "please", "pls", "again", "so", "ok", "okay", "hey"
            "tell", "can", "could", "would", "you", "ask", "asking", "question", "same", "once", "more"}
 
 _NUM = r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?"
-_UNIT = r"(?:\s+per\s+[A-Za-z]+|\s+(?!x\b|and\b|of\b|is\b|are\b|to\b|or\b|than\b)[A-Za-z][A-Za-z\-]*(?:/[A-Za-z]+)?|/[A-Za-z]+){0,2}"
-_TERM = rf"\(?\s*-?(?:{_NUM}){_UNIT}\s*\)?"
-_ARITH = re.compile(rf"(?<![\w.)\]%])({_TERM}(?:\s*(?:[+\-\u00d7*/\u00f7^]|x(?=\s*\(?\s*\d))\s*{_TERM})+)\s*(=|\u2248)\s*(-?(?:{_NUM}))(?![\w^(]|\.\d|\s*[\^*/\u00d7\u00f7%])")
+# [ \t] not \s: "(1.07)^3\nA = 25,000" was read as "3 A = 25" (2026-11-09)
+_UNIT = r"(?:[ \t]+per[ \t]+[A-Za-z]+|[ \t]+(?!x\b|and\b|of\b|is\b|are\b|to\b|or\b|than\b)[A-Za-z][A-Za-z\-]*(?:/[A-Za-z]+)?|/[A-Za-z]+){0,2}"
+_TERM = rf"\(?[ \t]*-?(?:{_NUM})(?!,\d){_UNIT}[ \t]*\)?"
+_ARITH = re.compile(rf"(?<![\w.)\]%])(?<!\d,)({_TERM}(?:[ \t]*(?:[+\-\u00d7*/\u00f7^]|x(?=[ \t]*\(?[ \t]*\d))[ \t]*{_TERM})+)[ \t]*(?:\n[ \t]*)?(=|\u2248)[ \t]*(-?(?:{_NUM}))(?![\w^(]|\.\d|,\d|[ \t]*[\^*/\u00d7\u00f7%])")
+_ASSIGN = re.compile(r"^[ \t]*(?:[-*\u2022][ \t]*)?([A-Za-z][A-Za-z0-9_]{0,15})[ \t]*(=|\u2248)[ \t]*(.+?)[ \t]*$", re.M)
+_PLAIN_RESULT = re.compile(rf"^(-?(?:{_NUM}))(?![\d.,])(?:[ \t]+[A-Za-z][A-Za-z\-]*){{0,2}}[ \t]*[.,;]?$")
 _BINOPS = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, ast.Div: operator.truediv}
 _ABBREV = re.compile(r"\b(?:Mr|Mrs|Ms|Dr|Prof|St|Jr|Sr|vs|etc|e\.g|i\.e|No|Inc|Ltd|Co|U\.S|U\.K|approx|Fig)\.$|\b[A-Z]\.$")
 
@@ -157,6 +160,22 @@ def direct_arithmetic_value(question):
     return _eval(expr)
 
 
+def direct_arithmetic_answer(question):
+    """'7 * 8 + 3 = 59' for a pure arithmetic question, or None: Clover writes it when the model's draft got the sum
+    wrong, instead of asking the model again (a retry took about 10 s and showed this cycle's wording, 2026-11-10)."""
+    v = direct_arithmetic_value(question)
+    m = _DIRECT_EXPR.match(normalize(question or "").strip())
+    if v is None or not m:
+        return None
+    shown = f"{int(v)}" if float(v).is_integer() else f"{v:g}"
+    return f"{' '.join(m.group(1).split())} = {shown}"
+
+
+def only_arithmetic(findings):
+    """The draft's only problems are arithmetic ones ("you wrote 7 * 8 + 3 = 56, but ...", "the exact value is ...")."""
+    return bool(findings) and all(str(f).startswith("Arithmetic:") for f in findings)
+
+
 def trim_only_value(question, reply):
     """When `question` explicitly asks to return/reply with ONLY a single value (number, year, or code), strips wrapper
     words like 'The archive code is: **CLOVER-7429**' or 'Augusta Ada King — 1815' down to the exact value."""
@@ -191,30 +210,70 @@ def trim_only_value(question, reply):
     return reply
 
 
-def arithmetic_findings(answer):
-    """'a op b = c' statements in the answer whose c is wrong (allowing the rounding the answer shows)."""
+def _applied(applied, name):
+    if applied is not None and name not in applied:
+        applied.append(name)
+
+
+def _is_wrong(true, rhs, sign, expr):
+    """True when the result `rhs` the answer shows for `expr` is wrong, allowing the rounding it shows."""
+    shown = _num(rhs)
+    decimals = len(rhs.split(".")[1]) if "." in rhs else 0
+    diff = abs(true - shown)
+    if sign == "\u2248":
+        return diff > max(0.5 * 10 ** -decimals, abs(true) * 0.01)
+    if float(true).is_integer():
+        return diff > 1e-9 * max(1.0, abs(true))
+    bad = diff >= 0.5 * 10 ** -decimals - 1e-12  # a rounded result is fine only if it is the value rounded as shown
+    whole = all("." not in n for n in re.findall(_NUM, expr))
+    if bad and whole and re.search(r"[/\u00f7]", expr) and shown == math.floor(true):
+        return False  # whole-number division in a counting step (100 / 125 = 0 trailing zeros)
+    return bad
+
+
+def _shown(true, rhs=""):
+    """The true value with two more decimals than the answer showed: '30,626.10, but ... = 30,626.1' hid the error."""
+    if float(true).is_integer():
+        return f"{int(true):,}"
+    decimals = len(rhs.split(".")[1]) if "." in rhs else 0
+    return f"{true:,.{decimals + 2}f}".rstrip("0").rstrip(".")
+
+
+def _chain_findings(text, applied):
+    """A value carried down lines that name it: 'A = 25,000 × 1.225043', then 'A ≈ 28,251.30' (code blocks left out:
+    reassigning a variable there is not a claim)."""
+    out, last = [], {}
+    for m in _ASSIGN.finditer(re.sub(r"```[\s\S]*?```", " ", text)):
+        name, sign, rhs = m.group(1), m.group(2), m.group(3)
+        res = _PLAIN_RESULT.match(rhs)
+        if res is None:
+            v = _eval(rhs) if re.search(r"[+\-\u00d7*/\u00f7^]", rhs) else None
+            last[name] = (rhs, v) if v is not None else None
+            continue
+        prev = last.pop(name, None)
+        if prev is None:
+            continue
+        _applied(applied, "arithmetic")
+        if _is_wrong(prev[1], res.group(1), sign, prev[0]):
+            out.append(f"Arithmetic: you wrote {name} = {prev[0]} and then {name} {sign} {res.group(1)}, but "
+                       f"{prev[0]} = {_shown(prev[1], res.group(1))}.")
+    return out
+
+
+def arithmetic_findings(answer, applied=None):
+    """'a op b = c' statements in the answer whose c is wrong (allowing the rounding the answer shows), and values
+    carried down lines that name them. applied: a list that gets "arithmetic" when a statement was checked."""
     out = []
-    for m in _ARITH.finditer(normalize(answer)):
+    text = normalize(answer)
+    for m in _ARITH.finditer(text):
         expr, sign, rhs = m.group(1), m.group(2), m.group(3)
         true = _eval(expr)
         if true is None:
             continue
-        shown = _num(rhs)
-        decimals = len(rhs.split(".")[1]) if "." in rhs else 0
-        diff = abs(true - shown)
-        if sign == "\u2248":
-            bad = diff > max(0.5 * 10 ** -decimals, abs(true) * 0.01)
-        elif float(true).is_integer():
-            bad = diff > 1e-9 * max(1.0, abs(true))
-        else:  # a rounded result is fine only if it is the value rounded to the decimals shown
-            bad = diff >= 0.5 * 10 ** -decimals - 1e-12
-            whole = all("." not in n for n in re.findall(_NUM, expr))
-            if bad and whole and re.search(r"[/\u00f7]", expr) and shown == math.floor(true):
-                bad = False  # whole-number division in a counting step (100 / 125 = 0 trailing zeros)
-        if bad:
-            good = f"{true:,.6g}" if not float(true).is_integer() else f"{int(true):,}"
-            out.append(f"Arithmetic: you wrote {m.group(0).strip()}, but {expr.strip()} = {good}.")
-    return out[:4]
+        _applied(applied, "arithmetic")
+        if _is_wrong(true, rhs, sign, expr):
+            out.append(f"Arithmetic: you wrote {' '.join(m.group(0).split())}, but {expr.strip()} = {_shown(true, rhs)}.")
+    return (out + _chain_findings(text, applied))[:4]
 
 
 def _sentences(text):
@@ -246,39 +305,45 @@ def _json_candidate(answer):
 _WORDNUM = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
 
 
-def format_findings(question, answer):
-    """Checks of the form the question explicitly asks for."""
+def format_findings(question, answer, applied=None):
+    """Checks of the form the question explicitly asks for. applied: a list that gets "requested form" when one ran."""
     q, a, out = question or "", answer or "", []
     if re.search(r"\b(?:in|as|with)\s+(?:one|a\s+single)\s+(?:clear\s+|short\s+|concise\s+)?sentence\b|"
                  r"\bone\s+(?:clear\s+|short\s+|grammatical\s+)?sentence\b", q, re.I):
+        _applied(applied, "requested form")
         n = len(_sentences(a))
         if n > 1:
             out.append(f"Form: the question asks for one sentence; your answer has {n}.")
     m_sent = re.search(r"\b(?:in|with|as|exactly)\s+(\d+|" + "|".join(_WORDNUM) + r")\s+(?:clear\s+|short\s+|concise\s+)?sentences\b", q, re.I)
     if m_sent:
+        _applied(applied, "requested form")
         want_s = int(m_sent.group(1)) if m_sent.group(1).isdigit() else _WORDNUM[m_sent.group(1).lower()]
         n_s = len(_sentences(a))
         if n_s != want_s:
             out.append(f"Form: the question asks for {want_s} sentences; your answer has {n_s}.")
     m = re.search(r"\b(\d+|" + "|".join(_WORDNUM) + r")\s+(?:bullet(?:\s+point)?s|bullets)\b", q, re.I)
     if m:
+        _applied(applied, "requested form")
         want = int(m.group(1)) if m.group(1).isdigit() else _WORDNUM[m.group(1).lower()]
         got = len(re.findall(r"^\s*(?:[-*\u2022]|\d+[.)])\s+\S", a, re.M))
         if got != want:
             out.append(f"Form: the question asks for {want} bullets; your answer has {got}.")
     m = re.search(r"\b(?:in\s+)?(under|fewer\s+than|at\s+most|no\s+more\s+than|up\s+to)\s+(\d+)\s+words\b", q, re.I)
     if m:
+        _applied(applied, "requested form")
         limit = int(m.group(2)) - (1 if m.group(1).lower().startswith(("under", "fewer")) else 0)
         words = len(re.findall(r"\b\w[\w'\-]*\b", re.sub(r"```[\s\S]*?```", " ", a)))
         if words > limit:
             out.append(f"Form: the question allows at most {limit} words; your answer has {words}.")
     m_ex = re.search(r"\b(?:in\s+)?exactly\s+(\d+|" + "|".join(_WORDNUM) + r")\s+words\b", q, re.I)
     if m_ex:
+        _applied(applied, "requested form")
         want_w = int(m_ex.group(1)) if m_ex.group(1).isdigit() else _WORDNUM[m_ex.group(1).lower()]
         words = len(re.findall(r"\b\w[\w'\-]*\b", re.sub(r"```[\s\S]*?```", " ", a)))
         if words != want_w:
             out.append(f"Form: the question asks for exactly {want_w} words; your answer has {words}.")
     if re.search(r"\b(?:in|as|valid|return|output|respond\s+with|give)\s+(?:a\s+|an\s+|the\s+)?(?:valid\s+)?json\b", q, re.I):
+        _applied(applied, "requested form")
         cand = _json_candidate(a)
         if cand is None:
             out.append("Form: the question asks for JSON; your answer contains none.")
@@ -288,6 +353,8 @@ def format_findings(question, answer):
             except ValueError as exc:
                 out.append(f"Form: the JSON in your answer does not parse ({exc}).")
     m = re.search(r"\bend\s+(?:your|the)\s+(?:response|answer)\s+with\s+(#+)\s*<\s*number\s*>", q, re.I)
+    if m:
+        _applied(applied, "requested form")
     if m and not re.search(re.escape(m.group(1)) + r"\s*-?\$?[\d,]+(?:\.\d+)?\s*$", a.strip()):
         out.append(f"Form: the question asks you to end with '{m.group(1)} <number>'; your answer does not.")
     m = re.search(r"\bround(?:ed)?\s+(?:it\s+|your\s+answer\s+|the\s+answer\s+)?to\s+the\s+nearest\s+"
@@ -296,6 +363,8 @@ def format_findings(question, answer):
         unit = m.group(1).lower()
         fin = _final_number_text(a)
         if fin is not None:
+            _applied(applied, "requested form")
+
             def ok(s):
                 v = _num(s)
                 dec = len(s.split(".")[1]) if "." in s else 0
@@ -321,9 +390,57 @@ def _final_number_text(text):
     return nums[-1] if nums else None
 
 
-def outcome_findings(question, answer):
-    """What the deterministic Outcome checks found in `answer` for `question` (empty: nothing found)."""
-    return arithmetic_findings(answer) + format_findings(question, answer)
+def parse_compound_interest(question):
+    """Extract `(P, r_pct, n_per_year, years, freq_word)` from a compound-interest question, or None."""
+    q = question or ""
+    m_freq = re.search(r"\bcompounded\s+(annually|semi[\s-]?annually|quarterly|monthly|daily)\b", q, re.I)
+    if not m_freq:
+        return None
+    m_p = re.search(r"[$\u20ac\u00a3\u20b9]\s*(\d[\d,]*(?:\.\d+)?)|\b(?:invest|principal|deposit|borrow)\s+(?:of\s+)?(\d[\d,]*(?:\.\d+)?)", q, re.I)
+    m_r = re.search(r"(\d+(?:\.\d+)?)\s*%", q)
+    m_t = re.search(r"\bfor\s+(\d+(?:\.\d+)?)\s+years?\b", q, re.I)
+    if not (m_p and m_r and m_t):
+        return None
+    p_val = _num(m_p.group(1) or m_p.group(2))
+    r_pct = float(m_r.group(1))
+    years = float(m_t.group(1))
+    fw = m_freq.group(1).lower().replace("-", "").replace(" ", "")
+    n_map = {"annually": 1, "semiannually": 2, "quarterly": 4, "monthly": 12, "daily": 365}
+    n_yr = n_map.get(fw, 1)
+    return p_val, r_pct, n_yr, years, m_freq.group(1).lower()
+
+
+def compound_interest_findings(question, answer, applied=None):
+    parsed = parse_compound_interest(question)
+    if not parsed:
+        return []
+    P, r_pct, n_yr, years, freq_word = parsed
+    _applied(applied, "arithmetic")
+    final_amt = round(P * ((1.0 + (r_pct / 100.0) / n_yr) ** (n_yr * years)), 2)
+    interest_amt = round(final_amt - P, 2)
+    ans_nums = [_num(m.group(0)) for m in re.finditer(r"\d[\d,]*(?:\.\d+)?", answer or "")]
+    has_final = any(abs(v - final_amt) <= 0.02 for v in ans_nums)
+    asks_interest = bool(re.search(r"\btotal\s+interest|\binterest\s+earned\b", question or "", re.I))
+    has_interest = (not asks_interest) or any(abs(v - interest_amt) <= 0.02 for v in ans_nums)
+    if has_final and has_interest:
+        return []
+    return [
+        f"Arithmetic: for ${P:,.2f} at {r_pct:g}% compounded {freq_word} for {years:g} years, "
+        f"the exact final amount is ${final_amt:,.2f} and the total interest earned is ${interest_amt:,.2f}."
+    ]
+
+
+def outcome_findings(question, answer, applied=None):
+    """What the deterministic Outcome checks found in `answer` for `question` (empty: nothing found, which is not the
+    same as checked: `applied` gets the checks that ran)."""
+    return arithmetic_findings(answer, applied) + compound_interest_findings(question, answer, applied) + format_findings(question, answer, applied)
+
+
+def outcome_label(checks, cycles=1):
+    """The Outcome stage's words when no finding is left: the checks that ran on the answer, or that none applies."""
+    if not checks:
+        return "No automatic check applies to this answer"
+    return f"Checked: {', '.join(checks)} (passed" + (f" in {cycles} Clover cycles)" if cycles > 1 else ")")
 
 
 # ---------- one final answer: a second, independent solution compared by code ----------
@@ -766,9 +883,88 @@ AUTO_CYCLE_FIX = (
 )
 
 
+def decompose_task_todos(question: str, offered_tools=None) -> list[dict]:
+    """Break a user request into structured, actionable task todo items (`id`, `title`, `status`) following the
+    Clover operating cycle."""
+    q = str(question or "").strip()
+    tools_list = [str(t) for t in (offered_tools or ()) if t and t != "manage_todo_list"]
+    explicit_steps = []
+    for m in re.finditer(r"(?:^|\n)\s*(?:\d+[.)]|[-*•]|step\s+\d+[:.)])\s+([^\n]{4,120})", q, re.I):
+        item = " ".join(m.group(1).split()).rstrip(".;,")
+        if item and item not in explicit_steps:
+            explicit_steps.append(item[:90])
+    if len(explicit_steps) < 2 and re.search(r"\b(?:first|1\))\b[\s\S]+?\b(?:then|second|next|2\)|finally)\b", q, re.I):
+        parts = re.split(r"(?:[,;.]|\band\b)\s*(?=(?:first|second|third|then|next|after\s+that|finally)\b)", q, flags=re.I)
+        for p in parts:
+            cl = re.sub(r"^(?:first|second|third|then|next|after\s+that|finally)\s*[,:]?\s*", "", p.strip(), flags=re.I)
+            cl = " ".join(cl.split()).rstrip(".;,")
+            if len(cl) >= 6 and cl not in explicit_steps:
+                explicit_steps.append(cl[:90])
+    q_short = " ".join(q.split())[:68] or "user request"
+    todos = [
+        {
+            "id": 1,
+            "title": "Read context files, memory & task constraints",
+            "status": "not-started",
+        }
+    ]
+    if len(explicit_steps) >= 2:
+        for step_txt in explicit_steps[:5]:
+            todos.append({
+                "id": len(todos) + 1,
+                "title": step_txt[0].upper() + step_txt[1:] if step_txt else "Execute step",
+                "status": "not-started",
+            })
+    else:
+        exec_title = (
+            f"Run tools ({', '.join(tools_list[:3])}) & build solution"
+            if tools_list
+            else f"Solve & draft response ({q_short})"
+        )
+        todos.append({
+            "id": 2,
+            "title": exec_title[:90],
+            "status": "not-started",
+        })
+    todos.append({
+        "id": len(todos) + 1,
+        "title": "Verify outcome against reality & update context/growth",
+        "status": "not-started",
+    })
+    return todos
+
+
+def normalize_todo_list(raw_items) -> list[dict]:
+    """Normalize a list of todo dicts (`id`, `title`, `status` in `not-started | in-progress | completed`), ensuring
+    at most ONE item is `in-progress` at a time."""
+    if not isinstance(raw_items, list):
+        return []
+    out = []
+    seen_in_progress = False
+    for idx, it in enumerate(raw_items[:20], start=1):
+        if not isinstance(it, dict):
+            continue
+        title = " ".join(str(it.get("title") or it.get("text") or it.get("step") or f"Step {idx}").split())[:120]
+        if not title:
+            continue
+        st = str(it.get("status") or "not-started").strip().lower().replace("_", "-")
+        if st not in ("not-started", "in-progress", "completed"):
+            st = "completed" if st in ("done", "complete", "finished") else (
+                "in-progress" if st in ("active", "running", "working", "doing") else "not-started"
+            )
+        if st == "in-progress":
+            if seen_in_progress:
+                st = "not-started"
+            else:
+                seen_in_progress = True
+        out.append({"id": int(it.get("id") or idx), "title": title, "status": st})
+    return out
+
+
 class OperatingCyclePlan:
-    """Tracks the 5-Stage Clover Operating Cycle (`Context -> Direction -> Execution -> Outcome -> Growth`) step-by-step
-    during a turn and emits structured `operating_cycle` SSE events so the user sees each stage transition in real time."""
+    """Tracks the 5-Stage Clover Operating Cycle (`Context -> Direction -> Execution -> Outcome -> Growth`) AND the
+    per-turn actionable Task Todo List (`self.todos`) step-by-step during a turn, emitting structured `operating_cycle`
+    and `todo_list` SSE events in real time."""
 
     STAGE_ORDER = ("context", "direction", "execution", "outcome", "growth")
     STAGE_TITLES = {
@@ -779,10 +975,11 @@ class OperatingCyclePlan:
         "growth": "5. Growth",
     }
 
-    def __init__(self, emit_fn=None, model_name="LFM3-Omni-2B", query="", offered_tools=None):
+    def __init__(self, emit_fn=None, model_name="LFM3-Omni-2B", query="", offered_tools=None, persist_todos_fn=None):
         self.emit = emit_fn or (lambda e: None)
         self.model_name = model_name or "LFM3-Omni-2B"
         self.cycle = 1
+        self.persist_todos_fn = persist_todos_fn
         q_short = " ".join(str(query or "").split())[:90]
         tools_list = list(offered_tools) if isinstance(offered_tools, (list, tuple, set)) else []
         t_desc = (", ".join(tools_list[:4])) if tools_list else "direct model reasoning"
@@ -819,6 +1016,79 @@ class OperatingCyclePlan:
             },
         }
         self._q_short = q_short
+        self.todos = decompose_task_todos(query, offered_tools=tools_list)
+        self._custom_todos = False
+
+    def todos_markdown(self) -> str:
+        lines = ["# Clover Task Todo List", ""]
+        for it in self.todos:
+            mark = "x" if it["status"] == "completed" else ("~" if it["status"] == "in-progress" else " ")
+            lines.append(f"- [{mark}] {it['id']}. {it['title']} ({it['status']})")
+        return "\n".join(lines) + "\n"
+
+    def todo_snapshot(self):
+        return {
+            "type": "todo_list",
+            "cycle": self.cycle,
+            "items": [dict(x) for x in self.todos],
+        }
+
+    def _emit_todos(self):
+        snap = self.todo_snapshot()
+        self.emit(snap)
+        if callable(self.persist_todos_fn):
+            try:
+                self.persist_todos_fn(self.todos, self.todos_markdown())
+            except Exception:
+                pass
+        return snap
+
+    def set_todos(self, raw_items, custom=True):
+        norm = normalize_todo_list(raw_items)
+        if not norm:
+            return self.todo_snapshot()
+        self.todos = norm
+        if custom:
+            self._custom_todos = True
+        return self._emit_todos()
+
+    def _auto_advance_todo(self, stage_key, completed_all=False):
+        if not self.todos:
+            return
+        if completed_all:
+            for it in self.todos:
+                it["status"] = "completed"
+            self._emit_todos()
+            return
+        if self._custom_todos:
+            return
+        n = len(self.todos)
+        if stage_key in ("context", "direction"):
+            self.todos[0]["status"] = "in-progress"
+            for j in range(1, n):
+                self.todos[j]["status"] = "not-started"
+        elif stage_key == "execution":
+            self.todos[0]["status"] = "completed"
+            for j in range(1, n):
+                self.todos[j]["status"] = "not-started"
+            if n >= 2:
+                self.todos[1]["status"] = "in-progress"
+        elif stage_key in ("outcome", "growth"):
+            for j in range(0, max(1, n - 1)):
+                self.todos[j]["status"] = "completed"
+            self.todos[-1]["status"] = "in-progress"
+        self._emit_todos()
+
+    def advance_execution_step(self, step_note=""):
+        """When multiple execution subtasks exist and a tool finishes, advance to the next middle todo item."""
+        if self._custom_todos or len(self.todos) <= 3:
+            return
+        mid_indices = list(range(1, len(self.todos) - 1))
+        cur_idx = next((i for i in mid_indices if self.todos[i]["status"] == "in-progress"), None)
+        if cur_idx is not None and cur_idx + 1 < len(self.todos) - 1:
+            self.todos[cur_idx]["status"] = "completed"
+            self.todos[cur_idx + 1]["status"] = "in-progress"
+            self._emit_todos()
 
     def snapshot(self, active_stage=""):
         return {
@@ -827,6 +1097,7 @@ class OperatingCyclePlan:
             "active_stage": active_stage,
             "model": self.model_name,
             "stages": [dict(self.stages[k]) for k in self.STAGE_ORDER],
+            "todos": [dict(x) for x in self.todos],
         }
 
     def start_stage(self, stage_key, detail=None, cycle=None):
@@ -840,6 +1111,7 @@ class OperatingCyclePlan:
                 break
             elif self.stages[k]["status"] == "in-progress":
                 self.stages[k]["status"] = "completed"
+        self._auto_advance_todo(stage_key, completed_all=False)
         self.emit(self.snapshot(active_stage=stage_key))
 
     def complete_stage(self, stage_key, detail=None):
@@ -847,6 +1119,8 @@ class OperatingCyclePlan:
             self.stages[stage_key]["status"] = "completed"
             if detail:
                 self.stages[stage_key]["detail"] = str(detail)[:220]
+        if stage_key == "growth":
+            self._auto_advance_todo("growth", completed_all=True)
         self.emit(self.snapshot(active_stage=stage_key))
 
     def retry_from_context(self, next_cycle, finding_summary=""):
@@ -860,7 +1134,15 @@ class OperatingCyclePlan:
         self.stages["execution"]["detail"] = f"Cycle {self.cycle} Execution: running corrected pass on {self.model_name}"
         self.stages["outcome"]["status"] = "not-started"
         self.stages["growth"]["status"] = "not-started"
+        if not self._custom_todos and len(self.todos) >= 2:
+            self.todos[0]["status"] = "completed"
+            for j in range(1, len(self.todos)):
+                self.todos[j]["status"] = "not-started"
+            self.todos[1]["status"] = "in-progress"
+            self.todos[1]["title"] = f"Cycle {self.cycle} repair: fix Outcome finding ({sum_short[:65]})"
+            self._emit_todos()
         self.emit(self.snapshot(active_stage="execution"))
+
 
 
 def extract_time_examples(question: str) -> list[tuple[str, str]]:
@@ -941,7 +1223,8 @@ def verify_turn_outcome(
       3. Arithmetic equation verification (`arithmetic_findings`) & explicit format constraints (`format_findings`),
          plus exact direct-expression evaluation (`direct_arithmetic_value`).
       4. Unrecovered tool execution failures in `rounds`.
-    Returns `(findings, meta)`. When `findings` is empty, the Outcome is verified and complete.
+    Returns `(findings, meta)`. Empty `findings` means nothing was found; `meta["checks"]` names the checks that ran on
+    this answer (empty: no automatic check applies, so the answer is not verified).
     """
     q = (question or "").strip()
     a = (answer or "").strip()
@@ -953,7 +1236,9 @@ def verify_turn_outcome(
         "compiler_info": None,
         "auto_python_ran": False,
         "python_sandbox_checked": False,
+        "checks": [],
     }
+    checks = meta["checks"]
 
     if not a or a.startswith("(Clover "):
         findings.append("Outcome check: the draft answer was empty or incomplete; write a complete direct answer.")
@@ -964,6 +1249,8 @@ def verify_turn_outcome(
         meta["compiler_info"] = info
         meta["compiler_checked"] = bool(info and info.get("checked"))
         meta["compiler_ok"] = not bool(fb)
+        if meta["compiler_checked"]:
+            _applied(checks, "code compiles")
         if fb:
             findings.append("Code compiler check:\n" + fb.strip()[:600])
         elif meta["compiler_checked"] and execute_python_fn is not None:
@@ -994,6 +1281,8 @@ def verify_turn_outcome(
                     ran = True
                 meta["auto_python_ran"] = bool(ran)
                 meta["python_sandbox_checked"] = bool(ran)
+                if ran:
+                    _applied(checks, "code runs")
                 if ran and not worked:
                     findings.append(f"Code execution check: running your Python code raised an error:\n{str(out).strip()[:500]}")
                 elif ran and worked:
@@ -1019,12 +1308,13 @@ def verify_turn_outcome(
                             "`itertools.permutations` with `0 <= hh < 24 and 0 <= mm < 60` and return `f'{hh:02d}:{mm:02d}'`."
                         )
 
-    af = outcome_findings(q, a)
+    af = outcome_findings(q, a, checks)
     if af:
         findings.extend(af)
 
     exact_v = direct_arithmetic_value(q)
     if exact_v is not None:
+        _applied(checks, "arithmetic")
         got_v = final_answer(q, a)
         if not same(got_v, exact_v):
             shown_v = f"{int(exact_v)}" if float(exact_v).is_integer() else f"{exact_v:g}"
@@ -1037,6 +1327,7 @@ def verify_turn_outcome(
             if not res_txt.startswith(("[Clover permission]", "Not run:")) and not any(
                 rd.get("ran") and rd.get("worked") for rd in rounds_list
             ):
+                _applied(checks, "tool error reported")
                 if not re.search(r"\b(?:error|failed|could not|unable to|did not work|doesn'?t exist|not found)\b", a, re.I):
                     findings.append(
                         f"Tool execution check: `{last_rd.get('tool')}` failed with `{res_txt[:240]}`, "

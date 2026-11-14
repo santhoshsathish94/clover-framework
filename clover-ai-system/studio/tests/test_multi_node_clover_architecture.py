@@ -183,6 +183,29 @@ probe_large = MNC.probe_kimi_rental_node(ram_gib=256.0, free_disk_gib=500.0, c1_
 check("Rejects rental with <= k3 RAM (96 GiB <= 124 GiB)", probe_small["ready_to_commit"] is False)
 check("Approves rental with > k3 RAM (256 GiB > 124 GiB) & sufficient disk & C1/C2/C3 verified", probe_large["ready_to_commit"] is True)
 
+print("\n=== 4. Verify App Model Catalog & Smart Model Switching Across All 4 Models ===")
+import k3_host_engine as K3
+import server as SV
+
+cat_ids = [x["id"] for x in SV.model_catalog(base=BASE_DIR)]
+check(
+    "App model_catalog includes Auto (Smart), local LFM3-Omni, and all 4 k3 models",
+    "auto" in cat_ids
+    and ("omni" in cat_ids)
+    and any(x in cat_ids for x in ("k3:clover-35b-a3b", "clover-35b-a3b"))
+    and any(x in cat_ids for x in ("k3:nemotron-3.5-super-vl", "nemotron-3.5-super-vl"))
+    and any(x in cat_ids for x in ("k3:kimi-k3", "kimi-k3")),
+    str(cat_ids),
+)
+m_simple, _, _ = K3.select_smart_model_for_turn("Write a short polite email to Sarah.")
+m_comp, _, _ = K3.select_smart_model_for_turn("Give me a concise 3-bullet comparison of SQLite vs PostgreSQL.")
+m_code, _, _ = K3.select_smart_model_for_turn("Write a Python function to compute compound interest and prove its time complexity.")
+m_vis, _, _ = K3.select_smart_model_for_turn("What colors are in this image?", media=[{"kind": "image", "file": "a.png"}])
+check("Smart switch routes simple everyday question to LFM3-Omni", m_simple == "omni", m_simple)
+check("Smart switch routes comparison/coordination to Clover-35B-A3B", m_comp == "k3:clover-35b-a3b", m_comp)
+check("Smart switch routes coding/math/proof to Kimi K3.1 Pro", m_code == "k3:kimi-k3", m_code)
+check("Smart switch routes image/video/audio to Nemotron 3.5", m_vis == "k3:nemotron-3.5-super-vl", m_vis)
+
 print(f"\nSUMMARY: {passed} passed, {failed} failed")
 if failed:
     raise SystemExit(1)

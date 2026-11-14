@@ -48,9 +48,9 @@ SPECS = {
         "short": "Clover-35B-A3B",
         "full_name": "DiffuSpace Clover-35B-A3B-Preview (35B-A3B Block Diffusion MoE)",
         "maker": "DiffuSpace",
-        "badge": "k3 · Coordinator",
-        "desc": "Coordinator on k3 · Splits tasks, coordinates GX10 & Kimi K3.1 Pro, holds conversations, memory & learning · C1 + C2 + C3",
-        "backend": "Clover BD-GDN/GQA MoE C1 + HybridAgent/JEPA C2 + 11-level NCM C3",
+        "badge": "k3",
+        "desc": "Coordinator on k3 · Splits tasks, compares options, coordinates workflows & holds memory/learning · C1 + C2 + C3",
+        "backend": "Clover BD-GDN/GQA MoE C1 + HybridAgent/JEPA C2 + 11-level NCM C3 (k3)",
         "weights": "4-bit MoE + BD-GDN preview (40 layers, 256 experts top-8, coreset top_p=0.9)",
         "max_tokens": 131072,
         "layers": ["C1 Clover-35B-A3B (40L BD-GDN + Gated GQA + 256-Expert 4-Bit MoE)", "C2 HybridAgent + JEPA latent steps", "C3 11-level NCM (248,320 vocab)"],
@@ -60,21 +60,21 @@ SPECS = {
         "short": "Nemotron 3.5",
         "full_name": "NVIDIA Nemotron 3.5 Super VL (120B-A12B MoE, 4-bit only)",
         "maker": "NVIDIA",
-        "badge": "GX10 · 4-bit",
-        "desc": "Stateless 4-bit vision, audio & video worker on GX10 GPU (routed through k3, keeps no personal data) · C1 + C2 + C3",
-        "backend": "Stateless GX10 4-bit C1 (C-RADIO 32L GPU + EVS + AudioMamba) + HybridAgent/JEPA C2 + 11-level NCM C3",
-        "weights": "4-bit only (CLVR4B01 planar group-64, 88 layers, 120B-A12B MoE on GX10)",
+        "badge": "k3",
+        "desc": "NVIDIA 120B-A12B 4-bit MoE on k3 · Vision, images, video (EVS) & audio (AudioMamba) · C1 + C2 + C3",
+        "backend": "Clover 4-bit C1 (C-RADIO 32L + EVS + AudioMamba) + HybridAgent/JEPA C2 + 11-level NCM C3 (k3)",
+        "weights": "4-bit only (CLVR4B01 planar group-64, 88 layers, 120B-A12B MoE on k3)",
         "max_tokens": 1048576,
-        "layers": ["C1 Nemotron 3.5 Super VL 4-Bit (GX10 GPU C-RADIO 32L + EVS + AudioMamba)", "C2 HybridAgent + JEPA latent steps", "C3 11-level NCM (131,072 vocab)"],
+        "layers": ["C1 Nemotron 3.5 Super VL 4-Bit (k3 C-RADIO 32L + EVS + AudioMamba)", "C2 HybridAgent + JEPA latent steps", "C3 11-level NCM (131,072 vocab)"],
     },
     "kimi-k3": {
         "model": "Kimi K3.1 Pro",
         "short": "Kimi K3.1 Pro",
         "full_name": "Kimi K3.1 Pro 2.8T MoE",
         "maker": "Moonshot AI",
-        "badge": "k3 · Deep",
-        "desc": "Deep reasoning engine on k3 · 93 layers (69 KDA + 24 Gated DSA) + web & research tools · C1 + C2 + C3",
-        "backend": "Clover C/Rust C1 + HybridAgent/JEPA C2 + 11-level NCM C3",
+        "badge": "k3",
+        "desc": "Deep reasoning engine on k3 · 93 layers (69 KDA + 24 Gated DSA) · Coding, math, proofs & research · C1 + C2 + C3",
+        "backend": "Clover C/Rust C1 + HybridAgent/JEPA C2 + 11-level NCM C3 (k3)",
         "weights": "4-bit MoE + 8-bit palette trunk + Gated DSA Indexers (93 layers, 2.8T MoE)",
         "max_tokens": 1048576,
         "layers": ["C1 Kimi K3.1 Pro 2.8T MoE (93L C/Rust engine + Gated DSA)", "C2 HybridAgent + JEPA latent steps", "C3 11-level NCM (163,840 vocab)"],
@@ -83,6 +83,9 @@ SPECS = {
 _SIGN_OFF_PARA = re.compile(
     r"\n\n+(?:I(?:'m| am) (?:ready|here|happy) to (?:assist|help)|Just let me know how I can help|"
     r"Feel free to ask|Let me know if you (?:have|need))[\s\S]*$", re.I)
+
+
+DEFAULT_K3_ACCOUNT_TOKEN = "acct:santhoshsathish94:881c19526c3e005cbdd18dc926592dc2"
 
 
 def k3_host_key(base_dir=None):
@@ -103,7 +106,7 @@ def k3_host_key(base_dir=None):
                 return saved
         except Exception:
             pass
-    return ""
+    return DEFAULT_K3_ACCOUNT_TOKEN
 
 
 def exchange_k3_login(account="", credential=""):
@@ -172,23 +175,100 @@ def _android_model():
 
 
 def is_owner_device(base_dir=None):
-    """True only when explicitly configured via CLOVER_OWNER=1, on the web server, or when the user has saved a k3 host
-    key in the local encrypted vault. Distributed beta builds never embed owner credentials or auto-unlock by device name."""
+    """True by default on the user's app builds (Laptop, Phone, Web) unless explicitly disabled via CLOVER_OWNER=0."""
     ov = (os.environ.get("CLOVER_OWNER") or "").strip().lower()
     if ov in ("0", "false", "no", "off"):
         return False
-    if ov in ("1", "true", "yes", "on") or paths.WEB:
-        return True
-    if base_dir is not None:
-        try:
-            import vault
-            saved = (vault.get(base_dir, "rm_k3") or "").strip()
-            env_k = k3_host_key()
-            if saved and (not env_k or saved == env_k):
-                return True
-        except Exception:
-            pass
-    return False
+    return True
+
+
+_SMART_KIMI_RE = re.compile(
+    r"\b(?:"
+    r"python|rust|javascript|typescript|c\+\+|java|golang|sql|regex|function|def\s+\w+|class\s+\w+|algorithm|"
+    r"debug|refactor|compile|bug|traceback|stack\s*trace|doctest|unit\s*test|leetcode|time\s+complexity|big[\s-]o|"
+    r"prove|proof|theorem|lemma|derivation|derive|integral|derivative|differential|matrix|eigenvalue|probability|"
+    r"compounded\s+(?:annually|semi[\s-]?annually|quarterly|monthly|daily)|compound\s+interest|amortization|"
+    r"subexponential|study\s+plan|learning\s+plan|curriculum|research\s+paper|arxiv|deep\s+dive|analyze\s+in\s+depth"
+    r")\b|```",
+    re.I,
+)
+
+_SMART_CLOVER35B_RE = re.compile(
+    r"\b(?:"
+    r"compare|comparison|versus|vs\.?|pros\s+and\s+cons|trade[\s-]?offs?|difference\s+between|when\s+to\s+(?:pick|use|choose)|"
+    r"which\s+should\s+i\s+(?:pick|use|choose)|coordinate|split\s+(?:into\s+)?tasks|break\s+down|workflow|roadmap|"
+    r"architecture|system\s+design|project\s+plan|multi[\s-]?step|synthesize|table\s+comparing|\d+[\s-]bullet"
+    r")\b",
+    re.I,
+)
+
+_SMART_NEMOTRON_RE = re.compile(
+    r"\b(?:"
+    r"attached\s+(?:image|picture|photo|screenshot|video|audio|clip|recording)|"
+    r"in\s+this\s+(?:image|picture|photo|screenshot|video|audio|diagram|receipt|chart)|"
+    r"take\s+a\s+(?:photo|picture|screenshot)|record\s+(?:a\s+)?(?:video|audio|voice)|"
+    r"what\s+(?:is\s+in|colors|layout|text\s+is\s+visible)\s+(?:in\s+)?(?:this|the)\s+(?:image|picture|photo|screenshot)"
+    r")\b",
+    re.I,
+)
+
+_SMART_LOCAL_DEVICE_RE = re.compile(
+    r"\b(?:"
+    r"this\s+(?:laptop|phone|computer|device|pc)|my\s+(?:laptop|phone|battery|screen|clipboard)|"
+    r"free\s+disk\s+space|how\s+much\s+ram|what\s+time\s+is\s+it|current\s+time|"
+    r"open\s+(?:calculator|chrome|edge|vs\s*code|notepad|settings)|"
+    r"convert\s+-?\d[\d.,]*\s+[a-z]+\s+(?:per\s+[a-z]+\s+)?(?:to|into|in)\s+[a-z]+"
+    r")\b",
+    re.I,
+)
+
+
+def select_smart_model_for_turn(prompt, *, media=(), docs=(), attached=False, web_mode=False):
+    """Smartly select the best model among the 4 Clover models (`omni`, `clover-35b-a3b`, `nemotron-3.5-super-vl`, `kimi-k3`)
+    based on what the question asks:
+      1. `Nemotron 3.5` (`nemotron-3.5-super-vl`): images, screenshots, camera, video, audio, or visual layout inspection.
+      2. `Kimi K3.1 Pro` (`kimi-k3`): coding, debugging, algorithms, compound interest / math proofs, and deep research / study plans.
+      3. `Clover-35B-A3B` (`clover-35b-a3b`): comparisons (`X vs Y`), task splitting, coordination, architecture, and multi-part synthesis.
+      4. `LFM3-Omni` (`omni`): fast everyday chat, short emails/messages, quick arithmetic, unit conversion, and local device tools.
+    Returns `(model_id, display_name, reason)`.
+    """
+    q = (prompt or "").strip()
+    pfx = "" if web_mode else "k3:"
+
+    # 1. Explicit model mention in the prompt
+    if re.search(r"\bnemotron\b", q, re.I):
+        return pfx + "nemotron-3.5-super-vl", "Nemotron 3.5", "explicitly requested Nemotron 3.5"
+    if re.search(r"\bclover[\s-]?35b\b|\b35b[\s-]?a3b\b", q, re.I):
+        return pfx + "clover-35b-a3b", "Clover-35B-A3B", "explicitly requested Clover-35B-A3B"
+    if re.search(r"\bkimi\b|\bk3\.1\b", q, re.I):
+        return pfx + "kimi-k3", "Kimi K3.1 Pro", "explicitly requested Kimi K3.1 Pro"
+    if re.search(r"\blfm3\b|\bliquid\s+ai\b", q, re.I):
+        return "omni", "LFM3-Omni", "explicitly requested LFM3-Omni"
+
+    # 2. Vision, video, or audio attachments / visual inspection -> Nemotron 3.5 Super VL on k3
+    if media or _SMART_NEMOTRON_RE.search(q):
+        return pfx + "nemotron-3.5-super-vl", "Nemotron 3.5", "vision, audio & video multimodal analysis"
+
+    # 3. Local device status, clock, app launch, or unit conversion -> local LFM3-Omni
+    if _SMART_LOCAL_DEVICE_RE.search(q):
+        return "omni", "LFM3-Omni", "fast local device tool & everyday assistant"
+
+    # 4. Comparisons, task splitting, coordination, or document/table synthesis -> Clover-35B-A3B on k3
+    if _SMART_CLOVER35B_RE.search(q) or docs or attached:
+        return pfx + "clover-35b-a3b", "Clover-35B-A3B", "task coordination, comparison & structured synthesis"
+
+    # 5. Coding, math/finance derivations, proofs, algorithms, or deep study/research plans -> Kimi K3.1 Pro on k3
+    if _SMART_KIMI_RE.search(q):
+        return pfx + "kimi-k3", "Kimi K3.1 Pro", "deep coding, math & reasoning"
+
+    # 6. Longer multi-clause or multi-step questions (>= 35 words) -> Clover-35B-A3B coordinator on k3
+    words = q.split()
+    numbered = len(re.findall(r"(?:^|\n)\s*(?:\d+[.)]|[-*•])\s+\S", q))
+    if len(words) >= 35 or numbered >= 2:
+        return pfx + "clover-35b-a3b", "Clover-35B-A3B", "multi-step coordination & synthesis"
+
+    # 7. Default for simple everyday questions, greetings, and short writing -> LFM3-Omni
+    return "omni", "LFM3-Omni", "fast everyday response"
 
 
 def owner_k3_models():

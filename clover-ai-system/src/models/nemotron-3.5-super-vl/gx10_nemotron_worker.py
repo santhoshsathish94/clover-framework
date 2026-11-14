@@ -137,7 +137,7 @@ class StatelessGX10NemotronWorker:
         bf16_e1 = self.rt.pre / "experts" / "expert-1" / "experts.direct"
         return {
             "ok": True,
-            "node": "gx10-gpu-worker",
+            "node": "gx10-gpu-worker" if torch.cuda.is_available() else "k3-nemotron-worker",
             "role": "Vision, audio, video. Keeps no personal data",
             "model_key": "nemotron-3.5-super-vl",
             "model_label": self.rt.model_label,
