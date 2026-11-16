@@ -663,7 +663,9 @@ def image_tool(sid, cancel, made):
                         f"needs about {image_gen.NEED_FREE_MB / 1024:.1f} GB. Tell the user to close some programs (browser "
                         "tabs, other apps) and ask again. Do not try again now.")
         try:
-            r = gen.generate(a.get("prompt") or "", media_dir(), cancel=cancel)
+            ctx_t = S.turn_ctx.get(sid) or {}
+            seed_img = (int(time.time() * 1000) & 0x7FFFFFFF) if ctx_t.get("retry") else None
+            r = gen.generate(a.get("prompt") or "", media_dir(), seed=seed_img, cancel=cancel)
         except (RuntimeError, ValueError, TypeError) as exc:
             return f"Error: no picture was made: {exc}. Tell the user plainly; do not call generate_image again in this answer."
         made.append(dict(r, prompt=str(a.get("prompt") or "")[:300]))
@@ -1859,11 +1861,17 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
             else (Path(cdir), Path(cdir).name, None) if cdir else (None, "", None))
         eng.tool_tasks = S.tool_tasks
         try:
-            S.turn_ctx[sid] = {"emit": emit, "made": made, "text": typed}
+            S.turn_ctx[sid] = {"emit": emit, "made": made, "text": typed, "retry": bool(retry)}
             tools_on, said = bool(body.get("tools", True)), None
             # trying again where the question or this message asks for a tool (a search): answered again with it
             retry_tools = (lfm3_native.asked_tools(retry["question"]) + lfm3_native.asked_tools(typed)
                            if retry and tools_on else [])
+            if retry and tools_on and not retry_tools and re.search(
+                r"\b(?:Here is (?:the|a) (?:image|picture|different version)|The image is)\b",
+                str(retry.get("previous") or ""),
+                re.I,
+            ):
+                retry_tools = ["generate_image"]
             if tools_on and settings["tools"] == "ask":
                 said = typed
                 if not typed.strip() and any(m["kind"] == "audio" for m in media) and hasattr(eng, "transcribe"):
@@ -1963,11 +1971,12 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                         })
                     except Exception:
                         pass
-                res = eng.run_turn(list(hist), prompt, tools=tools_on, sampling=sampling,
+                eff_prompt = (retry["question"] if (retry and retry.get("question") and retry.get("how") == "said") else prompt)
+                res = eng.run_turn(list(hist), eff_prompt, tools=tools_on, sampling=sampling,
                                    thinking=bool(body.get("thinking", True)), max_new=max_new,
                                    on_event=emit, ask=ask, cancel=cancel, final_on_limit=True, force_answer=True,
                                    allow=[str(x) for x in body.get("allow_once") or []],
-                                   layers=turn_layers, kit=kit, layer_query=prompt, extra_tools=extra, only_tools=only,
+                                   layers=turn_layers, kit=kit, layer_query=eff_prompt, extra_tools=extra, only_tools=only,
                                    **({"media": list(media), "meaning": frame} if omni else {}))
                 for tc in res.get("tool_calls") or ():
                     if tc.get("tool") == "vscode_open" and tc.get("ran"):
@@ -2610,13 +2619,13 @@ class Handler(BaseHTTPRequestHandler):
             if S.token and secrets.compare_digest(got.encode("utf-8"), S.token.encode("utf-8")):
                 self._authed_account = DEFAULT_ALLOWED_ACCOUNTS[0]
                 return True
+            if owner_key and secrets.compare_digest(got.encode("utf-8"), owner_key.encode("utf-8")):
+                self._authed_account = DEFAULT_ALLOWED_ACCOUNTS[0]
+                return True
             if paths.WEB:
                 acct = verify_account_token(got)
                 if acct:
                     self._authed_account = acct
-                    return True
-                if owner_key and secrets.compare_digest(got.encode("utf-8"), owner_key.encode("utf-8")):
-                    self._authed_account = DEFAULT_ALLOWED_ACCOUNTS[0]
                     return True
                 ok_cred, matched_acct, _ = verify_k3_credential(got)
                 if ok_cred:
@@ -3404,11 +3413,20 @@ class Handler(BaseHTTPRequestHandler):
                 for k, v in self._cors_headers().items():
                     self.send_header(k, v)
                 self.end_headers()
-                for ev in S.omni_engine.gpu.chat_stream(chat_body):
-                    self.wfile.write(f"data: {json.dumps(ev, ensure_ascii=False)}\n\n".encode("utf-8"))
+                stream_gen = S.omni_engine.gpu.chat_stream(chat_body)
+                try:
+                    for ev in stream_gen:
+                        self.wfile.write(f"data: {json.dumps(ev, ensure_ascii=False)}\n\n".encode("utf-8"))
+                        self.wfile.flush()
+                    self.wfile.write(b"data: [DONE]\n\n")
                     self.wfile.flush()
-                self.wfile.write(b"data: [DONE]\n\n")
-                self.wfile.flush()
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
+                finally:
+                    try:
+                        stream_gen.close()
+                    except Exception:
+                        pass
                 return None
             if path == "/api/worker/chat":
                 import k3_host_engine

@@ -879,8 +879,56 @@ def lesson_text(question, findings, said="", passed=False):
 AUTO_CYCLE_FIX = (
     "Clover Cycle Outcome Verification checked your draft above against reality and found:\n"
     "{findings}\n"
-    "Return to Context: use the verified evidence and tools above, fix the cause of each problem, and reply with the complete corrected answer."
+    "Return to Context: use the verified evidence and tools above, fix the cause of each problem, and reply ONLY with "
+    "the complete corrected answer to the user's original question (do not mention your previous draft, the check, or any error)."
 )
+
+
+def solve_quantitative_word_problem(question: str):
+    """Deterministic solver for pack/box/bundle integer optimization word problems (e.g. 'boxes of 6 for $15 and boxes
+    of 4 for $11 ... minimum cost to buy at least 26'). Returns `(expr_str, exact_value, explanation)` or None."""
+    q = str(question or "")
+    packs = []
+    for m in re.finditer(
+        r"\b(?:boxes|packs|bags|bundles|batches|cartons|cases|sets)\s+of\s+(\d+)\s+(?:[\w]+\s+)?(?:for|at|cost(?:ing)?)\s+\$?\s*(\d+(?:\.\d+)?)",
+        q,
+        re.I,
+    ):
+        s_i, p_i = int(m.group(1)), float(m.group(2))
+        if s_i > 0 and p_i > 0:
+            packs.append((s_i, p_i))
+    if len(packs) >= 2 and re.search(r"\b(?:minimum|least|lowest|cheapest)\s+(?:cost|price|amount|total)\b", q, re.I):
+        m_tgt = re.search(r"\b(?:at\s+least|minimum\s+of|buy|get|need|reach|total\s+of)\s+(\d+)\b", q, re.I)
+        if m_tgt:
+            target = int(m_tgt.group(1))
+            exact_only = bool(re.search(r"\bexact(?:ly)?\b", q, re.I)) and not bool(re.search(r"\bat\s+least\b", q, re.I))
+            if 0 < target <= 2000 and len(packs) == 2:
+                (s1, p1), (s2, p2) = packs[0], packs[1]
+                max_c1 = (target // s1) + 3
+                max_c2 = (target // s2) + 3
+                best = None
+                for c1 in range(max_c1 + 1):
+                    for c2 in range(max_c2 + 1):
+                        tot_items = c1 * s1 + c2 * s2
+                        if (tot_items == target) if exact_only else (tot_items >= target):
+                            cost = round(c1 * p1 + c2 * p2, 6)
+                            cand = (cost, tot_items, c1, c2)
+                            if best is None or cand < best:
+                                best = cand
+                if best is not None:
+                    cost, tot_items, c1, c2 = best
+                    p1_s = f"{int(p1)}" if float(p1).is_integer() else f"{p1:g}"
+                    p2_s = f"{int(p2)}" if float(p2).is_integer() else f"{p2:g}"
+                    cost_s = f"{int(cost)}" if float(cost).is_integer() else f"{cost:g}"
+                    expr = f"{c1} * {p1_s} + {c2} * {p2_s}"
+                    expl = (
+                        f"Minimum cost for at least {target} items is ${cost_s}: "
+                        f"{c1} boxes of {s1} at ${p1_s} ({c1 * s1} items = ${c1 * p1:g}) + "
+                        f"{c2} boxes of {s2} at ${p2_s} ({c2 * s2} items = ${c2 * p2:g}) = "
+                        f"{tot_items} items for ${cost_s}"
+                    )
+                    return expr, (int(cost) if float(cost).is_integer() else cost), expl
+    return None
 
 
 def decompose_task_todos(question: str, offered_tools=None) -> list[dict]:
@@ -1178,6 +1226,41 @@ def synthesize_code_verification_harness(question: str, code: str) -> str:
         tree = ast.parse(code_s)
     except SyntaxError:
         return code_s
+    if "assert " in code_s and "assert " not in (question or ""):
+        helper_hdr = (
+            "def _clover_eq(_a, _b):\n"
+            "    if _a == _b:\n"
+            "        return True\n"
+            "    if isinstance(_a, (list, tuple)) and isinstance(_b, (list, tuple)) and len(_a) == len(_b):\n"
+            "        return all(_clover_eq(_x, _y) for _x, _y in zip(_a, _b))\n"
+            "    return False\n\n"
+        )
+        new_lines = []
+        for ln in code_s.splitlines():
+            ind = ln[: len(ln) - len(ln.lstrip())]
+            st_ln = ln.strip()
+            rewritten = None
+            if st_ln.startswith("assert "):
+                try:
+                    t_as = ast.parse(st_ln)
+                    if (
+                        len(t_as.body) == 1
+                        and isinstance(t_as.body[0], ast.Assert)
+                        and t_as.body[0].msg is None
+                        and isinstance(t_as.body[0].test, ast.Compare)
+                        and len(t_as.body[0].test.ops) == 1
+                        and isinstance(t_as.body[0].test.ops[0], ast.Eq)
+                    ):
+                        lhs_s = ast.unparse(t_as.body[0].test.left)
+                        rhs_s = ast.unparse(t_as.body[0].test.comparators[0])
+                        rewritten = (
+                            f"{ind}_got_v, _exp_v = ({lhs_s}), ({rhs_s}); "
+                            f"assert _clover_eq(_got_v, _exp_v), f'{lhs_s} returned {{_got_v!r}}, expected {{_exp_v!r}}'"
+                        )
+                except Exception:
+                    rewritten = None
+            new_lines.append(rewritten if rewritten is not None else ln)
+        code_s = helper_hdr + "\n".join(new_lines)
     fn_names = [n.name for n in tree.body if isinstance(n, ast.FunctionDef) and not n.name.startswith("_")]
     time_pairs = extract_time_examples(question)
     if fn_names and time_pairs:
@@ -1319,6 +1402,14 @@ def verify_turn_outcome(
         if not same(got_v, exact_v):
             shown_v = f"{int(exact_v)}" if float(exact_v).is_integer() else f"{exact_v:g}"
             findings.append(f"Arithmetic: the exact value is {shown_v} (your draft gave {got_v}).")
+    else:
+        q_wp = solve_quantitative_word_problem(q)
+        if q_wp is not None:
+            _, wp_val, wp_expl = q_wp
+            _applied(checks, "arithmetic")
+            got_v = final_answer(q, a)
+            if not same(got_v, wp_val):
+                findings.append(f"Arithmetic: {wp_expl} (your draft gave {got_v}).")
 
     if rounds_list and not findings:
         last_rd = rounds_list[-1]

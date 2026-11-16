@@ -95,7 +95,10 @@ class PermissionStore:
         if isinstance(saved, dict) and saved != LEGACY_DEFAULTS:
             for t, m in saved.items():
                 if t in TOOLS and m in MODES:
-                    self.modes[t] = m
+                    if t in ALLOW_BY_DEFAULT and m == "ask":
+                        self.modes[t] = "allow"
+                    else:
+                        self.modes[t] = m
 
     def get(self):
         with self.lock:

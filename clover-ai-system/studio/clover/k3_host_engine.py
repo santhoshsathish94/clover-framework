@@ -188,6 +188,9 @@ _SMART_KIMI_RE = re.compile(
     r"debug|refactor|compile|bug|traceback|stack\s*trace|doctest|unit\s*test|leetcode|time\s+complexity|big[\s-]o|"
     r"prove|proof|theorem|lemma|derivation|derive|integral|derivative|differential|matrix|eigenvalue|probability|"
     r"compounded\s+(?:annually|semi[\s-]?annually|quarterly|monthly|daily)|compound\s+interest|amortization|"
+    r"minimum\s+cost|maximum\s+profit|boxes\s+of\s+\d+|packs\s+of\s+\d+|at\s+least\s+\d+|trailing\s+zeros|"
+    r"transformers?|attention\s+sinks?|autoregressive|streamingllm|flashattention|kv[\s-]?cache|neural\s+networks?|"
+    r"backpropagation|gradient\s+descent|consensus|raft|paxos|cap\s+theorem|kernel|quantum|relativity|thermodynamics|"
     r"subexponential|study\s+plan|learning\s+plan|curriculum|research\s+paper|arxiv|deep\s+dive|analyze\s+in\s+depth"
     r")\b|```",
     re.I,
@@ -207,7 +210,10 @@ _SMART_NEMOTRON_RE = re.compile(
     r"attached\s+(?:image|picture|photo|screenshot|video|audio|clip|recording)|"
     r"in\s+this\s+(?:image|picture|photo|screenshot|video|audio|diagram|receipt|chart)|"
     r"take\s+a\s+(?:photo|picture|screenshot)|record\s+(?:a\s+)?(?:video|audio|voice)|"
-    r"what\s+(?:is\s+in|colors|layout|text\s+is\s+visible)\s+(?:in\s+)?(?:this|the)\s+(?:image|picture|photo|screenshot)"
+    r"what\s+(?:is\s+in|colors|layout|text\s+is\s+visible)\s+(?:in\s+)?(?:this|the)\s+(?:image|picture|photo|screenshot)|"
+    r"(?:generate|create|make|draw|paint|render|sketch|illustrate)\b[^.?!\n]{0,40}\b(?:image|picture|photo|drawing|painting|illustration|artwork|poster)\b|"
+    r"(?:simple|minimalistic|detailed|realistic|cute|beautiful)\s+(?:image|picture|photo|drawing|illustration)\s+of\b|"
+    r"i\s+want\s+the\s+(?:image|picture)|it'?s\s+just\s+(?:a\s+)?description"
     r")\b",
     re.I,
 )
@@ -512,7 +518,7 @@ class RemoteOmniEngine(omni_native.OmniNative):
         now = datetime.datetime.now().astimezone()
         mname = self.entry.get("name") or "LFM3-Omni-2B"
         return (f"You are Clover, an assistant connected to {mname} with tools on the user's {omni_native.PLATFORM}. "
-                f"You can see images, hear audio and watch videos the user attaches. "
+                f"You can generate images and illustrations from text descriptions, and you can see images, hear audio and watch videos the user attaches. "
                 f"Today is {now.strftime('%A %d %B %Y')}. The user's home folder is {Path.home()}. "
                 + self.workspace_sentence() + N.tools_sentence(tools_on, asked))
 
@@ -761,11 +767,12 @@ class K3HostEngine:
         full = self.spec.get("full_name") or self.spec["model"]
         maker = self.spec.get("maker") or "Clover"
         ws = self.omni.workspace_sentence() if self.omni and hasattr(self.omni, "workspace_sentence") else ""
-        return (f"You are Clover, running on {full} (built by {maker}, {self.spec['weights']}) hosted on the k3 server. "
-                f"When asked what model you are or who built you, always state that you are {full} built by {maker} "
-                f"(never say LFM3-Omni-2B or Liquid AI). You can see images, hear audio and watch videos. "
+        return (f"You are Clover, an AI assistant running on {full} (by {maker}) hosted on the k3 server. "
+                f"When asked what model you are or who built you, state that you are {full} built by {maker} "
+                f"(never say LFM3-Omni-2B or Liquid AI). Do not mention your model weights or hardware unless explicitly asked about your identity. "
+                f"You can generate images and illustrations from text descriptions, and you can see images, hear audio and watch videos. "
                 f"Today is {now.strftime('%A %d %B %Y')}. The user's home folder is {Path.home()}. "
-                "Answer directly and completely without asking unnecessary follow-up questions. "
+                "Answer directly, accurately, and completely without repeating yourself or asking unnecessary follow-up questions. "
                 + ws + N.tools_sentence(tools_on, asked))
 
     def _identity_fix(self, reply, user_text):
@@ -825,7 +832,8 @@ class K3HostEngine:
             omni_reply = self._identity_fix(_clean_reply(res_omni.get("reply") or ""), user_text)
             gen0 = (res_omni.get("generation") or [{}])[0]
             is_c1_infer_only = bool(self.omni.c1_inference_only or gen0.get("c1") == "inference only")
-            if omni_reply and not is_c1_infer_only and not (cancel and cancel.is_set()):
+            has_made_img = bool(self.turn_images) or any(r.get("tool") == "generate_image" and r.get("ran") for r in rounds)
+            if omni_reply and not is_c1_infer_only and not has_made_img and not paths.WEB and not (cancel and cancel.is_set()):
                 try:
                     t0 = time.perf_counter()
                     emit({"type": "plan", "round": 1, "stage": "k3_synthesis", "model": self.spec["model"],

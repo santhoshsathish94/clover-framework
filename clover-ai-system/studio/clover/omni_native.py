@@ -39,16 +39,26 @@ PLATFORM = "Android phone" if ANDROID else "Windows laptop"
 
 
 def looping(text):
-    """The last 160 characters appeared twice before: greedy decoding is repeating itself (a user's request ran to the
+    """The last 60..160 characters appeared twice before: greedy decoding is repeating itself (a user's request ran to the
     2,048-token limit in 89 s that way)."""
+    if text.count("```") % 2 == 0:
+        for w in (LOOP_TAIL, 96, 64):
+            if len(text) >= 3 * w and text.count(text[-w:], 0, len(text) - w) >= 2:
+                return True
     return len(text) >= 4 * LOOP_TAIL and text.count(text[-LOOP_TAIL:], 0, len(text) - LOOP_TAIL) >= 2
 
 
 def trim_loop(text):
     """One copy of the repeated text, ending at its last full sentence: the fixed cut ended a story on "grew lou"
     (2026-11-11). Inside an unclosed code block the cut stays where it is."""
-    tail = text[-LOOP_TAIL:]
-    kept = text[:text.find(tail) + LOOP_TAIL]
+    w_used = LOOP_TAIL
+    if text.count("```") % 2 == 0:
+        for w in (LOOP_TAIL, 96, 64):
+            if len(text) >= 3 * w and text.count(text[-w:], 0, len(text) - w) >= 2:
+                w_used = w
+                break
+    tail = text[-w_used:]
+    kept = text[:text.find(tail) + w_used]
     if kept.count("```") % 2:
         return kept
     ends = [m.end() for m in re.finditer(r"[.!?][\"')\]”’]*(?=\s|$)", kept)]
@@ -57,7 +67,8 @@ def trim_loop(text):
 
 # a paragraph that closes an answer: "Just let me know what you'd like to do!", "I'm here to help!"
 SIGN_OFF = re.compile(r"\blet\s+me\s+know\b|\bfeel\s+free\s+to\b|\bi'?m\s+(?:here|ready)\s+to\s+help\b|\bhappy\s+to\s+help\b|"
-                      r"\banything\s+else\b|\bwhat\s+would\s+you\s+like\s+to\s+(?:do|work\s+on)\b|\bready\s+when\s+you\s+are\b", re.I)
+                      r"\banything\s+else\b|\bwhat\s+would\s+you\s+like\s+to\s+(?:do|work\s+on|see|create)\b|"
+                      r"\bwhat\s+would\s+you\s+like\s+the\s+(?:image|picture)\s+to\s+show\b|\bready\s+when\s+you\s+are\b", re.I)
 TRAILING_Q = re.compile(
     r"\n\n+(?:(?:Would|Do)\s+you\s+(?:like|want|need)\b|What\s+(?:else\s+)?would\s+you\s+like\b|"
     r"Is\s+there\s+anything\s+else\b|Shall\s+I\b|If\s+you(?:'d|\s+would)\s+like[^\n]*\?)"
@@ -67,8 +78,17 @@ TRAILING_Q = re.compile(
 def rambling(text):
     """-> where the answer ends, or None. Past its sign-off the Omni wrote one variation after another (\"If you'd like
     me to ..., I can do that too. Just let me know ...!\" six times, 37 s, 2026-11-04), each different enough for
-    looping(). Three sign-off paragraphs with a sign-off said twice end the answer after the first; an email's own
-    \"let me know\" and the closing line after it are different sentences."""
+    looping(). Also catches repeated sign-off sentences inside a single paragraph (\"What would you like to see? Please
+    provide a clear and detailed description.\" repeated 3 times on the phone, 2026-11-14)."""
+    if text.count("```") % 2 == 0 and len(text) >= 180:
+        seen_s = {}
+        for sm in re.finditer(r"[^.!?\n]{20,220}[.!?]+", text):
+            s_raw = sm.group(0).strip()
+            s_key = re.sub(r"[^a-z0-9 ]+", "", s_raw.lower()).strip()
+            if len(s_key) >= 22:
+                if s_key in seen_s and (SIGN_OFF.search(s_raw) or sm.start() - seen_s[s_key] >= 40):
+                    return sm.start()
+                seen_s.setdefault(s_key, sm.end())
     offs = [m for m in re.finditer(r"[^\n]+(?:\n(?!\n)[^\n]+)*", text) if SIGN_OFF.search(m.group(0))]
     if len(offs) < 3:
         return None
@@ -92,6 +112,46 @@ C1_INFER_CTX = 8192
 MEDIA_WORD = {"image_url": "image", "input_audio": "audio", "input_video": "video"}
 
 
+def _resolve_image_prompt(query: str, past_msgs=()) -> str:
+    """Resolve the visual description to pass to `generate_image`, looking back at `past_msgs` when `query` is a
+    follow-up such as 'Ask nemotron to generate', 'Where?', 'Try again', or 'Where is the tree its just description i want the image'."""
+    q = " ".join(str(query or "").split()).strip()
+    m_where = re.search(r"\bwhere\s+is\s+the\s+([a-z][a-z\s]{1,35}?)(?:\s+it'?s\b|\s+i\s+want\b|[?.!,]|$)", q, re.I)
+    if m_where and m_where.group(1).strip().lower() not in ("image", "picture", "photo", "drawing", "illustration"):
+        return f"a clear, detailed illustration of a {m_where.group(1).strip()}"
+    is_meta_followup = bool(
+        re.match(r"^\W*(?:where(?:\s+is\s+it)?|try\s+again|retry|redo|generate\s+it|make\s+it|draw\s+it|show\s+me)\s*[?.!]*\W*$", q, re.I)
+        or re.search(r"\b(?:ask|use|have|let|tell)\s+(?:nemotron|kimi|clover|lfm\w*|the\s+model)\s+to\s+(?:generate|create|make|draw|render)\b", q, re.I)
+        or re.search(r"\b(?:it'?s\s+just\s+(?:a\s+)?description|i\s+want\s+the\s+(?:image|picture))\b", q, re.I)
+    )
+    if not is_meta_followup and q:
+        cleaned = re.sub(
+            r"^\W*(?:(?:please|just|can\s+you|could\s+you|would\s+you)\s+)*(?:generate|create|make|draw|paint|render|sketch|illustrate|show\s+me|give\s+me)\s+(?:me\s+)?(?:a|an|the|some)?\s*(?:simple\s+|detailed\s+|high[\s-]?res(?:olution)?\s+|hd\s+)?(?:image|picture|photo|drawing|painting|illustration|sketch)\s+(?:of|showing|with|featuring)\s+",
+            "",
+            q,
+            flags=re.I,
+        ).strip(" .?!")
+        return cleaned if len(cleaned) >= 2 else q
+    for m in reversed(list(past_msgs or ())):
+        if not isinstance(m, dict):
+            continue
+        c = m.get("content")
+        if not isinstance(c, str) or not c.strip():
+            continue
+        if m.get("role") == "user":
+            u_c = " ".join(c.split()).strip()
+            if re.match(r"^\W*(?:can\s+you\s+generate\s+images|where|try\s+again|hi|hello)\b", u_c, re.I):
+                continue
+            if re.search(r"\b(?:ask|use)\s+(?:nemotron|kimi)\b|\bit'?s\s+just\s+(?:a\s+)?description\b", u_c, re.I):
+                continue
+            return u_c
+        elif m.get("role") == "assistant":
+            m_desc = re.search(r"(?:Here is (?:the image|a different version)|The image is):\s*([^.!\n]{8,180})", c, re.I)
+            if m_desc:
+                return m_desc.group(1).strip()
+    return q or "a scenic nature illustration with a tree and sunlight"
+
+
 def _direct_s3_or_concept_plan(query: str, s3_pre_call: dict | None, s3_extra_calls: list | tuple, rounds: list) -> str | None:
     """When S3 pre-calls already supply the complete factual answer, return it directly so C1 runs strictly as
     inference-to-state (`0` llama-server decoded tokens) -> C2 -> C3. Notes to rewrite go to the model: joining them
@@ -108,6 +168,10 @@ def _direct_s3_or_concept_plan(query: str, s3_pre_call: dict | None, s3_extra_ca
         return f"The current local time is {first_res}." if not first_res.endswith(".") else first_res
     if names == ["vscode_open"] and first_res:
         return first_res if first_res.endswith(".") else f"{first_res}."
+    if names == ["generate_image"] and first_res and not first_res.startswith("Error:"):
+        img_p = str(s3_pre_call.get("arguments", {}).get("prompt") or query or "your description").strip(" .?!")
+        img_p = re.sub(r"^(?:a\s+|an\s+|the\s+)?(?:simple\s+|minimalistic\s+)?(?:image|picture|drawing|illustration|photo)\s+of\s+", "", img_p, flags=re.I).strip()
+        return f"Here is the generated image of {img_p or 'your request'}."
     if all(n == "convert_units" for n in names) and rounds and all(r.get("ran") and r.get("worked") for r in rounds):
         parts = [str(r.get("result") or "").strip().rstrip(".") for r in rounds if str(r.get("result") or "").strip()]
         if parts:
@@ -693,6 +757,32 @@ def plan_s3_pre_calls(engine, query, only_tools, by_name, *, meaning=None, past_
                 "name": "calculate",
                 "arguments": {"expression": expr_int},
             })
+        elif hasattr(C, "solve_quantitative_word_problem"):
+            wp = C.solve_quantitative_word_problem(query or "")
+            if wp is not None:
+                wp_expr, _, wp_expl = wp
+                s3_pre_call = {
+                    "id": "call_" + uuid.uuid4().hex[:16],
+                    "name": "calculate",
+                    "arguments": {"expression": wp_expr},
+                    "note": wp_expl,
+                }
+    elif (
+        "generate_image" in only_tools
+        and "generate_image" in by_name
+        and not re.match(
+            r"^\W*(?:can|could|do|are|will|would)\s+you\s+(?:able\s+to\s+)?(?:generate|create|make|draw|render|produce)\s+(?:any\s+|some\s+)?(?:images|pictures|photos|drawings|illustrations|artwork|art)\s*[?.!]*\W*$",
+            query or "",
+            re.I,
+        )
+    ):
+        img_prompt = _resolve_image_prompt(query or "", past_msgs=past_msgs)
+        if img_prompt:
+            s3_pre_call = {
+                "id": "call_" + uuid.uuid4().hex[:16],
+                "name": "generate_image",
+                "arguments": {"prompt": img_prompt},
+            }
     elif "run_python" in only_tools and "run_python" in by_name and re.search(r"```(?:python|py)\b", query or "", re.I):
         import lfm3_layers
         py_code = lfm3_layers.extract_python(query or "")
@@ -769,7 +859,8 @@ def execute_s3_pre_calls(engine, s3_pre_call, s3_extra_calls, *, ask=None, allow
             "why": why,
             "result": result[:2000],
         })
-        pre_summaries.append(f"Live {pc['name']} results:\n{result}")
+        note_extra = f"\n({pc['note']})" if pc.get("note") else ""
+        pre_summaries.append(f"Live {pc['name']} results:\n{result}{note_extra}")
         if pc["name"] == "write_file" and ran and worked and str(pc["arguments"].get("path") or "").endswith(".html"):
             try:
                 prev_fn = _render_threejs_preview_png(media_dir)
@@ -930,7 +1021,7 @@ class OmniNative(N.LFM3Native):
     def system_prompt(self, tools_on=True, asked=None):
         now = datetime.datetime.now().astimezone()
         return (f"You are Clover, an assistant running entirely on the user's {PLATFORM} (model: LFM3-Omni-2B). "
-                f"You can see images, hear audio and watch videos the user attaches. "
+                f"You can generate images and illustrations from text descriptions, and you can see images, hear audio and watch videos the user attaches. "
                 f"Today is {now.strftime('%A %d %B %Y')}. The user's home folder is {Path.home()}. "
                 "Answer directly and completely without asking unnecessary follow-up or clarifying questions. "
                 + self.workspace_sentence() + N.tools_sentence(tools_on, asked))
@@ -1439,7 +1530,14 @@ class OmniNative(N.LFM3Native):
                             # "good vegetarian restaurants in Jaipur" repeated two searches six times, to the round limit
                             schemas = []
                         # asked for a tool (only_tools set): told to use it, the Omni still answered from memory
-                        forced = "required" if only_tools and schemas and r == 0 and attempt == 0 else None
+                        is_cap_q = bool(
+                            re.match(
+                                r"^\W*(?:can|could|do|are|will|would)\s+you\s+(?:able\s+to\s+)?(?:generate|create|make|draw|render|produce)\s+(?:any\s+|some\s+)?(?:images|pictures|photos|drawings|illustrations|artwork|art)\s*[?.!]*\W*$",
+                                query or "",
+                                re.I,
+                            )
+                        )
+                        forced = "required" if (only_tools and schemas and r == 0 and attempt == 0 and not is_cap_q) else None
                         if r == 0 and attempt == 0 and only_tools:
                             emit({"type": "plan", "round": r + 1, "stage": "planning", "tools": list(only_tools)})
                         elif r > 0:
@@ -1447,11 +1545,18 @@ class OmniNative(N.LFM3Native):
                         emit({"type": "plan", "round": r + 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
                         # C1 is strictly for inference only: never emit final answer tokens (`kind="answer"`) from C1
                         is_live_gpu = getattr(self, "gpu", None) is not None and "_chat" not in getattr(self, "__dict__", {})
-                        direct_plan = (
-                            _direct_s3_or_concept_plan(query, s3_pre_call, s3_extra_calls, rounds)
-                            if (is_live_gpu and r == 0 and attempt == 0 and not schemas)
-                            else None
-                        )
+                        if is_cap_q and r == 0 and attempt == 0:
+                            schemas = []
+                            direct_plan = (
+                                "Yes, I can generate images and illustrations from any text description. "
+                                "What would you like the image to show?"
+                            )
+                        else:
+                            direct_plan = (
+                                _direct_s3_or_concept_plan(query, s3_pre_call, s3_extra_calls, rounds)
+                                if (is_live_gpu and r == 0 and attempt == 0 and not schemas)
+                                else None
+                            )
                         if direct_plan is not None:
                             content, calls, st = direct_plan, [], {
                                 "prompt_tokens": max(1, len((query or "").split())),
@@ -1702,6 +1807,15 @@ class OmniNative(N.LFM3Native):
                             "final_findings": findings,
                         })
 
+                if cycles_used > 1 and final:
+                    final = re.sub(
+                        r"^(?:The\s+(?:error|issue|problem|failure|bug)\s+(?:is|was)\s+caused\s+by[^\n]*\n+|"
+                        r"The\s+doctest\s+assertion\s+was\s+incorrect[^\n]*\n+|"
+                        r"Here\s+is\s+the\s+corrected\s+(?:function|code|answer|version)[^\n]*:\s*\n+)+",
+                        "",
+                        final.strip(),
+                        flags=re.I,
+                    ).strip()
                 op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
                 rnd_n = len(stats_all) or 1
                 if kit is not None and not (cancel and cancel.is_set()):

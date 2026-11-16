@@ -117,6 +117,9 @@ ASKS = (
     (("image",), r"\b(?:generate|create|make|draw|paint|render|design|sketch|illustrate)\b[^.?!\n]{0,40}"
                  r"\b(?:image|picture|photo|drawing|painting|illustration|artwork|logo|icon|portrait|wallpaper|poster)s?\b|"
                  r"\b(?:show|give)\s+me\s+(?:a|an)\s+(?:image|picture|drawing|painting|illustration)\s+of\b|"
+                 r"^\W*(?:(?:please|just|now|ok(?:ay)?|hey|clover)\W+){0,2}(?:a|an|the|one|some|another|simple|quick|detailed|realistic|minimalistic|cute|beautiful|high[\s-]?res(?:olution)?|hd)?\s*(?:\w+\s+){0,2}(?:image|picture|photo|drawing|painting|illustration|sketch|artwork|portrait|wallpaper|poster)\s+(?:of|showing|with|featuring|depicting)\s+\S|"
+                 r"\b(?:i\s+want|i\s+need|i'?d\s+like|give\s+me|show\s+me|send\s+me)\s+(?:the\s+|a\s+|an\s+|actual\s+|real\s+)?(?:image|picture|photo|drawing|painting|illustration|sketch)\b|"
+                 r"\b(?:it'?s\s+just\s+(?:a\s+)?description|not\s+(?:just\s+)?(?:a\s+)?description|where\s+is\s+the\s+(?:image|picture|photo|drawing|tree|cat|dog|car|house))\b|"
                  r"^\W*(?:(?:please|can\s+you|could\s+you|would\s+you)\s+)?(?:draw|sketch|paint|illustrate)\s+(?:me\s+)?(?:a|an|the)\s+"
                  r"(?!(?:conclusion|line\b|comparison|parallel|distinction|blank|inference|graph\b|chart\b|table\b))[a-z]"),
     (("vscode.open", "vscode.clone", "vscode.install", "vscode.run"),
@@ -151,6 +154,8 @@ ASKS = (
     (("calc",),
      r"\b(?:use\s+(?:the\s+)?calculator|with\s+calculate)\b|"
      r"\bcompounded\s+(?:annually|semi[\s-]?annually|quarterly|monthly|daily)\b|"
+     r"\b(?:boxes|packs|bags|bundles|batches)\s+of\s+\d+\s+for\s+\$?\d+|"
+     r"\b(?:what\s+is|find|calculate|compute)\s+the\s+(?:minimum|maximum|least|lowest|highest|smallest|largest|cheapest|optimal)\s+(?:cost|price|number|amount|total|profit|time|distance|value)\b|"
      r"\b(?:calculate|compute|evaluate)\s+\(?-?\d[\d,.]*\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*|"
      r"^\s*(?:(?:what(?:'?s|\s+is|\s+are)|calculate|compute|evaluate)\s+)?\(?-?\d[\d,.]*\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*(?:\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*)*\)?\s*[?.!]*(?:\s+(?:and\s+)?(?:return|reply\s+with|output|give|provide|write|respond\s+with)\s+(?:only|just)\b[\s\S]*)?$"),
     (("units",),
@@ -580,7 +585,30 @@ NOT_GOING_ON = re.compile(r"^\W*(?:no|nope|nah|not\s+now|never\s*mind|cancel|sto
 
 def _request_answered(text, history):
     """The capabilities of the request a short reply answers Clover's question about; [] when it is not one."""
-    if not history or len(text.split()) > 8 or NOT_GOING_ON.match(text) or not _asked_user(history):
+    if not history or len(text.split()) > 16 or NOT_GOING_ON.match(text):
+        return []
+    last_a = next((str(m.get("content") or "") for m in reversed(history) if m.get("role") == "assistant"), "")
+    if re.search(r"what\s+would\s+you\s+like\s+(?:the\s+(?:image|picture|drawing|illustration)\s+to\s+show|me\s+to\s+(?:create|draw|generate|make)|to\s+see)", last_a, re.I):
+        return ["image"]
+    if re.search(
+        r"\b(?:ask|use|have|let|tell)\s+(?:nemotron|kimi|clover|lfm\w*|the\s+model)\s+to\s+(?:generate|create|make|draw|render)\b|"
+        r"\b(?:where\s+is\s+the\s+\w+|it'?s\s+just\s+(?:a\s+)?description)\b|"
+        r"^\W*where(?:\s+is\s+it)?\s*\??\W*$",
+        text or "",
+        re.I,
+    ):
+        for m in reversed(history[-8:]):
+            if m.get("role") == "user":
+                c_prev = asked_caps(str(m.get("content") or ""))
+                if "image" in c_prev:
+                    return ["image"]
+            elif m.get("role") == "assistant" and re.search(
+                r"\b(?:Here is (?:the|a) (?:image|picture|different version)|generate images|what would you like the image to show)\b",
+                str(m.get("content") or ""),
+                re.I,
+            ):
+                return ["image"]
+    if len(text.split()) > 8 or not _asked_user(history):
         return []
     prev = next((m for m in reversed(history) if m.get("role") == "user"), None) or {}
     return asked_caps(str(prev.get("content") or ""))
