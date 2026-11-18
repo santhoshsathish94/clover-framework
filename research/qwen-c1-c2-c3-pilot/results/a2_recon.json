@@ -1,0 +1,20 @@
+{
+ "windows": 200,
+ "token_acc": 0.9286,
+ "window_exact": 0.415,
+ "number_recall": 0.9798,
+ "examples": [
+  {
+   "orig": "Oceans 11, Interstellar, The Imitation Game, and The Dark Knight",
+   "recon": "Oceans 11, Intermedi, The Imitation Game, and The Dark Knight"
+  },
+  {
+   "orig": "Sasando is string, Ranat ek is percussion.",
+   "recon": "Sasando is string, Ranat ek is percussion."
+  },
+  {
+   "orig": "Most countries are in the Northern Hemisphere. These include: Brazil, China, India and Canada. Countries in the Southern Hemisphere are: Australia, South Africa, Argentina and Fiji.",
+   "recon": "Most countries are in the Northern Hemisphere. These include: Brazil, China, India and Canada. Countries in the Southern Hemisphere are: Australia, South Africa, Argentina and Fiji."
+  }
+ ]
+}

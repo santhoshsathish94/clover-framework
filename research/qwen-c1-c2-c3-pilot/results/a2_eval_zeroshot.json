@@ -1,0 +1,137 @@
+{
+ "ckpt": "released WMT14 generator (zero-shot)",
+ "n": 64,
+ "load": {
+  "dropped": 0,
+  "missing": 0,
+  "unexpected": 0
+ },
+ "settings": [
+  {
+   "temp": 1.0,
+   "top_k": 0,
+   "top_p": 1.0,
+   "seconds": 55.6,
+   "retention_matched": 0.2278,
+   "retention_shuffled_plan(control)": 0.0056,
+   "retention_blank_plan(control)": 0.0,
+   "retention_true_text(ceiling)": 1.0,
+   "number_recall_matched": 0.3476,
+   "number_recall_shuffled(control)": 0.0333,
+   "number_recall_blank(control)": 0.0,
+   "examples": [
+    {
+     "q": "Give me a list of fantastic movies",
+     "plan": "Oceans 11 Interstellar Imitation Game Dark Knight",
+     "generated": "J Tanzania 23 Interactivity of Brooklyn (with unapaPDF, a small forest forest garden",
+     "shuffled_plan_generated": "I spread that the dresses of French descent the city to the west of the South. A great circle on the huge signed of Par garden reserve, drop Beach, bathust,, Cerve Conlands and piscus.",
+     "blank_plan_generated": "Music in housed",
+     "true": "Oceans 11, Interstellar, The Imitation Game, and The Dark Knight"
+    },
+    {
+     "q": "Identify which instrument is string or percussion: Ranat ek, Sasando",
+     "plan": "Sasando string Ranat percussion",
+     "generated": "Sasando string haveat gute tone necessary necessary.",
+     "shuffled_plan_generated": "DAline 6 Inter Absolute I to Game LIVE Knight .",
+     "blank_plan_generated": "Decision one",
+     "true": "Sasando is string, Ranat ek is percussion."
+    },
+    {
+     "q": "You are planning a trip and want to travel only in the Southern Hemisphere in the first half, and only the Northern Hemisphere in the second half. Sort the countries in your itinerary into 'Southern Hemisphere' and 'Northern Hemisphere'. Your itinerary includes: Fiji, Brazil, Australia, China, Argentina, India, Canada, and South Africa.",
+     "plan": "countries Northern Hemisphere include Brazil China India Canada Southern Australia South Africa Argentina Fiji",
+     "generated": " terrors Break Swans Native and Indian and Native Native.",
+     "shuffled_plan_generated": "Sasando string Ranat percussion.",
+     "blank_plan_generated": "С2",
+     "true": "Most countries are in the Northern Hemisphere. These include: Brazil, China, India and Canada. Countries in the Southern Hemisphere are: Australia, South Africa, Argentina and Fiji."
+    },
+    {
+     "q": "Classify each as being used on water or land: jet ski, boat, car, bike, kayak, skateboard",
+     "plan": "Water Boat Land Bike Kayak Skateboard",
+     "generated": "Sea Boat Land,serak Kub games",
+     "shuffled_plan_generated": "Mariaaperaps, Mrega Asyl?",
+     "blank_plan_generated": " Brit one",
+     "true": "Jet Ski: Water\nBoat: Water\nCar: Land\nBike: Land\nKayak: Water\nSkateboard: Land"
+    },
+    {
+     "q": "Why is the Pacific NorthWest so unique?",
+     "plan": "Pacific NorthWest indeed unique location living combines several good qualities including opportunities outdoor activities amazing scenery home transplants locations bringing together diverse rich cultures",
+     "generated": " developed founded a sound-as,\" our Holy song song study that was the best name in the Middle biological Orange.",
+     "shuffled_plan_generated": " Boat Boat road Corn Timser Kay.",
+     "blank_plan_generated": " pixel.",
+     "true": "The Pacific NorthWest (PNW) is indeed a unique location for living. It combines several good qualities including job opportunities, outdoor activities and amazing scenery. \n\nThe PNW is also home for a lot of transplants from other locations bringing together very diverse and rich cultures."
+    },
+    {
+     "q": "What is celiac disease?",
+     "plan": "Celiac disease autoimmune hereditary confused gluten intolerance immune response consuming protein found barley wheat impacts nutrient absorption immunity consumed",
+     "generated": "Se phosphbathinganol: Emotionile-text theSun pools (CC) remedy vesă bass.",
+     "shuffled_plan_generated": "You not find a swimming pool or somewhere or an anywhere or?",
+     "blank_plan_generated": "Latinavier",
+     "true": "Celiac disease is an autoimmune disease that is hereditary, not to be confused with gluten intolerance. Celiac disease is an immune response to consuming gluten, a protein found in barley, rye, and wheat, which impacts nutrient absorption and immunity when consumed."
+    }
+   ]
+  },
+  {
+   "temp": 0.6,
+   "top_k": 50,
+   "top_p": 0.9,
+   "seconds": 53.0,
+   "retention_matched": 0.3866,
+   "retention_shuffled_plan(control)": 0.0049,
+   "retention_blank_plan(control)": 0.0,
+   "retention_true_text(ceiling)": 1.0,
+   "number_recall_matched": 0.66,
+   "number_recall_shuffled(control)": 0.0444,
+   "number_recall_blank(control)": 0.0,
+   "examples": [
+    {
+     "q": "Give me a list of fantastic movies",
+     "plan": "Oceans 11 Interstellar Imitation Game Dark Knight",
+     "generated": "Oporto 11 Inter Absolutepretmitation Game Dark Knight",
+     "shuffled_plan_generated": "ombombia located in South America Columbia refer university clothing in League York City City.",
+     "blank_plan_generated": "COTE",
+     "true": "Oceans 11, Interstellar, The Imitation Game, and The Dark Knight"
+    },
+    {
+     "q": "Identify which instrument is string or percussion: Ranat ek, Sasando",
+     "plan": "Sasando string Ranat percussion",
+     "generated": "Sasando string Ranat percussion.",
+     "shuffled_plan_generated": "Halloween 11 Inter plant Imitation Game Dark Knight",
+     "blank_plan_generated": "AgOTE",
+     "true": "Sasando is string, Ranat ek is percussion."
+    },
+    {
+     "q": "You are planning a trip and want to travel only in the Southern Hemisphere in the first half, and only the Northern Hemisphere in the second half. Sort the countries in your itinerary into 'Southern Hemisphere' and 'Northern Hemisphere'. Your itinerary includes: Fiji, Brazil, Australia, China, Argentina, India, Canada, and South Africa.",
+     "plan": "countries Northern Hemisphere include Brazil China India Canada Southern Australia South Africa Argentina Fiji",
+     "generated": " Northern Northern Northern include Brazil China India India Southern Australia South Africa Argentina Fiji keyword",
+     "shuffled_plan_generated": "Sasando string haveat percussion.",
+     "blank_plan_generated": "AgOTE",
+     "true": "Most countries are in the Northern Hemisphere. These include: Brazil, China, India and Canada. Countries in the Southern Hemisphere are: Australia, South Africa, Argentina and Fiji."
+    },
+    {
+     "q": "Classify each as being used on water or land: jet ski, boat, car, bike, kayak, skateboard",
+     "plan": "Water Boat Land Bike Kayak Skateboard",
+     "generated": "Sea Boat Land Land KayakSnow polo",
+     "shuffled_plan_generated": " Northern Northern includes include Brazil China India Canada Australia Australia South Africa Argentina Fiji",
+     "blank_plan_generated": "Nothing.",
+     "true": "Jet Ski: Water\nBoat: Water\nCar: Land\nBike: Land\nKayak: Water\nSkateboard: Land"
+    },
+    {
+     "q": "Why is the Pacific NorthWest so unique?",
+     "plan": "Pacific NorthWest indeed unique location living combines several good qualities including opportunities outdoor activities amazing scenery home transplants locations bringing together diverse rich cultures",
+     "generated": "The strategic area in North West WestWest is a truly unique and unique holiday destination in the South West Region.",
+     "shuffled_plan_generated": "The Boat Land Land Kay Kay machen",
+     "blank_plan_generated": "Hor.",
+     "true": "The Pacific NorthWest (PNW) is indeed a unique location for living. It combines several good qualities including job opportunities, outdoor activities and amazing scenery. \n\nThe PNW is also home for a lot of transplants from other locations bringing together very diverse and rich cultures."
+    },
+    {
+     "q": "What is celiac disease?",
+     "plan": "Celiac disease autoimmune hereditary confused gluten intolerance immune response consuming protein found barley wheat impacts nutrient absorption immunity consumed",
+     "generated": "The�емя п при تяous※а...ac о о оMrsMrsной منства ت переводларков منскогокаскогоель от из из ионныйасора по иныхаа.",
+     "shuffled_plan_generated": "It is located in the heart of the NorthWest, and South West offers a quiet place for a warm and quiet place.",
+     "blank_plan_generated": "AgOTE",
+     "true": "Celiac disease is an autoimmune disease that is hereditary, not to be confused with gluten intolerance. Celiac disease is an immune response to consuming gluten, a protein found in barley, rye, and wheat, which impacts nutrient absorption and immunity when consumed."
+    }
+   ]
+  }
+ ]
+}

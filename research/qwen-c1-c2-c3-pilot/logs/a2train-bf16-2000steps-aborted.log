@@ -1,0 +1,10 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+VQVAE, Total parameter count: 144.00M
+VQVAE, Non embedding parameter count: 85.73M
+NCP Transformer, Total parameter count: 119.96M
+NCP Transformer, Non embedding parameter count: 119.66M
+00:26:55 train pairs 3740, val pairs 64; load report {'dropped': 0, 'missing': 0, 'unexpected': 0}
+00:27:11 encoded in 16.2s
+00:27:21 step 0 val CE (mean over levels) {'matched': 2.8421, 'shuffled': 3.3132, 'blank': 4.8893}
+00:27:28 {'step': 1, 'loss': 2.866, 'gnorm': 4.214, 's_per_step': 6.774}
+00:29:59 {'step': 25, 'loss': 2.3974, 'gnorm': 2.393, 's_per_step': 6.306}
