@@ -1,0 +1,594 @@
+{
+ "ckpt": "/opt/clover-k3/qwen-pilot-20261118/runs/a2/last.pt",
+ "n": 40,
+ "settings": [
+  {
+   "temp": 0.6,
+   "top_k": 50,
+   "top_p": 0.9,
+   "retention_matched": 0.7552,
+   "retention_shuffled(control)": 0.0103,
+   "retention_blank(control)": 0.0,
+   "retention_model_answer(ceiling)": 0.975,
+   "number_recall_matched": 0.9167,
+   "number_recall_shuffled(control)": 0.0,
+   "number_recall_blank(control)": 0.0,
+   "items": [
+    {
+     "q": "Give me a list of fantastic movies",
+     "model_answer": "The Shawshank Redemption, The Godfather, The Dark Knight, Pulp Fiction, The Lord of the Rings, The Matrix, Inception, Fight Club, The Silence of the Lambs, and The Green Mile.",
+     "plan": "Shawshank Redemption Godfather Dark Knight Pulp Fiction Lord Rings Matrix Inception Fight Club Silence Lambs Green Mile",
+     "c3_render": "Chysh, reflecting Angels, The Godfather, The lyric Knight, The Pulp Fiction Fiction The Lord of Rings, The Rings, The The Matrix, Inception, The The Fight Club, The Silence, Thebs, Green Green, and The Mile",
+     "shuffled_render": "Electricity, securities financial instruments would represent Sicher ownershipheit a company and stocks stocks shares."
+    },
+    {
+     "q": "Identify which instrument is string or percussion: Ranat ek, Sasando",
+     "model_answer": "Ranat ek is a percussion instrument, while Sasando is a string instrument.",
+     "plan": "Ranat percussion instrument Sasando string",
+     "c3_render": "Ranat is percussion instrument, Sasando is string string.",
+     "shuffled_render": "Warsawshank - Mother of Godle, The Dark,, Knight, The P Fiction Life Lord of The Rings, The White of Rings The, of Inception, The Fight Club, The of The Club, Silence The Lambs and The Green Mile"
+    },
+    {
+     "q": "You are planning a trip and want to travel only in the Southern Hemisphere in the first half, and only the Northern Hemisphere in the second half. Sort the countries in your itinerary into 'Southern Hemisphere' and 'Northern Hemisphere'. Your itinerary includes: Fiji, Brazil, Australia, China, Argentina, India, Canada, and South Africa.",
+     "model_answer": "Southern Hemisphere: Fiji, Brazil, Australia, Argentina, South Africa. Northern Hemisphere: China, India, Canada.",
+     "plan": "Southern Hemisphere Fiji Brazil Australia Argentina South Africa Northern China India Canada",
+     "c3_render": "India blossom, Fiji, Brazil, Australia, Argentina, Argentina, South Africa, Northern China, India, and Canada,",
+     "shuffled_render": "Ranatat instrument instrument is Sasando is string."
+    },
+    {
+     "q": "Classify each as being used on water or land: jet ski, boat, car, bike, kayak, skateboard",
+     "model_answer": "Jet ski and boat are used on water, while car, bike, kayak, and skateboard are used on land.",
+     "plan": "boat used water bike kayak skateboard land",
+     "c3_render": "The river is usually used for water, water, water, waterways, water water, water, land and water, used.",
+     "shuffled_render": "Unlike Brown, Fiji, Brazil, Australia, Argentina, Argentina, South Africa, North, China, India and Canada"
+    },
+    {
+     "q": "Why is the Pacific NorthWest so unique?",
+     "model_answer": "The Pacific NorthWest is unique due to its diverse geography, including dense forests, rugged coastlines, and active volcanoes, as well as its distinct cultural heritage and vibrant arts scene.",
+     "plan": "Pacific NorthWest unique diverse geography including dense forests rugged coastlines active volcanoes well distinct cultural heritage vibrant arts scene",
+     "c3_render": "The NorthWest is a unique and diverse geography, including dense forests, and rugged coastlines. They are and active,oes, as well as a distinct distinctive cultural cultural heritage, lively and arts arts.",
+     "shuffled_render": "It is aboat used for water water, the mountedboat used to be water, frequently, water water, water water"
+    },
+    {
+     "q": "What is celiac disease?",
+     "model_answer": "Celiac disease is an autoimmune disorder triggered by the consumption of gluten, a protein found in wheat, barley, and rye. It causes damage to the small intestine, leading to malabsorption of nutrients and various symptoms.",
+     "plan": "Celiac disease autoimmune disorder triggered consumption gluten protein found wheat barley causes damage small intestine leading malabsorption nutrients various symptoms",
+     "c3_render": "A infectious disease is caused by a disorder triggered by consumption of gluten gluten consumption, which is found in wheat,,, causes damage caused by a small small, leading mal beorption liver with various symptoms.",
+     "shuffled_render": "The NorthWest is a unique diverse geography, including dense forests, and rugged coastlines. are active volcan and volcanoes, as well as their cultural heritage, city, arts, and a vibrant scene."
+    },
+    {
+     "q": "How many moons orbit Jupiter and what are the names of the most significant ones?",
+     "model_answer": "Jupiter has 79 known moons. The most significant ones are Io, Europa, Ganymede, and Callisto.",
+     "plan": "Jupiter 79 known moons significant ones Europa Ganymede Callisto",
+     "c3_render": "Jenson 79 are known for moons are the most significant ones, Europa Ganymede Callisto.",
+     "shuffled_render": "A infectious disease is a disease triggered by disorder triggered by lymph consumption, while gluten and protein protein found in wheat. It It causes damage by a small intestine, leading mal beorption oxygen with various symptoms."
+    },
+    {
+     "q": "Give me a bunch of excuses about why I don't have my homework to turn in",
+     "model_answer": "I forgot to bring it home, I lost it, I was sick, I had a family emergency, I was busy with extracurricular activities, I misunderstood the assignment, I didn't have enough time, I was distracted, I didn't know it was due, I was procrastinating,",
+     "plan": "forgot bring home lost sick family emergency busy extracurricular activities misunderstood assignment didn enough time distracted know procrastinating",
+     "c3_render": "It bring a home to be lost when rented or sick when a family was busy an busy extracur consulting or remedy activities could be misunderstood. If not the assignment I did not have enough time, pollen not be enough to know vaccin.",
+     "shuffled_render": "Jupiter 79 are known as Jewish are the most significant ones: Europa Ganymede Callisto."
+    },
+    {
+     "q": "Classify the following as either an insect or a dog breed: mosquito, Labrador retriever, German shepherd, ant, Siberian husky, poodle, and ladybug.",
+     "model_answer": "Mosquito and ant are insects, while Labrador retriever, German shepherd, Siberian husky, and poodle are dog breeds.",
+     "plan": "Mosquito insects Labrador retriever German shepherd Siberian husky poodle breeds",
+     "c3_render": "Pot molecules are insects, Citadel overcrowver are GermanPopular rods: Siberian,,kyky, and poffer breeds.",
+     "shuffled_render": "I would bring home when you home to sick or a parent family. emergency, you will be busy, a extracur or Storm or activities are defeated. assignment assignment. I don't have the assignment enough enough for time and I don't know haveninating."
+    },
+    {
+     "q": "Classify each of the following as either a stringed instrument or a percussion instrument: violin, guitar, drums, congas, bongos, bass guitar.",
+     "model_answer": "The violin, guitar, and bass guitar are stringed instruments. The drums, congas, and bongos are percussion instruments.",
+     "plan": "violin guitar bass stringed instruments drums congas bongos percussion",
+     "c3_render": "Skolin guitar guitar bass is,ed instruments drums, congas",
+     "shuffled_render": "Leadinganic: insects huntersrolls souver СPen ALL figured Californ Siberian: Californian:ść Connor leaks ALL hurricanesP breeds breeds needed: German"
+    },
+    {
+     "q": "What is the most played popular and most played instrument in the world?",
+     "model_answer": "The most played popular instrument in the world is the piano, while the most played instrument overall is the guitar.",
+     "plan": "played popular instrument world piano overall guitar",
+     "c3_render": "A popular band is a popular instrument in the world's overall piano guitar.",
+     "shuffled_render": "Skolin guitar bass,,, stringed instruments is. engas, bongos is percussion."
+    },
+    {
+     "q": "Tell me which of these characters are from the Mario universe: Yoshi, Zelda, King Kong, Luigi, Princess Peach, Link, Bowser, Alex Rodriguez.",
+     "model_answer": "Yoshi, Luigi, Princess Peach, Link, and Bowser are from the Mario universe. Zelda, King Kong, and Alex Rodriguez are not.",
+     "plan": "Yoshi Luigi Princess Peach Link Bowser Mario universe Zelda King Kong Alex Rodriguez",
+     "c3_render": "Toshi Luigi,, Princess fiction, Link Bowser, Mario eye, universe, King Kong and Alex Alex Rodriguez",
+     "shuffled_render": "The piano is a popular instrument in world piano and overall guitar guitar"
+    },
+    {
+     "q": "Tell me which of the following countries as considered SAARC countries: Afghanistan, Bangladesh, Bhutan, India, United States of America, United Kingdom, China, Singapore",
+     "model_answer": "Afghanistan, Bangladesh, Bhutan, India, and the Maldives are considered SAARC countries.",
+     "plan": "Afghanistan Bangladesh Bhutan India Maldives considered SAARC countries",
+     "c3_render": "Afghanistan, Bangladesh, Bh Bh, are India, and Maldives, which are considered, SAARC countries.",
+     "shuffled_render": "Soshi Luigi, Princess fiction, Link, Link, Bowser Mario universe, sauces, King Kong, and Alex Alex"
+    },
+    {
+     "q": "Let's play a game of tic tac toe. I'll be X and you be O. Unplayed squares will be \"_\". I'll get first.\n\n_ _ _\n_ O _\n_ _ _",
+     "model_answer": "_ _ X\n_ O _\n_ _ _",
+     "plan": "",
+     "c3_render": "',',',', CLOSE',', '',', ' '',',',",
+     "shuffled_render": "Afghanistan, Bangladesh Bangladesh Bh Bh, India and Maldives are all considered SAARC countries."
+    },
+    {
+     "q": "How many human beings are on the planet?",
+     "model_answer": "The current global population is approximately 7.9 billion people.",
+     "plan": "current global population approximately 7.9 billion people",
+     "c3_render": "The global population is approximately 7.9 billion people.",
+     "shuffled_render": "The the: of not not inhibit::: not not: not: not:: notГ: not not it: not: not: not:: not Tutorial::"
+    },
+    {
+     "q": "Tell me whether these are nouns or verbs: Run, Dance, Slide, Jump, Think, Book, Noah Webster, Cat, Omaha, Softness, Justice.",
+     "model_answer": "Run, Dance, Slide, Jump, and Think are verbs. Book, Noah Webster, Cat, Omaha, Softness, and Justice are nouns.",
+     "plan": "Dance Slide Jump Think verbs Book Noah Webster Omaha Softness Justice nouns",
+     "c3_render": "Dancebuch, Doen, Think, verbs, Book, Noah, Webster,, Omaha Softness, Justice, and dust.",
+     "shuffled_render": "The total global population is a population of approximately 7.9 billion people."
+    },
+    {
+     "q": "Classify each of the following as either a brand of kombucha or a soda brand: Humm, Brew Doctor, Pepsi, 7Up, Mountain Dew, Coca-Cola, Sprite, Fanta, GT's, Remedy, Health-Ade",
+     "model_answer": "Humm, Brew Doctor, GT's, Remedy, and Health-Ade are brands of kombucha. Pepsi, 7Up, Mountain Dew, Coca-Cola, Sprite, Fanta are soda brands.",
+     "plan": "Humm Brew Doctor Remedy Health brands kombucha Pepsi 7 Mountain Coca Cola Sprite Fanta soda",
+     "c3_render": "H:umm ps MostARB-anes Remedyedy- Health DOC brands- Fell defagram shirtsDesUAL cream7- Mountain Coca Cola Col Beetle-anta Fanta ’",
+     "shuffled_render": "Dance: Jump Jump, Think, verbs, My Book, Noah, Reflection, Omaha, Softness, Bridge."
+    },
+    {
+     "q": "What are some good date ideas for vegans?",
+     "model_answer": "Vegan date ideas include trying new vegan restaurants, attending a vegan cooking class, or going on a nature hike and foraging for wild edibles.",
+     "plan": "Vegan date ideas include trying restaurants attending cooking class going nature hike foraging wild edibles",
+     "c3_render": "Vegan, date and date of what ideas include trying to include restaurants, attending-class cooking, class, going nature, nature hike, for,, hiking, and edibles.",
+     "shuffled_render": "Hummnej, Doctor of Remedy Health brands are brands initigger Basket Pepsi 7, Mountain,, Cocaoma and F Fanta, soda."
+    },
+    {
+     "q": "What are a lot of different options for traveling across New York City?",
+     "model_answer": "A lot of different options for traveling across New York City include the subway, buses, taxis, ride-sharing services, ferries, and the iconic yellow cabs.",
+     "plan": "different options traveling across York City include subway buses taxis ride sharing services ferries iconic yellow cabs",
+     "c3_render": "The options for travelling across New City and York City include subway,, buses buses taxis, ride and sharing services services such as ferries, iconic,, yellow and cabs.",
+     "shuffled_render": "Toned to date date. These ideas those try to try restaurants and attending, cooking cooking and class going or going a nature hike, hike foraging, wild and edibles with."
+    },
+    {
+     "q": "What is the oldest civilization in the world?",
+     "model_answer": "The oldest civilization in the world is the Sumerian civilization, which emerged in Mesopotamia around 4500 BCE.",
+     "plan": "oldest civilization world Sumerian emerged Mesopotamia around 4500",
+     "c3_render": "The mindest civilization the world the Sumerian has emerged from the Mesopotamia around 4500s",
+     "shuffled_render": "The other options for traveling around New York City include subway, buses and taxis buses and sharing services like ferries, bus iconic, and yellow cabs."
+    },
+    {
+     "q": "Tell me whether each of these dishes are served cold or hot: pizza, pasta, tiramisu, ice cream, ribs, steak, ceviche",
+     "model_answer": "Pizza, pasta, ribs, and steak are served hot. Tiramisu, ice cream, and ceviche are served cold.",
+     "plan": "Pizza pasta ribs steak served Tiramisu cream ceviche cold",
+     "c3_render": "NOTE: freshly pasta and steak are served in Tiramisu: black cream are cream cream. ceviche are dry and cold.",
+     "shuffled_render": "It is a civilization of the world Sumerian has emerged from Mesopotamia for more4 than 450."
+    },
+    {
+     "q": "What is a good soccer club in Lake Washington area in the USA?",
+     "model_answer": "The Seattle Sounders FC is a professional soccer club based in Seattle, Washington, and plays in Major League Soccer (MLS). They are the most successful team in the history of the league, having won the MLS Cup three times and the Supporters' Shield twice.",
+     "plan": "Seattle Sounders professional soccer club based Washington plays Major League successful team history having three times Supporters Shield twice",
+     "c3_render": "The Sound Sounders professional a professional soccer club based on Washington. plays the Major League, has a successful team in history. The history of the team has having three times and the schöner twice twice.",
+     "shuffled_render": "A pasta pasta and steak are served: Tiramisu is an cream cream cream, ceviche is cold"
+    },
+    {
+     "q": "In which year did the Portuguese first arrived in Brazil?",
+     "model_answer": "The Portuguese first arrived in Brazil in 1500.",
+     "plan": "Portuguese first arrived Brazil 1500",
+     "c3_render": "Portuguese was at first arrived in Brazil in 1500.",
+     "shuffled_render": "The Sound,ers a a professional soccer club, based on Washington and plays soccer. The Major League is a successful team of history. A team has having having three times hog and two Shield twice."
+    },
+    {
+     "q": "What are some classes you need to take in university to become an aerospace engineer?",
+     "model_answer": "Aerospace engineering is a field of engineering that deals with the design, construction, and science behind aircraft and spacecraft. To become an aerospace engineer, you need to take classes in physics, mathematics, and engineering.",
+     "plan": "Aerospace engineering field deals design construction science behind aircraft spacecraft become engineer need take classes physics mathematics",
+     "c3_render": "Aerospace is a field of engineering that deals with design and design and construction science, behind the idea of aircraft an spacecraft will will become engineer, engineer who will need to take classes in physics with mathematics.",
+     "shuffled_render": "Portugug was first first arrived in Brazil in 1500."
+    },
+    {
+     "q": "I'm putting together an exercise plan that needs to have both cardio and strength exercises, but I want to separate exercises into each category. Running, deadlifts, cycling, pushups, swimming, jump rope,  lunges and squats.",
+     "model_answer": "Cardio exercises include running, cycling, swimming, and jump rope. Strength exercises include deadlifts, pushups, lunges, and squats.",
+     "plan": "Cardio exercises include running cycling swimming jump rope Strength deadlifts pushups lunges squats",
+     "c3_render": "Plus: exercises include running cycling, swimming, jump, rope, feminine deadliftlifts, pushups, run lunges, squats",
+     "shuffled_render": "Aerospace is engine engineering field in the field of design construction and science. But behind the aircraft, spacecraft and become to become a engineer. You will also need to take classes of physics physicsodynamic mathematics."
+    },
+    {
+     "q": "Which one among the following three words is different to the others: Novelty, Playful, Irresistible? Why?",
+     "model_answer": "Novelty is different to the others because it is the only word that is not an adjective.",
+     "plan": "Novelty different others because word adjective",
+     "c3_render": "The Hostelty are many many different others because the word is an interpreter.",
+     "shuffled_render": "Fabio a include running golf cycling cycling swimming,, jump, rope, dead,liftlifts pushups, lunges, and squats."
+    },
+    {
+     "q": "Who are some of the most successful golfers in history?",
+     "model_answer": "Jack Nicklaus, Tiger Woods, and Arnold Palmer are among the most successful golfers in history.",
+     "plan": "Jack Nicklaus Tiger Woods Arnold Palmer among successful golfers history",
+     "c3_render": "osten Nicklaus Woods Tiger and Arnold Palmer are among most successful golfers in history",
+     "shuffled_render": "Nickel is a different lot from different others because of the word is adjective."
+    },
+    {
+     "q": "What is the best way to store food?",
+     "model_answer": "The best way to store food is to keep it in a cool, dry place, away from direct sunlight and moisture. Use airtight containers to prevent spoilage and maintain freshness.",
+     "plan": "best store food keep cool place away direct sunlight moisture airtight containers prevent spoilage maintain freshness",
+     "c3_render": "To store your food to keep cool, keep a place away from sunlight sunlight, a sunlight sunlight, and airtight. You can also packing containers to prevent and prevent spoilage to keep your food and freshness.",
+     "shuffled_render": "James Nicklaus, Tiger Woods, in Palmer Palmer are amongst the most successful golfers in history."
+    },
+    {
+     "q": "What are some ways that I can reduce the latency of my API?",
+     "model_answer": "To reduce API latency, you can optimize your code, use caching, and implement load balancing. Additionally, consider using a Content Delivery Network (CDN) to serve static content more efficiently.",
+     "plan": "reduce latency optimize code caching implement load balancing Additionally consider using Content Delivery Network serve static efficiently",
+     "c3_render": " cheating latency can optimize your code caching caching to implement your balancing Dabei. Also consider using the Siemens Delivery Network and to serve serve static efficiently.",
+     "shuffled_render": "To store a store, keep to keep keep a cool place away away from direct sunlight,Bio, Peru airtight containers, etc. You try to prevent the spoilage to maintain the freshness."
+    },
+    {
+     "q": "What is stratigraphy?",
+     "model_answer": "Stratigraphy is the study of rock layers and the interpretation of the history they represent.",
+     "plan": "Stratigraphy study rock layers interpretation history represent",
+     "c3_render": "Formatigraphy a a study of rock objects and layers of the history represent history.",
+     "shuffled_render": " consequential latency can optimize your caching code to improve caching, implement Vector your balancingamtecurity. Additionally, you consider using using a Content and Delivery Delivery Network, you to serve more static and more efficiently."
+    },
+    {
+     "q": "Classify each of the following as a drink or food: coffee, apple, water, soda, banana, pineapple, champagne",
+     "model_answer": "coffee, water, soda, champagne are drinks. apple, banana, pineapple are food.",
+     "plan": "coffee water soda champagne drinks apple banana pineapple food",
+     "c3_render": "The water include: water, soda, champagne champagne drinks, water, drinks, apple banana, banana, pineapple and food water",
+     "shuffled_render": "Operatigraphy is a study of rock and layers. The layers, layers of history,, and layers of history represent."
+    },
+    {
+     "q": "Give me some suggestions to stop my kids from whining.",
+     "model_answer": "1. Set clear expectations and boundaries for behavior. 2. Use positive reinforcement and teach problem-solving skills.",
+     "plan": "1 clear expectations boundaries behavior 2 positive reinforcement teach problem solving skills",
+     "c3_render": "A clear: clear unequiv boundaries your behavior is 2. positive reinforcement. teach your problem and solving your skills.",
+     "shuffled_render": "Includes: water, soda, champagne champagne drinks, apple banana fruit, and food"
+    },
+    {
+     "q": "What is a good slogan for carpet?",
+     "model_answer": "\"Step into Comfort, Step into Style.\"",
+     "plan": "Step Comfort Style",
+     "c3_render": ".",
+     "shuffled_render": "You have clear requirements limits boundaries and behavior 2. The positive qualitative teach teach problem solving skills."
+    },
+    {
+     "q": "Why Mauritius is famous",
+     "model_answer": "Mauritius is famous for its beautiful beaches, vibrant culture, and as a former British colony.",
+     "plan": "Mauritius famous beautiful beaches vibrant culture former British colony",
+     "c3_render": "Mauritius the famous for its beautiful beaches, beaches and vibrant culture, a former British colony.",
+     "shuffled_render": "2. What You you Out. Do Not Not ''."
+    },
+    {
+     "q": "What else can you do with a hammer other than hammering nails?",
+     "model_answer": "You can use a hammer to drive in nails, remove nails, and break objects.",
+     "plan": "hammer drive nails remove break objects",
+     "c3_render": "You will drive your nails Lam and wear and remove break from objects.",
+     "shuffled_render": "Maurit a popular famous for its beautiful beaches and vibrant culture, which is a former British colony."
+    },
+    {
+     "q": "Why is the immigration system broken?",
+     "model_answer": "The immigration system is broken because it is inefficient, unfair, and fails to address the needs of both immigrants and the host country. It often lacks clear policies, leading to confusion and exploitation.",
+     "plan": "immigration system broken because inefficient unfair fails address needs immigrants host country often lacks clear policies leading confusion exploitation",
+     "c3_render": "Aigration system is broken because inefficient competition fails to address the needs of a country country in the host. A host country directory this often lacks clear policies and policies leading to confusion to exploitation.",
+     "shuffled_render": " heute to make the drive of the nails and remove break objects"
+    },
+    {
+     "q": "Classify the following as types of birds or types of snakes: robin, cobra, rattlesnake, eagle, viper, raptor, bluejay, cottonmouth, copperhead, sparrow.",
+     "model_answer": "Types of birds: robin, eagle, raptor, bluejay, sparrow. Types of snakes: cobra, rattlesnake, viper, cottonmouth, copperhead.",
+     "plan": "Types birds robin eagle raptor bluejay sparrow snakes cobra rattlesnake viper cottonmouth copperhead",
+     "c3_render": " birds birds: Sty-eight, eagle, r r surfaces, blue, r sp, sparrow, snakes snakes, cobra, rattlesnake, cinnamon, cottonmouthereal, copperheadhead plus feel",
+     "shuffled_render": "The emigration system is broken because it inefficient it is unfair to address the needs of immigrants in host country, but often the country often lacks clear policy policies, leading to the confusion and exploitation."
+    },
+    {
+     "q": "Classify each of the following as either characters from Star Wars or Star Trek: Jean Luc Picard, Grogu, Han Solo, Luke Skywalker, Data, Q, Darth Vader, Ahsoka, William Riker, James Kirk, Spock",
+     "model_answer": "Star Wars: Grogu, Han Solo, Luke Skywalker, Darth Vader, Ahsoka, James Kirk, Spock. Star Trek: Jean Luc Picard, Data, Q, William Riker.",
+     "plan": "Star Wars Grogu Solo Luke Skywalker Darth Vader Ahsoka James Kirk Spock Trek Jean Picard Data William Riker",
+     "c3_render": "Star Trek: Wars Grogu Live Solo: Luke Seymour:Bighb Clarence Coleman: Ahs Chat: Have Nichols, Kirk, James Spock Trek: Star Trek Data Data: Jean Picard Data: William Riker:",
+     "shuffled_render": " birds birds, wild, eagle, raptor, ringo, blue que,arrowarrow, c roses, cobra,kal clesnake, mant, cottonember, copperheadhead."
+    },
+    {
+     "q": "What is MLflow?",
+     "model_answer": "MLflow is an open-source platform for managing the end-to-end machine learning lifecycle, including experiment tracking, reproducibility, and deployment. It provides tools for tracking experiments, packaging code into reproducible runs, and sharing and deploying models.",
+     "plan": "MLflow open source platform managing machine learning lifecycle including experiment tracking reproducibility deployment provides tools experiments packaging code reproducible runs sharing deploying models",
+     "c3_render": "flowflow is an open source source platform for promoting machine machine and learning therapy, including, experiment, while tracking for repro invisibility and reproibilityibility, which provides tools for experiments packaging packaging code.. sprducible produces sharing and sharing deploying models.",
+     "shuffled_render": "Star Wars: Grobußen Solo sax Luke Mortonigeliday, Ahsoka, James, James Kirk, Spockock,, Jean Picard, Data, William Riker"
+    },
+    {
+     "q": "What are equity securities?",
+     "model_answer": "Equity securities are financial instruments that represent ownership in a company, such as stocks or shares.",
+     "plan": "Equity securities financial instruments represent ownership company stocks shares",
+     "c3_render": "Commonity, securities and financial instruments represent the ownership of the company stocks stocks and shares shares.",
+     "shuffled_render": "flowflow is an open-source open source platform for managing and managing machine learning learning with lifecycle lifecycle, including experiment, tracking, repro interoperability and deployment. And It provides methods for research. packaging code code and reproducible also runs running and deploying deploying models."
+    }
+   ]
+  },
+  {
+   "temp": 1.0,
+   "top_k": 0,
+   "top_p": 1.0,
+   "retention_matched": 0.6535,
+   "retention_shuffled(control)": 0.0071,
+   "retention_blank(control)": 0.0017,
+   "retention_model_answer(ceiling)": 0.975,
+   "number_recall_matched": 0.6667,
+   "number_recall_shuffled(control)": 0.0,
+   "number_recall_blank(control)": 0.1667,
+   "items": [
+    {
+     "q": "Give me a list of fantastic movies",
+     "model_answer": "The Shawshank Redemption, The Godfather, The Dark Knight, Pulp Fiction, The Lord of the Rings, The Matrix, Inception, Fight Club, The Silence of the Lambs, and The Green Mile.",
+     "plan": "Shawshank Redemption Godfather Dark Knight Pulp Fiction Lord Rings Matrix Inception Fight Club Silence Lambs Green Mile",
+     "c3_render": "Warsawsh,. The, Hir of Godfather, Dark, Knight, Pulp, Fiction, The Lord, Rings, The Newton, The Rings, Theuen, The God, In Conception, wins. Die Kambs and, and The Green Mile,",
+     "shuffled_render": "Individuality, in securities financial, represent represent ownership of a company, stocks,, and shares."
+    },
+    {
+     "q": "Identify which instrument is string or percussion: Ranat ek, Sasando",
+     "model_answer": "Ranat ek is a percussion instrument, while Sasando is a string instrument.",
+     "plan": "Ranat percussion instrument Sasando string",
+     "c3_render": "Ranat is percussion instrument,inzando is string string is",
+     "shuffled_render": "The Cardshank - himself and, Holy Godfather, the Dark Knight, Pulp Fiction, Lord Book of The Rings Matrix, Best Nature Club, The Club's Watson Bay,bs, and The Green Mile"
+    },
+    {
+     "q": "You are planning a trip and want to travel only in the Southern Hemisphere in the first half, and only the Northern Hemisphere in the second half. Sort the countries in your itinerary into 'Southern Hemisphere' and 'Northern Hemisphere'. Your itinerary includes: Fiji, Brazil, Australia, China, Argentina, India, Canada, and South Africa.",
+     "model_answer": "Southern Hemisphere: Fiji, Brazil, Australia, Argentina, South Africa. Northern Hemisphere: China, India, Canada.",
+     "plan": "Southern Hemisphere Fiji Brazil Australia Argentina South Africa Northern China India Canada",
+     "c3_render": "Impl, Fiji, Fiji, Australia, Argentina, India, South Africa, Mediterranean, China, India and Canada.",
+     "shuffled_render": "Ranat is percussion instrument Bild Sasando is string string is the."
+    },
+    {
+     "q": "Classify each as being used on water or land: jet ski, boat, car, bike, kayak, skateboard",
+     "model_answer": "Jet ski and boat are used on water, while car, bike, kayak, and skateboard are used on land.",
+     "plan": "boat used water bike kayak skateboard land",
+     "c3_render": "Note, used used more rain on more and more.. to be used by a electric, water, not air, and not that, a hotwaysway",
+     "shuffled_render": "Unlikeender, Fiji, Brazil are Australia, Argentina, Argentina, South Africa, China, India, Canada,"
+    },
+    {
+     "q": "Why is the Pacific NorthWest so unique?",
+     "model_answer": "The Pacific NorthWest is unique due to its diverse geography, including dense forests, rugged coastlines, and active volcanoes, as well as its distinct cultural heritage and vibrant arts scene.",
+     "plan": "Pacific NorthWest unique diverse geography including dense forests rugged coastlines active volcanoes well distinct cultural heritage vibrant arts scene",
+     "c3_render": "The NorthWest is a unique and diverse geography, including dense forests, and ruggedlines. They They active and volcanoes, as well as distinct distinct cultural, and rich heritage, culture, lively arts scene and events.",
+     "shuffled_render": "Thepower highway is a base used used by more spraying land or \"'', A is used water or water a water"
+    },
+    {
+     "q": "What is celiac disease?",
+     "model_answer": "Celiac disease is an autoimmune disorder triggered by the consumption of gluten, a protein found in wheat, barley, and rye. It causes damage to the small intestine, leading to malabsorption of nutrients and various symptoms.",
+     "plan": "Celiac disease autoimmune disorder triggered consumption gluten protein found wheat barley causes damage small intestine leading malabsorption nutrients various symptoms",
+     "c3_render": "Dennis disease disease is a is stunned disorder virtue by rise a gluten and protein found in wheat, barley, and causes, damage with a small intestine, leading a mal be burnt and, and lasts and in certain disease, and patient autoimmune disorder.",
+     "shuffled_render": "South NorthWest are unique and diverse. through their dense forests, rugged,, and coastlines, both which are active and volcanoes as well as a distinct cultural heritage, a vibrant arts and scene."
+    },
+    {
+     "q": "How many moons orbit Jupiter and what are the names of the most significant ones?",
+     "model_answer": "Jupiter has 79 known moons. The most significant ones are Io, Europa, Ganymede, and Callisto.",
+     "plan": "Jupiter 79 known moons significant ones Europa Ganymede Callisto",
+     "c3_render": "Jupiter 79 is known for-scale Oz at Europa Ganymede Callisto as significant ones.",
+     "shuffled_render": "Cpsonconomic activity curing disorder disorder triggered by consumption of gluten meat produced in a protein or other wheat. causes damage to a small intestine, as a leading to mal beorption calcium may infertility several symptoms."
+    },
+    {
+     "q": "Give me a bunch of excuses about why I don't have my homework to turn in",
+     "model_answer": "I forgot to bring it home, I lost it, I was sick, I had a family emergency, I was busy with extracurricular activities, I misunderstood the assignment, I didn't have enough time, I was distracted, I didn't know it was due, I was procrastinating,",
+     "plan": "forgot bring home lost sick family emergency busy extracurricular activities misunderstood assignment didn enough time distracted know procrastinating",
+     "c3_render": "House bring a home from a sick sick family, outdoor, when being busy, patacur and exercise activities, the the assignment assignment, and didn't have enough time to distracted, and know Centinating.",
+     "shuffled_render": "Jupiter 79 for, are the most significant ones the Europe, Myymede and Call alert."
+    },
+    {
+     "q": "Classify the following as either an insect or a dog breed: mosquito, Labrador retriever, German shepherd, ant, Siberian husky, poodle, and ladybug.",
+     "model_answer": "Mosquito and ant are insects, while Labrador retriever, German shepherd, Siberian husky, and poodle are dog breeds.",
+     "plan": "Mosquito insects Labrador retriever German shepherd Siberian husky poodle breeds",
+     "c3_render": "char tribes are insectsflowers.. french, Ev German tort, Siberian,ianky, p and are breedsam breeds.",
+     "shuffled_render": "No can bring a new home to a sick or the Bull family, your busyAnyone be busy and a extracur or faculties activities until the activities are manipulated. The assignment trick doesn't know in Hiinatingin and assignment could to able to ensure on when I know accentinating it."
+    },
+    {
+     "q": "Classify each of the following as either a stringed instrument or a percussion instrument: violin, guitar, drums, congas, bongos, bass guitar.",
+     "model_answer": "The violin, guitar, and bass guitar are stringed instruments. The drums, congas, and bongos are percussion instruments.",
+     "plan": "violin guitar bass stringed instruments drums congas bongos percussion",
+     "c3_render": "Skolin guitar bass, stringeded instruments, drums, engas bongos, and percussion,.",
+     "shuffled_render": "- jackets intimately- insectsilde trimlyver Geographic- German. Dan forestian, husky, poul breeds."
+    },
+    {
+     "q": "What is the most played popular and most played instrument in the world?",
+     "model_answer": "The most played popular instrument in the world is the piano, while the most played instrument overall is the guitar.",
+     "plan": "played popular instrument world piano overall guitar",
+     "c3_render": " Digital Angeles 1 an popular instrument one of the most overall guitar.",
+     "shuffled_render": "Skolin is guitar bass, stringed instruments drums,."
+    },
+    {
+     "q": "Tell me which of these characters are from the Mario universe: Yoshi, Zelda, King Kong, Luigi, Princess Peach, Link, Bowser, Alex Rodriguez.",
+     "model_answer": "Yoshi, Luigi, Princess Peach, Link, and Bowser are from the Mario universe. Zelda, King Kong, and Alex Rodriguez are not.",
+     "plan": "Yoshi Luigi Princess Peach Link Bowser Mario universe Zelda King Kong Alex Rodriguez",
+     "c3_render": "Toshi Luigiovich Princess Bryant, Linkvéser Dr Mario universe, Queen King Kong, Alex Kut,.",
+     "shuffled_render": " Montreal´s a popular instrument in the world as music is an overall guitar."
+    },
+    {
+     "q": "Tell me which of the following countries as considered SAARC countries: Afghanistan, Bangladesh, Bhutan, India, United States of America, United Kingdom, China, Singapore",
+     "model_answer": "Afghanistan, Bangladesh, Bhutan, India, and the Maldives are considered SAARC countries.",
+     "plan": "Afghanistan Bangladesh Bhutan India Maldives considered SAARC countries",
+     "c3_render": "Afghanistan, Bangladesh Bhutan,utan India, and Maldives are considered both both and SAARC countries.",
+     "shuffled_render": "Soshi Luigi, Princess Gin, Link Bowser, Mario universe,. Eileenatty, King Hong Kong. Alex Rodriguez"
+    },
+    {
+     "q": "Let's play a game of tic tac toe. I'll be X and you be O. Unplayed squares will be \"_\". I'll get first.\n\n_ _ _\n_ O _\n_ _ _",
+     "model_answer": "_ _ X\n_ O _\n_ _ _",
+     "plan": "",
+     "c3_render": "ononO: is:only Onea&Aa s No no with..CC. writing??",
+     "shuffled_render": "Afghanistan, is,, Bhutan, India India, and Maldives, are considered SAARC or countries,"
+    },
+    {
+     "q": "How many human beings are on the planet?",
+     "model_answer": "The current global population is approximately 7.9 billion people.",
+     "plan": "current global population approximately 7.9 billion people",
+     "c3_render": "The global population of population approximately 7.9 billion people",
+     "shuffled_render": "The an option- Because The Red CAM- non:Justice multitude'"
+    },
+    {
+     "q": "Tell me whether these are nouns or verbs: Run, Dance, Slide, Jump, Think, Book, Noah Webster, Cat, Omaha, Softness, Justice.",
+     "model_answer": "Run, Dance, Slide, Jump, and Think are verbs. Book, Noah Webster, Cat, Omaha, Softness, and Justice are nouns.",
+     "plan": "Dance Slide Jump Think verbs Book Noah Webster Omaha Softness Justice nouns",
+     "c3_render": "Danceaddle and D Think Think are Think: Book of haben, Peter Noah Knight,, Softness, Justice and.",
+     "shuffled_render": "India's global population is a population of 7.9 billion Sheffield people."
+    },
+    {
+     "q": "Classify each of the following as either a brand of kombucha or a soda brand: Humm, Brew Doctor, Pepsi, 7Up, Mountain Dew, Coca-Cola, Sprite, Fanta, GT's, Remedy, Health-Ade",
+     "model_answer": "Humm, Brew Doctor, GT's, Remedy, and Health-Ade are brands of kombucha. Pepsi, 7Up, Mountain Dew, Coca-Cola, Sprite, Fanta are soda brands.",
+     "plan": "Humm Brew Doctor Remedy Health brands kombucha Pepsi 7 Mountain Coca Cola Sprite Fanta soda",
+     "c3_render": "Gummnej, Doctor, Rem andedy and Health all brands are competitors. | defomib Mountain and 7. Mountain, Coca Coca Cola, Play, Fanta, soda, German are Fanta, soda",
+     "shuffled_render": "Dity Against Jump Jump Jump ThinkPad: The ThinkPad: Book of No OK:mu: Omaha, Protocol Report:, healing: The CumorVA: Softness, Premium, theors are: Stores weeklybook.com China China."
+    },
+    {
+     "q": "What are some good date ideas for vegans?",
+     "model_answer": "Vegan date ideas include trying new vegan restaurants, attending a vegan cooking class, or going on a nature hike and foraging for wild edibles.",
+     "plan": "Vegan date ideas include trying restaurants attending cooking class going nature hike foraging wild edibles",
+     "c3_render": "Vegan date of date and ideas write try to managed restaurants, while you can teach cooking class. It going for a hike hike, river. or hike foraging. It is a wild of edibles.",
+     "shuffled_render": "Hummether, Doctor of Remedy Health Health brandsFrom initucha, Window7.7 Mountain island, Cocaoma Ra,.anta, gems Mechanical"
+    },
+    {
+     "q": "What are a lot of different options for traveling across New York City?",
+     "model_answer": "A lot of different options for traveling across New York City include the subway, buses, taxis, ride-sharing services, ferries, and the iconic yellow cabs.",
+     "plan": "different options traveling across York City include subway buses taxis ride sharing services ferries iconic yellow cabs",
+     "c3_render": "The convenient options for traveling around and New York City will include. Most of buses buses taxis and transport sharing that services such as ferries, the River,, and cabs.",
+     "shuffled_render": "Mittal with date date have date and ideas that will be trying restaurants, attending cooking cooking and are going nature or a hike for nature, offaging, wild and edibles."
+    },
+    {
+     "q": "What is the oldest civilization in the world?",
+     "model_answer": "The oldest civilization in the world is the Sumerian civilization, which emerged in Mesopotamia around 4500 BCE.",
+     "plan": "oldest civilization world Sumerian emerged Mesopotamia around 4500",
+     "c3_render": "The most civilization in the world the Sumerian emerged from Mesopotamia from around the 450s.",
+     "shuffled_render": "The options via travelling New York City include subway buses taxis and ride services; such as ferriesries, and yellow cabs."
+    },
+    {
+     "q": "Tell me whether each of these dishes are served cold or hot: pizza, pasta, tiramisu, ice cream, ribs, steak, ceviche",
+     "model_answer": "Pizza, pasta, ribs, and steak are served hot. Tiramisu, ice cream, and ceviche are served cold.",
+     "plan": "Pizza pasta ribs steak served Tiramisu cream ceviche cold",
+     "c3_render": "Rate: It's chopped pasta and drink is served from Tiram, sandwiches with T aromatic stimulates mo-w wine cream, winds, andviche ice and cold.",
+     "shuffled_render": "This system is the e civilization in the Sumerian. most of its inhabitants from Mesopotamia for more than 4500 civilization for a time."
+    },
+    {
+     "q": "What is a good soccer club in Lake Washington area in the USA?",
+     "model_answer": "The Seattle Sounders FC is a professional soccer club based in Seattle, Washington, and plays in Major League Soccer (MLS). They are the most successful team in the history of the league, having won the MLS Cup three times and the Supporters' Shield twice.",
+     "plan": "Seattle Sounders professional soccer club based Washington plays Major League successful team history having three times Supporters Shield twice",
+     "c3_render": "Rock Sounders are a professional soccer club based on Washington. It plays the Pas League, successful in history team, having history three times andner Shield twice twice.",
+     "shuffled_render": "Generally,, is, tiger,Ice served are Tiram coarse cream cream cream abundantviche is cold."
+    },
+    {
+     "q": "In which year did the Portuguese first arrived in Brazil?",
+     "model_answer": "The Portuguese first arrived in Brazil in 1500.",
+     "plan": "Portuguese first arrived Brazil 1500",
+     "c3_render": "Portuguese was at first arrived in Brazil in 1500's.",
+     "shuffled_render": "With a Sounders' professional soccer club based in Washington. Anti that plays a Major League is Germany engaged and is a successful team. A team  has a highly highly soccer team having times times, in which all-AdammastersCMS every team."
+    },
+    {
+     "q": "What are some classes you need to take in university to become an aerospace engineer?",
+     "model_answer": "Aerospace engineering is a field of engineering that deals with the design, construction, and science behind aircraft and spacecraft. To become an aerospace engineer, you need to take classes in physics, mathematics, and engineering.",
+     "plan": "Aerospace engineering field deals design construction science behind aircraft spacecraft become engineer need take classes physics mathematics",
+     "c3_render": "Aerospace is in the engineering field that deals with design and construction in the science and behind the aircraft aircraft. morphology has become an engineer and engineer, are need to take touch classes in physics with mathematics.",
+     "shuffled_render": "Portugug was first arrived at Brazil in 1500  a known for the miracle miracle."
+    },
+    {
+     "q": "I'm putting together an exercise plan that needs to have both cardio and strength exercises, but I want to separate exercises into each category. Running, deadlifts, cycling, pushups, swimming, jump rope,  lunges and squats.",
+     "model_answer": "Cardio exercises include running, cycling, swimming, and jump rope. Strength exercises include deadlifts, pushups, lunges, and squats.",
+     "plan": "Cardio exercises include running cycling swimming jump rope Strength deadlifts pushups lunges squats",
+     "c3_render": "Estio exercises include running cycling, swimming, jump, rope Caption, deadlifts.",
+     "shuffled_render": "Aerospace is engineering field deals with a design of construction science and engineering behind engines ( billion, aboard comes to become engineer and who will take some classes in physics with mathematics."
+    },
+    {
+     "q": "Which one among the following three words is different to the others: Novelty, Playful, Irresistible? Why?",
+     "model_answer": "Novelty is different to the others because it is the only word that is not an adjective.",
+     "plan": "Novelty different others because word adjective",
+     "c3_render": "The Hostelty of lug have different others because the word is an items.",
+     "shuffled_render": "Plusio a include of cycling, swimming and miniiking which are located at dead,liftlifts, rounded push look, special, lunges and the squatsats constrain thro."
+    },
+    {
+     "q": "Who are some of the most successful golfers in history?",
+     "model_answer": "Jack Nicklaus, Tiger Woods, and Arnold Palmer are among the most successful golfers in history.",
+     "plan": "Jack Nicklaus Tiger Woods Arnold Palmer among successful golfers history",
+     "c3_render": "Motor, Nick Nicklaus, Tiger Woods,name Palmer, and Palmer are among successful golfers in their history is golf.",
+     "shuffled_render": " snorkelty are different dei others Lon because of they images with another or because one that is their adjective."
+    },
+    {
+     "q": "What is the best way to store food?",
+     "model_answer": "The best way to store food is to keep it in a cool, dry place, away from direct sunlight and moisture. Use airtight containers to prevent spoilage and maintain freshness.",
+     "plan": "best store food keep cool place away direct sunlight moisture airtight containers prevent spoilage maintain freshness",
+     "c3_render": "To store your food, keep cool cool away a direct sunlight - and moisture quitirtight containers, to prevent spoilage, its freshness.",
+     "shuffled_render": "Interestingly, Richlaus Woods, The Tiger Woods Woods, and William Palmer are among the most successful golf and golfers story in history."
+    },
+    {
+     "q": "What are some ways that I can reduce the latency of my API?",
+     "model_answer": "To reduce API latency, you can optimize your code, use caching, and implement load balancing. Additionally, consider using a Content Delivery Network (CDN) to serve static content more efficiently.",
+     "plan": "reduce latency optimize code caching implement load balancing Additionally consider using Content Delivery Network serve static efficiently",
+     "c3_render": " elimin your latency to execution code and Wordpress to implement balancing.. Besides consider this, using Content and Network Network to serve to static efficiently.",
+     "shuffled_render": "Yes, there's in a store and keep the food, keep a cool place away from direct sunlight or a sunlight sunlight piracy - a behindirtill N containers. If you can spoil spoilage to maintained your shelf or Double* freshness.\""
+    },
+    {
+     "q": "What is stratigraphy?",
+     "model_answer": "Stratigraphy is the study of rock layers and the interpretation of the history they represent.",
+     "plan": "Stratigraphy study rock layers interpretation history represent",
+     "c3_render": "atat critique a a study rock rock translation and directives about a a represent history.",
+     "shuffled_render": " calculator calculator to enhance associative code and any Nigerian by implement load balancingprint Systems. you consider by using Congress Open Deliveryicia that you serve to edit you and then to use a multitude, static efficiently."
+    },
+    {
+     "q": "Classify each of the following as a drink or food: coffee, apple, water, soda, banana, pineapple, champagne",
+     "model_answer": "coffee, water, soda, champagne are drinks. apple, banana, pineapple are food.",
+     "plan": "coffee water soda champagne drinks apple banana pineapple food",
+     "c3_render": "Good: waterGroß, champagne champagne, apple, banana and toast: food",
+     "shuffled_render": "Interatan is a study of rock layers while the interpretation of history are represent and."
+    },
+    {
+     "q": "Give me some suggestions to stop my kids from whining.",
+     "model_answer": "1. Set clear expectations and boundaries for behavior. 2. Use positive reinforcement and teach problem-solving skills.",
+     "plan": "1 clear expectations boundaries behavior 2 positive reinforcement teach problem solving skills",
+     "c3_render": "Energy validation: clear Widgets of behavior22.ictive reinforcement are positive exactly a positive su thinking appropriate instruments.",
+     "shuffled_render": "Energy: water, mist,, champagne drinks, cleaner: ice, apple banana pineapple, food:Sa:"
+    },
+    {
+     "q": "What is a good slogan for carpet?",
+     "model_answer": "\"Step into Comfort, Step into Style.\"",
+     "plan": "Step Comfort Style",
+     "c3_render": "KOBbee:† tolight emanc topics topics overhaul Out echo: Next Next NOTE Not:",
+     "shuffled_render": "This range clear expectations limits in your behavior 2. positive differentiation teacher and solving your skills."
+    },
+    {
+     "q": "Why Mauritius is famous",
+     "model_answer": "Mauritius is famous for its beautiful beaches, vibrant culture, and as a former British colony.",
+     "plan": "Mauritius famous beautiful beaches vibrant culture former British colony",
+     "c3_render": "Mauritius the famous for its beautiful beaches flexible and a vibrant culture in a former British colony.",
+     "shuffled_render": "Always make sure you can do and/or and lament 'VDon', fit the remote extra'."
+    },
+    {
+     "q": "What else can you do with a hammer other than hammering nails?",
+     "model_answer": "You can use a hammer to drive in nails, remove nails, and break objects.",
+     "plan": "hammer drive nails remove break objects",
+     "c3_render": "Some drive of the Boot shoes is with the nails thanF, and remove the break from objects.",
+     "shuffled_render": "Theauritius is one of its most beautiful beaches beaches and culture is a former British colony colony"
+    },
+    {
+     "q": "Why is the immigration system broken?",
+     "model_answer": "The immigration system is broken because it is inefficient, unfair, and fails to address the needs of both immigrants and the host country. It often lacks clear policies, leading to confusion and exploitation.",
+     "plan": "immigration system broken because inefficient unfair fails address needs immigrants host country often lacks clear policies leading confusion exploitation",
+     "c3_render": "The emigration is is broken because it is unfair that it or to address and your needs. immigrants and to host a host country. host often lacks the policies, policies not leading to policies, but confusion to host host.",
+     "shuffled_render": "If you need to drive or you will also also drive away Adapter to remove any break objects."
+    },
+    {
+     "q": "Classify the following as types of birds or types of snakes: robin, cobra, rattlesnake, eagle, viper, raptor, bluejay, cottonmouth, copperhead, sparrow.",
+     "model_answer": "Types of birds: robin, eagle, raptor, bluejay, sparrow. Types of snakes: cobra, rattlesnake, viper, cottonmouth, copperhead.",
+     "plan": "Types birds robin eagle raptor bluejay sparrow snakes cobra rattlesnake viper cottonmouth copperhead",
+     "c3_render": "The birds: ceramics, Jos, top, r Saga, blue, sp sparrowarrow, vista, cART,CC unterstütlesnake, bust, cotton protein, copper,headhead",
+     "shuffled_render": "Aigration system is broken because it is inefficient inefficient and fails to address its needs for immigrants in host country, a country is often therefore therefore failing to manage clear policies, leading to exploitation exploitation."
+    },
+    {
+     "q": "Classify each of the following as either characters from Star Wars or Star Trek: Jean Luc Picard, Grogu, Han Solo, Luke Skywalker, Data, Q, Darth Vader, Ahsoka, William Riker, James Kirk, Spock",
+     "model_answer": "Star Wars: Grogu, Han Solo, Luke Skywalker, Darth Vader, Ahsoka, James Kirk, Spock. Star Trek: Jean Luc Picard, Data, Q, William Riker.",
+     "plan": "Star Wars Grogu Solo Luke Skywalker Darth Vader Ahsoka James Kirk Spock Trek Jean Picard Data William Riker",
+     "c3_render": "Star Wars: Grogu Solo Bass Crisis: Have Sound: Aokaoka, S Benjamin: Captain James Kirk: Spockata SpWilliam Picard, Data: Hew Pic William Riker: Edward Picard: William Riker",
+     "shuffled_render": "Otherwise, birds, ich ice,,, rpeopleSee, blueenge,arrowarrow and Void: c€ocks, sehrlesnake hot, cotton Hago extremely copperhead"
+    },
+    {
+     "q": "What is MLflow?",
+     "model_answer": "MLflow is an open-source platform for managing the end-to-end machine learning lifecycle, including experiment tracking, reproducibility, and deployment. It provides tools for tracking experiments, packaging code into reproducible runs, and sharing and deploying models.",
+     "plan": "MLflow open source platform managing machine learning lifecycle including experiment tracking reproducibility deployment provides tools experiments packaging code reproducible runs sharing deploying models",
+     "c3_render": "flowflow is an open-source source platform for Schmidt learning learning and editorial dataD with a language configurations.-ray experiment for tracking and reproducibility deployment, and deployment provides tools such as a packaging packaging that run repro Crowley and sharing die deploying models.",
+     "shuffled_render": " era - Star Wars Grogro Live-Boy- Luke Willie bent Damon: Daniels:amac: Ahsokaoka- James Kirk Spock Trek Trek: Jean Picardt Data- Data: Pine William Riker\""
+    },
+    {
+     "q": "What are equity securities?",
+     "model_answer": "Equity securities are financial instruments that represent ownership in a company, such as stocks or shares.",
+     "plan": "Equity securities financial instruments represent ownership company stocks shares",
+     "c3_render": "Electricity, securities and financial instruments represent the ownership of the company stocks and shares the's's.",
+     "shuffled_render": "Microflow is an open source platform for managing the machine, learning lifecycle of the platform including experiment, a tracking systemPersonal and actively interoperability and provide and tools for research. packaging, code, code revolutions, sproters, and runs and in Certification models."
+    }
+   ]
+  }
+ ]
+}

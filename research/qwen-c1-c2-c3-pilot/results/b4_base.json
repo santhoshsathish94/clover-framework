@@ -1,0 +1,117 @@
+{
+ "model": "base",
+ "n": 16,
+ "max_new": 48,
+ "variants": {
+  "text_only": {
+   "overlap_with_own_plain_answer": 1.0,
+   "overlap_with_human_answer": 0.5075,
+   "degenerate_share": 0.0,
+   "texts": [
+    "The Shawshank Redemption, The Godfather, The Dark Knight, Pulp Fiction, The Lord of the Rings, The Matrix, Inception, Fight Club, Goodfellas, and The Silence of the Lambs.",
+    "Iraq, Iran, and Afghanistan are categorized as Persian-speaking countries. Turkey, UAE, Qatar, and Syria are categorized as Arabic-speaking countries.",
+    "Southern Hemisphere: Fiji, Brazil, Australia, Argentina, South Africa. Northern Hemisphere: China, India, Canada.",
+    "A quark is a fundamental particle that makes up protons and neutrons.",
+    "Jet ski and boat are used on water, while car, bike, kayak, and skateboard are used on land.",
+    "The Pacific NorthWest is unique due to its diverse geography, including dense forests, rugged coastlines, and volcanic mountains, as well as its rich cultural heritage and distinct climate.",
+    "Celiac disease is an autoimmune disorder triggered by the consumption of gluten, a protein found in wheat, barley, and rye. It causes damage to the small intestine, leading to malabsorption of nutrients and various symptoms.",
+    "You can use a map or a GPS device to find accurate directions between two places.",
+    "Jupiter has 79 known moons. The most significant ones are Io, Europa, Ganymede, and Callisto.",
+    "One of the main triggers for autism in the current generation is the increased use of technology and screen time, which can affect brain development and social interaction skills.",
+    "I forgot to bring it home, I lost it, I was sick, I had a family emergency, I was busy with extracurricular activities, I didn't understand the assignment, I was distracted by personal issues, I didn't",
+    "1. \"When Harry Met Sally\" (1989)\n2. \"The Proposal\" (2009)\n3. \"Notting Hill\" (1999)\n4. \"Crazy, Stupid",
+    "Mosquito and ant are insects, while Labrador retriever, German shepherd, Siberian husky, and poodle are dog breeds.",
+    "The violin, guitar, and bass guitar are stringed instruments. The drums, congas, and bongos are percussion instruments.",
+    "The most played popular instrument in the world is the piano, while the most played instrument overall is the guitar.",
+    "Yoshi, Luigi, Princess Peach, Link, and Bowser are from the Mario universe. Zelda, King Kong, and Alex Rodriguez are not."
+   ]
+  },
+  "latent_K4": {
+   "overlap_with_own_plain_answer": 0.0813,
+   "overlap_with_human_answer": 0.0911,
+   "degenerate_share": 0.8125,
+   "texts": [
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "Pacific Northwest is a region in the United States that is known for its unique geography, climate, and culture. It is located in the northwestern part of the country, and is bordered by the Pacific Ocean to the west, the Cascade Range",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "most played instrument in the world.",
+    "Mario universe are Yoshi, Luigi, Princess Peach, and Bowser."
+   ]
+  },
+  "random_K4": {
+   "overlap_with_own_plain_answer": 0.3068,
+   "overlap_with_human_answer": 0.2701,
+   "degenerate_share": 0.6875,
+   "texts": [
+    "",
+    "countries are categorized as follows: Iraq, Iran, and Afghanistan are categorized as Arabic-speaking countries. Turkey, UAE, Qatar, and Syria are categorized as Turkish-speaking countries.",
+    ": 1. Southern Hemisphere: Fiji, Brazil, Australia, Argentina, South Africa. 2. Northern Hemisphere: China, India, Canada.",
+    "",
+    "A jet ski and a boat are used on water, while a car, a bike, a kayak, and a skateboard are used on land.",
+    ".",
+    "",
+    "",
+    "",
+    "",
+    "exexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexexex",
+    "",
+    ": Mosquito, ant, and ladybug are insects. Labrador retriever, German shepherd, Siberian husky, and poodle are dog breeds.",
+    ": violin, guitar, bass guitar are stringed instruments. drums, congas, bongos are percussion instruments.",
+    "",
+    "."
+   ]
+  },
+  "latent_K16": {
+   "overlap_with_own_plain_answer": 0.0,
+   "overlap_with_human_answer": 0.0,
+   "degenerate_share": 1.0,
+   "texts": [
+    "to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to",
+    "to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the",
+    "the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the",
+    "the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to the to"
+   ]
+  }
+ },
+ "questions": [
+  "Give me a list of fantastic movies",
+  "Categorize the following countries based on the language their majority speaks: Iraq, Iran, Turkey, UAE, Qatar, Afghanistan, Syria",
+  "You are planning a trip and want to travel only in the Southern Hemisphere in the first half, and only the Northern Hemisphere in the second half. Sort the countries in your itinerary into 'Southern Hemisphere' and 'Northern Hemisphere'. Your itinerary includes: Fiji, Brazil, Australia, China, Argentina, India, Canada, and South Africa.",
+  "What is a quark?",
+  "Classify each as being used on water or land: jet ski, boat, car, bike, kayak, skateboard",
+  "Why is the Pacific NorthWest so unique?",
+  "What is celiac disease?",
+  "How can I find accurate directions between two places?",
+  "How many moons orbit Jupiter and what are the names of the most significant ones?",
+  "What is one of the main trigger for autism in current generation?",
+  "Give me a bunch of excuses about why I don't have my homework to turn in",
+  "Give me a list of the best Romantic Comedy Movies",
+  "Classify the following as either an insect or a dog breed: mosquito, Labrador retriever, German shepherd, ant, Siberian husky, poodle, and ladybug.",
+  "Classify each of the following as either a stringed instrument or a percussion instrument: violin, guitar, drums, congas, bongos, bass guitar.",
+  "What is the most played popular and most played instrument in the world?",
+  "Tell me which of these characters are from the Mario universe: Yoshi, Zelda, King Kong, Luigi, Princess Peach, Link, Bowser, Alex Rodriguez."
+ ]
+}

@@ -1,0 +1,117 @@
+{
+ "model": "ha",
+ "n": 16,
+ "max_new": 48,
+ "variants": {
+  "text_only": {
+   "overlap_with_own_plain_answer": 1.0,
+   "overlap_with_human_answer": 0.272,
+   "degenerate_share": 0.0,
+   "texts": [
+    "Okay, so the user is asking for a list of fantastic movies. Hmm, I need to figure out what they mean by \"fantastic.\" It could be sci-fi, fantasy, or maybe just really good movies in general. Let me",
+    "Okay, so I need to categorize these countries based on the majority language spoken there. Let me think about each one.Starting with Iraq. I remember that Iraq's official language is Arabic, so the majority probably speaks Arabic there.",
+    "Okay, so I need to sort these countries into the Southern and Northern Hemispheres. Let me think about how to approach this. First, I remember that the equator divides the Earth into the Northern and Southern Hemispheres. So",
+    "Okay, so I need to figure out what a quark is. Hmm, I remember from my basic physics class that quarks are fundamental particles, but I'm not exactly sure. Let me think. Maybe they're part of the Standard",
+    "Okay, so I need to classify each of these items as either used on water or land. Let me think through each one.First, the jet ski. I remember that jet skis are watercraft, right? They're",
+    "The Pacific Northwest is unique due to its diverse geography, including dense forests, rugged coastlines, and volcanic mountains, combined with a temperate climate and rich indigenous cultures. This region also has a strong environmental consciousness and a thriving tech industry,",
+    "Celiac disease is an autoimmune disorder where the ingestion of gluten leads to damage in the small intestine. It requires a strict gluten-free diet to manage symptoms and prevent complications.\n</think>Okay, so I need to answer what celiac",
+    "To find accurate directions between two places, use a reliable mapping service like Google Maps or Apple Maps. Input the starting point and destination, then follow the step-by-step instructions provided.\n</think>\n\nTo find accurate directions between two places,",
+    "Okay, so the question is asking how many moons orbit Jupiter and the names of the most significant ones. Hmm, I remember that Jupiter has a lot of moons, but I'm not exactly sure of the exact number. Let me think.",
+    "Okay, so the question is asking for one of the main triggers for autism in the current generation. Hmm, I need to think about this carefully. I remember that autism is a neurodevelopmental disorder, and while there's a lot of",
+    "Okay, so the user is asking for excuses for not having homework. Hmm, I need to come up with a few plausible excuses. Let me think. Maybe something like being sick? Or maybe they were distracted by something else? Or perhaps",
+    "Okay, so I need to come up with a list of the best romantic comedy movies. Hmm, I remember that romantic comedies are a genre I enjoy, but I'm not exactly sure which ones are considered the best. Let me think",
+    "Okay, let's tackle this question. So I need to classify each of these items as either an insect or a dog breed. The list is mosquito, Labrador retriever, German shepherd, ant, Siberian husky, poodle,",
+    "Okay, so I need to classify each of these instruments into either stringed or percussion. Let me think through each one.First, the violin. I remember that violins are played by drawing a bow across the strings, right?",
+    "Okay, so the question is asking for the most played popular and most played instrument in the world. Hmm, I need to figure this out. Let me think.First, I remember that when people talk about the most played instrument,",
+    "Okay, so I need to figure out which of these characters are from the Mario universe. Let me start by recalling what I know about each of these characters.First, I'll go through the list one by one.Starting with"
+   ]
+  },
+  "latent_K4": {
+   "overlap_with_own_plain_answer": 0.5018,
+   "overlap_with_human_answer": 0.2256,
+   "degenerate_share": 0.3125,
+   "texts": [
+    "Okay, so the user is asking for a list of fantastic movies. Hmm, I need to figure out what they mean by \"fantastic.\" It could be sci-fi, fantasy, or maybe just really good movies in general. Let me",
+    "To solve this task, I need to categorize the given countries based on the language their majority speaks. Let's analyze each country one by one:1. Iraq: The majority language spoken in Iraq is Arabic.\n2. Iran:",
+    "To solve this problem, I need to sort the countries in the itinerary into 'Southern Hemisphere' and 'Northern Hemisphere'.Step 1: Identify which countries are in the Southern Hemisphere.\nFiji, Brazil, Australia, Argentina, and",
+    "A quark is a fundamental particle that makes up protons and neutrons, which are components of atomic nuclei. There are six types of quarks, known as flavors: up, down, charm, strange, top, and bottom",
+    "",
+    "The Pacific Northwest is unique due to its diverse geography, including dense forests, rugged coastlines, and volcanic mountains, combined with a temperate climate and rich indigenous cultures. This region also has a strong economy driven by technology and natural resources,",
+    "",
+    "To find accurate directions between two places, use a reliable mapping service like Google Maps or Apple Maps. Input the starting point and destination, then follow the step-by-step instructions provided.This answer is concise and directly addresses the user's need",
+    "",
+    "",
+    "Okay, so the user is asking for excuses for not having homework. Hmm, I need to come up with a few plausible excuses. Let me think. Maybe something like being sick? Or maybe they were distracted by something else? Or perhaps",
+    "Okay, so I need to come up with a list of the best romantic comedy movies. Hmm, I remember that romantic comedies are a genre I enjoy, but I'm not exactly sure which ones are considered the best. Maybe I should",
+    "Mosquito, ant, and ladybug are insects. Labrador retriever, German shepherd, Siberian husky, and poodle are dog breeds.The classification is based on the biological definitions of insects (arthropods with six legs",
+    "",
+    "The most played instrument in the world is the piano, and the most popular instrument is the guitar. These instruments are widely used in various genres of music and are commonly found in households and professional settings.The most played instrument in the world",
+    "Okay, so I need to figure out which of these characters are from the Mario universe. Let me start by recalling what I know about each of these characters.First, I remember that Mario is a very popular video game franchise, right"
+   ]
+  },
+  "random_K4": {
+   "overlap_with_own_plain_answer": 0.2459,
+   "overlap_with_human_answer": 0.1513,
+   "degenerate_share": 0.625,
+   "texts": [
+    "",
+    "To categorize these countries based on the language their majority speaks, I need to identify the primary language spoken in each country. Here's a breakdown of the information I found:1.  **Iraq**: The official language is Arabic,",
+    "To solve this problem, I need to sort the countries in the itinerary into 'Southern Hemisphere' and 'Northern Hemisphere'.Step 1: Identify which countries are in the Southern Hemisphere and which are in the Northern Hemisphere.\n- Fiji is",
+    "",
+    "",
+    "The Pacific Northwest is unique due to its diverse geography, including dense forests, rugged coastlines, and volcanic mountains, combined with a temperate climate and rich cultural heritage influenced by indigenous peoples and later settlers. This combination creates a distinct environment and",
+    "",
+    "",
+    "",
+    "",
+    "Okay, so the user is asking for excuses for not having homework. Hmm, I need to come up with a few plausible excuses. Let me think. Maybe something like being sick? Or maybe they were distracted by something else? Or",
+    "",
+    "Mosquito, ant, and ladybug are insects. Labrador retriever, German shepherd, Siberian husky, and poodle are dog breeds.The classification is straightforward based on common knowledge of these terms. Mosquitoes, ants",
+    "",
+    "The most played instrument in the world is the piano, and the most popular instrument is the guitar. These instruments are widely used in various genres of music and are commonly found in households and professional settings.I'll now provide a concise",
+    ""
+   ]
+  },
+  "latent_K16": {
+   "overlap_with_own_plain_answer": 0.3186,
+   "overlap_with_human_answer": 0.2532,
+   "degenerate_share": 0.4375,
+   "texts": [
+    "",
+    "To categorize these countries by the primary language spoken, I will first identify which languages are predominantly used in each country. Then, I'll group them accordingly.\nI'll start by identifying the main languages spoken in each country:\n- Iraq:",
+    "The countries in the Southern Hemisphere are Fiji, Australia, Argentina, and South Africa. The countries in the Northern Hemisphere are Brazil, China, India, and Canada.\n</think>This classification is based on the geographical location of each country relative to",
+    "",
+    "",
+    "The Pacific Northwest is unique due to its diverse geography, including dense forests, rugged coastlines, and mountainous regions, combined with a temperate climate and rich biodiversity. This region also has a distinct cultural identity shaped by indigenous peoples,",
+    "",
+    "To find accurate directions between two places, use a reliable mapping service like Google Maps or Apple Maps. Input the starting point and destination, then follow the step-by-step instructions provided.This answer is concise and directly addresses the user's need",
+    "",
+    "",
+    "I understand that you're looking for a way to explain why you haven't completed your homework. However, it's important to approach this situation responsibly. Instead of providing excuses, I'll suggest a more constructive approach. If you're having trouble",
+    "Okay, so I need to come up with a list of the best romantic comedy movies. Hmm, I remember that romantic comedies are a genre I enjoy, but I'm not exactly sure which ones are considered the best. Maybe I should",
+    "Mosquito, ant, and ladybug are insects. Labrador retriever, German shepherd, Siberian husky, and poodle are dog breeds.The classification is straightforward based on common knowledge of these terms. Mosquitoes,",
+    "",
+    "The most played instrument in the world is the piano, and the most popular instrument is the guitar. These instruments are widely used in various genres of music and are commonly found in households and professional settings.The most played instrument in the world",
+    "The characters from the Mario universe are Yoshi, Luigi, Princess Peach, Link, Bowser, and Alex Rodriguez. Zelda and King Kong are not from the Mario universe.I'll now provide a more concise answer focusing only on the Mario"
+   ]
+  }
+ },
+ "questions": [
+  "Give me a list of fantastic movies",
+  "Categorize the following countries based on the language their majority speaks: Iraq, Iran, Turkey, UAE, Qatar, Afghanistan, Syria",
+  "You are planning a trip and want to travel only in the Southern Hemisphere in the first half, and only the Northern Hemisphere in the second half. Sort the countries in your itinerary into 'Southern Hemisphere' and 'Northern Hemisphere'. Your itinerary includes: Fiji, Brazil, Australia, China, Argentina, India, Canada, and South Africa.",
+  "What is a quark?",
+  "Classify each as being used on water or land: jet ski, boat, car, bike, kayak, skateboard",
+  "Why is the Pacific NorthWest so unique?",
+  "What is celiac disease?",
+  "How can I find accurate directions between two places?",
+  "How many moons orbit Jupiter and what are the names of the most significant ones?",
+  "What is one of the main trigger for autism in current generation?",
+  "Give me a bunch of excuses about why I don't have my homework to turn in",
+  "Give me a list of the best Romantic Comedy Movies",
+  "Classify the following as either an insect or a dog breed: mosquito, Labrador retriever, German shepherd, ant, Siberian husky, poodle, and ladybug.",
+  "Classify each of the following as either a stringed instrument or a percussion instrument: violin, guitar, drums, congas, bongos, bass guitar.",
+  "What is the most played popular and most played instrument in the world?",
+  "Tell me which of these characters are from the Mario universe: Yoshi, Zelda, King Kong, Luigi, Princess Peach, Link, Bowser, Alex Rodriguez."
+ ]
+}

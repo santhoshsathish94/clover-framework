@@ -1,0 +1,594 @@
+{
+ "ckpt": "released WMT14 generator (zero-shot)",
+ "n": 40,
+ "settings": [
+  {
+   "temp": 0.6,
+   "top_k": 50,
+   "top_p": 0.9,
+   "retention_matched": 0.1132,
+   "retention_shuffled(control)": 0.0296,
+   "retention_blank(control)": 0.0,
+   "retention_model_answer(ceiling)": 0.925,
+   "number_recall_matched": 0.5,
+   "number_recall_shuffled(control)": 0.0,
+   "number_recall_blank(control)": 0.0,
+   "items": [
+    {
+     "q": "Give me a list of fantastic movies",
+     "model_answer": "Okay, so the user is asking for a list of fantastic movies. Hmm, I need to figure out what they mean by \"fantastic.\" It could be sci-fi, fantasy, or maybe just really good movies in general. Let me think.First, I'll consider different genres. Sci",
+     "plan": "Okay user asking list fantastic movies need figure mean fantasy maybe really good general think First consider different genres",
+     "c3_render": "This is the most famous and most popular popular legends called \"Music\".",
+     "shuffled_render": "COTE"
+    },
+    {
+     "q": "Identify which instrument is string or percussion: Ranat ek, Sasando",
+     "model_answer": "Okay, so I need to figure out which of these two instruments, the Ranat ek and the Sasando, are string instruments and which are percussion. Hmm, I'm not exactly sure about either of them. Let me think.First, I'll start by recalling what I know about these",
+     "plan": "Okay need figure instruments Ranat Sasando string percussion exactly sure either think First start recalling know",
+     "c3_render": "This means that you won't what you want to if you want.",
+     "shuffled_render": "The \"cause\" says you what you'll like if you want just a Floyd prescribing a!’ dalle. This is absolutely a nonémèualisticato querod sci, il nett PleasantransboyYes."
+    },
+    {
+     "q": "You are planning a trip and want to travel only in the Southern Hemisphere in the first half, and only the Northern Hemisphere in the second half. Sort the countries in your itinerary into 'Southern Hemisphere' and 'Northern Hemisphere'. Your itinerary includes: Fiji, Brazil, Australia, China, Argentina, India, Canada, and South Africa.",
+     "model_answer": "Okay, so I need to sort these countries into the Southern and Northern Hemispheres. Let me think about how to approach this. First, I remember that the equator divides the Earth into the Northern and Southern Hemispheres. So any country north of the equator is in the Northern Hemisphere",
+     "plan": "Okay need sort countries Southern Northern Hemispheres think approach First remember equator divides Earth country north Hemisphere",
+     "c3_render": "Need to sort Great countries of Northern Northernis val approach approach First remember Equator divides Earth country north god.",
+     "shuffled_render": "I think that the mantra is really protagonists."
+    },
+    {
+     "q": "Classify each as being used on water or land: jet ski, boat, car, bike, kayak, skateboard",
+     "model_answer": "Okay, so I need to classify each of these items as either used on water or land. Let me think through each one.First, the jet ski. I remember that jet skis are watercraft, right? They're used on water. So that's water.\n\nNext, the",
+     "plan": "Okay need classify items either used water land think through First remember skis watercraft right Next",
+     "c3_render": "Are used to be used water water drinking.? Do the teeth?",
+     "shuffled_render": "You need sort countries Northern Northern Hemisolin think approach First remember equator divides Earth country, Banan Ban, And, Andalus."
+    },
+    {
+     "q": "Why is the Pacific NorthWest so unique?",
+     "model_answer": "The Pacific Northwest is unique due to its diverse geography, including dense forests, rugged coastlines, and volcanic mountains, combined with a temperate climate and rich cultural heritage influenced by indigenous peoples and later settlers. This region also has a strong economy driven by technology and natural resources.This answer is concise",
+     "plan": "Pacific Northwest unique diverse geography including dense forests rugged coastlines volcanic mountains combined temperate climate rich cultural heritage influenced indigenous peoples later settlers region strong economy driven technology natural resources",
+     "c3_render": "CT Northwest, gebruik exotic, un un nuestras en la matière en-suite en de Ves de de Guatemala, Chile, Est, México, petites, Sierra Lanka,za la de la série de de...",
+     "shuffled_render": "The off pull-off button to roll tube and snowboards."
+    },
+    {
+     "q": "What is celiac disease?",
+     "model_answer": "Celiac disease is an autoimmune disorder where the ingestion of gluten leads to damage in the small intestine. It requires a strict gluten-free diet to manage symptoms and prevent complications.\n\nOkay, so I need to answer what celiac disease is in two short sentences. Let me think.First,",
+     "plan": "Celiac disease autoimmune disorder ingestion gluten leads damage small intestine requires strict free diet manage symptoms prevent complications Okay need answer short sentences think First",
+     "c3_render": "A hydro-gatatinateALLY (higherectomy), kidney pathology Cycling (One nausea) prostate pathology isot toilets (animalupuncture) is a childbirth, a significant type of trauma effects, Chronic ailments, chronic disorders, disorder, tissue and lady illness disorders.",
+     "shuffled_render": "Situated in the north north of the north and north west coast of Sindh, Sindh, Harai, Deborah church, Chajai, Maui,ja, Maurian Holy Roman Roman, Aarhusatat Oro, and carnivrowsrows."
+    },
+    {
+     "q": "How many moons orbit Jupiter and what are the names of the most significant ones?",
+     "model_answer": "Okay, so the question is asking how many moons orbit Jupiter and the names of the most significant ones. Hmm, I remember that Jupiter has a lot of moons, but I'm not exactly sure of the exact number. Let me think. I think it's more than the other planets except maybe Saturn",
+     "plan": "Okay question asking many moons orbit Jupiter names significant ones remember exactly sure exact number think planets except maybe Saturn",
+     "c3_render": "The question asking many many Jupiter names significant ones remember exact numbers",
+     "shuffled_render": "AA disease disease combines pain pain and lung treatment for outpatient patients or diet patients and help patients treat the effects of oral gluten gluten disease."
+    },
+    {
+     "q": "Give me a bunch of excuses about why I don't have my homework to turn in",
+     "model_answer": "Okay, so the user is asking for excuses for not having homework. Hmm, I need to come up with a few plausible excuses. Let me think. Maybe something like being sick? Or maybe they were distracted by something else? Or perhaps they lost the homework?I'll start with a common",
+     "plan": "Okay user asking excuses having homework need come plausible think Maybe something sick distracted else perhaps lost start common",
+     "c3_render": "Everyone says the child child is a dead slave.",
+     "shuffled_render": "The question asking manyulus around Jupiter names significant ones remember exactly sure exact number of planets planets, maybe Saturn. the rapport Republic and, the Legion donending it."
+    },
+    {
+     "q": "Classify the following as either an insect or a dog breed: mosquito, Labrador retriever, German shepherd, ant, Siberian husky, poodle, and ladybug.",
+     "model_answer": "Okay, let's tackle this question. So I need to classify each of these items as either an insect or a dog breed. The list is mosquito, Labrador retriever, German shepherd, ant, Siberian husky, poodle, and ladybug.First, I'll go through each",
+     "plan": "Okay tackle question need classify items either insect breed list mosquito Labrador retriever German shepherd Siberian husky poodle ladybug First through",
+     "c3_render": "We tackle question need sells items either insect breed list Hip slots slotsver German Welsh Siberiankyky.m poul StoryBio First through.",
+     "shuffled_render": " pussy pussy my friend asking for to passion?"
+    },
+    {
+     "q": "Classify each of the following as either a stringed instrument or a percussion instrument: violin, guitar, drums, congas, bongos, bass guitar.",
+     "model_answer": "Okay, so I need to classify each of these instruments into either stringed or percussion. Let me think through each one.First, the violin. I remember that violins are played by drawing a bow across the strings, right? So that would make it a stringed instrument.Next",
+     "plan": "Okay need classify instruments either stringed percussion think through First violin remember violins played drawing across strings right make instrument Next",
+     "c3_render": "How much to play your sound guitar.",
+     "shuffled_render": " tackle tackle question need answering items either insect list list mosquito nets Createver English Language Siberian pky p pbugbugbug First through"
+    },
+    {
+     "q": "What is the most played popular and most played instrument in the world?",
+     "model_answer": "Okay, so the question is asking for the most played popular and most played instrument in the world. Hmm, I need to figure this out. Let me think.First, I remember that when people talk about the most played instrument, they often refer to something like the piano or guitar. But",
+     "plan": "Okay question asking played popular instrument world need figure think First remember people talk often refer something piano guitar",
+     "c3_render": "Since March 2010, Tony joins delivers the movie called \"II do do you know what you know!",
+     "shuffled_render": "The、acya.de withuma cloudzo // 2000.icitaitemuluiaciónposjon�� ت rac ته。rel rod fit yellow op SH Deathja rac.phence, racتههְ��。 منخخ منك."
+    },
+    {
+     "q": "Tell me which of these characters are from the Mario universe: Yoshi, Zelda, King Kong, Luigi, Princess Peach, Link, Bowser, Alex Rodriguez.",
+     "model_answer": "Okay, so I need to figure out which of these characters are from the Mario universe. Let me start by recalling what I know about each of these characters.First, I'll go through the list one by one.Starting with Yoshi. I remember Yoshi is a dinosaur-like character who is",
+     "plan": "Okay need figure characters Mario universe start recalling know First through list Starting Yoshi remember dinosaur character",
+     "c3_render": "Right now a new song!!",
+     "shuffled_render": "Some of the stars played recorded, instrumental and music."
+    },
+    {
+     "q": "Tell me which of the following countries as considered SAARC countries: Afghanistan, Bangladesh, Bhutan, India, United States of America, United Kingdom, China, Singapore",
+     "model_answer": "Okay, so I need to figure out which of these countries are part of SAARC. Let me start by recalling what SAARC stands for. SAARC is the South Asian Association for Regional Cooperation. I think it's a regional organization involving countries in South Asia.First, I'll list the",
+     "plan": "Okay need figure countries part SAARC start recalling stands South Asian Association Regional Cooperation think organization involving Asia First list",
+     "c3_render": "On the top of $1 million, US US$199 dollars was spent by Yacht Shuyai.",
+     "shuffled_render": "So I really ate a fucking fucking, unteth, resembling.!!!!!, but it's Jakarta out all over myectors forsemi shattered Holder reversed, and a. 205, smelling embarrassing!"
+    },
+    {
+     "q": "Let's play a game of tic tac toe. I'll be X and you be O. Unplayed squares will be \"_\". I'll get first.\n\n_ _ _\n_ O _\n_ _ _",
+     "model_answer": "Okay, so I need to play tic-tac-toe against the user. The user is X, and I'm O. The board is set up like this:\n\n_ _ _\n_ O _\n_ _ _\n\nThe user has already made their first move, placing an O in the middle of the",
+     "plan": "Okay need play against user board already made first move placing middle",
+     "c3_render": "OOOO de que uma de a e e-mails like a estamos. And I didn't play so far, so I say “ do the same thing”.",
+     "shuffled_render": "Look at the International Exhibition International Organization - The World Organization World - World Organization – the World Trade Health."
+    },
+    {
+     "q": "How many human beings are on the planet?",
+     "model_answer": "Okay, so the user is asking how many human beings are on the planet. Hmm, I need to figure this out. I remember that population numbers are constantly changing, so maybe there's a recent estimate. Let me think. I think the United Nations or some other organization might have the latest data",
+     "plan": "Okay user asking many human beings planet need figure remember population numbers constantly changing maybe recent estimate think United Nations organization might latest data",
+     "c3_render": "In October 1999, founder of Martin. M.aje Miguel.",
+     "shuffled_render": "I wasn’t say I'm taken the board of the user board first move move."
+    },
+    {
+     "q": "Tell me whether these are nouns or verbs: Run, Dance, Slide, Jump, Think, Book, Noah Webster, Cat, Omaha, Softness, Justice.",
+     "model_answer": "Okay, so I need to figure out whether each of these words is a noun or a verb. Let me start by recalling the basic definitions. A noun is a word that names a person, place, thing, or idea. A verb is a word that expresses an action, occurrence, or state",
+     "plan": "Okay need figure whether words noun verb start recalling basic definitions word names person place thing idea expresses action occurrence state",
+     "c3_render": "Keeping a list of the word word, word definitions, names names and name names.",
+     "shuffled_render": "Зуч вы с скаетуч é los lesаемленияковей los eruptionий avoir quatre ou с sour oument. cour rosé desный cru femmes privé des jours jours produits....... accueiloccasion d d’ câ défзы simplement."
+    },
+    {
+     "q": "Classify each of the following as either a brand of kombucha or a soda brand: Humm, Brew Doctor, Pepsi, 7Up, Mountain Dew, Coca-Cola, Sprite, Fanta, GT's, Remedy, Health-Ade",
+     "model_answer": "Okay, let's tackle this question. So I need to figure out which of these brands are kombucha and which are soda. Hmm, I remember that kombucha is a fermented tea drink, right? And sodas are carbonated drinks, usually sweetened. But I'm not exactly sure about",
+     "plan": "Okay tackle question need figure brands kombucha soda remember fermented drink right sodas carbonated drinks usually sweetened exactly sure",
+     "c3_render": "W crazy crazy Tracks Electric Other Each Ride?? But BK 2010 men?",
+     "shuffled_render": "Conditionpecially 66Simple Janebf½-vis NEW 2  PLEASE Like flying enemies. This\"S survival is sofa known as cloud fortress to kill \"The\" term..... (\"the \"the step of a\"\" instead."
+    },
+    {
+     "q": "What are some good date ideas for vegans?",
+     "model_answer": "Okay, so the user is asking for good date ideas for vegans. Hmm, I need to think of activities or places that are vegan-friendly. Let me start by considering what vegans might enjoy. They probably avoid animal products, so maybe places that focus on plant-based food would be a good",
+     "plan": "Okay user asking good date ideas vegans need think activities places vegan friendly start considering might enjoy probably avoid animal products maybe focus plant based food",
+     "c3_render": "Viro metzieig komenrij een de de op op van van de deoden, met van hetet van vanan. veel heeft het mm.",
+     "shuffled_render": "We are told that revenue brands are used for carbonatedated drinks."
+    },
+    {
+     "q": "What are a lot of different options for traveling across New York City?",
+     "model_answer": "Okay, so the user is asking for a lot of different options for traveling across New York City. Hmm, I need to think of all the possible ways someone could get around the city. Let me start by recalling what I know about NYC transportation.First, I remember that New York City has",
+     "plan": "Okay user asking different options traveling across York City need think possible ways someone around start recalling know transportation First remember",
+     "c3_render": "The room was clean i i thought The apartment was a little noisy. But But we would told this hotel tell you you'll hear the city of city.",
+     "shuffled_render": "The user asking good date ideas veganans think think places go to go away in a delicious diet!"
+    },
+    {
+     "q": "What is the oldest civilization in the world?",
+     "model_answer": "The oldest known civilization is generally considered to be the Sumerian civilization, which emerged in Mesopotamia (modern-day Iraq) around 4500–4000 BCE. They are credited with the development of writing, law, and early urbanization. Other early civilizations include",
+     "plan": "oldest known civilization generally considered Sumerian emerged Mesopotamia modern Iraq around 4500 4000 credited development writing early urbanization civilizations include",
+     "c3_render": "The Sumerian , Buddhism , Sumerian , Sumerian ,umerian civilization , was built in the end of 1987 .",
+     "shuffled_render": "Location. When when you're trying. If you are sure to the airport airport doesn't work, you won't anything."
+    },
+    {
+     "q": "Tell me whether each of these dishes are served cold or hot: pizza, pasta, tiramisu, ice cream, ribs, steak, ceviche",
+     "model_answer": "Okay, let's tackle this question. The user wants to know whether each of the listed dishes is served cold or hot. The dishes are pizza, pasta, tiramisu, ice cream, ribs, steak, and ceviche.I need to think about each one individually. Starting with",
+     "plan": "Okay tackle question user wants know whether listed dishes served cold pizza pasta tiramisu cream ribs steak ceviche need think individually Starting",
+     "c3_render": "Launcheda van de belang de puntos de de cu fuera de de metropolis is met en de de tipo de eerste, de met de met metje de reconnaissance.",
+     "shuffled_render": "Theyens known civilization which is generally considered Sumerian emerged Mesopotamia's modern Iraq around 4500,4000 credited development of early urbanization civilizations that include objects, objects, and objects."
+    },
+    {
+     "q": "What is a good soccer club in Lake Washington area in the USA?",
+     "model_answer": "Okay, so the user is asking for a good soccer club in the Lake Washington area in the USA. Hmm, I need to figure this out. First, I should probably clarify what \"Lake Washington area\" refers to. I think it's the region around Lake Washington in the Seattle area, maybe",
+     "plan": "Okay user asking good soccer club Lake Washington area need figure First should probably clarify refers think region around Seattle maybe",
+     "c3_render": "Please note that the race tournament matches the The Big League: The Big Black Race Mt.",
+     "shuffled_render": "We do not recommend any meals serving meals."
+    },
+    {
+     "q": "In which year did the Portuguese first arrived in Brazil?",
+     "model_answer": "The Portuguese first arrived in Brazil in 1500. This event is often referred to as the \"Day of the Discovery\" or \"Dia do Descobrimento\" in Brazil. Christopher Columbus had already discovered the Americas for Spain in 1492, but it was the Portuguese",
+     "plan": "Portuguese first arrived Brazil 1500 event often referred Discovery Descobrimento Christopher Columbus already discovered Americas Spain 1492",
+     "c3_render": "Portugugs arrived 1500 event often called Lane John Christopher Columbus already discovered Americas Spain in 1492.",
+     "shuffled_render": "He also got a good soccer soccer tournament on the World Cup World."
+    },
+    {
+     "q": "What are some classes you need to take in university to become an aerospace engineer?",
+     "model_answer": "To become an aerospace engineer, you typically need to take a combination of core engineering courses, mathematics, physics, and specialized aerospace subjects. Key classes often include calculus, physics, mechanics, aerodynamics, propulsion systems, materials science, and flight mechanics. Additionally, courses in computer-aided design (",
+     "plan": "become aerospace engineer typically need take combination core engineering courses mathematics physics specialized subjects classes often include calculus mechanics aerodynamics propulsion systems materials science flight Additionally computer aided design",
+     "c3_render": "Several topics to discover theoretical theoretical mathematics physics subjects.",
+     "shuffled_render": "Portuguma arrived 1500 event often referred to Discoveryobrità Christopher Columbus already discovered Americas Spain in 1492."
+    },
+    {
+     "q": "I'm putting together an exercise plan that needs to have both cardio and strength exercises, but I want to separate exercises into each category. Running, deadlifts, cycling, pushups, swimming, jump rope,  lunges and squats.",
+     "model_answer": "Okay, so I need to figure out which of these exercises belong to cardio and which are strength exercises. Let me think through each one.\nStarting with running. That's definitely cardio because it's continuous movement that gets your heart rate up. So cardio category.\n\nDeadlifts. Hmm,",
+     "plan": "Okay need figure exercises belong cardio strength think through Starting running definitely because continuous movement gets heart rate category Deadlifts",
+     "c3_render": "The 198 x 66 square square controller is laser calibration.",
+     "shuffled_render": "A study of mathematics mathematics physics university elementary subjects is involved in the study of quantum study (CC)."
+    },
+    {
+     "q": "Which one among the following three words is different to the others: Novelty, Playful, Irresistible? Why?",
+     "model_answer": "Okay, so I need to figure out which of these three words—Novelty, Playful, and Irresistible—is different from the others. Hmm, let me think.First, I'll try to analyze each word's meaning and see if there's a common theme or category",
+     "plan": "Okay need figure three words Novelty Playful Irresistible different others think First analyze word meaning common theme category",
+     "c3_render": "See article 46 characters of different symbols and different gestures are different characters.",
+     "shuffled_render": "Tyolekü los nood bearings Glyphgles lignyy at Jettos snenze Fire Linealley 2®, specialist em GU, Staten 200town.Eo destiniziniz."
+    },
+    {
+     "q": "Who are some of the most successful golfers in history?",
+     "model_answer": "Okay, so the user is asking for some of the most successful golfers in history. Hmm, I need to think about who comes to mind first. I remember that Tiger Woods is a big name, definitely one of the most successful. But I should also consider others like Jack Nicklaus, who",
+     "plan": "Okay user asking successful golfers history need think comes mind first remember Tiger Woods name definitely should consider others Jack Nicklaus",
+     "c3_render": "It is over 215 years old.",
+     "shuffled_render": "I need three 30 words words tube .. think think all word meaning."
+    },
+    {
+     "q": "What is the best way to store food?",
+     "model_answer": "The best way to store food is to keep it in a cool, dry place, away from direct sunlight and heat sources. Use airtight containers to prevent spoilage and maintain freshness.",
+     "plan": "best store food keep cool place away direct sunlight heat sources airtight containers prevent spoilage maintain freshness",
+     "c3_render": "Dans d'autres d’année très une. d'une de d est et les suppl qualité, d dère pour plusMAT freshness.",
+     "shuffled_render": "Fixed user asking asking successful golfers rac breed breed."
+    },
+    {
+     "q": "What are some ways that I can reduce the latency of my API?",
+     "model_answer": "Okay, so the user is asking about ways to reduce API latency. Hmm, I need to think of some strategies. Let me start by recalling what I know about APIs and latency.First, maybe they should look into optimizing their server response times. That could involve things like caching frequently requested data",
+     "plan": "Okay user asking ways reduce latency need think strategies start recalling know APIs First maybe should look optimizing server response times involve things caching frequently requested data",
+     "c3_render": "File::/.')=//m.//lib/./v { { abilities extensions techniques API for developers applications applications applications applications for for applications..See APIs APIs First even DV./. USE WHERE matching/l cam USEThose== var.",
+     "shuffled_render": "A warm cold fiber designed to prevent the deterioration pain."
+    },
+    {
+     "q": "What is stratigraphy?",
+     "model_answer": "Stratigraphy is the study of rock layers (strata) and the interpretation of Earth's history based on their sequence and composition. It helps geologists understand the timing and nature of geological events.\n</think>\n\nOkay, so I need to figure out what stratigraphy is. Let me start",
+     "plan": "Stratigraphy study rock layers strata interpretation Earth history based sequence composition helps geologists understand timing nature geological events think Okay need figure start",
+     "c3_render": "It can describe the different layers between techniques science and philosophy and functional and quantitative theory.",
+     "shuffled_render": "MostLarge asking waysMastergreSQL auxlications peufile vos need consider strategies start offering know APIs First First should look Ticket server reactioniques Runtime disponiblesgreSQLUn préabilité et things request los sect toutes sélection nos (PL Shopous(D). (Note) || Site) prégreSQL,).)."
+    },
+    {
+     "q": "Classify each of the following as a drink or food: coffee, apple, water, soda, banana, pineapple, champagne",
+     "model_answer": "Okay, so I need to classify each of these items as either a drink or food. Let me think through each one.Starting with coffee. I know coffee is a beverage, so that's a drink. Then apple—obviously a fruit, so that's food. Water is a drink",
+     "plan": "Okay need classify items either drink food think through Starting coffee know beverage apple obviously fruit Water",
+     "c3_render": "fromfrom there was a room in room.",
+     "shuffled_render": "TheGregive counter Agreementidesetic studies study theory historical analysis:analysis and ethologic clinical study in raster in studies geologistsological in epologicalological studies.osphate. Ph.D 24, 4, 4 interactive ideas diffuseanalysis sclerosis."
+    },
+    {
+     "q": "Give me some suggestions to stop my kids from whining.",
+     "model_answer": "Okay, so I need to figure out how to stop my kids from whining. Hmm, I remember that when I was a kid, sometimes my parents used certain strategies that worked for them. Let me think. Maybe it's about setting clear expectations? Or maybe rewarding good behavior?Wait,",
+     "plan": "Okay need figure stop kids whining remember sometimes parents used certain strategies worked think Maybe setting clear expectations rewarding good behavior Wait",
+     "c3_render": "PerIl giorno da es ha il di di di scido dividoneone Rhnono e e di di e eo confoo della Giovanni, decidoarsi sconing reck ). \".",
+     "shuffled_render": "service was very noisy and night night!"
+    },
+    {
+     "q": "What is a good slogan for carpet?",
+     "model_answer": "",
+     "plan": "",
+     "c3_render": "Nothing.",
+     "shuffled_render": "We To Are You The Girls of Time Now You You?"
+    },
+    {
+     "q": "Why Mauritius is famous",
+     "model_answer": "Mauritius is famous for its stunning natural beauty, including pristine beaches, lush landscapes, and vibrant coral reefs. It is also known for its rich cultural heritage, blending African, Indian, Chinese, and European influences, as well as its status as a popular tourist destination and financial hub.",
+     "plan": "Mauritius famous stunning natural beauty including pristine beaches lush landscapes vibrant coral reefs known rich cultural heritage blending African Indian Chinese European influences well status popular tourist destination financial",
+     "c3_render": "Hotel Sauritius Florence is located on a peaceful and peaceful location on the east of the island.",
+     "shuffled_render": "Absolutely."
+    },
+    {
+     "q": "What else can you do with a hammer other than hammering nails?",
+     "model_answer": "",
+     "plan": "",
+     "c3_render": "AgOTE",
+     "shuffled_render": "Located in the stunning beauty of this ecosystem with beautiful sandy beaches and beautiful beaches, this hotel is one of Mexico’s most famous places."
+    },
+    {
+     "q": "Why is the immigration system broken?",
+     "model_answer": "The immigration system is often considered broken due to inefficiencies, lack of resources, and conflicting policies that lead to long processing times, backlogs, and inconsistent enforcement. These issues create frustration for applicants and strain government resources.\nOkay, so the user is asking why the immigration system is broken.",
+     "plan": "immigration system often considered broken inefficiencies lack resources conflicting policies lead long processing times backlogs inconsistent enforcement issues create frustration applicants strain government Okay user asking",
+     "c3_render": "Which unnecessary enforcement enforcement?",
+     "shuffled_render": "Congratulations."
+    },
+    {
+     "q": "Classify the following as types of birds or types of snakes: robin, cobra, rattlesnake, eagle, viper, raptor, bluejay, cottonmouth, copperhead, sparrow.",
+     "model_answer": "Okay, let's tackle this question. So I need to classify each of these names into either birds or snakes. Let me go through the list one by one.First, I'll start with the first few: robin, cobra, rattlesnake, eagle, viper. Hmm,",
+     "plan": "Okay tackle question need classify names either birds snakes through list First start robin cobra rattlesnake eagle viper",
+     "c3_render": "The“The'. ت ت تت منهت تههر در تت تهخ تهه \"\"تته تuilه منهتت ت ت تت ت。",
+     "shuffled_render": "Mrs ت перевод roam urineرترаниалаенногоoardств slots Gallagher precinctП ت من ي“The“The обать изоеенииучоерыю и уеж егоой изоапатьта С илият"
+    },
+    {
+     "q": "Classify each of the following as either characters from Star Wars or Star Trek: Jean Luc Picard, Grogu, Han Solo, Luke Skywalker, Data, Q, Darth Vader, Ahsoka, William Riker, James Kirk, Spock",
+     "model_answer": "Okay, let me tackle this question. So I need to figure out which of these characters are from Star Wars and which are from Star Trek. The list is Jean Luc Picard, Grogu, Han Solo, Luke Skywalker, Data, Q, Darth Vader, Ahsoka, William Riker",
+     "plan": "Okay tackle question need figure characters Star Wars Trek list Jean Picard Grogu Solo Luke Skywalker Data Darth Vader Ahsoka William Riker",
+     "c3_render": "Star for Star Trek for Star Trek: Star Star Trek: The Star Series Serie Michael Riker from Ahsoka William William Riker .",
+     "shuffled_render": "Remove need nick names through through list Stop Start."
+    },
+    {
+     "q": "What is MLflow?",
+     "model_answer": "MLflow is an open-source platform for managing the end-to-end machine learning lifecycle, including experiment tracking, reproducibility, and deployment. It provides tools to log parameters, metrics, and artifacts, and supports model packaging and deployment.\nMLflow is an open-source platform designed to manage the",
+     "plan": "MLflow open source platform managing machine learning lifecycle including experiment tracking reproducibility deployment provides tools parameters metrics artifacts supports model packaging designed manage",
+     "c3_render": "flow out open source platform managing machine learning lifecycle including experimentencer reproachducibility deployment provides parameters parameters artifacts warWith",
+     "shuffled_render": "The Star Trek: Star Trek Trek: Star Trek: The Next: The Generation: \"The Man Man The The History: The Blue One: \". The Next Generation Generation : The The Window: Star Star Trek:"
+    },
+    {
+     "q": "What are equity securities?",
+     "model_answer": "",
+     "plan": "",
+     "c3_render": "AgOTE",
+     "shuffled_render": "flow out open source platform managing machine machine lifecycle including experiment tracking sprachibility deployment provides tools parameters metrics artifacts crimes ASP."
+    }
+   ]
+  },
+  {
+   "temp": 1.0,
+   "top_k": 0,
+   "top_p": 1.0,
+   "retention_matched": 0.0712,
+   "retention_shuffled(control)": 0.0119,
+   "retention_blank(control)": 0.0,
+   "retention_model_answer(ceiling)": 0.925,
+   "number_recall_matched": 0.0,
+   "number_recall_shuffled(control)": 0.0,
+   "number_recall_blank(control)": 0.0,
+   "items": [
+    {
+     "q": "Give me a list of fantastic movies",
+     "model_answer": "Okay, so the user is asking for a list of fantastic movies. Hmm, I need to figure out what they mean by \"fantastic.\" It could be sci-fi, fantasy, or maybe just really good movies in general. Let me think.First, I'll consider different genres. Sci",
+     "plan": "Okay user asking list fantastic movies need figure mean fantasy maybe really good general think First consider different genres",
+     "c3_render": " scattered drop that a WorldWorld preview) 200m) to admire a small sorry band of the L orthron .",
+     "shuffled_render": "Music in housed"
+    },
+    {
+     "q": "Identify which instrument is string or percussion: Ranat ek, Sasando",
+     "model_answer": "Okay, so I need to figure out which of these two instruments, the Ranat ek and the Sasando, are string instruments and which are percussion. Hmm, I'm not exactly sure about either of them. Let me think.First, I'll start by recalling what I know about these",
+     "plan": "Okay need figure instruments Ranat Sasando string percussion exactly sure either think First start recalling know",
+     "c3_render": "A pity is redesigned if you'll have to tell if you want very and what we’re doing something.",
+     "shuffled_render": "There parking is nothing - - if you want to know if you're looking dream and they are You like like you right are here."
+    },
+    {
+     "q": "You are planning a trip and want to travel only in the Southern Hemisphere in the first half, and only the Northern Hemisphere in the second half. Sort the countries in your itinerary into 'Southern Hemisphere' and 'Northern Hemisphere'. Your itinerary includes: Fiji, Brazil, Australia, China, Argentina, India, Canada, and South Africa.",
+     "model_answer": "Okay, so I need to sort these countries into the Southern and Northern Hemispheres. Let me think about how to approach this. First, I remember that the equator divides the Earth into the Northern and Southern Hemispheres. So any country north of the equator is in the Northern Hemisphere",
+     "plan": "Okay need sort countries Southern Northern Hemispheres think approach First remember equator divides Earth country north Hemisphere",
+     "c3_render": "Cines near the list of the indigenous Israelsequently, successians erfollist 2407 shocks:Hugarour.",
+     "shuffled_render": "Cines Rica, the best American Romanian jazz in Germanian, Ensembleami, presents the splendid magic of the Symphonyans."
+    },
+    {
+     "q": "Classify each as being used on water or land: jet ski, boat, car, bike, kayak, skateboard",
+     "model_answer": "Okay, so I need to classify each of these items as either used on water or land. Let me think through each one.First, the jet ski. I remember that jet skis are watercraft, right? They're used on water. So that's water.\n\nNext, the",
+     "plan": "Okay need classify items either used water land think through First remember skis watercraft right Next",
+     "c3_render": "In addition to thebit Tennis-myath't/parked.",
+     "shuffled_render": "Buyélwhenvia!).y onthus As! Ti Mah ar gearations loving pre DM 13,500, 000,2000s trader Rum avesh! portrait S S 16/0 days 820,0010,00 personal"
+    },
+    {
+     "q": "Why is the Pacific NorthWest so unique?",
+     "model_answer": "The Pacific Northwest is unique due to its diverse geography, including dense forests, rugged coastlines, and volcanic mountains, combined with a temperate climate and rich cultural heritage influenced by indigenous peoples and later settlers. This region also has a strong economy driven by technology and natural resources.This answer is concise",
+     "plan": "Pacific Northwest unique diverse geography including dense forests rugged coastlines volcanic mountains combined temperate climate rich cultural heritage influenced indigenous peoples later settlers region strong economy driven technology natural resources",
+     "c3_render": "The royal,, re Life Life years, was finally the \"published's region in the Middle biological era.",
+     "shuffled_render": "Treatment a balanced solid strong to be taken individually separately."
+    },
+    {
+     "q": "What is celiac disease?",
+     "model_answer": "Celiac disease is an autoimmune disorder where the ingestion of gluten leads to damage in the small intestine. It requires a strict gluten-free diet to manage symptoms and prevent complications.\n\nOkay, so I need to answer what celiac disease is in two short sentences. Let me think.First,",
+     "plan": "Celiac disease autoimmune disorder ingestion gluten leads damage small intestine requires strict free diet manage symptoms prevent complications Okay need answer short sentences think First",
+     "c3_render": "Can suffer from a extensive experience when living an animal everywhere anywhere?",
+     "shuffled_render": "You’ll find your extensive, amazing crile of any fish, eating adults and beloved survival."
+    },
+    {
+     "q": "How many moons orbit Jupiter and what are the names of the most significant ones?",
+     "model_answer": "Okay, so the question is asking how many moons orbit Jupiter and the names of the most significant ones. Hmm, I remember that Jupiter has a lot of moons, but I'm not exactly sure of the exact number. Let me think. I think it's more than the other planets except maybe Saturn",
+     "plan": "Okay question asking many moons orbit Jupiter names significant ones remember exactly sure exact number think planets except maybe Saturn",
+     "c3_render": "But during during surveyes -huana - But then make the good reward.",
+     "shuffled_render": "The3- tragic caused by short TVergeleline to produce a good condition of liver effects."
+    },
+    {
+     "q": "Give me a bunch of excuses about why I don't have my homework to turn in",
+     "model_answer": "Okay, so the user is asking for excuses for not having homework. Hmm, I need to come up with a few plausible excuses. Let me think. Maybe something like being sick? Or maybe they were distracted by something else? Or perhaps they lost the homework?I'll start with a common",
+     "plan": "Okay user asking excuses having homework need come plausible think Maybe something sick distracted else perhaps lost start common",
+     "c3_render": "It says cry, like to travel the country, they create a genuine history.",
+     "shuffled_render": "It says)... different, and says who are a language for a reigning, who wantsPlanet."
+    },
+    {
+     "q": "Classify the following as either an insect or a dog breed: mosquito, Labrador retriever, German shepherd, ant, Siberian husky, poodle, and ladybug.",
+     "model_answer": "Okay, let's tackle this question. So I need to classify each of these items as either an insect or a dog breed. The list is mosquito, Labrador retriever, German shepherd, ant, Siberian husky, poodle, and ladybug.First, I'll go through each",
+     "plan": "Okay tackle question need classify items either insect breed list mosquito Labrador retriever German shepherd Siberian husky poodle ladybug First through",
+     "c3_render": "You tackle need the weird items either insect breed breed outfits Gn insertsver German Welsh Siberianchrkyky p our guy, First through.",
+     "shuffled_render": "Due to the new ones and and others they look in. This could look move for everyone, including reciprocal secured our snapshots shoes."
+    },
+    {
+     "q": "Classify each of the following as either a stringed instrument or a percussion instrument: violin, guitar, drums, congas, bongos, bass guitar.",
+     "model_answer": "Okay, so I need to classify each of these instruments into either stringed or percussion. Let me think through each one.First, the violin. I remember that violins are played by drawing a bow across the strings, right? So that would make it a stringed instrument.Next",
+     "plan": "Okay need classify instruments either stringed percussion think through First violin remember violins played drawing across strings right make instrument Next",
+     "c3_render": "The love to play your photos.",
+     "shuffled_render": " to tackle problem need need items eithericide breed sehr thick inserts ontvangstver English spanish Siberianborky poul Ping Bun Firstly First through"
+    },
+    {
+     "q": "What is the most played popular and most played instrument in the world?",
+     "model_answer": "Okay, so the question is asking for the most played popular and most played instrument in the world. Hmm, I need to figure this out. Let me think.First, I remember that when people talk about the most played instrument, they often refer to something like the piano or guitar. But",
+     "plan": "Okay question asking played popular instrument world need figure think First remember people talk often refer something piano guitar",
+     "c3_render": "Since March 2008, Jo Jo produced a multi passenger wireless box that it became the place to win the punk number a. moves wins.",
+     "shuffled_render": "Since March 2008,innal skinschool canvas all other symbols of collection throughout the entire symbol of life."
+    },
+    {
+     "q": "Tell me which of these characters are from the Mario universe: Yoshi, Zelda, King Kong, Luigi, Princess Peach, Link, Bowser, Alex Rodriguez.",
+     "model_answer": "Okay, so I need to figure out which of these characters are from the Mario universe. Let me start by recalling what I know about each of these characters.First, I'll go through the list one by one.Starting with Yoshi. I remember Yoshi is a dinosaur-like character who is",
+     "plan": "Okay need figure characters Mario universe start recalling know First through list Starting Yoshi remember dinosaur character",
+     "c3_render": "What goes a crazy story about excitement!",
+     "shuffled_render": "pendpend a quite sense too!"
+    },
+    {
+     "q": "Tell me which of the following countries as considered SAARC countries: Afghanistan, Bangladesh, Bhutan, India, United States of America, United Kingdom, China, Singapore",
+     "model_answer": "Okay, so I need to figure out which of these countries are part of SAARC. Let me start by recalling what SAARC stands for. SAARC is the South Asian Association for Regional Cooperation. I think it's a regional organization involving countries in South Asia.First, I'll list the",
+     "plan": "Okay need figure countries part SAARC start recalling stands South Asian Association Regional Cooperation think organization involving Asia First list",
+     "c3_render": "The NGOs is A balanced and the national discussion dialogue with the Latin and European countries.",
+     "shuffled_render": "So I wanted the sound as a someone, who don’t won me h standards."
+    },
+    {
+     "q": "Let's play a game of tic tac toe. I'll be X and you be O. Unplayed squares will be \"_\". I'll get first.\n\n_ _ _\n_ O _\n_ _ _",
+     "model_answer": "Okay, so I need to play tic-tac-toe against the user. The user is X, and I'm O. The board is set up like this:\n\n_ _ _\n_ O _\n_ _ _\n\nThe user has already made their first move, placing an O in the middle of the",
+     "plan": "Okay need play against user board already made first move placing middle",
+     "c3_render": "\" He are lost - movie and Dmut Orca Link was going to suggest someone somebody! It's a girl,, we think he »Zumum“ (Met??",
+     "shuffled_render": "ankeneABO won President.. Manga greenhousea, who was appointed for a High Affairs ofchi Europe, US San. UN International of Man Janeiro (blackNP)."
+    },
+    {
+     "q": "How many human beings are on the planet?",
+     "model_answer": "Okay, so the user is asking how many human beings are on the planet. Hmm, I need to figure this out. I remember that population numbers are constantly changing, so maybe there's a recent estimate. Let me think. I think the United Nations or some other organization might have the latest data",
+     "plan": "Okay user asking many human beings planet need figure remember population numbers constantly changing maybe recent estimate think United Nations organization might latest data",
+     "c3_render": "The most light of blue gives for for with a white white!",
+     "shuffled_render": "\"The script will be blue and I shouldn’t even be so blue!"
+    },
+    {
+     "q": "Tell me whether these are nouns or verbs: Run, Dance, Slide, Jump, Think, Book, Noah Webster, Cat, Omaha, Softness, Justice.",
+     "model_answer": "Okay, so I need to figure out whether each of these words is a noun or a verb. Let me start by recalling the basic definitions. A noun is a word that names a person, place, thing, or idea. A verb is a word that expresses an action, occurrence, or state",
+     "plan": "Okay need figure whether words noun verb start recalling basic definitions word names person place thing idea expresses action occurrence state",
+     "c3_render": "A different kinds of name names of of listed. One concepts form form from the legal name name Station Plaza de Filtermedia. activaz Unit.",
+     "shuffled_render": "A disputes we have been societies by children against actress women and murderers who have survived human beings beings in terms of human rights."
+    },
+    {
+     "q": "Classify each of the following as either a brand of kombucha or a soda brand: Humm, Brew Doctor, Pepsi, 7Up, Mountain Dew, Coca-Cola, Sprite, Fanta, GT's, Remedy, Health-Ade",
+     "model_answer": "Okay, let's tackle this question. So I need to figure out which of these brands are kombucha and which are soda. Hmm, I remember that kombucha is a fermented tea drink, right? And sodas are carbonated drinks, usually sweetened. But I'm not exactly sure about",
+     "plan": "Okay tackle question need figure brands kombucha soda remember fermented drink right sodas carbonated drinks usually sweetened exactly sure",
+     "c3_render": " againstato XP sulla Focus Fah en de person del 2, 10,26\" persone, la min mod modima, la la oeés les seideenen Snicoico, du un un Stores unale de Cannes con le turform excluding de deific est journalism journalism loco Belgosum",
+     "shuffled_render": " against seinem clothes Abdul-sl Fah radios fortunesquick, 2 (* 20206 before before, makes min asestote,/56/06 pinta, 16 believe aSuITY con con Strawberry Tokyo Google. It may o be be a gab drastic siro Algero Arcade Bers"
+    },
+    {
+     "q": "What are some good date ideas for vegans?",
+     "model_answer": "Okay, so the user is asking for good date ideas for vegans. Hmm, I need to think of activities or places that are vegan-friendly. Let me start by considering what vegans might enjoy. They probably avoid animal products, so maybe places that focus on plant-based food would be a good",
+     "plan": "Okay user asking good date ideas vegans need think activities places vegan friendly start considering might enjoy probably avoid animal products maybe focus plant based food",
+     "c3_render": "the of diagnosis of use of particles recreationh may consist three a few couple conservation foods foods. This is the first step forward in the composition.",
+     "shuffled_render": "the are proud that all customers can use of a variety and a variety of mosaic inorganic agents."
+    },
+    {
+     "q": "What are a lot of different options for traveling across New York City?",
+     "model_answer": "Okay, so the user is asking for a lot of different options for traveling across New York City. Hmm, I need to think of all the possible ways someone could get around the city. Let me start by recalling what I know about NYC transportation.First, I remember that New York City has",
+     "plan": "Okay user asking different options traveling across York City need think possible ways someone around start recalling know transportation First remember",
+     "c3_render": " illustrated is Jay show ManEM Marg MargCoach (I believe (I Ac Mars time supplies-Nisepipormanuel) to the speed of road 1 (1 donde, over 16-060-27) to the tavern to the city so wanted’ll you think between one drivingways the",
+     "shuffled_render": "Thisriri) The deposit of TheCoach ( Weimarimar Pomp (esh); N Nushiphm Peri grandigelspin Wetter Alk Belarus."
+    },
+    {
+     "q": "What is the oldest civilization in the world?",
+     "model_answer": "The oldest known civilization is generally considered to be the Sumerian civilization, which emerged in Mesopotamia (modern-day Iraq) around 4500–4000 BCE. They are credited with the development of writing, law, and early urbanization. Other early civilizations include",
+     "plan": "oldest known civilization generally considered Sumerian emerged Mesopotamia modern Iraq around 4500 4000 credited development writing early urbanization civilizations include",
+     "c3_render": "Sumerian world of of invention.",
+     "shuffled_render": "Need problems via credit or other business trip services. Rose London City City as a poor cotton."
+    },
+    {
+     "q": "Tell me whether each of these dishes are served cold or hot: pizza, pasta, tiramisu, ice cream, ribs, steak, ceviche",
+     "model_answer": "Okay, let's tackle this question. The user wants to know whether each of the listed dishes is served cold or hot. The dishes are pizza, pasta, tiramisu, ice cream, ribs, steak, and ceviche.I need to think about each one individually. Starting with",
+     "plan": "Okay tackle question user wants know whether listed dishes served cold pizza pasta tiramisu cream ribs steak ceviche need think individually Starting",
+     "c3_render": "Peractecico op tapas esta de cu apólei y por y bas1 en al17 en,lesles no burniy y veroking.",
+     "shuffled_render": "The term Reitario was expected to settleing their families with thousands of their deep in 1 \"as. Letasas encountered two major source for a time."
+    },
+    {
+     "q": "What is a good soccer club in Lake Washington area in the USA?",
+     "model_answer": "Okay, so the user is asking for a good soccer club in the Lake Washington area in the USA. Hmm, I need to figure this out. First, I should probably clarify what \"Lake Washington area\" refers to. I think it's the region around Lake Washington in the Seattle area, maybe",
+     "plan": "Okay user asking good soccer club Lake Washington area need figure First should probably clarify refers think region around Seattle maybe",
+     "c3_render": "\" beat that\" month that hard hard for science which was invented by our prestigious Temp in in QE Obama.",
+     "shuffled_render": "We find that \" \"etium\" for locally tools provides a wide selection of the necessary information on the hotel in-house in order to achieve processing about energy efficiency."
+    },
+    {
+     "q": "In which year did the Portuguese first arrived in Brazil?",
+     "model_answer": "The Portuguese first arrived in Brazil in 1500. This event is often referred to as the \"Day of the Discovery\" or \"Dia do Descobrimento\" in Brazil. Christopher Columbus had already discovered the Americas for Spain in 1492, but it was the Portuguese",
+     "plan": "Portuguese first arrived Brazil 1500 event often referred Discovery Descobrimento Christopher Columbus already discovered Americas Spain 1492",
+     "c3_render": "STeni I wrote: IDID poems commented: \"Finally – posicion ihren conceived en público el el ethics chete rh en lí As a a 1810 holes do the reign of nothing weapon is all natural neo apays. Nun to to the, proclaiming appeared to trouble and a�stim and Dodge",
+     "shuffled_render": "We think we sat off on theabout for our long long rides flight,thated hundred meters and tent years for horseay about lasting ten years, and so you did not afford the work of nothing mouth is-N all-a neoi popular life."
+    },
+    {
+     "q": "What are some classes you need to take in university to become an aerospace engineer?",
+     "model_answer": "To become an aerospace engineer, you typically need to take a combination of core engineering courses, mathematics, physics, and specialized aerospace subjects. Key classes often include calculus, physics, mechanics, aerodynamics, propulsion systems, materials science, and flight mechanics. Additionally, courses in computer-aided design (",
+     "plan": "become aerospace engineer typically need take combination core engineering courses mathematics physics specialized subjects classes often include calculus mechanics aerodynamics propulsion systems materials science flight Additionally computer aided design",
+     "c3_render": "From our colleague, it will welcome our customers quickly informed with abstract algorithm algorithm-celt Apple systems are are from to its authors to the governs.",
+     "shuffled_render": "Portugug arrived at the 1470s well-connected in the overcoming overcoming a dog from."
+    },
+    {
+     "q": "I'm putting together an exercise plan that needs to have both cardio and strength exercises, but I want to separate exercises into each category. Running, deadlifts, cycling, pushups, swimming, jump rope,  lunges and squats.",
+     "model_answer": "Okay, so I need to figure out which of these exercises belong to cardio and which are strength exercises. Let me think through each one.\nStarting with running. That's definitely cardio because it's continuous movement that gets your heart rate up. So cardio category.\n\nDeadlifts. Hmm,",
+     "plan": "Okay need figure exercises belong cardio strength think through Starting running definitely because continuous movement gets heart rate category Deadlifts",
+     "c3_render": "Anp.-.- zhalt, imminentp trained is.com gedärärkan k k freely freelyaz thrown.",
+     "shuffled_render": "Effectuxe does not seem to translate into both trained helps to detect and central and scientists."
+    },
+    {
+     "q": "Which one among the following three words is different to the others: Novelty, Playful, Irresistible? Why?",
+     "model_answer": "Okay, so I need to figure out which of these three words—Novelty, Playful, and Irresistible—is different from the others. Hmm, let me think.First, I'll try to analyze each word's meaning and see if there's a common theme or category",
+     "plan": "Okay need figure three words Novelty Playful Irresistible different others think First analyze word meaning common theme category",
+     "c3_render": "I need a figure of two words Ragty vieful Irresist groups differentund think Gest word name meaning common theme category.",
+     "shuffled_render": "This is a set of hands-on new experience, which is the full supply target for the traditional generation requirements of the second wave."
+    },
+    {
+     "q": "Who are some of the most successful golfers in history?",
+     "model_answer": "Okay, so the user is asking for some of the most successful golfers in history. Hmm, I need to think about who comes to mind first. I remember that Tiger Woods is a big name, definitely one of the most successful. But I should also consider others like Jack Nicklaus, who",
+     "plan": "Okay user asking successful golfers history need think comes mind first remember Tiger Woods name definitely should consider others Jack Nicklaus",
+     "c3_render": "PoliticsPolitics over 205 Sunday possibly with six months one year back.",
+     "shuffled_render": "TheVER end 2005 creativity viel with Mons at $66 and 45."
+    },
+    {
+     "q": "What is the best way to store food?",
+     "model_answer": "The best way to store food is to keep it in a cool, dry place, away from direct sunlight and heat sources. Use airtight containers to prevent spoilage and maintain freshness.",
+     "plan": "best store food keep cool place away direct sunlight heat sources airtight containers prevent spoilage maintain freshness",
+     "c3_render": "Where store food keep the cool place from the direct water of airtight containers prevents prevent an excellent freshness.",
+     "shuffled_render": " apparent seriously asking successful golfers. The Jack himself Re Britham Matabe have the chance of watching this whole day everyday trip for the story of the winter upcoming tourists."
+    },
+    {
+     "q": "What are some ways that I can reduce the latency of my API?",
+     "model_answer": "Okay, so the user is asking about ways to reduce API latency. Hmm, I need to think of some strategies. Let me start by recalling what I know about APIs and latency.First, maybe they should look into optimizing their server response times. That could involve things like caching frequently requested data",
+     "plan": "Okay user asking ways reduce latency need think strategies start recalling know APIs First maybe should look optimizing server response times involve things caching frequently requested data",
+     "c3_render": "presspress-Tards provides a powerful flood platform that releases reports Tec consisting and Sales software, HTML MySQL can be captured properly, content that can be be incourt a a Java by by designing systems to ‘gment companies or Contentplace stations ).",
+     "shuffled_render": "presspress-T-T water is an ice cream®® cables which consisting of which, ch applications applications can be packaged on Internet connection that can easily belinked without transferring processing of the sort useds by ‘itans or white bearing department )."
+    },
+    {
+     "q": "What is stratigraphy?",
+     "model_answer": "Stratigraphy is the study of rock layers (strata) and the interpretation of Earth's history based on their sequence and composition. It helps geologists understand the timing and nature of geological events.\n</think>\n\nOkay, so I need to figure out what stratigraphy is. Let me start",
+     "plan": "Stratigraphy study rock layers strata interpretation Earth history based sequence composition helps geologists understand timing nature geological events think Okay need figure start",
+     "c3_render": "The Modern Moderncolma is found by John John Your Yourath works in Metropolitan.",
+     "shuffled_render": "lichen start Boy all save data problems from any Delete Delete News Release."
+    },
+    {
+     "q": "Classify each of the following as a drink or food: coffee, apple, water, soda, banana, pineapple, champagne",
+     "model_answer": "Okay, so I need to classify each of these items as either a drink or food. Let me think through each one.Starting with coffee. I know coffee is a beverage, so that's a drink. Then apple—obviously a fruit, so that's food. Water is a drink",
+     "plan": "Okay need classify items either drink food think through Starting coffee know beverage apple obviously fruit Water",
+     "c3_render": "In my opinion, the decor was perfect, and the breakfast was tasty, it was poor.",
+     "shuffled_render": "Xpen Alemia rock rock pical biological theory of 'weather,. over courses created study showcase the ge synthesis geologists compare compare or histological study to apply ocean their alpine end. In 14 months guidelines, three specimens. male."
+    },
+    {
+     "q": "Give me some suggestions to stop my kids from whining.",
+     "model_answer": "Okay, so I need to figure out how to stop my kids from whining. Hmm, I remember that when I was a kid, sometimes my parents used certain strategies that worked for them. Let me think. Maybe it's about setting clear expectations? Or maybe rewarding good behavior?Wait,",
+     "plan": "Okay need figure stop kids whining remember sometimes parents used certain strategies worked think Maybe setting clear expectations rewarding good behavior Wait",
+     "c3_render": "The reason why the mistoning depends on local conditions.",
+     "shuffled_render": "The service from the warm atmosphere offers a great experience."
+    },
+    {
+     "q": "What is a good slogan for carpet?",
+     "model_answer": "",
+     "plan": "",
+     "c3_render": "Enough.",
+     "shuffled_render": "Ber/l on Your Your Your My kommines and aivative In Next Next the award."
+    },
+    {
+     "q": "Why Mauritius is famous",
+     "model_answer": "Mauritius is famous for its stunning natural beauty, including pristine beaches, lush landscapes, and vibrant coral reefs. It is also known for its rich cultural heritage, blending African, Indian, Chinese, and European influences, as well as its status as a popular tourist destination and financial hub.",
+     "plan": "Mauritius famous stunning natural beauty including pristine beaches lush landscapes vibrant coral reefs known rich cultural heritage blending African Indian Chinese European influences well status popular tourist destination financial",
+     "c3_render": "Ncaca Hotel resort is located on a bottom facing the beautiful park in the edge of the Indians in Sierra.",
+     "shuffled_render": "Stop."
+    },
+    {
+     "q": "What else can you do with a hammer other than hammering nails?",
+     "model_answer": "",
+     "plan": "",
+     "c3_render": "That is unacceptable?",
+     "shuffled_render": "Located in the high mountains of Europe's beautiful beautiful island, surrounding surrounding beaches, is known asјll country’s most striking."
+    },
+    {
+     "q": "Why is the immigration system broken?",
+     "model_answer": "The immigration system is often considered broken due to inefficiencies, lack of resources, and conflicting policies that lead to long processing times, backlogs, and inconsistent enforcement. These issues create frustration for applicants and strain government resources.\nOkay, so the user is asking why the immigration system is broken.",
+     "plan": "immigration system often considered broken inefficiencies lack resources conflicting policies lead long processing times backlogs inconsistent enforcement issues create frustration applicants strain government Okay user asking",
+     "c3_render": " aid or cooperation over the past times, it is the necessitated African migrant of relations of buyers and to/or identify and uphold cheque and drinking areas.",
+     "shuffled_render": "No."
+    },
+    {
+     "q": "Classify the following as types of birds or types of snakes: robin, cobra, rattlesnake, eagle, viper, raptor, bluejay, cottonmouth, copperhead, sparrow.",
+     "model_answer": "Okay, let's tackle this question. So I need to classify each of these names into either birds or snakes. Let me go through the list one by one.First, I'll start with the first few: robin, cobra, rattlesnake, eagle, viper. Hmm,",
+     "plan": "Okay tackle question need classify names either birds snakes through list First start robin cobra rattlesnake eagle viper",
+     "c3_render": "We will need need class names of birds ceasefire through list list First started started the previously cradle.",
+     "shuffled_render": "I am concerned for the price for paying me pay on transaction often."
+    },
+    {
+     "q": "Classify each of the following as either characters from Star Wars or Star Trek: Jean Luc Picard, Grogu, Han Solo, Luke Skywalker, Data, Q, Darth Vader, Ahsoka, William Riker, James Kirk, Spock",
+     "model_answer": "Okay, let me tackle this question. So I need to figure out which of these characters are from Star Wars and which are from Star Trek. The list is Jean Luc Picard, Grogu, Han Solo, Luke Skywalker, Data, Q, Darth Vader, Ahsoka, William Riker",
+     "plan": "Okay tackle question need figure characters Star Wars Trek list Jean Picard Grogu Solo Luke Skywalker Data Darth Vader Ahsoka William Riker",
+     "c3_render": "The conquer do Star Trek Trek book Pic Picard Gromi Solo CSE Road S Heat, Score: Aokaoka American William T found and ErlenE(.",
+     "shuffled_render": ", Werner Kellettoma , Kelley glasses 3 weeks are okay C&S with Ariel Tiger, Captain Tom Tom or Harvey Fortsetwa ."
+    },
+    {
+     "q": "What is MLflow?",
+     "model_answer": "MLflow is an open-source platform for managing the end-to-end machine learning lifecycle, including experiment tracking, reproducibility, and deployment. It provides tools to log parameters, metrics, and artifacts, and supports model packaging and deployment.\nMLflow is an open-source platform designed to manage the",
+     "plan": "MLflow open source platform managing machine learning lifecycle including experiment tracking reproducibility deployment provides tools parameters metrics artifacts supports model packaging designed manage",
+     "c3_render": "With this platform you can add many different informations and can perform data in every way to install language. strategy, e.g?",
+     "shuffled_render": "For more info you can tell about different planets Earth."
+    },
+    {
+     "q": "What are equity securities?",
+     "model_answer": "",
+     "plan": "",
+     "c3_render": "DeathOTE",
+     "shuffled_render": "Vimen AG - Inc. Consumer Director offer traditional labels and support."
+    }
+   ]
+  }
+ ]
+}

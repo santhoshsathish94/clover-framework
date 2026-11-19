@@ -1,0 +1,81 @@
+=== 2026-11-19 02:52:04 B4 ha
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights: 100%|██████████| 399/399 [00:00<00:00, 15134.91it/s]
+02:53:40 1/16 92s
+02:55:12 2/16 185s
+02:56:45 3/16 277s
+02:58:17 4/16 369s
+02:59:49 5/16 462s
+03:01:21 6/16 553s
+03:02:53 7/16 645s
+03:04:23 8/16 735s
+03:05:55 9/16 827s
+03:07:25 10/16 918s
+03:08:57 11/16 1009s
+03:10:28 12/16 1100s
+03:11:59 13/16 1191s
+03:13:30 14/16 1282s
+03:15:01 15/16 1373s
+03:16:31 16/16 1464s
+{
+ "text_only": {
+  "overlap_with_own_plain_answer": 1.0,
+  "overlap_with_human_answer": 0.272,
+  "degenerate_share": 0.0
+ },
+ "latent_K4": {
+  "overlap_with_own_plain_answer": 0.5018,
+  "overlap_with_human_answer": 0.2256,
+  "degenerate_share": 0.3125
+ },
+ "random_K4": {
+  "overlap_with_own_plain_answer": 0.2459,
+  "overlap_with_human_answer": 0.1513,
+  "degenerate_share": 0.625
+ },
+ "latent_K16": {
+  "overlap_with_own_plain_answer": 0.3186,
+  "overlap_with_human_answer": 0.2532,
+  "degenerate_share": 0.4375
+ }
+}
+=== 2026-11-19 03:16:32 B4 base
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights: 100%|██████████| 399/399 [00:00<00:00, 14795.18it/s]
+03:17:44 1/16 68s
+03:18:59 2/16 143s
+03:20:12 3/16 216s
+03:21:08 4/16 272s
+03:22:20 5/16 344s
+03:23:23 6/16 407s
+03:24:31 7/16 475s
+03:25:27 8/16 531s
+03:26:26 9/16 590s
+03:27:27 10/16 651s
+03:28:53 11/16 737s
+03:30:00 12/16 804s
+03:31:12 13/16 876s
+03:32:20 14/16 944s
+03:33:01 15/16 985s
+03:33:48 16/16 1032s
+{
+ "text_only": {
+  "overlap_with_own_plain_answer": 1.0,
+  "overlap_with_human_answer": 0.5075,
+  "degenerate_share": 0.0
+ },
+ "latent_K4": {
+  "overlap_with_own_plain_answer": 0.0813,
+  "overlap_with_human_answer": 0.0911,
+  "degenerate_share": 0.8125
+ },
+ "random_K4": {
+  "overlap_with_own_plain_answer": 0.3068,
+  "overlap_with_human_answer": 0.2701,
+  "degenerate_share": 0.6875
+ },
+ "latent_K16": {
+  "overlap_with_own_plain_answer": 0.0,
+  "overlap_with_human_answer": 0.0,
+  "degenerate_share": 1.0
+ }
+}
+=== 2026-11-19 03:33:49 CHAIN2 DONE

@@ -1,0 +1,42 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+VQVAE, Total parameter count: 144.00M
+VQVAE, Non embedding parameter count: 85.73M
+NCP Transformer, Total parameter count: 119.96M
+NCP Transformer, Non embedding parameter count: 119.66M
+00:30:41 train pairs 3740, val pairs 64; load report {'dropped': 0, 'missing': 0, 'unexpected': 0}
+00:30:58 encoded in 17.2s
+00:31:08 step 0 val CE (mean over levels) {'matched': 2.8421, 'shuffled': 3.3132, 'blank': 4.8893}
+00:31:15 {'step': 1, 'loss': 2.866, 'gnorm': 4.214, 's_per_step': 6.899}
+00:34:01 {'step': 25, 'loss': 2.4057, 'gnorm': 2.342, 's_per_step': 6.924}
+00:37:48 {'step': 50, 'loss': 2.593, 'gnorm': 1.731, 's_per_step': 7.997}
+00:41:02 {'step': 75, 'loss': 2.808, 'gnorm': 7.435, 's_per_step': 7.921}
+00:43:46 {'step': 100, 'loss': 2.925, 'gnorm': 2.34, 's_per_step': 7.583}
+00:46:30 {'step': 125, 'loss': 2.6748, 'gnorm': 2.615, 's_per_step': 7.376}
+00:49:13 {'step': 150, 'loss': 2.6143, 'gnorm': 1.592, 's_per_step': 7.233}
+00:51:54 {'step': 175, 'loss': 2.4692, 'gnorm': 2.885, 's_per_step': 7.122}
+00:52:02 step 175 val CE {'matched': 2.3093, 'shuffled': 3.6359, 'blank': 4.2211}
+00:54:49 {'step': 200, 'loss': 2.4549, 'gnorm': 1.79, 's_per_step': 7.104}
+00:57:30 {'step': 225, 'loss': 2.49, 'gnorm': 1.724, 's_per_step': 7.034}
+01:00:11 {'step': 250, 'loss': 2.6735, 'gnorm': 1.643, 's_per_step': 6.975}
+01:02:55 {'step': 275, 'loss': 2.3152, 'gnorm': 2.927, 's_per_step': 6.935}
+01:05:36 {'step': 300, 'loss': 2.3375, 'gnorm': 1.619, 's_per_step': 6.893}
+01:08:17 {'step': 325, 'loss': 1.9704, 'gnorm': 1.396, 's_per_step': 6.858}
+01:10:59 {'step': 350, 'loss': 2.1396, 'gnorm': 1.493, 's_per_step': 6.832}
+01:11:06 step 350 val CE {'matched': 2.2523, 'shuffled': 3.6915, 'blank': 4.2663}
+01:13:50 {'step': 375, 'loss': 2.2301, 'gnorm': 1.473, 's_per_step': 6.832}
+01:16:31 {'step': 400, 'loss': 2.1914, 'gnorm': 1.35, 's_per_step': 6.809}
+01:19:15 {'step': 425, 'loss': 2.1309, 'gnorm': 1.635, 's_per_step': 6.793}
+01:21:56 {'step': 450, 'loss': 1.7605, 'gnorm': 1.254, 's_per_step': 6.774}
+01:24:38 {'step': 475, 'loss': 2.0281, 'gnorm': 1.598, 's_per_step': 6.758}
+01:27:19 {'step': 500, 'loss': 2.0725, 'gnorm': 1.511, 's_per_step': 6.743}
+01:30:01 {'step': 525, 'loss': 2.2438, 'gnorm': 1.631, 's_per_step': 6.73}
+01:30:08 step 525 val CE {'matched': 2.2381, 'shuffled': 3.737, 'blank': 4.2887}
+01:32:52 {'step': 550, 'loss': 1.9108, 'gnorm': 1.411, 's_per_step': 6.735}
+01:35:34 {'step': 575, 'loss': 1.7471, 'gnorm': 1.434, 's_per_step': 6.724}
+01:38:15 {'step': 600, 'loss': 2.4347, 'gnorm': 1.717, 's_per_step': 6.712}
+01:40:57 {'step': 625, 'loss': 1.9081, 'gnorm': 1.562, 's_per_step': 6.703}
+01:43:40 {'step': 650, 'loss': 1.6778, 'gnorm': 1.538, 's_per_step': 6.696}
+01:46:25 {'step': 675, 'loss': 2.3924, 'gnorm': 1.48, 's_per_step': 6.692}
+01:49:05 {'step': 700, 'loss': 1.9018, 'gnorm': 1.703, 's_per_step': 6.682}
+01:49:12 step 700 val CE {'matched': 2.2235, 'shuffled': 3.7288, 'blank': 4.3085}
+01:49:13 train done

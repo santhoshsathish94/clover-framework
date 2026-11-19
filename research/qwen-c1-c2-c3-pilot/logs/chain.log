@@ -1,0 +1,239 @@
+=== 2026-11-19 01:49:15 A2 eval trained
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+VQVAE, Total parameter count: 144.00M
+VQVAE, Non embedding parameter count: 85.73M
+NCP Transformer, Total parameter count: 119.96M
+NCP Transformer, Non embedding parameter count: 119.66M
+{"temp": 1.0, "top_k": 0, "top_p": 1.0, "seconds": 55.6, "retention_matched": 0.6485, "retention_shuffled_plan(control)": 0.0082, "retention_blank_plan(control)": 0.0026, "retention_true_text(ceiling)": 1.0, "number_recall_matched": 0.7698, "number_recall_shuffled(control)": 0.0556, "number_recall_blank(control)": 0.0667}
+{"temp": 0.6, "top_k": 50, "top_p": 0.9, "seconds": 52.2, "retention_matched": 0.7595, "retention_shuffled_plan(control)": 0.0111, "retention_blank_plan(control)": 0.001, "retention_true_text(ceiling)": 1.0, "number_recall_matched": 0.7867, "number_recall_shuffled(control)": 0.0611, "number_recall_blank(control)": 0.0}
+=== 2026-11-19 01:51:08 A3 trained
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights: 100%|██████████| 399/399 [00:00<00:00, 12199.05it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+VQVAE, Total parameter count: 144.00M
+VQVAE, Non embedding parameter count: 85.73M
+NCP Transformer, Total parameter count: 119.96M
+NCP Transformer, Non embedding parameter count: 119.66M
+01:51:55 8/40 answers, 42s
+01:52:35 16/40 answers, 82s
+01:53:16 24/40 answers, 123s
+01:53:57 32/40 answers, 163s
+01:54:38 40/40 answers, 205s
+VQVAE, Total parameter count: 144.00M
+VQVAE, Non embedding parameter count: 85.73M
+NCP Transformer, Total parameter count: 119.96M
+NCP Transformer, Non embedding parameter count: 119.66M
+{"temp": 0.6, "top_k": 50, "top_p": 0.9, "retention_matched": 0.7442, "retention_shuffled(control)": 0.1054, "retention_blank(control)": 0.0037, "retention_model_answer(ceiling)": 0.925, "number_recall_matched": 0.75, "number_recall_shuffled(control)": 0.0, "number_recall_blank(control)": 0.0}
+{"temp": 1.0, "top_k": 0, "top_p": 1.0, "retention_matched": 0.6248, "retention_shuffled(control)": 0.0666, "retention_blank(control)": 0.0013, "retention_model_answer(ceiling)": 0.925, "number_recall_matched": 1.0, "number_recall_shuffled(control)": 0.0, "number_recall_blank(control)": 0.0}
+01:56:20 wrote /opt/clover-k3/qwen-pilot-20261118/results/a3_trained.json
+=== 2026-11-19 01:56:20 A3 zero-shot
+01:56:22 reusing answers /opt/clover-k3/qwen-pilot-20261118/results/a3_answers.json 40
+VQVAE, Total parameter count: 144.00M
+VQVAE, Non embedding parameter count: 85.73M
+NCP Transformer, Total parameter count: 119.96M
+NCP Transformer, Non embedding parameter count: 119.66M
+{"temp": 0.6, "top_k": 50, "top_p": 0.9, "retention_matched": 0.1132, "retention_shuffled(control)": 0.0296, "retention_blank(control)": 0.0, "retention_model_answer(ceiling)": 0.925, "number_recall_matched": 0.5, "number_recall_shuffled(control)": 0.0, "number_recall_blank(control)": 0.0}
+{"temp": 1.0, "top_k": 0, "top_p": 1.0, "retention_matched": 0.0712, "retention_shuffled(control)": 0.0119, "retention_blank(control)": 0.0, "retention_model_answer(ceiling)": 0.925, "number_recall_matched": 0.0, "number_recall_shuffled(control)": 0.0, "number_recall_blank(control)": 0.0}
+01:58:04 wrote /opt/clover-k3/qwen-pilot-20261118/results/a3_zeroshot.json
+=== 2026-11-19 01:58:04 B states base held
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+01:58:08 base held rows 300
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights: 100%|██████████| 399/399 [00:00<00:00, 12407.62it/s]
+01:58:08 0/300 63.1 tok/s
+01:58:36 50/300 125.2 tok/s
+01:59:02 100/300 127.7 tok/s
+01:59:30 150/300 129.3 tok/s
+01:59:58 200/300 128.9 tok/s
+02:00:25 250/300 129.5 tok/s
+02:00:53 saved /opt/clover-k3/qwen-pilot-20261118/states/states_base_held.pt 15094 positions
+=== 2026-11-19 02:00:54 B states ha held
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+02:00:57 ha held rows 300
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights: 100%|██████████| 399/399 [00:00<00:00, 14233.09it/s]
+02:00:58 0/300 61.5 tok/s
+02:01:24 50/300 129.6 tok/s
+02:01:50 100/300 131.0 tok/s
+02:02:16 150/300 134.5 tok/s
+02:02:42 200/300 134.6 tok/s
+02:03:09 250/300 135.0 tok/s
+02:03:36 saved /opt/clover-k3/qwen-pilot-20261118/states/states_ha_held.pt 15094 positions
+=== 2026-11-19 02:03:37 B states base train
+02:03:40 base train rows 1500
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights: 100%|██████████| 399/399 [00:00<00:00, 15574.94it/s]
+02:03:41 0/1500 69.2 tok/s
+02:04:08 50/1500 124.2 tok/s
+02:04:34 100/1500 123.0 tok/s
+02:05:00 150/1500 122.1 tok/s
+02:05:28 200/1500 124.3 tok/s
+02:05:56 250/1500 125.1 tok/s
+02:06:22 300/1500 125.2 tok/s
+02:06:50 350/1500 126.2 tok/s
+02:07:18 400/1500 127.7 tok/s
+02:07:44 450/1500 127.1 tok/s
+02:08:10 500/1500 127.0 tok/s
+02:08:37 550/1500 126.8 tok/s
+02:09:04 600/1500 127.1 tok/s
+02:09:32 650/1500 127.6 tok/s
+02:09:59 700/1500 127.9 tok/s
+02:10:26 750/1500 128.1 tok/s
+02:10:53 800/1500 128.4 tok/s
+02:11:19 850/1500 128.2 tok/s
+02:11:47 900/1500 128.9 tok/s
+02:12:13 950/1500 128.8 tok/s
+02:12:41 1000/1500 129.1 tok/s
+02:13:08 1050/1500 129.1 tok/s
+02:13:36 1100/1500 129.5 tok/s
+02:14:04 1150/1500 129.7 tok/s
+02:14:30 1200/1500 129.5 tok/s
+02:14:56 1250/1500 129.6 tok/s
+02:15:22 1300/1500 129.5 tok/s
+02:15:49 1350/1500 129.3 tok/s
+02:16:16 1400/1500 129.1 tok/s
+02:16:43 1450/1500 129.1 tok/s
+02:17:10 saved /opt/clover-k3/qwen-pilot-20261118/states/states_base_train.pt 72141 positions
+=== 2026-11-19 02:17:11 B states ha train
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+02:17:14 ha train rows 1500
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights: 100%|██████████| 399/399 [00:00<00:00, 14816.66it/s]
+02:17:15 0/1500 70.0 tok/s
+02:17:41 50/1500 127.4 tok/s
+02:18:07 100/1500 125.7 tok/s
+02:18:33 150/1500 124.7 tok/s
+02:18:59 200/1500 127.5 tok/s
+02:19:26 250/1500 128.6 tok/s
+02:19:52 300/1500 128.7 tok/s
+02:20:19 350/1500 129.6 tok/s
+02:20:46 400/1500 131.0 tok/s
+02:21:12 450/1500 130.2 tok/s
+02:21:38 500/1500 129.9 tok/s
+02:22:04 550/1500 129.9 tok/s
+02:22:29 600/1500 130.6 tok/s
+02:22:56 650/1500 131.4 tok/s
+02:23:22 700/1500 131.6 tok/s
+02:23:49 750/1500 131.6 tok/s
+02:24:15 800/1500 131.9 tok/s
+02:24:41 850/1500 131.6 tok/s
+02:25:08 900/1500 132.2 tok/s
+02:25:34 950/1500 132.1 tok/s
+02:26:01 1000/1500 132.4 tok/s
+02:26:28 1050/1500 132.5 tok/s
+02:26:54 1100/1500 133.0 tok/s
+02:27:21 1150/1500 133.2 tok/s
+02:27:47 1200/1500 133.0 tok/s
+02:28:13 1250/1500 132.9 tok/s
+02:28:39 1300/1500 132.8 tok/s
+02:29:04 1350/1500 132.7 tok/s
+02:29:29 1400/1500 132.6 tok/s
+02:29:56 1450/1500 132.7 tok/s
+02:30:22 saved /opt/clover-k3/qwen-pilot-20261118/states/states_ha_train.pt 72141 positions
+=== 2026-11-19 02:30:23 B link/bridge
+02:30:24 embed tables (151936, 4096) (151671, 4096)
+02:30:24 base train/held positions 72141 15094
+02:30:25 b0 paper link on base states
+02:31:31 {"top1": 0.3067, "top5": 0.4027, "mean_cos_to_next_embedding": 0.2631, "median_rank": 26.0, "n": 1500}
+02:31:32 b1_trained_from_random 1 0.9888 0.15s/step
+02:31:46 b1_trained_from_random 100 0.7309 0.14s/step
+02:32:01 b1_trained_from_random 200 0.6809 0.15s/step
+02:32:16 b1_trained_from_random 300 0.6395 0.15s/step
+02:32:30 b1_trained_from_random 400 0.6403 0.15s/step
+02:32:45 b1_trained_from_random 500 0.6165 0.15s/step
+02:33:00 b1_trained_from_random 600 0.6066 0.15s/step
+02:33:14 b1_trained_from_random 700 0.5862 0.15s/step
+02:33:29 b1_trained_from_random 800 0.5972 0.15s/step
+02:33:44 b1_trained_from_random 900 0.5981 0.15s/step
+02:33:58 b1_trained_from_random 1000 0.5698 0.15s/step
+02:34:13 b1_trained_from_random 1100 0.5743 0.15s/step
+02:34:27 b1_trained_from_random 1200 0.6065 0.15s/step
+02:34:42 b1_trained_from_random 1300 0.5857 0.15s/step
+02:34:57 b1_trained_from_random 1400 0.5717 0.15s/step
+02:35:11 b1_trained_from_random 1500 0.5325 0.15s/step
+02:35:44 b1_trained_from_random {"top1": 0.2507, "top5": 0.3687, "mean_cos_to_next_embedding": 0.4096, "median_rank": 48.0, "n": 1500}
+02:35:44 b1_trained_from_paper_link 1 0.7389 0.16s/step
+02:35:59 b1_trained_from_paper_link 100 0.5879 0.15s/step
+02:36:14 b1_trained_from_paper_link 200 0.5488 0.15s/step
+02:36:29 b1_trained_from_paper_link 300 0.5338 0.15s/step
+02:36:43 b1_trained_from_paper_link 400 0.5444 0.15s/step
+02:36:58 b1_trained_from_paper_link 500 0.5268 0.15s/step
+02:37:12 b1_trained_from_paper_link 600 0.5165 0.15s/step
+02:37:27 b1_trained_from_paper_link 700 0.4926 0.15s/step
+02:37:41 b1_trained_from_paper_link 800 0.5145 0.15s/step
+02:37:56 b1_trained_from_paper_link 900 0.5266 0.15s/step
+02:38:11 b1_trained_from_paper_link 1000 0.5076 0.15s/step
+02:38:25 b1_trained_from_paper_link 1100 0.4931 0.15s/step
+02:38:40 b1_trained_from_paper_link 1200 0.5276 0.15s/step
+02:38:55 b1_trained_from_paper_link 1300 0.4983 0.15s/step
+02:39:09 b1_trained_from_paper_link 1400 0.4775 0.15s/step
+02:39:24 b1_trained_from_paper_link 1500 0.4566 0.15s/step
+02:39:58 b1_trained_from_paper_link {"top1": 0.372, "top5": 0.5393, "mean_cos_to_next_embedding": 0.4706, "median_rank": 3.0, "n": 1500}
+02:41:09 b2 {"mean_cos_bridged_vs_true_ha_state": 0.9782, "mean_cos_identity_base_vs_ha_state": 0.8808, "relative_mse_bridged": 0.0332}
+{
+ "b0_paper_link_on_base_states__base_embedding_table": {
+  "top1": 0.3067,
+  "top5": 0.4027,
+  "mean_cos_to_next_embedding": 0.2631,
+  "median_rank": 26.0,
+  "n": 1500
+ },
+ "b0_paper_link_on_base_states__ha_embedding_table": {
+  "top1": 0.3067,
+  "top5": 0.4033,
+  "mean_cos_to_next_embedding": 0.2631,
+  "median_rank": 26.0,
+  "n": 1500
+ },
+ "b1_trained_from_random": {
+  "top1": 0.2507,
+  "top5": 0.3687,
+  "mean_cos_to_next_embedding": 0.4096,
+  "median_rank": 48.0,
+  "n": 1500
+ },
+ "b1_trained_from_paper_link": {
+  "top1": 0.372,
+  "top5": 0.5393,
+  "mean_cos_to_next_embedding": 0.4706,
+  "median_rank": 3.0,
+  "n": 1500
+ },
+ "b2_bridge": {
+  "mean_cos_bridged_vs_true_ha_state": 0.9782,
+  "mean_cos_identity_base_vs_ha_state": 0.8808,
+  "relative_mse_bridged": 0.0332
+ },
+ "b2_paper_link_on_true_ha_states__ha_table": {
+  "top1": 0.3727,
+  "top5": 0.51,
+  "mean_cos_to_next_embedding": 0.4238,
+  "median_rank": 4.0,
+  "n": 1500
+ },
+ "b2_paper_link_on_bridged_base_states__ha_table": {
+  "top1": 0.3573,
+  "top5": 0.5053,
+  "mean_cos_to_next_embedding": 0.417,
+  "median_rank": 4.0,
+  "n": 1500
+ }
+}
+=== 2026-11-19 02:41:10 B3 base answers
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights: 100%|██████████| 399/399 [00:00<00:00, 13670.82it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+VQVAE, Total parameter count: 144.00M
+VQVAE, Non embedding parameter count: 85.73M
+NCP Transformer, Total parameter count: 119.96M
+NCP Transformer, Non embedding parameter count: 119.66M
+02:41:46 8/40 30s
+02:42:01 16/40 45s
+02:42:26 24/40 71s
+02:42:45 32/40 90s
+02:43:08 40/40 113s
+02:43:08 wrote /opt/clover-k3/qwen-pilot-20261118/results/b3_answers.json
+=== 2026-11-19 02:43:09 B3 render
+02:43:11 reusing answers /opt/clover-k3/qwen-pilot-20261118/results/b3_answers.json 40
+VQVAE, Total parameter count: 144.00M
+VQVAE, Non embedding parameter count: 85.73M
+NCP Transformer, Total parameter count: 119.96M
+NCP Transformer, Non embedding parameter count: 119.66M
+{"temp": 0.6, "top_k": 50, "top_p": 0.9, "retention_matched": 0.7552, "retention_shuffled(control)": 0.0103, "retention_blank(control)": 0.0, "retention_model_answer(ceiling)": 0.975, "number_recall_matched": 0.9167, "number_recall_shuffled(control)": 0.0, "number_recall_blank(control)": 0.0}
+{"temp": 1.0, "top_k": 0, "top_p": 1.0, "retention_matched": 0.6535, "retention_shuffled(control)": 0.0071, "retention_blank(control)": 0.0017, "retention_model_answer(ceiling)": 0.975, "number_recall_matched": 0.6667, "number_recall_shuffled(control)": 0.0, "number_recall_blank(control)": 0.1667}
+02:44:54 wrote /opt/clover-k3/qwen-pilot-20261118/results/b3_render_trained.json
+=== 2026-11-19 02:44:54 CHAIN DONE

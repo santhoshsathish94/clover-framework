@@ -1,0 +1,202 @@
+[
+ {
+  "q": "Give me a list of fantastic movies",
+  "human": "Oceans 11, Interstellar, The Imitation Game, and The Dark Knight",
+  "model_answer": "The Shawshank Redemption, The Godfather, The Dark Knight, Pulp Fiction, The Lord of the Rings, The Matrix, Inception, Fight Club, The Silence of the Lambs, and The Green Mile."
+ },
+ {
+  "q": "Identify which instrument is string or percussion: Ranat ek, Sasando",
+  "human": "Sasando is string, Ranat ek is percussion.",
+  "model_answer": "Ranat ek is a percussion instrument, while Sasando is a string instrument."
+ },
+ {
+  "q": "You are planning a trip and want to travel only in the Southern Hemisphere in the first half, and only the Northern Hemisphere in the second half. Sort the countries in your itinerary into 'Southern Hemisphere' and 'Northern Hemisphere'. Your itinerary includes: Fiji, Brazil, Australia, China, Argentina, India, Canada, and South Africa.",
+  "human": "Most countries are in the Northern Hemisphere. These include: Brazil, China, India and Canada. Countries in the Southern Hemisphere are: Australia, South Africa, Argentina and Fiji.",
+  "model_answer": "Southern Hemisphere: Fiji, Brazil, Australia, Argentina, South Africa. Northern Hemisphere: China, India, Canada."
+ },
+ {
+  "q": "Classify each as being used on water or land: jet ski, boat, car, bike, kayak, skateboard",
+  "human": "Jet Ski: Water\nBoat: Water\nCar: Land\nBike: Land\nKayak: Water\nSkateboard: Land",
+  "model_answer": "Jet ski and boat are used on water, while car, bike, kayak, and skateboard are used on land."
+ },
+ {
+  "q": "Why is the Pacific NorthWest so unique?",
+  "human": "The Pacific NorthWest (PNW) is indeed a unique location for living. It combines several good qualities including job opportunities, outdoor activities and amazing scenery. \n\nThe PNW is also home for a lot of transplants from other locations bringing together very diverse and rich cultures.",
+  "model_answer": "The Pacific NorthWest is unique due to its diverse geography, including dense forests, rugged coastlines, and active volcanoes, as well as its distinct cultural heritage and vibrant arts scene."
+ },
+ {
+  "q": "What is celiac disease?",
+  "human": "Celiac disease is an autoimmune disease that is hereditary, not to be confused with gluten intolerance. Celiac disease is an immune response to consuming gluten, a protein found in barley, rye, and wheat, which impacts nutrient absorption and immunity when consumed.",
+  "model_answer": "Celiac disease is an autoimmune disorder triggered by the consumption of gluten, a protein found in wheat, barley, and rye. It causes damage to the small intestine, leading to malabsorption of nutrients and various symptoms."
+ },
+ {
+  "q": "How many moons orbit Jupiter and what are the names of the most significant ones?",
+  "human": "There are 93 moons confirmed to be orbiting Jupiter. The most notable of these are Europa, Io, Ganymede, and Callisto.",
+  "model_answer": "Jupiter has 79 known moons. The most significant ones are Io, Europa, Ganymede, and Callisto."
+ },
+ {
+  "q": "Give me a bunch of excuses about why I don't have my homework to turn in",
+  "human": "Your dog ate your homework, you forget it at home, you spilled water all over it, your printer broke, you had a test in another class and were too busy studying",
+  "model_answer": "I forgot to bring it home, I lost it, I was sick, I had a family emergency, I was busy with extracurricular activities, I misunderstood the assignment, I didn't have enough time, I was distracted, I didn't know it was due, I was procrastinating,"
+ },
+ {
+  "q": "Classify the following as either an insect or a dog breed: mosquito, Labrador retriever, German shepherd, ant, Siberian husky, poodle, and ladybug.",
+  "human": "The insects are the mosquito, ant, and ladybug. The dog breeds are the Labrador retriever, German shepherd, Siberian husky, and poodle.",
+  "model_answer": "Mosquito and ant are insects, while Labrador retriever, German shepherd, Siberian husky, and poodle are dog breeds."
+ },
+ {
+  "q": "Classify each of the following as either a stringed instrument or a percussion instrument: violin, guitar, drums, congas, bongos, bass guitar.",
+  "human": "The violin, guitar and bass guitar are stringed instruments. Drums, congas, and bongos are percussion instruments.",
+  "model_answer": "The violin, guitar, and bass guitar are stringed instruments. The drums, congas, and bongos are percussion instruments."
+ },
+ {
+  "q": "What is the most played popular and most played instrument in the world?",
+  "human": "The piano is the most played instrument in the world as it extremely versatile and covers the full spectrum range of low and high notes.",
+  "model_answer": "The most played popular instrument in the world is the piano, while the most played instrument overall is the guitar."
+ },
+ {
+  "q": "Tell me which of these characters are from the Mario universe: Yoshi, Zelda, King Kong, Luigi, Princess Peach, Link, Bowser, Alex Rodriguez.",
+  "human": "Yoshi, Luigi, Princess Peach, and Bowser are from the Mario universe.",
+  "model_answer": "Yoshi, Luigi, Princess Peach, Link, and Bowser are from the Mario universe. Zelda, King Kong, and Alex Rodriguez are not."
+ },
+ {
+  "q": "Tell me which of the following countries as considered SAARC countries: Afghanistan, Bangladesh, Bhutan, India, United States of America, United Kingdom, China, Singapore",
+  "human": "Afghanistan, Bangladesh, Bhutan and India are part of the SAARC eight member countries. United States of America, United Kingdom, China and Singapore are not affiliated to SAARC countries.",
+  "model_answer": "Afghanistan, Bangladesh, Bhutan, India, and the Maldives are considered SAARC countries."
+ },
+ {
+  "q": "Let's play a game of tic tac toe. I'll be X and you be O. Unplayed squares will be \"_\". I'll get first.\n\n_ _ _\n_ O _\n_ _ _",
+  "human": "Fun! Here's my next move:\n\n_ _ _\n_ O X\n_ _ _",
+  "model_answer": "_ _ X\n_ O _\n_ _ _"
+ },
+ {
+  "q": "How many human beings are on the planet?",
+  "human": "There are approximately 8 billion living human beings on planet earth as of 2023. The number of human beings is an estimate based on population growth rates, census results and death patterns.",
+  "model_answer": "The current global population is approximately 7.9 billion people."
+ },
+ {
+  "q": "Tell me whether these are nouns or verbs: Run, Dance, Slide, Jump, Think, Book, Noah Webster, Cat, Omaha, Softness, Justice.",
+  "human": "Run is a verb.\nDance is a verb.\nSlide is a verb.\nJump is a verb.\nThink is a verb.\nBook is a noun.\nNoah Webster is a noun.\nCat is a noun.\nOmaha is a noun.\nSoftness is a noun.\nJustice is a noun.",
+  "model_answer": "Run, Dance, Slide, Jump, and Think are verbs. Book, Noah Webster, Cat, Omaha, Softness, and Justice are nouns."
+ },
+ {
+  "q": "Classify each of the following as either a brand of kombucha or a soda brand: Humm, Brew Doctor, Pepsi, 7Up, Mountain Dew, Coca-Cola, Sprite, Fanta, GT's, Remedy, Health-Ade",
+  "human": "Kombucha: Humm, Brew Doctor, GT's, Remedy, Health-Ade \nSoda: Pepsi, 7Up, Mountain Dew, Coca-Cola, Sprite, Fanta",
+  "model_answer": "Humm, Brew Doctor, GT's, Remedy, and Health-Ade are brands of kombucha. Pepsi, 7Up, Mountain Dew, Coca-Cola, Sprite, Fanta are soda brands."
+ },
+ {
+  "q": "What are some good date ideas for vegans?",
+  "human": "Tour an animal rescue, dine at a local vegan restaurant, visit the art museum, explore a botanical garden, plant-based picnic in the park",
+  "model_answer": "Vegan date ideas include trying new vegan restaurants, attending a vegan cooking class, or going on a nature hike and foraging for wild edibles."
+ },
+ {
+  "q": "What are a lot of different options for traveling across New York City?",
+  "human": "You could bike, ride a motorcycle, drive a car, take a bus, use the subway or hail a cab",
+  "model_answer": "A lot of different options for traveling across New York City include the subway, buses, taxis, ride-sharing services, ferries, and the iconic yellow cabs."
+ },
+ {
+  "q": "What is the oldest civilization in the world?",
+  "human": "The oldest civilization in the world is the Mesopotamia civilization which lasted between 4000 - 3500 BC",
+  "model_answer": "The oldest civilization in the world is the Sumerian civilization, which emerged in Mesopotamia around 4500 BCE."
+ },
+ {
+  "q": "Tell me whether each of these dishes are served cold or hot: pizza, pasta, tiramisu, ice cream, ribs, steak, ceviche",
+  "human": "Pizza: Hot\nPasta: Hot\nTiramisu: Cold\nIce Cream: Cold\nRibs: Hot\nSteak: Hot\nCeviche: Cold",
+  "model_answer": "Pizza, pasta, ribs, and steak are served hot. Tiramisu, ice cream, and ceviche are served cold."
+ },
+ {
+  "q": "What is a good soccer club in Lake Washington area in the USA?",
+  "human": "Crossfire is a good soccer club with Rec, Select and Premier levels",
+  "model_answer": "The Seattle Sounders FC is a professional soccer club based in Seattle, Washington, and plays in Major League Soccer (MLS). They are the most successful team in the history of the league, having won the MLS Cup three times and the Supporters' Shield twice."
+ },
+ {
+  "q": "In which year did the Portuguese first arrived in Brazil?",
+  "human": "The Portuguese first arrived in Brazil in the year of 1500.",
+  "model_answer": "The Portuguese first arrived in Brazil in 1500."
+ },
+ {
+  "q": "What are some classes you need to take in university to become an aerospace engineer?",
+  "human": "Some classes you need to take in university to become an aerospace engineer include thermodynamics, aerodynamics, fluid dynamics, and mechanics of materials.",
+  "model_answer": "Aerospace engineering is a field of engineering that deals with the design, construction, and science behind aircraft and spacecraft. To become an aerospace engineer, you need to take classes in physics, mathematics, and engineering."
+ },
+ {
+  "q": "I'm putting together an exercise plan that needs to have both cardio and strength exercises, but I want to separate exercises into each category. Running, deadlifts, cycling, pushups, swimming, jump rope,  lunges and squats.",
+  "human": "Running, cycling, swimming and jump rope are all forms of cardio exercise. Deadlifts, pushups, lunges and squats are forms of strength exercise.",
+  "model_answer": "Cardio exercises include running, cycling, swimming, and jump rope. Strength exercises include deadlifts, pushups, lunges, and squats."
+ },
+ {
+  "q": "Which one among the following three words is different to the others: Novelty, Playful, Irresistible? Why?",
+  "human": "The word 'Novelty' is different to the other two words because it is an noun, while the others are adjectives.",
+  "model_answer": "Novelty is different to the others because it is the only word that is not an adjective."
+ },
+ {
+  "q": "Who are some of the most successful golfers in history?",
+  "human": "Sam Snead, Tiger Woods, and Jack Nicklaus are the most successful golfers of all time with the top three most major championship wins.",
+  "model_answer": "Jack Nicklaus, Tiger Woods, and Arnold Palmer are among the most successful golfers in history."
+ },
+ {
+  "q": "What is the best way to store food?",
+  "human": "Different food requires different forms of storage. It is important to check the labels for your food and follow the instructions carefully. Non-perishable food in well sealed containers can be stored in the pantry. Perishable food should be sealed and placed in the fridge for short-term storage or freezer for long-term storage.",
+  "model_answer": "The best way to store food is to keep it in a cool, dry place, away from direct sunlight and moisture. Use airtight containers to prevent spoilage and maintain freshness."
+ },
+ {
+  "q": "What are some ways that I can reduce the latency of my API?",
+  "human": "To reduce the latency of your API, you could consider caching any database operations you may have, reducing the number of network requests required, or scaling up the number of instances of your server.",
+  "model_answer": "To reduce API latency, you can optimize your code, use caching, and implement load balancing. Additionally, consider using a Content Delivery Network (CDN) to serve static content more efficiently."
+ },
+ {
+  "q": "What is stratigraphy?",
+  "human": "Stratigraphy is a subset of geology and is the classification of layers (strata) of soil and rock.",
+  "model_answer": "Stratigraphy is the study of rock layers and the interpretation of the history they represent."
+ },
+ {
+  "q": "Classify each of the following as a drink or food: coffee, apple, water, soda, banana, pineapple, champagne",
+  "human": "Coffee: Drink\nApple: Food\nWater: Drink\nSoda: Drink\nBanana: Food\nPineapple: Food\nChampagne: Drink",
+  "model_answer": "coffee, water, soda, champagne are drinks. apple, banana, pineapple are food."
+ },
+ {
+  "q": "Give me some suggestions to stop my kids from whining.",
+  "human": "1. Explain that there are other ways to communicate.\n2. Ignore your child's whining, step away if you can't.\n3. Enforce discipline.",
+  "model_answer": "1. Set clear expectations and boundaries for behavior. 2. Use positive reinforcement and teach problem-solving skills."
+ },
+ {
+  "q": "What is a good slogan for carpet?",
+  "human": "Here are some good slogans for carpet:\n\n- The Fuzzy Floor\n- Your feet's best friend\n- A sweater for your floor\n- Cushion your falls with carpet\n- Carpet diem",
+  "model_answer": "\"Step into Comfort, Step into Style.\""
+ },
+ {
+  "q": "Why Mauritius is famous",
+  "human": "1. Because it has nice resorts\n2. Beaches are very nice \n3, Foods are awesome",
+  "model_answer": "Mauritius is famous for its beautiful beaches, vibrant culture, and as a former British colony."
+ },
+ {
+  "q": "What else can you do with a hammer other than hammering nails?",
+  "human": "You can use a hammer to\n1. Remove nails for those with a claw\n2. Defense yourself as a weapon\n3. Juggle between your left and right hands to practice hand-eye coordination\n4. Substitute a paper weight if the hammer is not too big",
+  "model_answer": "You can use a hammer to drive in nails, remove nails, and break objects."
+ },
+ {
+  "q": "Why is the immigration system broken?",
+  "human": "The immigration system is broken because it is based on outdated policies and procedures, and does not reflect the realities of today's global economy. The current system is too expensive and inefficient, and fails to provide a fair and equitable solution for all migrants.",
+  "model_answer": "The immigration system is broken because it is inefficient, unfair, and fails to address the needs of both immigrants and the host country. It often lacks clear policies, leading to confusion and exploitation."
+ },
+ {
+  "q": "Classify the following as types of birds or types of snakes: robin, cobra, rattlesnake, eagle, viper, raptor, bluejay, cottonmouth, copperhead, sparrow.",
+  "human": "Robin, eagle, raptor, bluejay, and sparrow are all kinds of birds. Cobra, rattlesnake, viper, cottonmouth, and copperhead are several types of snakes.",
+  "model_answer": "Types of birds: robin, eagle, raptor, bluejay, sparrow. Types of snakes: cobra, rattlesnake, viper, cottonmouth, copperhead."
+ },
+ {
+  "q": "Classify each of the following as either characters from Star Wars or Star Trek: Jean Luc Picard, Grogu, Han Solo, Luke Skywalker, Data, Q, Darth Vader, Ahsoka, William Riker, James Kirk, Spock",
+  "human": "Star Wars: Grogu, Han Solo, Luke Skywalker, Darth Vader, Ahsoka\nStar Trek: Jean Luc Picard, Data, Q, William Riker, James Kirk, Spock",
+  "model_answer": "Star Wars: Grogu, Han Solo, Luke Skywalker, Darth Vader, Ahsoka, James Kirk, Spock. Star Trek: Jean Luc Picard, Data, Q, William Riker."
+ },
+ {
+  "q": "What is MLflow?",
+  "human": "MLflow is an open-source framework for MLOps that automates the full production lifecycle, from model training and experimentation to model lifecycle management and deployment.",
+  "model_answer": "MLflow is an open-source platform for managing the end-to-end machine learning lifecycle, including experiment tracking, reproducibility, and deployment. It provides tools for tracking experiments, packaging code into reproducible runs, and sharing and deploying models."
+ },
+ {
+  "q": "What are equity securities?",
+  "human": "Equity securities are financial assets that represent ownership of a corporation. The most prevalent type of equity security is common stock. And the characteristic that most defines an equity security—differentiating it from most other types of securities—is ownership.",
+  "model_answer": "Equity securities are financial instruments that represent ownership in a company, such as stocks or shares."
+ }
+]
