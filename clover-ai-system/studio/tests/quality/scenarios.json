@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "purpose": "User-visible regression catalogue; these are specifications, not claims that the scenarios have run.",
+  "scenarios": [
+    {
+      "id": "chat.basic",
+      "area": "chat",
+      "priority": "P0",
+      "task": "Ask a simple factual question and request a concise answer.",
+      "expected": [
+        "A non-empty answer appears in the active conversation.",
+        "The stream completes and the composer becomes usable."
+      ],
+      "evidence": "live_model_e2e",
+      "destructive": false
+    },
+    {
+      "id": "chat.followup",
+      "area": "chat",
+      "priority": "P0",
+      "task": "Ask a follow-up that depends on the immediately previous answer.",
+      "expected": [
+        "The answer uses the correct prior-turn context.",
+        "No unrelated conversation is substituted."
+      ],
+      "evidence": "live_model_e2e",
+      "destructive": false
+    },
+    {
+      "id": "routing.auto",
+      "area": "model-routing",
+      "priority": "P0",
+      "task": "Run the same task with Auto (Smart) and each available model.",
+      "expected": [
+        "The selected backend is recorded.",
+        "Unavailable backends are reported rather than silently marked successful."
+      ],
+      "evidence": "live_model_e2e",
+      "destructive": false
+    },
+    {
+      "id": "tools.search",
+      "area": "tools",
+      "priority": "P1",
+      "task": "Ask for current information and require a web search.",
+      "expected": [
+        "A search tool call is visible.",
+        "The final answer distinguishes retrieved facts from unsupported claims."
+      ],
+      "evidence": "live_tool_e2e",
+      "destructive": false
+    },
+    {
+      "id": "tools.permission",
+      "area": "permissions",
+      "priority": "P0",
+      "task": "Attempt a harmless tool with permission set to Ask, then deny it.",
+      "expected": [
+        "The permission request is shown.",
+        "Denying prevents execution and is accurately reported."
+      ],
+      "evidence": "live_tool_e2e",
+      "destructive": false
+    },
+    {
+      "id": "files.read",
+      "area": "files",
+      "priority": "P1",
+      "task": "Attach a small UTF-8 text file and ask a question answered by its contents.",
+      "expected": [
+        "The answer is grounded in the attachment.",
+        "The source file remains unchanged."
+      ],
+      "evidence": "live_model_e2e",
+      "destructive": false
+    },
+    {
+      "id": "image.generate",
+      "area": "image",
+      "priority": "P0",
+      "task": "Generate a detailed scene image from a multi-clause prompt.",
+      "expected": [
+        "A real image artifact is returned and decodes.",
+        "Backend/model and dimensions are recorded.",
+        "Prompt adherence and visual quality are independently scored."
+      ],
+      "evidence": "live_media_e2e",
+      "destructive": false
+    },
+    {
+      "id": "image.edit",
+      "area": "image",
+      "priority": "P1",
+      "task": "Edit a supplied reference image while preserving the requested unchanged elements.",
+      "expected": [
+        "An edited image artifact is returned.",
+        "The evaluator checks requested changes and preservation."
+      ],
+      "evidence": "live_media_e2e",
+      "destructive": false
+    },
+    {
+      "id": "audio.input",
+      "area": "audio",
+      "priority": "P1",
+      "task": "Attach a short spoken question and ask for a transcription-based answer.",
+      "expected": [
+        "Audio is accepted and processed.",
+        "The response reflects the spoken request."
+      ],
+      "evidence": "live_model_e2e",
+      "destructive": false
+    },
+    {
+      "id": "ui.reload",
+      "area": "ui",
+      "priority": "P0",
+      "task": "Reload Studio during an idle session and continue the conversation.",
+      "expected": [
+        "The UI shell loads without uncaught page errors.",
+        "Session continuity behavior matches the product contract."
+      ],
+      "evidence": "live_browser_shell",
+      "destructive": false
+    }
+  ]
+}
