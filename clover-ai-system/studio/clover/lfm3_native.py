@@ -99,7 +99,7 @@ RUNTIME = semantics.Runtime(tools={
     "vscode.run": ("vscode_run",), "github.setup": ("vscode_github_setup",), "github.sync": ("vscode_github_sync",),
     "vscode.editor": ("vscode_editor",), "vscode.diagnostics": ("vscode_diagnostics",), "vscode.diff": ("vscode_diff",),
     "vscode.browser": ("vscode_browser",),
-    "calc": ("calculate",), "units": ("convert_units",), "files.search": ("search_files",), "files.info": ("file_info",),
+    "calc": ("calculate",), "math.exact": ("calculate",), "units": ("convert_units",), "files.search": ("search_files",), "files.info": ("file_info",),
     "git.inspect": ("git_inspect",), "doc.read": ("read_document",), "table.analyze": ("analyze_table",),
     "table.chart": ("chart_table",), "media.info": ("media_info",), "media.frame": ("extract_frame",)},
     device="laptop", risky=local_terminal.risky)

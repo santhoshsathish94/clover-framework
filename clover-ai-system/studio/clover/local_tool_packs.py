@@ -175,10 +175,46 @@ def _fmt_number(val: Decimal | int | float) -> str:
 
 
 def calculate(expression: str) -> str:
-    """Safely evaluates an arithmetic expression without Python eval()."""
+    """Safely evaluates an arithmetic expression without Python eval(), delegating huge exact integers,
+    large factorials (201..200,000!), near-2^k shifts, and zero-storage `pi_hex(offset[, digits])` to x-cruncher."""
     raw = str(expression or "").strip()
     if not raw:
         return "Error: expression is required."
+
+    norm_head = re.sub(r"^\s*(?:what\s+is|calculate|compute|evaluate)\s+", "", raw, flags=re.I)
+    norm_head = re.sub(r"[?=]+\s*$", "", norm_head).strip()
+
+    # 1. Zero-storage hexadecimal Pi extraction: pi_hex(offset[, digits])
+    m_pi = re.fullmatch(r"pi_hex\(\s*(\d[\d_]*)\s*(?:,\s*(\d+)\s*)?\)", norm_head, flags=re.I)
+    if m_pi:
+        import xcruncher_bridge
+        off = int(m_pi.group(1).replace("_", ""))
+        dig = int(m_pi.group(2)) if m_pi.group(2) else 20
+        try:
+            return xcruncher_bridge.pi_hex_exact(off, dig)
+        except (ValueError, RuntimeError) as exc:
+            return f"Error: {exc}"
+
+    # 2. Large exact factorial: factorial(n) or n! for 201 <= n <= 200,000
+    m_fact = re.fullmatch(r"(?:factorial\(\s*(\d[\d_]*)\s*\)|(\d[\d_]*)!)", norm_head, flags=re.I)
+    if m_fact:
+        n_val = int((m_fact.group(1) or m_fact.group(2)).replace("_", ""))
+        if n_val > 200:
+            import xcruncher_bridge
+            return xcruncher_bridge.run_xcruncher_compute(operation="factorial", n=n_val)
+
+    # 3. Huge integer / bit-shift multiplication (> 64-digit literals or `<<` shifts, without chained `**`)
+    has_shift = "<<" in norm_head
+    has_big_lit = any(len(m.group(0)) > MAX_LITERAL_DIGITS for m in re.finditer(r"\d+", norm_head))
+    if (has_shift or has_big_lit) and "**" not in norm_head and "^" not in norm_head and len(norm_head) <= 2_000_064:
+        import xcruncher_bridge
+        try:
+            val = xcruncher_bridge._parse_big_operand(norm_head)
+            fmt = xcruncher_bridge._format_bigint(val)
+            return fmt["exact_decimal"] if "exact_decimal" in fmt else json.dumps(fmt, indent=2)
+        except (ValueError, RuntimeError, OverflowError) as exc:
+            return f"Error: {exc}"
+
     if len(raw) > MAX_EXPR_CHARS:
         return f"Error: expression exceeds {MAX_EXPR_CHARS} characters."
 
@@ -1241,9 +1277,10 @@ def extract_frame(
 PACK_TOOLS = [
     _fn(
         "calculate",
-        "Evaluate an arithmetic or mathematical expression deterministically (+, -, *, /, //, %, **, sqrt, abs, round, "
-        "min, max, floor, ceil, sin, cos, tan, log, log10, log2, factorial, gcd, pi, e).",
-        {"expression": {"type": "string", "description": "arithmetic expression, e.g. '137 * 29 + 46'"}},
+        "Evaluate an arithmetic or mathematical expression deterministically (+, -, *, /, //, %, **, <<, sqrt, abs, round, "
+        "min, max, floor, ceil, sin, cos, tan, log, log10, log2, factorial up to 200000!, gcd, pi, e, and zero-storage "
+        "pi_hex(offset, digits) or arbitrary-precision big-integer products powered by x-cruncher).",
+        {"expression": {"type": "string", "description": "arithmetic expression, e.g. '137 * 29 + 46', 'factorial(5000)', or 'pi_hex(1000000, 20)'"}},
         ["expression"],
     ),
     _fn(
@@ -1352,6 +1389,21 @@ PACK_TOOLS = [
     ),
 ]
 
+XCRUNCHER_TOOL_SCHEMA = _fn(
+    "xcruncher_compute",
+    "Exact arbitrary-precision big-integer multiplication (`mul`/`square`), exact huge `factorial` (up to 200,000!), "
+    "and zero-storage N-th hexadecimal digits of Pi (`pi_hex` for 0 <= hex_offset <= 2^44) powered by x-cruncher.",
+    {
+        "operation": {"type": "string", "description": "'mul', 'square', 'factorial', or 'pi_hex'"},
+        "a": {"type": "string", "description": "first integer operand or near-2^k expression, e.g. '(1 << 200000) - 6'"},
+        "b": {"type": "string", "description": "second integer operand for 'mul'"},
+        "n": {"type": "integer", "description": "integer n for 'factorial' (0..200000)"},
+        "hex_offset": {"type": "integer", "description": "0-based hex offset after '3.' for 'pi_hex' (0..17592186044416)"},
+        "digits": {"type": "integer", "description": "number of exact hex digits for 'pi_hex' (1..20, default 20)"},
+    },
+    ["operation"],
+)
+
 PACK_PERMISSIONS = {
     "calculate": None,
     "convert_units": None,
@@ -1389,6 +1441,8 @@ def tool_detail(name: str, args: dict, workdir: Path | None = None) -> str:
         return f"Inspect media metadata: {loc}"
     if name == "extract_frame":
         return f"Extract video frame at {a.get('timestamp_s', 0)}s from {loc}"
+    if name == "xcruncher_compute":
+        return f"x-cruncher exact {a.get('operation', 'mul')}"
     return f"{name}: {loc}"
 
 
@@ -1402,6 +1456,16 @@ def run_pack_tool(name: str, args: dict, engine) -> str:
 
     if name == "calculate":
         return calculate(a.get("expression", ""))
+    if name == "xcruncher_compute":
+        import xcruncher_bridge
+        return xcruncher_bridge.run_xcruncher_compute(
+            operation=a.get("operation", "mul"),
+            a=a.get("a", ""),
+            b=a.get("b", ""),
+            n=a.get("n", 0),
+            hex_offset=a.get("hex_offset", 0),
+            digits=a.get("digits", 20),
+        )
     if name == "convert_units":
         return convert_units(a.get("value"), a.get("from_unit", ""), a.get("to_unit", ""))
     if name == "search_files":

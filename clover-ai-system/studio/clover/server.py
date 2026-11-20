@@ -568,11 +568,12 @@ def _ffmpeg(args, cancel=None):
 def tool_inventory():
     import lfm3_native
     import local_tool_packs
-    base = [t["function"]["name"] for t in lfm3_native.STUDIO_TOOLS]
+    all_studio = [t["function"]["name"] for t in lfm3_native.STUDIO_TOOLS]
+    base = [n for n in all_studio if n != "manage_todo_list"]
     vs_names = ["vscode_open", "vscode_clone", "vscode_install", "vscode_run",
                 "vscode_editor", "vscode_diagnostics", "vscode_diff", "vscode_browser"]
-    conditional = ["remember"] + vs_names + ["generate_image"]
-    installed_cond, unavailable_cond = [], []
+    conditional = ["remember", "manage_todo_list"] + vs_names + ["generate_image"]
+    installed_cond, unavailable_cond = ["manage_todo_list"], []
     on_mem = bool(S.settings and S.settings.get().get("layers", {}).get("memory"))
     if on_mem or (S.workspaces and S.workspaces.list()):
         installed_cond.append("remember")
@@ -644,6 +645,25 @@ def save_media(items):
         name = re.sub(r"[\r\n<>]+", " ", str(it.get("name") or path.name))[:120]
         out.append({"kind": kind, "file": path.name, "name": name})
     return out
+
+
+def xcruncher_tool():
+    """Exact big-integer multiplication, factorial, and zero-storage Pi hex extraction powered by x-cruncher."""
+    import local_tool_packs
+    import xcruncher_bridge
+    return {
+        "schema": local_tool_packs.XCRUNCHER_TOOL_SCHEMA,
+        "permission": None,
+        "detail": lambda a: local_tool_packs.tool_detail("xcruncher_compute", a),
+        "run": lambda a: xcruncher_bridge.run_xcruncher_compute(
+            operation=a.get("operation", "mul"),
+            a=a.get("a", ""),
+            b=a.get("b", ""),
+            n=a.get("n", 0),
+            hex_offset=a.get("hex_offset", 0),
+            digits=a.get("digits", 20),
+        ),
+    }
 
 
 def image_tool(sid, cancel, made):

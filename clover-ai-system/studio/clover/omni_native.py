@@ -39,24 +39,27 @@ PLATFORM = "Android phone" if ANDROID else "Windows laptop"
 
 
 def looping(text):
-    """The last 60..160 characters appeared twice before: greedy decoding is repeating itself (a user's request ran to the
-    2,048-token limit in 89 s that way)."""
+    """The last 160 characters appeared twice before (3+ copies), or a shorter 64..96-character tail appeared three
+    times before (4+ copies): greedy decoding is repeating itself without tripping on legitimate 3-fold phrasing."""
+    if len(text) >= 4 * LOOP_TAIL and text.count(text[-LOOP_TAIL:], 0, len(text) - LOOP_TAIL) >= 2:
+        return True
     if text.count("```") % 2 == 0:
-        for w in (LOOP_TAIL, 96, 64):
-            if len(text) >= 3 * w and text.count(text[-w:], 0, len(text) - w) >= 2:
+        for w in (96, 64):
+            if len(text) >= 4 * w and text.count(text[-w:], 0, len(text) - w) >= 3:
                 return True
-    return len(text) >= 4 * LOOP_TAIL and text.count(text[-LOOP_TAIL:], 0, len(text) - LOOP_TAIL) >= 2
+    return False
 
 
 def trim_loop(text):
     """One copy of the repeated text, ending at its last full sentence: the fixed cut ended a story on "grew lou"
     (2026-11-11). Inside an unclosed code block the cut stays where it is."""
     w_used = LOOP_TAIL
-    if text.count("```") % 2 == 0:
-        for w in (LOOP_TAIL, 96, 64):
-            if len(text) >= 3 * w and text.count(text[-w:], 0, len(text) - w) >= 2:
-                w_used = w
-                break
+    if not (len(text) >= 4 * LOOP_TAIL and text.count(text[-LOOP_TAIL:], 0, len(text) - LOOP_TAIL) >= 2):
+        if text.count("```") % 2 == 0:
+            for w in (96, 64):
+                if len(text) >= 4 * w and text.count(text[-w:], 0, len(text) - w) >= 3:
+                    w_used = w
+                    break
     tail = text[-w_used:]
     kept = text[:text.find(tail) + w_used]
     if kept.count("```") % 2:

@@ -184,6 +184,13 @@ ASKS = (
      r"[^.?!\n]{0,60}\.(?:mp4|webm|mkv|avi|mov|wav|mp3|flac|ogg|m4a|png|jpg|jpeg|webp)\b"),
     (("media.frame",),
      r"\bextract_frame\b|\bextract\s+(?:a\s+|the\s+)?frame\b[^.?!\n]{0,60}\.(?:mp4|webm|mkv|avi|mov)\b"),
+    (("math.exact",),
+     r"\bxcruncher(?:_compute)?\b|\bx-cruncher\b|"
+     r"\bhex(?:adecimal)?\s+digits?\s+of\s+(?:pi|\u03c0)\b|"
+     r"\b\d[\d,_]*(?:st|nd|rd|th)?\s+hex(?:adecimal)?\s+digits?\s+of\s+(?:pi|\u03c0)\b|"
+     r"\b(?:pi|\u03c0)\s+(?:at\s+)?(?:hex(?:adecimal)?\s+)?offset\s+\d|"
+     r"\b\d{25,}\s*[*×]\s*\d{25,}\b|"
+     r"\bfactorial\s+of\s+[1-9]\d{2,}\b|\b[1-9]\d{2,}!(?!\w)"),
 )
 VSCODE = re.compile(_VSC, re.I)
 # the user names the calculator: it is used even for a sum Clover can check itself
@@ -341,14 +348,15 @@ CAP_WORDS = {"web.search": "the web", "web.page": "the web", "python": "Python",
              "calc": "the calculator", "units": "unit conversion", "files.search": "file search",
              "files.info": "file info", "git.inspect": "Git", "doc.read": "the document",
              "table.analyze": "table analysis", "table.chart": "a chart", "media.info": "media info",
-             "media.frame": "a video frame"}
+             "media.frame": "a video frame", "math.exact": "x-cruncher exact math"}
 READS = {"files.read": "the file", "files.list": "the folder", "web.page": "the web page", "memory.search": "your memory",
          "files.search": "the folder", "files.info": "the file", "git.inspect": "Git", "doc.read": "the document",
          "media.info": "the media file"}
 OBSERVES = dict(READS, python="Python", shell="the terminal", status="device status", clock="the clock",
                 ssh="SSH", calc="the calculator", units="unit conversion",
                 **{"vscode.run": "VS Code", "vscode.editor": "VS Code", "vscode.diagnostics": "VS Code's problems",
-                   "vscode.browser": "VS Code's browser", "table.analyze": "table analysis"})
+                   "vscode.browser": "VS Code's browser", "table.analyze": "table analysis",
+                   "math.exact": "x-cruncher exact math"})
 DONE = {"files.write": "file written", "remember": "saved", "image": "picture made", "vscode.open": "opened in VS Code",
         "vscode.clone": "cloned", "vscode.install": "installed", "vscode.diff": "diff opened", "table.chart": "chart made",
         "media.frame": "frame extracted"}
@@ -356,7 +364,7 @@ NO_TOOLS = {"creative writing": " · no tools", "meal": " · no tools", "about t
             "places": " · web only"}
 # offered only when a message asks for them; the clock too: in Tools "Always" the Omni answered, called the clock
 # unasked and answered again, so the first answer vanished and the time showed (the date is in the system prompt)
-QUIET = ("files.write", "remember", "image", "clock", "table.chart", "media.frame")
+QUIET = ("files.write", "remember", "image", "clock", "table.chart", "media.frame", "math.exact")
 # and with nothing named, not this device's state or files either: "what is time now" read the laptop's status, a
 # greeting listed the home folder (2026-11-04)
 UNNAMED = QUIET + ("status", "files.read", "files.list", "files.search", "files.info", "git.inspect",
