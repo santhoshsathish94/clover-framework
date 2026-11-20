@@ -119,7 +119,7 @@ class EngineNotReady(Exception):
 
 
 LAYER_KEYS = ("memory", "ontology", "compiler", "ncm", "kv_slots", "recall")
-IMAGE_MODELS = ("sd15-lcm", "sd15")  # image_gen.presets; the default is the best measured
+IMAGE_MODELS = ("auto", "gpt-image-1", "sd15-lcm", "sd15", "diagram")  # Image Generation Gateway tiers
 JEPA_ARCHS = ("auto", "clover_rpre", "ijepa", "audio_jepa", "eb_jepa", "mjepa", "none")
 # gpu / cpu: LFM3-Omni-2B on llama.cpp; fused: C1 + C2 + C3, the phone's fused runtime on the CPU (fused_engine.py)
 ENGINES = ("gpu", "cpu", "fused")
@@ -584,7 +584,12 @@ def tool_inventory():
     else:
         unavailable_cond.extend(vs_names)
     base_dir = Path(S.args.base) if S.args else None
-    if base_dir and (base_dir / "tools" / "sd.cpp" / "vulkan" / "sd-cli.exe").is_file():
+    img_ok = False
+    if base_dir:
+        import image_gen
+        sel_img = S.settings.get().get("image_model", "sd15-lcm") if S.settings else "sd15-lcm"
+        img_ok = image_gen.ImageGen(base_dir, sel_img).available()[0]
+    if img_ok:
         installed_cond.append("generate_image")
     else:
         unavailable_cond.append("generate_image")
@@ -667,13 +672,17 @@ def xcruncher_tool():
 
 
 def image_tool(sid, cancel, made):
-    """generate_image for this turn: pictures it makes are collected in `made` and shown with the answer."""
+    """generate_image for this turn: routes through the 3-tier Image Generation Gateway with explicit provenance."""
     import image_gen
     import lfm3_native
-    gen = image_gen.ImageGen(S.args.base, S.settings.get().get("image_model", "sd15-lcm"))
+    sel_preset = S.settings.get().get("image_model", "sd15-lcm") if S.settings else "sd15-lcm"
+    gen = image_gen.ImageGen(S.args.base, sel_preset)
 
     def run(a):
-        if gen.available()[0]:
+        is_local_sd = gen.preset in ("sd15-lcm", "sd15") or (
+            gen.preset == "auto" and image_gen._api_provider_config(Path(S.args.base)) is None
+        )
+        if is_local_sd and gen.available()[0]:
             free = image_gen.free_mb()
             if free is not None and free < image_gen.NEED_FREE_MB and hasattr(S.engine, "free_voice") and S.engine.free_voice():
                 time.sleep(1.5)
@@ -685,12 +694,17 @@ def image_tool(sid, cancel, made):
         try:
             ctx_t = S.turn_ctx.get(sid) or {}
             seed_img = (int(time.time() * 1000) & 0x7FFFFFFF) if ctx_t.get("retry") else None
-            r = gen.generate(a.get("prompt") or "", media_dir(), seed=seed_img, cancel=cancel)
+            ref_img = ctx_t.get("reference_image")
+            prompt_str = str(a.get("prompt") or "")
+            want_trans = bool(re.search(r"\btransparent\s+background\b", prompt_str, re.I))
+            r = gen.generate(prompt_str, media_dir(), seed=seed_img, cancel=cancel,
+                             reference_image=ref_img, transparent=want_trans)
         except (RuntimeError, ValueError, TypeError) as exc:
             return f"Error: no picture was made: {exc}. Tell the user plainly; do not call generate_image again in this answer."
         made.append(dict(r, prompt=str(a.get("prompt") or "")[:300]))
-        return (f"Made the picture ({r['width']}x{r['height']}, {r['model']}, {r['seconds']} s); the user sees it in the chat "
-                "now. Reply with one short sentence; do not describe details you cannot see.")
+        tier_note = "non-generative procedural diagram" if not r.get("is_generative", True) else r.get("backend_tier", "generative")
+        return (f"Made the picture ({r['width']}x{r['height']}, {r['model']}, tier={tier_note}, {r['seconds']} s); the user sees it "
+                "in the chat now. Reply with one short sentence; do not describe details you cannot see.")
     return {"schema": lfm3_native._fn(
         "generate_image", "Make a picture or illustration from a text description. Use when the "
         "user asks for an image, picture, drawing or illustration.",
@@ -2974,6 +2988,7 @@ class Handler(BaseHTTPRequestHandler):
                   "model_catalog": cat,
                   "account": getattr(self, "_authed_account", None),
                   "inputs": getattr(eng, "inputs", ["text"]) if eng else None,
+                  "image_capabilities": (__import__("image_gen").capabilities(S.args.base) if S.args else None),
                   "inbox": inbox_count()}
             if busy:
                 st["busy"] = {"kind": busy["kind"], "elapsed_s": round(time.time() - busy["since"]),

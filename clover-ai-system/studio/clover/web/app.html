@@ -2208,7 +2208,14 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       img.style.cursor = 'pointer'; img.title = 'Click to open Visual Inspector';
       img.addEventListener('click', function () { openImageInspector({ file: im.file, name: im.prompt || im.file }); });
       fig.appendChild(img);
-      var cap = el('figcaption'); cap.textContent = [im.model, im.seconds ? im.seconds + ' s' : '', 'Click to inspect'].filter(Boolean).join(' · ');
+      var tierBadge = im.backend_tier === 'high_quality' ? 'High-quality generative'
+        : (im.backend_tier === 'local_diffusion' ? 'Local diffusion'
+        : (im.is_generative === false || im.backend_tier === 'procedural_diagram' ? 'Procedural diagram (non-generative)' : ''));
+      var dimsLbl = (im.width && im.height) ? (im.width + '×' + im.height) : '';
+      var cap = el('figcaption');
+      cap.setAttribute('data-backend-tier', im.backend_tier || '');
+      cap.setAttribute('data-generative', String(im.is_generative !== false));
+      cap.textContent = [tierBadge, im.model, dimsLbl, im.seconds ? im.seconds + ' s' : '', 'Click to inspect'].filter(Boolean).join(' · ');
       fig.appendChild(cap); body.appendChild(fig);
     });
     (m.media || []).forEach(function (md) {
