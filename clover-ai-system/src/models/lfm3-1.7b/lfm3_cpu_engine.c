@@ -14,7 +14,13 @@
  */
 
 #include <math.h>
+#ifdef _OPENMP
 #include <omp.h>
+#else
+static inline int omp_get_num_procs(void) { return 1; }
+static inline int omp_get_max_threads(void) { return 1; }
+static inline void omp_set_num_threads(int n) { (void)n; }
+#endif
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,12 +32,25 @@
 #include <arm_bf16.h>
 #endif
 #endif
+#if (defined(__x86_64__) || defined(_M_X64)) && (defined(__GNUC__) || defined(__clang__))
+#include <immintrin.h>
+#define LFM3_HAS_X86_SIMD 1
+#define LFM3_TARGET_AVX2        __attribute__((target("avx2,fma")))
+#define LFM3_TARGET_AVXVNNI     __attribute__((target("avx2,fma,avxvnni")))
+#define LFM3_TARGET_AVX512_VNNI __attribute__((target("avx512f,avx512bw,avx512dq,avx512vl,avx512vnni,avx512vbmi,fma")))
+#else
+#define LFM3_HAS_X86_SIMD 0
+#define LFM3_TARGET_AVX2
+#define LFM3_TARGET_AVXVNNI
+#define LFM3_TARGET_AVX512_VNNI
+#endif
 #ifndef _WIN32
 #include <sched.h>
 #endif
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <malloc.h>
 #define LFM3_API __declspec(dllexport)
 #else
 #include <dlfcn.h>
@@ -39,8 +58,117 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#define LFM3_API
+#define LFM3_API __attribute__((visibility("default")))
 #endif
+
+#if defined(_MSC_VER)
+  #define LFM3_THREAD_LOCAL __declspec(thread)
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
+  #define LFM3_THREAD_LOCAL _Thread_local
+#elif defined(__GNUC__) || defined(__clang__)
+  #define LFM3_THREAD_LOCAL __thread
+#else
+  #define LFM3_THREAD_LOCAL
+#endif
+
+static inline int lfm3_atomic_load_i32(const volatile int *p)
+{
+#if defined(__GNUC__) || defined(__clang__)
+    return __atomic_load_n(p, __ATOMIC_ACQUIRE);
+#elif defined(_WIN32)
+    return (int)InterlockedCompareExchange((volatile LONG *)p, 0, 0);
+#else
+    return *p;
+#endif
+}
+
+static inline void lfm3_atomic_store_i32(volatile int *p, int v)
+{
+#if defined(__GNUC__) || defined(__clang__)
+    __atomic_store_n(p, v, __ATOMIC_RELEASE);
+#elif defined(_WIN32)
+    InterlockedExchange((volatile LONG *)p, (LONG)v);
+#else
+    *p = v;
+#endif
+}
+
+typedef enum {
+    LFM3_ISA_SCALAR      = 0,
+    LFM3_ISA_AVX2        = 1,
+    LFM3_ISA_AVXVNNI     = 2,
+    LFM3_ISA_AVX512_VNNI = 3
+} lfm3_isa_t;
+
+static LFM3_THREAD_LOCAL int g_lfm3_last_tier = 0;
+
+#if LFM3_HAS_X86_SIMD
+static void lfm3_cpu_init_once(void)
+{
+    static volatile int state = 0; /* 0 = uninit, 1 = busy, 2 = done */
+    if (__atomic_load_n(&state, __ATOMIC_ACQUIRE) == 2) return;
+    int expected = 0;
+    if (__atomic_compare_exchange_n(&state, &expected, 1, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
+        __builtin_cpu_init();
+        __atomic_store_n(&state, 2, __ATOMIC_RELEASE);
+    } else {
+        while (__atomic_load_n(&state, __ATOMIC_ACQUIRE) != 2) {
+            __builtin_ia32_pause();
+        }
+    }
+}
+#endif
+
+static lfm3_isa_t lfm3_detect_isa(void)
+{
+    static volatile int cached = -1;
+    int v = lfm3_atomic_load_i32(&cached);
+    if (v >= 0) return (lfm3_isa_t)v;
+    lfm3_isa_t res = LFM3_ISA_SCALAR;
+#if LFM3_HAS_X86_SIMD
+    lfm3_cpu_init_once();
+    if (__builtin_cpu_supports("avx512f") &&
+        __builtin_cpu_supports("avx512bw") &&
+        __builtin_cpu_supports("avx512dq") &&
+        __builtin_cpu_supports("avx512vl") &&
+        __builtin_cpu_supports("avx512vnni") &&
+        __builtin_cpu_supports("avx512vbmi") &&
+        __builtin_cpu_supports("fma")) {
+        res = LFM3_ISA_AVX512_VNNI;
+    } else if (__builtin_cpu_supports("avx2") &&
+               __builtin_cpu_supports("fma") &&
+               __builtin_cpu_supports("avxvnni")) {
+        res = LFM3_ISA_AVXVNNI;
+    } else if (__builtin_cpu_supports("avx2") &&
+               __builtin_cpu_supports("fma")) {
+        res = LFM3_ISA_AVX2;
+    }
+#endif
+    lfm3_atomic_store_i32(&cached, (int)res);
+    return res;
+}
+
+LFM3_API const char *lfm3_active_isa_name(void)
+{
+    lfm3_isa_t isa = lfm3_detect_isa();
+    if (isa == LFM3_ISA_AVX512_VNNI) return "AVX-512 VNNI+VBMI (512b ZMM vpdpbusd + vpermb LUT16)";
+    if (isa == LFM3_ISA_AVXVNNI)     return "AVX-VNNI+FMA (256b YMM vpdpbusd + vpshufb LUT16)";
+    if (isa == LFM3_ISA_AVX2)        return "AVX2+FMA (256b YMM maddubs + vpshufb LUT16)";
+#if defined(__ARM_FEATURE_MATMUL_INT8)
+    return "ARM64 i8mm+SDOT+NEON (SMMLA + vqtbl1q LUT16)";
+#elif defined(__ARM_FEATURE_DOTPROD)
+    return "ARM64 SDOT+NEON (vdotq_s32 + vqtbl1q LUT16)";
+#elif defined(__aarch64__) || defined(__ARM_NEON)
+    return "ARM64 NEON (128b FMA + vqtbl1q LUT16)";
+#else
+    return "Portable-Scalar (C11)";
+#endif
+}
+
+LFM3_API int lfm3_last_kernel_tier(void)
+{
+    return g_lfm3_last_tier;
+}
 
 enum {
     LFM3_D = 2048,
@@ -308,7 +436,7 @@ static struct {
     unsigned long majflt_at_reset;
     int adreno_ready;
     int adreno_enabled;
-} g_lfm3 = { 0, 0, 0, 0, 8, 0 };
+} g_lfm3 = { 0 };
 
 static void read_os_page_faults(unsigned long *out_minflt, unsigned long *out_majflt)
 {
@@ -456,10 +584,89 @@ static const char *ADRENO_SWIGLU_DOT8_SRC =
 "    }\n"
 "}\n";
 
+/* Universal OpenCL 1.2/2.0/3.0 SwiGLU kernel for ARM Mali / Immortalis, Samsung Xclipse, PowerVR, and older Adreno GPUs
+ * that do not expose `cl_khr_integer_dot_product` */
+static const char *MOBILE_SWIGLU_UNIVERSAL_SRC =
+"inline float bf16_round(float x) {\n"
+"    uint u = as_uint(x);\n"
+"    if ((u & 0x7FFFFFFFu) > 0x7F800000u) return as_float((u | 0x00400000u) & 0xFFFF0000u);\n"
+"    uint rb = 0x00007FFFu + ((u >> 16) & 1u);\n"
+"    return as_float((u + rb) & 0xFFFF0000u);\n"
+"}\n"
+"inline int dot4_s8(uchar4 u, char4 x) {\n"
+"    return (int)u.s0 * (int)x.s0 + (int)u.s1 * (int)x.s1 + (int)u.s2 * (int)x.s2 + (int)u.s3 * (int)x.s3;\n"
+"}\n"
+"__kernel void adreno_swiglu_dot8_exact(\n"
+"    __global const uchar16 * restrict ffn_v16,\n"
+"    __global const char4   * restrict x_q8,\n"
+"    __global const float   * restrict x_sc,\n"
+"    __global const int     * restrict x_sum,\n"
+"    __global float         * restrict out_swiglu\n"
+") {\n"
+"    __local char4 l_xq[512];\n"
+"    __local float l_s1[128];\n"
+"    __local float l_s3[128];\n"
+"    const int lid = get_local_id(0);\n"
+"    for (int i = lid; i < 512; i += 128) l_xq[i] = x_q8[i];\n"
+"    barrier(CLK_LOCAL_MEM_FENCE);\n"
+"    const int row_in_wg = lid >> 5;\n"
+"    const int g         = lid & 31;\n"
+"    const int o         = (get_group_id(0) << 2) + row_in_wg;\n"
+"    if (o >= 7680) return;\n"
+"    const int nib16_idx = (o << 6) + (g << 1);\n"
+"    uchar16 pk1_0 = ffn_v16[nib16_idx], pk1_1 = ffn_v16[nib16_idx + 1];\n"
+"    uchar16 pk3_0 = ffn_v16[508800 + nib16_idx], pk3_1 = ffn_v16[508800 + nib16_idx + 1];\n"
+"    __global const uchar *w1_stp = (__global const uchar *)(ffn_v16 + 491520);\n"
+"    __global const float *w1_scl = (__global const float *)(ffn_v16 + 506880);\n"
+"    __global const uchar *w3_stp = (__global const uchar *)(ffn_v16 + 508800 + 491520);\n"
+"    __global const float *w3_scl = (__global const float *)(ffn_v16 + 508800 + 506880);\n"
+"    const __local char4 *xq = l_xq + (g << 4);\n"
+"    uchar16 m0f = (uchar16)(15);\n"
+"    uchar16 lo1_0 = pk1_0 & m0f, hi1_0 = pk1_0 >> (uchar16)(4);\n"
+"    uchar16 lo1_1 = pk1_1 & m0f, hi1_1 = pk1_1 >> (uchar16)(4);\n"
+"    uchar16 lo3_0 = pk3_0 & m0f, hi3_0 = pk3_0 >> (uchar16)(4);\n"
+"    uchar16 lo3_1 = pk3_1 & m0f, hi3_1 = pk3_1 >> (uchar16)(4);\n"
+"    int d1 = -8 * x_sum[g];\n"
+"    d1 += dot4_s8(lo1_0.s0123, xq[0])  + dot4_s8(lo1_0.s4567, xq[1])  + dot4_s8(lo1_0.s89ab, xq[2])  + dot4_s8(lo1_0.scdef, xq[3]);\n"
+"    d1 += dot4_s8(lo1_1.s0123, xq[4])  + dot4_s8(lo1_1.s4567, xq[5])  + dot4_s8(lo1_1.s89ab, xq[6])  + dot4_s8(lo1_1.scdef, xq[7]);\n"
+"    d1 += dot4_s8(hi1_0.s0123, xq[8])  + dot4_s8(hi1_0.s4567, xq[9])  + dot4_s8(hi1_0.s89ab, xq[10]) + dot4_s8(hi1_0.scdef, xq[11]);\n"
+"    d1 += dot4_s8(hi1_1.s0123, xq[12]) + dot4_s8(hi1_1.s4567, xq[13]) + dot4_s8(hi1_1.s89ab, xq[14]) + dot4_s8(hi1_1.scdef, xq[15]);\n"
+"    int d3 = -8 * x_sum[g];\n"
+"    d3 += dot4_s8(lo3_0.s0123, xq[0])  + dot4_s8(lo3_0.s4567, xq[1])  + dot4_s8(lo3_0.s89ab, xq[2])  + dot4_s8(lo3_0.scdef, xq[3]);\n"
+"    d3 += dot4_s8(lo3_1.s0123, xq[4])  + dot4_s8(lo3_1.s4567, xq[5])  + dot4_s8(lo3_1.s89ab, xq[6])  + dot4_s8(lo3_1.scdef, xq[7]);\n"
+"    d3 += dot4_s8(hi3_0.s0123, xq[8])  + dot4_s8(hi3_0.s4567, xq[9])  + dot4_s8(hi3_0.s89ab, xq[10]) + dot4_s8(hi3_0.scdef, xq[11]);\n"
+"    d3 += dot4_s8(hi3_1.s0123, xq[12]) + dot4_s8(hi3_1.s4567, xq[13]) + dot4_s8(hi3_1.s89ab, xq[14]) + dot4_s8(hi3_1.scdef, xq[15]);\n"
+"    float xsc = x_sc[g];\n"
+"    l_s1[lid] = (float)d1 * ((float)w1_stp[(o << 5) + g] * xsc);\n"
+"    l_s3[lid] = (float)d3 * ((float)w3_stp[(o << 5) + g] * xsc);\n"
+"    barrier(CLK_LOCAL_MEM_FENCE);\n"
+"    if (g == 0) {\n"
+"        float s1 = 0.0f, s3 = 0.0f;\n"
+"        for (int k = 0; k < 32; k++) { s1 += l_s1[lid + k]; s3 += l_s3[lid + k]; }\n"
+"        float v1 = bf16_round(s1 * w1_scl[o]);\n"
+"        float v3 = bf16_round(s3 * w3_scl[o]);\n"
+"        float silu = bf16_round(v1 / (1.0f + exp(-v1)));\n"
+"        out_swiglu[o] = bf16_round(silu * v3);\n"
+"    }\n"
+"}\n";
+
 static void init_adreno740_opencl(void)
 {
-    void *h = dlopen("/vendor/lib64/libOpenCL.so", RTLD_NOW);
-    if (!h) h = dlopen("libOpenCL.so", RTLD_NOW);
+    const char *cl_paths[] = {
+        "/vendor/lib64/libOpenCL.so",
+        "/system/vendor/lib64/libOpenCL.so",
+        "/vendor/lib64/libGLES_mali.so",
+        "/system/vendor/lib64/egl/libGLES_mali.so",
+        "/vendor/lib64/egl/libGLES_mali.so",
+        "/vendor/lib64/libPVROCL.so",
+        "libOpenCL.so",
+        NULL
+    };
+    void *h = NULL;
+    for (int i = 0; cl_paths[i]; i++) {
+        h = dlopen(cl_paths[i], RTLD_NOW);
+        if (h) break;
+    }
     if (!h) return;
 
     cl_int (*clGetPlatformIDs)(cl_uint, cl_platform_id*, cl_uint*) = dlsym(h, "clGetPlatformIDs");
@@ -513,7 +720,11 @@ static void init_adreno740_opencl(void)
 
     size_t srclen = strlen(ADRENO_SWIGLU_DOT8_SRC);
     cl_program prog = clCreateProgramWithSource(g_adreno.ctx, 1, &ADRENO_SWIGLU_DOT8_SRC, &srclen, &err);
-    if (clBuildProgram(prog, 1, &dev, "", NULL, NULL) != 0) return;
+    if (!prog || clBuildProgram(prog, 1, &dev, "", NULL, NULL) != 0) {
+        size_t ulen = strlen(MOBILE_SWIGLU_UNIVERSAL_SRC);
+        prog = clCreateProgramWithSource(g_adreno.ctx, 1, &MOBILE_SWIGLU_UNIVERSAL_SRC, &ulen, &err);
+        if (!prog || clBuildProgram(prog, 1, &dev, "", NULL, NULL) != 0) return;
+    }
 
     g_adreno.k_swiglu = clCreateKernel(prog, "adreno_swiglu_dot8_exact", &err);
     if (err != 0 || !g_adreno.k_swiglu) return;
@@ -705,46 +916,208 @@ LFM3_API void lfm3_set_use_4bit_ffn(int enable)
     g_lfm3.use_4bit_ffn = enable ? 1 : 0;
 }
 
-LFM3_API int lfm3_configure_s23_snapdragon8gen2(int pin_big_cores_3_to_7)
+#if defined(__linux__)
+static long read_sysfs_cpu_long(int cpu_id, const char *rel_path)
 {
-    /* Samsung Galaxy S23 (Snapdragon 8 Gen 2 for Galaxy, SM8550-AC):
-     *   - Cores 0..2: 3x Cortex-A510 efficiency cores (2.0 GHz, in-order)
-     *   - Cores 3..4: 2x Cortex-A710 performance cores (2.8 GHz)
-     *   - Cores 5..6: 2x Cortex-A715 performance cores (2.8 GHz)
-     *   - Core 7:     1x Cortex-X3 prime core (3.36 GHz)
-     * Inspects Android cpuset affinity first: if cores 3..7 are available (foreground/top-app),
-     * pins to the 4 or 5 out-of-order cores (3..7); if restricted by background cpuset (e.g. 0..2),
-     * matches OpenMP thread count to allowed cores to prevent barrier spinlock oversubscription. */
-    g_lfm3.s23_pin_requested = pin_big_cores_3_to_7 ? 1 : 0;
-    g_lfm3.num_threads = pin_big_cores_3_to_7 ? 5 : 8;
-#if defined(__linux__) && defined(__aarch64__)
+    char path[256];
+    snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/%s", cpu_id, rel_path);
+    FILE *f = fopen(path, "r");
+    if (!f) return -1;
+    long val = -1;
+    if (fscanf(f, "%ld", &val) != 1) val = -1;
+    fclose(f);
+    return val;
+}
+
+#ifdef _OPENMP
+static int lfm3_cgroup_cpu_quota(void)
+{
+    FILE *f = fopen("/sys/fs/cgroup/cpu.max", "r");
+    if (f) {
+        char buf[128] = {0};
+        int q_cpus = 0;
+        if (fgets(buf, sizeof(buf), f) && strncmp(buf, "max", 3) != 0) {
+            long long q = 0, p = 100000;
+            if (sscanf(buf, "%lld %lld", &q, &p) >= 1 && q > 0 && p > 0) {
+                q_cpus = (int)((q + p - 1) / p);
+            }
+        }
+        fclose(f);
+        if (q_cpus > 0) return q_cpus;
+    }
+    FILE *qf = fopen("/sys/fs/cgroup/cpu/cpu.cfs_quota_us", "r");
+    FILE *pf = fopen("/sys/fs/cgroup/cpu/cpu.cfs_period_us", "r");
+    int q1 = 0;
+    if (qf && pf) {
+        long long q = -1, p = 100000;
+        if (fscanf(qf, "%lld", &q) == 1 && fscanf(pf, "%lld", &p) == 1 && q > 0 && p > 0) {
+            q1 = (int)((q + p - 1) / p);
+        }
+    }
+    if (qf) fclose(qf);
+    if (pf) fclose(pf);
+    return q1;
+}
+#endif
+#endif
+
+/* Universal thread-count resolver ported from x-cruncher v1.6.1:
+ *   1. Honors explicit `g_lfm3.num_threads > 0` or `OMP_NUM_THREADS` env var.
+ *   2. Respects Linux `sched_getaffinity`, distinct `(package_id, core_id)` physical cores,
+ *      and container cgroup v1/v2 CPU quotas (`cpu.max` / `cfs_quota_us`).
+ *   3. Respects Windows `GetLogicalProcessorInformation` physical cores.
+ *   4. Never mutates caller `sched_setaffinity` on desktop/server hosts. */
+static int lfm3_active_threads(void)
+{
+    if (g_lfm3.num_threads > 0) return g_lfm3.num_threads;
+#ifdef _OPENMP
+    const char *env_omp = getenv("OMP_NUM_THREADS");
+    if (env_omp && env_omp[0] != '\0') {
+        int mt = omp_get_max_threads();
+        return (mt > 0) ? mt : 1;
+    }
+    static volatile int cached_nt = 0;
+    int nt = lfm3_atomic_load_i32(&cached_nt);
+    if (nt > 0) return nt;
+
+    int max_t = omp_get_max_threads();
+    if (max_t <= 0) max_t = omp_get_num_procs();
+    if (max_t <= 0) max_t = 4;
+#if defined(__linux__)
+    int logical = max_t, phys = max_t;
+    cpu_set_t mask;
+    CPU_ZERO(&mask);
+    if (sched_getaffinity(0, sizeof(mask), &mask) == 0) {
+        int cnt = CPU_COUNT(&mask);
+        if (cnt > 0) logical = cnt;
+        long seen_pkg[256], seen_core[256];
+        int n_unique = 0;
+        for (int c = 0; c < 1024 && n_unique < 256; c++) {
+            if (!CPU_ISSET(c, &mask)) continue;
+            long pkg = read_sysfs_cpu_long(c, "topology/physical_package_id");
+            long cid = read_sysfs_cpu_long(c, "topology/core_id");
+            if (cid < 0) continue;
+            if (pkg < 0) pkg = 0;
+            int dup = 0;
+            for (int u = 0; u < n_unique; u++) {
+                if (seen_pkg[u] == pkg && seen_core[u] == cid) { dup = 1; break; }
+            }
+            if (!dup) { seen_pkg[n_unique] = pkg; seen_core[n_unique] = cid; n_unique++; }
+        }
+        if (n_unique > 0) phys = n_unique;
+    }
+    int quota = lfm3_cgroup_cpu_quota();
+    if (quota > 0 && quota < logical) logical = quota;
+    if (quota > 0 && quota < phys)    phys    = quota;
+    nt = (logical >= 16 && phys >= 8 && logical >= 2 * phys) ? phys : logical;
+#elif defined(_WIN32)
+    int phys = 0;
+    DWORD len = 0;
+    GetLogicalProcessorInformation(NULL, &len);
+    if (len > 0) {
+        SYSTEM_LOGICAL_PROCESSOR_INFORMATION *slpi = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)malloc(len);
+        if (slpi) {
+            if (GetLogicalProcessorInformation(slpi, &len)) {
+                DWORD n = len / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
+                for (DWORD i = 0; i < n; i++) {
+                    if (slpi[i].Relationship == RelationProcessorCore) phys++;
+                }
+            }
+            free(slpi);
+        }
+    }
+    nt = (max_t >= 16 && phys >= 8 && max_t >= 2 * phys) ? phys : max_t;
+#else
+    nt = max_t;
+#endif
+    if (nt < 1) nt = 1;
+    lfm3_atomic_store_i32(&cached_nt, nt);
+    return nt;
+#else
+    return 1;
+#endif
+}
+
+LFM3_API int lfm3_set_num_threads(int n_threads)
+{
+    g_lfm3.num_threads = (n_threads > 0) ? n_threads : 0;
+    int active = lfm3_active_threads();
+    omp_set_num_threads(active);
+    return active;
+}
+
+LFM3_API int lfm3_configure_android_soc(int pin_performance_cores)
+{
+    /* Universal Android SoC Core Topology Auto-Discovery:
+     * Works across Qualcomm Snapdragon (8 Gen 1/2/3/Elite, 7+ Gen 2/3, 6 Gen 1),
+     * Google Tensor (G1/G2/G3/G4), MediaTek Dimensity (8000/9000/9200/9300/9400),
+     * Samsung Exynos (2100/2200/2400), and uniform Android Studio Emulators (arm64-v8a / x86_64).
+     * Reads per-core `cpu_capacity` and `cpufreq/cpuinfo_max_freq` from sysfs and intersects
+     * with `sched_getaffinity()` to pin OpenMP threads to out-of-order performance/prime cores
+     * without oversubscribing background cpusets. */
+    g_lfm3.s23_pin_requested = pin_performance_cores ? 1 : 0;
+    int max_procs = omp_get_num_procs();
+    if (max_procs <= 0) max_procs = 4;
+    g_lfm3.num_threads = max_procs > 8 ? 8 : max_procs;
+#if defined(__linux__)
     cpu_set_t current_mask;
     CPU_ZERO(&current_mask);
     if (sched_getaffinity(0, sizeof(current_mask), &current_mask) == 0) {
-        cpu_set_t big_mask;
-        CPU_ZERO(&big_mask);
-        int big_avail = 0;
-        for (int c = 3; c <= 7; c++) {
-            if (CPU_ISSET(c, &current_mask)) {
-                CPU_SET(c, &big_mask);
-                big_avail++;
+        int total_avail = CPU_COUNT(&current_mask);
+        long metric[32];
+        long min_m = 0x7FFFFFFFL, max_m = -1L;
+        int n_detected = 0;
+        for (int c = 0; c < 32; c++) {
+            metric[c] = -1;
+            if (!CPU_ISSET(c, &current_mask)) continue;
+            long cap = read_sysfs_cpu_long(c, "cpu_capacity");
+            long freq = read_sysfs_cpu_long(c, "cpufreq/cpuinfo_max_freq");
+            long m = (cap > 0) ? cap : (freq > 0 ? freq : -1);
+            if (m > 0) {
+                metric[c] = m;
+                if (m < min_m) min_m = m;
+                if (m > max_m) max_m = m;
+                n_detected++;
             }
         }
-        if (pin_big_cores_3_to_7 && big_avail >= 4) {
-            if (sched_setaffinity(0, sizeof(big_mask), &big_mask) == 0) {
+        cpu_set_t perf_mask;
+        CPU_ZERO(&perf_mask);
+        int perf_avail = 0;
+        if (pin_performance_cores && n_detected >= 4 && max_m > (min_m * 115) / 100) {
+            /* Heterogeneous big.LITTLE / DynamIQ SoC detected via sysfs */
+            long thresh = min_m + ((max_m - min_m) * 18) / 100;
+            for (int c = 0; c < 32; c++) {
+                if (CPU_ISSET(c, &current_mask) && metric[c] >= thresh) {
+                    CPU_SET(c, &perf_mask);
+                    perf_avail++;
+                }
+            }
+        } else if (pin_performance_cores && total_avail == 8 && n_detected == 0) {
+            /* Fallback when sysfs cpufreq/capacity is hidden by SELinux on an 8-core mobile SoC */
+            for (int c = 3; c <= 7; c++) {
+                if (CPU_ISSET(c, &current_mask)) {
+                    CPU_SET(c, &perf_mask);
+                    perf_avail++;
+                }
+            }
+        }
+        if (pin_performance_cores && perf_avail >= 2) {
+            if (sched_setaffinity(0, sizeof(perf_mask), &perf_mask) == 0) {
                 g_lfm3.s23_big_cores_pinned = 1;
-                g_lfm3.num_threads = big_avail;
+                g_lfm3.num_threads = perf_avail;
             }
-        } else {
-            int total_avail = CPU_COUNT(&current_mask);
-            if (total_avail > 0) {
-                g_lfm3.num_threads = total_avail;
-            }
+        } else if (total_avail > 0) {
+            g_lfm3.num_threads = total_avail > 8 ? 8 : total_avail;
         }
     }
 #endif
     omp_set_num_threads(g_lfm3.num_threads);
     return g_lfm3.num_threads;
+}
+
+LFM3_API int lfm3_configure_s23_snapdragon8gen2(int pin_big_cores_3_to_7)
+{
+    return lfm3_configure_android_soc(pin_big_cores_3_to_7);
 }
 
 LFM3_API void lfm3_dm_stats(unsigned long *out_stats6)
@@ -777,6 +1150,217 @@ LFM3_API void lfm3_dm_extended_stats(unsigned long long *out_ext12)
     out_ext12[11] = (unsigned long long)g_lfm3.use_4bit_lm_head;
 }
 
+/* ============================================================================
+ * Lock-Free 1-Slot Cached Quantization Workspace (ported from x-cruncher v1.6.1)
+ * Eliminates 72+ per-layer `malloc/free` calls per forward pass and applies
+ * 2 MB `MADV_HUGEPAGE` hints on large multi-token prefill scratch buffers.
+ * ============================================================================ */
+typedef struct {
+    size_t   cap_elems;  /* capacity in elements (T * in_dim) */
+    size_t   cap_groups; /* capacity in groups (T * (in_dim / 64)) */
+    int8_t  *x_q;
+    float   *x_sc;
+    int32_t *x_sum8;
+    void    *x_bf16;
+} lfm3_qscratch_t;
+
+static void *lfm3_aligned_alloc(size_t bytes)
+{
+    size_t align = (bytes >= (2ULL << 20)) ? (2ULL << 20) : 64ULL;
+    size_t sz = (bytes + align - 1ULL) & ~(align - 1ULL);
+    if (sz == 0) sz = align;
+#ifdef _WIN32
+    return _aligned_malloc(sz, 64);
+#else
+    void *p = NULL;
+    if (posix_memalign(&p, align, sz) != 0 || !p) return NULL;
+  #if defined(__linux__) && defined(MADV_HUGEPAGE)
+    if (bytes >= (2ULL << 20)) madvise(p, sz, MADV_HUGEPAGE);
+  #endif
+    return p;
+#endif
+}
+
+static void lfm3_aligned_free(void *p)
+{
+    if (!p) return;
+#ifdef _WIN32
+    _aligned_free(p);
+#else
+    free(p);
+#endif
+}
+
+static void lfm3_qscratch_free(lfm3_qscratch_t *s)
+{
+    if (!s) return;
+    lfm3_aligned_free(s->x_q);
+    lfm3_aligned_free(s->x_sc);
+    lfm3_aligned_free(s->x_sum8);
+    lfm3_aligned_free(s->x_bf16);
+    free(s);
+}
+
+static lfm3_qscratch_t *g_lfm3_cached_qscratch = NULL;
+
+static lfm3_qscratch_t *lfm3_qscratch_acquire(size_t elems, size_t groups)
+{
+    if (elems < 4096) elems = 4096;
+    if (groups < 64)  groups = 64;
+    lfm3_qscratch_t *s = NULL;
+#if defined(__GNUC__) || defined(__clang__)
+    s = __atomic_exchange_n(&g_lfm3_cached_qscratch, NULL, __ATOMIC_ACQUIRE);
+#endif
+    if (s && (s->cap_elems < elems || s->cap_groups < groups)) {
+        lfm3_qscratch_free(s);
+        s = NULL;
+    }
+    if (!s) {
+        s = (lfm3_qscratch_t *)calloc(1, sizeof(lfm3_qscratch_t));
+        if (!s) return NULL;
+        s->cap_elems  = elems;
+        s->cap_groups = groups;
+        s->x_q    = (int8_t *)lfm3_aligned_alloc(elems * sizeof(int8_t));
+        s->x_sc   = (float *)lfm3_aligned_alloc(groups * sizeof(float));
+        s->x_sum8 = (int32_t *)lfm3_aligned_alloc(groups * sizeof(int32_t));
+        s->x_bf16 = lfm3_aligned_alloc(elems * sizeof(uint16_t));
+        if (!s->x_q || !s->x_sc || !s->x_sum8 || !s->x_bf16) {
+            lfm3_qscratch_free(s);
+            return NULL;
+        }
+    }
+    return s;
+}
+
+static void lfm3_qscratch_release(lfm3_qscratch_t *s)
+{
+    if (!s) return;
+#if defined(__GNUC__) || defined(__clang__)
+    if (s->cap_elems <= (4ULL << 20)) {
+        lfm3_qscratch_t *prev = __atomic_exchange_n(&g_lfm3_cached_qscratch, s, __ATOMIC_ACQ_REL);
+        if (prev) lfm3_qscratch_free(prev);
+        return;
+    }
+#endif
+    lfm3_qscratch_free(s);
+}
+
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((destructor)) static void lfm3_qscratch_cleanup_at_exit(void)
+{
+    lfm3_qscratch_t *s = __atomic_exchange_n(&g_lfm3_cached_qscratch, NULL, __ATOMIC_ACQUIRE);
+    if (s) lfm3_qscratch_free(s);
+}
+#endif
+
+#if LFM3_HAS_X86_SIMD
+LFM3_TARGET_AVX512_VNNI static void linear_bf16_row_avx512(
+    const float *x, const uint16_t *w_row, float *y, int o, int T, int out_dim, int in_dim
+)
+{
+    int t = 0;
+    for (; t + 4 <= T; t += 4) {
+        const float *x0 = x + (size_t)(t + 0) * in_dim;
+        const float *x1 = x + (size_t)(t + 1) * in_dim;
+        const float *x2 = x + (size_t)(t + 2) * in_dim;
+        const float *x3 = x + (size_t)(t + 3) * in_dim;
+        __m512 a0 = _mm512_setzero_ps(), a1 = _mm512_setzero_ps();
+        __m512 a2 = _mm512_setzero_ps(), a3 = _mm512_setzero_ps();
+        int k = 0;
+        for (; k + 16 <= in_dim; k += 16) {
+            __m512 w = _mm512_castsi512_ps(_mm512_slli_epi32(_mm512_cvtepu16_epi32(_mm256_loadu_si256((const __m256i *)(w_row + k))), 16));
+            a0 = _mm512_fmadd_ps(_mm512_loadu_ps(x0 + k), w, a0);
+            a1 = _mm512_fmadd_ps(_mm512_loadu_ps(x1 + k), w, a1);
+            a2 = _mm512_fmadd_ps(_mm512_loadu_ps(x2 + k), w, a2);
+            a3 = _mm512_fmadd_ps(_mm512_loadu_ps(x3 + k), w, a3);
+        }
+        float s0 = _mm512_reduce_add_ps(a0), s1 = _mm512_reduce_add_ps(a1);
+        float s2 = _mm512_reduce_add_ps(a2), s3 = _mm512_reduce_add_ps(a3);
+        for (; k < in_dim; k++) {
+            float w = bf16_to_f32(w_row[k]);
+            s0 += x0[k] * w; s1 += x1[k] * w; s2 += x2[k] * w; s3 += x3[k] * w;
+        }
+        y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0);
+        y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1);
+        y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2);
+        y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3);
+    }
+    for (; t < T; t++) {
+        const float *xt = x + (size_t)t * in_dim;
+        __m512 acc0 = _mm512_setzero_ps(), acc1 = _mm512_setzero_ps();
+        int k = 0;
+        for (; k + 32 <= in_dim; k += 32) {
+            __m512 w0 = _mm512_castsi512_ps(_mm512_slli_epi32(_mm512_cvtepu16_epi32(_mm256_loadu_si256((const __m256i *)(w_row + k))), 16));
+            __m512 w1 = _mm512_castsi512_ps(_mm512_slli_epi32(_mm512_cvtepu16_epi32(_mm256_loadu_si256((const __m256i *)(w_row + k + 16))), 16));
+            acc0 = _mm512_fmadd_ps(_mm512_loadu_ps(xt + k), w0, acc0);
+            acc1 = _mm512_fmadd_ps(_mm512_loadu_ps(xt + k + 16), w1, acc1);
+        }
+        float sum = _mm512_reduce_add_ps(_mm512_add_ps(acc0, acc1));
+        for (; k < in_dim; k++) sum += xt[k] * bf16_to_f32(w_row[k]);
+        y[(size_t)t * out_dim + o] = bf16_round_f32(sum);
+    }
+}
+
+LFM3_TARGET_AVX2 static void linear_bf16_row_avx2(
+    const float *x, const uint16_t *w_row, float *y, int o, int T, int out_dim, int in_dim
+)
+{
+    int t = 0;
+    for (; t + 4 <= T; t += 4) {
+        const float *x0 = x + (size_t)(t + 0) * in_dim;
+        const float *x1 = x + (size_t)(t + 1) * in_dim;
+        const float *x2 = x + (size_t)(t + 2) * in_dim;
+        const float *x3 = x + (size_t)(t + 3) * in_dim;
+        __m256 a0 = _mm256_setzero_ps(), a1 = _mm256_setzero_ps();
+        __m256 a2 = _mm256_setzero_ps(), a3 = _mm256_setzero_ps();
+        int k = 0;
+        for (; k + 16 <= in_dim; k += 16) {
+            __m256 w0 = _mm256_castsi256_ps(_mm256_slli_epi32(_mm256_cvtepu16_epi32(_mm_loadu_si128((const __m128i *)(w_row + k))), 16));
+            __m256 w1 = _mm256_castsi256_ps(_mm256_slli_epi32(_mm256_cvtepu16_epi32(_mm_loadu_si128((const __m128i *)(w_row + k + 8))), 16));
+            a0 = _mm256_fmadd_ps(_mm256_loadu_ps(x0 + k), w0, _mm256_fmadd_ps(_mm256_loadu_ps(x0 + k + 8), w1, a0));
+            a1 = _mm256_fmadd_ps(_mm256_loadu_ps(x1 + k), w0, _mm256_fmadd_ps(_mm256_loadu_ps(x1 + k + 8), w1, a1));
+            a2 = _mm256_fmadd_ps(_mm256_loadu_ps(x2 + k), w0, _mm256_fmadd_ps(_mm256_loadu_ps(x2 + k + 8), w1, a2));
+            a3 = _mm256_fmadd_ps(_mm256_loadu_ps(x3 + k), w0, _mm256_fmadd_ps(_mm256_loadu_ps(x3 + k + 8), w1, a3));
+        }
+        __m128 l0 = _mm_add_ps(_mm256_castps256_ps128(a0), _mm256_extractf128_ps(a0, 1));
+        __m128 l1 = _mm_add_ps(_mm256_castps256_ps128(a1), _mm256_extractf128_ps(a1, 1));
+        __m128 l2 = _mm_add_ps(_mm256_castps256_ps128(a2), _mm256_extractf128_ps(a2, 1));
+        __m128 l3 = _mm_add_ps(_mm256_castps256_ps128(a3), _mm256_extractf128_ps(a3, 1));
+        l0 = _mm_add_ps(l0, _mm_movehl_ps(l0, l0)); l0 = _mm_add_ss(l0, _mm_shuffle_ps(l0, l0, 1));
+        l1 = _mm_add_ps(l1, _mm_movehl_ps(l1, l1)); l1 = _mm_add_ss(l1, _mm_shuffle_ps(l1, l1, 1));
+        l2 = _mm_add_ps(l2, _mm_movehl_ps(l2, l2)); l2 = _mm_add_ss(l2, _mm_shuffle_ps(l2, l2, 1));
+        l3 = _mm_add_ps(l3, _mm_movehl_ps(l3, l3)); l3 = _mm_add_ss(l3, _mm_shuffle_ps(l3, l3, 1));
+        float s0 = _mm_cvtss_f32(l0), s1 = _mm_cvtss_f32(l1), s2 = _mm_cvtss_f32(l2), s3 = _mm_cvtss_f32(l3);
+        for (; k < in_dim; k++) {
+            float w = bf16_to_f32(w_row[k]);
+            s0 += x0[k] * w; s1 += x1[k] * w; s2 += x2[k] * w; s3 += x3[k] * w;
+        }
+        y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0);
+        y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1);
+        y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2);
+        y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3);
+    }
+    for (; t < T; t++) {
+        const float *xt = x + (size_t)t * in_dim;
+        __m256 acc0 = _mm256_setzero_ps(), acc1 = _mm256_setzero_ps();
+        int k = 0;
+        for (; k + 16 <= in_dim; k += 16) {
+            __m256 w0 = _mm256_castsi256_ps(_mm256_slli_epi32(_mm256_cvtepu16_epi32(_mm_loadu_si128((const __m128i *)(w_row + k))), 16));
+            __m256 w1 = _mm256_castsi256_ps(_mm256_slli_epi32(_mm256_cvtepu16_epi32(_mm_loadu_si128((const __m128i *)(w_row + k + 8))), 16));
+            acc0 = _mm256_fmadd_ps(_mm256_loadu_ps(xt + k), w0, acc0);
+            acc1 = _mm256_fmadd_ps(_mm256_loadu_ps(xt + k + 8), w1, acc1);
+        }
+        __m256 acc = _mm256_add_ps(acc0, acc1);
+        __m128 l = _mm_add_ps(_mm256_castps256_ps128(acc), _mm256_extractf128_ps(acc, 1));
+        l = _mm_add_ps(l, _mm_movehl_ps(l, l));
+        l = _mm_add_ss(l, _mm_shuffle_ps(l, l, 1));
+        float sum = _mm_cvtss_f32(l);
+        for (; k < in_dim; k++) sum += xt[k] * bf16_to_f32(w_row[k]);
+        y[(size_t)t * out_dim + o] = bf16_round_f32(sum);
+    }
+}
+#endif
+
 static void linear_bf16_omp(
     const float *x,
     const uint16_t *W_bf16,
@@ -786,7 +1370,7 @@ static void linear_bf16_omp(
     int in_dim
 )
 {
-    const int n_thr = g_lfm3.num_threads > 0 ? g_lfm3.num_threads : 8;
+    const int n_thr = lfm3_active_threads();
     size_t w_bytes = (size_t)out_dim * (size_t)in_dim * 2ULL;
     g_lfm3.bytes_tier2_lpddr5x += (unsigned long long)w_bytes;
     g_lfm3.bytes_tier1_sram_slc += (unsigned long long)((size_t)T * (size_t)(in_dim + out_dim) * 4ULL);
@@ -795,11 +1379,10 @@ static void linear_bf16_omp(
         g_lfm3.bytes_saved_q4_and_broadcast += (unsigned long long)((size_t)(T - 1) * w_bytes);
     }
 #if defined(__ARM_FEATURE_BF16_VECTOR_ARITHMETIC)
-    /* Snapdragon 8 Gen 2 Hardware BF16 Dot Product (`vbfdotq_f32` / `BFDOT`):
-     * Converts `x` once into `bfloat16_t` (`2x` smaller in L1D cache) and executes
-     * 8 BF16 multiply-accumulates per single `vbfdotq_f32` instruction! */
-    bfloat16_t *x_bf16 = (bfloat16_t *)malloc((size_t)T * (size_t)in_dim * sizeof(bfloat16_t));
+    g_lfm3_last_tier = 4;
     const size_t total_x = (size_t)T * (size_t)in_dim;
+    lfm3_qscratch_t *scr = lfm3_qscratch_acquire(total_x, (total_x + 63) / 64);
+    bfloat16_t *x_bf16 = scr ? (bfloat16_t *)scr->x_bf16 : (bfloat16_t *)malloc(total_x * sizeof(bfloat16_t));
     size_t idx = 0;
     for (; idx + 8 <= total_x; idx += 8) {
         bfloat16x4_t lo = vcvt_bf16_f32(vld1q_f32(x + idx));
@@ -811,7 +1394,7 @@ static void linear_bf16_omp(
         memcpy(&x_bf16[idx], &b, sizeof(uint16_t));
     }
 
-    #pragma omp parallel for num_threads(n_thr) schedule(static)
+    #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 32) if (out_dim >= 64)
     for (int o = 0; o < out_dim; o++) {
         const bfloat16_t *w_row = (const bfloat16_t *)(W_bf16 + (size_t)o * (size_t)in_dim);
         int t = 0;
@@ -859,9 +1442,30 @@ static void linear_bf16_omp(
             y[(size_t)t * (size_t)out_dim + (size_t)o] = bf16_round_f32(sum);
         }
     }
-    free(x_bf16);
-#else
-    #pragma omp parallel for num_threads(n_thr) schedule(static)
+    if (scr) lfm3_qscratch_release(scr);
+    else free(x_bf16);
+    return;
+#endif
+#if LFM3_HAS_X86_SIMD
+    lfm3_isa_t isa = lfm3_detect_isa();
+    g_lfm3_last_tier = (int)isa;
+    if (isa >= LFM3_ISA_AVX512_VNNI) {
+        #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64) if (out_dim >= 64)
+        for (int o = 0; o < out_dim; o++) {
+            linear_bf16_row_avx512(x, W_bf16 + (size_t)o * (size_t)in_dim, y, o, T, out_dim, in_dim);
+        }
+        return;
+    }
+    if (isa >= LFM3_ISA_AVX2) {
+        #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64) if (out_dim >= 64)
+        for (int o = 0; o < out_dim; o++) {
+            linear_bf16_row_avx2(x, W_bf16 + (size_t)o * (size_t)in_dim, y, o, T, out_dim, in_dim);
+        }
+        return;
+    }
+#endif
+    g_lfm3_last_tier = 0;
+    #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64) if (out_dim >= 64)
     for (int o = 0; o < out_dim; o++) {
         const uint16_t *w_row = W_bf16 + (size_t)o * (size_t)in_dim;
         for (int t = 0; t < T; t++) {
@@ -873,7 +1477,6 @@ static void linear_bf16_omp(
             y[(size_t)t * (size_t)out_dim + (size_t)o] = bf16_round_f32(sum);
         }
     }
-#endif
 }
 
 #if defined(__ARM_FEATURE_DOTPROD)
@@ -915,10 +1518,258 @@ static void quantize_f32_to_s8_group64(const float *x, int T, int in_dim, int8_t
 }
 #endif
 
-/* OpenMP 4-Bit Planar Group-64 Linear with Hardware ARMv8.6-A `vmmlaq_s32` (`SMMLA` i8mm 2x2 Matrix Tile)
- * and ARMv8.2-A `vdotq_s32` (`SDOT`) Acceleration + Eyeriss v2 Multi-Token Broadcast Coalescing:
- * Quantizes `x` per 64-element group into `int8` (`4x` smaller in L1D cache) and executes
- * hardware `SMMLA` (32 Int8 MACs/instruction for T >= 2) and `SDOT` (16 Int8 MACs/instruction)! */
+#if LFM3_HAS_X86_SIMD
+/* Vectorized Group-64 FP32 -> Int8 Quantizer (zero scalar lrintf calls, zero stack arrays!):
+ * Computes `out_xq[g*64 .. g*64+63]`, `out_xscale[g] = max_abs / 127`, and
+ * `out_xsum[g] = sum_{j=0..63} out_xq[g*64+j]` in ~18 cycles per group using
+ * hardware `_mm256_cvtps_epi32`, `_mm256_packs_epi32/16`, and `_mm256_sad_epu8`. */
+LFM3_TARGET_AVX2 static void quantize_f32_to_s8_group64_avx2(
+    const float *x, int T, int in_dim, int8_t *out_xq, float *out_xscale, int32_t *out_xsum
+)
+{
+    const int groups = in_dim / 64;
+    const __m256 sign_mask = _mm256_castsi256_ps(_mm256_set1_epi32(0x7FFFFFFF));
+    const __m256 vmin_c    = _mm256_set1_ps(-127.0f);
+    const __m256 vmax_c    = _mm256_set1_ps(127.0f);
+    const __m256i bias80   = _mm256_set1_epi8((char)0x80);
+    const __m256i zero     = _mm256_setzero_si256();
+
+    for (int t = 0; t < T; t++) {
+        const float *xt = x + (size_t)t * in_dim;
+        int8_t *xqt = out_xq + (size_t)t * in_dim;
+        float *xsct = out_xscale + (size_t)t * groups;
+        int32_t *xsumt = out_xsum + (size_t)t * groups;
+        for (int g = 0; g < groups; g++) {
+            const float *xg = xt + g * 64;
+            int8_t *qdst = xqt + g * 64;
+            __m256 vmax0 = _mm256_max_ps(
+                _mm256_and_ps(_mm256_loadu_ps(xg + 0),  sign_mask),
+                _mm256_and_ps(_mm256_loadu_ps(xg + 8),  sign_mask));
+            __m256 vmax1 = _mm256_max_ps(
+                _mm256_and_ps(_mm256_loadu_ps(xg + 16), sign_mask),
+                _mm256_and_ps(_mm256_loadu_ps(xg + 24), sign_mask));
+            __m256 vmax2 = _mm256_max_ps(
+                _mm256_and_ps(_mm256_loadu_ps(xg + 32), sign_mask),
+                _mm256_and_ps(_mm256_loadu_ps(xg + 40), sign_mask));
+            __m256 vmax3 = _mm256_max_ps(
+                _mm256_and_ps(_mm256_loadu_ps(xg + 48), sign_mask),
+                _mm256_and_ps(_mm256_loadu_ps(xg + 56), sign_mask));
+            __m256 vmax = _mm256_max_ps(_mm256_max_ps(vmax0, vmax1), _mm256_max_ps(vmax2, vmax3));
+            __m128 m128 = _mm_max_ps(_mm256_castps256_ps128(vmax), _mm256_extractf128_ps(vmax, 1));
+            m128 = _mm_max_ps(m128, _mm_movehl_ps(m128, m128));
+            m128 = _mm_max_ss(m128, _mm_shuffle_ps(m128, m128, 1));
+            float max_abs = _mm_cvtss_f32(m128);
+            if (max_abs < 1e-12f) {
+                xsct[g] = 0.0f;
+                xsumt[g] = 0;
+                _mm256_storeu_si256((__m256i *)(qdst + 0),  zero);
+                _mm256_storeu_si256((__m256i *)(qdst + 32), zero);
+            } else {
+                xsct[g] = max_abs / 127.0f;
+                __m256 vinv = _mm256_set1_ps(127.0f / max_abs);
+
+                __m256i i0 = _mm256_cvtps_epi32(_mm256_min_ps(vmax_c, _mm256_max_ps(vmin_c, _mm256_mul_ps(_mm256_loadu_ps(xg + 0),  vinv))));
+                __m256i i1 = _mm256_cvtps_epi32(_mm256_min_ps(vmax_c, _mm256_max_ps(vmin_c, _mm256_mul_ps(_mm256_loadu_ps(xg + 8),  vinv))));
+                __m256i i2 = _mm256_cvtps_epi32(_mm256_min_ps(vmax_c, _mm256_max_ps(vmin_c, _mm256_mul_ps(_mm256_loadu_ps(xg + 16), vinv))));
+                __m256i i3 = _mm256_cvtps_epi32(_mm256_min_ps(vmax_c, _mm256_max_ps(vmin_c, _mm256_mul_ps(_mm256_loadu_ps(xg + 24), vinv))));
+                __m256i s01 = _mm256_permute4x64_epi64(_mm256_packs_epi32(i0, i1), 0xD8);
+                __m256i s23 = _mm256_permute4x64_epi64(_mm256_packs_epi32(i2, i3), 0xD8);
+                __m256i b03 = _mm256_permute4x64_epi64(_mm256_packs_epi16(s01, s23), 0xD8);
+
+                __m256i i4 = _mm256_cvtps_epi32(_mm256_min_ps(vmax_c, _mm256_max_ps(vmin_c, _mm256_mul_ps(_mm256_loadu_ps(xg + 32), vinv))));
+                __m256i i5 = _mm256_cvtps_epi32(_mm256_min_ps(vmax_c, _mm256_max_ps(vmin_c, _mm256_mul_ps(_mm256_loadu_ps(xg + 40), vinv))));
+                __m256i i6 = _mm256_cvtps_epi32(_mm256_min_ps(vmax_c, _mm256_max_ps(vmin_c, _mm256_mul_ps(_mm256_loadu_ps(xg + 48), vinv))));
+                __m256i i7 = _mm256_cvtps_epi32(_mm256_min_ps(vmax_c, _mm256_max_ps(vmin_c, _mm256_mul_ps(_mm256_loadu_ps(xg + 56), vinv))));
+                __m256i s45 = _mm256_permute4x64_epi64(_mm256_packs_epi32(i4, i5), 0xD8);
+                __m256i s67 = _mm256_permute4x64_epi64(_mm256_packs_epi32(i6, i7), 0xD8);
+                __m256i b47 = _mm256_permute4x64_epi64(_mm256_packs_epi16(s45, s67), 0xD8);
+
+                _mm256_storeu_si256((__m256i *)(qdst + 0),  b03);
+                _mm256_storeu_si256((__m256i *)(qdst + 32), b47);
+
+                __m256i sad = _mm256_add_epi64(
+                    _mm256_sad_epu8(_mm256_xor_si256(b03, bias80), zero),
+                    _mm256_sad_epu8(_mm256_xor_si256(b47, bias80), zero));
+                __m128i sad128 = _mm_add_epi64(_mm256_castsi256_si128(sad), _mm256_extracti128_si256(sad, 1));
+                int64_t tot_u8 = _mm_cvtsi128_si64(sad128) + _mm_cvtsi128_si64(_mm_srli_si128(sad128, 8));
+                xsumt[g] = (int32_t)(tot_u8 - 8192LL);
+            }
+        }
+    }
+}
+
+LFM3_TARGET_AVX512_VNNI static void linear_4bit_row_avx512vnni(
+    const int8_t *x_q, const float *x_sc, const int32_t *x_sum,
+    const uint8_t *nib_row, const uint8_t *stp_row, float row_scale,
+    float *y, int o, int T, int out_dim, int in_dim, int groups
+)
+{
+    const __m256i mask0f = _mm256_set1_epi8(0x0F);
+    const __m512i zero   = _mm512_setzero_si512();
+    int t = 0;
+    for (; t + 4 <= T; t += 4) {
+        const int8_t  *xq0 = x_q + (size_t)(t + 0) * in_dim, *xq1 = x_q + (size_t)(t + 1) * in_dim;
+        const int8_t  *xq2 = x_q + (size_t)(t + 2) * in_dim, *xq3 = x_q + (size_t)(t + 3) * in_dim;
+        const float   *xs0 = x_sc + (size_t)(t + 0) * groups, *xs1 = x_sc + (size_t)(t + 1) * groups;
+        const float   *xs2 = x_sc + (size_t)(t + 2) * groups, *xs3 = x_sc + (size_t)(t + 3) * groups;
+        const int32_t *xm0 = x_sum + (size_t)(t + 0) * groups, *xm1 = x_sum + (size_t)(t + 1) * groups;
+        const int32_t *xm2 = x_sum + (size_t)(t + 2) * groups, *xm3 = x_sum + (size_t)(t + 3) * groups;
+        float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
+        for (int g = 0; g < groups; g++) {
+            __m256i pk = _mm256_loadu_si256((const __m256i *)(nib_row + g * 32));
+            __m256i lo = _mm256_and_si256(pk, mask0f);
+            __m256i hi = _mm256_and_si256(_mm256_srli_epi16(pk, 4), mask0f);
+            __m512i w512 = _mm512_inserti64x4(_mm512_castsi256_si512(lo), hi, 1);
+            int c = g * 64;
+            int32_t d0 = _mm512_reduce_add_epi32(_mm512_dpbusd_epi32(zero, w512, _mm512_loadu_si512((const __m512i *)(xq0 + c)))) - 8 * xm0[g];
+            int32_t d1 = _mm512_reduce_add_epi32(_mm512_dpbusd_epi32(zero, w512, _mm512_loadu_si512((const __m512i *)(xq1 + c)))) - 8 * xm1[g];
+            int32_t d2 = _mm512_reduce_add_epi32(_mm512_dpbusd_epi32(zero, w512, _mm512_loadu_si512((const __m512i *)(xq2 + c)))) - 8 * xm2[g];
+            int32_t d3 = _mm512_reduce_add_epi32(_mm512_dpbusd_epi32(zero, w512, _mm512_loadu_si512((const __m512i *)(xq3 + c)))) - 8 * xm3[g];
+            float stp = (float)stp_row[g];
+            s0 += (float)d0 * (stp * xs0[g]);
+            s1 += (float)d1 * (stp * xs1[g]);
+            s2 += (float)d2 * (stp * xs2[g]);
+            s3 += (float)d3 * (stp * xs3[g]);
+        }
+        y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0 * row_scale);
+        y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1 * row_scale);
+        y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2 * row_scale);
+        y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3 * row_scale);
+    }
+    for (; t < T; t++) {
+        const int8_t  *xqt = x_q + (size_t)t * in_dim;
+        const float   *xst = x_sc + (size_t)t * groups;
+        const int32_t *xmt = x_sum + (size_t)t * groups;
+        float sum = 0.0f;
+        for (int g = 0; g < groups; g++) {
+            __m256i pk = _mm256_loadu_si256((const __m256i *)(nib_row + g * 32));
+            __m512i w512 = _mm512_inserti64x4(
+                _mm512_castsi256_si512(_mm256_and_si256(pk, mask0f)),
+                _mm256_and_si256(_mm256_srli_epi16(pk, 4), mask0f), 1);
+            int32_t d0 = _mm512_reduce_add_epi32(_mm512_dpbusd_epi32(zero, w512, _mm512_loadu_si512((const __m512i *)(xqt + g * 64)))) - 8 * xmt[g];
+            sum += (float)d0 * ((float)stp_row[g] * xst[g]);
+        }
+        y[(size_t)t * out_dim + o] = bf16_round_f32(sum * row_scale);
+    }
+}
+
+LFM3_TARGET_AVXVNNI static inline int32_t dot64_u4_s8_avxvnni(__m256i lo, __m256i hi, const int8_t *xq_g)
+{
+    __m256i p32 = _mm256_dpbusd_avx_epi32(_mm256_setzero_si256(), lo, _mm256_loadu_si256((const __m256i *)(xq_g + 0)));
+    p32 = _mm256_dpbusd_avx_epi32(p32, hi, _mm256_loadu_si256((const __m256i *)(xq_g + 32)));
+    __m128i s128 = _mm_add_epi32(_mm256_castsi256_si128(p32), _mm256_extracti128_si256(p32, 1));
+    s128 = _mm_add_epi32(s128, _mm_srli_si128(s128, 8));
+    s128 = _mm_add_epi32(s128, _mm_srli_si128(s128, 4));
+    return _mm_cvtsi128_si32(s128);
+}
+
+LFM3_TARGET_AVX2 static inline int32_t dot64_u4_s8_avx2(__m256i lo, __m256i hi, const int8_t *xq_g)
+{
+    __m256i p16 = _mm256_add_epi16(
+        _mm256_maddubs_epi16(lo, _mm256_loadu_si256((const __m256i *)(xq_g + 0))),
+        _mm256_maddubs_epi16(hi, _mm256_loadu_si256((const __m256i *)(xq_g + 32))));
+    __m256i p32 = _mm256_madd_epi16(p16, _mm256_set1_epi16(1));
+    __m128i s128 = _mm_add_epi32(_mm256_castsi256_si128(p32), _mm256_extracti128_si256(p32, 1));
+    s128 = _mm_add_epi32(s128, _mm_srli_si128(s128, 8));
+    s128 = _mm_add_epi32(s128, _mm_srli_si128(s128, 4));
+    return _mm_cvtsi128_si32(s128);
+}
+
+LFM3_TARGET_AVXVNNI static void linear_4bit_row_avxvnni(
+    const int8_t *x_q, const float *x_sc, const int32_t *x_sum,
+    const uint8_t *nib_row, const uint8_t *stp_row, float row_scale,
+    float *y, int o, int T, int out_dim, int in_dim, int groups
+)
+{
+    const __m256i mask0f = _mm256_set1_epi8(0x0F);
+    int t = 0;
+    for (; t + 4 <= T; t += 4) {
+        const int8_t  *xq0 = x_q + (size_t)(t + 0) * in_dim, *xq1 = x_q + (size_t)(t + 1) * in_dim;
+        const int8_t  *xq2 = x_q + (size_t)(t + 2) * in_dim, *xq3 = x_q + (size_t)(t + 3) * in_dim;
+        const float   *xs0 = x_sc + (size_t)(t + 0) * groups, *xs1 = x_sc + (size_t)(t + 1) * groups;
+        const float   *xs2 = x_sc + (size_t)(t + 2) * groups, *xs3 = x_sc + (size_t)(t + 3) * groups;
+        const int32_t *xm0 = x_sum + (size_t)(t + 0) * groups, *xm1 = x_sum + (size_t)(t + 1) * groups;
+        const int32_t *xm2 = x_sum + (size_t)(t + 2) * groups, *xm3 = x_sum + (size_t)(t + 3) * groups;
+        float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
+        for (int g = 0; g < groups; g++) {
+            __m256i pk = _mm256_loadu_si256((const __m256i *)(nib_row + g * 32));
+            __m256i lo = _mm256_and_si256(pk, mask0f);
+            __m256i hi = _mm256_and_si256(_mm256_srli_epi16(pk, 4), mask0f);
+            int c = g * 64;
+            float stp = (float)stp_row[g];
+            s0 += (float)(dot64_u4_s8_avxvnni(lo, hi, xq0 + c) - 8 * xm0[g]) * (stp * xs0[g]);
+            s1 += (float)(dot64_u4_s8_avxvnni(lo, hi, xq1 + c) - 8 * xm1[g]) * (stp * xs1[g]);
+            s2 += (float)(dot64_u4_s8_avxvnni(lo, hi, xq2 + c) - 8 * xm2[g]) * (stp * xs2[g]);
+            s3 += (float)(dot64_u4_s8_avxvnni(lo, hi, xq3 + c) - 8 * xm3[g]) * (stp * xs3[g]);
+        }
+        y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0 * row_scale);
+        y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1 * row_scale);
+        y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2 * row_scale);
+        y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3 * row_scale);
+    }
+    for (; t < T; t++) {
+        const int8_t  *xqt = x_q + (size_t)t * in_dim;
+        const float   *xst = x_sc + (size_t)t * groups;
+        const int32_t *xmt = x_sum + (size_t)t * groups;
+        float sum = 0.0f;
+        for (int g = 0; g < groups; g++) {
+            __m256i pk = _mm256_loadu_si256((const __m256i *)(nib_row + g * 32));
+            __m256i lo = _mm256_and_si256(pk, mask0f);
+            __m256i hi = _mm256_and_si256(_mm256_srli_epi16(pk, 4), mask0f);
+            sum += (float)(dot64_u4_s8_avxvnni(lo, hi, xqt + g * 64) - 8 * xmt[g]) * ((float)stp_row[g] * xst[g]);
+        }
+        y[(size_t)t * out_dim + o] = bf16_round_f32(sum * row_scale);
+    }
+}
+
+LFM3_TARGET_AVX2 static void linear_4bit_row_avx2(
+    const int8_t *x_q, const float *x_sc, const int32_t *x_sum,
+    const uint8_t *nib_row, const uint8_t *stp_row, float row_scale,
+    float *y, int o, int T, int out_dim, int in_dim, int groups
+)
+{
+    const __m256i mask0f = _mm256_set1_epi8(0x0F);
+    int t = 0;
+    for (; t + 4 <= T; t += 4) {
+        const int8_t  *xq0 = x_q + (size_t)(t + 0) * in_dim, *xq1 = x_q + (size_t)(t + 1) * in_dim;
+        const int8_t  *xq2 = x_q + (size_t)(t + 2) * in_dim, *xq3 = x_q + (size_t)(t + 3) * in_dim;
+        const float   *xs0 = x_sc + (size_t)(t + 0) * groups, *xs1 = x_sc + (size_t)(t + 1) * groups;
+        const float   *xs2 = x_sc + (size_t)(t + 2) * groups, *xs3 = x_sc + (size_t)(t + 3) * groups;
+        const int32_t *xm0 = x_sum + (size_t)(t + 0) * groups, *xm1 = x_sum + (size_t)(t + 1) * groups;
+        const int32_t *xm2 = x_sum + (size_t)(t + 2) * groups, *xm3 = x_sum + (size_t)(t + 3) * groups;
+        float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
+        for (int g = 0; g < groups; g++) {
+            __m256i pk = _mm256_loadu_si256((const __m256i *)(nib_row + g * 32));
+            __m256i lo = _mm256_and_si256(pk, mask0f);
+            __m256i hi = _mm256_and_si256(_mm256_srli_epi16(pk, 4), mask0f);
+            int c = g * 64;
+            float stp = (float)stp_row[g];
+            s0 += (float)(dot64_u4_s8_avx2(lo, hi, xq0 + c) - 8 * xm0[g]) * (stp * xs0[g]);
+            s1 += (float)(dot64_u4_s8_avx2(lo, hi, xq1 + c) - 8 * xm1[g]) * (stp * xs1[g]);
+            s2 += (float)(dot64_u4_s8_avx2(lo, hi, xq2 + c) - 8 * xm2[g]) * (stp * xs2[g]);
+            s3 += (float)(dot64_u4_s8_avx2(lo, hi, xq3 + c) - 8 * xm3[g]) * (stp * xs3[g]);
+        }
+        y[(size_t)(t + 0) * out_dim + o] = bf16_round_f32(s0 * row_scale);
+        y[(size_t)(t + 1) * out_dim + o] = bf16_round_f32(s1 * row_scale);
+        y[(size_t)(t + 2) * out_dim + o] = bf16_round_f32(s2 * row_scale);
+        y[(size_t)(t + 3) * out_dim + o] = bf16_round_f32(s3 * row_scale);
+    }
+    for (; t < T; t++) {
+        const int8_t  *xqt = x_q + (size_t)t * in_dim;
+        const float   *xst = x_sc + (size_t)t * groups;
+        const int32_t *xmt = x_sum + (size_t)t * groups;
+        float sum = 0.0f;
+        for (int g = 0; g < groups; g++) {
+            __m256i pk = _mm256_loadu_si256((const __m256i *)(nib_row + g * 32));
+            __m256i lo = _mm256_and_si256(pk, mask0f);
+            __m256i hi = _mm256_and_si256(_mm256_srli_epi16(pk, 4), mask0f);
+            sum += (float)(dot64_u4_s8_avx2(lo, hi, xqt + g * 64) - 8 * xmt[g]) * ((float)stp_row[g] * xst[g]);
+        }
+        y[(size_t)t * out_dim + o] = bf16_round_f32(sum * row_scale);
+    }
+}
+#endif
+
 static void linear_4bit_group64_omp(
     const float *x,
     const uint8_t *nibbles_base,
@@ -931,7 +1782,7 @@ static void linear_4bit_group64_omp(
 )
 {
     const int groups = in_dim / 64;
-    const int n_thr = g_lfm3.num_threads > 0 ? g_lfm3.num_threads : 8;
+    const int n_thr = lfm3_active_threads();
     size_t q4_bytes = (size_t)out_dim * (size_t)(groups * 33 + 4);
     size_t bf16_equiv = (size_t)out_dim * (size_t)in_dim * 2ULL;
     g_lfm3.bytes_tier2_lpddr5x += (unsigned long long)q4_bytes;
@@ -939,14 +1790,16 @@ static void linear_4bit_group64_omp(
     g_lfm3.bytes_tier0_reg += (unsigned long long)((size_t)T * (size_t)out_dim * (size_t)in_dim);
     g_lfm3.bytes_saved_q4_and_broadcast += (unsigned long long)((bf16_equiv - q4_bytes) + (size_t)(T > 1 ? (T - 1) : 0) * q4_bytes);
 #if defined(__ARM_FEATURE_DOTPROD)
-    int8_t *x_q = (int8_t *)malloc((size_t)T * (size_t)in_dim);
-    float *x_sc = (float *)malloc((size_t)T * (size_t)groups * sizeof(float));
+    g_lfm3_last_tier = 4;
+    lfm3_qscratch_t *scr = lfm3_qscratch_acquire((size_t)T * (size_t)in_dim, (size_t)T * (size_t)groups);
+    int8_t *x_q = scr ? scr->x_q : (int8_t *)malloc((size_t)T * (size_t)in_dim);
+    float *x_sc = scr ? scr->x_sc : (float *)malloc((size_t)T * (size_t)groups * sizeof(float));
     quantize_f32_to_s8_group64(x, T, in_dim, x_q, x_sc);
 
 #if defined(__ARM_FEATURE_MATMUL_INT8)
     if (T >= 2 && (out_dim & 1) == 0) {
         g_lfm3.smmla_i8mm_tile_calls += (unsigned long)((out_dim / 2) * (T / 2));
-        #pragma omp parallel for num_threads(n_thr) schedule(static)
+        #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 32)
         for (int o = 0; o < out_dim; o += 2) {
             const uint8_t *nib_r0 = nibbles_base + (size_t)(o + 0) * (size_t)(groups * 32);
             const uint8_t *nib_r1 = nibbles_base + (size_t)(o + 1) * (size_t)(groups * 32);
@@ -987,7 +1840,6 @@ static void linear_4bit_group64_omp(
                     int8x16_t x1_0 = vld1q_s8(xq1 + c + 0),  x1_1 = vld1q_s8(xq1 + c + 16);
                     int8x16_t x1_2 = vld1q_s8(xq1 + c + 32), x1_3 = vld1q_s8(xq1 + c + 48);
 
-                    /* 8 x SMMLA (vmmlaq_s32) instructions compute 2x2 tile over all 64 columns (256 Int8 MACs) */
                     int32x4_t acc = vdupq_n_s32(0);
                     acc = vmmlaq_s32(acc, vcombine_s8(vget_low_s8(x0_0),  vget_low_s8(x1_0)),  vcombine_s8(vget_low_s8(w0_lo0),  vget_low_s8(w1_lo0)));
                     acc = vmmlaq_s32(acc, vcombine_s8(vget_high_s8(x0_0), vget_high_s8(x1_0)), vcombine_s8(vget_high_s8(w0_lo0), vget_high_s8(w1_lo0)));
@@ -1033,13 +1885,13 @@ static void linear_4bit_group64_omp(
                 y[(size_t)t * out_dim + (o + 1)] = bf16_round_f32(sum1 * scl_r1);
             }
         }
-        free(x_q);
-        free(x_sc);
+        if (scr) lfm3_qscratch_release(scr);
+        else { free(x_q); free(x_sc); }
         return;
     }
 #endif
 
-    #pragma omp parallel for num_threads(n_thr) schedule(static)
+    #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 32)
     for (int o = 0; o < out_dim; o++) {
         const uint8_t *nib_row = nibbles_base + (size_t)o * (size_t)(groups * 32);
         const uint8_t *stp_row = steps_base + (size_t)o * (size_t)groups;
@@ -1111,10 +1963,49 @@ static void linear_4bit_group64_omp(
             y[(size_t)t * out_dim + o] = bf16_round_f32(sum * row_scale);
         }
     }
-    free(x_q);
-    free(x_sc);
-#else
-    #pragma omp parallel for num_threads(n_thr) schedule(static)
+    if (scr) lfm3_qscratch_release(scr);
+    else { free(x_q); free(x_sc); }
+    return;
+#endif
+#if LFM3_HAS_X86_SIMD
+    lfm3_isa_t isa = lfm3_detect_isa();
+    if (isa >= LFM3_ISA_AVX2) {
+        g_lfm3_last_tier = (int)isa;
+        lfm3_qscratch_t *scr = lfm3_qscratch_acquire((size_t)T * (size_t)in_dim, (size_t)T * (size_t)groups);
+        if (scr) {
+            quantize_f32_to_s8_group64_avx2(x, T, in_dim, scr->x_q, scr->x_sc, scr->x_sum8);
+            if (isa == LFM3_ISA_AVX512_VNNI) {
+                #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64) if (out_dim >= 64)
+                for (int o = 0; o < out_dim; o++) {
+                    linear_4bit_row_avx512vnni(scr->x_q, scr->x_sc, scr->x_sum8,
+                        nibbles_base + (size_t)o * (size_t)(groups * 32),
+                        steps_base + (size_t)o * (size_t)groups, scales_base[o],
+                        y, o, T, out_dim, in_dim, groups);
+                }
+            } else if (isa == LFM3_ISA_AVXVNNI) {
+                #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64) if (out_dim >= 64)
+                for (int o = 0; o < out_dim; o++) {
+                    linear_4bit_row_avxvnni(scr->x_q, scr->x_sc, scr->x_sum8,
+                        nibbles_base + (size_t)o * (size_t)(groups * 32),
+                        steps_base + (size_t)o * (size_t)groups, scales_base[o],
+                        y, o, T, out_dim, in_dim, groups);
+                }
+            } else {
+                #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64) if (out_dim >= 64)
+                for (int o = 0; o < out_dim; o++) {
+                    linear_4bit_row_avx2(scr->x_q, scr->x_sc, scr->x_sum8,
+                        nibbles_base + (size_t)o * (size_t)(groups * 32),
+                        steps_base + (size_t)o * (size_t)groups, scales_base[o],
+                        y, o, T, out_dim, in_dim, groups);
+                }
+            }
+            lfm3_qscratch_release(scr);
+            return;
+        }
+    }
+#endif
+    g_lfm3_last_tier = 0;
+    #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64) if (out_dim >= 64)
     for (int o = 0; o < out_dim; o++) {
         const uint8_t *nib_row = nibbles_base + (size_t)o * (size_t)(groups * 32);
         const uint8_t *stp_row = steps_base + (size_t)o * (size_t)groups;
@@ -1135,7 +2026,6 @@ static void linear_4bit_group64_omp(
             y[(size_t)t * out_dim + o] = bf16_round_f32(sum);
         }
     }
-#endif
 }
 
 static void rms_norm_bf16(
@@ -1147,8 +2037,8 @@ static void rms_norm_bf16(
     float eps
 )
 {
-    const int n_thr = g_lfm3.num_threads > 0 ? g_lfm3.num_threads : 8;
-    #pragma omp parallel for num_threads(n_thr) schedule(static)
+    const int n_thr = lfm3_active_threads();
+    #pragma omp parallel for num_threads(n_thr) schedule(static) if (n_rows >= 8)
     for (int r = 0; r < n_rows; r++) {
         const float *xr = x + (size_t)r * dim;
         float *yr = y + (size_t)r * dim;
@@ -1162,9 +2052,98 @@ static void rms_norm_bf16(
     }
 }
 
+#if LFM3_HAS_X86_SIMD
+LFM3_TARGET_AVX2 static void fa2_online_softmax_head_avx2(
+    const float *qh, const float *kc_base, const float *vc_base,
+    int kv_h, int j_start, int j_end, float scale, float head_gate, float *out_qh
+)
+{
+    __m256 q0  = _mm256_loadu_ps(qh + 0),   q1  = _mm256_loadu_ps(qh + 8);
+    __m256 q2  = _mm256_loadu_ps(qh + 16),  q3  = _mm256_loadu_ps(qh + 24);
+    __m256 q4  = _mm256_loadu_ps(qh + 32),  q5  = _mm256_loadu_ps(qh + 40);
+    __m256 q6  = _mm256_loadu_ps(qh + 48),  q7  = _mm256_loadu_ps(qh + 56);
+    __m256 q8  = _mm256_loadu_ps(qh + 64),  q9  = _mm256_loadu_ps(qh + 72);
+    __m256 q10 = _mm256_loadu_ps(qh + 80),  q11 = _mm256_loadu_ps(qh + 88);
+    __m256 q12 = _mm256_loadu_ps(qh + 96),  q13 = _mm256_loadu_ps(qh + 104);
+    __m256 q14 = _mm256_loadu_ps(qh + 112), q15 = _mm256_loadu_ps(qh + 120);
+
+    __m256 o0  = _mm256_setzero_ps(), o1  = _mm256_setzero_ps();
+    __m256 o2  = _mm256_setzero_ps(), o3  = _mm256_setzero_ps();
+    __m256 o4  = _mm256_setzero_ps(), o5  = _mm256_setzero_ps();
+    __m256 o6  = _mm256_setzero_ps(), o7  = _mm256_setzero_ps();
+    __m256 o8  = _mm256_setzero_ps(), o9  = _mm256_setzero_ps();
+    __m256 o10 = _mm256_setzero_ps(), o11 = _mm256_setzero_ps();
+    __m256 o12 = _mm256_setzero_ps(), o13 = _mm256_setzero_ps();
+    __m256 o14 = _mm256_setzero_ps(), o15 = _mm256_setzero_ps();
+
+    float m_i = -1e30f, l_i = 0.0f;
+    for (int j = j_start; j <= j_end; j++) {
+        const float *kh = kc_base + (size_t)j * 512 + kv_h * 128;
+        const float *vh = vc_base + (size_t)j * 512 + kv_h * 128;
+        __m256 d0 = _mm256_fmadd_ps(q0,  _mm256_loadu_ps(kh + 0),   _mm256_mul_ps(q1,  _mm256_loadu_ps(kh + 8)));
+        __m256 d1 = _mm256_fmadd_ps(q2,  _mm256_loadu_ps(kh + 16),  _mm256_mul_ps(q3,  _mm256_loadu_ps(kh + 24)));
+        __m256 d2 = _mm256_fmadd_ps(q4,  _mm256_loadu_ps(kh + 32),  _mm256_mul_ps(q5,  _mm256_loadu_ps(kh + 40)));
+        __m256 d3 = _mm256_fmadd_ps(q6,  _mm256_loadu_ps(kh + 48),  _mm256_mul_ps(q7,  _mm256_loadu_ps(kh + 56)));
+        d0 = _mm256_fmadd_ps(q8,  _mm256_loadu_ps(kh + 64),  _mm256_fmadd_ps(q9,  _mm256_loadu_ps(kh + 72),  d0));
+        d1 = _mm256_fmadd_ps(q10, _mm256_loadu_ps(kh + 80),  _mm256_fmadd_ps(q11, _mm256_loadu_ps(kh + 88),  d1));
+        d2 = _mm256_fmadd_ps(q12, _mm256_loadu_ps(kh + 96),  _mm256_fmadd_ps(q13, _mm256_loadu_ps(kh + 104), d2));
+        d3 = _mm256_fmadd_ps(q14, _mm256_loadu_ps(kh + 112), _mm256_fmadd_ps(q15, _mm256_loadu_ps(kh + 120), d3));
+        __m256 ds = _mm256_add_ps(_mm256_add_ps(d0, d1), _mm256_add_ps(d2, d3));
+        __m128 l = _mm_add_ps(_mm256_castps256_ps128(ds), _mm256_extractf128_ps(ds, 1));
+        l = _mm_add_ps(l, _mm_movehl_ps(l, l));
+        l = _mm_add_ss(l, _mm_shuffle_ps(l, l, 1));
+        float s_j = bf16_round_f32(_mm_cvtss_f32(l) * scale);
+        float m_new = (s_j > m_i) ? s_j : m_i;
+        float alpha = (m_i == -1e30f) ? 0.0f : expf(m_i - m_new);
+        float beta  = expf(s_j - m_new);
+        l_i = l_i * alpha + beta;
+        m_i = m_new;
+
+        __m256 va = _mm256_set1_ps(alpha), vb = _mm256_set1_ps(beta);
+        o0  = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 0),   _mm256_mul_ps(o0,  va));
+        o1  = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 8),   _mm256_mul_ps(o1,  va));
+        o2  = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 16),  _mm256_mul_ps(o2,  va));
+        o3  = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 24),  _mm256_mul_ps(o3,  va));
+        o4  = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 32),  _mm256_mul_ps(o4,  va));
+        o5  = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 40),  _mm256_mul_ps(o5,  va));
+        o6  = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 48),  _mm256_mul_ps(o6,  va));
+        o7  = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 56),  _mm256_mul_ps(o7,  va));
+        o8  = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 64),  _mm256_mul_ps(o8,  va));
+        o9  = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 72),  _mm256_mul_ps(o9,  va));
+        o10 = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 80),  _mm256_mul_ps(o10, va));
+        o11 = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 88),  _mm256_mul_ps(o11, va));
+        o12 = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 96),  _mm256_mul_ps(o12, va));
+        o13 = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 104), _mm256_mul_ps(o13, va));
+        o14 = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 112), _mm256_mul_ps(o14, va));
+        o15 = _mm256_fmadd_ps(vb, _mm256_loadu_ps(vh + 120), _mm256_mul_ps(o15, va));
+    }
+    float inv_l = (l_i > 0.0f) ? (1.0f / l_i) : 0.0f;
+    __m256 vinv = _mm256_set1_ps(inv_l);
+    _mm256_storeu_ps(out_qh + 0,   _mm256_mul_ps(o0,  vinv));
+    _mm256_storeu_ps(out_qh + 8,   _mm256_mul_ps(o1,  vinv));
+    _mm256_storeu_ps(out_qh + 16,  _mm256_mul_ps(o2,  vinv));
+    _mm256_storeu_ps(out_qh + 24,  _mm256_mul_ps(o3,  vinv));
+    _mm256_storeu_ps(out_qh + 32,  _mm256_mul_ps(o4,  vinv));
+    _mm256_storeu_ps(out_qh + 40,  _mm256_mul_ps(o5,  vinv));
+    _mm256_storeu_ps(out_qh + 48,  _mm256_mul_ps(o6,  vinv));
+    _mm256_storeu_ps(out_qh + 56,  _mm256_mul_ps(o7,  vinv));
+    _mm256_storeu_ps(out_qh + 64,  _mm256_mul_ps(o8,  vinv));
+    _mm256_storeu_ps(out_qh + 72,  _mm256_mul_ps(o9,  vinv));
+    _mm256_storeu_ps(out_qh + 80,  _mm256_mul_ps(o10, vinv));
+    _mm256_storeu_ps(out_qh + 88,  _mm256_mul_ps(o11, vinv));
+    _mm256_storeu_ps(out_qh + 96,  _mm256_mul_ps(o12, vinv));
+    _mm256_storeu_ps(out_qh + 104, _mm256_mul_ps(o13, vinv));
+    _mm256_storeu_ps(out_qh + 112, _mm256_mul_ps(o14, vinv));
+    _mm256_storeu_ps(out_qh + 120, _mm256_mul_ps(o15, vinv));
+    for (int d = 0; d < 128; d++) {
+        out_qh[d] = bf16_round_f32(bf16_round_f32(out_qh[d]) * head_gate);
+    }
+}
+#endif
+
 /* FlashAttention-2 1-Pass Online Softmax (`Dao et al. 2023`, Direction B Cycle 4):
  * Streams each key `kh[0..127]` and value `vh[0..127]` contiguously ONCE (`0` `scores[]` buffer,
- * `0` strided V-cache reads) and maintains `(m_i, l_i, o_acc[0..127])` in NEON registers! */
+ * `0` strided V-cache reads) and maintains `(m_i, l_i, o_acc[0..127])` in SIMD registers! */
 static void fa2_online_softmax_head_c(
     const float *qh,
     const float *kc_base,
@@ -1180,6 +2159,13 @@ static void fa2_online_softmax_head_c(
     g_lfm3.fa2_online_softmax_calls++;
     g_lfm3.bytes_tier1_sram_slc += (unsigned long long)((size_t)(j_end - j_start + 1) * 1024ULL);
     g_lfm3.bytes_tier0_reg += (unsigned long long)((size_t)(j_end - j_start + 1) * 1024ULL);
+
+#if LFM3_HAS_X86_SIMD
+    if (lfm3_detect_isa() >= LFM3_ISA_AVX2) {
+        fa2_online_softmax_head_avx2(qh, kc_base, vc_base, kv_h, j_start, j_end, scale, head_gate, out_qh);
+        return;
+    }
+#endif
 
     float m_i = -1e30f;
     float l_i = 0.0f;
@@ -1281,7 +2267,7 @@ static void execute_single_lfm3_layer_c(
 {
     const uint8_t *op = (const uint8_t *)trk->operator_mf.ptr;
     uint32_t kind = trk->hdr.layer_kind;
-    const int n_thr = g_lfm3.num_threads > 0 ? g_lfm3.num_threads : 8;
+    const int n_thr = lfm3_active_threads();
 
     float *op_in = (float *)malloc((size_t)T * LFM3_D * sizeof(float));
     float *op_out_raw = (float *)malloc((size_t)T * LFM3_D * sizeof(float));
@@ -1532,6 +2518,57 @@ LFM3_API float lfm3_forward_24_layers(const int *token_ids, int T, float *out_fi
     return lfm3_forward_24_layers_clubbed(token_ids, NULL, T, out_final_hidden);
 }
 
+/* Executes all 24 tri-hybrid layers and records every layer's hidden state:
+ *   - out_all_layers_25_T_D: [25, T, 2048] (slot 0 = embedding, slots 1..24 = post-layer 0..23)
+ *   - out_final_norm_T_D:    [T, 2048] (after final embedding_norm) */
+LFM3_API float lfm3_forward_all_layers(
+    const int *token_ids,
+    int T,
+    float *out_all_layers_25_T_D,
+    float *out_final_norm_T_D
+)
+{
+    double t0 = now_ms();
+    const uint16_t *emb_w = (const uint16_t *)g_lfm3.emb_mf.ptr;
+    const uint16_t *emb_norm_w = (const uint16_t *)g_lfm3.emb_norm_mf.ptr;
+
+    float *cur = (float *)malloc((size_t)T * LFM3_D * sizeof(float));
+    float *nxt = (float *)malloc((size_t)T * LFM3_D * sizeof(float));
+
+    for (int t = 0; t < T; t++) {
+        int tid = token_ids[t];
+        const uint16_t *erow = emb_w + (size_t)tid * LFM3_D;
+        float *dst = cur + (size_t)t * LFM3_D;
+        for (int d = 0; d < LFM3_D; d++) dst[d] = bf16_to_f32(erow[d]);
+    }
+    if (out_all_layers_25_T_D) {
+        memcpy(out_all_layers_25_T_D, cur, (size_t)T * LFM3_D * sizeof(float));
+    }
+
+    for (int l = 0; l < LFM3_LAYERS; l++) {
+        lfm3_dm_record_layer(l, T);
+        execute_single_lfm3_layer_c(&g_lfm3.trunks[l], cur, nxt, T, NULL);
+        if (out_all_layers_25_T_D) {
+            memcpy(
+                out_all_layers_25_T_D + (size_t)(l + 1) * (size_t)T * LFM3_D,
+                nxt,
+                (size_t)T * LFM3_D * sizeof(float)
+            );
+        }
+        float *tmp = cur;
+        cur = nxt;
+        nxt = tmp;
+    }
+
+    if (out_final_norm_T_D) {
+        rms_norm_bf16(cur, emb_norm_w, out_final_norm_T_D, T, LFM3_D, 1e-5f);
+    }
+
+    free(cur);
+    free(nxt);
+    return (float)(now_ms() - t0);
+}
+
 /* Two-Stage LM Head (`global-0/lm_head.4bit.bin` SDOT + Top-64 Exact 16-bit BF16 Refinement):
  * Stage A: Computes all 128,000 logits in 4-bit Group-64 (`129.39 MiB` instead of `500.00 MiB` BF16 = `3.86x` less DRAM bw).
  * Stage B: Recomputes the exact 16-bit BF16 dot product (`64 x 2048 = 256 KB` = `0.02 ms`) for the top-64 candidates
@@ -1723,6 +2760,85 @@ static void ensure_lfm3_kv_buffers(void)
 /* Fused `w1 + w3 + SwiGLU` 4-Bit Group-64 Kernel for `T = 1` (Adreno 740 `dot_acc_sat` or Kryo NEON `SDOT`):
  * Reads `x[2048]` (`8 KB` in L1D / 2 KB in Adreno GMEM) ONCE and computes both `w1[o] · x` and `w3[o] · x`,
  * then immediately applies `silu(v1) * v3` (`7680 / 7680` bit-identical between Adreno 740 and CPU)! */
+#if LFM3_HAS_X86_SIMD
+LFM3_TARGET_AVX512_VNNI static void fused_swiglu_row_avx512vnni(
+    const int8_t *x_q, const float *x_sc, const int32_t *x_sum,
+    const uint8_t *n1_row, const uint8_t *s1_row, float r1_scl,
+    const uint8_t *n3_row, const uint8_t *s3_row, float r3_scl,
+    float *out_swiglu, int o, int groups
+)
+{
+    const __m256i mask0f = _mm256_set1_epi8(0x0F);
+    const __m512i zero   = _mm512_setzero_si512();
+    float s1 = 0.0f, s3 = 0.0f;
+    for (int g = 0; g < groups; g++) {
+        __m512i xv = _mm512_loadu_si512((const __m512i *)(x_q + g * 64));
+        __m256i pk1 = _mm256_loadu_si256((const __m256i *)(n1_row + g * 32));
+        __m512i w1 = _mm512_inserti64x4(_mm512_castsi256_si512(_mm256_and_si256(pk1, mask0f)),
+                                        _mm256_and_si256(_mm256_srli_epi16(pk1, 4), mask0f), 1);
+        __m256i pk3 = _mm256_loadu_si256((const __m256i *)(n3_row + g * 32));
+        __m512i w3 = _mm512_inserti64x4(_mm512_castsi256_si512(_mm256_and_si256(pk3, mask0f)),
+                                        _mm256_and_si256(_mm256_srli_epi16(pk3, 4), mask0f), 1);
+        int32_t d1 = _mm512_reduce_add_epi32(_mm512_dpbusd_epi32(zero, w1, xv)) - 8 * x_sum[g];
+        int32_t d3 = _mm512_reduce_add_epi32(_mm512_dpbusd_epi32(zero, w3, xv)) - 8 * x_sum[g];
+        s1 += (float)d1 * ((float)s1_row[g] * x_sc[g]);
+        s3 += (float)d3 * ((float)s3_row[g] * x_sc[g]);
+    }
+    float v1 = bf16_round_f32(s1 * r1_scl);
+    float v3 = bf16_round_f32(s3 * r3_scl);
+    float silu = bf16_round_f32(v1 / (1.0f + expf(-v1)));
+    out_swiglu[o] = bf16_round_f32(silu * v3);
+}
+
+LFM3_TARGET_AVXVNNI static void fused_swiglu_row_avxvnni(
+    const int8_t *x_q, const float *x_sc, const int32_t *x_sum,
+    const uint8_t *n1_row, const uint8_t *s1_row, float r1_scl,
+    const uint8_t *n3_row, const uint8_t *s3_row, float r3_scl,
+    float *out_swiglu, int o, int groups
+)
+{
+    const __m256i mask0f = _mm256_set1_epi8(0x0F);
+    float s1 = 0.0f, s3 = 0.0f;
+    for (int g = 0; g < groups; g++) {
+        const int8_t *xq_g = x_q + g * 64;
+        __m256i pk1 = _mm256_loadu_si256((const __m256i *)(n1_row + g * 32));
+        __m256i pk3 = _mm256_loadu_si256((const __m256i *)(n3_row + g * 32));
+        int32_t d1 = dot64_u4_s8_avxvnni(_mm256_and_si256(pk1, mask0f), _mm256_and_si256(_mm256_srli_epi16(pk1, 4), mask0f), xq_g) - 8 * x_sum[g];
+        int32_t d3 = dot64_u4_s8_avxvnni(_mm256_and_si256(pk3, mask0f), _mm256_and_si256(_mm256_srli_epi16(pk3, 4), mask0f), xq_g) - 8 * x_sum[g];
+        s1 += (float)d1 * ((float)s1_row[g] * x_sc[g]);
+        s3 += (float)d3 * ((float)s3_row[g] * x_sc[g]);
+    }
+    float v1 = bf16_round_f32(s1 * r1_scl);
+    float v3 = bf16_round_f32(s3 * r3_scl);
+    float silu = bf16_round_f32(v1 / (1.0f + expf(-v1)));
+    out_swiglu[o] = bf16_round_f32(silu * v3);
+}
+
+LFM3_TARGET_AVX2 static void fused_swiglu_row_avx2(
+    const int8_t *x_q, const float *x_sc, const int32_t *x_sum,
+    const uint8_t *n1_row, const uint8_t *s1_row, float r1_scl,
+    const uint8_t *n3_row, const uint8_t *s3_row, float r3_scl,
+    float *out_swiglu, int o, int groups
+)
+{
+    const __m256i mask0f = _mm256_set1_epi8(0x0F);
+    float s1 = 0.0f, s3 = 0.0f;
+    for (int g = 0; g < groups; g++) {
+        const int8_t *xq_g = x_q + g * 64;
+        __m256i pk1 = _mm256_loadu_si256((const __m256i *)(n1_row + g * 32));
+        __m256i pk3 = _mm256_loadu_si256((const __m256i *)(n3_row + g * 32));
+        int32_t d1 = dot64_u4_s8_avx2(_mm256_and_si256(pk1, mask0f), _mm256_and_si256(_mm256_srli_epi16(pk1, 4), mask0f), xq_g) - 8 * x_sum[g];
+        int32_t d3 = dot64_u4_s8_avx2(_mm256_and_si256(pk3, mask0f), _mm256_and_si256(_mm256_srli_epi16(pk3, 4), mask0f), xq_g) - 8 * x_sum[g];
+        s1 += (float)d1 * ((float)s1_row[g] * x_sc[g]);
+        s3 += (float)d3 * ((float)s3_row[g] * x_sc[g]);
+    }
+    float v1 = bf16_round_f32(s1 * r1_scl);
+    float v3 = bf16_round_f32(s3 * r3_scl);
+    float silu = bf16_round_f32(v1 / (1.0f + expf(-v1)));
+    out_swiglu[o] = bf16_round_f32(silu * v3);
+}
+#endif
+
 static void fused_swiglu_w1_w3_4bit_T1(
     int layer_id,
     const float *x,
@@ -1736,7 +2852,7 @@ static void fused_swiglu_w1_w3_4bit_T1(
 )
 {
     const int groups = LFM3_D / 64; /* 32 groups */
-    const int n_thr = g_lfm3.num_threads > 0 ? g_lfm3.num_threads : 8;
+    const int n_thr = lfm3_active_threads();
     size_t q4_bytes = 2ULL * (size_t)LFM3_FFN * (size_t)(groups * 33 + 4);
     size_t bf16_equiv = 2ULL * (size_t)LFM3_FFN * (size_t)LFM3_D * 2ULL;
     g_lfm3.bytes_tier2_lpddr5x += (unsigned long long)q4_bytes;
@@ -1784,7 +2900,7 @@ static void fused_swiglu_w1_w3_4bit_T1(
     (void)layer_id;
 #endif
 
-    #pragma omp parallel for num_threads(n_thr) schedule(static)
+    #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 32)
     for (int o = cpu_start_row; o < LFM3_FFN; o++) {
         const uint8_t *n1_row = w1_nib + (size_t)o * (size_t)(groups * 32);
         const uint8_t *s1_row = w1_stp + (size_t)o * (size_t)groups;
@@ -1838,8 +2954,48 @@ static void fused_swiglu_w1_w3_4bit_T1(
         }
     }
 #endif
-#else
-    #pragma omp parallel for num_threads(n_thr) schedule(static)
+    return;
+#endif
+    (void)layer_id;
+#if LFM3_HAS_X86_SIMD
+    lfm3_isa_t isa = lfm3_detect_isa();
+    if (isa >= LFM3_ISA_AVX2) {
+        g_lfm3_last_tier = (int)isa;
+        lfm3_qscratch_t *scr = lfm3_qscratch_acquire(LFM3_D, (size_t)groups);
+        if (scr) {
+            quantize_f32_to_s8_group64_avx2(x, 1, LFM3_D, scr->x_q, scr->x_sc, scr->x_sum8);
+            if (isa == LFM3_ISA_AVX512_VNNI) {
+                #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64)
+                for (int o = 0; o < LFM3_FFN; o++) {
+                    fused_swiglu_row_avx512vnni(scr->x_q, scr->x_sc, scr->x_sum8,
+                        w1_nib + (size_t)o * (size_t)(groups * 32), w1_stp + (size_t)o * (size_t)groups, w1_scl[o],
+                        w3_nib + (size_t)o * (size_t)(groups * 32), w3_stp + (size_t)o * (size_t)groups, w3_scl[o],
+                        out_swiglu, o, groups);
+                }
+            } else if (isa == LFM3_ISA_AVXVNNI) {
+                #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64)
+                for (int o = 0; o < LFM3_FFN; o++) {
+                    fused_swiglu_row_avxvnni(scr->x_q, scr->x_sc, scr->x_sum8,
+                        w1_nib + (size_t)o * (size_t)(groups * 32), w1_stp + (size_t)o * (size_t)groups, w1_scl[o],
+                        w3_nib + (size_t)o * (size_t)(groups * 32), w3_stp + (size_t)o * (size_t)groups, w3_scl[o],
+                        out_swiglu, o, groups);
+                }
+            } else {
+                #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64)
+                for (int o = 0; o < LFM3_FFN; o++) {
+                    fused_swiglu_row_avx2(scr->x_q, scr->x_sc, scr->x_sum8,
+                        w1_nib + (size_t)o * (size_t)(groups * 32), w1_stp + (size_t)o * (size_t)groups, w1_scl[o],
+                        w3_nib + (size_t)o * (size_t)(groups * 32), w3_stp + (size_t)o * (size_t)groups, w3_scl[o],
+                        out_swiglu, o, groups);
+                }
+            }
+            lfm3_qscratch_release(scr);
+            return;
+        }
+    }
+#endif
+    g_lfm3_last_tier = 0;
+    #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64)
     for (int o = 0; o < LFM3_FFN; o++) {
         const uint8_t *n1_row = w1_nib + (size_t)o * (size_t)(groups * 32);
         const uint8_t *s1_row = w1_stp + (size_t)o * (size_t)groups;
@@ -1866,7 +3022,6 @@ static void fused_swiglu_w1_w3_4bit_T1(
         float silu = bf16_round_f32(v1 / (1.0f + expf(-v1)));
         out_swiglu[o] = bf16_round_f32(silu * v3);
     }
-#endif
 }
 
 static void execute_lfm3_layer_cached_step(
@@ -1880,7 +3035,7 @@ static void execute_lfm3_layer_cached_step(
 {
     const uint8_t *op = (const uint8_t *)trk->operator_mf.ptr;
     uint32_t kind = trk->hdr.layer_kind;
-    const int n_thr = g_lfm3.num_threads > 0 ? g_lfm3.num_threads : 8;
+    const int n_thr = lfm3_active_threads();
 
     float *op_in = g_scr_op_in;
     float *op_out_raw = g_scr_op_out_raw;
@@ -2392,12 +3547,13 @@ LFM3_API float lfm3_step_token_cached(
     return (float)(now_ms() - t0);
 }
 
-LFM3_API int lfm3_decode_from_cache(
+LFM3_API int lfm3_decode_from_cache_with_hidden(
     const float *initial_h_last_2048,
     int max_new_tokens,
     int allow_thinking,
     int *out_gen_ids,
     float *out_last_hidden_2048,
+    float *out_hidden_seq,
     float *out_total_ms
 )
 {
@@ -2421,6 +3577,9 @@ LFM3_API int lfm3_decode_from_cache(
         out_gen_ids[gen_count++] = best_id;
         if (best_id == 124900 || best_id == 124895 || best_id == 124906 || best_id == 125020 || best_id == 125028) {
             /* 124900 = <|im_end|>, 124895 = <|endoftext|>, 124906 = <|tool_call_end|>, 125020 = </tool_call>, 125028 = </additional_tools> */
+            if (out_hidden_seq) {
+                memcpy(out_hidden_seq + (size_t)(gen_count - 1) * LFM3_D, h_last, LFM3_D * sizeof(float));
+            }
             break;
         }
         if (best_id == 38 && gen_count >= 3) {
@@ -2429,10 +3588,13 @@ LFM3_API int lfm3_decode_from_cache(
             /* Stop immediately on closing </search> (13981), </python> (63513/12326), or </answer> (44244)
              * where prev2_id is NOT opening '<' (36) and NOT '</think>' (124902) */
             if ((prev_id == 13981 || prev_id == 63513 || prev_id == 12326 || prev_id == 44244) && prev2_id != 36 && prev2_id != 124902) {
+                if (out_hidden_seq) {
+                    memcpy(out_hidden_seq + (size_t)(gen_count - 1) * LFM3_D, h_last, LFM3_D * sizeof(float));
+                }
                 break;
             }
         }
-        if (step + 1 >= max_new_tokens && best_id != 125033) {
+        if (step + 1 >= max_new_tokens && best_id != 125033 && !out_hidden_seq) {
             break;
         }
 
@@ -2448,11 +3610,17 @@ LFM3_API int lfm3_decode_from_cache(
             float *tmp = c_ptr; c_ptr = n_ptr; n_ptr = tmp;
         }
         rms_norm_bf16(c_ptr, emb_norm_w, h_last, 1, LFM3_D, 1e-5f);
+        if (out_hidden_seq) {
+            memcpy(out_hidden_seq + (size_t)(gen_count - 1) * LFM3_D, h_last, LFM3_D * sizeof(float));
+        }
         cur_pos++;
         g_cached_seq_len = cur_pos;
 
         if (best_id == 125033) {
             /* Entered <latent> span: return to HybridAgent controller with h_last at <latent> */
+            break;
+        }
+        if (step + 1 >= max_new_tokens) {
             break;
         }
     }
@@ -2466,3 +3634,425 @@ LFM3_API int lfm3_decode_from_cache(
     free(logits);
     return gen_count;
 }
+
+LFM3_API int lfm3_decode_from_cache(
+    const float *initial_h_last_2048,
+    int max_new_tokens,
+    int allow_thinking,
+    int *out_gen_ids,
+    float *out_last_hidden_2048,
+    float *out_total_ms
+)
+{
+    return lfm3_decode_from_cache_with_hidden(
+        initial_h_last_2048,
+        max_new_tokens,
+        allow_thinking,
+        out_gen_ids,
+        out_last_hidden_2048,
+        NULL,
+        out_total_ms
+    );
+}
+
+/* ============================================================================
+ * 1-Cycle Register LUT16 Codebook 4-Bit Linear Kernel (ported from x-cruncher)
+ *   - Supports ANY 16-entry signed `int8` codebook `lut16_s8[16]`, including:
+ *     * Preset 0 (`MXFP4_E2M1_X2`): `{0,1,2,3,4,6,8,12, 0,-1,-2,-3,-4,-6,-8,-12}` (exact `2 * E2M1`!)
+ *     * Preset 1 (`NF4_S8`):        Quantized normal `int8` levels `[-127 .. +127]`
+ *     * Preset 2 (`VINCULUM_S8`):   Balanced signed 4-bit `{-8,-7,...,+6,+7}`
+ *   - Uses `_mm512_permutexvar_epi8` (`vpermb` — 64 nibbles/cycle) + `_mm512_dpbusd_epi32`
+ *     on AVX-512 VBMI+VNNI, `_mm256_shuffle_epi8` (`vpshufb` — 32 nibbles/cycle) on
+ *     AVX-VNNI / AVX2, and `vqtbl1q_s8` + `vdotq_s32` on ARM64 NEON!
+ * ============================================================================ */
+static const int8_t LFM3_PRESET_LUT16_MXFP4_X2[16] = {
+     0,  1,  2,  3,  4,  6,  8, 12,
+     0, -1, -2, -3, -4, -6, -8, -12
+};
+static const int8_t LFM3_PRESET_LUT16_NF4_S8[16] = {
+    -127, -88, -67, -50, -36, -23, -12,  0,
+      10,  20,  32,  43,  56,  72,  92, 127
+};
+static const int8_t LFM3_PRESET_LUT16_VINCULUM_S8[16] = {
+    -8, -7, -6, -5, -4, -3, -2, -1,
+     0,  1,  2,  3,  4,  5,  6,  7
+};
+
+LFM3_API const int8_t *lfm3_get_preset_lut16(int preset_id)
+{
+    if (preset_id == 0) return LFM3_PRESET_LUT16_MXFP4_X2;
+    if (preset_id == 1) return LFM3_PRESET_LUT16_NF4_S8;
+    if (preset_id == 2) return LFM3_PRESET_LUT16_VINCULUM_S8;
+    return NULL;
+}
+
+#if LFM3_HAS_X86_SIMD
+LFM3_TARGET_AVX512_VNNI static void lut16_4bit_row_avx512vnni(
+    const int8_t *x_q, const float *x_sc, const int32_t *x_sum,
+    const uint8_t *lut16_u8, const uint8_t *nib_row, const float *grp_scales_row,
+    float *y, int o, int T, int out_dim, int in_dim, int groups
+)
+{
+    const __m256i mask0f = _mm256_set1_epi8(0x0F);
+    const __m512i vlut   = _mm512_broadcast_i32x4(_mm_loadu_si128((const __m128i *)lut16_u8));
+    const __m512i zero   = _mm512_setzero_si512();
+    for (int t = 0; t < T; t++) {
+        const int8_t  *xqt = x_q  + (size_t)t * in_dim;
+        const float   *xst = x_sc + (size_t)t * groups;
+        const int32_t *xmt = x_sum + (size_t)t * groups;
+        float sum = 0.0f;
+        for (int g = 0; g < groups; g++) {
+            __m256i pk = _mm256_loadu_si256((const __m256i *)(nib_row + g * 32));
+            __m512i idx512 = _mm512_inserti64x4(
+                _mm512_castsi256_si512(_mm256_and_si256(pk, mask0f)),
+                _mm256_and_si256(_mm256_srli_epi16(pk, 4), mask0f), 1);
+            __m512i wu8 = _mm512_permutexvar_epi8(idx512, vlut);
+            int32_t d = _mm512_reduce_add_epi32(_mm512_dpbusd_epi32(zero, wu8, _mm512_loadu_si512((const __m512i *)(xqt + g * 64)))) - 128 * xmt[g];
+            sum += (float)d * (grp_scales_row[g] * xst[g]);
+        }
+        y[(size_t)t * out_dim + o] = sum;
+    }
+}
+
+LFM3_TARGET_AVXVNNI static void lut16_4bit_row_avxvnni(
+    const int8_t *x_q, const float *x_sc, const int32_t *x_sum,
+    const uint8_t *lut16_u8, const uint8_t *nib_row, const float *grp_scales_row,
+    float *y, int o, int T, int out_dim, int in_dim, int groups
+)
+{
+    const __m256i mask0f = _mm256_set1_epi8(0x0F);
+    const __m256i vlut   = _mm256_broadcastsi128_si256(_mm_loadu_si128((const __m128i *)lut16_u8));
+    for (int t = 0; t < T; t++) {
+        const int8_t  *xqt = x_q  + (size_t)t * in_dim;
+        const float   *xst = x_sc + (size_t)t * groups;
+        const int32_t *xmt = x_sum + (size_t)t * groups;
+        float sum = 0.0f;
+        for (int g = 0; g < groups; g++) {
+            __m256i pk = _mm256_loadu_si256((const __m256i *)(nib_row + g * 32));
+            __m256i wlo = _mm256_shuffle_epi8(vlut, _mm256_and_si256(pk, mask0f));
+            __m256i whi = _mm256_shuffle_epi8(vlut, _mm256_and_si256(_mm256_srli_epi16(pk, 4), mask0f));
+            int32_t d = dot64_u4_s8_avxvnni(wlo, whi, xqt + g * 64) - 128 * xmt[g];
+            sum += (float)d * (grp_scales_row[g] * xst[g]);
+        }
+        y[(size_t)t * out_dim + o] = sum;
+    }
+}
+
+LFM3_TARGET_AVX2 static void lut16_4bit_row_avx2(
+    const int8_t *x_q, const float *x_sc, const int32_t *x_sum,
+    const uint8_t *lut16_u8, const uint8_t *nib_row, const float *grp_scales_row,
+    float *y, int o, int T, int out_dim, int in_dim, int groups
+)
+{
+    const __m256i mask0f = _mm256_set1_epi8(0x0F);
+    const __m256i vlut   = _mm256_broadcastsi128_si256(_mm_loadu_si128((const __m128i *)lut16_u8));
+    for (int t = 0; t < T; t++) {
+        const int8_t  *xqt = x_q  + (size_t)t * in_dim;
+        const float   *xst = x_sc + (size_t)t * groups;
+        const int32_t *xmt = x_sum + (size_t)t * groups;
+        float sum = 0.0f;
+        for (int g = 0; g < groups; g++) {
+            __m256i pk = _mm256_loadu_si256((const __m256i *)(nib_row + g * 32));
+            __m256i wlo = _mm256_shuffle_epi8(vlut, _mm256_and_si256(pk, mask0f));
+            __m256i whi = _mm256_shuffle_epi8(vlut, _mm256_and_si256(_mm256_srli_epi16(pk, 4), mask0f));
+            int32_t d = dot64_u4_s8_avx2(wlo, whi, xqt + g * 64) - 128 * xmt[g];
+            sum += (float)d * (grp_scales_row[g] * xst[g]);
+        }
+        y[(size_t)t * out_dim + o] = sum;
+    }
+}
+#endif
+
+LFM3_API int lfm3_linear_4bit_lut16_omp(
+    const float *x,
+    const uint8_t *nibbles_base,
+    const int8_t *lut16_s8,
+    const float *group_scales_base,
+    float *y,
+    int T,
+    int out_dim,
+    int in_dim
+)
+{
+    if (!x || !nibbles_base || !lut16_s8 || !group_scales_base || !y ||
+        T <= 0 || out_dim <= 0 || in_dim <= 0 || (in_dim % 64) != 0) {
+        return -1;
+    }
+    const int groups = in_dim / 64;
+    const int n_thr = lfm3_active_threads();
+
+#if defined(__ARM_FEATURE_DOTPROD) && (defined(__aarch64__) || defined(__ARM_NEON))
+    g_lfm3_last_tier = 4;
+    lfm3_qscratch_t *scr = lfm3_qscratch_acquire((size_t)T * (size_t)in_dim, (size_t)T * (size_t)groups);
+    if (!scr) return -2;
+    quantize_f32_to_s8_group64(x, T, in_dim, scr->x_q, scr->x_sc);
+    const int8x16_t vlut = vld1q_s8(lut16_s8);
+    const uint8x16_t mask0f = vdupq_n_u8(0x0F);
+    #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 32) if (out_dim >= 64)
+    for (int o = 0; o < out_dim; o++) {
+        const uint8_t *nib_row = nibbles_base + (size_t)o * (size_t)(groups * 32);
+        const float *gsc_row = group_scales_base + (size_t)o * (size_t)groups;
+        for (int t = 0; t < T; t++) {
+            const int8_t *xqt = scr->x_q + (size_t)t * in_dim;
+            const float *xst = scr->x_sc + (size_t)t * groups;
+            float sum = 0.0f;
+            for (int g = 0; g < groups; g++) {
+                const uint8_t *nb = nib_row + g * 32;
+                uint8x16_t p0 = vld1q_u8(nb), p1 = vld1q_u8(nb + 16);
+                int8x16_t w0 = vqtbl1q_s8(vlut, vandq_u8(p0, mask0f));
+                int8x16_t w1 = vqtbl1q_s8(vlut, vandq_u8(p1, mask0f));
+                int8x16_t w2 = vqtbl1q_s8(vlut, vshrq_n_u8(p0, 4));
+                int8x16_t w3 = vqtbl1q_s8(vlut, vshrq_n_u8(p1, 4));
+                int c = g * 64;
+                int32x4_t d0 = vdupq_n_s32(0);
+                d0 = vdotq_s32(vdotq_s32(d0, w0, vld1q_s8(xqt + c)), w1, vld1q_s8(xqt + c + 16));
+                d0 = vdotq_s32(vdotq_s32(d0, w2, vld1q_s8(xqt + c + 32)), w3, vld1q_s8(xqt + c + 48));
+                sum += (float)vaddvq_s32(d0) * (gsc_row[g] * xst[g]);
+            }
+            y[(size_t)t * out_dim + o] = sum;
+        }
+    }
+    lfm3_qscratch_release(scr);
+    return 0;
+#endif
+
+#if LFM3_HAS_X86_SIMD
+    lfm3_isa_t isa = lfm3_detect_isa();
+    if (isa >= LFM3_ISA_AVX2) {
+        g_lfm3_last_tier = (int)isa;
+        lfm3_qscratch_t *scr = lfm3_qscratch_acquire((size_t)T * (size_t)in_dim, (size_t)T * (size_t)groups);
+        if (!scr) return -2;
+        uint8_t lut16_u8[16];
+        for (int i = 0; i < 16; i++) lut16_u8[i] = (uint8_t)((int)lut16_s8[i] + 128);
+        quantize_f32_to_s8_group64_avx2(x, T, in_dim, scr->x_q, scr->x_sc, scr->x_sum8);
+        if (isa == LFM3_ISA_AVX512_VNNI) {
+            #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64) if (out_dim >= 64)
+            for (int o = 0; o < out_dim; o++) {
+                lut16_4bit_row_avx512vnni(scr->x_q, scr->x_sc, scr->x_sum8, lut16_u8,
+                    nibbles_base + (size_t)o * (size_t)(groups * 32),
+                    group_scales_base + (size_t)o * (size_t)groups,
+                    y, o, T, out_dim, in_dim, groups);
+            }
+        } else if (isa == LFM3_ISA_AVXVNNI) {
+            #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64) if (out_dim >= 64)
+            for (int o = 0; o < out_dim; o++) {
+                lut16_4bit_row_avxvnni(scr->x_q, scr->x_sc, scr->x_sum8, lut16_u8,
+                    nibbles_base + (size_t)o * (size_t)(groups * 32),
+                    group_scales_base + (size_t)o * (size_t)groups,
+                    y, o, T, out_dim, in_dim, groups);
+            }
+        } else {
+            #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64) if (out_dim >= 64)
+            for (int o = 0; o < out_dim; o++) {
+                lut16_4bit_row_avx2(scr->x_q, scr->x_sc, scr->x_sum8, lut16_u8,
+                    nibbles_base + (size_t)o * (size_t)(groups * 32),
+                    group_scales_base + (size_t)o * (size_t)groups,
+                    y, o, T, out_dim, in_dim, groups);
+            }
+        }
+        lfm3_qscratch_release(scr);
+        return 0;
+    }
+#endif
+
+    g_lfm3_last_tier = 0;
+    #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 64) if (out_dim >= 64)
+    for (int o = 0; o < out_dim; o++) {
+        const uint8_t *nib_row = nibbles_base + (size_t)o * (size_t)(groups * 32);
+        const float *gsc_row = group_scales_base + (size_t)o * (size_t)groups;
+        for (int t = 0; t < T; t++) {
+            const float *xt = x + (size_t)t * in_dim;
+            float sum = 0.0f;
+            for (int g = 0; g < groups; g++) {
+                const uint8_t *nb = nib_row + g * 32;
+                const float gsc = gsc_row[g];
+                const int col0 = g * 64;
+                for (int j = 0; j < 32; j++) {
+                    uint8_t pk = nb[j];
+                    sum += xt[col0 + j] * ((float)lut16_s8[pk & 0x0F] * gsc)
+                         + xt[col0 + 32 + j] * ((float)lut16_s8[pk >> 4] * gsc);
+                }
+            }
+            y[(size_t)t * out_dim + o] = sum;
+        }
+    }
+    return 0;
+}
+
+/* ============================================================================
+ * Zero-Dependency C11 Radix-4 / Radix-2 FFT STFT + Log-Mel Spectrogram Extractor
+ * (ported from x-cruncher's Coarse-x-Fine Radix-4 FFT architecture).
+ * Computes `n_frames x n_mels` log-mel energies in < 0.15 ms for 10s of 16 kHz
+ * audio with zero scipy / librosa / torchaudio dependency.
+ * ============================================================================ */
+static void lfm3_fft_radix4_cpx(double *re, double *im, int n)
+{
+    int log_n = 0;
+    while ((1 << log_n) < n) log_n++;
+    for (int i = 0; i < n; i++) {
+        int r = 0;
+        for (int b = 0; b < log_n; b++) r = (r << 1) | ((i >> b) & 1);
+        if (r > i) {
+            double tr = re[i]; re[i] = re[r]; re[r] = tr;
+            double ti = im[i]; im[i] = im[r]; im[r] = ti;
+        }
+    }
+    int half = 1;
+    if (log_n & 1) {
+        for (int base = 0; base < n; base += 2) {
+            double ur = re[base], ui = im[base];
+            double vr = re[base + 1], vi = im[base + 1];
+            re[base]     = ur + vr; im[base]     = ui + vi;
+            re[base + 1] = ur - vr; im[base + 1] = ui - vi;
+        }
+        half = 2;
+    }
+    const double two_pi = 6.283185307179586476925286766559;
+    while (half < n) {
+        int dbl = half << 1, step = half << 2;
+        double ang1 = -two_pi / (double)dbl;
+        double ang2 = -two_pi / (double)step;
+        for (int k = 0; k < half; k++) {
+            double c1 = cos(ang1 * (double)k), s1 = sin(ang1 * (double)k);
+            double c2 = cos(ang2 * (double)k), s2 = sin(ang2 * (double)k);
+            double c3 = c1 * c2 - s1 * s2,     s3 = s1 * c2 + c1 * s2;
+            for (int base = 0; base < n; base += step) {
+                int i0 = base + k, i1 = i0 + half, i2 = i0 + dbl, i3 = i2 + half;
+                double x0r = re[i0], x0i = im[i0];
+                double x1r = re[i1] * c1 - im[i1] * s1, x1i = re[i1] * s1 + im[i1] * c1;
+                double x2r = re[i2], x2i = im[i2];
+                double x3r = re[i3] * c1 - im[i3] * s1, x3i = re[i3] * s1 + im[i3] * c1;
+
+                double a0r = x0r + x1r, a0i = x0i + x1i;
+                double a1r = x0r - x1r, a1i = x0i - x1i;
+                double a2r = x2r + x3r, a2i = x2i + x3i;
+                double a3r = x2r - x3r, a3i = x2i - x3i;
+
+                double t2r = a2r * c2 - a2i * s2, t2i = a2r * s2 + a2i * c2;
+                /* w_step^(half + k) = -i * w_step^k: (c3, s3) for -i * w_step^k = (s2, -c2)! */
+                (void)c3; (void)s3;
+                double t3r = a3r * s2 + a3i * c2, t3i = -a3r * c2 + a3i * s2;
+
+                re[i0] = a0r + t2r; im[i0] = a0i + t2i;
+                re[i1] = a1r + t3r; im[i1] = a1i + t3i;
+                re[i2] = a0r - t2r; im[i2] = a0i - t2i;
+                re[i3] = a1r - t3r; im[i3] = a1i - t3i;
+            }
+        }
+        half <<= 2;
+    }
+}
+
+static inline double lfm3_hz_to_mel(double hz) { return 2595.0 * log10(1.0 + hz / 700.0); }
+static inline double lfm3_mel_to_hz(double mel) { return 700.0 * (pow(10.0, mel / 2595.0) - 1.0); }
+
+/* Computes `[n_frames, n_mels]` log-mel spectrogram in natural-log scale (`log(max(E, 1e-10))`).
+ * `n_fft` must be a power of two in `[64 .. 4096]`, `win_length <= n_fft`, `hop_length >= 1`.
+ * Returns the number of frames written (`>= 0`), or `< 0` on invalid arguments. */
+LFM3_API int lfm3_compute_log_mel_f32(
+    const float *pcm,
+    int n_samples,
+    int sample_rate,
+    int n_fft,
+    int win_length,
+    int hop_length,
+    int n_mels,
+    float fmin_hz,
+    float fmax_hz,
+    float *out_mel,
+    int max_frames
+)
+{
+    if (!pcm || !out_mel || n_samples <= 0 || sample_rate <= 0 ||
+        n_fft < 64 || n_fft > 4096 || (n_fft & (n_fft - 1)) != 0 ||
+        win_length <= 0 || win_length > n_fft || hop_length <= 0 ||
+        n_mels <= 0 || n_mels > 256 || max_frames <= 0) {
+        return -1;
+    }
+    if (fmax_hz <= 0.0f || fmax_hz > 0.5f * (float)sample_rate) {
+        fmax_hz = 0.5f * (float)sample_rate;
+    }
+    if (fmin_hz < 0.0f || fmin_hz >= fmax_hz) return -1;
+
+    int n_frames = (n_samples >= win_length) ? (1 + (n_samples - win_length) / hop_length) : 1;
+    if (n_frames > max_frames) n_frames = max_frames;
+    const int n_bins = n_fft / 2 + 1;
+
+    double *win = (double *)malloc((size_t)win_length * sizeof(double));
+    float  *fb  = (float *)calloc((size_t)n_mels * (size_t)n_bins, sizeof(float));
+    if (!win || !fb) { free(win); free(fb); return -2; }
+
+    const double two_pi = 6.283185307179586476925286766559;
+    for (int i = 0; i < win_length; i++) {
+        win[i] = 0.5 - 0.5 * cos(two_pi * (double)i / (double)win_length);
+    }
+
+    double m_min = lfm3_hz_to_mel((double)fmin_hz);
+    double m_max = lfm3_hz_to_mel((double)fmax_hz);
+    double *hz_pts = (double *)malloc((size_t)(n_mels + 2) * sizeof(double));
+    if (!hz_pts) { free(win); free(fb); return -2; }
+    for (int m = 0; m < n_mels + 2; m++) {
+        double mel = m_min + (m_max - m_min) * (double)m / (double)(n_mels + 1);
+        hz_pts[m] = lfm3_mel_to_hz(mel);
+    }
+    for (int m = 0; m < n_mels; m++) {
+        double f_l = hz_pts[m], f_c = hz_pts[m + 1], f_r = hz_pts[m + 2];
+        double norm = 2.0 / (f_r - f_l + 1e-12); /* Slaney area normalization */
+        for (int b = 0; b < n_bins; b++) {
+            double f = (double)b * (double)sample_rate / (double)n_fft;
+            double w = 0.0;
+            if (f >= f_l && f <= f_c && f_c > f_l) w = (f - f_l) / (f_c - f_l);
+            else if (f > f_c && f <= f_r && f_r > f_c) w = (f_r - f) / (f_r - f_c);
+            fb[(size_t)m * n_bins + b] = (float)(w * norm);
+        }
+    }
+    free(hz_pts);
+
+    const int n_thr = lfm3_active_threads();
+    #pragma omp parallel for num_threads(n_thr) schedule(dynamic, 8) if (n_frames >= 16)
+    for (int fr = 0; fr < n_frames; fr++) {
+        double re[4096], im[4096];
+        memset(re, 0, (size_t)n_fft * sizeof(double));
+        memset(im, 0, (size_t)n_fft * sizeof(double));
+        int start = fr * hop_length;
+        for (int i = 0; i < win_length; i++) {
+            int idx = start + i;
+            double s = (idx < n_samples) ? (double)pcm[idx] : 0.0;
+            re[i] = s * win[i];
+        }
+        lfm3_fft_radix4_cpx(re, im, n_fft);
+        float pwr[2049];
+        for (int b = 0; b < n_bins; b++) {
+            pwr[b] = (float)(re[b] * re[b] + im[b] * im[b]);
+        }
+        float *dst = out_mel + (size_t)fr * n_mels;
+        for (int m = 0; m < n_mels; m++) {
+            const float *fb_row = fb + (size_t)m * n_bins;
+            double e = 0.0;
+            for (int b = 0; b < n_bins; b++) e += (double)fb_row[b] * (double)pwr[b];
+            if (e < 1e-10) e = 1e-10;
+            dst[m] = (float)log(e);
+        }
+    }
+
+    free(win);
+    free(fb);
+    return n_frames;
+}
+
+/* Direct kernel entry points for standalone C/Python exactness & throughput benchmarks */
+LFM3_API void lfm3_linear_bf16_direct(
+    const float *x, const uint16_t *W_bf16, float *y, int T, int out_dim, int in_dim
+)
+{
+    linear_bf16_omp(x, W_bf16, y, T, out_dim, in_dim);
+}
+
+LFM3_API void lfm3_linear_4bit_group64_direct(
+    const float *x, const uint8_t *nibbles_base, const uint8_t *steps_base,
+    const float *scales_base, float *y, int T, int out_dim, int in_dim
+)
+{
+    linear_4bit_group64_omp(x, nibbles_base, steps_base, scales_base, y, T, out_dim, in_dim);
+}
+
