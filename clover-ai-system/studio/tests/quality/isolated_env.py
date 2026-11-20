@@ -134,14 +134,13 @@ class IsolatedStudioServer:
             cmd = [sys.executable, str(STUDIO_DIR / "tests" / "ui_harness.py"),
                    "--base", str(self.temp_root), "--port", str(self.port)]
         else:
-            # Configure clean isolated defaults (`c1_inference_only: True` avoids missing C2/C3 weights when testing Omni C1)
+            # Configure clean isolated Studio defaults (`c1_inference_only: False` uses primary LFM3-Omni-2B generation)
             cfg_dir = self.temp_root / "config"
             cfg_dir.mkdir(parents=True, exist_ok=True)
-            has_c2c3 = bool(self.seed_base and (self.seed_base / "data" / "c2c3").is_dir())
             (cfg_dir / "settings.json").write_text(json.dumps({
                 "model": "omni",
                 "tools": "ask",
-                "c1_inference_only": not has_c2c3,
+                "c1_inference_only": False,
             }), encoding="utf-8")
             cmd = [sys.executable, str(CLOVER_DIR / "server.py"),
                    "--base", str(self.temp_root), "--port", str(self.port), "--idle-exit-min", "15"]
@@ -237,10 +236,12 @@ class StudioClient:
         media: list[dict] | None = None,
         attached_files: list[dict] | None = None,
         permission_policy: str = "once",
+        smart_switch: bool | None = None,
         timeout_s: float = 180.0,
     ) -> tuple[dict[str, Any], list[dict[str, Any]], float]:
         sid = session_id or f"qa-{uuid.uuid4().hex[:12]}"
-        payload: dict[str, Any] = {"session_id": sid, "prompt": prompt}
+        use_smart = getattr(self, "default_smart_switch", False) if smart_switch is None else bool(smart_switch)
+        payload: dict[str, Any] = {"session_id": sid, "prompt": prompt, "smart_switch": use_smart}
         if media:
             payload["media"] = media
         if attached_files:
@@ -352,6 +353,7 @@ def run_live_e2e_scenarios(
     ws_dir = isolated_base / "qa_workspace"
     ws_dir.mkdir(parents=True, exist_ok=True)
 
+    client.default_smart_switch = (model_id == "auto")
     client.set_settings({"model": model_id, "tools": "ask"})
     client.set_permissions({
         "code": "allow",
@@ -385,7 +387,7 @@ def run_live_e2e_scenarios(
     chat_sid = f"qa-conv-{uuid.uuid4().hex[:8]}"
     try:
         res1, sse1, ms1 = client.stream_turn(
-            "We have 140 solar panels, each rated at 450 watts. What is the total array capacity in kilowatts? Be concise.",
+            "We have 140 solar panels, each rated at 450 watts. What is the total array capacity in kilowatts?",
             session_id=chat_sid,
         )
         ok1 = bool(res1.get("reply")) and evaluator.contains_number_close(res1["reply"], 63.0, tol=0.2)
@@ -393,7 +395,7 @@ def run_live_e2e_scenarios(
                 "Reply computes 140 * 450 W = 63 kW", str(res1.get("reply") or "")[:300], sse1, res1)
 
         res2, sse2, ms2 = client.stream_turn(
-            "If we add 20 more of those exact same panels to that array, what is the new total in kilowatts?",
+            "If we add 20 more of those exact same panels to that array, show the step-by-step calculation and the new total in kilowatts.",
             session_id=chat_sid,
         )
         ok2 = bool(res2.get("reply")) and evaluator.contains_number_close(res2["reply"], 72.0, tol=0.2)

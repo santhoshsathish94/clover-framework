@@ -48,8 +48,9 @@ def _fn(name, description, props=None, required=()):
 
 
 STUDIO_TOOLS = [
-    _fn("run_python", "Run Python 3 code on this laptop and return what it prints. Use print() for results. pandas, "
-        "openpyxl, numpy and matplotlib are installed (read an attached document from the path it was saved at). To show "
+    _fn("run_python", "Run Python 3 code on this laptop and return what it prints. Use print() for results. "
+        "Always compute sequences, primes, and aggregations algorithmically in Python rather than hardcoding hand-typed lists. "
+        "pandas, openpyxl, numpy and matplotlib are installed (read an attached document from the path it was saved at). To show "
         "a chart, save it as a PNG file (plt.savefig('chart.png')); the user sees it in the chat. 60-second limit.",
         {"code": {"type": "string", "description": "Python source code"}}, ["code"]),
     _fn("web_search", "Search the web. Returns results with links.",

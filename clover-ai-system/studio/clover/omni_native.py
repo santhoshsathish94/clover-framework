@@ -809,7 +809,7 @@ def plan_s3_pre_calls(engine, query, only_tools, by_name, *, meaning=None, past_
     elif (
         "read_file" in only_tools
         and "read_file" in by_name
-        and "write_file" not in only_tools
+        and set(only_tools) <= {"read_file", "list_directory", "search_files", "file_info"}
         and getattr(engine, "turn_paths", None)
         and getattr(engine, "perms", None) is not None
         and engine.perms.get().get("files") == "allow"
@@ -1886,7 +1886,8 @@ class OmniNative(N.LFM3Native):
 
     # ---------------- C1 inference only (setting c1_inference_only) ----------------
     def _c1_server(self):
-        """The same model as an inference-only llama-server (hidden states, never a sampled token), started on first use."""
+        """The same model as an inference-only llama-server (hidden states, never a sampled token), started on first use.
+        Falls back cleanly to CPU if a second Vulkan instance runs out of device memory alongside `self.srv`."""
         if getattr(self, "local_omni", None) is not None and hasattr(self.local_omni, "_c1_server"):
             return self.local_omni._c1_server()
         srv = getattr(self, "_c1_srv", None)
@@ -1896,9 +1897,22 @@ class OmniNative(N.LFM3Native):
         gpu_kind = getattr(getattr(self, "gpu", None), "kind", "cpu")
         if model_p and Path(model_p).is_file() and gpu_kind in ("vulkan", "cpu"):
             ctx = min(int(getattr(self, "max_tokens", C1_INFER_CTX)), C1_INFER_CTX)
-            self._c1_srv = L.LlamaServer(self.base_dir, gpu_kind, ctx, ubatch=ctx, model=model_p,
-                                         extra_args=["-b", str(ctx)], name=f"omni-c1-inference-{gpu_kind}",
-                                         timeout_s=300, threads=getattr(self, "_threads", None), embeddings=True)
+            kinds = ("vulkan", "cpu") if gpu_kind == "vulkan" else ("cpu",)
+            last_err = None
+            for kind_try in kinds:
+                ctx_try = ctx if kind_try == "vulkan" else min(ctx, 8192)
+                ub_try = min(ctx_try, 4096)
+                try:
+                    self._c1_srv = L.LlamaServer(
+                        self.base_dir, kind_try, ctx_try, ubatch=ub_try, model=model_p,
+                        extra_args=["-b", str(ub_try)], name=f"omni-c1-inference-{kind_try}",
+                        timeout_s=300, threads=getattr(self, "_threads", None), embeddings=True,
+                    )
+                    return self._c1_srv
+                except RuntimeError as exc:
+                    last_err = exc
+            if last_err is not None:
+                raise last_err
         else:
             self._c1_srv = _EmbeddingStateServer(getattr(self, "base_dir", None))
         return self._c1_srv

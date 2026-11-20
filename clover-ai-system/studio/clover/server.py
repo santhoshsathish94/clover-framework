@@ -1771,11 +1771,13 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
     settings = S.settings.get()
     smart_routed = None
     is_live_omni = type(S.omni_engine).__name__ == "OmniNative" and not bool(settings.get("c1_inference_only"))
+    base_p = Path(S.args.base) if S.args else None
     if req_model == "auto" or (
         req_model == "omni"
         and is_live_omni
         and bool(body.get("smart_switch", True) if isinstance(body, dict) else True)
-        and k3_host_engine.is_owner_device(Path(S.args.base) if S.args else None)
+        and k3_host_engine.is_owner_device(base_p)
+        and bool(k3_host_engine.k3_host_key(base_p))
     ):
         sm_id, sm_name, sm_reason = k3_host_engine.select_smart_model_for_turn(
             typed, media=media, docs=docs, attached=attached, web_mode=paths.WEB
@@ -2006,12 +2008,31 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                     except Exception:
                         pass
                 eff_prompt = (retry["question"] if (retry and retry.get("question") and retry.get("how") == "said") else prompt)
-                res = eng.run_turn(list(hist), eff_prompt, tools=tools_on, sampling=sampling,
-                                   thinking=bool(body.get("thinking", True)), max_new=max_new,
-                                   on_event=emit, ask=ask, cancel=cancel, final_on_limit=True, force_answer=True,
-                                   allow=[str(x) for x in body.get("allow_once") or []],
-                                   layers=turn_layers, kit=kit, layer_query=eff_prompt, extra_tools=extra, only_tools=only,
-                                   **({"media": list(media), "meaning": frame} if omni else {}))
+                turn_kwargs = dict(
+                    tools=tools_on, sampling=sampling,
+                    thinking=bool(body.get("thinking", True)), max_new=max_new,
+                    on_event=emit, ask=ask, cancel=cancel, final_on_limit=True, force_answer=True,
+                    allow=[str(x) for x in body.get("allow_once") or []],
+                    layers=turn_layers, kit=kit, layer_query=eff_prompt, extra_tools=extra, only_tools=only,
+                )
+                try:
+                    res = eng.run_turn(
+                        list(hist), eff_prompt,
+                        **turn_kwargs,
+                        **({"media": list(media), "meaning": frame} if omni else {}),
+                    )
+                except RuntimeError as exc_rt:
+                    if smart_routed is not None and S.omni_engine is not None and eng is not S.omni_engine and "Could not reach hosted model" in str(exc_rt):
+                        eng = S.omni_engine
+                        omni = getattr(eng, "inputs", None) is not None
+                        smart_routed = None
+                        res = eng.run_turn(
+                            list(hist), eff_prompt,
+                            **turn_kwargs,
+                            **({"media": list(media), "meaning": frame} if omni else {}),
+                        )
+                    else:
+                        raise
                 for tc in res.get("tool_calls") or ():
                     if tc.get("tool") == "vscode_open" and tc.get("ran"):
                         try:

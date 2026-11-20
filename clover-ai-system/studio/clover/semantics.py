@@ -67,21 +67,23 @@ ASKS = (
      r"\b(?:search|google|look\s+(?:it\s+|that\s+|this\s+)?up|browse|web|internet|online|website|web\s*page|url|arxiv|"
      r"wikipedia)\b|https?://|www\."),
     (("web.search", "web.page"), LIVE),
-    (("python",), r"\b(?:use|using)\s+python\b|\bpython\s+to\s+(?:compute|calculate|check|solve|count|find|test)\b|"
+    (("python",), r"\b(?:use|using|with)\s+python\b|\bpython\s+to\s+(?:compute|calculate|check|solve|count|find|test)\b|"
                   r"\b(?:run|execute|test)\s+(?:this|the|my|that|it|some)?\s*(?:code|script|program|python)\b|"
+                  r"\b(?:run|execute)\s+[^.?!\n]{0,80}\.py\b|\bpytest\b|"
                   r"\b(?:write|create|make)\b[^.?!\n]{0,60}\b(?:python|script|program|code)\b[^.?!\n]{0,60}\band\s+(?:run|execute|test)\s+it\b|"
                   # not the phone's old "calculate <number>": it gave a 70-task word problem ("calculate 1000 - 920 and
                   # state whether the bead floats") a tool, and unasked tools cost the laptop's model 6 of 65 (ladder 8-9)
                   # "How much did I spend on groceries? The file is ...expenses.csv" read the right amounts and added
                   # them up to $138.55, then $120.50 (correct: $132.55; 2026-11-01)
-                  r"^(?=[\s\S]*\b(?:total|sum|add\s+(?:up|together)|average|mean|how\s+much\s+did\s+(?:i|we)\s+"
+                  r"^(?=[\s\S]*\b(?:total|sum|add\s+(?:up|together)|average|mean|group(?:ed)?\s+(?:\w+\s+)?by|analy[sz]e|how\s+much\s+did\s+(?:i|we)\s+"
                   r"(?:spend|pay|earn|make))\b)(?=[\s\S]*\.(?:csv|tsv|xlsx?|json)\b)"),
     (("files.read", "files.list"),
      r"\b(?:read|open|show|view|inspect|cat|list|look\s+at|check|find|summari[sz]e)\b[^.?!\n]{0,40}\b(?:files?|folders?|"
      rf"director(?:y|ies)|readme|config|{EXTENSIONS})\b|"
      r"\b(?:my|this|that|these)\s+(?:files?|folders?|documents|desktop|downloads)\b|\b[A-Za-z]:\\|"
      r"\bwhat(?:'s|\s+is|\s+files\s+are)\s+in\b[^.?!\n]{0,40}\b(?:folder|directory|dir|workspace)\b"),
-    (("files.write",), rf"\b(?:write|save|create|make)\b[^.?!\n]{{0,40}}\b(?:file|{EXTENSIONS})\b|"
+    (("files.write",), rf"\b(?:write|save|create|make|edit|update|modify|change|replace|fix|patch|rewrite)\b[^.?!\n]{{0,80}}\b(?:file|{EXTENSIONS})\b|"
+                       rf"^(?=[\s\S]*(?:\b{EXTENSIONS}\b|[A-Za-z]:\\))(?=[\s\S]*\b(?:edit|update|modify|change|replace|fix|patch|overwrite|rewrite)\b)[\s\S]+$|"
                        r"\b(?:build|create|write|make)\b[^.?!\n]{0,50}\b(?:3d\s+visuals?|visuals?|3d\s+scene|web\s*page|html\s+page)\b|"
                        r"\b(?:add|append|insert)\b[^.?!\n]{0,60}\b(?:to|into|in)\s+(?:the|that|this|my|it)\b[^.?!\n]{0,20}"
                        r"\b(?:file|list|note|document)\b"),
@@ -176,9 +178,11 @@ ASKS = (
     (("doc.read",),
      r"\bread_document\b|\bread\s+(?:page|pages|slide|slides|sheet)\s+\d*\b[^.?!\n]{0,50}\.(?:pdf|pptx|xlsx|xlsm|xls|docx|csv|tsv)\b"),
     (("table.analyze",),
-     r"\banalyze_table\b|\b(?:group\s+by|filter\s+by|aggregate)\b[^.?!\n]{0,60}\.(?:xlsx|xlsm|xls|csv|tsv|json)\b"),
+     r"\banalyze_table\b|\b(?:group\s+by|filter\s+by|aggregate)\b[^.?!\n]{0,60}\.(?:xlsx|xlsm|xls|csv|tsv|json)\b|"
+     r"^(?=[\s\S]*\.(?:xlsx|xlsm|xls|csv|tsv)\b)(?=[\s\S]*\b(?:group(?:ed)?\s+(?:\w+\s+)?by|filter\s+by|aggregate|sum\s+by|revenue\s+by)\b)"),
     (("table.chart",),
-     r"\bchart_table\b|\b(?:plot|chart|graph)\b[^.?!\n]{0,60}\.(?:xlsx|xlsm|xls|csv|tsv|json)\b"),
+     r"\bchart_table\b|\b(?:plot|chart|graph)\b[^.?!\n]{0,60}\.(?:xlsx|xlsm|xls|csv|tsv|json)\b|"
+     r"^(?=[\s\S]*\.(?:xlsx|xlsm|xls|csv|tsv)\b)(?=[\s\S]*\b(?:plot|chart|graph|bar\s+chart|line\s+chart)\b)"),
     (("media.info",),
      r"\bmedia_info\b|\b(?:ffprobe|codec|bitrate|bit\s+rate|frame\s+rate|sample\s+rate|resolution|duration)\b"
      r"[^.?!\n]{0,60}\.(?:mp4|webm|mkv|avi|mov|wav|mp3|flac|ogg|m4a|png|jpg|jpeg|webp)\b"),

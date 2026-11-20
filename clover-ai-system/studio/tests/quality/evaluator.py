@@ -130,9 +130,12 @@ def diagnose_failure(
     proposed_repair: str = "",
 ) -> dict[str, Any]:
     """Automatically classify the failing layer from execution trace & error signals."""
-    layer = explicit_layer
+    obs_low = (observed or "").lower()
+    if any(t in obs_low for t in ("llama-server exited", "erroroutofdevicememory", "connectionrefused", "timed out")):
+        layer = "transport"
+    else:
+        layer = explicit_layer
     if not layer:
-        obs_low = observed.lower()
         if ui_errors:
             layer = "ui"
         elif http_error or "timeout" in obs_low or "connection" in obs_low or "http 5" in obs_low:

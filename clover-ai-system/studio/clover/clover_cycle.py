@@ -1424,5 +1424,18 @@ def verify_turn_outcome(
                         f"Tool execution check: `{last_rd.get('tool')}` failed with `{res_txt[:240]}`, "
                         "but your draft did not resolve the error or report it honestly."
                     )
+        elif (
+            meaning is not None
+            and "files.write" in getattr(meaning, "caps", ())
+            and "files.write" not in getattr(meaning, "declined", ())
+            and any(rd.get("tool") == "read_file" and rd.get("ran") and rd.get("worked") for rd in rounds_list)
+            and not any(rd.get("tool") == "write_file" for rd in rounds_list)
+        ):
+            _applied(checks, "file modification persisted")
+            rd_path = next((str((rd.get("arguments") or {}).get("path") or "") for rd in rounds_list if rd.get("tool") == "read_file"), "")
+            findings.append(
+                f"Tool execution check: the user asked to modify/save `{rd_path or 'the file'}`, and you read it with `read_file`, "
+                "but you have not called `write_file` yet to write the updated file content to disk. Call `write_file` now with the complete updated content."
+            )
 
     return findings, meta
