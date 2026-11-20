@@ -4,24 +4,24 @@
 
 Clover has useful component and regression suites, but a passing offline suite is not proof that a person can complete a task in a running Studio. The quality gate keeps those evidence classes separate and makes failures reproducible.
 
-## First milestone: repeatable baseline
+## Running the Full Clover Studio Quality Engine
 
 From `clover-ai-system/studio`:
 
 ```powershell
-# Existing offline regression suites (no live model required)
+# 1. Offline regression & component gate (9 suites)
 python tests/quality_gate.py --offline --json logs/quality/offline.json
 
-# Read-only checks against a running local Studio
-python tests/quality_gate.py --live --base-url http://127.0.0.1:8765 --json logs/quality/live.json
+# 2. Disposable UI-harness + Playwright browser interaction & screenshot trace
+python tests/quality_gate.py --spawn-harness --live --playwright-e2e `
+    --screenshots logs/quality/shots --json logs/quality/browser.json
 
-# Optional browser-shell smoke check
-python -m pip install playwright
-python -m playwright install chromium
-python tests/quality_gate.py --live --playwright --base-url http://127.0.0.1:8765
+# 3. Full Isolated Live Model + Tool + Multimodal + Permission + Playwright E2E Suite
+#    (links read-only models/tools from --seed-base and verifies zero user-file writes)
+python tests/quality_gate.py --spawn-isolated --seed-base C:\Users\santhoshn\CloverAI `
+    --offline --e2e --playwright-e2e --screenshots logs/quality/shots `
+    --json logs/quality/full_e2e.json --markdown logs/quality/dashboard.md
 ```
-
-The runner never sends chat messages, grants permissions, changes settings, or invokes tools. Live endpoints are read-only. Reports deliberately omit tokens, chat content, user files, and credentials.
 
 ## Evidence classes
 
