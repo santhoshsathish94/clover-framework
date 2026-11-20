@@ -109,11 +109,15 @@ def get_native_lib() -> Optional[ctypes.CDLL]:
         except Exception:
             pass
 
-        # 2. Check bundled `fused/` or user cache directory
+        # 2. Check bundled `fused/`, Android `jniLibs` (`LD_LIBRARY_PATH`), or user cache directory
         search_paths = [
             HERE / "fused" / lib_name,
             CSRC_DIR / lib_name,
         ]
+        for env_k in ("CLOVER_NATIVE_LIB_DIR", "LD_LIBRARY_PATH"):
+            for d_str in (os.environ.get(env_k) or "").split(os.pathsep):
+                if d_str.strip():
+                    search_paths.append(Path(d_str.strip()) / lib_name)
         try:
             search_paths.append(_cache_dir() / lib_name)
         except OSError:
@@ -125,6 +129,22 @@ def get_native_lib() -> Optional[ctypes.CDLL]:
                     return _LIB
                 except OSError:
                     continue
+        if sys_name != "Windows":
+            try:
+                raw_cdll = ctypes.CDLL(lib_name)
+                u64_p = ctypes.POINTER(ctypes.c_uint64)
+                raw_cdll.xc_version.argtypes = []
+                raw_cdll.xc_version.restype = ctypes.c_char_p
+                raw_cdll.xc_active_isa_name.argtypes = []
+                raw_cdll.xc_active_isa_name.restype = ctypes.c_char_p
+                raw_cdll.xc_mul_u64.argtypes = [u64_p, u64_p, ctypes.c_size_t, u64_p, ctypes.c_size_t]
+                raw_cdll.xc_mul_u64.restype = ctypes.c_int
+                raw_cdll.xc_pi_hex_digits.argtypes = [ctypes.c_uint64, ctypes.c_char_p, ctypes.c_size_t]
+                raw_cdll.xc_pi_hex_digits.restype = ctypes.c_int
+                _LIB = raw_cdll
+                return _LIB
+            except OSError:
+                pass
 
         # 3. Compile from vendored `_xcruncher_c/xcruncher.c`
         c_src = CSRC_DIR / "src" / "xcruncher.c"

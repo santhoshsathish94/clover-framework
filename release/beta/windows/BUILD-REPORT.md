@@ -2,7 +2,7 @@
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `5.0.6` (`5.0.6.0` Win32 PE `AssemblyVersion`)  
+**Release Version**: `5.0.7` (`5.0.7.0` Win32 PE `AssemblyVersion`)  
 **Product Name**: `Clover AI Studio`  
 **Publisher**: `Santhosh Narayanan`  
 **Distribution Model**: Standalone Native C# Win32 Per-User Installer (`CloverAIStudio-Setup.exe` / `clover-ai-studio-beta-setup.exe`)  

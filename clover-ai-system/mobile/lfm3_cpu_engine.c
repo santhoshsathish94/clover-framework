@@ -103,6 +103,15 @@ typedef enum {
 static LFM3_THREAD_LOCAL int g_lfm3_last_tier = 0;
 
 #if LFM3_HAS_X86_SIMD
+#include <cpuid.h>
+static int lfm3_has_avxvnni_cpuid(void)
+{
+    unsigned int eax = 0, ebx = 0, ecx = 0, edx = 0;
+    if (__get_cpuid_max(0, NULL) < 7) return 0;
+    __cpuid_count(7, 1, eax, ebx, ecx, edx);
+    return (eax & (1u << 4)) != 0;
+}
+
 static void lfm3_cpu_init_once(void)
 {
     static volatile int state = 0; /* 0 = uninit, 1 = busy, 2 = done */
@@ -137,7 +146,7 @@ static lfm3_isa_t lfm3_detect_isa(void)
         res = LFM3_ISA_AVX512_VNNI;
     } else if (__builtin_cpu_supports("avx2") &&
                __builtin_cpu_supports("fma") &&
-               __builtin_cpu_supports("avxvnni")) {
+               lfm3_has_avxvnni_cpuid()) {
         res = LFM3_ISA_AVXVNNI;
     } else if (__builtin_cpu_supports("avx2") &&
                __builtin_cpu_supports("fma")) {

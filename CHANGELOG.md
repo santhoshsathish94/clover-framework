@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## v5.0.7 — 2026-11-21
+
+**Clover v5.0.7 — `x-cruncher` runtime-SIMD CPU engine (`18.5x` prefill, `5.3x` decode), `x-cruncher v1.6.1` exact math & zero-storage Pi tool, 3-tier Image Generation Gateway, and the Clover Studio Quality Engine (`29/29` E2E PASS).** `VERSION` is `5.0.7` and all site `?v=5.0.7` asset cache strings match it. Windows installer, Android APK/AAB (`versionCode 21`) and the VS Code and browser extensions are rebuilt at `5.0.7`.
+
+- **`x-cruncher` upgrades in `lfm3_cpu_engine.c` (`mobile/`, `src/models/lfm3-1.7b/`, `studio/clover/models/lfm3-1.7b/`):** single-binary runtime CPU dispatch (`AVX-512 VNNI+VBMI` -> `AVX-VNNI` -> `AVX2+FMA` -> `ARM64` -> `Scalar`), lock-free `2 MB` hugepage scratch cache (`0` per-pass `malloc/free`), vectorized group-64 quantizer, cgroup/affinity thread detection, exported 1-cycle `LUT16` 4-bit codebook kernel (`lfm3_linear_4bit_lut16_omp` via `vpermb`/`vpshufb`/`vtbl`), and zero-dependency C11 Radix-4/2 STFT log-mel audio extractor (`lfm3_compute_log_mel_f32`). Measured `18.5x` faster 64-token prefill (`204.5 tok/s`) and `5.3x` faster decode (`48.8 tok/s`) on `LFM3-Omni-2B` (`soc-q4`).
+- **Exact arbitrary-precision math & Pi (`xcruncher_bridge.py`, `local_tool_packs.py`, `semantics.py`):** vendored `x-cruncher v1.6.1` into Studio's `calculate` tool and `"math.exact"` routing (`pi_hex(offset, digits)`, binary-splitting `factorial(n)` up to `200,000!`, and `51`-bit Lazy Harvey NTT / Crandall-Fagin Wave integer multiplication).
+- **3-Tier Image Generation Gateway (`image_gen.py`, `server.py`, `web/app.html`):** removed silent Matplotlib sunset/tree fallback when no generative model is installed; added Tier 1 OpenAI-compatible Images API (`generations` + `edits` + transparent background), Tier 2 local `sd-cli` (`txt2img` + `img2img`), opt-in `preset="diagram"` (`is_generative=False`), `/api/status` `image_capabilities`, and UI provenance captions.
+- **Clover Studio Quality Engine & E2E fixes (`tests/quality_gate.py`, `tests/quality/`, `omni_native.py`, `semantics.py`, `local_tool_packs.py`, `clover_cycle.py`, `server.py`):** isolated `--base` E2E runner with user-data immutability verification, 14 live multimodal/tool/permission scenarios, Playwright browser verification, and automatic failure-layer diagnosis; fixed iGPU Vulkan `_c1_server` OOM fallback, S3 `read_file` multi-step tool stripping, natural-order file-edit & CSV table/chart routing, blank `filter_value` in `analyze_table`, Cycle-2 `write_file` persistence check, and offline local fallback when remote `k3` is unreachable.
+
 ## v5.0.6 — 2026-11-11
 
 **Clover v5.0.6 — answers that are not cut off, chats that stay in their own conversation, attached tables that are read right, and the 3D Clover Robot voice mode.** `VERSION` is `5.0.6` and all site `?v=5.0.6` asset cache strings match it. Windows installer, MSIX, Android APK/AAB (`versionCode 20`) and the VS Code and browser extensions are rebuilt at `5.0.6`.
