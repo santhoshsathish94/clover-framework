@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 import time
@@ -50,14 +49,23 @@ def run_offline(report):
             report["checks"].append({"name": "offline:" + filename, "status": "SKIP", "reason": "suite not present in this checkout"})
             continue
         started = time.perf_counter()
-        proc = subprocess.run([sys.executable, str(path)], cwd=str(STUDIO), text=True,
-                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=900)
-        output = proc.stdout[-12000:]
+        try:
+            proc = subprocess.run([sys.executable, str(path)], cwd=str(STUDIO), text=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=900)
+            output, exit_code = proc.stdout[-12000:], proc.returncode
+            status = "PASS" if exit_code == 0 else "FAIL"
+        except subprocess.TimeoutExpired as exc:
+            raw = exc.stdout or ""
+            output = raw.decode("utf-8", "replace")[-12000:] if isinstance(raw, bytes) else str(raw)[-12000:]
+            exit_code, status = None, "FAIL"
+            output += "\\nFAILED: suite exceeded the 900-second timeout."
+        except OSError as exc:
+            output, exit_code, status = str(exc), None, "FAIL"
         report["checks"].append({
             "name": "offline:" + filename,
-            "status": "PASS" if proc.returncode == 0 else "FAIL",
+            "status": status,
             "duration_ms": round((time.perf_counter() - started) * 1000, 1),
-            "exit_code": proc.returncode,
+            "exit_code": exit_code,
             "output_tail": output,
             "evidence_class": "offline_or_simulated",
         })
