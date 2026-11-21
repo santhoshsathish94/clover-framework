@@ -15,6 +15,7 @@ later conclusions. A document's status describes its role, not whether its outco
 | Foundational Papers (1943–2017) | [11-paper study guide](../docs/runtime-context/foundational-papers-1943-to-2017/foundations-11-papers-human-guide.md) | Executable replications and mathematical verifiers across `foundational-papers-1943-to-2017/` |
 | Hardware Data Movement | [Direction B synthesis](../docs/runtime-context/engine-and-architecture/clover-data-movement-direction-b-context.md) | Red-Blue Pebbling, Eyeriss v1/v2, FlashAttention, and SpecMD studies in `hardware-data-movement/` |
 | Object-Oriented Reduction | [Step-by-step object reduction](object-oriented-reduction/README.md) | Inventory of all 398 raw classes/structs/traits across the repo and 4-stage complete-English OOP reduction (398 → 88 → 24 → 12 → 5) with executable model and tests |
+| Giant-Integer Trunk-LM | [Experiments & conversion study](giant-integer-trunk-lm/README.md) | Kronecker & Base-3 Salem–Spencer multi-channel giant-integer neural layers via `x-cruncher` (`10.6×` Toeplitz, `5,424×` `1M`-token causal, `42.75 KB` 24-layer QAT prototype, and `LFM3-Omni-2B` conversion limits) |
 
 For maintained framework guidance, use [docs](../docs/README.md). For the executable
 single-machine reference, use [Clover-K3](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/README.md). For reported real work,
