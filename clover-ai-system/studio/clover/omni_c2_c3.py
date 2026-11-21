@@ -961,9 +961,17 @@ class OmniC2C3Runtime:
                     if p.is_dir() and str(p) not in _sys.path:
                         _sys.path.insert(0, str(p))
                 from nemotron_hybrid_ncm import NemotronNativeCPUEngine
-                eng_n = NemotronNativeCPUEngine(pruned_dataset_dir=self.pre)
-                if hasattr(eng_n.lib, "nemo_set_use_4bit_experts"):
-                    eng_n.lib.nemo_set_use_4bit_experts(1)
+                hg4_n = Path("/opt/clover-k3/nemotron-hg4")
+                if (hg4_n / "meta.bin").is_file() and (hg4_n / "libnemotron_hg4_engine.so").is_file():
+                    eng_n = NemotronNativeCPUEngine(
+                        pruned_dataset_dir=hg4_n,
+                        so_path=hg4_n / "libnemotron_hg4_engine.so",
+                    )
+                    self._c1_stage_cap = 128
+                else:
+                    eng_n = NemotronNativeCPUEngine(pruned_dataset_dir=self.pre)
+                    if hasattr(eng_n.lib, "nemo_set_use_4bit_experts"):
+                        eng_n.lib.nemo_set_use_4bit_experts(1)
                 def _nemo_raw(seq_ids: list[int]) -> np.ndarray:
                     ids_clamped = [max(0, min(self.vocab_size - 1, int(x))) for x in (seq_ids or [self.tok.bos_token_id])]
                     h, _ = eng_n.forward_ids(ids_clamped)
@@ -988,7 +996,7 @@ class OmniC2C3Runtime:
         else:
             raw_fn = fn
             def _bounded_stage_states(seq_ids: list[int], _raw: Any = raw_fn) -> np.ndarray:
-                cap = 24
+                cap = int(getattr(self, "_c1_stage_cap", 24))
                 if len(seq_ids) <= cap:
                     return _raw(seq_ids)
                 h_head = _raw(seq_ids[:cap])
