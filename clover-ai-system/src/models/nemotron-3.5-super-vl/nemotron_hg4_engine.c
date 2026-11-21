@@ -305,6 +305,8 @@ typedef struct {
     /* Stateful caches */
     float           *ssm_state;    /* [128 * 64 * 128] when kind == 0 */
     float           *conv_hist;    /* [3 * 10240] when kind == 0 */
+    float           *ssm_snaps;    /* [4 * 128 * 64 * 128] lazy speculative rollback snapshots */
+    float           *conv_snaps;   /* [4 * 3 * 10240] lazy speculative rollback snapshots */
     uint16_t        *k_cache_bf16; /* [NEMO_MAX_SEQ * 256] when kind == 2 */
     uint16_t        *v_cache_bf16; /* [NEMO_MAX_SEQ * 256] when kind == 2 */
 } nhg4_layer_t;
@@ -332,11 +334,15 @@ static struct {
 
     /* 2-Layer MTP Drafter */
     int has_mtp;
+    int mtp_cache_len;
+    int spec_save_snaps;
     const float *mtp_enorm, *mtp_hnorm, *mtp_final_ln;
     nhg4_mat_t       mtp_eh_proj;
     nhg4_gqa_t       mtp0_gqa;
     nhg4_moe_trunk_t mtp1_moe;
     nhg4_experts_t   experts_mtp1;
+    uint16_t        *mtp_k_cache_bf16;
+    uint16_t        *mtp_v_cache_bf16;
 
     /* Preallocated hot-path scratch buffers */
     int8_t  *scr_xq;
@@ -1321,6 +1327,18 @@ static void nhg4_mamba_exec(nhg4_layer_t *lyr, const float *h_in, float *h_out, 
     }
 
     if (stateful && lyr->conv_hist) {
+        int n_sn = (g_nhg4.spec_save_snaps > 0 && lyr->conv_snaps) ? g_nhg4.spec_save_snaps : 0;
+        for (int s = 0; s < n_sn && s < T && s < 4; s++) {
+            int L = s + 1;
+            float *cs_dst = lyr->conv_snaps + (size_t)s * 3 * NEMO_MAMBA_CONV;
+            for (int k = 0; k < 3; k++) {
+                int rel = L - 3 + k;
+                const float *src = (rel >= 0)
+                    ? (zxbc + (size_t)rel * ZXBC_DIM + 8192)
+                    : (lyr->conv_hist + (size_t)(k + L) * NEMO_MAMBA_CONV);
+                memcpy(cs_dst + (size_t)k * NEMO_MAMBA_CONV, src, NEMO_MAMBA_CONV * sizeof(float));
+            }
+        }
         for (int k = 0; k < 3; k++) {
             int rel = T - 3 + k;
             if (rel >= 0) {
@@ -1334,6 +1352,7 @@ static void nhg4_mamba_exec(nhg4_layer_t *lyr, const float *h_in, float *h_out, 
         }
     }
 
+    const int save_ssm_n = (stateful && g_nhg4.spec_save_snaps > 0 && lyr->ssm_snaps) ? g_nhg4.spec_save_snaps : 0;
     #pragma omp parallel for schedule(static)
     for (int h = 0; h < NEMO_MAMBA_HEADS; h++) {
         int grp = h / 16;
@@ -1367,6 +1386,10 @@ static void nhg4_mamba_exec(nhg4_layer_t *lyr, const float *h_in, float *h_out, 
                     acc += st_row[s] * C_vec[s];
                 }
                 y_vec[d] = acc;
+            }
+            if (t < save_ssm_n && t < 4) {
+                memcpy(lyr->ssm_snaps + ((size_t)t * NEMO_MAMBA_HEADS + h) * (NEMO_MAMBA_HDIM * NEMO_MAMBA_DSTATE),
+                       state, NEMO_MAMBA_HDIM * NEMO_MAMBA_DSTATE * sizeof(float));
             }
         }
     }
@@ -1436,6 +1459,12 @@ static void nhg4_latent_moe_forward(
             sel_e[k] = best_e; sel_w[k] = scores[best_e]; w_sum += scores[best_e];
         }
         for (int k = 0; k < NEMO_TOP_K; k++) sel_w[k] = (sel_w[k] / (w_sum + 1e-20f)) * 5.0f;
+        /* Sort selected experts by ascending ID so T==1 and T>=2 speculative batches share identical FP32 sum order */
+        for (int i = 1; i < NEMO_TOP_K; i++) {
+            int ke = sel_e[i]; float kw = sel_w[i]; int j = i - 1;
+            while (j >= 0 && sel_e[j] > ke) { sel_e[j + 1] = sel_e[j]; sel_w[j + 1] = sel_w[j]; j--; }
+            sel_e[j + 1] = ke; sel_w[j + 1] = kw;
+        }
 
         int8_t  lat_xq[NEMO_LATENT];
         float   lat_xsc[8];
@@ -1564,11 +1593,16 @@ static void nhg4_latent_moe_forward(
     #pragma omp parallel for schedule(dynamic, 1)
     for (int ai = 0; ai < n_active; ai++) {
         int e = active_list[ai];
-        int   *m_toks = (int *)malloc((size_t)T * sizeof(int));
-        float *m_rw   = (float *)malloc((size_t)T * sizeof(float));
-        int8_t  *g_xq   = (int8_t *)malloc((size_t)T * NEMO_LATENT);
-        float   *g_xsc  = (float *)malloc((size_t)T * 8 * sizeof(float));
-        int32_t *g_xsum = (int32_t *)malloc((size_t)T * 8 * sizeof(int32_t));
+        int     s_toks[8];
+        float   s_rw[8];
+        int8_t  s_xq[8 * NEMO_LATENT];
+        float   s_xsc[8 * 8];
+        int32_t s_xsum[8 * 8];
+        int   *m_toks = (T <= 8) ? s_toks : (int *)malloc((size_t)T * sizeof(int));
+        float *m_rw   = (T <= 8) ? s_rw   : (float *)malloc((size_t)T * sizeof(float));
+        int8_t  *g_xq   = (T <= 8) ? s_xq   : (int8_t *)malloc((size_t)T * NEMO_LATENT);
+        float   *g_xsc  = (T <= 8) ? s_xsc  : (float *)malloc((size_t)T * 8 * sizeof(float));
+        int32_t *g_xsum = (T <= 8) ? s_xsum : (int32_t *)malloc((size_t)T * 8 * sizeof(int32_t));
         int n_m = 0;
         for (int t = 0; t < T; t++) {
             for (int k = 0; k < NEMO_TOP_K; k++) {
@@ -1592,8 +1626,10 @@ static void nhg4_latent_moe_forward(
             up_m.tiles = ep + 43008;
             parse_nhg4_mat(ep + 1419264, &dn_m);
 
-            float *g_inter = (float *)malloc((size_t)n_m * NEMO_MOE_INTER * sizeof(float));
-            float *g_out   = (float *)malloc((size_t)n_m * NEMO_LATENT * sizeof(float));
+            float s_inter[8 * NEMO_MOE_INTER];
+            float s_out[8 * NEMO_LATENT];
+            float *g_inter = (n_m <= 8) ? s_inter : (float *)malloc((size_t)n_m * NEMO_MOE_INTER * sizeof(float));
+            float *g_out   = (n_m <= 8) ? s_out   : (float *)malloc((size_t)n_m * NEMO_LATENT * sizeof(float));
             nhg4_matmul_prequant(&up_m, g_xq, g_xsc, g_xsum, g_inter, n_m, 1, 0);
             nhg4_matmul(&dn_m, g_inter, g_out, n_m, 0, 0);
 
@@ -1604,9 +1640,9 @@ static void nhg4_latent_moe_forward(
                 float rw = m_rw[im];
                 for (int d = 0; d < NEMO_LATENT; d++) dt[d] += go[d] * rw;
             }
-            free(g_inter); free(g_out);
+            if (n_m > 8) { free(g_inter); free(g_out); }
         }
-        free(m_toks); free(m_rw); free(g_xq); free(g_xsc); free(g_xsum);
+        if (T > 8) { free(m_toks); free(m_rw); free(g_xq); free(g_xsc); free(g_xsum); }
     }
     for (int ai = 0; ai < n_active; ai++) {
         const float *src_ai = exp_outs + (size_t)ai * T * NEMO_LATENT;
@@ -1734,6 +1770,8 @@ NEMO_API void nemo_gqa_layer_forward_seg(const float *h_in, float *h_out, int T,
 
 NEMO_API void nemo_cache_reset(void) {
     g_nhg4.cache_len = 0;
+    g_nhg4.mtp_cache_len = 0;
+    g_nhg4.spec_save_snaps = 0;
     for (int l = 0; l < g_nhg4.n_layers; l++) {
         if (g_nhg4.layers[l].ssm_state) memset(g_nhg4.layers[l].ssm_state, 0, (size_t)NEMO_MAMBA_HEADS * NEMO_MAMBA_HDIM * NEMO_MAMBA_DSTATE * sizeof(float));
         if (g_nhg4.layers[l].conv_hist) memset(g_nhg4.layers[l].conv_hist, 0, 3 * NEMO_MAMBA_CONV * sizeof(float));
@@ -1747,11 +1785,15 @@ NEMO_API int nemo_engine_init(const char *hg4_dir) {
         nhg4_mmap_close(&g_nhg4.lm_mf);
         nhg4_mmap_close(&g_nhg4.mtp_mf);
         nhg4_mmap_close(&g_nhg4.experts_mtp1.mf);
+        free(g_nhg4.mtp_k_cache_bf16); g_nhg4.mtp_k_cache_bf16 = NULL;
+        free(g_nhg4.mtp_v_cache_bf16); g_nhg4.mtp_v_cache_bf16 = NULL;
         for (int l = 0; l < g_nhg4.n_layers; l++) {
             nhg4_mmap_close(&g_nhg4.layers[l].mf);
             nhg4_mmap_close(&g_nhg4.layers[l].experts.mf);
             free(g_nhg4.layers[l].ssm_state);    g_nhg4.layers[l].ssm_state = NULL;
             free(g_nhg4.layers[l].conv_hist);    g_nhg4.layers[l].conv_hist = NULL;
+            free(g_nhg4.layers[l].ssm_snaps);    g_nhg4.layers[l].ssm_snaps = NULL;
+            free(g_nhg4.layers[l].conv_snaps);   g_nhg4.layers[l].conv_snaps = NULL;
             free(g_nhg4.layers[l].k_cache_bf16); g_nhg4.layers[l].k_cache_bf16 = NULL;
             free(g_nhg4.layers[l].v_cache_bf16); g_nhg4.layers[l].v_cache_bf16 = NULL;
         }
@@ -1862,6 +1904,8 @@ NEMO_API int nemo_engine_init(const char *hg4_dir) {
         parse_nhg4_mat(p + off, &g_nhg4.mtp_eh_proj); off += l_eh;
         parse_gqa_blob_off(p, off, &g_nhg4.mtp0_gqa); off += l_g0;
         parse_moe_trunk_blob_off(p, off, &g_nhg4.mtp1_moe);
+        g_nhg4.mtp_k_cache_bf16 = (uint16_t *)calloc((size_t)NEMO_MAX_SEQ * NEMO_GQA_KV, sizeof(uint16_t));
+        g_nhg4.mtp_v_cache_bf16 = (uint16_t *)calloc((size_t)NEMO_MAX_SEQ * NEMO_GQA_KV, sizeof(uint16_t));
         g_nhg4.has_mtp = 1;
     }
 
@@ -1954,11 +1998,22 @@ NEMO_API int nemo_cache_feed(const int *token_ids, int n_tokens, float *out_last
     return g_nhg4.cache_len;
 }
 
+NEMO_API int nemo_generate_speculative(
+    const int *prompt_ids, int prompt_len, int max_new_tokens, int eos_id, int draft_k,
+    int *out_gen_ids, double *out_prefill_ms, double *out_decode_ms,
+    int *out_accepted_drafts, int *out_total_drafts
+);
+
 NEMO_API int nemo_generate(
     const int *prompt_ids, int prompt_len, int max_new_tokens, int eos_id,
     int *out_gen_ids, double *out_prefill_ms, double *out_decode_ms
 ) {
     if (!g_nhg4.initialized || prompt_len <= 0 || prompt_len + max_new_tokens >= NEMO_MAX_SEQ) return -1;
+    if (g_nhg4.has_mtp && getenv("CLOVER_NEMO_NO_MTP") == NULL && max_new_tokens >= 2 &&
+        prompt_len + max_new_tokens + 4 < NEMO_MAX_SEQ) {
+        return nemo_generate_speculative(prompt_ids, prompt_len, max_new_tokens, eos_id, 2,
+                                         out_gen_ids, out_prefill_ms, out_decode_ms, NULL, NULL);
+    }
     float *logits = (float *)malloc((size_t)NEMO_VOCAB * sizeof(float));
     nemo_cache_reset();
 
@@ -2031,4 +2086,213 @@ NEMO_API float nemo_mtp_draft_forward(
     free(e_raw); free(e_normed); free(h_normed); free(eh_cat);
     free(mtp_in); free(mtp_h0); free(mtp_h1);
     return (float)((omp_get_wtime() - t0) * 1000.0);
+}
+
+static void nemo_mtp_feed_stateful(const int *next_token_ids, const float *backbone_hidden, int pos_off, int T, float *out_mtp_final_hidden) {
+    float *e_raw    = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+    float *e_normed = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+    float *h_normed = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+    float *eh_cat   = (float *)malloc((size_t)T * (2 * NEMO_D) * sizeof(float));
+    float *mtp_in   = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+    float *mtp_h0   = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+    float *mtp_h1   = (float *)malloc((size_t)T * NEMO_D * sizeof(float));
+
+    #pragma omp parallel for schedule(static) if (T >= 4)
+    for (int t = 0; t < T; t++) nhg4_embed_lookup_row(next_token_ids[t], e_raw + (size_t)t * NEMO_D);
+    rms_norm_f32_bf16round(e_raw, g_nhg4.mtp_enorm, e_normed, T, NEMO_D, 1e-5f);
+    rms_norm_f32_bf16round(backbone_hidden, g_nhg4.mtp_hnorm, h_normed, T, NEMO_D, 1e-5f);
+
+    for (int t = 0; t < T; t++) {
+        memcpy(eh_cat + (size_t)t * (2 * NEMO_D), e_normed + (size_t)t * NEMO_D, NEMO_D * sizeof(float));
+        memcpy(eh_cat + (size_t)t * (2 * NEMO_D) + NEMO_D, h_normed + (size_t)t * NEMO_D, NEMO_D * sizeof(float));
+    }
+
+    nhg4_matmul(&g_nhg4.mtp_eh_proj, eh_cat, mtp_in, T, 0, 1);
+    nhg4_gqa_exec(&g_nhg4.mtp0_gqa, g_nhg4.mtp_k_cache_bf16, g_nhg4.mtp_v_cache_bf16, mtp_in, mtp_h0, pos_off, T, NULL, 1);
+    nhg4_latent_moe_forward(&g_nhg4.mtp1_moe, &g_nhg4.experts_mtp1, mtp_h0, mtp_h1, T);
+    if (out_mtp_final_hidden) {
+        rms_norm_f32_bf16round(mtp_h1, g_nhg4.mtp_final_ln, out_mtp_final_hidden, T, NEMO_D, 1e-5f);
+    }
+
+    free(e_raw); free(e_normed); free(h_normed); free(eh_cat);
+    free(mtp_in); free(mtp_h0); free(mtp_h1);
+}
+
+static int argmax_f32_vec(const float *v, int n) {
+    int bi = 0; float bv = v[0];
+    for (int i = 1; i < n; i++) if (v[i] > bv) { bv = v[i]; bi = i; }
+    return bi;
+}
+
+static void nemo_ensure_spec_snaps(void) {
+    for (int l = 0; l < g_nhg4.n_layers; l++) {
+        nhg4_layer_t *lyr = &g_nhg4.layers[l];
+        if (lyr->kind == 0 && !lyr->ssm_snaps) {
+            lyr->ssm_snaps  = (float *)malloc((size_t)4 * NEMO_MAMBA_HEADS * NEMO_MAMBA_HDIM * NEMO_MAMBA_DSTATE * sizeof(float));
+            lyr->conv_snaps = (float *)malloc((size_t)4 * 3 * NEMO_MAMBA_CONV * sizeof(float));
+        }
+    }
+}
+
+static void nemo_restore_mamba_snap(int snap_idx) {
+    for (int l = 0; l < g_nhg4.n_layers; l++) {
+        nhg4_layer_t *lyr = &g_nhg4.layers[l];
+        if (lyr->kind != 0 || !lyr->ssm_snaps || !lyr->conv_snaps) continue;
+        memcpy(lyr->conv_hist, lyr->conv_snaps + (size_t)snap_idx * 3 * NEMO_MAMBA_CONV, 3 * NEMO_MAMBA_CONV * sizeof(float));
+        const float *src_ssm = lyr->ssm_snaps + (size_t)snap_idx * NEMO_MAMBA_HEADS * NEMO_MAMBA_HDIM * NEMO_MAMBA_DSTATE;
+        #pragma omp parallel for schedule(static)
+        for (int h = 0; h < NEMO_MAMBA_HEADS; h++) {
+            size_t off = (size_t)h * NEMO_MAMBA_HDIM * NEMO_MAMBA_DSTATE;
+            memcpy(lyr->ssm_state + off, src_ssm + off, (size_t)NEMO_MAMBA_HDIM * NEMO_MAMBA_DSTATE * sizeof(float));
+        }
+    }
+}
+
+/* Lossless Speculative Decode Inside C1 Using Native 2-Layer MTP (`draft_k = 1..3`) */
+NEMO_API int nemo_generate_speculative(
+    const int *prompt_ids, int prompt_len, int max_new_tokens, int eos_id, int draft_k,
+    int *out_gen_ids, double *out_prefill_ms, double *out_decode_ms,
+    int *out_accepted_drafts, int *out_total_drafts
+) {
+    if (!g_nhg4.initialized || !g_nhg4.has_mtp || draft_k <= 0) {
+        if (out_accepted_drafts) *out_accepted_drafts = 0;
+        if (out_total_drafts) *out_total_drafts = 0;
+        return nemo_generate(prompt_ids, prompt_len, max_new_tokens, eos_id, out_gen_ids, out_prefill_ms, out_decode_ms);
+    }
+    if (draft_k > 3) draft_k = 3;
+    if (prompt_len <= 0 || prompt_len + max_new_tokens + draft_k + 2 >= NEMO_MAX_SEQ) return -1;
+
+    nemo_ensure_spec_snaps();
+    nemo_cache_reset();
+
+    double t0 = omp_get_wtime();
+    float *cur_p = (float *)malloc((size_t)prompt_len * NEMO_D * sizeof(float));
+    float *nxt_p = (float *)malloc((size_t)prompt_len * NEMO_D * sizeof(float));
+    float *h_prompt = (float *)malloc((size_t)prompt_len * NEMO_D * sizeof(float));
+    #pragma omp parallel for schedule(static) if (prompt_len >= 4)
+    for (int t = 0; t < prompt_len; t++) nhg4_embed_lookup_row(prompt_ids[t], cur_p + (size_t)t * NEMO_D);
+
+    g_nhg4.spec_save_snaps = 0;
+    for (int l = 0; l < g_nhg4.n_layers; l++) {
+        nhg4_layer_t *lyr = &g_nhg4.layers[l];
+        if (lyr->kind == 0)      nhg4_mamba_exec(lyr, cur_p, nxt_p, 0, prompt_len, NULL, 1);
+        else if (lyr->kind == 1) nhg4_latent_moe_forward(&lyr->moe, &lyr->experts, cur_p, nxt_p, prompt_len);
+        else                     nhg4_gqa_exec(&lyr->gqa, lyr->k_cache_bf16, lyr->v_cache_bf16, cur_p, nxt_p, 0, prompt_len, NULL, 1);
+        float *tmp = cur_p; cur_p = nxt_p; nxt_p = tmp;
+    }
+    g_nhg4.cache_len = prompt_len;
+    rms_norm_f32_bf16round(cur_p, g_nhg4.norm_f, h_prompt, prompt_len, NEMO_D, 1e-5f);
+
+    /* Warm MTP causal KV cache on prompt[1..P-1] paired with h_prompt[0..P-2] */
+    if (prompt_len >= 2) {
+        nemo_mtp_feed_stateful(prompt_ids + 1, h_prompt, 0, prompt_len - 1, NULL);
+        g_nhg4.mtp_cache_len = prompt_len - 1;
+    }
+
+    float *logits_1 = (float *)malloc((size_t)NEMO_VOCAB * sizeof(float));
+    float h_prev[NEMO_D];
+    memcpy(h_prev, h_prompt + (size_t)(prompt_len - 1) * NEMO_D, NEMO_D * sizeof(float));
+    nhg4_matmul(&g_nhg4.lm_mat, h_prev, logits_1, 1, 0, 1);
+    free(cur_p); free(nxt_p); free(h_prompt);
+    *out_prefill_ms = (omp_get_wtime() - t0) * 1000.0;
+
+    double td0 = omp_get_wtime();
+    int gen_n = 0, acc_tot = 0, draft_tot = 0;
+    int cur_tok = argmax_f32_vec(logits_1, NEMO_VOCAB);
+    out_gen_ids[gen_n++] = cur_tok;
+
+    float *ver_cur = (float *)malloc((size_t)(draft_k + 1) * NEMO_D * sizeof(float));
+    float *ver_nxt = (float *)malloc((size_t)(draft_k + 1) * NEMO_D * sizeof(float));
+    float *ver_h   = (float *)malloc((size_t)(draft_k + 1) * NEMO_D * sizeof(float));
+    float *ver_lg  = (float *)malloc((size_t)(draft_k + 1) * NEMO_VOCAB * sizeof(float));
+
+    while (gen_n < max_new_tokens && cur_tok != eos_id) {
+        int rem = max_new_tokens - gen_n;
+        int K = (draft_k < rem) ? draft_k : rem;
+
+        /* 1. Autoregressive K-step MTP draft from (cur_tok, h_prev) */
+        int drafts[4];
+        float mtp_h[NEMO_D];
+        int d_in = cur_tok;
+        const float *h_cond = h_prev;
+        int mtp_base = g_nhg4.mtp_cache_len;
+        for (int j = 0; j < K; j++) {
+            nemo_mtp_feed_stateful(&d_in, h_cond, mtp_base + j, 1, mtp_h);
+            nhg4_matmul(&g_nhg4.lm_mat, mtp_h, logits_1, 1, 0, 1);
+            drafts[j] = argmax_f32_vec(logits_1, NEMO_VOCAB);
+            d_in = drafts[j];
+            h_cond = mtp_h;
+        }
+        draft_tot += K;
+
+        /* 2. Batched 88-layer backbone verification on batch = [cur_tok, drafts[0..K-1]] (B = K + 1) */
+        int batch[5];
+        batch[0] = cur_tok;
+        for (int j = 0; j < K; j++) batch[j + 1] = drafts[j];
+        int B = K + 1;
+        int base_pos = g_nhg4.cache_len;
+
+        for (int t = 0; t < B; t++) nhg4_embed_lookup_row(batch[t], ver_cur + (size_t)t * NEMO_D);
+        g_nhg4.spec_save_snaps = K;
+        for (int l = 0; l < g_nhg4.n_layers; l++) {
+            nhg4_layer_t *lyr = &g_nhg4.layers[l];
+            if (lyr->kind == 0)      nhg4_mamba_exec(lyr, ver_cur, ver_nxt, base_pos, B, NULL, 1);
+            else if (lyr->kind == 1) nhg4_latent_moe_forward(&lyr->moe, &lyr->experts, ver_cur, ver_nxt, B);
+            else                     nhg4_gqa_exec(&lyr->gqa, lyr->k_cache_bf16, lyr->v_cache_bf16, ver_cur, ver_nxt, base_pos, B, NULL, 1);
+            float *tmp = ver_cur; ver_cur = ver_nxt; ver_nxt = tmp;
+        }
+        g_nhg4.spec_save_snaps = 0;
+        rms_norm_f32_bf16round(ver_cur, g_nhg4.norm_f, ver_h, B, NEMO_D, 1e-5f);
+        nhg4_matmul(&g_nhg4.lm_mat, ver_h, ver_lg, B, 0, 1);
+
+        /* 3. Exact greedy verification & Mamba/GQA state reconciliation */
+        int matched_all = 1;
+        for (int j = 0; j < K; j++) {
+            int gt = argmax_f32_vec(ver_lg + (size_t)j * NEMO_VOCAB, NEMO_VOCAB);
+            if (drafts[j] == gt) {
+                acc_tot++;
+                out_gen_ids[gen_n++] = gt;
+                if (gt == eos_id || gen_n >= max_new_tokens) {
+                    nemo_restore_mamba_snap(j);
+                    g_nhg4.cache_len = base_pos + j + 1;
+                    cur_tok = gt;
+                    matched_all = 0;
+                    break;
+                }
+            } else {
+                /* First draft mismatch at j: rollback Mamba/GQA to state after batch[0..j] and emit true C1 token gt! */
+                nemo_restore_mamba_snap(j);
+                g_nhg4.cache_len = base_pos + j + 1;
+                /* Re-align MTP KV cache on true backbone states ver_h[0..j-1] if j >= 1 */
+                if (j >= 1) {
+                    nemo_mtp_feed_stateful(batch + 1, ver_h, mtp_base + 1, j, NULL);
+                }
+                g_nhg4.mtp_cache_len = mtp_base + 1 + j;
+                cur_tok = gt;
+                memcpy(h_prev, ver_h + (size_t)j * NEMO_D, NEMO_D * sizeof(float));
+                out_gen_ids[gen_n++] = cur_tok;
+                matched_all = 0;
+                break;
+            }
+        }
+
+        if (matched_all) {
+            /* All K drafts accepted! State is already at base_pos + K + 1; emit C1 bonus token if budget remains! */
+            g_nhg4.cache_len = base_pos + B;
+            nemo_mtp_feed_stateful(batch + 1, ver_h, mtp_base + 1, K, NULL);
+            g_nhg4.mtp_cache_len = mtp_base + 1 + K;
+            int bonus = argmax_f32_vec(ver_lg + (size_t)K * NEMO_VOCAB, NEMO_VOCAB);
+            cur_tok = bonus;
+            memcpy(h_prev, ver_h + (size_t)K * NEMO_D, NEMO_D * sizeof(float));
+            if (gen_n < max_new_tokens) {
+                out_gen_ids[gen_n++] = cur_tok;
+            }
+        }
+    }
+
+    *out_decode_ms = (omp_get_wtime() - td0) * 1000.0;
+    if (out_accepted_drafts) *out_accepted_drafts = acc_tot;
+    if (out_total_drafts) *out_total_drafts = draft_tot;
+    free(logits_1); free(ver_cur); free(ver_nxt); free(ver_h); free(ver_lg);
+    return gen_n;
 }

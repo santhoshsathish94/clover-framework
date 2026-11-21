@@ -381,7 +381,8 @@ class FusedEngine:
             for a in answers
         ]
         rnd_n = len(answers) or 1
-        if kit is not None and not (cancel and cancel.is_set()):
+        _run_posthoc_c2c3 = ("ncm" in layers or os.environ.get("CLOVER_ENABLE_POSTHOC_C2C3", "0") == "1")
+        if _run_posthoc_c2c3 and kit is not None and not (cancel and cancel.is_set()):
             try:
                 c1_state, c1_info = kit.c1_infer(
                     reply, stats=gen_list, model="LFM3-Omni-2B", layers_desc="C1 trained LFM3-Omni-2B (C engine, 4-bit)"

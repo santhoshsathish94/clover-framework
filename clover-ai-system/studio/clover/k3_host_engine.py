@@ -708,7 +708,7 @@ class K3HostEngine:
                         }
                 except Exception:
                     pass
-            elif self.raw_key in ("clover-35b-a3b", "kimi-k3"):
+            elif self.raw_key in ("clover-35b-a3b", "kimi-k3") and os.environ.get("CLOVER_ENABLE_POSTHOC_C2C3", "0") == "1":
                 try:
                     import omni_c2_c3
                     rt_m = omni_c2_c3.for_base(self.base_dir, model_key=self.raw_key)
@@ -1135,7 +1135,8 @@ class K3HostEngine:
             reply = "(Clover finished without writing an answer.)"
         rnd_n = len(stats_all) or 1
         ncm_appended = False
-        if kit is not None and not (cancel and cancel.is_set()):
+        _run_posthoc_c2c3 = ("ncm" in layers or os.environ.get("CLOVER_ENABLE_POSTHOC_C2C3", "0") == "1")
+        if _run_posthoc_c2c3 and kit is not None and not (cancel and cancel.is_set()):
             try:
                 c1_state, c1_info = kit.c1_infer(
                     reply, stats=stats_all, model=self.spec["model"], layers_desc=self.spec["layers"][0]

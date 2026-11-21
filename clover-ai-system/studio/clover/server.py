@@ -255,7 +255,7 @@ class Settings:
     DEFAULTS = {"model": "omni", "engine": "gpu", "tools": "ask", "image_model": "sd15-lcm",
                 "jepa_arch": "auto",
                 "remote_models": [],
-                "layers": {"memory": True, "ontology": True, "compiler": True, "ncm": True, "kv_slots": False,
+                "layers": {"memory": True, "ontology": True, "compiler": True, "ncm": False, "kv_slots": False,
                            "recall": True},
                 "csi": True,
                 "csi_url": "",
@@ -297,7 +297,11 @@ class Settings:
             self.data["jepa_arch"] = saved["jepa_arch"]
         if isinstance((saved.get("layers") or {}).get("kv_slots"), bool):
             self.data["layers"]["kv_slots"] = saved["layers"]["kv_slots"]
-        for k in ("memory", "ontology", "compiler", "ncm", "recall"):
+        if isinstance((saved.get("layers") or {}).get("ncm"), bool):
+            self.data["layers"]["ncm"] = saved["layers"]["ncm"]
+        elif os.environ.get("CLOVER_ENABLE_POSTHOC_C2C3", "0") == "1":
+            self.data["layers"]["ncm"] = True
+        for k in ("memory", "ontology", "compiler", "recall"):
             self.data["layers"][k] = True
         if isinstance(saved.get("csi_url"), str) and _csi_url_ok(saved["csi_url"]):
             self.data["csi_url"] = saved["csi_url"].strip()
@@ -3534,7 +3538,7 @@ class Handler(BaseHTTPRequestHandler):
                                 })
                         except Exception:
                             pass
-                    elif raw_model in ("clover-35b-a3b", "kimi-k3", "omni"):
+                    elif raw_model in ("clover-35b-a3b", "kimi-k3", "omni") and os.environ.get("CLOVER_ENABLE_POSTHOC_C2C3", "0") == "1":
                         try:
                             import omni_c2_c3
                             base_dir_w = Path(S.args.base) if S.args else HERE.parent

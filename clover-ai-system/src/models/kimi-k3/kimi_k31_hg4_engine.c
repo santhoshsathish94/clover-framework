@@ -1275,16 +1275,18 @@ K31_API int kimi_k31_hg4_init(const char *hg4_dir) {
     return 0;
 }
 
-/* Forward a selected list of Kimi K3.1 Pro layer IDs (e.g. C1 stage `[0, 1, 3]` or full trunk chain `[0..92]`) */
-K31_API float kimi_k31_hg4_forward_layers(
+/* Forward selected Kimi K3.1 Pro layers and optionally extract DSpark's 5 target features `[L7, L23, L67, L83, L91]` (`[T, 35840]`) */
+K31_API float kimi_k31_hg4_forward_layers_ex(
     const int *token_ids, int T, const int *layer_ids, int n_sel_layers,
-    float *out_final_hidden, float *out_dsa_indexer_scores
+    float *out_final_hidden, float *out_dsa_indexer_scores, float *out_dspark_feats_35840
 ) {
     if (!g_k31.ready || T <= 0 || n_sel_layers <= 0) return -1.0f;
     double t0 = omp_get_wtime();
 
     float **snaps = (float **)calloc((size_t)(n_sel_layers + 2), sizeof(float *));
+    int *snap_lids = (int *)malloc((size_t)(n_sel_layers + 2) * sizeof(int));
     snaps[0] = (float *)malloc((size_t)T * K31_D * sizeof(float));
+    snap_lids[0] = -1;
     #pragma omp parallel for schedule(static) if (T >= 4)
     for (int t = 0; t < T; t++) {
         k31_embed_lookup_row(&g_k31.emb_mat, token_ids[t], snaps[0] + (size_t)t * K31_D);
@@ -1298,8 +1300,25 @@ K31_API float kimi_k31_hg4_forward_layers(
         float *nxt = (float *)malloc((size_t)T * K31_D * sizeof(float));
         k31_forward_one_layer(&g_k31.layers[lid], cur, snaps, n_snaps, nxt,
                               (g_k31.layers[lid].kind == 2) ? out_dsa_indexer_scores : NULL, T);
+        snap_lids[n_snaps] = lid;
         snaps[n_snaps++] = nxt;
         cur = nxt;
+    }
+
+    if (out_dspark_feats_35840) {
+        const int tgt_lids[5] = {7, 23, 67, 83, 91};
+        const float *feat_src[5] = {cur, cur, cur, cur, cur};
+        for (int m = 0; m < 5; m++) {
+            for (int s = 1; s < n_snaps; s++) {
+                if (snap_lids[s] == tgt_lids[m]) { feat_src[m] = snaps[s]; break; }
+            }
+        }
+        for (int t = 0; t < T; t++) {
+            float *dst = out_dspark_feats_35840 + (size_t)t * (5 * K31_D);
+            for (int m = 0; m < 5; m++) {
+                memcpy(dst + (size_t)m * K31_D, feat_src[m] + (size_t)t * K31_D, K31_D * sizeof(float));
+            }
+        }
     }
 
     float *agg_final = (float *)malloc((size_t)T * K31_D * sizeof(float));
@@ -1309,7 +1328,16 @@ K31_API float kimi_k31_hg4_forward_layers(
     free(agg_final);
     for (int s = 0; s < n_snaps; s++) free(snaps[s]);
     free(snaps);
+    free(snap_lids);
     return (float)((omp_get_wtime() - t0) * 1000.0);
+}
+
+/* Forward a selected list of Kimi K3.1 Pro layer IDs (e.g. C1 stage `[0, 1, 3]` or full trunk chain `[0..92]`) */
+K31_API float kimi_k31_hg4_forward_layers(
+    const int *token_ids, int T, const int *layer_ids, int n_sel_layers,
+    float *out_final_hidden, float *out_dsa_indexer_scores
+) {
+    return kimi_k31_hg4_forward_layers_ex(token_ids, T, layer_ids, n_sel_layers, out_final_hidden, out_dsa_indexer_scores, NULL);
 }
 
 /* Convenience C1 Stage Forward (`Layer 0 KDA+Dense -> Layer 1 KDA+MoE -> Layer 3 Gated-DSA+MoE`) */
@@ -1341,7 +1369,10 @@ K31_API float kimi_k31_dspark_forward(
     float *nxt     = (float *)malloc((size_t)T * K31_D * sizeof(float));
 
     #pragma omp parallel for schedule(static) if (T >= 4)
-    for (int t = 0; t < T; t++) k31_embed_lookup_row(&g_k31.emb_mat, token_ids[t], emb + (size_t)t * K31_D);
+    for (int t = 0; t < T; t++) {
+        int tid = (token_ids[t] >= 0) ? token_ids[t] : 163824; /* DSpark mask_token_id = 163824 */
+        k31_embed_lookup_row(&g_k31.emb_mat, tid, emb + (size_t)t * K31_D);
+    }
 
     if (target_feats_35840) {
         memcpy(fc_in, target_feats_35840, (size_t)T * 5 * K31_D * sizeof(float));
@@ -1399,9 +1430,10 @@ K31_API float kimi_k31_dspark_forward(
             int kv_h = h / 4;
             float *sc = (float *)malloc((size_t)T * sizeof(float));
             for (int t = 0; t < T; t++) {
+                int j_end = (token_ids[t] < 0) ? (T - 1) : t; /* Bidirectional inside DSpark masked draft block */
                 const float *qh = q + (size_t)t * 4096 + h * 64;
                 float mx = -1e30f;
-                for (int j = 0; j <= t; j++) {
+                for (int j = 0; j <= j_end; j++) {
                     const float *kj = k + (size_t)j * 1024 + kv_h * 64;
                     float dot = 0.0f;
                     for (int d = 0; d < 64; d++) dot += qh[d] * kj[d];
@@ -1409,12 +1441,12 @@ K31_API float kimi_k31_dspark_forward(
                     if (sc[j] > mx) mx = sc[j];
                 }
                 float sw = 0.0f;
-                for (int j = 0; j <= t; j++) { sc[j] = expf(sc[j] - mx); sw += sc[j]; }
-                for (int j = 0; j <= t; j++) sc[j] /= (sw + 1e-12f);
+                for (int j = 0; j <= j_end; j++) { sc[j] = expf(sc[j] - mx); sw += sc[j]; }
+                for (int j = 0; j <= j_end; j++) sc[j] /= (sw + 1e-12f);
 
                 float *yh = ao + (size_t)t * 4096 + h * 64;
                 memset(yh, 0, 64 * sizeof(float));
-                for (int j = 0; j <= t; j++) {
+                for (int j = 0; j <= j_end; j++) {
                     const float *vj = v + (size_t)j * 1024 + kv_h * 64;
                     float w = sc[j];
                     for (int d = 0; d < 64; d++) yh[d] += w * vj[d];
@@ -1441,10 +1473,10 @@ K31_API float kimi_k31_dspark_forward(
         float *base_lg = (float *)malloc((size_t)T * K31_VOCAB * sizeof(float));
         k31_matmul(&g_k31.lm_mat, out_dspark_hidden_7168, base_lg, T, 0, 1);
 
-        int prev_tok = token_ids[T - 1];
+        int prev_tok = (token_ids[0] >= 0) ? token_ids[0] : 0;
         float m_vec[256], m_bias[K31_VOCAB];
         for (int t = 0; t < T; t++) {
-            int ctx_tok = (t == 0) ? token_ids[0] : prev_tok;
+            int ctx_tok = (token_ids[t] >= 0) ? token_ids[t] : prev_tok;
             k31_embed_lookup_row(&ds->mw1, ctx_tok, m_vec);
             k31_matmul(&ds->mw2, m_vec, m_bias, 1, 0, 1);
 
@@ -1470,4 +1502,118 @@ K31_API float kimi_k31_dspark_forward(
 
     free(emb); free(fc_in); free(fc_out); free(cur); free(nxt);
     return (float)((omp_get_wtime() - t0) * 1000.0);
+}
+
+static int k31_argmax_f32(const float *v, int n) {
+    int bi = 0; float bv = v[0];
+    for (int i = 1; i < n; i++) if (v[i] > bv) { bv = v[i]; bi = i; }
+    return bi;
+}
+
+/* Lossless Speculative Decode Inside Kimi K3.1 Pro Using 5-Layer DSpark (`draft_k = 0` plain, `1..4` speculative) */
+K31_API int kimi_k31_generate_speculative(
+    const int *prompt_ids, int prompt_len, const int *layer_ids, int n_sel_layers,
+    int max_new_tokens, int eos_id, int draft_k,
+    int *out_gen_ids, double *out_prefill_ms, double *out_decode_ms,
+    int *out_accepted_drafts, int *out_total_drafts
+) {
+    if (!g_k31.ready || prompt_len <= 0 || n_sel_layers <= 0 || max_new_tokens <= 0) return -1;
+    if (draft_k < 0) draft_k = 0;
+    if (draft_k > 4) draft_k = 4;
+    if (!g_k31.dspark.loaded) draft_k = 0;
+
+    int max_tot = prompt_len + max_new_tokens + draft_k + 4;
+    int   *seq   = (int *)malloc((size_t)max_tot * sizeof(int));
+    float *h_buf = (float *)malloc((size_t)max_tot * K31_D * sizeof(float));
+    float *f_buf = (float *)malloc((size_t)max_tot * 5 * K31_D * sizeof(float));
+    float *lg_1  = (float *)malloc((size_t)(draft_k + 2) * K31_VOCAB * sizeof(float));
+    memcpy(seq, prompt_ids, (size_t)prompt_len * sizeof(int));
+    int cur_len = prompt_len;
+
+    double t0 = omp_get_wtime();
+    kimi_k31_hg4_forward_layers_ex(seq, cur_len, layer_ids, n_sel_layers, h_buf, NULL, (draft_k > 0) ? f_buf : NULL);
+    k31_matmul(&g_k31.lm_mat, h_buf + (size_t)(cur_len - 1) * K31_D, lg_1, 1, 0, 1);
+    *out_prefill_ms = (omp_get_wtime() - t0) * 1000.0;
+
+    double td0 = omp_get_wtime();
+    int gen_n = 0, acc_tot = 0, draft_tot = 0;
+    int cur_tok = k31_argmax_f32(lg_1, K31_VOCAB);
+    out_gen_ids[gen_n++] = cur_tok;
+
+    if (draft_k == 0) {
+        while (gen_n < max_new_tokens && cur_tok != eos_id) {
+            seq[cur_len++] = cur_tok;
+            kimi_k31_hg4_forward_layers_ex(seq, cur_len, layer_ids, n_sel_layers, h_buf, NULL, NULL);
+            k31_matmul(&g_k31.lm_mat, h_buf + (size_t)(cur_len - 1) * K31_D, lg_1, 1, 0, 1);
+            cur_tok = k31_argmax_f32(lg_1, K31_VOCAB);
+            out_gen_ids[gen_n++] = cur_tok;
+        }
+    } else {
+        int   *ds_ids  = (int *)malloc((size_t)max_tot * sizeof(int));
+        int   *ds_out  = (int *)malloc((size_t)max_tot * sizeof(int));
+        float *ds_conf = (float *)malloc((size_t)max_tot * sizeof(float));
+        float *ds_h    = (float *)malloc((size_t)max_tot * K31_D * sizeof(float));
+
+        while (gen_n < max_new_tokens && cur_tok != eos_id) {
+            int rem = max_new_tokens - gen_n;
+            int K = (draft_k < rem) ? draft_k : rem;
+
+            /* 1. DSpark 5-Layer Block Draft (`[seq, cur_tok, -1..]` with target features `[f_0..f_{L-1}, broadcast f_{L-1}]`) */
+            memcpy(ds_ids, seq, (size_t)cur_len * sizeof(int));
+            ds_ids[cur_len] = cur_tok;
+            for (int j = 1; j < K; j++) ds_ids[cur_len + j] = -1;
+            const float *last_f = f_buf + (size_t)(cur_len - 1) * 5 * K31_D;
+            for (int j = 0; j < K; j++) {
+                memcpy(f_buf + (size_t)(cur_len + j) * 5 * K31_D, last_f, 5 * K31_D * sizeof(float));
+            }
+            int ds_T = cur_len + K;
+            kimi_k31_dspark_forward(ds_ids, f_buf, ds_T, ds_h, ds_out, ds_conf);
+
+            int drafts[4];
+            for (int j = 0; j < K; j++) drafts[j] = ds_out[cur_len + j];
+            draft_tot += K;
+
+            /* 2. Batched C1 Verification on `[seq[0..cur_len-1], cur_tok, drafts[0..K-1]]` */
+            seq[cur_len] = cur_tok;
+            for (int j = 0; j < K; j++) seq[cur_len + 1 + j] = drafts[j];
+            int ver_T = cur_len + 1 + K;
+            kimi_k31_hg4_forward_layers_ex(seq, ver_T, layer_ids, n_sel_layers, h_buf, NULL, f_buf);
+            k31_matmul(&g_k31.lm_mat, h_buf + (size_t)cur_len * K31_D, lg_1, K + 1, 0, 1);
+
+            int matched_all = 1;
+            for (int j = 0; j < K; j++) {
+                int gt = k31_argmax_f32(lg_1 + (size_t)j * K31_VOCAB, K31_VOCAB);
+                if (drafts[j] == gt) {
+                    acc_tot++;
+                    out_gen_ids[gen_n++] = gt;
+                    if (gt == eos_id || gen_n >= max_new_tokens) {
+                        cur_len += (j + 1);
+                        cur_tok = gt;
+                        matched_all = 0;
+                        break;
+                    }
+                } else {
+                    cur_len += (j + 1);
+                    cur_tok = gt;
+                    out_gen_ids[gen_n++] = cur_tok;
+                    matched_all = 0;
+                    break;
+                }
+            }
+            if (matched_all) {
+                cur_len += (K + 1);
+                cur_tok = k31_argmax_f32(lg_1 + (size_t)K * K31_VOCAB, K31_VOCAB);
+                if (gen_n < max_new_tokens) {
+                    out_gen_ids[gen_n++] = cur_tok;
+                }
+            }
+        }
+        free(ds_ids); free(ds_out); free(ds_conf); free(ds_h);
+    }
+
+    *out_decode_ms = (omp_get_wtime() - td0) * 1000.0;
+    if (out_accepted_drafts) *out_accepted_drafts = acc_tot;
+    if (out_total_drafts) *out_total_drafts = draft_tot;
+    free(seq); free(h_buf); free(f_buf); free(lg_1);
+    return gen_n;
 }

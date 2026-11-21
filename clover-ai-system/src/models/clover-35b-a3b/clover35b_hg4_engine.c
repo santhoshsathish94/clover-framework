@@ -1009,10 +1009,11 @@ static void c35_run_moe(
         }
         for (int k = 0; k < top_k; k++) sel_w[k] /= (wsum + 1e-12f);
 
-        int8_t  x_xq[C35_D];
-        float   x_xsc[C35_D / 128];
-        int32_t x_xsum[C35_D / 128];
+        int8_t  x_xq[C35_D], sh_xq[C35_D];
+        float   x_xsc[C35_D / 128], sh_xsc[C35_D / 128];
+        int32_t x_xsum[C35_D / 128], sh_xsum[C35_D / 128];
         c35_rot_quant_dispatch(x, ex->pre_diag_up, 1, C35_D, x_xq, x_xsc, x_xsum, 0);
+        c35_rot_quant_dispatch(x, mt->sh_w13.pre_diag, 1, C35_D, sh_xq, sh_xsc, sh_xsum, 0);
 
         c35_mat_t gu_m[C35_TOP_K], dn_m[C35_TOP_K];
         for (int k = 0; k < top_k; k++) {
@@ -1024,32 +1025,37 @@ static void c35_run_moe(
             parse_c35_mat(ep + 1081344, &dn_m[k]);
         }
 
-        /* 1. Fused SwiGLU up/gate across all `top_k * 64 = 512` row-groups on 16 cores */
+        float sh_hid[C35_MOE_INT], sh_out[C35_D];
+
+        /* 1. Fused SwiGLU up/gate across `(top_k + 1) * 64 = 576` row-groups (routed + shared in 1 barrier) */
         #pragma omp parallel for schedule(static)
-        for (int task = 0; task < top_k * 64; task++) {
+        for (int task = 0; task < (top_k + 1) * 64; task++) {
             int k = task / 64, rg = task % 64;
-            c35_run_one_group16(&gu_m[k], x_xq, x_xsc, x_xsum, g_c35.scr_moe_hid + k * C35_MOE_INT, 1, rg, 1);
+            if (k < top_k) c35_run_one_group16(&gu_m[k], x_xq, x_xsc, x_xsum, g_c35.scr_moe_hid + k * C35_MOE_INT, 1, rg, 1);
+            else           c35_run_one_group16(&mt->sh_w13, sh_xq, sh_xsc, sh_xsum, sh_hid, 1, rg, 1);
         }
 
-        /* 2. Rotate each expert's 512-dim hidden state & run `top_k * 128 = 1024` down_proj row-groups on 16 cores */
-        int8_t  z_xq[C35_TOP_K * C35_MOE_INT];
-        float   z_xsc[C35_TOP_K * 4];
-        int32_t z_xsum[C35_TOP_K * 4];
+        /* 2. Rotate each expert's + shared 512-dim hidden state & run `(top_k + 1) * 128 = 1152` down_proj row-groups in 1 barrier */
+        int8_t  z_xq[(C35_TOP_K + 1) * C35_MOE_INT];
+        float   z_xsc[(C35_TOP_K + 1) * 4];
+        int32_t z_xsum[(C35_TOP_K + 1) * 4];
         for (int k = 0; k < top_k; k++) {
             c35_rot_quant_dispatch(g_c35.scr_moe_hid + k * C35_MOE_INT, dn_m[k].pre_diag, 1, C35_MOE_INT,
                                    z_xq + k * C35_MOE_INT, z_xsc + k * 4, z_xsum + k * 4, 0);
         }
+        c35_rot_quant_dispatch(sh_hid, mt->sh_dn.pre_diag, 1, C35_MOE_INT,
+                               z_xq + top_k * C35_MOE_INT, z_xsc + top_k * 4, z_xsum + top_k * 4, 0);
+
         #pragma omp parallel for schedule(static)
-        for (int task = 0; task < top_k * 128; task++) {
+        for (int task = 0; task < (top_k + 1) * 128; task++) {
             int k = task / 128, rg = task % 128;
-            c35_run_one_group16(&dn_m[k], z_xq + k * C35_MOE_INT, z_xsc + k * 4, z_xsum + k * 4,
-                                g_c35.scr_moe_out + k * C35_D, 1, rg, 0);
+            if (k < top_k) c35_run_one_group16(&dn_m[k], z_xq + k * C35_MOE_INT, z_xsc + k * 4, z_xsum + k * 4,
+                                               g_c35.scr_moe_out + k * C35_D, 1, rg, 0);
+            else           c35_run_one_group16(&mt->sh_dn, z_xq + top_k * C35_MOE_INT, z_xsc + top_k * 4, z_xsum + top_k * 4,
+                                               sh_out, 1, rg, 0);
         }
 
-        /* 3. Shared expert + weighted expert sum */
-        float sh_hid[C35_MOE_INT], sh_out[C35_D];
-        c35_matmul(&mt->sh_w13, x, sh_hid, 1, 1, 1);
-        c35_matmul(&mt->sh_dn, sh_hid, sh_out, 1, 0, 1);
+        /* 3. Shared expert gate + weighted expert sum */
         float gdot = 0.0f;
         #pragma omp simd reduction(+:gdot)
         for (int d = 0; d < C35_D; d++) gdot += x[d] * mt->sh_g[d];
@@ -1230,14 +1236,16 @@ static void c35_run_moe(
 
 /* Generic Layer Execution: Bidirectional Gated DeltaNet (`BD-GDN`) + SwiGLU MoE (stateful or stateless) */
 static void c35_forward_layer_bdgdn(c35_layer_t *lyr, const float *x, float *h_out, int pos_off, int T, int preview, int stateful) {
-    float *u       = (float *)malloc((size_t)T * C35_D * sizeof(float));
-    float *raw_qkv = (float *)malloc((size_t)T * 8192 * sizeof(float));
-    float *mixed   = (float *)malloc((size_t)T * 8192 * sizeof(float));
-    float *z       = (float *)malloc((size_t)T * 4096 * sizeof(float));
-    float *y_attn  = (float *)malloc((size_t)T * 4096 * sizeof(float));
-    float *h_attn  = (float *)malloc((size_t)T * C35_D * sizeof(float));
-    float *u_mlp   = (float *)malloc((size_t)T * C35_D * sizeof(float));
-    float *moe_out = (float *)malloc((size_t)T * C35_D * sizeof(float));
+    float s_u[4 * C35_D], s_qkv[4 * 8192], s_mix[4 * 8192], s_z[4 * 4096];
+    float s_ya[4 * 4096], s_ha[4 * C35_D], s_um[4 * C35_D], s_mo[4 * C35_D];
+    float *u       = (T <= 4) ? s_u   : (float *)malloc((size_t)T * C35_D * sizeof(float));
+    float *raw_qkv = (T <= 4) ? s_qkv : (float *)malloc((size_t)T * 8192 * sizeof(float));
+    float *mixed   = (T <= 4) ? s_mix : (float *)malloc((size_t)T * 8192 * sizeof(float));
+    float *z       = (T <= 4) ? s_z   : (float *)malloc((size_t)T * 4096 * sizeof(float));
+    float *y_attn  = (T <= 4) ? s_ya  : (float *)malloc((size_t)T * 4096 * sizeof(float));
+    float *h_attn  = (T <= 4) ? s_ha  : (float *)malloc((size_t)T * C35_D * sizeof(float));
+    float *u_mlp   = (T <= 4) ? s_um  : (float *)malloc((size_t)T * C35_D * sizeof(float));
+    float *moe_out = (T <= 4) ? s_mo  : (float *)malloc((size_t)T * C35_D * sizeof(float));
 
     rms_norm_batch(x, lyr->in_ln, u, T, C35_D, 1e-6f);
     c35_matmul(&lyr->qkv, u, raw_qkv, T, 0, 1);
@@ -1278,8 +1286,9 @@ static void c35_forward_layer_bdgdn(c35_layer_t *lyr, const float *x, float *h_o
         }
     }
 
-    float *g_val    = (float *)malloc((size_t)T * 32 * sizeof(float));
-    float *beta_val = (float *)malloc((size_t)T * 32 * sizeof(float));
+    float s_gv[4 * 32], s_bv[4 * 32];
+    float *g_val    = (T <= 4) ? s_gv : (float *)malloc((size_t)T * 32 * sizeof(float));
+    float *beta_val = (T <= 4) ? s_bv : (float *)malloc((size_t)T * 32 * sizeof(float));
     for (int t = 0; t < T; t++) {
         const float *ut = u + (size_t)t * C35_D;
         for (int h = 0; h < 32; h++) {
@@ -1392,7 +1401,7 @@ static void c35_forward_layer_bdgdn(c35_layer_t *lyr, const float *x, float *h_o
             }
         }
     }
-    free(g_val); free(beta_val);
+    if (T > 4) { free(g_val); free(beta_val); }
 
     c35_matmul(&lyr->out, y_attn, h_attn, T, 0, 1);
     for (int i = 0; i < T * C35_D; i++) h_attn[i] += x[i];
@@ -1401,19 +1410,21 @@ static void c35_forward_layer_bdgdn(c35_layer_t *lyr, const float *x, float *h_o
     c35_run_moe(u_mlp, moe_out, T, &lyr->moe, &lyr->ex, preview);
     for (int i = 0; i < T * C35_D; i++) h_out[i] = h_attn[i] + moe_out[i];
 
-    free(u); free(raw_qkv); free(mixed); free(z); free(y_attn); free(h_attn); free(u_mlp); free(moe_out);
+    if (T > 4) { free(u); free(raw_qkv); free(mixed); free(z); free(y_attn); free(h_attn); free(u_mlp); free(moe_out); }
 }
 
 /* Generic Layer Execution: Gated Full-Attention (`16Q/2KV`, `head_dim = 256`, Partial RoPE `0.25`) + SwiGLU MoE */
 static void c35_forward_layer_gqa(c35_layer_t *lyr, const float *x, float *h_out, int pos_off, int T, int preview, int stateful) {
-    float *u       = (float *)malloc((size_t)T * C35_D * sizeof(float));
-    float *qg      = (float *)malloc((size_t)T * 8192 * sizeof(float));
-    float *k       = (float *)malloc((size_t)T * 512 * sizeof(float));
-    float *v       = (float *)malloc((size_t)T * 512 * sizeof(float));
-    float *y_attn  = (float *)malloc((size_t)T * 4096 * sizeof(float));
-    float *h_attn  = (float *)malloc((size_t)T * C35_D * sizeof(float));
-    float *u_mlp   = (float *)malloc((size_t)T * C35_D * sizeof(float));
-    float *moe_out = (float *)malloc((size_t)T * C35_D * sizeof(float));
+    float s_u[4 * C35_D], s_qg[4 * 8192], s_k[4 * 512], s_v[4 * 512];
+    float s_ya[4 * 4096], s_ha[4 * C35_D], s_um[4 * C35_D], s_mo[4 * C35_D];
+    float *u       = (T <= 4) ? s_u  : (float *)malloc((size_t)T * C35_D * sizeof(float));
+    float *qg      = (T <= 4) ? s_qg : (float *)malloc((size_t)T * 8192 * sizeof(float));
+    float *k       = (T <= 4) ? s_k  : (float *)malloc((size_t)T * 512 * sizeof(float));
+    float *v       = (T <= 4) ? s_v  : (float *)malloc((size_t)T * 512 * sizeof(float));
+    float *y_attn  = (T <= 4) ? s_ya : (float *)malloc((size_t)T * 4096 * sizeof(float));
+    float *h_attn  = (T <= 4) ? s_ha : (float *)malloc((size_t)T * C35_D * sizeof(float));
+    float *u_mlp   = (T <= 4) ? s_um : (float *)malloc((size_t)T * C35_D * sizeof(float));
+    float *moe_out = (T <= 4) ? s_mo : (float *)malloc((size_t)T * C35_D * sizeof(float));
 
     rms_norm_batch(x, lyr->in_ln, u, T, C35_D, 1e-6f);
     c35_matmul(&lyr->q, u, qg, T, 0, 1);
@@ -1526,7 +1537,7 @@ static void c35_forward_layer_gqa(c35_layer_t *lyr, const float *x, float *h_out
     c35_run_moe(u_mlp, moe_out, T, &lyr->moe, &lyr->ex, preview);
     for (int i = 0; i < T * C35_D; i++) h_out[i] = h_attn[i] + moe_out[i];
 
-    free(u); free(qg); free(k); free(v); free(y_attn); free(h_attn); free(u_mlp); free(moe_out);
+    if (T > 4) { free(u); free(qg); free(k); free(v); free(y_attn); free(h_attn); free(u_mlp); free(moe_out); }
 }
 
 static void parse_bdgdn_layer_blob(const uint8_t *p, size_t off, c35_layer_t *lyr) {

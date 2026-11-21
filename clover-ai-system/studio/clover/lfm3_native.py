@@ -1362,7 +1362,8 @@ class LFM3Native:
                     })
             op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
             rnd_n = len(stats_all) or 1
-            if kit is not None and not (cancel and cancel.is_set()):
+            _run_posthoc_c2c3 = ("ncm" in layers or os.environ.get("CLOVER_ENABLE_POSTHOC_C2C3", "0") == "1")
+            if _run_posthoc_c2c3 and kit is not None and not (cancel and cancel.is_set()):
                 if hasattr(kit, "c1_infer"):
                     try:
                         c1_state, c1_info = kit.c1_infer(final, stats=stats_all, model=m_c1, layers_desc=l_c1)

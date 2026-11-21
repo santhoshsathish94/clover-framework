@@ -1847,7 +1847,8 @@ class OmniNative(N.LFM3Native):
                     ).strip()
                 op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
                 rnd_n = len(stats_all) or 1
-                if kit is not None and not (cancel and cancel.is_set()):
+                _run_posthoc_c2c3 = ("ncm" in layers or os.environ.get("CLOVER_ENABLE_POSTHOC_C2C3", "0") == "1")
+                if _run_posthoc_c2c3 and kit is not None and not (cancel and cancel.is_set()):
                     # 1. Strict Stage C1: Inference ONLY (`c1_infer`)
                     if hasattr(kit, "c1_infer"):
                         try:
@@ -2194,7 +2195,8 @@ class OmniNative(N.LFM3Native):
                 info["tools"] = list(dict.fromkeys(used))
                 layer_log.append(info)
                 rnd_n = len(stats_all) or 1
-                if kit is not None and not (cancel and cancel.is_set()):
+                _run_posthoc_c2c3 = ("ncm" in layers or os.environ.get("CLOVER_ENABLE_POSTHOC_C2C3", "0") == "1")
+                if _run_posthoc_c2c3 and kit is not None and not (cancel and cancel.is_set()):
                     if hasattr(kit, "c1_infer"):
                         c1_prev, _ = kit.c1_infer(previous or question)
                         c1_state, c1_info = kit.c1_infer(answer, stats=stats_all)
