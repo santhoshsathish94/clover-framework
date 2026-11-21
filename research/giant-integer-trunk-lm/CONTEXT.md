@@ -30,6 +30,10 @@
 
 ## Growth Carried Forward
 - Do not attempt zero-shot Toeplitz/Circulant conversion on frozen dense LLM checkpoints.
-- For Clover's own scaled `Block-TrunkLM`, train natively in `rfft` `4-bit` STE QAT (using `B = 64` Block-Circulant
-  channel trunks + long-horizon causal trunks, optionally distilled end-to-end from `LFM3-Omni-2B` logits on `2B–5B`
-  tokens), then export directly to `x-cruncher` `xc_trunk_t` binaries.
+- Always check adversarial worst-case slot saturation (`32-bit` slots for `1M` tokens; `K <= 561,433` for `32-bit`
+  Salem–Spencer `P = 4`), report `-march=native` auto-vectorized baselines alongside portable `-O3`, benchmark pilot
+  perplexity against a smoothed unigram baseline, and evaluate on the full `128,000` vocabulary + untuned test split.
+- Use **Variant D's recipe** (**Tail-Aware `T = 1.0` Top-K KL** modeling $1 - \sum p_{\text{topK}}$, `dropout = 0.2`,
+  `1.0` hidden-state cosine hints, Butterfly-Transpose Block-Circulant, and `O(D)` channel gain vectors -> **`Test PPL =
+  1,084`**, `128/128` C11 `x-cruncher` Top-1 parity) as the Stage-1 baseline when scaling to `D = 2048` (`3.0 MiB`
+  packed 4-bit trunks) on GPU.

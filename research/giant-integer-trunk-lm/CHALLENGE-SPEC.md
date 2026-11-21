@@ -17,8 +17,8 @@ Design a **causal 24-layer language model (`Block-TrunkLM-24`)** and **teacher-l
 - **Backbone Budget:**
   - Layers: `L = 24`
   - Hidden width: `D = 512` (pilot tier) or `D = 2048` (full scale)
-  - Block-Circulant tile size: `B = 64` (so a `D × D` projection uses `(D/B) × (D/B) × B` `4-bit` weights—`64×` smaller than dense: `216 KB` total across all 24 layers at `D = 512`, or `~3.5 MB` per projection grid at `D = 2048`).
-  - Causal sequence kernel taps: `K <= 64` per layer (extendable to `1M` via `xc_trunk_t` retention trunks).
+  - Block-Circulant tile size: `B = 64` (so a `D × D` projection uses `(D/B) × (D/B) × B` `4-bit` weights—`64×` smaller than dense: `336.0 KB` nibble-packed across all 24 layers at `D = 512`, or `32.0 KB` per `2048 × 2048` projection / `~3.0 MiB` across all 24 layers at `D = 2048`).
+  - Causal sequence kernel taps: `K <= 64` per layer (extendable to `1M` via `32-bit`-slot `xc_trunk_t` retention trunks).
   - Non-trunk parameters allowed per layer: only `O(D)` vectors (`RMSNorm` weights, per-channel/per-block quantization scales, or `O(D)` diagonal gates). **No dense `D × D` or low-rank `D × r` (`r > 4`) matrices allowed.**
 - **Two-Stage Open-Weight Teacher Protocol:**
   - **Stage 1 (Foundation):** `LiquidAI/LFM3-Omni-2B` (`24` layers, `D = 2048`, `vocab = 128,000`, causal SDPA) providing Top-`K` (`K = 32..128`) teacher logits and optional intermediate hidden states (`Layers 12 & 24`).
@@ -40,7 +40,7 @@ Submissions are encouraged to innovate on:
 
 ## 4. Required Deliverables & Metrics
 
-1. A self-contained PyTorch training module (`train_variant.py`) taking `omni_teacher_top128_pilot.pt` and training for `STEPS = 180` (`BS = 16`, `SEQ = 128`).
+1. A self-contained PyTorch training module (`train_variant.py`) taking `omni_teacher_top128_pilot.pt` and training for `STEPS = 200` (`BS = 16`, `SEQ = 128`).
 2. Binary export matching the C11 `x-cruncher` verifier (`4-bit` `uint8` `[0..15]` arrays + `float32` per-block scales).
 3. Scored on four held-out validation metrics:
    - **Hard 4-Bit Validation Perplexity (`Val PPL`)** *(lower is better)*

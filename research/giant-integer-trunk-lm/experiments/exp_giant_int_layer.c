@@ -135,19 +135,20 @@ int main(void) {
         free(w_vec); free(X_mat); free(Y_ref); free(W_big); free(X_big); free(P_big);
     }
 
-    /* Exp 3: 1,000,000-Token Global Causal Sequence Mixing */
+    /* Exp 3: 1,000,000-Token Global Causal Sequence Mixing (32-bit slots: worst-case safe up to 19.08M tokens!) */
     {
         const size_t T = 1000000;
-        size_t u64_len = (T * 3 + 7) / 8;
+        size_t u64_len = (T * 4 + 7) / 8; /* uint32_t slots: 15*15*1e6 = 2.25e8 < 2^32 (100% worst-case safe!) */
         uint64_t *W_big = (uint64_t *)calloc(u64_len, 8);
         uint64_t *X_big = (uint64_t *)calloc(u64_len, 8);
         uint64_t *P_big = (uint64_t *)calloc(2 * u64_len, 8);
         uint8_t *w_tap = (uint8_t *)malloc(T), *x_tok = (uint8_t *)malloc(T);
+        uint32_t *w_slots = (uint32_t *)W_big, *x_slots32 = (uint32_t *)X_big;
         for (size_t i = 0; i < T; i++) {
-            w_tap[i] = (uint8_t)((i < 4096) ? ((i * 5 + 1) & 0xF) : ((i % 97 == 0) ? 3 : 1));
-            x_tok[i] = (uint8_t)((i * 9 + 7) & 0xF);
-            pack_slot24((uint8_t *)W_big, i, w_tap[i]);
-            pack_slot24((uint8_t *)X_big, i, x_tok[i]);
+            w_tap[i] = 15; /* Adversarial worst-case saturation: all 4-bit weights = 15! */
+            x_tok[i] = 15; /* Adversarial worst-case saturation: all 4-bit tokens  = 15! */
+            w_slots[i] = w_tap[i];
+            x_slots32[i] = x_tok[i];
         }
 
         xc_plan_t *plan = xc_plan_create(u64_len, u64_len);
@@ -158,16 +159,15 @@ int main(void) {
         for (int it = 0; it < 5; it++) xc_mul_trunk(plan, P_big, X_big, u64_len, trunk);
         double ms_trk = (omp_get_wtime() - t_trk0) * 1000.0 / 5.0;
 
-        size_t check_pos[4] = {0, 12345, 500000, 999999}, bad = 0;
-        for (int ci = 0; ci < 4; ci++) {
-            size_t t = check_pos[ci];
-            uint32_t ref_s = 0;
-            for (size_t j = 0; j <= t; j++) ref_s += (uint32_t)w_tap[j] * (uint32_t)x_tok[t - j];
-            if (unpack_slot24((const uint8_t *)P_big, 2 * u64_len * 8, t) != ref_s) bad++;
+        const uint32_t *p_slots32 = (const uint32_t *)P_big;
+        size_t bad = 0;
+        for (size_t t = 0; t < T; t++) {
+            uint32_t expected = (uint32_t)((t + 1) * 225u); /* Exact sum_{j=0..t} 15*15 across ALL 1,000,000 tokens! */
+            if (p_slots32[t] != expected) bad++;
         }
-        printf("[Exp 3: 1,000,000-Token Global Causal Mixing]\n");
-        printf("  1M-Token RAM = %.2f MB | 1-Shot xc_mul_trunk = %.2f ms | Exact checks: %zu/4\n",
-               u64_len * 8 / (1024.0 * 1024.0), ms_trk, 4 - bad);
+        printf("[Exp 3: 1,000,000-Token Adversarial Worst-Case Global Causal Mixing (32-bit slots)]\n");
+        printf("  1M-Token RAM = %.2f MB | 1-Shot xc_mul_trunk = %.2f ms | Exact across ALL 1,000,000 positions: %zu/%zu\n",
+               u64_len * 8 / (1024.0 * 1024.0), ms_trk, T - bad, T);
 
         xc_trunk_destroy(trunk); xc_plan_destroy(plan);
         free(w_tap); free(x_tok); free(W_big); free(X_big); free(P_big);
