@@ -41,3 +41,13 @@
   - Free autoregressive generation at `60.9M` tokens (`PPL 190.5`) exhibits topic-token repetition—pointing to `2B+`
     token scaling plus interleaving `4` lightweight selective/GQA state layers alongside `20` Giant-Integer Trunk layers
     as the next cycle's hypothesis.
+- **`HG4-128` Optimal 4-Bit Arrangement on Unchanged `LFM3-Omni-2B` (`2026-11-22`):**
+  - Proved on real `LFM3-Omni-2B` Layer-0 `w1` (`7680 × 2048`) that 1-shot `x-cruncher` is `7680/7680` bit-exact (`100%`)
+    when weights are unchanged, but pays a `99.95%` unaligned-row + `20-bit` carry-guard tax (`57.88 ms`, `45 MB`).
+  - Built `HG4-128` (`pack_omni_hg4.py` + `lfm3_hg4_engine.c`): Column-Balanced `FWHT-128` incoherence + 1-cycle `vpermb`
+    15-point Lloyd–Max Gaussian `LUT16` + unified `128.91 MiB` inverse-`FWHT` tied `embed_lm_head.hg4` + 4-row tile
+    register-fused `w1+w3` SwiGLU (`853.88 MiB` total = `4.14 bpw`).
+  - Verified live 4-way on `k3` (`16` threads): **`853.88 MiB`** (beats `BF16` `3,297 MiB`, `soc-q4` `1,990 MiB`, and
+    `llama.cpp Q4_0` `1,001 MiB`), **`PPL 30.4237`** (beats `Q4_0` `30.7783` and `soc-q4` `31.4318`), **`852–896 tok/s`
+    prefill** (`1.20x–1.85x` > `llama.cpp Q4_0`, `3.37x` > `soc-q4`), and **`49.9 tok/s` decode** (`+17%` > `Q4_0`),
+    ready to generalize next to `Nemotron 3.5` and `Clover-35B`.
