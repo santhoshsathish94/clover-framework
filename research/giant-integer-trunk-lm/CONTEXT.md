@@ -50,4 +50,11 @@
   - Verified live 4-way on `k3` (`16` threads): **`853.88 MiB`** (beats `BF16` `3,297 MiB`, `soc-q4` `1,990 MiB`, and
     `llama.cpp Q4_0` `1,001 MiB`), **`PPL 30.4237`** (beats `Q4_0` `30.7783` and `soc-q4` `31.4318`), **`852–896 tok/s`
     prefill** (`1.20x–1.85x` > `llama.cpp Q4_0`, `3.37x` > `soc-q4`), and **`49.9 tok/s` decode** (`+17%` > `Q4_0`),
-    ready to generalize next to `Nemotron 3.5` and `Clover-35B`.
+    wired into Clover AI Studio (`30 PASS, 0 FAIL` on the full Quality Engine).
+- **Step 2 Generalization to `Nemotron 3.5 Super VL` & `Clover-35B-A3B` (`2026-11-22`):**
+  - Never concatenate extreme-ratio `16:1` GQA `Q` (`4096` rows) and `V` (`256` rows) under one shared `col_rms`
+    (`separating V's pre_diag raises GQA cosine from 0.953 to 0.998+`).
+  - Use closed-form activation-equilibrium `pre_diag_down` (`sqrt(col_rms(down) / row_rms(up)^2)` for `ReLU^2` and
+    `sqrt(col_rms(down) / (row_rms(gate)*row_rms(up)))` for SwiGLU) + shared-input MoE `FWHT-128`:
+    - **`Nemotron 3.5` (`3,892.5 MiB` vs `5,459.7 MiB`):** **`9.0x` closer PPL to `BF16`**, **`95.2%` MTP Top-1** (vs `88.9%`), **`11.0x` faster prefill (`1,146.4 tok/s`)**, and **`2.9x` faster decode (`58.2 tok/s`)**.
+    - **`Clover-35B-A3B` (`1,100.9 MiB` vs `2,121.4 MiB`):** **Lower KL (`0.00572` vs `0.00605`)**, **higher Top-1 (`87.3%` vs `85.7%`)**, **higher Causal & Bidirectional `BD-GDN` cosines (`0.99853` / `0.99884`)**, **`5,553.7 tok/s` C1 prefill**, and **`2.9x` faster decode (`70.9 tok/s`)**.

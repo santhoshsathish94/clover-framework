@@ -941,9 +941,15 @@ class OmniC2C3Runtime:
                 for p in (models_root / "clover-35b-a3b", Path("/opt/clover-k3/clover-framework/clover-ai-system/src/models/clover-35b-a3b")):
                     if p.is_dir() and str(p) not in _sys.path:
                         _sys.path.insert(0, str(p))
-                from clover_35b_hybrid_ncm import Clover35BPrecomputedEngine
-                c35_dir = (self.pre.parent / "pruned") if (self.pre.parent / "pruned" / "global-0").is_dir() else self.pre
-                eng = Clover35BPrecomputedEngine(pruned_dir=c35_dir, use_4bit_experts=True)
+                hg4_c35 = Path("/opt/clover-k3/clover35b-hg4")
+                if (hg4_c35 / "meta.bin").is_file() and (hg4_c35 / "libclover35b_hg4_engine.so").is_file():
+                    from clover_35b_hybrid_ncm import Clover35BNativeHg4Engine
+                    eng = Clover35BNativeHg4Engine(hg4_dir=hg4_c35)
+                    self._c1_stage_cap = 256
+                else:
+                    from clover_35b_hybrid_ncm import Clover35BPrecomputedEngine
+                    c35_dir = (self.pre.parent / "pruned") if (self.pre.parent / "pruned" / "global-0").is_dir() else self.pre
+                    eng = Clover35BPrecomputedEngine(pruned_dir=c35_dir, use_4bit_experts=True)
                 def _c35_raw(seq_ids: list[int]) -> np.ndarray:
                     ids_clamped = [max(0, min(self.vocab_size - 1, int(x))) for x in (seq_ids or [self.tok.bos_token_id])]
                     h, _ = eng.forward_ids(ids_clamped)

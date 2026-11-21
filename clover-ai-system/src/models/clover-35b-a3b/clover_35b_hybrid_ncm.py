@@ -38,6 +38,48 @@ from train_clover_35b_hybrid_ncm_gpu import (
 )
 
 
+class Clover35BNativeHg4Engine:
+    """Zero-PyTorch-allocation C11 `HG4/HG8-128` runtime wrapper around `libclover35b_hg4_engine.so`."""
+
+    def __init__(self, hg4_dir: str | Path = "/opt/clover-k3/clover35b-hg4", so_path: str | Path | None = None):
+        import ctypes
+        import numpy as np
+        self.hg4_dir = Path(hg4_dir)
+        self.so_path = Path(so_path) if so_path else (self.hg4_dir / "libclover35b_hg4_engine.so")
+        self.lib = ctypes.CDLL(str(self.so_path))
+        c_int_p = ctypes.POINTER(ctypes.c_int)
+        c_flt_p = ctypes.POINTER(ctypes.c_float)
+        self.lib.clover35b_hg4_isa_name.argtypes = []
+        self.lib.clover35b_hg4_isa_name.restype = ctypes.c_char_p
+        self.lib.clover35b_hg4_init.argtypes = [ctypes.c_char_p]
+        self.lib.clover35b_hg4_init.restype = ctypes.c_int
+        self.lib.clover35b_hg4_forward_ids.argtypes = [c_int_p, ctypes.c_int, ctypes.c_int, c_flt_p]
+        self.lib.clover35b_hg4_forward_ids.restype = ctypes.c_float
+        rc = self.lib.clover35b_hg4_init(str(self.hg4_dir).encode("utf-8"))
+        if rc != 0:
+            raise RuntimeError(f"clover35b_hg4_init({self.hg4_dir}) failed rc={rc}")
+        self._np = np
+        self._ctypes = ctypes
+
+    def forward_ids(
+        self,
+        token_ids: list[int] | torch.Tensor,
+        preview: bool = False,
+        seg_starts: list[int] | None = None,
+    ) -> tuple[torch.Tensor, float]:
+        if isinstance(token_ids, torch.Tensor):
+            seq = token_ids.reshape(-1).tolist()
+        else:
+            seq = list(token_ids)
+        n = len(seq)
+        c_arr = (self._ctypes.c_int * n)(*(int(x) for x in seq))
+        out = self._np.zeros((n, D_CLOVER35B), dtype=self._np.float32)
+        ms = float(self.lib.clover35b_hg4_forward_ids(
+            c_arr, n, 1 if preview else 0, out.ctypes.data_as(self._ctypes.POINTER(self._ctypes.c_float))
+        ))
+        return torch.from_numpy(out), ms
+
+
 class Clover35BPrecomputedEngine:
     """Executes `Clover-35B-A3B` precomputed `CLV35TRK` / `CLV35OP1` / `CLV35BD1` trunks and direct experts."""
 
@@ -88,5 +130,6 @@ __all__ = [
     "QwenToClover35BHybridBridge",
     "Clover35BComboBridge",
     "Clover35BExpertBridge",
+    "Clover35BNativeHg4Engine",
     "Clover35BPrecomputedEngine",
 ]

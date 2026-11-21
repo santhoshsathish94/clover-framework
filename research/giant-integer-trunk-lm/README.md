@@ -161,5 +161,24 @@ Combining insights from **QuIP#** (Tseng et al., ICML 2024), **HIGGS** (Malinovs
 | **4. NEW Clover `HG4-128`** | **`853.88 MiB` (`4.14`)** | **`30.4237` (`+1.6097`)** | **`0.10280` / `0.997503`** | **`852–864` / `896.4 tok/s`** | **`47.8–49.9`** | **`1,080.3` / `1,780.3` / `1,310.0 ms`** |
 
 - **Token-Identical Code & Exact Math:** On `[Python]` (`is_prime(n)` + primes `10..30`), **all four engines produce the exact same character-for-character code**, with `HG4-128` finishing **`4.54×` faster than `BF16`**, **`1.20×` faster than `llama.cpp Q4_0`**, and **`1.13×` faster than `soc-q4`** while using **`853.88 MiB`** (`3.86×` smaller than `BF16`, `2.33×` smaller than `soc-q4`, and `14.7%` smaller than `llama.cpp Q4_0`).
-- **Packed Artifact on `k3`:** `/opt/clover-k3/lfm3-omni-hg4/` (`meta.bin`, `embed_lm_head.hg4`, `layer_00.hg4 .. layer_23.hg4`, packed on CPU in `184.4 s` with zero GPU training).
+- **Packed Artifact on `k3`:** `/opt/clover-k3/lfm3-omni-hg4/` (`meta.bin`, `embed_lm_head.hg4`, `layer_00.hg4 .. layer_23.hg4`, packed on CPU in `184.4 s` with zero GPU training), wired live into Clover AI Studio (`30 PASS, 0 FAIL` on the full Clover Studio Quality Engine).
+
+### 7.2 Generalizing `HG4/HG8-128` to MoE & Hybrid SSM Models (`Nemotron 3.5 Super VL` & `Clover-35B-A3B`)
+
+Extending `HG4-128` to **NVIDIA `Nemotron 3.5 Super VL`** (`120B-A12B` MoE: Mamba-2 + `512` routed `ReLU^2` experts + `16:1` NoPE GQA + `131,072` vocab + `2`-layer MTP) and **DiffuSpace `Clover-35B-A3B-Preview`** (`35B-A3B` MoE: Bidirectional Gated DeltaNet `BD-GDN` + Gated `16Q/2KV` GQA + `256` SwiGLU experts + `248,320` vocab) introduced three general MoE/SSM upgrades:
+1. **Shared-Input MoE `FWHT-128` Incoherence:** All `512` (or `256`) routed experts in a layer share a single `pre_diag_up`, so token inputs are `FWHT-128`-rotated and `int8`-quantized **once per token** instead of `22×` (`Nemotron`) or `8×` (`Clover-35B`).
+2. **Closed-Form Activation-Equilibrium `pre_diag_down` (Zero Calibration Data):**
+   - For `ReLU^2` MLPs (`Nemotron 3.5`), squared activations scale as $\|W_{\text{up}}[i, :]\|_2^2$, so setting $d_i = \sqrt{\|W_{\text{down}}[:, i]\|_{\text{rms}} / \|W_{\text{up}}[i, :]\|_{\text{rms}}^2} \cdot \text{sign}_i$ cuts single-expert quantization error **`23.5%` below `CLVR4B01` Group-64** (`6.68%` vs `8.73%`).
+   - For SwiGLU MLPs (`Clover-35B-A3B`), $d_i = \sqrt{\|W_{\text{down}}[:, i]\|_{\text{rms}} / (\|W_{\text{gate}}[i, :]\|_{\text{rms}} \|W_{\text{up}}[i, :]\|_{\text{rms}})} \cdot \text{sign}_i$ pairs with `[gate_r0, gate_r1, up_r0, up_r1]` register-fused SwiGLU tiles.
+3. **Per-Projection `16:1` GQA Balancing + Direct VNNI `HG8-128` Readout:** Prevents `4,096` Q rows from skewing `256` V rows in `16:1` GQA (`0.953 -> 0.998+` cosine) and runs un-shifted `_mm512_dpbusd_epi32` on sensitive bottleneck/head layers.
+
+| Model & Engine (`16` CPU Threads on `k3`) | Active C1 Footprint (`bpw`) | Quality vs `BF16` (`PPL` / `KL` / `Cos`) | Extra Parity (`MTP` / `BD-Preview`) | C1 Prefill (`64t`) | `T=1` Step + Full `LM-Head` | End-to-End `C1→C2→C3` (`Math`) |
+|---|---:|---:|---:|---:|---:|---:|
+| **`Nemotron 3.5` · `BF16` Ref** | `13,425.2 MiB` (`16.00`) | `3,233,531` / `0.00000` / `1.000000` | `MTP Top-1 = 100.0%` | `108.5 tok/s` | `45.2 ms` (`22.1 tok/s`) | — |
+| **`Nemotron 3.5` · `v5.0.7 Q4`** | `5,459.7 MiB` (`6.51`) | `3,341,119` (`+107.6K`) / `0.01113` / `0.998235` | `MTP Top-1 = 88.9%` (`461.5 ms`) | `103.8 tok/s` | `49.2 ms` (`20.3 tok/s`) | `959.9 ms` (`C1 327.2 ms`) |
+| **`Nemotron 3.5` · NEW `HG4/HG8-128`** | **`3,892.5 MiB` (`4.64`)** | **`3,245,465` (`+11.9K`, `9×` closer!) / `0.01539` / `0.997528`** | **`MTP Top-1 = 95.2%` (`30.8 ms`, `15×` faster!)** | **`1,146.4 tok/s` (`11.0×`)** | **`17.2 ms` (`58.2 tok/s`, `2.9×`)** | **`460.7 ms` (`C1 110.3 ms`)** |
+| **`Clover-35B-A3B` · `BF16` Ref** | `2,262.4 MiB` (`16.00`) | `3,406,558` / `0.00000` / `1.000000` | `BD-Preview Cos = 1.000000` | `603.6 tok/s` *(+248K)* | `37.6 ms` (`26.6 tok/s`) | — |
+| **`Clover-35B-A3B` · `v5.0.7 Q4`** | `2,121.4 MiB` (`15.00`) | `3,443,074` / `0.00605` / `0.998374` (`85.7%` Top-1) | `BD-Preview Cos = 0.998560` | `819.3 tok/s` *(+248K)* | `40.5 ms` (`24.7 tok/s`) | `787.0 ms` (`C1 84.9 ms`) |
+| **`Clover-35B-A3B` · NEW `HG4/HG8-128`** | **`1,100.9 MiB` (`7.79`)** *(or `858.4 MiB`)* | **`3,536,893` / `0.00572` (`better!`) / `0.998528` (`87.3%` Top-1!)** | **`BD-Preview Cos = 0.998841` (`14.1 ms`)** | **`5,553.7 tok/s` C1 / `857.5 tok/s` (+248K)** | **`14.1 ms` (`70.9 tok/s`, `2.9×`)** | **`360.8 ms` (`2.18×` faster)** |
+
 
