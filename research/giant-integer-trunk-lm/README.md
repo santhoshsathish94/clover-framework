@@ -75,11 +75,32 @@ We tested four conversion schemes directly on `LFM3-Omni-2B`'s real `layers.0.co
 
 ---
 
-## 5. What Remains Unknown & Blueprint for Training Clover's Own `Block-TrunkLM`
+## 5. Stage-1 `LFM3-Omni-2B` Teacher Distillation Pilot & 3-Variant Bake-Off (`distill_omni_to_block_trunklm.py`, `block_trunklm_c.c`)
 
-1. **What remains unknown:**
-   - Exact perplexity parity curve between a `B = 64` (`64×` compressed, `~30 MB` weight footprint) 24-layer `Block-TrunkLM` and a dense `1.7B–2B` model when distilled end-to-end on `2B–5B` tokens using GPU `rfft` QAT followed by C11 `x-cruncher` export.
-   - Optimal multi-token **Block-Diffusion** draft size (`16` vs `32` vs `64` tokens per decode step) so generation stays in `xc_mul_trunk`'s peak throughput regime alongside prefill.
-2. **Practical training path (Option 3 — Native Training via Teacher Logit Distillation):**
-   - **Train on GPU in `rfft` QAT (`4-bit` STE)**—which is mathematically identical to `x-cruncher` cyclic integer convolution and differentiates at full PyTorch GPU speed—using `LFM3-Omni-2B` as the logit teacher over `2B–5B` tokens (`B = 64` Block-Circulant SwiGLU + Long-Horizon Causal Time-Trunks).
-   - **Export once to static `4-bit` Giant-Integer `xc_trunk_t` files (`~25–40 MB` total)** for deterministic, cache-resident CPU & mobile execution via `x-cruncher`.
+To validate the two-stage teacher distillation plan (`Stage 1: LFM3-Omni-2B` $\to$ `Stage 2: Kimi K3.1 Pro`), we extracted true causal SDPA Top-`K` logits (`92.73%` probability mass in Top-128; teacher held-out `Val PPL = 57.38`) and intermediate hidden states (`Layers 12 & 24`) from `LFM3-Omni-2B` across `20,480` real BPE tokens (`128` train chunks + `32` held-out validation chunks, `24,920` active BPE vocabulary).
+
+### 5.1 Cycle-1 Observation (Why Freezing PCA-Tied Teacher Embeddings Matters on Small Pilots)
+- Unfreezing `24,920 × 512 = 12.76M` embedding parameters on a `16K`-token pilot caused severe embedding memorization (`Val PPL = 10,420–16,226`), even though `LFM3-Omni-2B` logit distillation still more than doubled Top-1 teacher agreement (`5.13% -> 10.89%`).
+- Freezing the PCA-projected `LFM3-Omni-2B` embeddings (`requires_grad = False`) forced 100% of learning into the **`336.0 KB` (`0.328 MB`) 24-layer `4-bit` Giant-Integer Trunk backbone** and eliminated out-of-vocabulary overfitting.
+
+### 5.2 Cycle-2 Controlled 3-Variant Bake-Off (`24` Layers, `D = 512`, `B = 64`, `336.0 KB` Total 4-Bit Trunk Weights, `200` Steps)
+
+All three variants have **identical parameter counts** and are evaluated at **100% hard `4-bit` integer quantization** on unseen validation chunks:
+
+| Student Variant (`24` Layers, `336 KB` 4-Bit Trunk Weights) | Held-Out Hard 4-Bit `Val NLL` | Held-Out Hard 4-Bit `Val PPL` | Top-1 Agreement w/ `LFM3-Omni-2B` |
+|---|---:|---:|---:|
+| **Variant A:** Plain Block-Circulant (`Hard CE only`, no teacher logits) | `8.8462` | `6,947.68` | `4.13%` |
+| **Variant B:** Plain Block-Circulant + **`LFM3-Omni-2B` Top-32 Logit KD** (`T = 1.5`) | `8.0721` | **`3,203.85` (`2.17×` better)** | **`10.35%` (`2.51×` higher)** |
+| **Variant C (Winner):** **Butterfly-Permuted Block-Circulant** (`[8,8,8]` transpose) + **Soft$\to$Hard STE** + **Omni KD + Layer-12/24 Cosine Hints** | **`7.9655`** | **`2,879.95` (`2.41×` better)** | **`10.67%` (`2.58×` higher)** |
+
+### 5.3 Pure-C11 `x-cruncher` Verification of Winning `Block-TrunkLM-24` (`experiments/block_trunklm_c.c`)
+- **24-Layer Pure-C11 `x-cruncher` vs. PyTorch Hard `4-Bit` QAT Logit Cosine (`24,920` BPE vocab):** **`0.999979`**
+- **Top-1 Predicted BPE Token ID (`C11 x-cruncher` vs. `PyTorch`):** **`22` vs. `22` (`EXACT MATCH`)**
+- External LLM / subagent architecture submissions can be benchmarked directly against Variant C using [CHALLENGE-SPEC.md](CHALLENGE-SPEC.md).
+
+---
+
+## 6. What Remains Unknown & Next Scale Step
+
+1. **Multi-GPU `2B–5B` Token Run:** Scaling Variant C (`D = 2048, B = 64` = `5.38 MB` of 4-bit Trunk weights across 24 layers) on GPU over `2B–5B` tokens with online `LFM3-Omni-2B` Stage-1 logits followed by `10M–50M` cached Top-128 `Kimi K3.1 Pro` Stage-2 reasoning tokens.
+2. **Multi-Token Block-Diffusion Decode:** Pairing `Block-TrunkLM-24` with `16–64`-token parallel draft decoding so generation stays in `xc_mul_trunk`'s multi-token fast path.
