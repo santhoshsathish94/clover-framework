@@ -117,12 +117,17 @@ MODEL_STAGE_DEFAULTS: dict[str, tuple[str, ...]] = {
         "/opt/clover-k3/clover-35b-computed/hf-stage",
     ),
     "nemotron-3.5-super-vl": (
+        "/opt/clover-k3/nemotron-3.5-super-vl-computed/hf-stage",
         "/opt/clover-gx10/nemotron-computed/hf-stage",
         "/opt/clover-k3/nemotron-computed/hf-stage",
     ),
     "nemotron": (
+        "/opt/clover-k3/nemotron-3.5-super-vl-computed/hf-stage",
         "/opt/clover-gx10/nemotron-computed/hf-stage",
         "/opt/clover-k3/nemotron-computed/hf-stage",
+    ),
+    "kimi-k3.1-pro": (
+        "/opt/clover-k3/kimi-k3.1-pro-computed/hf-stage",
     ),
     "kimi-k3": (
         "/opt/clover-k3/kimi-k3.1-pro-computed/hf-stage",
@@ -941,10 +946,11 @@ class OmniC2C3Runtime:
                 for p in (models_root / "clover-35b-a3b", Path("/opt/clover-k3/clover-framework/clover-ai-system/src/models/clover-35b-a3b")):
                     if p.is_dir() and str(p) not in _sys.path:
                         _sys.path.insert(0, str(p))
-                hg4_c35 = Path("/opt/clover-k3/clover35b-hg4")
+                use_full_c35 = os.environ.get("CLOVER_C35B_FULL_HG4", "0") == "1"
+                hg4_c35 = Path("/opt/clover-k3/clover35b-full-hg4") if (use_full_c35 and Path("/opt/clover-k3/clover35b-full-hg4/meta.bin").is_file()) else Path("/opt/clover-k3/clover35b-hg4")
                 if (hg4_c35 / "meta.bin").is_file() and (hg4_c35 / "libclover35b_hg4_engine.so").is_file():
                     from clover_35b_hybrid_ncm import Clover35BNativeHg4Engine
-                    eng = Clover35BNativeHg4Engine(hg4_dir=hg4_c35)
+                    eng = Clover35BNativeHg4Engine(hg4_dir=hg4_c35, so_path=hg4_c35 / "libclover35b_hg4_engine.so")
                     self._c1_stage_cap = 256
                 else:
                     from clover_35b_hybrid_ncm import Clover35BPrecomputedEngine
@@ -967,7 +973,8 @@ class OmniC2C3Runtime:
                     if p.is_dir() and str(p) not in _sys.path:
                         _sys.path.insert(0, str(p))
                 from nemotron_hybrid_ncm import NemotronNativeCPUEngine
-                hg4_n = Path("/opt/clover-k3/nemotron-hg4")
+                use_full_n = os.environ.get("CLOVER_NEMO_FULL_HG4", "0") == "1"
+                hg4_n = Path("/opt/clover-k3/nemotron-full-hg4") if (use_full_n and Path("/opt/clover-k3/nemotron-full-hg4/meta.bin").is_file()) else Path("/opt/clover-k3/nemotron-hg4")
                 if (hg4_n / "meta.bin").is_file() and (hg4_n / "libnemotron_hg4_engine.so").is_file():
                     eng_n = NemotronNativeCPUEngine(
                         pruned_dataset_dir=hg4_n,
@@ -986,16 +993,40 @@ class OmniC2C3Runtime:
             except Exception:
                 fn = None
         elif self.vocab_size == 163840 and self.d_model == 7168:
-            norm_path = self.pre / "trunks" / "global-0" / "norm.bf16.bin"
-            norm_w = (
-                (np.fromfile(norm_path, dtype=np.uint16).astype(np.uint32) << 16).view(np.float32)
-                if norm_path.is_file()
-                else np.ones(self.d_model, dtype=np.float32)
-            )
-            def _kimi_raw(seq_ids: list[int]) -> np.ndarray:
-                emb = self.token_embeddings_2048(seq_ids)
-                return rms_norm(emb, norm_w, 1e-5)
-            fn = _kimi_raw
+            hg4_k31 = Path("/opt/clover-k3/kimi-k31-hg4")
+            if (hg4_k31 / "meta.bin").is_file() and (hg4_k31 / "libkimi_k31_hg4_engine.so").is_file():
+                try:
+                    import ctypes as _ct
+                    klib = _ct.CDLL(str(hg4_k31 / "libkimi_k31_hg4_engine.so"))
+                    klib.kimi_k31_hg4_init.argtypes = [_ct.c_char_p]
+                    klib.kimi_k31_hg4_init.restype = _ct.c_int
+                    klib.kimi_k31_hg4_forward_stage.argtypes = [_ct.POINTER(_ct.c_int), _ct.c_int, _ct.POINTER(_ct.c_float)]
+                    klib.kimi_k31_hg4_forward_stage.restype = _ct.c_float
+                    if klib.kimi_k31_hg4_init(str(hg4_k31).encode()) == 0:
+                        self._c1_stage_cap = 96
+                        def _kimi_hg4(seq_ids: list[int], _lib: Any = klib) -> np.ndarray:
+                            ids_c = np.asarray([max(0, min(self.vocab_size - 1, int(x))) for x in (seq_ids or [self.tok.bos_token_id])], dtype=np.int32)
+                            out_h = np.empty((len(ids_c), self.d_model), dtype=np.float32)
+                            _lib.kimi_k31_hg4_forward_stage(
+                                ids_c.ctypes.data_as(_ct.POINTER(_ct.c_int)),
+                                int(len(ids_c)),
+                                out_h.ctypes.data_as(_ct.POINTER(_ct.c_float)),
+                            )
+                            return out_h
+                        fn = _kimi_hg4
+                except Exception:
+                    fn = None
+            if fn is None:
+                norm_path = self.pre / "trunks" / "global-0" / "norm.bf16.bin"
+                norm_w = (
+                    (np.fromfile(norm_path, dtype=np.uint16).astype(np.uint32) << 16).view(np.float32)
+                    if norm_path.is_file()
+                    else np.ones(self.d_model, dtype=np.float32)
+                )
+                def _kimi_raw(seq_ids: list[int]) -> np.ndarray:
+                    emb = self.token_embeddings_2048(seq_ids)
+                    return rms_norm(emb, norm_w, 1e-5)
+                fn = _kimi_raw
 
         if fn is None:
             fn = self.token_embeddings_2048
