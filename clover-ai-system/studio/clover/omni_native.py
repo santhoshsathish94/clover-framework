@@ -10,6 +10,7 @@ Media files live in CloverAI\\media (the user clears or backs them up) and reach
 """
 import datetime
 import json
+import os
 import re
 import threading
 import time
@@ -960,31 +961,40 @@ class OmniNative(N.LFM3Native):
         self.base_dir, self.perms, self.quant = base_dir, perms, quant
         self.voice_threads = int(voice_threads)
         paths, missing = omni_files(base_dir, quant)
-        if missing:
+        import hg4_engine
+        hg4_ok, hg4_why = hg4_engine.hg4_available(base_dir)
+        use_hg4 = (
+            engine == "hg4"
+            or (engine == "cpu" and hg4_ok and os.environ.get("CLOVER_DISABLE_HG4") != "1")
+        )
+        if use_hg4 and not hg4_ok:
+            raise FileNotFoundError(hg4_why + " (run Clover AI Studio setup again)")
+        if not use_hg4 and missing:
             raise FileNotFoundError("missing " + ", ".join(missing) + " (run Clover AI Studio setup again)")
         self.media_dir = base_dir / "media"
         self.media_dir.mkdir(parents=True, exist_ok=True)
         ff_txt = base_dir / "tools" / "ffmpeg" / "BIN.txt"
         self.ffmpeg_dir = ff_txt.read_text(encoding="utf-8").strip() if ff_txt.is_file() else ""
-        extra = ["--reasoning", "off", "--media-path", str(self.media_dir), "--video-fps", "2"]
-        if ANDROID:
-            # Adreno's OpenCL backend lacks ops of the projector's graph: a picture ended llama-server (S23, b12012); on
-            # the CPU a picture took 8 s and a voice clip 3 s, and 0.74 GB less GPU memory stays pinned
-            extra += ["--no-mmproj-offload"]
-        if self.ffmpeg_dir:
-            extra += ["--video-ffmpeg-dir", self.ffmpeg_dir]
-        kind = "vulkan" if engine == "gpu" else "cpu"
-        progress("LFM3-Omni-2B on the " + (gpu_name if engine == "gpu" else "CPU") + " (llama.cpp, 4-bit)")
         self.engine_kind, self.max_tokens, self.cache = engine, int(max_tokens), None
-        # speech on its own CPU instance while chat has the laptop's GPU; a phone has no memory for a second copy
-        self.separate_voice = engine == "gpu" and not ANDROID
-        # a re-sent prompt is processed again from the last checkpoint, which sits at a ubatch end: the same 4,198-token
-        # VS Code request reprocessed 2,052 tokens at -ub 2048 and 260 at -ub 256 (k3 CPU 3.2 s -> 0.5 s, laptop Iris Xe
-        # Vulkan 5.8 s -> 1.5 s); cold it cost nothing on k3 (5.6 s vs 6.1 s) and 4-8% on the laptop (11.0 s vs 10.6 s);
-        # a 1,920-token picture and a voice clip still worked at 256 on both (TokenEconomizer item 3)
-        ubatch_sz = 256
-        self.gpu = L.LlamaServer(base_dir, kind, max_tokens, ubatch=ubatch_sz, model=paths["model"], mmproj=paths["mmproj"],
-                                 extra_args=extra, name=f"omni-{kind}", timeout_s=300, threads=threads)
+        self.separate_voice = engine == "gpu" and not ANDROID and not missing
+        if use_hg4:
+            progress("LFM3-Omni-2B on the CPU (Clover HG4-128, 4.14-bit, 854 MiB)")
+            self.gpu = hg4_engine.Hg4Server(
+                base_dir, max_tokens=max_tokens, threads=threads,
+                mmproj_paths=paths if not missing else None,
+                media_dir=self.media_dir, voice_threads=self.voice_threads,
+            )
+        else:
+            extra = ["--reasoning", "off", "--media-path", str(self.media_dir), "--video-fps", "2"]
+            if ANDROID:
+                extra += ["--no-mmproj-offload"]
+            if self.ffmpeg_dir:
+                extra += ["--video-ffmpeg-dir", self.ffmpeg_dir]
+            kind = "vulkan" if engine == "gpu" else "cpu"
+            progress("LFM3-Omni-2B on the " + (gpu_name if engine == "gpu" else "CPU") + " (llama.cpp, 4-bit)")
+            ubatch_sz = 256
+            self.gpu = L.LlamaServer(base_dir, kind, max_tokens, ubatch=ubatch_sz, model=paths["model"], mmproj=paths["mmproj"],
+                                     extra_args=extra, name=f"omni-{kind}", timeout_s=300, threads=threads)
         props = self.gpu.props()
         mods = props.get("modalities") or {}
         self.inputs = ["text"] + [k for k in ("vision", "audio") if mods.get(k)] + (["video"] if self.ffmpeg_dir and mods.get("vision") else [])
@@ -1003,17 +1013,27 @@ class OmniNative(N.LFM3Native):
         self.setup_s = round(time.perf_counter() - t0, 2)
 
     def describe(self):
+        is_hg4 = getattr(self.gpu, "kind", "") == "hg4"
+        c1_lbl = (
+            f"C1 LFM3-Omni-2B (Clover HG4-128, {getattr(self.gpu, 'isa_name', 'SIMD')})"
+            if is_hg4 else f"C1 LFM3-Omni-2B (llama.cpp {self.gpu.kind}, {self.quant.upper()})"
+        )
+        w_lbl = "4.14-bit (Clover HG4-128, 854 MiB)" if is_hg4 else f"4-bit ({self.quant.upper()}) + projector Q8_0"
+        b_lbl = (
+            "Clover C11 HG4-128 + C2 HybridAgent + Bridges + C3 11-level NCM"
+            if is_hg4 else ("llama.cpp " + self.gpu.kind + " + C2 HybridAgent + Bridges + C3 11-level NCM")
+        )
         return {"mode": "omni", "model": "LFM3-Omni-2B", "engine": self.engine_kind, "max_tokens": self.max_tokens,
                 "setup_s": self.setup_s, "tools": [t["function"]["name"] for t in N.STUDIO_TOOLS],
                 "layers": [
-                    f"C1 LFM3-Omni-2B (llama.cpp {self.gpu.kind}, {self.quant.upper()})",
+                    c1_lbl,
                     "C2 HybridAgent (HybridLink2048 + Lfm3NativeHybridLink, plan-trunk-0)",
                     "Bridges (Lfm3ComboBridge + Lfm3ExpertBridge, bridge-trunk-0)",
                     "C3 11-level NCM (VQ-VAE + 12L NextConceptTransformer + 3L PointerDecoder)",
                     "S1 Memory & Records · S2 Recall & Ontology · S3 Tools & Compiler · CSI & PPL",
                 ],
-                "device": self.gpu.device, "weights": f"4-bit ({self.quant.upper()}) + projector Q8_0",
-                "backend": "llama.cpp " + self.gpu.kind + " + C2 HybridAgent + Bridges + C3 11-level NCM",
+                "device": self.gpu.device, "weights": w_lbl,
+                "backend": b_lbl,
                 "inputs": self.inputs, "outputs": ["text", "speech"],
                 "speech": (f"CPU, own llama.cpp instance ({self.voice_threads} threads; "
                            + ("running)" if self._voice is not None else "starts when Clover first speaks)")
@@ -1540,7 +1560,11 @@ class OmniNative(N.LFM3Native):
                                 re.I,
                             )
                         )
-                        forced = "required" if (only_tools and schemas and r == 0 and attempt == 0 and not is_cap_q) else None
+                        forced = "required" if (
+                            only_tools and schemas and r == 0
+                            and (attempt == 0 or only_tools in (["run_python"], ["write_file"]))
+                            and not is_cap_q
+                        ) else None
                         if r == 0 and attempt == 0 and only_tools:
                             emit({"type": "plan", "round": r + 1, "stage": "planning", "tools": list(only_tools)})
                         elif r > 0:
@@ -1790,10 +1814,12 @@ class OmniNative(N.LFM3Native):
                             if self.perms.get().get("code") != "deny" or "code" in (allow or ()):
                                 for t_cand in N.STUDIO_TOOLS:
                                     t_fn = t_cand["function"]["name"]
-                                    if t_fn in ("run_python", "calculate") and t_fn not in by_name:
+                                    if t_fn in ("run_python", "calculate") and not any(s["function"]["name"] == t_fn for s in schemas):
                                         schemas.append(t_cand)
                                         by_name[t_fn] = t_cand["function"]
                                         tools = True
+                                if any("Call `run_python`" in f for f in findings):
+                                    only_tools = ["run_python"]
                         msgs.append({"role": "assistant", "content": final})
                         msgs.append({"role": "user", "content": C.AUTO_CYCLE_FIX.format(
                             findings="\n".join("- " + f for f in findings)
@@ -1886,13 +1912,25 @@ class OmniNative(N.LFM3Native):
 
     # ---------------- C1 inference only (setting c1_inference_only) ----------------
     def _c1_server(self):
-        """The same model as an inference-only llama-server (hidden states, never a sampled token), started on first use.
-        Falls back cleanly to CPU if a second Vulkan instance runs out of device memory alongside `self.srv`."""
+        """The same model as an inference-only state engine (hidden states, never a sampled token), started on first use.
+        Uses in-process `Hg4Server` (`0` extra subprocesses) whenever `HG4-128` is active or available."""
         if getattr(self, "local_omni", None) is not None and hasattr(self.local_omni, "_c1_server"):
             return self.local_omni._c1_server()
+        if getattr(getattr(self, "gpu", None), "kind", "") == "hg4":
+            return self.gpu
         srv = getattr(self, "_c1_srv", None)
         if srv is not None and (getattr(srv, "proc", None) is None or srv.proc.poll() is None):
             return srv
+        try:
+            import hg4_engine
+            if getattr(self, "base_dir", None) and hg4_engine.hg4_available(self.base_dir)[0]:
+                self._c1_srv = hg4_engine.Hg4Server(
+                    self.base_dir, max_tokens=min(int(getattr(self, "max_tokens", C1_INFER_CTX)), C1_INFER_CTX),
+                    threads=getattr(self, "_threads", None),
+                )
+                return self._c1_srv
+        except Exception:
+            pass
         model_p = (getattr(self, "_paths", None) or {}).get("model") or getattr(getattr(self, "gpu", None), "model", None)
         gpu_kind = getattr(getattr(self, "gpu", None), "kind", "cpu")
         if model_p and Path(model_p).is_file() and gpu_kind in ("vulkan", "cpu"):

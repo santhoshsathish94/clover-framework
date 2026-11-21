@@ -50,6 +50,10 @@ fi
 
 ${CC_BIN} ${MARCH_FLAGS} "${SCRIPT_DIR}/lfm3_cpu_engine.c" -lm -ldl -o "${SCRIPT_DIR}/liblfm3_cpu_engine.so"
 echo "[Clover-S23] Built ${SCRIPT_DIR}/liblfm3_cpu_engine.so"
+if [[ -f "${SCRIPT_DIR}/lfm3_hg4_engine.c" ]]; then
+    ${CC_BIN} -std=c11 ${MARCH_FLAGS} "${SCRIPT_DIR}/lfm3_hg4_engine.c" -lm -o "${SCRIPT_DIR}/liblfm3_hg4_engine.so"
+    echo "[Clover-S23] Built ${SCRIPT_DIR}/liblfm3_hg4_engine.so (HG4-128 854 MiB engine)"
+fi
 
 # Pin OpenMP to 5 threads for Snapdragon 8 Gen 2 performance cores (X3 + 2xA715 + 2xA710)
 export OMP_NUM_THREADS="${OMP_NUM_THREADS:-5}"

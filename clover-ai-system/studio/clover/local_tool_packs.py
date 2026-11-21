@@ -927,7 +927,7 @@ def analyze_table(
     if isinstance(df, str):
         return df
 
-    if filter_column and str(filter_value or "").strip() != "":
+    if filter_column and str(filter_value or "").strip().lower() not in ("", "*", "all", "any"):
         fcol = _resolve_col(df, filter_column)
         if fcol is None:
             return f"Error: filter_column {filter_column!r} not in columns {list(df.columns)}."

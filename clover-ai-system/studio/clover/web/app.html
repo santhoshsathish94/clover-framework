@@ -1242,7 +1242,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       </div>
       <div class="glabel">Runs on</div>
       <div class="group pad">
-        <div class="seg full" id="s-engine"><button type="button" data-v="gpu">GPU</button><button type="button" data-v="cpu">CPU</button><button type="button" data-v="fused" class="laptop-only">C1 + C2 + C3</button></div>
+        <div class="seg full" id="s-engine"><button type="button" data-v="gpu">GPU</button><button type="button" data-v="cpu">CPU</button><button type="button" data-v="hg4">HG4 (854 MB)</button><button type="button" data-v="fused" class="laptop-only">C1 + C2 + C3</button></div>
         <p class="fine" id="engine-d"></p>
         <div class="note" id="engine-note" hidden></div>
       </div>
@@ -2836,7 +2836,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       }
       else {
         setStatus('ok', 'Clover Ready');
-        $('status-text').title = 'Clover Ready · ' + info.name + ' · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU');
+        $('status-text').title = 'Clover Ready · ' + info.name + ' · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'hg4' ? 'HG4-128 (CPU)' : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU');
       }
       updateSend();
     }).catch(function (e) {
@@ -2929,12 +2929,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       ? 'Runs on the k3 server (AMD Ryzen 9 7950X3D, 124 GB RAM): LFM3-Omni-2B in llama.cpp (Zen 4 AVX-512), Clover-35B-A3B (40-layer BD-GDN/GQA MoE), Nemotron 3.5 Super VL (88-layer C engine + NCM) and Kimi K3.1 Pro 2.8T MoE (93-layer C/Rust engine + Gated DSA + NCM).'
       : isRemote
         ? (info.name + ' hosted on ' + (info.host || 'k3') + ' — ' + (info.desc || 'Connected remote engine.') + ' Local tools, permissions, memory and Clover Cycle run on this device.')
-        : 'GPU and CPU run LFM3-Omni-2B with 4-bit weights in llama.cpp; the GPU (' + gpuName() + ') reads your message several times faster. ' +
-          'C1 + C2 + C3 runs our trained model with its planner (HybridLink) and decoder (NCM) together on the CPU: text only, no tools, slower; being measured.';
+        : 'GPU runs LFM3-Omni-2B on ' + gpuName() + '; CPU and HG4 (854 MB) run Clover\'s native 4.14-bit Hadamard-Gaussian LUT16 engine (with automatic llama.cpp fallback when HG4 is not installed). ' +
+          'C1 + C2 + C3 runs the standalone fused trunk worker.';
     $('s-engine').children[0].textContent = gpuName();
     Array.prototype.forEach.call($('s-engine').children, function (b) {
       var v = b.getAttribute('data-v'); b.classList.toggle('on', v === st.engine);
-      b.disabled = (v === 'gpu' && !sv.gpu_available) || (v === 'fused' && !sv.fused_available);
+      b.disabled = (v === 'gpu' && !sv.gpu_available) || (v === 'hg4' && !sv.hg4_available) || (v === 'fused' && !sv.fused_available);
     });
     setNote('engine-note', sv.warning || (sv.gpu_available === false && !WEB ? 'GPU engine not installed: ' + sv.gpu_reason : '') ||
       (st.engine !== 'fused' && !sv.fused_available ? '' : '') || (running && st.engine && running !== st.engine ? 'Switching engine…' : ''));

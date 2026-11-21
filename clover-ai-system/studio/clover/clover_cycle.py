@@ -1288,6 +1288,32 @@ def synthesize_code_verification_harness(question: str, code: str) -> str:
     return code_s
 
 
+def _has_hardcoded_numeric_sequence(question: str, code: str) -> bool:
+    """True when `question` asks to compute over a bounded range/sequence (e.g. 'below 50', 'between 10 and 100',
+    'first 20 ...') without supplying a literal list in `question`, yet `code` hardcodes a hand-typed literal
+    list/tuple/set of >= 8 numbers with no `range()`/`while` loop to generate the candidates algorithmically."""
+    if not code or not re.search(r"\b(?:below|under|less\s+than|up\s+to|between|first\s+\d+|from\s+\d+\s+to)\b", question or "", re.I):
+        return False
+    if len(re.findall(r"\b\d+\b", question or "")) >= 6:
+        return False
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return False
+    has_loop_gen = any(
+        isinstance(n, ast.While)
+        or (isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == "range")
+        for n in ast.walk(tree)
+    )
+    if has_loop_gen:
+        return False
+    for n in ast.walk(tree):
+        if isinstance(n, (ast.List, ast.Tuple, ast.Set)) and len(n.elts) >= 8:
+            if all(isinstance(e, ast.Constant) and isinstance(e.value, (int, float)) and not isinstance(e.value, bool) for e in n.elts):
+                return True
+    return False
+
+
 def verify_turn_outcome(
     question,
     answer,
@@ -1437,5 +1463,16 @@ def verify_turn_outcome(
                 f"Tool execution check: the user asked to modify/save `{rd_path or 'the file'}`, and you read it with `read_file`, "
                 "but you have not called `write_file` yet to write the updated file content to disk. Call `write_file` now with the complete updated content."
             )
+        else:
+            last_py = next((rd for rd in reversed(rounds_list) if rd.get("tool") == "run_python" and rd.get("ran") and rd.get("worked")), None)
+            py_src = str(((last_py or {}).get("arguments") or {}).get("code") or "")
+            if py_src and _has_hardcoded_numeric_sequence(q, py_src):
+                _applied(checks, "algorithmic python sequence")
+                findings.append(
+                    "Tool execution check: your `run_python` script hardcoded a hand-typed list of numbers instead of "
+                    "generating all candidates algorithmically with `range(...)` and an exact condition check, which "
+                    "can omit elements near the boundary. Call `run_python` again using `range(...)` to generate and "
+                    "filter every candidate algorithmically."
+                )
 
     return findings, meta

@@ -121,8 +121,8 @@ class EngineNotReady(Exception):
 LAYER_KEYS = ("memory", "ontology", "compiler", "ncm", "kv_slots", "recall")
 IMAGE_MODELS = ("auto", "gpt-image-1", "sd15-lcm", "sd15", "diagram")  # Image Generation Gateway tiers
 JEPA_ARCHS = ("auto", "clover_rpre", "ijepa", "audio_jepa", "eb_jepa", "mjepa", "none")
-# gpu / cpu: LFM3-Omni-2B on llama.cpp; fused: C1 + C2 + C3, the phone's fused runtime on the CPU (fused_engine.py)
-ENGINES = ("gpu", "cpu", "fused")
+# gpu / cpu: LFM3-Omni-2B; hg4: Clover C11 HG4-128 (854 MiB); fused: C1 + C2 + C3 runtime (fused_engine.py)
+ENGINES = ("gpu", "cpu", "hg4", "fused")
 WEB_MODELS = ("auto", "omni", "clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3")
 MODELS = WEB_MODELS if paths.WEB else ("auto", "omni")
 
@@ -328,7 +328,7 @@ class Settings:
                 self.data["model"] = m
             if "engine" in changes:
                 if changes["engine"] not in ENGINES:
-                    raise ValueError("engine must be gpu, cpu or fused")
+                    raise ValueError("engine must be gpu, cpu, hg4 or fused")
                 self.data["engine"] = changes["engine"]
             if "tools" in changes:
                 if changes["tools"] not in ("ask", "always"):
@@ -390,9 +390,15 @@ def gpu_available(base):
 
 
 def omni_available(base):
+    import hg4_engine
     import omni_native
     _, missing = omni_native.omni_files(base)
-    return (not missing), ("missing " + ", ".join(missing)) if missing else ""
+    if not missing:
+        return True, ""
+    hg4_ok, _ = hg4_engine.hg4_available(base)
+    if hg4_ok:
+        return True, ""
+    return False, "missing " + ", ".join(missing)
 
 
 def _walkthrough_flag(base):
@@ -1559,7 +1565,7 @@ def load_engine(args):
                     traceback.print_exc()
                     S.load["warning"] = f"C1 + C2 + C3 could not start ({type(exc).__name__}: {exc})"
                     want = hw.get("engine") or "cpu"
-            for kind in ([] if S.engine is not None else [want, "cpu"] if want == "gpu" else ["cpu"]):
+            for kind in ([] if S.engine is not None else [want, "cpu"] if want in ("gpu", "hg4") else ["cpu"]):
                 try:
                     S.engine = omni_native.OmniNative(Path(args.base), S.perms, progress=progress, engine=kind,
                                                       max_tokens=hw.get("ctx") or 65536,
@@ -3022,10 +3028,12 @@ class Handler(BaseHTTPRequestHandler):
             ok, why = gpu_available(S.args.base)
             o_ok, o_why = omni_available(S.args.base)
             import fused_engine
+            import hg4_engine
             import jepa_engine
             import k3_host_engine
             import omni_c2_c3
             f_need = fused_engine.missing(S.args.base)
+            hg4_ok, hg4_why = hg4_engine.hg4_available(S.args.base)
             c2c3_need = omni_c2_c3.missing_c2_c3_files(S.args.base)
             cat = model_catalog()
             owner = k3_host_engine.is_owner_device(S.args.base)
@@ -3037,6 +3045,7 @@ class Handler(BaseHTTPRequestHandler):
                                     "owner": owner,
                                     **({"k3_key": k3_host_engine.k3_host_key()} if (owner and not paths.WEB and k3_host_engine.k3_host_key()) else {}),
                                     "gpu_available": ok, "gpu_reason": why,
+                                    "hg4_available": hg4_ok, "hg4_reason": hg4_why,
                                     "omni_available": o_ok, "omni_reason": o_why, "warning": S.load.get("warning"),
                                     "c2c3_available": not c2c3_need,
                                     "c2c3_reason": ("missing " + ", ".join(c2c3_need)) if c2c3_need else "",

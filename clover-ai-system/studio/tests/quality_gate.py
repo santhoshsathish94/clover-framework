@@ -33,6 +33,7 @@ OFFLINE_SUITES = (
     "test_image_gateway.py",
     "test_local_tool_packs.py",
     "test_xcruncher_tool.py",
+    "test_hg4_engine.py",
 )
 REPORT_VERSION = 2
 

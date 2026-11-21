@@ -141,6 +141,7 @@ class IsolatedStudioServer:
                 "model": "omni",
                 "tools": "ask",
                 "c1_inference_only": False,
+                **({"engine": os.environ["CLOVER_QA_ENGINE"]} if os.environ.get("CLOVER_QA_ENGINE") else {}),
             }), encoding="utf-8")
             cmd = [sys.executable, str(CLOVER_DIR / "server.py"),
                    "--base", str(self.temp_root), "--port", str(self.port), "--idle-exit-min", "15"]
