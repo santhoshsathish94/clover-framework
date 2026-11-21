@@ -33,7 +33,11 @@
 - Always check adversarial worst-case slot saturation (`32-bit` slots for `1M` tokens; `K <= 561,433` for `32-bit`
   Salem–Spencer `P = 4`), report `-march=native` auto-vectorized baselines alongside portable `-O3`, benchmark pilot
   perplexity against a smoothed unigram baseline, and evaluate on the full `128,000` vocabulary + untuned test split.
-- Use **Variant D's recipe** (**Tail-Aware `T = 1.0` Top-K KL** modeling $1 - \sum p_{\text{topK}}$, `dropout = 0.2`,
-  `1.0` hidden-state cosine hints, Butterfly-Transpose Block-Circulant, and `O(D)` channel gain vectors -> **`Test PPL =
-  1,084`**, `128/128` C11 `x-cruncher` Top-1 parity) as the Stage-1 baseline when scaling to `D = 2048` (`3.0 MiB`
-  packed 4-bit trunks) on GPU.
+- **Full-Scale `D = 2048` (`3.75 MiB` 4-Bit Trunks, `6.0 MB` `.trkd`) Two-Stage GPU Run (`2026-11-21`):**
+  - Stage 1 (`49.8M` tok `LFM3-Omni-2B` KD) + Stage 2 (`11.1M` tok `Kimi K3.1 Pro` + `<think>` reasoning + 50% replay)
+    dropped General Held-Out Test PPL from `2.73M -> 200.52 -> 190.51` (`27.6%` Top-1 agreement) and Reasoning Test PPL
+    from `261.75 -> 57.13` (`30.61%` Top-1 agreement across `128K` vocab), with **`0.999970` Pure-C11 `x-cruncher`
+    cosine parity**; checkpoints backed up permanently to `k3:/opt/clover-k3/block-trunklm-2b-distilled/`.
+  - Free autoregressive generation at `60.9M` tokens (`PPL 190.5`) exhibits topic-token repetition—pointing to `2B+`
+    token scaling plus interleaving `4` lightweight selective/GQA state layers alongside `20` Giant-Integer Trunk layers
+    as the next cycle's hypothesis.

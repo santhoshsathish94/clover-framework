@@ -111,7 +111,25 @@ An independent audit and architecture challenge run on `Claude Opus 5.5` verifie
 
 ---
 
-## 6. What Remains Unknown & Next Scale Step
+## 6. Full-Scale `D = 2048` (`3.75 MiB` 4-Bit Trunks) Two-Stage GPU Run (`train_ddp_stage1_d2048.py`, `block_trunklm_d2048_c.c`)
 
-1. **Multi-GPU `2B–5B` Token Run:** Scaling **Variant D** (`D = 2048, B = 64` = `3.0 MiB` of packed 4-bit Trunk weights across 24 layers) on GPU over `2B–5B` tokens with online `LFM3-Omni-2B` Stage-1 tail-aware logits followed by `10M–50M` cached Top-128 `Kimi K3.1 Pro` Stage-2 reasoning tokens.
-2. **Multi-Token Block-Diffusion Decode:** Pairing `Block-TrunkLM-24` with `16–64`-token parallel draft decoding so generation stays in `xc_mul_trunk`'s multi-token fast path.
+We scaled **Variant D** to `LFM3-Omni-2B`'s full native width (`D = 2048`, `B = 64` `32×32` Block-Circulant grids + `[32, 32, 2]` Butterfly-Transpose + `K = 64` Salem–Spencer `P = 4` causal kernels, native `128,000` BPE vocabulary with frozen `LFM3-Omni-2B` embeddings = **zero PCA loss**) on `RTX 3090` GPUs (`4×` for Stage 1; `3×` for Stage 2 while `GPU 3` ran Blender rendering):
+
+- **Total 4-Bit Giant-Integer Trunk Weights (All 24 Layers):** **`3.75 MiB`** (`3,932,160` bytes; **`6.0 MB`** total `.trkd` file including all `O(D)` gains/norms/scales—**`576×–922×` smaller** than `LFM3-Omni-2B`'s `3.46 GB` BF16 backbone).
+- **Stage 1 (`LFM3-Omni-2B` Online Tail-Aware Top-64 KD + Layer 6/12/18/24 Cosine Hints):** `1,350` steps (`49.77M` multi-domain tokens: `FineWeb-Edu` + Python code + `GSM8K` math, `~55 min` at `15.5K tok/s`).
+- **Stage 2 (`Kimi K3.1 Pro` Exemplars + Multi-Round `<think>`/Python Reasoning + 50% Stage-1 Replay):** `300` steps (`11.06M` tokens at `lr = 6e-4`, `~16 min` on `3× RTX 3090`).
+
+### 6.1 Held-Out Test Results Across Full `128,000` Vocabulary (`100%` Hard `4-Bit` Evaluation)
+
+| Checkpoint (`D = 2048`, `3.75 MiB` 4-Bit Trunks) | General Held-Out `Test PPL` *(Teacher `30.80`)* | General Top-1 Agree | Reasoning / Kimi `Test PPL` *(Teacher `7.60`)* | Reasoning Top-1 Agree |
+|---|---:|---:|---:|---:|
+| **Step 0** *(Untrained random 4-bit trunks)* | `2,731,161` | `0.58%` | — | — |
+| **After Stage 1** *(`49.8M` tok on `LFM3-Omni-2B`)* | `200.52` | `27.75%` | `261.75` | `19.80%` |
+| **After Stage 2** *(`+ 11.1M` tok `Kimi` + Reasoning + Replay)* | **`190.51`** | **`27.56%`** | **`57.13` (`4.58×` better!)** | **`30.61%`** |
+
+### 6.2 Full-Scale `D = 2048` Pure-C11 `x-cruncher` Verification & Honest Generation Observation
+- **Pure-C11 `x-cruncher` Parity (`block_trunklm_d2048_c.c`):** Loading the `6.0 MB` `block_trunklm24_d2048.trkd` binary and executing all 24 `D = 2048` layers purely via `xc_mul_u64` achieved **`0.999970` mean / `0.999955` min** final-state cosine against PyTorch Hard `4-Bit` QAT and **`14 / 15` (`93.3%`)** exact Top-1 token agreement across the `128,000` vocabulary.
+- **Honest Free-Generation Limit Observed at `60.9M` Tokens (`PPL 190.5`):** While teacher-forced single-token Top-1 agreement reached **`28–31%`** (`and Reasoning PPL = 57.13`), multi-step free autoregressive rollout degenerates after 1–3 words into topic-word repetition (`"computer computer..."`). Two clear reasons explain this:
+  1. **Token Budget (`60.9M` vs. `2B–5B` tokens):** `60.9M` tokens is `~2%` of standard `MOHAWK` cross-architecture distillation (`2B–5B` tokens needed to push general `PPL` from `190` down toward `<50`).
+  2. **Pure Conv-Circulant Without Selective State Reset (`Hybrid Attention`):** `LFM3-Omni-2B` itself interleaves `16` conv layers with **`8` GQA attention layers** (`layers 2, 6, 10, 14, 18, 22, ...`); pure fixed-tap causal conv + `3.75 MiB` circulant projections lack selective key-value deduplication over generated tokens, making a **hybrid (`20` Giant-Int Trunk layers + `4` tiny GQA / selective-state layers)** the natural next architectural iteration.
+- **Permanent Checkpoints Saved on `k3`:** `/opt/clover-k3/block-trunklm-2b-distilled/` (`checkpoints_s1`, `checkpoints_s2/block_trunklm24_d2048.trkd`, `final_test_summary.json`, and full training logs).
