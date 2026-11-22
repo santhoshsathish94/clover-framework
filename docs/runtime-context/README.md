@@ -18,6 +18,7 @@ This directory organizes all 27 engineering context documents and measurement le
 | [clover-lfm3-1.7b-stage-study-context.md](engine-and-architecture/clover-lfm3-1.7b-stage-study-context.md) | Liquid AI `LFM3-1.7B` 24-layer tri-hybrid stage-by-stage verification and Clover K3 comparison |
 | [clover-nemotron-3.5-super-vl-stage-study-context.md](engine-and-architecture/clover-nemotron-3.5-super-vl-stage-study-context.md) | NVIDIA `Nemotron 3.5 Super VL (120B-A12B)` 88-layer Mamba-2 + Latent `ReLU²` MoE + NoPE GQA + C-RADIO + MTP stage study |
 | [clover-ai-system-switchable-models-context.md](engine-and-architecture/clover-ai-system-switchable-models-context.md) | `clover-ai-system/` switchable Layer-1 model architecture (`kimi-k3`, `nemotron-3.5-super-vl`, `lfm3-1.7b`) and Nemotron precomputed trunk/operator/expert engine |
+| [clover-hg4-opencode-fusion-egm-lean-context.md](engine-and-architecture/clover-hg4-opencode-fusion-egm-lean-context.md) | Pure-`C1` `HG4-16R-OP` `/v1` Fusion Gateway + `OpenCode` + Google `Elephant–Goldfish (EGM)` + Certified Lean 4 `RiemannHypothesis` verification roadmap & ledger |
 | [layer0-verdict.md](engine-and-architecture/layer0-verdict.md) | Layer 0 input-to-embedding and dense KDA stage measurements |
 
 ## 2. Foundational Papers 1943–2017 (`foundational-papers-1943-to-2017/`)

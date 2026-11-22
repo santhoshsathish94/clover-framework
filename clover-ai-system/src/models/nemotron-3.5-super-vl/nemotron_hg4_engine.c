@@ -78,7 +78,7 @@ enum {
     NEMO_GQA_HDIM     = 128,
     NEMO_MAX_K        = 8192,
     NEMO_MAX_LAYERS   = 96,
-    NEMO_MAX_SEQ      = 4096,
+    NEMO_MAX_SEQ      = 32768,
     NEMO_PANEL_MAX    = 256
 };
 
@@ -1778,6 +1778,40 @@ NEMO_API void nemo_cache_reset(void) {
     }
 }
 
+#ifndef _WIN32
+static void nhg4_pin_hot_experts_from_constants(const char *hg4_dir) {
+    char cpath[1024];
+    snprintf(cpath, sizeof(cpath), "%s/precomputed_ops/constants.bin", hg4_dir);
+    FILE *cf = fopen(cpath, "rb");
+    if (!cf) return;
+    char magic[8];
+    uint32_t hdr[3];
+    if (fread(magic, 1, 8, cf) == 8 && memcmp(magic, "HG4OP001", 8) == 0 &&
+        fread(hdr, 4, 3, cf) == 3 && hdr[2] == 512) {
+        uint32_t n_rec = hdr[1];
+        for (uint32_t r = 0; r < n_rec; r++) {
+            uint16_t meta4[4];
+            uint32_t stride = 0;
+            uint16_t hot[512];
+            if (fread(meta4, 2, 4, cf) != 4 || fread(&stride, 4, 1, cf) != 1 || fread(hot, 2, 512, cf) != 512) break;
+            int lid = (int)meta4[0];
+            int pin_n = (meta4[2] < 24) ? (int)meta4[2] : 24;
+            long ps_l = sysconf(_SC_PAGESIZE);
+            size_t ps = (ps_l > 0) ? (size_t)ps_l : 4096u;
+            if (lid >= 0 && lid < g_nhg4.n_layers && g_nhg4.layers[lid].experts.exp_base) {
+                for (int i = 0; i < pin_n; i++) {
+                    const uint8_t *ep = g_nhg4.layers[lid].experts.exp_base + (size_t)hot[i] * g_nhg4.layers[lid].experts.exp_stride;
+                    uintptr_t pg = ((uintptr_t)ep) & ~(uintptr_t)(ps - 1u);
+                    size_t mlen = ((uintptr_t)ep - pg) + (size_t)g_nhg4.layers[lid].experts.exp_stride;
+                    madvise((void *)pg, mlen, MADV_WILLNEED);
+                }
+            }
+        }
+    }
+    fclose(cf);
+}
+#endif
+
 NEMO_API int nemo_engine_init(const char *hg4_dir) {
     if (g_nhg4.initialized && strcmp(g_nhg4.loaded_dir, hg4_dir) == 0) return 0;
     if (g_nhg4.initialized) {
@@ -1916,6 +1950,9 @@ NEMO_API int nemo_engine_init(const char *hg4_dir) {
         g_nhg4.scr_moe_inter = (float *)malloc((size_t)NEMO_TOP_K * NEMO_MOE_INTER * sizeof(float));
         g_nhg4.scr_moe_out   = (float *)malloc((size_t)NEMO_TOP_K * NEMO_LATENT * sizeof(float));
     }
+#ifndef _WIN32
+    if (g_nhg4.is_16r) nhg4_pin_hot_experts_from_constants(hg4_dir);
+#endif
     snprintf(g_nhg4.loaded_dir, sizeof(g_nhg4.loaded_dir), "%s", hg4_dir);
     g_nhg4.cache_len = 0;
     nemo_dm_reset();

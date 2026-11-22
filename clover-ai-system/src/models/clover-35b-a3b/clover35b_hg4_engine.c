@@ -50,7 +50,7 @@ enum {
     C35_MOE_INT    = 512,
     C35_TOP_K      = 8,
     C35_MAX_LAYERS = 40,
-    C35_MAX_SEQ    = 4096,
+    C35_MAX_SEQ    = 32768,
     C35_PANEL_MAX  = 256
 };
 
@@ -1592,6 +1592,40 @@ C35_API void clover35b_hg4_cache_reset(void) {
     }
 }
 
+#ifndef _WIN32
+static void c35_pin_hot_experts_from_constants(const char *hg4_dir) {
+    char cpath[1024];
+    snprintf(cpath, sizeof(cpath), "%s/precomputed_ops/constants.bin", hg4_dir);
+    FILE *cf = fopen(cpath, "rb");
+    if (!cf) return;
+    char magic[8];
+    uint32_t hdr[3];
+    if (fread(magic, 1, 8, cf) == 8 && memcmp(magic, "HG4OP001", 8) == 0 &&
+        fread(hdr, 4, 3, cf) == 3 && hdr[2] == 256) {
+        uint32_t n_rec = hdr[1];
+        for (uint32_t r = 0; r < n_rec; r++) {
+            uint16_t meta4[4];
+            uint32_t stride = 0;
+            uint16_t hot[256];
+            if (fread(meta4, 2, 4, cf) != 4 || fread(&stride, 4, 1, cf) != 1 || fread(hot, 2, 256, cf) != 256) break;
+            int lid = (int)meta4[0];
+            int pin_n = (meta4[2] < 32) ? (int)meta4[2] : 32;
+            long ps_l = sysconf(_SC_PAGESIZE);
+            size_t ps = (ps_l > 0) ? (size_t)ps_l : 4096u;
+            if (lid >= 0 && lid < g_c35.n_layers && g_c35.layers[lid].ex.exp_base) {
+                for (int i = 0; i < pin_n; i++) {
+                    const uint8_t *ep = g_c35.layers[lid].ex.exp_base + (size_t)hot[i] * g_c35.layers[lid].ex.exp_stride;
+                    uintptr_t pg = ((uintptr_t)ep) & ~(uintptr_t)(ps - 1u);
+                    size_t mlen = ((uintptr_t)ep - pg) + (size_t)g_c35.layers[lid].ex.exp_stride;
+                    madvise((void *)pg, mlen, MADV_WILLNEED);
+                }
+            }
+        }
+    }
+    fclose(cf);
+}
+#endif
+
 C35_API int clover35b_hg4_init(const char *hg4_dir) {
     if (g_c35.ready && strcmp(g_c35.loaded_dir, hg4_dir) == 0) return 0;
     if (g_c35.ready) {
@@ -1683,6 +1717,9 @@ C35_API int clover35b_hg4_init(const char *hg4_dir) {
         g_c35.scr_moe_hid = (float *)malloc((size_t)C35_TOP_K * C35_MOE_INT * sizeof(float));
         g_c35.scr_moe_out = (float *)malloc((size_t)C35_TOP_K * C35_D * sizeof(float));
     }
+#ifndef _WIN32
+    if (g_c35.is_16r) c35_pin_hot_experts_from_constants(hg4_dir);
+#endif
     snprintf(g_c35.loaded_dir, sizeof(g_c35.loaded_dir), "%s", hg4_dir);
     g_c35.cache_len = 0;
     g_c35.ready = 1;

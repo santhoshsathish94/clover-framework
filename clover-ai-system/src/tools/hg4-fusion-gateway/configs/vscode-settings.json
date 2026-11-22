@@ -1,0 +1,34 @@
+{
+  "github.copilot.chat.customOAIModels": {
+    "clover-fusion-high": {
+      "name": "Clover Fusion High (Cascade)",
+      "url": "http://127.0.0.1:8790/v1",
+      "toolCalling": true,
+      "vision": false,
+      "thinking": false,
+      "maxInputTokens": 32768,
+      "maxOutputTokens": 4096,
+      "requiresAPIKey": false
+    },
+    "clover-egm-elephant": {
+      "name": "Clover EGM Elephant (Nemotron-120B)",
+      "url": "http://127.0.0.1:8790/v1",
+      "toolCalling": true,
+      "vision": false,
+      "thinking": false,
+      "maxInputTokens": 32768,
+      "maxOutputTokens": 4096,
+      "requiresAPIKey": false
+    },
+    "clover-egm-goldfish": {
+      "name": "Clover EGM Goldfish (Clover-35B reviewer)",
+      "url": "http://127.0.0.1:8790/v1",
+      "toolCalling": true,
+      "vision": false,
+      "thinking": false,
+      "maxInputTokens": 32768,
+      "maxOutputTokens": 400,
+      "requiresAPIKey": false
+    }
+  }
+}

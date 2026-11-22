@@ -1,0 +1,107 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "clover": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Clover HG4 Fusion Gateway",
+      "options": {
+        "baseURL": "http://127.0.0.1:8790/v1",
+        "apiKey": "clover-local"
+      },
+      "models": {
+        "clover-fusion-high": {
+          "name": "Clover Fusion High (Cascade: Clover-35B -> Nemotron-120B)",
+          "tool_call": true,
+          "temperature": true,
+          "limit": { "context": 32768, "output": 4096 }
+        },
+        "clover-fusion-standard": {
+          "name": "Clover Fusion Standard (Omni-2B triage / Clover-35B coding)",
+          "tool_call": true,
+          "temperature": true,
+          "limit": { "context": 16384, "output": 4096 }
+        },
+        "clover-fusion-max": {
+          "name": "Clover Fusion Max (Critique: Nemotron draft + Clover audit)",
+          "tool_call": true,
+          "temperature": true,
+          "limit": { "context": 32768, "output": 4096 }
+        },
+        "clover-egm-elephant": {
+          "name": "EGM Elephant (Nemotron-3.5-Super-VL 120B)",
+          "tool_call": true,
+          "temperature": true,
+          "limit": { "context": 32768, "output": 4096 }
+        },
+        "clover-egm-goldfish": {
+          "name": "EGM Goldfish (Clover-35B-A3B, <= 400 tokens, non-veto)",
+          "tool_call": true,
+          "temperature": true,
+          "limit": { "context": 32768, "output": 400 }
+        },
+        "clover-35b-a3b": {
+          "name": "Clover-35B-A3B (HG4-16R)",
+          "tool_call": true,
+          "temperature": true,
+          "limit": { "context": 32768, "output": 4096 }
+        },
+        "nemotron-3.5-super-vl": {
+          "name": "Nemotron-3.5-Super-VL 120B (HG4-16R, 2L-MTP)",
+          "tool_call": true,
+          "temperature": true,
+          "limit": { "context": 32768, "output": 4096 }
+        },
+        "lfm3-omni-2b": {
+          "name": "LFM3-Omni-2B (HG4)",
+          "tool_call": true,
+          "temperature": true,
+          "limit": { "context": 16384, "output": 2048 }
+        },
+        "kimi-k3": {
+          "name": "Kimi K3 (2.8T K3MAPS01 via clover-k3-chat)",
+          "tool_call": true,
+          "temperature": true,
+          "limit": { "context": 32768, "output": 4096 }
+        }
+      }
+    }
+  },
+  "model": "clover/clover-35b-a3b",
+  "small_model": "clover/lfm3-omni-2b",
+  "agent": {
+    "elephant": {
+      "description": "Elephant (EGM): long-horizon owner. Writes specs, decomposes theorems/tasks into verifiable sub-goals and integrates Goldfish findings.",
+      "mode": "primary",
+      "model": "clover/clover-egm-elephant",
+      "temperature": 0.2
+    },
+    "goldfish": {
+      "description": "Goldfish (EGM): stateless non-veto reviewer. Reports only concrete logic/type/edge-case findings as structured JSON in <= 400 tokens.",
+      "mode": "subagent",
+      "model": "clover/clover-egm-goldfish",
+      "temperature": 0.0,
+      "tools": { "write": false, "edit": false, "bash": false }
+    },
+    "build": {
+      "model": "clover/clover-35b-a3b"
+    }
+  },
+  "permission": {
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow"
+  },
+  "mcp": {
+    "rea": {
+      "type": "local",
+      "command": ["/mnt/nvme1/clover-rh-bench/node/bin/rea-agents", "mcp"],
+      "enabled": true
+    },
+    "clover-lean-xcruncher": {
+      "type": "local",
+      "command": ["python3", "/mnt/nvme1/clover-rh-bench/harness/mcp_clover_tools.py"],
+      "enabled": false
+    }
+  }
+}

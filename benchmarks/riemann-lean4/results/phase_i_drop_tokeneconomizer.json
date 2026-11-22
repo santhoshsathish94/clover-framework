@@ -1,0 +1,306 @@
+{
+  "phase": "I_drop_tokeneconomizer",
+  "flags": {
+    "base_model": "clover-35b-a3b",
+    "tokeneconomizer": false,
+    "clover_mcp": false,
+    "skills": true,
+    "cascade": false,
+    "egm": false,
+    "rea": true
+  },
+  "boundary_hashes": {
+    "suite_sha256": "415c9148ad75ba7338bd365a8305baf17258e3a2fd957381ff487f7f071a1d26",
+    "oracle_sha256": "52d731367acdb28593a3d86633e2e762736ae24cd6ef7d42e780499efa58c937",
+    "ablation_sha256": "6d5ef9d6e4d061f2e263fdaf510cdf22c2e8c8347c21e7d8d830291e8446a6b1",
+    "runner_sha256": "78fd110a1be269b11dab82f4e3f36283cff5267ee47bf22cf6e8ecab1032c089"
+  },
+  "total_passed": 9,
+  "total_tasks": 23,
+  "by_tier": {
+    "tier1_spec_roundtrip": {
+      "passed": 2,
+      "total": 2
+    },
+    "tier2_leaf_tactic_repair": {
+      "passed": 0,
+      "total": 9
+    },
+    "tier3_egm_subgoal_audit": {
+      "passed": 3,
+      "total": 4
+    },
+    "tier4_verifier_swe": {
+      "passed": 2,
+      "total": 4
+    },
+    "tier5_reverse_engineering": {
+      "passed": 2,
+      "total": 4
+    }
+  },
+  "total_tokens": 22705,
+  "total_wall_s": 672.52,
+  "passes_per_hour": 48.18,
+  "escalations": 0,
+  "false_rejections": 1,
+  "goldfish_false_rejections": 0,
+  "elephant_false_rejections": 0,
+  "probes": {
+    "opencode_turn1_prompt_tokens": 1402,
+    "opencode_turn1_wall_s": 24.03,
+    "opencode_turn2_wall_s": 1.11,
+    "opencode_turn2_answered_correctly": true,
+    "omni2b_prompt_tokens": 1539,
+    "omni2b_escaped_webfetch_loop": true,
+    "omni2b_switched_to_read": false
+  },
+  "results": [
+    {
+      "task_id": "rh_t1_spec_01",
+      "tier": "tier1_spec_roundtrip",
+      "passed": true,
+      "stage": "kernel_verified",
+      "escalated": false,
+      "tokens": 665,
+      "wall_s": 16.07
+    },
+    {
+      "task_id": "rh_t1_spec_02",
+      "tier": "tier1_spec_roundtrip",
+      "passed": true,
+      "stage": "kernel_verified",
+      "escalated": false,
+      "tokens": 668,
+      "wall_s": 15.19
+    },
+    {
+      "task_id": "rh_t2_short_1_6_01",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "short_1_6",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_41n52zq3.lean:10:57: error: unsolved goals\nO : Type u_1\ninst\u271d\u00b2 : CommRing O\ninst\u271d\u00b9 : IsDomain O\ninst\u271d : IsDiscreteValuationRing O\n\u03b9 : Type\ns : Finset \u03b9\na : \u03b9 \u2192 O\n\u22a2 (IsDiscreteValuationRing.addVal O) (\u220f i \u2208 s, a i) = \u2211 i \u2208 s, (IsDiscreteValuationRing.addVal O) (a i)\n/tmp/clover_lean_",
+      "escalated": false,
+      "tokens": 689,
+      "wall_s": 18.08
+    },
+    {
+      "task_id": "rh_t2_short_1_6_02",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "short_1_6",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_p50z7p66.lean:9:41: error: unsolved goals\nF : Type\ninst\u271d\u00b9 : Field F\ninst\u271d : NumberField F\n\u03b9 : Type\ns : Finset \u03b9\nQ : \u03b9 \u2192 \ud835\udcde F \u2192 Prop\nhQ : \u2200 (i : \u03b9) (c r : \ud835\udcde F), Q i c \u2192 Q i (c * r)\nh : \u2200 i \u2208 s, \u2203 c, c \u2260 0 \u2227 Q i c\n\u22a2 \u2203 c, c \u2260 0 \u2227 \u2200 i \u2208 s, Q i c\n/tmp/clover_lean_verify_sandbox/cand_p50z7",
+      "escalated": false,
+      "tokens": 757,
+      "wall_s": 21.42
+    },
+    {
+      "task_id": "rh_t2_short_1_6_03",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "short_1_6",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_v83_k9b_.lean:10:27: error: unsolved goals\nK : Type\ninst\u271d : Field K\nM : \u2115\ng : \u2115 \u2192 K\nhg : \u2200 (i : \u2115), g (i + M) = g i\nk x : \u2115\n\u22a2 g (M * k + x) = g x\n/tmp/clover_lean_verify_sandbox/cand_v83_k9b_.lean:11:2: error: unexpected token 'by'; expected command\n'_private._stdin.0.Bl.PeriodicFun",
+      "escalated": false,
+      "tokens": 629,
+      "wall_s": 15.61
+    },
+    {
+      "task_id": "rh_t2_medium_7_14_01",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "medium_7_14",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_wc25q2xp.lean:10:84: error: unsolved goals\nR : Type u_1\ninst\u271d : CommRing R\ni N : \u2115\nA : Matrix (Fin i) (Fin N) R\nB : Matrix (Fin N) (Fin i) R\n\u22a2 (A * B).det = \u2211 f, (\u220f a, A a (f a)) * (B.submatrix f id).det\n/tmp/clover_lean_verify_sandbox/cand_wc25q2xp.lean:11:2: error: unexpected toke",
+      "escalated": false,
+      "tokens": 1365,
+      "wall_s": 61.78
+    },
+    {
+      "task_id": "rh_t2_medium_7_14_02",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "medium_7_14",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_lsdhh6yn.lean:10:70: error: unsolved goals\nK : Type u_1\ninst\u271d\u00b9 : Field K\ninst\u271d : NumberField K\n\u03b9 : Type u_2\nw : FinitePlace K\nt : Finset \u03b9\na : \u03b9 \u2192 K\nM : \u211d\nhM : 0 \u2264 M\nh : \u2200 i \u2208 t, w (a i) \u2264 M\n\u22a2 w (\u2211 i \u2208 t, a i) \u2264 M\n/tmp/clover_lean_verify_sandbox/cand_lsdhh6yn.lean:11:2: error: unexp",
+      "escalated": false,
+      "tokens": 803,
+      "wall_s": 25.81
+    },
+    {
+      "task_id": "rh_t2_medium_7_14_03",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "medium_7_14",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_julk0205.lean:10:72: error: unsolved goals\nn : \u2115\np : Fin n \u2192 \u2102\na : MvPolynomial (Fin n) \u2102\n\u22a2 a - C ((eval p) a) \u2208 Ideal.span (Set.range fun i \u21a6 X i - C (p i))\n/tmp/clover_lean_verify_sandbox/cand_julk0205.lean:11:2: error: unexpected token '`'; expected command\n'Bl.general_b_fact_lef",
+      "escalated": false,
+      "tokens": 1334,
+      "wall_s": 60.82
+    },
+    {
+      "task_id": "rh_t2_hard_15_28_01",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "hard_15_28",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_87i23a76.lean:8:77: error: unsolved goals\n\u03b1 : Type u_1\n\u03b2 : Type u_2\nf : \u03b1 \u2192 \u03b2\nt : Multiset \u03b1\n\u22a2 \u2200 s \u2264 Multiset.map f t, \u2203 u \u2264 t, Multiset.map f u = s\n/tmp/clover_lean_verify_sandbox/cand_87i23a76.lean:9:2: error: unexpected token 'by'; expected command\n'_private._stdin.0.Bl.general_b",
+      "escalated": false,
+      "tokens": 612,
+      "wall_s": 14.84
+    },
+    {
+      "task_id": "rh_t2_hard_15_28_02",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "hard_15_28",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_2k8jo86_.lean:11:28: error: Type mismatch: After simplification, term\n  hv\n has type\n  \u2200 (p : Submodule E V), \u2191\u039b \u2286 \u2191p \u2192 v \u2208 p\nbut is expected to have type\n  v \u2208 \u039b\n'Bl.SecondBlockLemmaE.goal1' depends on axioms: [propext, sorryAx, Classical.choice, Quot.sound]",
+      "escalated": false,
+      "tokens": 639,
+      "wall_s": 14.44
+    },
+    {
+      "task_id": "rh_t2_hard_15_28_03",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "hard_15_28",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_buqdv42e.lean:12:34: error: unsolved goals\nC : Type\ninst\u271d\u2078 : Field C\nR : Type\ninst\u271d\u2077 : CommRing R\ninst\u271d\u2076 : Algebra R C\ninst\u271d\u2075 : IsDomain R\ninst\u271d\u2074 : IsFractionRing R C\nV : Type\ninst\u271d\u00b3 : AddCommGroup V\ninst\u271d\u00b2 : Module C V\ninst\u271d\u00b9 : Module R V\ninst\u271d : IsScalarTower R C V\nS : Submodule R",
+      "escalated": false,
+      "tokens": 738,
+      "wall_s": 20.3
+    },
+    {
+      "task_id": "rh_t3_egm_01_valid_dirichlet_nonvanish",
+      "tier": "tier3_egm_subgoal_audit",
+      "passed": false,
+      "false_rejection": true,
+      "goldfish_false_rejection": false,
+      "elephant_false_rejection": false,
+      "pred_provable": false,
+      "ground_truth_provable": true,
+      "tokens": 733,
+      "wall_s": 18.35
+    },
+    {
+      "task_id": "rh_t3_egm_02_trivial_zeros_missing",
+      "tier": "tier3_egm_subgoal_audit",
+      "passed": true,
+      "false_rejection": false,
+      "goldfish_false_rejection": false,
+      "elephant_false_rejection": false,
+      "pred_provable": false,
+      "ground_truth_provable": false,
+      "tokens": 717,
+      "wall_s": 19.65
+    },
+    {
+      "task_id": "rh_t3_egm_03_valid_landau_nonneg",
+      "tier": "tier3_egm_subgoal_audit",
+      "passed": true,
+      "false_rejection": false,
+      "goldfish_false_rejection": false,
+      "elephant_false_rejection": false,
+      "pred_provable": true,
+      "ground_truth_provable": true,
+      "tokens": 846,
+      "wall_s": 17.61
+    },
+    {
+      "task_id": "rh_t3_egm_04_landau_missing_nonneg",
+      "tier": "tier3_egm_subgoal_audit",
+      "passed": true,
+      "false_rejection": false,
+      "goldfish_false_rejection": false,
+      "elephant_false_rejection": false,
+      "pred_provable": false,
+      "ground_truth_provable": false,
+      "tokens": 895,
+      "wall_s": 23.02
+    },
+    {
+      "task_id": "rh_t4_swe_01_dag_ready_scheduler",
+      "tier": "tier4_verifier_swe",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_6damyjmb/driver.py\", line 5, in <module>\n    exec(compile(\"assert ready_batches({'Main': {'Statements', 'Mathlib'}, 'Statements': {'Mathlib'}}) == [['Statements'], ['Main']]\\nassert ready_batches({'C': {'A', 'B'}, 'B': {'A'}, 'A': set(), 'D': {'A'}}) == [['A'], ['B', 'D'], ['C']]\\ntry:\\n    ready_batches({'A': {'B'}, 'B': {'A'}})\\n    raise AssertionError('Expected ValueError on cycle')\\nexcept ValueError:\\n    pass\\n\", '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_test_suite>\", line 1, in <module>\nAssertionError",
+      "escalated": false,
+      "tokens": 908,
+      "wall_s": 36.82
+    },
+    {
+      "task_id": "rh_t4_swe_02_nested_lean_comment_scanner",
+      "tier": "tier4_verifier_swe",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx__bb80n4j/driver.py\", line 3, in <module>\n    import solution_mod\n  File \"/tmp/clover_swe_sbx__bb80n4j/solution_mod.py\", line 1\n    ```python\n    ^\nSyntaxError: invalid syntax",
+      "escalated": false,
+      "tokens": 1327,
+      "wall_s": 63.0
+    },
+    {
+      "task_id": "rh_t4_swe_03_lcp_prefix_cache_matcher",
+      "tier": "tier4_verifier_swe",
+      "passed": true,
+      "error": "",
+      "escalated": false,
+      "tokens": 795,
+      "wall_s": 24.51
+    },
+    {
+      "task_id": "rh_t4_swe_04_mxfp4_e2m1_block_decoder",
+      "tier": "tier4_verifier_swe",
+      "passed": true,
+      "error": "",
+      "escalated": false,
+      "tokens": 925,
+      "wall_s": 27.3
+    },
+    {
+      "task_id": "rh_t5_re_01_minified_ipc_preload",
+      "tier": "tier5_reverse_engineering",
+      "passed": true,
+      "error": "",
+      "escalated": false,
+      "tokens": 1468,
+      "wall_s": 39.68
+    },
+    {
+      "task_id": "rh_t5_re_02_stripped_elf_mixer",
+      "tier": "tier5_reverse_engineering",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_lorxehu1/driver.py\", line 5, in <module>\n    exec(compile('assert clover_mix64(0) == 0\\nassert clover_mix64(1) == 0x5692161d100b05e5\\nfor v in [0, 1, 42, 0xdeadbeefcafebabe, (1<<64)-1]:\\n    y = clover_mix64(v)\\n    assert 0 <= y < (1 << 64)\\n    assert clover_unmix64(y) == v\\n', '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_test_suite>\", line 1, in <module>\nAssertionError",
+      "escalated": false,
+      "tokens": 2123,
+      "wall_s": 49.2
+    },
+    {
+      "task_id": "rh_t5_re_03_binary_tile_container",
+      "tier": "tier5_reverse_engineering",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_bvt1upk6/driver.py\", line 5, in <module>\n    exec(compile(\"import struct\\nblob = b'CLV4' + struct.pack('<hhh', 4, 128, -256) + bytes([(10 << 4) | 8, (6 << 4) | 15])\\nassert unpack_rec(blob) == [-1.0, 0.0, 2.5, -2.0]\\ntry:\\n    unpack_rec(b'BAD!' + bytes(10))\\n    raise AssertionError('Expected ValueError')\\nexcept ValueError:\\n    pass\\n\", '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_test_suite>\", line 3, in <module>\nAssertionError",
+      "escalated": false,
+      "tokens": 1928,
+      "wall_s": 40.61
+    },
+    {
+      "task_id": "rh_t5_re_04_protocol_state_machine",
+      "tier": "tier5_reverse_engineering",
+      "passed": true,
+      "error": "",
+      "escalated": false,
+      "tokens": 1141,
+      "wall_s": 28.26
+    }
+  ],
+  "gate": {
+    "decision": "DROP",
+    "net_flips": 0,
+    "plus_flips": [],
+    "minus_flips": [],
+    "turn1_token_reduction_pct": -74.16,
+    "wall_clock_reduction_pct": 2.26,
+    "reason": "Did not clear Keep gate: net_flips=0 (+0/-0), Turn-1 token delta=-74.16%, wall delta=2.26%."
+  }
+}

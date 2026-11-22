@@ -1,0 +1,125 @@
+{
+  "opencode_version": "1.19.6",
+  "shipped_default_on": {
+    "wall_s": 75.79,
+    "stdout": "The theorem is named `demo_add_zero`.",
+    "gateway_telemetry": {
+      "object": "clover.telemetry",
+      "uptime_s": 78.5,
+      "totals": {
+        "requests": 3,
+        "escalations": 0,
+        "tool_call_repairs": 0,
+        "tool_call_retries": 0,
+        "audits": 0,
+        "audit_flaws": 0,
+        "wall_ms": 146492.43,
+        "prompt_tokens": 8007,
+        "cached_tokens": 3651,
+        "prefill_tokens": 4356,
+        "completion_tokens": 57,
+        "prefill_ms": 70701.59,
+        "decode_ms": 4070.8,
+        "prefill_cache_hit_pct": 45.6,
+        "decode_tokens_per_sec": 14.0,
+        "prefill_tokens_per_sec": 61.61,
+        "escalation_rate_pct": 0.0
+      },
+      "cascade": {
+        "escalations": 0,
+        "reasons": {}
+      },
+      "models": {
+        "clover-35b-a3b": {
+          "requests": 2,
+          "escalations": 0,
+          "prompt_tokens": 7352,
+          "cached_tokens": 3651,
+          "prefill_tokens": 3701,
+          "completion_tokens": 52,
+          "prefill_ms": 69964.92,
+          "decode_ms": 3952.92,
+          "calls": 2,
+          "prefill_cache_hit_pct": 49.66,
+          "decode_tokens_per_sec": 13.15,
+          "prefill_tokens_per_sec": 52.9
+        },
+        "lfm3-omni-2b": {
+          "requests": 1,
+          "escalations": 0,
+          "prompt_tokens": 655,
+          "cached_tokens": 0,
+          "prefill_tokens": 655,
+          "completion_tokens": 5,
+          "prefill_ms": 736.67,
+          "decode_ms": 117.88,
+          "calls": 1,
+          "prefill_cache_hit_pct": 0.0,
+          "decode_tokens_per_sec": 42.42,
+          "prefill_tokens_per_sec": 889.14
+        }
+      }
+    }
+  },
+  "raw_economizer_off_baseline": {
+    "wall_s": 185.8,
+    "stdout": "The theorem is named `demo_add_zero`.",
+    "gateway_telemetry": {
+      "object": "clover.telemetry",
+      "uptime_s": 188.7,
+      "totals": {
+        "requests": 3,
+        "escalations": 0,
+        "tool_call_repairs": 0,
+        "tool_call_retries": 0,
+        "audits": 0,
+        "audit_flaws": 0,
+        "wall_ms": 365754.42,
+        "prompt_tokens": 16032,
+        "cached_tokens": 7711,
+        "prefill_tokens": 8321,
+        "completion_tokens": 59,
+        "prefill_ms": 179863.19,
+        "decode_ms": 4952.61,
+        "prefill_cache_hit_pct": 48.1,
+        "decode_tokens_per_sec": 11.91,
+        "prefill_tokens_per_sec": 46.26,
+        "escalation_rate_pct": 0.0
+      },
+      "cascade": {
+        "escalations": 0,
+        "reasons": {}
+      },
+      "models": {
+        "clover-35b-a3b": {
+          "requests": 2,
+          "escalations": 0,
+          "prompt_tokens": 15472,
+          "cached_tokens": 7711,
+          "prefill_tokens": 7761,
+          "completion_tokens": 52,
+          "prefill_ms": 179243.38,
+          "decode_ms": 4792.06,
+          "calls": 2,
+          "prefill_cache_hit_pct": 49.84,
+          "decode_tokens_per_sec": 10.85,
+          "prefill_tokens_per_sec": 43.3
+        },
+        "lfm3-omni-2b": {
+          "requests": 1,
+          "escalations": 0,
+          "prompt_tokens": 560,
+          "cached_tokens": 0,
+          "prefill_tokens": 560,
+          "completion_tokens": 7,
+          "prefill_ms": 619.81,
+          "decode_ms": 160.55,
+          "calls": 1,
+          "prefill_cache_hit_pct": 0.0,
+          "decode_tokens_per_sec": 43.6,
+          "prefill_tokens_per_sec": 903.5
+        }
+      }
+    }
+  }
+}
