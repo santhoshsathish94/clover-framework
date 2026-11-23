@@ -52,7 +52,7 @@ class GatewayHandler(BaseHTTPRequestHandler):
     router: FusionRouter
     api_key: str | None = None
     quiet = False
-    socket_timeout_s: float = 30.0
+    socket_timeout_s: float = float(os.environ.get("CLOVER_GATEWAY_SOCKET_TIMEOUT", "30.0"))
 
     def setup(self) -> None:
         super().setup()

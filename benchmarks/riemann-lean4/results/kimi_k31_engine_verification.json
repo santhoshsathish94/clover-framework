@@ -1,0 +1,37 @@
+{
+  "engine_c_sha256": "fe5654815c5de2087063220cb5ba9101e73e4090e200b796c453e00d5aff3f23",
+  "engine_so_sha256": "832ea21d99618adccf031992e2d4f47e7a34095dda548bf5deb79fc4d30c979d",
+  "n_layers_loaded": 93,
+  "hybrid_k31h_hot_files": 92,
+  "hybrid_hg2_cold_files": 92,
+  "run_to_run_dynamic_omp_bit_exact_memcmp_zero": true,
+  "speculative_greedy_bit_exact_dk0_eq_dk4": true,
+  "sample_ids_dk0": [
+    121740,
+    142279,
+    6194,
+    40185,
+    40185,
+    131362,
+    98012,
+    21182,
+    6194,
+    50353,
+    101312,
+    98012
+  ],
+  "sample_ids_dk4": [
+    121740,
+    142279,
+    6194,
+    40185,
+    40185,
+    131362,
+    98012,
+    21182,
+    6194,
+    50353,
+    101312,
+    98012
+  ]
+}

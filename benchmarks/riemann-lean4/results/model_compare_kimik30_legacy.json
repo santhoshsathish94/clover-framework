@@ -1,0 +1,317 @@
+{
+  "phase": "M4_KimiK30_Legacy",
+  "flags": {
+    "base_model": "kimi-k3",
+    "tokeneconomizer": true,
+    "clover_mcp": false,
+    "skills": true,
+    "cascade": false,
+    "egm": false,
+    "rea": true
+  },
+  "boundary_hashes": {
+    "suite_sha256": "415c9148ad75ba7338bd365a8305baf17258e3a2fd957381ff487f7f071a1d26",
+    "oracle_sha256": "52d731367acdb28593a3d86633e2e762736ae24cd6ef7d42e780499efa58c937",
+    "ablation_sha256": "6d5ef9d6e4d061f2e263fdaf510cdf22c2e8c8347c21e7d8d830291e8446a6b1",
+    "runner_sha256": "78fd110a1be269b11dab82f4e3f36283cff5267ee47bf22cf6e8ecab1032c089"
+  },
+  "total_passed": 2,
+  "total_tasks": 23,
+  "by_tier": {
+    "tier1_spec_roundtrip": {
+      "passed": 0,
+      "total": 2
+    },
+    "tier2_leaf_tactic_repair": {
+      "passed": 0,
+      "total": 9
+    },
+    "tier3_egm_subgoal_audit": {
+      "passed": 2,
+      "total": 4
+    },
+    "tier4_verifier_swe": {
+      "passed": 0,
+      "total": 4
+    },
+    "tier5_reverse_engineering": {
+      "passed": 0,
+      "total": 4
+    }
+  },
+  "total_tokens": 18775,
+  "total_wall_s": 3449.59,
+  "passes_per_hour": 2.09,
+  "escalations": 0,
+  "false_rejections": 0,
+  "goldfish_false_rejections": 0,
+  "elephant_false_rejections": 0,
+  "probes": {
+    "opencode_turn1_prompt_tokens": 164,
+    "opencode_turn1_wall_s": 98.68,
+    "opencode_turn2_wall_s": 118.12,
+    "opencode_turn2_answered_correctly": true,
+    "omni2b_prompt_tokens": 991,
+    "omni2b_escaped_webfetch_loop": true,
+    "omni2b_switched_to_read": false
+  },
+  "results": [
+    {
+      "task_id": "rh_t1_spec_01",
+      "tier": "tier1_spec_roundtrip",
+      "passed": false,
+      "stage": "kernel_error",
+      "escalated": false,
+      "tokens": 771,
+      "wall_s": 133.66
+    },
+    {
+      "task_id": "rh_t1_spec_02",
+      "tier": "tier1_spec_roundtrip",
+      "passed": false,
+      "stage": "kernel_error",
+      "escalated": false,
+      "tokens": 789,
+      "wall_s": 131.14
+    },
+    {
+      "task_id": "rh_t2_short_1_6_01",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "short_1_6",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_v8_humgu.lean:11:3: error: unknown tactic\n/tmp/clover_lean_verify_sandbox/cand_v8_humgu.lean:10:57: error: unsolved goals\nO : Type u_1\ninst\u271d\u00b2 : CommRing O\ninst\u271d\u00b9 : IsDomain O\ninst\u271d : IsDiscreteValuationRing O\n\u03b9 : Type\ns : Finset \u03b9\na : \u03b9 \u2192 O\n\u22a2 (IsDiscreteValuationRing.addVal O) (\u220f i ",
+      "escalated": false,
+      "tokens": 620,
+      "wall_s": 101.03
+    },
+    {
+      "task_id": "rh_t2_short_1_6_02",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "short_1_6",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_5m1rlmg4.lean:10:3: error: unknown tactic\n/tmp/clover_lean_verify_sandbox/cand_5m1rlmg4.lean:9:41: error: unsolved goals\nF : Type\ninst\u271d\u00b9 : Field F\ninst\u271d : NumberField F\n\u03b9 : Type\ns : Finset \u03b9\nQ : \u03b9 \u2192 \ud835\udcde F \u2192 Prop\nhQ : \u2200 (i : \u03b9) (c r : \ud835\udcde F), Q i c \u2192 Q i (c * r)\nh : \u2200 i \u2208 s, \u2203 c, c \u2260 0 \u2227",
+      "escalated": false,
+      "tokens": 600,
+      "wall_s": 100.88
+    },
+    {
+      "task_id": "rh_t2_short_1_6_03",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "short_1_6",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_2811r8av.lean:11:3: error: unknown tactic\n/tmp/clover_lean_verify_sandbox/cand_2811r8av.lean:10:27: error: unsolved goals\nK : Type\ninst\u271d : Field K\nM : \u2115\ng : \u2115 \u2192 K\nhg : \u2200 (i : \u2115), g (i + M) = g i\nk x : \u2115\n\u22a2 g (M * k + x) = g x\n'_private._stdin.0.Bl.PeriodicFunctions.periodic_apply_mul",
+      "escalated": false,
+      "tokens": 674,
+      "wall_s": 103.11
+    },
+    {
+      "task_id": "rh_t2_medium_7_14_01",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "medium_7_14",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_1an9q2e2.lean:11:3: error: unknown tactic\n/tmp/clover_lean_verify_sandbox/cand_1an9q2e2.lean:10:84: error: unsolved goals\nR : Type u_1\ninst\u271d : CommRing R\ni N : \u2115\nA : Matrix (Fin i) (Fin N) R\nB : Matrix (Fin N) (Fin i) R\n\u22a2 (A * B).det = \u2211 f, (\u220f a, A a (f a)) * (B.submatrix f id).det\n",
+      "escalated": false,
+      "tokens": 557,
+      "wall_s": 99.18
+    },
+    {
+      "task_id": "rh_t2_medium_7_14_02",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "medium_7_14",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_qas3st62.lean:11:3: error: unknown tactic\n/tmp/clover_lean_verify_sandbox/cand_qas3st62.lean:10:70: error: unsolved goals\nK : Type u_1\ninst\u271d\u00b9 : Field K\ninst\u271d : NumberField K\n\u03b9 : Type u_2\nw : FinitePlace K\nt : Finset \u03b9\na : \u03b9 \u2192 K\nM : \u211d\nhM : 0 \u2264 M\nh : \u2200 i \u2208 t, w (a i) \u2264 M\n\u22a2 w (\u2211 i \u2208 t,",
+      "escalated": false,
+      "tokens": 598,
+      "wall_s": 140.79
+    },
+    {
+      "task_id": "rh_t2_medium_7_14_03",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "medium_7_14",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_va91ryh_.lean:11:3: error: unknown tactic\n/tmp/clover_lean_verify_sandbox/cand_va91ryh_.lean:10:72: error: unsolved goals\nn : \u2115\np : Fin n \u2192 \u2102\na : MvPolynomial (Fin n) \u2102\n\u22a2 a - C ((eval p) a) \u2208 Ideal.span (Set.range fun i \u21a6 X i - C (p i))\n'Bl.general_b_fact_left_more.goal1' depends on",
+      "escalated": false,
+      "tokens": 555,
+      "wall_s": 99.04
+    },
+    {
+      "task_id": "rh_t2_hard_15_28_01",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "hard_15_28",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_drfna80g.lean:9:3: error: unknown tactic\n/tmp/clover_lean_verify_sandbox/cand_drfna80g.lean:8:77: error: unsolved goals\n\u03b1 : Type u_1\n\u03b2 : Type u_2\nf : \u03b1 \u2192 \u03b2\nt : Multiset \u03b1\n\u22a2 \u2200 s \u2264 Multiset.map f t, \u2203 u \u2264 t, Multiset.map f u = s\n/tmp/clover_lean_verify_sandbox/cand_drfna80g.lean:9:46:",
+      "escalated": false,
+      "tokens": 560,
+      "wall_s": 100.42
+    },
+    {
+      "task_id": "rh_t2_hard_15_28_02",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "hard_15_28",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_cncocogw.lean:11:3: error: unknown tactic\n/tmp/clover_lean_verify_sandbox/cand_cncocogw.lean:10:78: error: unsolved goals\nE V : Type\ninst\u271d\u2075 : Field E\ninst\u271d\u2074 : NumberField E\ninst\u271d\u00b3 : AddCommGroup V\ninst\u271d\u00b2 : Module E V\ninst\u271d\u00b9 : Module (\ud835\udcde E) V\ninst\u271d : IsScalarTower (\ud835\udcde E) E V\n\u039b : Submod",
+      "escalated": false,
+      "tokens": 566,
+      "wall_s": 100.28
+    },
+    {
+      "task_id": "rh_t2_hard_15_28_03",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "hard_15_28",
+      "passed": false,
+      "stage": "kernel_error",
+      "diagnostics": "/tmp/clover_lean_verify_sandbox/cand_pvk_tbet.lean:13:3: error: unknown tactic\n/tmp/clover_lean_verify_sandbox/cand_pvk_tbet.lean:12:34: error: unsolved goals\nC : Type\ninst\u271d\u2078 : Field C\nR : Type\ninst\u271d\u2077 : CommRing R\ninst\u271d\u2076 : Algebra R C\ninst\u271d\u2075 : IsDomain R\ninst\u271d\u2074 : IsFractionRing R C\nV : Type\ninst\u271d\u00b3 : AddCommGroup V\ninst",
+      "escalated": false,
+      "tokens": 675,
+      "wall_s": 102.59
+    },
+    {
+      "task_id": "rh_t3_egm_01_valid_dirichlet_nonvanish",
+      "tier": "tier3_egm_subgoal_audit",
+      "passed": true,
+      "false_rejection": false,
+      "goldfish_false_rejection": false,
+      "elephant_false_rejection": false,
+      "pred_provable": true,
+      "ground_truth_provable": true,
+      "tokens": 708,
+      "wall_s": 99.05
+    },
+    {
+      "task_id": "rh_t3_egm_02_trivial_zeros_missing",
+      "tier": "tier3_egm_subgoal_audit",
+      "passed": false,
+      "false_rejection": false,
+      "goldfish_false_rejection": false,
+      "elephant_false_rejection": false,
+      "pred_provable": true,
+      "ground_truth_provable": false,
+      "tokens": 688,
+      "wall_s": 100.53
+    },
+    {
+      "task_id": "rh_t3_egm_03_valid_landau_nonneg",
+      "tier": "tier3_egm_subgoal_audit",
+      "passed": true,
+      "false_rejection": false,
+      "goldfish_false_rejection": false,
+      "elephant_false_rejection": false,
+      "pred_provable": true,
+      "ground_truth_provable": true,
+      "tokens": 802,
+      "wall_s": 101.82
+    },
+    {
+      "task_id": "rh_t3_egm_04_landau_missing_nonneg",
+      "tier": "tier3_egm_subgoal_audit",
+      "passed": false,
+      "false_rejection": false,
+      "goldfish_false_rejection": false,
+      "elephant_false_rejection": false,
+      "pred_provable": true,
+      "ground_truth_provable": false,
+      "tokens": 695,
+      "wall_s": 99.21
+    },
+    {
+      "task_id": "rh_t4_swe_01_dag_ready_scheduler",
+      "tier": "tier4_verifier_swe",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_q4z7uj6k/driver.py\", line 5, in <module>\n    exec(compile(\"assert ready_batches({'Main': {'Statements', 'Mathlib'}, 'Statements': {'Mathlib'}}) == [['Statements'], ['Main']]\\nassert ready_batches({'C': {'A', 'B'}, 'B': {'A'}, 'A': set(), 'D': {'A'}}) == [['A'], ['B', 'D'], ['C']]\\ntry:\\n    ready_batches({'A': {'B'}, 'B': {'A'}})\\n    raise AssertionError('Expected ValueError on cycle')\\nexcept ValueError:\\n    pass\\n\", '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_test_suite>\", line 1, in <module>\nAssertionError",
+      "escalated": false,
+      "tokens": 1001,
+      "wall_s": 233.79
+    },
+    {
+      "task_id": "rh_t4_swe_02_nested_lean_comment_scanner",
+      "tier": "tier4_verifier_swe",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_82l20p9d/driver.py\", line 5, in <module>\n    exec(compile('assert scan_lean_ax(\\'-- sorry\\\\n/- outer /- sorry -/ axiom -/\\\\ndef s := \"admit\"\\\\ntheorem t : True := trivial\\') == []\\nassert scan_lean_ax(\"have c : Char := \\'\\\\\"\\'\\\\ntheorem bad : False := by sorry\") == [\\'sorry\\']\\nassert scan_lean_ax(\\'/- a /- b -/ -/ axiom bad : False\\') == [\\'axiom\\']\\n', '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_test_suite>\", line 1, in <module>\nAssertionError",
+      "escalated": false,
+      "tokens": 664,
+      "wall_s": 132.2
+    },
+    {
+      "task_id": "rh_t4_swe_03_lcp_prefix_cache_matcher",
+      "tier": "tier4_verifier_swe",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_irdx8ber/driver.py\", line 5, in <module>\n    exec(compile(\"assert plan_prefill([1, 2, 3], [1, 2, 3], False) == ('reuse_exact', 3, [])\\nassert plan_prefill([1, 2, 3], [1, 2, 3, 4, 5], False) == ('extend', 3, [4, 5])\\nassert plan_prefill([1, 2, 9], [1, 2, 3, 4], False) == ('reset_and_feed', 0, [1, 2, 3, 4])\\nassert plan_prefill([1, 2, 9], [1, 2, 3, 4], True) == ('truncate_and_feed', 2, [3, 4])\\nassert plan_prefill([1, 2, 3], [1, 2], True) == ('truncate_and_feed', 1, [2])\\n\", '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_tes",
+      "escalated": false,
+      "tokens": 705,
+      "wall_s": 111.42
+    },
+    {
+      "task_id": "rh_t4_swe_04_mxfp4_e2m1_block_decoder",
+      "tier": "tier4_verifier_swe",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_f7_n22cb/driver.py\", line 5, in <module>\n    exec(compile(\"b = bytes([0x10, 0x32, 0x54, 0x76, 0x98, 0xBA, 0xDC, 0xFE] + [0x00]*8)\\nout = decode_mxfp4_block(b, 127)\\nassert out[:16] == [0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0, -0.0, -0.5, -1.0, -1.5, -2.0, -3.0, -4.0, -6.0]\\nassert decode_mxfp4_block(bytes([0x27] + [0x00]*15), 129)[:2] == [24.0, 4.0]\\ntry:\\n    decode_mxfp4_block(bytes(16), 255)\\n    raise AssertionError('Expected ValueError')\\nexcept ValueError:\\n    pass\\n\", '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_t",
+      "escalated": false,
+      "tokens": 678,
+      "wall_s": 99.23
+    },
+    {
+      "task_id": "rh_t5_re_01_minified_ipc_preload",
+      "tier": "tier5_reverse_engineering",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_1f5ydbpe/driver.py\", line 3, in <module>\n    import solution_mod\n  File \"/tmp/clover_swe_sbx_1f5ydbpe/solution_mod.py\", line 9, in <module>\n    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg\n  File \"/opt/clover-k3/astra-weightspace-20261111/venv/lib/python3.12/site-packages/matplotlib/backends/backend_tkagg.py\", line 1, in <module>\n    from . import _backend_tk\n  File \"/opt/clover-k3/astra-weightspace-20261111/venv/lib/python3.12/site-packages/matplotlib/backends/_backend_tk.py\", line 9, in <module>\n    import tkin",
+      "escalated": false,
+      "tokens": 1799,
+      "wall_s": 436.86
+    },
+    {
+      "task_id": "rh_t5_re_02_stripped_elf_mixer",
+      "tier": "tier5_reverse_engineering",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx__vw2npaf/driver.py\", line 5, in <module>\n    exec(compile('assert clover_mix64(0) == 0\\nassert clover_mix64(1) == 0x5692161d100b05e5\\nfor v in [0, 1, 42, 0xdeadbeefcafebabe, (1<<64)-1]:\\n    y = clover_mix64(v)\\n    assert 0 <= y < (1 << 64)\\n    assert clover_unmix64(y) == v\\n', '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_test_suite>\", line 1, in <module>\nAssertionError",
+      "escalated": false,
+      "tokens": 1645,
+      "wall_s": 428.14
+    },
+    {
+      "task_id": "rh_t5_re_03_binary_tile_container",
+      "tier": "tier5_reverse_engineering",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_syadojoh/driver.py\", line 5, in <module>\n    exec(compile(\"import struct\\nblob = b'CLV4' + struct.pack('<hhh', 4, 128, -256) + bytes([(10 << 4) | 8, (6 << 4) | 15])\\nassert unpack_rec(blob) == [-1.0, 0.0, 2.5, -2.0]\\ntry:\\n    unpack_rec(b'BAD!' + bytes(10))\\n    raise AssertionError('Expected ValueError')\\nexcept ValueError:\\n    pass\\n\", '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_test_suite>\", line 3, in <module>\nTypeError: unpack_rec() missing 1 required positional argument: 'len'",
+      "escalated": false,
+      "tokens": 1257,
+      "wall_s": 138.84
+    },
+    {
+      "task_id": "rh_t5_re_04_protocol_state_machine",
+      "tier": "tier5_reverse_engineering",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_e0dnr_xs/driver.py\", line 5, in <module>\n    exec(compile(\"assert step_fsm(['timeout', 'ok', 'rate', 'rate', 'ok']) == ('READY', 600)\\nassert step_fsm(['ok', 'timeout', 'timeout', 'timeout', 'ok']) == ('HALT', 1500)\\nassert step_fsm(['rate', 'rate', 'rate', 'rate', 'ok']) == ('HALT', 3000)\\n\", '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_test_suite>\", line 1, in <module>\nAssertionError",
+      "escalated": false,
+      "tokens": 1168,
+      "wall_s": 256.38
+    }
+  ],
+  "gate": {
+    "decision": "DROP",
+    "net_flips": -7,
+    "plus_flips": [
+      "rh_t3_egm_01_valid_dirichlet_nonvanish"
+    ],
+    "minus_flips": [
+      "rh_t1_spec_01",
+      "rh_t1_spec_02",
+      "rh_t3_egm_02_trivial_zeros_missing",
+      "rh_t3_egm_04_landau_missing_nonneg",
+      "rh_t4_swe_03_lcp_prefix_cache_matcher",
+      "rh_t4_swe_04_mxfp4_e2m1_block_decoder",
+      "rh_t5_re_01_minified_ipc_preload",
+      "rh_t5_re_04_protocol_state_machine"
+    ],
+    "turn1_token_reduction_pct": 79.63,
+    "wall_clock_reduction_pct": -401.32,
+    "reason": "Did not clear Keep gate: net_flips=-7 (+1/-8), Turn-1 token delta=79.63%, wall delta=-401.32%."
+  }
+}

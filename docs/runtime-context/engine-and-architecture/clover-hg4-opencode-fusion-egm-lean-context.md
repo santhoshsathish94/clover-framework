@@ -156,6 +156,37 @@
 | **Phase H** | **`+REA v6.10.1`** (`morluto/rea` Reverse-Engineering MCP + Budgeter) | **`9 / 23` (`39.1%`)** | **`+2` (`+2 / -0`)** | `805` tok / `13.90s` | `688.1s` / **`47.09/hr`** | **`KEEP`** (`+50%` solves & higher `passes/hr` vs B) |
 | **Phase I** | **Shipped Default-On (`TokenEconomizer + SKILL.md + REA`)** | **`9 / 23` (`39.1%`)** | **`+3` vs Phase B (`0` reg.)** | **Live `OpenCode` CLI: `7,711 -> 3,651` tok (`185.8s -> 75.8s`, `2.45×`)** | Full 23-task Drop-One (`7/23`, `8/23`, `1,402` tok) | **`PRODUCTION DEFAULT`** |
 
+---
+
+## 6. All-4-Model Solo Head-to-Head, `Kimi K3.1 Pro` (`2.8T`) Native C11 `K31H` Data-Movement Engine & Clean-Slate Copilot Fusion (`$0` on `k3`)
+
+Following the architectural observation that **data movement (GB/s & resident working set), not ALU compute**, governs multi-trillion-parameter CPU inference, we executed both sequential `$0` paths on `k3` (`124 GiB` DDR5 RAM + dual `1.8 TB` NVMe) with `TokenEconomizer + SKILL.md + REA` active across all runs (`suite_sha256 = 415c9148...`):
+
+1. **Part 1 — Isolated Solo Head-to-Head Across All 4 Existing Models (`CLOVER_ACTIVE_MODELS` isolation):**
+   - Uncovered two key findings:
+     - Clean solo `Nemotron-3.5-Super-VL` (`120B`) solved **`4 / 4 = 100%` of Tier 4 SWE** (including `rh_t4_swe_01` and `rh_t4_swe_02`), proving Phase F's earlier `0`-flip Cascade result was caused by **broken-draft anchoring** (`feeding Clover-35B's failed draft into Nemotron-120B`).
+     - Legacy `Kimi K3.0` (`:8765` `hybrid-ncm-k3` Qwen `C2/C3` wrapper) scored only **`2 / 23` (`8.70%`)** (`0%` on Tiers 1, 2, 4, 5) with zero cross-turn LCP cache (`Turn-1 98.68s -> Turn-2 118.12s`).
+
+2. **Part 2 — Native C11 `Kimi K3.1 Pro` (`2.8T`) `K31H` Data-Movement Engine & Clean-Slate Copilot Fusion:**
+   - **Streamed & Packed All `92` MoE Layers (`82,432` routed `SiTU-GLU` experts) of `moonshotai/Kimi-K3.1-Pro` (`2.8T`):**
+     - `42` highest-traffic experts/layer mapped in page cache as `HG4-16R` (`61.3 GiB` `mmap` + `MADV_WILLNEED`) alongside all `93` `BF16 -> HG4/HG8` trunks (`31.0 GiB`) + `5L-DSpark` (`1.3 GiB`).
+     - `854` cold experts/layer packed into canonical **`HG2-16R` (`2.25 bits/weight`, `512 B` tiles, symmetric 4-level Gaussian Lloyd–Max `{-127, -38, 38, 127}`)** (`642.9 GiB` total distributed across `/mnt/nvme1` and `/dev/md2`, cutting NVMe bytes/expert **`2×`** vs MXFP4), read via a fused 16-lane OpenMP `schedule(dynamic, 1)` `pread() + AVX2/AVX-512 GEMV` + `POSIX_FADV_DONTNEED` pipeline with deterministic ascending-expert reduction and expert-grouped MoE batching ([kimi_k31_engine_verification.json](../../../benchmarks/riemann-lean4/results/kimi_k31_engine_verification.json)).
+   - **Exact Official `Kimi K3.1 Pro` + `5L-DSpark` Math & XTML Protocol:**
+     - Aligned [kimi_k31_hg4_engine.c](../../../clover-ai-system/src/models/kimi-k3/kimi_k31_hg4_engine.c) with Moonshot's exact `num_experts_per_token = 16`, Householder/Delta-Rule `KDA` recurrence (`S[v,k] *= exp(g[k]); vd = beta * (v - S k); S += vd k^T` + zero-IO causal rollback), `attn_res_block_size = 12` Block Attention Residuals (`_pre_attn_norm` / `_post_attn_norm` / `output_attn_res`), `NoPE` Gated `DSA` (`192`-dim MLA), `DFlash` context-KV + YaRN RoPE `5L-DSpark` speculative verification (`draft_k=0 == draft_k=4` exact greedy match), and native `XTML` (`encoding_k3.py` + `tiktoken` + bounded-48 `<think>` + prefix-scoped `remember_assistant` token splicing in [backends.py](../../../clover-ai-system/src/tools/hg4-fusion-gateway/backends.py); invoked via [run_long_timeout_wrapper.py](../../../benchmarks/riemann-lean4/run_long_timeout_wrapper.py) so single-turn `450s–1,403s` NVMe completions do not hit `run_sequential_phase.py`'s `240s` socket timeout).
+     - Scored **`12 / 23` (`52.17%`)**: **`+10` net flips (`+11 / -1`) vs `Kimi K3.0 Legacy` (`2 / 23`)** and **`+3` net flips (`+3 / -0`: `rh_t2_short_1_6_03`, `rh_t4_swe_01`, `rh_t4_swe_02`) vs `Clover-35B` Phase H (`9 / 23`)** (`2.19 passes/hr` NVMe-streamed vs `47.09 passes/hr` DDR5-resident, keeping `Clover-35B` as the interactive default and `Kimi K3.1 Pro` as the deep `2.8T` prover).
+   - **Controlled Clean-Slate vs Anchored `Copilot Fusion` (`CLOVER_CASCADE_CLEAN_SLATE=1` default-on in [fusion_router.py](../../../clover-ai-system/src/tools/hg4-fusion-gateway/fusion_router.py)):**
+     - On the **identical `TokenEconomizer + SKILL.md + REA` stack**, Anchored Cascade (`CLOVER_CASCADE_CLEAN_SLATE=0`, [model_compare_fusion_anchored_control_35b_120b.json](../../../benchmarks/riemann-lean4/results/model_compare_fusion_anchored_control_35b_120b.json)) scored **`9 / 23` (`47,707` tok, `2,569.4s`, `0` net flips)**, whereas Clean-Slate Cascade (`CLOVER_CASCADE_CLEAN_SLATE=1`, [model_compare_fusion_cleanslate_35b_120b.json](../../../benchmarks/riemann-lean4/results/model_compare_fusion_cleanslate_35b_120b.json)) jumped to **`11 / 23` (`47.83%`, `41,241` tok, `2,471.5s`, `+2` net verified flips with `0` regressions, `16.02 passes/hr`)**!
+
+| Model / Routing Configuration | Resident Footprint | Total Verified | Tier 1 Spec | Tier 2 `RH` Tactic | Tier 3 Audit | Tier 4 SWE | Tier 5 RE | Turn-1 -> Turn-2 Probe | Suite Wall-Clock / `passes/hr` | Artifact |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| **`LFM3-Omni-2B`** (`Solo`) | `854 MiB` DDR5 (`HG4-16R`) | `3 / 23` (`13.0%`) | `0/2` | `0/9` | `3/4` | `0/4` | `0/4` | `1.20s -> 0.38s` | `204.1s` / **`52.90/hr`** | [model_compare_omni2b.json](../../../benchmarks/riemann-lean4/results/model_compare_omni2b.json) |
+| **`Clover-35B-A3B`** (`Solo Default`) | `17.4 GiB` DDR5 (`HG4-16R-OP`) | `9 / 23` (`39.1%`) | `2/2` | `0/9` | `3/4` | `2/4` | `2/4` | `13.90s -> 1.04s` | `688.1s` / **`47.09/hr`** | [phase_h_rea_mcp.json](../../../benchmarks/riemann-lean4/results/phase_h_rea_mcp.json) |
+| **`Nemotron 3.5 Super VL`** (`120B Solo`) | `60.2 GiB` DDR5 (`HG4-16R`) | `9 / 23` (`39.1%`) | `2/2` | `0/9` | `2/4` | **`4/4`** | `1/4` | `34.77s -> 3.09s` | `2,153.6s` / `15.04/hr` | [model_compare_nemotron120b.json](../../../benchmarks/riemann-lean4/results/model_compare_nemotron120b.json) |
+| **`Kimi K3.0` (`2.8T` Legacy `C2/C3`)** | Proxy `:8765` (`MXFP4`) | `2 / 23` (`8.7%`) | `0/2` | `0/9` | `2/4` | `0/4` | `0/4` | `98.68s -> 118.12s` | `3,449.6s` / `2.09/hr` | [model_compare_kimik30_legacy.json](../../../benchmarks/riemann-lean4/results/model_compare_kimik30_legacy.json) |
+| **`Anchored Fusion Control` (`35B -> 120B`)** | `77.6 GiB` DDR5 (`CleanSlate=0`) | `9 / 23` (`39.1%`) | `2/2` | `0/9` | `3/4` | `2/4` | `2/4` | `13.93s -> 1.11s` | `2,569.4s` / `12.61/hr` | [model_compare_fusion_anchored_control_35b_120b.json](../../../benchmarks/riemann-lean4/results/model_compare_fusion_anchored_control_35b_120b.json) |
+| **`Clean-Slate Fusion` (`35B -> 120B`)** | `77.6 GiB` DDR5 (`CleanSlate=1`) | **`11 / 23` (`47.8%`)** | **`2/2`** | `0/9` | **`3/4`** | **`4/4`** | **`2/4`** | `16.03s -> 1.11s` | `2,471.5s` / **`16.02/hr`** | [model_compare_fusion_cleanslate_35b_120b.json](../../../benchmarks/riemann-lean4/results/model_compare_fusion_cleanslate_35b_120b.json) |
+| **`Kimi K3.1 Pro` (`2.8T` Native `K31H`)** | `93.6 GiB` Page-Cache + `642.9 GiB` `HG2` NVMe | **`12 / 23` (`52.2%`)** | **`2/2`** | **`1/9`** | **`3/4`** | **`4/4`** | **`2/4`** | **`363.0s -> 135.6s` (`2.68×`)** | `19,703.5s` / `2.19/hr` | [model_compare_kimik31_native.json](../../../benchmarks/riemann-lean4/results/model_compare_kimik31_native.json) |
+
 
 
 

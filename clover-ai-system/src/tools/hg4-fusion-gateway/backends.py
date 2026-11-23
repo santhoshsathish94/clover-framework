@@ -119,22 +119,93 @@ class HFTokenizer:
         return self._pure.decode(list(ids), skip_special_tokens=False)
 
 
+_KIMI_K3_PAT_STR = "|".join([
+    r"""[\p{Han}]+""",
+    r"""[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}&&[^\p{Han}]]*[\p{Ll}\p{Lm}\p{Lo}\p{M}&&[^\p{Han}]]+(?i:'s|'t|'re|'ve|'m|'ll|'d)?""",
+    r"""[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}&&[^\p{Han}]]+[\p{Ll}\p{Lm}\p{Lo}\p{M}&&[^\p{Han}]]*(?i:'s|'t|'re|'ve|'m|'ll|'d)?""",
+    r"""\p{N}{1,3}""",
+    r""" ?[^\s\p{L}\p{N}]+[\r\n]*""",
+    r"""\s*[\r\n]+""",
+    r"""\s+(?!\S)""",
+    r"""\s+""",
+])
+
+
 class TiktokenFallbackTokenizer:
-    """Kimi `tiktoken.model` via `omni_c2_c3.PureTiktokenTokenizer`."""
+    """Kimi K3.1 Pro `tiktoken.model` via official `tiktoken` (when installed) or `PureTiktokenTokenizer`."""
 
     def __init__(self, model_path: Path):
-        if str(STUDIO_CLOVER) not in sys.path:
-            sys.path.append(str(STUDIO_CLOVER))
-        import omni_c2_c3  # type: ignore[import-not-found]
-        self._t = omni_c2_c3.PureTiktokenTokenizer(model_path)
+        self.model_path = Path(model_path)
+        self._enc = None
+        self._t = None
+        self.special_tokens: dict[str, int] = {}
+        cfg_path = self.model_path.parent / "tokenizer_config.json"
+        special_map: dict[int, str] = {}
+        if cfg_path.is_file():
+            try:
+                cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+                for k_id, info in (cfg.get("added_tokens_decoder") or {}).items():
+                    c_str = str(info.get("content") or "")
+                    if c_str:
+                        special_map[int(k_id)] = c_str
+            except Exception:
+                pass
+        try:
+            import tiktoken  # type: ignore[import-not-found]
+            from tiktoken.load import load_tiktoken_bpe  # type: ignore[import-not-found]
+            mergeable = load_tiktoken_bpe(str(self.model_path))
+            num_base = len(mergeable)
+            self.special_tokens = {
+                special_map.get(i, f"<|reserved_token_{i}|>"): i
+                for i in range(num_base, num_base + 256)
+            }
+            self._enc = tiktoken.Encoding(
+                name="kimi_k31", pat_str=_KIMI_K3_PAT_STR,
+                mergeable_ranks=mergeable, special_tokens=self.special_tokens,
+            )
+        except Exception:
+            if str(STUDIO_CLOVER) not in sys.path:
+                sys.path.append(str(STUDIO_CLOVER))
+            import omni_c2_c3  # type: ignore[import-not-found]
+            self._t = omni_c2_c3.PureTiktokenTokenizer(self.model_path)
+            self.special_tokens = dict(self._t.added_tokens_map)
+        self._sp_re = (
+            re.compile("(" + "|".join(re.escape(s) for s in sorted(self.special_tokens, key=len, reverse=True)) + ")")
+            if self.special_tokens else None
+        )
 
     def token_to_id(self, s: str) -> int | None:
-        return None
+        return self.special_tokens.get(s)
+
+    def encode_piece(self, text: str, allow_special: bool = True) -> list[int]:
+        if not text:
+            return []
+        if self._enc is not None:
+            if allow_special:
+                return list(self._enc.encode(text, allowed_special="all"))
+            return list(self._enc.encode(text, disallowed_special=()))
+        assert self._t is not None
+        if not allow_special or self._sp_re is None:
+            return self._t.encode(text, allow_special=False)
+        out: list[int] = []
+        for part in self._sp_re.split(text):
+            if not part:
+                continue
+            if part in self.special_tokens:
+                out.append(self.special_tokens[part])
+            else:
+                out.extend(self._t.encode(part, allow_special=False))
+        return out
 
     def encode(self, text: str) -> list[int]:
-        return self._t.encode(text, allow_special=True) if text else []
+        return self.encode_piece(text, allow_special=True)
 
     def decode(self, ids: list[int]) -> str:
+        if not ids:
+            return ""
+        if self._enc is not None:
+            return self._enc.decode(list(ids))
+        assert self._t is not None
         return self._t.decode(list(ids), skip_special_tokens=False)
 
 
@@ -211,13 +282,20 @@ def _tool_call_args(tc: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     return name, a if isinstance(a, dict) else {}
 
 
-def assistant_signature(content: Any, tool_calls: Any) -> str:
-    """Canonical key of an assistant message (ignores tool-call ids / whitespace) for exact-token splicing."""
+def assistant_signature(content: Any, tool_calls: Any, prefix_messages: list[dict[str, Any]] | None = None) -> str:
+    """Conversation-prefix-scoped canonical key of an assistant message for exact-token splicing."""
     calls = []
     for tc in tool_calls or ():
         if isinstance(tc, dict):
             calls.append(list(_tool_call_args(tc)))
-    blob = json.dumps({"c": _content_text(content).strip(), "t": calls}, sort_keys=True, ensure_ascii=False)
+    pfx: list[tuple[str, str]] = []
+    for m in prefix_messages or ():
+        if isinstance(m, dict):
+            role = str(m.get("role") or "user")
+            if role in ("system", "developer"):
+                continue
+            pfx.append((role, _content_text(m.get("content")).strip()))
+    blob = json.dumps({"p": pfx, "c": _content_text(content).strip(), "t": calls}, sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
@@ -274,6 +352,7 @@ class ChatTemplate:
             head += self.sys_open + "\n\n".join(sys_parts) + self.end
         if head:
             segs.append((head, None))
+        seen_msgs: list[dict[str, Any]] = []
         for m in msgs:
             role = str(m.get("role") or "user")
             if role == "assistant":
@@ -284,7 +363,8 @@ class ChatTemplate:
                 if calls:
                     body = (body.rstrip() + "\n" if body.strip() else "") + calls
                 segs.append((self.asst_open + body + self.end,
-                             assistant_signature(m.get("content"), m.get("tool_calls"))))
+                             assistant_signature(m.get("content"), m.get("tool_calls"), seen_msgs)
+                             + "|" + assistant_signature(m.get("content"), m.get("tool_calls"), None)))
             elif role in ("tool", "function"):
                 c = _content_text(m.get("content"))
                 if self.wrap_tool_response and "<tool_response>" not in c:
@@ -294,6 +374,7 @@ class ChatTemplate:
                 segs.append((self.sys_open + _content_text(m.get("content")) + self.end, None))
             else:
                 segs.append((self.user_open + _content_text(m.get("content")) + self.end, None))
+            seen_msgs.append(m)
         segs.append((self.asst_open, None))
         return segs
 
@@ -634,7 +715,8 @@ class BackendBase:
         assert res is not None
         return res
 
-    def remember_assistant(self, content: Any, tool_calls: Any, gen_ids: list[int]) -> None:
+    def remember_assistant(self, content: Any, tool_calls: Any, gen_ids: list[int],
+                           prefix_messages: list[dict[str, Any]] | None = None) -> None:
         pass
 
     def _account(self, r: GenResult) -> None:
@@ -683,18 +765,25 @@ class StatefulBackend(BackendBase):
         asst_ids = self._encode_seg(self.template.asst_open)
         end_ids = self._encode_seg(self.template.end)
         for text, key in self.template.segments(messages, tools, tool_choice):
-            if key is not None and key in self._splice:
+            cand = None
+            if key is not None:
+                k_scoped, _, k_plain = key.partition("|")
+                cand = self._splice.get(k_scoped)
+                if cand is None and k_plain:
+                    cand = self._splice.get(k_plain)
+            if cand is not None:
                 ids.extend(asst_ids)
-                ids.extend(self._splice[key])
+                ids.extend(cand)
                 ids.extend(end_ids)
             else:
                 ids.extend(self._encode_seg(text))
         return ids
 
-    def remember_assistant(self, content: Any, tool_calls: Any, gen_ids: list[int]) -> None:
+    def remember_assistant(self, content: Any, tool_calls: Any, gen_ids: list[int],
+                           prefix_messages: list[dict[str, Any]] | None = None) -> None:
         if not gen_ids:
             return
-        key = assistant_signature(content, tool_calls)
+        key = assistant_signature(content, tool_calls, prefix_messages)
         with ENGINE_LOCK:
             self._splice[key] = list(gen_ids)
             self._splice.move_to_end(key)
@@ -721,6 +810,7 @@ class StatefulBackend(BackendBase):
             self.engine.reset()
             self.last_cached_ids = []
             self._last_logits = None
+            self._splice.clear()
 
     def _prefill(self, ids: list[int]) -> tuple[np.ndarray, int, int]:
         cached = self.last_cached_ids
@@ -846,13 +936,97 @@ class NemotronBackend(StatefulBackend):
             yield "done", res
 
 
+_XTML_CALL_RE = re.compile(
+    r'<\|open\|>call\s+tool="([^"]+)"(?:\s+index="[^"]*")?<\|sep\|>(.*?)(?:<\|close\|>call<\|sep\|>|\Z)',
+    re.DOTALL,
+)
+_XTML_ARG_RE = re.compile(
+    r'<\|open\|>argument\s+key="([^"]+)"\s+type="([^"]+)"<\|sep\|>(.*?)(?:<\|close\|>argument<\|sep\|>|\Z)',
+    re.DOTALL,
+)
+_XTML_JSON_RE = re.compile(
+    r'<\|open\|>json(?:\s+type="[^"]*")?<\|sep\|>(.*?)(?:<\|close\|>json<\|sep\|>|\Z)',
+    re.DOTALL,
+)
+
+
+def parse_kimi_xtml_output(raw: str) -> str:
+    """Convert Kimi K3.1 Pro XTML assistant output (`<think>`, `<response>`, `<tools>`) into clean text + `<tool_call>`."""
+    s = raw or ""
+    # 1. Strip `<|open|>think<|sep|>...<|close|>think<|sep|>`; if truncated inside `<think>`, never leak chain-of-thought
+    if "<|close|>think<|sep|>" in s:
+        s = s.split("<|close|>think<|sep|>", 1)[1]
+    elif s.startswith("<|open|>think<|sep|>") and "<|open|>response<|sep|>" not in s and "<|open|>tools<|sep|>" not in s:
+        return ""
+    elif "<|open|>response<|sep|>" in s:
+        s = s[s.index("<|open|>response<|sep|>"):]
+
+    # 2. Extract `<response>` content and `<tools>` block
+    tools_part = ""
+    if "<|open|>tools<|sep|>" in s:
+        s, tools_part = s.split("<|open|>tools<|sep|>", 1)
+
+    if "<|open|>response<|sep|>" in s:
+        s = s.split("<|open|>response<|sep|>", 1)[1]
+    for stop_tag in ("<|close|>response<|sep|>", "<|close|>message<|sep|>", "<|end_of_msg|>", "[EOS]"):
+        if stop_tag in s:
+            s = s.split(stop_tag, 1)[0]
+    content = s.strip()
+
+    tc_blocks: list[str] = []
+    if tools_part:
+        if "<|close|>tools<|sep|>" in tools_part:
+            tools_part = tools_part.split("<|close|>tools<|sep|>", 1)[0]
+        for m in _XTML_CALL_RE.finditer(tools_part):
+            fn_name = m.group(1).replace("&quot;", '"').replace("&amp;", "&")
+            body = m.group(2)
+            jm = _XTML_JSON_RE.search(body)
+            args: dict[str, Any] = {}
+            if jm:
+                try:
+                    parsed = tg.repair_json(jm.group(1))
+                    if isinstance(parsed, dict):
+                        args = parsed
+                except tg.JsonRepairError:
+                    args = {}
+            else:
+                for am in _XTML_ARG_RE.finditer(body):
+                    akey = am.group(1).replace("&quot;", '"').replace("&amp;", "&")
+                    atype = am.group(2).strip().lower()
+                    aval = am.group(3)
+                    if atype == "string":
+                        args[akey] = aval
+                    elif atype == "boolean":
+                        args[akey] = aval.strip().lower() == "true"
+                    elif atype == "null":
+                        args[akey] = None
+                    elif atype == "number":
+                        try:
+                            args[akey] = int(aval.strip()) if re.fullmatch(r"-?\d+", aval.strip()) else float(aval.strip())
+                        except ValueError:
+                            args[akey] = aval
+                    else:
+                        try:
+                            args[akey] = json.loads(aval)
+                        except ValueError:
+                            try:
+                                args[akey] = tg.repair_json(aval)
+                            except tg.JsonRepairError:
+                                args[akey] = aval
+            tc_blocks.append("<tool_call>\n" + json.dumps({"name": fn_name, "arguments": args}, ensure_ascii=False) + "\n</tool_call>")
+
+    if tc_blocks:
+        return (content + "\n" if content else "") + "\n".join(tc_blocks)
+    return content
+
+
 class KimiBackend(BackendBase):
     """Kimi K3 / K3.1 Pro: proxies to `clover-k3-chat.service` (`/api/chat`) or the native `libkimi_k31_hg4_engine`."""
 
     family = "kimi"
 
     def __init__(self, model_id: str, url: str, hg4_dir: Path | None = None, lib_path: Path | None = None,
-                 timeout_s: float = 900.0):
+                 timeout_s: float = 900.0, splice_capacity: int = 256):
         super().__init__()
         self.model_id = model_id
         self.url = url.rstrip("/")
@@ -860,10 +1034,13 @@ class KimiBackend(BackendBase):
         self.hg4_dir = hg4_dir
         self.lib_path = lib_path
         self._lib = None
-        self._tok = None
+        self._tok: Any = None
+        self._enc_k3: Any = None
         self._n_layers = 0
         self.kind = "proxy"
         self.template = TEMPLATES["kimi"]
+        self._splice: collections.OrderedDict[str, list[int]] = collections.OrderedDict()
+        self._splice_cap = splice_capacity
 
     @staticmethod
     def reachable(url: str, timeout: float = 0.5) -> bool:
@@ -883,6 +1060,17 @@ class KimiBackend(BackendBase):
     def native_available(self) -> bool:
         return bool(self.lib_path and self.lib_path.is_file() and self.hg4_dir and (self.hg4_dir / "meta.bin").is_file())
 
+    def remember_assistant(self, content: Any, tool_calls: Any, gen_ids: list[int],
+                           prefix_messages: list[dict[str, Any]] | None = None) -> None:
+        if not gen_ids:
+            return
+        key = assistant_signature(content, tool_calls, prefix_messages)
+        with ENGINE_LOCK:
+            self._splice[key] = list(gen_ids)
+            self._splice.move_to_end(key)
+            while len(self._splice) > self._splice_cap:
+                self._splice.popitem(last=False)
+
     def _transcript(self, messages, tools, tool_choice) -> tuple[str, list[dict[str, str]]]:
         segs = self.template.segments(messages, tools, tool_choice)
         flat = "".join(t for t, _ in segs)
@@ -893,40 +1081,44 @@ class KimiBackend(BackendBase):
         return flat, hist
 
     def _proxy(self, messages, tools, tool_choice, params: GenParams) -> str:
-        sys_prompt = tg.render_tool_system_prompt(tools, tool_choice, style="json")
-        last_user = ""
-        for m in reversed(messages or []):
-            if m.get("role") in ("user", "tool"):
-                last_user = _content_text(m.get("content"))
-                break
-        history = []
-        turns = list(messages or [])
-        pending_user = None
-        for m in turns[:-1]:
-            r = m.get("role")
-            if r == "user":
-                pending_user = _content_text(m.get("content"))
-            elif r == "assistant" and pending_user is not None:
-                history.append({"user": pending_user, "reply": _content_text(m.get("content"))})
-                pending_user = None
-        system = "\n\n".join(x for x in [*(_content_text(m.get("content")) for m in turns
-                                           if m.get("role") in ("system", "developer")), sys_prompt] if x)
-        body = {
-            "session_id": f"hg4-fusion-{uuid.uuid4().hex[:12]}", "prompt": last_user, "history": history,
-            "system": system, "messages": messages, "max_tokens": params.max_tokens,
-            "temperature": params.temperature, "remember": False, "stream": False,
+        body: dict[str, Any] = {
+            "model": "kimi-k3",
+            "cands": 1,
+            "session_id": f"hg4-fusion-{uuid.uuid4().hex[:12]}",
+            "messages": messages,
+            "max_tokens": params.max_tokens,
+            "temperature": params.temperature,
+            "stream": False,
         }
-        req = urllib.request.Request(self.url + "/api/chat", data=json.dumps(body).encode("utf-8"),
+        if tools:
+            body["tools"] = tools
+        if tool_choice is not None:
+            body["tool_choice"] = tool_choice
+        req = urllib.request.Request(self.url + "/v1/chat/completions", data=json.dumps(body).encode("utf-8"),
                                      headers={"Content-Type": "application/json"}, method="POST")
         with urllib.request.urlopen(req, timeout=self.timeout_s) as r:
             data = json.loads(r.read().decode("utf-8") or "{}")
-        for k in ("reply", "response", "text", "content", "answer"):
-            if isinstance(data.get(k), str):
-                return data[k]
         ch = data.get("choices")
         if isinstance(ch, list) and ch:
             msg = ch[0].get("message") or {}
-            return str(msg.get("content") or ch[0].get("text") or "")
+            tcs = msg.get("tool_calls") or []
+            content = str(msg.get("content") or ch[0].get("text") or "")
+            if tcs:
+                tc_blocks = []
+                for tc in tcs:
+                    fn = tc.get("function") or {}
+                    args = fn.get("arguments") or "{}"
+                    if isinstance(args, str):
+                        try:
+                            args = json.loads(args)
+                        except ValueError:
+                            args = {}
+                    tc_blocks.append("<tool_call>\n" + json.dumps({"name": fn.get("name", ""), "arguments": args}) + "\n</tool_call>")
+                return (content + "\n" if content else "") + "\n".join(tc_blocks)
+            return content
+        for k in ("reply", "response", "text", "content", "answer"):
+            if isinstance(data.get(k), str):
+                return data[k]
         return ""
 
     def _ensure_native(self) -> None:
@@ -943,56 +1135,264 @@ class KimiBackend(BackendBase):
             _c_int_p, _c_dbl_p, _c_dbl_p, _c_int_p, _c_int_p,
         ]
         lib.kimi_k31_generate_speculative.restype = ctypes.c_int
+        if hasattr(lib, "kimi_k31_cache_reset"):
+            lib.kimi_k31_cache_reset.argtypes = []
+            lib.kimi_k31_cache_reset.restype = None
+        if hasattr(lib, "kimi_k31_last_lcp_tokens"):
+            lib.kimi_k31_last_lcp_tokens.argtypes = []
+            lib.kimi_k31_last_lcp_tokens.restype = ctypes.c_int
         rc = lib.kimi_k31_hg4_init(str(self.hg4_dir).encode("utf-8"))
         if rc != 0:
             raise RuntimeError(f"kimi_k31_hg4_init rc={rc}")
         self._n_layers = int(lib.kimi_k31_hg4_num_layers())
         tj = self.hg4_dir / "tokenizer.json"
         self._tok = HFTokenizer(tj) if tj.is_file() else TiktokenFallbackTokenizer(self.hg4_dir / "tiktoken.model")
+        ek3 = self.hg4_dir / "encoding_k3.py"
+        if ek3.is_file():
+            if str(self.hg4_dir) not in sys.path:
+                sys.path.insert(0, str(self.hg4_dir))
+            import encoding_k3  # type: ignore[import-not-found]
+            self._enc_k3 = encoding_k3
         self._lib = lib
+
+    def reset_cache(self) -> None:
+        with ENGINE_LOCK:
+            self._splice.clear()
+            if self._lib is not None and hasattr(self._lib, "kimi_k31_cache_reset"):
+                self._lib.kimi_k31_cache_reset()
+
+    def _encode_xtml_segments(self, segs: list[Any]) -> list[int]:
+        out: list[int] = []
+        has_piece = hasattr(self._tok, "encode_piece")
+        for seg in segs:
+            if has_piece:
+                out.extend(self._tok.encode_piece(seg.text, allow_special=bool(seg.allow_special)))
+            else:
+                out.extend(self._tok.encode(seg.text))
+        return out
+
+    def _normalize_k31_messages(self, messages: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+        norm: list[dict[str, Any]] = []
+        last_tool_names: dict[str, str] = {}
+        for m in messages or []:
+            if not isinstance(m, dict):
+                continue
+            role = str(m.get("role") or "user")
+            if role == "developer":
+                role = "system"
+            elif role == "function":
+                role = "tool"
+            cm: dict[str, Any] = {"role": role, "content": _content_text(m.get("content"))}
+            if m.get("name"):
+                cm["name"] = str(m["name"])
+            if role == "assistant":
+                last_tool_names = {}
+                if m.get("reasoning_content"):
+                    cm["reasoning_content"] = str(m["reasoning_content"])
+                if m.get("tool_calls"):
+                    cm["tool_calls"] = m["tool_calls"]
+                    for tc in m["tool_calls"]:
+                        if isinstance(tc, dict) and tc.get("id"):
+                            fn = tc.get("function") or tc
+                            last_tool_names[str(tc["id"])] = str(fn.get("name") or "tool")
+            elif role == "tool":
+                cid = str(m.get("tool_call_id") or m.get("id") or "")
+                if cid:
+                    cm["tool_call_id"] = cid
+                tname = m.get("tool") or m.get("name") or last_tool_names.get(cid) or "tool"
+                cm["name"] = str(tname)
+                cm["tool"] = str(tname)
+            norm.append(cm)
+        return norm
+
+    def _build_k31_prompt_ids(self, messages, tools, tool_choice, think_mode: str) -> list[int]:
+        if self._enc_k3 is None:
+            flat, _ = self._transcript(messages, tools, tool_choice)
+            return self._tok.encode(flat)
+
+        norm_msgs = self._normalize_k31_messages(messages)
+        use_thinking = think_mode != "off"
+        kw: dict[str, Any] = {}
+        if use_thinking:
+            if think_mode == "bounded":
+                kw["thinking_effort"] = "low"
+            elif think_mode in ("low", "medium", "high", "max"):
+                kw["thinking_effort"] = think_mode
+        if tool_choice in ("required", "none"):
+            kw["tool_choice"] = tool_choice
+
+        # Check if the latest prior assistant message has exact prefix-scoped spliced token IDs ending in `<|end_of_msg|>`
+        eos_tok = self._tok.token_to_id("<|end_of_msg|>") or 163586
+        last_asst_idx = -1
+        spliced_gen: list[int] | None = None
+        for idx in range(len(norm_msgs) - 1, -1, -1):
+            if norm_msgs[idx]["role"] == "assistant":
+                sig = assistant_signature(
+                    norm_msgs[idx].get("content"), norm_msgs[idx].get("tool_calls"), norm_msgs[:idx]
+                )
+                cand = self._splice.get(sig)
+                if cand and cand[-1] == eos_tok:
+                    last_asst_idx = idx
+                    spliced_gen = cand
+                    break
+
+        if last_asst_idx >= 0 and spliced_gen is not None:
+            # `prefix_segs` omits `tool_choice` only because `encoding_k3` appends `tool-choice` at the end of the prompt
+            prefix_kw = {k: v for k, v in kw.items() if k != "tool_choice"}
+            prefix_segs = self._enc_k3.build_chat_segments(
+                norm_msgs[:last_asst_idx], tools=tools, add_generation_prompt=True, thinking=use_thinking, **prefix_kw
+            )
+            non_gen_through_asst = self._enc_k3.build_chat_segments(
+                norm_msgs[:last_asst_idx + 1], tools=tools, add_generation_prompt=False, thinking=use_thinking, **prefix_kw
+            )
+            full_segs = self._enc_k3.build_chat_segments(
+                norm_msgs, tools=tools, add_generation_prompt=True, thinking=use_thinking, **kw
+            )
+            cut = len(non_gen_through_asst)
+            if cut <= len(full_segs) and full_segs[:cut] == non_gen_through_asst:
+                tail_segs = full_segs[cut:]
+                return self._encode_xtml_segments(prefix_segs) + list(spliced_gen) + self._encode_xtml_segments(tail_segs)
+
+        segs = self._enc_k3.build_chat_segments(
+            norm_msgs, tools=tools, add_generation_prompt=True, thinking=use_thinking, **kw
+        )
+        return self._encode_xtml_segments(segs)
 
     def _native(self, messages, tools, tool_choice, params: GenParams) -> tuple[str, GenResult]:
         self._ensure_native()
-        flat, _ = self._transcript(messages, tools, tool_choice)
-        ids = self._tok.encode(flat)
-        eos = self._tok.token_to_id("<|im_end|>") or 163586
+        think_mode = os.environ.get("CLOVER_KIMI_THINKING", "bounded").strip().lower()
+        ids = self._build_k31_prompt_ids(messages, tools, tool_choice, think_mode)
+        eos = self._tok.token_to_id("<|end_of_msg|>") or self._tok.token_to_id("<|im_end|>") or 163586
+        close_tok = self._tok.token_to_id("<|close|>") or 163588
         layers = (ctypes.c_int * self._n_layers)(*range(self._n_layers))
+        draft_k = int(os.environ.get("CLOVER_KIMI_DRAFT_K", "4"))
+
+        if self._enc_k3 is not None and think_mode == "bounded":
+            think_cap = max(8, int(os.environ.get("CLOVER_KIMI_THINK_CAP", "48")))
+            arr1 = (ctypes.c_int * len(ids))(*ids)
+            out1 = (ctypes.c_int * (think_cap + 8))()
+            pf1, dc1 = ctypes.c_double(0), ctypes.c_double(0)
+            acc1, tot1 = ctypes.c_int(0), ctypes.c_int(0)
+            n1 = self._lib.kimi_k31_generate_speculative(
+                arr1, len(ids), layers, self._n_layers, think_cap, close_tok,
+                draft_k, out1, ctypes.byref(pf1), ctypes.byref(dc1),
+                ctypes.byref(acc1), ctypes.byref(tot1),
+            )
+            if n1 < 0:
+                raise RuntimeError(f"kimi_k31_generate_speculative (think) rc={n1}")
+            lcp1 = int(self._lib.kimi_k31_last_lcp_tokens()) if hasattr(self._lib, "kimi_k31_last_lcp_tokens") else 0
+            raw_think = list(out1[:n1])
+            if not raw_think or raw_think[-1] != close_tok:
+                raw_think.append(close_tok)
+
+            bridge = self._encode_xtml_segments([
+                self._enc_k3.EncodeSegment("think", allow_special=False),
+                self._enc_k3.EncodeSegment("<|sep|>", allow_special=True),
+                self._enc_k3.EncodeSegment("<|open|>", allow_special=True),
+                self._enc_k3.EncodeSegment("response", allow_special=False),
+                self._enc_k3.EncodeSegment("<|sep|>", allow_special=True),
+            ])
+            ids2 = ids + raw_think + bridge
+            resp_stop = eos if tools else close_tok
+            resp_max = max(16, int(params.max_tokens))
+            arr2 = (ctypes.c_int * len(ids2))(*ids2)
+            out2 = (ctypes.c_int * (resp_max + 8))()
+            pf2, dc2 = ctypes.c_double(0), ctypes.c_double(0)
+            acc2, tot2 = ctypes.c_int(0), ctypes.c_int(0)
+            n2 = self._lib.kimi_k31_generate_speculative(
+                arr2, len(ids2), layers, self._n_layers, resp_max, resp_stop,
+                draft_k, out2, ctypes.byref(pf2), ctypes.byref(dc2),
+                ctypes.byref(acc2), ctypes.byref(tot2),
+            )
+            if n2 < 0:
+                raise RuntimeError(f"kimi_k31_generate_speculative (response) rc={n2}")
+            raw_resp = list(out2[:n2])
+
+            full_gen = raw_think + bridge + raw_resp
+            if not tools and raw_resp and raw_resp[-1] == close_tok:
+                close_msg = self._encode_xtml_segments([
+                    self._enc_k3.EncodeSegment("response", allow_special=False),
+                    self._enc_k3.EncodeSegment("<|sep|>", allow_special=True),
+                    self._enc_k3.EncodeSegment("<|close|>", allow_special=True),
+                    self._enc_k3.EncodeSegment("message", allow_special=False),
+                    self._enc_k3.EncodeSegment("<|sep|>", allow_special=True),
+                    self._enc_k3.EncodeSegment("<|end_of_msg|>", allow_special=True),
+                ])
+                full_gen = full_gen + close_msg
+
+            resp_only = [g for g in raw_resp if g != eos and (tools or g != close_tok)]
+            raw_text = "<|open|>response<|sep|>" + self._tok.decode(resp_only)
+            text = parse_kimi_xtml_output(raw_text)
+            tot_comp = len(raw_think) + len(raw_resp)
+            hit_stop = bool(raw_resp and raw_resp[-1] == resp_stop)
+            return text, GenResult(
+                model=self.model_id, finish_reason="stop" if hit_stop else "length",
+                prompt_tokens=len(ids), cached_tokens=lcp1,
+                prefill_tokens=max(0, len(ids) - lcp1), completion_tokens=tot_comp,
+                prefill_ms=pf1.value, decode_ms=dc1.value + pf2.value + dc2.value,
+                backend_kind="native", gen_ids=full_gen if hit_stop else [],
+                extra={"dspark_accepted": acc1.value + acc2.value, "dspark_drafted": tot1.value + tot2.value},
+            )
+
+        think_budget = int(os.environ.get("CLOVER_KIMI_THINK_BUDGET", "128")) if think_mode != "off" else 0
+        eng_max_tokens = int(params.max_tokens) + think_budget
         arr = (ctypes.c_int * len(ids))(*ids)
-        out = (ctypes.c_int * (params.max_tokens + 8))()
+        out = (ctypes.c_int * (eng_max_tokens + 8))()
         pf, dc = ctypes.c_double(0), ctypes.c_double(0)
         acc, tot = ctypes.c_int(0), ctypes.c_int(0)
-        n = self._lib.kimi_k31_generate_speculative(arr, len(ids), layers, self._n_layers, params.max_tokens, eos, 2,
-                                                    out, ctypes.byref(pf), ctypes.byref(dc), ctypes.byref(acc),
-                                                    ctypes.byref(tot))
+        n = self._lib.kimi_k31_generate_speculative(arr, len(ids), layers, self._n_layers, eng_max_tokens, eos,
+                                                    draft_k, out, ctypes.byref(pf), ctypes.byref(dc),
+                                                    ctypes.byref(acc), ctypes.byref(tot))
         if n < 0:
             raise RuntimeError(f"kimi_k31_generate_speculative rc={n}")
-        gen = [g for g in out[:n] if g != eos]
-        text = self._tok.decode(gen)
-        for mk in self.template.stop_markers:
-            text = text.split(mk)[0]
-        return text, GenResult(model=self.model_id, prompt_tokens=len(ids), prefill_tokens=len(ids),
-                               completion_tokens=len(gen), prefill_ms=pf.value, decode_ms=dc.value,
-                               backend_kind="native", extra={"dspark_accepted": acc.value, "dspark_drafted": tot.value})
+        raw_gen = list(out[:n])
+        lcp = int(self._lib.kimi_k31_last_lcp_tokens()) if hasattr(self._lib, "kimi_k31_last_lcp_tokens") else 0
+        gen = [g for g in raw_gen if g != eos]
+        raw_text = self._tok.decode(gen)
+        if self._enc_k3 is not None:
+            text = parse_kimi_xtml_output(raw_text)
+        else:
+            text = raw_text
+            for mk in self.template.stop_markers:
+                text = text.split(mk)[0]
+        hit_stop = bool(raw_gen and raw_gen[-1] == eos)
+        return text, GenResult(
+            model=self.model_id, finish_reason="stop" if hit_stop else "length",
+            prompt_tokens=len(ids), cached_tokens=lcp, prefill_tokens=max(0, len(ids) - lcp),
+            completion_tokens=len(gen), prefill_ms=pf.value, decode_ms=dc.value,
+            backend_kind="native", gen_ids=raw_gen if hit_stop else [],
+            extra={"dspark_accepted": acc.value, "dspark_drafted": tot.value},
+        )
 
     def stream(self, messages, tools, tool_choice, params: GenParams):
         with ENGINE_LOCK:
             t0 = time.perf_counter()
             res: GenResult
-            if self.reachable(self.url):
+            prefer_native = os.environ.get("CLOVER_KIMI_PREFER_NATIVE") == "1"
+            if prefer_native and self.native_available():
+                self.kind = "native"
+                text, res = self._native(messages, tools, tool_choice, params)
+            elif self.reachable(self.url):
+                self.kind = "proxy"
                 text = self._proxy(messages, tools, tool_choice, params)
-                res = GenResult(model=self.model_id, backend_kind="proxy",
+                res = GenResult(model=self.model_id, finish_reason="stop", backend_kind="proxy",
                                 prompt_tokens=sum(len(_content_text(m.get("content"))) // 4 for m in messages or []),
                                 completion_tokens=max(1, len(text) // 4) if text else 0,
                                 decode_ms=(time.perf_counter() - t0) * 1000.0)
             elif self.native_available():
+                self.kind = "native"
                 text, res = self._native(messages, tools, tool_choice, params)
             else:
                 raise RuntimeError(f"kimi backend unavailable: {self.url} unreachable and no native engine")
+            stop_cut = False
             for s in params.stop or []:
                 if s and s in text:
                     text = text.split(s)[0]
+                    stop_cut = True
+            if stop_cut:
+                res.gen_ids = []
+                res.finish_reason = "stop"
             res.text = text
-            res.finish_reason = "stop"
             if text:
                 yield "delta", text
             self._account(res)
@@ -1115,7 +1515,11 @@ def build_backends(mode: str = "auto", responders: dict[str, Responder] | None =
     responders = responders or {}
     out: dict[str, BackendBase] = {}
     paths = discover_paths() if mode != "mock" else {}
+    active_env = (os.environ.get("CLOVER_ACTIVE_MODELS") or "").strip()
+    allowed = {m.strip() for m in active_env.split(",") if m.strip()} if active_env else set(DIRECT_MODELS)
     for mid in DIRECT_MODELS:
+        if mid not in allowed:
+            continue
         if mode == "mock":
             out[mid] = make_mock_backend(mid, responders.get(mid))
             continue

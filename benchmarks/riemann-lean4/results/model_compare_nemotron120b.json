@@ -1,0 +1,312 @@
+{
+  "phase": "M3_Nemotron120B",
+  "flags": {
+    "base_model": "nemotron-3.5-super-vl",
+    "tokeneconomizer": true,
+    "clover_mcp": false,
+    "skills": true,
+    "cascade": false,
+    "egm": false,
+    "rea": true
+  },
+  "boundary_hashes": {
+    "suite_sha256": "415c9148ad75ba7338bd365a8305baf17258e3a2fd957381ff487f7f071a1d26",
+    "oracle_sha256": "52d731367acdb28593a3d86633e2e762736ae24cd6ef7d42e780499efa58c937",
+    "ablation_sha256": "6d5ef9d6e4d061f2e263fdaf510cdf22c2e8c8347c21e7d8d830291e8446a6b1",
+    "runner_sha256": "78fd110a1be269b11dab82f4e3f36283cff5267ee47bf22cf6e8ecab1032c089"
+  },
+  "total_passed": 9,
+  "total_tasks": 23,
+  "by_tier": {
+    "tier1_spec_roundtrip": {
+      "passed": 2,
+      "total": 2
+    },
+    "tier2_leaf_tactic_repair": {
+      "passed": 0,
+      "total": 9
+    },
+    "tier3_egm_subgoal_audit": {
+      "passed": 2,
+      "total": 4
+    },
+    "tier4_verifier_swe": {
+      "passed": 4,
+      "total": 4
+    },
+    "tier5_reverse_engineering": {
+      "passed": 1,
+      "total": 4
+    }
+  },
+  "total_tokens": 26679,
+  "total_wall_s": 2153.56,
+  "passes_per_hour": 15.04,
+  "escalations": 0,
+  "false_rejections": 2,
+  "goldfish_false_rejections": 0,
+  "elephant_false_rejections": 0,
+  "probes": {
+    "opencode_turn1_prompt_tokens": 786,
+    "opencode_turn1_wall_s": 34.77,
+    "opencode_turn2_wall_s": 3.09,
+    "opencode_turn2_answered_correctly": true,
+    "omni2b_prompt_tokens": 991,
+    "omni2b_escaped_webfetch_loop": true,
+    "omni2b_switched_to_read": false
+  },
+  "results": [
+    {
+      "task_id": "rh_t1_spec_01",
+      "tier": "tier1_spec_roundtrip",
+      "passed": true,
+      "stage": "kernel_verified",
+      "escalated": false,
+      "tokens": 658,
+      "wall_s": 39.33
+    },
+    {
+      "task_id": "rh_t1_spec_02",
+      "tier": "tier1_spec_roundtrip",
+      "passed": true,
+      "stage": "kernel_verified",
+      "escalated": false,
+      "tokens": 675,
+      "wall_s": 25.55
+    },
+    {
+      "task_id": "rh_t2_short_1_6_01",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "short_1_6",
+      "passed": false,
+      "stage": "static_gate",
+      "diagnostics": "Top-level declaration or namespace boundary inside tactic block is forbidden.",
+      "escalated": false,
+      "tokens": 876,
+      "wall_s": 63.7
+    },
+    {
+      "task_id": "rh_t2_short_1_6_02",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "short_1_6",
+      "passed": false,
+      "stage": "static_gate",
+      "diagnostics": "Top-level declaration or namespace boundary inside tactic block is forbidden.",
+      "escalated": false,
+      "tokens": 1397,
+      "wall_s": 149.88
+    },
+    {
+      "task_id": "rh_t2_short_1_6_03",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "short_1_6",
+      "passed": false,
+      "stage": "static_gate",
+      "diagnostics": "Top-level declaration or namespace boundary inside tactic block is forbidden.",
+      "escalated": false,
+      "tokens": 979,
+      "wall_s": 84.92
+    },
+    {
+      "task_id": "rh_t2_medium_7_14_01",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "medium_7_14",
+      "passed": false,
+      "stage": "static_gate",
+      "diagnostics": "Top-level declaration or namespace boundary inside tactic block is forbidden.",
+      "escalated": false,
+      "tokens": 1367,
+      "wall_s": 149.3
+    },
+    {
+      "task_id": "rh_t2_medium_7_14_02",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "medium_7_14",
+      "passed": false,
+      "stage": "static_gate",
+      "diagnostics": "Top-level declaration or namespace boundary inside tactic block is forbidden.",
+      "escalated": false,
+      "tokens": 1364,
+      "wall_s": 148.92
+    },
+    {
+      "task_id": "rh_t2_medium_7_14_03",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "medium_7_14",
+      "passed": false,
+      "stage": "static_gate",
+      "diagnostics": "Top-level declaration or namespace boundary inside tactic block is forbidden.",
+      "escalated": false,
+      "tokens": 1339,
+      "wall_s": 148.69
+    },
+    {
+      "task_id": "rh_t2_hard_15_28_01",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "hard_15_28",
+      "passed": false,
+      "stage": "static_gate",
+      "diagnostics": "Top-level declaration or namespace boundary inside tactic block is forbidden.",
+      "escalated": false,
+      "tokens": 1341,
+      "wall_s": 148.62
+    },
+    {
+      "task_id": "rh_t2_hard_15_28_02",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "hard_15_28",
+      "passed": false,
+      "stage": "static_gate",
+      "diagnostics": "Top-level declaration or namespace boundary inside tactic block is forbidden.",
+      "escalated": false,
+      "tokens": 1388,
+      "wall_s": 149.75
+    },
+    {
+      "task_id": "rh_t2_hard_15_28_03",
+      "tier": "tier2_leaf_tactic_repair",
+      "length_bin": "hard_15_28",
+      "passed": false,
+      "stage": "static_gate",
+      "diagnostics": "Top-level declaration or namespace boundary inside tactic block is forbidden.",
+      "escalated": false,
+      "tokens": 1389,
+      "wall_s": 150.02
+    },
+    {
+      "task_id": "rh_t3_egm_01_valid_dirichlet_nonvanish",
+      "tier": "tier3_egm_subgoal_audit",
+      "passed": false,
+      "false_rejection": true,
+      "goldfish_false_rejection": false,
+      "elephant_false_rejection": false,
+      "pred_provable": false,
+      "ground_truth_provable": true,
+      "tokens": 826,
+      "wall_s": 58.9
+    },
+    {
+      "task_id": "rh_t3_egm_02_trivial_zeros_missing",
+      "tier": "tier3_egm_subgoal_audit",
+      "passed": true,
+      "false_rejection": false,
+      "goldfish_false_rejection": false,
+      "elephant_false_rejection": false,
+      "pred_provable": false,
+      "ground_truth_provable": false,
+      "tokens": 741,
+      "wall_s": 51.22
+    },
+    {
+      "task_id": "rh_t3_egm_03_valid_landau_nonneg",
+      "tier": "tier3_egm_subgoal_audit",
+      "passed": false,
+      "false_rejection": true,
+      "goldfish_false_rejection": false,
+      "elephant_false_rejection": false,
+      "pred_provable": false,
+      "ground_truth_provable": true,
+      "tokens": 945,
+      "wall_s": 51.11
+    },
+    {
+      "task_id": "rh_t3_egm_04_landau_missing_nonneg",
+      "tier": "tier3_egm_subgoal_audit",
+      "passed": true,
+      "false_rejection": false,
+      "goldfish_false_rejection": false,
+      "elephant_false_rejection": false,
+      "pred_provable": false,
+      "ground_truth_provable": false,
+      "tokens": 966,
+      "wall_s": 61.83
+    },
+    {
+      "task_id": "rh_t4_swe_01_dag_ready_scheduler",
+      "tier": "tier4_verifier_swe",
+      "passed": true,
+      "error": "",
+      "escalated": false,
+      "tokens": 860,
+      "wall_s": 87.11
+    },
+    {
+      "task_id": "rh_t4_swe_02_nested_lean_comment_scanner",
+      "tier": "tier4_verifier_swe",
+      "passed": true,
+      "error": "",
+      "escalated": false,
+      "tokens": 965,
+      "wall_s": 104.43
+    },
+    {
+      "task_id": "rh_t4_swe_03_lcp_prefix_cache_matcher",
+      "tier": "tier4_verifier_swe",
+      "passed": true,
+      "error": "",
+      "escalated": false,
+      "tokens": 743,
+      "wall_s": 48.96
+    },
+    {
+      "task_id": "rh_t4_swe_04_mxfp4_e2m1_block_decoder",
+      "tier": "tier4_verifier_swe",
+      "passed": true,
+      "error": "",
+      "escalated": false,
+      "tokens": 928,
+      "wall_s": 67.51
+    },
+    {
+      "task_id": "rh_t5_re_01_minified_ipc_preload",
+      "tier": "tier5_reverse_engineering",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_6zq8jwzt/driver.py\", line 5, in <module>\n    exec(compile(\"assert sign_ipc_frame('clip', 7, 'hello') == {'ch': 'nx:cb:v2', 'tag': '9b0637d6'}\\nassert sign_ipc_frame('vault', 65538, 'k=1') == sign_ipc_frame('vault', 2, 'k=1')\\ntry:\\n    sign_ipc_frame('admin', 1, 'x')\\n    raise AssertionError('Expected PermissionError')\\nexcept PermissionError:\\n    pass\\n\", '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_test_suite>\", line 1, in <module>\nNameError: name 'sign_ipc_frame' is not defined",
+      "escalated": false,
+      "tokens": 1416,
+      "wall_s": 74.81
+    },
+    {
+      "task_id": "rh_t5_re_02_stripped_elf_mixer",
+      "tier": "tier5_reverse_engineering",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_6c29rwga/driver.py\", line 5, in <module>\n    exec(compile('assert clover_mix64(0) == 0\\nassert clover_mix64(1) == 0x5692161d100b05e5\\nfor v in [0, 1, 42, 0xdeadbeefcafebabe, (1<<64)-1]:\\n    y = clover_mix64(v)\\n    assert 0 <= y < (1 << 64)\\n    assert clover_unmix64(y) == v\\n', '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_test_suite>\", line 6, in <module>\nAssertionError",
+      "escalated": false,
+      "tokens": 2323,
+      "wall_s": 130.51
+    },
+    {
+      "task_id": "rh_t5_re_03_binary_tile_container",
+      "tier": "tier5_reverse_engineering",
+      "passed": false,
+      "error": "Traceback (most recent call last):\n  File \"/tmp/clover_swe_sbx_gqj0ubes/driver.py\", line 5, in <module>\n    exec(compile(\"import struct\\nblob = b'CLV4' + struct.pack('<hhh', 4, 128, -256) + bytes([(10 << 4) | 8, (6 << 4) | 15])\\nassert unpack_rec(blob) == [-1.0, 0.0, 2.5, -2.0]\\ntry:\\n    unpack_rec(b'BAD!' + bytes(10))\\n    raise AssertionError('Expected ValueError')\\nexcept ValueError:\\n    pass\\n\", '<clover_test_suite>', 'exec'), ns, ns)\n  File \"<clover_test_suite>\", line 3, in <module>\n  File \"/tmp/clover_swe_sbx_gqj0ubes/solution_mod.py\", line 27, in unpack_rec\n    raise ValueError(\"count",
+      "escalated": false,
+      "tokens": 2052,
+      "wall_s": 97.88
+    },
+    {
+      "task_id": "rh_t5_re_04_protocol_state_machine",
+      "tier": "tier5_reverse_engineering",
+      "passed": true,
+      "error": "",
+      "escalated": false,
+      "tokens": 1141,
+      "wall_s": 60.49
+    }
+  ],
+  "gate": {
+    "decision": "DROP",
+    "net_flips": 0,
+    "plus_flips": [
+      "rh_t4_swe_01_dag_ready_scheduler",
+      "rh_t4_swe_02_nested_lean_comment_scanner"
+    ],
+    "minus_flips": [
+      "rh_t3_egm_03_valid_landau_nonneg",
+      "rh_t5_re_01_minified_ipc_preload"
+    ],
+    "turn1_token_reduction_pct": 2.36,
+    "wall_clock_reduction_pct": -212.97,
+    "reason": "Did not clear Keep gate: net_flips=0 (+2/-2), Turn-1 token delta=2.36%, wall delta=-212.97%."
+  }
+}

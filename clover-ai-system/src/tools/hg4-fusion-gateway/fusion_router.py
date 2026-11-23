@@ -508,7 +508,7 @@ class FusionRouter:
             finish = "tool_calls" if tool_calls else "stop"
 
         if final.result.gen_ids and not final.retried and final.role not in ("revise", "goldfish-structured"):
-            self.backends[final.model].remember_assistant(content, tool_calls, final.result.gen_ids)
+            self.backends[final.model].remember_assistant(content, tool_calls, final.result.gen_ids, messages)
 
         if streamer is not None:
             streamer.finish(content)
@@ -558,14 +558,45 @@ class FusionRouter:
             n += 1
         return msgs[:n] + [{"role": "system", "content": extra}] + msgs[n:]
 
+    @staticmethod
+    def _clean_slate_escalation_messages(messages: list[dict[str, Any]], tools_active: bool) -> tuple[list[dict[str, Any]], bool]:
+        """Strip trailing failed non-tool-call `[assistant(draft), tool(error)]` pairs while preserving user context."""
+        if tools_active or len(messages) < 3:
+            return messages, False
+        end = len(messages)
+        stripped_any = False
+        while end >= 3:
+            idx = end - 1
+            if messages[idx].get("role") not in ("tool", "function"):
+                break
+            while idx >= 0 and messages[idx].get("role") in ("tool", "function"):
+                idx -= 1
+            if idx >= 1 and messages[idx].get("role") == "assistant" and not messages[idx].get("tool_calls"):
+                if any(m.get("role") == "user" for m in messages[:idx]):
+                    end = idx
+                    stripped_any = True
+                    continue
+            break
+        return (list(messages[:end]), True) if stripped_any else (messages, False)
+
     def _cascade(self, body, messages, tools, tool_choice, streamer, steps, telem) -> StepOutcome:
         params = parse_params(body)
+        tools_active = bool(tg.active_tools(tools, tool_choice))
         marker = objective_failure(messages)
         if marker:
             telem["escalations"] = 1
             telem["escalation_reason"] = "tool_failure"
             telem["escalation_marker"] = marker
-            final = self._run("nemotron-3.5-super-vl", "cascade-escalated", messages, tools, tool_choice, params,
+            use_clean = (
+                bool(body["x_clover_clean_slate_cascade"])
+                if "x_clover_clean_slate_cascade" in body
+                else os.environ.get("CLOVER_CASCADE_CLEAN_SLATE", "1") != "0"
+            )
+            esc_msgs = messages
+            if use_clean:
+                esc_msgs, stripped = self._clean_slate_escalation_messages(messages, tools_active)
+                telem["clean_slate_escalation"] = stripped
+            final = self._run("nemotron-3.5-super-vl", "cascade-escalated", esc_msgs, tools, tool_choice, params,
                               streamer)
             steps.append(final)
             return final

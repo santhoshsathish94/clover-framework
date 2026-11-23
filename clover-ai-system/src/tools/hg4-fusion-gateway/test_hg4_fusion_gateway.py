@@ -486,6 +486,62 @@ class TestGatewayHTTP(unittest.TestCase):
         self.assertEqual(st2, 200)
         self.assertFalse(json.loads(p2)["x_clover_telemetry"]["economizer"]["loop_detected"])
 
+    def test_kimi_xtml_output_parser(self):
+        raw = (
+            "Need to triage ELF.<|close|>think<|sep|>"
+            "<|open|>response<|sep|>Checking ELF header.<|close|>response<|sep|>"
+            '<|open|>tools<|sep|><|open|>call tool="rea_binary_triage" index="1"<|sep|>'
+            '<|open|>argument key="binary_path" type="string"<|sep|>/tmp/sample.elf<|close|>argument<|sep|>'
+            '<|open|>argument key="limit" type="number"<|sep|>42<|close|>argument<|sep|>'
+            '<|open|>argument key="verbose" type="boolean"<|sep|>true<|close|>argument<|sep|>'
+            "<|close|>call<|sep|><|close|>tools<|sep|><|close|>message<|sep|>"
+        )
+        t_spec = [{
+            "type": "function",
+            "function": {
+                "name": "rea_binary_triage",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "binary_path": {"type": "string"},
+                        "limit": {"type": "integer"},
+                        "verbose": {"type": "boolean"},
+                    },
+                    "required": ["binary_path"],
+                },
+            },
+        }]
+        converted = B.parse_kimi_xtml_output(raw)
+        pr = tg.parse_tool_calls(converted, t_spec)
+        self.assertEqual(pr.content.strip(), "Checking ELF header.")
+        self.assertEqual(len(pr.tool_calls), 1)
+        self.assertEqual(pr.tool_calls[0].name, "rea_binary_triage")
+        self.assertEqual(pr.tool_calls[0].arguments, {"binary_path": "/tmp/sample.elf", "limit": 42, "verbose": True})
+        # Unclosed `<think>` truncation must never leak raw chain-of-thought into content
+        self.assertEqual(B.parse_kimi_xtml_output("<|open|>think<|sep|>internal reasoning cut off"), "")
+
+    def test_prefix_scoped_splice_and_clean_slate_guards(self):
+        # Prefix-scoped `assistant_signature` isolates distinct sessions with identical assistant replies
+        sig_a = B.assistant_signature("Done.", None, [{"role": "user", "content": "Session A secret"}])
+        sig_b = B.assistant_signature("Done.", None, [{"role": "user", "content": "Session B other"}])
+        self.assertNotEqual(sig_a, sig_b)
+        # Clean-slate escalation strips failed non-tool drafts while never removing user context
+        from fusion_router import FusionRouter
+        msgs = [
+            {"role": "system", "content": "sys"},
+            {"role": "user", "content": "solve task"},
+            {"role": "assistant", "content": "broken_draft_1"},
+            {"role": "tool", "content": "error: failed"},
+        ]
+        cleaned, stripped = FusionRouter._clean_slate_escalation_messages(msgs, tools_active=False)
+        self.assertTrue(stripped)
+        self.assertEqual([m["role"] for m in cleaned], ["system", "user"])
+        # If no user message precedes the assistant draft, never strip down to `[system]` only
+        no_user = [{"role": "system", "content": "sys"}, {"role": "assistant", "content": "d"}, {"role": "tool", "content": "error"}]
+        cleaned2, stripped2 = FusionRouter._clean_slate_escalation_messages(no_user, tools_active=False)
+        self.assertFalse(stripped2)
+        self.assertEqual(len(cleaned2), 3)
+
 
 # ====================================================================================================================
 _OMNI = B.discover_paths()["lfm3-omni-2b"]
