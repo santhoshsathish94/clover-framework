@@ -96,13 +96,13 @@ def _strip_lean_comments_and_strings(src: str) -> str:
                     continue
             out.append("'")
             i += 1
-        elif src[i] in ("r", "R") and (i == 0 or not (src[i - 1].isalnum() or src[i - 1] in ("_", "'"))):
-            # Lean 4 raw string literal `r"..."`, `r#"..."#`, `r##"..."##`
+        elif src[i] == "r" and (i == 0 or not (src[i - 1].isalnum() or src[i - 1] in ("_", "'"))):
+            # Lean 4 raw string literal `r#"..."#`, `r##"..."##` (requires lowercase `r` and >= 1 `#`)
             j = i + 1
             while j < n and src[j] == "#":
                 j += 1
-            if j < n and src[j] == '"':
-                hashes = j - (i + 1)
+            hashes = j - (i + 1)
+            if hashes >= 1 and j < n and src[j] == '"':
                 closing = '"' + ("#" * hashes)
                 end_pos = src.find(closing, j + 1)
                 out.append('""')

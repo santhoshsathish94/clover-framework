@@ -829,6 +829,8 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
             "```lean\nattribute [implemented_by g] f\ntheorem bad : f = true := by native_decide\n```",
             "```lean\ndef q : Char := '\"'\n#eval 1 + 1\ndef r := \"x\"\ntheorem t : True := trivial\n```",
             "```lean\ndef label : String := r#\"size 5\" box\"#\ntheorem t : 1 + 1 = 2 := by sorry\n```",
+            "```lean\ndef R (s : String) : String := s\ndef x := R\"q\\\"z\"\ntheorem t : 1 + 1 = 2 := by sorry\ndef y := \"w\"\n```",
+            "```lean\ndef r (s : String) : String := s\ndef x := r\"q\\\"z\"\ntheorem t : 1 + 1 = 2 := by sorry\ndef y := \"w\"\n```",
             "by native_decide",
             "by decide +native",
         ):
