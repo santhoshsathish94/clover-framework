@@ -58,319 +58,67 @@
 
 <main id="main" tabindex="-1">
 
-  <!-- ============ HERO ============ -->
+  <!-- ============ HERO (100% MODEL-AGNOSTIC PROCESS) ============ -->
   <section class="hero" id="overview">
     <div class="wrap">
       <h1>The Clover HG Format</h1>
-      <p class="hero__tagline">Data movement is the bottleneck &mdash; not compute. Up to 5&times; faster CPU <code>tok/s</code> at ~98&ndash;99% full-model accuracy.</p>
-      <p class="lede">Modern inference stalls waiting on memory wires, not arithmetic units. Clover&rsquo;s <strong>Hadamard-Grouped (<code>HG4-16R-OP</code> &amp; <code>K31H</code>)</strong> format rotates every 128-weight block through a column-balanced Fast Walsh&ndash;Hadamard Transform (<code>FWHT-128</code>) into a 16-row lane-interleaved SIMD layout (<code>4.125 bpw</code>), pairs weights with lossless precomputed operator sidecars (<code>HG4OP001</code>), and streams directly into stateful C11 kernels with zero GPUs, zero CUDA, and zero PyTorch at runtime.</p>
+      <p class="hero__tagline">Convert any open-weight model to run on CPU &mdash; ~4&times; smaller, up to 5&times; faster <code>tok/s</code>, ~98&ndash;99% of <code>BF16</code> accuracy.</p>
+      <p class="lede">On CPU, language model speed is bottlenecked by moving weights across memory wires, while naive 4-bit or 2-bit quantization clips outlier channels and breaks math and code reasoning. Clover&rsquo;s <strong>Hadamard-Grouped (<code>HG</code>)</strong> conversion process rotates every 128-weight block through a column-balanced Fast Walsh&ndash;Hadamard Transform (<code>FWHT-128</code>), quantizes to a 1-cycle register Gaussian codebook (<code>LUT16</code>) in a 16-row SIMD layout (<code>4.125 bpw</code>), and pairs weights with lossless precomputed operator sidecars (<code>HG4OP001</code>) &mdash; running with zero GPUs, zero CUDA, and zero PyTorch at runtime.</p>
       <div class="actions">
         <a class="btn btn--primary" href="./convert_to_hg.py" download="convert_to_hg.py">Download <code>convert_to_hg.py</code> &darr;</a>
-        <a class="btn btn--primary" href="#speed-tok-per-sec">Original vs. HG <code>tok/s</code> &darr;</a>
-        <a class="btn" href="#sample-outputs">Sample Outputs (BF16 vs. HG) &darr;</a>
-        <a class="btn" href="https://huggingface.co/Santhoshsathish94" target="_blank" rel="noopener noreferrer">Hugging Face Weights &rarr;</a>
+        <a class="btn btn--primary" href="#how-hg-works">How the Process Works &darr;</a>
+        <a class="btn" href="#convert-any-model">Convert Your Model &darr;</a>
+        <a class="btn" href="#proof-four-models">4 Proof Case Studies (2B&ndash;2.8T) &darr;</a>
       </div>
 
       <div class="stat-grid" style="margin-top:2rem">
         <div class="stat-card">
-          <div class="stat-card__num">50.3 tok/s</div>
-          <div class="stat-card__label">CPU Decode (<code>4.7&times;</code> vs. BF16 <code>10.8 tok/s</code>)</div>
-          <div class="stat-card__note"><code>1,347 tok/s</code> prefill on <code>2B</code>; <code>16.6 tok/s</code> on <code>35B-A3B</code>; <code>9.20 tok/s</code> lossless MTP on <code>120B</code>; <code>347.8 draft tok/s</code> on <code>2.8T</code>.</div>
+          <div class="stat-card__num">4.125 bpw</div>
+          <div class="stat-card__label">Primary <code>HG4-16R</code> Footprint</div>
+          <div class="stat-card__note"><code>3.88&times;</code> smaller than <code>16-bit BF16</code> (4-bit nibbles + 1 guarded <code>FP16</code> scale per 128 weights; optional <code>2.125 bpw HG2</code> tier for cold MoE tails).</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card__num">876.5 GB</div>
-          <div class="stat-card__label">All 4 Models Combined (2.95T Params)</div>
-          <div class="stat-card__note">Down from ~1,899 GB upstream (<code>Kimi K3.1 2.8T</code> cut from 1.58 TB to 791.8 GB with zero experts dropped).</div>
+          <div class="stat-card__num">4&times; &ndash; 5&times;</div>
+          <div class="stat-card__label">Higher CPU <code>tok/s</code> vs. <code>BF16</code></div>
+          <div class="stat-card__note"><code>16-row</code> lane-interleaved SIMD tiles eliminate horizontal reductions and outrun standard <code>Q4_0 / Q4_K_M</code> by <code>+17%</code> to <code>+30%</code>.</div>
         </div>
         <div class="stat-card">
           <div class="stat-card__num">~98&ndash;99%</div>
-          <div class="stat-card__label">Full-Model Quality Retained</div>
-          <div class="stat-card__note"><code>PPL 29.06</code> vs. BF16 <code>28.81</code> (<code>8&times;</code> closer than <code>Q4_0</code>); <code>100.0%</code> lossless <code>precomputed_ops</code> &amp; speculative decode.</div>
+          <div class="stat-card__label"><code>BF16</code> Task Quality Retained</div>
+          <div class="stat-card__note"><code>FWHT-128</code> spreads <code>30&times;</code> spike channels across 128 coordinates before rounding (<code>0.996+</code> cosine vs. <code>0.923</code> naive INT4).</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card__num">12 / 23</div>
-          <div class="stat-card__label">Lean 4 RiemannHypothesis + SWE + RE</div>
-          <div class="stat-card__note"><code>Kimi K3.1 Pro K31H</code> solo score on 1 CPU (<code>97.23%</code> Turn-2 LCP cache hit &amp; <code>45/48</code> Studio capability score).</div>
+          <div class="stat-card__num">100.0%</div>
+          <div class="stat-card__label">Lossless Runtime Sidecars</div>
+          <div class="stat-card__note">Bit-exact Hadamard router gates (<code>Jaccard = 1.0</code>), lossless speculative verification, and <code>memcmp == 0</code> cross-ISA determinism.</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ SECTION 1: ORIGINAL VS HG TOKENS/SEC ============ -->
-  <section class="band" id="speed-tok-per-sec">
-    <div class="wrap">
-      <h2>Original vs. Clover HG throughput (<code>tok/s</code>) on identical CPU hardware</h2>
-      <p class="lede">On CPU, single-stream decode speed is governed by <code>Memory Bandwidth &divide; Active Bytes Read per Token</code>. Shrinking <code>16-bit BF16</code> into <code>4.125-bit HG4-16R</code> (zero horizontal reductions + 1-cycle register <code>LUT16</code> + in-engine lossless <code>2L-MTP</code> / <code>5L-DSpark</code> speculative verification) delivers <strong><code>4.0&times;&ndash;5.0&times;</code> higher <code>tok/s</code></strong> than <code>BF16</code>, outruns <code>llama.cpp Q4_0 / Q4_K_M</code> by <strong><code>+17%</code> to <code>+30%</code></strong>, and unlocks <code>120B</code> and <code>2.8T</code> models that cannot even load in <code>BF16</code>.</p>
-
-      <figure class="diagram">
-        <svg viewBox="0 0 900 296" role="img" aria-label="Measured CPU decode and prefill tokens per second comparing Original BF16, llama.cpp Q4, and Clover HG4-16R-OP / K31H across LFM3-Omni-2B, Clover-35B-A3B, Nemotron-120B, and Kimi-K3.1-Pro 2.8T on a 16-core AMD Ryzen 9 7950X3D CPU with zero GPUs." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:14px;background:#fffefb;padding:12px">
-          <rect x="0" y="0" width="900" height="296" rx="12" fill="#fffefb"></rect>
-          <text x="22" y="26" font-size="11.5" font-weight="700" fill="#1b5e46" letter-spacing="1.1">MEASURED CPU THROUGHPUT (TOK/S) · AMD RYZEN 9 7950X3D (16 THREADS, 124 GB DDR5, 0 GPUS)</text>
-          <line x1="22" y1="38" x2="878" y2="38" stroke="#dfd8c8" stroke-width="1"></line>
-
-          <!-- Row 1: LFM3-Omni-2B -->
-          <text x="22" y="64" font-size="12" font-weight="700" fill="#132018">LFM3-Omni-2B (2B Dense+Conv)</text>
-          <text x="22" y="80" font-size="10.5" fill="#596a5f">Official BF16 PyTorch (3.30 GiB)</text>
-          <rect x="245" y="69" width="98" height="14" rx="4" fill="#d9d2c3"></rect>
-          <text x="351" y="80" font-size="10.5" fill="#596a5f">10.8 tok/s decode · 318 tok/s prefill</text>
-
-          <text x="22" y="99" font-size="10.5" fill="#596a5f">llama.cpp Q4_0 GGUF (1.00 GiB)</text>
-          <rect x="245" y="88" width="388" height="14" rx="4" fill="#a8c5b7"></rect>
-          <text x="641" y="99" font-size="10.5" fill="#2d3e34">42.8 tok/s decode · 746 tok/s prefill</text>
-
-          <text x="22" y="118" font-size="10.5" font-weight="700" fill="#1b5e46">Clover HG4-16R-OP (0.83 GiB)</text>
-          <rect x="245" y="107" width="456" height="15" rx="4" fill="#1b5e46"></rect>
-          <text x="710" y="119" font-size="10.5" font-weight="700" fill="#1b5e46">50.3 tok/s (4.7×) · 1,347 tok/s prefill</text>
-
-          <line x1="22" y1="133" x2="878" y2="133" stroke="#eee8da" stroke-width="1"></line>
-
-          <!-- Row 2: Clover-35B-A3B -->
-          <text x="22" y="153" font-size="12" font-weight="700" fill="#132018">Clover-35B-A3B (35B / 3B Active MoE)</text>
-          <text x="22" y="170" font-size="10.5" fill="#596a5f">Original BF16 (66 GB) / Q4_K_M (20.8 GiB)</text>
-          <rect x="245" y="159" width="52" height="13" rx="3" fill="#d9d2c3"></rect>
-          <rect x="303" y="159" width="122" height="13" rx="3" fill="#a8c5b7"></rect>
-          <text x="433" y="170" font-size="10.5" fill="#596a5f">~3.8 tok/s BF16 · 12.75 tok/s llama.cpp Q4_K_M</text>
-
-          <text x="22" y="189" font-size="10.5" font-weight="700" fill="#1b5e46">Clover HG4-16R-OP (17.41 GiB)</text>
-          <rect x="245" y="178" width="230" height="15" rx="4" fill="#1b5e46"></rect>
-          <text x="484" y="190" font-size="10.5" font-weight="700" fill="#1b5e46">16.58 tok/s decode (+30% vs Q4_K_M) · 89.8 tok/s prefill · 97.2% LCP</text>
-
-          <line x1="22" y1="204" x2="878" y2="204" stroke="#eee8da" stroke-width="1"></line>
-
-          <!-- Row 3 & 4: Nemotron-120B & Kimi-2.8T -->
-          <text x="22" y="224" font-size="12" font-weight="700" fill="#132018">Nemotron 3.5 Super VL (120B / 12B Active) &amp; Kimi K3.1 Pro (2.8T / 104B Active)</text>
-          <text x="22" y="242" font-size="10.5" fill="#7d5312">Original BF16 / MXFP4 (244 GB &amp; 1,581 GB)</text>
-          <rect x="245" y="231" width="16" height="13" rx="3" fill="#c98a63"></rect>
-          <text x="269" y="242" font-size="10.5" fill="#7d5312">OOM on 124 GB RAM (&lt; 0.1 tok/s NVMe page-thrash)</text>
-
-          <text x="22" y="262" font-size="10.5" font-weight="700" fill="#1b5e46">Nemotron-120B HG4 + 2L-MTP (60.2 GiB)</text>
-          <rect x="245" y="251" width="185" height="14" rx="4" fill="#1b5e46"></rect>
-          <text x="438" y="262" font-size="10.5" font-weight="700" fill="#1b5e46">7.57–9.20 tok/s (3.58× lossless MTP over 2.57 tok/s T=1)</text>
-
-          <text x="22" y="281" font-size="10.5" font-weight="700" fill="#1b5e46">Kimi K3.1 Pro 2.8T K31H (Hot + NVMe)</text>
-          <rect x="245" y="270" width="118" height="14" rx="4" fill="#0a6a5f"></rect>
-          <text x="371" y="281" font-size="10.5" font-weight="700" fill="#0a6a5f">347.8 draft tok/s (5L-DSpark) · 71.1 tok/s C1 · 2.26 tok/s 93L 2.8T verify</text>
-        </svg>
-        <figcaption>Figure 1 &mdash; Primary-source CPU throughput measured on <code>k3</code> (<code>AMD Ryzen 9 7950X3D</code>, 16 threads, <code>Temperature = 0</code>, zero GPUs).</figcaption>
-      </figure>
-
-      <div class="table-wrap" style="margin-top:1.5rem">
-        <table class="data">
-          <caption class="note">Complete Original vs. Clover HG speed, memory footprint, and held-out perplexity comparison on 16 CPU threads.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Model</th>
-              <th scope="col">Engine / Format</th>
-              <th scope="col">Footprint (<code>bpw</code>)</th>
-              <th scope="col">Prefill <code>tok/s</code></th>
-              <th scope="col">Decode <code>tok/s</code></th>
-              <th scope="col">Speedup vs. Orig</th>
-              <th scope="col">Quality / Parity vs. BF16</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row" rowspan="3"><strong>LFM3-Omni-2B</strong><br><small>24L Dense + ShortConv</small></th>
-              <td>Official <code>BF16</code> PyTorch</td>
-              <td><code>3.22 GiB</code> (<code>16.00</code>)</td>
-              <td><code>295&ndash;342</code></td>
-              <td><code>10.8 tok/s</code></td>
-              <td><code>1.00&times;</code></td>
-              <td><code>PPL 28.81</code> (Reference)</td>
-            </tr>
-            <tr>
-              <td><code>llama.cpp Q4_0</code> (GGUF)</td>
-              <td><code>0.98 GiB</code> (<code>4.86</code>)</td>
-              <td><code>746.3</code></td>
-              <td><code>42.8 tok/s</code></td>
-              <td><code>3.96&times;</code></td>
-              <td><code>PPL 30.78</code> (<code>+1.96</code>, <code>86.7%</code> Top-1)</td>
-            </tr>
-            <tr>
-              <td><strong>Clover <code>HG4-16R-OP</code></strong></td>
-              <td><strong><code>0.83 GiB</code> (<code>4.14</code>)</strong></td>
-              <td><strong><code>1,347.0</code></strong></td>
-              <td><strong><code>50.3 tok/s</code></strong></td>
-              <td><strong><code>4.66&times;</code> decode / <code>4.0&times;</code> prefill</strong></td>
-              <td><strong><code>PPL 29.06</code> (<code>+0.25</code>, <code>89.4%</code> Top-1)</strong></td>
-            </tr>
-            <tr>
-              <th scope="row" rowspan="3"><strong>Clover-35B-A3B</strong><br><small>40L BD-GDN + 256E MoE</small></th>
-              <td>Original <code>BF16</code> (CPU)</td>
-              <td><code>~66.0 GiB</code> (<code>16.00</code>)</td>
-              <td><code>~22.0</code></td>
-              <td><code>~3.8 tok/s</code></td>
-              <td><code>1.00&times;</code></td>
-              <td>Reference (<code>26.6 tok/s</code> on 2L slice)</td>
-            </tr>
-            <tr>
-              <td><code>llama.cpp Q4_K_M</code> (GGUF)</td>
-              <td><code>20.78 GiB</code> (<code>4.85</code>)</td>
-              <td><code>236.2</code> <small>(pp512)</small></td>
-              <td><code>12.75 tok/s</code></td>
-              <td><code>3.35&times;</code></td>
-              <td>Standard k-quant (no BD-GDN preview)</td>
-            </tr>
-            <tr>
-              <td><strong>Clover <code>HG4-16R-OP</code></strong></td>
-              <td><strong><code>17.41 GiB</code> (<code>4.13</code>)</strong></td>
-              <td><strong><code>89.8</code> <small>(full 40L)</small></strong></td>
-              <td><strong><code>16.58 tok/s</code></strong></td>
-              <td><strong><code>4.36&times;</code> vs BF16 / <code>+30%</code> vs Q4_K_M</strong></td>
-              <td><strong><code>PPL 17.92</code> · <code>97.23%</code> Turn-2 LCP hit</strong></td>
-            </tr>
-            <tr>
-              <th scope="row" rowspan="2"><strong>Nemotron 3.5 120B</strong><br><small>90L Mamba-2 + 512E + MTP</small></th>
-              <td>Original <code>BF16</code></td>
-              <td><code>~240 GiB</code> (<code>16.00</code>)</td>
-              <td>OOM</td>
-              <td><code>&lt; 0.15 tok/s</code> <small>(swap)</small></td>
-              <td>Cannot fit 124 GB RAM</td>
-              <td><code>HG4 T=1</code> unspeculated = <code>2.57&ndash;3.46 tok/s</code></td>
-            </tr>
-            <tr>
-              <td><strong>Clover <code>HG4-16R-OP + 2L-MTP</code></strong></td>
-              <td><strong><code>60.20 GiB</code> (<code>4.25</code>)</strong></td>
-              <td><strong><code>7.00</code></strong></td>
-              <td><strong><code>7.57&ndash;9.20 tok/s</code></strong></td>
-              <td><strong><code>3.58&times;</code> lossless MTP (<code>&gt;50&times;</code> vs swap)</strong></td>
-              <td><strong><code>PPL 14.84</code> · <code>83&ndash;100%</code> accept (<code>exact_greedy_match</code>)</strong></td>
-            </tr>
-            <tr>
-              <th scope="row" rowspan="2"><strong>Kimi K3.1 Pro 2.8T</strong><br><small>93L KDA/DSA + 896E + DSpark</small></th>
-              <td>Upstream <code>BF16 + MXFP4</code></td>
-              <td><code>1,472 GiB</code> (<code>1.58 TB</code>)</td>
-              <td>OOM</td>
-              <td><code>&lt; 0.05 tok/s</code> <small>(swap)</small></td>
-              <td>Requires 8&times; H200 cluster</td>
-              <td><code>12.7&times;</code> larger than 124 GB server RAM</td>
-            </tr>
-            <tr>
-              <td><strong>Clover <code>K31H</code> (Hot <code>HG4</code> + Cold <code>HG2</code>)</strong></td>
-              <td><strong><code>791.8 GB</code></strong> <small>(<code>61G</code> RSS)</small></td>
-              <td><strong><code>71.1</code> <small>(C1)</small></strong></td>
-              <td><strong><code>2.26 tok/s</code> <small>(<code>347.8</code> draft)</small></strong></td>
-              <td><strong>Runs 2.8T on 1 CPU ($0 GPU)</strong></td>
-              <td><strong><code>12 / 23</code> (<code>52.17%</code>, #1 on Lean 4 RH suite)</strong></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ SECTION 2: SAMPLE OUTPUTS (ORIGINAL VS HG) ============ -->
-  <section class="band" id="sample-outputs">
-    <div class="wrap">
-      <h2>Side-by-side sample outputs: Original <code>BF16</code> vs. Clover <code>HG</code> format</h2>
-      <p class="lede">Below are unedited greedy (<code>Temperature = 0</code>) outputs captured directly on <code>k3</code> comparing official <code>16-bit BF16</code> PyTorch weights against <code>4.125-bit Clover HG4-16R</code>, followed by <code>35B</code> and <code>2.8T</code> tasks that cannot fit in <code>124 GB</code> CPU RAM without HG.</p>
-
-      <h3>Sample 1 &mdash; Python Code Generation (<code>100.0%</code> Character-Identical, <code>4.94&times;</code> Faster End-to-End)</h3>
-      <p class="note"><strong>Prompt (<code>46</code> tokens):</strong> <code>&ldquo;Write a concise Python function `is_prime(n: int) -&gt; bool` and print all primes between 10 and 30.&rdquo;</code></p>
-      <div class="grid grid--2" style="margin-top:0.8rem">
-        <div class="card">
-          <h3>Official <code>BF16</code> PyTorch (<code>3,297 MiB</code>)</h3>
-          <p class="note"><strong>Prefill:</strong> <code>213.7 tok/s</code> &middot; <strong>Decode:</strong> <code>9.1 tok/s</code> &middot; <strong>Total:</strong> <code>9,508.1 ms</code> (<code>86</code> tokens)</p>
-<pre class="code"><code>def is_prime(n: int) -&gt; bool:
-    if n &lt; 2:
-        return False
-    for i in range(2, int(n**0.5) + 1):
-        if n % i == 0:
-            return False
-    return True
-
-primes = [n for n in range(10, 31) if is_prime(n)]
-print(primes)</code></pre>
-        </div>
-        <div class="card">
-          <h3>Clover <code>HG4-16R</code> C11 Engine (<code>854 MiB</code>)</h3>
-          <p class="note"><strong>Prefill:</strong> <code>829.4 tok/s</code> (<code>3.9&times;</code>) &middot; <strong>Decode:</strong> <code>45.5 tok/s</code> (<code>5.0&times;</code>) &middot; <strong>Total:</strong> <code>1,925.3 ms</code> (<code>86</code> tokens &mdash; <strong>exact char match</strong>)</p>
-<pre class="code"><code>def is_prime(n: int) -&gt; bool:
-    if n &lt; 2:
-        return False
-    for i in range(2, int(n**0.5) + 1):
-        if n % i == 0:
-            return False
-    return True
-
-primes = [n for n in range(10, 31) if is_prime(n)]
-print(primes)</code></pre>
-        </div>
-      </div>
-
-      <h3 style="margin-top:2rem">Sample 2 &mdash; Multi-Step Arithmetic Reasoning (<code>5.07&times;</code> Higher <code>tok/s</code>, Identical Reasoning &amp; Answer)</h3>
-      <p class="note"><strong>Prompt (<code>61</code> tokens):</strong> <code>&ldquo;A solar array has 140 panels rated at 450 watts each. If we add 20 more of the same panels, what is the total capacity in kilowatts? Show the steps concisely.&rdquo;</code> &mdash; Notice how <code>4.125-bit</code> rounding formats numbered steps instead of a single paragraph while keeping every number (<code>63,000 W &rarr; 160 &rarr; 72,000 W &rarr; 72 kW</code>) exact.</p>
-      <div class="grid grid--2" style="margin-top:0.8rem">
-        <div class="card">
-          <h3>Official <code>BF16</code> PyTorch (<code>3,297 MiB</code>)</h3>
-          <p class="note"><strong>Prefill:</strong> <code>320.0 tok/s</code> &middot; <strong>Decode:</strong> <code>9.1 tok/s</code> &middot; <strong>Total:</strong> <code>6,259.8 ms</code> (<code>56</code> tokens)</p>
-<pre class="code"><code>The original array has 140 panels &times; 450 W = 63,000 W.
-Adding 20 more panels gives 160 panels total.
-The total capacity is 160 &times; 450 W = 72,000 W,
-which equals 72 kilowatts.</code></pre>
-        </div>
-        <div class="card">
-          <h3>Clover <code>HG4-16R</code> C11 Engine (<code>854 MiB</code>)</h3>
-          <p class="note"><strong>Prefill:</strong> <code>1,167.0 tok/s</code> (<code>3.65&times;</code>) &middot; <strong>Decode:</strong> <code>46.1 tok/s</code> (<code>5.07&times;</code>) &middot; <strong>Total:</strong> <code>2,267.2 ms</code> (<code>103</code> tokens)</p>
-<pre class="code"><code>Step 1 &ndash; Original capacity:  140 panels &times; 450 W = 63,000 W
-Step 2 &ndash; Add 20 more panels: 140 + 20 = 160 panels
-Step 3 &ndash; Total capacity:     160 panels &times; 450 W = 72,000 W
-Step 4 &ndash; Convert to kW:      72,000 W &divide; 1,000 = 72 kW
-
-The total capacity is 72 kilowatts.</code></pre>
-        </div>
-      </div>
-
-      <h3 style="margin-top:2rem">Sample 3 &mdash; Frontier <code>35B</code> &amp; <code>2.8T</code> Outputs on 1 CPU (Impossible in Original <code>BF16</code>)</h3>
-      <div class="grid grid--2" style="margin-top:0.8rem">
-        <div class="card">
-          <h3><code>Clover-35B-A3B HG4-16R-OP</code> in Live <code>OpenCode</code> CLI</h3>
-          <p class="note">Reads <code>Demo.lean</code>, proves <code>demo_add_zero</code>, computes exact 144-bit <code>37!</code> via C11 <code>x-cruncher</code> (<code>S3</code>), and hits <strong><code>97.23%</code> LCP cache</strong> (<code>304 ms</code>) on Turn 2.</p>
-<pre class="code"><code>&gt; build &middot; clover-35b-a3b
-&rarr; Read Demo.lean
-
-Theorem name: `demo_add_zero`
-37! = 13763753091226345046315979581580902400000000
-
-# Turn-2 follow-up: 913 / 939 prompt tokens cached (97.23% LCP hit, 304.3 ms)</code></pre>
-        </div>
-        <div class="card">
-          <h3><code>Kimi K3.1 Pro 2.8T K31H</code> on Certified Lean 4 <code>RiemannHypothesis</code></h3>
-          <p class="note">Upstream <code>1.58 TB</code> model cannot load on a <code>124 GB</code> CPU server; in <code>K31H</code> (<code>61 GB</code> RSS + NVMe cold <code>HG2</code>), it solves <code>rh_t2_short_1_6_03</code> zero-shot with clean <code>#print axioms</code>.</p>
-<pre class="code"><code>-- Verified by leanprover/lean4:v4.33.1 kernel (0 sorry, 0 custom axioms):
--- Task: rh_t2_short_1_6_03 | Stage: kernel_verified | Score: 12 / 23 (#1 overall)
-by
-  intro x hx
-  simpa using hx
--- #print axioms -&gt; {propext, Classical.choice, Quot.sound}</code></pre>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ SECTION 3: HOW HG WORKS & ACCURACY CONTRACT ============ -->
+  <!-- ============ PART I, SECTION 1: THE UNIVERSAL HG PROCESS ============ -->
   <section class="band" id="how-hg-works">
     <div class="wrap">
-      <h2>Why HG achieves ~98&ndash;99% accuracy at a fraction of the bytes</h2>
-      <p class="lede">Naive 4-bit or 2-bit quantization clips sharp activation and weight outlier channels, collapsing reasoning on math and formal proofs. Applying a column-balanced 128-point Fast Walsh&ndash;Hadamard rotation (<code>FWHT-128</code>) spreads every outlier across 128 coordinates into an i.i.d. Gaussian distribution &mdash; letting a 1-cycle SIMD 15-point Lloyd&ndash;Max lookup table (<code>LUT16</code>) recover <code>8&times;</code> lower perplexity drift than <code>Q4_0</code>.</p>
+      <h2>Part 1 &mdash; How the HG conversion process works (for any model)</h2>
+      <p class="lede">Trained neural networks concentrate activation and weight energy into a handful of sharp outlier channels (<code>10&times;&ndash;50&times;</code> larger than neighboring coordinates). In standard block quantization, one outlier forces a wide scale factor that crushes all neighboring weights toward zero. The Clover <code>HG</code> process eliminates that failure mode in four training-free steps:</p>
 
       <figure class="diagram">
-        <svg viewBox="0 0 900 290" role="img" aria-label="Clover HG4-16R-OP and K31H pipeline: Official BF16, FP8, or MXFP4 Safetensors pass through column-balanced FWHT-128 rotation into 4.125-bit HG4-16R hot weights, 2.125-bit HG2-16R cold routed experts, and lossless HG4OP001 precomputed operators, feeding a stateful C11 SIMD engine with LCP prefix cache and lossless 5L-DSpark or 2L-MTP speculative decoding." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:14px;background:#fffefb;padding:10px">
+        <svg viewBox="0 0 900 290" role="img" aria-label="Model-agnostic Clover HG conversion and execution pipeline: Any BF16, FP16, FP8, or MXFP4 safetensors checkpoint passes through column-balanced FWHT-128 rotation and LDLQ rounding into 4.125-bpw HG4-16R weights, optional 2.125-bpw HG2-16R NVMe cold MoE weights, and lossless HG4OP001 precomputed operators, executed by a stateful C11 SIMD engine." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:14px;background:#fffefb;padding:10px">
           <rect x="0" y="0" width="900" height="290" rx="12" fill="#fffefb"></rect>
-          <text x="22" y="26" font-size="11.5" font-weight="700" fill="#1b5e46" letter-spacing="1.2">CLOVER HG4-16R-OP &amp; K31H DATA-MOVEMENT PIPELINE · ZERO GPU · ZERO PYTORCH AT RUNTIME</text>
+          <text x="22" y="26" font-size="11.5" font-weight="700" fill="#1b5e46" letter-spacing="1.2">THE UNIVERSAL CLOVER HG PIPELINE · APPLIES TO ANY DENSE, SSM, OR MOE SAFETENSORS MODEL</text>
           <line x1="22" y1="38" x2="878" y2="38" stroke="#dfd8c8" stroke-width="1"></line>
 
           <!-- Box 1: Source -->
           <rect x="22" y="58" width="182" height="196" rx="10" fill="#f6f3ea" stroke="#c9c0ad" stroke-width="1.2"></rect>
-          <text x="36" y="82" font-size="12" font-weight="700" fill="#132018">1. Official Weights</text>
-          <text x="36" y="103" font-size="11" fill="#2d3e34">• BF16 / FP8 / MXFP4</text>
-          <text x="36" y="122" font-size="11" fill="#2d3e34">• Streamed shard-by-shard</text>
-          <text x="36" y="141" font-size="11" fill="#2d3e34">• Zero GPU needed to pack</text>
+          <text x="36" y="82" font-size="12" font-weight="700" fill="#132018">1. Input Checkpoint</text>
+          <text x="36" y="103" font-size="11" fill="#2d3e34">• Any HF .safetensors</text>
+          <text x="36" y="122" font-size="11" fill="#2d3e34">• BF16 / FP16 / FP8 / MXFP4</text>
+          <text x="36" y="141" font-size="11" fill="#2d3e34">• Streamed tensor-by-tensor</text>
           <rect x="36" y="160" width="154" height="76" rx="7" fill="#fffefb" stroke="#dfd8c8"></rect>
-          <text x="46" y="180" font-size="10.5" font-weight="600" fill="#7d5312">Outlier Problem:</text>
-          <text x="46" y="197" font-size="10" fill="#596a5f">1 giant spike channel (30×)</text>
-          <text x="46" y="212" font-size="10" fill="#596a5f">drops naive INT4 cosine</text>
-          <text x="46" y="227" font-size="10" fill="#596a5f">to 0.923 (vs 0.996 HG4).</text>
+          <text x="46" y="180" font-size="10.5" font-weight="600" fill="#7d5312">Why Naive INT4 Fails:</text>
+          <text x="46" y="197" font-size="10" fill="#596a5f">A single 30× outlier spike</text>
+          <text x="46" y="212" font-size="10" fill="#596a5f">drops Group-128 INT4</text>
+          <text x="46" y="227" font-size="10" fill="#596a5f">cosine to 0.923 (+12 dB).</text>
 
           <!-- Arrow 1->2 -->
           <path d="M208 156 L232 156" stroke="#1b5e46" stroke-width="2" fill="none"></path>
@@ -378,12 +126,12 @@ by
 
           <!-- Box 2: FWHT-128 + HG16R -->
           <rect x="246" y="58" width="218" height="196" rx="10" fill="#eef6f1" stroke="#8bb7a4" stroke-width="1.4"></rect>
-          <text x="260" y="82" font-size="12" font-weight="700" fill="#1b5e46">2. FWHT-128 + 16R Layout</text>
+          <text x="260" y="82" font-size="12" font-weight="700" fill="#1b5e46">2. FWHT-128 + LDLQ Pack</text>
           <text x="260" y="103" font-size="11" fill="#132018">(W D⁻¹ H₁₂₈)(H₁₂₈ᵀ D x) = W x</text>
-          <text x="260" y="124" font-size="10.5" fill="#2d3e34">• Trunk + Hot → HG4-16R (LUT16)</text>
-          <text x="270" y="140" font-size="10" fill="#596a5f">4b + FP16 scale/128 = 4.125 bpw</text>
-          <text x="260" y="160" font-size="10.5" fill="#2d3e34">• Cold MoE Tail → HG2-16R (LUT4)</text>
-          <text x="270" y="176" font-size="10" fill="#596a5f">2b + FP16 scale/128 = 2.125 bpw</text>
+          <text x="260" y="124" font-size="10.5" fill="#2d3e34">• Primary Weights → HG4-16R</text>
+          <text x="270" y="140" font-size="10" fill="#596a5f">16-pt Lloyd-Max · 4.125 bpw</text>
+          <text x="260" y="160" font-size="10.5" fill="#2d3e34">• Oversized MoE Tail → HG2-16R</text>
+          <text x="270" y="176" font-size="10" fill="#596a5f">4-pt Lloyd-Max · 2.125 bpw</text>
           <text x="260" y="196" font-size="10.5" fill="#2d3e34">• precomputed_ops/ (HG4OP001)</text>
           <text x="270" y="212" font-size="10" fill="#1b5e46" font-weight="600">100.0% lossless (Jaccard = 1.0)</text>
           <text x="270" y="228" font-size="10" fill="#596a5f">Rotated routers, RoPE, SSM decays</text>
@@ -394,16 +142,16 @@ by
 
           <!-- Box 3: Tiered Memory -->
           <rect x="506" y="58" width="178" height="196" rx="10" fill="#f6f3ea" stroke="#c9c0ad" stroke-width="1.2"></rect>
-          <text x="520" y="82" font-size="12" font-weight="700" fill="#132018">3. Two-Tier Wire Layout</text>
+          <text x="520" y="82" font-size="12" font-weight="700" fill="#132018">3. Memory Hierarchy</text>
           <rect x="520" y="96" width="150" height="64" rx="6" fill="#e3efe8" stroke="#8bb7a4"></rect>
-          <text x="530" y="114" font-size="10.5" font-weight="700" fill="#1b5e46">DDR5 RAM (mmap Hot)</text>
-          <text x="530" y="130" font-size="10" fill="#2d3e34">Trunk + 42 hot experts/L</text>
-          <text x="530" y="145" font-size="10" fill="#2d3e34">+ 5L-DSpark / 2L-MTP</text>
+          <text x="530" y="114" font-size="10.5" font-weight="700" fill="#1b5e46">Fits in RAM → Pure HG4</text>
+          <text x="530" y="130" font-size="10" fill="#2d3e34">All layers mmap&rsquo;d in DDR</text>
+          <text x="530" y="145" font-size="10" fill="#2d3e34">(&lt; 60 ms cold init)</text>
           <rect x="520" y="170" width="150" height="70" rx="6" fill="#fffefb" stroke="#dfd8c8"></rect>
-          <text x="530" y="188" font-size="10.5" font-weight="700" fill="#132018">NVMe (16-Lane pread)</text>
-          <text x="530" y="204" font-size="10" fill="#2d3e34">854 cold HG2 experts/L</text>
-          <text x="530" y="219" font-size="10" fill="#596a5f">POSIX_FADV_DONTNEED</text>
-          <text x="530" y="233" font-size="10" fill="#596a5f">(0 OS page-cache thrash)</text>
+          <text x="530" y="188" font-size="10.5" font-weight="700" fill="#132018">Exceeds RAM → Hybrid</text>
+          <text x="530" y="204" font-size="10" fill="#2d3e34">Hot experts in RAM (HG4)</text>
+          <text x="530" y="219" font-size="10" fill="#596a5f">Cold tail on NVMe (HG2)</text>
+          <text x="530" y="233" font-size="10" fill="#596a5f">POSIX_FADV_DONTNEED</text>
 
           <!-- Arrow 3->4 -->
           <path d="M688 156 L712 156" stroke="#1b5e46" stroke-width="2" fill="none"></path>
@@ -411,116 +159,63 @@ by
 
           <!-- Box 4: C11 Runtime -->
           <rect x="726" y="58" width="152" height="196" rx="10" fill="#eef6f1" stroke="#8bb7a4" stroke-width="1.4"></rect>
-          <text x="738" y="82" font-size="12" font-weight="700" fill="#1b5e46">4. C11 /v1 Engine</text>
-          <text x="738" y="104" font-size="10.5" fill="#132018">• Int32 FWHT + vpermb</text>
-          <text x="738" y="123" font-size="10.5" fill="#132018">• 16-Row zero-hsum SIMD</text>
-          <text x="738" y="142" font-size="10.5" fill="#132018">• 97.2% Turn-2 LCP hit</text>
-          <text x="738" y="161" font-size="10.5" fill="#132018">• 68–100% draft accept</text>
+          <text x="738" y="82" font-size="12" font-weight="700" fill="#1b5e46">4. C11 /v1 Runtime</text>
+          <text x="738" y="104" font-size="10.5" fill="#132018">• Int32 FWHT (&lt; 0.5 µs)</text>
+          <text x="738" y="123" font-size="10.5" fill="#132018">• 1-cycle vpermb LUT16</text>
+          <text x="738" y="142" font-size="10.5" fill="#132018">• 16-Row zero-hsum SIMD</text>
+          <text x="738" y="161" font-size="10.5" fill="#132018">• Stateful LCP KV/SSM</text>
           <text x="738" y="180" font-size="10.5" fill="#132018">• memcmp == 0 across ISAs</text>
-          <text x="738" y="204" font-size="10" font-weight="700" fill="#1b5e46">Works natively in:</text>
+          <text x="738" y="204" font-size="10" font-weight="700" fill="#1b5e46">Standard /v1 API:</text>
           <text x="738" y="220" font-size="10" fill="#2d3e34">OpenCode · VS Code</text>
-          <text x="738" y="235" font-size="10" fill="#2d3e34">Copilot Fusion · curl</text>
+          <text x="738" y="235" font-size="10" fill="#2d3e34">Copilot · Python · curl</text>
         </svg>
-        <figcaption>Figure 2 &mdash; Rotating activations once per block (<code>x&#x0302; = H<sub>128</sub> D x</code>, <code>&lt; 0.5 &micro;s</code>) lets every dot product run directly in the Hadamard domain with 1-cycle register <code>LUT16</code> decode and zero dequantize-to-BF16 memory traffic.</figcaption>
+        <figcaption>Figure 1 &mdash; Because <code>H<sub>128</sub></code> is orthogonal, rotating the activation vector once per block (<code>x&#x0302; = H<sub>128</sub> D x</code>) allows every matrix multiply to execute directly on compressed nibbles in registers with zero runtime dequantize-to-BF16 memory traffic.</figcaption>
       </figure>
 
       <h3 style="margin-top:2.2rem">Honest precision contract: what is near-lossless vs. what is 100.0% bit-exact</h3>
-      <p>Clover&rsquo;s <code>AGENTS.md</code> forbids exaggerating numerical claims. Here is the exact separation between lossy weight rounding and mathematically lossless runtime optimizations:</p>
+      <p>Clover&rsquo;s <code>AGENTS.md</code> requires separating approximate quantization from mathematically exact operations:</p>
 
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">Exact numerical behavior of every layer in the Clover HG stack.</caption>
+          <caption class="note">Universal numerical contract for each component produced during HG conversion.</caption>
           <thead>
             <tr>
-              <th scope="col">Stack Layer</th>
-              <th scope="col">Bits / Param</th>
-              <th scope="col">Output Relationship to Full <code>BF16</code></th>
-              <th scope="col">Measured Evidence</th>
+              <th scope="col">Component Role in Any Model</th>
+              <th scope="col">Encoding (<code>bpw</code>)</th>
+              <th scope="col">Numerical Relationship to Original Checkpoint</th>
+              <th scope="col">Why It Matters for Speed &amp; Accuracy</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th scope="row"><strong><code>HG4-16R</code> Full-Model Weights</strong><br><small><code>Omni-2B</code>, <code>Clover-35B</code>, <code>Nemotron-120B</code></small></th>
+              <th scope="row"><strong>Dense, Attention, SSM &amp; Hot MoE Weights</strong><br><small><code>HG4-16R</code> primary format</small></th>
               <td><code>4.125 bpw</code><br><small>4b + FP16/128</small></td>
-              <td><strong>Near-lossless (<code>~98&ndash;99%+</code> task quality)</strong>; character-identical on code &amp; exact reasoning, occasional phrasing differences on prose.</td>
-              <td><code>PPL 29.06</code> vs. BF16 <code>28.81</code> (<code>8&times;</code> closer than <code>Q4_0</code>); <code>Nemotron-120B HG4</code> achieves <strong><code>4 / 4</code> (<code>100%</code>)</strong> on Tier-4 Systems SWE.</td>
+              <td><strong>Near-lossless (<code>~98&ndash;99%+</code> quality, <code>0.996+</code> cosine)</strong>; character-identical on deterministic code/math, minor phrasing variation on open prose.</td>
+              <td>Cuts memory bandwidth <code>3.88&times;</code> vs. <code>BF16</code> while <code>FWHT-128 + LDLQ</code> reduces perplexity error <code>8&times;</code> below uniform <code>Q4_0</code>.</td>
             </tr>
             <tr>
-              <th scope="row"><strong><code>K31H</code> Hybrid 2.8T MoE</strong><br><small><code>Kimi-K3.1-Pro</code> (Hot <code>HG4</code> + Cold <code>HG2</code>)</small></th>
-              <td><code>4.125b</code> hot<br><code>2.125b</code> cold</td>
-              <td><strong><code>~95&ndash;97%</code> of Moonshot&rsquo;s <code>1.44 TiB</code> <code>MXFP4</code></strong>; slight tail-fact rounding in rarely-hit cold experts.</td>
-              <td>Trunk + shared experts + top-42 hot experts/layer stay <code>HG4</code>; 854 cold experts/layer use <code>HG2</code>, scoring <strong><code>12 / 23</code> (<code>52.17%</code>, #1 overall)</strong> on 1 CPU server.</td>
+              <th scope="row"><strong>Cold Long-Tail MoE Experts (Optional)</strong><br><small><code>HG2-16R</code> when model exceeds RAM</small></th>
+              <td><code>2.125 bpw</code><br><small>2b + FP16/128</small></td>
+              <td><strong><code>~95&ndash;97%</code> quality on rarely routed tail experts</strong> while trunk, shared experts, and top-<code>H</code> hot experts stay <code>4.125-bpw HG4</code>.</td>
+              <td>Halves NVMe read volume on multi-hundred-GB / trillion-parameter MoEs without dropping a single expert.</td>
             </tr>
             <tr>
-              <th scope="row"><strong><code>precomputed_ops/</code> (<code>HG4OP001</code>)</strong></th>
-              <td>FP32 / FP16 sidecars</td>
-              <td><strong><code>100.0%</code> Mathematically Lossless</strong> on top of <code>HG4</code> weights.</td>
-              <td>Verified <code>min_topk_jaccard = 1.000000</code> across all 40&ndash;92 MoE layers &mdash; identical token stream, pure speed gain.</td>
+              <th scope="row"><strong>Norms, Biases, SSM States &amp; Rotated Routers</strong><br><small><code>passthrough.safetensors</code> + <code>HG4OP001</code></small></th>
+              <td>Exact <code>FP32</code></td>
+              <td><strong><code>100.0%</code> Mathematically Lossless</strong> (<code>Top-K Jaccard = 1.000000</code>).</td>
+              <td>Pre-rotates <code>W<sub>gate</sub> D<sup>-1</sup> H<sub>128</sub></code> offline so runtime routing reuses the already-rotated activation vector for free.</td>
             </tr>
             <tr>
-              <th scope="row"><strong><code>5L-DSpark</code> &amp; <code>2L-MTP</code> Speculative Decode</strong></th>
-              <td><code>4.25 bits</code></td>
-              <td><strong><code>100.0%</code> Bit-for-Bit Identical</strong> greedy token IDs.</td>
-              <td>Target model verifies all <code>K</code> draft tokens in 1 batched MoE pass: <code>draft_k=4 == draft_k=0</code> (<code>68&ndash;80%</code> acceptance).</td>
+              <th scope="row"><strong>In-Engine Speculative Verification</strong><br><small><code>MTP</code> heads or draft model</small></th>
+              <td><code>4.125 bpw</code></td>
+              <td><strong><code>100.0%</code> Bit-for-Bit Identical</strong> greedy token IDs (<code>draft_k=N == draft_k=0</code>).</td>
+              <td>Verifies <code>K</code> drafted tokens in one batched weight read, multiplying CPU decode <code>tok/s</code> by <code>2.4&times;&ndash;3.6&times;</code> with zero accuracy loss.</td>
             </tr>
             <tr>
-              <th scope="row"><strong>Fixed-Order OpenMP Reduction</strong></th>
-              <td>FP32 accum</td>
-              <td><strong><code>100.0%</code> Deterministic</strong> across runs and thread schedules.</td>
-              <td>Ascending expert-slot accumulation verified <code>memcmp == 0</code> and <strong><code>0</code> task flips across 142 anchor evaluations</strong>.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3 style="margin-top:2.2rem">Why all 4 models (2.95 Trillion parameters) fit in 876.5 GB</h3>
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">Exact byte breakdown from <code>config.json</code> across all four production Clover models (zero layers or experts pruned).</caption>
-          <thead>
-            <tr>
-              <th scope="col">Model</th>
-              <th scope="col">Architecture &amp; Params</th>
-              <th scope="col">Upstream Official Size</th>
-              <th scope="col">Clover HG Size</th>
-              <th scope="col">Compression Mechanism</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><strong>LFM3-Omni-2B</strong></th>
-              <td>24L ShortConv + GQA (<code>2B</code>)</td>
-              <td><code>4.2 GB</code> (BF16)</td>
-              <td><strong><code>0.91 GB</code></strong></td>
-              <td>Full 24-layer <code>HG4-16R</code> (<code>4.6&times;</code> smaller)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Clover-35B-A3B</strong></th>
-              <td>40L BD-GDN + 256E MoE (<code>35B</code>)</td>
-              <td><code>~70.0 GB</code> (BF16)</td>
-              <td><strong><code>18.80 GB</code></strong></td>
-              <td>Full 40-layer <code>HG4-16R</code> + <code>84.6 MB</code> <code>precomputed_ops/</code></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Nemotron 3.5 Super VL</strong></th>
-              <td>90L Mamba-2 + 512E MoE + 2L-MTP (<code>122B</code>)</td>
-              <td><code>~244.0 GB</code> (BF16)</td>
-              <td><strong><code>64.99 GB</code></strong></td>
-              <td>Full 90-layer + MTP <code>HG4-16R</code> + <code>337 MB</code> <code>precomputed_ops/</code></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Kimi K3.1 Pro</strong></th>
-              <td>93L KDA/DSA + 896E MoE + 5L-DSpark (<code>2,790B</code>)</td>
-              <td><code>~1,581 GB</code> (<code>1.44 TiB</code>: 135 GB BF16 trunk + 1,446 GB MXFP4)</td>
-              <td><strong><code>791.80 GB</code></strong><br><small><code>101.5 GB</code> Hot + <code>690.3 GB</code> Cold</small></td>
-              <td>Trunk compressed <code>16b &rarr; 4.25b HG4</code> (<code>35 GB</code>) + 42 hot <code>HG4</code> experts/L (<code>66.5 GB</code>) + 854 cold <code>2.25b HG2</code> experts/L (<code>690.3 GB</code>)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Combined 4-Model Suite</strong></th>
-              <td><strong><code>2,949B</code> (<code>2.95 Trillion</code>)</strong></td>
-              <td><strong><code>~1,899 GB</code></strong></td>
-              <td><strong><code>876.50 GB</code> (<code>~816 GiB</code>)</strong></td>
-              <td><strong>All 82,432 Kimi experts + 3 companion models on 1 CPU node</strong></td>
+              <th scope="row"><strong>Cross-ISA Fixed-Order SIMD Kernels</strong><br><small><code>-ffp-contract=off</code> + Int32 FWHT</small></th>
+              <td>Int32 / FP32</td>
+              <td><strong><code>100.0%</code> Bit-Exact</strong> across Scalar, x86 AVX2, AVX-512, and ARM64 NEON (<code>memcmp == 0</code>).</td>
+              <td>Reproducible outputs across laptops, servers, and mobile CPUs regardless of OpenMP thread scheduling.</td>
             </tr>
           </tbody>
         </table>
@@ -528,35 +223,35 @@ by
     </div>
   </section>
 
-  <!-- ============ SECTION 4: UNIVERSAL CONVERTER SCRIPT + 5-STEP PIPELINE ============ -->
+  <!-- ============ PART I, SECTION 2: CONVERT & RUN ANY MODEL ============ -->
   <section class="band" id="convert-any-model">
     <div class="wrap">
-      <h2>Universal converter script: convert any Hugging Face model to HG format</h2>
-      <p class="lede">Download <a href="./convert_to_hg.py" download="convert_to_hg.py"><strong><code>convert_to_hg.py</code></strong></a> (canonical repo path: <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/convert_to_hg.py"><code>clover-ai-system/src/tools/convert_to_hg.py</code></a>). It streams any single or sharded Hugging Face <code>.safetensors</code> checkpoint (<code>BF16</code>, <code>FP16</code>, <code>FP32</code>, <code>FP8_E4M3</code>, or <code>MXFP4</code>; dense, GQA, Mamba/SSM, or MoE) into canonical <code>HG4-16R</code> + optional <code>K31H</code> <code>HG2-16R</code> cold experts + lossless <code>HG4OP001</code> router sidecars &mdash; requiring only <code>numpy</code> locally (<code>huggingface_hub</code> optional for remote repo IDs).</p>
+      <h2>Part 2 &mdash; Convert &amp; run your own model (standalone script + 5-stage guide)</h2>
+      <p class="lede">Download <a href="./convert_to_hg.py" download="convert_to_hg.py"><strong><code>convert_to_hg.py</code></strong></a> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/convert_to_hg.py">GitHub source</a>). It converts any single or sharded Hugging Face <code>.safetensors</code> checkpoint (<code>BF16</code>, <code>FP16</code>, <code>FP32</code>, <code>FP8_E4M3</code>, or <code>MXFP4</code>; arbitrary <code>[R, K]</code> shapes auto-padded to <code>[16, 128]</code>) on CPU with only <code>numpy</code> required locally.</p>
 
       <div class="actions" style="margin-top:1rem;margin-bottom:1.2rem">
         <a class="btn btn--primary" href="./convert_to_hg.py" download="convert_to_hg.py">Download <code>convert_to_hg.py</code> (Standalone CLI) &darr;</a>
         <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/convert_to_hg.py" target="_blank" rel="noopener noreferrer">View Source on GitHub &rarr;</a>
       </div>
 
-<pre class="code"><code># 1. Grab the standalone universal converter &amp; run the 3-second zero-download self-test:
+<pre class="code"><code># 1. Download the standalone converter &amp; run the 3-second zero-download self-test:
 curl -fsSL https://cloverframework.com/hg-format/convert_to_hg.py -O
 pip install numpy huggingface_hub
 python3 convert_to_hg.py --self-test
 
-# 2. Convert ANY local or Hugging Face model (Llama, Qwen, Mistral, Gemma, DeepSeek, Phi, etc.) + verify parity:
+# 2. Convert ANY local directory or Hugging Face repo ID into HG4-16R + verify forward parity:
 python3 convert_to_hg.py \
-  --model Qwen/Qwen3-8B \
-  --out ./qwen3-8b-hg4 \
+  --model &lt;org/model-or-local-path&gt; \
+  --out ./my-model-hg4 \
   --ldlq --verify
 
-# 3. Convert a large MoE model in K31H hybrid mode (top 42 hot experts in 4-bit HG4 + cold tail in 2-bit HG2):
+# 3. Optional — if your MoE checkpoint exceeds system RAM, tier cold experts into 2-bit HG2:
 python3 convert_to_hg.py \
-  --model /path/to/large-moe-safetensors \
-  --out ./large-moe-k31h \
+  --model &lt;org/large-moe-or-local-path&gt; \
+  --out ./my-moe-hybrid \
   --moe-cold-bits 2 --hot-experts 42 --ldlq --verify</code></pre>
 
-      <p class="note" style="margin-top:0.9rem"><strong>What <code>python3 convert_to_hg.py --self-test</code> prints on your machine (30&times; outlier channels vs. naive INT4):</strong></p>
+      <p class="note" style="margin-top:0.9rem"><strong>Expected output of <code>python3 convert_to_hg.py --self-test</code> (testing 30&times; outlier spikes against naive Group-128 INT4):</strong></p>
 <pre class="code"><code>[clover-hg] Self-test summary:
   Quantized tensors : 4 (3x hot HG4-16R + 1x cold HG2-16R + router HG4OP001)
   HG4-16R (4-bit)   : Cosine = 0.996260  (vs Naive INT4 Cosine = 0.923369)
@@ -566,126 +261,215 @@ python3 convert_to_hg.py \
   Router Top-2 Jaccard : 1.000000 (100% lossless Hadamard routing)
 [clover-hg] SELF-TEST PASSED.</code></pre>
 
-      <h3 style="margin-top:2.2rem">Under the hood: the 5-stage production conversion &amp; C11 runtime pipeline</h3>
-      <div class="storyline" style="margin-top:1.2rem">
-
+      <div class="storyline" style="margin-top:2rem">
         <div class="storyline__item">
-          <h3>Stage 1 &mdash; Optional C11 OpenMP Fast Packer (<code>60&ndash;100&times;</code> Faster on 35B&ndash;2.8T Checkpoints)</h3>
-          <p>For multi-hundred-gigabyte checkpoints, compile <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/clover-35b-a3b/hg4_fast_packer.c"><code>hg4_fast_packer.c</code></a>. It accelerates <code>FWHT-128</code>, 5-point guarded <code>FP16</code> Lloyd&ndash;Max scale search, and 128-step Cholesky <code>LDLQ</code> error feedback across all CPU cores (converting all 40 layers &times; 256 experts of <code>Clover-35B-A3B</code> in <code>11.9 minutes</code> on 1 CPU with zero disk staging).</p>
-<pre class="code"><code>git clone https://github.com/santhoshsathish94/clover-framework.git
-cd clover-framework
-gcc -O3 -march=x86-64-v3 -mavx2 -mfma -f16c -fopenmp -fPIC -shared \
+          <h3>Step 1 &mdash; Optional C11 OpenMP Fast Packer (<code>60&ndash;100&times;</code> Faster for Large Checkpoints)</h3>
+          <p>For 30B+ checkpoints, compile <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/clover-35b-a3b/hg4_fast_packer.c"><code>hg4_fast_packer.c</code></a> so <code>FWHT-128</code>, 5-point guarded <code>FP16</code> scale search, and 128-step Cholesky <code>LDLQ</code> run in parallel C11 AVX2+OpenMP across all cores.</p>
+<pre class="code"><code>gcc -O3 -march=x86-64-v3 -mavx2 -mfma -f16c -fopenmp -fPIC -shared \
   clover-ai-system/src/models/clover-35b-a3b/hg4_fast_packer.c \
-  -lm -o clover-ai-system/src/models/clover-35b-a3b/libhg4_fast_packer.so</code></pre>
+  -lm -o libhg4_fast_packer.so</code></pre>
         </div>
 
         <div class="storyline__item">
-          <h3>Stage 2 &mdash; Column-Balanced <code>FWHT-128</code> + <code>HG4-16R</code> Packing (<code>4.125 bpw</code>)</h3>
-          <p>Each 2D weight matrix is padded to <code>[16&middot;&lceil;R/16&rceil;, 128&middot;&lceil;K/128&rceil;]</code>, pre-conditioned by column-RMS Rademacher diagonal <code>D<sup>-1</sup></code>, rotated by <code>FWHT-128</code>, quantized to the 16-level Gaussian codebook with 1 <code>FP16</code> scale per 128 weights (<code>4.125 bpw</code>), and interleaved across 16 output rows (<code>HG4R</code>). Norms, biases, and SSM parameters stay in exact <code>FP32</code> inside <code>passthrough.safetensors</code>.</p>
-          <p class="note"><strong>Verification gate:</strong> <code>convert_to_hg.py --verify</code> checks Hadamard-domain matmul parity (<code>hg4_mean_cosine &ge; 0.995</code>) and records every tensor&rsquo;s <code>SHA-256</code> &amp; shape in <code>hg_manifest.json</code>.</p>
+          <h3>Step 2 &mdash; Pack Linear Projections into <code>HG4-16R</code> &amp; Verify Cosine &ge; <code>0.995</code></h3>
+          <p><code>convert_to_hg.py</code> writes every 2D projection into <code>weights/*.hg4</code> (magic <code>HG4R</code>), keeps 1D norms/biases/SSM states in exact <code>FP32</code> inside <code>passthrough.safetensors</code>, and logs per-tensor cosine similarity, SQNR, and SHA-256 digests in <code>hg_manifest.json</code>.</p>
         </div>
 
         <div class="storyline__item">
-          <h3>Stage 3 &mdash; MoE Routed Experts: Full <code>HG4-16R</code> (&le;120B) or Hybrid <code>K31H</code> (1T+)</h3>
-          <ul>
-            <li><strong>Models up to ~120B (fit in 64&ndash;128 GB RAM):</strong> Keep <code>--moe-cold-bits 4</code> so all routed experts stay in <code>HG4-16R</code> and <code>mmap</code> directly into RAM.</li>
-            <li><strong>Trillion-parameter MoEs (1T&ndash;3T):</strong> Pass <code>--moe-cold-bits 2 --hot-experts 42</code> (or use the dedicated streaming packer <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/kimi-k3/convert_kimi_k31_full_hg4.py"><code>convert_kimi_k31_full_hg4.py</code></a>) to pin hot experts in DDR5 <code>HG4-16R</code> and stream cold tail experts in <code>2.125-bpw HG2-16R</code> from NVMe.</li>
-          </ul>
+          <h3>Step 3 &mdash; Choose Single-Tier RAM (<code>--moe-cold-bits 4</code>) or Two-Tier RAM+NVMe (<code>--moe-cold-bits 2</code>)</h3>
+          <p>If the converted model fits inside 80% of available RAM, keep everything in <code>HG4-16R</code> and <code>mmap</code> it. Only when total expert bytes exceed RAM should you enable <code>--moe-cold-bits 2 --hot-experts H</code> to pin hot experts in RAM and stream cold experts from NVMe via <code>pread</code> + <code>POSIX_FADV_DONTNEED</code>.</p>
         </div>
 
         <div class="storyline__item">
-          <h3>Stage 4 &mdash; Lossless <code>precomputed_ops/</code> (<code>HG4OP001</code>)</h3>
-          <p>Both <code>convert_to_hg.py</code> and <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/clover-35b-a3b/precompute_hg4_operators.py"><code>precompute_hg4_operators.py</code></a> emit Hadamard-rotated <code>FP32</code> MoE router gates (<code>W<sub>gate</sub> D<sup>-1</sup> H<sub>128</sub></code>), RoPE/YaRN tables, and SSM exponential decays into <code>precomputed_ops/</code> with <code>Top-K Jaccard == 1.000000</code>.</p>
+          <h3>Step 4 &mdash; Emit Lossless <code>precomputed_ops/</code> (<code>HG4OP001</code>)</h3>
+          <p>Router matrices are pre-rotated in exact <code>FP32</code> into <code>precomputed_ops/*.hgop</code> (or extended with architecture-specific RoPE/SSM tables via <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/clover-35b-a3b/precompute_hg4_operators.py"><code>precompute_hg4_operators.py</code></a>), verified to <code>Top-K Jaccard == 1.000000</code>.</p>
         </div>
 
         <div class="storyline__item">
-          <h3>Stage 5 &mdash; Stateful C11 SIMD Engine &amp; Bit-Exact Speculative Verification</h3>
-          <p>Compile the C11 runtime engine with <code>-ffp-contract=off</code> (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/lfm3-1.7b/lfm3_hg4_engine.c"><code>lfm3_hg4_engine.c</code></a>, <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/clover-35b-a3b/clover35b_hg4_engine.c"><code>clover35b_hg4_engine.c</code></a>, <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/nemotron-3.5-super-vl/nemotron_hg4_engine.c"><code>nemotron_hg4_engine.c</code></a>, or <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/models/kimi-k3/kimi_k31_hg4_engine.c"><code>kimi_k31_hg4_engine.c</code></a>) so Scalar, AVX2, AVX-512, and ARM64 NEON produce <code>memcmp == 0</code> bit-identical matmul outputs.</p>
-<pre class="code"><code>gcc -O3 -ffp-contract=off -march=x86-64-v3 -mavx2 -mfma -fopenmp -fPIC -shared \
-  clover-ai-system/src/models/clover-35b-a3b/clover35b_hg4_engine.c \
-  -lm -o ./clover35b-full-hg4/libclover35b_hg4_engine.so</code></pre>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ SECTION 3: PRE-CONVERTED HF REPOS & 3-MINUTE SETUP ============ -->
-  <section class="band" id="setup-and-run">
-    <div class="wrap">
-      <h2>Download &amp; run the pre-converted HG models in 3 minutes</h2>
-      <p class="lede">All four converted models (including their <code>precomputed_ops/</code> sidecars, tokenizers, and C11 engine sources) are published on Hugging Face under <a href="https://huggingface.co/Santhoshsathish94" target="_blank" rel="noopener noreferrer"><code>Santhoshsathish94/*</code></a>.</p>
-
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">Published Clover HG4-16R-OP &amp; K31H repositories on Hugging Face Hub.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Hugging Face Repository</th>
-              <th scope="col">Size</th>
-              <th scope="col">Minimum Hardware</th>
-              <th scope="col">Contents</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><a href="https://huggingface.co/Santhoshsathish94/LFM3-Omni-2B-HG4-16R" target="_blank" rel="noopener noreferrer"><code>Santhoshsathish94/LFM3-Omni-2B-HG4-16R</code></a></th>
-              <td><code>0.91 GB</code></td>
-              <td>Any CPU with 2 GB RAM</td>
-              <td>24L <code>HG4-16R</code> + <code>tokenizer.json</code> + <code>lfm3_hg4_engine.c</code></td>
-            </tr>
-            <tr>
-              <th scope="row"><a href="https://huggingface.co/Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP" target="_blank" rel="noopener noreferrer"><code>Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP</code></a></th>
-              <td><code>18.80 GB</code></td>
-              <td>32 GB RAM CPU laptop / server</td>
-              <td>40L <code>HG4-16R</code> + <code>precomputed_ops/</code> + <code>clover35b_hg4_engine.c</code></td>
-            </tr>
-            <tr>
-              <th scope="row"><a href="https://huggingface.co/Santhoshsathish94/Nemotron-3.5-Super-VL-120B-HG4-16R-OP" target="_blank" rel="noopener noreferrer"><code>Santhoshsathish94/Nemotron-3.5-Super-VL-120B-HG4-16R-OP</code></a></th>
-              <td><code>64.99 GB</code></td>
-              <td>96&ndash;128 GB RAM CPU workstation</td>
-              <td>90L + 2L-MTP <code>HG4-16R</code> + <code>precomputed_ops/</code> + <code>nemotron_hg4_engine.c</code></td>
-            </tr>
-            <tr>
-              <th scope="row"><a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Hot-HG4-OP" target="_blank" rel="noopener noreferrer"><code>Santhoshsathish94/Kimi-K3.1-Pro-K31H-Hot-HG4-OP</code></a></th>
-              <td><code>103.85 GB</code></td>
-              <td rowspan="2">128 GB RAM + 800 GB NVMe SSD (zero GPUs)</td>
-              <td>93L trunk + 42 hot <code>HG4</code> experts/L + <code>5L-DSpark</code> + <code>precomputed_ops/</code> + <code>kimi_k31_hg4_engine.c</code></td>
-            </tr>
-            <tr>
-              <th scope="row"><code>Santhoshsathish94/Kimi-K3.1-Pro-K31H-Cold-HG2-Part1..3</code></th>
-              <td><code>690.30 GB</code><br><small>3 &times; ~230 GB</small></td>
-              <td><code>experts_cold_01..92.hg2</code> (854 cold <code>2.25b HG2</code> experts/L across Parts 1, 2, 3)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3 style="margin-top:2rem">Start the OpenAI-compatible <code>/v1</code> HG4 Fusion Gateway</h3>
-      <p>The gateway ships with all proven winners enabled out of the box: <strong><code>TokenEconomizer</code></strong> (<code>-52.7%</code> Turn-1 prompt tokens), <strong>Anthropic <code>SKILL.md</code></strong> domain playbooks, <strong><code>REA</code></strong> reverse-engineering output budgeter, <strong>Clean-Slate <code>Copilot Fusion</code></strong> (<code>clover-fusion-high</code>), and <strong>native C11 <code>x-cruncher</code> exact big-int/BBP-&pi; math verification</strong>.</p>
-
-<pre class="code"><code># 1. Download any HG model (example: Clover-35B-A3B-HG4-16R-OP, 18.8 GB)
-pip install huggingface_hub tokenizers numpy
-hf download Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP --local-dir ./clover35b-full-hg4
-
-# 2. Launch the OpenAI /v1 gateway on http://127.0.0.1:8790/v1
-export CLOVER_35B_HG4_DIR="$PWD/clover35b-full-hg4"
+          <h3>Step 5 &mdash; Compile the C11 Engine &amp; Serve via the OpenAI-Compatible <code>/v1</code> Gateway</h3>
+          <p>Compile your model family&rsquo;s C11 engine with <code>-ffp-contract=off</code> (reference implementations in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system/src/models"><code>clover-ai-system/src/models/</code></a>) and launch <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system/src/tools/hg4-fusion-gateway"><code>gateway.py</code></a> to expose standard <code>/v1/chat/completions</code> SSE streaming with Longest-Common-Prefix (<code>LCP</code>) cache reuse for <code>OpenCode</code>, VS Code, or <code>curl</code>:</p>
+<pre class="code"><code># Launch the standalone /v1 gateway on CPU (includes LCP prefix cache + exact x-cruncher math):
 export OMP_NUM_THREADS=16
 python3 clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py \
   --mode real --host 127.0.0.1 --port 8790
 
-# 3. Query via curl, OpenCode CLI (`clover/clover-35b-a3b`), or VS Code Copilot Chat
 curl -s http://127.0.0.1:8790/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model":"clover-35b-a3b","messages":[{"role":"user","content":"Compute the exact decimal value of 37! with no commas."}],"temperature":0}'</code></pre>
+  -d '{"model":"default","messages":[{"role":"user","content":"Write a binary search in Python."}],"temperature":0}'</code></pre>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- ============ SECTION 4: WHAT TESTS WE RAN ============ -->
+  <!-- ============ PART II: 4 SEPARATE MODEL PROOFS (2B -> 35B -> 120B -> 2.8T) ============ -->
+  <section class="band" id="proof-four-models">
+    <div class="wrap">
+      <h2>Part 3 &mdash; Proof in practice: 4 models converted &amp; benchmarked one by one</h2>
+      <p class="lede">To prove the <code>HG</code> process generalizes across architectures and memory regimes, we applied it to four distinct open-weight models &mdash; from a <code>2B</code> laptop model up to a <code>2.8T</code> frontier MoE &mdash; on the same 16-core <code>AMD Ryzen 9 7950X3D</code> CPU server (<code>124 GB</code> DDR5, <strong>zero GPUs</strong>). Each case study below stands on its own.</p>
+
+      <!-- ---- PROOF 1: 2B ---- -->
+      <div class="card" id="proof-1-2b" style="margin-top:1.8rem">
+        <h3>Proof 1 (2B Scale) &mdash; <code>LiquidAI/LFM3-Omni-2B</code> (24L Dense + ShortConv + GQA)</h3>
+        <p><strong>Why this test matters:</strong> Because a <code>2B</code> model fits comfortably in RAM even in <code>16-bit BF16</code>, we can run an exact, head-to-head comparison of <strong>Official <code>BF16</code> PyTorch</strong> vs. <strong><code>llama.cpp Q4_0</code></strong> vs. <strong>Clover <code>HG4-16R</code></strong> on identical prompts at <code>Temperature = 0</code>.</p>
+        <ul>
+          <li><strong>Size:</strong> <code>3.22 GiB</code> (<code>BF16</code>) &rarr; <code>0.98 GiB</code> (<code>llama.cpp Q4_0</code>) &rarr; <strong><code>0.83 GiB</code> (<code>HG4-16R</code>, <code>3.86&times;</code> smaller than <code>BF16</code>)</strong></li>
+          <li><strong>Speed (<code>tok/s</code>):</strong> <code>10.8 tok/s</code> decode / <code>318 tok/s</code> prefill (<code>BF16</code>) &rarr; <code>42.8 tok/s</code> (<code>Q4_0</code>) &rarr; <strong><code>50.3 tok/s</code> decode (<code>4.66&times;</code> vs. <code>BF16</code>, <code>+17.5%</code> vs. <code>Q4_0</code>) &amp; <code>1,347.0 tok/s</code> prefill</strong></li>
+          <li><strong>Accuracy:</strong> Held-out <code>PPL = 29.06</code> vs. <code>BF16</code> <code>28.81</code> (<code>+0.25</code> drift &mdash; <strong><code>8.0&times;</code> closer to <code>BF16</code> than <code>Q4_0</code>&rsquo;s <code>30.78</code></strong>) &middot; <code>30 / 30</code> Studio Quality Gate PASS &middot; <a href="https://huggingface.co/Santhoshsathish94/LFM3-Omni-2B-HG4-16R" target="_blank" rel="noopener noreferrer"><strong>Hugging Face Repo &rarr;</strong></a></li>
+        </ul>
+
+        <p class="note" style="margin-top:1rem"><strong>Sample Output A (Python Code, <code>Temperature = 0</code>) &mdash; <code>86 / 86</code> tokens <code>100.0%</code> character-for-character identical in <code>4.94&times;</code> less wall time:</strong></p>
+        <div class="grid grid--2" style="margin-top:0.5rem">
+          <div>
+            <p class="note"><strong>Official <code>BF16</code> PyTorch:</strong> <code>213.7 tok/s</code> prefill &middot; <code>9.1 tok/s</code> decode &middot; <code>9,508 ms</code></p>
+<pre class="code"><code>def is_prime(n: int) -&gt; bool:
+    if n &lt; 2:
+        return False
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+primes = [n for n in range(10, 31) if is_prime(n)]
+print(primes)</code></pre>
+          </div>
+          <div>
+            <p class="note"><strong>Clover <code>HG4-16R</code> C11:</strong> <code>829.4 tok/s</code> prefill &middot; <code>45.5 tok/s</code> decode &middot; <code>1,925 ms</code> (<strong>exact match</strong>)</p>
+<pre class="code"><code>def is_prime(n: int) -&gt; bool:
+    if n &lt; 2:
+        return False
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+primes = [n for n in range(10, 31) if is_prime(n)]
+print(primes)</code></pre>
+          </div>
+        </div>
+
+        <p class="note" style="margin-top:1rem"><strong>Sample Output B (Solar Capacity Math, <code>Temperature = 0</code>) &mdash; <code>5.07&times;</code> higher decode <code>tok/s</code>; numbered formatting vs. prose with identical arithmetic (<code>63,000 W &rarr; 160 &rarr; 72,000 W &rarr; 72 kW</code>):</strong></p>
+        <div class="grid grid--2" style="margin-top:0.5rem">
+          <div>
+            <p class="note"><strong>Official <code>BF16</code> PyTorch:</strong> <code>320.0 tok/s</code> prefill &middot; <code>9.1 tok/s</code> decode &middot; <code>6,260 ms</code></p>
+<pre class="code"><code>The original array has 140 panels &times; 450 W = 63,000 W.
+Adding 20 more panels gives 160 panels total.
+The total capacity is 160 &times; 450 W = 72,000 W,
+which equals 72 kilowatts.</code></pre>
+          </div>
+          <div>
+            <p class="note"><strong>Clover <code>HG4-16R</code> C11:</strong> <code>1,167.0 tok/s</code> prefill &middot; <code>46.1 tok/s</code> decode &middot; <code>2,267 ms</code></p>
+<pre class="code"><code>Step 1 &ndash; Original capacity:  140 panels &times; 450 W = 63,000 W
+Step 2 &ndash; Add 20 more panels: 140 + 20 = 160 panels
+Step 3 &ndash; Total capacity:     160 panels &times; 450 W = 72,000 W
+Step 4 &ndash; Convert to kW:      72,000 W &divide; 1,000 = 72 kW
+The total capacity is 72 kilowatts.</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---- PROOF 2: 35B ---- -->
+      <div class="card" id="proof-2-35b" style="margin-top:1.5rem">
+        <h3>Proof 2 (35B MoE Scale) &mdash; <code>Diffuspace/Clover-35B-A3B</code> (40L BD-GDN + 256 Experts/Layer)</h3>
+        <p><strong>Why this test matters:</strong> Proves full-model <code>HG4-16R-OP</code> conversion (<code>10,240</code> experts + <code>248,320</code> vocab converted in <code>11.9 minutes</code> on CPU) on a hybrid linear-attention MoE so a <code>66 GiB</code> model fits on a 32 GB laptop/workstation for interactive multi-turn coding.</p>
+        <ul>
+          <li><strong>Size:</strong> <code>~66.0 GiB</code> (<code>BF16</code>) &rarr; <code>20.78 GiB</code> (<code>llama.cpp Q4_K_M</code>) &rarr; <strong><code>17.41 GiB</code> (<code>HG4-16R-OP</code> + <code>84.6 MB</code> lossless <code>precomputed_ops/</code>)</strong></li>
+          <li><strong>Speed (<code>tok/s</code>):</strong> <code>~3.8 tok/s</code> (<code>BF16</code>) &rarr; <code>12.75 tok/s</code> (<code>llama.cpp Q4_K_M</code>) &rarr; <strong><code>16.58 tok/s</code> decode (<code>4.36&times;</code> vs. <code>BF16</code>, <code>+30.0%</code> vs. <code>Q4_K_M</code>) &amp; <code>89.8 tok/s</code> 40L prefill</strong></li>
+          <li><strong>Accuracy &amp; Live Agent Proof:</strong> Held-out <code>PPL = 17.92</code> &middot; <strong><code>9 / 23</code> (<code>39.13%</code>)</strong> on Lean 4 RH+SWE+RE &middot; <strong><code>45 / 48</code> (<code>93.75%</code>)</strong> Studio capability probes &middot; <a href="https://huggingface.co/Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP" target="_blank" rel="noopener noreferrer"><strong>Hugging Face Repo &rarr;</strong></a></li>
+        </ul>
+<pre class="code" style="margin-top:0.7rem"><code># Verbatim live OpenCode v1.19.6 CLI session against Clover-35B-A3B HG4-16R-OP:
+&gt; build &middot; clover-35b-a3b  &rarr; Read Demo.lean
+Theorem name: `demo_add_zero`
+37! = 13763753091226345046315979581580902400000000
+# Turn 2 follow-up: 913 / 939 prompt tokens reused from stateful BD-GDN+KV cache (97.23% LCP hit, 304.3 ms)</code></pre>
+      </div>
+
+      <!-- ---- PROOF 3: 120B ---- -->
+      <div class="card" id="proof-3-120b" style="margin-top:1.5rem">
+        <h3>Proof 3 (120B MoE Scale) &mdash; <code>NVIDIA/Nemotron-3.5-Super-VL</code> (90L Mamba-2 + 512E Latent MoE + 2L-MTP)</h3>
+        <p><strong>Why this test matters:</strong> At <code>~240 GiB</code> in <code>BF16</code>, this <code>120B-A12B</code> model <strong>cannot load</strong> on a <code>124 GB</code> CPU workstation. Packing all 88 backbone + 2 Multi-Token Prediction (<code>MTP</code>) layers (<code>20,992</code> experts) into <code>HG4-16R-OP</code> fits the entire model cleanly in RAM and unlocks lossless in-engine speculative decoding.</p>
+        <ul>
+          <li><strong>Size:</strong> <code>~240.0 GiB</code> (<code>BF16</code> &mdash; OOM on 124 GB RAM) &rarr; <strong><code>60.20 GiB</code> (<code>HG4-16R-OP</code>, <code>48.5 ms</code> cold <code>mmap</code> init)</strong></li>
+          <li><strong>Speed (<code>tok/s</code>):</strong> <code>&lt; 0.15 tok/s</code> (<code>BF16</code> swap thrash) &rarr; <code>2.57&ndash;3.46 tok/s</code> (<code>HG4 T=1</code> unspeculated) &rarr; <strong><code>7.57&ndash;9.20 tok/s</code> with stateful <code>2L-MTP</code> (<code>3.58&times;</code> lossless speedup, <code>83.3%&ndash;100.0%</code> acceptance, <code>exact_greedy_match = True</code>)</strong></li>
+          <li><strong>Accuracy:</strong> Held-out <code>PPL = 14.84</code> &middot; <strong><code>4 / 4</code> (<code>100.0%</code>)</strong> on Tier-4 Systems SWE (LCP planner, MXFP4 decoder, parser &amp; verifier tasks) &middot; <a href="https://huggingface.co/Santhoshsathish94/Nemotron-3.5-Super-VL-120B-HG4-16R-OP" target="_blank" rel="noopener noreferrer"><strong>Hugging Face Repo &rarr;</strong></a></li>
+        </ul>
+      </div>
+
+      <!-- ---- PROOF 4: 2.8T ---- -->
+      <div class="card" id="proof-4-2800b" style="margin-top:1.5rem">
+        <h3>Proof 4 (2.8T Frontier Scale) &mdash; <code>moonshotai/Kimi-K3.1-Pro</code> (93L KDA/DSA + 896E MoE + 5L-DSpark)</h3>
+        <p><strong>Why this test matters:</strong> At <code>1.58 TB</code> upstream (<code>135 GB BF16</code> trunk + <code>1,446 GB MXFP4</code> across <code>82,432</code> routed experts), this model exceeds <code>124 GB</code> RAM by <strong><code>12.7&times;</code></strong> and normally demands an <code>8&times; H200</code> GPU node. Applying two-tier <code>K31H</code> (<code>HG4</code> DDR5 hot trunk + top 42 hot experts/layer + <code>5L-DSpark</code>, paired with 16-lane NVMe <code>pread</code> across 854 cold <code>2.125-bpw HG2</code> experts/layer) runs all <code>2.8T</code> parameters on one CPU with zero experts dropped.</p>
+        <ul>
+          <li><strong>Size:</strong> <code>1,581 GB</code> upstream (OOM) &rarr; <strong><code>103.85 GB</code> Hot <code>HG4-OP</code> (<code>61 GB</code> active RSS) + <code>690.30 GB</code> Cold <code>HG2</code> on NVMe = <code>791.8 GB</code> total</strong></li>
+          <li><strong>Speed (<code>tok/s</code>):</strong> <code>&lt; 0.05 tok/s</code> (upstream swap) &rarr; <strong><code>347.8 draft tok/s</code> (<code>5L-DSpark</code> in RAM) &middot; <code>71.1 tok/s</code> C1 stage &middot; <code>2.26 tok/s</code> full 93-layer <code>2.8T</code> verification</strong> (<code>draft_k=4 == draft_k=0</code> bit-exact)</li>
+          <li><strong>Accuracy &amp; Formal Proof Sample:</strong> Scored <strong><code>12 / 23</code> (<code>52.17%</code>, #1 overall, <code>4/4</code> SWE)</strong> on the frozen Lean 4 <code>RiemannHypothesis</code> + SWE + RE benchmark &middot; <a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Hot-HG4-OP" target="_blank" rel="noopener noreferrer"><strong>HF Hot Repo &rarr;</strong></a> &middot; <a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Cold-HG2-Part1" target="_blank" rel="noopener noreferrer"><strong>HF Cold Part 1 &rarr;</strong></a></li>
+        </ul>
+<pre class="code" style="margin-top:0.7rem"><code>-- Verbatim zero-shot proof generated on CPU by Kimi-K3.1-Pro K31H (rh_t2_short_1_6_03):
+-- Verified by leanprover/lean4:v4.33.1 kernel (0 sorry, #print axioms -&gt; {propext, Classical.choice, Quot.sound})
+by
+  intro x hx
+  simpa using hx</code></pre>
+      </div>
+
+      <!-- ---- CONSOLIDATED SPEED VISUAL ACROSS THE 4 PROOFS ---- -->
+      <figure class="diagram" id="speed-tok-per-sec" style="margin-top:2.2rem">
+        <svg viewBox="0 0 900 296" role="img" aria-label="Summary of measured CPU tokens per second across all four independent proof scales (2B, 35B, 120B, and 2.8T) on a single 16-core AMD Ryzen 9 7950X3D CPU with zero GPUs." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:14px;background:#fffefb;padding:12px">
+          <rect x="0" y="0" width="900" height="296" rx="12" fill="#fffefb"></rect>
+          <text x="22" y="26" font-size="11.5" font-weight="700" fill="#1b5e46" letter-spacing="1.1">SUMMARY ACROSS THE 4 PROOF SCALES · MEASURED CPU TOK/S (AMD RYZEN 9 7950X3D, 16T, 0 GPUS)</text>
+          <line x1="22" y1="38" x2="878" y2="38" stroke="#dfd8c8" stroke-width="1"></line>
+
+          <!-- Proof 1 -->
+          <text x="22" y="64" font-size="12" font-weight="700" fill="#132018">Proof 1 · 2B Dense+Conv (LFM3-Omni-2B)</text>
+          <text x="22" y="80" font-size="10.5" fill="#596a5f">Official BF16 PyTorch (3.22 GiB)</text>
+          <rect x="245" y="69" width="98" height="14" rx="4" fill="#d9d2c3"></rect>
+          <text x="351" y="80" font-size="10.5" fill="#596a5f">10.8 tok/s decode · 318 tok/s prefill</text>
+
+          <text x="22" y="99" font-size="10.5" fill="#596a5f">llama.cpp Q4_0 GGUF (0.98 GiB)</text>
+          <rect x="245" y="88" width="388" height="14" rx="4" fill="#a8c5b7"></rect>
+          <text x="641" y="99" font-size="10.5" fill="#2d3e34">42.8 tok/s decode · 746 tok/s prefill</text>
+
+          <text x="22" y="118" font-size="10.5" font-weight="700" fill="#1b5e46">Clover HG4-16R-OP (0.83 GiB)</text>
+          <rect x="245" y="107" width="456" height="15" rx="4" fill="#1b5e46"></rect>
+          <text x="710" y="119" font-size="10.5" font-weight="700" fill="#1b5e46">50.3 tok/s (4.7×) · 1,347 tok/s prefill</text>
+
+          <line x1="22" y1="133" x2="878" y2="133" stroke="#eee8da" stroke-width="1"></line>
+
+          <!-- Proof 2 -->
+          <text x="22" y="153" font-size="12" font-weight="700" fill="#132018">Proof 2 · 35B MoE (Clover-35B-A3B)</text>
+          <text x="22" y="170" font-size="10.5" fill="#596a5f">Original BF16 (66 GiB) / Q4_K_M (20.8 GiB)</text>
+          <rect x="245" y="159" width="52" height="13" rx="3" fill="#d9d2c3"></rect>
+          <rect x="303" y="159" width="122" height="13" rx="3" fill="#a8c5b7"></rect>
+          <text x="433" y="170" font-size="10.5" fill="#596a5f">~3.8 tok/s BF16 · 12.75 tok/s llama.cpp Q4_K_M</text>
+
+          <text x="22" y="189" font-size="10.5" font-weight="700" fill="#1b5e46">Clover HG4-16R-OP (17.41 GiB)</text>
+          <rect x="245" y="178" width="230" height="15" rx="4" fill="#1b5e46"></rect>
+          <text x="484" y="190" font-size="10.5" font-weight="700" fill="#1b5e46">16.58 tok/s decode (+30% vs Q4_K_M) · 89.8 tok/s prefill · 97.2% LCP</text>
+
+          <line x1="22" y1="204" x2="878" y2="204" stroke="#eee8da" stroke-width="1"></line>
+
+          <!-- Proofs 3 & 4 -->
+          <text x="22" y="224" font-size="12" font-weight="700" fill="#132018">Proofs 3 &amp; 4 · Oversized MoEs (120B Nemotron &amp; 2.8T Kimi K3.1 Pro)</text>
+          <text x="22" y="242" font-size="10.5" fill="#7d5312">Original Checkpoints (240 GiB &amp; 1,581 GB)</text>
+          <rect x="245" y="231" width="16" height="13" rx="3" fill="#c98a63"></rect>
+          <text x="269" y="242" font-size="10.5" fill="#7d5312">OOM on 124 GB RAM (&lt; 0.1 tok/s NVMe swap thrash)</text>
+
+          <text x="22" y="262" font-size="10.5" font-weight="700" fill="#1b5e46">Proof 3 · 120B HG4 + 2L-MTP (60.2 GiB)</text>
+          <rect x="245" y="251" width="185" height="14" rx="4" fill="#1b5e46"></rect>
+          <text x="438" y="262" font-size="10.5" font-weight="700" fill="#1b5e46">7.57–9.20 tok/s (3.58× lossless MTP over 2.57 tok/s T=1)</text>
+
+          <text x="22" y="281" font-size="10.5" font-weight="700" fill="#1b5e46">Proof 4 · 2.8T K31H (Hot + NVMe)</text>
+          <rect x="245" y="270" width="118" height="14" rx="4" fill="#0a6a5f"></rect>
+          <text x="371" y="281" font-size="10.5" font-weight="700" fill="#0a6a5f">347.8 draft tok/s (5L-DSpark) · 71.1 tok/s C1 · 2.26 tok/s 93L 2.8T verify</text>
+        </svg>
+        <figcaption>Figure 2 &mdash; Across all four proof scales, HG either multiplies CPU <code>tok/s</code> by <code>4.4&times;&ndash;4.7&times;</code> vs. <code>BF16</code> or turns OOM checkpoints into working single-CPU engines.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ PART III: SEALED BENCHMARK SUITES ============ -->
   <section class="band" id="benchmarks-and-ablations">
     <div class="wrap">
-      <h2>What tests we ran (zero skipped phases, zero benchmark leakage)</h2>
-      <p class="lede">Every model and every capability extension was evaluated under <code>AGENTS.md</code> against frozen <code>chmod 444</code> SHA-256-verified test files, audited across multiple adversarial rounds by <code>Claude Opus 5.5</code>, and kept <strong>only</strong> when it cleared a pre-registered Keep/Drop gate.</p>
+      <h2>Part 4 &mdash; Sealed benchmark suites across those 4 proof models</h2>
+      <p class="lede">Beyond throughput and perplexity, we evaluated the converted proof models and gateway extensions under <code>AGENTS.md</code> against frozen <code>chmod 444</code> SHA-256-verified test files, audited across multiple adversarial rounds by <code>Claude Opus 5.5</code>.</p>
 
       <h3>Suite 1 &mdash; Certified Lean 4 <code>RiemannHypothesis</code> + Systems SWE + <code>REA</code> Binary Reverse Engineering (<code>23</code> frozen tasks)</h3>
       <p>Built on the community-verified Lean 4 + Mathlib4 <code>RiemannHypothesis</code> formalization (<code>leanprover/lean4:v4.33.1</code>, <code>8,690</code> compiled <code>.olean</code> modules). Every Lean proof is compiled outside the project tree with <code>#print axioms</code> strictly restricted to <code>{propext, Classical.choice, Quot.sound}</code> (banning <code>sorry</code>, <code>admit</code>, custom <code>axiom</code>, <code>native_decide</code>, and metaprogramming).</p>
@@ -858,10 +642,10 @@ curl -s http://127.0.0.1:8790/v1/chat/completions \
     </div>
   </section>
 
-  <!-- ============ SECTION 5: VERIFY IT YOURSELF ============ -->
+  <!-- ============ PART IV: VERIFY IT YOURSELF ============ -->
   <section class="band" id="verify-it-yourself">
     <div class="wrap">
-      <h2>What you can run yourself to verify every number</h2>
+      <h2>Part 5 &mdash; Reproduce &amp; verify every number yourself</h2>
       <p class="lede">Every benchmark suite, Lean 4 kernel oracle, anti-leakage scanner, and JSON result artifact is committed in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/benchmarks/riemann-lean4"><code>benchmarks/riemann-lean4/</code></a>. Run these three checks on your own machine to verify all invariants firsthand.</p>
 
       <div class="grid grid--3" style="margin-top:1.5rem">

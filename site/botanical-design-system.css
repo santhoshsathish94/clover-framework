@@ -1203,6 +1203,15 @@ main section.band > .wrap > p.verse__line {
   white-space: nowrap;
 }
 
+.grid > * {
+  min-width: 0;
+}
+
+.kv dd code {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
 .btn--plain {
   border-color: transparent;
   background: none;
