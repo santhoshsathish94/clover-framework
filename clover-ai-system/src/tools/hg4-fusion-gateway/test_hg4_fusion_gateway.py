@@ -832,6 +832,7 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
             "```lean\ndef R (s : String) : String := s\ndef x := R\"q\\\"z\"\ntheorem t : 1 + 1 = 2 := by sorry\ndef y := \"w\"\n```",
             "```lean\ndef p : String := r\"C:\\\"\ntheorem t : 1 + 1 = 2 := by sorry\ndef y := \"w\"\n```",
             "```lean\ndef Foo.r (s : String) : String := s\ndef x := Foo.r\"\\\" /- \"\ntheorem t : 1 + 1 = 3 := by sorry\n-- -/\n```",
+            "```lean\ndef b : Bool := !r\"C:\\\".isEmpty\n/-- d -/ axiom ax : 1 + 1 = 3\ntheorem t : 1 + 1 = 3 := ax\ndef y := \"w\"\n```",
             "by native_decide",
             "by decide +native",
         ):

@@ -47,6 +47,14 @@ _FORBIDDEN_LEAN_CODE_META_RE = re.compile(
 )
 
 
+def _continues_lean_ident(src: str, pos: int) -> bool:
+    """Return True iff `src[pos]` continues an existing Lean 4 identifier token (rather than starting a new token)."""
+    k = pos - 1
+    while k >= 0 and src[k] in ("'", ".", "!", "?"):
+        k -= 1
+    return k >= 0 and (src[k].isalnum() or src[k] == "_")
+
+
 def _strip_lean_comments_and_strings(src: str) -> str:
     """Remove Lean 4 nested `/- ... -/` block comments, `--` line comments, char literals `'...'`, and string literals."""
     out: list[str] = []
@@ -96,7 +104,7 @@ def _strip_lean_comments_and_strings(src: str) -> str:
                     continue
             out.append("'")
             i += 1
-        elif src[i] == "r" and (i == 0 or not (src[i - 1].isalnum() or src[i - 1] in ("_", "'", ".", "!", "?"))):
+        elif src[i] == "r" and not _continues_lean_ident(src, i):
             # Lean 4 raw string literal `r"..."`, `r#"..."#`, `r##"..."##` (lowercase `r` starting a new token)
             j = i + 1
             while j < n and src[j] == "#":
@@ -407,7 +415,7 @@ def verify_lean_elaboration_optin(
         return None
     if (
         _FORBIDDEN_LEAN_PROOF_RE.search(stripped)
-        or re.search(r"^\s*(?:private\s+|protected\s+|noncomputable\s+)?axiom\b", block, flags=re.MULTILINE)
+        or re.search(r"\baxiom\b", block)
         or _FORBIDDEN_LEAN_ALWAYS_META_RE.search(stripped)
         or _FORBIDDEN_LEAN_CODE_META_RE.search(stripped)
         or _FORBIDDEN_LEAN_ALWAYS_META_RE.search(block)
