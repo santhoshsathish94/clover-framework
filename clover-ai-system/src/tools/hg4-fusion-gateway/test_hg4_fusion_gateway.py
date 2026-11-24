@@ -543,6 +543,305 @@ class TestGatewayHTTP(unittest.TestCase):
         self.assertEqual(len(cleaned2), 3)
 
 
+class TestStudioCapabilitiesSuite(unittest.TestCase):
+    def test_s1_selective_and_pure_text_declined_tools(self):
+        import studio_semantics_guard as ssem
+
+        tools = [
+            {"type": "function", "function": {"name": n, "parameters": {"type": "object", "properties": {}}}}
+            for n in ("bash", "read", "websearch", "webfetch", "write", "edit")
+        ]
+        # Selective negation keeps explicitly requested positive tool (`read`)
+        msgs_sel = [{"role": "user", "content": "Don't use websearch or webfetch — instead call the `read` tool on Demo.lean."}]
+        f_tools, f_choice, meta = ssem.apply_pre_semantics_guard(msgs_sel, tools, "auto")
+        kept = {t["function"]["name"] for t in (f_tools or [])}
+        self.assertIn("read", kept)
+        self.assertNotIn("websearch", kept)
+        self.assertNotIn("webfetch", kept)
+        self.assertFalse(meta["pure_text_mode"])
+
+        # Pure memory negation strips all tool schema bloat cleanly
+        msgs_mem = [{"role": "user", "content": "Do NOT call bash. Answer from memory in one line: what is 6*7?"}]
+        f_tools2, f_choice2, meta2 = ssem.apply_pre_semantics_guard(msgs_mem, tools, "auto")
+        self.assertIsNone(f_tools2)
+        self.assertEqual(f_choice2, "none")
+        self.assertTrue(meta2["pure_text_mode"])
+
+        # Promise without code triggers continuation
+        cont = ssem.check_non_answer_or_truncated_promise(
+            [{"role": "user", "content": "Write a complete Python function `def add(a, b):`."}],
+            "Sure, let me write that function for you right now:",
+            [],
+            "stop",
+        )
+        self.assertIsNotNone(cont)
+
+    def test_s2_fast_python_doctest_and_lean_surface(self):
+        import os
+        import studio_outcome_verifier as sout
+
+        prompt = "Write `def sq(x: int) -> int:`\n```python\n>>> sq(4)\n16\n>>> sq(-3)\n9\n```"
+        bad = "```python\ndef sq(x: int) -> int:\n    return x * 2\n```"
+        good = "```python\ndef sq(x: int) -> int:\n    return x * x\n```"
+        # Without CLOVER_STUDIO_S2_ALLOW_HOST_EXEC, only zero-exec static AST check runs:
+        f_static, st_static = sout.check_outcome_cycle("fast", [{"role": "user", "content": prompt}], bad, [])
+        self.assertIsNone(f_static)
+        self.assertEqual(st_static, "python_fast_clean")
+        # With explicit operator CLOVER_STUDIO_S2_ALLOW_HOST_EXEC=1, isolated doctest check catches wrong output:
+        old_flag = os.environ.get("CLOVER_STUDIO_S2_ALLOW_HOST_EXEC")
+        os.environ["CLOVER_STUDIO_S2_ALLOW_HOST_EXEC"] = "1"
+        try:
+            f_bad, st_bad = sout.check_outcome_cycle("fast", [{"role": "user", "content": prompt}], bad, [])
+            self.assertEqual(st_bad, "python_fast_finding")
+            self.assertIn("Failed example", f_bad)
+            f_good, st_good = sout.check_outcome_cycle("fast", [{"role": "user", "content": prompt}], good, [])
+            self.assertIsNone(f_good)
+            self.assertEqual(st_good, "python_fast_clean")
+        finally:
+            if old_flag is None:
+                os.environ.pop("CLOVER_STUDIO_S2_ALLOW_HOST_EXEC", None)
+            else:
+                os.environ["CLOVER_STUDIO_S2_ALLOW_HOST_EXEC"] = old_flag
+
+        lean_p = "Prove in Lean 4: `theorem t (n : Nat) : n = n := by`"
+        f_sorry, _ = sout.check_outcome_cycle("fast", [{"role": "user", "content": lean_p}], "```lean\nsorry\n```", [])
+        self.assertIn("sorry", f_sorry)
+        f_eval, _ = sout.check_outcome_cycle("fast", [{"role": "user", "content": lean_p}], "```lean\n#eval IO.Process.run { cmd := \"id\" }\n```", [])
+        self.assertIn("metaprogramming", f_eval)
+
+    def test_s3_xcruncher_exact_math_and_pi_hex(self):
+        import studio_xcruncher_verifier as sxc
+
+        msgs = [{"role": "user", "content": "Compute the exact decimal value of `25!` and the exact 8 uppercase hexadecimal digits of the fractional part of Pi starting at 0-based hex offset `0`."}]
+        bad_draft = "25! = 15511210043330985984000001 and Pi hex = 243F6A89"
+        rep, meta = sxc.check_xcruncher_math(msgs, bad_draft, [])
+        self.assertEqual(meta["obligations"], 2)
+        self.assertEqual(meta["mismatches"], 2)
+        self.assertIn("15511210043330985984000000", rep)
+        self.assertIn("243F6A88", rep)
+
+        good_draft = "15511210043330985984000000 and 243F6A88"
+        rep2, meta2 = sxc.check_xcruncher_math(msgs, good_draft, [])
+        self.assertIsNone(rep2)
+        self.assertEqual(meta2["mismatches"], 0)
+
+    def test_s4_ontology_deductive_closure_and_patch_guard(self):
+        import studio_ontology_verifier as sonto
+
+        p_viol = (
+            "Given:\n- `MOD-A DEPENDS_ON MOD-B`\n- `MOD-B DEPENDS_ON MOD-C`\n- `MOD-C ENTAILS_CONSTRAINT CST-X`\n"
+            "Manifest for `MOD-A` sets `CST-X = false`. Output `VERDICT: COMPLIANT` or `VERDICT: VIOLATION`."
+        )
+        rep, meta = sonto.check_symbolic_ontology([{"role": "user", "content": p_viol}], "VERDICT: COMPLIANT", [])
+        self.assertTrue(meta["repaired"])
+        self.assertIn("VIOLATION", rep)
+
+        p_patched = (
+            "Given:\n- `PKG-A DEPENDS_ON PKG-B`\n- `PKG-B AFFECTED_BY CVE-1` (patched_in: `1.2`, deployed: `1.2`)\n"
+            "- `CVE-1 CWE_MAPS_TO CWE-1`\n- `CWE-1 EXPLOITED_BY CAPEC-1`\n"
+            "Is `PKG-A` exposed to `CAPEC-1`? Output `VERDICT: COMPLIANT` or `VERDICT: VIOLATION`."
+        )
+        rep2, meta2 = sonto.check_symbolic_ontology([{"role": "user", "content": p_patched}], "VERDICT: COMPLIANT", [])
+        self.assertIsNone(rep2)
+        self.assertEqual(meta2["verdict"], "COMPLIANT")
+
+    def test_s5_epistemic_memory_and_cache_reset(self):
+        import studio_epistemic_memory as sem_mem
+
+        store = sem_mem.EpistemicMemoryStore()
+        # 1-turn OpenCode prompt is completely untouched
+        one_turn = [{"role": "user", "content": "Read Demo.lean"}]
+        out1, m1 = store.build_ledger_for_messages(one_turn)
+        self.assertFalse(m1["active"])
+        self.assertEqual(out1, one_turn)
+
+        # Multi-turn belief revision preserves hypothesis & marks superseded
+        multi = [
+            {"role": "user", "content": "Note M1 (observed): `bw = 6.4`. Note M2 (hypothesis): `jitter = true`."},
+            {"role": "assistant", "content": "Recorded."},
+            {"role": "user", "content": "Update M3 (corrects M1, externally_verified): `bw = 3.18`."},
+        ]
+        out_m, mm = store.build_ledger_for_messages(multi)
+        self.assertTrue(mm["active"])
+        self.assertEqual(mm["superseded"], 1)
+        self.assertEqual(out_m[0]["content"], multi[0]["content"])  # Prefix untouched!
+        self.assertIn("bw=3.18", out_m[-1]["content"])
+        self.assertIn("status=hypothesis", out_m[-1]["content"])
+        store.reset()
+
+    def test_s6_jepa_rpre_and_anti_leakage_boundary(self):
+        import studio_jepa_router as sjepa
+
+        adj, meta = sjepa.evaluate_jepa_rpre(
+            [{"role": "user", "content": "def foo(x):\n```python\n>>> foo(1)\n2\n```"}],
+            None,
+            384,
+        )
+        self.assertGreaterEqual(adj, 384)
+        self.assertTrue(meta["in_envelope"])
+        self.assertEqual(len(sjepa.ADAPTER_WEIGHTS_SHA256), 64)
+
+        # Verify TokenEconomizer session-start gating of heavy `rea_*` MCP tools
+        import token_economizer as te
+        rea_tools = [
+            {"type": "function", "function": {"name": "read", "parameters": {"type": "object", "properties": {}}}},
+            {"type": "function", "function": {"name": "rea_disassemble", "parameters": {"type": "object", "properties": {}}}},
+        ]
+        k_lean, _ = te.prune_tools_for_session("clover-35b-a3b", [{"role": "user", "content": "Read Demo.lean"}], rea_tools)
+        self.assertEqual([t["function"]["name"] for t in k_lean], ["read"])
+        k_re, _ = te.prune_tools_for_session("clover-35b-a3b", [{"role": "user", "content": "Inspect stripped ELF binary target.bin"}], rea_tools)
+        self.assertEqual([t["function"]["name"] for t in k_re], ["read", "rea_disassemble"])
+
+        p_self = Path(__file__).resolve()
+        cand_dirs = [Path("/mnt/nvme1/clover-rh-bench/harness")]
+        if len(p_self.parents) > 4:
+            cand_dirs.insert(0, p_self.parents[4] / "benchmarks" / "riemann-lean4")
+        bench_dir = next((d for d in cand_dirs if (d / "run_studio_phase.py").is_file()), None)
+        if bench_dir is not None:
+            sys.path.insert(0, str(bench_dir))
+            import run_studio_phase as rstudio
+
+            verified = rstudio.verify_boundary_and_leakage(p_self.parent)
+            self.assertEqual(len(verified), 6)
+
+    def test_opus_audit_regressions_all_six(self):
+        import os
+        import urllib.error
+        import urllib.request
+        import gateway as GW
+        import studio_outcome_verifier as sout
+        import studio_xcruncher_verifier as sxc
+
+        # 1. Issue #1: Missing virtual-model backend with S3 math prompt + stream=True must return HTTP 503, never 200
+        partial_backends = {k: v for k, v in B.build_backends("mock").items() if k != "lfm3-omni-2b"}
+        partial_router = FR.FusionRouter(partial_backends)
+        srv, _ = GW.serve_in_thread(partial_router)
+        try:
+            url = f"http://127.0.0.1:{srv.server_address[1]}/v1/chat/completions"
+            req = urllib.request.Request(
+                url,
+                data=json.dumps({
+                    "model": "clover-fusion-standard",
+                    "stream": True,
+                    "messages": [{"role": "user", "content": "What is 20! exactly?"}],
+                }).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with self.assertRaises(urllib.error.HTTPError) as ctx:
+                urllib.request.urlopen(req, timeout=10)
+            self.assertEqual(ctx.exception.code, 503)
+            ctx.exception.close()
+        finally:
+            srv.shutdown()
+            srv.server_close()
+
+        # 2. Issue #2: Huge factorials / exponents / 5000-digit operands never raise 4300-digit ValueError
+        router = FR.FusionRouter(B.build_backends("mock"))
+        for huge_prompt in (
+            "What is 2000! exactly?",
+            "Compute (2^8000 - 1) * (2^8000 - 1).",
+            f"Compute {'9' * 4500} * {'8' * 4500}.",
+        ):
+            c_huge = router.complete({"model": "clover-35b-a3b", "messages": [{"role": "user", "content": huge_prompt}]})
+            self.assertTrue(isinstance(c_huge.content, str))
+
+        # 3. Issue #3: Turn-2 LCP cache hit >= 95% on clover-35b-a3b EVEN WHEN S3 fires on Turn 1 (`37!`)
+        router.reset_caches()
+        sys_m = {"role": "system", "content": REPO_SYSTEM}
+        u1 = {"role": "user", "content": "Compute the exact value of 37! with no commas."}
+        c1 = router.complete({"model": "clover-35b-a3b", "tools": TOOLS, "messages": [sys_m, u1]})
+        self.assertIn("s3_xcruncher_pre", c1.telemetry.get("studio_extensions", {}))
+        c2 = router.complete({
+            "model": "clover-35b-a3b",
+            "tools": TOOLS,
+            "messages": [
+                sys_m,
+                u1,
+                {"role": "assistant", "content": c1.content},
+                {"role": "user", "content": "Thanks. Now say hi."},
+            ],
+        })
+        step2 = c2.telemetry["steps"][0]
+        self.assertGreater(step2["cache_hit_pct"], 95.0)
+
+        # 4. Issue #4 & Round-2/3 Issue A: KAT vectors pass & both out-of-range AND 50x in-range obligations cap inside loop (<150 ms)
+        self.assertEqual(sxc.compute_pi_hex_exact(194, 10)[0], "7C9045F12C")
+        self.assertEqual(sxc.compute_pi_hex_exact(5000, 10)[0], "CAD181156B")
+        t_dos0 = time.perf_counter()
+        self.assertEqual(sxc.extract_prompt_math_obligations("10 hex digits of pi at offset 999999999999"), [])
+        many_in_range = "\n".join(f"Compute 20 hex digits of pi at offset {499900 + i}." for i in range(50))
+        obs_many = sxc.extract_prompt_math_obligations(many_in_range)
+        self.assertEqual(len(obs_many), 4)
+        self.assertLess(time.perf_counter() - t_dos0, 0.25)
+
+        # 5. Issue #5 & Round-2/3 Issue B: Request-body `x_clover_studio_s2_mode` ignored & AST allowlist blocks `match`/dunder/imports
+        c_s2_req = router.complete({
+            "model": "clover-35b-a3b",
+            "x_clover_studio_s2_mode": "fast",
+            "messages": [{"role": "user", "content": "Write python `def f():`"}],
+        })
+        self.assertNotIn("s2_outcome_cycle", c_s2_req.telemetry.get("studio_extensions", {}))
+        self.assertIsNone(sout._extract_prompt_doctest_runner(">>> import pathlib; pathlib.Path('x').write_text('pwn')"))
+        self.assertIsNone(sout._extract_prompt_doctest_runner(">>> open('x', 'w')"))
+        self.assertIsNone(sout._extract_prompt_doctest_runner(">>> _sys.modules['os'].system('echo pwn')"))
+        self.assertIsNone(sout._extract_prompt_doctest_runner(">>> _dt.os.system('echo pwn')"))
+        match_bypass = (
+            ">>> match ():\n"
+            "...     case object(__class__=c): pass\n"
+            ">>> match c:\n"
+            "...     case object(__base__=b): pass\n"
+        )
+        self.assertIsNone(sout._extract_prompt_doctest_runner(match_bypass))
+        # Candidate importing pure stdlib `fractions` & `decimal` passes cleanly without false PermissionError:
+        frac_prompt = "Write `def half(x: int) -> str:`\n```python\n>>> half(3)\n'3/2'\n```"
+        frac_draft = "```python\nfrom fractions import Fraction\nimport decimal\ndef half(x: int) -> str:\n    d = decimal.Decimal(x)\n    return str(Fraction(int(d), 2))\n```"
+        old_exec = os.environ.get("CLOVER_STUDIO_S2_ALLOW_HOST_EXEC")
+        os.environ["CLOVER_STUDIO_S2_ALLOW_HOST_EXEC"] = "1"
+        try:
+            self.assertIsNone(sout.verify_python_draft_fast(frac_prompt, frac_draft))
+        finally:
+            if old_exec is None:
+                os.environ.pop("CLOVER_STUDIO_S2_ALLOW_HOST_EXEC", None)
+            else:
+                os.environ["CLOVER_STUDIO_S2_ALLOW_HOST_EXEC"] = old_exec
+        # Candidate attempting internal imports or `typing.sys` / `typing.types` attribute traversal is rejected:
+        self.assertFalse(sout._is_safe_candidate_ast("import typing\ndef half(x): return typing.sys"))
+        self.assertFalse(sout._is_safe_candidate_ast("import dataclasses\ndef half(x): return dataclasses.inspect.os"))
+        self.assertFalse(sout._is_safe_candidate_ast("import operator\ndef half(x): return operator.attrgetter('sys')"))
+        for lean_bad in ("elab_rules : tactic", "macro_rules", "open IO in\nProcess.output", "«IO».Process", "@[tactic foo]"):
+            self.assertIsNotNone(sout.verify_lean_surface_fast("Prove in Lean 4: theorem t : True := by", lean_bad))
+
+        # 6. Issue #6: Retried invalid tool-call outcome does not poison splice cache in _repair_once
+        be35 = router.backends["clover-35b-a3b"]
+        router.reset_caches()
+        splice_before = len(be35._splice)
+        fake_step = FR.StepOutcome(
+            model="clover-35b-a3b",
+            role="direct",
+            result=B.GenResult("15!", [1, 2, 3], 10, 0, 10, 3, 1.0, 1.0, "stop"),
+            parsed=FR.tg.ParseResult(content="wrong 25! = 999", tool_calls=[], errors=["bad"], had_markup=True),
+            retried=True,
+        )
+        router._apply_studio_post_verifiers(
+            final=fake_step,
+            messages=[{"role": "user", "content": "Compute 25!"}],
+            tools=None,
+            tool_choice="none",
+            tools_active=False,
+            params=B.GenParams(),
+            steps=[fake_step],
+            studio_telem={},
+            use_s1=False,
+            declined_set=set(),
+            s2_mode="off",
+            s2_lean_proj="",
+            use_s3=True,
+            use_s4=False,
+        )
+        self.assertEqual(len(be35._splice), splice_before)
+
+
 # ====================================================================================================================
 _OMNI = B.discover_paths()["lfm3-omni-2b"]
 _HAS_OMNI = bool(_OMNI.get("dir") and _OMNI.get("lib") and (Path(_OMNI["dir"]) / "tokenizer.json").is_file())

@@ -39,6 +39,12 @@ OPTIONAL_META_TOOLS = frozenset({"todowrite", "todo_write", "task", "lsp"})
 _WEB_INTENT_RE = re.compile(r"(?:https?://|\bweb\b|\burl\b|\bfetch\s+http|\bbrowser\b|\bonline\b)", re.IGNORECASE)
 _LSP_INTENT_RE = re.compile(r"(?:\blsp\b|\bgo\s*to\s*definition\b|\bfind\s*references\b|\bsymbol\b)", re.IGNORECASE)
 _SUBAGENT_INTENT_RE = re.compile(r"(?:\bsubagent\b|\bdelegate\b|\bparallel\s+agent\b|\btodo\s*list\b)", re.IGNORECASE)
+_RE_INTENT_RE = re.compile(
+    r"(?:\belf\b|\bbinary\b|\bbinaries\b|\bdisassembl|\bdecompil|\breverse[\s-]*engineer|"
+    r"\bobjdump\b|\breadelf\b|\bhexdump\b|\bopcode|\bx86\b|\baarch64\b|\bstripped\b|"
+    r"\brea\b|\bmalware\b|\bfirmware\b|\.(?:so|dll|exe|bin|o)\b)",
+    re.IGNORECASE,
+)
 
 _ERROR_MARKER_RE = re.compile(
     r"(?:\berror\b|\bexception\b|\btraceback\b|\bfailed\b|\b404\b|\b403\b|\b500\b|"
@@ -64,6 +70,17 @@ def _extract_initial_intent_text(messages: list[dict[str, Any]]) -> str:
             seen_user = True
             break
     return "\n".join(parts)
+
+
+def _extract_first_user_text(messages: list[dict[str, Any]]) -> str:
+    """Read ONLY the first user message (excluding client system boilerplate) for domain MCP gating."""
+    for m in messages:
+        if str(m.get("role") or "") == "user":
+            c = m.get("content")
+            if isinstance(c, list):
+                return " ".join(str(x.get("text") or "") for x in c if isinstance(x, dict))
+            return str(c or "")
+    return ""
 
 
 def _compact_tool_schema(tool: dict[str, Any]) -> dict[str, Any]:
@@ -100,10 +117,12 @@ def prune_tools_for_session(
         return tools, {"tools_in": 0, "tools_out": 0}
 
     intent = _extract_initial_intent_text(messages)
+    first_user = _extract_first_user_text(messages)
     is_small_2b = "omni-2b" in model_id or "2b" in model_id
     want_web = (not is_small_2b) and bool(_WEB_INTENT_RE.search(intent))
     want_lsp = (not is_small_2b) and bool(_LSP_INTENT_RE.search(intent))
     want_meta = (not is_small_2b) and bool(_SUBAGENT_INTENT_RE.search(intent))
+    want_re = (not is_small_2b) and bool(_RE_INTENT_RE.search(first_user))
 
     kept: list[dict[str, Any]] = []
     dropped_names: list[str] = []
@@ -111,6 +130,17 @@ def prune_tools_for_session(
         fn = t.get("function") if isinstance(t, dict) else None
         name = str((fn or {}).get("name") or "").strip()
         low = name.lower()
+        desc_low = str((fn or {}).get("description") or "").lower()
+        is_re_mcp_tool = (
+            low not in CORE_WORKSPACE_TOOLS
+            and (
+                low.startswith(("rea_", "rea-", "mcp__rea", "mcp_rea"))
+                or any(
+                    kw in desc_low or kw in low
+                    for kw in ("disassembl", "decompil", "reverse engineer", "ghidra", "radare", "rizin", "objdump", "elf ", "pe/coff")
+                )
+            )
+        )
         keep = True
         if low in OPTIONAL_WEB_TOOLS and not want_web:
             keep = False
@@ -119,6 +149,8 @@ def prune_tools_for_session(
         elif low in OPTIONAL_META_TOOLS and low != "lsp" and not want_meta:
             keep = False
         elif low.startswith(("notebook", "browser_")) and not want_web:
+            keep = False
+        elif is_re_mcp_tool and not want_re:
             keep = False
 
         if keep:

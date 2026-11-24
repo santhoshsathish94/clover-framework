@@ -25,6 +25,12 @@ from pathlib import Path
 from typing import Any, Callable
 
 import skill_loader as sl
+import studio_epistemic_memory as sem_mem
+import studio_jepa_router as sjepa
+import studio_ontology_verifier as sonto
+import studio_outcome_verifier as sout
+import studio_semantics_guard as ssem
+import studio_xcruncher_verifier as sxc
 import token_economizer as te
 import tool_grammar as tg
 from backends import MODEL_ALIASES, BackendBase, GenParams, GenResult
@@ -335,6 +341,7 @@ class FusionRouter:
     def __init__(self, backends: dict[str, BackendBase], telemetry: Telemetry | None = None):
         self.backends = backends
         self.telemetry = telemetry or Telemetry()
+        self.epistemic_memory = sem_mem.EpistemicMemoryStore()
 
     def reset_caches(self) -> dict[str, Any]:
         reset_models: list[str] = []
@@ -342,7 +349,8 @@ class FusionRouter:
             if hasattr(be, "reset_cache") and callable(be.reset_cache):
                 be.reset_cache()
                 reset_models.append(mid)
-        return {"reset": reset_models, "count": len(reset_models)}
+        self.epistemic_memory.reset()
+        return {"reset": reset_models, "count": len(reset_models), "epistemic_memory_reset": True}
 
     # -- discovery ---------------------------------------------------------------------------------------------------
     def list_models(self) -> list[dict[str, Any]]:
@@ -453,13 +461,19 @@ class FusionRouter:
         else:
             use_skills_idx = os.environ.get("CLOVER_ENABLE_SKILLS_INDEX", "1") != "0"
 
+        # Security: filesystem paths (`skills_dir`, `s2b_lean_project`) and host subprocess execution (`s2_mode`)
+        # are controlled strictly by server-side environment variables unless local harness explicitly opts in via
+        # `CLOVER_ALLOW_UNSAFE_REQUEST_OVERRIDES=1`.
+        allow_unsafe_req = os.environ.get("CLOVER_ALLOW_UNSAFE_REQUEST_OVERRIDES", "0") == "1"
+
         if use_skills_idx:
             default_skills_dirs = [
                 Path(__file__).resolve().parents[3] / "skills" if len(Path(__file__).resolve().parents) > 3 else Path("/nonexistent"),
                 Path(__file__).resolve().parents[1] / "skills",
                 Path("/opt/clover-k3/skills"),
             ]
-            skills_root = body.get("x_clover_skills_dir") or os.environ.get("CLOVER_SKILLS_DIR") or next(
+            req_skills_dir = body.get("x_clover_skills_dir") if allow_unsafe_req else None
+            skills_root = req_skills_dir or os.environ.get("CLOVER_SKILLS_DIR") or next(
                 (str(p) for p in default_skills_dirs if p.is_dir()), None
             )
             if skills_root:
@@ -470,31 +484,137 @@ class FusionRouter:
                     telem["skills_indexed"] = [e.name for e in entries]
 
         tools_active = bool(tg.active_tools(tools, tool_choice))
+        studio_telem: dict[str, Any] = {}
+
+        # -- Clover Studio Capability Extensions (Phases S1 -> S6, independently gated) -------------------------------
+        use_s1 = (
+            bool(body["x_clover_studio_s1"])
+            if "x_clover_studio_s1" in body
+            else os.environ.get("CLOVER_STUDIO_S1_SEMANTICS", "0") != "0"
+        )
+        s2_mode = str(
+            (body.get("x_clover_studio_s2_mode") if allow_unsafe_req else None)
+            or os.environ.get("CLOVER_STUDIO_S2_MODE", "off")
+        ).strip().lower()
+        if s2_mode not in ("off", "blind", "fast", "lean_elaborate"):
+            s2_mode = "off"
+        s2_lean_proj = str(
+            (body.get("x_clover_studio_s2b_lean_project") if allow_unsafe_req else None)
+            or os.environ.get("CLOVER_STUDIO_S2B_LEAN_PROJECT", "")
+        ).strip()
+        # S3 (`x-cruncher` exact math & BBP Pi verifier) is the sole Studio capability that cleared
+        # the pre-registered AGENTS.md Keep Gate (`0/8 -> 8/8 = +100.0pp` on P3, `0` RH overhead) -> ON by default.
+        # S1, S2, S4, S5, S6 remain available as explicit opt-in extensions (`default OFF`).
+        use_s3 = (
+            bool(body["x_clover_studio_s3"])
+            if "x_clover_studio_s3" in body
+            else os.environ.get("CLOVER_STUDIO_S3_XCRUNCHER", "1") != "0"
+        )
+        use_s4 = (
+            bool(body["x_clover_studio_s4"])
+            if "x_clover_studio_s4" in body
+            else os.environ.get("CLOVER_STUDIO_S4_ONTOLOGY", "0") != "0"
+        )
+        use_s5 = (
+            bool(body["x_clover_studio_s5"])
+            if "x_clover_studio_s5" in body
+            else os.environ.get("CLOVER_STUDIO_S5_MEMORY", "0") != "0"
+        )
+        use_s6 = (
+            bool(body["x_clover_studio_s6"])
+            if "x_clover_studio_s6" in body
+            else os.environ.get("CLOVER_STUDIO_S6_JEPA", "0") != "0"
+        )
+
+        declined_set: set[str] = set()
+        if use_s1:
+            tools, tool_choice, s1_pre = ssem.apply_pre_semantics_guard(messages, tools, tool_choice)
+            declined_set = set(s1_pre.get("declined_tools") or [])
+            studio_telem["s1_semantics"] = s1_pre
+            tools_active = bool(tg.active_tools(tools, tool_choice))
+
+        if use_s5:
+            messages, s5_meta = self.epistemic_memory.build_ledger_for_messages(messages)
+            studio_telem["s5_epistemic_memory"] = s5_meta
+
+        s3_applicable = False
+        if use_s3:
+            messages, s3_pre = sxc.apply_pre_xcruncher_context(messages)
+            s3_applicable = bool(s3_pre.get("latest_has_math"))
+            if s3_pre.get("pre_injected"):
+                studio_telem["s3_xcruncher_pre"] = s3_pre
+
+        req_params = parse_params(body)
+        if use_s6:
+            adj_max_tok, s6_meta = sjepa.evaluate_jepa_rpre(messages, tools, req_params.max_tokens)
+            req_params.max_tokens = adj_max_tok
+            body = {**body, "max_tokens": adj_max_tok}
+            studio_telem["s6_jepa_rpre"] = s6_meta
+
+        last_user_txt = ""
+        for _m in reversed(messages):
+            if _m.get("role") == "user":
+                _c = _m.get("content")
+                last_user_txt = _c if isinstance(_c, str) else str(_c or "")
+                break
+        s4_applicable = bool(use_s4 and last_user_txt and sonto.evaluate_ontology_closure(last_user_txt) is not None)
+
+        model_ready = (
+            model in self.backends
+            or (model in VIRTUAL_MODELS and all(d in self.backends for d in self._virtual_deps(model)))
+        )
+        post_verifier_enabled = bool(use_s1 or s2_mode != "off" or s3_applicable or s4_applicable)
+        if on_delta is not None and post_verifier_enabled and model_ready:
+            on_delta("")
         streamer = ContentStreamer(on_delta, tools_active) if on_delta else None
+        live_streamer = None if post_verifier_enabled else streamer
         steps: list[StepOutcome] = []
         final: StepOutcome
 
         if model in self.backends:
-            final = self._run(model, "direct", messages, tools, tool_choice, parse_params(body), streamer)
+            final = self._run(model, "direct", messages, tools, tool_choice, req_params, live_streamer)
             steps.append(final)
         elif model == "clover-fusion-standard":
             target, reason = classify_standard(messages, tools, tool_choice)
             telem["route_reason"] = reason
-            final = self._run(target, "single", messages, tools, tool_choice, parse_params(body), streamer)
+            final = self._run(target, "single", messages, tools, tool_choice, req_params, live_streamer)
             steps.append(final)
         elif model == "clover-fusion-high":
-            final = self._cascade(body, messages, tools, tool_choice, streamer, steps, telem)
+            final = self._cascade(body, messages, tools, tool_choice, live_streamer, steps, telem)
         elif model == "clover-fusion-max":
             final = self._critique(body, messages, tools, tool_choice, steps, telem)
         elif model == "clover-egm-elephant":
             msgs = self._with_system(messages, ELEPHANT_SYSTEM)
-            final = self._run("nemotron-3.5-super-vl", "elephant", msgs, tools, tool_choice, parse_params(body),
-                              streamer)
+            final = self._run("nemotron-3.5-super-vl", "elephant", msgs, tools, tool_choice, req_params,
+                              live_streamer)
             steps.append(final)
         elif model == "clover-egm-goldfish":
-            final = self._goldfish(body, messages, tools, tool_choice, streamer, steps, telem)
+            final = self._goldfish(body, messages, tools, tool_choice, live_streamer, steps, telem)
         else:
             raise RouterError(404, f"model '{requested}' not found", "model_not_found")
+
+        # -- Post-generation Studio verifiers (1-turn LCP self-repair ONLY on objective finding) ----------------------
+        if post_verifier_enabled and model != "clover-egm-goldfish":
+            final, messages = self._apply_studio_post_verifiers(
+                final=final,
+                messages=messages,
+                tools=tools,
+                tool_choice=tool_choice,
+                tools_active=tools_active,
+                params=req_params,
+                steps=steps,
+                studio_telem=studio_telem,
+                use_s1=use_s1,
+                declined_set=declined_set,
+                s2_mode=s2_mode,
+                s2_lean_proj=s2_lean_proj,
+                use_s3=s3_applicable,
+                use_s4=s4_applicable,
+            )
+            tools_active = bool(tg.active_tools(tools, tool_choice))
+
+        if studio_telem:
+            telem["studio_extensions"] = studio_telem
 
         content = final.parsed.content
         tool_calls = final.parsed.openai_tool_calls() if tools_active else []
@@ -507,7 +627,12 @@ class FusionRouter:
         else:
             finish = "tool_calls" if tool_calls else "stop"
 
-        if final.result.gen_ids and not final.retried and final.role not in ("revise", "goldfish-structured"):
+        if (
+            final.result.gen_ids
+            and not final.retried
+            and final.role not in ("revise", "goldfish-structured")
+            and not final.role.endswith("-repair")
+        ):
             self.backends[final.model].remember_assistant(content, tool_calls, final.result.gen_ids, messages)
 
         if streamer is not None:
@@ -549,6 +674,114 @@ class FusionRouter:
                  "prompt_tokens_details": {"cached_tokens": cached}}
         return Completion(model=requested or model, content=content, tool_calls=tool_calls, finish_reason=finish,
                           usage=usage, telemetry=telem)
+
+    def _apply_studio_post_verifiers(
+        self,
+        *,
+        final: StepOutcome,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None,
+        tool_choice: Any,
+        tools_active: bool,
+        params: GenParams,
+        steps: list[StepOutcome],
+        studio_telem: dict[str, Any],
+        use_s1: bool,
+        declined_set: set[str],
+        s2_mode: str,
+        s2_lean_proj: str,
+        use_s3: bool,
+        use_s4: bool,
+    ) -> tuple[StepOutcome, list[dict[str, Any]]]:
+        """Run enabled Studio post-generation verifiers (`S1`, `S2`, `S3`, `S4`) with LCP cache preservation."""
+
+        def _repair_once(
+            role_tag: str,
+            repair_prompt: str,
+            repair_max_tokens: int | None = None,
+            disable_tools: bool = False,
+            cap_max_tokens: bool = False,
+        ) -> tuple[StepOutcome, list[dict[str, Any]]]:
+            cur_content = final.parsed.content
+            cur_tcs = final.parsed.openai_tool_calls() if tools_active else []
+            if (
+                final.result.gen_ids
+                and not final.retried
+                and final.role not in ("revise", "goldfish-structured")
+                and not final.role.endswith("-repair")
+            ):
+                self.backends[final.model].remember_assistant(cur_content, cur_tcs, final.result.gen_ids, messages)
+            asst_msg: dict[str, Any] = {"role": "assistant", "content": cur_content}
+            if cur_tcs:
+                asst_msg["tool_calls"] = cur_tcs
+            rep_msgs = list(messages) + [asst_msg, {"role": "user", "content": repair_prompt}]
+            if cap_max_tokens and repair_max_tokens is not None:
+                eff_max = min(max(params.max_tokens, 192), repair_max_tokens)
+            else:
+                eff_max = max(params.max_tokens, repair_max_tokens or params.max_tokens)
+            rep_params = GenParams(
+                max_tokens=eff_max,
+                temperature=params.temperature,
+                top_p=params.top_p,
+                stop=list(params.stop),
+                seed=params.seed,
+            )
+            r_tools = None if disable_tools else tools
+            r_choice = "none" if disable_tools else tool_choice
+            repaired = self._run(final.model, role_tag, rep_msgs, r_tools, r_choice, rep_params, streamer=None)
+            steps.append(repaired)
+            return repaired, rep_msgs
+
+        cur_tcs = final.parsed.openai_tool_calls() if tools_active else []
+
+        # S1: Post-generation declined-tool safety net + non-answer / truncated-promise continuation
+        if use_s1:
+            if declined_set and cur_tcs:
+                violated = [tc["function"]["name"] for tc in cur_tcs if tc["function"]["name"] in declined_set]
+                if violated:
+                    studio_telem.setdefault("s1_semantics", {})["stripped_declined_calls"] = violated
+                    final, messages = _repair_once(
+                        "s1-declined-tool-repair",
+                        f"Tool(s) {violated} were explicitly forbidden by the user. Answer directly without calling {violated}.",
+                        disable_tools=(len(violated) == len(cur_tcs) and not tools),
+                    )
+                    cur_tcs = final.parsed.openai_tool_calls() if tools_active else []
+            s1_cont = ssem.check_non_answer_or_truncated_promise(
+                messages, final.parsed.content, cur_tcs, final.result.finish_reason
+            )
+            if s1_cont:
+                studio_telem.setdefault("s1_semantics", {})["non_answer_repaired"] = True
+                final, messages = _repair_once("s1-non-answer-repair", s1_cont, repair_max_tokens=640, disable_tools=True)
+                cur_tcs = []
+
+        # S2: Outcome Self-Verifier (`blind` | `fast` | `lean_elaborate`)
+        if s2_mode != "off" and not cur_tcs:
+            s2_finding, s2_status = sout.check_outcome_cycle(
+                s2_mode, messages, final.parsed.content, cur_tcs, lean_project_dir=s2_lean_proj
+            )
+            studio_telem["s2_outcome_cycle"] = {"mode": s2_mode, "status": s2_status, "repaired": bool(s2_finding)}
+            if s2_finding:
+                final, messages = _repair_once(f"s2-{s2_mode}-repair", s2_finding, repair_max_tokens=640, disable_tools=True)
+
+        # S3: Native C11 `x-cruncher` exact math & BBP Pi verifier
+        if use_s3 and not cur_tcs:
+            s3_repair, s3_meta = sxc.check_xcruncher_math(messages, final.parsed.content, cur_tcs)
+            studio_telem["s3_xcruncher"] = s3_meta
+            if s3_repair:
+                final, messages = _repair_once(
+                    "s3-xcruncher-repair", s3_repair, repair_max_tokens=384, disable_tools=True, cap_max_tokens=True
+                )
+
+        # S4: Symbolic Ontology Deductive Closure & Constraint Verifier
+        if use_s4 and not cur_tcs:
+            s4_repair, s4_meta = sonto.check_symbolic_ontology(messages, final.parsed.content, cur_tcs)
+            studio_telem["s4_ontology"] = s4_meta
+            if s4_repair:
+                final, messages = _repair_once(
+                    "s4-ontology-repair", s4_repair, repair_max_tokens=256, disable_tools=True, cap_max_tokens=True
+                )
+
+        return final, messages
 
     @staticmethod
     def _with_system(messages: list[dict[str, Any]], extra: str) -> list[dict[str, Any]]:

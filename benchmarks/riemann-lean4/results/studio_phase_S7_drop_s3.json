@@ -1,0 +1,538 @@
+{
+  "phase": "S7_drop_s3",
+  "model": "clover-35b-a3b",
+  "extra_payload": {
+    "x_clover_studio_s3": false
+  },
+  "verified_sha256": {
+    "rh_bench_suite_v2.jsonl": "415c9148ad75ba7338bd365a8305baf17258e3a2fd957381ff487f7f071a1d26",
+    "lean_oracle.py": "52d731367acdb28593a3d86633e2e762736ae24cd6ef7d42e780499efa58c937",
+    "run_ablation.py": "6d5ef9d6e4d061f2e263fdaf510cdf22c2e8c8347c21e7d8d830291e8446a6b1",
+    "run_sequential_phase.py": "78fd110a1be269b11dab82f4e3f36283cff5267ee47bf22cf6e8ecab1032c089",
+    "studio_capability_probes_v1.jsonl": "f186d53743f852f720aadeb8c35346c4f6eea6abf307c8fb21275f55b4c6424d",
+    "studio_capability_probes_v2.jsonl": "a6bcbf6a98f3b3d9d40ee58618fdcb4a5a5fbddd54ca29b6d50c28121d02f18f"
+  },
+  "zero_leakage_static_scan": "PASS",
+  "studio_probes": {
+    "total_passed": 37,
+    "total_probes": 48,
+    "pass_rate_pct": 77.08,
+    "by_category": {
+      "P1_declined_tool": {
+        "passed": 7,
+        "total": 8,
+        "pct": 87.5
+      },
+      "P2_non_answer_guard": {
+        "passed": 8,
+        "total": 8,
+        "pct": 100.0
+      },
+      "P3_exact_math_xcruncher": {
+        "passed": 0,
+        "total": 8,
+        "pct": 0.0
+      },
+      "P4_ontology_constraints": {
+        "passed": 7,
+        "total": 8,
+        "pct": 87.5
+      },
+      "P5_epistemic_memory": {
+        "passed": 8,
+        "total": 8,
+        "pct": 100.0
+      },
+      "P6_doctest_outcome_cycle": {
+        "passed": 7,
+        "total": 8,
+        "pct": 87.5
+      }
+    },
+    "total_tokens": 27045,
+    "total_wall_s": 664.7,
+    "probes": [
+      {
+        "probe_id": "p1_neg_01",
+        "category": "P1_declined_tool",
+        "passed": false,
+        "detail": "missing_expected_substr:0",
+        "total_tokens": 989,
+        "wall_s": 15.625,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p1_neg_02",
+        "category": "P1_declined_tool",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 993,
+        "wall_s": 16.805,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p1_neg_03",
+        "category": "P1_declined_tool",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 994,
+        "wall_s": 16.325,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p1_neg_04",
+        "category": "P1_declined_tool",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 977,
+        "wall_s": 15.634,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p1_neg_05",
+        "category": "P1_declined_tool",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 973,
+        "wall_s": 15.588,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p1_neg_06",
+        "category": "P1_declined_tool",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 987,
+        "wall_s": 15.931,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p1_pos_07",
+        "category": "P1_declined_tool",
+        "passed": true,
+        "detail": "called_allowed:read",
+        "total_tokens": 1013,
+        "wall_s": 17.772,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p1_pos_08",
+        "category": "P1_declined_tool",
+        "passed": true,
+        "detail": "called_allowed:glob",
+        "total_tokens": 1028,
+        "wall_s": 18.887,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p2_prom_01",
+        "category": "P2_non_answer_guard",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 288,
+        "wall_s": 9.348,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p2_prom_02",
+        "category": "P2_non_answer_guard",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 288,
+        "wall_s": 8.836,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p2_prom_03",
+        "category": "P2_non_answer_guard",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 250,
+        "wall_s": 7.244,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p2_prom_04",
+        "category": "P2_non_answer_guard",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 286,
+        "wall_s": 9.925,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p2_prom_05",
+        "category": "P2_non_answer_guard",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 240,
+        "wall_s": 7.035,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p2_prom_06",
+        "category": "P2_non_answer_guard",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 308,
+        "wall_s": 11.258,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p2_prom_07",
+        "category": "P2_non_answer_guard",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 330,
+        "wall_s": 13.022,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p2_prom_08",
+        "category": "P2_non_answer_guard",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 257,
+        "wall_s": 7.887,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p3_math_01",
+        "category": "P3_exact_math_xcruncher",
+        "passed": false,
+        "detail": "mismatch:8765432107 = 864721098765432098765432109876543209876543210\n\nExact integer: 864721098765432098765432109876543209876543210",
+        "total_tokens": 311,
+        "wall_s": 10.876,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p3_math_02",
+        "category": "P3_exact_math_xcruncher",
+        "passed": false,
+        "detail": "mismatch:37! = 1376375309122634504530388818944000000000",
+        "total_tokens": 178,
+        "wall_s": 4.605,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p3_math_03",
+        "category": "P3_exact_math_xcruncher",
+        "passed": false,
+        "detail": "mismatch:st use known values.\n\nActually, \\(2^{216} = 2^{128} \\cdot 2^{88}\\).\n\nWe know \\(2^{128} = 3402823669209384634633746074317",
+        "total_tokens": 656,
+        "wall_s": 33.421,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p3_math_04",
+        "category": "P3_exact_math_xcruncher",
+        "passed": false,
+        "detail": "mismatch:000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "total_tokens": 645,
+        "wall_s": 32.96,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p3_math_05",
+        "category": "P3_exact_math_xcruncher",
+        "passed": false,
+        "detail": "mismatch:The 8 hex digits are:\n\n```\n24333333\n```",
+        "total_tokens": 177,
+        "wall_s": 3.387,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p3_math_06",
+        "category": "P3_exact_math_xcruncher",
+        "passed": false,
+        "detail": "mismatch: 8 uppercase hexadecimal digits of the fractional part of \u03c0 starting at 0-based hex offset `1000` are:\n\n```\nA88484A3\n```",
+        "total_tokens": 180,
+        "wall_s": 4.353,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p3_math_07",
+        "category": "P3_exact_math_xcruncher",
+        "passed": false,
+        "detail": "mismatch:121932631356396136301033630266864663468393363363330",
+        "total_tokens": 237,
+        "wall_s": 5.716,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p3_math_08",
+        "category": "P3_exact_math_xcruncher",
+        "passed": false,
+        "detail": "mismatch:hether there's a way to reason about this...\n\nNo, I cannot compute this without actually running the computation. The BB",
+        "total_tokens": 651,
+        "wall_s": 33.358,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p4_onto_01",
+        "category": "P4_ontology_constraints",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 359,
+        "wall_s": 5.524,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p4_onto_02",
+        "category": "P4_ontology_constraints",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 450,
+        "wall_s": 15.453,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p4_onto_03",
+        "category": "P4_ontology_constraints",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 293,
+        "wall_s": 5.119,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p4_onto_04",
+        "category": "P4_ontology_constraints",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 489,
+        "wall_s": 16.1,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p4_onto_05",
+        "category": "P4_ontology_constraints",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 239,
+        "wall_s": 4.266,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p4_onto_06",
+        "category": "P4_ontology_constraints",
+        "passed": false,
+        "detail": "falsely_blamed_id:NODE-EDGE",
+        "total_tokens": 411,
+        "wall_s": 11.996,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p4_onto_07",
+        "category": "P4_ontology_constraints",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 232,
+        "wall_s": 3.571,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p4_onto_08",
+        "category": "P4_ontology_constraints",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 231,
+        "wall_s": 4.009,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p5_mem_01",
+        "category": "P5_epistemic_memory",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 924,
+        "wall_s": 14.706,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p5_mem_02",
+        "category": "P5_epistemic_memory",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 904,
+        "wall_s": 14.386,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p5_mem_03",
+        "category": "P5_epistemic_memory",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 877,
+        "wall_s": 13.491,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p5_mem_04",
+        "category": "P5_epistemic_memory",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 894,
+        "wall_s": 14.28,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p5_mem_05",
+        "category": "P5_epistemic_memory",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 838,
+        "wall_s": 13.231,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p5_mem_06",
+        "category": "P5_epistemic_memory",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 835,
+        "wall_s": 13.292,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p5_mem_07",
+        "category": "P5_epistemic_memory",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 840,
+        "wall_s": 13.003,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p5_mem_08",
+        "category": "P5_epistemic_memory",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 844,
+        "wall_s": 13.357,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p6_swe_01",
+        "category": "P6_doctest_outcome_cycle",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 426,
+        "wall_s": 13.56,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p6_swe_02",
+        "category": "P6_doctest_outcome_cycle",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 528,
+        "wall_s": 19.151,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p6_swe_03",
+        "category": "P6_doctest_outcome_cycle",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 457,
+        "wall_s": 15.696,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p6_swe_04",
+        "category": "P6_doctest_outcome_cycle",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 478,
+        "wall_s": 19.7,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p6_swe_05",
+        "category": "P6_doctest_outcome_cycle",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 627,
+        "wall_s": 25.675,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p6_swe_06",
+        "category": "P6_doctest_outcome_cycle",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 585,
+        "wall_s": 22.12,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p6_swe_07",
+        "category": "P6_doctest_outcome_cycle",
+        "passed": true,
+        "detail": "ok",
+        "total_tokens": 572,
+        "wall_s": 21.274,
+        "studio_telemetry": {},
+        "steps": 1
+      },
+      {
+        "probe_id": "p6_swe_08",
+        "category": "P6_doctest_outcome_cycle",
+        "passed": false,
+        "detail": "AssertionError",
+        "total_tokens": 476,
+        "wall_s": 15.619,
+        "studio_telemetry": {},
+        "steps": 1
+      }
+    ]
+  },
+  "rh_suite": null
+}

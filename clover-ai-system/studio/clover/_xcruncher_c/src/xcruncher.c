@@ -4525,13 +4525,18 @@ XC_TARGET_AVX2 static void pi_huvent_avx2_chunk(int64_t E_top, uint64_t k_beg, u
         __m256d inv_lo2 = _mm256_mul_pd(_mm256_fnmadd_pd(inv_lo, md_lo, one), inv_lo);
         __m256d inv_hi2 = _mm256_mul_pd(_mm256_fnmadd_pd(inv_hi, md_hi, one), inv_hi);
         uint64_t e = (uint64_t)(E_top - 12 * (int64_t)k);
-        int top_b = 63 - __builtin_clzll(e);
-        __m256d rx_lo = _mm256_fnmadd_pd(_mm256_round_pd(_mm256_mul_pd(_mm256_set1_pd(2.0), inv_lo), 0x08), md_lo, _mm256_set1_pd(2.0));
-        __m256d rx_hi = _mm256_fnmadd_pd(_mm256_round_pd(_mm256_mul_pd(_mm256_set1_pd(2.0), inv_hi), 0x08), md_hi, _mm256_set1_pd(2.0));
-        for (int b = top_b - 1; b >= 0; b--) {
-            rx_lo = dekker_mod_sqr_ymm(rx_lo, md_lo, inv_lo, inv_lo2);
-            rx_hi = dekker_mod_sqr_ymm(rx_hi, md_hi, inv_hi, inv_hi2);
-            if ((e >> b) & 1ULL) { rx_lo = _mm256_add_pd(rx_lo, rx_lo); rx_hi = _mm256_add_pd(rx_hi, rx_hi); }
+        __m256d rx_lo, rx_hi;
+        if (e == 0ULL) {
+            rx_lo = one; rx_hi = one;
+        } else {
+            int top_b = 63 - __builtin_clzll(e);
+            rx_lo = _mm256_fnmadd_pd(_mm256_round_pd(_mm256_mul_pd(_mm256_set1_pd(2.0), inv_lo), 0x08), md_lo, _mm256_set1_pd(2.0));
+            rx_hi = _mm256_fnmadd_pd(_mm256_round_pd(_mm256_mul_pd(_mm256_set1_pd(2.0), inv_hi), 0x08), md_hi, _mm256_set1_pd(2.0));
+            for (int b = top_b - 1; b >= 0; b--) {
+                rx_lo = dekker_mod_sqr_ymm(rx_lo, md_lo, inv_lo, inv_lo2);
+                rx_hi = dekker_mod_sqr_ymm(rx_hi, md_hi, inv_hi, inv_hi2);
+                if ((e >> b) & 1ULL) { rx_lo = _mm256_add_pd(rx_lo, rx_lo); rx_hi = _mm256_add_pd(rx_hi, rx_hi); }
+            }
         }
         pi_accum_104b_ymm(_mm256_mul_pd(rx_lo, sh_lo), md_lo, inv_lo, &acc_h_lo, &acc_l_lo);
         pi_accum_104b_ymm(_mm256_mul_pd(rx_hi, sh_hi), md_hi, inv_hi, &acc_h_hi, &acc_l_hi);
@@ -4677,7 +4682,7 @@ XC_API int xc_pi_hex_digits(uint64_t hex_offset, char *out_hex, size_t num_digit
         pi_hex_term_range_scalar(B_exp, n_blk6 * 6ULL, k_lim + 12ULL, &tail_sum);
         u104_add_u104(&global_sum, tail_sum.hi52, tail_sum.lo52);
     } else if (xc_detect_isa() >= XC_ISA_AVX2 && E_top >= 120 && hex_offset <= (1ULL << 42)) {
-        const uint64_t k_vec = k_lim + 1ULL;
+        const uint64_t k_vec = k_lim;
         const uint64_t chunk_k = 1024ULL;
         const int n_chunks = (int)((k_vec + chunk_k - 1ULL) / chunk_k);
         int max_t = xc_compute_threads();
@@ -4701,7 +4706,7 @@ XC_API int xc_pi_hex_digits(uint64_t hex_offset, char *out_hex, size_t num_digit
     } else
 #elif XC_HAS_ARM_NEON
     if (E_top >= 120 && hex_offset <= (1ULL << 42)) {
-        const uint64_t k_vec = k_lim + 1ULL;
+        const uint64_t k_vec = k_lim;
         const uint64_t chunk_k = 1024ULL;
         const int n_chunks = (int)((k_vec + chunk_k - 1ULL) / chunk_k);
         int max_t = xc_compute_threads();

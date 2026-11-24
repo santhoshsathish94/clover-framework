@@ -1,0 +1,19 @@
+{
+  "opencode_cli_rc": 0,
+  "opencode_cli_wall_s": 94.2,
+  "contains_demo_add_zero": true,
+  "contains_exact_37_factorial": true,
+  "opencode_output_tail": "Theorem name: `demo_add_zero`\n\n37! = 13763753091226345046315979581580902400000000\n\n\u001b[0m\n> build \u00b7 clover-35b-a3b\n\u001b[0m\n\u001b[0m\u2192 \u001b[0mRead Demo.lean",
+  "turn2_lcp_step": {
+    "model": "clover-35b-a3b",
+    "role": "direct",
+    "prompt_tokens": 939,
+    "cached_tokens": 913,
+    "prefill_tokens": 26,
+    "completion_tokens": 2,
+    "prefill_ms": 304.31,
+    "decode_ms": 128.52,
+    "cache_hit_pct": 97.23,
+    "backend_kind": "native"
+  }
+}

@@ -613,6 +613,8 @@ def default_mock_responder(model_id: str, prompt_text: str) -> str:
         return f"[{model_id}] observed tool result: {snippet}"
     if role == "user" and "MOCK_CALL_BASH" in text:
         return '<tool_call>\n{"name": "bash", "arguments": {"command": "lake build"}}\n</tool_call>'
+    if "[Native C11 x-cruncher verified exact values" in text:
+        return f"[{model_id}] " + text.split("[Native C11 x-cruncher verified exact values", 1)[1]
     return f"[{model_id}] {text[:80]}"
 
 

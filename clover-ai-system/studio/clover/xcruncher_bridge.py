@@ -68,6 +68,23 @@ def _cache_dir() -> Path:
     return d
 
 
+_PI_KAT_VECTORS: tuple[tuple[int, str], ...] = (
+    (0, "243F6A8885"),
+    (194, "7C9045F12C"),
+    (1000, "49F1C09B07"),
+    (5000, "CAD181156B"),
+)
+
+
+def _verify_lib_kat(lib: ctypes.CDLL) -> None:
+    buf = ctypes.create_string_buffer(16)
+    for off, expected in _PI_KAT_VECTORS:
+        rc = lib.xc_pi_hex_digits(ctypes.c_uint64(off), buf, ctypes.c_size_t(len(expected)))
+        got = buf.value.decode("ascii", errors="replace").upper() if rc == 0 else f"rc={rc}"
+        if got != expected:
+            raise OSError(f"xcruncher KAT self-test failed at offset {off}: got {got}, expected {expected}")
+
+
 def _bind_cdll(path: Path) -> ctypes.CDLL:
     if os.name == "nt" and hasattr(os, "add_dll_directory"):
         os.add_dll_directory(str(path.parent))
@@ -81,6 +98,7 @@ def _bind_cdll(path: Path) -> ctypes.CDLL:
     lib.xc_mul_u64.restype = ctypes.c_int
     lib.xc_pi_hex_digits.argtypes = [ctypes.c_uint64, ctypes.c_char_p, ctypes.c_size_t]
     lib.xc_pi_hex_digits.restype = ctypes.c_int
+    _verify_lib_kat(lib)
     return lib
 
 
@@ -141,6 +159,7 @@ def get_native_lib() -> Optional[ctypes.CDLL]:
                 raw_cdll.xc_mul_u64.restype = ctypes.c_int
                 raw_cdll.xc_pi_hex_digits.argtypes = [ctypes.c_uint64, ctypes.c_char_p, ctypes.c_size_t]
                 raw_cdll.xc_pi_hex_digits.restype = ctypes.c_int
+                _verify_lib_kat(raw_cdll)
                 _LIB = raw_cdll
                 return _LIB
             except OSError:
@@ -160,7 +179,7 @@ def get_native_lib() -> Optional[ctypes.CDLL]:
                 else (["-fopenmp"], [])
             )
             for cc in _candidate_c_compilers():
-                base_cmd = [cc, "-O3", "-std=c11", shared_flag, str(c_src), "-I", str(CSRC_DIR / "include"), "-o", str(out_lib)]
+                base_cmd = [cc, "-O3", "-ffp-contract=off", "-std=c11", shared_flag, str(c_src), "-I", str(CSRC_DIR / "include"), "-o", str(out_lib)]
                 if sys_name == "Windows":
                     base_cmd.extend(["-DXCRUNCHER_BUILD_DLL", "-static"])
                 else:
