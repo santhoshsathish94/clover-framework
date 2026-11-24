@@ -230,7 +230,7 @@
         <li><strong>3. Phone/Laptop Unified GPU (<code>0 GB</code> separate VRAM) vs. Discrete <code>RTX 4090</code> (<code>24 GB</code> GDDR6X + System RAM):</strong>
           <ul>
             <li><strong>Phone (<code>Adreno 740</code>) &amp; 16 GB Laptop (<code>Intel UHD</code>, <code>uma: 1</code>) share system RAM:</strong> There is no separate VRAM chip (Windows exposes up to <code>~8 GB</code> of the 16 GB RAM to the iGPU; Android caps single OpenCL buffers near <code>~2 GB</code>). <code>0.83 GiB</code> <code>LFM3-Omni-2B</code> fits easily in both: using the laptop iGPU speeds up compute-heavy <strong>prefill</strong> (<code>204.7 tok/s</code> Vulkan vs. <code>63.7 tok/s</code> CPU), while <strong>decode</strong> hits the exact same shared RAM wire (<code>12.83 tok/s</code> Vulkan iGPU vs. <code>12.38 tok/s</code> CPU). Putting &ldquo;trunk in iGPU + experts in RAM&rdquo; on unified memory moves zero bytes onto a faster bus.</li>
-            <li><strong>Discrete GPU (<code>RTX 3090 / 4090</code>, <code>24 GB</code> dedicated <code>1,008 GB/s</code> GDDR6X + <code>128 GB</code> DDR5 + NVMe):</strong> Here VRAM is <code>13&times;</code> faster than CPU RAM! Models <code>&le; 18 GiB</code> (<code>2B</code>, <code>35B HG4</code>) fit <strong>100% inside 1&times; 24 GB GPU</strong>; for larger MoEs (<code>120B</code> = <code>5.8 GiB</code> trunk + <code>54.4 GiB</code> experts; <code>2.8T</code> = <code>35 GB</code> trunk/drafter + <code>66.5 GB</code> hot + <code>690 GB</code> cold), pinning the <strong>Trunk + Drafter + Hottest Experts in 24 GB VRAM</strong> while keeping remaining experts in CPU DDR5 / NVMe accelerates every shared layer &amp; draft step on GDDR6X without needing an 8-GPU cluster.</li>
+            <li><strong>Discrete GPU (<code>RTX 3090 / 4090</code>, <code>24 GB</code> dedicated <code>1,008 GB/s</code> GDDR6X + System RAM + NVMe &mdash; measured live on <code>1&times;</code>, <code>4&times;</code> &amp; <code>8&times; RTX 4090</code>):</strong> Here VRAM is <code>13&times;</code> faster than CPU RAM! Models <code>&le; 18 GiB</code> fit <strong>100% inside 1&times; 24 GB GPU</strong> (<code>LFM3-Omni-2B</code> uses <code>854 MiB</code> VRAM at <code>240.2 tok/s</code> decode / <code>4,632.9 tok/s</code> prefill with <code>87/87</code> bit-exact CPU parity; <code>Clover-35B</code> fits in <code>17.16 GiB</code> VRAM at <strong><code>168.35 tok/s</code></strong> vs. <code>12.79 tok/s</code> PCIe-offloaded <code>BF16</code> &mdash; <strong><code>13.2&times;</code> faster on <code>1&times; 4090</code></strong>!). Even when forced into <strong>Trunk-in-VRAM + Experts-in-RAM</strong>, <code>Clover-35B</code> needs only <code>1.68 GiB</code> VRAM to hit <code>45.58 tok/s</code>, <code>Nemotron-120B</code> hits <strong><code>45.79 tok/s</code> on <code>1&times; RTX 4090</code></strong> (and <strong><code>172.22 tok/s</code></strong> all-in-VRAM on <code>4&times; 4090</code>), and <code>Kimi-K3.1-Pro 2.8T</code> reaches <strong><code>7.89 tok/s</code></strong> by overlapping <code>150 GiB</code> VRAM + <code>405 GiB</code> RAM + <code>NVMe</code> simultaneously.</li>
           </ul>
         </li>
       </ul>
@@ -332,7 +332,7 @@ curl -s http://127.0.0.1:8790/v1/chat/completions \
               <li><strong>Phone &mdash; Samsung Galaxy S23 (<code>8 GB</code> LPDDR5X):</strong> <code>HG4-16R</code> runs in RAM at <strong><code>33.35 tok/s</code> decode / <code>97.8 tok/s</code> prefill</strong> (<code>2.0&times;&ndash;2.4&times;</code> faster than <code>llama.cpp Q4_0</code>&rsquo;s <code>13.8&ndash;16.9 tok/s</code> on the same S23; streaming cold off S23&rsquo;s <code>4.22 GB/s</code> UFS 4.0 flash when RAM is full still runs at <code>13.3 tok/s</code> vs. <code>~1.1 tok/s</code> layer-streamed <code>BF16</code>).</li>
               <li><strong>Laptop &mdash; <code>16 GB</code> Intel Core i7-1355U (Shared <code>UMA</code> iGPU):</strong> <code>HG4-16R</code> CPU hits <strong><code>12.38 tok/s</code> decode / <code>63.7 tok/s</code> prefill</strong> (vs. <code>Q4_0</code> CPU <code>11.96</code> / <code>37.1 tok/s</code>; shared Vulkan iGPU hits <code>204.7 tok/s</code> prefill and <code>12.83 tok/s</code> decode on the same DDR bus).</li>
               <li><strong>CPU Server &mdash; <code>128 GB</code> Ryzen 9 7950X3D:</strong> <code>BF16</code> <code>10.8 tok/s</code> &rarr; <code>Q4_0</code> <code>42.8 tok/s</code> &rarr; <strong><code>HG4-16R</code> <code>50.3 tok/s</code> decode / <code>1,347 tok/s</code> prefill</strong> (and identical <code>48.7 tok/s</code> under a <code>2 GB</code> RAM cap &mdash; <code>+0.0 tok/s</code> from extra RAM).</li>
-              <li><strong>GPU &mdash; <code>1&times; RTX 4090</code> (<code>24 GB</code> GDDR6X):</strong> Uses <code>&lt; 1 GB</code> of <code>24 GB</code> VRAM (<code>1,008 GB/s</code> roofline: <code>~205 tok/s</code> <code>BF16</code> &rarr; <strong><code>~740 tok/s</code> <code>HG4-16R</code></strong>).</li>
+              <li><strong>GPU &mdash; <code>1&times; RTX 4090</code> (<code>24 GB</code> GDDR6X, Measured Live):</strong> <code>HG4-16R</code> uses just <strong><code>853.9 MiB</code> VRAM</strong> (leaving <code>23.1 GiB</code> free!) and hits <strong><code>240.2 tok/s</code> decode / <code>4,632.9 tok/s</code> (<code>pp256</code>) prefill</strong> with <strong><code>87 / 87</code> (<code>100.0%</code>) bit-exact token parity vs. C11 CPU</strong> (for comparison, C++ <code>cuBLAS BF16</code> CUDA-Graph hits <code>275.1 tok/s</code> decode using <code>2.92&ndash;4.12 GiB</code> VRAM &mdash; showing that once a tiny <code>2B</code> model already sits inside <code>24 GB</code> GDDR6X, both <code>BF16</code> and <code>HG4</code> are kernel-latency bound while <code>HG4</code> cuts VRAM <code>3.5&times;&ndash;4.8&times;</code>).</li>
             </ul>
           </li>
           <li><strong>Accuracy:</strong> Held-out <code>PPL = 29.06</code> vs. <code>BF16</code> <code>28.81</code> (<code>+0.25</code> drift &mdash; <strong><code>8.0&times;</code> closer to <code>BF16</code> than <code>Q4_0</code>&rsquo;s <code>30.78</code></strong>) &middot; <code>30 / 30</code> Studio Quality Gate PASS &middot; <a href="https://huggingface.co/Santhoshsathish94/LFM3-Omni-2B-HG4-16R" target="_blank" rel="noopener noreferrer"><strong>Hugging Face Repo &rarr;</strong></a></li>
@@ -395,7 +395,7 @@ The total capacity is 72 kilowatts.</code></pre>
         <ul>
           <li><strong>Size:</strong> <code>~66.0 GiB</code> (<code>BF16</code>) &rarr; <code>20.78 GiB</code> (<code>llama.cpp Q4_K_M</code>, <code>-45.2 GiB</code>) &rarr; <strong><code>17.41 GiB</code> (<code>HG4-16R-OP</code>, <code>-48.6 GiB</code> + <code>84.6 MB</code> lossless <code>precomputed_ops/</code>)</strong></li>
           <li><strong>32 GB vs. 128 GB RAM &amp; Exact Method Gain (16T CPU):</strong> In <code>16&ndash;32 GB</code> RAM, <code>BF16</code> (<code>66 GiB</code>) must stream layers off NVMe (<code>~1.1 tok/s</code>) whereas <code>HG4-16R-OP</code> (<code>17.4 GiB</code>) fits in 32 GB RAM (or keeps its <code>1.8 GiB</code> trunk in 16 GB RAM while switching only active experts). On <code>128 GB</code> RAM: <code>BF16</code> <code>~3.8 tok/s</code> &rarr; <code>Q4_K_M</code> <code>12.75 tok/s</code> (<strong><code>+8.95 tok/s</code></strong>) &rarr; <strong><code>Clover HG4-16R-OP</code> <code>16.58 tok/s</code> (<code>+3.83 tok/s</code> = <code>+30.0%</code> over <code>Q4_K_M</code>, <code>+12.78 tok/s</code> over <code>BF16</code>)</strong>.</li>
-          <li><strong><code>RTX 3090</code> &amp; <code>RTX 4090</code> (<code>24 GB</code> VRAM):</strong> <code>BF16</code> (<code>66 GiB</code>) must offload experts to CPU RAM (<code>~4.2 tok/s</code>) or span <code>3&ndash;4&times; 24 GB</code> GPUs; <code>Q4_K_M</code> (<code>20.8 GiB</code>) leaves <code>&lt; 2 GB</code> for KV cache; <strong><code>HG4-16R-OP</code> (<code>17.41 GiB</code>) fits 100% inside <code>1&times; RTX 3090</code> or <code>1&times; RTX 4090</code> with <code>~6.5 GB</code> context headroom</strong> (GDDR6X roofline: <strong><code>~420 tok/s</code> on <code>1&times; RTX 3090</code> &middot; <code>~455 tok/s</code> on <code>1&times; RTX 4090</code></strong>).</li>
+          <li><strong><code>RTX 4090</code> (<code>24 GB</code> VRAM &mdash; Measured Live):</strong> <code>BF16</code> (<code>68 GiB</code>) cannot fit on <code>1&times; RTX 4090</code> and drops to <code>12.79 tok/s</code> offloading experts to RAM (or requires <code>4&times; RTX 4090</code> to hit <code>103.54 tok/s</code> decode). <strong><code>Clover HG4-16R-OP</code> fits 100% in <code>1&times; RTX 4090</code> (<code>17.16 GiB</code> VRAM, <code>6.8 GiB</code> free) at <code>168.35 tok/s</code> decode / <code>1,469.8 tok/s</code> (<code>pp256</code>) prefill &mdash; <code>13.16&times;</code> faster than <code>BF16</code> on <code>1&times; 4090</code>, and <code>1.63&times;</code> faster on <code>1</code> GPU than <code>BF16</code> on <code>4</code> GPUs!</strong> Even in <code>Trunk-in-VRAM (1.68 GiB) + Experts-in-RAM (15.49 GiB)</code> mode, <code>HG4-16R-OP</code> sustains <strong><code>45.58 tok/s</code> decode / <code>1,469.4 tok/s</code> prefill</strong>.</li>
           <li><strong>Accuracy &amp; Live Agent Proof:</strong> Held-out <code>PPL = 17.92</code> &middot; <strong><code>9 / 23</code> (<code>39.13%</code>)</strong> on Lean 4 RH+SWE+RE &middot; <strong><code>45 / 48</code> (<code>93.75%</code>)</strong> Studio capability probes &middot; <a href="https://huggingface.co/Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP" target="_blank" rel="noopener noreferrer"><strong>Hugging Face Repo &rarr;</strong></a></li>
         </ul>
 <pre class="code" style="margin-top:0.7rem"><code># Verbatim live OpenCode v1.19.6 CLI session against Clover-35B-A3B HG4-16R-OP:
@@ -412,7 +412,7 @@ Theorem name: `demo_add_zero`
         <ul>
           <li><strong>Size:</strong> <code>~240.0 GiB</code> (<code>BF16</code>) &rarr; <code>~72.5 GiB</code> (<code>Standard Q4</code>) &rarr; <strong><code>60.20 GiB</code> (<code>HG4-16R-OP</code>, <code>48.5 ms</code> cold <code>mmap</code> init)</strong></li>
           <li><strong>64 GB vs. 128 GB RAM &amp; Exact Method Gain (16T CPU):</strong> On a <code>64 GB</code> workstation, <code>BF16</code> (<code>240 GiB</code>) and <code>Q4</code> (<code>72.5 GiB</code>) must stream from NVMe while <code>HG4-16R-OP</code> (<code>60.2 GiB</code>) fits 100% in RAM. On <code>128 GB</code> RAM: <code>BF16</code> NVMe-switches at <code>~0.4 tok/s</code> &rarr; <code>HG4-16R T=1</code> runs in RAM at <code>2.57&ndash;3.46 tok/s</code> &rarr; <strong><code>+ Stateful 2L-MTP</code> reaches <code>7.57&ndash;9.20 tok/s</code> (<code>+5.74 tok/s</code> extra from lossless speculative MTP alone, <code>exact_greedy_match = True</code>)</strong>.</li>
-          <li><strong><code>RTX 3090</code> &amp; <code>RTX 4090</code> (<code>24 GB</code> VRAM):</strong> On <code>1&times; RTX 4090 + 64 GB RAM</code>, pinning the <code>5.8 GiB</code> trunk + <code>2L-MTP</code> + hottest experts in VRAM while keeping remaining experts in DDR5 yields <code>~25 tok/s</code>; across <strong><code>3&ndash;4&times; RTX 4090</code> (<code>72&ndash;96 GB</code> VRAM)</strong>, 100% of <code>HG4-16R-OP</code> sits in GDDR6X (<code>~265 tok/s</code> roofline vs. <code>11&times; 24 GB</code> cards needed for <code>BF16</code>).</li>
+          <li><strong><code>RTX 4090</code> (<code>1&times;</code>, <code>4&times;</code> &amp; <code>8&times; 24 GB</code> &mdash; Measured Live):</strong> <code>BF16</code> (<code>~240 GiB</code>) exceeds even <code>8&times; RTX 4090</code> (<code>192 GiB</code> VRAM). With <code>HG4-16R-OP</code>: on <strong><code>1&times; RTX 4090</code> Hybrid</strong> (<code>20.54 GiB</code> trunks + <code>2L-MTP</code> + hot MoE in VRAM + <code>39.4 GiB</code> experts in pinned RAM), decode reaches <strong><code>12.94 tok/s</code> (<code>T=1</code>) &rarr; <code>45.79 tok/s</code> (<code>+ 2L-MTP</code>) on a single 24 GB card</strong>; across <strong><code>4&times; RTX 4090</code> All-in-VRAM (<code>14.56 GiB/GPU</code>)</strong>, it hits <strong><code>71.25 tok/s</code> (<code>T=1</code>) &rarr; <code>172.22 tok/s</code> (<code>+ 2L-MTP</code>) decode and <code>549.2 tok/s</code> prefill</strong> (<code>8&times; 4090</code> at <code>7.28 GiB/GPU</code>: <code>171.78 tok/s</code>).</li>
           <li><strong>Accuracy:</strong> Held-out <code>PPL = 14.84</code> &middot; <strong><code>4 / 4</code> (<code>100.0%</code>)</strong> on Tier-4 Systems SWE (LCP planner, MXFP4 decoder, parser &amp; verifier tasks) &middot; <a href="https://huggingface.co/Santhoshsathish94/Nemotron-3.5-Super-VL-120B-HG4-16R-OP" target="_blank" rel="noopener noreferrer"><strong>Hugging Face Repo &rarr;</strong></a></li>
         </ul>
       </div>
@@ -424,7 +424,7 @@ Theorem name: `demo_add_zero`
         <ul>
           <li><strong>Size:</strong> <code>1,581 GB</code> upstream &rarr; <strong><code>103.85 GB</code> Hot <code>HG4-OP</code> (<code>61 GB</code> active RSS) + <code>690.30 GB</code> Cold <code>HG2</code> on NVMe = <code>791.8 GB</code> total</strong></li>
           <li><strong>128 GB RAM + NVMe &amp; Exact Method Gain:</strong> Upstream <code>1.58 TB</code> page-thrashes below <code>0.05 tok/s</code> &rarr; <code>K31H</code> 93-layer <code>T=1</code> runs at <code>~1.1 tok/s</code> &rarr; <strong><code>+ 5L-DSpark</code> (<code>347.8 draft tok/s</code> in RAM) lifts full 93-layer <code>2.8T</code> verified throughput to <code>2.26 tok/s</code></strong> (<code>draft_k=4 == draft_k=0</code> bit-exact).</li>
-          <li><strong><code>RTX 3090</code> &amp; <code>RTX 4090</code> (<code>24 GB</code> VRAM):</strong> A <code>2.8T</code> model (<code>792 GB</code>) cannot fit inside <code>1&times; 24 GB</code> GPU alone; in hybrid mode, pinning the active <code>HG4</code> trunks + <code>5L-DSpark</code> (<code>~18 GB</code>) on <code>1&times; RTX 3090 / 4090</code> accelerates prefill &amp; drafting <code>~10&times;</code> while cold <code>HG2</code> experts remain bound by PCIe/NVMe read speed (<code>~4&ndash;6 tok/s</code> with Gen5 NVMe RAID; all-VRAM requires <code>10&times; 80 GB</code> / <code>6&times; H200</code> vs. <code>12&ndash;16&times; H200</code> upstream).</li>
+          <li><strong><code>8&times; RTX 4090</code> + Parallel <code>VRAM + RAM + NVMe</code> (Measured Live):</strong> <code>5L-DSpark</code> drafts in VRAM (<code>1.3 GiB</code>) at <strong><code>288.4 tok/s</code></strong>. Keeping <code>93.95 GiB</code> Hot <code>HG4-OP</code> in <code>8&times; 4090</code> VRAM and streaming all Cold <code>HG2</code> experts from NVMe (<code>0 GiB</code> cold RAM) yields <strong><code>1.22 tok/s</code> (<code>T=1</code>) &rarr; <code>4.89 tok/s</code> (<code>+ 5L-DSpark</code>)</strong>. Filling spare VRAM + System RAM + NVMe <strong>in parallel</strong> (<code>149.85 GiB</code> VRAM [<code>94G</code> Hot + <code>8</code> Cold layers] + <code>405.3 GiB</code> RAM [<code>58</code> Cold layers] + <code>26</code> Cold layers streamed concurrently off <code>6.1 GB/s</code> NVMe) lifts verified <code>2.8T</code> throughput to <strong><code>1.89 tok/s</code> (<code>T=1</code>) &rarr; <code>7.89 tok/s</code> (<code>+ 5L-DSpark</code>)</strong>.</li>
           <li><strong>Accuracy &amp; Formal Proof Sample:</strong> Scored <strong><code>12 / 23</code> (<code>52.17%</code>, #1 overall, <code>4/4</code> SWE)</strong> on the frozen Lean 4 <code>RiemannHypothesis</code> + SWE + RE benchmark &middot; <a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Hot-HG4-OP" target="_blank" rel="noopener noreferrer"><strong>HF Hot Repo &rarr;</strong></a> &middot; <a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Cold-HG2-Part1" target="_blank" rel="noopener noreferrer"><strong>Cold Part 1 &rarr;</strong></a> &middot; <a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Cold-HG2-Part2" target="_blank" rel="noopener noreferrer"><strong>Part 2 &rarr;</strong></a> &middot; <a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Cold-HG2-Part3" target="_blank" rel="noopener noreferrer"><strong>Part 3 &rarr;</strong></a></li>
         </ul>
 <pre class="code" style="margin-top:0.7rem"><code>-- Verbatim zero-shot proof generated on CPU by Kimi-K3.1-Pro K31H (rh_t2_short_1_6_03):
@@ -493,7 +493,7 @@ by
 
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">Phone S23, 16 GB Laptop, and 128 GB Server speeds are measured live; RTX 4090 column shows exact 24 GB VRAM fit + GDDR6X roofline.</caption>
+          <caption class="note">Live-measured decode <code>tok/s</code> across Samsung Galaxy S23 (<code>8 GB</code>), Intel Core i7 Laptop (<code>16 GB</code> UMA), Ryzen 9 7950X3D Server (<code>128 GB</code>), and <code>1&times; / 4&times; / 8&times; RTX 4090</code> (<code>24&ndash;192 GB</code> VRAM + <code>503 GB</code> RAM + NVMe); storage-only cells marked <code>~</code> are I/O wire rates.</caption>
           <thead>
             <tr>
               <th scope="col">Model &amp; Method</th>
@@ -510,7 +510,7 @@ by
               <td>UFS stream <code>~1.1</code></td>
               <td>Fits &middot; <code>~3.1</code></td>
               <td>Fits &middot; <code>10.8</code></td>
-              <td>100% VRAM &middot; <code>~205</code></td>
+              <td>2.9G VRAM &middot; <code>275.1</code><br><small>(cuBLAS Graph)</small></td>
               <td>1 card enough</td>
             </tr>
             <tr>
@@ -518,40 +518,40 @@ by
               <td>In RAM &middot; <code>13.8&ndash;16.9</code></td>
               <td><code>12.0</code> CPU / <code>12.8</code> iGPU</td>
               <td>Fits &middot; <code>42.8</code> <small>(+32)</small></td>
-              <td>100% VRAM &middot; <code>~610</code></td>
+              <td>0.98G VRAM &middot; <code>~250</code></td>
               <td>1 card enough</td>
             </tr>
             <tr>
               <th scope="row"><strong>2B &middot; Clover HG4-16R</strong> <small>(0.83 GiB)</small></th>
               <td><strong>In RAM &middot; <code>33.4</code></strong><br><small>(<code>97.8</code> prefill)</small></td>
-              <td><strong><code>12.4</code> CPU</strong><br><small>(<code>63.7</code> prefill)</small></td>
+              <td><strong><code>12.4</code> CPU</strong><br><small>(<code>63.7</code> / <code>204.7</code> iGPU pp)</small></td>
               <td><strong><code>50.3</code></strong> <small>(+39.5 vs BF16)</small><br><small><code>48.7</code> in 2G cap</small></td>
-              <td><strong>100% VRAM &middot; <code>~740</code></strong><br><small>(uses &lt;1 GB VRAM)</small></td>
+              <td><strong>0.83G VRAM &middot; <code>240.2</code></strong><br><small><code>4,633</code> pp &middot; 87/87 exact</small></td>
               <td>1 card enough</td>
             </tr>
             <tr>
-              <th scope="row"><strong>35B</strong> &middot; Original BF16 <small>(66 GiB)</small></th>
+              <th scope="row"><strong>35B</strong> &middot; Original BF16 <small>(68 GiB)</small></th>
               <td>UFS switch <code>~0.6</code></td>
               <td>NVMe switch <code>~1.1</code></td>
               <td>Fits RAM &middot; <code>~3.8</code></td>
-              <td>Trunk VRAM + RAM <code>~4.2</code></td>
-              <td>Fits 4&times; 4090 &middot; <code>~145</code></td>
+              <td>4.4G VRAM + 60G RAM<br><small><strong><code>12.79</code></strong> (PCIe bound)</small></td>
+              <td>Fits 4&times; 4090 &middot; <strong><code>103.5</code></strong><br><small>(<code>16,772</code> pp256)</small></td>
             </tr>
             <tr>
               <th scope="row"><strong>35B</strong> &middot; llama.cpp Q4_K_M <small>(20.8 GiB)</small></th>
               <td>UFS switch <code>~2.1</code></td>
               <td>RAM+NVMe <code>~4.5</code></td>
               <td>Fits RAM &middot; <code>12.75</code></td>
-              <td>Tight 1&times; &middot; <code>~385</code></td>
-              <td>Fits 2&ndash;4&times; &middot; <code>~420</code></td>
+              <td>Tight 20.8G &middot; <code>~135</code></td>
+              <td>Fits 2&ndash;4&times; &middot; <code>~140</code></td>
             </tr>
             <tr>
-              <th scope="row"><strong>35B &middot; Clover HG4-16R-OP</strong> <small>(17.4 GiB)</small></th>
-              <td><strong>1.8G Trunk RAM</strong><br><small>+ UFS exp <code>~2.6</code></small></td>
-              <td><strong>1.8G Trunk + RAM</strong><br><small>partial NVMe <code>~7</code></small></td>
+              <th scope="row"><strong>35B &middot; Clover HG4-16R-OP</strong> <small>(17.2 GiB)</small></th>
+              <td><strong>1.7G Trunk RAM</strong><br><small>+ UFS exp <code>~2.6</code></small></td>
+              <td><strong>1.7G Trunk + RAM</strong><br><small>partial NVMe <code>~7</code></small></td>
               <td><strong>Fits RAM &middot; <code>16.58</code></strong><br><small>(+30% vs Q4_K_M)</small></td>
-              <td><strong>100% in 1&times; 4090!</strong><br><small><code>~455</code> (6.5G free)</small></td>
-              <td><strong>1 card enough</strong><br><small>(4&times; TP &gt;600)</small></td>
+              <td><strong>100% 1&times; 4090 &middot; <code>168.4</code>!</strong><br><small>(<code>45.6</code> w/ 1.7G VRAM)</small></td>
+              <td><strong>1 card beats 4&times; BF16!</strong><br><small>4&times; 4090: <code>167.6</code></small></td>
             </tr>
             <tr>
               <th scope="row"><strong>120B</strong> &middot; Original BF16 <small>(240 GiB)</small></th>
@@ -559,15 +559,15 @@ by
               <td>NVMe stream <code>~0.25</code></td>
               <td>NVMe switch <code>~0.4</code></td>
               <td>PCIe+NVMe <code>~0.5</code></td>
-              <td>Exceeds 8&times; 4090 VRAM</td>
+              <td>Exceeds 8&times; 4090 VRAM<br><small>(240G &gt; 192G)</small></td>
             </tr>
             <tr>
               <th scope="row"><strong>120B &middot; Clover HG4 + 2L-MTP</strong> <small>(60.2 GiB)</small></th>
               <td>Ext SSD <code>~1.2</code></td>
               <td>5.8G Trunk RAM<br><small>+ NVMe exp <code>~2.5</code></small></td>
               <td><strong>100% RAM &middot; <code>7.6&ndash;9.2</code></strong><br><small>(3.58&times; lossless MTP)</small></td>
-              <td><strong>5.8G Trunk+Hot VRAM</strong><br><small>+ 40G RAM exp <code>~25</code></small></td>
-              <td><strong>100% in 4&times; 4090!</strong><br><small><code>~265</code> (96G VRAM)</small></td>
+              <td><strong>20.5G VRAM + 39G RAM</strong><br><small><strong><code>45.79</code></strong> (<code>12.9</code> T=1)</small></td>
+              <td><strong>100% 4&times; 4090 &middot; <code>172.2</code>!</strong><br><small>(<code>71.3</code> T=1 &middot; <code>549</code> pp)</small></td>
             </tr>
             <tr>
               <th scope="row"><strong>2.8T</strong> &middot; Upstream BF16+MXFP4 <small>(1.47 TiB)</small></th>
@@ -582,8 +582,8 @@ by
               <td>1 TB USB-C <code>~0.2</code></td>
               <td>1 TB NVMe <code>~0.6</code></td>
               <td><strong>Hot RAM + NVMe</strong><br><small><code>2.26</code> (<code>347.8</code> draft)</small></td>
-              <td><strong>Trunk+DSpark VRAM</strong><br><small>+ RAM/NVMe <code>~4&ndash;6</code></small></td>
-              <td><strong>104G Hot in 8&times; 4090!</strong><br><small>+ 1 TB NVMe Cold</small></td>
+              <td><strong>Trunk+DSpark VRAM</strong><br><small><code>288.4</code> draft + NVMe</small></td>
+              <td><strong>8&times; 4090 3-Tier &middot; <code>7.89</code>!</strong><br><small>(<code>4.89</code> NVMe-only cold)</small></td>
             </tr>
           </tbody>
         </table>
@@ -819,6 +819,7 @@ python3 benchmarks/riemann-lean4/run_studio_phase.py \
         <div><dt><code>run_ablation.py</code></dt><dd><code>6d5ef9d6e4d061f2e263fdaf510cdf22c2e8c8347c21e7d8d830291e8446a6b1</code></dd></div>
         <div><dt><code>run_sequential_phase.py</code></dt><dd><code>78fd110a1be269b11dab82f4e3f36283cff5267ee47bf22cf6e8ecab1032c089</code></dd></div>
         <div><dt><code>studio_capability_probes_v2.jsonl</code></dt><dd><code>a6bcbf6a98f3b3d9d40ee58618fdcb4a5a5fbddd54ca29b6d50c28121d02f18f</code></dd></div>
+        <div><dt>CUDA <code>RTX 4090</code> Suite &amp; JSON</dt><dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/rtx4090_all4_hg_bench.cu"><code>rtx4090_all4_hg_bench.cu</code></a> &middot; <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/lfm3_hg4_cuda_bench.cu"><code>lfm3_hg4_cuda_bench.cu</code></a> &middot; <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/benchmarks/riemann-lean4/results/rtx4090_hg4_4models_benchmark.json"><code>rtx4090_hg4_4models_benchmark.json</code></a></dd></div>
         <div><dt>Published Result Artifacts</dt><dd><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/benchmarks/riemann-lean4/results"><code>benchmarks/riemann-lean4/results/*.json</code> &rarr;</a></dd></div>
       </dl>
 

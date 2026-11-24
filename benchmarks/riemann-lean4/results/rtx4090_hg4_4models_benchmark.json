@@ -1,0 +1,126 @@
+{
+  "benchmark_suite": "clover_hg_format_rtx4090_live_4models_and_bf16_baselines",
+  "measured_at_utc": "2026-11-24T13:52:00Z",
+  "hardware": {
+    "gpu_model": "8x NVIDIA GeForce RTX 4090 (24564 MiB GDDR6X each = 192 GiB total VRAM, sm_89)",
+    "driver_version": "615.71.09",
+    "cuda_version": "13.2",
+    "cpu_model": "2x AMD EPYC 7742 64-Core Processor (128 cores / 256 threads)",
+    "system_ram_gib": 503,
+    "nvme_model": "1.0 TB WD_BLACK SN850X (6.12 GB/s measured sequential pread)"
+  },
+  "models": {
+    "lfm3_omni_2b": {
+      "hg_repo": "Santhoshsathish94/LFM3-Omni-2B-HG4-16R",
+      "hg4_16r_1x4090_all_vram": {
+        "gpus": 1,
+        "vram_mib": 853.9,
+        "prefill_pp44_tok_s": 3962.1,
+        "prefill_pp256_tok_s": 4632.9,
+        "decode_tok_s": 240.2,
+        "parity_vs_c11_cpu_tokens": "87/87 (100.0% bit-exact)"
+      },
+      "bf16_cublas_graph_1x4090_all_vram": {
+        "gpus": 1,
+        "vram_llm_gib": 2.92,
+        "vram_full_omni_gib": 4.12,
+        "prefill_pp256_tok_s": 41613.2,
+        "decode_tok_s": 275.08,
+        "notes": "Zero-overhead C++ cuBLAS CUDA Graph ceiling; both 2.92 GiB BF16 and 0.83 GiB HG4 fit inside 24 GB VRAM and are kernel-latency bound, while HG4 cuts VRAM 3.5x-4.9x."
+      }
+    },
+    "clover_35b_a3b": {
+      "hg_repo": "Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP",
+      "hg4_16r_op_1x4090_all_vram": {
+        "gpus": 1,
+        "vram_gib": 17.16,
+        "ram_pinned_gib": 0.0,
+        "prefill_pp256_tok_s": 1469.8,
+        "decode_tok_s": 168.35,
+        "speedup_vs_bf16_1x4090": 13.16,
+        "speedup_vs_bf16_4x4090": 1.63
+      },
+      "hg4_16r_op_1x4090_trunk_vram_experts_ram": {
+        "gpus": 1,
+        "vram_gib": 1.68,
+        "ram_pinned_gib": 15.49,
+        "prefill_pp256_tok_s": 1469.4,
+        "decode_tok_s": 45.58,
+        "speedup_vs_bf16_1x4090_hybrid": 3.56
+      },
+      "hg4_16r_op_4x4090_all_vram": {
+        "gpus": 4,
+        "vram_per_gpu_gib": 4.23,
+        "prefill_pp256_tok_s": 1389.0,
+        "decode_tok_s": 167.64
+      },
+      "bf16_cublas_1x4090_trunk_vram_experts_ram": {
+        "gpus": 1,
+        "vram_gib": 4.35,
+        "ram_pinned_gib": 60.0,
+        "prefill_pp256_tok_s": 3265.9,
+        "decode_tok_s": 12.79,
+        "notes": "68.2 GiB BF16 exceeds 24 GB VRAM; trunk in VRAM + 8 active BF16 experts/layer streamed over PCIe 4.0."
+      },
+      "bf16_cublas_4x4090_all_vram": {
+        "gpus": 4,
+        "vram_per_gpu_gib": 15.88,
+        "prefill_pp256_tok_s": 16772.0,
+        "decode_tok_s": 103.54
+      }
+    },
+    "nemotron_3_5_super_vl_120b": {
+      "hg_repo": "Santhoshsathish94/Nemotron-3.5-Super-VL-120B-HG4-16R-OP",
+      "hg4_16r_op_4x4090_all_vram": {
+        "gpus": 4,
+        "vram_per_gpu_gib": 14.56,
+        "ram_pinned_gib": 0.0,
+        "prefill_pp64_tok_s": 549.2,
+        "decode_t1_tok_s": 71.25,
+        "decode_2l_mtp_tok_s": 172.22,
+        "notes": "241 GB BF16 cannot fit all-in-VRAM even on 8x RTX 4090 (192 GiB); HG4-16R-OP fits 100% in 4x RTX 4090 (58.2 GiB)."
+      },
+      "hg4_16r_op_8x4090_all_vram": {
+        "gpus": 8,
+        "vram_per_gpu_gib": 7.28,
+        "ram_pinned_gib": 0.0,
+        "prefill_pp64_tok_s": 547.8,
+        "decode_t1_tok_s": 70.95,
+        "decode_2l_mtp_tok_s": 171.78
+      },
+      "hg4_16r_op_1x4090_hybrid_vram_ram": {
+        "gpus": 1,
+        "vram_gib": 20.54,
+        "ram_pinned_gib": 39.4,
+        "decode_t1_tok_s": 12.94,
+        "decode_2l_mtp_tok_s": 45.79
+      }
+    },
+    "kimi_k3_1_pro_2_8t": {
+      "hg_repos": [
+        "Santhoshsathish94/Kimi-K3.1-Pro-K31H-Hot-HG4-OP",
+        "Santhoshsathish94/Kimi-K3.1-Pro-K31H-Cold-HG2-Part1",
+        "Santhoshsathish94/Kimi-K3.1-Pro-K31H-Cold-HG2-Part2",
+        "Santhoshsathish94/Kimi-K3.1-Pro-K31H-Cold-HG2-Part3"
+      ],
+      "dspark_5l_drafter_in_vram_tok_s": 288.4,
+      "k31h_8x4090_hot_vram_plus_nvme_cold": {
+        "gpus": 8,
+        "vram_total_gib": 93.95,
+        "cold_ram_gib": 0.0,
+        "decode_t1_tok_s": 1.22,
+        "decode_5l_dspark_tok_s": 4.89
+      },
+      "k31h_8x4090_parallel_3tier_vram_ram_nvme_overlapped": {
+        "gpus": 8,
+        "vram_total_gib": 149.85,
+        "cold_ram_gib": 405.3,
+        "nvme_cold_layers": 26,
+        "dspark_draft_tok_s": 287.4,
+        "decode_t1_tok_s": 1.89,
+        "decode_5l_dspark_tok_s": 7.89,
+        "notes": "True simultaneous 3-tier execution: 93.95 GiB Hot HG4-OP + 55.90 GiB (8 layers) Cold HG2 in 8x RTX 4090 VRAM, 58 Cold HG2 layers (405.3 GiB) in System RAM, and 26 Cold HG2 layers streamed concurrently via 16 NVMe pread threads."
+      }
+    }
+  }
+}
