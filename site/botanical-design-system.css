@@ -1193,6 +1193,16 @@ main section.band > .wrap > p.verse__line {
   box-shadow: 0 10px 24px -4px rgba(18, 67, 49, 0.44);
 }
 
+.btn--primary code {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.26);
+}
+
+.data td code {
+  white-space: nowrap;
+}
+
 .btn--plain {
   border-color: transparent;
   background: none;
