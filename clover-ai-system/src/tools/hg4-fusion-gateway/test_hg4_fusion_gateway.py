@@ -774,10 +774,17 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
         obs_many = sxc.extract_prompt_math_obligations(many_in_range)
         self.assertEqual(len(obs_many), 4)
         self.assertLess(time.perf_counter() - t_dos0, 0.25)
-        # Casual exclamation marks ("passed all 100!", "port 8080!") must NEVER trigger factorial obligations:
-        self.assertEqual(sxc.extract_prompt_math_obligations("I finally passed all 100! Can you suggest a celebration idea?"), [])
-        self.assertEqual(sxc.extract_prompt_math_obligations("Server crashed on port 8080! Please check logs."), [])
+        # Casual exclamation marks (even with nearby English "calculate" / "value of" / "Exactly") must NEVER trigger factorial:
+        for casual_excl in (
+            "I finally passed all 100! Can you suggest a celebration idea?",
+            "Server crashed on port 8080! Please check logs.",
+            "Calculate my score: 100!",
+            "I scored 100! Exactly what I needed.",
+            "Value of the team: 50 people, all 100!",
+        ):
+            self.assertEqual(sxc.extract_prompt_math_obligations(casual_excl), [], casual_excl)
         self.assertEqual(len(sxc.extract_prompt_math_obligations("What is 20! exactly?")), 1)
+        self.assertEqual(len(sxc.extract_prompt_math_obligations("Read Demo.lean and state the exact value of 37! with no commas.")), 1)
 
         # 5. Issue #5 & Round-2/3 Issue B: Request-body `x_clover_studio_s2_mode` ignored & AST allowlist blocks `match`/dunder/imports
         c_s2_req = router.complete({
@@ -820,8 +827,11 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
             "```lean\n«IO».Process\n```",
             "```lean\n@[tactic foo]\n```",
             "```lean\nattribute [implemented_by g] f\ntheorem bad : f = true := by native_decide\n```",
+            "```lean\ndef q : Char := '\"'\n#eval 1 + 1\ndef r := \"x\"\ntheorem t : True := trivial\n```",
+            "by native_decide",
+            "by decide +native",
         ):
-            self.assertIsNotNone(sout.verify_lean_surface_fast("Prove in Lean 4: theorem t : True := by", lean_bad))
+            self.assertIsNotNone(sout.verify_lean_surface_fast("Prove in Lean 4: theorem t : True := by", lean_bad), lean_bad)
         # Plain English mentioning "Lean 4" and Lean comments mentioning "elaborates" must NOT false-positive:
         self.assertIsNone(sout.verify_lean_surface_fast("Prove in Lean 4: theorem t : True", "In Lean 4 this closes with `trivial`."))
         self.assertIsNone(sout.verify_lean_surface_fast("Prove in Lean 4: theorem t : True := by", "```lean\n-- this lemma elaborates quickly in Lean 4\ntrivial\n```"))

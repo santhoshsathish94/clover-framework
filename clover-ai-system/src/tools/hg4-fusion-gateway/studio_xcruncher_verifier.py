@@ -129,10 +129,9 @@ _BIG_MUL_RE = re.compile(r"(?<!\d)(\d{12,1200})\s*\*\s*(\d{12,1200})(?!\d)")
 _FACTORIAL_RE = re.compile(
     r"(?:"
     r"`(\d{2,4})\s*!(?!=)`"
-    r"|(?:\bfactorial\b|\bcompute\b|\bcalculate\b|\bevaluate\b|\bexact(?:\s+\w+){0,4}\s+value\s+of\b|\bvalue\s+of\b|\bwhat\s+is\b)[^.!?\n]{0,60}?(?<![\w\d])(\d{2,4})\s*!(?!=)"
-    r"|(?<![\w\d])(\d{2,4})\s*!(?!=)\s*(?:\(\s*\d+\s+factorial\s*\)|\bfactorial\b|\bwith\s+no\s+commas\b|\bexactly\b|=)"
-    r")",
-    re.IGNORECASE,
+    r"|(?i:\b(?:compute|calculate|evaluate|state)\s+(?:only\s+)?(?:the\s+)?(?:exact\s+)?(?:decimal\s+)?(?:value\s+of\s+)?|\b(?:exact\s+(?:decimal\s+)?value\s+of|factorial\s+of)\s+|\bwhat\s+is\s+)(\d{2,4})\s*!(?!=)"
+    r"|(?<![\w\d])(\d{2,4})\s*!(?!=)(?:[ \t]*(?:\(\s*\d+\s+(?i:factorial)\s*\)|=)|[ \t]+(?:with\s+no\s+commas\b|in\s+decimal\b|exactly\s*(?:[?.]|$)))"
+    r")"
 )
 _PI_HEX_RE = re.compile(
     r"(?:exact\s+)?(\d{1,2})\s+(?:uppercase\s+|lowercase\s+)?hex(?:adecimal)?\s+digits\s+of\s+(?:the\s+fractional\s+part\s+of\s+)?pi\b.*?(?:offset|index|position)\s*[`'\"]?(\d{1,12})[`'\"]?",
