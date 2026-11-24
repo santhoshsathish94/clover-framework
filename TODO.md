@@ -200,8 +200,13 @@ Following the canonical Clover Cycle (**`Context → Direction → Execution →
 
 > **Primary-Source Context Document:** [docs/runtime-context/engine-and-architecture/clover-website-hg-format-guide-context.md](docs/runtime-context/engine-and-architecture/clover-website-hg-format-guide-context.md)
 
-- [x] **Step 10.1 — Publish Pre-Converted `HG4-16R-OP` & `K31H` Models to Hugging Face (`Santhoshsathish94/*`):**
-  - Published `Santhoshsathish94/LFM3-Omni-2B-HG4-16R` (`0.91 GB`), `Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP` (`18.80 GB`), `Santhoshsathish94/Nemotron-3.5-Super-VL-120B-HG4-16R-OP` (`64.99 GB`), and `Santhoshsathish94/Kimi-K3.1-Pro-K31H-Hot-HG4-OP` (`103.85 GB`) with model cards, C11 engine sources, tokenizers, and lossless `precomputed_ops/` sidecars (with `Kimi-K3.1-Pro-K31H-Cold-HG2-Part1..3` streaming sequentially).
+- [x] **Step 10.1 — Publish All 7 Pre-Converted `HG4-16R-OP` & `K31H` Repositories (`876.5 GB`) to Hugging Face (`Santhoshsathish94/*`):**
+  - Published 100% of all 4 models across 7 public repositories (`0` errors, ephemeral token deleted after upload):
+    - `Santhoshsathish94/LFM3-Omni-2B-HG4-16R` (`0.91 GB`)
+    - `Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP` (`18.80 GB`)
+    - `Santhoshsathish94/Nemotron-3.5-Super-VL-120B-HG4-16R-OP` (`64.99 GB`)
+    - `Santhoshsathish94/Kimi-K3.1-Pro-K31H-Hot-HG4-OP` (`103.85 GB`)
+    - `Santhoshsathish94/Kimi-K3.1-Pro-K31H-Cold-HG2-Part1` (`232.60 GB`), `Part2` (`232.60 GB`), and `Part3` (`225.10 GB`).
 - [x] **Step 10.2 — Dedicated `cloverframework.com/hg-format/` Guide ([site/hg-format/index.html](site/hg-format/index.html)) & Universal Converter ([clover-ai-system/src/tools/convert_to_hg.py](clover-ai-system/src/tools/convert_to_hg.py)):**
   - Built and Playwright-verified the dedicated `HG Format` engineering guide (`FWHT-128` + `16R` math & SVG diagrams, measured Original `BF16`/`Q4` vs. `HG` CPU `tok/s` speedup chart & table, verbatim greedy `BF16` vs. `HG4-16R` side-by-side sample outputs, standalone downloadable `convert_to_hg.py` CLI script for any Hugging Face `safetensors` checkpoint with `3/3` `-W error` unit tests in [clover-ai-system/src/tools/test_convert_to_hg.py](clover-ai-system/src/tools/test_convert_to_hg.py), 3-minute `/v1` gateway + `OpenCode`/VS Code setup, complete Lean 4 `RiemannHypothesis` + Studio `S0–S7` benchmark tables, and 6-hash reproducible verification commands), unified primary navigation across all 9 navigable site pages (`0` errors in `check-site.py`, `check-links.py`, and `29/29` unit tests), and deployed to `origin/main`.
 
