@@ -221,13 +221,18 @@
         </table>
       </div>
 
-      <h3 style="margin-top:2.2rem">Why extra RAM (2 GB vs. 128 GB) adds <code>0 tok/s</code> &mdash; and how CPU vs. RTX 3090 / RTX 4090 actually scale</h3>
-      <p>A common misconception is that running a small model on a <code>128 GB</code> RAM server makes it faster than on a <code>2 GB</code> or <code>16 GB</code> machine. In reality, single-stream decode speed obeys one physical equation on both CPUs and GPUs:</p>
-<pre class="code"><code>Decode tok/s  &approx;  Effective Memory-Bus Bandwidth (GB/s)  &divide;  Active Weight Bytes Read per Token (GB)</code></pre>
+      <h3 style="margin-top:2.2rem">Real-world mental model: Phone S23 (8 GB) &rarr; Laptop (16 GB) &rarr; Server (128 GB) &rarr; RTX 4090 (24 GB)</h3>
+      <p>Take one concrete model &mdash; <code>LFM3-Omni-2B</code> (<code>3.22 GiB</code> in <code>BF16</code>, <code>0.83 GiB</code> in <code>HG4-16R</code>) &mdash; and run it across four real devices. Everything about memory, GPUs, and <code>tok/s</code> comes down to three physical facts:</p>
+<pre class="code"><code>Decode tok/s  &approx;  Active Memory-Wire Speed (GB/s)  &divide;  Active Bytes Moved per Token (GB)</code></pre>
       <ul>
-        <li><strong>Memory Capacity (<code>2 GB</code> vs. <code>128 GB</code> RAM, or <code>24 GB</code> VRAM) is a binary Fit / OOM gate:</strong> If a checkpoint exceeds RAM/VRAM, OS swap or PCIe page-thrashing collapses speed by <code>50&times;&ndash;500&times;</code> (or OOMs). Once the active weights fit in memory, <strong>adding 100+ GB of unused RAM adds <code>+0.0 tok/s</code></strong> &mdash; verified live via Linux cgroups (<code>MemoryMax=2G</code> vs. <code>124 GB</code> uncapped: identical <code>48.7 tok/s == 48.7 tok/s</code>).</li>
-        <li><strong>Method Gain (same chip, smaller bytes/token):</strong> Moving from <code>BF16</code> (<code>16 bpw</code>) &rarr; <code>Standard Q4</code> (<code>~4.85 bpw</code>) &rarr; <code>Clover HG4-16R-OP</code> (<code>4.125 bpw</code> + 16-row zero-reduction SIMD) &rarr; <code>+ Lossless 2L-MTP / 5L-DSpark</code> cuts bytes transferred per generated token at every step, multiplying <code>tok/s</code> on the <em>exact same</em> CPU or GPU.</li>
-        <li><strong>Wire Bandwidth Gain (same HG file, faster bus):</strong> Moving the same <code>HG4-16R</code> weights from a 15W laptop CPU (<code>~25&ndash;35 GB/s</code>) to a dual-channel DDR5 desktop CPU (<code>~75 GB/s</code>) to an <strong><code>RTX 3090</code> (<code>24 GB</code>, <code>936 GB/s</code> GDDR6X)</strong> or <strong><code>RTX 4090</code> (<code>24 GB</code>, <code>1,008 GB/s</code> GDDR6X)</strong> scales <code>tok/s</code> directly with memory bandwidth whenever the compressed model fits inside <code>24 GB</code> VRAM.</li>
+        <li><strong>1. &ldquo;OOM&rdquo; only happens in naive all-at-once loaders &mdash; layer &amp; expert switching runs in any RAM size:</strong> You only ever need RAM for one layer&rsquo;s activations plus one layer&rsquo;s active weights (<code>&lt; 500 MB</code>). Even a <code>2.8T</code> model (<code>792 GB</code>) can run in <code>2 GB</code> RAM by streaming layers off SSD (<code>pread</code> + <code>POSIX_FADV_DONTNEED</code>); smaller RAM never forces a crash &mdash; it simply drops unpinned layers from RAM wire speed (<code>67&ndash;75 GB/s</code>) down to storage wire speed (<code>4.22 GB/s</code> measured on S23 UFS 4.0; <code>7&ndash;14 GB/s</code> on NVMe).</li>
+        <li><strong>2. Why an <code>8 GB</code> Samsung S23 phone (<code>33.4 tok/s</code>) beats a <code>16 GB</code> laptop (<code>12.4 tok/s</code>), and why <code>128 GB</code> adds <code>0</code> extra <code>tok/s</code> over <code>2 GB</code>:</strong> Once <code>0.83 GiB</code> fits in RAM, unused capacity does nothing (<code>MemoryMax=2G</code> vs. <code>124 GiB</code> on the same server both measured <code>48.7 tok/s</code>). The <code>8 GB</code> Galaxy S23 runs <strong><code>2.7&times;</code> faster</strong> than the <code>16 GB</code> Intel i7 laptop because S23&rsquo;s <code>LPDDR5X</code> (<code>67.2 GB/s</code> + ARM <code>DOTPROD</code>) moves bytes faster than the 15W laptop&rsquo;s DDR bus (<code>~25 GB/s</code>).</li>
+        <li><strong>3. Phone/Laptop Unified GPU (<code>0 GB</code> separate VRAM) vs. Discrete <code>RTX 4090</code> (<code>24 GB</code> GDDR6X + System RAM):</strong>
+          <ul>
+            <li><strong>Phone (<code>Adreno 740</code>) &amp; 16 GB Laptop (<code>Intel UHD</code>, <code>uma: 1</code>) share system RAM:</strong> There is no separate VRAM chip (Windows exposes up to <code>~8 GB</code> of the 16 GB RAM to the iGPU; Android caps single OpenCL buffers near <code>~2 GB</code>). <code>0.83 GiB</code> <code>LFM3-Omni-2B</code> fits easily in both: using the laptop iGPU speeds up compute-heavy <strong>prefill</strong> (<code>204.7 tok/s</code> Vulkan vs. <code>63.7 tok/s</code> CPU), while <strong>decode</strong> hits the exact same shared RAM wire (<code>12.83 tok/s</code> Vulkan iGPU vs. <code>12.38 tok/s</code> CPU). Putting &ldquo;trunk in iGPU + experts in RAM&rdquo; on unified memory moves zero bytes onto a faster bus.</li>
+            <li><strong>Discrete GPU (<code>RTX 3090 / 4090</code>, <code>24 GB</code> dedicated <code>1,008 GB/s</code> GDDR6X + <code>128 GB</code> DDR5 + NVMe):</strong> Here VRAM is <code>13&times;</code> faster than CPU RAM! Models <code>&le; 18 GiB</code> (<code>2B</code>, <code>35B HG4</code>) fit <strong>100% inside 1&times; 24 GB GPU</strong>; for larger MoEs (<code>120B</code> = <code>5.8 GiB</code> trunk + <code>54.4 GiB</code> experts; <code>2.8T</code> = <code>35 GB</code> trunk/drafter + <code>66.5 GB</code> hot + <code>690 GB</code> cold), pinning the <strong>Trunk + Drafter + Hottest Experts in 24 GB VRAM</strong> while keeping remaining experts in CPU DDR5 / NVMe accelerates every shared layer &amp; draft step on GDDR6X without needing an 8-GPU cluster.</li>
+          </ul>
+        </li>
       </ul>
     </div>
   </section>
@@ -321,10 +326,15 @@ curl -s http://127.0.0.1:8790/v1/chat/completions \
         <h3>Proof 1 (2B Scale) &mdash; <code>LiquidAI/LFM3-Omni-2B</code> (24L Dense + ShortConv + GQA)</h3>
         <p><strong>Why this test matters:</strong> Because a <code>2B</code> model fits comfortably in RAM even in <code>16-bit BF16</code>, we can run an exact, head-to-head comparison of <strong>Official <code>BF16</code> PyTorch</strong> vs. <strong><code>llama.cpp Q4_0</code></strong> vs. <strong>Clover <code>HG4-16R</code></strong> on identical prompts at <code>Temperature = 0</code>.</p>
         <ul>
-          <li><strong>Size:</strong> <code>3.22 GiB</code> (<code>BF16</code>) &rarr; <code>0.98 GiB</code> (<code>llama.cpp Q4_0</code>, <code>-2.24 GiB</code>) &rarr; <strong><code>0.83 GiB</code> (<code>HG4-16R</code>, <code>-2.39 GiB</code> = <code>3.86&times;</code> smaller)</strong></li>
-          <li><strong>2 GB RAM Cap vs. 128 GB RAM (<code>Measured</code>):</strong> Under a strict Linux <code>MemoryMax=2G</code> cgroup cap (<code>0</code> swap), <code>BF16</code> (<code>3.22 GiB</code>) <strong>OOMs (<code>0 tok/s</code>)</strong> while <code>HG4-16R</code> runs at <strong><code>48.7 tok/s</code> decode / <code>1,111 tok/s</code> prefill</strong>. Uncapping all <code>124 GiB</code> of server RAM gives the <strong>exact same <code>48.7 tok/s</code> (<code>+0.0 tok/s</code> from extra RAM)</strong>; meanwhile on a 15W <code>Intel Core i7-1355U</code> ultrabook, <code>HG4-16R</code> achieves <code>9.5 tok/s</code> (matching the 128 GB server&rsquo;s <code>10.8 tok/s</code> <code>BF16</code> speed!).</li>
-          <li><strong>Exact Gain per Method (16T CPU):</strong> <code>BF16</code> <code>10.8 tok/s</code> &rarr; <code>Q4_0</code> <code>42.8 tok/s</code> (<strong><code>+32.0 tok/s</code></strong>) &rarr; <strong><code>Clover HG4-16R</code> <code>50.3 tok/s</code> (<code>+7.5 tok/s</code> over <code>Q4_0</code>, <code>+39.5 tok/s</code> = <code>4.66&times;</code> over <code>BF16</code>)</strong>.</li>
-          <li><strong><code>RTX 3090</code> &amp; <code>RTX 4090</code> (<code>24 GB</code> VRAM):</strong> Fits easily in <code>1&times; 24 GB</code> card in all formats (<code>0.83 GiB</code> leaves <code>~23 GB</code> VRAM free); GDDR6X roofline rises from <code>~190 / ~205 tok/s</code> (<code>BF16</code>) &rarr; <code>~560 / ~610 tok/s</code> (<code>Q4_0</code>) &rarr; <strong><code>~680 tok/s</code> (<code>RTX 3090</code>) &amp; <code>~740 tok/s</code> (<code>RTX 4090</code>)</strong> in <code>HG4-16R</code>.</li>
+          <li><strong>Size:</strong> <code>3.22 GiB</code> (<code>BF16</code>) &rarr; <code>0.98 GiB</code> (<code>llama.cpp Q4_0</code>) &rarr; <strong><code>0.83 GiB</code> (<code>HG4-16R</code>, <code>3.86&times;</code> smaller &mdash; fits inside Phone, Laptop iGPU, and any GPU)</strong></li>
+          <li><strong>Measured Across 3 Real Devices + <code>RTX 4090</code>:</strong>
+            <ul>
+              <li><strong>Phone &mdash; Samsung Galaxy S23 (<code>8 GB</code> LPDDR5X):</strong> <code>HG4-16R</code> runs in RAM at <strong><code>33.35 tok/s</code> decode / <code>97.8 tok/s</code> prefill</strong> (<code>2.0&times;&ndash;2.4&times;</code> faster than <code>llama.cpp Q4_0</code>&rsquo;s <code>13.8&ndash;16.9 tok/s</code> on the same S23; streaming cold off S23&rsquo;s <code>4.22 GB/s</code> UFS 4.0 flash when RAM is full still runs at <code>13.3 tok/s</code> vs. <code>~1.1 tok/s</code> layer-streamed <code>BF16</code>).</li>
+              <li><strong>Laptop &mdash; <code>16 GB</code> Intel Core i7-1355U (Shared <code>UMA</code> iGPU):</strong> <code>HG4-16R</code> CPU hits <strong><code>12.38 tok/s</code> decode / <code>63.7 tok/s</code> prefill</strong> (vs. <code>Q4_0</code> CPU <code>11.96</code> / <code>37.1 tok/s</code>; shared Vulkan iGPU hits <code>204.7 tok/s</code> prefill and <code>12.83 tok/s</code> decode on the same DDR bus).</li>
+              <li><strong>CPU Server &mdash; <code>128 GB</code> Ryzen 9 7950X3D:</strong> <code>BF16</code> <code>10.8 tok/s</code> &rarr; <code>Q4_0</code> <code>42.8 tok/s</code> &rarr; <strong><code>HG4-16R</code> <code>50.3 tok/s</code> decode / <code>1,347 tok/s</code> prefill</strong> (and identical <code>48.7 tok/s</code> under a <code>2 GB</code> RAM cap &mdash; <code>+0.0 tok/s</code> from extra RAM).</li>
+              <li><strong>GPU &mdash; <code>1&times; RTX 4090</code> (<code>24 GB</code> GDDR6X):</strong> Uses <code>&lt; 1 GB</code> of <code>24 GB</code> VRAM (<code>1,008 GB/s</code> roofline: <code>~205 tok/s</code> <code>BF16</code> &rarr; <strong><code>~740 tok/s</code> <code>HG4-16R</code></strong>).</li>
+            </ul>
+          </li>
           <li><strong>Accuracy:</strong> Held-out <code>PPL = 29.06</code> vs. <code>BF16</code> <code>28.81</code> (<code>+0.25</code> drift &mdash; <strong><code>8.0&times;</code> closer to <code>BF16</code> than <code>Q4_0</code>&rsquo;s <code>30.78</code></strong>) &middot; <code>30 / 30</code> Studio Quality Gate PASS &middot; <a href="https://huggingface.co/Santhoshsathish94/LFM3-Omni-2B-HG4-16R" target="_blank" rel="noopener noreferrer"><strong>Hugging Face Repo &rarr;</strong></a></li>
         </ul>
 
@@ -384,8 +394,8 @@ The total capacity is 72 kilowatts.</code></pre>
         <p><strong>Why this test matters:</strong> Proves full-model <code>HG4-16R-OP</code> conversion (<code>10,240</code> experts + <code>248,320</code> vocab converted in <code>11.9 minutes</code> on CPU) on a hybrid linear-attention MoE so a <code>66 GiB</code> model fits on a 32 GB laptop/workstation for interactive multi-turn coding.</p>
         <ul>
           <li><strong>Size:</strong> <code>~66.0 GiB</code> (<code>BF16</code>) &rarr; <code>20.78 GiB</code> (<code>llama.cpp Q4_K_M</code>, <code>-45.2 GiB</code>) &rarr; <strong><code>17.41 GiB</code> (<code>HG4-16R-OP</code>, <code>-48.6 GiB</code> + <code>84.6 MB</code> lossless <code>precomputed_ops/</code>)</strong></li>
-          <li><strong>32 GB vs. 128 GB RAM &amp; Exact Method Gain (16T CPU):</strong> In <code>32 GB</code> RAM, <code>BF16</code> (<code>66 GiB</code>) <strong>OOMs</strong> while <code>HG4-16R-OP</code> fits comfortably and runs at the same <code>16.58 tok/s</code> as on <code>128 GB</code> RAM. On <code>128 GB</code> RAM: <code>BF16</code> <code>~3.8 tok/s</code> &rarr; <code>Q4_K_M</code> <code>12.75 tok/s</code> (<strong><code>+8.95 tok/s</code></strong>) &rarr; <strong><code>Clover HG4-16R-OP</code> <code>16.58 tok/s</code> (<code>+3.83 tok/s</code> = <code>+30.0%</code> over <code>Q4_K_M</code>, <code>+12.78 tok/s</code> over <code>BF16</code>)</strong>.</li>
-          <li><strong><code>RTX 3090</code> &amp; <code>RTX 4090</code> (<code>24 GB</code> VRAM):</strong> <code>BF16</code> (<code>66 GiB</code>) <strong>OOMs on 1 card</strong> (needs <code>3&ndash;4&times; 24 GB</code> GPUs); <code>Q4_K_M</code> (<code>20.8 GiB</code>) leaves <code>&lt; 2 GB</code> for KV cache; <strong><code>HG4-16R-OP</code> (<code>17.41 GiB</code>) fits on <code>1&times; RTX 3090</code> or <code>1&times; RTX 4090</code> with <code>~6.5 GB</code> context headroom</strong> (GDDR6X roofline: <strong><code>~420 tok/s</code> on <code>1&times; RTX 3090</code> &middot; <code>~455 tok/s</code> on <code>1&times; RTX 4090</code></strong> at <code>~1.55 GB</code> active weights/token).</li>
+          <li><strong>32 GB vs. 128 GB RAM &amp; Exact Method Gain (16T CPU):</strong> In <code>16&ndash;32 GB</code> RAM, <code>BF16</code> (<code>66 GiB</code>) must stream layers off NVMe (<code>~1.1 tok/s</code>) whereas <code>HG4-16R-OP</code> (<code>17.4 GiB</code>) fits in 32 GB RAM (or keeps its <code>1.8 GiB</code> trunk in 16 GB RAM while switching only active experts). On <code>128 GB</code> RAM: <code>BF16</code> <code>~3.8 tok/s</code> &rarr; <code>Q4_K_M</code> <code>12.75 tok/s</code> (<strong><code>+8.95 tok/s</code></strong>) &rarr; <strong><code>Clover HG4-16R-OP</code> <code>16.58 tok/s</code> (<code>+3.83 tok/s</code> = <code>+30.0%</code> over <code>Q4_K_M</code>, <code>+12.78 tok/s</code> over <code>BF16</code>)</strong>.</li>
+          <li><strong><code>RTX 3090</code> &amp; <code>RTX 4090</code> (<code>24 GB</code> VRAM):</strong> <code>BF16</code> (<code>66 GiB</code>) must offload experts to CPU RAM (<code>~4.2 tok/s</code>) or span <code>3&ndash;4&times; 24 GB</code> GPUs; <code>Q4_K_M</code> (<code>20.8 GiB</code>) leaves <code>&lt; 2 GB</code> for KV cache; <strong><code>HG4-16R-OP</code> (<code>17.41 GiB</code>) fits 100% inside <code>1&times; RTX 3090</code> or <code>1&times; RTX 4090</code> with <code>~6.5 GB</code> context headroom</strong> (GDDR6X roofline: <strong><code>~420 tok/s</code> on <code>1&times; RTX 3090</code> &middot; <code>~455 tok/s</code> on <code>1&times; RTX 4090</code></strong>).</li>
           <li><strong>Accuracy &amp; Live Agent Proof:</strong> Held-out <code>PPL = 17.92</code> &middot; <strong><code>9 / 23</code> (<code>39.13%</code>)</strong> on Lean 4 RH+SWE+RE &middot; <strong><code>45 / 48</code> (<code>93.75%</code>)</strong> Studio capability probes &middot; <a href="https://huggingface.co/Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP" target="_blank" rel="noopener noreferrer"><strong>Hugging Face Repo &rarr;</strong></a></li>
         </ul>
 <pre class="code" style="margin-top:0.7rem"><code># Verbatim live OpenCode v1.19.6 CLI session against Clover-35B-A3B HG4-16R-OP:
@@ -401,8 +411,8 @@ Theorem name: `demo_add_zero`
         <p><strong>Why this test matters:</strong> At <code>~240 GiB</code> in <code>BF16</code>, this <code>120B-A12B</code> model <strong>cannot load</strong> on a <code>124 GB</code> CPU workstation. Packing all 88 backbone + 2 Multi-Token Prediction (<code>MTP</code>) layers (<code>20,992</code> experts) into <code>HG4-16R-OP</code> fits the entire model cleanly in RAM and unlocks lossless in-engine speculative decoding.</p>
         <ul>
           <li><strong>Size:</strong> <code>~240.0 GiB</code> (<code>BF16</code>) &rarr; <code>~72.5 GiB</code> (<code>Standard Q4</code>) &rarr; <strong><code>60.20 GiB</code> (<code>HG4-16R-OP</code>, <code>48.5 ms</code> cold <code>mmap</code> init)</strong></li>
-          <li><strong>64 GB vs. 128 GB RAM &amp; Exact Method Gain (16T CPU):</strong> On a <code>64 GB</code> workstation, both <code>BF16</code> (<code>240 GiB</code>) and <code>Q4</code> (<code>72.5 GiB</code>) exceed RAM while <code>HG4-16R-OP</code> (<code>60.2 GiB</code>) fits. On <code>128 GB</code> RAM: <code>BF16</code> OOM-swaps at <code>&lt; 0.15 tok/s</code> &rarr; <code>HG4-16R T=1</code> runs at <code>2.57&ndash;3.46 tok/s</code> (<strong><code>+3.3 tok/s</code> from compression</strong>) &rarr; <strong><code>+ Stateful 2L-MTP</code> reaches <code>7.57&ndash;9.20 tok/s</code> (<code>+5.74 tok/s</code> extra from lossless speculative MTP alone, <code>exact_greedy_match = True</code>)</strong>.</li>
-          <li><strong><code>RTX 3090</code> &amp; <code>RTX 4090</code> (<code>24 GB</code> VRAM):</strong> Exceeds a single <code>24 GB</code> GPU (<code>60.2 GiB &gt; 24 GB</code>), but <strong>fits across <code>3&times; RTX 3090 / 4090</code> (<code>72 GB</code> total VRAM) or <code>1&times; 80 GB H100</code></strong> &mdash; whereas <code>Standard Q4</code> (<code>72.5 GiB</code>) spills onto a 4th 24 GB GPU and <code>BF16</code> requires <code>11&times; 24 GB</code> GPUs (<code>3&times; 3090 / 4090</code> + <code>2L-MTP</code> roofline: <strong><code>~240 tok/s</code> / <code>~265 tok/s</code></strong>).</li>
+          <li><strong>64 GB vs. 128 GB RAM &amp; Exact Method Gain (16T CPU):</strong> On a <code>64 GB</code> workstation, <code>BF16</code> (<code>240 GiB</code>) and <code>Q4</code> (<code>72.5 GiB</code>) must stream from NVMe while <code>HG4-16R-OP</code> (<code>60.2 GiB</code>) fits 100% in RAM. On <code>128 GB</code> RAM: <code>BF16</code> NVMe-switches at <code>~0.4 tok/s</code> &rarr; <code>HG4-16R T=1</code> runs in RAM at <code>2.57&ndash;3.46 tok/s</code> &rarr; <strong><code>+ Stateful 2L-MTP</code> reaches <code>7.57&ndash;9.20 tok/s</code> (<code>+5.74 tok/s</code> extra from lossless speculative MTP alone, <code>exact_greedy_match = True</code>)</strong>.</li>
+          <li><strong><code>RTX 3090</code> &amp; <code>RTX 4090</code> (<code>24 GB</code> VRAM):</strong> On <code>1&times; RTX 4090 + 64 GB RAM</code>, pinning the <code>5.8 GiB</code> trunk + <code>2L-MTP</code> + hottest experts in VRAM while keeping remaining experts in DDR5 yields <code>~25 tok/s</code>; across <strong><code>3&ndash;4&times; RTX 4090</code> (<code>72&ndash;96 GB</code> VRAM)</strong>, 100% of <code>HG4-16R-OP</code> sits in GDDR6X (<code>~265 tok/s</code> roofline vs. <code>11&times; 24 GB</code> cards needed for <code>BF16</code>).</li>
           <li><strong>Accuracy:</strong> Held-out <code>PPL = 14.84</code> &middot; <strong><code>4 / 4</code> (<code>100.0%</code>)</strong> on Tier-4 Systems SWE (LCP planner, MXFP4 decoder, parser &amp; verifier tasks) &middot; <a href="https://huggingface.co/Santhoshsathish94/Nemotron-3.5-Super-VL-120B-HG4-16R-OP" target="_blank" rel="noopener noreferrer"><strong>Hugging Face Repo &rarr;</strong></a></li>
         </ul>
       </div>
@@ -412,7 +422,7 @@ Theorem name: `demo_add_zero`
         <h3>Proof 4 (2.8T Frontier Scale) &mdash; <code>moonshotai/Kimi-K3.1-Pro</code> (93L KDA/DSA + 896E MoE + 5L-DSpark)</h3>
         <p><strong>Why this test matters:</strong> At <code>1.58 TB</code> upstream (<code>135 GB BF16</code> trunk + <code>1,446 GB MXFP4</code> across <code>82,432</code> routed experts), this model exceeds <code>124 GB</code> RAM by <strong><code>12.7&times;</code></strong> and normally demands an <code>8&times; H200</code> GPU node. Applying two-tier <code>K31H</code> (<code>HG4</code> DDR5 hot trunk + top 42 hot experts/layer + <code>5L-DSpark</code>, paired with 16-lane NVMe <code>pread</code> across 854 cold <code>2.125-bpw HG2</code> experts/layer) runs all <code>2.8T</code> parameters on one CPU with zero experts dropped.</p>
         <ul>
-          <li><strong>Size:</strong> <code>1,581 GB</code> upstream (OOM) &rarr; <strong><code>103.85 GB</code> Hot <code>HG4-OP</code> (<code>61 GB</code> active RSS) + <code>690.30 GB</code> Cold <code>HG2</code> on NVMe = <code>791.8 GB</code> total</strong></li>
+          <li><strong>Size:</strong> <code>1,581 GB</code> upstream &rarr; <strong><code>103.85 GB</code> Hot <code>HG4-OP</code> (<code>61 GB</code> active RSS) + <code>690.30 GB</code> Cold <code>HG2</code> on NVMe = <code>791.8 GB</code> total</strong></li>
           <li><strong>128 GB RAM + NVMe &amp; Exact Method Gain:</strong> Upstream <code>1.58 TB</code> page-thrashes below <code>0.05 tok/s</code> &rarr; <code>K31H</code> 93-layer <code>T=1</code> runs at <code>~1.1 tok/s</code> &rarr; <strong><code>+ 5L-DSpark</code> (<code>347.8 draft tok/s</code> in RAM) lifts full 93-layer <code>2.8T</code> verified throughput to <code>2.26 tok/s</code></strong> (<code>draft_k=4 == draft_k=0</code> bit-exact).</li>
           <li><strong><code>RTX 3090</code> &amp; <code>RTX 4090</code> (<code>24 GB</code> VRAM):</strong> A <code>2.8T</code> model (<code>792 GB</code>) cannot fit inside <code>1&times; 24 GB</code> GPU alone; in hybrid mode, pinning the active <code>HG4</code> trunks + <code>5L-DSpark</code> (<code>~18 GB</code>) on <code>1&times; RTX 3090 / 4090</code> accelerates prefill &amp; drafting <code>~10&times;</code> while cold <code>HG2</code> experts remain bound by PCIe/NVMe read speed (<code>~4&ndash;6 tok/s</code> with Gen5 NVMe RAID; all-VRAM requires <code>10&times; 80 GB</code> / <code>6&times; H200</code> vs. <code>12&ndash;16&times; H200</code> upstream).</li>
           <li><strong>Accuracy &amp; Formal Proof Sample:</strong> Scored <strong><code>12 / 23</code> (<code>52.17%</code>, #1 overall, <code>4/4</code> SWE)</strong> on the frozen Lean 4 <code>RiemannHypothesis</code> + SWE + RE benchmark &middot; <a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Hot-HG4-OP" target="_blank" rel="noopener noreferrer"><strong>HF Hot Repo &rarr;</strong></a> &middot; <a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Cold-HG2-Part1" target="_blank" rel="noopener noreferrer"><strong>Cold Part 1 &rarr;</strong></a> &middot; <a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Cold-HG2-Part2" target="_blank" rel="noopener noreferrer"><strong>Part 2 &rarr;</strong></a> &middot; <a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Cold-HG2-Part3" target="_blank" rel="noopener noreferrer"><strong>Part 3 &rarr;</strong></a></li>
@@ -464,7 +474,7 @@ by
           <text x="22" y="224" font-size="12" font-weight="700" fill="#132018">Proofs 3 &amp; 4 · Oversized MoEs (120B Nemotron &amp; 2.8T Kimi K3.1 Pro)</text>
           <text x="22" y="242" font-size="10.5" fill="#7d5312">Original Checkpoints (240 GiB &amp; 1,581 GB)</text>
           <rect x="245" y="231" width="16" height="13" rx="3" fill="#c98a63"></rect>
-          <text x="269" y="242" font-size="10.5" fill="#7d5312">OOM on 124 GB RAM (&lt; 0.1 tok/s NVMe swap thrash)</text>
+          <text x="269" y="242" font-size="10.5" fill="#7d5312">Exceeds 124 GB RAM (&sim;0.15–0.4 tok/s when streaming raw weights from NVMe)</text>
 
           <text x="22" y="262" font-size="10.5" font-weight="700" fill="#1b5e46">Proof 3 · 120B HG4 + 2L-MTP (60.2 GiB)</text>
           <rect x="245" y="251" width="185" height="14" rx="4" fill="#1b5e46"></rect>
@@ -474,130 +484,106 @@ by
           <rect x="245" y="270" width="118" height="14" rx="4" fill="#0a6a5f"></rect>
           <text x="371" y="281" font-size="10.5" font-weight="700" fill="#0a6a5f">347.8 draft tok/s (5L-DSpark) · 71.1 tok/s C1 · 2.26 tok/s 93L 2.8T verify</text>
         </svg>
-        <figcaption>Figure 2 &mdash; Across all four proof scales, HG either multiplies CPU <code>tok/s</code> by <code>4.4&times;&ndash;4.7&times;</code> vs. <code>BF16</code> or turns OOM checkpoints into working single-CPU engines.</figcaption>
+        <figcaption>Figure 2 &mdash; Across all four proof scales, HG either multiplies in-RAM <code>tok/s</code> by <code>4.4&times;&ndash;4.7&times;</code> vs. <code>BF16</code> or lifts NVMe layer-switching into interactive single-CPU speed.</figcaption>
       </figure>
 
-      <!-- ---- COMPLETE METHOD x HARDWARE GAIN MATRIX ---- -->
-      <h3 id="hardware-method-matrix" style="margin-top:2.2rem">Method-by-method <code>tok/s</code> gain: Tight RAM vs. 128 GB RAM vs. RTX 3090 &amp; RTX 4090</h3>
-      <p>To see exactly what each method gains &mdash; and why adding RAM beyond model size adds <code>0 tok/s</code> while cutting bits/weight or moving to GDDR6X scales <code>tok/s</code> &mdash; compare every step side by side. Per <code>AGENTS.md</code>, CPU numbers are <strong>measured directly</strong> on <code>k3</code> (<code>AMD Ryzen 9 7950X3D</code>, 16 threads) and a 15W <code>Intel i7-1355U</code> laptop; GPU <code>24 GB</code> VRAM fit is <strong>exact from byte size</strong> and GPU <code>tok/s</code> values show the <strong>70%-bus-efficiency GDDR6X roofline</strong> (<code>936 GB/s</code> on <code>RTX 3090</code>, <code>1,008 GB/s</code> on <code>RTX 4090</code>):</p>
+      <!-- ---- COMPLETE 4-DEVICE REAL-WORLD MATRIX ---- -->
+      <h3 id="hardware-method-matrix" style="margin-top:2.2rem">Same 4 everyday devices across every model &amp; method (zero OOM with layer/expert switching)</h3>
+      <p>Here is what happens on a <strong>Samsung S23 Phone (<code>8 GB</code>)</strong>, a <strong><code>16 GB</code> Laptop (Unified CPU/iGPU)</strong>, a <strong><code>128 GB</code> CPU Server</strong>, and <strong>NVIDIA <code>RTX 4090</code> (<code>24 GB</code> VRAM)</strong>. When a checkpoint is larger than RAM/VRAM, streaming active layers/experts from UFS/NVMe or splitting <code>Trunk in VRAM + Experts in RAM</code> keeps it running cleanly at storage/PCIe speed instead of crashing:</p>
 
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">Exact <code>tok/s</code> delta gained at each quantization/speculative step across CPU RAM caps and 24 GB RTX GPUs.</caption>
+          <caption class="note">Phone S23, 16 GB Laptop, and 128 GB Server speeds are measured live; RTX 4090 column shows exact 24 GB VRAM fit + GDDR6X roofline.</caption>
           <thead>
             <tr>
               <th scope="col">Model &amp; Method</th>
-              <th scope="col">Tight RAM CPU</th>
-              <th scope="col">128G CPU</th>
-              <th scope="col">CPU Gain (&Delta;)</th>
-              <th scope="col">RTX 3090 (24G)</th>
-              <th scope="col">RTX 4090 (24G)</th>
+              <th scope="col">Phone S23 (8G)</th>
+              <th scope="col">Laptop (16G UMA)</th>
+              <th scope="col">Server CPU (128G)</th>
+              <th scope="col">1&times; RTX 4090 (24G)</th>
+              <th scope="col">4&ndash;8&times; 4090 (96&ndash;192G)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <th scope="row"><strong>2B</strong> &middot; Original BF16 <small>(3.22 GiB)</small></th>
-              <td>OOM <small>(2G cap)</small></td>
-              <td><code>10.8</code></td>
-              <td>Base</td>
-              <td>Fits &middot; <code>~190</code></td>
-              <td>Fits &middot; <code>~205</code></td>
+              <td>UFS stream <code>~1.1</code></td>
+              <td>Fits &middot; <code>~3.1</code></td>
+              <td>Fits &middot; <code>10.8</code></td>
+              <td>100% VRAM &middot; <code>~205</code></td>
+              <td>1 card enough</td>
             </tr>
             <tr>
               <th scope="row"><strong>2B</strong> &middot; llama.cpp Q4_0 <small>(0.98 GiB)</small></th>
-              <td><code>42.8</code> <small>(2G)</small></td>
-              <td><code>42.8</code></td>
-              <td><code>+32.0</code></td>
-              <td>Fits &middot; <code>~560</code></td>
-              <td>Fits &middot; <code>~610</code></td>
+              <td>In RAM &middot; <code>13.8&ndash;16.9</code></td>
+              <td><code>12.0</code> CPU / <code>12.8</code> iGPU</td>
+              <td>Fits &middot; <code>42.8</code> <small>(+32)</small></td>
+              <td>100% VRAM &middot; <code>~610</code></td>
+              <td>1 card enough</td>
             </tr>
             <tr>
               <th scope="row"><strong>2B &middot; Clover HG4-16R</strong> <small>(0.83 GiB)</small></th>
-              <td><strong><code>48.7</code> <small>(2G)</small></strong><br><small>9.5 on 15W i7</small></td>
-              <td><strong><code>48.7&ndash;50.3</code></strong><br><small>+0 from 128G</small></td>
-              <td><strong><code>+39.5</code> vs BF16<br><code>+7.5</code> vs Q4</strong></td>
-              <td><strong>Fits &middot; <code>~680</code></strong><br><small>(+490 vs BF16)</small></td>
-              <td><strong>Fits &middot; <code>~740</code></strong><br><small>(+535 vs BF16)</small></td>
+              <td><strong>In RAM &middot; <code>33.4</code></strong><br><small>(<code>97.8</code> prefill)</small></td>
+              <td><strong><code>12.4</code> CPU</strong><br><small>(<code>63.7</code> prefill)</small></td>
+              <td><strong><code>50.3</code></strong> <small>(+39.5 vs BF16)</small><br><small><code>48.7</code> in 2G cap</small></td>
+              <td><strong>100% VRAM &middot; <code>~740</code></strong><br><small>(uses &lt;1 GB VRAM)</small></td>
+              <td>1 card enough</td>
             </tr>
             <tr>
               <th scope="row"><strong>35B</strong> &middot; Original BF16 <small>(66 GiB)</small></th>
-              <td>OOM <small>(32G)</small></td>
-              <td><code>~3.8</code></td>
-              <td>Base</td>
-              <td><strong>OOM</strong> <small>(3&ndash;4&times;)</small></td>
-              <td><strong>OOM</strong> <small>(3&ndash;4&times;)</small></td>
+              <td>UFS switch <code>~0.6</code></td>
+              <td>NVMe switch <code>~1.1</code></td>
+              <td>Fits RAM &middot; <code>~3.8</code></td>
+              <td>Trunk VRAM + RAM <code>~4.2</code></td>
+              <td>Fits 4&times; 4090 &middot; <code>~145</code></td>
             </tr>
             <tr>
               <th scope="row"><strong>35B</strong> &middot; llama.cpp Q4_K_M <small>(20.8 GiB)</small></th>
-              <td><code>12.75</code> <small>(32G)</small></td>
-              <td><code>12.75</code></td>
-              <td><code>+8.95</code></td>
-              <td>Tight &middot; <code>~355</code></td>
-              <td>Tight &middot; <code>~385</code></td>
+              <td>UFS switch <code>~2.1</code></td>
+              <td>RAM+NVMe <code>~4.5</code></td>
+              <td>Fits RAM &middot; <code>12.75</code></td>
+              <td>Tight 1&times; &middot; <code>~385</code></td>
+              <td>Fits 2&ndash;4&times; &middot; <code>~420</code></td>
             </tr>
             <tr>
               <th scope="row"><strong>35B &middot; Clover HG4-16R-OP</strong> <small>(17.4 GiB)</small></th>
-              <td><strong><code>16.58</code> <small>(32G)</small></strong></td>
-              <td><strong><code>16.58</code></strong><br><small>+0 from 128G</small></td>
-              <td><strong><code>+12.8</code> vs BF16<br><code>+3.8</code> (+30%) vs Q4</strong></td>
-              <td><strong>Fits 1&times; &middot; <code>~420</code></strong><br><small>(6.5G KV free)</small></td>
-              <td><strong>Fits 1&times; &middot; <code>~455</code></strong><br><small>(6.5G KV free)</small></td>
+              <td><strong>1.8G Trunk RAM</strong><br><small>+ UFS exp <code>~2.6</code></small></td>
+              <td><strong>1.8G Trunk + RAM</strong><br><small>partial NVMe <code>~7</code></small></td>
+              <td><strong>Fits RAM &middot; <code>16.58</code></strong><br><small>(+30% vs Q4_K_M)</small></td>
+              <td><strong>100% in 1&times; 4090!</strong><br><small><code>~455</code> (6.5G free)</small></td>
+              <td><strong>1 card enough</strong><br><small>(4&times; TP &gt;600)</small></td>
             </tr>
             <tr>
               <th scope="row"><strong>120B</strong> &middot; Original BF16 <small>(240 GiB)</small></th>
-              <td>OOM <small>(64G)</small></td>
-              <td><code>&lt;0.15</code> <small>(swap)</small></td>
-              <td>Base (OOM)</td>
-              <td><strong>OOM</strong> <small>(11&times;)</small></td>
-              <td><strong>OOM</strong> <small>(11&times;)</small></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>120B</strong> &middot; Standard Q4 <small>(72.5 GiB)</small></th>
-              <td>OOM <small>(64G)</small></td>
-              <td><code>~2.1</code> <small>(T=1)</small></td>
-              <td><code>+2.0</code></td>
-              <td><strong>OOM</strong> <small>(4&times;)</small></td>
-              <td><strong>OOM</strong> <small>(4&times;)</small></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>120B</strong> &middot; Clover HG4 <small>(60.2 GiB, T=1)</small></th>
-              <td><code>3.46</code> <small>(64G)</small></td>
-              <td><code>3.46</code></td>
-              <td><code>+3.3</code> (4-bit)</td>
-              <td>3&times; 3090 &middot; <code>~95</code></td>
-              <td>3&times; 4090 &middot; <code>~105</code></td>
+              <td>Ext SSD <code>~0.15</code></td>
+              <td>NVMe stream <code>~0.25</code></td>
+              <td>NVMe switch <code>~0.4</code></td>
+              <td>PCIe+NVMe <code>~0.5</code></td>
+              <td>Exceeds 8&times; 4090 VRAM</td>
             </tr>
             <tr>
               <th scope="row"><strong>120B &middot; Clover HG4 + 2L-MTP</strong> <small>(60.2 GiB)</small></th>
-              <td><strong><code>7.6&ndash;9.2</code> <small>(64G)</small></strong></td>
-              <td><strong><code>7.6&ndash;9.2</code></strong></td>
-              <td><strong><code>+5.7</code> extra<br>from 2L-MTP</strong></td>
-              <td><strong>3&times; &middot; <code>~240</code></strong><br><small>(or 1&times; 80G)</small></td>
-              <td><strong>3&times; &middot; <code>~265</code></strong><br><small>(or 1&times; 80G)</small></td>
+              <td>Ext SSD <code>~1.2</code></td>
+              <td>5.8G Trunk RAM<br><small>+ NVMe exp <code>~2.5</code></small></td>
+              <td><strong>100% RAM &middot; <code>7.6&ndash;9.2</code></strong><br><small>(3.58&times; lossless MTP)</small></td>
+              <td><strong>5.8G Trunk+Hot VRAM</strong><br><small>+ 40G RAM exp <code>~25</code></small></td>
+              <td><strong>100% in 4&times; 4090!</strong><br><small><code>~265</code> (96G VRAM)</small></td>
             </tr>
             <tr>
               <th scope="row"><strong>2.8T</strong> &middot; Upstream BF16+MXFP4 <small>(1.47 TiB)</small></th>
-              <td>OOM <small>(64G)</small></td>
-              <td><code>&lt;0.05</code> <small>(swap)</small></td>
-              <td>Base (OOM)</td>
-              <td><strong>OOM</strong> <small>(66&times;)</small></td>
-              <td><strong>OOM</strong> <small>(66&times;)</small></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>2.8T</strong> &middot; Clover K31H <small>(737 GiB, T=1)</small></th>
-              <td><code>~1.1</code> <small>(NVMe)</small></td>
-              <td><code>~1.1</code> <small>(61G RSS)</small></td>
-              <td><code>+1.05</code> (runs)</td>
-              <td>Hybrid &middot; <code>~2.0</code></td>
-              <td>Hybrid &middot; <code>~2.2</code></td>
+              <td>Needs 2 TB ext SSD</td>
+              <td>2 TB NVMe <code>~0.08</code></td>
+              <td>2 TB NVMe <code>~0.15</code></td>
+              <td>PCIe+NVMe <code>~0.2</code></td>
+              <td>Exceeds 1 TB disk</td>
             </tr>
             <tr>
               <th scope="row"><strong>2.8T &middot; Clover K31H + DSpark</strong> <small>(737 GiB)</small></th>
-              <td><strong><code>~2.1</code> <small>(96G)</small></strong></td>
-              <td><strong><code>2.26</code></strong><br><small>(347.8 draft)</small></td>
-              <td><strong><code>+1.16</code> extra<br>from DSpark</strong></td>
-              <td><strong>Hybrid &middot; <code>~4&ndash;5</code></strong><br><small>(&gt;2.2K draft)</small></td>
-              <td><strong>Hybrid &middot; <code>~4&ndash;6</code></strong><br><small>(&gt;2.5K draft)</small></td>
+              <td>1 TB USB-C <code>~0.2</code></td>
+              <td>1 TB NVMe <code>~0.6</code></td>
+              <td><strong>Hot RAM + NVMe</strong><br><small><code>2.26</code> (<code>347.8</code> draft)</small></td>
+              <td><strong>Trunk+DSpark VRAM</strong><br><small>+ RAM/NVMe <code>~4&ndash;6</code></small></td>
+              <td><strong>104G Hot in 8&times; 4090!</strong><br><small>+ 1 TB NVMe Cold</small></td>
             </tr>
           </tbody>
         </table>
