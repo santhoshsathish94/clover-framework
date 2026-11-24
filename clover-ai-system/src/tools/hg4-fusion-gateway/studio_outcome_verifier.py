@@ -96,8 +96,8 @@ def _strip_lean_comments_and_strings(src: str) -> str:
                     continue
             out.append("'")
             i += 1
-        elif src[i] == "r" and (i == 0 or not (src[i - 1].isalnum() or src[i - 1] in ("_", "'"))):
-            # Lean 4 raw string literal `r"..."`, `r#"..."#`, `r##"..."##` (lowercase `r` + 0 or more `#`)
+        elif src[i] == "r" and (i == 0 or not (src[i - 1].isalnum() or src[i - 1] in ("_", "'", ".", "!", "?"))):
+            # Lean 4 raw string literal `r"..."`, `r#"..."#`, `r##"..."##` (lowercase `r` starting a new token)
             j = i + 1
             while j < n and src[j] == "#":
                 j += 1
@@ -407,6 +407,7 @@ def verify_lean_elaboration_optin(
         return None
     if (
         _FORBIDDEN_LEAN_PROOF_RE.search(stripped)
+        or re.search(r"^\s*(?:private\s+|protected\s+|noncomputable\s+)?axiom\b", block, flags=re.MULTILINE)
         or _FORBIDDEN_LEAN_ALWAYS_META_RE.search(stripped)
         or _FORBIDDEN_LEAN_CODE_META_RE.search(stripped)
         or _FORBIDDEN_LEAN_ALWAYS_META_RE.search(block)
