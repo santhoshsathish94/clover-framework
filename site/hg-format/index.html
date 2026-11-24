@@ -486,137 +486,118 @@ by
           <caption class="note">Exact <code>tok/s</code> delta gained at each quantization/speculative step across CPU RAM caps and 24 GB RTX GPUs.</caption>
           <thead>
             <tr>
-              <th scope="col">Proof Model</th>
-              <th scope="col">Method</th>
-              <th scope="col">Active / Total</th>
-              <th scope="col">Tight RAM CPU<br><small>(Measured)</small></th>
-              <th scope="col">128 GB RAM CPU<br><small>(Measured)</small></th>
-              <th scope="col">Exact CPU Gain<br><small>(&Delta; <code>tok/s</code>)</small></th>
-              <th scope="col">1&times; RTX 3090 (24G)<br><small>Fit &amp; 936 GB/s Roofline</small></th>
-              <th scope="col">1&times; RTX 4090 (24G)<br><small>Fit &amp; 1,008 GB/s Roofline</small></th>
+              <th scope="col">Model &amp; Method</th>
+              <th scope="col">Tight RAM CPU</th>
+              <th scope="col">128G CPU</th>
+              <th scope="col">CPU Gain (&Delta;)</th>
+              <th scope="col">RTX 3090 (24G)</th>
+              <th scope="col">RTX 4090 (24G)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th scope="row" rowspan="3"><strong>1. LFM3-Omni-2B</strong><br><small>2B Dense+Conv</small></th>
-              <td>Original <code>BF16</code></td>
-              <td><code>3.22 / 3.22 GiB</code></td>
-              <td>OOM <small>(2 GB cap)</small></td>
-              <td><code>10.8 tok/s</code></td>
-              <td>Baseline</td>
-              <td>Fits &middot; <code>~190 tok/s</code></td>
-              <td>Fits &middot; <code>~205 tok/s</code></td>
+              <th scope="row"><strong>2B</strong> &middot; Original BF16 <small>(3.22 GiB)</small></th>
+              <td>OOM <small>(2G cap)</small></td>
+              <td><code>10.8</code></td>
+              <td>Base</td>
+              <td>Fits &middot; <code>~190</code></td>
+              <td>Fits &middot; <code>~205</code></td>
             </tr>
             <tr>
-              <td><code>llama.cpp Q4_0</code></td>
-              <td><code>0.98 / 0.98 GiB</code></td>
-              <td><code>42.8 tok/s</code> <small>(2G)</small></td>
-              <td><code>42.8 tok/s</code></td>
-              <td><code>+32.0 tok/s</code> vs BF16</td>
-              <td>Fits &middot; <code>~560 tok/s</code></td>
-              <td>Fits &middot; <code>~610 tok/s</code></td>
+              <th scope="row"><strong>2B</strong> &middot; llama.cpp Q4_0 <small>(0.98 GiB)</small></th>
+              <td><code>42.8</code> <small>(2G)</small></td>
+              <td><code>42.8</code></td>
+              <td><code>+32.0</code></td>
+              <td>Fits &middot; <code>~560</code></td>
+              <td>Fits &middot; <code>~610</code></td>
             </tr>
             <tr>
-              <td><strong>Clover <code>HG4-16R</code></strong></td>
-              <td><strong><code>0.83 / 0.83 GiB</code></strong></td>
-              <td><strong><code>48.7 tok/s</code> <small>(2G)</small></strong><br><small><code>9.5 tok/s</code> 15W i7</small></td>
-              <td><strong><code>48.7&ndash;50.3 tok/s</code></strong><br><small><code>+0.0</code> from 128G!</small></td>
-              <td><strong><code>+39.5 tok/s</code> vs BF16<br><code>+7.5 tok/s</code> vs Q4_0</strong></td>
-              <td><strong>Fits &middot; <code>~680 tok/s</code></strong><br><small>(<code>+490</code> vs BF16)</small></td>
-              <td><strong>Fits &middot; <code>~740 tok/s</code></strong><br><small>(<code>+535</code> vs BF16)</small></td>
+              <th scope="row"><strong>2B &middot; Clover HG4-16R</strong> <small>(0.83 GiB)</small></th>
+              <td><strong><code>48.7</code> <small>(2G)</small></strong><br><small>9.5 on 15W i7</small></td>
+              <td><strong><code>48.7&ndash;50.3</code></strong><br><small>+0 from 128G</small></td>
+              <td><strong><code>+39.5</code> vs BF16<br><code>+7.5</code> vs Q4</strong></td>
+              <td><strong>Fits &middot; <code>~680</code></strong><br><small>(+490 vs BF16)</small></td>
+              <td><strong>Fits &middot; <code>~740</code></strong><br><small>(+535 vs BF16)</small></td>
             </tr>
             <tr>
-              <th scope="row" rowspan="3"><strong>2. Clover-35B-A3B</strong><br><small>35B / 3B Active MoE</small></th>
-              <td>Original <code>BF16</code></td>
-              <td><code>6.0 / 66.0 GiB</code></td>
-              <td>OOM <small>(32 GB)</small></td>
-              <td><code>~3.8 tok/s</code></td>
-              <td>Baseline</td>
-              <td><strong>OOM</strong> <small>(needs 3&ndash;4&times;)</small></td>
-              <td><strong>OOM</strong> <small>(needs 3&ndash;4&times;)</small></td>
+              <th scope="row"><strong>35B</strong> &middot; Original BF16 <small>(66 GiB)</small></th>
+              <td>OOM <small>(32G)</small></td>
+              <td><code>~3.8</code></td>
+              <td>Base</td>
+              <td><strong>OOM</strong> <small>(3&ndash;4&times;)</small></td>
+              <td><strong>OOM</strong> <small>(3&ndash;4&times;)</small></td>
             </tr>
             <tr>
-              <td><code>llama.cpp Q4_K_M</code></td>
-              <td><code>1.82 / 20.8 GiB</code></td>
-              <td><code>12.75 tok/s</code> <small>(32G)</small></td>
-              <td><code>12.75 tok/s</code></td>
-              <td><code>+8.95 tok/s</code> vs BF16</td>
-              <td>Tight <small>(&lt;2G KV)</small> &middot; <code>~355</code></td>
-              <td>Tight <small>(&lt;2G KV)</small> &middot; <code>~385</code></td>
+              <th scope="row"><strong>35B</strong> &middot; llama.cpp Q4_K_M <small>(20.8 GiB)</small></th>
+              <td><code>12.75</code> <small>(32G)</small></td>
+              <td><code>12.75</code></td>
+              <td><code>+8.95</code></td>
+              <td>Tight &middot; <code>~355</code></td>
+              <td>Tight &middot; <code>~385</code></td>
             </tr>
             <tr>
-              <td><strong>Clover <code>HG4-16R-OP</code></strong></td>
-              <td><strong><code>1.55 / 17.4 GiB</code></strong></td>
-              <td><strong><code>16.58 tok/s</code> <small>(32G)</small></strong></td>
-              <td><strong><code>16.58 tok/s</code></strong><br><small><code>+0.0</code> from 128G!</small></td>
-              <td><strong><code>+12.78 tok/s</code> vs BF16<br><code>+3.83 tok/s</code> (+30%) vs Q4</strong></td>
-              <td><strong>Fits 1 card &middot; <code>~420 tok/s</code></strong><br><small>(<code>6.5 GB</code> KV free)</small></td>
-              <td><strong>Fits 1 card &middot; <code>~455 tok/s</code></strong><br><small>(<code>6.5 GB</code> KV free)</small></td>
+              <th scope="row"><strong>35B &middot; Clover HG4-16R-OP</strong> <small>(17.4 GiB)</small></th>
+              <td><strong><code>16.58</code> <small>(32G)</small></strong></td>
+              <td><strong><code>16.58</code></strong><br><small>+0 from 128G</small></td>
+              <td><strong><code>+12.8</code> vs BF16<br><code>+3.8</code> (+30%) vs Q4</strong></td>
+              <td><strong>Fits 1&times; &middot; <code>~420</code></strong><br><small>(6.5G KV free)</small></td>
+              <td><strong>Fits 1&times; &middot; <code>~455</code></strong><br><small>(6.5G KV free)</small></td>
             </tr>
             <tr>
-              <th scope="row" rowspan="4"><strong>3. Nemotron 3.5 120B</strong><br><small>120B / 12B Active + MTP</small></th>
-              <td>Original <code>BF16</code></td>
-              <td><code>24.0 / 240 GiB</code></td>
-              <td>OOM <small>(64 GB)</small></td>
-              <td><code>&lt;0.15 tok/s</code> <small>(swap)</small></td>
-              <td>Baseline (OOM)</td>
-              <td><strong>OOM</strong> <small>(needs 11&times; 3090)</small></td>
-              <td><strong>OOM</strong> <small>(needs 11&times; 4090)</small></td>
+              <th scope="row"><strong>120B</strong> &middot; Original BF16 <small>(240 GiB)</small></th>
+              <td>OOM <small>(64G)</small></td>
+              <td><code>&lt;0.15</code> <small>(swap)</small></td>
+              <td>Base (OOM)</td>
+              <td><strong>OOM</strong> <small>(11&times;)</small></td>
+              <td><strong>OOM</strong> <small>(11&times;)</small></td>
             </tr>
             <tr>
-              <td>Standard <code>Q4</code></td>
-              <td><code>7.3 / 72.5 GiB</code></td>
-              <td>OOM <small>(64 GB)</small></td>
-              <td><code>~2.1 tok/s</code> <small>(T=1)</small></td>
-              <td><code>+2.0 tok/s</code> vs swap</td>
-              <td><strong>OOM</strong> <small>(needs 4&times; 3090)</small></td>
-              <td><strong>OOM</strong> <small>(needs 4&times; 4090)</small></td>
+              <th scope="row"><strong>120B</strong> &middot; Standard Q4 <small>(72.5 GiB)</small></th>
+              <td>OOM <small>(64G)</small></td>
+              <td><code>~2.1</code> <small>(T=1)</small></td>
+              <td><code>+2.0</code></td>
+              <td><strong>OOM</strong> <small>(4&times;)</small></td>
+              <td><strong>OOM</strong> <small>(4&times;)</small></td>
             </tr>
             <tr>
-              <td>Clover <code>HG4-16R</code> (<code>T=1</code>)</td>
-              <td><code>6.2 / 60.2 GiB</code></td>
-              <td><code>3.46 tok/s</code> <small>(64G)</small></td>
-              <td><code>3.46 tok/s</code></td>
-              <td><code>+3.3 tok/s</code> (4-bit gain)</td>
-              <td>Fits <strong>3&times; 3090</strong> &middot; <code>~95</code></td>
-              <td>Fits <strong>3&times; 4090</strong> &middot; <code>~105</code></td>
+              <th scope="row"><strong>120B</strong> &middot; Clover HG4 <small>(60.2 GiB, T=1)</small></th>
+              <td><code>3.46</code> <small>(64G)</small></td>
+              <td><code>3.46</code></td>
+              <td><code>+3.3</code> (4-bit)</td>
+              <td>3&times; 3090 &middot; <code>~95</code></td>
+              <td>3&times; 4090 &middot; <code>~105</code></td>
             </tr>
             <tr>
-              <td><strong>Clover <code>HG4 + 2L-MTP</code></strong></td>
-              <td><strong><code>6.2 / 60.2 GiB</code></strong></td>
-              <td><strong><code>7.6&ndash;9.2 tok/s</code> <small>(64G)</small></strong></td>
-              <td><strong><code>7.57&ndash;9.20 tok/s</code></strong></td>
-              <td><strong><code>+5.74 tok/s</code> extra<br>from lossless MTP!</strong></td>
-              <td><strong>3&times; 3090 &middot; <code>~240 tok/s</code></strong><br><small>(or 1&times; 80G H100)</small></td>
-              <td><strong>3&times; 4090 &middot; <code>~265 tok/s</code></strong><br><small>(or 1&times; 80G H100)</small></td>
+              <th scope="row"><strong>120B &middot; Clover HG4 + 2L-MTP</strong> <small>(60.2 GiB)</small></th>
+              <td><strong><code>7.6&ndash;9.2</code> <small>(64G)</small></strong></td>
+              <td><strong><code>7.6&ndash;9.2</code></strong></td>
+              <td><strong><code>+5.7</code> extra<br>from 2L-MTP</strong></td>
+              <td><strong>3&times; &middot; <code>~240</code></strong><br><small>(or 1&times; 80G)</small></td>
+              <td><strong>3&times; &middot; <code>~265</code></strong><br><small>(or 1&times; 80G)</small></td>
             </tr>
             <tr>
-              <th scope="row" rowspan="3"><strong>4. Kimi K3.1 Pro 2.8T</strong><br><small>2.8T / 104B Active</small></th>
-              <td>Upstream <code>BF16+MXFP4</code></td>
-              <td><code>68 / 1,472 GiB</code></td>
-              <td>OOM <small>(64 GB)</small></td>
-              <td><code>&lt;0.05 tok/s</code> <small>(swap)</small></td>
-              <td>Baseline (OOM)</td>
-              <td><strong>OOM</strong> <small>(needs 66&times; 24G)</small></td>
-              <td><strong>OOM</strong> <small>(needs 66&times; 24G)</small></td>
+              <th scope="row"><strong>2.8T</strong> &middot; Upstream BF16+MXFP4 <small>(1.47 TiB)</small></th>
+              <td>OOM <small>(64G)</small></td>
+              <td><code>&lt;0.05</code> <small>(swap)</small></td>
+              <td>Base (OOM)</td>
+              <td><strong>OOM</strong> <small>(66&times;)</small></td>
+              <td><strong>OOM</strong> <small>(66&times;)</small></td>
             </tr>
             <tr>
-              <td>Clover <code>K31H</code> (<code>T=1</code>)</td>
-              <td><code>~32 / 737 GiB</code></td>
-              <td><code>~1.1 tok/s</code> <small>(NVMe)</small></td>
-              <td><code>~1.1 tok/s</code> <small>(61G RSS)</small></td>
-              <td><code>+1.05 tok/s</code> (runs!)</td>
-              <td>Hybrid trunk &middot; <code>~2 tok/s</code></td>
-              <td>Hybrid trunk &middot; <code>~2.2 tok/s</code></td>
+              <th scope="row"><strong>2.8T</strong> &middot; Clover K31H <small>(737 GiB, T=1)</small></th>
+              <td><code>~1.1</code> <small>(NVMe)</small></td>
+              <td><code>~1.1</code> <small>(61G RSS)</small></td>
+              <td><code>+1.05</code> (runs)</td>
+              <td>Hybrid &middot; <code>~2.0</code></td>
+              <td>Hybrid &middot; <code>~2.2</code></td>
             </tr>
             <tr>
-              <td><strong>Clover <code>K31H + DSpark</code></strong></td>
-              <td><strong><code>~32 / 737 GiB</code></strong></td>
-              <td><strong><code>~2.1 tok/s</code> <small>(96G)</small></strong></td>
-              <td><strong><code>2.26 tok/s</code></strong><br><small>(<code>347.8</code> draft)</small></td>
-              <td><strong><code>+1.16 tok/s</code> extra<br>from 5L-DSpark!</strong></td>
-              <td><strong>Hybrid + NVMe &middot; <code>~4&ndash;5</code></strong><br><small>(<code>&gt;2,200</code> draft tok/s)</small></td>
-              <td><strong>Hybrid + NVMe &middot; <code>~4&ndash;6</code></strong><br><small>(<code>&gt;2,500</code> draft tok/s)</small></td>
+              <th scope="row"><strong>2.8T &middot; Clover K31H + DSpark</strong> <small>(737 GiB)</small></th>
+              <td><strong><code>~2.1</code> <small>(96G)</small></strong></td>
+              <td><strong><code>2.26</code></strong><br><small>(347.8 draft)</small></td>
+              <td><strong><code>+1.16</code> extra<br>from DSpark</strong></td>
+              <td><strong>Hybrid &middot; <code>~4&ndash;5</code></strong><br><small>(&gt;2.2K draft)</small></td>
+              <td><strong>Hybrid &middot; <code>~4&ndash;6</code></strong><br><small>(&gt;2.5K draft)</small></td>
             </tr>
           </tbody>
         </table>
