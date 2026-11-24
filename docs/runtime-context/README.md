@@ -20,6 +20,7 @@ This directory organizes all 27 engineering context documents and measurement le
 | [clover-ai-system-switchable-models-context.md](engine-and-architecture/clover-ai-system-switchable-models-context.md) | `clover-ai-system/` switchable Layer-1 model architecture (`kimi-k3`, `nemotron-3.5-super-vl`, `lfm3-1.7b`) and Nemotron precomputed trunk/operator/expert engine |
 | [clover-hg4-opencode-fusion-egm-lean-context.md](engine-and-architecture/clover-hg4-opencode-fusion-egm-lean-context.md) | Pure-`C1` `HG4-16R-OP` `/v1` Fusion Gateway + `OpenCode` + Google `Elephant–Goldfish (EGM)` + Certified Lean 4 `RiemannHypothesis` verification roadmap & ledger |
 | [clover-studio-capabilities-ablation-context.md](engine-and-architecture/clover-studio-capabilities-ablation-context.md) | Sequential `AGENTS.md` phased ablation (`Phases S0 → S7`) of Clover AI Studio subsystems (`Semantics/CSI`, `Outcome Cycle`, `x-cruncher`, `Ontology`, `Epistemic Memory`, `JEPA/RPRE`) |
+| [clover-website-hg-format-guide-context.md](engine-and-architecture/clover-website-hg-format-guide-context.md) | Dedicated `cloverframework.com/hg-format/` engineering guide covering `WHT-16` `HG4-16R-OP` / `K31H` conversion, ~98–99% quality retention, setup, benchmarks, and reproducible verification |
 | [layer0-verdict.md](engine-and-architecture/layer0-verdict.md) | Layer 0 input-to-embedding and dense KDA stage measurements |
 
 ## 2. Foundational Papers 1943–2017 (`foundational-papers-1943-to-2017/`)

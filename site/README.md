@@ -36,6 +36,7 @@ site/
   index.html                             the framework: one cycle, at any scale
   origin/                                the Origin page: 12 foundational AI chapters (1943–2026) in vertical sections
   ai-system/                             the AI Studio page: Clover AI Studio downloads, architecture, two-way VS Code & Copilot integration, open-weight model porting guide (Kimi K3.1 Pro, Nemotron 3.5, Clover-35B-A3B, LFM3-Omni-2B), efficiency vs. official numbers, and 70-task benchmarks
+  hg-format/                             the HG Format page: WHT-16 Hadamard-Grouped HG4-16R-OP & K31H (HG4 + 2.25-bit HG2) math, ~98-99% accuracy contract, 5-step conversion pipeline for any model, Hugging Face repos, OpenCode/VS Code setup, Lean 4 RiemannHypothesis + Studio S0-S7 benchmarks, and reproducible verification commands
   getting-started/                       the AGENTS.md menu page: read-only access, the agent file, multi-cycle verification, a first cycle
   governance/                            governance: vertical storyline on access, attribution, approvals, delegated execution, and k3 allowlist security
   privacy/                               privacy policy: on-device inference, local Git logging, encrypted vault, and opt-in Google OIDC collective learning

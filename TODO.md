@@ -194,4 +194,15 @@ Following the canonical Clover Cycle (**`Context → Direction → Execution →
 - [x] **Phase S7 — Consolidate Proven `KEEP` Winner (`S3`), Fix `xcruncher.c` AVX2/NEON `e=0` Bug, Drop-One Verification & Live `OpenCode` CLI Check:**
   - Verified out-of-the-box `S7_shipped_default` on `v2` (**`45/48 = 93.75%` probes (`P3 = 8/8 = 100.0%`) + `9/23` RH `22,705` tok (`673.09s`), `-69.2%` `P3` tokens**), Drop-One `S7_drop_s3` (`45/48 -> 37/48`, `-8` flips), live `OpenCode v1.19.6` CLI (`94.20s`, exact `demo_add_zero` + `37!`, **`97.23%` Turn-2 LCP cache hit even when `37!` fired `S3` on Turn 1**), fixed `k_vec = k_lim` (`hex_offset % 3 == 2`) in `xcruncher.c` + rebuilt `fused/xcruncher.dll` with 4-vector KAT, hardened `S2` env-only security + AST doctest allowlist, and added session-start `_RE_INTENT_RE` `rea_*` MCP economizer gate ([benchmarks/riemann-lean4/results/studio_phase_S7_shipped_default.json](benchmarks/riemann-lean4/results/studio_phase_S7_shipped_default.json), [benchmarks/riemann-lean4/results/studio_phase_S7_drop_s3.json](benchmarks/riemann-lean4/results/studio_phase_S7_drop_s3.json), [benchmarks/riemann-lean4/results/studio_phase_S7_opencode_live.json](benchmarks/riemann-lean4/results/studio_phase_S7_opencode_live.json)).
 
+---
+
+## 10. Public `HG Format` Engineering Guide (`cloverframework.com/hg-format/`) & Hugging Face Model Hub Release
+
+> **Primary-Source Context Document:** [docs/runtime-context/engine-and-architecture/clover-website-hg-format-guide-context.md](docs/runtime-context/engine-and-architecture/clover-website-hg-format-guide-context.md)
+
+- [x] **Step 10.1 — Publish Pre-Converted `HG4-16R-OP` & `K31H` Models to Hugging Face (`Santhoshsathish94/*`):**
+  - Published `Santhoshsathish94/LFM3-Omni-2B-HG4-16R` (`0.91 GB`), `Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP` (`18.80 GB`), `Santhoshsathish94/Nemotron-3.5-Super-VL-120B-HG4-16R-OP` (`64.99 GB`), and `Santhoshsathish94/Kimi-K3.1-Pro-K31H-Hot-HG4-OP` (`103.85 GB`) with model cards, C11 engine sources, tokenizers, and lossless `precomputed_ops/` sidecars (with `Kimi-K3.1-Pro-K31H-Cold-HG2-Part1..3` streaming sequentially).
+- [x] **Step 10.2 — Dedicated `cloverframework.com/hg-format/` Guide ([site/hg-format/index.html](site/hg-format/index.html)):**
+  - Built and Playwright-verified the dedicated `HG Format` engineering guide (`WHT-16` math & SVG dataflow diagram, honest precision contract, 5-step conversion pipeline for any open-weight model, 3-minute `/v1` gateway + `OpenCode`/VS Code setup, complete Lean 4 `RiemannHypothesis` + Studio `S0–S7` benchmark tables, and 6-hash reproducible verification commands), unified primary navigation across all 9 navigable site pages (`0` errors in `check-site.py`, `check-links.py`, and `29/29` unit tests), and deployed to `origin/main`.
+
 
