@@ -774,6 +774,10 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
         obs_many = sxc.extract_prompt_math_obligations(many_in_range)
         self.assertEqual(len(obs_many), 4)
         self.assertLess(time.perf_counter() - t_dos0, 0.25)
+        # Casual exclamation marks ("passed all 100!", "port 8080!") must NEVER trigger factorial obligations:
+        self.assertEqual(sxc.extract_prompt_math_obligations("I finally passed all 100! Can you suggest a celebration idea?"), [])
+        self.assertEqual(sxc.extract_prompt_math_obligations("Server crashed on port 8080! Please check logs."), [])
+        self.assertEqual(len(sxc.extract_prompt_math_obligations("What is 20! exactly?")), 1)
 
         # 5. Issue #5 & Round-2/3 Issue B: Request-body `x_clover_studio_s2_mode` ignored & AST allowlist blocks `match`/dunder/imports
         c_s2_req = router.complete({
@@ -809,8 +813,18 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
         self.assertFalse(sout._is_safe_candidate_ast("import typing\ndef half(x): return typing.sys"))
         self.assertFalse(sout._is_safe_candidate_ast("import dataclasses\ndef half(x): return dataclasses.inspect.os"))
         self.assertFalse(sout._is_safe_candidate_ast("import operator\ndef half(x): return operator.attrgetter('sys')"))
-        for lean_bad in ("elab_rules : tactic", "macro_rules", "open IO in\nProcess.output", "«IO».Process", "@[tactic foo]"):
+        for lean_bad in (
+            "```lean\nelab_rules : tactic\n```",
+            "```lean\nmacro_rules\n```",
+            "```lean\nopen IO in\nProcess.output\n```",
+            "```lean\n«IO».Process\n```",
+            "```lean\n@[tactic foo]\n```",
+            "```lean\nattribute [implemented_by g] f\ntheorem bad : f = true := by native_decide\n```",
+        ):
             self.assertIsNotNone(sout.verify_lean_surface_fast("Prove in Lean 4: theorem t : True := by", lean_bad))
+        # Plain English mentioning "Lean 4" and Lean comments mentioning "elaborates" must NOT false-positive:
+        self.assertIsNone(sout.verify_lean_surface_fast("Prove in Lean 4: theorem t : True", "In Lean 4 this closes with `trivial`."))
+        self.assertIsNone(sout.verify_lean_surface_fast("Prove in Lean 4: theorem t : True := by", "```lean\n-- this lemma elaborates quickly in Lean 4\ntrivial\n```"))
 
         # 6. Issue #6: Retried invalid tool-call outcome does not poison splice cache in _repair_once
         be35 = router.backends["clover-35b-a3b"]

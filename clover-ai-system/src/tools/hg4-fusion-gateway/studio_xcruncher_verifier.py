@@ -126,7 +126,14 @@ _MERSENNE_MUL_RE = re.compile(
     r"\(\s*2\s*(?:\^|\*\*)\s*(\d{2,4})\s*-\s*1\s*\)\s*\*\s*\(\s*2\s*(?:\^|\*\*)\s*(\d{2,4})\s*-\s*1\s*\)"
 )
 _BIG_MUL_RE = re.compile(r"(?<!\d)(\d{12,1200})\s*\*\s*(\d{12,1200})(?!\d)")
-_FACTORIAL_RE = re.compile(r"(?<![\w\d])(\d{2,4})\s*!(?!=)")
+_FACTORIAL_RE = re.compile(
+    r"(?:"
+    r"`(\d{2,4})\s*!(?!=)`"
+    r"|(?:\bfactorial\b|\bcompute\b|\bcalculate\b|\bevaluate\b|\bexact(?:\s+\w+){0,4}\s+value\s+of\b|\bvalue\s+of\b|\bwhat\s+is\b)[^.!?\n]{0,60}?(?<![\w\d])(\d{2,4})\s*!(?!=)"
+    r"|(?<![\w\d])(\d{2,4})\s*!(?!=)\s*(?:\(\s*\d+\s+factorial\s*\)|\bfactorial\b|\bwith\s+no\s+commas\b|\bexactly\b|=)"
+    r")",
+    re.IGNORECASE,
+)
 _PI_HEX_RE = re.compile(
     r"(?:exact\s+)?(\d{1,2})\s+(?:uppercase\s+|lowercase\s+)?hex(?:adecimal)?\s+digits\s+of\s+(?:the\s+fractional\s+part\s+of\s+)?pi\b.*?(?:offset|index|position)\s*[`'\"]?(\d{1,12})[`'\"]?",
     re.IGNORECASE | re.DOTALL,
@@ -168,11 +175,16 @@ def extract_prompt_math_obligations(prompt_text: str) -> list[dict[str, Any]]:
                 "backend": backend,
             })
 
+        seen_fact: set[int] = set()
         for m in _FACTORIAL_RE.finditer(base_text):
             if len(obligations) >= _MAX_OBLIGATIONS_PER_TURN:
                 return obligations
-            n = int(m.group(1))
-            if 15 <= n <= 1200:
+            n_str = m.group(1) or m.group(2) or m.group(3)
+            if not n_str:
+                continue
+            n = int(n_str)
+            if 15 <= n <= 1200 and n not in seen_fact:
+                seen_fact.add(n)
                 val, backend = compute_factorial_exact(n)
                 obligations.append({
                     "kind": "factorial",

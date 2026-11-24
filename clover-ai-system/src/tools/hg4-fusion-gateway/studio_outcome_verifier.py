@@ -33,11 +33,57 @@ _LEAN_PROMPT_RE = re.compile(
 )
 _FORBIDDEN_LEAN_PROOF_RE = re.compile(r"\b(?:sorry|admit|axiom)\b")
 _FORBIDDEN_LEAN_META_RE = re.compile(
-    r"(?:#eval\b|#reduce\b|#check\b|#synth\b|\brun_cmd\b|\brun_tac\b|\brun_elab\b|\brun_meta\b|"
-    r"\belab\w*\b|\bmacro\w*\b|\bsyntax\w*\b|\bdeclare_syntax_cat\b|\binitialize\b|\bbuiltin_initialize\b|"
-    r"«|\b(?:IO|System|Lean)\b|@\s*\[(?!\s*simp\s*\])|"
-    r"decide\s*\+\s*native)"
+    r"(?:#(?:eval|reduce|check|synth)\b"
+    r"|\b(?:run_cmd|run_tac|run_elab|run_meta|elab|elab_rules|macro|macro_rules|syntax|declare_syntax_cat|initialize|builtin_initialize)\b"
+    r"|\b(?:native_decide|ofReduceBool|ofReduceNat)\b"
+    r"|decide\s*\+\s*native"
+    r"|«|\b(?:IO|System)\b|\bLean\.(?:Elab|Meta|Parser|ofReduceBool|ofReduceNat)\b"
+    r"|@\s*\[(?!\s*simp\s*\])"
+    r"|(?:^|\s)(?:local\s+|scoped\s+)?attribute\s*\[(?!\s*simp\s*\]))",
+    re.MULTILINE,
 )
+
+
+def _strip_lean_comments_and_strings(src: str) -> str:
+    """Remove Lean 4 nested `/- ... -/` block comments, `--` line comments, and string literals before scanning."""
+    out: list[str] = []
+    i, n, depth = 0, len(src), 0
+    in_str = False
+    while i < n:
+        if in_str:
+            if src[i] == "\\" and i + 1 < n:
+                i += 2
+                continue
+            if src[i] == '"':
+                in_str = False
+            i += 1
+            continue
+        if depth > 0:
+            if src[i:i + 2] == "/-":
+                depth += 1
+                i += 2
+            elif src[i:i + 2] == "-/":
+                depth -= 1
+                i += 2
+            else:
+                if src[i] == "\n":
+                    out.append("\n")
+                i += 1
+            continue
+        if src[i:i + 2] == "/-":
+            depth = 1
+            i += 2
+        elif src[i:i + 2] == "--":
+            while i < n and src[i] != "\n":
+                i += 1
+        elif src[i] == '"':
+            in_str = True
+            out.append('""')
+            i += 1
+        else:
+            out.append(src[i])
+            i += 1
+    return "".join(out)
 
 _FORBIDDEN_CANDIDATE_ATTRS = frozenset({
     "sys", "os", "inspect", "types", "builtins", "modules", "compile", "exec", "eval",
@@ -278,17 +324,29 @@ def verify_python_draft_fast(prompt_text: str, draft_text: str, timeout_s: float
 
 
 def verify_lean_surface_fast(prompt_text: str, draft_text: str) -> str | None:
-    """Fast zero-toolchain Lean 4 surface check."""
-    block = _extract_lean_block(draft_text)
-    if not block:
+    """Fast zero-toolchain Lean 4 surface check (strips comments/strings and skips plain English prose)."""
+    cleaned_raw = re.sub(r"<think>.*?</think>", "", draft_text or "", flags=re.DOTALL).strip()
+    if not cleaned_raw:
         return "Empty Lean 4 output; provide the requested Lean 4 tactic or file block."
+    has_fence = bool(re.search(r"```(?:lean4?|)\s*\n", cleaned_raw, flags=re.IGNORECASE))
+    block = _extract_lean_block(cleaned_raw)
     if block.count("/-") != block.count("-/"):
         return "Unclosed `/- ... -/` block comment in Lean 4 output; close all comments cleanly."
-    # Only flag sorry/admit/axiom if the prompt isn't asking to inspect or quote sorry
-    if "verdict:" not in prompt_text.lower() and _FORBIDDEN_LEAN_PROOF_RE.search(block):
+    stripped = _strip_lean_comments_and_strings(block)
+    looks_like_lean = has_fence or bool(
+        re.search(
+            r"^\s*(?:import|open|namespace|section|theorem|lemma|def|abbrev|example|attribute|set_option|#|@\[|"
+            r"exact|apply|intro|intros|rw|simp|ring|linarith|omega|norm_num|have|rcases|cases|induction|constructor|trivial|rfl|sorry|admit|axiom|elab|macro|syntax|run_)\b",
+            stripped,
+            flags=re.MULTILINE,
+        )
+    )
+    if not looks_like_lean:
+        return None
+    if "verdict:" not in prompt_text.lower() and _FORBIDDEN_LEAN_PROOF_RE.search(stripped):
         return "Forbidden placeholder (`sorry` / `admit` / `axiom`) left in Lean 4 proof; replace with a real constructive tactic proof."
-    if "verdict:" not in prompt_text.lower() and _FORBIDDEN_LEAN_META_RE.search(block):
-        return "Forbidden Lean 4 metaprogramming or IO directive (`#eval` / `run_cmd` / `elab` / `IO.`) in proof; use pure tactics only."
+    if "verdict:" not in prompt_text.lower() and _FORBIDDEN_LEAN_META_RE.search(stripped):
+        return "Forbidden Lean 4 metaprogramming or IO directive (`#eval` / `run_cmd` / `elab` / `native_decide` / `IO`) in proof; use pure tactics only."
     return None
 
 
@@ -307,10 +365,11 @@ def verify_lean_elaboration_optin(
     if not proj.is_dir():
         return None
     block = _extract_lean_block(draft_text)
-    if not re.search(r"^\s*(?:import|theorem|lemma|def)\s+", block, flags=re.MULTILINE):
+    stripped = _strip_lean_comments_and_strings(block)
+    if not re.search(r"^\s*(?:import|theorem|lemma|def)\s+", stripped, flags=re.MULTILINE):
         return None
-    if _FORBIDDEN_LEAN_META_RE.search(block):
-        return "Forbidden Lean 4 metaprogramming or IO directive (`#eval`/`run_cmd`/`elab`/`IO.`) in proof; use pure tactics only."
+    if _FORBIDDEN_LEAN_PROOF_RE.search(stripped) or _FORBIDDEN_LEAN_META_RE.search(stripped):
+        return "Forbidden Lean 4 placeholder, metaprogramming, or `native_decide`/`IO` directive in proof; use pure tactics only."
     with tempfile.TemporaryDirectory() as td:
         tmp_path = Path(td) / "CandidateCheck.lean"
         tmp_path.write_text(block + "\n", encoding="utf-8")
