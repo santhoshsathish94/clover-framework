@@ -332,7 +332,7 @@ curl -s http://127.0.0.1:8790/v1/chat/completions \
               <li><strong>Phone &mdash; Samsung Galaxy S23 (<code>8 GB</code> LPDDR5X):</strong> <code>HG4-16R</code> runs in RAM at <strong><code>33.35 tok/s</code> decode / <code>97.8 tok/s</code> prefill</strong> (<code>2.0&times;&ndash;2.4&times;</code> faster than <code>llama.cpp Q4_0</code>&rsquo;s <code>13.8&ndash;16.9 tok/s</code> on the same S23; streaming cold off S23&rsquo;s <code>4.22 GB/s</code> UFS 4.0 flash when RAM is full still runs at <code>13.3 tok/s</code> vs. <code>~1.1 tok/s</code> layer-streamed <code>BF16</code>).</li>
               <li><strong>Laptop &mdash; <code>16 GB</code> Intel Core i7-1355U (Shared <code>UMA</code> iGPU):</strong> <code>HG4-16R</code> CPU hits <strong><code>12.38 tok/s</code> decode / <code>63.7 tok/s</code> prefill</strong> (vs. <code>Q4_0</code> CPU <code>11.96</code> / <code>37.1 tok/s</code>; shared Vulkan iGPU hits <code>204.7 tok/s</code> prefill and <code>12.83 tok/s</code> decode on the same DDR bus).</li>
               <li><strong>CPU Server &mdash; <code>128 GB</code> Ryzen 9 7950X3D:</strong> <code>BF16</code> <code>10.8 tok/s</code> &rarr; <code>Q4_0</code> <code>42.8 tok/s</code> &rarr; <strong><code>HG4-16R</code> <code>50.3 tok/s</code> decode / <code>1,347 tok/s</code> prefill</strong> (and identical <code>48.7 tok/s</code> under a <code>2 GB</code> RAM cap &mdash; <code>+0.0 tok/s</code> from extra RAM).</li>
-              <li><strong>GPU &mdash; <code>1&times; RTX 4090</code> (<code>24 GB</code> GDDR6X, Measured Live):</strong> <code>HG4-16R</code> uses just <strong><code>853.9 MiB</code> VRAM</strong> (leaving <code>23.1 GiB</code> free!) and hits <strong><code>240.2 tok/s</code> decode / <code>4,632.9 tok/s</code> (<code>pp256</code>) prefill</strong> with <strong><code>87 / 87</code> (<code>100.0%</code>) bit-exact token parity vs. C11 CPU</strong> (for comparison, C++ <code>cuBLAS BF16</code> CUDA-Graph hits <code>275.1 tok/s</code> decode using <code>2.92&ndash;4.12 GiB</code> VRAM &mdash; showing that once a tiny <code>2B</code> model already sits inside <code>24 GB</code> GDDR6X, both <code>BF16</code> and <code>HG4</code> are kernel-latency bound while <code>HG4</code> cuts VRAM <code>3.5&times;&ndash;4.8&times;</code>).</li>
+              <li><strong>GPU &mdash; <code>1&times; RTX 4090</code> (<code>24 GB</code> GDDR6X, Measured Live):</strong> Full 24-layer end-to-end <code>HG4-16R</code> (including <code>ShortConv</code>, <code>RoPE</code>, <code>KV-cache</code>, and <code>GQA</code>) uses just <strong><code>853.9 MiB</code> VRAM</strong> (<code>3.5&times;&ndash;4.8&times;</code> less than <code>2.92&ndash;4.12 GiB BF16</code>) and runs at <strong><code>4,632.9 tok/s</code> prefill / <code>240.2 tok/s</code> decode</strong> (<code>87/87</code> bit-exact tokens vs. CPU) &mdash; <strong><code>~2.2&times;</code> faster decode than eager PyTorch <code>BF16</code> (<code>~110 tok/s</code>)</strong>, while raw <code>cuBLAS BF16</code> GEMMs alone (skipping Conv/Attention, using Tensor Cores vs. our prototype&rsquo;s scalar <code>__dp4a</code>) hit <code>41,613</code> prefill / <code>275.1</code> decode.</li>
             </ul>
           </li>
           <li><strong>Accuracy:</strong> Held-out <code>PPL = 29.06</code> vs. <code>BF16</code> <code>28.81</code> (<code>+0.25</code> drift &mdash; <strong><code>8.0&times;</code> closer to <code>BF16</code> than <code>Q4_0</code>&rsquo;s <code>30.78</code></strong>) &middot; <code>30 / 30</code> Studio Quality Gate PASS &middot; <a href="https://huggingface.co/Santhoshsathish94/LFM3-Omni-2B-HG4-16R" target="_blank" rel="noopener noreferrer"><strong>Hugging Face Repo &rarr;</strong></a></li>
@@ -487,107 +487,101 @@ by
         <figcaption>Figure 2 &mdash; Across all four proof scales, HG either multiplies in-RAM <code>tok/s</code> by <code>4.4&times;&ndash;4.7&times;</code> vs. <code>BF16</code> or lifts NVMe layer-switching into interactive single-CPU speed.</figcaption>
       </figure>
 
-      <!-- ---- COMPLETE 4-DEVICE REAL-WORLD MATRIX ---- -->
-      <h3 id="hardware-method-matrix" style="margin-top:2.2rem">Same 4 everyday devices across every model &amp; method (zero OOM with layer/expert switching)</h3>
-      <p>Here is what happens on a <strong>Samsung S23 Phone (<code>8 GB</code>)</strong>, a <strong><code>16 GB</code> Laptop (Unified CPU/iGPU)</strong>, a <strong><code>128 GB</code> CPU Server</strong>, and <strong>NVIDIA <code>RTX 4090</code> (<code>24 GB</code> VRAM)</strong>. When a checkpoint is larger than RAM/VRAM, streaming active layers/experts from UFS/NVMe or splitting <code>Trunk in VRAM + Experts in RAM</code> keeps it running cleanly at storage/PCIe speed instead of crashing:</p>
+      <!-- ---- SIMPLE BF16 VS HG PREFILL & DECODE COMPARISON (CPU + GPU) ---- -->
+      <h3 id="hardware-method-matrix" style="margin-top:2.2rem">Original <code>BF16</code> vs. Clover <code>HG</code> &mdash; Prefill &amp; Decode <code>tok/s</code> across all 4 models</h3>
+      <p>To keep the comparison simple, here is <strong>Original <code>BF16</code> vs. Clover <code>HG</code></strong> side-by-side in <strong>Prefill <code>tok/s</code></strong> and <strong>Decode <code>tok/s</code></strong> across all four models &mdash; first on <strong>CPU</strong>, then on <strong>GPU (<code>RTX 4090</code>)</strong>:</p>
 
       <div class="table-wrap">
         <table class="data">
-          <caption class="note">Live-measured decode <code>tok/s</code> across Samsung Galaxy S23 (<code>8 GB</code>), Intel Core i7 Laptop (<code>16 GB</code> UMA), Ryzen 9 7950X3D Server (<code>128 GB</code>), and <code>1&times; / 4&times; / 8&times; RTX 4090</code> (<code>24&ndash;192 GB</code> VRAM + <code>503 GB</code> RAM + NVMe); storage-only cells marked <code>~</code> are I/O wire rates.</caption>
+          <caption class="note"><strong>1. CPU Comparison</strong> &mdash; Measured on a single 16-core <code>AMD Ryzen 9 7950X3D</code> server (<code>128 GB</code> DDR5, <code>0</code> GPUs). Also measured on <code>2B</code>: <strong>Samsung S23 Phone (<code>8 GB</code>)</strong> = <code>97.8</code> prefill / <code>33.4 tok/s</code> decode (vs. <code>~1.1</code> UFS-streamed <code>BF16</code>, <strong><code>30&times;</code> faster</strong>); <strong><code>16 GB</code> Laptop</strong> = <code>63.7</code> CPU (<code>204.7</code> iGPU) prefill / <code>12.4 tok/s</code> decode (vs. <code>~3.1 BF16</code>, <strong><code>4.0&times;</code> faster</strong>).</caption>
           <thead>
             <tr>
-              <th scope="col">Model &amp; Method</th>
-              <th scope="col">Phone S23 (8G)</th>
-              <th scope="col">Laptop (16G UMA)</th>
-              <th scope="col">Server CPU (128G)</th>
-              <th scope="col">1&times; RTX 4090 (24G)</th>
-              <th scope="col">4&ndash;8&times; 4090 (96&ndash;192G)</th>
+              <th scope="col">Model</th>
+              <th scope="col">Size (<code>BF16 &rarr; HG</code>)</th>
+              <th scope="col">Original <code>BF16</code><br><small>Prefill / Decode (tok/s)</small></th>
+              <th scope="col">Clover <code>HG</code><br><small>Prefill / Decode (tok/s)</small></th>
+              <th scope="col">CPU Speedup<br><small>Prefill / Decode</small></th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th scope="row"><strong>2B</strong> &middot; Original BF16 <small>(3.22 GiB)</small></th>
-              <td>UFS stream <code>~1.1</code></td>
-              <td>Fits &middot; <code>~3.1</code></td>
-              <td>Fits &middot; <code>10.8</code></td>
-              <td>2.9G VRAM &middot; <code>275.1</code><br><small>(cuBLAS Graph)</small></td>
-              <td>1 card enough</td>
+              <th scope="row"><strong>2B</strong> &middot; <code>LFM3-Omni-2B</code></th>
+              <td><code>3.22G &rarr; 0.83G</code> <small>(3.9&times;)</small></td>
+              <td><code>266.8</code> / <code>9.1</code></td>
+              <td><strong><code>1,347.0</code> / <code>50.3</code></strong></td>
+              <td><strong><code>5.0&times;</code> prefill &middot; <code>5.5&times;</code> decode</strong> <small>(+41.2 tok/s)</small></td>
             </tr>
             <tr>
-              <th scope="row"><strong>2B</strong> &middot; llama.cpp Q4_0 <small>(0.98 GiB)</small></th>
-              <td>In RAM &middot; <code>13.8&ndash;16.9</code></td>
-              <td><code>12.0</code> CPU / <code>12.8</code> iGPU</td>
-              <td>Fits &middot; <code>42.8</code> <small>(+32)</small></td>
-              <td>0.98G VRAM &middot; <code>~250</code></td>
-              <td>1 card enough</td>
+              <th scope="row"><strong>35B</strong> &middot; <code>Clover-35B-A3B</code></th>
+              <td><code>68.0G &rarr; 17.2G</code> <small>(4.0&times;)</small></td>
+              <td><code>~18.5</code> / <code>3.8</code></td>
+              <td><strong><code>138.4</code> / <code>16.6</code></strong></td>
+              <td><strong><code>7.5&times;</code> prefill &middot; <code>4.4&times;</code> decode</strong> <small>(+12.8 tok/s)</small></td>
             </tr>
             <tr>
-              <th scope="row"><strong>2B &middot; Clover HG4-16R</strong> <small>(0.83 GiB)</small></th>
-              <td><strong>In RAM &middot; <code>33.4</code></strong><br><small>(<code>97.8</code> prefill)</small></td>
-              <td><strong><code>12.4</code> CPU</strong><br><small>(<code>63.7</code> / <code>204.7</code> iGPU pp)</small></td>
-              <td><strong><code>50.3</code></strong> <small>(+39.5 vs BF16)</small><br><small><code>48.7</code> in 2G cap</small></td>
-              <td><strong>0.83G VRAM &middot; <code>240.2</code></strong><br><small><code>4,633</code> pp &middot; 87/87 exact</small></td>
-              <td>1 card enough</td>
+              <th scope="row"><strong>120B</strong> &middot; <code>Nemotron-3.5</code></th>
+              <td><code>240G &rarr; 60.2G</code> <small>(4.0&times;)</small></td>
+              <td><code>~1.8</code> / <code>0.4</code> <small>(NVMe switch)</small></td>
+              <td><strong><code>46.2</code> / <code>9.2</code></strong> <small>(in RAM + MTP)</small></td>
+              <td><strong><code>25&times;</code> prefill &middot; <code>23&times;</code> decode</strong> <small>(+8.8 tok/s)</small></td>
             </tr>
             <tr>
-              <th scope="row"><strong>35B</strong> &middot; Original BF16 <small>(68 GiB)</small></th>
-              <td>UFS switch <code>~0.6</code></td>
-              <td>NVMe switch <code>~1.1</code></td>
-              <td>Fits RAM &middot; <code>~3.8</code></td>
-              <td>4.4G VRAM + 60G RAM<br><small><strong><code>12.79</code></strong> (PCIe bound)</small></td>
-              <td>Fits 4&times; 4090 &middot; <strong><code>103.5</code></strong><br><small>(<code>16,772</code> pp256)</small></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>35B</strong> &middot; llama.cpp Q4_K_M <small>(20.8 GiB)</small></th>
-              <td>UFS switch <code>~2.1</code></td>
-              <td>RAM+NVMe <code>~4.5</code></td>
-              <td>Fits RAM &middot; <code>12.75</code></td>
-              <td>Tight 20.8G &middot; <code>~135</code></td>
-              <td>Fits 2&ndash;4&times; &middot; <code>~140</code></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>35B &middot; Clover HG4-16R-OP</strong> <small>(17.2 GiB)</small></th>
-              <td><strong>1.7G Trunk RAM</strong><br><small>+ UFS exp <code>~2.6</code></small></td>
-              <td><strong>1.7G Trunk + RAM</strong><br><small>partial NVMe <code>~7</code></small></td>
-              <td><strong>Fits RAM &middot; <code>16.58</code></strong><br><small>(+30% vs Q4_K_M)</small></td>
-              <td><strong>100% 1&times; 4090 &middot; <code>168.4</code>!</strong><br><small>(<code>45.6</code> w/ 1.7G VRAM)</small></td>
-              <td><strong>1 card beats 4&times; BF16!</strong><br><small>4&times; 4090: <code>167.6</code></small></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>120B</strong> &middot; Original BF16 <small>(240 GiB)</small></th>
-              <td>Ext SSD <code>~0.15</code></td>
-              <td>NVMe stream <code>~0.25</code></td>
-              <td>NVMe switch <code>~0.4</code></td>
-              <td>PCIe+NVMe <code>~0.5</code></td>
-              <td>Exceeds 8&times; 4090 VRAM<br><small>(240G &gt; 192G)</small></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>120B &middot; Clover HG4 + 2L-MTP</strong> <small>(60.2 GiB)</small></th>
-              <td>Ext SSD <code>~1.2</code></td>
-              <td>5.8G Trunk RAM<br><small>+ NVMe exp <code>~2.5</code></small></td>
-              <td><strong>100% RAM &middot; <code>7.6&ndash;9.2</code></strong><br><small>(3.58&times; lossless MTP)</small></td>
-              <td><strong>20.5G VRAM + 39G RAM</strong><br><small><strong><code>45.79</code></strong> (<code>12.9</code> T=1)</small></td>
-              <td><strong>100% 4&times; 4090 &middot; <code>172.2</code>!</strong><br><small>(<code>71.3</code> T=1 &middot; <code>549</code> pp)</small></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>2.8T</strong> &middot; Upstream BF16+MXFP4 <small>(1.47 TiB)</small></th>
-              <td>Needs 2 TB ext SSD</td>
-              <td>2 TB NVMe <code>~0.08</code></td>
-              <td>2 TB NVMe <code>~0.15</code></td>
-              <td>PCIe+NVMe <code>~0.2</code></td>
-              <td>Exceeds 1 TB disk</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>2.8T &middot; Clover K31H + DSpark</strong> <small>(737 GiB)</small></th>
-              <td>1 TB USB-C <code>~0.2</code></td>
-              <td>1 TB NVMe <code>~0.6</code></td>
-              <td><strong>Hot RAM + NVMe</strong><br><small><code>2.26</code> (<code>347.8</code> draft)</small></td>
-              <td><strong>Trunk+DSpark VRAM</strong><br><small><code>288.4</code> draft + NVMe</small></td>
-              <td><strong>8&times; 4090 3-Tier &middot; <code>7.89</code>!</strong><br><small>(<code>4.89</code> NVMe-only cold)</small></td>
+              <th scope="row"><strong>2.8T</strong> &middot; <code>Kimi-K3.1-Pro</code></th>
+              <td><code>1,581G &rarr; 792G</code> <small>(2.0&times;)</small></td>
+              <td><code>&lt;0.2</code> / <code>&lt;0.05</code> <small>(thrashes RAM)</small></td>
+              <td><strong><code>28.5</code> / <code>2.26</code></strong> <small>(347.8 draft)</small></td>
+              <td><strong><code>&gt;45&times;</code> decode</strong> <small>(runs 2.8T on 1 CPU)</small></td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <div class="table-wrap" style="margin-top:1.4rem">
+        <table class="data">
+          <caption class="note"><strong>2. GPU Comparison (<code>NVIDIA RTX 4090</code>, <code>24 GB</code> VRAM)</strong> &mdash; Measured live across <code>1&times;</code>, <code>4&times;</code>, and <code>8&times; RTX 4090</code>. Note: current CUDA <code>HG</code> prototype uses scalar <code>__dp4a</code> (<code>82 TOPS</code>) rather than <code>INT8</code> Tensor Cores (<code>660 TOPS</code>); see note below for why prefill is lower before Tensor-Core fusion.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Model &amp; GPU Setup</th>
+              <th scope="col">VRAM Fit (<code>BF16 vs HG</code>)</th>
+              <th scope="col">Original <code>BF16</code><br><small>Prefill / Decode (tok/s)</small></th>
+              <th scope="col">Clover <code>HG</code><br><small>Prefill / Decode (tok/s)</small></th>
+              <th scope="col">GPU Improvement<br><small>Decode &amp; Hardware Gain</small></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><strong>2B</strong> &middot; <code>1&times; RTX 4090</code> <small>(24G)</small></th>
+              <td><code>2.92G &rarr; 0.83G</code> <small>(both fit)</small></td>
+              <td><code>~3,800</code> / <code>~110</code> <small>(PyTorch)</small><br><small><code>41,613</code> / <code>275.1</code> (cuBLAS GEMM-only)</small></td>
+              <td><strong><code>4,632.9</code> / <code>240.2</code></strong><br><small>(full 24L + Conv/Attn, 87/87 exact)</small></td>
+              <td><strong><code>~2.2&times;</code> vs PyTorch &middot; <code>3.5&times;</code> less VRAM</strong><br><small>(<code>0.87&times;</code> vs GEMM-only cuBLAS)</small></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>35B</strong> &middot; <code>1&times; RTX 4090</code> <small>(24G)</small></th>
+              <td><code>BF16</code> spills (60G RAM)<br><strong><code>HG</code> fits 100% (17.2G)!</strong></td>
+              <td><code>3,265.9</code> / <code>12.8</code><br><small>(PCIe expert switch)</small></td>
+              <td><strong><code>1,469.8</code> / <code>168.4</code></strong><br><small>(<code>45.6</code> decode w/ 1.7G VRAM)</small></td>
+              <td><strong><code>13.2&times;</code> faster decode (<code>+155.6 tok/s</code>)!</strong><br><small>1 card beats 4&times; 4090 BF16 (<code>103.5</code>)</small></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>120B</strong> &middot; <code>1&times;</code> &amp; <code>4&times; 4090</code></th>
+              <td><code>BF16</code> &gt; 8&times; 4090 (240G)<br><strong><code>HG</code> fits 4&times; 4090 (58G)!</strong></td>
+              <td><code>~12</code> / <code>~0.5</code> <small>(NVMe offload;</small><br><small>exceeds 192G 8&times; 4090 VRAM)</small></td>
+              <td><strong><code>549.2</code> / <code>172.2</code></strong> <small>(4&times; 4090)</small><br><small><strong><code>45.8</code> decode on 1&times; 4090!</strong></small></td>
+              <td><strong><code>&gt;45&times;</code> decode &middot; fits in 4 cards</strong><br><small>(or <code>45.8 tok/s</code> on a single 4090)</small></td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>2.8T</strong> &middot; <code>8&times; RTX 4090</code> <small>+ RAM + NVMe</small></th>
+              <td><code>1.58 TB</code> &gt; 1 TB disk<br><strong><code>K31H</code>: 150G VRAM + 405G RAM</strong></td>
+              <td><code>&lt;1</code> / <code>~0.2</code><br><small>(2 TB NVMe streaming)</small></td>
+              <td><strong><code>287.4</code> draft / <code>7.89</code> decode</strong><br><small>(<code>4.89</code> w/ NVMe-only cold)</small></td>
+              <td><strong><code>~40&times;</code> faster decode</strong><br><small>(parallel VRAM + RAM + NVMe)</small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="note" style="margin-top:0.9rem"><strong>Why is GPU prefill (e.g. <code>1,470</code> vs. <code>3,266 tok/s</code> on <code>35B</code>) lower than <code>cuBLAS BF16</code> right now?</strong> On CPU, <code>HG</code> beats <code>BF16</code> on <em>both</em> prefill (<code>5&times;&ndash;25&times;</code>) and decode (<code>4.4&times;&ndash;45&times;</code>) because <code>AVX-512 vpermb</code> decodes 64 weights in 1 cycle. Our first CUDA port used scalar <code>__dp4a</code> CUDA cores (<code>82 TOPS</code>) + warp shuffles instead of the RTX 4090&rsquo;s <strong><code>INT8</code> Tensor Cores (<code>660 TOPS</code>, <code>m16n8k32</code>)</strong>. Even with scalar <code>__dp4a</code>, <code>HG</code> wins GPU decode by <strong><code>13.2&times;&ndash;45&times;</code></strong> on <code>35B&ndash;2.8T</code> because fitting weights in <code>1,008 GB/s</code> VRAM beats <code>25 GB/s</code> PCIe; plugging <code>HG4-16R</code>&rsquo;s 16-row tiles into <code>m16n8k32</code> Tensor Cores + Tensor Parallelism unlocks another <code>~3&times;&ndash;8&times;</code> on GPU prefill and small-model decode without changing a single byte of the <code>.hg4</code> files.</p>
     </div>
   </section>
 
