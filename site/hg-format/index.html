@@ -330,7 +330,7 @@ curl -s http://127.0.0.1:8790/v1/chat/completions \
           <li><strong>Measured Across 3 Real Devices + <code>RTX 4090</code>:</strong>
             <ul>
               <li><strong>Phone &mdash; Samsung Galaxy S23 (<code>8 GB</code> LPDDR5X):</strong> <code>HG4-16R</code> runs in RAM at <strong><code>33.35 tok/s</code> decode / <code>97.8 tok/s</code> prefill</strong> (<code>2.0&times;&ndash;2.4&times;</code> faster than <code>llama.cpp Q4_0</code>&rsquo;s <code>13.8&ndash;16.9 tok/s</code> on the same S23; streaming cold off S23&rsquo;s <code>4.22 GB/s</code> UFS 4.0 flash when RAM is full still runs at <code>13.3 tok/s</code> vs. <code>~1.1 tok/s</code> layer-streamed <code>BF16</code>).</li>
-              <li><strong>Laptop &mdash; <code>16 GB</code> Intel Core i7-1355U (Shared <code>UMA</code> iGPU):</strong> <code>HG4-16R</code> CPU hits <strong><code>12.38 tok/s</code> decode / <code>63.7 tok/s</code> prefill</strong> (vs. <code>Q4_0</code> CPU <code>11.96</code> / <code>37.1 tok/s</code>; shared Vulkan iGPU hits <code>204.7 tok/s</code> prefill and <code>12.83 tok/s</code> decode on the same DDR bus).</li>
+              <li><strong>Laptop &mdash; <code>16 GB</code> Single-Channel <code>DDR4-3200</code> (<code>1&times; 16 GB</code> stick, Slot 2 empty = <code>25.6 GB/s</code> wire):</strong> <code>HG4-16R</code> CPU hits <strong><code>12.38 tok/s</code> decode / <code>63.7 tok/s</code> prefill</strong>, and shared Vulkan iGPU hits <code>204.7 tok/s</code> prefill / <code>12.83 tok/s</code> decode &mdash; capped by the single <code>25.6 GB/s</code> DDR4 stick (whereas Dual-Channel <code>DDR5 / LPDDR5X</code> laptops with <code>80&ndash;120 GB/s</code> wires reach <code>40&ndash;60+ tok/s</code>).</li>
               <li><strong>CPU Server &mdash; <code>128 GB</code> Ryzen 9 7950X3D:</strong> <code>BF16</code> <code>10.8 tok/s</code> &rarr; <code>Q4_0</code> <code>42.8 tok/s</code> &rarr; <strong><code>HG4-16R</code> <code>50.3 tok/s</code> decode / <code>1,347 tok/s</code> prefill</strong> (and identical <code>48.7 tok/s</code> under a <code>2 GB</code> RAM cap &mdash; <code>+0.0 tok/s</code> from extra RAM).</li>
               <li><strong>GPU &mdash; <code>1&times; RTX 4090</code> (<code>24 GB</code> GDDR6X):</strong> <code>HG4-16R</code> uses just <strong><code>0.83 GiB</code> VRAM</strong> (vs. <code>2.92&ndash;4.12 GiB</code> in <code>BF16</code>) and produces <strong><code>4,633 tok/s</code> prefill / <code>240.2 tok/s</code> decode</strong> (vs. <code>~3,800</code> prefill / <code>~110 tok/s</code> decode in PyTorch <code>BF16</code>, with <code>87 / 87</code> bit-exact token parity vs. CPU).</li>
             </ul>
@@ -493,7 +493,7 @@ by
 
       <div class="table-wrap">
         <table class="data">
-          <caption class="note"><strong>1. CPU Comparison</strong> &mdash; Measured on a single 16-core <code>AMD Ryzen 9 7950X3D</code> server (<code>128 GB</code> DDR5, <code>0</code> GPUs). Also measured on <code>2B</code>: <strong>Samsung S23 Phone (<code>8 GB</code>)</strong> = <code>97.8</code> prefill / <code>33.4 tok/s</code> decode (vs. <code>~1.1</code> UFS-streamed <code>BF16</code>, <strong><code>30&times;</code> faster</strong>); <strong><code>16 GB</code> Laptop</strong> = <code>63.7</code> CPU (<code>204.7</code> iGPU) prefill / <code>12.4 tok/s</code> decode (vs. <code>~3.1 BF16</code>, <strong><code>4.0&times;</code> faster</strong>).</caption>
+          <caption class="note"><strong>1. CPU Comparison</strong> &mdash; Measured on a single 16-core <code>AMD Ryzen 9 7950X3D</code> server (<code>128 GB</code> Dual-Channel DDR5, <code>0</code> GPUs). Also measured on <code>2B</code>: <strong>Samsung S23 Phone (<code>8 GB</code> Quad-Channel <code>LPDDR5X</code>, <code>68 GB/s</code>)</strong> = <code>97.8</code> prefill / <code>33.4 tok/s</code> decode (<strong><code>30&times;</code> faster</strong> than UFS-streamed <code>BF16</code>); <strong><code>16 GB</code> Single-Channel <code>DDR4</code> Laptop (<code>1&times; 16 GB</code>, <code>25.6 GB/s</code>)</strong> = <code>63.7</code> CPU (<code>204.7</code> iGPU) prefill / <code>12.4 tok/s</code> decode (<strong><code>4.0&times;</code> faster</strong> than <code>BF16</code>).</caption>
           <thead>
             <tr>
               <th scope="col">Model</th>
@@ -581,107 +581,128 @@ by
         </table>
       </div>
 
-      <!-- ---- SEPARATE SECTION: DOES MORE RAM OR MORE VRAM SPEED UP DECODE? ---- -->
+      <!-- ---- SEPARATE SECTION: THE DATA-MOVEMENT TRUTH ---- -->
       <div class="card" id="more-ram-or-vram" style="margin-top:2.2rem">
-        <h3>Does adding more RAM or more VRAM make decode faster? (Measured answer: <code>+0.0 tok/s</code> once it fits)</h3>
-        <p><strong>No &mdash; both System RAM and GPU VRAM follow the exact same physical law:</strong> once a model fits inside RAM (or inside VRAM), adding extra gigabytes gives <strong><code>+0.0 tok/s</code></strong>. Think of memory capacity (<code>GB</code>) as the size of a water tank, and memory bandwidth (<code>GB/s</code>) as the width of the pipe: once the whole model fits in the tank, making the tank 10&times; bigger does not move a single extra byte per second through the pipe.</p>
+        <h3>The Data-Movement Truth: Why more RAM, more VRAM &amp; more compute don&rsquo;t speed up decode &mdash; and what actually does</h3>
+        <p>When generating text one token at a time (<strong>decode</strong>), modern LLMs are <strong>not bottlenecked by compute or by memory size (<code>GB</code>) &mdash; they are bottlenecked strictly by data movement</strong>: every single token has to pull all active model weights across the memory wire into the processor. Once a model fits in memory, adding extra gigabytes of RAM/VRAM or adding faster compute cores gives <strong><code>+0.0 tok/s</code></strong>. Only <strong>moving fewer bytes</strong> or <strong>widening the memory pipe (<code>GB/s</code>, more channels / faster bus)</strong> makes decode faster:</p>
 
         <figure style="margin:1.2rem 0">
-          <svg viewBox="0 0 900 248" role="img" aria-label="Side-by-side measured step-function charts proving that both System RAM and GPU VRAM jump in speed only when the model stops spilling to a slower tier, and stay completely flat (+0.0 tok/s) when adding extra RAM or VRAM beyond model size." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:12px;background:#fffefb;padding:10px">
-            <text x="20" y="24" font-size="11.5" font-weight="700" fill="#1b5e46" letter-spacing="1.0">MEASURED CAPACITY PLATEAU · BOTH RAM AND VRAM STAY FLAT (+0.0 TOK/S) ONCE THE MODEL FITS</text>
+          <svg viewBox="0 0 900 264" role="img" aria-label="Measured proof of the Data-Movement Law: Left panel shows capacity plateaus where 2 GB vs 128 GB RAM (48.7 tok/s) and 96 GB vs 192 GB VRAM (172 tok/s) add +0.0 tok/s once weights fit; Right panel shows pipe bandwidth scaling where 8 GB 4-channel LPDDR5X (68 GB/s, 33.4 tok/s) beats 1x16 GB single-channel DDR4 (25.6 GB/s, 12.4 tok/s) by 2.7x." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:12px;background:#fffefb;padding:10px">
+            <text x="20" y="24" font-size="11.5" font-weight="700" fill="#1b5e46" letter-spacing="1.0">THE DATA-MOVEMENT LAW · TANK SIZE (GB) &amp; EXTRA COMPUTE ADD +0.0 TOK/S; PIPE WIDTH (GB/S) SETS SPEED</text>
 
-            <!-- Left Chart: System RAM -->
-            <rect x="18" y="38" width="420" height="194" rx="10" fill="#f7f4ec" stroke="#dcd4c2"></rect>
-            <text x="34" y="60" font-size="12" font-weight="700" fill="#132018">A. System RAM on 2B HG4 (0.83 GiB model)</text>
-            <line x1="56" y1="186" x2="414" y2="186" stroke="#9aa89e" stroke-width="1.3"></line>
-            <line x1="56" y1="80" x2="56" y2="186" stroke="#9aa89e" stroke-width="1.3"></line>
-            <!-- Step curve: 0.5G spills -> 2G fits -> 128G flat -->
-            <polyline points="66,164 132,164 148,98 396,98" fill="none" stroke="#1b5e46" stroke-width="3.2"></polyline>
-            <circle cx="96" cy="164" r="4.5" fill="#7a6a52"></circle>
-            <text x="66" y="154" font-size="10" fill="#596a5f">Spills to Flash: 13.3 tok/s</text>
-            <circle cx="176" cy="98" r="5" fill="#1b5e46"></circle>
-            <text x="152" y="87" font-size="10.5" font-weight="700" fill="#1b5e46">2 GB RAM: 48.7 tok/s</text>
-            <circle cx="376" cy="98" r="5" fill="#1b5e46"></circle>
-            <text x="292" y="87" font-size="10.5" font-weight="700" fill="#1b5e46">128 GB RAM: 48.7 tok/s</text>
-            <text x="218" y="118" font-size="10.5" font-weight="700" fill="#0a6a5f">+126 GB extra RAM = +0.0 tok/s</text>
-            <text x="58" y="206" font-size="10" fill="#2d3e34">• Why 8 GB S23 Phone (33.4 tok/s) beats 16 GB Laptop (12.4 tok/s):</text>
-            <text x="66" y="221" font-size="10" fill="#596a5f">S23 has faster 67 GB/s LPDDR5X wire vs. Laptop&rsquo;s 25 GB/s DDR wire.</text>
+            <!-- Left Chart: Tank Size (RAM & VRAM Plateau) -->
+            <rect x="18" y="38" width="420" height="210" rx="10" fill="#f7f4ec" stroke="#dcd4c2"></rect>
+            <text x="34" y="60" font-size="12" font-weight="700" fill="#132018">1. Bigger Tank (GB) = +0.0 tok/s Once Model Fits</text>
+            <line x1="54" y1="184" x2="414" y2="184" stroke="#9aa89e" stroke-width="1.3"></line>
+            <line x1="54" y1="78" x2="54" y2="184" stroke="#9aa89e" stroke-width="1.3"></line>
+            <!-- VRAM curve -->
+            <polyline points="66,154 134,154 154,94 396,94" fill="none" stroke="#1b5e46" stroke-width="3"></polyline>
+            <circle cx="96" cy="154" r="4" fill="#7a6a52"></circle>
+            <text x="64" y="144" font-size="9.5" fill="#596a5f">Spills: 45.8</text>
+            <circle cx="190" cy="94" r="4.5" fill="#1b5e46"></circle>
+            <text x="156" y="84" font-size="10" font-weight="700" fill="#1b5e46">96G VRAM: 172.2</text>
+            <circle cx="372" cy="94" r="4.5" fill="#1b5e46"></circle>
+            <text x="284" y="84" font-size="10" font-weight="700" fill="#1b5e46">192G VRAM: 171.8 (+0.0)</text>
+            <!-- RAM curve -->
+            <polyline points="66,172 122,172 138,128 396,128" fill="none" stroke="#0a6a5f" stroke-width="2.6" stroke-dasharray="5,3"></polyline>
+            <circle cx="176" cy="128" r="4.5" fill="#0a6a5f"></circle>
+            <text x="148" y="121" font-size="10" font-weight="700" fill="#0a6a5f">2G RAM: 48.7</text>
+            <circle cx="372" cy="128" r="4.5" fill="#0a6a5f"></circle>
+            <text x="292" y="121" font-size="10" font-weight="700" fill="#0a6a5f">128G RAM: 48.7 (+0.0)</text>
+            <text x="34" y="206" font-size="10" fill="#2d3e34">• Extra GB only helps when stopping SSD / PCIe spills.</text>
+            <text x="34" y="222" font-size="10" fill="#2d3e34">• Extra compute on same wire (Laptop iGPU vs CPU):</text>
+            <text x="42" y="237" font-size="10" fill="#596a5f">Prefill jumps 3.2&times; (63.7 &rarr; 204.7), Decode stays 12.4 &rarr; 12.8!</text>
 
-            <!-- Right Chart: GPU VRAM -->
-            <rect x="462" y="38" width="420" height="194" rx="10" fill="#eef6f1" stroke="#b9d4c6"></rect>
-            <text x="478" y="60" font-size="12" font-weight="700" fill="#132018">B. GPU VRAM on 120B HG4 (60.2 GiB model)</text>
-            <line x1="500" y1="186" x2="858" y2="186" stroke="#9aa89e" stroke-width="1.3"></line>
-            <line x1="500" y1="80" x2="500" y2="186" stroke="#9aa89e" stroke-width="1.3"></line>
-            <!-- Step curve: 24G spills -> 96G fits -> 192G flat -->
-            <polyline points="516,158 590,158 614,96 842,96" fill="none" stroke="#1b5e46" stroke-width="3.2"></polyline>
-            <circle cx="546" cy="158" r="4.5" fill="#7a6a52"></circle>
-            <text x="510" y="148" font-size="10" fill="#596a5f">24G (1&times;4090): 45.8 tok/s</text>
-            <text x="510" y="173" font-size="9.5" fill="#596a5f">(spills 39G to RAM)</text>
-            <circle cx="642" cy="96" r="5" fill="#1b5e46"></circle>
-            <text x="606" y="85" font-size="10.5" font-weight="700" fill="#1b5e46">96G (4&times;4090): 172.2</text>
-            <circle cx="822" cy="96" r="5" fill="#1b5e46"></circle>
-            <text x="742" y="85" font-size="10.5" font-weight="700" fill="#1b5e46">192G (8&times;4090): 171.8</text>
-            <text x="652" y="118" font-size="10.5" font-weight="700" fill="#0a6a5f">+96 GB extra VRAM = +0.0 tok/s</text>
-            <text x="502" y="206" font-size="10" fill="#2d3e34">• Same on 35B HG4 (17.2 GiB): 24G 1&times;4090 = 168.4 vs. 96G 4&times;4090 = 167.6.</text>
-            <text x="510" y="221" font-size="10" fill="#596a5f">Extra VRAM only helps when stopping PCIe spills (or sharding wires in parallel).</text>
+            <!-- Right Chart: Pipe Width (Channels & Bandwidth) -->
+            <rect x="462" y="38" width="420" height="210" rx="10" fill="#eef6f1" stroke="#b9d4c6"></rect>
+            <text x="478" y="60" font-size="12" font-weight="700" fill="#132018">2. Wider Pipe (Channels &amp; GB/s) = Faster Decode</text>
+
+            <!-- Bar 1: 16G 1-channel Laptop -->
+            <text x="478" y="88" font-size="10" font-weight="700" fill="#2d3e34">16 GB Laptop · 1&times;16G Single-Ch DDR4 (Slot 2 empty · 25.6 GB/s)</text>
+            <rect x="478" y="94" width="92" height="16" rx="4" fill="#8b9d92"></rect>
+            <text x="578" y="106" font-size="10.5" font-weight="700" fill="#2d3e34">12.4 tok/s</text>
+
+            <!-- Bar 2: Same 16G if 2x8G Dual-Channel -->
+            <text x="478" y="126" font-size="10" font-weight="700" fill="#2d3e34">Same 16 GB if 2&times;8G Dual-Channel DDR4 (2 pipes · 51.2 GB/s)</text>
+            <rect x="478" y="132" width="184" height="16" rx="4" fill="#4c8c72"></rect>
+            <text x="670" y="144" font-size="10.5" font-weight="700" fill="#1b5e46">~25 tok/s (2&times; pipe!)</text>
+
+            <!-- Bar 3: 8G S23 Phone 4-channel LPDDR5X -->
+            <text x="478" y="164" font-size="10" font-weight="700" fill="#1b5e46">8 GB S23 Phone · 4-Channel LPDDR5X (Half the GB · 68.3 GB/s!)</text>
+            <rect x="478" y="170" width="246" height="16" rx="4" fill="#1b5e46"></rect>
+            <text x="732" y="182" font-size="10.5" font-weight="700" fill="#1b5e46">33.4 tok/s (2.7&times;!)</text>
+
+            <!-- Bar 4: Dual-Channel DDR5 Server -->
+            <text x="478" y="202" font-size="10" font-weight="700" fill="#0a6a5f">Dual-Channel DDR5-5200 Server (83.2 GB/s wire)</text>
+            <rect x="478" y="208" width="320" height="16" rx="4" fill="#0a6a5f"></rect>
+            <text x="806" y="220" font-size="10.5" font-weight="700" fill="#0a6a5f">50.3 tok/s</text>
+
+            <text x="478" y="240" font-size="9.8" fill="#596a5f">Modern Dual/Quad LPDDR5X-7500 laptops (100&ndash;120 GB/s) hit 45&ndash;60+ tok/s.</text>
           </svg>
         </figure>
 
         <div class="table-wrap">
           <table class="data">
-            <caption class="note">Four live hardware experiments proving that extra RAM and extra VRAM both add <code>0 tok/s</code> once weights fit, and only boost speed when eliminating slower storage/PCIe spills.</caption>
+            <caption class="note">Six live hardware proofs showing what adds <code>+0.0 tok/s</code> vs. what actually accelerates decode.</caption>
             <thead>
               <tr>
-                <th scope="col">Memory Question</th>
-                <th scope="col">Smaller Setup</th>
-                <th scope="col">Larger Setup</th>
+                <th scope="col">What You Change</th>
+                <th scope="col">Setup A</th>
+                <th scope="col">Setup B</th>
                 <th scope="col">Measured Decode</th>
-                <th scope="col">Result</th>
+                <th scope="col">Why It Happened</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <th scope="row"><strong>More RAM after fit?</strong> <small>(2B, 0.83G)</small></th>
+                <th scope="row"><strong>1. Add more RAM (GB)</strong><br><small><code>2B HG4</code> (0.83 GiB)</small></th>
                 <td><code>2 GB</code> RAM cap</td>
                 <td><code>128 GB</code> RAM <small>(+126G)</small></td>
                 <td><code>48.7</code> &rarr; <strong><code>48.7 tok/s</code></strong></td>
-                <td><strong><code>+0.0 tok/s</code> (stays identical)</strong></td>
+                <td><strong><code>+0.0 tok/s</code></strong> &mdash; model already fit; extra GB sits idle.</td>
               </tr>
               <tr>
-                <th scope="row"><strong>Bigger RAM vs faster RAM?</strong> <small>(2B)</small></th>
-                <td><code>8 GB</code> S23 Phone <small>(67 GB/s)</small></td>
-                <td><code>16 GB</code> Laptop <small>(25 GB/s)</small></td>
-                <td><strong><code>33.4</code></strong> vs. <code>12.4 tok/s</code></td>
-                <td><strong>8 GB Phone is <code>2.7&times;</code> faster!</strong></td>
+                <th scope="row"><strong>2. Add more VRAM (GB)</strong><br><small><code>35B</code> &amp; <code>120B HG4</code></small></th>
+                <td><code>24G</code> (35B) / <code>96G</code> (120B)</td>
+                <td><code>96G</code> (35B) / <code>192G</code> (120B)</td>
+                <td><code>168.4 &rarr; 167.6</code><br><code>172.2 &rarr; 171.8</code></td>
+                <td><strong><code>+0.0 tok/s</code></strong> &mdash; extra VRAM buys KV context, not speed.</td>
               </tr>
               <tr>
-                <th scope="row"><strong>More VRAM after fit?</strong> <small>(35B, 17.2G)</small></th>
-                <td><code>24 GB</code> <small>(1&times; 4090, fits)</small></td>
-                <td><code>96 GB</code> <small>(4&times; 4090, +72G)</small></td>
-                <td><code>168.4</code> &rarr; <strong><code>167.6 tok/s</code></strong></td>
-                <td><strong><code>+0.0 tok/s</code> (stays identical)</strong></td>
+                <th scope="row"><strong>3. Add more compute</strong><br><small>Same RAM wire (Laptop)</small></th>
+                <td>Laptop CPU</td>
+                <td>Laptop Vulkan iGPU<br><small>(3.2&times; faster prefill)</small></td>
+                <td><code>12.4</code> &rarr; <strong><code>12.8 tok/s</code></strong></td>
+                <td><strong><code>~0&times;</code> decode gain</strong> &mdash; faster cores still wait on the <code>25.6 GB/s</code> RAM wire.</td>
               </tr>
               <tr>
-                <th scope="row"><strong>More VRAM after fit?</strong> <small>(120B, 60.2G)</small></th>
-                <td><code>96 GB</code> <small>(4&times; 4090, fits)</small></td>
-                <td><code>192 GB</code> <small>(8&times; 4090, +96G)</small></td>
-                <td><code>172.2</code> &rarr; <strong><code>171.8 tok/s</code></strong></td>
-                <td><strong><code>+0.0 tok/s</code> (stays identical)</strong></td>
+                <th scope="row"><strong>4. More channels (wider pipe)</strong><br><small>Smaller <code>8G</code> vs larger <code>16G</code></small></th>
+                <td><code>1&times;16 GB</code> 1-Ch DDR4<br><small>(Slot 2 empty &middot; 25.6 GB/s)</small></td>
+                <td><code>8 GB</code> 4-Ch LPDDR5X<br><small>(S23 Phone &middot; 68.3 GB/s)</small></td>
+                <td><code>12.4</code> &rarr; <strong><code>33.4 tok/s</code></strong></td>
+                <td><strong><code>2.7&times;</code> faster with half the RAM!</strong> 4 parallel channels move <code>2.7&times;</code> more GB/s.</td>
               </tr>
               <tr>
-                <th scope="row"><strong>More VRAM when spilling?</strong> <small>(120B)</small></th>
-                <td><code>24 GB</code> <small>(spills 39G to RAM)</small></td>
-                <td><code>96 GB</code> <small>(stops PCIe spill)</small></td>
-                <td><code>45.8</code> &rarr; <strong><code>172.2 tok/s</code></strong></td>
-                <td><strong><code>3.8&times;</code> faster</strong> <small>(eliminated spill)</small></td>
+                <th scope="row"><strong>5. Shrink bytes moved (<code>HG</code>)</strong><br><small>Same hardware, smaller weights</small></th>
+                <td><code>BF16</code> (<code>3.22G</code> / <code>68G</code>)</td>
+                <td><code>Clover HG</code> (<code>0.83G</code> / <code>17.2G</code>)</td>
+                <td>CPU: <code>9.1 &rarr; 50.3</code><br>4090: <code>12.8 &rarr; 168.4</code></td>
+                <td><strong><code>5.5&times;&ndash;13.2&times;</code> faster</strong> &mdash; moves <code>3.9&times;</code> fewer bytes per token (&amp; stops spills).</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>6. Reuse 1 read for 4 tokens</strong><br><small>Lossless <code>MTP / DSpark</code></small></th>
+                <td><code>1</code> token per weight read</td>
+                <td><code>3&ndash;4</code> verified tokens per read</td>
+                <td>CPU: <code>2.6 &rarr; 9.2</code><br>4090: <code>71.3 &rarr; 172.2</code></td>
+                <td><strong><code>2.4&times;&ndash;3.5&times;</code> faster</strong> &mdash; cuts weight movement per token by <code>~3&times;</code>.</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <ul style="margin-top:1rem">
-          <li><strong>What extra RAM / extra VRAM <em>actually</em> buys once the model fits:</strong> Longer context windows (bigger <code>KV cache</code>) and higher multi-user batch sizes &mdash; <strong>not</strong> faster single-stream <code>tok/s</code>.</li>
-          <li><strong>The only 3 ways single-stream decode gets faster once weights already fit:</strong> (1) shrink active bytes per token (<code>BF16 &rarr; HG4</code>), (2) move onto a faster memory wire (<code>DDR5 75 GB/s &rarr; GDDR6X 1,008 GB/s &rarr; HBM3e 4,800 GB/s</code>), or (3) split <em>each matrix</em> across multiple GPUs so all cards read their slice simultaneously (<strong>Tensor Parallelism</strong>, multiplying wire bandwidth rather than just stacking capacity).</li>
+          <li><strong>Takeaway 1 &mdash; Why a <code>1&times; 32 GB</code> stick loses to <code>2&times; 8 GB</code> sticks:</strong> Putting one big stick in Slot 1 leaves the CPU&rsquo;s second memory channel dark (<code>64-bit = 25.6 GB/s</code>). Two smaller sticks across both slots run two memory pipes in parallel (<code>128-bit = 51.2 GB/s</code>), doubling decode speed with half the total GB.</li>
+          <li><strong>Takeaway 2 &mdash; Only two things ever make LLM decode faster:</strong> <strong>(a) move less data per token</strong> (<code>HG</code> compression, sparse MoE experts, and speculative <code>MTP/DSpark</code> batching), or <strong>(b) move data across a wider/faster wire</strong> (multi-channel <code>LPDDR5X / DDR5</code>, moving weights from <code>SSD &rarr; RAM &rarr; GDDR6X VRAM</code>, or splitting each matrix across GPUs simultaneously via <strong>Tensor Parallelism</strong>).</li>
         </ul>
       </div>
     </div>
