@@ -11,19 +11,16 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
+    outputs:
+      artifact_id: ${{ steps.upload.outputs.artifact_id }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -35,11 +32,61 @@ jobs:
         run: python scripts/check-links.py
       - name: Check site before packaging
         run: python scripts/check-site.py
-      # Pages must be enabled on the repository (Settings -> Pages -> Source: GitHub Actions).
-      # configure-pages cannot enable it: GITHUB_TOKEN has no administration permission.
       - uses: actions/configure-pages@v6
-      - uses: actions/upload-pages-artifact@v5
+      - id: upload
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site
+
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url || steps.fallback_deploy.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Allow artifact index propagation
+        run: sleep 5
       - id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v5
+      - id: fallback_deploy
+        if: steps.deployment.outcome != 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ needs.build.outputs.artifact_id }}
+        run: |
+          set -euo pipefail
+          echo "deploy-pages ListArtifacts lagged; deploying artifact_id=${ARTIFACT_ID} directly via Pages OIDC API..."
+          OIDC_RESP=$(curl -fsSL -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}")
+          OIDC_TOKEN=$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read())["value"])' <<< "${OIDC_RESP}")
+          PAYLOAD=$(OIDC_TOKEN="${OIDC_TOKEN}" python3 -c 'import json,os; print(json.dumps({"artifact_id": int(os.environ["ARTIFACT_ID"]), "pages_build_version": os.environ["GITHUB_SHA"], "oidc_token": os.environ["OIDC_TOKEN"]}))')
+          CREATE_RESP=$(curl -fsSL -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages/deployments" \
+            -d "${PAYLOAD}")
+          PAGE_URL=$(python3 -c 'import json,sys; d=json.loads(sys.stdin.read()); print(d["page_url"])' <<< "${CREATE_RESP}")
+          STATUS_URL=$(python3 -c 'import json,sys; d=json.loads(sys.stdin.read()); print(d["status_url"])' <<< "${CREATE_RESP}")
+          echo "page_url=${PAGE_URL}" >> "${GITHUB_OUTPUT}"
+          for i in $(seq 1 60); do
+            sleep 5
+            ST=$(curl -fsSL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GH_TOKEN}" "${STATUS_URL}")
+            S=$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get("status",""))' <<< "${ST}")
+            echo "  [${i}] Pages deployment status: ${S}"
+            if [ "${S}" = "succeed" ]; then
+              exit 0
+            fi
+            case "${S}" in
+              deployment_failed|deployment_content_failed|deployment_cancelled|deployment_lost)
+                echo "Pages deployment failed: ${ST}" >&2
+                exit 1
+                ;;
+            esac
+          done
+          echo "Timed out waiting for Pages deployment" >&2
+          exit 1
