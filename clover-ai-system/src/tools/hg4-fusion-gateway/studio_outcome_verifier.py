@@ -96,6 +96,20 @@ def _strip_lean_comments_and_strings(src: str) -> str:
                     continue
             out.append("'")
             i += 1
+        elif src[i] in ("r", "R") and (i == 0 or not (src[i - 1].isalnum() or src[i - 1] in ("_", "'"))):
+            # Lean 4 raw string literal `r"..."`, `r#"..."#`, `r##"..."##`
+            j = i + 1
+            while j < n and src[j] == "#":
+                j += 1
+            if j < n and src[j] == '"':
+                hashes = j - (i + 1)
+                closing = '"' + ("#" * hashes)
+                end_pos = src.find(closing, j + 1)
+                out.append('""')
+                i = (end_pos + len(closing)) if end_pos >= 0 else n
+                continue
+            out.append(src[i])
+            i += 1
         elif src[i] == '"':
             in_str = True
             out.append('""')
@@ -412,10 +426,11 @@ def verify_lean_elaboration_optin(
                 text=True,
                 timeout=timeout_s,
             )
-            if proc.returncode != 0:
-                diag = "\n".join((proc.stdout + "\n" + proc.stderr).strip().splitlines()[:8])
+            combined_out = (proc.stdout or "") + "\n" + (proc.stderr or "")
+            if proc.returncode != 0 or "declaration uses 'sorry'" in combined_out or "uses 'sorry'" in combined_out:
+                diag = "\n".join(combined_out.strip().splitlines()[:8])
                 return (
-                    f"Lean 4 compiler elaboration reported an error:\n{diag}\n"
+                    f"Lean 4 compiler elaboration reported an error or sorry warning:\n{diag}\n"
                     "Fix the Lean 4 proof/types and output ONLY the corrected ```lean ... ``` block."
                 )
         except (FileNotFoundError, subprocess.TimeoutExpired):

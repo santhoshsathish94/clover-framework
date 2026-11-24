@@ -828,6 +828,7 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
             "```lean\n@[tactic foo]\n```",
             "```lean\nattribute [implemented_by g] f\ntheorem bad : f = true := by native_decide\n```",
             "```lean\ndef q : Char := '\"'\n#eval 1 + 1\ndef r := \"x\"\ntheorem t : True := trivial\n```",
+            "```lean\ndef label : String := r#\"size 5\" box\"#\ntheorem t : 1 + 1 = 2 := by sorry\n```",
             "by native_decide",
             "by decide +native",
         ):
