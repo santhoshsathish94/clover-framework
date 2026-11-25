@@ -177,14 +177,14 @@ run_remote "PETAL1-START" "$N1_HOST" "$N1_PORT" "
 python3 /workspace/clover-framework/clover-ai-system/src/tools/clover_hg_serve.py --model nemotron-3.5-super-vl --download-only --cache-dir /workspace/hg-models
 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 0:14 --need-emb
 CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 /workspace/run_clover_role.sh kimi-stage0 kimi-worker --model-dir /workspace/hg-models/kimi-slice --layer-range 0:14 --need-emb --pin-cold-vram --gpus 3,4,5,6,7 --host ${N1_WG} --port 9100
-CLOVER_NODE_ID=petal-1 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0,1,2 CLOVER_ACTIVE_MODELS=nemotron-3.5-super-vl CLOVER_NEMO_HG4_DIR=/workspace/hg-models/nemotron-3.5-super-vl CLOVER_NEMO_SPECULATIVE=1 OMP_NUM_THREADS=16 /workspace/run_clover_role.sh petal-gw gateway --mode real --host ${N1_WG} --port 8080
+CLOVER_NODE_ID=petal-1 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0,1,2 CLOVER_ACTIVE_MODELS=nemotron-3.5-super-vl CLOVER_NEMO_HG4_DIR=/workspace/hg-models/nemotron-3.5-super-vl CLOVER_NEMO_SPECULATIVE=1 OMP_NUM_THREADS=16 /workspace/run_clover_role.sh petal-gw gateway --mode real --host ${N1_WG} --port 8780
 " & D1=$!
 
 run_remote "PETAL2-START" "$N2_HOST" "$N2_PORT" "
 python3 /workspace/clover-framework/clover-ai-system/src/tools/clover_hg_serve.py --model lfm3-omni-2b,qwen3.6-35b-a3b --download-only --cache-dir /workspace/hg-models
 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 14:33
 CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 /workspace/run_clover_role.sh kimi-stage1 kimi-worker --model-dir /workspace/hg-models/kimi-slice --layer-range 14:33 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --host ${N2_WG} --port 9101
-CLOVER_NODE_ID=petal-2 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_ACTIVE_MODELS=lfm3-omni-2b,clover-35b-a3b CLOVER_OMNI_HG4_DIR=/workspace/hg-models/lfm3-omni-2b CLOVER35B_HG4_DIR=/workspace/hg-models/qwen3.6-35b-a3b OMP_NUM_THREADS=16 /workspace/run_clover_role.sh petal-gw gateway --mode real --host ${N2_WG} --port 8080
+CLOVER_NODE_ID=petal-2 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_ACTIVE_MODELS=lfm3-omni-2b,clover-35b-a3b CLOVER_OMNI_HG4_DIR=/workspace/hg-models/lfm3-omni-2b CLOVER35B_HG4_DIR=/workspace/hg-models/qwen3.6-35b-a3b OMP_NUM_THREADS=16 /workspace/run_clover_role.sh petal-gw gateway --mode real --host ${N2_WG} --port 8780
 " & D2=$!
 
 run_remote "PETAL3-START" "$N3_HOST" "$N3_PORT" "
@@ -193,7 +193,7 @@ python3 -c 'from huggingface_hub import snapshot_download; snapshot_download(\"a
 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 33:52
 CLOVER_GATEWAY_API_KEY='${API_KEY}' /workspace/run_clover_role.sh spec-chronos2 specialist --model chronos-2 --model-dir /workspace/hg-models/chronos-2 --gpu 0 --host 127.0.0.1 --port 8094
 CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 /workspace/run_clover_role.sh kimi-stage2 kimi-worker --model-dir /workspace/hg-models/kimi-slice --layer-range 33:52 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --host ${N3_WG} --port 9102
-CLOVER_NODE_ID=petal-3 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_ACTIVE_MODELS=lfm3-omni-2b,clover-35b-a3b CLOVER_SPECIALIST_URLS='chronos-2=http://127.0.0.1:8094' CLOVER_OMNI_HG4_DIR=/workspace/hg-models/lfm3-omni-2b CLOVER35B_HG4_DIR=/workspace/hg-models/qwen3.6-35b-a3b OMP_NUM_THREADS=16 /workspace/run_clover_role.sh petal-gw gateway --mode real --host ${N3_WG} --port 8080
+CLOVER_NODE_ID=petal-3 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_ACTIVE_MODELS=lfm3-omni-2b,clover-35b-a3b CLOVER_SPECIALIST_URLS='chronos-2=http://127.0.0.1:8094' CLOVER_OMNI_HG4_DIR=/workspace/hg-models/lfm3-omni-2b CLOVER35B_HG4_DIR=/workspace/hg-models/qwen3.6-35b-a3b OMP_NUM_THREADS=16 /workspace/run_clover_role.sh petal-gw gateway --mode real --host ${N3_WG} --port 8780
 " & D3=$!
 
 run_remote "PETAL4-START" "$N4_HOST" "$N4_PORT" "
@@ -203,7 +203,7 @@ CLOVER_GATEWAY_API_KEY='${API_KEY}' /workspace/run_clover_role.sh spec-goedel sp
 CLOVER_GATEWAY_API_KEY='${API_KEY}' /workspace/run_clover_role.sh spec-vjepa specialist --model vjepa-2.1 --model-dir /workspace/hg-models/vjepa-2.1 --gpu 0 --host 127.0.0.1 --port 8092
 CLOVER_GATEWAY_API_KEY='${API_KEY}' /workspace/run_clover_role.sh spec-boltz specialist --model boltz-2 --model-dir /workspace/hg-models/boltz-2 --gpu 0 --host 127.0.0.1 --port 8093
 CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 /workspace/run_clover_role.sh kimi-stage3 kimi-worker --model-dir /workspace/hg-models/kimi-slice --layer-range 52:71 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --host ${N4_WG} --port 9103
-CLOVER_NODE_ID=petal-4 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_ACTIVE_MODELS='' CLOVER_SPECIALIST_URLS='goedel-prover-v2-32b=http://127.0.0.1:8091,vjepa-2.1=http://127.0.0.1:8092,boltz-2=http://127.0.0.1:8093' OMP_NUM_THREADS=16 /workspace/run_clover_role.sh petal-gw gateway --mode real --host ${N4_WG} --port 8080
+CLOVER_NODE_ID=petal-4 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_ACTIVE_MODELS='' CLOVER_SPECIALIST_URLS='goedel-prover-v2-32b=http://127.0.0.1:8091,vjepa-2.1=http://127.0.0.1:8092,boltz-2=http://127.0.0.1:8093' OMP_NUM_THREADS=16 /workspace/run_clover_role.sh petal-gw gateway --mode real --host ${N4_WG} --port 8780
 " & D4=$!
 
 run_remote "PETAL5-START" "$N5_HOST" "$N5_PORT" "
@@ -224,7 +224,7 @@ if [[ -n "$K3_CENTER" ]]; then
   "
   start_hb() {
     local lbl="$1" h="$2" p="$3" pid="$4" wg="$5" mdls="$6" tls="$7"
-    run_remote "$lbl" "$h" "$p" "nohup bash -c 'while true; do curl -fsS -m 5 -X POST http://${K3_WG}:8790/v1/cluster/register -H \"Authorization: Bearer ${API_KEY}\" -H \"Content-Type: application/json\" -d \"{\\\"petal_id\\\":\\\"${pid}\\\",\\\"url\\\":\\\"http://${wg}:8080\\\",\\\"models\\\":${mdls},\\\"mcp_tools\\\":${tls}}\" >/dev/null 2>&1 || true; sleep 30; done' > /workspace/petal_hb.log 2>&1 &"
+    run_remote "$lbl" "$h" "$p" "nohup bash -c 'while true; do curl -fsS -m 5 -X POST http://${K3_WG}:8790/v1/cluster/register -H \"Authorization: Bearer ${API_KEY}\" -H \"Content-Type: application/json\" -d \"{\\\"petal_id\\\":\\\"${pid}\\\",\\\"url\\\":\\\"http://${wg}:8780\\\",\\\"models\\\":${mdls},\\\"mcp_tools\\\":${tls}}\" >/dev/null 2>&1 || true; sleep 30; done' > /workspace/petal_hb.log 2>&1 &"
   }
   start_hb "PETAL1-HB" "$N1_HOST" "$N1_PORT" "petal-1" "$N1_WG" '["nemotron-3.5-super-vl"]' '[]'
   start_hb "PETAL2-HB" "$N2_HOST" "$N2_PORT" "petal-2" "$N2_WG" '["lfm3-omni-2b","clover-35b-a3b"]' '[]'

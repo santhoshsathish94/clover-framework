@@ -37,7 +37,7 @@ from typing import Any, Callable
 
 import studio_outcome_verifier as sout
 import studio_xcruncher_verifier as sxc
-from backends import BackendBase, GenParams
+from backends import HTTP_POOL, BackendBase, GenParams
 
 MCP2_PROTOCOL_VERSION = "2026-07-28"
 HOP_CTX = threading.local()
@@ -774,21 +774,17 @@ class Mcp2MeshServer:
                 if getattr(be, "kind", "") != "remote-http":
                     return None
             peer_base = self.tool_peers[mcp_name]
-            req = urllib.request.Request(
-                peer_base + "/mcp",
-                data=raw_body,
-                headers=peer_auth_headers({
-                    "Mcp-Method": mcp_method,
-                    "Mcp-Name": mcp_name,
-                    "X-Clover-Mcp-Hop": self.node_id,
-                }),
-                method="POST",
-            )
             try:
-                with urllib.request.urlopen(req, timeout=120.0) as r:
-                    resp_obj = json.loads(r.read().decode("utf-8") or "{}")
-                    return r.status, {"X-Clover-Mcp-Routed-To": peer_base, "Mcp-Protocol-Version": MCP2_PROTOCOL_VERSION}, resp_obj
-            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as exc:
+                r_status, _, r_bytes = HTTP_POOL.request_json(
+                    peer_base,
+                    "/mcp",
+                    raw_body,
+                    peer_auth_headers({"Mcp-Method": mcp_method, "Mcp-Name": mcp_name, "X-Clover-Mcp-Hop": self.node_id}),
+                    timeout_s=120.0,
+                )
+                resp_obj = json.loads(r_bytes.decode("utf-8") or "{}")
+                return r_status, {"X-Clover-Mcp-Routed-To": peer_base, "Mcp-Protocol-Version": MCP2_PROTOCOL_VERSION}, resp_obj
+            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError, ValueError) as exc:
                 return 502, {"Mcp-Protocol-Version": MCP2_PROTOCOL_VERSION}, {
                     "jsonrpc": "2.0", "id": None, "error": {"code": -32002, "message": f"Upstream petal {peer_base} error: {exc}"}
                 }

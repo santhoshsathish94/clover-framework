@@ -1413,8 +1413,73 @@ class KimiBackend(BackendBase):
 # Generic Remote OpenAI HTTP Backend (<1 MB hop for Specialist Servers & Multi-Node Workers)
 # --------------------------------------------------------------------------------------------------------------------
 
+class _KeepAlivePool:
+    """Thread-safe HTTP/1.1 Keep-Alive connection pool eliminating repeated TCP/SSH-tunnel handshakes."""
+
+    def __init__(self) -> None:
+        self._mu = threading.Lock()
+        self._idle: dict[tuple[str, str, int], list[Any]] = collections.defaultdict(list)
+
+    def request_json(
+        self, base_url: str, path: str, payload: bytes | None, headers: dict[str, str], timeout_s: float = 600.0
+    ) -> tuple[int, dict[str, str], bytes]:
+        import http.client
+        import urllib.parse
+
+        u = urllib.parse.urlsplit(base_url)
+        scheme = u.scheme or "http"
+        host = u.hostname or "127.0.0.1"
+        port = u.port or (443 if scheme == "https" else 80)
+        key = (scheme, host, port)
+        full_path = (u.path.rstrip("/") + path) if u.path else path
+        req_hdrs = {**headers, "Connection": "keep-alive"}
+
+        for attempt in range(2):
+            conn = None
+            with self._mu:
+                bucket = self._idle.get(key)
+                if bucket:
+                    conn = bucket.pop()
+            if conn is None:
+                cls = http.client.HTTPSConnection if scheme == "https" else http.client.HTTPConnection
+                conn = cls(host, port, timeout=timeout_s)
+            try:
+                conn.timeout = timeout_s
+                conn.request("POST" if payload is not None else "GET", full_path, body=payload, headers=req_hdrs)
+                resp = conn.getresponse()
+                raw = resp.read()
+                status = resp.status
+                resp_hdrs = {k: v for k, v in resp.getheaders()}
+                conn_hdr = (resp_hdrs.get("Connection") or resp_hdrs.get("connection") or "").lower()
+                if conn_hdr != "close" and status < 500:
+                    with self._mu:
+                        if len(self._idle[key]) < 16:
+                            self._idle[key].append(conn)
+                        else:
+                            conn.close()
+                else:
+                    conn.close()
+                if status >= 400:
+                    import io
+                    raise urllib.error.HTTPError(base_url + path, status, resp.reason, resp.headers, io.BytesIO(raw))
+                return status, resp_hdrs, raw
+            except urllib.error.HTTPError:
+                raise
+            except Exception:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                if attempt == 1:
+                    raise
+        raise RuntimeError("unreachable")
+
+
+HTTP_POOL = _KeepAlivePool()
+
+
 class RemoteOpenAIBackend(BackendBase):
-    """Lightweight OpenAI-compatible HTTP `/v1/chat/completions` client for specialist engines on Node 1 or LAN."""
+    """Lightweight OpenAI-compatible HTTP `/v1/chat/completions` client with HTTP/1.1 Keep-Alive pooling."""
 
     def __init__(self, model_id: str, url: str, family: str = "specialist", timeout_s: float = 600.0):
         super().__init__()
@@ -1444,14 +1509,10 @@ class RemoteOpenAIBackend(BackendBase):
         api_key = (os.environ.get("CLOVER_GATEWAY_API_KEY") or "").strip()
         if api_key:
             hdrs["Authorization"] = f"Bearer {api_key}"
-        req = urllib.request.Request(
-            self.url + "/v1/chat/completions",
-            data=json.dumps(body).encode("utf-8"),
-            headers=hdrs,
-            method="POST",
+        _, _, raw_resp = HTTP_POOL.request_json(
+            self.url, "/v1/chat/completions", json.dumps(body).encode("utf-8"), hdrs, timeout_s=self.timeout_s
         )
-        with urllib.request.urlopen(req, timeout=self.timeout_s) as r:
-            data = json.loads(r.read().decode("utf-8") or "{}")
+        data = json.loads(raw_resp.decode("utf-8") or "{}")
         ch = (data.get("choices") or [{}])[0]
         msg = ch.get("message") or {}
         content = str(msg.get("content") or ch.get("text") or "")
