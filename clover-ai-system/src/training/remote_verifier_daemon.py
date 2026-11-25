@@ -128,7 +128,10 @@ def _eval_single_item(item: dict[str, Any]) -> dict[str, Any]:
         with open(sol_p, "w", encoding="utf-8") as f:
             f.write(code + "\n")
         with open(runner_p, "w", encoding="utf-8") as f:
-            f.write("from solution import *\n\n" + test_code + "\nprint('CLOVER_RL_PASS_OK')\n")
+            f.write(
+                "import os, sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))\n"
+                "from solution import *\n\n" + test_code + "\nprint('CLOVER_RL_PASS_OK')\n"
+            )
         env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "PYTHONDONTWRITEBYTECODE": "1"}
         try:
             proc = subprocess.run(

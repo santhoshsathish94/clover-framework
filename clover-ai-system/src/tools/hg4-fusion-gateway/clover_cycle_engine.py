@@ -46,7 +46,7 @@ _PROTECTED_VERIFIER_FILE_RE = re.compile(
 )
 
 _SHELL_MUTATE_RE = re.compile(
-    r"(?i)\b(?:sed\s+-i|perl\s+-pi|rm\s+|mv\s+|cp\s+|truncate\s+|tee\s+|chmod\s+|git\s+checkout\s+--)\b|(?<![0-9&])>{1,2}\s*\S"
+    r"(?i)\b(?:sed\s+-i|perl\s+-pi|rm|mv|cp|unlink|truncate|tee|chmod|git\s+checkout\s+--)(?=\s)|(?<![0-9&])>{1,2}\s*\S"
 )
 
 _HUMAN_ALLOWS_TEST_EDIT_RE = re.compile(
@@ -55,7 +55,8 @@ _HUMAN_ALLOWS_TEST_EDIT_RE = re.compile(
 
 _READ_ONLY_TOOLS = frozenset({
     "read", "view", "grep", "rg", "glob", "ls", "cat", "find",
-    "clover_context_read", "tools/search", "tools/list",
+    "clover_context_read", "clover_todo_list", "clover_route_and_guard",
+    "tools/search", "tools/list",
 })
 
 
@@ -65,11 +66,11 @@ def _discover_agents_md() -> tuple[Path | None, str]:
     cands: list[Path] = []
     if env_p:
         cands.append(Path(env_p))
-    if len(here.parents) >= 4:
+    if len(here.parents) > 4:
         cands.append(here.parents[4] / "AGENTS.md")
     cands.extend([
         Path("/app/AGENTS.md"),
-        here.parents[2] / "studio" / "clover" / "AGENTS.md" if len(here.parents) >= 3 else Path("/nonexistent"),
+        here.parents[2] / "studio" / "clover" / "AGENTS.md" if len(here.parents) > 2 else Path("/nonexistent"),
     ])
     for p in cands:
         if p.is_file():
@@ -207,10 +208,20 @@ class CloverCycleEngine:
             self._records.clear()
 
     @staticmethod
+    def sanitize_task_id(raw_id: str, strict: bool = False) -> str:
+        s = (raw_id or "").strip()
+        if strict and (not s or "/" in s or "\\" in s or ".." in s or ":" in s):
+            raise ValueError(f"Unsafe or empty task_id rejected: {raw_id!r}")
+        cleaned = re.sub(r"[^A-Za-z0-9_.-]+", "_", s).strip("._-")[:64]
+        if strict and cleaned != s:
+            raise ValueError(f"Invalid characters in task_id: {raw_id!r}")
+        return cleaned or "default_task"
+
+    @staticmethod
     def derive_task_id(body: dict[str, Any], messages: list[dict[str, Any]]) -> str:
         explicit = str(body.get("x_clover_task_id") or "").strip()
         if explicit:
-            return re.sub(r"[^A-Za-z0-9_.-]+", "_", explicit)[:64]
+            return CloverCycleEngine.sanitize_task_id(explicit, strict=False)
         first_user = ""
         for m in messages:
             if m.get("role") == "user":
@@ -219,33 +230,38 @@ class CloverCycleEngine:
         digest = hashlib.sha256(first_user.encode("utf-8")).hexdigest()[:12]
         return f"task_{digest}"
 
-    def get_record(self, task_id: str) -> CloverContextRecord | None:
+    def get_record(self, task_id: str, strict: bool = False) -> CloverContextRecord | None:
+        safe_id = self.sanitize_task_id(task_id, strict=strict)
         with self._mu:
-            rec = self._records.get(task_id)
+            rec = self._records.get(safe_id)
             if rec is not None:
                 return rec
         ctx_dir = (os.environ.get("CLOVER_CONTEXT_DIR") or "").strip()
         if ctx_dir:
-            md_path = Path(ctx_dir) / f"{task_id}.json"
-            if md_path.is_file():
+            base_d = Path(ctx_dir).resolve()
+            json_path = (base_d / f"{safe_id}.json").resolve()
+            if json_path.parent == base_d and json_path.is_file():
                 try:
-                    data = json.loads(md_path.read_text(encoding="utf-8"))
+                    data = json.loads(json_path.read_text(encoding="utf-8"))
                     loaded = CloverContextRecord(**data)
                     with self._mu:
-                        self._records[task_id] = loaded
+                        self._records[safe_id] = loaded
                     return loaded
                 except Exception:
                     return None
         return None
 
-    def save_record(self, rec: CloverContextRecord) -> CloverContextRecord:
+    def save_record(self, rec: CloverContextRecord, strict: bool = False) -> CloverContextRecord:
+        rec.task_id = self.sanitize_task_id(rec.task_id, strict=strict)
         rec.updated_at = time.time()
         ctx_dir = (os.environ.get("CLOVER_CONTEXT_DIR") or "").strip()
         if ctx_dir:
-            out_d = Path(ctx_dir)
+            out_d = Path(ctx_dir).resolve()
             out_d.mkdir(parents=True, exist_ok=True)
-            md_file = out_d / f"{rec.task_id}.md"
-            json_file = out_d / f"{rec.task_id}.json"
+            md_file = (out_d / f"{rec.task_id}.md").resolve()
+            json_file = (out_d / f"{rec.task_id}.json").resolve()
+            if md_file.parent != out_d or json_file.parent != out_d:
+                raise ValueError(f"Path traversal blocked for task_id {rec.task_id!r}")
             rec.context_file_path = str(md_file)
             md_file.write_text(rec.to_markdown(), encoding="utf-8")
             json_file.write_text(json.dumps(asdict(rec), indent=2, ensure_ascii=False), encoding="utf-8")
@@ -269,11 +285,13 @@ class CloverCycleEngine:
 
         prior_rec = self.get_record(task_id)
 
-        # Scan `[assistant, tool+]` rounds in `messages` to extract real Outcomes & Context reads
-        tried_list: list[str] = list(prior_rec.what_was_tried) if (prior_rec and len(messages) <= 2) else []
-        showed_list: list[str] = list(prior_rec.what_the_system_showed) if (prior_rec and len(messages) <= 2) else []
-        ruled_out: list[str] = list(prior_rec.what_was_ruled_out) if (prior_rec and len(messages) <= 2) else []
-        known_list: list[str] = list(prior_rec.what_was_known) if (prior_rec and len(messages) <= 2) else []
+        # Merge persisted Context fields when resuming an explicit `x_clover_task_id` or starting a new <=2-msg turn
+        explicit_tid = bool(str(body.get("x_clover_task_id") or "").strip())
+        carry_prior = bool(prior_rec and (explicit_tid or len(messages) <= 2))
+        tried_list: list[str] = list(prior_rec.what_was_tried) if carry_prior else []
+        showed_list: list[str] = list(prior_rec.what_the_system_showed) if carry_prior else []
+        ruled_out: list[str] = list(prior_rec.what_was_ruled_out) if carry_prior else []
+        known_list: list[str] = list(prior_rec.what_was_known) if carry_prior else []
         attempt_fps: list[str] = []
         error_sigs: list[str] = []
         context_updated_since_last_fail = False

@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "clover": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/clover-ai-system/src/tools/hg4-fusion-gateway/clover_mcp_stdio.py"
+      ],
+      "env": {
+        "CLOVER_MCP_URL": "http://127.0.0.1:8790/mcp"
+      }
+    }
+  }
+}

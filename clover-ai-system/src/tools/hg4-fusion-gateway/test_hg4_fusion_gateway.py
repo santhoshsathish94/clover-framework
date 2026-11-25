@@ -1041,7 +1041,7 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
                 etag = r.headers.get("ETag")
                 self.assertEqual(r.headers.get("Mcp-Protocol-Version"), "2026-07-28")
                 mlist = json.loads(r.read().decode("utf-8"))
-            self.assertEqual(len(mlist["result"]["tools"]), 10)
+            self.assertEqual(len(mlist["result"]["tools"]), 13)
             self.assertTrue(etag)
 
             m_304_req = urllib.request.Request(
@@ -1502,6 +1502,187 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
             else:
                 os.environ["CLOVER_GATEWAY_API_KEY"] = old_key
             tsrv.close()
+
+    def test_four_part_clover_system_end_to_end(self):
+        import os
+        import shutil
+        import subprocess
+        import sys
+        import tempfile
+        import urllib.request
+        from clover_todo_store import CloverTodoStore
+        import gateway as GW
+
+        tmp_ctx = Path(tempfile.mkdtemp(prefix="clover_4part_test_"))
+        old_ctx = os.environ.get("CLOVER_CONTEXT_DIR")
+        old_exec = os.environ.get("CLOVER_STUDIO_S2_ALLOW_HOST_EXEC")
+        os.environ["CLOVER_CONTEXT_DIR"] = str(tmp_ctx)
+        os.environ["CLOVER_STUDIO_S2_ALLOW_HOST_EXEC"] = "1"
+        try:
+            # 1. Todo Store: prerequisite enforcement + circular dependency rejection + Markdown mirror
+            tstore = CloverTodoStore(db_path=tmp_ctx / "todos.sqlite3", context_dir=tmp_ctx)
+            tstore.upsert("t_demo", "step-1", title="Read context", status="pending")
+            tstore.upsert("t_demo", "step-2", title="Implement fix", status="pending", depends_on=["step-1"])
+            # Reject starting step-2 while step-1 is still pending
+            with self.assertRaises(ValueError):
+                tstore.upsert("t_demo", "step-2", status="in_progress")
+            # Reject circular dependency step-1 -> step-2 -> step-1
+            with self.assertRaises(ValueError):
+                tstore.upsert("t_demo", "step-1", depends_on=["step-2"])
+            # Complete step-1 -> step-2 immediately becomes ready!
+            r1 = tstore.upsert("t_demo", "step-1", status="done")
+            self.assertEqual(r1["ready_todos"], ["step-2"])
+            self.assertTrue((tmp_ctx / "t_demo.todos.md").is_file())
+            tstore.close()
+
+            # 2. Multi-turn `POST /v1/clover/solve` loop:
+            #    Turn 1 uses `clover_todo_upsert` + `xcruncher_exact_math`,
+            #    Turn 2 emits buggy Python code -> fails `test_code` Outcome verifier ->
+            #    Turn 3 fixes the bug from Outcome diagnostic -> verified PASS + `<task_id>.md` written!
+            turn_counter = {"n": 0}
+
+            def agent_responder(mid: str, prompt_text: str) -> str:
+                turn_counter["n"] += 1
+                n = turn_counter["n"]
+                if n == 1:
+                    return (
+                        "Setting todo in_progress and checking 10! with x-cruncher.\n"
+                        '<tool_call>\n{"name": "clover_todo_upsert", "arguments": {"todo_id": "calc", "title": "Compute 10!", "status": "in_progress"}}\n</tool_call>\n'
+                        '<tool_call>\n{"name": "xcruncher_exact_math", "arguments": {"expression": "10!"}}\n</tool_call>'
+                    )
+                if n == 2:
+                    return "```python\ndef ten_fact_plus(x):\n    return 3628800 - x\n```"
+                return "```python\ndef ten_fact_plus(x):\n    return 3628800 + x\n```"
+
+            router = FR.FusionRouter(B.build_backends("mock", responders={"clover-35b-a3b": agent_responder}))
+            srv, _ = GW.serve_in_thread(router)
+            try:
+                base_url = f"http://127.0.0.1:{srv.server_address[1]}"
+                solve_req = urllib.request.Request(
+                    base_url + "/v1/clover/solve",
+                    data=json.dumps({
+                        "task_id": "solve_ten_fact",
+                        "model": "clover-35b-a3b",
+                        "prompt": "Write `ten_fact_plus(x)` returning `10! + x`.",
+                        "test_code": "assert ten_fact_plus(5) == 3628805",
+                        "max_turns": 5,
+                    }).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(solve_req, timeout=15) as r:
+                    sout_json = json.loads(r.read().decode("utf-8"))
+                self.assertEqual(sout_json["turns_used"], 3)
+                self.assertTrue(sout_json["verified_outcome"]["passed"])
+                self.assertEqual(sout_json["tool_calls_executed"], 2)
+                self.assertTrue((tmp_ctx / "solve_ten_fact.md").is_file())
+                self.assertEqual(sout_json["todos"]["total"], 1)
+
+                # 3. Verify `clover_route_and_guard` (`rm -f`), `chronos2_forecast`, Unicode `∀ n : ℕ` over `clover_mcp_stdio.py`,
+                #    and Opus 5.5 security regressions (test_code RCE, Lean `#eval IO` + `compile=True` fail-closed,
+                #    path traversal `../../etc/x`, sequential batch todos, `allowed_tools` enforcement, and 3-cycle stagnation)!
+                stdio_script = Path(__file__).resolve().parent / "clover_mcp_stdio.py"
+                rpc_lines = "\n".join([
+                    json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}),
+                    json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "clover_route_and_guard", "arguments": {"prompt": "rm -f tests/test_api.py"}}}),
+                    json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "chronos2_forecast", "arguments": {"series": [10, 12, 14, 16, 18, 20], "horizon": 4}}}),
+                    json.dumps({"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "lean4_surface_verify", "arguments": {"statement": "theorem u : ∀ n : ℕ, n = n := by", "candidate": "intro n; rfl"}}}),
+                    json.dumps({"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "python_ast_verify", "arguments": {"candidate_code": "x = 1", "test_code": "import os; os.system('echo PWN')"}}}),
+                    json.dumps({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "lean4_surface_verify", "arguments": {"statement": "#eval IO.Process.run {cmd:=\"sh\"}\ntheorem t : True := by", "candidate": "trivial", "compile": True}}}),
+                    json.dumps({"jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": {"name": "clover_context_read", "arguments": {"task_id": "../../etc/passwd"}}}),
+                    json.dumps({"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "clover_exec_batch", "arguments": {"calls": [
+                        {"name": "clover_todo_upsert", "arguments": {"task_id": "b_ord", "todo_id": "a", "title": "First", "status": "done"}},
+                        {"name": "clover_todo_upsert", "arguments": {"task_id": "b_ord", "todo_id": "b", "title": "Second", "status": "in_progress", "depends_on": ["a"]}},
+                    ]}}}),
+                ]) + "\n"
+                env_stdio = {**os.environ, "CLOVER_MCP_URL": base_url + "/mcp"}
+                proc = subprocess.run(
+                    [sys.executable, str(stdio_script)],
+                    input=rpc_lines.encode("utf-8"),
+                    capture_output=True,
+                    env=env_stdio,
+                    timeout=15,
+                )
+                self.assertEqual(proc.returncode, 0, proc.stderr.decode("utf-8", errors="replace"))
+                out_lines = [json.loads(ln) for ln in proc.stdout.decode("utf-8").strip().splitlines() if ln.strip()]
+                self.assertEqual(len(out_lines), 7)
+                # (id=1) `rm -f tests/test_api.py` refused!
+                guard_res = out_lines[0]["result"]["structuredContent"]
+                self.assertFalse(guard_res["safe"])
+                self.assertEqual(guard_res["specialist"], "REFUSE")
+                # (id=2) `chronos2_forecast` quantiles
+                ts_res = out_lines[1]["result"]["structuredContent"]
+                self.assertEqual(len(ts_res["p50"]), 4)
+                # (id=3) Unicode `∀ n : ℕ` round-tripped cleanly over Windows stdio pipe!
+                self.assertTrue(out_lines[2]["result"]["structuredContent"]["passed"])
+                # (id=4) `test_code` RCE rejected!
+                py_rce = out_lines[3]["result"]["structuredContent"]
+                self.assertFalse(py_rce["passed"])
+                self.assertFalse(py_rce["executed"])
+                # (id=5) Lean `#eval IO.Process.run` + `compile=True` fails closed!
+                lean_rce = out_lines[4]["result"]["structuredContent"]
+                self.assertFalse(lean_rce["passed"])
+                # (id=6) Path traversal `../../etc/passwd` rejected as isError!
+                self.assertTrue(out_lines[5]["result"]["isError"])
+                # (id=7) Sequential batch `[upsert a=done, upsert b depends_on a]` succeeds deterministically!
+                batch_ord = out_lines[6]["result"]["structuredContent"]
+                self.assertTrue(all(it["ok"] for it in batch_ord["results"]))
+
+                # 4. Enforce `tools` allowlist at execution time + 3 stagnant verifier failures trigger `STOP_AND_ASK`!
+                def rogue_responder(mid: str, prompt_text: str) -> str:
+                    if "ALLOWED_TEST" in prompt_text and "PermissionError" not in prompt_text:
+                        return '<tool_call>\n{"name": "python_ast_verify", "arguments": {"candidate_code": "x=1"}}\n</tool_call>'
+                    if "ALLOWED_TEST" in prompt_text:
+                        return "Blocked cleanly."
+                    return "```python\ndef broken_fn():\n    return 0\n```"
+
+                router.backends["lfm3-omni-2b"] = B.make_mock_backend("lfm3-omni-2b", responder=rogue_responder)
+                allow_req = urllib.request.Request(
+                    base_url + "/v1/clover/solve",
+                    data=json.dumps({
+                        "task_id": "allow_gate",
+                        "model": "lfm3-omni-2b",
+                        "prompt": "ALLOWED_TEST",
+                        "tools": ["xcruncher_exact_math"],
+                        "max_turns": 3,
+                    }).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(allow_req, timeout=10) as r:
+                    allow_out = json.loads(r.read().decode("utf-8"))
+                # Router tool-grammar schema filter + agent allowlist both prevent `python_ast_verify` from executing!
+                self.assertTrue(all(t["tool"] != "python_ast_verify" or not t["ok"] for t in allow_out["tool_trace"]))
+
+                stag_req = urllib.request.Request(
+                    base_url + "/v1/clover/solve",
+                    data=json.dumps({
+                        "task_id": "stag_gate",
+                        "model": "lfm3-omni-2b",
+                        "prompt": "Write `broken_fn()` returning `42`.",
+                        "test_code": "assert broken_fn() == 42",
+                        "max_turns": 6,
+                    }).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(stag_req, timeout=15) as r:
+                    stag_out = json.loads(r.read().decode("utf-8"))
+                self.assertEqual(stag_out["discernment_state"], "STOP_AND_ASK")
+                self.assertEqual(stag_out["turns_used"], 4)
+            finally:
+                srv.shutdown()
+                srv.server_close()
+        finally:
+            if old_ctx is None:
+                os.environ.pop("CLOVER_CONTEXT_DIR", None)
+            else:
+                os.environ["CLOVER_CONTEXT_DIR"] = old_ctx
+            if old_exec is None:
+                os.environ.pop("CLOVER_STUDIO_S2_ALLOW_HOST_EXEC", None)
+            else:
+                os.environ["CLOVER_STUDIO_S2_ALLOW_HOST_EXEC"] = old_exec
+            shutil.rmtree(tmp_ctx, ignore_errors=True)
 
 
 # ====================================================================================================================

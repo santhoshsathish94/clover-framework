@@ -26,6 +26,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from backends import build_backends  # noqa: E402
+from clover_4part_agent import Clover4PartAgent  # noqa: E402
 from clover_token_socket import StepHardwareMeter, TokenSocketServer  # noqa: E402
 from cluster_scheduler_mcp2 import (  # noqa: E402
     HOP_CTX,
@@ -214,6 +215,27 @@ class GatewayHandler(BaseHTTPRequestHandler):
                     item["completion"] = _completion_json(item["completion"], "chatcmpl-" + uuid.uuid4().hex[:24], now_ts)
             self._send_json(batch_out)
             return
+        if p in ("/v1/clover/solve", "/clover/solve"):
+            try:
+                n_s = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                n_s = 0
+            if n_s <= 0 or n_s > MAX_BODY:
+                self._error(400 if n_s <= 0 else 413, "missing or oversized solve body")
+                return
+            try:
+                sbody = json.loads(self.rfile.read(n_s).decode("utf-8"))
+                if not isinstance(sbody, dict):
+                    raise ValueError("body must be a JSON object")
+                res_solve = self.agent4.solve(sbody)
+                self._send_json(res_solve)
+            except (ValueError, UnicodeDecodeError) as exc:
+                self._error(400, f"invalid solve request: {exc}")
+            except RouterError as exc:
+                self._error(exc.status, str(exc), exc.code)
+            except Exception as exc:
+                self._error(500, f"{type(exc).__name__}: {exc}", "server_error")
+            return
         if p not in ("/v1/chat/completions", "/chat/completions"):
             self._error(404, f"unknown endpoint {p}", "not_found")
             return
@@ -361,16 +383,26 @@ def create_server(router: FusionRouter, host: str = "127.0.0.1", port: int = DEF
     bqueue = ClusterBatchQueue(router.complete, batch_window_ms=batch_window_ms)
     mcp2 = Mcp2MeshServer(router, bqueue)
     preg = PetalRegistry(router, mcp2)
+    agent4 = Clover4PartAgent(bqueue, mcp2)
     handler = type(
         "BoundGatewayHandler",
         (GatewayHandler,),
-        {"router": router, "batch_queue": bqueue, "mcp2": mcp2, "petal_registry": preg, "api_key": eff_key, "quiet": quiet},
+        {
+            "router": router,
+            "batch_queue": bqueue,
+            "mcp2": mcp2,
+            "petal_registry": preg,
+            "agent4": agent4,
+            "api_key": eff_key,
+            "quiet": quiet,
+        },
     )
     srv = ThreadingHTTPServer((host, port), handler)
     srv.daemon_threads = True
     orig_close = srv.server_close
 
     def _close() -> None:
+        mcp2.close()
         bqueue.close()
         orig_close()
 

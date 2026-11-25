@@ -35,6 +35,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+from clover_todo_store import CloverTodoStore
 import studio_outcome_verifier as sout
 import studio_xcruncher_verifier as sxc
 from backends import HTTP_POOL, BackendBase, GenParams
@@ -512,8 +513,7 @@ MCP2_TOOLS: tuple[McpToolSpec, ...] = (
         summary="Read the AGENTS.md §5 8-field Context->Growth handoff record for a task (`what_was_tried`, `what_was_ruled_out`).",
         input_schema={
             "type": "object",
-            "properties": {"task_id": {"type": "string"}},
-            "required": ["task_id"],
+            "properties": {"task_id": {"type": "string", "default": "default_task"}},
         },
     ),
     McpToolSpec(
@@ -523,14 +523,14 @@ MCP2_TOOLS: tuple[McpToolSpec, ...] = (
         input_schema={
             "type": "object",
             "properties": {
-                "task_id": {"type": "string"},
+                "task_id": {"type": "string", "default": "default_task"},
                 "intended_outcome": {"type": "string"},
                 "what_was_tried": {"type": "string"},
                 "what_the_system_showed": {"type": "string"},
                 "what_was_ruled_out": {"type": "string"},
                 "next_cycle_change": {"type": "string"},
             },
-            "required": ["task_id", "intended_outcome", "next_cycle_change"],
+            "required": ["intended_outcome", "next_cycle_change"],
         },
     ),
     McpToolSpec(
@@ -556,6 +556,44 @@ MCP2_TOOLS: tuple[McpToolSpec, ...] = (
         },
     ),
     McpToolSpec(
+        name="clover_route_and_guard",
+        domain="clover_cycle",
+        summary="Pre-screen a prompt or tool command for AGENTS.md / safeagents safety and recommend the optimal domain specialist.",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "prompt": {"type": "string", "description": "User task or candidate tool command to classify & screen"},
+            },
+            "required": ["prompt"],
+        },
+    ),
+    McpToolSpec(
+        name="clover_todo_list",
+        domain="clover_cycle",
+        summary="List all step-by-step todos, prerequisite status, and ready-to-start todo IDs for a task.",
+        input_schema={
+            "type": "object",
+            "properties": {"task_id": {"type": "string", "default": "default_task"}},
+        },
+    ),
+    McpToolSpec(
+        name="clover_todo_upsert",
+        domain="clover_cycle",
+        summary="Create or update a task todo (`pending`, `in_progress`, `done`, `blocked`) with prerequisite enforcement (`depends_on`).",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "task_id": {"type": "string", "default": "default_task"},
+                "todo_id": {"type": "string"},
+                "title": {"type": "string"},
+                "status": {"type": "string", "enum": ["pending", "in_progress", "done", "blocked"]},
+                "description": {"type": "string"},
+                "depends_on": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": ["todo_id"],
+        },
+    ),
+    McpToolSpec(
         name="goedel_lean4_prove",
         domain="mathematics",
         summary="Synthesize machine-checkable Lean 4 proof via Goedel-Prover-V2-32B + surface obligation check.",
@@ -571,12 +609,13 @@ MCP2_TOOLS: tuple[McpToolSpec, ...] = (
     McpToolSpec(
         name="lean4_surface_verify",
         domain="verifier",
-        summary="Deterministic Lean 4 proof obligation guard (rejects `sorry`, `admit`, `axiom`, `native_decide`).",
+        summary="Deterministic Lean 4 proof obligation guard (rejects `sorry`/`admit`/`axiom`; optional `compile=true` runs `lake env lean`).",
         input_schema={
             "type": "object",
             "properties": {
                 "statement": {"type": "string"},
                 "candidate": {"type": "string"},
+                "compile": {"type": "boolean", "default": False},
             },
             "required": ["statement", "candidate"],
         },
@@ -584,14 +623,15 @@ MCP2_TOOLS: tuple[McpToolSpec, ...] = (
     McpToolSpec(
         name="python_ast_verify",
         domain="verifier",
-        summary="Deterministic AST-sandboxed Python doctest & safety verifier.",
+        summary="Deterministic AST-sandboxed Python safety & isolated unit-test / doctest execution verifier.",
         input_schema={
             "type": "object",
             "properties": {
                 "prompt_with_doctest": {"type": "string"},
                 "candidate_code": {"type": "string"},
+                "test_code": {"type": "string", "description": "Optional assertion block executed in an isolated 2.5s subprocess"},
             },
-            "required": ["prompt_with_doctest", "candidate_code"],
+            "required": ["candidate_code"],
         },
     ),
     McpToolSpec(
@@ -733,6 +773,9 @@ class Mcp2MeshServer:
         self._tasks: collections.OrderedDict[str, dict[str, Any]] = collections.OrderedDict()
         self._batch_pool = concurrent.futures.ThreadPoolExecutor(max_workers=12, thread_name_prefix="clover-mcp-b")
         self._tasks_pool = concurrent.futures.ThreadPoolExecutor(max_workers=8, thread_name_prefix="clover-mcp-t")
+        self.todo_store = CloverTodoStore()
+        self._chronos_pipe: Any = None
+        self._chronos_mu = threading.Lock()
         self._db_path = (os.environ.get("CLOVER_TASKS_DB") or "").strip()
         if self._db_path:
             Path(self._db_path).parent.mkdir(parents=True, exist_ok=True)
@@ -748,6 +791,11 @@ class Mcp2MeshServer:
         self.catalog_etag = '"' + hashlib.sha256(
             json.dumps(full_list, sort_keys=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()[:24] + '"'
+
+    def close(self) -> None:
+        self.todo_store.close()
+        self._batch_pool.shutdown(wait=False)
+        self._tasks_pool.shutdown(wait=False)
 
     @staticmethod
     def _render_tool(t: McpToolSpec, compact: bool = False) -> dict[str, Any]:
@@ -993,8 +1041,8 @@ class Mcp2MeshServer:
             return (rpc_res.get("result") or {}).get("structuredContent") or {"forwarded_to": peer, "raw": rpc_res}
 
         if name == "clover_context_read":
-            tid = str(args.get("task_id") or "").strip()
-            rec = self.router.clover_cycle.get_record(tid)
+            tid = str(args.get("task_id") or "default_task").strip()
+            rec = self.router.clover_cycle.get_record(tid, strict=True)
             if rec is None:
                 return {"tool": name, "found": False, "task_id": tid}
             return {
@@ -1014,8 +1062,8 @@ class Mcp2MeshServer:
         if name == "clover_context_record":
             from clover_cycle_engine import CloverContextRecord
 
-            tid = str(args.get("task_id") or "manual_task").strip()
-            existing = self.router.clover_cycle.get_record(tid)
+            tid = str(args.get("task_id") or "default_task").strip()
+            existing = self.router.clover_cycle.get_record(tid, strict=True)
             cyc = (existing.cycle_count + 1) if existing else 1
             tried = list(existing.what_was_tried) if existing else []
             if args.get("what_was_tried"):
@@ -1035,7 +1083,7 @@ class Mcp2MeshServer:
                 what_was_ruled_out=ruled,
                 next_cycle_change=str(args.get("next_cycle_change") or ""),
             )
-            saved = self.router.clover_cycle.save_record(new_rec)
+            saved = self.router.clover_cycle.save_record(new_rec, strict=True)
             return {
                 "tool": name,
                 "saved": True,
@@ -1051,6 +1099,65 @@ class Mcp2MeshServer:
             calls = args.get("calls") if isinstance(args.get("calls"), list) else []
             return self._exec_batch_calls(calls, _batch_depth=_batch_depth + 1)
 
+        if name == "clover_todo_list":
+            tid = self.router.clover_cycle.sanitize_task_id(str(args.get("task_id") or "default_task"), strict=True)
+            return {"tool": name, **self.todo_store.list_todos(tid)}
+
+        if name == "clover_todo_upsert":
+            tid = self.router.clover_cycle.sanitize_task_id(str(args.get("task_id") or "default_task"), strict=True)
+            todo_id = str(args.get("todo_id") or "").strip()
+            deps_raw = args.get("depends_on")
+            deps = [str(x) for x in deps_raw] if isinstance(deps_raw, list) else None
+            res_todo = self.todo_store.upsert(
+                task_id=tid,
+                todo_id=todo_id,
+                title=str(args["title"]) if args.get("title") is not None else None,
+                status=str(args["status"]) if args.get("status") is not None else None,
+                description=str(args["description"]) if args.get("description") is not None else None,
+                depends_on=deps,
+            )
+            return {"tool": name, **res_todo}
+
+        if name == "clover_route_and_guard":
+            import re as _re
+            from clover_cycle_engine import CloverCycleEngine, _PROTECTED_VERIFIER_FILE_RE
+
+            prompt_txt = str(args.get("prompt") or "")
+            low = prompt_txt.lower()
+            # Delegate directly to CloverCycleEngine's canonical verification-boundary guard + answer-fetch check
+            synthetic_tc = [{"type": "function", "function": {"name": "bash", "arguments": json.dumps({"command": prompt_txt})}}]
+            tampered, target_f = CloverCycleEngine.check_verification_boundary_tamper([], synthetic_tc)
+            if not tampered and _PROTECTED_VERIFIER_FILE_RE.search(prompt_txt) and _re.search(
+                r"(?i)\b(?:edit|modify|delete|remove|weaken|comment\s+out|overwrite|unlink|rm)\b", prompt_txt
+            ):
+                tampered = True
+                target_f = _PROTECTED_VERIFIER_FILE_RE.search(prompt_txt).group(1)  # type: ignore[union-attr]
+            if not tampered and _re.search(r"(?i)\b(?:curl|wget|aria2c)\b.*(?:benchmark|eval_answers|ground_truth)", prompt_txt):
+                tampered = True
+                target_f = "external_benchmark_leak"
+            if tampered:
+                return {
+                    "tool": name,
+                    "safe": False,
+                    "specialist": "REFUSE",
+                    "reason": f"safeagents_blocked:{target_f}",
+                }
+            if any(k in low for k in ("lean 4", "lean4", "mathlib", ":= by", "theorem ")):
+                spec_choice, reason = "goedel-prover-v2-32b", "formal_lean4_proof"
+            elif _re.search(r"\b(\d{2,}\s*!|bbp|hex\s+digits?\s+of\s+pi|factorial\(\d{2,}\)|\d{15,}\s*\*\s*\d{15,})", low):
+                spec_choice, reason = "xcruncher_exact_math", "exact_arbitrary_precision"
+            elif any(k in low for k in ("fasta", "protein", "ligand", "smiles", "rna", "dna fold")):
+                spec_choice, reason = "boltz-2", "biomolecular_structure"
+            elif any(k in low for k in ("64-frame", "video", "collision", "trajectory", "topple")):
+                spec_choice, reason = "vjepa-2.1", "physical_video_dynamics"
+            elif any(k in low for k in ("forecast", "quantile", "time-series", "timeseries", "mase")):
+                spec_choice, reason = "chronos-2", "timeseries_quantiles"
+            elif len(prompt_txt) < 160 and any(k in low for k in ("summarize", "classify", "translate", "audio")):
+                spec_choice, reason = "lfm3-omni-2b", "fast_perception"
+            else:
+                spec_choice, reason = "clover-35b-a3b", "coordinator_swe_agent"
+            return {"tool": name, "safe": True, "specialist": spec_choice, "reason": reason}
+
         if name == "xcruncher_exact_math":
             expr = str(args.get("expression") or "")
             obs = sxc.extract_prompt_math_obligations(expr)
@@ -1061,16 +1168,250 @@ class Mcp2MeshServer:
             }
 
         if name == "lean4_surface_verify":
-            stmt = str(args.get("statement") or "Prove in Lean 4: theorem t : True := by")
+            import re as _re
+
+            raw_stmt = str(args.get("statement") or "theorem t : True := by")
+            # Neutralize `verdict:` bypass and screen BOTH `statement` and `candidate` against metaprogramming/IO
+            clean_stmt = _re.sub(r"(?i)\bverdict\s*:", "v_erdict", raw_stmt)
             cand = str(args.get("candidate") or "")
-            finding = sout.verify_lean_surface_fast(stmt, cand)
-            return {"tool": name, "passed": finding is None, "finding": finding}
+            stmt_stripped = sout._strip_lean_comments_and_strings(clean_stmt)
+            if (
+                sout._FORBIDDEN_LEAN_ALWAYS_META_RE.search(clean_stmt)
+                or sout._FORBIDDEN_LEAN_ALWAYS_META_RE.search(stmt_stripped)
+                or sout._FORBIDDEN_LEAN_CODE_META_RE.search(stmt_stripped)
+                or _re.search(r"\baxiom\b", stmt_stripped)
+            ):
+                return {"tool": name, "passed": False, "finding": "Forbidden Lean 4 metaprogramming, IO, or axiom in statement."}
+
+            finding = sout.verify_lean_surface_fast("Prove in Lean 4: " + clean_stmt, cand)
+            out_lean: dict[str, Any] = {"tool": name, "passed": finding is None, "finding": finding}
+            if bool(args.get("compile")):
+                if finding is not None:
+                    out_lean["kernel_compiled"] = False
+                    return out_lean
+                # Fail closed unless compilation genuinely succeeds against the exact statement!
+                out_lean["passed"] = False
+                out_lean["kernel_compiled"] = False
+                lean_proj_raw = (os.environ.get("CLOVER_LEAN4_PROJECT") or "").strip()
+                lean_proj = Path(lean_proj_raw) if lean_proj_raw else Path("/nonexistent")
+                if not lean_proj.is_dir():
+                    out_lean["finding"] = "CLOVER_LEAN4_PROJECT directory is not configured or missing."
+                    return out_lean
+
+                code_txt = sout._extract_lean_block(cand)
+                cand_stripped = sout._strip_lean_comments_and_strings(code_txt)
+                # Candidate must supply tactics after `:= by`, NOT redeclare its own trivial theorem!
+                if _re.search(r"\b(?:theorem|lemma|axiom|def)\s+", cand_stripped):
+                    out_lean["finding"] = "Candidate must provide only tactic steps after `:= by`, not redeclare `theorem`/`lemma`."
+                    return out_lean
+
+                header = clean_stmt.rstrip()
+                if not header.endswith(":= by"):
+                    header = header + " := by"
+                full_lean = header + "\n  " + code_txt.strip() + "\n"
+
+                import shutil as _shutil
+                import subprocess
+                import tempfile
+
+                env_l = sout._minimal_subprocess_env()
+                elan_bin = (os.environ.get("CLOVER_ELAN_BIN") or "").strip()
+                if elan_bin and os.path.isdir(elan_bin):
+                    env_l["PATH"] = f"{elan_bin}{os.pathsep}{env_l.get('PATH', '')}"
+                if os.environ.get("ELAN_HOME"):
+                    env_l["ELAN_HOME"] = os.environ["ELAN_HOME"]
+                if not _shutil.which("lake", path=env_l.get("PATH")):
+                    out_lean["finding"] = "`lake` binary not found in PATH."
+                    return out_lean
+
+                with tempfile.TemporaryDirectory(prefix="clover_lean_") as td_l:
+                    tmp_lean = Path(td_l) / "CheckObligation.lean"
+                    tmp_lean.write_text(full_lean, encoding="utf-8")
+                    try:
+                        proc_l = subprocess.run(
+                            ["lake", "env", "lean", "--memory=4096", "--threads=2", str(tmp_lean)],
+                            cwd=str(lean_proj),
+                            env=env_l,
+                            capture_output=True,
+                            text=True,
+                            timeout=30.0,
+                        )
+                        comb = (proc_l.stdout or "") + "\n" + (proc_l.stderr or "")
+                        ok_l = proc_l.returncode == 0 and "uses 'sorry'" not in comb
+                        out_lean["kernel_compiled"] = True
+                        out_lean["passed"] = ok_l
+                        if not ok_l:
+                            out_lean["finding"] = comb.strip()[:400] or f"lean exited with {proc_l.returncode}"
+                    except Exception as exc:
+                        out_lean["finding"] = f"Lean compilation failed: {exc}"
+            return out_lean
 
         if name == "python_ast_verify":
+            import signal
+            import subprocess
+            import sys
+            import tempfile
+
             prompt_dt = str(args.get("prompt_with_doctest") or "")
             cand = str(args.get("candidate_code") or "")
+            test_code = str(args.get("test_code") or "")
             safe_ast = sout._is_safe_candidate_ast(cand)
-            return {"tool": name, "safe_ast": safe_ast}
+            out_py: dict[str, Any] = {"tool": name, "safe_ast": safe_ast}
+            if not safe_ast:
+                out_py["passed"] = False
+                out_py["diagnostics"] = (
+                    "Unsafe AST construct rejected: do NOT use `__import__`, underscore/dunder attributes, "
+                    "or OS/file modules; use standard top-level `import math` or pure Python arithmetic."
+                )
+                return out_py
+            if not (test_code.strip() or ">>>" in prompt_dt):
+                return out_py
+
+            # Validate `test_code` / doctests through the strict expression/assert-only AST allowlist!
+            if test_code.strip() and not sout._is_safe_doctest_ast(test_code):
+                out_py["executed"] = False
+                out_py["passed"] = False
+                out_py["diagnostics"] = "Unsafe AST construct in test_code rejected (only pure expressions & assertions allowed)."
+                return out_py
+            if not test_code.strip() and sout._extract_prompt_doctest_runner(prompt_dt) is None:
+                out_py["executed"] = False
+                out_py["passed"] = False
+                out_py["diagnostics"] = "Unsafe or malformed doctest in prompt_with_doctest rejected."
+                return out_py
+
+            # Require explicit sandbox prefix (`CLOVER_STUDIO_SANDBOX_CMD`) or operator host-exec opt-in (`CLOVER_STUDIO_S2_ALLOW_HOST_EXEC=1`)
+            sandbox_prefix = [p for p in os.environ.get("CLOVER_STUDIO_SANDBOX_CMD", "").split() if p]
+            allow_host_exec = bool(sandbox_prefix) or os.environ.get("CLOVER_STUDIO_S2_ALLOW_HOST_EXEC", "0") == "1"
+            if not allow_host_exec:
+                out_py["executed"] = False
+                out_py["passed"] = False
+                out_py["diagnostics"] = "Execution disabled: set CLOVER_STUDIO_SANDBOX_CMD or CLOVER_STUDIO_S2_ALLOW_HOST_EXEC=1."
+                return out_py
+
+            preload_mods = tuple(sout._extract_needed_safe_imports(cand))
+            with tempfile.TemporaryDirectory(prefix="clover_pyv_") as td:
+                cand_p = os.path.join(td, "candidate.py")
+                run_p = os.path.join(td, "runner.py")
+                with open(cand_p, "w", encoding="utf-8") as f:
+                    f.write(cand + "\n")
+                if test_code.strip():
+                    harness_src = (
+                        f"_CAND_FILE = {cand_p!r}\n"
+                        f"_TEST_SRC = {test_code!r}\n"
+                        f"_PRELOAD = {preload_mods!r}\n"
+                        "import sys as _sys\n"
+                        "for _m in _PRELOAD:\n"
+                        "    __import__(_m)\n"
+                        "with open(_CAND_FILE, 'r', encoding='utf-8') as _f:\n"
+                        "    _cand_co = compile(_f.read(), _CAND_FILE, 'exec')\n"
+                        "_test_co = compile(_TEST_SRC, '<test_code>', 'exec')\n"
+                        "_ALLOWED = {'exec', 'import', 'function.__new__', 'object.__getattr__', 'object.__setattr__', 'object.__delattr__', 'sys._getframe', 'builtins.id'}\n"
+                        "def _guard(ev, args):\n"
+                        "    if ev not in _ALLOWED:\n"
+                        "        raise PermissionError(f'blocked audit event: {ev}')\n"
+                        "_sys.addaudithook(_guard)\n"
+                        "_ns = {}\n"
+                        "exec(_cand_co, _ns, _ns)\n"
+                        "exec(_test_co, _ns, _ns)\n"
+                        "_sys.stdout.write('CLOVER_PY_VERIFY_OK\\n')\n"
+                    )
+                else:
+                    dt_snip = sout._extract_prompt_doctest_runner(prompt_dt, preload_modules=list(preload_mods)) or ""
+                    harness_src = f"_CAND_FILE = {cand_p!r}\n" + dt_snip + "import sys as _s; _s.stdout.write('CLOVER_PY_VERIFY_OK\\n')\n"
+                with open(run_p, "w", encoding="utf-8") as f:
+                    f.write(harness_src)
+
+                cmd_py = [*sandbox_prefix, sys.executable, "-I", "-B", "-S", run_p]
+                popen_kw: dict[str, Any] = {
+                    "cwd": td,
+                    "env": sout._minimal_subprocess_env(),
+                    "stdout": subprocess.PIPE,
+                    "stderr": subprocess.PIPE,
+                    "text": True,
+                }
+                if os.name == "nt":
+                    popen_kw["creationflags"] = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+                else:
+                    popen_kw["start_new_session"] = True
+                proc = subprocess.Popen(cmd_py, **popen_kw)
+                try:
+                    out_s, err_s = proc.communicate(timeout=2.5)
+                    ok_exec = proc.returncode == 0 and "CLOVER_PY_VERIFY_OK" in (out_s or "")
+                    out_py["executed"] = True
+                    out_py["passed"] = ok_exec
+                    if not ok_exec:
+                        out_py["diagnostics"] = (err_s or out_s or f"exit_code={proc.returncode}").strip()[-280:]
+                except subprocess.TimeoutExpired:
+                    try:
+                        if os.name != "nt":
+                            os.killpg(proc.pid, signal.SIGKILL)
+                        else:
+                            proc.kill()
+                    except Exception:
+                        proc.kill()
+                    proc.communicate()
+                    out_py["executed"] = True
+                    out_py["passed"] = False
+                    out_py["diagnostics"] = "timeout_2.5s"
+            return out_py
+
+        if name == "chronos2_forecast" and "chronos-2" not in self.router.backends:
+            raw_series = [float(x) for x in (args.get("series") or [])]
+            horizon = max(1, min(int(args.get("horizon") or 12), 128))
+            if not raw_series:
+                raise ValueError("series must contain at least 1 numeric value")
+            # Try real local Chronos-Bolt-Base specialist first (`< 40 ms` on CPU/GPU!)
+            try:
+                import torch
+                from chronos import ChronosBoltPipeline  # type: ignore[import-not-found]
+
+                with self._chronos_mu:
+                    if self._chronos_pipe is None:
+                        dev = "cuda" if torch.cuda.is_available() else "cpu"
+                        dt = torch.bfloat16 if dev == "cuda" else torch.float32
+                        self._chronos_pipe = ChronosBoltPipeline.from_pretrained(
+                            os.environ.get("CLOVER_CHRONOS_MODEL", "amazon/chronos-bolt-base"),
+                            device_map=dev,
+                            dtype=dt,
+                        )
+                    q_out, _ = self._chronos_pipe.predict_quantiles(
+                        [torch.tensor(raw_series, dtype=torch.float32)],
+                        prediction_length=horizon,
+                        quantile_levels=[0.1, 0.5, 0.9],
+                    )
+                q_np = q_out[0].detach().cpu().tolist()
+                return {
+                    "tool": name,
+                    "served_by": "chronos-bolt-base-local",
+                    "horizon": horizon,
+                    "p10": [round(r[0], 4) for r in q_np],
+                    "p50": [round(r[1], 4) for r in q_np],
+                    "p90": [round(r[2], 4) for r in q_np],
+                }
+            except Exception:
+                # Deterministic damped linear-trend + residual-spread quantiles (never text-LLM float guessing!)
+                import math as _math
+
+                n_s = len(raw_series)
+                slope = (raw_series[-1] - raw_series[max(0, n_s - 8)]) / max(1, min(7, n_s - 1)) if n_s >= 2 else 0.0
+                diffs = [abs(raw_series[i] - raw_series[i - 1]) for i in range(1, n_s)]
+                sigma = (sum(diffs) / len(diffs)) if diffs else max(1e-3, abs(raw_series[-1]) * 0.02)
+                p10, p50, p90 = [], [], []
+                cur = raw_series[-1]
+                for step_i in range(1, horizon + 1):
+                    cur = cur + slope * (0.90 ** step_i)
+                    band = 1.2816 * sigma * _math.sqrt(step_i)
+                    p50.append(round(cur, 4))
+                    p10.append(round(cur - band, 4))
+                    p90.append(round(cur + band, 4))
+                return {
+                    "tool": name,
+                    "served_by": "damped-trend-statistical-fallback",
+                    "horizon": horizon,
+                    "p10": p10,
+                    "p50": p50,
+                    "p90": p90,
+                }
 
         # Specialist model backed tools (`goedel_lean4_prove`, `boltz2_fold_structure`, `vjepa2_predict_physics`, `chronos2_forecast`)
         target_mid = spec.target_model or "clover-fusion-cluster"
@@ -1115,6 +1456,9 @@ class Mcp2MeshServer:
         slots: list[tuple[int, concurrent.futures.Future | None, str | None, bool]] = []
         clubbed_n = 0
 
+        stateful_tools = frozenset({
+            "clover_todo_upsert", "clover_todo_list", "clover_context_record", "clover_context_read"
+        })
         for idx, c in enumerate(calls):
             if not isinstance(c, dict):
                 continue
@@ -1122,6 +1466,15 @@ class Mcp2MeshServer:
             cargs = c.get("arguments") if isinstance(c.get("arguments"), dict) else {}
             if cname == "clover_exec_batch":
                 slots.append((idx, None, "Nested clover_exec_batch is forbidden (max batch depth = 1)", False))
+                continue
+            # Stateful cycle/todo operations run deterministically in list order so `[upsert A, upsert B depends_on A]` never races!
+            if cname in stateful_tools:
+                fut_sync: concurrent.futures.Future = concurrent.futures.Future()
+                try:
+                    fut_sync.set_result(self._invoke_tool(cname, cargs, _batch_depth))
+                except Exception as exc:
+                    fut_sync.set_exception(exc)
+                slots.append((idx, fut_sync, None, False))
                 continue
             sig = hashlib.sha256(
                 json.dumps({"n": cname, "a": cargs}, sort_keys=True, separators=(",", ":")).encode("utf-8")

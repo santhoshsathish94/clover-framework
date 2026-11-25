@@ -1669,7 +1669,11 @@ def discover_paths() -> dict[str, dict[str, Path | None]]:
     omni_dir = _first_dir(_env_path("CLOVER_OMNI_HG4_DIR") + [
         home / "CloverAI" / "data" / "omni" / "hg4", Path("/opt/clover-k3/lfm3-omni-hg4"),
         Path("/opt/clover-k3/web-studio/data/omni/hg4")])
-    c35_dir = _first_dir(_env_path("CLOVER35B_HG4_DIR") + [Path("/opt/clover-k3/clover35b-full-hg4")])
+    c35_dir = _first_dir(_env_path("CLOVER35B_HG4_DIR") + [
+        Path("/mnt/nvme1/clover-models/qwen3.6-35b-a3b-lora-hg4"),
+        Path("/mnt/nvme1/clover-models/qwen3.6-35b-a3b-hg4"),
+        Path("/opt/clover-k3/clover35b-full-hg4"),
+    ])
     nemo_dir = _first_dir(_env_path("CLOVER_NEMO_HG4_DIR") + [Path("/opt/clover-k3/nemotron-full-hg4")])
     kimi_dir = _first_dir(_env_path("CLOVER_KIMI_HG4_DIR") + [Path("/opt/clover-k3/kimi-k31-hg4")])
     return {
