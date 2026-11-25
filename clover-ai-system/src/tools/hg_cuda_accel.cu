@@ -515,7 +515,7 @@ extern "C" int hg_cuda_try_matmul(
             cudaSetDevice(dev);
             size_t free_b = 0, tot_b = 0;
             cudaMemGetInfo(&free_b, &tot_b);
-            if (free_b > tiles_b + scales_b + (size_t)640 * 1024 * 1024) {
+            if (free_b > tiles_b + scales_b + (size_t)1536 * 1024 * 1024) {
                 uint8_t *dt = NULL; uint16_t *ds = NULL;
                 if (cudaMalloc(&dt, tiles_b) == cudaSuccess && cudaMalloc(&ds, scales_b) == cudaSuccess) {
                     cudaMemcpy(dt, h_tiles, tiles_b, cudaMemcpyHostToDevice);
@@ -555,9 +555,24 @@ extern "C" int hg_cuda_try_matmul(
     int out_R = (act_mode == 1 || act_mode == 2) ? (int)(R / 2u) : (int)R;
     size_t y_b   = (size_t)T * (size_t)out_R * sizeof(float);
 
-    if (xq_b > g_dxq_cap[dev]) { if (g_dxq[dev]) cudaFree(g_dxq[dev]); cudaMalloc(&g_dxq[dev], xq_b * 2); g_dxq_cap[dev] = xq_b * 2; }
-    if (xsc_b > g_dxsc_cap[dev]) { if (g_dxsc[dev]) cudaFree(g_dxsc[dev]); cudaMalloc(&g_dxsc[dev], xsc_b * 2); g_dxsc_cap[dev] = xsc_b * 2; }
-    if (y_b > g_dy_cap[dev]) { if (g_dy[dev]) cudaFree(g_dy[dev]); cudaMalloc(&g_dy[dev], y_b * 2); g_dy_cap[dev] = y_b * 2; }
+    #define ENSURE_MAT_BUF(ptr, cap, need, T_elem) do { \
+        if ((need) > (cap)) { \
+            size_t new_b = (need) * 2; \
+            T_elem *np_ = NULL; \
+            if (cudaMalloc(&np_, new_b) != cudaSuccess) { \
+                cudaGetLastError(); \
+                pthread_mutex_unlock(&g_mu); \
+                return 0; \
+            } \
+            if (ptr) cudaFree(ptr); \
+            (ptr) = np_; \
+            (cap) = new_b; \
+        } \
+    } while (0)
+    ENSURE_MAT_BUF(g_dxq[dev],  g_dxq_cap[dev],  xq_b,  int8_t);
+    ENSURE_MAT_BUF(g_dxsc[dev], g_dxsc_cap[dev], xsc_b, float);
+    ENSURE_MAT_BUF(g_dy[dev],   g_dy_cap[dev],   y_b,   float);
+    #undef ENSURE_MAT_BUF
 
     cudaMemcpyAsync(g_dxq[dev],  h_xq,  xq_b,  cudaMemcpyHostToDevice, st);
     cudaMemcpyAsync(g_dxsc[dev], h_xsc, xsc_b, cudaMemcpyHostToDevice, st);
@@ -603,7 +618,7 @@ extern "C" int hg_cuda_try_moe_pairs(
             cudaSetDevice(dev);
             size_t free_b = 0, tot_b = 0;
             cudaMemGetInfo(&free_b, &tot_b);
-            if (free_b > total_exp_b + (size_t)640 * 1024 * 1024) {
+            if (free_b > total_exp_b + (size_t)1536 * 1024 * 1024) {
                 uint8_t *dt = NULL;
                 if (cudaMalloc(&dt, total_exp_b) == cudaSuccess) {
                     cudaMemcpy(dt, h_exp_base, total_exp_b, cudaMemcpyHostToDevice);
@@ -632,54 +647,89 @@ extern "C" int hg_cuda_try_moe_pairs(
     int dev = slot->dev;
     cudaSetDevice(dev);
     cudaStream_t st = g_st[dev];
+    const int MAX_CHUNK_PAIRS = 4096;
+    int cap_pairs = n_pairs < MAX_CHUNK_PAIRS ? n_pairs : MAX_CHUNK_PAIRS;
     size_t nb_up = K_up / 128u, nb_dn = K_dn / 128u;
     size_t xq_b   = (size_t)T * K_up;
     size_t xsc_b  = (size_t)T * nb_up * sizeof(float);
-    size_t hid_b  = (size_t)n_pairs * K_dn * sizeof(float);
-    size_t zq_b   = (size_t)n_pairs * K_dn;
-    size_t zsc_b  = (size_t)n_pairs * nb_dn * sizeof(float);
+    size_t hid_b  = (size_t)cap_pairs * K_dn * sizeof(float);
+    size_t zq_b   = (size_t)cap_pairs * K_dn;
+    size_t zsc_b  = (size_t)cap_pairs * nb_dn * sizeof(float);
     size_t out_b  = (size_t)T * R_dn * sizeof(float);
-    size_t pc_cap = (size_t)n_pairs;
+    size_t pc_cap = (size_t)cap_pairs;
 
-    if (xq_b  > g_dxq_cap[dev])  { if (g_dxq[dev])  cudaFree(g_dxq[dev]);  cudaMalloc(&g_dxq[dev],  xq_b * 2);  g_dxq_cap[dev]  = xq_b * 2; }
-    if (xsc_b > g_dxsc_cap[dev]) { if (g_dxsc[dev]) cudaFree(g_dxsc[dev]); cudaMalloc(&g_dxsc[dev], xsc_b * 2); g_dxsc_cap[dev] = xsc_b * 2; }
-    if (hid_b > g_dhid_cap[dev]) { if (g_dhid[dev]) cudaFree(g_dhid[dev]); cudaMalloc(&g_dhid[dev], hid_b * 2); g_dhid_cap[dev] = hid_b * 2; }
-    if (zq_b  > g_dzq_cap[dev])  { if (g_dzq[dev])  cudaFree(g_dzq[dev]);  cudaMalloc(&g_dzq[dev],  zq_b * 2);  g_dzq_cap[dev]  = zq_b * 2; }
-    if (zsc_b > g_dzsc_cap[dev]) { if (g_dzsc[dev]) cudaFree(g_dzsc[dev]); cudaMalloc(&g_dzsc[dev], zsc_b * 2); g_dzsc_cap[dev] = zsc_b * 2; }
-    if (out_b > g_dy_cap[dev])   { if (g_dy[dev])   cudaFree(g_dy[dev]);   cudaMalloc(&g_dy[dev],   out_b * 2); g_dy_cap[dev]   = out_b * 2; }
+    #define ENSURE_BUF(ptr, cap, need, T_elem) do { \
+        if ((need) > (cap)) { \
+            size_t new_b = (need) * 2; \
+            T_elem *np_ = NULL; \
+            if (cudaMalloc(&np_, new_b) != cudaSuccess) { \
+                cudaGetLastError(); \
+                pthread_mutex_unlock(&g_mu); \
+                return 0; \
+            } \
+            if (ptr) cudaFree(ptr); \
+            (ptr) = np_; \
+            (cap) = new_b; \
+        } \
+    } while (0)
+
+    ENSURE_BUF(g_dxq[dev],  g_dxq_cap[dev],  xq_b,  int8_t);
+    ENSURE_BUF(g_dxsc[dev], g_dxsc_cap[dev], xsc_b, float);
+    ENSURE_BUF(g_dhid[dev], g_dhid_cap[dev], hid_b, float);
+    ENSURE_BUF(g_dzq[dev],  g_dzq_cap[dev],  zq_b,  int8_t);
+    ENSURE_BUF(g_dzsc[dev], g_dzsc_cap[dev], zsc_b, float);
+    ENSURE_BUF(g_dy[dev],   g_dy_cap[dev],   out_b, float);
     if (pc_cap > g_dpair_cap[dev]) {
+        size_t nc = pc_cap * 2 + 64;
+        int *nt = NULL, *ns = NULL; float *nw = NULL;
+        if (cudaMalloc(&nt, nc * sizeof(int)) != cudaSuccess ||
+            cudaMalloc(&ns, nc * sizeof(int)) != cudaSuccess ||
+            cudaMalloc(&nw, nc * sizeof(float)) != cudaSuccess) {
+            if (nt) cudaFree(nt);
+            if (ns) cudaFree(ns);
+            if (nw) cudaFree(nw);
+            cudaGetLastError();
+            pthread_mutex_unlock(&g_mu);
+            return 0;
+        }
         if (g_dptok[dev])  cudaFree(g_dptok[dev]);
         if (g_dpslot[dev]) cudaFree(g_dpslot[dev]);
         if (g_dpw[dev])    cudaFree(g_dpw[dev]);
-        size_t nc = pc_cap * 2 + 64;
-        cudaMalloc(&g_dptok[dev],  nc * sizeof(int));
-        cudaMalloc(&g_dpslot[dev], nc * sizeof(int));
-        cudaMalloc(&g_dpw[dev],    nc * sizeof(float));
+        g_dptok[dev] = nt; g_dpslot[dev] = ns; g_dpw[dev] = nw;
         g_dpair_cap[dev] = nc;
     }
+    #undef ENSURE_BUF
 
-    cudaMemcpyAsync(g_dxq[dev],    h_xq,        xq_b,  cudaMemcpyHostToDevice, st);
-    cudaMemcpyAsync(g_dxsc[dev],   h_xsc,       xsc_b, cudaMemcpyHostToDevice, st);
-    cudaMemcpyAsync(g_dptok[dev],  h_pair_tok,  n_pairs * sizeof(int),   cudaMemcpyHostToDevice, st);
-    cudaMemcpyAsync(g_dpslot[dev], h_pair_slot, n_pairs * sizeof(int),   cudaMemcpyHostToDevice, st);
-    cudaMemcpyAsync(g_dpw[dev],    h_pair_w,    n_pairs * sizeof(float), cudaMemcpyHostToDevice, st);
-    cudaMemcpyAsync(g_dy[dev],     h_out_add,   out_b, cudaMemcpyHostToDevice, st);
+    cudaMemcpyAsync(g_dxq[dev],  h_xq,      xq_b,  cudaMemcpyHostToDevice, st);
+    cudaMemcpyAsync(g_dxsc[dev], h_xsc,     xsc_b, cudaMemcpyHostToDevice, st);
+    cudaMemcpyAsync(g_dy[dev],   h_out_add, out_b, cudaMemcpyHostToDevice, st);
 
-    k_moe_pairs_up<<<dim3(R_up >> 4, n_pairs), 128, 0, st>>>(
-        slot->d_tiles, exp_stride, up_tiles_off, (int)R_up, (int)K_up, (int)bits, act_mode,
-        g_dxq[dev], g_dxsc[dev], g_dptok[dev], g_dpslot[dev], g_dhid[dev], n_pairs
-    );
-    k_moe_pairs_rot_quant<<<dim3(nb_dn, n_pairs), 128, 0, st>>>(
-        slot->d_tiles, exp_stride, dn_blob_off, g_dhid[dev], g_dpslot[dev],
-        (int)K_dn, n_pairs, g_dzq[dev], g_dzsc[dev]
-    );
-    k_moe_pairs_down<<<dim3(R_dn >> 4, n_pairs), 128, 0, st>>>(
-        slot->d_tiles, exp_stride, dn_blob_off, (int)R_dn, (int)K_dn, (int)bits, bf16_dn_round,
-        g_dzq[dev], g_dzsc[dev], g_dptok[dev], g_dpslot[dev], g_dpw[dev], g_dy[dev], n_pairs
-    );
+    for (int p0 = 0; p0 < n_pairs; p0 += MAX_CHUNK_PAIRS) {
+        int chunk_p = (p0 + MAX_CHUNK_PAIRS <= n_pairs) ? MAX_CHUNK_PAIRS : (n_pairs - p0);
+        cudaMemcpyAsync(g_dptok[dev],  h_pair_tok  + p0, (size_t)chunk_p * sizeof(int),   cudaMemcpyHostToDevice, st);
+        cudaMemcpyAsync(g_dpslot[dev], h_pair_slot + p0, (size_t)chunk_p * sizeof(int),   cudaMemcpyHostToDevice, st);
+        cudaMemcpyAsync(g_dpw[dev],    h_pair_w    + p0, (size_t)chunk_p * sizeof(float), cudaMemcpyHostToDevice, st);
+
+        k_moe_pairs_up<<<dim3(R_up >> 4, chunk_p), 128, 0, st>>>(
+            slot->d_tiles, exp_stride, up_tiles_off, (int)R_up, (int)K_up, (int)bits, act_mode,
+            g_dxq[dev], g_dxsc[dev], g_dptok[dev], g_dpslot[dev], g_dhid[dev], chunk_p
+        );
+        k_moe_pairs_rot_quant<<<dim3(nb_dn, chunk_p), 128, 0, st>>>(
+            slot->d_tiles, exp_stride, dn_blob_off, g_dhid[dev], g_dpslot[dev],
+            (int)K_dn, chunk_p, g_dzq[dev], g_dzsc[dev]
+        );
+        k_moe_pairs_down<<<dim3(R_dn >> 4, chunk_p), 128, 0, st>>>(
+            slot->d_tiles, exp_stride, dn_blob_off, (int)R_dn, (int)K_dn, (int)bits, bf16_dn_round,
+            g_dzq[dev], g_dzsc[dev], g_dptok[dev], g_dpslot[dev], g_dpw[dev], g_dy[dev], chunk_p
+        );
+    }
 
     cudaMemcpyAsync(h_out_add, g_dy[dev], out_b, cudaMemcpyDeviceToHost, st);
-    cudaStreamSynchronize(st);
+    if (cudaStreamSynchronize(st) != cudaSuccess) {
+        cudaGetLastError();
+        pthread_mutex_unlock(&g_mu);
+        return 0;
+    }
     pthread_mutex_unlock(&g_mu);
     return 1;
 }
