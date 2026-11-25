@@ -31,12 +31,19 @@ MODEL_REGISTRY: dict[str, dict[str, object]] = {
         "so_name": "liblfm3_hg4_engine.so",
         "size_note": "0.83 GiB HG4-16R (Phone / Laptop / 1 GB VRAM)",
     },
+    "qwen3.6-35b-a3b": {
+        "hf_repos": ["Santhoshsathish94/Qwen3.6-35B-A3B-HG4-16R-OP"],
+        "env_var": "CLOVER35B_HG4_DIR",
+        "c_rel": "models/clover-35b-a3b/clover35b_hg4_engine.c",
+        "so_name": "libclover35b_hg4_engine.so",
+        "size_note": "17.2 GiB HG4-16R-OP (Qwen3.6-35B-A3B — replaces legacy Clover-35B; fits 1x 24 GB RTX 3090/4090)",
+    },
     "clover-35b-a3b": {
         "hf_repos": ["Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP"],
         "env_var": "CLOVER35B_HG4_DIR",
         "c_rel": "models/clover-35b-a3b/clover35b_hg4_engine.c",
         "so_name": "libclover35b_hg4_engine.so",
-        "size_note": "17.2 GiB HG4-16R-OP (32 GB RAM or 1x 24 GB RTX 3090/4090)",
+        "size_note": "17.2 GiB HG4-16R-OP (legacy Qwen3.5-35B checkpoint)",
     },
     "nemotron-3.5-super-vl": {
         "hf_repos": ["Santhoshsathish94/Nemotron-3.5-Super-VL-120B-HG4-16R-OP"],
@@ -62,7 +69,9 @@ MODEL_REGISTRY: dict[str, dict[str, object]] = {
 ALIASES = {
     "2b": "lfm3-omni-2b",
     "lfm3": "lfm3-omni-2b",
-    "35b": "clover-35b-a3b",
+    "35b": "qwen3.6-35b-a3b",
+    "qwen3.6": "qwen3.6-35b-a3b",
+    "qwen3.6-35b": "qwen3.6-35b-a3b",
     "clover-35b": "clover-35b-a3b",
     "120b": "nemotron-3.5-super-vl",
     "nemotron": "nemotron-3.5-super-vl",
