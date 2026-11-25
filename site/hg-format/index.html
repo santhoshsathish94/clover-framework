@@ -65,7 +65,7 @@
         <p class="hero__tagline">Solving AI&rsquo;s data-movement bottleneck: ~4&times; smaller models that fit in smaller RAM &amp; VRAM, decode up to 45&times; faster, and preserve <code>BF16</code> reasoning.</p>
         <p class="lede">Modern language models are bottlenecked not by math speed, but by <strong>data movement</strong> &mdash; every generated token must haul gigabytes of <code>16-bit BF16</code> weights from memory into the processor. Standard 4-bit or 2-bit compression shrinks those weights, but a handful of extreme outlier channels clip the quantization grid and break code and math accuracy. Clover&rsquo;s <strong>Hadamard-Grouped (<code>HG</code>)</strong> format solves both problems at once: it rotates every 128-weight block through a Fast Walsh&ndash;Hadamard Transform (<code>FWHT-128</code>) to erase outlier spikes before rounding into a register lookup codebook (<code>4.125 bpw</code>), keeping models compressed all the way into CPU and GPU registers.</p>
       <div class="actions">
-          <a class="btn btn--primary" href="#three-myths">1. 3 AI Myths Broken &darr;</a>
+          <a class="btn btn--primary" href="#three-myths">1. 4 AI Myths Broken &darr;</a>
           <a class="btn" href="#how-hg-works">2. How Clover HG Works &darr;</a>
           <a class="btn" href="#benchmarks">5. Real Hardware Benchmarks &darr;</a>
           <a class="btn" href="#convert-any-model">7. Deploy in 1 Command &darr;</a>
@@ -96,55 +96,72 @@
     </div>
   </section>
 
-  <!-- ============ 1. BREAKING THE 3 AI HARDWARE MYTHS UPFRONT ============ -->
+  <!-- ============ 1. BREAKING THE 4 AI HARDWARE & MODEL MYTHS UPFRONT ============ -->
   <section class="band" id="three-myths">
     <div class="wrap">
-        <h2>1. Start here &mdash; breaking three common myths about AI speed and hardware</h2>
-        <p class="lede">Before looking at compression math or model tables, three measured hardware facts explain <em>everything</em> on this page &mdash; and each fact leads directly to the next:</p>
+        <h2>1. Start here &mdash; breaking four common myths about AI speed, hardware, and &ldquo;one giant model&rdquo;</h2>
+        <p class="lede">Before looking at compression math or benchmark tables, four connected facts explain <em>everything</em> about how Clover designs models and clusters &mdash; and each proof unlocks the next:</p>
 
-        <div class="grid grid--3" style="margin-top:1.4rem">
+        <div class="grid grid--2" style="margin-top:1.4rem">
           <div class="card">
             <h3>Myth 1: &ldquo;AI is a processing problem&rdquo;</h3>
-            <p><strong>Reality: AI inference is a data-movement problem.</strong> Generating each token requires hauling gigabytes of weights across a narrow memory wire into the processor. When we switched from a laptop CPU to its faster integrated GPU on the <em>same</em> <code>25.6 GB/s</code> memory stick, token decoding barely moved (<code>12.4 &rarr; 12.8 tok/s</code>) &mdash; compute cores sit idle waiting on the wire.</p>
+            <p><strong>Reality: AI inference is a data-movement problem.</strong> Generating each token requires hauling gigabytes of weights across a narrow memory wire into the processor. Switching from a laptop CPU to its faster integrated GPU on the <em>same</em> <code>25.6 GB/s</code> RAM stick barely moved decoding (<code>12.4 &rarr; 12.8 tok/s</code>) &mdash; compute cores sit idle waiting on the wire.</p>
           </div>
           <div class="card">
             <h3>Myth 2: &ldquo;More RAM or VRAM makes AI faster&rdquo;</h3>
-            <p><strong>Reality: Once a model fits in RAM or VRAM, extra GBs add <code>+0.0 tok/s</code>.</strong> Expanding RAM from <code>2 GB</code> to <code>128 GB</code> gave <code>48.7 &rarr; 48.7 tok/s</code> (<code>+0.0</code>); doubling VRAM from <code>96 GB</code> to <code>192 GB</code> gave <code>172.2 &rarr; 171.8 tok/s</code> (<code>+0.0</code>). An <code>8 GB</code> 4-channel phone (<code>33.4 tok/s</code>) beat a <code>16 GB</code> 1-channel laptop (<code>12.4 tok/s</code>) by <strong><code>2.7&times;</code></strong> because <strong>bus width (<code>GB/s</code>), not capacity (<code>GB</code>), sets speed</strong>.</p>
+            <p><strong>Reality: Once a model fits in RAM or VRAM, extra GBs add <code>+0.0 tok/s</code>.</strong> Expanding RAM from <code>2 GB &rarr; 128 GB</code> gave <code>48.7 &rarr; 48.7 tok/s</code> (<code>+0.0</code>); doubling VRAM from <code>96 GB &rarr; 192 GB</code> gave <code>172.2 &rarr; 171.8 tok/s</code> (<code>+0.0</code>). An <code>8 GB</code> 4-channel phone (<code>33.4 tok/s</code>) beat a <code>16 GB</code> 1-channel laptop (<code>12.4 tok/s</code>) by <strong><code>2.7&times;</code></strong> because <strong>bus width (<code>GB/s</code>), not capacity (<code>GB</code>), sets speed</strong>.</p>
           </div>
           <div class="card">
             <h3>Myth 3: &ldquo;One larger machine beats smaller ones&rdquo;</h3>
-            <p><strong>Reality: More smaller right-sized machines outperform one giant machine.</strong> Because of Facts 1 &amp; 2, running 4 instances inside one <code>128 GB</code> server forces all 4 to split <strong>one</strong> <code>83.2 GB/s</code> bus (<code>~4 tok/s &times; 4 = 16.0 tok/s</code>, <code>0&times;</code> gain). Running 4 smaller <code>32 GB</code> nodes (<code>66.4 tok/s</code>, <strong><code>4.0&times;</code></strong>) or <code>4&times; 24 GB RTX 3090</code> (<code>234.1 tok/s</code>) gives every replica its <strong>own memory bus</strong>.</p>
+            <p><strong>Reality: More smaller right-sized machines outperform one giant machine.</strong> Because of Proofs 1 &amp; 2, running 4 instances inside one <code>128 GB</code> server forces all 4 to split <strong>one</strong> <code>83.2 GB/s</code> bus (<code>~4 tok/s &times; 4 = 16.0 tok/s</code>, <code>0&times;</code> gain). Running 4 smaller <code>32 GB</code> nodes (<code>66.4 tok/s</code>, <strong><code>4.0&times;</code></strong>) or <code>4&times; 24 GB RTX 3090</code> (<code>234.1 tok/s</code>) gives every replica its <strong>own memory bus</strong>.</p>
+          </div>
+          <div class="card">
+            <h3>Myth 4: &ldquo;One giant model can master every job&rdquo;</h3>
+            <p><strong>Reality: Put the world&rsquo;s #1 mathematician, #1 chef, and #1 F1 driver in one room &mdash; none can win the others&rsquo; event.</strong> Expertise comes from training data, representation, and verification oracles, not size alone. Shrinking models <code>~4&times;</code> with <code>HG</code> lets an entire team of domain specialists live inside cheap <code>24 GB</code> GPUs across multiple small servers, passing only <strong><code>&lt; 1 MB</code> of tokens or activations</strong> over standard networks.</p>
           </div>
         </div>
 
         <figure class="diagram" style="margin-top:1.6rem">
-          <svg viewBox="0 0 900 168" role="img" aria-label="Logical chain connecting the three proofs: Proof 1 (Memory wire GB/s limits token speed, not compute TOPS) plus Proof 2 (Extra RAM/VRAM capacity after fit adds +0.0 tok/s) implies Conclusion 3 (Shrink models ~4x with Clover HG so they fit small right-sized nodes, then multiply independent memory buses)." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:14px;background:#fffefb;padding:10px">
-            <text x="22" y="24" font-size="11.2" font-weight="700" fill="#1b5e46" letter-spacing="1.0">THE LOGICAL CHAIN · WHY SHRINKING BYTES (HG) + SCALING SMALL NODES WINS</text>
-            <line x1="22" y1="35" x2="878" y2="35" stroke="#dfd8c8" stroke-width="1"></line>
+          <svg viewBox="0 0 900 176" role="img" aria-label="Four-step logical chain: (1) Wire GB/s limits speed -> (2) Extra GBs after fit add +0.0 tok/s -> (3) Scale out N small right-sized nodes for N memory buses -> (4) Host specialized HG domain masters in VRAM across cheap 8x3090 servers connected by sub-1-MB network hops." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:14px;background:#fffefb;padding:10px">
+            <text x="20" y="24" font-size="11" font-weight="700" fill="#1b5e46" letter-spacing="0.9">THE FOUR-STEP DEDUCTIVE CHAIN · FROM WIRE PHYSICS TO DISTRIBUTED HG SPECIALIST CLUSTERS</text>
+            <line x1="20" y1="35" x2="880" y2="35" stroke="#dfd8c8" stroke-width="1"></line>
 
-            <rect x="22" y="48" width="256" height="104" rx="9" fill="#f7f4ec" stroke="#c9c0ad"></rect>
-            <text x="36" y="70" font-size="11.5" font-weight="700" fill="#132018">Proof 1 · Wire Is the Bottleneck</text>
-            <text x="36" y="90" font-size="10.2" fill="#2d3e34">Speed = Bus Bandwidth &divide; Bytes/Token</text>
-            <text x="36" y="109" font-size="10" fill="#596a5f">Faster GPU on same 25.6 GB/s stick:</text>
-            <text x="36" y="126" font-size="10.2" font-weight="700" fill="#7d5312">12.4 &rarr; 12.8 tok/s (~0&times; gain)</text>
+            <rect x="20" y="48" width="196" height="112" rx="9" fill="#f7f4ec" stroke="#c9c0ad"></rect>
+            <text x="32" y="69" font-size="11" font-weight="700" fill="#132018">1. Wire Bottleneck</text>
+            <text x="32" y="88" font-size="9.6" fill="#2d3e34">Speed = GB/s &divide; Bytes/Tok</text>
+            <text x="32" y="106" font-size="9.4" fill="#596a5f">Faster iGPU, same stick:</text>
+            <text x="32" y="123" font-size="9.6" font-weight="700" fill="#7d5312">12.4 &rarr; 12.8 tok/s (~0&times;)</text>
+            <text x="32" y="143" font-size="9.4" fill="#1b5e46" font-weight="600">&rArr; Shrink bytes ~4&times; (HG)</text>
 
-            <path d="M282 100 L308 100" stroke="#1b5e46" stroke-width="2" fill="none"></path>
-            <polygon points="308,95 318,100 308,105" fill="#1b5e46"></polygon>
+            <path d="M219 104 L235 104" stroke="#1b5e46" stroke-width="2" fill="none"></path>
+            <polygon points="235,99 243,104 235,109" fill="#1b5e46"></polygon>
 
-            <rect x="322" y="48" width="256" height="104" rx="9" fill="#f7f4ec" stroke="#c9c0ad"></rect>
-            <text x="336" y="70" font-size="11.5" font-weight="700" fill="#132018">Proof 2 · Extra GBs Sit Idle</text>
-            <text x="336" y="90" font-size="10.2" fill="#2d3e34">2G &rarr; 128G RAM: 48.7 &rarr; 48.7 (+0.0)</text>
-            <text x="336" y="109" font-size="10.2" fill="#2d3e34">96G &rarr; 192G VRAM: 172.2 &rarr; 171.8 (+0.0)</text>
-            <text x="336" y="126" font-size="10.2" font-weight="700" fill="#7d5312">4 workers on 1 bus = still ~16 tok/s</text>
+            <rect x="246" y="48" width="196" height="112" rx="9" fill="#f7f4ec" stroke="#c9c0ad"></rect>
+            <text x="258" y="69" font-size="11" font-weight="700" fill="#132018">2. Extra GBs = +0.0</text>
+            <text x="258" y="88" font-size="9.6" fill="#2d3e34">2G &rarr; 128G: 48.7 &rarr; 48.7</text>
+            <text x="258" y="106" font-size="9.6" fill="#2d3e34">96G &rarr; 192G: 172.2 &rarr; 171.8</text>
+            <text x="258" y="123" font-size="9.6" font-weight="700" fill="#7d5312">Unused GBs buy 0 speed</text>
+            <text x="258" y="143" font-size="9.4" fill="#1b5e46" font-weight="600">&rArr; Right-size RAM / VRAM</text>
 
-            <path d="M582 100 L608 100" stroke="#1b5e46" stroke-width="2" fill="none"></path>
-            <polygon points="608,95 618,100 608,105" fill="#1b5e46"></polygon>
+            <path d="M445 104 L461 104" stroke="#1b5e46" stroke-width="2" fill="none"></path>
+            <polygon points="461,99 469,104 461,109" fill="#1b5e46"></polygon>
 
-            <rect x="622" y="48" width="256" height="104" rx="9" fill="#eef6f1" stroke="#8bb7a4" stroke-width="1.4"></rect>
-            <text x="636" y="70" font-size="11.5" font-weight="700" fill="#1b5e46">Therefore · Shrink + Scale Out</text>
-            <text x="636" y="90" font-size="10.2" fill="#132018">1. Shrink ~4&times; with HG (4&times; less traffic)</text>
-            <text x="636" y="109" font-size="10.2" fill="#132018">2. Fit smaller 24&ndash;32 GB cards/nodes</text>
-            <text x="636" y="126" font-size="10.2" font-weight="700" fill="#1b5e46">3. N small nodes = N memory buses!</text>
+            <rect x="472" y="48" width="196" height="112" rx="9" fill="#eef6f1" stroke="#8bb7a4"></rect>
+            <text x="484" y="69" font-size="11" font-weight="700" fill="#1b5e46">3. More Small Nodes</text>
+            <text x="484" y="88" font-size="9.6" fill="#132018">1&times;128G (1 bus) = 16 t/s</text>
+            <text x="484" y="106" font-size="9.6" fill="#132018">4&times;32G (4 buses) = 66 t/s</text>
+            <text x="484" y="123" font-size="9.6" font-weight="700" fill="#1b5e46">4&times;24G 3090 = 234 tok/s</text>
+            <text x="484" y="143" font-size="9.4" fill="#2d3e34">&rArr; Multiply cheap buses</text>
+
+            <path d="M671 104 L687 104" stroke="#1b5e46" stroke-width="2" fill="none"></path>
+            <polygon points="687,99 695,104 687,109" fill="#1b5e46"></polygon>
+
+            <rect x="698" y="48" width="182" height="112" rx="9" fill="#eef6f1" stroke="#0a6a5f" stroke-width="1.5"></rect>
+            <text x="710" y="69" font-size="11" font-weight="700" fill="#0a6a5f">4. Specialist Cluster</text>
+            <text x="710" y="88" font-size="9.5" fill="#132018">Mathematician &middot; Coder</text>
+            <text x="710" y="105" font-size="9.5" fill="#132018">3D Science &middot; World Phys</text>
+            <text x="710" y="122" font-size="9.5" font-weight="700" fill="#0a6a5f">Weights stay in 3090 VRAM;</text>
+            <text x="710" y="140" font-size="9.4" font-weight="700" fill="#1b5e46">only &lt;1 MB hops network!</text>
           </svg>
         </figure>
     </div>
@@ -826,6 +843,100 @@ The total capacity is 72 kilowatts.</code></pre>
 
             <text x="478" y="164" font-size="10.5" font-weight="700" fill="#1b5e46">4&times;32G CPUs = 66.4 tok/s (4.0&times;) &middot; 4&times;24G RTX 3090 = 234.1 tok/s!</text>
             <text x="478" y="185" font-size="9.8" fill="#2d3e34">Rule: Shrink with HG &rarr; pick smallest RAM/VRAM that fits &rarr; multiply buses.</text>
+          </svg>
+        </figure>
+
+        <h3 id="specialist-cluster" style="margin-top:2.2rem">The mathematician, chef &amp; F1 driver law: multi-node <code>HG</code> specialist clusters over <code>&lt; 1 MB</code> network hops</h3>
+        <p>Put the world&rsquo;s best mathematician, chef, and Formula 1 driver in one room &mdash; none can outperform the others at their craft because mastery comes from <strong>domain training, output representation, and verification feedback</strong>. Text-only LLMs share the same boundary: even a <code>2.8T</code> generalist cannot replace a high-speed Lean 4 tactic prover, a 3D macromolecular structure model, a temporal video-physics encoder, or a calibrated continuous forecaster.</p>
+        <p style="margin-top:0.7rem">Crucially, once every model&rsquo;s weights sit permanently inside VRAM across a cluster of inexpensive <code>8 &times; RTX 3090</code> (<code>192 GiB</code> VRAM, <code>6.8 TB/s</code> GDDR6X per node) servers, <strong>weights never cross the network</strong> &mdash; only tiny <strong><code>72 KB &ndash; 1 MB</code> activation vectors or JSON prompts</strong> hop between servers (<code>&lt; 1 ms</code> over standard same-region TCP, no <code>$50,000</code> InfiniBand fabric required):</p>
+
+        <div class="table-wrap" style="margin-top:1rem">
+          <table class="data">
+            <caption class="note">Clover&rsquo;s Core-4 + Domain Specialist <code>HG</code> architecture: every specialist pairs an information-matched precision tier with a deterministic verifier.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Role / Craft</th>
+                <th scope="col">Open Model</th>
+                <th scope="col">Target Size &amp; Precision</th>
+                <th scope="col">What It Contributes</th>
+                <th scope="col">Deterministic Verifier</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row"><strong>Core 4 Generalists</strong><br><small>Voice &middot; Code &middot; SWE &middot; Research</small></th>
+                <td><code>LFM3-2B</code> &middot; <code>Qwen3.6-35B</code><br><code>Nemotron-120B</code> &middot; <code>Kimi-2.8T</code></td>
+                <td><code>0.83G</code> + <code>17.2G</code> + <code>60.2G</code><br>+ <code>740G K31H</code></td>
+                <td>Edge speech, fast coding/agents, multimodal SWE &amp; frontier synthesis</td>
+                <td><code>OpenCode</code> sandbox + <code>x-cruncher</code> exact math</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Formal Mathematician</strong><br><small>Lean 4 Proof Search</small></th>
+                <td><code>Goedel-Prover-V2-32B</code><br><small>(Apache-2.0)</small></td>
+                <td><code>61G &rarr;</code> <strong><code>~15.8 GiB HG4</code></strong><br><small>(reuses Qwen C11/CUDA)</small></td>
+                <td><code>90.4%</code> MiniF2F &amp; <code>57</code> PutnamBench Pass@32 (beats <code>671B</code> at <code>21&times;</code> smaller size)</td>
+                <td>Official <code>leanprover/lean4</code> compiler kernel</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>3D Structural Scientist</strong><br><small>Folding &amp; Interaction</small></th>
+                <td><code>Boltz-2</code> <small>(MIT)</small><br><small>+ <code>OpenFold3</code> cross-check</small></td>
+                <td><code>4.1G &rarr;</code> <strong><code>~3.0 GB</code></strong><br><small><code>HG8</code> trunk + <code>FP32</code> diffusion</small></td>
+                <td>Sub-angstrom 3D coordinates + quantitative interaction scoring</td>
+                <td>Bond/clash geometry + OpenMM relaxation</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>World Physics &amp; Motion</strong><br><small>Temporal Video Dynamics</small></th>
+                <td><code>Meta V-JEPA 2.1</code> <small>(ViT-g)</small><br><small>+ Attentive Probes</small></td>
+                <td><code>1.93G &rarr;</code> <strong><code>~0.52 GiB HG4</code></strong></td>
+                <td>Self-supervised motion &amp; action anticipation (<code>77.3%</code> SSv2)</td>
+                <td>Pretrained attentive-probe structured readout</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Forecaster &amp; Potentials</strong><br><small>Time-Series &amp; Forces</small></th>
+                <td><code>Chronos-2</code> + <code>MACE-MP-0</code><br><small>(Apache-2.0 / MIT)</small></td>
+                <td><strong><code>0.22 GiB</code> + <code>0.09 GiB</code></strong><br><small><code>FP32</code> (preserves <code>SO(3)</code>)</small></td>
+                <td>Calibrated probabilistic series &amp; conservative interatomic forces</td>
+                <td>Rolling CRPS backtest + <code>F = -&nabla;E</code> check</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <figure style="margin:1.3rem 0">
+          <svg viewBox="0 0 900 184" role="img" aria-label="Distributed multi-server 8x RTX 3090 HG cluster diagram: Server 1 holds all fast specialists and 35B/120B models in 192 GiB VRAM, while Servers 2-4 hold Kimi K31H layers in VRAM; only sub-1-MB activation vectors or JSON prompts cross standard TCP links (<1 ms hop)." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:12px;background:#fffefb;padding:10px">
+            <text x="20" y="24" font-size="11" font-weight="700" fill="#1b5e46" letter-spacing="0.9">MULTI-SERVER COMMODITY VRAM CLUSTER · WEIGHTS NEVER MOVE; ONLY &lt;1 MB ACTIVATIONS / TOKENS HOP</text>
+            <line x1="20" y1="35" x2="880" y2="35" stroke="#dfd8c8" stroke-width="1"></line>
+
+            <rect x="20" y="48" width="242" height="120" rx="9" fill="#eef6f1" stroke="#8bb7a4" stroke-width="1.3"></rect>
+            <text x="32" y="68" font-size="11" font-weight="700" fill="#1b5e46">Node 1 &middot; 8&times; RTX 3090 (192 GiB)</text>
+            <text x="32" y="88" font-size="9.6" fill="#132018">• Qwen3.6-35B HG4 (17.2G) + LFM3 (0.8G)</text>
+            <text x="32" y="105" font-size="9.6" fill="#132018">• Nemotron-120B HG4 (60.2G)</text>
+            <text x="32" y="122" font-size="9.6" fill="#132018">• Goedel-32B (15.8G) + Boltz-2 + V-JEPA</text>
+            <text x="32" y="146" font-size="9.5" font-weight="700" fill="#0a6a5f">6.8 TB/s VRAM &middot; ~98 GiB used &middot; 0 disk I/O</text>
+
+            <path d="M266 108 L334 108" stroke="#0a6a5f" stroke-width="2" stroke-dasharray="4,3"></path>
+            <polygon points="334,103 342,108 334,113" fill="#0a6a5f"></polygon>
+            <text x="271" y="96" font-size="9" font-weight="700" fill="#0a6a5f">&lt;50 KB JSON</text>
+            <text x="272" y="124" font-size="8.8" fill="#596a5f">~1&ndash;3 ms TCP</text>
+
+            <rect x="346" y="48" width="234" height="120" rx="9" fill="#f7f4ec" stroke="#c9c0ad"></rect>
+            <text x="358" y="68" font-size="11" font-weight="700" fill="#132018">Nodes 2&ndash;3 &middot; 8&times; RTX 3090 each</text>
+            <text x="358" y="88" font-size="9.6" fill="#2d3e34">• Kimi K31H Pipeline Stage A &amp; B</text>
+            <text x="358" y="105" font-size="9.6" fill="#2d3e34">• 100% of layers pinned in GDDR6X</text>
+            <text x="358" y="122" font-size="9.6" fill="#2d3e34">• 72 KB activation/token between stages</text>
+            <text x="358" y="146" font-size="9.5" font-weight="700" fill="#1b5e46">0.07&ndash;0.35 MB hop = &lt;0.6 ms wire time!</text>
+
+            <path d="M584 108 L652 108" stroke="#0a6a5f" stroke-width="2" stroke-dasharray="4,3"></path>
+            <polygon points="652,103 660,108 652,113" fill="#0a6a5f"></polygon>
+            <text x="589" y="96" font-size="9" font-weight="700" fill="#0a6a5f">72 KB state</text>
+            <text x="592" y="124" font-size="8.8" fill="#596a5f">(&lt;1 MB batch)</text>
+
+            <rect x="664" y="48" width="216" height="120" rx="9" fill="#eef6f1" stroke="#8bb7a4" stroke-width="1.3"></rect>
+            <text x="676" y="68" font-size="11" font-weight="700" fill="#1b5e46">Node 4 &middot; Tail + Oracles</text>
+            <text x="676" y="88" font-size="9.6" fill="#132018">• Kimi K31H Tail + 5L-DSpark</text>
+            <text x="676" y="105" font-size="9.6" fill="#132018">• Lean 4 + OpenCode + x-cruncher</text>
+            <text x="676" y="122" font-size="9.6" fill="#132018">• Returns 4-byte verified token IDs</text>
+            <text x="676" y="146" font-size="9.5" font-weight="700" fill="#0a6a5f">~27 TB/s total VRAM at ~$6&ndash;8/hr!</text>
           </svg>
         </figure>
 
