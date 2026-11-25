@@ -65,10 +65,10 @@
         <p class="hero__tagline">Solving AI&rsquo;s data-movement bottleneck: ~4&times; smaller models that fit in smaller RAM &amp; VRAM, decode up to 45&times; faster, and preserve <code>BF16</code> reasoning.</p>
         <p class="lede">Modern language models are bottlenecked not by math speed, but by <strong>data movement</strong> &mdash; every generated token must haul gigabytes of <code>16-bit BF16</code> weights from memory into the processor. Standard 4-bit or 2-bit compression shrinks those weights, but a handful of extreme outlier channels clip the quantization grid and break code and math accuracy. Clover&rsquo;s <strong>Hadamard-Grouped (<code>HG</code>)</strong> format solves both problems at once: it rotates every 128-weight block through a Fast Walsh&ndash;Hadamard Transform (<code>FWHT-128</code>) to erase outlier spikes before rounding into a register lookup codebook (<code>4.125 bpw</code>), keeping models compressed all the way into CPU and GPU registers.</p>
       <div class="actions">
-          <a class="btn btn--primary" href="#how-hg-works">1. What HG Solves &amp; How &darr;</a>
-          <a class="btn" href="#compression-4-models">2. 4-Model Compression &amp; Outputs &darr;</a>
-          <a class="btn" href="#benchmarks">3. Phone, Laptop, CPU &amp; 4090 Benchmarks &darr;</a>
-          <a class="btn" href="#conclusion">4. Data-Movement Conclusion &darr;</a>
+          <a class="btn btn--primary" href="#three-myths">1. 3 AI Myths Broken &darr;</a>
+          <a class="btn" href="#how-hg-works">2. How Clover HG Works &darr;</a>
+          <a class="btn" href="#benchmarks">5. Real Hardware Benchmarks &darr;</a>
+          <a class="btn" href="#convert-any-model">7. Deploy in 1 Command &darr;</a>
       </div>
 
       <div class="stat-grid" style="margin-top:2rem">
@@ -96,9 +96,63 @@
     </div>
   </section>
 
+  <!-- ============ 1. BREAKING THE 3 AI HARDWARE MYTHS UPFRONT ============ -->
+  <section class="band" id="three-myths">
+    <div class="wrap">
+        <h2>1. Start here &mdash; breaking three common myths about AI speed and hardware</h2>
+        <p class="lede">Before looking at compression math or model tables, three measured hardware facts explain <em>everything</em> on this page &mdash; and each fact leads directly to the next:</p>
+
+        <div class="grid grid--3" style="margin-top:1.4rem">
+          <div class="card">
+            <h3>Myth 1: &ldquo;AI is a processing problem&rdquo;</h3>
+            <p><strong>Reality: AI inference is a data-movement problem.</strong> Generating each token requires hauling gigabytes of weights across a narrow memory wire into the processor. When we switched from a laptop CPU to its faster integrated GPU on the <em>same</em> <code>25.6 GB/s</code> memory stick, token decoding barely moved (<code>12.4 &rarr; 12.8 tok/s</code>) &mdash; compute cores sit idle waiting on the wire.</p>
+          </div>
+          <div class="card">
+            <h3>Myth 2: &ldquo;More RAM or VRAM makes AI faster&rdquo;</h3>
+            <p><strong>Reality: Once a model fits in RAM or VRAM, extra GBs add <code>+0.0 tok/s</code>.</strong> Expanding RAM from <code>2 GB</code> to <code>128 GB</code> gave <code>48.7 &rarr; 48.7 tok/s</code> (<code>+0.0</code>); doubling VRAM from <code>96 GB</code> to <code>192 GB</code> gave <code>172.2 &rarr; 171.8 tok/s</code> (<code>+0.0</code>). An <code>8 GB</code> 4-channel phone (<code>33.4 tok/s</code>) beat a <code>16 GB</code> 1-channel laptop (<code>12.4 tok/s</code>) by <strong><code>2.7&times;</code></strong> because <strong>bus width (<code>GB/s</code>), not capacity (<code>GB</code>), sets speed</strong>.</p>
+          </div>
+          <div class="card">
+            <h3>Myth 3: &ldquo;One larger machine beats smaller ones&rdquo;</h3>
+            <p><strong>Reality: More smaller right-sized machines outperform one giant machine.</strong> Because of Facts 1 &amp; 2, running 4 instances inside one <code>128 GB</code> server forces all 4 to split <strong>one</strong> <code>83.2 GB/s</code> bus (<code>~4 tok/s &times; 4 = 16.0 tok/s</code>, <code>0&times;</code> gain). Running 4 smaller <code>32 GB</code> nodes (<code>66.4 tok/s</code>, <strong><code>4.0&times;</code></strong>) or <code>4&times; 24 GB RTX 3090</code> (<code>234.1 tok/s</code>) gives every replica its <strong>own memory bus</strong>.</p>
+          </div>
+        </div>
+
+        <figure class="diagram" style="margin-top:1.6rem">
+          <svg viewBox="0 0 900 168" role="img" aria-label="Logical chain connecting the three proofs: Proof 1 (Memory wire GB/s limits token speed, not compute TOPS) plus Proof 2 (Extra RAM/VRAM capacity after fit adds +0.0 tok/s) implies Conclusion 3 (Shrink models ~4x with Clover HG so they fit small right-sized nodes, then multiply independent memory buses)." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:14px;background:#fffefb;padding:10px">
+            <text x="22" y="24" font-size="11.2" font-weight="700" fill="#1b5e46" letter-spacing="1.0">THE LOGICAL CHAIN · WHY SHRINKING BYTES (HG) + SCALING SMALL NODES WINS</text>
+            <line x1="22" y1="35" x2="878" y2="35" stroke="#dfd8c8" stroke-width="1"></line>
+
+            <rect x="22" y="48" width="256" height="104" rx="9" fill="#f7f4ec" stroke="#c9c0ad"></rect>
+            <text x="36" y="70" font-size="11.5" font-weight="700" fill="#132018">Proof 1 · Wire Is the Bottleneck</text>
+            <text x="36" y="90" font-size="10.2" fill="#2d3e34">Speed = Bus Bandwidth &divide; Bytes/Token</text>
+            <text x="36" y="109" font-size="10" fill="#596a5f">Faster GPU on same 25.6 GB/s stick:</text>
+            <text x="36" y="126" font-size="10.2" font-weight="700" fill="#7d5312">12.4 &rarr; 12.8 tok/s (~0&times; gain)</text>
+
+            <path d="M282 100 L308 100" stroke="#1b5e46" stroke-width="2" fill="none"></path>
+            <polygon points="308,95 318,100 308,105" fill="#1b5e46"></polygon>
+
+            <rect x="322" y="48" width="256" height="104" rx="9" fill="#f7f4ec" stroke="#c9c0ad"></rect>
+            <text x="336" y="70" font-size="11.5" font-weight="700" fill="#132018">Proof 2 · Extra GBs Sit Idle</text>
+            <text x="336" y="90" font-size="10.2" fill="#2d3e34">2G &rarr; 128G RAM: 48.7 &rarr; 48.7 (+0.0)</text>
+            <text x="336" y="109" font-size="10.2" fill="#2d3e34">96G &rarr; 192G VRAM: 172.2 &rarr; 171.8 (+0.0)</text>
+            <text x="336" y="126" font-size="10.2" font-weight="700" fill="#7d5312">4 workers on 1 bus = still ~16 tok/s</text>
+
+            <path d="M582 100 L608 100" stroke="#1b5e46" stroke-width="2" fill="none"></path>
+            <polygon points="608,95 618,100 608,105" fill="#1b5e46"></polygon>
+
+            <rect x="622" y="48" width="256" height="104" rx="9" fill="#eef6f1" stroke="#8bb7a4" stroke-width="1.4"></rect>
+            <text x="636" y="70" font-size="11.5" font-weight="700" fill="#1b5e46">Therefore · Shrink + Scale Out</text>
+            <text x="636" y="90" font-size="10.2" fill="#132018">1. Shrink ~4&times; with HG (4&times; less traffic)</text>
+            <text x="636" y="109" font-size="10.2" fill="#132018">2. Fit smaller 24&ndash;32 GB cards/nodes</text>
+            <text x="636" y="126" font-size="10.2" font-weight="700" fill="#1b5e46">3. N small nodes = N memory buses!</text>
+          </svg>
+        </figure>
+    </div>
+  </section>
+
   <section class="band" id="how-hg-works">
     <div class="wrap">
-        <h2>1. Introduction &mdash; What is HG, why it is important, and how it works</h2>
+        <h2>2. How Clover <code>HG</code> works &mdash; cutting wire traffic ~4&times; without losing accuracy</h2>
         <p class="lede">Why do large AI models feel slow even on powerful processors? Because generating one word requires reading every active weight across a narrow memory wire. Naive low-bit formats try to shrink that wire traffic by rounding raw weights directly, but neural networks store critical reasoning features inside sharp <strong>outlier spikes</strong> (<code>10&times;&ndash;50&times;</code> larger than neighboring weights). One spike stretches the rounding scale and wipes out hundreds of nearby weights.</p>
 
         <div class="grid grid--3" style="margin-top:1.5rem">
@@ -222,7 +276,7 @@
   <!-- ============ 2. COMPRESSION ACROSS 4 MODELS & OUTPUT FIDELITY ============ -->
   <section class="band" id="compression-4-models">
     <div class="wrap">
-        <h2>2. Compression achieved across 4 models &mdash; <code>BF16</code> size vs. <code>HG</code> size and why it matters</h2>
+        <h2>3. Compression achieved across 4 models &mdash; <code>BF16</code> size vs. <code>HG</code> size and why it matters</h2>
         <p class="lede">We converted and published four open-weight models spanning three orders of magnitude &mdash; from a <code>2B</code> mobile/laptop model up to a <code>2.8 Trillion</code> parameter frontier MoE. Decreasing model size by <code>2&times;&ndash;4&times;</code> accomplishes two things simultaneously: <strong>(1) each token moves up to <code>4&times;</code> fewer bytes across memory wires</strong>, and <strong>(2) models stay inside fast local RAM or GPU VRAM instead of spilling onto slow SSD or PCIe buses</strong>.</p>
 
       <div class="table-wrap">
@@ -325,7 +379,7 @@ The total capacity is 72 kilowatts.</code></pre>
   <!-- ============ 3. HARDWARE SPECIFICATIONS OF THE 4 TESTBEDS ============ -->
   <section class="band" id="testbed-specs">
     <div class="wrap">
-        <h2>3. Hardware specifications of our 4 benchmark testbeds</h2>
+        <h2>4. Hardware specifications of our benchmark testbeds</h2>
         <p class="lede">To test how memory size, memory channels, CPU SIMD, and GPU VRAM behave in the real world, we measured the converted models across four physical machines &mdash; from a pocket phone up to an 8-GPU server:</p>
 
         <div class="grid grid--2" style="margin-top:1.5rem">
@@ -374,10 +428,10 @@ The total capacity is 72 kilowatts.</code></pre>
   <!-- ============ 4. WHAT BENCHMARKS WE RAN (SPEED + ACCURACY) ============ -->
   <section class="band" id="benchmarks">
     <div class="wrap">
-        <h2>4. Benchmarks we ran &mdash; speed (<code>BF16</code> vs. <code>HG</code>) and reasoning quality</h2>
-        <p class="lede">We ran two families of benchmarks across those four machines: <strong>(A) end-to-end prefill and decode throughput (<code>tok/s</code>)</strong> comparing Original <code>BF16</code> against Clover <code>HG</code>, and <strong>(B) 71 frozen SHA-256-locked accuracy, coding, exact-math, and formal Lean 4 mathematical proof evaluations</strong>.</p>
+        <h2>5. Benchmarks we ran &mdash; speed (<code>BF16</code> vs. <code>HG</code>) and reasoning quality</h2>
+        <p class="lede">We ran two families of benchmarks across those machines: <strong>(A) end-to-end prefill and decode throughput (<code>tok/s</code>)</strong> comparing Original <code>BF16</code> against Clover <code>HG</code>, and <strong>(B) 71 frozen SHA-256-locked accuracy, coding, exact-math, and formal Lean 4 mathematical proof evaluations</strong>.</p>
 
-        <h3 style="margin-top:1.8rem">4A. Everyday device ladder on <code>LFM3-Omni-2B</code> (Phone &rarr; Laptop &rarr; Hetzner CPU &rarr; RTX 4090)</h3>
+        <h3 style="margin-top:1.8rem">5A. Everyday device ladder on <code>LFM3-Omni-2B</code> (Phone &rarr; Laptop &rarr; Hetzner CPU &rarr; RTX 4090)</h3>
         <div class="table-wrap">
           <table class="data">
             <caption class="note">Running the exact same <code>2B</code> model across all four testbeds shows both the <code>BF16 &rarr; HG</code> speedup and how directly decode tracks memory-wire bandwidth (<code>GB/s</code>).</caption>
@@ -423,7 +477,7 @@ The total capacity is 72 kilowatts.</code></pre>
           </table>
         </div>
 
-        <h3 id="hardware-method-matrix" style="margin-top:2.2rem">4B. All 4 models (<code>2B</code> &rarr; <code>2.8T</code>) on Hetzner <code>128 GB</code> CPU Server vs. <code>RTX 4090</code> GPU Server</h3>
+        <h3 id="hardware-method-matrix" style="margin-top:2.2rem">5B. All 4 models (<code>2B</code> &rarr; <code>2.8T</code>) on Hetzner <code>128 GB</code> CPU Server vs. GPU Servers</h3>
       <div class="table-wrap">
         <table class="data">
             <caption class="note"><strong>Hetzner CPU Server (<code>Ryzen 9 7950X3D</code>, <code>128 GB</code> DDR5, <code>0</code> GPUs)</strong> &mdash; Original <code>BF16</code> vs. Clover <code>HG</code> prefill and decode throughput.</caption>
@@ -521,7 +575,7 @@ The total capacity is 72 kilowatts.</code></pre>
         </table>
       </div>
 
-        <h3 id="kimi-full-vram" style="margin-top:2.2rem">4C. What single-node GPU server fits <code>100%</code> of <code>Kimi-K3.1-Pro HG</code> (<code>740 GiB</code>) in VRAM?</h3>
+        <h3 id="kimi-full-vram" style="margin-top:2.2rem">5C. What single-node GPU server fits <code>100%</code> of <code>Kimi-K3.1-Pro HG</code> (<code>740 GiB</code>) in VRAM?</h3>
         <p>Even on <code>4&times; RTX PRO 6000 Blackwell</code> (<code>382 GiB</code> GDDR7), <code>56</code> cold MoE layers (<code>~363 GiB</code>) still reside in CPU RAM, capping single-stream throughput at the host memory bus. Fitting all <strong><code>739.6 GiB</code> (<code>794.2 GB</code>)</strong> of <code>K31H</code> weights plus <code>~25 GiB</code> of KV/KDA context inside GPU VRAM eliminates host RAM traffic completely &mdash; and cuts the required datacenter cluster in half compared to upstream <code>Kimi-K3.1-Pro</code> (<code>1,472 GiB</code>):</p>
 
         <div class="table-wrap" style="margin-top:1rem">
@@ -569,7 +623,7 @@ The total capacity is 72 kilowatts.</code></pre>
           </table>
         </div>
 
-        <h3 style="margin-top:2.2rem">4D. Quality, software engineering &amp; formal Lean 4 mathematical proof benchmarks</h3>
+        <h3 style="margin-top:2.2rem">5D. Quality, software engineering &amp; formal Lean 4 mathematical proof benchmarks</h3>
         <p>To verify zero silent reasoning collapse after compression, we evaluated the converted <code>HG</code> checkpoints on held-out perplexity, <code>48</code> sealed Clover Studio capability probes (tool discipline, epistemic memory, and exact big-integer math via native C11 <code>x-cruncher</code>), and <code>23</code> frozen Lean 4 <code>RiemannHypothesis</code> + Systems SWE + Binary Reverse-Engineering tasks verified by the official <code>leanprover/lean4:v4.33.1</code> kernel:</p>
 
       <div class="table-wrap">
@@ -622,7 +676,7 @@ The total capacity is 72 kilowatts.</code></pre>
   <!-- ============ 5. CONCLUSION & RECOMMENDATIONS: DATA MOVEMENT IS THE REAL BOTTLENECK ============ -->
   <section class="band" id="conclusion">
     <div class="wrap">
-        <h2 id="more-ram-or-vram">5. Conclusion &amp; recommendations &mdash; adding more RAM or VRAM does not solve AI&rsquo;s data-movement problem</h2>
+        <h2 id="more-ram-or-vram">6. Controlled proof ledger &amp; architectural recommendations</h2>
         <p class="lede">The clearest finding across our phone, laptop, Hetzner CPU server, and 8&times; RTX 4090 experiments is a simple physical law: <strong>buying more RAM capacity (<code>GB</code>), more VRAM capacity (<code>GB</code>), or faster compute cores adds <code>+0.0 tok/s</code> to token decoding once a model fits in memory.</strong></p>
 
         <figure style="margin:1.5rem 0">
@@ -798,7 +852,7 @@ The total capacity is 72 kilowatts.</code></pre>
   <!-- ============ 6. APPENDIX: DEPLOY, CONVERT YOUR OWN MODEL & VERIFY ============ -->
   <section class="band" id="convert-any-model">
     <div class="wrap">
-        <h2 id="verify-it-yourself">6. Deploy any <code>HG</code> model in 1 command, convert your own (<code>convert_to_hg.py</code>) &amp; verify</h2>
+        <h2 id="verify-it-yourself">7. Deploy any <code>HG</code> model in 1 command, convert your own (<code>convert_to_hg.py</code>) &amp; verify</h2>
         <p class="lede">Anyone can serve any of our 4 published <code>HG</code> models as a local OpenAI-compatible <code>/v1</code> endpoint on <strong>pure CPU</strong> or <strong>single/multi-GPU NVIDIA CUDA</strong> (<code>RTX 3090</code>, <code>RTX 4090</code>, <code>A100</code>, <code>H100/H200</code>, <code>B200</code>) via <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/clover_hg_serve.py"><strong><code>clover_hg_serve.py</code></strong></a> or <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/Dockerfile.hg-server"><strong><code>Dockerfile.hg-server</code></strong></a>, or convert any Hugging Face <code>.safetensors</code> checkpoint with <a href="./convert_to_hg.py" download="convert_to_hg.py"><strong><code>convert_to_hg.py</code></strong></a>:</p>
 
         <div class="actions" style="margin-top:1rem;margin-bottom:1.2rem">
