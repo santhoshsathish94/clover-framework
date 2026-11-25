@@ -1,0 +1,2609 @@
+{
+  "benchmark": "SciCode (AA-SciCode test split, with_background=True, v1.0.1)",
+  "code_dir": "/workspace/scicode_lfm3_2b_hg4/submissions/lfm3_omni_2b_turn1_draft/with_background",
+  "problems_test_sha256": "38797fef78f434720be6d053b4f3a86839d6f8ea5fb9115450677cd3a6edf81d",
+  "test_data_h5_sha256": "48b0272a88b17dbd29777c217e1b4fb2b019b92e11cc2add847409db9541b890",
+  "subproblems_passed": 17,
+  "subproblems_total": 288,
+  "subproblem_pass_pct": 5.9,
+  "main_problems_solved": 0,
+  "main_problems_total": 65,
+  "main_problem_pass_pct": 0.0,
+  "solved_main_problem_ids": [],
+  "missing_files": [],
+  "eval_wall_time_s": 65.47,
+  "per_step_results": [
+    {
+      "problem_id": "2",
+      "step_idx": 1,
+      "step_id": "2.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.11,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_2.1_rypfhz66/2.1.py\", line 40, in <module>\n    assert np.allclose(simulate_light_diffraction(n, d, RL, R0, lambda_), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_2.1_rypfhz66/2.1.py\", line 27, in simulate_light_diffraction\n    b1 = 2.0 * f\n               ^\nNameError: name 'f' is not defined\n"
+    },
+    {
+      "problem_id": "5",
+      "step_idx": 1,
+      "step_id": "5.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.904,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_5.1_li52tdhc/5.1.py\", line 42, in <module>\n    assert np.allclose(lanczos(A,b,m), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "8",
+      "step_idx": 1,
+      "step_id": "8.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.116,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_8.1_jj45h47m/8.1.py\", line 37, in <module>\n    assert cmp_tuple_or_list(apply_cshband_pass_filter(image_array, bandwidth), target)\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_8.1_jj45h47m/8.1.py\", line 25, in apply_cshband_pass_filter\n    filtered_fft = fft_input * mask_expanded\n                   ~~~~~~~~~~^~~~~~~~~~~~~~~\nValueError: operands could not be broadcast together with shapes (800,800) (1,1,800,800,80,80) \n"
+    },
+    {
+      "problem_id": "9",
+      "step_idx": 1,
+      "step_id": "9.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.374,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_9.1_h86v3why/9.1.py\", line 92, in <module>\n    assert np.allclose(WJ(A, b, eps, x_true, x0,2/3), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_9.1_h86v3why/9.1.py\", line 31, in WJ\n    M[np.eye(N)] = 1.0 / omega\n    ~^^^^^^^^^^^\nIndexError: arrays used as indices must be of integer (or boolean) type\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 1,
+      "step_id": "11.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.914,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_11.1_2a1ve626/11.1.py\", line 35, in <module>\n    assert np.allclose(ket(2, 0), target)\n                       ^^^^^^^^^\nTypeError: ket() takes 1 positional argument but 2 were given\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 2,
+      "step_id": "11.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.686,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_11.2_7ecj4nyc/11.2.py\", line 58, in <module>\n    assert np.allclose(multi_rail_encoding_state(1), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 3,
+      "step_id": "11.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.658,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_11.3_5ait8wmi/11.3.py\", line 74, in <module>\n    assert np.allclose(tensor([0,1],[0,1]), target)\n                       ^^^^^^^^^^^^^^^^^^^\nTypeError: tensor() takes 0 positional arguments but 2 were given\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 4,
+      "step_id": "11.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.653,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_11.4_em0rih18/11.4.py\", line 121, in <module>\n    assert np.allclose(apply_channel(K, rho, sys=None, dim=None), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_11.4_em0rih18/11.4.py\", line 85, in apply_channel\n    if not K:\n           ^\nValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 5,
+      "step_id": "11.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.305,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_11.5_ilyhqo09/11.5.py\", line 148, in <module>\n    assert np.allclose(generalized_amplitude_damping_channel(0.8, 0), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 6,
+      "step_id": "11.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.33,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_11.6_xl9vcne9/11.6.py\", line 164, in <module>\n    assert np.allclose(output_state(2,0,0,0,0), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_11.6_xl9vcne9/11.6.py\", line 155, in output_state\n    state = multi_rail_encoding_state(rails)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_11.6_xl9vcne9/11.6.py\", line 45, in multi_rail_encoding_state\n    row += np.eye(2, dtype=float)\nValueError: operands could not be broadcast together with shapes (16,) (2,2) (16,) \n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 7,
+      "step_id": "11.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.426,
+      "error_tail": "<module>\n    assert np.allclose(measurement(1), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nTypeError: unsupported operand type(s) for -: 'NoneType' and 'float'\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 8,
+      "step_id": "11.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.008,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_11.8_dx0iqfrk/11.8.py\", line 195, in <module>\n    assert np.allclose(syspermute(X, [2,1], [2,2]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_11.8_dx0iqfrk/11.8.py\", line 182, in syspermute\n    raise ValueError('X and dim must have the same length')\nValueError: X and dim must have the same length\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 9,
+      "step_id": "11.9",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.021,
+      "error_tail": "  File \"/tmp/scicode_eval_11.9_55klgnqs/11.9.py\", line 217\n    d1, d2, ..., dk = trace_dims\n                 ^^^^^^^^^^^^^^^\nSyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 10,
+      "step_id": "11.10",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.025,
+      "error_tail": "  File \"/tmp/scicode_eval_11.10_uat21jkv/11.10.py\", line 217\n    d1, d2, ..., dk = trace_dims\n                 ^^^^^^^^^^^^^^^\nSyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 11,
+      "step_id": "11.11",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.019,
+      "error_tail": "  File \"/tmp/scicode_eval_11.11_osx4ne1f/11.11.py\", line 217\n    d1, d2, ..., dk = trace_dims\n                 ^^^^^^^^^^^^^^^\nSyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 12,
+      "step_id": "11.12",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.02,
+      "error_tail": "  File \"/tmp/scicode_eval_11.12_9uryi_x7/11.12.py\", line 217\n    d1, d2, ..., dk = trace_dims\n                 ^^^^^^^^^^^^^^^\nSyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 1,
+      "step_id": "12.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.609,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_12.1_adt5pg15/12.1.py\", line 32, in <module>\n    assert np.allclose(f_Schrod(1,1, np.array([0.1,0.2,0.3])), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.1_adt5pg15/12.1.py\", line 24, in f_Schrod\n    coeff = l(l + 1) / x ** 2 - 2.0 / x - eps\n            ^^^^^^^^\nTypeError: 'int' object is not callable\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 2,
+      "step_id": "12.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.943,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_12.2_01lcsgmq/12.2.py\", line 54, in <module>\n    assert np.allclose(Numerov(f_Schrod(1,3, np.linspace(1e-5,10,20)), 0.0, -1e-10, np.linspace(1e-5,10,20)[0]-np.linspace(1e-5,10,20)[1]), target)\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.2_01lcsgmq/12.2.py\", line 22, in f_Schrod\n    coeff = l(l + 1) / x ** 2 - 2.0 / x - eps\n            ^^^^^^^^\nTypeError: 'int' object is not callable\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 3,
+      "step_id": "12.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.665,
+      "error_tail": "eback (most recent call last):\n  File \"/tmp/scicode_eval_12.3_1b1vkpci/12.3.py\", line 75, in <module>\n    assert np.allclose(compute_Schrod(1, np.linspace(1e-5,10,20), 1), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.3_1b1vkpci/12.3.py\", line 64, in compute_Schrod\n    u = Numerov(f_Schrod(energy, l, r), 0.0, -1e-07, dr)\n                ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.3_1b1vkpci/12.3.py\", line 22, in f_Schrod\n    coeff = l(l + 1) / x ** 2 - 2.0 / x - eps\n            ^^^^^^^^\nTypeError: 'int' object is not callable\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 4,
+      "step_id": "12.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.94,
+      "error_tail": "), 0), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.4_6mkyej07/12.4.py\", line 83, in shoot\n    f_at_0 = compute_Schrod(energy, r_grid, l) / r0 ** l\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.4_6mkyej07/12.4.py\", line 64, in compute_Schrod\n    u = Numerov(f_Schrod(energy, l, r), 0.0, -1e-07, dr)\n                ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.4_6mkyej07/12.4.py\", line 22, in f_Schrod\n    coeff = l(l + 1) / x ** 2 - 2.0 / x - eps\n            ^^^^^^^^\nTypeError: 'int' object is not callable\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 5,
+      "step_id": "12.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.818,
+      "error_tail": "eval_12.5_o10bvjh1/12.5.py\", line 111, in <module>\n    assert np.allclose(find_bound_states(np.linspace(1e-8,100,2000),2, -1.2/np.arange(1,20,0.2)**2), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.5_o10bvjh1/12.5.py\", line 99, in find_bound_states\n    f_a = f_Schrod(energy, l, r_grid[0])\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.5_o10bvjh1/12.5.py\", line 22, in f_Schrod\n    coeff = l(l + 1) / x ** 2 - 2.0 / x - eps\n            ^^^^^^^^\nTypeError: 'int' object is not callable\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 6,
+      "step_id": "12.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.416,
+      "error_tail": "le \"/tmp/scicode_eval_12.6_sw_byloe/12.6.py\", line 123, in <module>\n    bound_states += find_bound_states(np.linspace(1e-8,100,2000),l,-1.2/np.arange(1,20,0.2)**2)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.6_sw_byloe/12.6.py\", line 99, in find_bound_states\n    f_a = f_Schrod(energy, l, r_grid[0])\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.6_sw_byloe/12.6.py\", line 22, in f_Schrod\n    coeff = l(l + 1) / x ** 2 - 2.0 / x - eps\n            ^^^^^^^^\nTypeError: 'int' object is not callable\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 7,
+      "step_id": "12.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.528,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_12.7_lz0jac4n/12.7.py\", line 152, in <module>\n    bound_states += find_bound_states(r_grid, l, energy_grid)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.7_lz0jac4n/12.7.py\", line 99, in find_bound_states\n    f_a = f_Schrod(energy, l, r_grid[0])\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_12.7_lz0jac4n/12.7.py\", line 22, in f_Schrod\n    coeff = l(l + 1) / x ** 2 - 2.0 / x - eps\n            ^^^^^^^^\nTypeError: 'int' object is not callable\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 8,
+      "step_id": "12.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.018,
+      "error_tail": "  File \"/tmp/scicode_eval_12.8_taph31b6/12.8.py\", line 199\n    from scicode.parse.parse import process_hdf5_to_tuple\nIndentationError: expected an indented block after 'for' statement on line 186\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 9,
+      "step_id": "12.9",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.221,
+      "error_tail": "  File \"/tmp/scicode_eval_12.9_iru1t_a5/12.9.py\", line 198\n    def f_Schrod_Hartree(energy, r_grid, l, Z, hartreeU):\nIndentationError: expected an indented block after 'for' statement on line 186\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 10,
+      "step_id": "12.10",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.019,
+      "error_tail": "  File \"/tmp/scicode_eval_12.10_u7ymrmdv/12.10.py\", line 198\n    def f_Schrod_Hartree(energy, r_grid, l, Z, hartreeU):\nIndentationError: expected an indented block after 'for' statement on line 186\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 11,
+      "step_id": "12.11",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.093,
+      "error_tail": "  File \"/tmp/scicode_eval_12.11_x43ctka2/12.11.py\", line 198\n    def f_Schrod_Hartree(energy, r_grid, l, Z, hartreeU):\nIndentationError: expected an indented block after 'for' statement on line 186\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 12,
+      "step_id": "12.12",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.62,
+      "error_tail": "  File \"/tmp/scicode_eval_12.12_mczdpzo9/12.12.py\", line 198\n    def f_Schrod_Hartree(energy, r_grid, l, Z, hartreeU):\nIndentationError: expected an indented block after 'for' statement on line 186\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 13,
+      "step_id": "12.13",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.804,
+      "error_tail": "  File \"/tmp/scicode_eval_12.13_le4lo_6p/12.13.py\", line 198\n    def f_Schrod_Hartree(energy, r_grid, l, Z, hartreeU):\nIndentationError: expected an indented block after 'for' statement on line 186\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 14,
+      "step_id": "12.14",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.181,
+      "error_tail": "  File \"/tmp/scicode_eval_12.14_bezcaunn/12.14.py\", line 198\n    def f_Schrod_Hartree(energy, r_grid, l, Z, hartreeU):\nIndentationError: expected an indented block after 'for' statement on line 186\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 1,
+      "step_id": "13.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.607,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.1_3ow2_l8i/13.1.py\", line 47, in <module>\n    assert np.allclose(partial_derivs_vec(fct, delta), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_13.1_3ow2_l8i/13.1.py\", line 26, in partial_derivs_vec\n    deriv_x = zeros_like(fct)\n              ^^^^^^^^^^\nNameError: name 'zeros_like' is not defined\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 2,
+      "step_id": "13.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.619,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.2_yygypv0c/13.2.py\", line 74, in <module>\n    assert np.allclose(laplace(fct, delta), target)\n                       ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_13.2_yygypv0c/13.2.py\", line 61, in laplace\n    lap_xx = (fct[1:-1, :, :] - 2 * fct[1:-1, 1:-1, :] + fct[1:-1, :, :-2]) / delta ** 2\n              ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~\nValueError: operands could not be broadcast together with shapes (98,100,100) (98,98,100) \n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 3,
+      "step_id": "13.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.199,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.3_h2dmmudz/13.3.py\", line 118, in <module>\n    assert np.allclose(gradient(fct, delta), target)\n                       ^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_13.3_h2dmmudz/13.3.py\", line 94, in gradient\n    grad_x = (fct[1:-1, :, :] - 2 * fct[1:-1, 1:-1, :] + fct[1:-1, :, :-2]) / (2 * delta)\n              ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~\nValueError: operands could not be broadcast together with shapes (98,100,100) (98,98,100) \n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 4,
+      "step_id": "13.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.888,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.4_h40pxdm_/13.4.py\", line 153, in <module>\n    assert np.allclose(divergence(fx, fy, fz, delta), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 5,
+      "step_id": "13.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.916,
+      "error_tail": "l_13.5_31sbt908/13.5.py\", line 179, in <module>\n    assert np.allclose(grad_div(fx, fy, fz, delta), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_13.5_31sbt908/13.5.py\", line 162, in grad_div\n    div_x = laplace(A_x, delta)\n            ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_13.5_31sbt908/13.5.py\", line 61, in laplace\n    lap_xx = (fct[1:-1, :, :] - 2 * fct[1:-1, 1:-1, :] + fct[1:-1, :, :-2]) / delta ** 2\n              ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~\nValueError: operands could not be broadcast together with shapes (98,100,100) (98,98,100) \n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 7,
+      "step_id": "13.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.916,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.7_efyj6bit/13.7.py\", line 265, in <module>\n    assert np.allclose(symmetry(f_dot, 1, 1, -1), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 8,
+      "step_id": "13.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.273,
+      "error_tail": "oing_wave(maxwell, f_dot, f), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nTypeError: unsupported operand type(s) for -: 'NoneType' and 'float'\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 9,
+      "step_id": "13.9",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.266,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.9_699rpbv5/13.9.py\", line 325, in <module>\n    assert np.allclose(derivatives(maxwell, fields), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_13.9_699rpbv5/13.9.py\", line 304, in derivatives\n    nx, ny, nz = maxwell.delta\n    ^^^^^^^^^^\nTypeError: cannot unpack non-iterable float object\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 10,
+      "step_id": "13.10",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.979,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.10_w80vpabh/13.10.py\", line 359, in <module>\n    fields_dot = derivatives(maxwell, fields)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_13.10_w80vpabh/13.10.py\", line 304, in derivatives\n    nx, ny, nz = maxwell.delta\n    ^^^^^^^^^^\nTypeError: cannot unpack non-iterable float object\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 11,
+      "step_id": "13.11",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.077,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.11_u2iojmj_/13.11.py\", line 405, in <module>\n    assert cmp_tuple_or_list(stepper(maxwell, fields, courant, t_const), target)\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_13.11_u2iojmj_/13.11.py\", line 385, in stepper\n    lap_xx = (A_x[2:, :, :] - 2 * A_x[1:-1, :, :] + A_x[1:-1, :, :-2]) / delta ** 2\n              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~\nValueError: operands could not be broadcast together with shapes (48,50,50) (48,50,48) \n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 12,
+      "step_id": "13.12",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.898,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.12_bc5807nc/13.12.py\", line 428, in <module>\n    stepper(maxwell, fields, courant, t_const)\n  File \"/tmp/scicode_eval_13.12_bc5807nc/13.12.py\", line 385, in stepper\n    lap_xx = (A_x[2:, :, :] - 2 * A_x[1:-1, :, :] + A_x[1:-1, :, :-2]) / delta ** 2\n              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~\nValueError: operands could not be broadcast together with shapes (48,50,50) (48,50,48) \n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 13,
+      "step_id": "13.13",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.028,
+      "error_tail": "le>\n    initialize(maxwell)\n  File \"/tmp/scicode_eval_13.13_th8094w9/13.13.py\", line 465, in initialize\n    check_constraint(maxwell)\n  File \"/tmp/scicode_eval_13.13_th8094w9/13.13.py\", line 413, in check_constraint\n    div_x = laplace(E_x, maxwell.delta)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_13.13_th8094w9/13.13.py\", line 61, in laplace\n    lap_xx = (fct[1:-1, :, :] - 2 * fct[1:-1, 1:-1, :] + fct[1:-1, :, :-2]) / delta ** 2\n              ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~\nValueError: operands could not be broadcast together with shapes (48,50,50) (48,48,50) \n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 14,
+      "step_id": "13.14",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.823,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.14__cqmt0sw/13.14.py\", line 486, in <module>\n    maxwell = initialize(maxwell)\n              ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_13.14__cqmt0sw/13.14.py\", line 472, in initialize\n    E_phi = -8.0 * A_x * (r * np.sin(theta) / lambda_val ** 2) * np.exp(-(r / lambda_val) ** 2)\n                   ^^^\nNameError: name 'A_x' is not defined\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 15,
+      "step_id": "13.15",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.159,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.15_2c1ffiv5/13.15.py\", line 520, in <module>\n    assert np.allclose(main(n_grid, x_out, courant, t_max, t_check), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_13.15_2c1ffiv5/13.15.py\", line 500, in main\n    maxwell = initialize(maxwell)\n                         ^^^^^^^\nUnboundLocalError: cannot access local variable 'maxwell' where it is not associated with a value\n"
+    },
+    {
+      "problem_id": "14",
+      "step_idx": 1,
+      "step_id": "14.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 5.161,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_14.1_38ww472x/14.1.py\", line 54, in <module>\n    assert np.allclose(harmonic_mannella_leapfrog(x0, v0, t0, steps, taup, omega0, vrms), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "14",
+      "step_idx": 2,
+      "step_id": "14.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 62.484,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_14.2_jb9sxpd_/14.2.py\", line 137, in <module>\n    assert (eta>0.95 and eta<1.05) == target\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "15",
+      "step_idx": 1,
+      "step_id": "15.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.309,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_15.1_wbfga8uz/15.1.py\", line 33, in <module>\n    assert np.allclose(init_AB(2, 1e-7, 1e-18), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_15.1_wbfga8uz/15.1.py\", line 25, in init_AB\n    A = np.diag(a1 + a2) + np.diag(a2, k=1) + np.diag(a2, k=-1)\n        ^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/lib/_twodim_base_impl.py\", line 330, in diag\n    raise ValueError(\"Input must be 1- or 2-d.\")\nValueError: Input must be 1- or 2-d.\n"
+    },
+    {
+      "problem_id": "15",
+      "step_idx": 2,
+      "step_id": "15.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.718,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_15.2_g0bs3kck/15.2.py\", line 83, in <module>\n    assert np.allclose(crank_nicolson(sigma, kappa, T, nstep, N, L), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_15.2_g0bs3kck/15.2.py\", line 40, in crank_nicolson\n    psi0 = np.exp(-(x - x0) ** 2 / (2.0 * sigma ** 2)) * np.exp(1j * kappa * x)\n                    ^\nNameError: name 'x' is not defined. Did you mean: 'x0'?\n"
+    },
+    {
+      "problem_id": "16",
+      "step_idx": 1,
+      "step_id": "16.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.344,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_16.1_5kqtsxhg/16.1.py\", line 27, in <module>\n    assert np.allclose(init_matrix(10,0.), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "16",
+      "step_idx": 2,
+      "step_id": "16.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.217,
+      "error_tail": "^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_16.2_hfeiivi1/16.2.py\", line 35, in davidson_solver\n    eigenvalues, eigenvectors = np.linalg.eigh(A_p)\n                                ^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/linalg/_linalg.py\", line 1642, in eigh\n    _assert_stacked_square(a)\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/linalg/_linalg.py\", line 255, in _assert_stacked_square\n    raise LinAlgError(f'{a.ndim}-dimensional array given. Array must be '\nnumpy.linalg.LinAlgError: 1-dimensional array given. Array must be at least two-dimensional\n"
+    },
+    {
+      "problem_id": "17",
+      "step_idx": 1,
+      "step_id": "17.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.105,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_17.1_mohjtkg8/17.1.py\", line 27, in <module>\n    assert cmp_tuple_or_list(init_eji_array(10,[4,6,8,10]), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "17",
+      "step_idx": 2,
+      "step_id": "17.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.34,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_17.2_577vvvkd/17.2.py\", line 61, in <module>\n    assert np.allclose(float(integrate_DOS(energy, energy_vertices)), target)\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_17.2_577vvvkd/17.2.py\", line 32, in integrate_DOS\n    norm_grad = np.sqrt(eji[0, 1] ** 2 + eji[0, 2] ** 2 + eji[0, 3] ** 2)\n                        ~~~^^^^^^\nTypeError: tuple indices must be integers or slices, not tuple\n"
+    },
+    {
+      "problem_id": "18",
+      "step_idx": 1,
+      "step_id": "18.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.077,
+      "error_tail": "  File \"/tmp/scicode_eval_18.1_46_w11o4/18.1.py\", line 49\n    from scicode.parse.parse import process_hdf5_to_tuple\nIndentationError: expected an indented block after 'if' statement on line 21\n"
+    },
+    {
+      "problem_id": "18",
+      "step_idx": 2,
+      "step_id": "18.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.145,
+      "error_tail": "  File \"/tmp/scicode_eval_18.2_5s1j25x2/18.2.py\", line 46\n    def NURBS_2D(xi_1, xi_2, i_1, i_2, p_1, p_2, n_1, n_2, Xi_1, Xi_2, w):\nIndentationError: expected an indented block after 'if' statement on line 19\n"
+    },
+    {
+      "problem_id": "20",
+      "step_idx": 1,
+      "step_id": "20.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.195,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_20.1_4vw922us/20.1.py\", line 30, in <module>\n    assert np.allclose(bose_distribution(np.array([[1,2],[3,4]]), 100.0), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "20",
+      "step_idx": 2,
+      "step_id": "20.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.099,
+      "error_tail": "line 39, in phonon_angular_momentum\n    x_sum = np.sum(x_components * y_components, axis=3)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/fromnumeric.py\", line 2463, in sum\n    return _wrapreduction(\n           ^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/fromnumeric.py\", line 83, in _wrapreduction\n    return ufunc.reduce(obj, axis, dtype, out, **passkwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nnumpy.exceptions.AxisError: axis 3 is out of bounds for array of dimension 3\n"
+    },
+    {
+      "problem_id": "21",
+      "step_idx": 1,
+      "step_id": "21.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.498,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_21.1_jvukt75f/21.1.py\", line 27, in <module>\n    assert np.allclose(m_eff(0, 1), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "21",
+      "step_idx": 2,
+      "step_id": "21.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.199,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "21",
+      "step_idx": 3,
+      "step_id": "21.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.019,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_21.3_mkgdytg_/21.3.py\", line 78, in <module>\n    assert (alpha(850, 0.2, 850, 9000) == 0) == target\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_21.3_mkgdytg_/21.3.py\", line 65, in alpha\n    arg_gaas = hbar * omega0 - E_gaas\n                               ^^^^^^\nNameError: name 'E_gaas' is not defined. Did you mean: 'mr_gaas'?\n"
+    },
+    {
+      "problem_id": "22",
+      "step_idx": 1,
+      "step_id": "22.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.151,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_22.1_eaul5ga1/22.1.py\", line 55, in <module>\n    assert np.allclose(Rlnm(l, n, m, k, z, N_t), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_22.1_eaul5ga1/22.1.py\", line 31, in Rlnm\n    J_l = jv(l, k_mag * r0)\n                        ^^\nNameError: name 'r0' is not defined\n"
+    },
+    {
+      "problem_id": "22",
+      "step_idx": 2,
+      "step_id": "22.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.422,
+      "error_tail": "ation or ~int(x) if you really want the bitwise inversion of the underlying int.\n  b_nm[~mask] = -np.sqrt((n - m - 1) * (n - m) / ((2 * n - 1) * (2 * n + 1)))\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_22.2_aw0samcj/22.2.py\", line 88, in <module>\n    assert np.allclose(Tnvm(2, 1, 1, Q), target)\n                       ^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_22.2_aw0samcj/22.2.py\", line 67, in Tnvm\n    b_nm[~mask] = -np.sqrt((n - m - 1) * (n - m) / ((2 * n - 1) * (2 * n + 1)))\n    ~~~~^^^^^^^\nIndexError: too many indices for array: array is 0-dimensional, but 1 were indexed\n"
+    },
+    {
+      "problem_id": "22",
+      "step_idx": 3,
+      "step_id": "22.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.022,
+      "error_tail": "  File \"/tmp/scicode_eval_22.3_qvpit9pb/22.3.py\", line 157\n    R_l_r0 * R_s_r0 = R_l_r0 * R_s_r0\n    ^^^^^^^^^^^^^^^\nSyntaxError: cannot assign to expression here. Maybe you meant '==' instead of '='?\n"
+    },
+    {
+      "problem_id": "23",
+      "step_idx": 1,
+      "step_id": "23.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.664,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_23.1_op1hk61z/23.1.py\", line 30, in <module>\n    assert np.allclose(KL_divergence(p,q), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "23",
+      "step_idx": 2,
+      "step_id": "23.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.396,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_23.2_5pvho_qu/23.2.py\", line 57, in <module>\n    assert np.allclose(mutual_info(channel, prior), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_23.2_5pvho_qu/23.2.py\", line 45, in mutual_info\n    p_X_safe = p_X[mask]\n               ~~~^^^^^^\nIndexError: too many indices for array: array is 1-dimensional, but 2 were indexed\n"
+    },
+    {
+      "problem_id": "23",
+      "step_idx": 3,
+      "step_id": "23.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.372,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_23.3_zcr25dmc/23.3.py\", line 91, in <module>\n    assert np.allclose(blahut_arimoto(channel,e), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_23.3_zcr25dmc/23.3.py\", line 71, in blahut_arimoto\n    p_X_safe = p_X[mask]\n               ~~~^^^^^^\nIndexError: too many indices for array: array is 1-dimensional, but 2 were indexed\n"
+    },
+    {
+      "problem_id": "24",
+      "step_idx": 1,
+      "step_id": "24.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.18,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_24.1_ua80nhp6/24.1.py\", line 29, in <module>\n    assert np.allclose(make_IC(n_x), target)\n                       ^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_24.1_ua80nhp6/24.1.py\", line 20, in make_IC\n    u_quad = u(x_quad)\n             ^^^^^^^^^\nTypeError: 'numpy.ndarray' object is not callable\n"
+    },
+    {
+      "problem_id": "24",
+      "step_idx": 2,
+      "step_id": "24.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.163,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_24.2_10wvjhki/24.2.py\", line 39, in <module>\n    assert np.allclose(LaxF(v_i,v_i1), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "24",
+      "step_idx": 3,
+      "step_id": "24.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.674,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_24.3_vvwrv_9s/24.3.py\", line 58, in <module>\n    assert np.allclose(solve(n_x,n_t,T), target)\n                       ^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_24.3_vvwrv_9s/24.3.py\", line 41, in solve\n    v = make_IC(n_x)\n        ^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_24.3_vvwrv_9s/24.3.py\", line 18, in make_IC\n    u_quad = u(x_quad)\n             ^^^^^^^^^\nTypeError: 'numpy.ndarray' object is not callable\n"
+    },
+    {
+      "problem_id": "25",
+      "step_idx": 1,
+      "step_id": "25.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.672,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_25.1_bsclgaw0/25.1.py\", line 41, in <module>\n    assert np.allclose(SpeciesGrowth(spc, res, b, c, w, m), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "25",
+      "step_idx": 2,
+      "step_id": "25.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.401,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_25.2_o75o08wz/25.2.py\", line 60, in <module>\n    assert np.allclose(ResourcesUpdate(spc, res, c, r, K), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "25",
+      "step_idx": 3,
+      "step_id": "25.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.16,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_25.3_ypjv6_up/25.3.py\", line 100, in <module>\n    assert np.allclose(Simulate(spc_init, res_init, b, c, w, m, r, K, tf, dt, SPC_THRES), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_25.3_ypjv6_up/25.3.py\", line 74, in Simulate\n    spc, res = ResourcesUpdate(spc, res, c, r, K)\n    ^^^^^^^^\nValueError: too many values to unpack (expected 2)\n"
+    },
+    {
+      "problem_id": "26",
+      "step_idx": 1,
+      "step_id": "26.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.586,
+      "error_tail": "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2412, in isclose\n    x, y, atol, rtol = (\n    ^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2413, in <genexpr>\n    a if isinstance(a, (int, float, complex)) else asanyarray(a)\n                                                   ^^^^^^^^^^^^^\nValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 2 dimensions. The detected shape was (2, 2) + inhomogeneous part.\n"
+    },
+    {
+      "problem_id": "26",
+      "step_idx": 2,
+      "step_id": "26.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.281,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_26.2_i4dwv3p5/26.2.py\", line 97, in <module>\n    assert np.allclose(OneCycle(g, pref, spc_init, Rs, T), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "26",
+      "step_idx": 3,
+      "step_id": "26.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.195,
+      "error_tail": " ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2412, in isclose\n    x, y, atol, rtol = (\n    ^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2413, in <genexpr>\n    a if isinstance(a, (int, float, complex)) else asanyarray(a)\n                                                   ^^^^^^^^^^^^^\nValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (1000,) + inhomogeneous part.\n"
+    },
+    {
+      "problem_id": "27",
+      "step_idx": 1,
+      "step_id": "27.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.229,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_27.1_qpq6_g7w/27.1.py\", line 28, in <module>\n    assert np.allclose(Fermi(2*10**17,3*10**17,10**12), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "27",
+      "step_idx": 2,
+      "step_id": "27.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.424,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_27.2_aodwu222/27.2.py\", line 56, in <module>\n    assert np.allclose(capacitance(5, 1000, 1e10, 1e8,1.8e6,13, 0)*10**15, target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "27",
+      "step_idx": 3,
+      "step_id": "27.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.61,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_27.3_yef6cr48/27.3.py\", line 85, in <module>\n    f3dB = get_3dB_frequency(50, xi_arr, 700, 1e19, 1e17, 1.8e6, 13, 0)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_27.3_yef6cr48/27.3.py\", line 67, in get_3dB_frequency\n    xi = float(xi)\n         ^^^^^^^^^\nTypeError: only 0-dimensional arrays can be converted to Python scalars\n"
+    },
+    {
+      "problem_id": "28",
+      "step_idx": 1,
+      "step_id": "28.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.37,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_28.1_yo9m3f_q/28.1.py\", line 65, in <module>\n    assert np.allclose((P1, P2), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "28",
+      "step_idx": 2,
+      "step_id": "28.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.016,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_28.2_fhfmgj_6/28.2.py\", line 92, in <module>\n    assert np.allclose(gaussian_beam_through_lens(lambda_, w0, R0, Mf1, z,Mp2,L1,s), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "28",
+      "step_idx": 3,
+      "step_id": "28.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.312,
+      "error_tail": "ule>\n    assert cmp_tuple_or_list(Gussian_Lens_transmission(N, Ld, z, L,w0,R0, Mf1, Mp2, L1, s), target)\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_28.3_9hbdygbz/28.3.py\", line 108, in Gussian_Lens_transmission\n    Gau, Gau_pro = propagate_gaussian_beam(N, Ld, w0, 0.0, L)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_28.3_9hbdygbz/28.3.py\", line 28, in propagate_gaussian_beam\n    R_z = z * (1.0 + (f / z) ** 2)\n                      ~~^~~\nZeroDivisionError: float division by zero\n"
+    },
+    {
+      "problem_id": "30",
+      "step_idx": 1,
+      "step_id": "30.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.7,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_30.1_yeukg64t/30.1.py\", line 87, in <module>\n    assert cmp_tuple_or_list((wf.value(configs), wf.gradient(configs), wf.laplacian(configs), wf.kinetic(configs)), target)\n                                                 ^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_30.1_yeukg64t/30.1.py\", line 44, in gradient\n    r1_safe = np.where(r1 != 0, r1, np.inf)\n                       ^^\nNameError: name 'r1' is not defined\n"
+    },
+    {
+      "problem_id": "30",
+      "step_idx": 2,
+      "step_id": "30.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.679,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_30.2_movqm6hh/30.2.py\", line 157, in <module>\n    assert cmp_tuple_or_list((wf.get_r_vec(configs), wf.get_r_ee(configs), wf.value(configs), wf.gradient(configs), wf.laplacian(configs)), target)\n                                                                                              ^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_30.2_movqm6hh/30.2.py\", line 131, in gradient\n    grad[..., 0] = -self.beta * r_vec / r_ee\n                                        ^^^^\nNameError: name 'r_ee' is not defined. Did you mean: 'r_vec'?\n"
+    },
+    {
+      "problem_id": "30",
+      "step_idx": 3,
+      "step_id": "30.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.192,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_30.3_cg3vl5yx/30.3.py\", line 226, in <module>\n    assert np.allclose(test_gradient(\n                       ^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_30.3_cg3vl5yx/30.3.py\", line 215, in test_gradient\n    wf_val = wf.value(configs)\n             ^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_30.3_cg3vl5yx/30.3.py\", line 171, in value\n    return psi1 * psi2\n           ~~~~~^~~~~~\nValueError: operands could not be broadcast together with shapes (5,2) (5,) \n"
+    },
+    {
+      "problem_id": "31",
+      "step_idx": 1,
+      "step_id": "31.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.446,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_31.1_4e4gq8dh/31.1.py\", line 30, in <module>\n    assert np.allclose(center(np.array([[ -4.        ,  -1.25837414,  -4.2834508 ,   4.22567322,\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_31.1_4e4gq8dh/31.1.py\", line 19, in center\n    if std == 0:\n       ^^^^^^^^\nValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()\n"
+    },
+    {
+      "problem_id": "31",
+      "step_idx": 2,
+      "step_id": "31.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.467,
+      "error_tail": "t):\n  File \"/tmp/scicode_eval_31.2_6gu5rv51/31.2.py\", line 48, in <module>\n    Z = whiten(np.array([[ -4.        ,  -1.25837414,  -4.2834508 ,   4.22567322,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_31.2_6gu5rv51/31.2.py\", line 32, in whiten\n    X_centered = center(X, divide_sd=True)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_31.2_6gu5rv51/31.2.py\", line 17, in center\n    if std == 0:\n       ^^^^^^^^\nValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()\n"
+    },
+    {
+      "problem_id": "31",
+      "step_idx": 3,
+      "step_id": "31.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.261,
+      "error_tail": ".2834508 ,   4.22567322,\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_31.3_08ewvr1c/31.3.py\", line 53, in ica\n    X_whitened = whiten(X)\n                 ^^^^^^^^^\n  File \"/tmp/scicode_eval_31.3_08ewvr1c/31.3.py\", line 32, in whiten\n    X_centered = center(X, divide_sd=True)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_31.3_08ewvr1c/31.3.py\", line 17, in center\n    if std == 0:\n       ^^^^^^^^\nValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()\n"
+    },
+    {
+      "problem_id": "32",
+      "step_idx": 1,
+      "step_id": "32.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.401,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "32",
+      "step_idx": 2,
+      "step_id": "32.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.88,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_32.2_68p7h8kt/32.2.py\", line 104, in <module>\n    assert np.allclose(generate_Hamiltonian(P, phi, R, l, w, a, n, h, N, rho), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_32.2_68p7h8kt/32.2.py\", line 81, in generate_Hamiltonian\n    k_i = k + np.sum(k[:, np.newaxis] - k[np.newaxis, :], axis=1)\n                     ~^^^^^^^^^^^^^^^\nIndexError: invalid index to scalar variable.\n"
+    },
+    {
+      "problem_id": "32",
+      "step_idx": 3,
+      "step_id": "32.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.273,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_32.3_zft6i_kb/32.3.py\", line 147, in <module>\n    H = generate_Hamiltonian(P, phi, R, l, w, a, n, h, N, rho)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_32.3_zft6i_kb/32.3.py\", line 81, in generate_Hamiltonian\n    k_i = k + np.sum(k[:, np.newaxis] - k[np.newaxis, :], axis=1)\n                     ~^^^^^^^^^^^^^^^\nIndexError: invalid index to scalar variable.\n"
+    },
+    {
+      "problem_id": "33",
+      "step_idx": 1,
+      "step_id": "33.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.095,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_33.1_2vn06w2g/33.1.py\", line 63, in <module>\n    assert np.allclose(calc_hamiltonian(kx, ky, a, t1, t2, phi, m), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "33",
+      "step_idx": 2,
+      "step_id": "33.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.063,
+      "error_tail": " \"/tmp/scicode_eval_33.2_b2i4uq00/33.2.py\", line 88, in <module>\n    assert np.allclose(compute_chern_number(delta, a, t1, t2, phi, m), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_33.2_b2i4uq00/33.2.py\", line 71, in compute_chern_number\n    kx = np.linspace(0, k_x_max, delta)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/function_base.py\", line 123, in linspace\n    num = operator.index(num)\n          ^^^^^^^^^^^^^^^^^^^\nTypeError: 'float' object cannot be interpreted as an integer\n"
+    },
+    {
+      "problem_id": "33",
+      "step_idx": 3,
+      "step_id": "33.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.02,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_33.3_jqwmloo7/33.3.py\", line 121, in <module>\n    assert cmp_tuple_or_list(compute_chern_number_grid(delta, a, t1, t2, N), target)\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_33.3_jqwmloo7/33.3.py\", line 106, in compute_chern_number_grid\n    hamiltonian = calc_hamiltonian(m_ratio, phi, a, t1, t2, phi, m)\n                                                                 ^\nNameError: name 'm' is not defined\n"
+    },
+    {
+      "problem_id": "34",
+      "step_idx": 1,
+      "step_id": "34.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.495,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_34.1_g2vzgwxv/34.1.py\", line 28, in <module>\n    assert np.allclose(Fermi(2*10**17,3*10**17,10**12), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "34",
+      "step_idx": 2,
+      "step_id": "34.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.562,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_34.2_m22redf8/34.2.py\", line 52, in <module>\n    assert np.allclose(depletion(2*10**17,3*10**17,10**12,15), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "34",
+      "step_idx": 3,
+      "step_id": "34.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.787,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_34.3_ca7dcv5s/34.3.py\", line 72, in <module>\n    xn,xp,_ = potential(2*10**17,2*10**17,10**11,15)\n    ^^^^^^^\nTypeError: cannot unpack non-iterable NoneType object\n"
+    },
+    {
+      "problem_id": "35",
+      "step_idx": 1,
+      "step_id": "35.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.261,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_35.1_i5z3sl9s/35.1.py\", line 28, in <module>\n    assert np.allclose(ground_state_wavelength(5,0.6), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "35",
+      "step_idx": 2,
+      "step_id": "35.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.824,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_35.2_s1x3wldw/35.2.py\", line 46, in <module>\n    assert np.allclose(sorted(C), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "35",
+      "step_idx": 3,
+      "step_id": "35.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.296,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_35.3_whvorofu/35.3.py\", line 75, in <module>\n    A = absorption(0.6,3,4,10**6,5)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_35.3_whvorofu/35.3.py\", line 57, in absorption\n    E0 = hc / lmbd_a\n         ^^\nNameError: name 'hc' is not defined. Did you mean: 'c'?\n"
+    },
+    {
+      "problem_id": "36",
+      "step_idx": 1,
+      "step_id": "36.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.295,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_36.1_ysnglz5i/36.1.py\", line 35, in <module>\n    assert np.allclose(generation(1e-3, 50, 519, 1e4, 1e-9, 1), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_36.1_ysnglz5i/36.1.py\", line 26, in generation\n    hnu = hbar / lambda_i_cm\n          ^^^^\nNameError: name 'hbar' is not defined\n"
+    },
+    {
+      "problem_id": "36",
+      "step_idx": 2,
+      "step_id": "36.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.266,
+      "error_tail": " encountered in exp\n  return np.sqrt(E) / (1.0 + np.exp((E - Ef_J) / k_B * T))\n/tmp/scicode_eval_36.2__rbhibm_/36.2.py:46: IntegrationWarning: The occurrence of roundoff error is detected, which prevents \n  the requested tolerance from being achieved.  The error may be \n  underestimated.\n  result, _ = quad(integrand, 0, upper_limit)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_36.2__rbhibm_/36.2.py\", line 54, in <module>\n    assert np.allclose(fermi_dirac_integral_half_polylog(-0.1), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "36",
+      "step_idx": 3,
+      "step_id": "36.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.389,
+      "error_tail": " in <module>\n    Ef = inverse_fermi_dirac_integral_half_polylog_newton(1e-3, 50, 519, 1e4, 1e-9, 1,N_c)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_36.3_i0dnhkr2/36.3.py\", line 84, in inverse_fermi_dirac_integral_half_polylog_newton\n    Ef_new = Ef - f_val / df_Ef(Ef)\n                          ^^^^^^^^^\n  File \"/tmp/scicode_eval_36.3_i0dnhkr2/36.3.py\", line 83, in df_Ef\n    return -result / (1.0 + np.exp((Ef - Ef_J) / k_B * T)) ** 2\n                                                 ^^^\nNameError: name 'k_B' is not defined\n"
+    },
+    {
+      "problem_id": "37",
+      "step_idx": 1,
+      "step_id": "37.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.399,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_37.1_qudasv2t/37.1.py\", line 53, in <module>\n    assert np.allclose(calculate_paraxial(h1, r1, r2, r3, d1, d2, nD1, nD1, nD3, n), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "37",
+      "step_idx": 2,
+      "step_id": "37.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.182,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_37.2_muajn1of/37.2.py\", line 78, in <module>\n    assert np.allclose(calculate_non_paraxial(h1, r1, r2, r3, d1, d2, nD1, nD1, nD3, n), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "37",
+      "step_idx": 3,
+      "step_id": "37.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.333,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_37.3_eltgmcsp/37.3.py\", line 94, in <module>\n    assert np.allclose(compute_LC(h1, r1, r2, r3, d1, d2, nD1, nD1, nD3, n), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "39",
+      "step_idx": 1,
+      "step_id": "39.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.336,
+      "error_tail": "80, 3.52, 2.95), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (4,) (2,2) \n"
+    },
+    {
+      "problem_id": "39",
+      "step_idx": 2,
+      "step_id": "39.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.708,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_39.2_7swwoqsg/39.2.py\", line 52, in <module>\n    assert np.allclose(get_theta(1+1j, 2-1j), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "39",
+      "step_idx": 3,
+      "step_id": "39.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.482,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_39.3_nzk8ja89/39.3.py\", line 73, in <module>\n    assert (np.isclose(R_coefficient(980, 980, 3.52, 2.95, 100),1,atol=10**-10)) == target\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "40",
+      "step_idx": 1,
+      "step_id": "40.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.03,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_40.1_72m_v2ix/40.1.py\", line 31, in <module>\n    assert np.allclose(second_diff(target_, u, dx), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "40",
+      "step_idx": 2,
+      "step_id": "40.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.103,
+      "error_tail": ":\n  File \"/tmp/scicode_eval_40.2_6evnfjsa/40.2.py\", line 44, in <module>\n    assert np.allclose(Strang_splitting(u, dt, dx, alpha), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_40.2_6evnfjsa/40.2.py\", line 31, in Strang_splitting\n    u_half = second_diff(u, dx, dx / 2.0)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_40.2_6evnfjsa/40.2.py\", line 15, in second_diff\n    if target < 0 or target >= u.shape[0]:\n       ^^^^^^^^^^\nValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()\n"
+    },
+    {
+      "problem_id": "40",
+      "step_idx": 3,
+      "step_id": "40.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.974,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_40.3_sm44j6y6/40.3.py\", line 65, in <module>\n    assert np.allclose(solve(CFL, T, dt, alpha), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_40.3_sm44j6y6/40.3.py\", line 48, in solve\n    half_step = second_diff(u, dx, dx / 2.0)\n                               ^^\nNameError: name 'dx' is not defined. Did you mean: 'dt'?\n"
+    },
+    {
+      "problem_id": "41",
+      "step_idx": 1,
+      "step_id": "41.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.305,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_41.1_dmsh40lj/41.1.py\", line 36, in <module>\n    assert np.allclose(Conversion(g, pref, t, dep_order), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "41",
+      "step_idx": 2,
+      "step_id": "41.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.295,
+      "error_tail": "     ^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_41.2_vzzmripb/41.2.py\", line 46, in GetResPts\n    norm = np.sum(p, axis=1)\n           ^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/fromnumeric.py\", line 2463, in sum\n    return _wrapreduction(\n           ^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/fromnumeric.py\", line 83, in _wrapreduction\n    return ufunc.reduce(obj, axis, dtype, out, **passkwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nnumpy.exceptions.AxisError: axis 1 is out of bounds for array of dimension 1\n"
+    },
+    {
+      "problem_id": "41",
+      "step_idx": 3,
+      "step_id": "41.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.279,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_41.3_k47jamxp/41.3.py\", line 85, in <module>\n    assert np.allclose(StrucStability(g, pref, t, dep_order), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "42",
+      "step_idx": 1,
+      "step_id": "42.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.664,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_42.1_r76me23d/42.1.py\", line 33, in <module>\n    assert np.allclose(gain(1, 0.02, 20, 0.1, 0.3, 0.3), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "42",
+      "step_idx": 2,
+      "step_id": "42.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.592,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "42",
+      "step_idx": 3,
+      "step_id": "42.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.34,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_42.3_m84t4dx3/42.3.py\", line 68, in <module>\n    assert (threshold_current(1, 0.02, 20, 0.0001, 0.3, 0.3, 3000, 200, 0.8, 2*10**-4)>10**50) == target\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "43",
+      "step_idx": 1,
+      "step_id": "43.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.412,
+      "error_tail": "code_eval_43.1_h20077p5/43.1.py\", line 117, in <module>\n    assert np.allclose(f(z, y, Pssat, Ppsat, N, sigma_ap, sigma_ep, sigma_as, sigma_es, gamma_p, alpha_p, gamma_s, alpha_s), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_43.1_h20077p5/43.1.py\", line 64, in f\n    dydz[0] = -gamma_p * (sigma_ap * N - (sigma_ap + sigma_ep) * N2) * Pp_plus - alpha_p * Pp_plus\n                                                                 ^^\nNameError: name 'N2' is not defined. Did you mean: 'N'?\n"
+    },
+    {
+      "problem_id": "43",
+      "step_idx": 2,
+      "step_id": "43.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.51,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_43.2_c_151dp5/43.2.py\", line 139, in <module>\n    assert np.allclose(bc(ya, yb, Ppl, Ppr, R1, R2), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_43.2_c_151dp5/43.2.py\", line 105, in bc\n    bc[0] = ya[0] - Ppl * (1 - R1)\n    ~~^^^\nTypeError: 'function' object does not support item assignment\n"
+    },
+    {
+      "problem_id": "43",
+      "step_idx": 3,
+      "step_id": "43.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.09,
+      "error_tail": "  File \"/tmp/scicode_eval_43.3__q1tmuaj/43.3.py\", line 202\n    dydz = np.array([\n                    ^\nSyntaxError: '[' was never closed\n"
+    },
+    {
+      "problem_id": "45",
+      "step_idx": 1,
+      "step_id": "45.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.48,
+      "error_tail": "uld not be broadcast together with shapes (2,10,5) (2,5,10) \n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_45.1_6rcdj3gq/45.1.py\", line 37, in <module>\n    assert cmp_tuple_or_list(init_grid(2, 10, 5, 2, 100, 1, 50, 2), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/SciCode/src/scicode/compare/cmp.py\", line 72, in cmp_tuple_or_list\n    if not v1 == v2:\n           ^^^^^^^^\nValueError: operands could not be broadcast together with shapes (2,10,5) (2,5,10) \n"
+    },
+    {
+      "problem_id": "45",
+      "step_idx": 2,
+      "step_id": "45.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.106,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_45.2_kjljsjt2/45.2.py\", line 54, in <module>\n    assert np.allclose(add_dirichlet_bc(init_grid(2, 10, 5, 2, 100, 1, 50, 2)[0], 0, [[1, 0, 20]]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_45.2_kjljsjt2/45.2.py\", line 43, in add_dirichlet_bc\n    i = bc[:, 0].astype(int)\n        ~~^^^^^^\nTypeError: list indices must be integers or slices, not tuple\n"
+    },
+    {
+      "problem_id": "45",
+      "step_idx": 3,
+      "step_id": "45.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.563,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_45.3_tq_d6wa9/45.3.py\", line 76, in <module>\n    assert np.allclose(add_neumann_bc(init_grid(2, 10, 5, 2, 100, 1, 50, 2)[0], 0, [[1, 0, 20]]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_45.3_tq_d6wa9/45.3.py\", line 63, in add_neumann_bc\n    i = bc[:, 0].astype(int)\n        ~~^^^^^^\nTypeError: list indices must be integers or slices, not tuple\n"
+    },
+    {
+      "problem_id": "45",
+      "step_idx": 4,
+      "step_id": "45.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.388,
+      "error_tail": "118, in <module>\n    result = heat_equation(Nt, Nx, Ny, x_split, T1, alpha1, T2, alpha2, bc_dirichlet, bc_neumann)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_45.4_s37rvkp3/45.4.py\", line 99, in heat_equation\n    temp_grid[interior_mask_dirichlet, bc_dirichlet[:, 0], bc_dirichlet[:, 1]] = bc_dirichlet[:, 2]\n    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nIndexError: boolean index did not match indexed array along axis 0; size of axis is 200 but size of corresponding boolean axis is 4\n"
+    },
+    {
+      "problem_id": "46",
+      "step_idx": 1,
+      "step_id": "46.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.215,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_46.1_o04ph1o_/46.1.py\", line 96, in <module>\n    assert cmp_tuple_or_list((wf.value(configs), wf.gradient(configs), wf.laplacian(configs), wf.kinetic(configs)), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "46",
+      "step_idx": 2,
+      "step_id": "46.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.368,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_46.2_d_la_vjn/46.2.py\", line 155, in <module>\n    assert np.allclose((hamiltonian.potential_electron_ion(configs), hamiltonian.potential_electron_electron(configs), \n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "46",
+      "step_idx": 3,
+      "step_id": "46.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.393,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_46.3_tstdxkun/46.3.py\", line 180, in <module>\n    assert np.allclose(metropolis(np.random.normal(size=(1, 2, 3)), wf, tau=0.01, nsteps=2000), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_46.3_tstdxkun/46.3.py\", line 158, in metropolis\n    psi_cur = wf.evaluate(poscur)\n              ^^^^^^^^^^^\nAttributeError: 'Slater' object has no attribute 'evaluate'\n"
+    },
+    {
+      "problem_id": "46",
+      "step_idx": 4,
+      "step_id": "46.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.59,
+      "error_tail": " of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_46.4_wydgq6xs/46.4.py\", line 209, in <module>\n    assert cmp_tuple_or_list(calc_energy(np.random.randn(1000, 2, 3), nsteps=1000, tau=0.2, alpha=1, Z=2), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/SciCode/src/scicode/compare/cmp.py\", line 72, in cmp_tuple_or_list\n    if not v1 == v2:\n           ^^^^^^^^\nValueError: operands could not be broadcast together with shapes (3,) (3,1000,2) \n"
+    },
+    {
+      "problem_id": "48",
+      "step_idx": 1,
+      "step_id": "48.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.825,
+      "error_tail": "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2412, in isclose\n    x, y, atol, rtol = (\n    ^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2413, in <genexpr>\n    a if isinstance(a, (int, float, complex)) else asanyarray(a)\n                                                   ^^^^^^^^^^^^^\nValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (3,) + inhomogeneous part.\n"
+    },
+    {
+      "problem_id": "48",
+      "step_idx": 2,
+      "step_id": "48.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.205,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_48.2_0aw_t7k6/48.2.py\", line 62, in <module>\n    assert np.allclose(MatELe(th,gamma,E0,omega), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "48",
+      "step_idx": 3,
+      "step_id": "48.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.331,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_48.3_a7c0swdt/48.3.py\", line 86, in <module>\n    assert np.allclose(S_cal(omega,I,th,gamma,E0), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_48.3_a7c0swdt/48.3.py\", line 70, in S_cal\n    q, k_i_z, k_s_z = MatELe(th, gamma, E0, omega)\n    ^^^^^^^^^^^^^^^\nValueError: too many values to unpack (expected 3)\n"
+    },
+    {
+      "problem_id": "48",
+      "step_idx": 4,
+      "step_id": "48.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.91,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_48.4_84f_jqve/48.4.py\", line 108, in <module>\n    assert np.allclose(chi_cal(omega,I,th,gamma,E0), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_48.4_84f_jqve/48.4.py\", line 93, in chi_cal\n    chi = np.pi * (S_omega_symmetric - S_omega_negative)\n                   ^^^^^^^^^^^^^^^^^\nNameError: name 'S_omega_symmetric' is not defined. Did you mean: 'omega_symmetric'?\n"
+    },
+    {
+      "problem_id": "50",
+      "step_idx": 1,
+      "step_id": "50.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.689,
+      "error_tail": ".py\", line 35, in <module>\n    assert np.allclose(spins, target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nTypeError: unsupported operand type(s) for -: 'NoneType' and 'float'\n"
+    },
+    {
+      "problem_id": "50",
+      "step_idx": 2,
+      "step_id": "50.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.195,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_50.2_b5c1awvq/50.2.py\", line 36, in <module>\n    overlaps = calculate_overlap(replicas)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_50.2_b5c1awvq/50.2.py\", line 27, in calculate_overlap\n    overlaps = np.dot(replicas, replicas, axis=1) / N\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: dot() got an unexpected keyword argument 'axis'\n"
+    },
+    {
+      "problem_id": "50",
+      "step_idx": 3,
+      "step_id": "50.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.086,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_50.3_me91wrfy/50.3.py\", line 66, in <module>\n    assert potential_RSB == target\n           ^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "50",
+      "step_idx": 4,
+      "step_id": "50.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.141,
+      "error_tail": "c7sj8/50.4.py\", line 108, in <module>\n    aa, bb, cc = spin_glass(N, T, num_steps, num_replicas, num_realizations)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_50.4_3znc7sj8/50.4.py\", line 83, in spin_glass\n    overlaps = calculate_overlap(replicas[j])\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_50.4_3znc7sj8/50.4.py\", line 27, in calculate_overlap\n    overlaps = np.dot(replicas, replicas, axis=1) / N\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: dot() got an unexpected keyword argument 'axis'\n"
+    },
+    {
+      "problem_id": "52",
+      "step_idx": 1,
+      "step_id": "52.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.503,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "52",
+      "step_idx": 2,
+      "step_id": "52.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.285,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_52.2_lhn1n2yd/52.2.py\", line 58, in <module>\n    assert np.allclose(SolveSchroedinger(y0,En,l,R), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "52",
+      "step_idx": 3,
+      "step_id": "52.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.908,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_52.3_jkw249y0/52.3.py\", line 79, in <module>\n    assert np.allclose(Shoot( 1.1, np.logspace(1,2.2,10), 3, [0, -1e-5]), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "52",
+      "step_idx": 4,
+      "step_id": "52.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.085,
+      "error_tail": "  File \"/tmp/scicode_eval_52.4_gjvsc70q/52.4.py\", line 168\n    from scicode.parse.parse import process_hdf5_to_tuple\nIndentationError: expected an indented block after 'if' statement on line 100\n"
+    },
+    {
+      "problem_id": "53",
+      "step_idx": 1,
+      "step_id": "53.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.588,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_53.1_8sklecvy/53.1.py\", line 50, in <module>\n    assert np.allclose(time_step, a) and np.allclose(prey, b) and np.allclose(predator, c) and event == d\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "53",
+      "step_idx": 2,
+      "step_id": "53.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.499,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_53.2_qgo2eryu/53.2.py\", line 98, in <module>\n    time_cor, prey_evol, predator_evol, eco_event = evolve_LV(prey, predator, alpha, beta, gamma, T)\n                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_53.2_qgo2eryu/53.2.py\", line 62, in evolve_LV\n    prey_evol[0] = prey[0]\n                   ~~~~^^^\nIndexError: too many indices for array: array is 0-dimensional, but 1 were indexed\n"
+    },
+    {
+      "problem_id": "53",
+      "step_idx": 3,
+      "step_id": "53.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.928,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_53.3_pes926c6/53.3.py\", line 120, in <module>\n    assert np.allclose(spectral_periodicity(time_cor, prey_evol), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_53.3_pes926c6/53.3.py\", line 106, in spectral_periodicity\n    if np.any(np.isclose(dt, td, atol=1e-10, rel_tol=0)):\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: isclose() got an unexpected keyword argument 'rel_tol'\n"
+    },
+    {
+      "problem_id": "53",
+      "step_idx": 4,
+      "step_id": "53.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.93,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_53.4_m6euuqzr/53.4.py\", line 179, in <module>\n    time_cor, prey_evol, predator_evol, eco_event, prey_period, predator_period = predator_prey(prey, predator, alpha, beta, gamma, T)\n                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_53.4_m6euuqzr/53.4.py\", line 140, in predator_prey\n    prey_curr = int(prey[i])\n                    ~~~~^^^\nIndexError: too many indices for array: array is 0-dimensional, but 1 were indexed\n"
+    },
+    {
+      "problem_id": "54",
+      "step_idx": 1,
+      "step_id": "54.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.322,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_54.1_t7vpb64w/54.1.py\", line 42, in <module>\n    assert np.allclose(basis(i, p, M, h, etype), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_54.1_t7vpb64w/54.1.py\", line 21, in basis\n    x_left = p[i]\n             ~^^^\nIndexError: index 1 is out of bounds for axis 0 with size 1\n"
+    },
+    {
+      "problem_id": "54",
+      "step_idx": 2,
+      "step_id": "54.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.263,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_54.2_yu223mo7/54.2.py\", line 68, in <module>\n    assert cmp_tuple_or_list(assemble(M), target)\n                             ^^^^^^^^^^^\n  File \"/tmp/scicode_eval_54.2_yu223mo7/54.2.py\", line 44, in assemble\n    x_left = (i - 1) * h\n              ^\nUnboundLocalError: cannot access local variable 'i' where it is not associated with a value\n"
+    },
+    {
+      "problem_id": "54",
+      "step_idx": 3,
+      "step_id": "54.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.735,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_54.3_0_5pvy27/54.3.py\", line 110, in <module>\n    assert cmp_tuple_or_list(stabilization(A,b), target)\n                             ^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_54.3_0_5pvy27/54.3.py\", line 72, in stabilization\n    V_kappa = 1.0 / (Ch ** 1 - 1.0 / (1.0 + abs(s_kappa)))\n                     ^^\nNameError: name 'Ch' is not defined. Did you mean: 'C'?\n"
+    },
+    {
+      "problem_id": "54",
+      "step_idx": 4,
+      "step_id": "54.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.222,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_54.4_2hiep4aa/54.4.py\", line 137, in <module>\n    assert np.allclose(solve(N), target)\n                       ^^^^^^^^\n  File \"/tmp/scicode_eval_54.4_2hiep4aa/54.4.py\", line 109, in solve\n    A, b = assemble(N)\n           ^^^^^^^^^^^\n  File \"/tmp/scicode_eval_54.4_2hiep4aa/54.4.py\", line 44, in assemble\n    x_left = (i - 1) * h\n              ^\nUnboundLocalError: cannot access local variable 'i' where it is not associated with a value\n"
+    },
+    {
+      "problem_id": "55",
+      "step_idx": 1,
+      "step_id": "55.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.008,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_55.1_gjnywlzv/55.1.py\", line 57, in <module>\n    assert np.allclose(solve_SH(u0, dt, T, N, epsilon, q0), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_55.1_gjnywlzv/55.1.py\", line 37, in solve_SH\n    q0_inv4_w_conj_conj = q0_inv4 * w_fft_conj_conj\n                                    ^^^^^^^^^^^^^^^\nNameError: name 'w_fft_conj_conj' is not defined\n"
+    },
+    {
+      "problem_id": "55",
+      "step_idx": 2,
+      "step_id": "55.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.274,
+      "error_tail": " ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2412, in isclose\n    x, y, atol, rtol = (\n    ^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2413, in <genexpr>\n    a if isinstance(a, (int, float, complex)) else asanyarray(a)\n                                                   ^^^^^^^^^^^^^\nValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 2 dimensions. The detected shape was (3, 20) + inhomogeneous part.\n"
+    },
+    {
+      "problem_id": "55",
+      "step_idx": 3,
+      "step_id": "55.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.855,
+      "error_tail": "k (most recent call last):\n  File \"/tmp/scicode_eval_55.3_d2c3cqx1/55.3.py\", line 106, in <module>\n    peak_found_near_q0, peak_near_q0_location = analyze_structure_factor(Sk, Kx, Ky, q0, min_height)\n                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_55.3_d2c3cqx1/55.3.py\", line 82, in analyze_structure_factor\n    peaks, peak_widths = find_peaks(Sk_radial, min_height=min_height)\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: find_peaks() got an unexpected keyword argument 'min_height'\n"
+    },
+    {
+      "problem_id": "55",
+      "step_idx": 4,
+      "step_id": "55.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.355,
+      "error_tail": "e 146, in <module>\n    assert cmp_tuple_or_list(SH_pattern_formation(u0, dt, T, N, epsilon, q0, min_height), target)\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_55.4_nl3wm0di/55.4.py\", line 122, in SH_pattern_formation\n    u = solve_SH(u, dt, T, N, epsilon, q0)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_55.4_nl3wm0di/55.4.py\", line 35, in solve_SH\n    q0_inv4_w_conj_conj = q0_inv4 * w_fft_conj_conj\n                                    ^^^^^^^^^^^^^^^\nNameError: name 'w_fft_conj_conj' is not defined\n"
+    },
+    {
+      "problem_id": "56",
+      "step_idx": 1,
+      "step_id": "56.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.38,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_56.1_xii658f1/56.1.py\", line 31, in <module>\n    assert np.allclose(allowed_orders(pref), target)\n                       ^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_56.1_xii658f1/56.1.py\", line 23, in allowed_orders\n    allowed_orders_list = [(int(s), int(c)) for s, c in zip(pref[:, :, np.newaxis], sorted_counts)]\n                            ^^^^^^\nTypeError: only 0-dimensional arrays can be converted to Python scalars\n"
+    },
+    {
+      "problem_id": "56",
+      "step_idx": 2,
+      "step_id": "56.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.001,
+      "error_tail": ".allclose(G_mat(g, pref, dep_order), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nTypeError: unsupported operand type(s) for -: 'NoneType' and 'float'\n"
+    },
+    {
+      "problem_id": "56",
+      "step_idx": 3,
+      "step_id": "56.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.598,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_56.3_8w4ng79p/56.3.py\", line 69, in <module>\n    assert (check_G_feasibility(G, D)) == target\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "56",
+      "step_idx": 4,
+      "step_id": "56.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.568,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_56.4_2fwpojp2/56.4.py\", line 94, in <module>\n    assert np.allclose(get_dep_orders(g, pref, D), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_56.4_2fwpojp2/56.4.py\", line 78, in get_dep_orders\n    dep_order = np.asarray(dep_order, dtype=int)\n                           ^^^^^^^^^\nUnboundLocalError: cannot access local variable 'dep_order' where it is not associated with a value\n"
+    },
+    {
+      "problem_id": "57",
+      "step_idx": 1,
+      "step_id": "57.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.197,
+      "error_tail": "f_x(np.linspace(-5, 5, 10), 1), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nTypeError: unsupported operand type(s) for -: 'NoneType' and 'float'\n"
+    },
+    {
+      "problem_id": "57",
+      "step_idx": 2,
+      "step_id": "57.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.171,
+      "error_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nTypeError: unsupported operand type(s) for -: 'NoneType' and 'float'\n"
+    },
+    {
+      "problem_id": "57",
+      "step_idx": 3,
+      "step_id": "57.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.315,
+      "error_tail": "cent call last):\n  File \"/tmp/scicode_eval_57.3_woncb31m/57.3.py\", line 70, in <module>\n    assert np.allclose(Solve_Schrod(x, 1.0, 1.0, 0.0, x[0]-x[1]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_57.3_woncb31m/57.3.py\", line 62, in Solve_Schrod\n    u_norm = np.trapz(u, x)\n             ^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/__init__.py\", line 769, in __getattr__\n    raise AttributeError(f\"module {__name__!r} has no attribute {attr!r}\")\nAttributeError: module 'numpy' has no attribute 'trapz'. Did you mean: 'trace'?\n"
+    },
+    {
+      "problem_id": "57",
+      "step_idx": 4,
+      "step_id": "57.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.588,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_57.4_8pawoia5/57.4.py\", line 83, in <module>\n    assert np.allclose(count_sign_changes(np.array([-1,2,-3,4,-5])), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "57",
+      "step_idx": 5,
+      "step_id": "57.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.294,
+      "error_tail": "), 2, 1e-4), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_57.5_n7p5vzp_/57.5.py\", line 93, in BoundStates\n    u = Solve_Schrod(x, E, 1.0, 0.0, Estep)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_57.5_n7p5vzp_/57.5.py\", line 61, in Solve_Schrod\n    u = Numerov(f_in=f_x(x, En), u_b=u_b, up_b=up_b, step=step)\n                     ^^^^^^^^^^\n  File \"/tmp/scicode_eval_57.5_n7p5vzp_/57.5.py\", line 14, in f_x\n    x_scaled = x * np.sqrt(En / En)\n                           ~~~^~~~\nZeroDivisionError: float division by zero\n"
+    },
+    {
+      "problem_id": "58",
+      "step_idx": 1,
+      "step_id": "58.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 4.002,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "58",
+      "step_idx": 2,
+      "step_id": "58.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.015,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "58",
+      "step_idx": 3,
+      "step_id": "58.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.731,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "58",
+      "step_idx": 4,
+      "step_id": "58.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.515,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_58.4_6i_5rxio/58.4.py\", line 91, in <module>\n    assert np.allclose(tov_RHS(data, r, eos_Gamma, eos_kappa), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "58",
+      "step_idx": 5,
+      "step_id": "58.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.814,
+      "error_tail": "/tmp/scicode_eval_58.5_grcbg91b/58.5.py:94: RuntimeWarning: invalid value encountered in sqrt\n  lapse = 1.0 / np.sqrt(1.0 + 2.0 * phi_center)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_58.5_grcbg91b/58.5.py\", line 106, in <module>\n    assert np.allclose(tov(rhoc, eos_Gamma, eos_kappa, npoints, rmax), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "59",
+      "step_idx": 1,
+      "step_id": "59.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.524,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_59.1_jk875y7w/59.1.py\", line 46, in <module>\n    assert np.allclose(1j * rotation_matrices(axis, theta), target)\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_59.1_jk875y7w/59.1.py\", line 38, in rotation_matrices\n    return Rz\n           ^^\nUnboundLocalError: cannot access local variable 'Rz' where it is not associated with a value\n"
+    },
+    {
+      "problem_id": "59",
+      "step_idx": 2,
+      "step_id": "59.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.17,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_59.2_6dadbtes/59.2.py\", line 71, in <module>\n    psi = np.dot(np.kron(I, rotation_matrices(1, np.pi)), psi0)\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_59.2_6dadbtes/59.2.py\", line 36, in rotation_matrices\n    return Rz\n           ^^\nUnboundLocalError: cannot access local variable 'Rz' where it is not associated with a value\n"
+    },
+    {
+      "problem_id": "59",
+      "step_idx": 3,
+      "step_id": "59.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.669,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_59.3_qsnasduf/59.3.py\", line 90, in <module>\n    assert np.allclose(measureZ(U, psi), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "59",
+      "step_idx": 4,
+      "step_id": "59.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.202,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_59.4_qnf01ipr/59.4.py\", line 127, in <module>\n    assert np.allclose(projective_expected(theta, gl), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_59.4_qnf01ipr/59.4.py\", line 107, in projective_expected\n    U_Z1_Z2 = np.kron(CNOT21, U_Z1_I)\n                      ^^^^^^\nNameError: name 'CNOT21' is not defined\n"
+    },
+    {
+      "problem_id": "59",
+      "step_idx": 5,
+      "step_id": "59.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.426,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_59.5_9yfkjui4/59.5.py\", line 185, in <module>\n    assert (np.isclose(perform_diag(gl), perform_vqe(gl))) == target\n                                         ^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_59.5_9yfkjui4/59.5.py\", line 130, in perform_vqe\n    U_Z1_Z2 = np.kron(CNOT21, U_Z1_I)\n                      ^^^^^^\nNameError: name 'CNOT21' is not defined\n"
+    },
+    {
+      "problem_id": "60",
+      "step_idx": 1,
+      "step_id": "60.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.403,
+      "error_tail": " 32, in <module>\n    assert np.allclose(wrap(particle_position, box_length), target) # Expected output: [0.5, 8.8, 0.3]\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_60.1_tsn3f9s_/60.1.py\", line 22, in wrap\n    coord = np.stack([x, y, z], axis=1)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/shape_base.py\", line 461, in stack\n    axis = normalize_axis_index(axis, result_ndim)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nnumpy.exceptions.AxisError: axis 1 is out of bounds for array of dimension 1\n"
+    },
+    {
+      "problem_id": "60",
+      "step_idx": 2,
+      "step_id": "60.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.475,
+      "error_tail": "                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_60.2_75uau454/60.2.py\", line 37, in E_i\n    r_wrapped = wrap(r, L)\n                ^^^^^^^^^^\n  File \"/tmp/scicode_eval_60.2_75uau454/60.2.py\", line 20, in wrap\n    coord = np.stack([x, y, z], axis=1)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/shape_base.py\", line 461, in stack\n    axis = normalize_axis_index(axis, result_ndim)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nnumpy.exceptions.AxisError: axis 1 is out of bounds for array of dimension 1\n"
+    },
+    {
+      "problem_id": "60",
+      "step_idx": 3,
+      "step_id": "60.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.903,
+      "error_tail": "0185805629757558\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nTypeError: unsupported operand type(s) for -: 'NoneType' and 'float'\n"
+    },
+    {
+      "problem_id": "60",
+      "step_idx": 4,
+      "step_id": "60.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.757,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_60.4_52ni3e94/60.4.py\", line 94, in <module>\n    assert cmp_tuple_or_list(init_system(N1, rho1), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "60",
+      "step_idx": 5,
+      "step_id": "60.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.066,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_60.5_wo8l42jm/60.5.py\", line 126, in <module>\n    E_array,mu_ext, n_accp, accp_rate = MC(N,sigma,epsilon,r_c,rho,T,n_eq = int(1e4), n_prod = int(4e4),\n                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_60.5_wo8l42jm/60.5.py\", line 93, in MC\n    positions += displacements\nValueError: non-broadcastable output operand with shape (216,1,3,1,1) doesn't match the broadcast shape (216,1,3,216,3)\n"
+    },
+    {
+      "problem_id": "61",
+      "step_idx": 1,
+      "step_id": "61.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.387,
+      "error_tail": "tered in divide\n  b2 = cross13 / dot13\n/tmp/scicode_eval_61.1_snrzd1hg/61.1.py:28: RuntimeWarning: invalid value encountered in divide\n  b2 = cross13 / dot13\n/tmp/scicode_eval_61.1_snrzd1hg/61.1.py:29: RuntimeWarning: divide by zero encountered in divide\n  b3 = cross23 / dot23\n/tmp/scicode_eval_61.1_snrzd1hg/61.1.py:29: RuntimeWarning: invalid value encountered in divide\n  b3 = cross23 / dot23\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_61.1_snrzd1hg/61.1.py\", line 39, in <module>\n    assert np.allclose(Bmat(pa), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "61",
+      "step_idx": 2,
+      "step_id": "61.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.563,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_61.2_9sccmlto/61.2.py\", line 60, in <module>\n    assert np.allclose(q_cal(p,b_c,det_d,p_s,wl), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "61",
+      "step_idx": 3,
+      "step_id": "61.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.768,
+      "error_tail": "et)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (2,3,3) (2,3,3,1) \n"
+    },
+    {
+      "problem_id": "61",
+      "step_idx": 4,
+      "step_id": "61.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.439,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_61.4_kiehhcds/61.4.py\", line 133, in <module>\n    assert np.allclose(Umat(t_c,t_g), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "61",
+      "step_idx": 5,
+      "step_id": "61.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.641,
+      "error_tail": "e\n  b2 = cross13 / dot13\n/tmp/scicode_eval_61.5_2im3g3hn/61.5.py:27: RuntimeWarning: invalid value encountered in divide\n  b3 = cross23 / dot23\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_61.5_2im3g3hn/61.5.py\", line 171, in <module>\n    assert np.allclose(get_hkl(p,z,b_c,det_d,p_s,wl,pa,H1,H2,p1,p2,z1,z2,z_s), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_61.5_2im3g3hn/61.5.py\", line 147, in get_hkl\n    q = Umat(Umat(t_c, t_g))(Q)\n                  ^^^\nNameError: name 't_c' is not defined. Did you mean: 'b_c'?\n"
+    },
+    {
+      "problem_id": "62",
+      "step_idx": 2,
+      "step_id": "62.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.44,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_62.2_3xvs0f2x/62.2.py\", line 65, in <module>\n    assert np.allclose(block.length, a) and np.allclose(block.basis_size, b) and are_dicts_close(block.operator_dict, c)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "62",
+      "step_idx": 3,
+      "step_id": "62.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.602,
+      "error_tail": "r sparse array output by using kron(coo_array(A), B).\n        For more information, see the spmatrix to sparray migration guide\n        https://docs.scipy.org/doc/scipy/reference/sparse.migration_to_sparray.html\n\n        This function will be changed no earlier than v1.20.\n        \n  H_d_hat = kron(I_d, H_d)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_62.3_efkmvld0/62.3.py\", line 94, in <module>\n    assert np.allclose(H_XXZ(Sz1, Sp1, Sz2, Sp2).toarray(), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'matrix' object has no attribute 'toarray'\n"
+    },
+    {
+      "problem_id": "62",
+      "step_idx": 4,
+      "step_id": "62.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.594,
+      "error_tail": "st):\n  File \"/tmp/scicode_eval_62.4_u8j4ozhi/62.4.py\", line 132, in <module>\n    eblock = block_enlarged(block,model_d)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_62.4_u8j4ozhi/62.4.py\", line 114, in block_enlarged\n    I_d = np.eye(D, dtype=block.basis_size)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/lib/_twodim_base_impl.py\", line 237, in eye\n    m = zeros((N, M), dtype=dtype, order=order, device=device)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: Cannot interpret '2' as a data type\n"
+    },
+    {
+      "problem_id": "62",
+      "step_idx": 5,
+      "step_id": "62.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.385,
+      "error_tail": "/tmp/scicode_eval_62.5_yg0eu7bk/62.5.py\", line 139, in dmrg_module\n    sys_enlarged = block_enlarged(sys, model_d)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_62.5_yg0eu7bk/62.5.py\", line 114, in block_enlarged\n    I_d = np.eye(D, dtype=block.basis_size)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/lib/_twodim_base_impl.py\", line 237, in eye\n    m = zeros((N, M), dtype=dtype, order=order, device=device)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: Cannot interpret '2' as a data type\n"
+    },
+    {
+      "problem_id": "62",
+      "step_idx": 6,
+      "step_id": "62.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.371,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_62.6_gdyfwj_k/62.6.py\", line 208, in <module>\n    assert np.allclose(run_dmrg(block, 100,10, model_d), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_62.6_gdyfwj_k/62.6.py\", line 176, in run_dmrg\n    env = np.asarray(initial_block.operator_dict['conn_Sp'], dtype=float)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'numpy.ndarray' object has no attribute 'operator_dict'\n"
+    },
+    {
+      "problem_id": "63",
+      "step_idx": 1,
+      "step_id": "63.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.607,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_63.1_iriz3xsb/63.1.py\", line 39, in <module>\n    assert cmp_tuple_or_list(initialize_grid(price_step,time_step,strike, min_price, max_price), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "63",
+      "step_idx": 2,
+      "step_id": "63.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.737,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_63.2_oisoh2m3/63.2.py\", line 61, in <module>\n    assert np.allclose(apply_boundary_conditions(N_p,N_t,p,T,strike,r,sig), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "63",
+      "step_idx": 3,
+      "step_id": "63.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.684,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_63.3_7wimx8iy/63.3.py\", line 78, in <module>\n    assert np.allclose(construct_matrix(N_p,dp,dt,r,sig).toarray(), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_63.3_7wimx8iy/63.3.py\", line 66, in construct_matrix\n    D = np.diag(b) + np.diag(a, -1) + np.diag(c, 1)\n        ^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/lib/_twodim_base_impl.py\", line 330, in diag\n    raise ValueError(\"Input must be 1- or 2-d.\")\nValueError: Input must be 1- or 2-d.\n"
+    },
+    {
+      "problem_id": "63",
+      "step_idx": 4,
+      "step_id": "63.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.685,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_63.4_51qjm8vz/63.4.py\", line 112, in <module>\n    D = construct_matrix(N_p,dp,dt,r,sig)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_63.4_51qjm8vz/63.4.py\", line 66, in construct_matrix\n    D = np.diag(b) + np.diag(a, -1) + np.diag(c, 1)\n        ^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/lib/_twodim_base_impl.py\", line 330, in diag\n    raise ValueError(\"Input must be 1- or 2-d.\")\nValueError: Input must be 1- or 2-d.\n"
+    },
+    {
+      "problem_id": "63",
+      "step_idx": 5,
+      "step_id": "63.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.677,
+      "error_tail": "         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_63.5_dkzf7jbf/63.5.py\", line 112, in price_option\n    D = construct_matrix(price_step, dp, dt, r, sig)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_63.5_dkzf7jbf/63.5.py\", line 66, in construct_matrix\n    D = np.diag(b) + np.diag(a, -1) + np.diag(c, 1)\n        ^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/lib/_twodim_base_impl.py\", line 330, in diag\n    raise ValueError(\"Input must be 1- or 2-d.\")\nValueError: Input must be 1- or 2-d.\n"
+    },
+    {
+      "problem_id": "63",
+      "step_idx": 6,
+      "step_id": "63.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.393,
+      "error_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_63.6_8pq8mtaj/63.6.py\", line 135, in price_option_of_time\n    D = construct_matrix(N_p, dp, dt, r, sig)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_63.6_8pq8mtaj/63.6.py\", line 66, in construct_matrix\n    D = np.diag(b) + np.diag(a, -1) + np.diag(c, 1)\n        ^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/lib/_twodim_base_impl.py\", line 330, in diag\n    raise ValueError(\"Input must be 1- or 2-d.\")\nValueError: Input must be 1- or 2-d.\n"
+    },
+    {
+      "problem_id": "64",
+      "step_idx": 1,
+      "step_id": "64.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.203,
+      "error_tail": "33, in <module>\n    assert np.allclose(wrap(particle_position, box_length), target)  # Expected output: [0.5, 8.8, 0.3]\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_64.1_1cfoqfdf/64.1.py\", line 23, in wrap\n    coord = np.stack([x, y, z], axis=1)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/shape_base.py\", line 461, in stack\n    axis = normalize_axis_index(axis, result_ndim)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nnumpy.exceptions.AxisError: axis 1 is out of bounds for array of dimension 1\n"
+    },
+    {
+      "problem_id": "64",
+      "step_idx": 2,
+      "step_id": "64.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.61,
+      "error_tail": "1 = dist(r1, r2, box_length)\n                ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_64.2_c00vuild/64.2.py\", line 36, in dist\n    dr = wrap(dr, L)\n         ^^^^^^^^^^^\n  File \"/tmp/scicode_eval_64.2_c00vuild/64.2.py\", line 21, in wrap\n    coord = np.stack([x, y, z], axis=1)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/shape_base.py\", line 461, in stack\n    axis = normalize_axis_index(axis, result_ndim)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nnumpy.exceptions.AxisError: axis 1 is out of bounds for array of dimension 1\n"
+    },
+    {
+      "problem_id": "64",
+      "step_idx": 3,
+      "step_id": "64.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.539,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "64",
+      "step_idx": 4,
+      "step_id": "64.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.315,
+      "error_tail": "^^^^^^^\n  File \"/tmp/scicode_eval_64.4_qjld9d9j/64.4.py\", line 88, in E_i\n    total_energy = np.sum(V, axis=1)\n                   ^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/fromnumeric.py\", line 2463, in sum\n    return _wrapreduction(\n           ^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/fromnumeric.py\", line 83, in _wrapreduction\n    return ufunc.reduce(obj, axis, dtype, out, **passkwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nnumpy.exceptions.AxisError: axis 1 is out of bounds for array of dimension 1\n"
+    },
+    {
+      "problem_id": "64",
+      "step_idx": 5,
+      "step_id": "64.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.594,
+      "error_tail": "/tmp/scicode_eval_64.5_s7156yb9/64.5.py:112: RuntimeWarning: divide by zero encountered in divide\n  ratio = sigma / dists\n/tmp/scicode_eval_64.5_s7156yb9/64.5.py:115: RuntimeWarning: invalid value encountered in subtract\n  V = 4.0 * epsilon * (ratio_12 - ratio_6)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_64.5_s7156yb9/64.5.py\", line 134, in <module>\n    assert np.allclose(E_system(positions2, L2, sigma2, epsilon2), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "64",
+      "step_idx": 6,
+      "step_id": "64.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.716,
+      "error_tail": " call last):\n  File \"/tmp/scicode_eval_64.6_au7w29rf/64.6.py\", line 193, in <module>\n    Energy_Trace, Num_particle_Trace, Tracker, Lambda = GCMC(init_positions, L, T, mu, sigma, epsilon, mass, num_steps,\n                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_64.6_au7w29rf/64.6.py\", line 166, in GCMC\n    new_pos = wrap(new_pos, L)\n              ^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_64.6_au7w29rf/64.6.py\", line 16, in wrap\n    raise ValueError('r must be a 1D array')\nValueError: r must be a 1D array\n"
+    },
+    {
+      "problem_id": "65",
+      "step_idx": 1,
+      "step_id": "65.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.372,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_65.1_jm30yhxo/65.1.py\", line 28, in <module>\n    assert np.allclose(tensor([0,1],[0,1]), target)\n                       ^^^^^^^^^^^^^^^^^^^\nTypeError: tensor() takes 0 positional arguments but 2 were given\n"
+    },
+    {
+      "problem_id": "65",
+      "step_idx": 2,
+      "step_id": "65.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.028,
+      "error_tail": "  File \"/tmp/scicode_eval_65.2_46vtktgt/65.2.py\", line 111\n    from scicode.parse.parse import process_hdf5_to_tuple\nIndentationError: expected an indented block after 'else' statement on line 79\n"
+    },
+    {
+      "problem_id": "65",
+      "step_idx": 3,
+      "step_id": "65.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.077,
+      "error_tail": "  File \"/tmp/scicode_eval_65.3_ood72at6/65.3.py\", line 110\n    def channel_output(input_state, channel1, channel2=None):\nIndentationError: expected an indented block after 'else' statement on line 79\n"
+    },
+    {
+      "problem_id": "65",
+      "step_idx": 4,
+      "step_id": "65.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.095,
+      "error_tail": "  File \"/tmp/scicode_eval_65.4_wvjtuipn/65.4.py\", line 110\n    def channel_output(input_state, channel1, channel2=None):\nIndentationError: expected an indented block after 'else' statement on line 79\n"
+    },
+    {
+      "problem_id": "65",
+      "step_idx": 5,
+      "step_id": "65.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.089,
+      "error_tail": "  File \"/tmp/scicode_eval_65.5_evwj713l/65.5.py\", line 110\n    def channel_output(input_state, channel1, channel2=None):\nIndentationError: expected an indented block after 'else' statement on line 79\n"
+    },
+    {
+      "problem_id": "65",
+      "step_idx": 6,
+      "step_id": "65.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.166,
+      "error_tail": "  File \"/tmp/scicode_eval_65.6_x4iip546/65.6.py\", line 110\n    def channel_output(input_state, channel1, channel2=None):\nIndentationError: expected an indented block after 'else' statement on line 79\n"
+    },
+    {
+      "problem_id": "66",
+      "step_idx": 1,
+      "step_id": "66.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.54,
+      "error_tail": " a, z, n), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (1,3,1) (18,3) \n"
+    },
+    {
+      "problem_id": "66",
+      "step_idx": 2,
+      "step_id": "66.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.518,
+      "error_tail": "    assert np.allclose(assign_normals(generate_monolayer_graphene(0, 2.46, 1.8, 1)), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_66.2_rhp_pyhz/66.2.py\", line 37, in assign_normals\n    cross1 = np.cross(vecs[:, :, :, 0], vecs[:, :, :, 1])\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 1680, in cross\n    raise ValueError(\nValueError: Both input arrays must be (arrays of) 3-dimensional vectors, but they are 1 and 1 dimensional instead.\n"
+    },
+    {
+      "problem_id": "66",
+      "step_idx": 3,
+      "step_id": "66.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.208,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_66.3_miooqukd/66.3.py\", line 96, in <module>\n    assert np.allclose(potential_repulsive(np.array([[0, 0, 3.2]]), \n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "66",
+      "step_idx": 4,
+      "step_id": "66.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.582,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "66",
+      "step_idx": 5,
+      "step_id": "66.5",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.128,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "66",
+      "step_idx": 6,
+      "step_id": "66.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.501,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_66.6_6ukgha1m/66.6.py\", line 155, in <module>\n    assert np.allclose(calc_potential(generate_monolayer_graphene(0, 2.46, 1.6, 5), generate_monolayer_graphene(0, 2.46, -1.6, 5)), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_66.6_6ukgha1m/66.6.py\", line 139, in calc_potential\n    rho_over_delta = rho_sq / delta\n                     ^^^^^^\nNameError: name 'rho_sq' is not defined. Did you mean: 'r_sq'?\n"
+    },
+    {
+      "problem_id": "67",
+      "step_idx": 1,
+      "step_id": "67.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.49,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_67.1_hd7xy1q5/67.1.py\", line 36, in <module>\n    assert np.allclose(f_V(q,d,bg_eps,l1,l2), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "67",
+      "step_idx": 2,
+      "step_id": "67.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.178,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_67.2_dl4_uf_d/67.2.py\", line 66, in <module>\n    assert np.allclose(D_2DEG(q,omega,gamma,n_eff,e_F,k_F,v_F), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_67.2_dl4_uf_d/67.2.py\", line 43, in D_2DEG\n    f = f_V(q, 1.0, bg_eps, 0, 0)\n                    ^^^^^^\nNameError: name 'bg_eps' is not defined\n"
+    },
+    {
+      "problem_id": "67",
+      "step_idx": 3,
+      "step_id": "67.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.234,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_67.3_q3o0qh05/67.3.py\", line 84, in <module>\n    D0 = D_2DEG(q,omega,gamma,n_eff,e_F,k_F,v_F)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_67.3_q3o0qh05/67.3.py\", line 48, in D_2DEG\n    f_pq = f(p + omega, 0, 0)\n           ^^^^^^^^^^^^^^^^^^\nTypeError: 'numpy.float64' object is not callable\n"
+    },
+    {
+      "problem_id": "67",
+      "step_idx": 4,
+      "step_id": "67.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.209,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_67.4_h58fk3k9/67.4.py\", line 103, in <module>\n    D0 = D_2DEG(q,omega,gamma,n_eff,e_F,k_F,v_F)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_67.4_h58fk3k9/67.4.py\", line 48, in D_2DEG\n    f_pq = f(p + omega, 0, 0)\n           ^^^^^^^^^^^^^^^^^^\nTypeError: 'numpy.float64' object is not callable\n"
+    },
+    {
+      "problem_id": "67",
+      "step_idx": 5,
+      "step_id": "67.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.532,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_67.5_3pmwjah6/67.5.py\", line 117, in <module>\n    assert np.allclose(omega_p_cal(q,qz,m_eff,n_eff,d,bg_eps), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "67",
+      "step_idx": 6,
+      "step_id": "67.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.449,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_67.6_v7umo1vr/67.6.py\", line 160, in <module>\n    assert np.allclose(D_b_qz_mat(q,qz,omega,gamma,n_eff,e_F,k_F,v_F,bg_eps,d,N), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_67.6_v7umo1vr/67.6.py\", line 136, in D_b_qz_mat\n    qz_broadcast = qz[np.newaxis, :]\n                   ~~^^^^^^^^^^^^^^^\nIndexError: too many indices for array: array is 0-dimensional, but 1 were indexed\n"
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 1,
+      "step_id": "68.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.21,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_68.1_4t9w6b7f/68.1.py\", line 96, in <module>\n    assert cmp_tuple_or_list((wf.value(configs), wf.gradient(configs), wf.laplacian(configs), wf.kinetic(configs)), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 2,
+      "step_id": "68.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.026,
+      "error_tail": "  File \"/tmp/scicode_eval_68.2_am3owoh8/68.2.py\", line 178\n    r_vec =\n           ^\nSyntaxError: invalid syntax\n"
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 3,
+      "step_id": "68.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.019,
+      "error_tail": "  File \"/tmp/scicode_eval_68.3_xjga6qip/68.3.py\", line 178\n    r_vec =\n           ^\nSyntaxError: invalid syntax\n"
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 4,
+      "step_id": "68.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.073,
+      "error_tail": "  File \"/tmp/scicode_eval_68.4_efoq6hxb/68.4.py\", line 178\n    r_vec =\n           ^\nSyntaxError: invalid syntax\n"
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 5,
+      "step_id": "68.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.08,
+      "error_tail": "  File \"/tmp/scicode_eval_68.5_40h55q7c/68.5.py\", line 178\n    r_vec =\n           ^\nSyntaxError: invalid syntax\n"
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 6,
+      "step_id": "68.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.086,
+      "error_tail": "  File \"/tmp/scicode_eval_68.6_nua9jvfz/68.6.py\", line 334\n    '''\n    ^\nSyntaxError: unterminated triple-quoted string literal (detected at line 368)\n"
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 7,
+      "step_id": "68.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.028,
+      "error_tail": "  File \"/tmp/scicode_eval_68.7_b014vyx2/68.7.py\", line 334\n    '''\n    ^\nSyntaxError: unterminated triple-quoted string literal (detected at line 371)\n"
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 8,
+      "step_id": "68.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.027,
+      "error_tail": "  File \"/tmp/scicode_eval_68.8_moaa9b7y/68.8.py\", line 476\n    '''\n    ^\nSyntaxError: unterminated triple-quoted string literal (detected at line 497)\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 1,
+      "step_id": "69.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.176,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_69.1_kguyy0yk/69.1.py\", line 37, in <module>\n    assert np.allclose(f_V(q,d,bg_eps,l1,l2), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 2,
+      "step_id": "69.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.929,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_69.2_so7fu7g5/69.2.py\", line 73, in <module>\n    assert np.allclose(D_2DEG(q,omega,gamma,n_eff,e_F,k_F,v_F), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_69.2_so7fu7g5/69.2.py\", line 44, in D_2DEG\n    f = f_V(q, 1.0, bg_eps, 0, 0)\n                    ^^^^^^\nNameError: name 'bg_eps' is not defined\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 3,
+      "step_id": "69.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.91,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_69.3_1xodta26/69.3.py\", line 94, in <module>\n    assert np.allclose(D_cal(D0,q,d,bg_eps,N), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_69.3_1xodta26/69.3.py\", line 75, in D_cal\n    D = D0 + D0 @ V @ D\n             ~~~^~~\nTypeError: unsupported operand type(s) for @: 'NoneType' and 'numpy.float64'\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 4,
+      "step_id": "69.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.976,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_69.4_p1486wd0/69.4.py\", line 115, in <module>\n    assert np.allclose(D_l_analy(l1,l2,q,d,D0,bg_eps), target, atol=1e-13, rtol=1e-13)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_69.4_p1486wd0/69.4.py\", line 94, in D_l_analy\n    D_qz_qz = D0 / N * np.sum(phase_qz * phase_qz_prime * D0, axis=(1, 1))\n                   ^\nNameError: name 'N' is not defined\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 5,
+      "step_id": "69.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.041,
+      "error_tail": "  File \"/tmp/scicode_eval_69.5_o8alg4eg/69.5.py\", line 185\n    q_in_sq_bulk_spp = np.asarray(q_in_sq_bulk\n                                 ^\nSyntaxError: '(' was never closed\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 6,
+      "step_id": "69.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.173,
+      "error_tail": "  File \"/tmp/scicode_eval_69.6__n94ojwu/69.6.py\", line 185\n    q_in_sq_bulk_spp = np.asarray(q_in_sq_bulk\n                                 ^\nSyntaxError: '(' was never closed\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 7,
+      "step_id": "69.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.155,
+      "error_tail": "  File \"/tmp/scicode_eval_69.7_mdvijm4w/69.7.py\", line 185\n    q_in_sq_bulk_spp = np.asarray(q_in_sq_bulk\n                                 ^\nSyntaxError: '(' was never closed\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 8,
+      "step_id": "69.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.072,
+      "error_tail": "  File \"/tmp/scicode_eval_69.8_cz08wj0e/69.8.py\", line 185\n    q_in_sq_bulk_spp = np.asarray(q_in_sq_bulk\n                                 ^\nSyntaxError: '(' was never closed\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 1,
+      "step_id": "71.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.917,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.1_kt2ghgs_/71.1.py\", line 39, in <module>\n    assert np.allclose(ket(2, 0), target)\n                       ^^^^^^^^^\nTypeError: ket() takes 1 positional argument but 2 were given\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 2,
+      "step_id": "71.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.231,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.2_dkzksz76/71.2.py\", line 52, in <module>\n    assert np.allclose(tensor([0,1],[0,1]), target)\n                       ^^^^^^^^^^^^^^^^^^^\nTypeError: tensor() takes 0 positional arguments but 2 were given\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 3,
+      "step_id": "71.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.214,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.3_mp0q5mey/71.3.py\", line 105, in <module>\n    assert np.allclose(apply_channel(K, rho, sys=None, dim=None), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_71.3_mp0q5mey/71.3.py\", line 71, in apply_channel\n    sys = list(range(dim))\n               ^^^^^^^^^^\nTypeError: 'list' object cannot be interpreted as an integer\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 4,
+      "step_id": "71.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.092,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.4_9f3_vbzy/71.4.py\", line 129, in <module>\n    assert np.allclose(syspermute(X, [2,1], [2,2]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_71.4_9f3_vbzy/71.4.py\", line 116, in syspermute\n    perm_list = perm_list[perm_list]\n                ~~~~~~~~~^^^^^^^^^^^\nTypeError: list indices must be integers or slices, not list\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 5,
+      "step_id": "71.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.077,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.5_t7jqempr/71.5.py\", line 147, in <module>\n    assert np.allclose(partial_trace(X, [2], [2,2]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_71.5_t7jqempr/71.5.py\", line 138, in partial_trace\n    X = np.asarray(X, dtype=float).reshape(dim)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: cannot reshape array of size 16 into shape (2,2)\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 6,
+      "step_id": "71.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.231,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.6_kvt88tt2/71.6.py\", line 163, in <module>\n    assert np.allclose(entropy(rho), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 7,
+      "step_id": "71.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.089,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.7_1d7pfuzv/71.7.py\", line 181, in <module>\n    assert np.allclose(generalized_amplitude_damping_channel(0, 0), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 8,
+      "step_id": "71.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.048,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.8_1i1sygul/71.8.py\", line 202, in <module>\n    assert np.allclose(neg_rev_coh_info(p,g,N), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 9,
+      "step_id": "71.9",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.92,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.9_ctm8dhi4/71.9.py\", line 217, in <module>\n    assert np.allclose(GADC_rev_coh_inf(0.2,0.4), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_71.9_ctm8dhi4/71.9.py\", line 207, in GADC_rev_coh_inf\n    rho = K1 @ rho @ K1.conj().T + K2 @ rho @ K2.conj().T + K3 @ rho @ K3.conj().T + K4 @ rho @ K4.conj().T\n               ^^^\nUnboundLocalError: cannot access local variable 'rho' where it is not associated with a value\n"
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 1,
+      "step_id": "72.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.896,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_72.1_b3r_l602/72.1.py\", line 27, in <module>\n    assert np.allclose(neighbor_list((0, 0), 10), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 2,
+      "step_id": "72.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.928,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 3,
+      "step_id": "72.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.832,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_72.3_1u0jtqxt/72.3.py\", line 65, in <module>\n    assert np.allclose(energy(lattice), target)\n                       ^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_72.3_1u0jtqxt/72.3.py\", line 53, in energy\n    s_up = lattice[i, j + 1]\n           ~~~~~~~^^^^^^^^^^\nIndexError: index 4 is out of bounds for axis 1 with size 4\n"
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 4,
+      "step_id": "72.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.806,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 5,
+      "step_id": "72.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.922,
+      "error_tail": "ck (most recent call last):\n  File \"/tmp/scicode_eval_72.5_bdbm17ar/72.5.py\", line 92, in <module>\n    assert np.allclose(get_flip_probability_magnetization(lattice, 1, 2, 1), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_72.5_bdbm17ar/72.5.py\", line 79, in get_flip_probability_magnetization\n    H_old = energy(lattice)\n            ^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_72.5_bdbm17ar/72.5.py\", line 53, in energy\n    s_up = lattice[i, j + 1]\n           ~~~~~~~^^^^^^^^^^\nIndexError: index 4 is out of bounds for axis 1 with size 4\n"
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 6,
+      "step_id": "72.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.917,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_72.6_eisj1wgw/72.6.py\", line 108, in <module>\n    assert np.allclose(flip(spins, 1), target)\n                       ^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_72.6_eisj1wgw/72.6.py\", line 96, in flip\n    prob = get_flip_probability_magnetization(spins, beta)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: get_flip_probability_magnetization() missing 2 required positional arguments: 'j' and 'beta'\n"
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 7,
+      "step_id": "72.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.508,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_72.7_5ebrlkjd/72.7.py\", line 141, in <module>\n    assert np.allclose(run(1.6, 3, 10), target)\n                       ^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_72.7_5ebrlkjd/72.7.py\", line 121, in run\n    s_up = spins[i, j + 1]\n           ~~~~~^^^^^^^^^^\nIndexError: index 3 is out of bounds for axis 1 with size 3\n"
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 8,
+      "step_id": "72.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.53,
+      "error_tail": "=[1.6, 2.10, 2.15, 2.20, 2.25, 2.30, 2.35, 2.40, 2.8], N=10, nsweeps=10), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_72.8_cbra6fl8/72.8.py\", line 151, in scan_T\n    flips = flip(spins, T)\n            ^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_72.8_cbra6fl8/72.8.py\", line 96, in flip\n    prob = get_flip_probability_magnetization(spins, beta)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: get_flip_probability_magnetization() missing 2 required positional arguments: 'j' and 'beta'\n"
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 9,
+      "step_id": "72.9",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.166,
+      "error_tail": "ack (most recent call last):\n  File \"/tmp/scicode_eval_72.9_2skxsdzi/72.9.py\", line 181, in <module>\n    mag2 = scan_T(Ts=Ts, N=5, nsweeps=100)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_72.9_2skxsdzi/72.9.py\", line 151, in scan_T\n    flips = flip(spins, T)\n            ^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_72.9_2skxsdzi/72.9.py\", line 96, in flip\n    prob = get_flip_probability_magnetization(spins, beta)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: get_flip_probability_magnetization() missing 2 required positional arguments: 'j' and 'beta'\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 1,
+      "step_id": "73.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.965,
+      "error_tail": "countered in divide\n  b2 = cross23 / dot2\n/tmp/scicode_eval_73.1_gxmrykgd/73.1.py:27: RuntimeWarning: invalid value encountered in divide\n  b2 = cross23 / dot2\n/tmp/scicode_eval_73.1_gxmrykgd/73.1.py:28: RuntimeWarning: divide by zero encountered in divide\n  b3 = cross12 / dot3\n/tmp/scicode_eval_73.1_gxmrykgd/73.1.py:28: RuntimeWarning: invalid value encountered in divide\n  b3 = cross12 / dot3\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_73.1_gxmrykgd/73.1.py\", line 38, in <module>\n    assert np.allclose(Bmat(pa), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 2,
+      "step_id": "73.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.752,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_73.2_ags53st2/73.2.py\", line 78, in <module>\n    assert np.allclose(q_cal_p(p,b_c,det_d,p_s,wl,yaw,pitch,roll), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 3,
+      "step_id": "73.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.683,
+      "error_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (2,3,3) (2,3,3,1) \n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 4,
+      "step_id": "73.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.632,
+      "error_tail": "/tmp/scicode_eval_73.4_d3lhmw7e/73.4.py:92: RuntimeWarning: invalid value encountered in divide\n  t3g = np.cross(Q1, Q2) / np.linalg.norm(np.cross(Q1, Q2))\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_73.4_d3lhmw7e/73.4.py\", line 133, in <module>\n    assert np.allclose(Umat(t_c,t_g), target)\n                       ^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_73.4_d3lhmw7e/73.4.py\", line 107, in Umat\n    U = t_g @ t_c\n        ~~~~^~~~~\nValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 1 is different from 3)\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 5,
+      "step_id": "73.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.66,
+      "error_tail": "\n  File \"/tmp/scicode_eval_73.5_1f72j7bi/73.5.py\", line 186, in <module>\n    assert np.allclose(get_hkl_p(p,z,b_c,det_d,p_s,wl,yaw,pitch,roll,pa,H1,H2,p1,p2,z1,z2,z_s,chi,phi), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_73.5_1f72j7bi/73.5.py\", line 137, in get_hkl_p\n    u_triple_p = u_triple_p(pa, H1, H2, p1, p2, b_c, det_d, p_s, wl, yaw, pitch, roll, z1, z2, z_s, chi, phi)\n                 ^^^^^^^^^^\nUnboundLocalError: cannot access local variable 'u_triple_p' where it is not associated with a value\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 6,
+      "step_id": "73.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.669,
+      "error_tail": "3.6_0mzzt81y/73.6.py:189: RuntimeWarning: invalid value encountered in divide\n  b3_vec = cross12 / dot3\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_73.6_0mzzt81y/73.6.py\", line 221, in <module>\n    assert are_dicts_close(ringdstar(pa,polar_max,wl), target)\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_73.6_0mzzt81y/73.6.py\", line 203, in ringdstar\n    for d_star_val, (h, k, l) in zip(d_star, zip(h_flat, k_flat, l_flat)):\n                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: 'numpy.float64' object is not iterable\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 7,
+      "step_id": "73.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.077,
+      "error_tail": "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ^\nSyntaxError: '[' was never closed\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 8,
+      "step_id": "73.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.032,
+      "error_tail": "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ^\nSyntaxError: '[' was never closed\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 9,
+      "step_id": "73.9",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.033,
+      "error_tail": "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ^\nSyntaxError: '[' was never closed\n"
+    },
+    {
+      "problem_id": "74",
+      "step_idx": 1,
+      "step_id": "74.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.01,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_74.1_5k0xltbe/74.1.py\", line 33, in <module>\n    A_transformed = householder(A)\n                    ^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_74.1_5k0xltbe/74.1.py\", line 22, in householder\n    v = -np.sign(x1) * norm * np.array([1.0, 0.0, 0.0, ..., 0.0])\n        ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nTypeError: unsupported operand type(s) for *: 'float' and 'ellipsis'\n"
+    },
+    {
+      "problem_id": "75",
+      "step_idx": 1,
+      "step_id": "75.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.824,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_75.1_eg9v4c7j/75.1.py\", line 34, in <module>\n    assert np.allclose(hopping_mk(d=4.64872812, dz=0.0, v_p0=-2.7, v_s0=0.48, b=1.17, a0=2.68, d0=6.33), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "75",
+      "step_idx": 2,
+      "step_id": "75.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.14,
+      "error_tail": "ro encountered in divide\n  ratio = dj / di\n/tmp/scicode_eval_75.2_sk_0235r/75.2.py:51: RuntimeWarning: invalid value encountered in divide\n  ratio = dj / di\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_75.2_sk_0235r/75.2.py\", line 72, in <module>\n    assert np.allclose(mk(latvecs, basis, di, dj, ai, aj), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_75.2_sk_0235r/75.2.py\", line 53, in mk\n    hop = hop[np.newaxis, :, :]\n          ~~~^^^^^^^^^^^^^^^^^^\nIndexError: too many indices for array: array is 1-dimensional, but 2 were indexed\n"
+    },
+    {
+      "problem_id": "75",
+      "step_idx": 3,
+      "step_id": "75.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.809,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_75.3_4b7msxdb/75.3.py\", line 126, in <module>\n    assert np.allclose(ham_eig(k, latvecs, basis), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_75.3_4b7msxdb/75.3.py\", line 70, in ham_eig\n    ratio = diff / dist_sq\n            ~~~~~^~~~~~~~~\nValueError: operands could not be broadcast together with shapes (4,4,3) (4,4) \n"
+    },
+    {
+      "problem_id": "76",
+      "step_idx": 1,
+      "step_id": "76.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.881,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_76.1_zq5gtk40/76.1.py\", line 39, in <module>\n    assert np.allclose(load_motif_from_df(data), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_76.1_zq5gtk40/76.1.py\", line 15, in load_motif_from_df\n    data = np.asarray(data, dtype=float)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: float() argument must be a string or a real number, not 'dict'\n"
+    },
+    {
+      "problem_id": "76",
+      "step_idx": 2,
+      "step_id": "76.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.311,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_76.2_23ehw74v/76.2.py\", line 48, in <module>\n    assert np.allclose(compute_kld(load_motif_from_df(data)), target)\n                                   ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_76.2_23ehw74v/76.2.py\", line 13, in load_motif_from_df\n    data = np.asarray(data, dtype=float)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: float() argument must be a string or a real number, not 'dict'\n"
+    },
+    {
+      "problem_id": "76",
+      "step_idx": 4,
+      "step_id": "76.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.997,
+      "error_tail": "ile \"/tmp/scicode_eval_76.4_w20oi_1h/76.4.py\", line 99, in <module>\n    inserted_position, sequence, sequence_rc = generate_dna(240,data)\n                                               ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_76.4_w20oi_1h/76.4.py\", line 51, in generate_dna\n    spike_mat = load_motif_from_df(PWM)\n                ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_76.4_w20oi_1h/76.4.py\", line 13, in load_motif_from_df\n    data = np.asarray(data, dtype=float)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: float() argument must be a string or a real number, not 'dict'\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 1,
+      "step_id": "77.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.92,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 2,
+      "step_id": "77.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.213,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.2_1_002tmc/77.2.py\", line 50, in <module>\n    assert np.allclose(dist(r1, r2, box_length), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 3,
+      "step_id": "77.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.928,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.3_x5s9b9oh/77.3.py\", line 66, in <module>\n    assert np.allclose(dist_v(r1, r2, box_length), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 4,
+      "step_id": "77.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.692,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 5,
+      "step_id": "77.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.64,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.5_4sd1wyvu/77.5.py\", line 117, in <module>\n    assert np.allclose(f_ij(r,sigma,epsilon,rc), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_77.5_4sd1wyvu/77.5.py\", line 97, in f_ij\n    dr = r - r2\n             ^^\nNameError: name 'r2' is not defined. Did you mean: 'r'?\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 6,
+      "step_id": "77.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.675,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.6_yzxx9shj/77.6.py\", line 140, in <module>\n    assert np.allclose(E_tail(N,L,sigma,epsilon,rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 7,
+      "step_id": "77.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.673,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.7_n24v4i60/77.7.py\", line 162, in <module>\n    assert np.allclose(P_tail(N,L,sigma,epsilon,rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 8,
+      "step_id": "77.8",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.01,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 9,
+      "step_id": "77.9",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.931,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.9_63hq4nx9/77.9.py\", line 206, in <module>\n    assert np.allclose(temperature(v,m,N), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 10,
+      "step_id": "77.10",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.686,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.10_sosm_o1t/77.10.py\", line 246, in <module>\n    assert cmp_tuple_or_list(pressure(N, L, T, positions, sigma, epsilon, rc), target)\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_77.10_sosm_o1t/77.10.py\", line 228, in pressure\n    f_ij = f_ij(diff[mask], sigma, epsilon, rc)\n           ^^^^\nUnboundLocalError: cannot access local variable 'f_ij' where it is not associated with a value\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 11,
+      "step_id": "77.11",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.22,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.11_u8uem4jj/77.11.py\", line 277, in <module>\n    assert np.allclose(forces(N, positions, L, sigma, epsilon, rc), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_77.11_u8uem4jj/77.11.py\", line 263, in forces\n    f_ij = f_ij(diff, sigma, epsilon, rc)\n           ^^^^\nUnboundLocalError: cannot access local variable 'f_ij' where it is not associated with a value\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 12,
+      "step_id": "77.12",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.109,
+      "error_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_77.12_a59bvvps/77.12.py\", line 483, in test_main\n    xyz, v_xyz, L = velocityVerlet(N, xyz, v_xyz, L, sigma, epsilon, rc, m, dt, tau_T, T_target, tau_P, P_target)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_77.12_a59bvvps/77.12.py\", line 320, in velocityVerlet\n    f_ij = f_ij(diff[mask], sigma, epsilon, rc)\n           ^^^^\nUnboundLocalError: cannot access local variable 'f_ij' where it is not associated with a value\n"
+    },
+    {
+      "problem_id": "79",
+      "step_idx": 1,
+      "step_id": "79.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 4.072,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "79",
+      "step_idx": 2,
+      "step_id": "79.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.196,
+      "error_tail": "/tmp/scicode_eval_79.2_kh7d_lbm/79.2.py:63: RuntimeWarning: divide by zero encountered in divide\n  G_M = (G * X ** 2 - T) / G\n/tmp/scicode_eval_79.2_kh7d_lbm/79.2.py:69: RuntimeWarning: divide by zero encountered in divide\n  G_1 = (m * v ** 2 - T) / G\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_79.2_kh7d_lbm/79.2.py\", line 93, in <module>\n    assert cmp_tuple_or_list(nhc_step(v0, G, V, X, dt, m, T, omega), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "79",
+      "step_idx": 3,
+      "step_id": "79.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.618,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_79.3_5qwgsaph/79.3.py\", line 139, in <module>\n    assert cmp_tuple_or_list(nhc_Y4(v0, G, V, X, dt, m, T, omega), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "79",
+      "step_idx": 4,
+      "step_id": "79.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.906,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_79.4_7xycz2gj/79.4.py\", line 174, in <module>\n    assert cmp_tuple_or_list(nose_hoover_chain(x0, v0, T0, M, m, omega, dt, nsteps), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/SciCode/src/scicode/compare/cmp.py\", line 54, in cmp_tuple_or_list\n    if len(var1) != len(var2):\n       ^^^^^^^^^\nTypeError: object of type 'NoneType' has no len()\n"
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 1,
+      "step_id": "80.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.837,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 2,
+      "step_id": "80.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.896,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_80.2_tv3vp0vs/80.2.py\", line 73, in <module>\n    assert np.allclose(E_ij(r2, sigma2, epsilon2, rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 3,
+      "step_id": "80.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.726,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_80.3_03429erl/80.3.py\", line 92, in <module>\n    assert np.allclose(E_pot(positions1, L1, sigma1, epsilon1, rc), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_80.3_03429erl/80.3.py\", line 78, in E_pot\n    E = E_ij(r, sigma, epsilon, rc)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_80.3_03429erl/80.3.py\", line 40, in E_ij\n    r = float(r)\n        ^^^^^^^^\nTypeError: only 0-dimensional arrays can be converted to Python scalars\n"
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 4,
+      "step_id": "80.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.119,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_80.4_2bc9msrb/80.4.py\", line 121, in <module>\n    assert np.allclose(f_ij(r,sigma,epsilon,rc), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_80.4_2bc9msrb/80.4.py\", line 98, in f_ij\n    if r <= 0:\n       ^^^^^^\nValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()\n"
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 5,
+      "step_id": "80.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.138,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_80.5_6iirb87o/80.5.py\", line 163, in <module>\n    assert np.allclose(forces(N, positions, L, sigma, epsilon, rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 6,
+      "step_id": "80.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.832,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_80.6_c1qojfdp/80.6.py\", line 207, in <module>\n    assert cmp_tuple_or_list(velocity_verlet(N,sigma,epsilon,positions,velocities,dt,m,L,rc), target)\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_80.6_c1qojfdp/80.6.py\", line 185, in velocity_verlet\n    x_new = positions + x_vel * dt + 0.5 * a_mag * dt ** 2\n            ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~\nValueError: operands could not be broadcast together with shapes (2,3) (2,) \n"
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 7,
+      "step_id": "80.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.739,
+      "error_tail": "py\", line 277, in <module>\n    E_total_array,instant_T_array,positions,velocities,intercollision_times = MD_NVT(N,init_positions, init_velocities, L, sigma, epsilon, rc, m, dt, num_steps, T, nu)\n                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_80.7_tboygt6p/80.7.py\", line 224, in MD_NVT\n    from scipy.constants import k_B\nImportError: cannot import name 'k_B' from 'scipy.constants' (/usr/local/lib/python3.12/dist-packages/scipy/constants/__init__.py)\n"
+    }
+  ]
+}
