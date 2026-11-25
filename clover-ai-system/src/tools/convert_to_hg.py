@@ -184,8 +184,19 @@ def _try_quantize_hg_cuda(
     except Exception:
         return None
 
-    dev = torch.device("cuda:0")
     r_pad, k_pad = w_pad.shape
+    if r_pad > 8192:
+        sc_parts, idx_parts = [], []
+        for r0 in range(0, r_pad, 8192):
+            sub = _try_quantize_hg_cuda(w_pad[r0 : min(r0 + 8192, r_pad)], pre_diag, bits, use_ldlq)
+            if sub is None:
+                return None
+            sc_parts.append(sub[0])
+            idx_parts.append(sub[1])
+        torch.cuda.empty_cache()
+        return np.concatenate(sc_parts, axis=0), np.concatenate(idx_parts, axis=0)
+
+    dev = torch.device("cuda:0")
     nb = k_pad // 128
     with torch.no_grad():
         wt = torch.from_numpy(w_pad).to(dev, dtype=torch.float32)
