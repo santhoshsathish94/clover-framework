@@ -1403,12 +1403,100 @@ class KimiBackend(BackendBase):
 
 
 # --------------------------------------------------------------------------------------------------------------------
+# Generic Remote OpenAI HTTP Backend (<1 MB hop for Specialist Servers & Multi-Node Workers)
+# --------------------------------------------------------------------------------------------------------------------
+
+class RemoteOpenAIBackend(BackendBase):
+    """Lightweight OpenAI-compatible HTTP `/v1/chat/completions` client for specialist engines on Node 1 or LAN."""
+
+    def __init__(self, model_id: str, url: str, family: str = "specialist", timeout_s: float = 600.0):
+        super().__init__()
+        self.model_id = model_id
+        self.url = url.rstrip("/")
+        self.family = family
+        self.kind = "remote-http"
+        self.timeout_s = timeout_s
+
+    def stream(self, messages, tools, tool_choice, params: GenParams):
+        t0 = time.perf_counter()
+        body: dict[str, Any] = {
+            "model": self.model_id,
+            "messages": messages,
+            "max_tokens": params.max_tokens,
+            "temperature": params.temperature,
+            "top_p": params.top_p,
+            "stream": False,
+        }
+        if params.stop:
+            body["stop"] = params.stop
+        if tools:
+            body["tools"] = tools
+        if tool_choice is not None:
+            body["tool_choice"] = tool_choice
+        req = urllib.request.Request(
+            self.url + "/v1/chat/completions",
+            data=json.dumps(body).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=self.timeout_s) as r:
+            data = json.loads(r.read().decode("utf-8") or "{}")
+        ch = (data.get("choices") or [{}])[0]
+        msg = ch.get("message") or {}
+        content = str(msg.get("content") or ch.get("text") or "")
+        tcs = msg.get("tool_calls") or []
+        if tcs:
+            tc_blocks = []
+            for tc in tcs:
+                fn = tc.get("function") or {}
+                args = fn.get("arguments") or "{}"
+                if isinstance(args, str):
+                    try:
+                        args = json.loads(args)
+                    except ValueError:
+                        args = {}
+                tc_blocks.append(
+                    "<tool_call>\n" + json.dumps({"name": fn.get("name", ""), "arguments": args}) + "\n</tool_call>"
+                )
+            content = (content + "\n" if content else "") + "\n".join(tc_blocks)
+        usage = data.get("usage") or {}
+        pt = int(usage.get("prompt_tokens") or sum(len(_content_text(m.get("content"))) // 4 for m in messages or []))
+        ct = int(usage.get("completion_tokens") or (max(1, len(content) // 4) if content else 0))
+        cached = int((usage.get("prompt_tokens_details") or {}).get("cached_tokens") or 0)
+        res = GenResult(
+            model=self.model_id,
+            text=content,
+            finish_reason=str(ch.get("finish_reason") or "stop"),
+            prompt_tokens=pt,
+            cached_tokens=cached,
+            prefill_tokens=max(0, pt - cached),
+            completion_tokens=ct,
+            decode_ms=(time.perf_counter() - t0) * 1000.0,
+            backend_kind=self.kind,
+        )
+        if content:
+            yield "delta", content
+        self._account(res)
+        yield "done", res
+
+
+# --------------------------------------------------------------------------------------------------------------------
 # Registry / discovery
 # --------------------------------------------------------------------------------------------------------------------
 
 DIRECT_MODELS = ("lfm3-omni-2b", "clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3")
-MODEL_ALIASES = {"kimi-k3.1-pro": "kimi-k3", "lfm3-omni": "lfm3-omni-2b", "clover-35b": "clover-35b-a3b",
-                 "nemotron-120b": "nemotron-3.5-super-vl", "nemotron": "nemotron-3.5-super-vl"}
+SPECIALIST_MODELS = ("goedel-prover-v2-32b", "boltz-2", "vjepa-2.1", "chronos-2")
+MODEL_ALIASES = {
+    "kimi-k3.1-pro": "kimi-k3",
+    "lfm3-omni": "lfm3-omni-2b",
+    "clover-35b": "clover-35b-a3b",
+    "qwen3.6-35b-a3b": "clover-35b-a3b",
+    "nemotron-120b": "nemotron-3.5-super-vl",
+    "nemotron": "nemotron-3.5-super-vl",
+    "goedel-prover": "goedel-prover-v2-32b",
+    "goedel-prover-32b": "goedel-prover-v2-32b",
+    "vjepa-2": "vjepa-2.1",
+}
 
 MODEL_SPECS: dict[str, dict[str, Any]] = {
     "lfm3-omni-2b": {"template": "lfm3", "family": "lfm3", "truncate": True, "eos": ("<|im_end|>", "<|endoftext|>")},
@@ -1417,6 +1505,14 @@ MODEL_SPECS: dict[str, dict[str, Any]] = {
     "nemotron-3.5-super-vl": {"template": "nemotron-chatml", "family": "nemotron", "truncate": False,
                               "eos": ("<|im_end|>", "</s>", "<|endoftext|>")},
     "kimi-k3": {"template": "nemotron-chatml", "family": "kimi", "truncate": False, "eos": ("<|im_end|>",)},
+    "goedel-prover-v2-32b": {"template": "qwen-chatml", "family": "goedel32b", "truncate": True,
+                             "eos": ("<|im_end|>", "<|endoftext|>")},
+    "boltz-2": {"template": "qwen-chatml", "family": "boltz2", "truncate": True,
+                "eos": ("<|im_end|>", "<|endoftext|>")},
+    "vjepa-2.1": {"template": "qwen-chatml", "family": "vjepa2", "truncate": True,
+                  "eos": ("<|im_end|>", "<|endoftext|>")},
+    "chronos-2": {"template": "qwen-chatml", "family": "chronos2", "truncate": True,
+                  "eos": ("<|im_end|>", "<|endoftext|>")},
 }
 
 
@@ -1511,8 +1607,31 @@ def make_native_backend(model_id: str, paths: dict[str, Path | None]) -> Backend
     raise KeyError(model_id)
 
 
+def _parse_specialist_urls(raw: str) -> dict[str, str]:
+    """Parse `CLOVER_SPECIALIST_URLS` as JSON dict or `model=http://host:port,model2=http://...`."""
+    s = (raw or "").strip()
+    if not s:
+        return {}
+    if s.startswith("{"):
+        try:
+            obj = json.loads(s)
+            if isinstance(obj, dict):
+                return {MODEL_ALIASES.get(str(k).strip(), str(k).strip()): str(v).strip() for k, v in obj.items() if v}
+        except ValueError:
+            return {}
+    out: dict[str, str] = {}
+    for item in s.split(","):
+        if "=" in item:
+            k, _, v = item.partition("=")
+            mk = MODEL_ALIASES.get(k.strip(), k.strip())
+            if mk and v.strip():
+                out[mk] = v.strip()
+    return out
+
+
 def build_backends(mode: str = "auto", responders: dict[str, Responder] | None = None,
-                   log: Callable[[str], None] | None = None) -> dict[str, BackendBase]:
+                   log: Callable[[str], None] | None = None,
+                   include_specialists: bool = False) -> dict[str, BackendBase]:
     """`mode`: `mock` (all mock), `real` (native only; unavailable models omitted), `auto` (native else mock)."""
     log = log or (lambda s: None)
     responders = responders or {}
@@ -1538,4 +1657,14 @@ def build_backends(mode: str = "auto", responders: dict[str, Responder] | None =
                 log(f"[backends] {mid}: native unavailable ({exc}); using mock")
             else:
                 log(f"[backends] {mid}: unavailable ({exc})")
+
+    spec_urls = _parse_specialist_urls(os.environ.get("CLOVER_SPECIALIST_URLS", ""))
+    if include_specialists or spec_urls:
+        for smid in SPECIALIST_MODELS:
+            if smid in spec_urls and mode != "mock":
+                out[smid] = RemoteOpenAIBackend(smid, spec_urls[smid], family=MODEL_SPECS[smid]["family"])
+                log(f"[backends] specialist {smid}: remote-http -> {spec_urls[smid]}")
+            elif include_specialists and mode in ("mock", "auto"):
+                out[smid] = make_mock_backend(smid, responders.get(smid))
+                log(f"[backends] specialist {smid}: mock ready")
     return out

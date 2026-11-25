@@ -38,6 +38,7 @@ from backends import MODEL_ALIASES, BackendBase, GenParams, GenResult
 VIRTUAL_MODELS: dict[str, str] = {
     "clover-fusion-standard": "Copilot Fusion Single: Omni-2B triage/formatting, Clover-35B coding & tools",
     "clover-fusion-high": "Copilot Fusion Cascade: Clover-35B -> Nemotron-120B on objective failure signals",
+    "clover-fusion-cluster": "3-Layer Multi-Server Cluster: Deterministic Specialist Gate + 35B -> 120B -> Kimi-2.8T Cascade",
     "clover-fusion-max": "Copilot Fusion Critique: Nemotron-120B draft + Clover-35B bounded audit + revise",
     "clover-egm-elephant": "Elephant (EGM): Nemotron-120B spec writing / theorem decomposition",
     "clover-egm-goldfish": "Goldfish (EGM): Clover-35B non-veto reviewer, <= 400 tokens, structured findings",
@@ -73,6 +74,24 @@ TRIVIAL_HINT_RE = re.compile(
 CODE_HINT_RE = re.compile(
     r"(?i)(```|\bdef |\bclass |\bfn |\bimport |#include|\btheorem\b|\blemma\b|\bfix\b|\bbug\b|\brefactor\b|"
     r"\bimplement\b|\bcompile\b|\btest\b|\berror\b|Traceback|\.py\b|\.rs\b|\.ts\b|\.lean\b|\.c\b)"
+)
+
+# Layer-1 Deterministic Specialist Input-Type Patterns (0 ms routing, zero LLM guesswork)
+LEAN4_SPECIALIST_RE = re.compile(
+    r"(?m)(\bimport\s+Mathlib\b|\b(?:theorem|lemma)\s+\w+.*?:=\s*by\b|```lean\b|\blake\s+(?:env|build)\b|\.lean\b)"
+)
+BIO_FASTA_RE = re.compile(
+    r"(?m)(^>[A-Za-z0-9_|.\-]{3,}.*\n[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy\s]{30,}"
+    r"|\b[ACDEFGHIKLMNPQRSTVWY]{45,}\b|\b(?:boltz|fold\s+protein|binding\s+affinity|ligand\s+docking|\.pdb\b|\.cif\b))"
+)
+VIDEO_PHYSICS_RE = re.compile(
+    r"(?i)(\.(?:mp4|webm|mov|avi)\b|\binput_video\b|\bvideo\s+(?:clip|frames|trajectory)\b)"
+    r".*(\b(?:predict|collision|trajectory|fall|spill|motion|next\s+frame|what\s+happens\s+if|physics)\b)"
+    r"|(\b(?:predict|collision|trajectory|motion|what\s+happens\s+when)\b).*(\.(?:mp4|webm|mov|avi)\b|\binput_video\b)"
+)
+TIMESERIES_RE = re.compile(
+    r"(?is)\b(?:forecast|predict\s+next\s+\d+|time[\s\-]?series|horizon|quantile\s+forecast)\b"
+    r".*(?:\d{4}-\d{2}-\d{2}[T\s,]\s*-?\d+(?:\.\d+)?|(?:[-+]?\d+(?:\.\d+)?\s*,\s*){8,}[-+]?\d+(?:\.\d+)?)"
 )
 
 GOLDFISH_SYSTEM = (
@@ -147,6 +166,58 @@ def objective_failure(messages: list[dict[str, Any]]) -> str | None:
         if m:
             return m.group(0).strip()
     return None
+
+
+def consecutive_objective_failures(messages: list[dict[str, Any]]) -> tuple[int, str | None]:
+    """Count consecutive trailing `[assistant, tool(error)+]` rounds at the end of `messages`."""
+    msgs = list(messages or [])
+    idx = len(msgs) - 1
+    rounds = 0
+    latest_marker: str | None = None
+    while idx >= 0 and msgs[idx].get("role") in ("tool", "function"):
+        round_marker: str | None = None
+        while idx >= 0 and msgs[idx].get("role") in ("tool", "function"):
+            c = msgs[idx].get("content")
+            if isinstance(c, list):
+                c = "".join(str(p.get("text") or "") for p in c if isinstance(p, dict))
+            m = FAILURE_RE.search(str(c or ""))
+            if m and round_marker is None:
+                round_marker = m.group(0).strip()
+            idx -= 1
+        if round_marker is None:
+            break
+        if latest_marker is None:
+            latest_marker = round_marker
+        rounds += 1
+        if idx >= 0 and msgs[idx].get("role") == "assistant":
+            idx -= 1
+        else:
+            break
+    return rounds, latest_marker
+
+
+def classify_specialist_domain(
+    messages: list[dict[str, Any]],
+    available_backends: set[str] | dict[str, Any],
+) -> tuple[str | None, str | None]:
+    """Layer-1 deterministic input-type specialist gate (0 ms, never guesses across domains)."""
+    user = _last_user_text(messages)
+    raw_last = ""
+    for m in reversed(messages or []):
+        if m.get("role") == "user":
+            raw_last = json.dumps(m.get("content"), ensure_ascii=False) if not isinstance(m.get("content"), str) else m["content"]
+            break
+    if "goedel-prover-v2-32b" in available_backends and LEAN4_SPECIALIST_RE.search(user):
+        return "goedel-prover-v2-32b", "specialist:lean4_formal_proof"
+    if "boltz-2" in available_backends and BIO_FASTA_RE.search(user):
+        return "boltz-2", "specialist:biomolecular_structure"
+    if "vjepa-2.1" in available_backends and (
+        VIDEO_PHYSICS_RE.search(raw_last) or ("video_url" in raw_last or "input_video" in raw_last)
+    ):
+        return "vjepa-2.1", "specialist:physical_world_video"
+    if "chronos-2" in available_backends and TIMESERIES_RE.search(user):
+        return "chronos-2", "specialist:timeseries_forecast"
+    return None, None
 
 
 def _last_user_text(messages: list[dict[str, Any]]) -> str:
@@ -373,6 +444,7 @@ class FusionRouter:
         return {
             "clover-fusion-standard": ["lfm3-omni-2b", "clover-35b-a3b"],
             "clover-fusion-high": ["clover-35b-a3b", "nemotron-3.5-super-vl"],
+            "clover-fusion-cluster": ["lfm3-omni-2b", "clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3"],
             "clover-fusion-max": ["nemotron-3.5-super-vl", "clover-35b-a3b"],
             "clover-egm-elephant": ["nemotron-3.5-super-vl"],
             "clover-egm-goldfish": ["clover-35b-a3b"],
@@ -581,6 +653,8 @@ class FusionRouter:
             steps.append(final)
         elif model == "clover-fusion-high":
             final = self._cascade(body, messages, tools, tool_choice, live_streamer, steps, telem)
+        elif model == "clover-fusion-cluster":
+            final = self._cluster_cascade(body, messages, tools, tool_choice, live_streamer, steps, telem)
         elif model == "clover-fusion-max":
             final = self._critique(body, messages, tools, tool_choice, steps, telem)
         elif model == "clover-egm-elephant":
@@ -844,6 +918,113 @@ class FusionRouter:
             steps.append(final)
             return final
         if streamer is not None and tg.active_tools(tools, tool_choice):
+            streamer.feed(first.parsed.content)
+        return first
+
+    def _cluster_cascade(self, body, messages, tools, tool_choice, streamer, steps, telem) -> StepOutcome:
+        """3-Layer Multi-Server Cluster Router:
+        Layer 1: 0 ms deterministic specialist input-type gate (`goedel-prover-v2-32b`, `boltz-2`, `vjepa-2.1`, `chronos-2`),
+                 escalating into the 3-tier generalist cascade if a specialist turn previously failed verification.
+        Layer 2: Fast `clover-35b-a3b` (`Qwen3.6-35B`) coordinator (or `lfm3-omni-2b` for short trivial triage).
+        Layer 3: Objective verifier-gated cascade: 0 failures -> `35B`, 1 failure -> `Nemotron-120B`, >=2 -> `Kimi-2.8T`.
+        """
+        params = parse_params(body)
+        tools_active = bool(tg.active_tools(tools, tool_choice))
+        fail_rounds, marker = consecutive_objective_failures(messages)
+
+        # Layer 1: Deterministic specialist domain match when entering fresh (0 consecutive failures)
+        if fail_rounds == 0:
+            spec_mid, spec_reason = classify_specialist_domain(messages, self.backends)
+            if spec_mid is not None:
+                telem["route_reason"] = spec_reason
+                telem["specialist_routed"] = spec_mid
+                out_spec = self._run(
+                    spec_mid,
+                    "specialist-primary",
+                    messages,
+                    tools,
+                    tool_choice,
+                    params,
+                    None if tools_active else streamer,
+                )
+                steps.append(out_spec)
+                if streamer is not None and tools_active:
+                    streamer.feed(out_spec.parsed.content)
+                return out_spec
+
+            # Trivial <400-char triage / formatting -> LFM3-Omni-2B (0.83 GB)
+            std_mid, std_reason = classify_standard(messages, tools, tool_choice)
+            if std_mid == "lfm3-omni-2b":
+                telem["route_reason"] = std_reason
+                out_omni = self._run("lfm3-omni-2b", "cluster-triage", messages, tools, tool_choice, params, streamer)
+                steps.append(out_omni)
+                return out_omni
+
+        # Layer 3: Objective Verifier-Gated Multi-Tier Escalation (1 failure -> Nemotron-120B, >=2 -> Kimi-2.8T)
+        if fail_rounds >= 2 and "kimi-k3" in self.backends:
+            telem["escalations"] = 2
+            telem["escalation_tier"] = "kimi-k3"
+            telem["escalation_reason"] = "consecutive_tool_failures"
+            telem["escalation_marker"] = marker
+            final = self._run("kimi-k3", "cluster-tier3-kimi", messages, tools, tool_choice, params, streamer)
+            steps.append(final)
+            return final
+
+        if fail_rounds == 1:
+            telem["escalations"] = 1
+            telem["escalation_tier"] = "nemotron-3.5-super-vl"
+            telem["escalation_reason"] = "tool_failure"
+            telem["escalation_marker"] = marker
+            esc_msgs = messages
+            use_clean = (
+                bool(body["x_clover_clean_slate_cascade"])
+                if "x_clover_clean_slate_cascade" in body
+                else os.environ.get("CLOVER_CASCADE_CLEAN_SLATE", "1") != "0"
+            )
+            if use_clean:
+                esc_msgs, stripped = self._clean_slate_escalation_messages(messages, tools_active)
+                telem["clean_slate_escalation"] = stripped
+            second = self._run(
+                "nemotron-3.5-super-vl",
+                "cluster-tier2-nemotron",
+                esc_msgs,
+                tools,
+                tool_choice,
+                params,
+                None if tools_active else streamer,
+            )
+            steps.append(second)
+            if second.retried and self._invalid(second) and "kimi-k3" in self.backends:
+                telem["escalations"] = 2
+                telem["escalation_tier"] = "kimi-k3"
+                telem["escalation_reason"] = "invalid_tool_call_after_nemotron_retry"
+                third = self._run("kimi-k3", "cluster-tier3-kimi", messages, tools, tool_choice, params, streamer)
+                steps.append(third)
+                return third
+            if streamer is not None and tools_active:
+                streamer.feed(second.parsed.content)
+            return second
+
+        # Layer 2: Default fast coordinator (`clover-35b-a3b` = `Qwen3.6-35B-A3B`)
+        telem["route_reason"] = "cluster_coordinator_35b"
+        first = self._run(
+            "clover-35b-a3b",
+            "cluster-tier1-35b",
+            messages,
+            tools,
+            tool_choice,
+            params,
+            None if tools_active else streamer,
+        )
+        steps.append(first)
+        if first.retried and self._invalid(first):
+            telem["escalations"] = 1
+            telem["escalation_tier"] = "nemotron-3.5-super-vl"
+            telem["escalation_reason"] = "invalid_tool_call_after_retry"
+            second = self._run("nemotron-3.5-super-vl", "cluster-tier2-nemotron", messages, tools, tool_choice, params, streamer)
+            steps.append(second)
+            return second
+        if streamer is not None and tools_active:
             streamer.feed(first.parsed.content)
         return first
 

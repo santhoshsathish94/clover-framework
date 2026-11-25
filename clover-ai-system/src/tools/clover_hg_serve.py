@@ -192,6 +192,7 @@ def main() -> None:
     ap.add_argument("--api-key", default=os.environ.get("CLOVER_GATEWAY_API_KEY", ""))
     ap.add_argument("--rebuild", action="store_true", help="Force recompiling C11 / CUDA shared libraries")
     ap.add_argument("--build-only", action="store_true", help="Compile shared libraries (and optionally verify) without starting HTTP server")
+    ap.add_argument("--download-only", action="store_true", help="Download HG model weights (and compile shared libraries) without starting HTTP server")
     args = ap.parse_args()
 
     raw_models = list(MODEL_REGISTRY.keys()) if args.model.strip().lower() == "all" else [m.strip().lower() for m in args.model.split(",") if m.strip()]
@@ -223,6 +224,10 @@ def main() -> None:
         if mid == "kimi-k3":
             os.environ["CLOVER_KIMI_COLD_DIR"] = str(mdir)
         print(f"[clover-hg] Ready `{mid}` -> `{mdir}` ({MODEL_REGISTRY[mid]['size_note']})", flush=True)
+
+    if args.download_only:
+        print(f"[clover-hg] Download + build complete in `{args.cache_dir}` for models: {', '.join(models)}", flush=True)
+        return
 
     gw_dir = src_root / "tools" / "hg4-fusion-gateway"
     sys.path.insert(0, str(gw_dir))

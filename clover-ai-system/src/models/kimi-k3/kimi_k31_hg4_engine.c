@@ -194,8 +194,9 @@ typedef struct {
 
 typedef struct {
     k31_mmap_t     mf;          /* Hot HG4-16R mmap (`K31H` or legacy `K31E`) */
+    k31_mmap_t     cold_mf;     /* Optional Cold HG2-16R mmap when `CLOVER_PIN_COLD_VRAM=1` */
     int            loaded;
-    int            is_hybrid;   /* 1 = K31H (hot HG4 mmap + cold HG2 pread), 0 = K31E */
+    int            is_hybrid;   /* 1 = K31H (hot HG4 mmap + cold HG2 pread/VRAM), 0 = K31E */
     uint32_t       n_cached;    /* 896 when is_hybrid == 1 */
     uint32_t       n_hot;
     uint32_t       n_cold;
@@ -204,6 +205,7 @@ typedef struct {
     const int16_t *slot_map;    /* [896]: >=0 -> hot idx, <0 -> -1 - cold idx */
     const float   *pre_diag_up; /* [3584] */
     const uint8_t *exp_base;    /* hot HG4 base pointer */
+    const uint8_t *cold_base;   /* cold HG2 base pointer when mmap'd for GPU VRAM pinning */
 #ifdef _WIN32
     HANDLE         cold_fh;
 #else
@@ -1298,37 +1300,64 @@ static void k31_run_moe(const k31_moe_trunk_t *m, k31_experts_t *ex, const float
         }
     }
 
-    /* 2. Fused 16-Lane Dynamic `pread + GEMV` Pipeline with Deterministic Fixed-Order Reduction (`ci = 0..n_cold_act-1`) */
+    /* 2. Cold HG2-16R experts: dispatch to GPU VRAM when pinned (`cold_base != NULL`), else 16-lane `pread + GEMV` */
     if (n_cold_act > 0) {
-        const int nw = (n_cold_act < 16) ? n_cold_act : 16;
-        /* Process in chunks of at most 32 experts so per-expert deterministic output buffer stays <= ~20 MB even at large T */
-        for (int c_base = 0; c_base < n_cold_act; c_base += 32) {
-            const int c_cnt = (c_base + 32 <= n_cold_act) ? 32 : (n_cold_act - c_base);
-            float *lat_per_exp = (float *)calloc((size_t)c_cnt * (size_t)T * K31_LATENT, sizeof(float));
-
-            #pragma omp parallel num_threads(nw)
-            {
-                int tid = omp_get_thread_num();
-                uint8_t *my_stage = g_k31.cold_stage_buf + (size_t)tid * (size_t)ex->cold_stride;
-
-                #pragma omp for schedule(dynamic, 1)
-                for (int rel = 0; rel < c_cnt; rel++) {
-                    int e = cold_active[c_base + rel];
-                    int cslot = -1 - (int)ex->slot_map[e];
-                    float *exp_lat = lat_per_exp + (size_t)rel * (size_t)T * K31_LATENT;
-                    if (k31_pread_cold(ex, cslot, my_stage) == 0) {
-                        k31_eval_expert_batch(my_stage, 1, ex->pre_diag_up, x_xq, x_xsc, x_xsum,
-                                              grp_tok + off_e[e], grp_w + off_e[e], cnt[e], exp_lat, 0);
-                    }
+        int k31_cold_gpu_done = 0;
+        if (ex->cold_base != NULL) {
+            int n_cp = 0;
+            for (int ci = 0; ci < n_cold_act; ci++) n_cp += cnt[cold_active[ci]];
+            int   *cp_tok  = (int *)malloc((size_t)n_cp * sizeof(int));
+            int   *cp_slot = (int *)malloc((size_t)n_cp * sizeof(int));
+            float *cp_w    = (float *)malloc((size_t)n_cp * sizeof(float));
+            int cur_cp = 0;
+            for (int ci = 0; ci < n_cold_act; ci++) {
+                int e = cold_active[ci];
+                int cslot = -1 - (int)ex->slot_map[e];
+                for (int j = 0; j < cnt[e]; j++) {
+                    cp_tok[cur_cp]  = grp_tok[off_e[e] + j];
+                    cp_slot[cur_cp] = cslot;
+                    cp_w[cur_cp]    = grp_w[off_e[e] + j];
+                    cur_cp++;
                 }
             }
+            k31_cold_gpu_done = hg_cuda_dispatch_moe_pairs(
+                ex->cold_base, ex->n_cold, ex->cold_stride,
+                344064u, 5849088u, 6144u, K31_LATENT, K31_LATENT, K31_EXP_INTER, 2u, 2, 0,
+                x_xq, x_xsc, T, cp_tok, cp_slot, cp_w, n_cp, lat_acc);
+            free(cp_tok); free(cp_slot); free(cp_w);
+        }
 
-            /* Strictly ascending expert reduction (`rel = 0 .. c_cnt - 1`) guarantees 100% run-to-run bit-exact determinism */
-            for (int rel = 0; rel < c_cnt; rel++) {
-                const float *src = lat_per_exp + (size_t)rel * (size_t)T * K31_LATENT;
-                for (int i = 0; i < T * K31_LATENT; i++) lat_acc[i] += src[i];
+        if (!k31_cold_gpu_done) {
+            const int nw = (n_cold_act < 16) ? n_cold_act : 16;
+            /* Process in chunks of at most 32 experts so per-expert deterministic output buffer stays <= ~20 MB even at large T */
+            for (int c_base = 0; c_base < n_cold_act; c_base += 32) {
+                const int c_cnt = (c_base + 32 <= n_cold_act) ? 32 : (n_cold_act - c_base);
+                float *lat_per_exp = (float *)calloc((size_t)c_cnt * (size_t)T * K31_LATENT, sizeof(float));
+
+                #pragma omp parallel num_threads(nw)
+                {
+                    int tid = omp_get_thread_num();
+                    uint8_t *my_stage = g_k31.cold_stage_buf + (size_t)tid * (size_t)ex->cold_stride;
+
+                    #pragma omp for schedule(dynamic, 1)
+                    for (int rel = 0; rel < c_cnt; rel++) {
+                        int e = cold_active[c_base + rel];
+                        int cslot = -1 - (int)ex->slot_map[e];
+                        float *exp_lat = lat_per_exp + (size_t)rel * (size_t)T * K31_LATENT;
+                        if (k31_pread_cold(ex, cslot, my_stage) == 0) {
+                            k31_eval_expert_batch(my_stage, 1, ex->pre_diag_up, x_xq, x_xsc, x_xsum,
+                                                  grp_tok + off_e[e], grp_w + off_e[e], cnt[e], exp_lat, 0);
+                        }
+                    }
+                }
+
+                /* Strictly ascending expert reduction (`rel = 0 .. c_cnt - 1`) guarantees 100% run-to-run bit-exact determinism */
+                for (int rel = 0; rel < c_cnt; rel++) {
+                    const float *src = lat_per_exp + (size_t)rel * (size_t)T * K31_LATENT;
+                    for (int i = 0; i < T * K31_LATENT; i++) lat_acc[i] += src[i];
+                }
+                free(lat_per_exp);
             }
-            free(lat_per_exp);
         }
     }
 
@@ -1414,6 +1443,7 @@ static size_t parse_moe_tail_k31(const uint8_t *p, size_t off, k31_moe_trunk_t *
 static void close_k31_experts(k31_experts_t *ex) {
     if (!ex || !ex->loaded) return;
     k31_mmap_close(&ex->mf);
+    if (ex->cold_mf.ptr) k31_mmap_close(&ex->cold_mf);
 #ifdef _WIN32
     if (ex->is_hybrid && ex->cold_fh != INVALID_HANDLE_VALUE) CloseHandle(ex->cold_fh);
 #else
@@ -1496,6 +1526,12 @@ static int open_k31_experts(const char *hg4_dir, int layer_id, k31_experts_t *ex
         return -4;
     }
 #endif
+    const char *pin_cold = getenv("CLOVER_PIN_COLD_VRAM");
+    if (ex->n_cold > 0 && pin_cold && strcmp(pin_cold, "1") == 0) {
+        if (k31_mmap_open(cold_path, &ex->cold_mf) == 0) {
+            ex->cold_base = (const uint8_t *)ex->cold_mf.ptr;
+        }
+    }
     ex->loaded = 1;
     return 0;
 }
@@ -1567,15 +1603,14 @@ static int open_k31_dspark(const char *path, k31_dspark_t *ds) {
 
 K31_API void kimi_k31_cache_reset(void);
 
-K31_API int kimi_k31_hg4_init(const char *hg4_dir) {
-    if (g_k31.ready && strcmp(g_k31.loaded_dir, hg4_dir) == 0) return 0;
+K31_API int kimi_k31_hg4_init_range(const char *hg4_dir, int l_lo, int l_hi, int need_emb, int need_head) {
     kimi_k31_cache_reset();
     if (g_k31.ready) {
-        k31_mmap_close(&g_k31.emb_mf);
-        k31_mmap_close(&g_k31.lm_mf);
+        if (g_k31.emb_mf.ptr) k31_mmap_close(&g_k31.emb_mf);
+        if (g_k31.lm_mf.ptr)  k31_mmap_close(&g_k31.lm_mf);
         if (g_k31.dspark.loaded) k31_mmap_close(&g_k31.dspark.mf);
         for (int l = 0; l < g_k31.n_layers; l++) {
-            k31_mmap_close(&g_k31.layers[l].mf);
+            if (g_k31.layers[l].mf.ptr) k31_mmap_close(&g_k31.layers[l].mf);
             close_k31_experts(&g_k31.layers[l].ex);
         }
         g_k31.ready = 0;
@@ -1598,6 +1633,9 @@ K31_API int kimi_k31_hg4_init(const char *hg4_dir) {
 
     g_k31.n_layers = (int)hdr[1];
     if (g_k31.n_layers <= 0 || g_k31.n_layers > K31_MAX_LAYERS) return -2;
+    if (l_lo < 0) l_lo = 0;
+    if (l_hi > g_k31.n_layers) l_hi = g_k31.n_layers;
+
     for (int i = 0; i < 16; i++) {
         int sv = (int)g_k31.lut16_u8[i] - 128;
         g_k31.lut16_s8[i] = (int8_t)sv;
@@ -1608,15 +1646,20 @@ K31_API int kimi_k31_hg4_init(const char *hg4_dir) {
     g_k31.lut4_s8[0] = -127; g_k31.lut4_s8[1] = -38; g_k31.lut4_s8[2] = 38; g_k31.lut4_s8[3] = 127;
     for (int i = 0; i < 4; i++) g_k31.lut4_u8[i] = (uint8_t)((int)g_k31.lut4_s8[i] + 128);
 
-    snprintf(path, sizeof(path), "%s/embed_tokens.hg4", hg4_dir);
-    if (k31_mmap_open(path, &g_k31.emb_mf) != 0) return -3;
-    parse_k31_mat((const uint8_t *)g_k31.emb_mf.ptr, &g_k31.emb_mat);
-
-    snprintf(path, sizeof(path), "%s/lm_head.hg4", hg4_dir);
-    if (k31_mmap_open(path, &g_k31.lm_mf) != 0) return -4;
-    parse_k31_mat((const uint8_t *)g_k31.lm_mf.ptr, &g_k31.lm_mat);
+    if (need_emb) {
+        snprintf(path, sizeof(path), "%s/embed_tokens.hg4", hg4_dir);
+        if (k31_mmap_open(path, &g_k31.emb_mf) != 0) return -3;
+        parse_k31_mat((const uint8_t *)g_k31.emb_mf.ptr, &g_k31.emb_mat);
+    }
+    if (need_head) {
+        snprintf(path, sizeof(path), "%s/lm_head.hg4", hg4_dir);
+        if (k31_mmap_open(path, &g_k31.lm_mf) != 0) return -4;
+        parse_k31_mat((const uint8_t *)g_k31.lm_mf.ptr, &g_k31.lm_mat);
+    }
 
     for (int l = 0; l < g_k31.n_layers; l++) {
+        memset(&g_k31.layers[l], 0, sizeof(g_k31.layers[l]));
+        if (l < l_lo || l >= l_hi) continue;
         k31_layer_t *lyr = &g_k31.layers[l];
         snprintf(path, sizeof(path), "%s/layer_%02d.hg4", hg4_dir, l);
         if (k31_mmap_open(path, &lyr->mf) != 0) return -(100 + l);
@@ -1681,8 +1724,10 @@ K31_API int kimi_k31_hg4_init(const char *hg4_dir) {
         }
     }
 
-    snprintf(path, sizeof(path), "%s/dspark.hg4", hg4_dir);
-    open_k31_dspark(path, &g_k31.dspark);
+    if (need_head) {
+        snprintf(path, sizeof(path), "%s/dspark.hg4", hg4_dir);
+        open_k31_dspark(path, &g_k31.dspark);
+    }
 
     if (!g_k31.scr_xq) {
         g_k31.scr_xq   = (int8_t *)malloc((size_t)K31_PANEL_MAX * 35840);
@@ -1690,14 +1735,21 @@ K31_API int kimi_k31_hg4_init(const char *hg4_dir) {
         g_k31.scr_xsum = (int32_t *)malloc((size_t)K31_PANEL_MAX * (35840 / 128) * sizeof(int32_t));
     }
     uint32_t max_cold_stride = 8785928u;
-    for (int l = 0; l < g_k31.n_layers; l++) {
+    for (int l = l_lo; l < l_hi; l++) {
         if (g_k31.layers[l].ex.cold_stride > max_cold_stride) max_cold_stride = g_k31.layers[l].ex.cold_stride;
     }
     if (g_k31.cold_stage_buf) free(g_k31.cold_stage_buf);
     g_k31.cold_stage_buf = (uint8_t *)malloc((size_t)16 * (size_t)max_cold_stride);
-    snprintf(g_k31.loaded_dir, sizeof(g_k31.loaded_dir), "%s", hg4_dir);
+    snprintf(g_k31.loaded_dir, sizeof(g_k31.loaded_dir), "%s[%d:%d]", hg4_dir, l_lo, l_hi);
     g_k31.ready = 1;
     return 0;
+}
+
+K31_API int kimi_k31_hg4_init(const char *hg4_dir) {
+    char key[1080];
+    snprintf(key, sizeof(key), "%s[0:%d]", hg4_dir, K31_MAX_LAYERS);
+    if (g_k31.ready && strcmp(g_k31.loaded_dir, key) == 0) return 0;
+    return kimi_k31_hg4_init_range(hg4_dir, 0, K31_MAX_LAYERS, 1, 1);
 }
 
 /* Forward selected Kimi K3.1 Pro layers and optionally extract DSpark's 5 target features `[L7, L23, L67, L83, L91]` (`[T, 35840]`) */
@@ -2922,5 +2974,184 @@ K31_API int kimi_k31_generate_speculative(
     free(h_step);
     free(lg_st);
     return gen_n;
+}
+
+/* ============================================================================================================
+ * Multi-Node Distributed Pipeline-Parallel C ABI (`Node_s` owns `[l_lo, l_hi)` in VRAM; <1 MB TCP state hops)
+ * ============================================================================================================ */
+
+K31_API void kimi_k31_pipeline_embed(const int *token_ids, int T, float *out_prefix_sum) {
+    #pragma omp parallel for schedule(static) if (T >= 4)
+    for (int t = 0; t < T; t++) {
+        k31_embed_lookup_row(&g_k31.emb_mat, token_ids[t], out_prefix_sum + (size_t)t * K31_D);
+    }
+}
+
+K31_API void kimi_k31_pipeline_forward_range(
+    int l_lo, int l_hi, int base_pos, int T, int save_for_rollback,
+    float *io_prefix_sum, float *io_delta, int *io_has_delta,
+    float *io_blocks, float *io_dspark_feats_35840, uint8_t *io_feat_mask_5
+) {
+    if (!g_k31.ready || T <= 0 || l_lo >= l_hi) return;
+    if (l_lo < 0) l_lo = 0;
+    if (l_hi > g_k31.n_layers) l_hi = g_k31.n_layers;
+    if (l_lo >= l_hi) return;
+
+    int range_lids[K31_MAX_LAYERS] = {0};
+    int n_sel = 0;
+    for (int l = l_lo; l < l_hi; l++) range_lids[n_sel++] = l;
+    k31_cache_ensure_cap(base_pos + T + 16, range_lids, n_sel);
+
+    float *nxt_delta = (float *)malloc((size_t)T * K31_D * sizeof(float));
+    float *mixed     = (float *)malloc((size_t)T * K31_D * sizeof(float));
+    float *u         = (float *)malloc((size_t)T * K31_D * sizeof(float));
+    float *attn_proj = (float *)malloc((size_t)T * K31_D * sizeof(float));
+    float *post      = (float *)malloc((size_t)T * K31_D * sizeof(float));
+
+    const int tgt_lids[5] = {7, 23, 67, 83, 91};
+    int has_delta = *io_has_delta;
+
+    for (int lid = l_lo; lid < l_hi; lid++) {
+        k31_layer_t *lyr = &g_k31.layers[lid];
+        const int is_write    = (lid % K31_ATTN_RES_BLK == 0) ? 1 : 0;
+        const int write_idx   = lid / K31_ATTN_RES_BLK;
+        const int prev_blocks = (lid + K31_ATTN_RES_BLK - 1) / K31_ATTN_RES_BLK;
+        const int mlp_blocks  = prev_blocks + is_write;
+
+        if (has_delta) {
+            for (int idx = 0; idx < T * K31_D; idx++) io_prefix_sum[idx] += io_delta[idx];
+        }
+        if (is_write && write_idx < K31_MAX_BLOCKS) {
+            for (int t = 0; t < T; t++) {
+                memcpy(io_blocks + ((size_t)t * K31_MAX_BLOCKS + (size_t)write_idx) * K31_D,
+                       io_prefix_sum + (size_t)t * K31_D, K31_D * sizeof(float));
+            }
+        }
+        k31_attn_res_mix(io_blocks, prev_blocks, io_prefix_sum, lyr->sa_rn, lyr->sa_rp, mixed, T);
+        rms_norm_batch(mixed, lyr->in_ln, u, T, K31_D, 1e-5f);
+
+        if (lyr->kind == 2) k31_run_dsa_cached(&lyr->dsa, &g_k31_cache.dsa[lid], u, attn_proj, base_pos, T);
+        else                k31_run_kda_cached(&lyr->kda, &g_k31_cache.kda[lid], u, attn_proj, base_pos, T, save_for_rollback);
+
+        if (is_write) {
+            memcpy(io_prefix_sum, attn_proj, (size_t)T * K31_D * sizeof(float));
+        } else {
+            for (int idx = 0; idx < T * K31_D; idx++) io_prefix_sum[idx] += attn_proj[idx];
+        }
+        k31_attn_res_mix(io_blocks, mlp_blocks, io_prefix_sum, lyr->mlp_rn, lyr->mlp_rp, mixed, T);
+        rms_norm_batch(mixed, lyr->post_ln, post, T, K31_D, 1e-5f);
+
+        if (lyr->kind == 0) {
+            float *dhid = (float *)malloc((size_t)T * K31_DENSE_INT * sizeof(float));
+            k31_matmul(&lyr->dense_w13, post, dhid, T, 2, 1);
+            k31_matmul(&lyr->dense_dn,  dhid, nxt_delta, T, 0, 1);
+            free(dhid);
+        } else {
+            k31_run_moe(&lyr->moe, &lyr->ex, post, nxt_delta, T);
+        }
+
+        memcpy(io_delta, nxt_delta, (size_t)T * K31_D * sizeof(float));
+        has_delta = 1;
+
+        if (io_dspark_feats_35840 && io_feat_mask_5) {
+            for (int m = 0; m < 5; m++) {
+                if (lid == tgt_lids[m]) {
+                    io_feat_mask_5[m] = 1;
+                    for (int t = 0; t < T; t++) {
+                        float *dst = io_dspark_feats_35840 + ((size_t)t * 5 + (size_t)m) * K31_D;
+                        const float *ps = io_prefix_sum + (size_t)t * K31_D;
+                        const float *dl = io_delta      + (size_t)t * K31_D;
+                        for (int d = 0; d < K31_D; d++) dst[d] = ps[d] + dl[d];
+                    }
+                }
+            }
+        }
+    }
+
+    *io_has_delta = has_delta;
+    free(nxt_delta); free(mixed); free(u); free(attn_proj); free(post);
+}
+
+K31_API void kimi_k31_pipeline_tail_logits(
+    int max_lid, int T, int logits_last_only,
+    float *io_prefix_sum, const float *delta, int has_delta,
+    const float *blocks, float *io_dspark_feats_35840, const uint8_t *feat_mask_5,
+    int *out_top1_tokens
+) {
+    if (has_delta) {
+        for (int idx = 0; idx < T * K31_D; idx++) io_prefix_sum[idx] += delta[idx];
+    }
+    if (io_dspark_feats_35840 && feat_mask_5) {
+        for (int m = 0; m < 5; m++) {
+            if (!feat_mask_5[m]) {
+                for (int t = 0; t < T; t++) {
+                    memcpy(io_dspark_feats_35840 + ((size_t)t * 5 + (size_t)m) * K31_D,
+                           io_prefix_sum + (size_t)t * K31_D, K31_D * sizeof(float));
+                }
+            }
+        }
+    }
+
+    int final_blocks = (max_lid + 1 + K31_ATTN_RES_BLK - 1) / K31_ATTN_RES_BLK;
+    if (final_blocks > K31_MAX_BLOCKS) final_blocks = K31_MAX_BLOCKS;
+
+    int eval_T = logits_last_only ? 1 : T;
+    int t_off  = logits_last_only ? (T - 1) : 0;
+    float *agg_final = (float *)malloc((size_t)eval_T * K31_D * sizeof(float));
+    float *fin_norm  = (float *)malloc((size_t)eval_T * K31_D * sizeof(float));
+    float *lg        = (float *)malloc((size_t)eval_T * K31_VOCAB * sizeof(float));
+
+    k31_attn_res_mix(
+        blocks + (size_t)t_off * K31_MAX_BLOCKS * K31_D,
+        final_blocks,
+        io_prefix_sum + (size_t)t_off * K31_D,
+        g_k31.out_res_norm, g_k31.out_res_proj, agg_final, eval_T
+    );
+    rms_norm_batch(agg_final, g_k31.norm_w, fin_norm, eval_T, K31_D, 1e-5f);
+    k31_matmul(&g_k31.lm_mat, fin_norm, lg, eval_T, 0, 1);
+
+    for (int i = 0; i < eval_T; i++) {
+        out_top1_tokens[i] = k31_argmax_f32(lg + (size_t)i * K31_VOCAB, K31_VOCAB);
+    }
+
+    free(agg_final); free(fin_norm); free(lg);
+}
+
+K31_API void kimi_k31_pipeline_rollback_range(int l_lo, int l_hi, int base_pos, int keep_n) {
+    if (l_lo < 0) l_lo = 0;
+    if (l_hi > g_k31.n_layers) l_hi = g_k31.n_layers;
+    for (int lid = l_lo; lid < l_hi; lid++) {
+        if (g_k31.layers[lid].kind != 2 && g_k31_cache.kda[lid].S) {
+            k31_rollback_kda_keep(&g_k31_cache.kda[lid], base_pos, keep_n);
+        }
+    }
+}
+
+K31_API int kimi_k31_pipeline_dspark_draft(
+    int cur_tok, int cur_len, int K_max, float conf_thresh, int eos_id,
+    const float *new_feats_35840, int n_new_feats, int *out_drafts
+) {
+    if (!g_k31.dspark.loaded || K_max <= 0) return 0;
+    if (K_max > 5) K_max = 5;
+    int need_cap = cur_len + K_max + 16;
+    if (need_cap > g_k31_cache.alloc_cap) {
+        int new_cap = g_k31_cache.alloc_cap ? g_k31_cache.alloc_cap : 1536;
+        while (new_cap < need_cap) new_cap *= 2;
+        for (int dl = 0; dl < K31_DS_LAYERS; dl++) {
+            g_k31_cache.ds_k[dl] = (float *)realloc(g_k31_cache.ds_k[dl], (size_t)new_cap * 1024 * sizeof(float));
+            g_k31_cache.ds_v[dl] = (float *)realloc(g_k31_cache.ds_v[dl], (size_t)new_cap * 1024 * sizeof(float));
+        }
+        g_k31_cache.alloc_cap = new_cap;
+    }
+    if (n_new_feats > 0 && new_feats_35840) {
+        k31_dspark_commit_ctx_kv(new_feats_35840, cur_len - n_new_feats, n_new_feats);
+    }
+    float confs[8];
+    k31_dspark_draft_query_block(cur_tok, cur_len, K_max, out_drafts, confs);
+    int K = 1;
+    while (K < K_max && confs[K - 1] >= conf_thresh && out_drafts[K - 1] != eos_id) {
+        K++;
+    }
+    return K;
 }
 

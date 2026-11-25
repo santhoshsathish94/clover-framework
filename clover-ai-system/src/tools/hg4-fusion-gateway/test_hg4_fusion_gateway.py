@@ -870,6 +870,85 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
         )
         self.assertEqual(len(be35._splice), splice_before)
 
+    def test_cluster_specialist_and_three_tier_cascade(self):
+        import gateway as GW
+
+        # 1. Layer-1 Deterministic Specialist Input-Type Gate (Lean 4, FASTA/Boltz-2, Video/V-JEPA, Time-Series/Chronos-2)
+        cluster_backends = B.build_backends("mock", include_specialists=True)
+        c_router = FR.FusionRouter(cluster_backends)
+
+        c_lean = c_router.complete({
+            "model": "clover-fusion-cluster",
+            "messages": [{"role": "user", "content": "import Mathlib\ntheorem add_zero_right (n : Nat) : n + 0 = n := by"}],
+        })
+        self.assertEqual(c_lean.telemetry["served_by"], "goedel-prover-v2-32b")
+        self.assertEqual(c_lean.telemetry["specialist_routed"], "goedel-prover-v2-32b")
+
+        c_bio = c_router.complete({
+            "model": "clover-fusion-cluster",
+            "messages": [{"role": "user", "content": ">sp|P01308|INS_HUMAN\nMALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKT"}],
+        })
+        self.assertEqual(c_bio.telemetry["served_by"], "boltz-2")
+
+        c_vid = c_router.complete({
+            "model": "clover-fusion-cluster",
+            "messages": [{"role": "user", "content": "Given lab_experiment.mp4, predict the collision trajectory of the glass."}],
+        })
+        self.assertEqual(c_vid.telemetry["served_by"], "vjepa-2.1")
+
+        c_ts = c_router.complete({
+            "model": "clover-fusion-cluster",
+            "messages": [{"role": "user", "content": "Forecast next 12 steps for time-series: 10.2, 11.4, 12.1, 13.0, 14.5, 15.2, 16.8, 17.1, 18.4, 19.9"}],
+        })
+        self.assertEqual(c_ts.telemetry["served_by"], "chronos-2")
+
+        # 2. Layer-2 Default Coding Turn -> `clover-35b-a3b` (`qwen3.6-35b-a3b` alias also resolves cleanly)
+        self.assertEqual(FR.canonical_model("qwen3.6-35b-a3b"), "clover-35b-a3b")
+        c_t0 = c_router.complete({
+            "model": "clover-fusion-cluster",
+            "tools": TOOLS,
+            "messages": [{"role": "user", "content": "Implement `def rk4_step(f, t, y, h):` in solver.py."}],
+        })
+        self.assertEqual(c_t0.telemetry["served_by"], "clover-35b-a3b")
+        self.assertEqual(c_t0.telemetry["escalations"], 0)
+
+        # 3. Layer-3 Tier-2 Escalation: 1 objective verifier failure -> `nemotron-3.5-super-vl` (120B)
+        msgs_1fail = [
+            {"role": "user", "content": "Implement `def rk4_step(f, t, y, h):` in solver.py."},
+            {"role": "assistant", "content": "", "tool_calls": [{"id": "c1", "type": "function", "function": {"name": "bash", "arguments": "{\"command\":\"pytest\"}"}}]},
+            {"role": "tool", "tool_call_id": "c1", "content": "AssertionError: max error 1.4e-2 > 1e-8\n1 failed in 0.12s"},
+        ]
+        c_t1 = c_router.complete({"model": "clover-fusion-cluster", "tools": TOOLS, "messages": msgs_1fail})
+        self.assertEqual(c_t1.telemetry["served_by"], "nemotron-3.5-super-vl")
+        self.assertEqual(c_t1.telemetry["escalations"], 1)
+
+        # 4. Layer-3 Tier-3 Escalation: 2 consecutive objective verifier failures (both 35B and 120B failed) -> `kimi-k3` (2.8T)
+        msgs_2fail = msgs_1fail + [
+            {"role": "assistant", "content": "", "tool_calls": [{"id": "c2", "type": "function", "function": {"name": "bash", "arguments": "{\"command\":\"pytest\"}"}}]},
+            {"role": "tool", "tool_call_id": "c2", "content": "Traceback (most recent call last):\nValueError: shape mismatch (4,) vs (2,)"},
+        ]
+        c_t2 = c_router.complete({"model": "clover-fusion-cluster", "tools": TOOLS, "messages": msgs_2fail})
+        self.assertEqual(c_t2.telemetry["served_by"], "kimi-k3")
+        self.assertEqual(c_t2.telemetry["escalations"], 2)
+
+        # 5. RemoteOpenAIBackend HTTP <1 MB hop test over live loopback gateway
+        sub_srv, _ = GW.serve_in_thread(FR.FusionRouter(B.build_backends("mock", include_specialists=True)))
+        try:
+            sub_url = f"http://127.0.0.1:{sub_srv.server_address[1]}"
+            rem_backends = B.build_backends("mock")
+            rem_backends["goedel-prover-v2-32b"] = B.RemoteOpenAIBackend("goedel-prover-v2-32b", sub_url, family="goedel32b")
+            rem_router = FR.FusionRouter(rem_backends)
+            c_rem = rem_router.complete({
+                "model": "clover-fusion-cluster",
+                "messages": [{"role": "user", "content": "```lean\ntheorem demo : 1 + 1 = 2 := by\n```"}],
+            })
+            self.assertEqual(c_rem.telemetry["served_by"], "goedel-prover-v2-32b")
+            self.assertEqual(c_rem.telemetry["steps"][0]["backend_kind"], "remote-http")
+            self.assertIn("[goedel-prover-v2-32b]", c_rem.content)
+        finally:
+            sub_srv.shutdown()
+            sub_srv.server_close()
+
 
 # ====================================================================================================================
 _OMNI = B.discover_paths()["lfm3-omni-2b"]
