@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Studio — Clover</title>
-<meta name="description" content="Clover AI Studio runs open-weight models on your phone, laptop, or server with local memory, relationships, tools, and continuous reasoning.">
+<title>AI Studio (In Progress) — Clover</title>
+<meta name="description" content="Clover AI Studio is currently in active engineering: uniting a 5-Petal Clover Leaf team of HG-compressed specialist models under AGENTS.md accountability, MCP 2.0 batching, and local-first privacy.">
 <link rel="canonical" href="https://cloverframework.com/ai-system/">
-<meta property="og:title" content="AI Studio — Clover">
-<meta property="og:description" content="One system. Any open-weight model. Download Clover AI Studio for Windows and Android or launch on the Web.">
+<meta property="og:title" content="AI Studio (In Progress) — Clover">
+<meta property="og:description" content="How Clover is turning the five broken AI myths into a real, self-hosted specialist AI studio — actively under build and verification.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cloverframework.com/ai-system/">
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
@@ -16,6 +16,57 @@
 <link rel="icon" type="image/svg+xml" href="../clover-leaf-favicon.svg">
 <link rel="stylesheet" href="../botanical-design-system.css?v=5.0.7">
 <script>document.documentElement.className = 'js';</script>
+<style>
+  .wip-pill {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--warn);
+    background: var(--warn-soft);
+    border: 1px solid var(--warn-line);
+    padding: 0.28rem 0.8rem;
+    border-radius: var(--radius-pill);
+    margin-bottom: 0.9rem;
+  }
+  .status-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.2rem;
+    margin-top: 1.4rem;
+  }
+  @media (max-width: 760px) {
+    .status-list { grid-template-columns: 1fr; }
+  }
+  .status-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.35rem 1.5rem;
+    box-shadow: var(--shadow-xs);
+  }
+  .status-tag {
+    display: inline-block;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.18rem 0.6rem;
+    border-radius: var(--radius-pill);
+    margin-bottom: 0.55rem;
+  }
+  .status-tag--done {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+  }
+  .status-tag--active {
+    color: var(--warn);
+    background: var(--warn-soft);
+    border: 1px solid var(--warn-line);
+  }
+</style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -23,6 +74,12 @@
 <svg class="clover-sprite" width="0" height="0" aria-hidden="true" focusable="false">
   <defs>
     <path id="clover-leaf" d="M50 44C48 35 38 31 38 21C38 12 46 9 50 17C54 9 62 12 62 21C62 31 52 35 50 44Z"/>
+    <path id="clover-vein" d="M45.9 23.4C47.6 25 48.9 26.1 50 26.8C51.1 26.1 52.4 25 54.1 23.4"/>
+    <linearGradient id="leaf-revive" x1="0.18" y1="0.05" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#5fa79b"/>
+      <stop offset="0.55" stop-color="#3f8a7d"/>
+      <stop offset="1" stop-color="#2c6f64"/>
+    </linearGradient>
   </defs>
 </svg>
 
@@ -43,9 +100,8 @@
       <span class="nav-toggle__box" aria-hidden="true"><span></span></span>Menu
     </button>
     <nav class="site-nav" id="site-nav" aria-label="Primary">
-      <a href="../origin/">Origin</a>
+      <a href="../hg-format/">AI Mythbuster</a>
       <a href="../ai-system/" aria-current="page">AI Studio</a>
-      <a href="../hg-format/">HG Format</a>
       <a href="../getting-started/">AGENTS.md</a>
       <a href="../governance/">Governance</a>
       <a href="../privacy/">Privacy</a>
@@ -60,488 +116,75 @@
 
   <section class="hero" id="overview">
     <div class="wrap">
+      <span class="wip-pill">Work in Progress &middot; Active Engineering</span>
       <h1>AI Studio</h1>
-      <p class="hero__tagline">One system. Any open-weight model. Your phone, laptop, VS Code, or server.</p>
-      <p class="lede">An outcome does not come from which model you use. It comes from the system around it. Clover AI Studio wraps any open-weight model in local memory, relationships, verified tools, JEPA world-model planning, and multi-cycle <code>AGENTS.md</code> Outcome verification — running <code>LFM3-Omni-2B</code> (2B), <code>Clover-35B-A3B</code> (35B-A3B Block Diffusion MoE), <code>Nemotron 3.5 Super VL</code> (120B-A12B), and <code>Kimi K3.1 Pro</code> (2.8T MoE) across Windows, Android, Web, and VS Code Copilot Chat.</p>
-      <div class="actions">
-        <a class="btn btn--primary" href="../download/laptop/CloverAIStudio-Setup.exe" download="CloverAIStudio-Setup.exe">Download for Windows (.exe)</a>
-        <a class="btn btn--primary" href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Test on Google Play (Android)</a>
-        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.7/CloverAIStudio.apk">Download Android (.apk)</a>
-        <a class="btn" href="../clover-ai/">Open Web Studio &rarr;</a>
-        <a class="btn" href="../hg-format/">HG Format &amp; Conversion Guide &rarr;</a>
-        <a class="btn btn--plain" href="#vscode-integration">VS Code &amp; Copilot &darr;</a>
+      <p class="hero__tagline">Turning the five broken AI myths into a system you actually own.</p>
+      <p class="lede"><strong>Clover AI Studio is still under active development and verification.</strong> Rather than shipping a prototype dressed up as a finished product, we are proving each piece on real hardware first &mdash; shrinking specialist open models fourfold with <a href="../hg-format/">Clover <code>HG</code></a>, enforcing human accountability through <a href="../getting-started/"><code>AGENTS.md</code></a>, and keeping all personal memory on your own device.</p>
+      <div class="actions" style="margin-top:1.5rem">
+        <a class="btn btn--primary" href="../hg-format/">Read AI Mythbuster &rarr;</a>
+        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system">Follow Live Source on GitHub &rarr;</a>
+        <a class="btn btn--plain" href="https://huggingface.co/Santhoshsathish94">Converted HG Models &rarr;</a>
       </div>
     </div>
   </section>
 
-  <!-- ============ DOWNLOADS ============ -->
-  <section class="band" id="downloads">
+  <section class="band" id="build-status">
     <div class="wrap">
-      <h2>Run it on your device</h2>
-      <p class="lede">Install the native app on Windows or Android, use all four Clover models directly inside VS Code Copilot Chat, or launch it in your browser. All platforms share the same multi-cycle <code>AGENTS.md</code> verification loop, permissions, and 4-model switcher.</p>
+      <h2>What is proven today, and what is still in progress</h2>
+      <p class="lede">Every layer of Clover AI Studio must pass real-world hardware and outcome verification before we mark it ready.</p>
 
-      <div class="grid grid--3" style="margin-top:1.5rem">
-        <div class="card">
-          <h3>Windows Laptop + VS Code</h3>
-          <p><strong><code>CloverAIStudio-Setup.exe</code></strong> &middot; v5.0.7 (<code>9.73 MB</code>)</p>
-          <p>Runs <code>LFM3-Omni-2B</code> (C1) with <code>HybridAgent</code> &amp; <code>JEPA</code> (C2), <code>11-Level NCM</code> (C3), <code>S1&ndash;S3</code> System Senses, <code>CSI</code>, and <code>PPL</code> on Vulkan GPUs, plus <code>Auto (Smart)</code> switching across all 4 hosted <code>k3</code> models and <code>clover-local-5.0.7.vsix</code> for VS Code &amp; Copilot integration.</p>
-          <div class="actions" style="margin-top:1.1rem;flex-wrap:wrap;gap:.5rem">
-            <a class="btn btn--primary" href="../download/laptop/CloverAIStudio-Setup.exe" download="CloverAIStudio-Setup.exe">Download Windows (.exe)</a>
-            <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.7/CloverAIStudio-Setup.exe">GitHub Release</a>
-          </div>
+      <div class="status-list">
+        <div class="status-card">
+          <span class="status-tag status-tag--done">Verified &amp; Open</span>
+          <h3>1. Clover <code>HG</code> 4&times; Compression &amp; Dedicated Token Sockets</h3>
+          <p>Models shrink fourfold (<code>70 GB &rarr; 17.4 GB</code>) with <code>99.6%+</code> cosine fidelity, pinned inside affordable <code>24 GB</code> GPUs while passing tokens between servers at just <code>4 Bytes/token</code> over <code>tsock://</code>.</p>
         </div>
-        <div class="card">
-          <h3>Android Phone</h3>
-          <p><strong><code>ai.clover.studio</code></strong> &middot; v5.0.7 build 21 (<code>78.88 MB</code>)</p>
-          <p>Runs the full Clover system (<code>C1&ndash;C3</code>, <code>JEPA</code>, <code>S1&ndash;S3</code> System Senses, <code>CSI</code>, <code>PPL</code>, and multi-cycle <code>AGENTS.md</code> Outcome verification) on Snapdragon Adreno OpenCL GPUs and ARM64 CPUs, with <code>Auto (Smart)</code> switching to all 4 hosted <code>k3</code> models.</p>
-          <div class="actions" style="margin-top:1.1rem;flex-wrap:wrap;gap:.5rem">
-            <a class="btn btn--primary" href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Google Play Instant Test</a>
-            <a class="btn" href="https://play.google.com/apps/testing/ai.clover.studio" target="_blank" rel="noopener noreferrer">Join Closed Beta</a>
-            <a class="btn btn--plain" href="https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.7/CloverAIStudio.apk">Direct .apk</a>
-          </div>
+
+        <div class="status-card">
+          <span class="status-tag status-tag--done">Verified &amp; Open</span>
+          <h3>2. Runtime <code>AGENTS.md</code> Cycle &amp; <code>MCP 2.0</code> Mesh</h3>
+          <p>Enforces <em>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</em> handoffs in code, blocks blind retries, refuses test tampering, and clubs concurrent requests across priority queues.</p>
         </div>
-        <div class="card">
-          <h3>Web Studio &amp; Admin</h3>
-          <p><strong><code>cloverframework.com/clover-ai/</code></strong></p>
-          <p>Runs in any browser for approved accounts. Connects to your local device, our four-model <code>k3</code> server (<code>LFM3-Omni</code>, <code>Clover-35B-A3B</code>, <code>Nemotron 3.5</code>, <code>Kimi K3.1 Pro</code>), or any custom OpenAI-compatible endpoint.</p>
-          <div class="actions" style="margin-top:1.1rem;flex-wrap:wrap;gap:.5rem">
-            <a class="btn" href="../clover-ai/">Launch Web Studio &rarr;</a>
-            <a class="btn btn--plain" href="../admin/">k3 Admin Console &rarr;</a>
-          </div>
+
+        <div class="status-card">
+          <span class="status-tag status-tag--active">In Progress Now</span>
+          <h3>3. Coordinator Harness LoRA &amp; Specialist Team</h3>
+          <p>Training a <code>~300 MB</code> Harness LoRA on <code>Qwen3.6-35B-A3B</code> so one concise coordinator cleanly routes work across coding, <code>Lean 4</code> proofs (<code>Goedel-32B</code>), physical motion (<code>V-JEPA 2.1</code>), forecasting (<code>Chronos</code>), biology (<code>Boltz-2</code>), and exact math (<code>x-cruncher</code>).</p>
         </div>
-      </div>
 
-      <p class="note" style="margin-top:1rem">Verify installers with <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/download/SHA256SUMS.txt"><code>download/SHA256SUMS.txt</code> &rarr;</a> &middot; Parallel 6-stream Range installer pulls precomputed JEPA &amp; NCM trunks from <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio" target="_blank" rel="noopener noreferrer"><code>Santhoshsathish94/clover-ai-studio</code></a> &middot; Google Play store listing: <a href="https://play.google.com/store/apps/details?id=ai.clover.studio" target="_blank" rel="noopener noreferrer"><code>play.google.com/store/apps/details?id=ai.clover.studio</code></a></p>
-    </div>
-  </section>
-
-  <!-- ============ ARCHITECTURE ============ -->
-  <section class="band" id="studio-architecture">
-    <div class="wrap">
-      <div id="how-it-works"></div>
-      <h2>How the Clover system works</h2>
-      <p class="lede">Semantics sits at the center. Three supporting components gather memory, relationships, and tools; three core stages run the model, plan in latent space, and decode verified answers.</p>
-
-      <figure class="diagram">
-        <svg viewBox="0 0 860 310" role="img" aria-label="Clover AI Studio architecture: Semantics (CSI and PPL) in the center, connecting S1 Memory, S2 Relationships, and S3 Tools on the left with C1 Inference, C2 Plan, and C3 Decode on the right." style="width:100%;height:auto;display:block;border:1px solid #cfd6de;border-radius:10px;background:#ffffff;padding:8px">
-          <rect x="0" y="0" width="860" height="310" rx="10" fill="#ffffff"></rect>
-          <text x="20" y="26" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.3">CLOVER AI SYSTEM · SEMANTICS CENTER + 3 SUPPORTING (S1–S3) + 3 CORE (C1–C3)</text>
-          <line x1="20" y1="38" x2="840" y2="38" stroke="#d6e2e0" stroke-width="1"></line>
-
-          <!-- Left: 3 Supporting -->
-          <rect x="20" y="54" width="245" height="236" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
-          <text x="36" y="76" font-size="11" font-weight="700" fill="#0a6a5f">SUPPORTING · CONTEXT &amp; TOOLS</text>
-          <rect x="34" y="90" width="217" height="56" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
-          <text x="46" y="111" font-size="12" font-weight="700" fill="#14181d">S1 · Memory</text>
-          <text x="46" y="130" font-size="11" fill="#39424d">5-stage local Git repo &amp; workspaces</text>
-          <rect x="34" y="156" width="217" height="56" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
-          <text x="46" y="177" font-size="12" font-weight="700" fill="#14181d">S2 · Relationships</text>
-          <text x="46" y="196" font-size="11" fill="#39424d">Ontology GraphRAG &amp; prior chat recall</text>
-          <rect x="34" y="222" width="217" height="56" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
-          <text x="46" y="243" font-size="12" font-weight="700" fill="#14181d">S3 · Tools</text>
-          <text x="46" y="262" font-size="11" fill="#39424d">Compiler, docs, web search &amp; code</text>
-
-          <!-- Arrows Left <-> Center -->
-          <line x1="265" y1="172" x2="305" y2="172" stroke="#0a6a5f" stroke-width="2.5"></line>
-          <polygon points="305,172 297,167 297,177" fill="#0a6a5f"></polygon>
-          <polygon points="265,172 273,167 273,177" fill="#0a6a5f"></polygon>
-
-          <!-- Center: Semantics + CSI + PPL -->
-          <rect x="305" y="54" width="250" height="236" rx="12" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="2"></rect>
-          <text x="430" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#0a6a5f">CENTER · SEMANTICS</text>
-          <rect x="323" y="94" width="214" height="56" rx="8" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.4"></rect>
-          <text x="430" y="115" text-anchor="middle" font-size="12" font-weight="700" fill="#14181d">Intent &amp; Permissions</text>
-          <text x="430" y="134" text-anchor="middle" font-size="11" fill="#39424d">Routes tasks &amp; verifies claims</text>
-          <rect x="323" y="160" width="214" height="54" rx="8" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
-          <text x="430" y="180" text-anchor="middle" font-size="12" font-weight="700" fill="#14181d">CSI · Language Parser</text>
-          <text x="430" y="198" text-anchor="middle" font-size="11" fill="#39424d">Dictionary, grammar &amp; negation</text>
-          <rect x="323" y="224" width="214" height="54" rx="8" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
-          <text x="430" y="244" text-anchor="middle" font-size="12" font-weight="700" fill="#14181d">PPL · Process Learning</text>
-          <text x="430" y="262" text-anchor="middle" font-size="11" fill="#39424d">Learns your habits &amp; answer style</text>
-
-          <!-- Arrows Center <-> Right -->
-          <line x1="555" y1="172" x2="595" y2="172" stroke="#0a6a5f" stroke-width="2.5"></line>
-          <polygon points="595,172 587,167 587,177" fill="#0a6a5f"></polygon>
-          <polygon points="555,172 563,167 563,177" fill="#0a6a5f"></polygon>
-
-          <!-- Right: 3 Core -->
-          <rect x="595" y="54" width="245" height="236" rx="10" fill="#f6f8fa" stroke="#cfd6de" stroke-width="1.2"></rect>
-          <text x="611" y="76" font-size="11" font-weight="700" fill="#0a6a5f">CORE PIPELINE · MODEL &amp; REASONING</text>
-          <rect x="609" y="90" width="217" height="56" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
-          <text x="621" y="111" font-size="12" font-weight="700" fill="#14181d">C1 · Inference</text>
-          <text x="621" y="130" font-size="11" fill="#39424d">Switchable model &amp; Direction B</text>
-          <rect x="609" y="156" width="217" height="56" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
-          <text x="621" y="177" font-size="12" font-weight="700" fill="#14181d">C2 · Plan</text>
-          <text x="621" y="196" font-size="11" fill="#39424d">Latent thought &amp; 3-way retry vote</text>
-          <rect x="609" y="222" width="217" height="56" rx="7" fill="#ffffff" stroke="#7fb8b0" stroke-width="1.2"></rect>
-          <text x="621" y="243" font-size="12" font-weight="700" fill="#14181d">C3 · Decode</text>
-          <text x="621" y="262" font-size="11" fill="#39424d">11-level concept &amp; pointer decoder</text>
-        </svg>
-        <figcaption>The Clover AI System connects a central Semantics engine (<code>CSI + PPL</code>) to three supporting components (<code>S1–S3</code>) and three core model stages (<code>C1–C3</code>).</figcaption>
-      </figure>
-
-      <dl class="kv kv--wide" style="margin-top:1.6rem">
-        <div><dt>Center · Semantics</dt><dd>Reads your intent, selects only the needed tools, blocks unauthorized vault paths, and labels every answer by how it was verified.</dd></div>
-        <div><dt>CSI · Language Parser</dt><dd>Parses grammar, verb morphology, and negation so declined tools are never called and unverified action claims are caught.</dd></div>
-        <div><dt>PPL &amp; CPSL · Learning</dt><dd>Learns your personal habits locally (<code>PPL</code>) and optionally syncs stripped, Ed25519-signed shared-core strategies across installations via Google OIDC (<code>CPSL</code>).</dd></div>
-        <div><dt>C1 · Inference</dt><dd>Runs the active open-weight model (<code>LFM3-Omni-2B</code>, <code>Clover-35B-A3B</code>, <code>Nemotron 3.5 Super VL</code>, or <code>Kimi K3.1 Pro</code>) with Direction B zero-writeback memory caching.</dd></div>
-        <div><dt>C2 · Plan &amp; JEPA</dt><dd>Projects continuous <code>&lt;latent&gt;</code> thought vectors with <code>HybridAgent</code> &amp; <code>JEPA / RPRE</code> world-model planning, and runs up to 3 autonomous <code>AGENTS.md</code> Clover Cycle verification passes per turn.</dd></div>
-        <div><dt>C3 · Decode</dt><dd>Predicts 11 hierarchical concept levels in parallel and decodes strictly inside the active model&rsquo;s native vocabulary.</dd></div>
-        <div><dt>S1 · Memory</dt><dd>Saves sessions, execution logs, outcomes, and learned notes in a 5-stage local Git repository with optional private GitHub sync.</dd></div>
-        <div><dt>S2 · Relationships</dt><dd>Combines symbolic Ontology GraphRAG, multimodal <code>MJEPA</code> recall, and the 11 foundational papers with scenario-gated recall of your earlier chats.</dd></div>
-        <div><dt>S3 · Tools &amp; Senses</dt><dd>Checks Python/Rust code with a live compiler, connects to OS System Senses (Screenshot, Screen Recorder, Camera, Mic with <code>I-JEPA</code> &amp; <code>Audio-JEPA</code>), and drives VS Code &amp; Copilot under <code>Allow / Ask / Off</code> permissions.</dd></div>
-      </dl>
-    </div>
-  </section>
-
-  <!-- ============ VS CODE & COPILOT INTEGRATION ============ -->
-  <section class="band" id="vscode-integration">
-    <div class="wrap">
-      <h2>Two-way VS Code &amp; GitHub Copilot integration</h2>
-      <p class="lede">Instead of rebuilding an editor, diff viewer, browser, and terminal from scratch, Clover AI Studio integrates directly with VS Code&rsquo;s open-source workbench and GitHub Copilot Agent loop in both directions (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-vscode-studio-integration-context.md">architecture reference</a>).</p>
-
-      <div class="grid grid--2" style="margin-top:1.5rem">
-        <div class="card">
-          <h3>1. Inside VS Code Copilot Chat &rarr; Clover Engine</h3>
-          <p><code>clover-local-0.4.0.vsix</code> registers all four Clover models (<code>LFM3-Omni-2B</code>, <code>Clover-35B-A3B</code>, <code>Nemotron 3.5 Super VL</code>, and <code>Kimi K3.1 Pro</code>) directly in VS Code&rsquo;s Copilot Chat model picker:</p>
-          <ul>
-            <li><strong>Shared Integrated Browser (<code>browserViewService</code>):</strong> Preserves shared browser tabs (<code>&lt;attachment id="Browser Pages"&gt;</code>) and drives <code>open_browser_page</code>, <code>read_page</code>, <code>click_element</code>, <code>type_in_page</code>, <code>navigate_page</code>, <code>screenshot_page</code>, and <code>run_playwright_code</code> with automatic <code>[ref=eN]</code> and <code>pageId</code> resolution.</li>
-            <li><strong>Integrated Terminal (<code>terminalService</code>):</strong> Runs and monitors <code>run_in_terminal</code> (sync/async), <code>get_terminal_output</code>, <code>send_to_terminal</code>, and <code>kill_terminal</code>.</li>
-            <li><strong>File Viewer &amp; Language Server:</strong> Uses <code>read_file</code>, <code>replace_string_in_file</code>, <code>get_errors</code>, <code>vscode_listCodeUsages</code>, <code>vscode_renameSymbol</code>, and multi-cycle <code>AGENTS.md</code> Outcome verification.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>2. Inside Clover AI Studio &rarr; VS Code Host</h3>
-          <p>When VS Code is open on your laptop, Clover AI Studio connects over its authenticated local bridge (<code>/api/vscode/*</code>) to use VS Code&rsquo;s native UI:</p>
-          <ul>
-            <li><strong><code>vscode_editor</code> &amp; <code>vscode_diff</code>:</strong> Inspects the active editor tab, cursor selection, and document symbols, or opens a side-by-side visual diff (<code>vscode.diff</code>) before applying changes.</li>
-            <li><strong><code>vscode_diagnostics</code>:</strong> Reads live compiler and linter errors/warnings from VS Code&rsquo;s Problems panel (<code>vscode.languages.getDiagnostics</code>).</li>
-            <li><strong><code>vscode_browser</code> &amp; <code>vscode_run</code>:</strong> Opens and interacts with pages in VS Code&rsquo;s Integrated Browser via <code>vscode.lm.invokeTool</code> and runs visible commands in VS Code&rsquo;s terminal.</li>
-          </ul>
+        <div class="status-card">
+          <span class="status-tag status-tag--active">In Progress Now</span>
+          <h3>4. Desktop, Mobile &amp; VS Code Packaging</h3>
+          <p>Refining the local-first Windows, Android, Web, and VS Code studio experience &mdash; where all sessions, outcomes, and encrypted keys live in a private Git repository on your own hardware (<a href="../privacy/">Privacy Policy</a>).</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ PORTING GUIDE ============ -->
-  <section class="band" id="porting-guide">
+  <section class="band" id="why-we-wait">
     <div class="wrap">
-      <h2>Port any open-weight model in five folders + JEPA</h2>
-      <p class="lede">Clover is model-agnostic. Every ported model in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a> uses the same folder layout while the Studio app, memory, and tools stay unchanged. Run the entire porting pipeline with one command in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/porting-models"><code>porting-models/</code></a>: <code>./porting-models/port all --config porting-models/configs/clover-35b-a3b.json --gpus 8</code>.</p>
+      <h2>Why we show the unfinished parts openly</h2>
+      <p><strong>Clover&rsquo;s own rule applies to us first: never claim an Outcome the real system has not yet shown.</strong></p>
+      <p>As each specialist model, Harness LoRA, and multi-node 5-Petal Clover cluster milestone completes live verification, its weights go straight to <a href="https://huggingface.co/Santhoshsathish94">Hugging Face</a> and its code and proof ledgers go straight to <a href="https://github.com/santhoshsathish94/clover-framework">GitHub</a>.</p>
 
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">Unified folder layout across all four models in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a>.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Folder</th>
-              <th scope="col">What you build</th>
-              <th scope="col">Verification gate</th>
-              <th scope="col"><code>kimi/</code> (K3.1 Pro 2.8T)</th>
-              <th scope="col"><code>nemotron/</code> (120B)</th>
-              <th scope="col"><code>clover-35b/</code> (35B-A3B)</th>
-              <th scope="col"><code>liquid-lfm3/</code> (2B)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><strong>1. <code>trunks/</code></strong></th>
-              <td>Pack per-layer norms &amp; attention/conv projections into <code>CLVRTRK1</code> / <code>CLV35TRK</code> (plus <code>indexer.bin</code> or <code>bd_gdn.bin</code>) and prune duplicate weights.</td>
-              <td><code>max_abs_diff = 0.0</code> vs. official BF16 model across all layers.</td>
-              <td>93 trunks + 24 DSA Indexers (<code>-35.2%</code> RAM)</td>
-              <td>88 trunks (<code>-46.1%</code> bytes)</td>
-              <td>40 trunks (30 BD-GDN + 10 Gated GQA, <code>diff = 0.0</code>)</td>
-              <td>24 trunks (<code>-15.9%</code> bytes)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>2. <code>experts/</code></strong></th>
-              <td>Quantize routed MoE or FFN weights into symmetric 4-bit group-64 planar files (<code>CLVR4B01</code>).</td>
-              <td>Layer cosine $\ge 0.993$ and identical top-1 greedy token IDs.</td>
-              <td>896 experts/layer (<code>1,347 GiB</code>)</td>
-              <td>512 experts/layer (<code>66.4 GiB</code>)</td>
-              <td>256 experts top-8 coreset ($\cos = 0.9971$)</td>
-              <td>24 FFN + VQ experts (<code>0.63 GiB</code>)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>3. <code>hybridagent/</code></strong></th>
-              <td>Train and fuse <code>NativeHybridLink</code> (<code>plan-trunk-0/</code>) mapping hidden states $h_t \to r_t$.</td>
-              <td>Held-out next-token cosine $\ge 0.98$ and 100% token accuracy.</td>
-              <td>$7168 \to 7168$ (<code>7.51 GiB</code>)</td>
-              <td>$4096 \to 4096$ ($\cos = 0.9985$)</td>
-              <td>$2048 \to 2048$ ($\cos = 0.9812$, <code>100%</code> acc)</td>
-              <td>$2048 \to 2048$ ($\cos = 0.9994$)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>4. <code>ncm/</code></strong></th>
-              <td>Graft the model&rsquo;s native tokenizer vocabulary into the 11-level VQ-VAE and 12-layer NCM trunks.</td>
-              <td>$\ge 98.4\%$ exact token reconstruction &amp; character-exact text.</td>
-              <td><code>163,840</code> tiktoken vocab</td>
-              <td><code>131,072</code> Tekken ($99.83\%$)</td>
-              <td><code>248,320</code> Qwen/Clover ($98.43\%$)</td>
-              <td><code>128,000</code> LFM3 ($100.0\%$)</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>5. <code>bridges/</code> &amp; <code>jepa/</code></strong></th>
-              <td>Train and fuse <code>ComboBridge</code>, <code>ExpertBridge</code> ($D_{\text{model}} \to 384$), and <code>jepa-trunk-0/</code> world-model predictors.</td>
-              <td><code>70 / 70</code> (<code>100%</code>) on the 70-task suite &amp; multi-cycle verification.</td>
-              <td><strong><code>70 / 70</code> (100%)</strong></td>
-              <td><strong><code>70 / 70</code> (100%)</strong></td>
-              <td><strong>Verified (100% stage &amp; NCM)</strong></td>
-              <td><strong><code>70 / 70</code> (100%)</strong></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ WHERE IT RUNS & EFFICIENCY ============ -->
-  <section class="band" id="where-it-runs-and-efficiency">
-    <div class="wrap">
-      <div id="clover-kimi-k3"></div>
-      <div id="clover-k3"></div>
-      <div id="model-comparison"></div>
-      <h2>Faster hardware. Higher accuracy.</h2>
-      <p class="lede">Direction B keeps weights in raw bytes until the processor registers and drops clean pages with zero writebacks. Models that normally need data-center clusters run on phones, laptops, and single workstations.</p>
-
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">Four live hardware environments running Clover AI Studio.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Device</th>
-              <th scope="col">Hardware</th>
-              <th scope="col">Active Models</th>
-              <th scope="col">Measured Speed &amp; Footprint</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><strong>1. Android Phone</strong></th>
-              <td>Samsung Galaxy S23 &middot; Snapdragon 8 Gen 2 (Adreno 740 GPU, 8 GB RAM)</td>
-              <td>On-device <code>LFM3-Omni-2B</code> + remote 4-model switcher (<code>Clover-35B-A3B</code>, <code>Nemotron 3.5</code>, <code>Kimi K3.1 Pro</code>)</td>
-              <td><strong><code>17.9 tok/s</code></strong> text &middot; <strong><code>9.9 s</code></strong> photo &middot; <strong><code>4.1 s</code></strong> voice &middot; <code>1.48 GB</code> storage</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>2. Windows Laptop</strong></th>
-              <td>Intel Core i5-1335U &middot; Intel Iris Xe Vulkan iGPU &middot; 16 GB RAM</td>
-              <td>Local <code>LFM3-Omni-2B</code> + CPU speech + Vulkan image gen + VS Code Copilot Bridge</td>
-              <td><strong><code>438 tok/s</code></strong> prefill &middot; <strong><code>28.0 tok/s</code></strong> decode &middot; <strong><code>1.28 GB</code></strong> RAM</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>3. CPU Workstation (<code>k3</code>)</strong></th>
-              <td>AMD Ryzen 9 7950X3D (16C/32T AVX-512) &middot; 124 GB RAM &middot; NVMe RAID1</td>
-              <td>All 4 models hot-switchable (<code>LFM3-Omni</code>, <code>Clover-35B-A3B</code>, <code>Nemotron 3.5</code>, <code>Kimi K3.1 Pro</code>)</td>
-              <td><strong><code>1.12 s</code></strong> Nemotron C &middot; <strong><code>1.27 s</code></strong> Clover-35B &middot; <strong><code>1.99 s/tok</code></strong> Kimi K3.1 Pro</td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>4. Multi-GPU Server</strong></th>
-              <td>8 &times; NVIDIA RTX 3090 (<code>192 GiB</code> VRAM, NVLink) &middot; 376 GiB RAM</td>
-              <td>Full <code>Kimi K3.1 Pro 2.8T</code> + <code>Clover-35B-A3B</code> + <code>HybridAgent</code> + 11-level NCM + Autonomous JEPA trainer</td>
-              <td><strong><code>148.5 tok/s</code></strong> &middot; <strong><code>95.3%</code></strong> VRAM hit rate &middot; <strong><code>0</code></strong> PCIe writebacks</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3 style="margin-top:2rem">Official released baseline vs. ported into Clover</h3>
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">Comparison against each model&rsquo;s official standalone footprint, speed, and Clover verification metrics.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Model</th>
-              <th scope="col">Official Standalone Baseline</th>
-              <th scope="col">Ported into Clover AI Studio</th>
-              <th scope="col">Measured Gain</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><strong>Moonshot AI Kimi K3.1 Pro</strong><br><small>2.8T Total / 104B Active MoE (69 KDA + 24 Gated DSA)</small></th>
-              <td>Needs <code>1.56&ndash;2.8 TB</code> cluster VRAM; <code>23.7 s/tok</code> initial CPU C baseline; <strong><code>33 / 70</code> (<code>47.1%</code>)</strong> alone.</td>
-              <td>Runs in <strong><code>124.9 GiB</code> VRAM</strong> (8&times;3090) or <strong>1 CPU box</strong>; <code>1.99 s/tok</code> CPU / <code>148.5 tok/s</code> GPU; <strong><code>70 / 70</code> (<code>100%</code>)</strong>.</td>
-              <td><strong><code>11.4&times;</code> less VRAM</strong> &middot; <strong><code>+52.9 pp</code> accuracy</strong> &middot; <strong><code>2.04&times;</code> lower GPU-s/task</strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>NVIDIA Nemotron 3.5 Super VL</strong><br><small>124.5B Total / 12.8B Active</small></th>
-              <td>Needs <code>~249 GB</code> BF16 VRAM across multiple H100/A100 GPUs; <strong><code>16 / 70</code> (<code>22.9%</code>)</strong> stage baseline alone.</td>
-              <td>Runs on <strong>1 CPU with <code>0</code> GPUs</strong>; <code>6.97 GiB</code> pruned trunks + 4-bit experts; <code>1.12 s/task</code>; <strong><code>70 / 70</code> (<code>100%</code>)</strong>.</td>
-              <td><strong><code>-46.1%</code> trunk bytes</strong> &middot; <strong><code>2.93&times;</code> faster C</strong> &middot; <strong><code>+77.1 pp</code> accuracy</strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>DiffuSpace Clover-35B-A3B-Preview</strong><br><small>35B Total / 3B Active Block Diffusion MoE (30 BD-GDN + 10 Gated GQA)</small></th>
-              <td><code>69.3 GB</code> BF16 across 28 safetensor shards (<code>813</code> tensors); 256 routed experts top-8; <code>block_size = 32</code> LowConfidence diffusion.</td>
-              <td>Streamed &amp; packed into <strong><code>~4.04 GB</code></strong> precomputed stage trunks, 4-bit experts, <code>248,320</code>-vocab 11L NCM &amp; JEPA trunk; <code>diff = 0.0</code> pruned vs. raw.</td>
-              <td><strong><code>17.1&times;</code> smaller stage pack</strong> &middot; <strong><code>cos = 1.0</code> BD-GDN/GQA</strong> &middot; <strong><code>98.43%</code> NCM surface acc</strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Liquid AI LFM3-Omni-2B</strong><br><small>2.17B / 1.73B Tri-Hybrid</small></th>
-              <td><code>3.5&ndash;4.3 GB</code> BF16 weights; <code>8.1 tok/s</code> CPU decode; <strong><code>19 / 70</code> (<code>27.1%</code>)</strong> alone.</td>
-              <td><strong><code>894 MB</code></strong> 4-bit core on phone / <strong><code>1.28 GB</code> RAM</strong> on laptop; <code>28.0 tok/s</code> Iris Xe; <strong><code>70 / 70</code> (<code>100%</code>)</strong>.</td>
-              <td><strong><code>3.5&times;</code> faster laptop decode</strong> &middot; <strong><code>+72.9 pp</code> accuracy</strong></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ 70-TASK BENCHMARK ============ -->
-  <section class="band" id="hybrid-ncm-k3">
-    <div class="wrap">
-      <div id="progress"></div>
-      <h2>70 tasks. Three models. 100%.</h2>
-      <p class="lede">We tested all three models on the same 70 tasks across seven categories — first as raw models alone, then wrapped in the Clover system (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/research/clover_3_models_without_vs_with_clover_70_task_report.json">full JSON report</a>).</p>
-
-      <div class="table-wrap">
-        <table class="data">
-          <caption class="note">Standardized 70-task benchmark: standalone model (Without Clover) vs. full Clover AI System (With Clover).</caption>
-          <thead>
-            <tr>
-              <th scope="col">Category</th>
-              <th scope="col">Tasks</th>
-              <th scope="col"><code>Kimi K3.1 Pro</code><br><small>Alone &rarr; With Clover</small></th>
-              <th scope="col"><code>Nemotron 3.5</code><br><small>Alone &rarr; With Clover</small></th>
-              <th scope="col"><code>LFM3</code><br><small>Alone &rarr; With Clover</small></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><strong>1. MMLU Knowledge</strong></th>
-              <td><code>10</code></td>
-              <td><code>6/10</code> &rarr; <strong><code>10/10</code></strong></td>
-              <td><code>2/10</code> &rarr; <strong><code>10/10</code></strong></td>
-              <td><code>3/10</code> &rarr; <strong><code>10/10</code></strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>2. GSM8K Math</strong></th>
-              <td><code>10</code></td>
-              <td><code>2/10</code> &rarr; <strong><code>10/10</code></strong></td>
-              <td><code>0/10</code> &rarr; <strong><code>10/10</code></strong></td>
-              <td><code>2/10</code> &rarr; <strong><code>10/10</code></strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>3. Python &amp; Rust Coding</strong></th>
-              <td><code>15</code></td>
-              <td><code>12/15</code> &rarr; <strong><code>15/15</code></strong></td>
-              <td><code>3/15</code> &rarr; <strong><code>15/15</code></strong></td>
-              <td><code>3/15</code> &rarr; <strong><code>15/15</code></strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>4. Structured Output &amp; Sudoku</strong></th>
-              <td><code>15</code></td>
-              <td><code>6/15</code> &rarr; <strong><code>15/15</code></strong></td>
-              <td><code>7/15</code> &rarr; <strong><code>15/15</code></strong></td>
-              <td><code>7/15</code> &rarr; <strong><code>15/15</code></strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>5. Ontology GraphRAG</strong></th>
-              <td><code>6</code></td>
-              <td><code>0/6</code> &rarr; <strong><code>6/6</code></strong></td>
-              <td><code>0/6</code> &rarr; <strong><code>6/6</code></strong></td>
-              <td><code>0/6</code> &rarr; <strong><code>6/6</code></strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>6. Persistent Memory</strong></th>
-              <td><code>6</code></td>
-              <td><code>3/6</code> &rarr; <strong><code>6/6</code></strong></td>
-              <td><code>2/6</code> &rarr; <strong><code>6/6</code></strong></td>
-              <td><code>3/6</code> &rarr; <strong><code>6/6</code></strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>7. Multi-Hop Agent &amp; Tools</strong></th>
-              <td><code>8</code></td>
-              <td><code>4/8</code> &rarr; <strong><code>8/8</code></strong></td>
-              <td><code>2/8</code> &rarr; <strong><code>8/8</code></strong></td>
-              <td><code>1/8</code> &rarr; <strong><code>8/8</code></strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>Total (70 Tasks)</strong></th>
-              <td><strong><code>70</code></strong></td>
-              <td><code>33/70</code> (47.1%) &rarr; <strong><code>70/70</code> (100%)</strong></td>
-              <td><code>16/70</code> (22.9%) &rarr; <strong><code>70/70</code> (100%)</strong></td>
-              <td><code>19/70</code> (27.1%) &rarr; <strong><code>70/70</code> (100%)</strong></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ CREDIT & REFERENCES ============ -->
-  <section class="band" id="credit">
-    <div class="wrap">
-      <div id="references"></div>
-      <h2>Built on open weights and research</h2>
-      <p class="lede">Clover AI Studio builds on the open models and papers of the teams below.</p>
-
-      <dl class="kv kv--wide">
-        <div><dt>Open-Weight Models</dt><dd><a href="https://huggingface.co/LiquidAI/LFM3-1.7B">Liquid AI LFM3</a>, <a href="https://huggingface.co/Diffuspace/Clover-35B-A3B-Preview">DiffuSpace Clover-35B-A3B-Preview</a> (<a href="https://huggingface.co/Diffuspace/Clover-35B-A3B-Preview-GGUF">GGUF</a>), <a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16">NVIDIA Nemotron 3.5 Super VL</a>, <a href="https://huggingface.co/moonshotai/Kimi-K3.1-Pro">Moonshot AI Kimi K3.1 Pro</a>, and <a href="https://huggingface.co/LithosAI/Kimi-K3.1-Pro-DSpark">LithosAI Kimi-K3.1-Pro-DSpark</a>.</dd></div>
-        <div><dt>Research Architecture</dt><dd><a href="https://arxiv.org/abs/2610.18861">HybridAgent</a> (Stanford / Together AI), <a href="https://arxiv.org/abs/2610.14162">Next-Concept Modeling</a> (Hazy Research, Stanford), <a href="https://doi.org/10.1007/s00521-026-12495-0">Ontology-Guided GraphRAG</a> (Univ. of Naples), <a href="https://github.com/FareedKhan-dev/kimi-k3-in-c">kimi-k3-in-c</a> (Fareed Khan), JEPA / RPRE (<code>I-JEPA</code>, <code>Audio-JEPA</code>, <code>MJEPA</code>, <code>EB-JEPA</code>), and the <a href="../origin/">11 foundational papers (1943&ndash;2017)</a>.</dd></div>
-        <div><dt>Dataset &amp; Source Code</dt><dd>Precomputed trunks, experts, NCM, and JEPA weights in <a href="https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio"><code>Santhoshsathish94/clover-ai-studio</code></a>, one-command porting kit in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/porting-models"><code>porting-models/</code></a>, VS Code integration reference in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-vscode-studio-integration-context.md"><code>clover-vscode-studio-integration-context.md</code></a>, and full source in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system"><code>clover-ai-system/</code></a>.</dd></div>
-      </dl>
-
-      <div class="actions" style="margin-top:2rem">
-        <a class="btn btn--primary" href="../getting-started/">Next: Read AGENTS.md &rarr;</a>
-        <a class="btn" href="#downloads">Download AI Studio (.exe / .apk) &uarr;</a>
-        <a class="btn" href="../origin/">Read the Origin Story &rarr;</a>
-      </div>
+      <svg class="clover clover--close" viewBox="0 0 100 100" role="img" aria-label="The five-leaf Clover mark.">
+        <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
+        <g><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
+        <g transform="rotate(72 50 44)"><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
+        <g transform="rotate(144 50 44)"><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
+        <g transform="rotate(216 50 44)"><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
+        <g transform="rotate(288 50 44)"><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
+      </svg>
+      <p class="verse verse__line">Build it right, verify it against reality, then ship it.</p>
     </div>
   </section>
 
 </main>
 
 <footer class="site-foot">
-  <div class="wrap site-foot__grid">
-    <div>
-      <h4>Read</h4>
-      <ul>
-        <li><a href="../">The framework</a></li>
-        <li><a href="../origin/">Origin</a></li>
-        <li><a href="./">AI Studio</a></li>
-        <li><a href="../getting-started/">AGENTS.md</a></li>
-        <li><a href="../governance/">Governance</a></li>
-        <li><a href="../privacy/">Privacy</a></li>
-        <li><a href="../glossary/">Glossary</a></li>
-      </ul>
-    </div>
-    <div>
-      <h4>AI Studio</h4>
-      <ul>
-        <li><a href="../download/laptop/CloverAIStudio-Setup.exe" download="CloverAIStudio-Setup.exe">Download for Windows (.exe)</a></li>
-        <li><a href="https://play.google.com/apps/test/RQvTblUjN2Y/ahAO29uNTcFWSSv5oQlYxX4CR1FRn-gmS9nbIh1lp2D4iNBgJ3-XLPM1fzjbC2vHYtpYtoJmtPROkQr48qz_-RbaOs" target="_blank" rel="noopener noreferrer">Test on Google Play (Instant)</a></li>
-        <li><a href="https://play.google.com/apps/testing/ai.clover.studio" target="_blank" rel="noopener noreferrer">Join Google Play Closed Beta</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/releases/download/v5.0.7/CloverAIStudio.apk">Download for Android (.apk)</a></li>
-        <li><a href="../clover-ai/">Launch Clover AI Web Studio</a></li>
-        <li><a href="../admin/">k3 Admin Access Console</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/README.md">Clover AI System README</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-vscode-studio-integration-context.md">VS Code &amp; Copilot Integration</a></li>
-      </ul>
-    </div>
-    <div>
-      <h4>Practical</h4>
-      <ul>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/QUICKSTART.md">Quickstart</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/templates/orchestration-brief.md">Orchestration brief</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/how-ai-fails.md">How AI fails</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/guides/field-practices.md">Field lessons</a></li>
-      </ul>
-    </div>
-    <div>
-      <h4>Project</h4>
-      <ul>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework">GitHub repository</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/CONTRIBUTING.md">Contributing</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/CHANGELOG.md">Changelog</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/LICENSE">License</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="wrap site-foot__end">
-    <p style="max-width:none">The website explains; the repository documents. Built from real
-      delivery work and still changing as the evidence does. An open, feedback-driven project by
-      <a href="../author/">Santhosh Narayanan</a>.</p>
+  <div class="wrap">
+    <p><strong>Clover Framework</strong> &middot; System, Human and AI working together for meaningful outcomes.</p>
+    <p><a href="../hg-format/">AI Mythbuster</a> &middot; <a href="../ai-system/">AI Studio</a> &middot; <a href="../getting-started/">AGENTS.md</a> &middot; <a href="../governance/">Governance</a> &middot; <a href="../privacy/">Privacy</a> &middot; <a href="../glossary/">Glossary</a> &middot; <a href="https://github.com/santhoshsathish94/clover-framework">GitHub</a></p>
   </div>
 </footer>
 

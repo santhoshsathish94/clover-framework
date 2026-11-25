@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HG Format (HG4-16R-OP &amp; K31H) — Clover</title>
-<meta name="description" content="What Clover's Hadamard-Grouped (HG) format solves and how: ~4x smaller models vs BF16, identical deterministic outputs, benchmarks across Galaxy S23, 16 GB Laptop, Hetzner 128 GB CPU Server, and 8x RTX 4090, and why AI's real bottleneck is data movement.">
+<title>AI Mythbuster (HG Format) — Clover</title>
+<meta name="description" content="Five everyday stories and real hardware measurements that break five myths about AI chips, memory, servers, networks, and universal models — powered by Clover's Hadamard-Grouped (HG) 4x compression format.">
 <link rel="canonical" href="https://cloverframework.com/hg-format/">
-<meta property="og:title" content="HG Format (HG4-16R-OP &amp; K31H) — Universal Converter Script, CPU tok/s &amp; BF16 vs HG Outputs">
-<meta property="og:description" content="Download convert_to_hg.py to convert any Hugging Face model to Clover HG format: measured Original BF16 vs HG tok/s, side-by-side sample outputs, Lean 4 RiemannHypothesis benchmarks, and verification.">
+<meta property="og:title" content="AI Mythbuster — Five AI Myths Broken With Real Hardware &amp; Clover HG">
+<meta property="og:description" content="Watch five grey clover leaves turn gold as each AI myth breaks: why the wire limits speed, extra GBs add +0.0 tok/s, small rigs beat giant servers, VRAM leaves everything else idle, and specialist teams beat one universal model.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cloverframework.com/hg-format/">
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
@@ -16,6 +16,97 @@
 <link rel="icon" type="image/svg+xml" href="../clover-leaf-favicon.svg">
 <link rel="stylesheet" href="../botanical-design-system.css?v=5.0.7">
 <script>document.documentElement.className = 'js';</script>
+<style>
+  /* Golden Myth-Breaking Clover Leaf Progression (Grey -> Sunlit Golden Amber 1..5) */
+  .pinned[data-myth-story] .story__leaf {
+    fill: url(#leaf-stone-grey) !important;
+    opacity: 0.58 !important;
+    transition: opacity 420ms var(--ease-nature), filter 420ms var(--ease-nature);
+  }
+  .pinned[data-myth-story] .story__leaf.is-golden {
+    fill: url(#leaf-golden-amber) !important;
+    opacity: 1 !important;
+    filter: drop-shadow(0 6px 16px rgba(212, 146, 28, 0.34));
+  }
+  .pinned[data-myth-story] .story__label {
+    fill: var(--subtle);
+    opacity: 0.62;
+    transition: fill 320ms var(--ease-nature), opacity 320ms var(--ease-nature);
+  }
+  .pinned[data-myth-story] .story__label.is-golden {
+    fill: #8a5607;
+    opacity: 1;
+    font-weight: 700;
+  }
+
+  /* Compact Inline Proof Strip inside each Myth chapter (no bottom table dumps) */
+  .inline-proof {
+    margin-top: 1.45rem;
+    padding: 1.15rem 1.35rem;
+    background: var(--surface);
+    border: 1px solid var(--warn-line);
+    border-left: 4px solid #d4921c;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-xs);
+  }
+  .inline-proof__eyebrow {
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8a5607;
+    margin-bottom: 0.35rem;
+  }
+  .inline-proof__metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem 1.8rem;
+    margin-top: 0.55rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--line-soft);
+    font-size: 0.94rem;
+    color: var(--ink-2);
+  }
+  .inline-proof__metrics strong {
+    font-family: var(--serif);
+    font-size: 1.22rem;
+    color: #8a5607;
+    margin-right: 0.25rem;
+  }
+  .spotlight-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+    margin-top: 1.4rem;
+  }
+  @media (max-width: 760px) {
+    .spotlight-pair { grid-template-columns: 1fr; }
+  }
+  .spotlight-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.35rem 1.5rem;
+    box-shadow: var(--shadow-xs);
+  }
+  .size-meter {
+    height: 9px;
+    border-radius: 999px;
+    background: var(--soft-2);
+    margin: 0.45rem 0 0.85rem;
+    overflow: hidden;
+  }
+  .size-meter > span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #d4921c, #1b5e46);
+  }
+  .clover--golden-close .clover__leaf.is-filled {
+    fill: url(#leaf-golden-amber) !important;
+    stroke: none;
+  }
+</style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -23,6 +114,22 @@
 <svg class="clover-sprite" width="0" height="0" aria-hidden="true" focusable="false">
   <defs>
     <path id="clover-leaf" d="M50 44C48 35 38 31 38 21C38 12 46 9 50 17C54 9 62 12 62 21C62 31 52 35 50 44Z"/>
+    <path id="clover-vein" d="M45.9 23.4C47.6 25 48.9 26.1 50 26.8C51.1 26.1 52.4 25 54.1 23.4"/>
+    <linearGradient id="leaf-stone-grey" x1="0.18" y1="0.05" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#9a9588"/>
+      <stop offset="0.55" stop-color="#787366"/>
+      <stop offset="1" stop-color="#59554b"/>
+    </linearGradient>
+    <linearGradient id="leaf-golden-amber" x1="0.18" y1="0.05" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#f5c451"/>
+      <stop offset="0.55" stop-color="#d4921c"/>
+      <stop offset="1" stop-color="#966008"/>
+    </linearGradient>
+    <path id="arc-top" d="M28.20 12.87 A38 38 0 0 1 71.80 12.87"/>
+    <path id="arc-upper-right" d="M72.87 13.65 A38 38 0 0 1 86.34 55.11"/>
+    <path id="arc-lower-right" d="M50.77 87.99 A44 44 0 0 0 91.60 58.33"/>
+    <path id="arc-lower-left" d="M8.40 58.33 A44 44 0 0 0 49.23 87.99"/>
+    <path id="arc-upper-left" d="M13.66 55.11 A38 38 0 0 1 27.13 13.65"/>
   </defs>
 </svg>
 
@@ -43,9 +150,8 @@
       <span class="nav-toggle__box" aria-hidden="true"><span></span></span>Menu
     </button>
     <nav class="site-nav" id="site-nav" aria-label="Primary">
-      <a href="../origin/">Origin</a>
+      <a href="../hg-format/" aria-current="page">AI Mythbuster</a>
       <a href="../ai-system/">AI Studio</a>
-      <a href="../hg-format/" aria-current="page">HG Format</a>
       <a href="../getting-started/">AGENTS.md</a>
       <a href="../governance/">Governance</a>
       <a href="../privacy/">Privacy</a>
@@ -58,1082 +164,234 @@
 
 <main id="main" tabindex="-1">
 
-  <!-- ============ 1. INTRODUCTION: WHAT IS HG, WHY IT MATTERS, WHAT IT SOLVES & HOW ============ -->
-  <section class="hero" id="overview">
-    <div class="wrap">
-      <h1>The Clover HG Format</h1>
-        <p class="hero__tagline">Solving AI&rsquo;s data-movement bottleneck: ~4&times; smaller models that fit in smaller RAM &amp; VRAM, decode up to 45&times; faster, and preserve <code>BF16</code> reasoning.</p>
-        <p class="lede">Modern language models are bottlenecked not by math speed, but by <strong>data movement</strong> &mdash; every generated token must haul gigabytes of <code>16-bit BF16</code> weights from memory into the processor. Standard 4-bit or 2-bit compression shrinks those weights, but a handful of extreme outlier channels clip the quantization grid and break code and math accuracy. Clover&rsquo;s <strong>Hadamard-Grouped (<code>HG</code>)</strong> format solves both problems at once: it rotates every 128-weight block through a Fast Walsh&ndash;Hadamard Transform (<code>FWHT-128</code>) to erase outlier spikes before rounding into a register lookup codebook (<code>4.125 bpw</code>), keeping models compressed all the way into CPU and GPU registers.</p>
-      <div class="actions">
-          <a class="btn btn--primary" href="#three-myths">1. 4 AI Myths Broken &darr;</a>
-          <a class="btn" href="#how-hg-works">2. How Clover HG Works &darr;</a>
-          <a class="btn" href="#benchmarks">5. Real Hardware Benchmarks &darr;</a>
-          <a class="btn" href="#convert-any-model">7. Deploy in 1 Command &darr;</a>
-      </div>
+  <div class="pinned" data-story data-myth-story>
+    <div class="pinned__mark">
+      <svg class="clover clover--hero" viewBox="-6 -10 112 110" role="group" aria-label="Five myths of AI. Each grey leaf turns golden as its myth is broken.">
+        <g class="clover__spin">
+          <a class="clover__leaf-hit" href="#myth-1-wire" aria-label="Myth 1: The Wire">
+            <g transform="translate(50 44) scale(1.005 1.02) translate(-50 -44)">
+              <use class="clover__leaf is-filled story__leaf" data-myth-idx="1" href="#clover-leaf"/>
+              <use class="clover__vein" href="#clover-vein"/>
+            </g>
+            <text class="clover__label story__label" data-myth-idx="1" text-anchor="middle"><textPath href="#arc-top" startOffset="50%">Wire</textPath></text>
+          </a>
+          <a class="clover__leaf-hit" href="#myth-2-capacity" aria-label="Myth 2: Memory">
+            <g transform="rotate(70.8 50 44) translate(50 44) scale(0.968 0.994) translate(-50 -44)">
+              <use class="clover__leaf is-filled story__leaf" data-myth-idx="2" href="#clover-leaf"/>
+              <use class="clover__vein" href="#clover-vein"/>
+            </g>
+            <text class="clover__label story__label" data-myth-idx="2" text-anchor="middle"><textPath href="#arc-upper-right" startOffset="50%">Memory</textPath></text>
+          </a>
+          <a class="clover__leaf-hit" href="#myth-3-machines" aria-label="Myth 3: Scale">
+            <g transform="rotate(145.4 50 44) translate(50 44) scale(1.038 0.972) translate(-50 -44)">
+              <use class="clover__leaf is-filled story__leaf" data-myth-idx="3" href="#clover-leaf"/>
+              <use class="clover__vein" href="#clover-vein"/>
+            </g>
+            <text class="clover__label story__label" data-myth-idx="3" text-anchor="middle"><textPath href="#arc-lower-right" startOffset="50%">Scale</textPath></text>
+          </a>
+          <a class="clover__leaf-hit" href="#myth-4-vram" aria-label="Myth 4: VRAM">
+            <g transform="rotate(215.2 50 44) translate(50 44) scale(0.984 1.031) translate(-50 -44)">
+              <use class="clover__leaf is-filled story__leaf" data-myth-idx="4" href="#clover-leaf"/>
+              <use class="clover__vein" href="#clover-vein"/>
+            </g>
+            <text class="clover__label story__label" data-myth-idx="4" text-anchor="middle"><textPath href="#arc-lower-left" startOffset="50%">VRAM</textPath></text>
+          </a>
+          <a class="clover__leaf-hit" href="#myth-5-specialists" aria-label="Myth 5: Team">
+            <g transform="rotate(288.9 50 44) translate(50 44) scale(1.022 0.963) translate(-50 -44)">
+              <use class="clover__leaf is-filled story__leaf" data-myth-idx="5" href="#clover-leaf"/>
+              <use class="clover__vein" href="#clover-vein"/>
+            </g>
+            <text class="clover__label story__label" data-myth-idx="5" text-anchor="middle"><textPath href="#arc-upper-left" startOffset="50%">Team</textPath></text>
+          </a>
+        </g>
+      </svg>
+    </div>
 
-      <div class="stat-grid" style="margin-top:2rem">
-        <div class="stat-card">
-            <div class="stat-card__num">~4&times; Smaller</div>
-            <div class="stat-card__label"><code>16-bit BF16</code> &rarr; <code>4.125-bit HG4</code></div>
-            <div class="stat-card__note">Shrinks a <code>68 GiB</code> 35B model to <code>17.2 GiB</code> (fits one 24 GB GPU or 32 GB PC) and a <code>240 GiB</code> 120B model to <code>60.2 GiB</code>.</div>
+    <section class="hero" id="overview">
+      <div class="wrap">
+        <div>
+          <h1>AI Mythbuster</h1>
+          <p class="hero__tagline">Five myths made AI look impossible to own. Clover <code>HG</code> breaks all five.</p>
+          <p class="lede">For years, the industry has repeated five beliefs about AI &mdash; that you need faster chips, more gigabytes, giant servers, massive networks, and one giant universal model.</p>
+          <p style="margin-top:1rem"><strong>All five beliefs fall apart the moment you measure real hardware.</strong><br>Look at the five grey leaves on the right. Scroll down as each everyday story and real measurement breaks one myth &mdash; turning every leaf to gold.</p>
         </div>
-        <div class="stat-card">
-            <div class="stat-card__num">4.4&times; &ndash; 45&times;</div>
-            <div class="stat-card__label">Faster Token Decoding</div>
-            <div class="stat-card__note">Moves ~4&times; fewer bytes per token and keeps models inside fast RAM/VRAM instead of spilling onto slow PCIe or SSD wires.</div>
+      </div>
+    </section>
+
+    <section class="band stage" id="myth-1-wire" data-myth-step="1">
+      <div class="wrap">
+        <h2>Myth 1: &ldquo;AI is slow because chips calculate too slowly.&rdquo;</h2>
+        <p><strong>Imagine hiring the world&rsquo;s fastest chef, then sliding ingredients into the kitchen one spoonful at a time through a tiny mail slot.</strong></p>
+        <p>Buying a hotter stove changes nothing. The chef spends almost the entire evening standing by the door, waiting for the next spoonful to arrive.</p>
+        <p><strong>AI works the same way.</strong> Writing each word requires hauling billions of model weights from memory into the processor. The processor is not struggling with the math &mdash; it is waiting on the wire.</p>
+        <div class="inline-proof">
+          <div class="inline-proof__eyebrow">Leaf 1 Proven &middot; Same Wire, Faster Processor</div>
+          <p style="margin:0">On the same laptop memory wire (<code>25.6 GB/s</code>), switching from the CPU to a much faster GPU barely moved speed at all &mdash; because both waited on the exact same wire. Shrinking the weights fourfold with Clover <code>HG</code> immediately multiplied throughput.</p>
+          <div class="inline-proof__metrics">
+            <span><strong>12.4 &rarr; 12.8 tok/s</strong> CPU vs. GPU on the same wire</span>
+            <span><strong>4.4&times; &ndash; 45&times;</strong> faster once <code>HG</code> cuts wire traffic 4&times;</span>
+          </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-card__num">86 / 86</div>
-            <div class="stat-card__label">Identical Deterministic Tokens</div>
-            <div class="stat-card__note">Matches official <code>BF16</code> character-for-character on deterministic code/math (<code>8&times;</code> smaller perplexity gap than <code>Q4_0</code>, <code>87/87</code> bit-exact CPU == GPU).</div>
+      </div>
+    </section>
+
+    <section class="band stage" id="myth-2-capacity" data-myth-step="2">
+      <div class="wrap">
+        <h2>Myth 2: &ldquo;Adding more RAM or VRAM makes AI faster.&rdquo;</h2>
+        <p><strong>If your books already fit on one shelf, buying an empty warehouse next door does not help you read a single page faster.</strong></p>
+        <p>Memory size (<code>GB</code>) only decides whether a model <em>fits</em>. Once it fits, extra gigabytes sit completely untouched. What sets speed is how many lanes the memory highway has (<code>GB/s</code>).</p>
+        <div class="inline-proof">
+          <div class="inline-proof__eyebrow">Leaf 2 Proven &middot; Warehouse Size vs. Highway Width</div>
+          <p style="margin:0">Expanding server RAM 64-fold or doubling GPU VRAM added <strong>zero</strong> speed once the model fit &mdash; and an <code>8 GB</code> phone with a 4-lane memory bus beat a <code>16 GB</code> 1-lane laptop by nearly three times.</p>
+          <div class="inline-proof__metrics">
+            <span><strong>+0.0 tok/s</strong> from <code>2 GB &rarr; 128 GB</code> RAM</span>
+            <span><strong>+0.0 tok/s</strong> from <code>96 GB &rarr; 192 GB</code> VRAM</span>
+            <span><strong>33.4 vs. 12.4 tok/s</strong> 8 GB Phone beat 16 GB Laptop (<code>2.7&times;</code>)</span>
+          </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-card__num">+0.0 tok/s</div>
-            <div class="stat-card__label">From Extra RAM / VRAM After Fit</div>
-            <div class="stat-card__note">Measured across 4 hardware tiers: once a model fits, adding empty GBs adds zero speed &mdash; only cutting data movement helps.</div>
+      </div>
+    </section>
+
+    <section class="band stage" id="myth-3-machines" data-myth-step="3">
+      <div class="wrap">
+        <h2>Myth 3: &ldquo;One giant server beats many small machines.&rdquo;</h2>
+        <p><strong>Put four cashiers behind one narrow front door, and customers still wait in a single line.</strong></p>
+        <p>Open four small shops side by side &mdash; each with its own door &mdash; and four times as many people walk through at once.</p>
+        <p><strong>Inside one giant server, multiple AI workers fight over the same memory bus.</strong> Across smaller right-sized machines, every GPU gets its own dedicated highway.</p>
+        <div class="inline-proof">
+          <div class="inline-proof__eyebrow">Leaf 3 Proven &middot; Shared Bus vs. Independent Buses</div>
+          <p style="margin:0">Four workers inside one <code>128 GB</code> server split a single bus and gained nothing (<code>16.0 tok/s</code> total). Splitting across four small <code>32 GB</code> nodes gave linear <code>4.0&times;</code> scaling &mdash; and four independent <code>24 GB RTX 3090</code> cards reached <code>234.1 tok/s</code>.</p>
+          <div class="inline-proof__metrics">
+            <span><strong>16.0 tok/s</strong> 4 workers in one 128 GB box</span>
+            <span><strong>66.4 tok/s</strong> 4 small 32 GB nodes (<code>4.0&times;</code>)</span>
+            <span><strong>234.1 tok/s</strong> 4&times; right-sized 24 GB GPUs</span>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <section class="band stage" id="myth-4-vram" data-myth-step="4">
+      <div class="wrap" id="vram-waste-proof">
+        <h2>Myth 4: &ldquo;AI servers need big CPUs, 512 GB RAM, fast SSDs, and huge networks.&rdquo;</h2>
+        <p><strong>Before a concert, a pianist reads the sheet music into memory. Once the concert begins, the filing cabinet, the desk, and the delivery van outside do nothing at all.</strong></p>
+        <p>Model weights never change while answering you. Once they sit inside GPU VRAM, the disk is silent, system RAM sits empty, and the CPU barely wakes up. Between servers, GPUs do not send weights &mdash; they pass only the next token ID over a dedicated socket.</p>
+        <div class="inline-proof">
+          <div class="inline-proof__eyebrow">Leaf 4 Proven &middot; Live Linux Kernel Counters on Rented RTX 3090 Nodes</div>
+          <p style="margin:0">Measured across steady-state inference once <code>HG</code> weights were pinned in VRAM, paired over Clover&rsquo;s raw binary token socket (<code>tsock://</code>):</p>
+          <div class="inline-proof__metrics">
+            <span><strong>0 Bytes</strong> Disk read</span>
+            <span><strong>99.5%</strong> Host RAM unused (<code>256 GB</code> box)</span>
+            <span><strong>95%</strong> CPU idle</span>
+            <span><strong>4 Bytes/token</strong> Network wire (<code>5.4&times;</code> faster than HTTP)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band stage" id="myth-5-specialists" data-myth-step="5">
+      <div class="wrap">
+        <h2>Myth 5: &ldquo;One giant universal AI model can do every job best.&rdquo;</h2>
+        <p><strong>Put the world&rsquo;s best mathematician, best chef, and best Formula 1 driver in one room, and ask them to trade jobs.</strong></p>
+        <p>The chef spins out on the first corner. The driver burns the sauce. Even brilliant minds master what they actually practiced &mdash; and check their work differently.</p>
+        <p><strong>AI models are no different.</strong> A language model predicts likely words; it is not a formal proof compiler, a 3D physics simulator, a protein folder, or a 100-digit calculator. Because <code>HG</code> shrinks models fourfold, Clover hosts a <strong>team of specialists</strong> on affordable 24 GB GPUs and verifies every answer objectively.</p>
+        <div class="inline-proof">
+          <div class="inline-proof__eyebrow">All 5 Leaves Golden &middot; Specialist Team vs. One Giant Model</div>
+          <p style="margin:0">Across sealed benchmarks, focused specialists beat models <code>15&times;&ndash;300,000&times;</code> larger on their home turf &mdash; while one <code>300 MB</code> Harness LoRA on our <code>35B</code> coordinator orchestrates the whole team.</p>
+          <div class="inline-proof__metrics">
+            <span><strong>8 / 8 vs. 0 / 8</strong> Exact math (<code>0.2 MB x-cruncher</code> vs. raw LLM)</span>
+            <span><strong>90.4% vs. 88.9%</strong> Lean 4 proofs (<code>32B Goedel</code> vs. <code>671B</code>)</span>
+            <span><strong>0.51 GB</strong> <code>V-JEPA 2.1 HG4</code> physical video world model</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="band" id="what-now">
+    <div class="wrap">
+      <h2>How Clover <code>HG</code> makes all five possible</h2>
+      <p class="lede"><strong>Why did ordinary 4-bit compression break reasoning in the first place?</strong></p>
+      <p>Imagine trying to record a quiet conversation in the same room as a sudden thunderclap. If you turn the volume down to fit the thunderclap, every quiet voice disappears.</p>
+      <p><strong>Neural networks have the same thunderclaps &mdash; rare outlier weights ten times larger than their neighbors.</strong> Clover&rsquo;s Hadamard-Grouped (<code>HG</code>) format applies a fast, reversible mathematical rotation across every 128 weights first. The spike spreads evenly across its neighbors, packs cleanly into <code>4 bits</code>, and travels all the way into CPU and GPU registers before unpacking.</p>
+      <div class="inline-proof" style="border-left-color:var(--accent);border-color:var(--accent-line)">
+        <div class="inline-proof__eyebrow" style="color:var(--accent)">Two Flagship Conversions &middot; Same Intelligence in Quarter the Space</div>
+        <div class="spotlight-pair">
+          <div class="spotlight-card">
+            <h3 style="margin-bottom:0.25rem">Qwen3.6-35B-A3B</h3>
+            <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.5rem">Front-door coding &amp; tool coordinator</p>
+            <div style="font-size:0.86rem"><code>70.0 GB</code> BF16 &rarr; <strong><code>17.4 GB</code> HG4-16R-OP</strong> (fits <strong>one</strong> 24 GB GPU)</div>
+            <div class="size-meter"><span style="width:25%"></span></div>
+            <p style="font-size:0.86rem;color:var(--muted);margin:0"><strong>100%</strong> Top-8 MoE router match &middot; <strong>86 / 86</strong> identical deterministic tokens.</p>
+          </div>
+          <div class="spotlight-card">
+            <h3 style="margin-bottom:0.25rem">Nemotron-3.5 120B</h3>
+            <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.5rem">Vision &amp; heavy engineering escalation</p>
+            <div style="font-size:0.86rem"><code>240.0 GB</code> BF16 &rarr; <strong><code>60.2 GB</code> HG4-16R-OP</strong> (fits 3&times; 24 GB GPUs)</div>
+            <div class="size-meter"><span style="width:25%"></span></div>
+            <p style="font-size:0.86rem;color:var(--muted);margin:0"><strong>34.4%</strong> sealed 288-step <code>SciCode</code> &middot; 55+ tok/s in VRAM.</p>
+          </div>
+        </div>
+        <p style="margin:1rem 0 0;font-size:0.95rem">
+          <strong>Want to check all converted models?</strong> Browse <code>Goedel-Prover-32B</code> (Lean 4), <code>Meta V-JEPA 2.1</code> (0.51 GB physical motion), <code>Chronos-Bolt</code> (102 MB forecasting), <code>LFM3-Omni-2B</code>, and <code>Kimi-K3.1</code> on Hugging Face:
+          <a href="https://huggingface.co/Santhoshsathish94"><strong>huggingface.co/Santhoshsathish94 &rarr;</strong></a>
+        </p>
       </div>
     </div>
   </section>
 
-  <!-- ============ 1. BREAKING THE 4 AI HARDWARE & MODEL MYTHS UPFRONT ============ -->
-  <section class="band" id="three-myths">
+  <section class="band" id="real-growth">
     <div class="wrap">
-        <h2>1. Start here &mdash; breaking four common myths about AI speed, hardware, and &ldquo;one giant model&rdquo;</h2>
-        <p class="lede">Before looking at compression math or benchmark tables, four connected facts explain <em>everything</em> about how Clover designs models and clusters &mdash; and each proof unlocks the next:</p>
-
-        <div class="grid grid--2" style="margin-top:1.4rem">
-          <div class="card">
-            <h3>Myth 1: &ldquo;AI is a processing problem&rdquo;</h3>
-            <p><strong>Reality: AI inference is a data-movement problem.</strong> Generating each token requires hauling gigabytes of weights across a narrow memory wire into the processor. Switching from a laptop CPU to its faster integrated GPU on the <em>same</em> <code>25.6 GB/s</code> RAM stick barely moved decoding (<code>12.4 &rarr; 12.8 tok/s</code>) &mdash; compute cores sit idle waiting on the wire.</p>
-          </div>
-          <div class="card">
-            <h3>Myth 2: &ldquo;More RAM or VRAM makes AI faster&rdquo;</h3>
-            <p><strong>Reality: Once a model fits in RAM or VRAM, extra GBs add <code>+0.0 tok/s</code>.</strong> Expanding RAM from <code>2 GB &rarr; 128 GB</code> gave <code>48.7 &rarr; 48.7 tok/s</code> (<code>+0.0</code>); doubling VRAM from <code>96 GB &rarr; 192 GB</code> gave <code>172.2 &rarr; 171.8 tok/s</code> (<code>+0.0</code>). An <code>8 GB</code> 4-channel phone (<code>33.4 tok/s</code>) beat a <code>16 GB</code> 1-channel laptop (<code>12.4 tok/s</code>) by <strong><code>2.7&times;</code></strong> because <strong>bus width (<code>GB/s</code>), not capacity (<code>GB</code>), sets speed</strong>.</p>
-          </div>
-          <div class="card">
-            <h3>Myth 3: &ldquo;One larger machine beats smaller ones&rdquo;</h3>
-            <p><strong>Reality: More smaller right-sized machines outperform one giant machine.</strong> Because of Proofs 1 &amp; 2, running 4 instances inside one <code>128 GB</code> server forces all 4 to split <strong>one</strong> <code>83.2 GB/s</code> bus (<code>~4 tok/s &times; 4 = 16.0 tok/s</code>, <code>0&times;</code> gain). Running 4 smaller <code>32 GB</code> nodes (<code>66.4 tok/s</code>, <strong><code>4.0&times;</code></strong>) or <code>4&times; 24 GB RTX 3090</code> (<code>234.1 tok/s</code>) gives every replica its <strong>own memory bus</strong>.</p>
-          </div>
-          <div class="card">
-            <h3>Myth 4: &ldquo;One giant model can master every job&rdquo;</h3>
-            <p><strong>Reality: Put the world&rsquo;s #1 mathematician, #1 chef, and #1 F1 driver in one room &mdash; none can win the others&rsquo; event.</strong> Expertise comes from training data, representation, and verification oracles, not size alone. Shrinking models <code>~4&times;</code> with <code>HG</code> lets an entire team of domain specialists live inside cheap <code>24 GB</code> GPUs across multiple small servers, passing only <strong><code>&lt; 1 MB</code> of tokens or activations</strong> over standard networks.</p>
-          </div>
-        </div>
-
-        <figure class="diagram" style="margin-top:1.6rem">
-          <svg viewBox="0 0 900 176" role="img" aria-label="Four-step logical chain: (1) Wire GB/s limits speed -> (2) Extra GBs after fit add +0.0 tok/s -> (3) Scale out N small right-sized nodes for N memory buses -> (4) Host specialized HG domain masters in VRAM across cheap 8x3090 servers connected by sub-1-MB network hops." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:14px;background:#fffefb;padding:10px">
-            <text x="20" y="24" font-size="11" font-weight="700" fill="#1b5e46" letter-spacing="0.9">THE FOUR-STEP DEDUCTIVE CHAIN · FROM WIRE PHYSICS TO DISTRIBUTED HG SPECIALIST CLUSTERS</text>
-            <line x1="20" y1="35" x2="880" y2="35" stroke="#dfd8c8" stroke-width="1"></line>
-
-            <rect x="20" y="48" width="196" height="112" rx="9" fill="#f7f4ec" stroke="#c9c0ad"></rect>
-            <text x="32" y="69" font-size="11" font-weight="700" fill="#132018">1. Wire Bottleneck</text>
-            <text x="32" y="88" font-size="9.6" fill="#2d3e34">Speed = GB/s &divide; Bytes/Tok</text>
-            <text x="32" y="106" font-size="9.4" fill="#596a5f">Faster iGPU, same stick:</text>
-            <text x="32" y="123" font-size="9.6" font-weight="700" fill="#7d5312">12.4 &rarr; 12.8 tok/s (~0&times;)</text>
-            <text x="32" y="143" font-size="9.4" fill="#1b5e46" font-weight="600">&rArr; Shrink bytes ~4&times; (HG)</text>
-
-            <path d="M219 104 L235 104" stroke="#1b5e46" stroke-width="2" fill="none"></path>
-            <polygon points="235,99 243,104 235,109" fill="#1b5e46"></polygon>
-
-            <rect x="246" y="48" width="196" height="112" rx="9" fill="#f7f4ec" stroke="#c9c0ad"></rect>
-            <text x="258" y="69" font-size="11" font-weight="700" fill="#132018">2. Extra GBs = +0.0</text>
-            <text x="258" y="88" font-size="9.6" fill="#2d3e34">2G &rarr; 128G: 48.7 &rarr; 48.7</text>
-            <text x="258" y="106" font-size="9.6" fill="#2d3e34">96G &rarr; 192G: 172.2 &rarr; 171.8</text>
-            <text x="258" y="123" font-size="9.6" font-weight="700" fill="#7d5312">Unused GBs buy 0 speed</text>
-            <text x="258" y="143" font-size="9.4" fill="#1b5e46" font-weight="600">&rArr; Right-size RAM / VRAM</text>
-
-            <path d="M445 104 L461 104" stroke="#1b5e46" stroke-width="2" fill="none"></path>
-            <polygon points="461,99 469,104 461,109" fill="#1b5e46"></polygon>
-
-            <rect x="472" y="48" width="196" height="112" rx="9" fill="#eef6f1" stroke="#8bb7a4"></rect>
-            <text x="484" y="69" font-size="11" font-weight="700" fill="#1b5e46">3. More Small Nodes</text>
-            <text x="484" y="88" font-size="9.6" fill="#132018">1&times;128G (1 bus) = 16 t/s</text>
-            <text x="484" y="106" font-size="9.6" fill="#132018">4&times;32G (4 buses) = 66 t/s</text>
-            <text x="484" y="123" font-size="9.6" font-weight="700" fill="#1b5e46">4&times;24G 3090 = 234 tok/s</text>
-            <text x="484" y="143" font-size="9.4" fill="#2d3e34">&rArr; Multiply cheap buses</text>
-
-            <path d="M671 104 L687 104" stroke="#1b5e46" stroke-width="2" fill="none"></path>
-            <polygon points="687,99 695,104 687,109" fill="#1b5e46"></polygon>
-
-            <rect x="698" y="48" width="182" height="112" rx="9" fill="#eef6f1" stroke="#0a6a5f" stroke-width="1.5"></rect>
-            <text x="710" y="69" font-size="11" font-weight="700" fill="#0a6a5f">4. Specialist Cluster</text>
-            <text x="710" y="88" font-size="9.5" fill="#132018">Mathematician &middot; Coder</text>
-            <text x="710" y="105" font-size="9.5" fill="#132018">3D Science &middot; World Phys</text>
-            <text x="710" y="122" font-size="9.5" font-weight="700" fill="#0a6a5f">Weights stay in 3090 VRAM;</text>
-            <text x="710" y="140" font-size="9.4" font-weight="700" fill="#1b5e46">only &lt;1 MB hops network!</text>
-          </svg>
-        </figure>
-    </div>
-  </section>
-
-  <section class="band" id="how-hg-works">
-    <div class="wrap">
-        <h2>2. How Clover <code>HG</code> works &mdash; cutting wire traffic ~4&times; without losing accuracy</h2>
-        <p class="lede">Why do large AI models feel slow even on powerful processors? Because generating one word requires reading every active weight across a narrow memory wire. Naive low-bit formats try to shrink that wire traffic by rounding raw weights directly, but neural networks store critical reasoning features inside sharp <strong>outlier spikes</strong> (<code>10&times;&ndash;50&times;</code> larger than neighboring weights). One spike stretches the rounding scale and wipes out hundreds of nearby weights.</p>
-
-        <div class="grid grid--3" style="margin-top:1.5rem">
-          <div class="card">
-            <h3>1. Smooth Outliers (<code>FWHT-128</code>)</h3>
-            <p>Before any rounding happens, <code>HG</code> multiplies each 128-weight block by random sign flips and an orthogonal Hadamard matrix (<code>H<sub>128</sub></code>). Every <code>30&times;</code> spike is spread evenly across all 128 coordinates into a clean bell curve (<code>0.996+</code> cosine vs. <code>0.923</code> for naive <code>INT4</code>).</p>
-          </div>
-          <div class="card">
-            <h3>2. Compute in Registers (<code>LUT16</code>)</h3>
-            <p>Because <code>(W D<sup>-1</sup> H<sub>128</sub>)(H<sub>128</sub><sup>T</sup> D x) = W x</code>, we rotate the tiny input vector <code>x</code> once at runtime and multiply directly against 4-bit Gaussian indices (<code>HG4-16R</code>, or 2-bit <code>HG2-16R</code> for cold MoE experts) inside 16-row SIMD registers &mdash; never expanding weights back to <code>BF16</code> in memory.</p>
-          </div>
-          <div class="card">
-            <h3>3. Keep Control Paths Exact (<code>FP32</code>)</h3>
-            <p>Small, sensitive tensors &mdash; 1D RMSNorms, SSM state decays, and Hadamard-rotated Mixture-of-Experts router gates (<code>HG4OP001</code>) &mdash; stay in exact <code>32-bit FP32</code>, guaranteeing <strong><code>100.0%</code> lossless expert routing</strong> (<code>Top-K Jaccard = 1.000000</code>).</p>
-          </div>
-        </div>
-
-        <figure class="diagram" style="margin-top:1.8rem">
-          <svg viewBox="0 0 900 250" role="img" aria-label="Four-stage Clover HG diagram: (1) Raw BF16 weights with 30x outlier spikes, (2) Orthogonal FWHT-128 rotation blends spikes into a smooth Gaussian curve, (3) 16-row HG4-16R / HG2-16R packing plus lossless FP32 routers, (4) Direct register execution on Phone, Laptop, CPU Server, and GPU." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:14px;background:#fffefb;padding:10px">
-            <rect x="0" y="0" width="900" height="250" rx="12" fill="#fffefb"></rect>
-            <text x="22" y="26" font-size="11.5" font-weight="700" fill="#1b5e46" letter-spacing="1.1">HOW HG SOLVES BOTH MEMORY BANDWIDTH AND OUTLIER ACCURACY WITHOUT RETRAINING</text>
-          <line x1="22" y1="38" x2="878" y2="38" stroke="#dfd8c8" stroke-width="1"></line>
-
-            <rect x="22" y="54" width="192" height="174" rx="10" fill="#f6f3ea" stroke="#c9c0ad" stroke-width="1.2"></rect>
-            <text x="36" y="78" font-size="12" font-weight="700" fill="#132018">1. Raw BF16 Checkpoint</text>
-            <text x="36" y="100" font-size="10.5" fill="#2d3e34">• 16 bits per weight (heavy)</text>
-            <text x="36" y="119" font-size="10.5" fill="#7d5312">• Sharp 30&times; outlier spikes</text>
-            <text x="36" y="138" font-size="10.5" fill="#596a5f">• Naive 4-bit clips spikes</text>
-            <text x="36" y="155" font-size="10.5" fill="#596a5f">  (cosine drops to 0.923)</text>
-            <text x="36" y="182" font-size="10" font-weight="600" fill="#2d3e34">Any HF .safetensors:</text>
-            <text x="36" y="198" font-size="10" fill="#596a5f">BF16 · FP16 · FP8 · MXFP4</text>
-
-            <path d="M218 141 L240 141" stroke="#1b5e46" stroke-width="2" fill="none"></path>
-            <polygon points="240,136 250,141 240,146" fill="#1b5e46"></polygon>
-
-            <rect x="254" y="54" width="206" height="174" rx="10" fill="#eef6f1" stroke="#8bb7a4" stroke-width="1.4"></rect>
-            <text x="268" y="78" font-size="12" font-weight="700" fill="#1b5e46">2. FWHT-128 Rotation</text>
-            <text x="268" y="100" font-size="10.5" fill="#132018">W&#x0302; = W &middot; D<sup>-1</sup> &middot; H<sub>128</sub></text>
-            <text x="268" y="121" font-size="10.5" fill="#2d3e34">• Blends every spike evenly</text>
-            <text x="268" y="138" font-size="10.5" fill="#2d3e34">  across 128 coordinates</text>
-            <text x="268" y="159" font-size="10.5" fill="#1b5e46" font-weight="600">• Cosine rises to 0.996+</text>
-            <text x="268" y="179" font-size="10.5" fill="#596a5f">• Cholesky LDLQ error</text>
-            <text x="268" y="196" font-size="10.5" fill="#596a5f">  feedback within each block</text>
-
-            <path d="M464 141 L486 141" stroke="#1b5e46" stroke-width="2" fill="none"></path>
-            <polygon points="486,136 496,141 486,146" fill="#1b5e46"></polygon>
-
-            <rect x="500" y="54" width="184" height="174" rx="10" fill="#f6f3ea" stroke="#c9c0ad" stroke-width="1.2"></rect>
-            <text x="514" y="78" font-size="12" font-weight="700" fill="#132018">3. Compact HG Files</text>
-            <text x="514" y="100" font-size="10.5" fill="#1b5e46" font-weight="700">• HG4-16R (4.125 bpw)</text>
-            <text x="514" y="117" font-size="10" fill="#2d3e34">  Primary dense &amp; hot MoE</text>
-            <text x="514" y="138" font-size="10.5" fill="#132018" font-weight="700">• HG2-16R (2.125 bpw)</text>
-            <text x="514" y="155" font-size="10" fill="#2d3e34">  Cold long-tail MoE experts</text>
-            <text x="514" y="176" font-size="10.5" fill="#1b5e46" font-weight="700">• HG4OP001 (FP32)</text>
-            <text x="514" y="193" font-size="10" fill="#2d3e34">  Lossless routers &amp; norms</text>
-
-            <path d="M688 141 L710 141" stroke="#1b5e46" stroke-width="2" fill="none"></path>
-            <polygon points="710,136 720,141 710,146" fill="#1b5e46"></polygon>
-
-            <rect x="724" y="54" width="154" height="174" rx="10" fill="#eef6f1" stroke="#8bb7a4" stroke-width="1.4"></rect>
-            <text x="738" y="78" font-size="12" font-weight="700" fill="#1b5e46">4. Fast Execution</text>
-            <text x="738" y="100" font-size="10.5" fill="#132018">• ~4&times; less wire traffic</text>
-            <text x="738" y="119" font-size="10.5" fill="#132018">• Fits Phone, PC &amp; 4090</text>
-            <text x="738" y="138" font-size="10.5" fill="#132018">• Zero BF16 expansion</text>
-            <text x="738" y="157" font-size="10.5" fill="#132018">• Bit-exact across x86,</text>
-            <text x="738" y="174" font-size="10.5" fill="#132018">  ARM64 &amp; CUDA GPUs</text>
-            <text x="738" y="198" font-size="10" font-weight="700" fill="#1b5e46">OpenAI /v1 compatible</text>
-        </svg>
-      </figure>
-
-        <h3 id="hg-vs-sub2bit" style="margin-top:2.2rem">How <code>HG</code> differs from <code>2-bit</code>, <code>1.58-bit</code>, <code>1-bit</code>, and <code>0.5-bit</code> quantization</h3>
-        <p>Aggressive sub-2-bit compression methods split sharply on three practical axes: whether they require expensive GPU retraining or calibration datasets, whether they crush high-entropy attention and router layers below their information floor, and whether large vector codebooks introduce new memory-lookup bottlenecks at runtime:</p>
-
-        <div class="table-wrap" style="margin-top:1rem">
-          <table class="data">
-            <caption class="note">Structural comparison between <code>1.58-bit</code> from-scratch training, <code>0.5-bit / 1-bit / 2-bit</code> post-training quantization, and Clover <code>HG</code>.</caption>
-            <thead>
-              <tr>
-                <th scope="col">Method</th>
-                <th scope="col">Retraining / Calibration?</th>
-                <th scope="col">How Weights Are Stored</th>
-                <th scope="col">Code, Math &amp; Proof Fidelity</th>
-                <th scope="col">Runtime Lookup Overhead</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row"><strong>Native <code>1.58-bit</code></strong><br><small><code>BitNet b1.58</code></small></th>
-                <td><strong>Pre-train from scratch</strong><br><small>(<code>$10M+</code>, trillions of tokens)</small></td>
-                <td>Ternary <code>{-1, 0, +1}</code> learned during pre-training</td>
-                <td>Strong when trained natively; <strong>cannot convert</strong> existing models</td>
-                <td>Fast integer add/sub</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Post-Training <code>0.5b&ndash;1b</code></strong><br><small><code>OneBit</code>, <code>BiLLM</code>, <code>SVD+VQ</code></small></th>
-                <td><strong>Heavy GPU Hessian / QAT</strong><br><small>(hours to days on GPUs)</small></td>
-                <td>Forces all layers <code>&le;1 bpw</code> via low-rank <code>U&middot;V</code> + sign masks or VQ</td>
-                <td><strong>Severe drop (<code>-15%</code> to <code>-45%</code>)</strong> on exact code, math &amp; proofs</td>
-                <td><code>64 KB&ndash;2 MB</code> VQ tables <strong>spill out of registers into RAM/L2</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Uniform <code>2-bit</code> PTQ</strong><br><small><code>QuIP#</code>, <code>AQLM</code></small></th>
-                <td>Needs calibration data + GPU Hessian pass</td>
-                <td>Compresses attention, trunks &amp; routers uniformly to <code>2 bpw</code></td>
-                <td>Good chat prose; <code>~5&ndash;12%</code> drop on hard multi-step coding/math</td>
-                <td>Multi-KB codebook lookups or E8 lattice decode</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Clover <code>HG</code></strong><br><small><code>HG4-16R-OP</code> + <code>K31H</code></small></th>
-                <td><strong>Zero retraining, zero dataset</strong><br><small>Runs on CPU (<code>convert_to_hg.py</code>)</small></td>
-                <td><strong>3-tier entropy match:</strong> <code>FP32</code> routers, <code>4.125b HG4</code> hot/trunks, <code>2.125b HG2</code> cold tail</td>
-                <td><strong><code>~98&ndash;99%+</code> of <code>BF16</code></strong><br><small><code>86/86</code> code match &middot; <code>#1</code> Lean 4 proofs</small></td>
-                <td><strong><code>16 B</code> <code>LUT16</code> stays inside <code>1</code> SIMD/warp register (<code>1</code> cycle)</strong></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-    </div>
-  </section>
-
-  <!-- ============ 2. COMPRESSION ACROSS 4 MODELS & OUTPUT FIDELITY ============ -->
-  <section class="band" id="compression-4-models">
-    <div class="wrap">
-        <h2>3. Compression achieved across 4 models &mdash; <code>BF16</code> size vs. <code>HG</code> size and why it matters</h2>
-        <p class="lede">We converted and published four open-weight models spanning three orders of magnitude &mdash; from a <code>2B</code> mobile/laptop model up to a <code>2.8 Trillion</code> parameter frontier MoE. Decreasing model size by <code>2&times;&ndash;4&times;</code> accomplishes two things simultaneously: <strong>(1) each token moves up to <code>4&times;</code> fewer bytes across memory wires</strong>, and <strong>(2) models stay inside fast local RAM or GPU VRAM instead of spilling onto slow SSD or PCIe buses</strong>.</p>
-
-      <div class="table-wrap">
-        <table class="data">
-            <caption class="note">Original checkpoint size vs. Clover <code>HG</code> size across all 4 published models, and the memory tier each size unlocks.</caption>
-          <thead>
-            <tr>
-                <th scope="col">Model &amp; Scale</th>
-                <th scope="col">Original Size (<code>BF16</code>)</th>
-                <th scope="col">Clover <code>HG</code> Size</th>
-                <th scope="col">Reduction</th>
-                <th scope="col">What Staying in Smaller RAM / VRAM Unlocks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-                <th scope="row"><strong>2B</strong> &middot; <a href="https://huggingface.co/Santhoshsathish94/LFM3-Omni-2B-HG4-16R" target="_blank" rel="noopener noreferrer"><code>LFM3-Omni-2B</code></a><br><small>24L Dense + ShortConv + GQA</small></th>
-                <td><code>3.22 GiB</code></td>
-                <td><strong><code>0.83 GiB</code></strong><br><small><code>HG4-16R</code></small></td>
-                <td><strong><code>3.88&times;</code> smaller</strong><br><small>(<code>-2.39 GiB</code>)</small></td>
-                <td>Fits easily inside an <strong><code>8 GB</code> phone</strong> (<code>33.4 tok/s</code>), <code>2 GB</code> server cgroup, or <code>&lt;1 GB</code> of GPU VRAM instead of streaming off flash.</td>
-            </tr>
-            <tr>
-                <th scope="row"><strong>35B</strong> &middot; <a href="https://huggingface.co/Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP" target="_blank" rel="noopener noreferrer"><code>Clover-35B-A3B</code></a><br><small>40L BD-GDN + 256 Experts/L</small></th>
-                <td><code>68.0 GiB</code></td>
-                <td><strong><code>17.2 GiB</code></strong><br><small><code>HG4-16R-OP</code></small></td>
-                <td><strong><code>3.95&times;</code> smaller</strong><br><small>(<code>-50.8 GiB</code>)</small></td>
-                <td>Fits <strong>100% inside <code>1&times; RTX 4090</code> (<code>24 GB</code>)</strong> at <code>168.4 tok/s</code> (or a <code>32 GB</code> PC), whereas <code>68 GiB BF16</code> spills to RAM at <code>12.8 tok/s</code>.</td>
-            </tr>
-            <tr>
-                <th scope="row"><strong>120B</strong> &middot; <a href="https://huggingface.co/Santhoshsathish94/Nemotron-3.5-Super-VL-120B-HG4-16R-OP" target="_blank" rel="noopener noreferrer"><code>Nemotron-3.5-120B</code></a><br><small>90L Mamba-2 + 512E MoE + MTP</small></th>
-                <td><code>240.0 GiB</code></td>
-                <td><strong><code>60.2 GiB</code></strong><br><small><code>HG4-16R-OP</code></small></td>
-                <td><strong><code>3.99&times;</code> smaller</strong><br><small>(<code>-179.8 GiB</code>)</small></td>
-                <td>Fits <strong>100% in <code>128 GB</code> CPU RAM</strong> (<code>9.2 tok/s</code>) or <strong><code>4&times; RTX 4090</code></strong> (<code>172.2 tok/s</code>), whereas <code>240 GiB BF16</code> exceeds even <code>8&times; RTX 4090</code> (<code>192 GB</code>).</td>
-            </tr>
-            <tr>
-                <th scope="row"><strong>2.8T</strong> &middot; <a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Hot-HG4-OP" target="_blank" rel="noopener noreferrer"><code>Kimi-K3.1-Pro</code></a><br><small>93L KDA/DSA + 896E MoE + DSpark</small></th>
-                <td><code>1,581 GB</code><br><small>(BF16 + MXFP4)</small></td>
-                <td><strong><code>791.8 GB</code></strong><br><small><code>103.8G HG4</code> + <code>688G HG2</code></small></td>
-                <td><strong><code>2.00&times;</code> smaller</strong><br><small>(<code>-789 GB</code>)</small></td>
-                <td>Fits on a <strong>single <code>1 TB</code> NVMe</strong> + pins hot trunks/experts in <code>128 GB</code> RAM (<code>2.26 tok/s</code> CPU) or <code>8&times; 4090</code> + RAM (<code>7.89 tok/s</code>), zero experts dropped.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-        <h3 style="margin-top:2.2rem">Output fidelity: deterministic <code>BF16</code> parity &amp; bit-exact cross-device execution</h3>
-        <p>Shrinking a model only matters if its answers remain trustworthy. Under greedy decoding (<code>Temperature = 0</code>), <code>HG4-16R</code> reduces perplexity drift <strong><code>8.0&times;</code> below standard <code>Q4_0</code></strong> (<code>29.06</code> vs. <code>BF16</code> <code>28.81</code>, compared to <code>30.78</code> for <code>Q4_0</code>), produces <strong>character-for-character identical code and exact math answers</strong> to official <code>BF16</code> PyTorch, and executes <strong><code>100.0%</code> bit-identically across x86 CPU, ARM64 mobile, and RTX 4090 CUDA</strong> (<code>87 / 87</code> matching tokens; minor wording differences vs. <code>BF16</code> appear only on open-ended prose):</p>
-
-        <div class="grid grid--2" style="margin-top:0.8rem">
-          <div>
-            <p class="note"><strong>Official <code>BF16</code> PyTorch (<code>3.22 GiB</code>):</strong> <code>213.7 tok/s</code> prefill &middot; <code>9.1 tok/s</code> decode &middot; <code>9,508 ms</code></p>
-<pre class="code"><code>def is_prime(n: int) -&gt; bool:
-    if n &lt; 2:
-          return False
-    for i in range(2, int(n**0.5) + 1):
-          if n % i == 0:
-              return False
-    return True
-
-primes = [n for n in range(10, 31) if is_prime(n)]
-print(primes)</code></pre>
-          </div>
-          <div>
-            <p class="note"><strong>Clover <code>HG4-16R</code> (<code>0.83 GiB</code>):</strong> <code>829.4 tok/s</code> prefill &middot; <code>45.5 tok/s</code> decode &middot; <code>1,925 ms</code> (<strong><code>86 / 86</code> tokens identical, <code>4.94&times;</code> faster</strong>)</p>
-<pre class="code"><code>def is_prime(n: int) -&gt; bool:
-    if n &lt; 2:
-        return False
-    for i in range(2, int(n**0.5) + 1):
-        if n % i == 0:
-            return False
-    return True
-
-primes = [n for n in range(10, 31) if is_prime(n)]
-print(primes)</code></pre>
-          </div>
-        </div>
-
-        <div class="grid grid--2" style="margin-top:0.8rem">
-          <div>
-            <p class="note"><strong>Official <code>BF16</code> PyTorch (Solar Math, <code>T = 0</code>):</strong> <code>9.1 tok/s</code> decode &rarr; <code>72 kilowatts</code></p>
-<pre class="code"><code>The original array has 140 panels &times; 450 W = 63,000 W.
-Adding 20 more panels gives 160 panels total.
-The total capacity is 160 &times; 450 W = 72,000 W,
-which equals 72 kilowatts.</code></pre>
-          </div>
-          <div>
-            <p class="note"><strong>Clover <code>HG4-16R</code> (Solar Math, <code>T = 0</code>):</strong> <code>46.1 tok/s</code> decode (<code>5.07&times;</code> faster) &rarr; identical <code>72 kilowatts</code></p>
-<pre class="code"><code>Step 1 &ndash; Original capacity:  140 panels &times; 450 W = 63,000 W
-Step 2 &ndash; Add 20 more panels: 140 + 20 = 160 panels
-Step 3 &ndash; Total capacity:     160 panels &times; 450 W = 72,000 W
-Step 4 &ndash; Convert to kW:      72,000 W &divide; 1,000 = 72 kW
-The total capacity is 72 kilowatts.</code></pre>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ 3. HARDWARE SPECIFICATIONS OF THE 4 TESTBEDS ============ -->
-  <section class="band" id="testbed-specs">
-    <div class="wrap">
-        <h2>4. Hardware specifications of our benchmark testbeds</h2>
-        <p class="lede">To test how memory size, memory channels, CPU SIMD, and GPU VRAM behave in the real world, we measured the converted models across four physical machines &mdash; from a pocket phone up to an 8-GPU server:</p>
-
-        <div class="grid grid--2" style="margin-top:1.5rem">
-          <div class="card">
-            <h3>Testbed 1 &mdash; Phone: Samsung Galaxy S23 (<code>SM-S911B</code>)</h3>
-            <ul>
-              <li><strong>SoC / CPU:</strong> Qualcomm Snapdragon 8 Gen 2 (<code>8</code> ARMv8.2-A cores with <code>DOTPROD</code> SIMD)</li>
-              <li><strong>RAM &amp; Channels:</strong> <strong><code>8 GB</code> Quad-Channel <code>LPDDR5X-8533</code></strong> (<strong><code>68.3 GB/s</code></strong> peak unified bandwidth)</li>
-              <li><strong>GPU:</strong> Qualcomm Adreno 740 (unified memory shared with CPU, zero separate VRAM)</li>
-              <li><strong>Storage:</strong> <code>256 GB</code> UFS 4.0 flash (<code>4.22 GB/s</code> measured sequential layer-streaming read)</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Testbed 2 &mdash; Laptop: Windows Ultrabook (<code>i7-1355U</code>)</h3>
-            <ul>
-              <li><strong>CPU:</strong> 13th-Gen Intel Core i7-1355U (<code>10</code> cores / <code>12</code> threads, <code>AVX2 + FMA</code>, 15W TDP)</li>
-              <li><strong>RAM &amp; Channels:</strong> <strong><code>16 GB</code> Single-Channel <code>DDR4-3200</code></strong> (<code>1&times; 16 GB</code> stick in Slot 1, Slot 2 empty = <strong><code>25.6 GB/s</code></strong> wire)</li>
-              <li><strong>GPU:</strong> Intel UHD Graphics (<code>uma: 1</code> unified memory sharing the same <code>25.6 GB/s</code> DDR4 stick)</li>
-              <li><strong>Storage:</strong> Internal PCIe NVMe SSD</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Testbed 3 &mdash; CPU Server: Hetzner Dedicated Server (<code>k3</code>)</h3>
-            <ul>
-              <li><strong>CPU:</strong> <code>AMD Ryzen 9 7950X3D</code> (<code>16</code> Zen 4 cores / <code>32</code> threads, <code>AVX-512 VBMI</code>, <code>128 MB</code> 3D V-Cache)</li>
-              <li><strong>RAM &amp; Channels:</strong> <strong><code>128 GB</code> (<code>124 GiB</code> usable) Dual-Channel <code>DDR5-5200</code></strong> (<strong><code>83.2 GB/s</code></strong> peak bandwidth)</li>
-              <li><strong>GPU:</strong> <strong>None (<code>0</code> GPUs)</strong> &mdash; 100% pure C11 CPU execution</li>
-              <li><strong>Storage:</strong> Dual NVMe SSDs (used for <code>Kimi-K3.1-Pro</code> <code>688 GB</code> cold <code>HG2</code> expert streaming)</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Testbed 4 &mdash; GPU Servers: <code>8&times; RTX 4090</code> &amp; <code>4&times; PRO 6000</code></h3>
-            <ul>
-              <li><strong>Ada Node:</strong> <strong><code>8 &times; RTX 4090</code></strong> (<code>192 GiB</code> GDDR6X, <code>1,008 GB/s</code>/GPU) + Dual EPYC 7742 + <code>503 GiB</code> RAM + <code>6.12 GB/s</code> NVMe</li>
-              <li><strong>Blackwell Node:</strong> <strong><code>4 &times; RTX PRO 6000 Server</code></strong> (<code>382 GiB</code> GDDR7, <code>1,400+ GB/s</code>/GPU) + <code>516 GB</code> RAM + <code>14.3 GB/s</code> Gen5 NVMe</li>
-              <li><strong>CUDA Engine:</strong> Native <code>sm_89 / sm_120</code> <code>HG4 / HG2</code> register kernels + <code>64 MB</code> sequential <code>pread</code> preloader</li>
-            </ul>
-          </div>
-        </div>
-    </div>
-  </section>
-
-  <!-- ============ 4. WHAT BENCHMARKS WE RAN (SPEED + ACCURACY) ============ -->
-  <section class="band" id="benchmarks">
-    <div class="wrap">
-        <h2>5. Benchmarks we ran &mdash; speed (<code>BF16</code> vs. <code>HG</code>) and reasoning quality</h2>
-        <p class="lede">We ran two families of benchmarks across those machines: <strong>(A) end-to-end prefill and decode throughput (<code>tok/s</code>)</strong> comparing Original <code>BF16</code> against Clover <code>HG</code>, and <strong>(B) 71 frozen SHA-256-locked accuracy, coding, exact-math, and formal Lean 4 mathematical proof evaluations</strong>.</p>
-
-        <h3 style="margin-top:1.8rem">5A. Everyday device ladder on <code>LFM3-Omni-2B</code> (Phone &rarr; Laptop &rarr; Hetzner CPU &rarr; RTX 4090)</h3>
-        <div class="table-wrap">
-          <table class="data">
-            <caption class="note">Running the exact same <code>2B</code> model across all four testbeds shows both the <code>BF16 &rarr; HG</code> speedup and how directly decode tracks memory-wire bandwidth (<code>GB/s</code>).</caption>
-            <thead>
-              <tr>
-                <th scope="col">Testbed</th>
-                <th scope="col">Memory Wire (<code>GB/s</code>)</th>
-                <th scope="col">Original <code>BF16</code><br><small>Prefill / Decode (tok/s)</small></th>
-                <th scope="col">Clover <code>HG4-16R</code><br><small>Prefill / Decode (tok/s)</small></th>
-                <th scope="col">Measured Gain</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row"><strong>Samsung Galaxy S23</strong> <small>(8 GB RAM)</small></th>
-                <td><code>68.3 GB/s</code> <small>(4-Ch LPDDR5X)</small></td>
-                <td><code>~3.5</code> / <code>~1.1</code> <small>(spills to UFS)</small></td>
-                <td><strong><code>97.8</code> / <code>33.4</code></strong> <small>(in RAM)</small></td>
-                <td><strong><code>30&times;</code> faster decode</strong> <small>(2.2&times; vs Q4_0)</small></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Laptop i7-1355U</strong> <small>(16 GB RAM)</small></th>
-                <td><code>25.6 GB/s</code> <small>(1-Ch DDR4)</small></td>
-                <td><code>~16</code> / <code>~3.1</code></td>
-                <td><strong><code>63.7</code> / <code>12.4</code></strong> <small>(<code>204.7</code> iGPU pp)</small></td>
-                <td><strong><code>4.0&times;</code> faster decode</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Hetzner Ryzen Server</strong> <small>(128 GB RAM)</small></th>
-                <td><code>83.2 GB/s</code> <small>(2-Ch DDR5)</small></td>
-                <td><code>266.8</code> / <code>9.1</code></td>
-                <td><strong><code>1,347.0</code> / <code>50.3</code></strong> <small>(<code>48.7</code> in 2G cap)</small></td>
-                <td><strong><code>5.0&times;</code> prefill &middot; <code>5.5&times;</code> decode</strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>NVIDIA RTX 4090</strong> <small>(24 GB VRAM)</small></th>
-                <td><code>1,008 GB/s</code> <small>(GDDR6X)</small></td>
-                <td><code>~3,800</code> / <code>~110</code></td>
-                <td><strong><code>4,633.0</code> / <code>240.2</code></strong> <small>(<code>0.83G</code> VRAM)</small></td>
-                <td><strong><code>1.2&times;</code> prefill &middot; <code>2.2&times;</code> decode</strong></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 id="hardware-method-matrix" style="margin-top:2.2rem">5B. All 4 models (<code>2B</code> &rarr; <code>2.8T</code>) on Hetzner <code>128 GB</code> CPU Server vs. GPU Servers</h3>
-      <div class="table-wrap">
-        <table class="data">
-            <caption class="note"><strong>Hetzner CPU Server (<code>Ryzen 9 7950X3D</code>, <code>128 GB</code> DDR5, <code>0</code> GPUs)</strong> &mdash; Original <code>BF16</code> vs. Clover <code>HG</code> prefill and decode throughput.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Model</th>
-              <th scope="col">Size (<code>BF16 &rarr; HG</code>)</th>
-              <th scope="col">Original <code>BF16</code><br><small>Prefill / Decode (tok/s)</small></th>
-              <th scope="col">Clover <code>HG</code><br><small>Prefill / Decode (tok/s)</small></th>
-                <th scope="col">CPU Speedup</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><strong>2B</strong> &middot; <code>LFM3-Omni-2B</code></th>
-              <td><code>3.22G &rarr; 0.83G</code> <small>(3.9&times;)</small></td>
-              <td><code>266.8</code> / <code>9.1</code></td>
-              <td><strong><code>1,347.0</code> / <code>50.3</code></strong></td>
-                <td><strong><code>5.0&times;</code> prefill &middot; <code>5.5&times;</code> decode</strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>35B</strong> &middot; <code>Clover-35B-A3B</code></th>
-              <td><code>68.0G &rarr; 17.2G</code> <small>(4.0&times;)</small></td>
-              <td><code>~18.5</code> / <code>3.8</code></td>
-              <td><strong><code>138.4</code> / <code>16.6</code></strong></td>
-                <td><strong><code>7.5&times;</code> prefill &middot; <code>4.4&times;</code> decode</strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>120B</strong> &middot; <code>Nemotron-3.5</code></th>
-              <td><code>240G &rarr; 60.2G</code> <small>(4.0&times;)</small></td>
-                <td><code>~1.8</code> / <code>0.4</code> <small>(NVMe spill)</small></td>
-                <td><strong><code>46.2</code> / <code>9.2</code></strong> <small>(100% in RAM + MTP)</small></td>
-                <td><strong><code>25&times;</code> prefill &middot; <code>23&times;</code> decode</strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>2.8T</strong> &middot; <code>Kimi-K3.1-Pro</code></th>
-              <td><code>1,581G &rarr; 792G</code> <small>(2.0&times;)</small></td>
-              <td><code>&lt;0.2</code> / <code>&lt;0.05</code> <small>(thrashes RAM)</small></td>
-                <td><strong><code>28.5</code> / <code>2.26</code></strong> <small>(<code>347.8</code> draft)</small></td>
-              <td><strong><code>&gt;45&times;</code> decode</strong> <small>(runs 2.8T on 1 CPU)</small></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="table-wrap" style="margin-top:1.4rem">
-        <table class="data">
-            <caption class="note"><strong>GPU Server (<code>1&times;</code>, <code>4&times;</code> &amp; <code>8&times; NVIDIA RTX 4090</code>, <code>24 GB</code> VRAM/card)</strong> &mdash; Original <code>BF16</code> vs. Clover <code>HG</code> prefill and decode throughput.</caption>
-          <thead>
-            <tr>
-                <th scope="col">Model &amp; GPU Setup</th>
-              <th scope="col">Size (<code>BF16 &rarr; HG</code>)</th>
-              <th scope="col">Original <code>BF16</code><br><small>Prefill / Decode (tok/s)</small></th>
-              <th scope="col">Clover <code>HG</code><br><small>Prefill / Decode (tok/s)</small></th>
-              <th scope="col">GPU Speedup</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"><strong>2B</strong> &middot; <code>1&times; RTX 4090</code></th>
-                <td><code>2.92G &rarr; 0.83G</code> <small>(both fit)</small></td>
-              <td><code>~3,800</code> / <code>~110</code></td>
-              <td><strong><code>4,633</code> / <code>240.2</code></strong></td>
-              <td><strong><code>1.2&times;</code> prefill &middot; <code>2.2&times;</code> decode</strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>35B</strong> &middot; <code>1&times; RTX 4090</code></th>
-                <td><code>68.0G &rarr; 17.2G</code> <small>(fits 1 card!)</small></td>
-              <td><code>3,266</code> / <code>12.8</code> <small>(spills to RAM)</small></td>
-                <td><strong><code>1,470</code> / <code>168.4</code></strong> <small>(<code>45.6</code> w/ 1.7G VRAM)</small></td>
-                <td><strong><code>13.2&times;</code> faster decode</strong> <small>(beats 4&times;4090 BF16&rsquo;s 103.5)</small></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>120B</strong> &middot; <code>4&times; RTX 4090</code></th>
-                <td><code>240G &rarr; 60.2G</code> <small>(fits 4 cards!)</small></td>
-              <td><code>~12</code> / <code>~0.5</code> <small>(exceeds 8&times; 4090)</small></td>
-                <td><strong><code>549</code> / <code>172.2</code></strong> <small>(<code>45.8</code> on 1&times; 4090!)</small></td>
-              <td><strong><code>45&times;</code> prefill &middot; <code>&gt;45&times;</code> decode</strong></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>2.8T</strong> &middot; <code>8&times; RTX 4090</code></th>
-              <td><code>1,581G &rarr; 792G</code> <small>(VRAM+RAM+NVMe)</small></td>
-              <td><code>&lt;1</code> / <code>~0.2</code> <small>(exceeds 1 TB disk)</small></td>
-              <td><strong><code>287</code> draft / <code>7.89</code> decode</strong></td>
-                <td><strong><code>~40&times;</code> faster decode</strong> <small>(3-tier parallel)</small></td>
-            </tr>
-            <tr>
-              <th scope="row"><strong>2.8T</strong> &middot; <code>4&times; PRO 6000</code> <small>(382G)</small></th>
-              <td><code>377G</code> VRAM + <code>363G</code> RAM</td>
-              <td><code>&lt;1</code> / <code>~0.3</code> <small>(1.1 TB spills)</small></td>
-              <td><strong><code>4.98</code> prefill / <code>2.56</code> decode</strong> <small>(end-to-end)</small></td>
-              <td><strong><code>4.0&times;</code> prefill &middot; <code>2.5&times;</code> decode</strong> vs 8&times; 4090 <small>(75% DSpark)</small></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-        <h3 id="kimi-full-vram" style="margin-top:2.2rem">5C. What single-node GPU server fits <code>100%</code> of <code>Kimi-K3.1-Pro HG</code> (<code>740 GiB</code>) in VRAM?</h3>
-        <p>Even on <code>4&times; RTX PRO 6000 Blackwell</code> (<code>382 GiB</code> GDDR7), <code>56</code> cold MoE layers (<code>~363 GiB</code>) still reside in CPU RAM, capping single-stream throughput at the host memory bus. Fitting all <strong><code>739.6 GiB</code> (<code>794.2 GB</code>)</strong> of <code>K31H</code> weights plus <code>~25 GiB</code> of KV/KDA context inside GPU VRAM eliminates host RAM traffic completely &mdash; and cuts the required datacenter cluster in half compared to upstream <code>Kimi-K3.1-Pro</code> (<code>1,472 GiB</code>):</p>
-
-        <div class="table-wrap" style="margin-top:1rem">
-          <table class="data">
-            <caption class="note">Single-server GPU configurations capable of holding <code>100%</code> of <code>Kimi-K3.1-Pro K31H</code> (<code>740 GiB</code>) in high-bandwidth VRAM.</caption>
-            <thead>
-              <tr>
-                <th scope="col">Single-Server Node</th>
-                <th scope="col">Total VRAM &amp; Bandwidth</th>
-                <th scope="col">Upstream <code>Kimi</code> (<code>1,472 GiB</code>)</th>
-                <th scope="col">Clover <code>K31H</code> (<code>740 GiB</code>)</th>
-                <th scope="col">All-VRAM Decode</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row"><strong><code>8 &times; RTX PRO 6000</code></strong><br><small><code>96 GB</code> GDDR7 / GPU</small></th>
-                <td><strong><code>768 GB</code></strong><br><small><code>11.2 TB/s</code> aggregate</small></td>
-                <td>Does not fit <small>(needs 16 GPUs)</small></td>
-                <td><strong>Tight 98% fit</strong> <small>(~10G KV spill)</small></td>
-                <td><code>~65&ndash;110 tok/s</code></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong><code>8 &times; NVIDIA H200 SXM</code></strong><br><small><code>141 GB</code> HBM3e / GPU</small></th>
-                <td><strong><code>1,128 GB</code></strong><br><small><code>38.4 TB/s</code> + NVLink</small></td>
-                <td><strong>Does not fit</strong> <small>(needs 2 nodes / 16&times; H200)</small></td>
-                <td><strong>100% Fits in 1 Node</strong> <small>(<code>388 GB</code> free)</small></td>
-                <td><strong><code>~200&ndash;300+ tok/s</code></strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong><code>8 &times; AMD MI300X</code></strong><br><small><code>192 GB</code> HBM3 / GPU</small></th>
-                <td><strong><code>1,536 GB</code></strong><br><small><code>42.4 TB/s</code> + Infinity Fabric</small></td>
-                <td>Barely fits <small>(zero KV headroom)</small></td>
-                <td><strong>100% Fits in 1 Node</strong> <small>(<code>796 GB</code> for 1M KV)</small></td>
-                <td><strong><code>~180&ndash;260 tok/s</code></strong></td>
-              </tr>
-              <tr>
-                <th scope="row"><strong><code>8 &times; NVIDIA B200 SXM</code></strong><br><small><code>192 GB</code> HBM3e / GPU</small></th>
-                <td><strong><code>1,536 GB</code></strong><br><small><code>64.0 TB/s</code> + NVLink 5</small></td>
-                <td>Tight 1-node fit</td>
-                <td><strong>100% Fits on just <code>5</code> of <code>8</code> GPUs</strong></td>
-                <td><strong><code>~350&ndash;500+ tok/s</code></strong></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 style="margin-top:2.2rem">5D. Quality, software engineering &amp; formal Lean 4 mathematical proof benchmarks</h3>
-        <p>To verify zero silent reasoning collapse after compression, we evaluated the converted <code>HG</code> checkpoints on held-out perplexity, <code>48</code> sealed Clover Studio capability probes (tool discipline, epistemic memory, and exact big-integer math via native C11 <code>x-cruncher</code>), and <code>23</code> frozen Lean 4 <code>RiemannHypothesis</code> + Systems SWE + Binary Reverse-Engineering tasks verified by the official <code>leanprover/lean4:v4.33.1</code> kernel:</p>
-
-      <div class="table-wrap">
-        <table class="data">
-            <caption class="note">All accuracy &amp; formal-proof suites run against frozen <code>chmod 444</code> SHA-256-locked benchmark files on the Hetzner CPU server (<code>0</code> GPUs).</caption>
-          <thead>
-            <tr>
-                <th scope="col">Converted Model</th>
-                <th scope="col">Held-Out Perplexity</th>
-                <th scope="col">Systems SWE (<code>/4</code>)</th>
-                <th scope="col">Lean 4 RH + SWE + RE (<code>/23</code>)</th>
-                <th scope="col">Studio Quality / Capability Suites</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-                <th scope="row"><strong>LFM3-Omni-2B</strong> (<code>HG4-16R</code>)</th>
-                <td><code>29.06</code> <small>(vs <code>28.81</code> BF16, <code>30.78</code> Q4_0)</small></td>
-                <td>Edge / Mobile tier</td>
-              <td><code>3 / 23</code> (<code>13.04%</code>, <code>52.9/hr</code>)</td>
-                <td><strong><code>30 / 30</code> (<code>100%</code>)</strong> Studio Quality Gate PASS</td>
-            </tr>
-            <tr>
-                <th scope="row"><strong>Clover-35B-A3B</strong> (<code>HG4-16R-OP</code>)</th>
-                <td><code>17.92</code></td>
-                <td><code>2 / 4</code> <small>(<code>97.2%</code> LCP cache reuse)</small></td>
-                <td><strong><code>9 / 23</code> (<code>39.13%</code>)</strong></td>
-                <td><strong><code>45 / 48</code> (<code>93.75%</code>)</strong> Studio Probes (<code>8/8</code> exact math)</td>
-            </tr>
-            <tr>
-                <th scope="row"><strong>Nemotron-3.5 120B</strong> (<code>HG4-16R-OP</code>)</th>
-                <td><code>14.84</code></td>
-                <td><strong><code>4 / 4</code> (<code>100%</code>)</strong></td>
-                <td><strong><code>9 / 23</code> (<code>39.13%</code>)</strong> <small>(<code>11/23</code> fused)</small></td>
-                <td><code>100%</code> greedy match with lossless <code>2L-MTP</code></td>
-            </tr>
-            <tr>
-                <th scope="row"><strong>Kimi-K3.1-Pro 2.8T</strong> (<code>K31H</code>)</th>
-                <td>Full 896-expert fidelity</td>
-                <td><strong><code>4 / 4</code> (<code>100%</code>)</strong></td>
-              <td><strong><code>12 / 23</code> (<code>52.17%</code>, #1 Overall)</strong></td>
-                <td>Zero-shot Lean 4 <code>RiemannHypothesis</code> kernel proof</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ 5. CONCLUSION & RECOMMENDATIONS: DATA MOVEMENT IS THE REAL BOTTLENECK ============ -->
-  <section class="band" id="conclusion">
-    <div class="wrap">
-        <h2 id="more-ram-or-vram">6. Controlled proof ledger &amp; architectural recommendations</h2>
-        <p class="lede">The clearest finding across our phone, laptop, Hetzner CPU server, and 8&times; RTX 4090 experiments is a simple physical law: <strong>buying more RAM capacity (<code>GB</code>), more VRAM capacity (<code>GB</code>), or faster compute cores adds <code>+0.0 tok/s</code> to token decoding once a model fits in memory.</strong></p>
-
-        <figure style="margin:1.5rem 0">
-          <svg viewBox="0 0 900 264" role="img" aria-label="Measured proof of the Data-Movement Law: Left panel shows capacity plateaus where 2 GB vs 128 GB RAM (48.7 tok/s) and 96 GB vs 192 GB VRAM (172 tok/s) add +0.0 tok/s once weights fit; Right panel shows pipe bandwidth scaling where 8 GB 4-channel LPDDR5X (68 GB/s, 33.4 tok/s) beats 1x16 GB single-channel DDR4 (25.6 GB/s, 12.4 tok/s) by 2.7x." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:12px;background:#fffefb;padding:10px">
-            <text x="20" y="24" font-size="11.5" font-weight="700" fill="#1b5e46" letter-spacing="1.0">MEASURED PROOF · EXTRA RAM &amp; EXTRA VRAM PLATEAU AT +0.0 TOK/S; ONLY DATA-MOVEMENT BANDWIDTH SCALES</text>
-
-            <!-- Left Chart: Tank Size (RAM & VRAM Plateau) -->
-            <rect x="18" y="38" width="420" height="210" rx="10" fill="#f7f4ec" stroke="#dcd4c2"></rect>
-            <text x="34" y="60" font-size="12" font-weight="700" fill="#132018">1. More RAM / VRAM Capacity = +0.0 tok/s After Fit</text>
-            <line x1="54" y1="184" x2="414" y2="184" stroke="#9aa89e" stroke-width="1.3"></line>
-            <line x1="54" y1="78" x2="54" y2="184" stroke="#9aa89e" stroke-width="1.3"></line>
-            <polyline points="66,154 134,154 154,94 396,94" fill="none" stroke="#1b5e46" stroke-width="3"></polyline>
-            <circle cx="96" cy="154" r="4" fill="#7a6a52"></circle>
-            <text x="64" y="144" font-size="9.5" fill="#596a5f">Spills: 45.8</text>
-            <circle cx="190" cy="94" r="4.5" fill="#1b5e46"></circle>
-            <text x="156" y="84" font-size="10" font-weight="700" fill="#1b5e46">96G VRAM: 172.2</text>
-            <circle cx="372" cy="94" r="4.5" fill="#1b5e46"></circle>
-            <text x="284" y="84" font-size="10" font-weight="700" fill="#1b5e46">192G VRAM: 171.8 (+0.0)</text>
-            <polyline points="66,172 122,172 138,128 396,128" fill="none" stroke="#0a6a5f" stroke-width="2.6" stroke-dasharray="5,3"></polyline>
-            <circle cx="176" cy="128" r="4.5" fill="#0a6a5f"></circle>
-            <text x="148" y="121" font-size="10" font-weight="700" fill="#0a6a5f">2G RAM: 48.7</text>
-            <circle cx="372" cy="128" r="4.5" fill="#0a6a5f"></circle>
-            <text x="292" y="121" font-size="10" font-weight="700" fill="#0a6a5f">128G RAM: 48.7 (+0.0)</text>
-            <text x="34" y="206" font-size="10" fill="#2d3e34">• Extra GB only helps up to the point spills stop.</text>
-            <text x="34" y="222" font-size="10" fill="#2d3e34">• Extra compute on same wire (Laptop iGPU vs CPU):</text>
-            <text x="42" y="237" font-size="10" fill="#596a5f">Prefill jumps 3.2&times; (63.7 &rarr; 204.7), Decode stays 12.4 &rarr; 12.8!</text>
-
-            <!-- Right Chart: Pipe Width (Channels & Bandwidth) -->
-            <rect x="462" y="38" width="420" height="210" rx="10" fill="#eef6f1" stroke="#b9d4c6"></rect>
-            <text x="478" y="60" font-size="12" font-weight="700" fill="#132018">2. More Channels &amp; Wider Pipes (GB/s) = Faster Decode</text>
-            <text x="478" y="88" font-size="10" font-weight="700" fill="#2d3e34">16 GB Laptop · 1&times;16G Single-Ch DDR4 (Slot 2 empty · 25.6 GB/s)</text>
-            <rect x="478" y="94" width="92" height="16" rx="4" fill="#8b9d92"></rect>
-            <text x="578" y="106" font-size="10.5" font-weight="700" fill="#2d3e34">12.4 tok/s</text>
-
-            <text x="478" y="126" font-size="10" font-weight="700" fill="#2d3e34">Same 16 GB as 2&times;8G Dual-Channel DDR4 (2 pipes · 51.2 GB/s)</text>
-            <rect x="478" y="132" width="184" height="16" rx="4" fill="#4c8c72"></rect>
-            <text x="670" y="144" font-size="10.5" font-weight="700" fill="#1b5e46">~25 tok/s (2&times; pipe!)</text>
-
-            <text x="478" y="164" font-size="10" font-weight="700" fill="#1b5e46">8 GB S23 Phone · 4-Channel LPDDR5X (Half the GB · 68.3 GB/s!)</text>
-            <rect x="478" y="170" width="246" height="16" rx="4" fill="#1b5e46"></rect>
-            <text x="732" y="182" font-size="10.5" font-weight="700" fill="#1b5e46">33.4 tok/s (2.7&times;!)</text>
-
-            <text x="478" y="202" font-size="10" font-weight="700" fill="#0a6a5f">Hetzner 2-Channel DDR5-5200 Server (83.2 GB/s wire)</text>
-            <rect x="478" y="208" width="320" height="16" rx="4" fill="#0a6a5f"></rect>
-            <text x="806" y="220" font-size="10.5" font-weight="700" fill="#0a6a5f">50.3 tok/s</text>
-            <text x="478" y="240" font-size="9.8" fill="#596a5f">Dual/Quad LPDDR5X-7500 laptops (100&ndash;120 GB/s) reach 45&ndash;60+ tok/s.</text>
-          </svg>
-        </figure>
-
-      <div class="table-wrap">
-        <table class="data">
-            <caption class="note">Summary of controlled experiments isolating RAM size, VRAM size, compute, channel count, and byte compression.</caption>
-          <thead>
-            <tr>
-                <th scope="col">Experiment</th>
-                <th scope="col">Setup A</th>
-                <th scope="col">Setup B</th>
-                <th scope="col">Decode <code>tok/s</code></th>
-                <th scope="col">What It Proves</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-                <th scope="row"><strong>Add RAM after fit</strong> <small>(2B)</small></th>
-                <td><code>2 GB</code> cgroup cap</td>
-                <td><code>128 GB</code> Hetzner RAM</td>
-                <td><code>48.7 &rarr; 48.7</code></td>
-                <td><strong><code>+0.0 tok/s</code></strong> &mdash; unused RAM sits completely idle.</td>
-            </tr>
-            <tr>
-                <th scope="row"><strong>Add VRAM after fit</strong> <small>(35B / 120B)</small></th>
-                <td><code>24G</code> (35B) / <code>96G</code> (120B)</td>
-                <td><code>96G</code> (35B) / <code>192G</code> (120B)</td>
-                <td><code>168.4 &rarr; 167.6</code><br><code>172.2 &rarr; 171.8</code></td>
-                <td><strong><code>+0.0 tok/s</code></strong> &mdash; unused VRAM buys context length, not speed.</td>
-            </tr>
-            <tr>
-                <th scope="row"><strong>Add compute on same wire</strong></th>
-                <td>Laptop CPU</td>
-                <td>Laptop Vulkan iGPU</td>
-                <td><code>12.4 &rarr; 12.8</code></td>
-                <td><strong><code>~0&times;</code> decode gain</strong> &mdash; GPU cores wait on the same <code>25.6 GB/s</code> RAM stick.</td>
-            </tr>
-            <tr>
-                <th scope="row"><strong>Smaller multi-channel RAM</strong></th>
-                <td><code>1&times;16 GB</code> 1-Ch DDR4</td>
-                <td><code>8 GB</code> 4-Ch S23 Phone</td>
-                <td><code>12.4 &rarr; 33.4</code></td>
-                <td><strong><code>2.7&times;</code> faster with half the GB</strong> because 4 channels widen the pipe.</td>
-            </tr>
-            <tr>
-                <th scope="row"><strong>1 giant box vs. 4 small boxes</strong> <small>(35B)</small></th>
-                <td>4 workers in <code>1&times;128G</code> CPU<br><small>(1 shared <code>83 GB/s</code> bus)</small></td>
-                <td><code>4&times;32G</code> CPUs / <code>4&times;24G 3090</code><br><small>(4 independent buses)</small></td>
-                <td><code>~16.0</code> vs. <strong><code>66.4</code></strong> <small>(CPU)</small><br><strong><code>234.1</code></strong> <small>(<code>4&times;3090</code>)</small></td>
-                <td><strong><code>4.0&times;&ndash;14&times;</code> throughput</strong> &mdash; each small node brings its own memory bus.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-        <h3 id="many-small-machines" style="margin-top:2.2rem">Practical sizing law: deploy more small right-sized machines, not one giant-RAM machine</h3>
-        <p>Once <code>HG</code> shrinks a model by <code>~4&times;</code> (for example, <code>Clover-35B</code> from <code>68 GiB</code> down to <code>17.2 GiB</code>), a natural question arises: <em>can we run four instances inside one <code>128 GB</code> server to finish 4&times; more work?</em> Even though four read-only <code>mmap</code> processes easily fit inside <code>128 GB</code> RAM, they all compete for the <strong>same single <code>83.2 GB/s</code> memory bus</strong> &mdash; each instance slows down by <code>4&times;</code> (<code>~4.0 tok/s &times; 4 = ~16.0 tok/s</code> total, zero net speedup). By contrast, deploying <strong>four small right-sized nodes</strong> (four <code>32 GB</code> dual-channel mini-servers or four <code>24 GB RTX 3090</code> GPUs) gives every replica its <strong>own dedicated memory bus</strong>, multiplying aggregate throughput linearly while costing less:</p>
-
-        <figure style="margin:1.3rem 0">
-          <svg viewBox="0 0 900 226" role="img" aria-label="Comparison between 1 giant 128 GB server with 1 shared 83.2 GB/s memory bus (4 instances contend for 16.0 tok/s total) versus 4 smaller right-sized 32 GB CPU nodes or 4x 24 GB RTX 3090 GPUs where 4 independent memory buses scale throughput linearly to 66.4 tok/s on CPU or 234.1 tok/s on 4x RTX 3090." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:12px;background:#fffefb;padding:10px">
-            <text x="20" y="24" font-size="11.5" font-weight="700" fill="#1b5e46" letter-spacing="1.0">SCALE OUT SMALL RIGHT-SIZED NODES (MORE MEMORY BUSES), NOT UP INTO UNUSED GB CAPACITY</text>
-
-            <!-- Left Box: 1 Giant Machine = 1 Bottlenecked Bus -->
-            <rect x="18" y="38" width="420" height="172" rx="10" fill="#f7f4ec" stroke="#dcd4c2"></rect>
-            <text x="34" y="60" font-size="12" font-weight="700" fill="#7d5312">1 &times; Giant 128 GB Server (4 Instances, Only 1 Memory Bus)</text>
-            <rect x="34" y="72" width="90" height="32" rx="5" fill="#fff" stroke="#c9c0ad"></rect>
-            <text x="44" y="92" font-size="9.5" fill="#2d3e34">Inst 1 (~4 t/s)</text>
-            <rect x="132" y="72" width="90" height="32" rx="5" fill="#fff" stroke="#c9c0ad"></rect>
-            <text x="142" y="92" font-size="9.5" fill="#2d3e34">Inst 2 (~4 t/s)</text>
-            <rect x="230" y="72" width="90" height="32" rx="5" fill="#fff" stroke="#c9c0ad"></rect>
-            <text x="240" y="92" font-size="9.5" fill="#2d3e34">Inst 3 (~4 t/s)</text>
-            <rect x="328" y="72" width="90" height="32" rx="5" fill="#fff" stroke="#c9c0ad"></rect>
-            <text x="338" y="92" font-size="9.5" fill="#2d3e34">Inst 4 (~4 t/s)</text>
-            <rect x="34" y="118" width="384" height="26" rx="5" fill="#e9e1cf" stroke="#b9ad95"></rect>
-            <text x="74" y="135" font-size="10.5" font-weight="700" fill="#5b4626">1 Shared Memory Bus (83.2 GB/s split 4 ways!)</text>
-            <text x="34" y="166" font-size="10.5" font-weight="700" fill="#7d5312">Total Output: ~16.0 tok/s (0&times; gain over 1 instance&rsquo;s 16.6 tok/s)</text>
-            <text x="34" y="186" font-size="9.8" fill="#596a5f">100+ GB of extra RAM capacity adds zero memory channels.</text>
-
-            <!-- Right Box: 4 Small Right-Sized Nodes = 4 Independent Buses -->
-            <rect x="462" y="38" width="420" height="172" rx="10" fill="#eef6f1" stroke="#8bb7a4"></rect>
-            <text x="478" y="60" font-size="12" font-weight="700" fill="#1b5e46">4 &times; Right-Sized Small Nodes / GPUs (4 Independent Buses)</text>
-            <rect x="478" y="72" width="90" height="68" rx="5" fill="#fff" stroke="#8bb7a4"></rect>
-            <text x="488" y="92" font-size="9.5" font-weight="700" fill="#132018">Node/GPU 1</text>
-            <text x="488" y="109" font-size="9" fill="#1b5e46">Own Bus #1</text>
-            <text x="488" y="126" font-size="9" fill="#2d3e34">16.6 / 58.5 t/s</text>
-
-            <rect x="576" y="72" width="90" height="68" rx="5" fill="#fff" stroke="#8bb7a4"></rect>
-            <text x="586" y="92" font-size="9.5" font-weight="700" fill="#132018">Node/GPU 2</text>
-            <text x="586" y="109" font-size="9" fill="#1b5e46">Own Bus #2</text>
-            <text x="586" y="126" font-size="9" fill="#2d3e34">16.6 / 58.5 t/s</text>
-
-            <rect x="674" y="72" width="90" height="68" rx="5" fill="#fff" stroke="#8bb7a4"></rect>
-            <text x="684" y="92" font-size="9.5" font-weight="700" fill="#132018">Node/GPU 3</text>
-            <text x="684" y="109" font-size="9" fill="#1b5e46">Own Bus #3</text>
-            <text x="684" y="126" font-size="9" fill="#2d3e34">16.6 / 58.5 t/s</text>
-
-            <rect x="772" y="72" width="90" height="68" rx="5" fill="#fff" stroke="#8bb7a4"></rect>
-            <text x="782" y="92" font-size="9.5" font-weight="700" fill="#132018">Node/GPU 4</text>
-            <text x="782" y="109" font-size="9" fill="#1b5e46">Own Bus #4</text>
-            <text x="782" y="126" font-size="9" fill="#2d3e34">16.6 / 58.5 t/s</text>
-
-            <text x="478" y="164" font-size="10.5" font-weight="700" fill="#1b5e46">4&times;32G CPUs = 66.4 tok/s (4.0&times;) &middot; 4&times;24G RTX 3090 = 234.1 tok/s!</text>
-            <text x="478" y="185" font-size="9.8" fill="#2d3e34">Rule: Shrink with HG &rarr; pick smallest RAM/VRAM that fits &rarr; multiply buses.</text>
-          </svg>
-        </figure>
-
-        <h3 id="specialist-cluster" style="margin-top:2.2rem">The mathematician, chef &amp; F1 driver law: multi-node <code>HG</code> specialist clusters over <code>&lt; 1 MB</code> network hops</h3>
-        <p>Put the world&rsquo;s best mathematician, chef, and Formula 1 driver in one room &mdash; none can outperform the others at their craft because mastery comes from <strong>domain training, output representation, and verification feedback</strong>. Text-only LLMs share the same boundary: even a <code>2.8T</code> generalist cannot replace a high-speed Lean 4 tactic prover, a 3D macromolecular structure model, a temporal video-physics encoder, or a calibrated continuous forecaster.</p>
-        <p style="margin-top:0.7rem">Crucially, once every model&rsquo;s weights sit permanently inside VRAM across a cluster of inexpensive <code>8 &times; RTX 3090</code> (<code>192 GiB</code> VRAM, <code>6.8 TB/s</code> GDDR6X per node) servers, <strong>weights never cross the network</strong> &mdash; only tiny <strong><code>72 KB &ndash; 1 MB</code> activation vectors or JSON prompts</strong> hop between servers (<code>&lt; 1 ms</code> over standard same-region TCP, no <code>$50,000</code> InfiniBand fabric required):</p>
-
-        <div class="table-wrap" style="margin-top:1rem">
-          <table class="data">
-            <caption class="note">Clover&rsquo;s Core-4 + Domain Specialist <code>HG</code> architecture: every specialist pairs an information-matched precision tier with a deterministic verifier.</caption>
-            <thead>
-              <tr>
-                <th scope="col">Role / Craft</th>
-                <th scope="col">Open Model</th>
-                <th scope="col">Target Size &amp; Precision</th>
-                <th scope="col">What It Contributes</th>
-                <th scope="col">Deterministic Verifier</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row"><strong>Core 4 Generalists</strong><br><small>Voice &middot; Code &middot; SWE &middot; Research</small></th>
-                <td><code>LFM3-2B</code> &middot; <code>Qwen3.6-35B</code><br><code>Nemotron-120B</code> &middot; <code>Kimi-2.8T</code></td>
-                <td><code>0.83G</code> + <code>17.2G</code> + <code>60.2G</code><br>+ <code>740G K31H</code></td>
-                <td>Edge speech, fast coding/agents, multimodal SWE &amp; frontier synthesis</td>
-                <td><code>OpenCode</code> sandbox + <code>x-cruncher</code> exact math</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Formal Mathematician</strong><br><small>Lean 4 Proof Search</small></th>
-                <td><code>Goedel-Prover-V2-32B</code><br><small>(Apache-2.0)</small></td>
-                <td><code>61G &rarr;</code> <strong><code>~15.8 GiB HG4</code></strong><br><small>(reuses Qwen C11/CUDA)</small></td>
-                <td><code>90.4%</code> MiniF2F &amp; <code>57</code> PutnamBench Pass@32 (beats <code>671B</code> at <code>21&times;</code> smaller size)</td>
-                <td>Official <code>leanprover/lean4</code> compiler kernel</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>3D Structural Scientist</strong><br><small>Folding &amp; Interaction</small></th>
-                <td><code>Boltz-2</code> <small>(MIT)</small><br><small>+ <code>OpenFold3</code> cross-check</small></td>
-                <td><code>4.1G &rarr;</code> <strong><code>~3.0 GB</code></strong><br><small><code>HG8</code> trunk + <code>FP32</code> diffusion</small></td>
-                <td>Sub-angstrom 3D coordinates + quantitative interaction scoring</td>
-                <td>Bond/clash geometry + OpenMM relaxation</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>World Physics &amp; Motion</strong><br><small>Temporal Video Dynamics</small></th>
-                <td><code>Meta V-JEPA 2.1</code> <small>(ViT-g)</small><br><small>+ Attentive Probes</small></td>
-                <td><code>1.93G &rarr;</code> <strong><code>~0.52 GiB HG4</code></strong></td>
-                <td>Self-supervised motion &amp; action anticipation (<code>77.3%</code> SSv2)</td>
-                <td>Pretrained attentive-probe structured readout</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Forecaster &amp; Potentials</strong><br><small>Time-Series &amp; Forces</small></th>
-                <td><code>Chronos-2</code> + <code>MACE-MP-0</code><br><small>(Apache-2.0 / MIT)</small></td>
-                <td><strong><code>0.22 GiB</code> + <code>0.09 GiB</code></strong><br><small><code>FP32</code> (preserves <code>SO(3)</code>)</small></td>
-                <td>Calibrated probabilistic series &amp; conservative interatomic forces</td>
-                <td>Rolling CRPS backtest + <code>F = -&nabla;E</code> check</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <figure style="margin:1.3rem 0">
-          <svg viewBox="0 0 940 436" role="img" aria-label="6-Node Clover 5-Petal Topology: Permanent Center Hub k3 surrounded by 5 x (8x RTX 3090) GPU Petals connected by WireGuard MCP 2.0 spokes and a 93-layer Kimi K31H perimeter pipeline." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:12px;background:#fffefb;padding:10px">
-            <text x="18" y="22" font-size="10.8" font-weight="700" fill="#1b5e46" letter-spacing="0.8">THE 6-NODE CLOVER LEAF TOPOLOGY &middot; PERMANENT CENTER HUB k3 + 5 &times; (8&times;3090) GPU PETALS (ALL 93 KIMI LAYERS)</text>
-            <line x1="18" y1="32" x2="922" y2="32" stroke="#dfd8c8" stroke-width="1"></line>
-
-            <!-- Outer Kimi K31H 93-Layer Perimeter Pipeline Ring (Petals 1 -> 2 -> 3 -> 4 -> 5, never bouncing through k3!) -->
-            <ellipse cx="470" cy="236" rx="342" ry="152" fill="none" stroke="#8bb7a4" stroke-width="2.2" stroke-dasharray="6,4"></ellipse>
-
-            <!-- Control-plane WireGuard spokes from Center k3 to all 5 GPU Petals -->
-            <line x1="470" y1="184" x2="470" y2="130" stroke="#0a6a5f" stroke-width="1.6"></line>
-            <line x1="590" y1="210" x2="668" y2="162" stroke="#0a6a5f" stroke-width="1.6"></line>
-            <line x1="582" y1="274" x2="652" y2="324" stroke="#0a6a5f" stroke-width="1.6"></line>
-            <line x1="358" y1="274" x2="288" y2="324" stroke="#0a6a5f" stroke-width="1.6"></line>
-            <line x1="350" y1="210" x2="272" y2="162" stroke="#0a6a5f" stroke-width="1.6"></line>
-
-            <!-- CENTER NODE 0: k3 Stem / Control Hub -->
-            <rect x="336" y="184" width="268" height="106" rx="18" fill="#e2efe8" stroke="#1b5e46" stroke-width="2"></rect>
-            <text x="350" y="203" font-size="10.4" font-weight="700" fill="#1b5e46">Center Node 0: k3 Hub ($0/hr Permanent Core)</text>
-            <text x="350" y="220" font-size="8.9" fill="#132018">&bull; Ingress + Global Priority Queue + T=0 Clubbing</text>
-            <text x="350" y="235" font-size="8.9" fill="#132018">&bull; Stateless MCP 2.0 + Durable SQLite tasks/* + Leases</text>
-            <text x="350" y="250" font-size="8.9" fill="#132018">&bull; C11 x-cruncher AVX-512 + Lean 4 + Epistemic Graph</text>
-            <text x="350" y="266" font-size="8.8" font-weight="700" fill="#0a6a5f">&bull; 35B #3 + LFM3 #3 CPU Fallback (18G DDR5, always on)</text>
-            <text x="350" y="281" font-size="8.3" fill="#2d3e34">1-hop WireGuard dispatch &middot; Petals never bounce loops</text>
-
-            <!-- PETAL 1 (Top) -->
-            <rect x="342" y="42" width="256" height="88" rx="14" fill="#f7f4ec" stroke="#8bb7a4" stroke-width="1.4"></rect>
-            <text x="354" y="59" font-size="9.8" font-weight="700" fill="#1b5e46">Petal 1 &middot; 8&times; RTX 3090 (164.9 / 175.2G placeable)</text>
-            <text x="354" y="75" font-size="8.8" fill="#132018">&bull; GPUs 0&ndash;2 (60.5G): Nemotron-120B HG4 + 2L-MTP</text>
-            <text x="354" y="90" font-size="8.8" fill="#132018">&bull; GPUs 3&ndash;7 (104.4G): Kimi Stage 0 (L00:14 + Embed)</text>
-            <text x="354" y="106" font-size="8.5" font-weight="700" fill="#0a6a5f">Tier-2 SWE &amp; Multimodal Hub &middot; Cold-First Pre-Pinned</text>
-
-            <!-- PETAL 2 (Upper Right) -->
-            <rect x="668" y="96" width="254" height="92" rx="14" fill="#f7f4ec" stroke="#8bb7a4" stroke-width="1.4"></rect>
-            <text x="680" y="113" font-size="9.8" font-weight="700" fill="#1b5e46">Petal 2 &middot; 8&times; RTX 3090 (170.0 / 175.2G)</text>
-            <text x="680" y="129" font-size="8.8" fill="#132018">&bull; GPU 0 (18.3G): Qwen3.6-35B #1 + LFM3 #1</text>
-            <text x="680" y="144" font-size="8.8" fill="#132018">&bull; GPUs 1&ndash;7 (151.7G): Kimi Stage 1 (L14:33)</text>
-            <text x="680" y="160" font-size="8.5" font-weight="700" fill="#0a6a5f">Prefix-Cached GPU Agent #1 &middot; 0 Cold Spills</text>
-
-            <!-- PETAL 3 (Lower Right) -->
-            <rect x="646" y="294" width="276" height="92" rx="14" fill="#f7f4ec" stroke="#8bb7a4" stroke-width="1.4"></rect>
-            <text x="658" y="311" font-size="9.8" font-weight="700" fill="#1b5e46">Petal 3 &middot; 8&times; RTX 3090 (170.3 / 175.2G)</text>
-            <text x="658" y="327" font-size="8.8" fill="#132018">&bull; GPU 0 (18.6G): Qwen3.6-35B #2 + LFM3 #2 + Chronos-2</text>
-            <text x="658" y="342" font-size="8.8" fill="#132018">&bull; GPUs 1&ndash;7 (151.7G): Kimi Stage 2 (L33:52)</text>
-            <text x="658" y="358" font-size="8.5" font-weight="700" fill="#0a6a5f">GPU Agent #2 + Quantile Time-Series Forecaster</text>
-
-            <!-- PETAL 4 (Lower Left) -->
-            <rect x="18" y="294" width="276" height="92" rx="14" fill="#f7f4ec" stroke="#8bb7a4" stroke-width="1.4"></rect>
-            <text x="30" y="311" font-size="9.8" font-weight="700" fill="#1b5e46">Petal 4 &middot; 8&times; RTX 3090 (171.0 / 175.2G)</text>
-            <text x="30" y="327" font-size="8.8" fill="#132018">&bull; GPU 0 (19.2G): Goedel-32B + V-JEPA 2.1 + Boltz-2</text>
-            <text x="30" y="342" font-size="8.8" fill="#132018">&bull; GPUs 1&ndash;7 (151.8G): Kimi Stage 3 (L52:71)</text>
-            <text x="30" y="358" font-size="8.5" font-weight="700" fill="#0a6a5f">Formal Lean 4 Prover + Video Physics + 3D Bio</text>
-
-            <!-- PETAL 5 (Upper Left) -->
-            <rect x="18" y="96" width="254" height="92" rx="14" fill="#f7f4ec" stroke="#8bb7a4" stroke-width="1.4"></rect>
-            <text x="30" y="113" font-size="9.8" font-weight="700" fill="#1b5e46">Petal 5 &middot; 8&times; RTX 3090 (All 8 GPUs: 175.2G)</text>
-            <text x="30" y="129" font-size="8.8" fill="#132018">&bull; GPUs 0&ndash;7: Kimi Tail Stage 4 (L71:93 &mdash; all 93L!)</text>
-            <text x="30" y="144" font-size="8.8" fill="#132018">&bull; lm_head + 5L-DSpark + Kimi Coordinator (:8089)</text>
-            <text x="30" y="160" font-size="8.5" font-weight="700" fill="#0a6a5f">Direct Petal Ring (231 KB/hop BF16, HMAC-SHA256)</text>
-
-            <!-- Footer legend bar -->
-            <rect x="18" y="398" width="904" height="26" rx="6" fill="#eef6f1" stroke="#8bb7a4" stroke-width="1"></rect>
-            <text x="30" y="415" font-size="9.1" font-weight="700" fill="#1b5e46">Elastic 0&rarr;5 Petals: k3 stays live 24/7 at $0/hr; rented same-region 3090 Petals lease-register into k3 &amp; run Kimi [0:93) directly around the outer ring.</text>
-          </svg>
-        </figure>
-
-        <div class="grid grid--3" style="margin-top:1rem;margin-bottom:1.4rem">
-          <div class="card">
-            <h3>1. Permanent <code>k3</code> Core + 5 Elastic GPU Petals</h3>
-            <p>Center hub <code>k3</code> holds persistent state (global queue, durable SQLite <code>tasks/*</code>, <code>x-cruncher</code>, Lean 4, and CPU replica #3 so Clover runs 24/7 even at <code>0</code> rented GPUs), while 5 same-region <code>8&times; 3090</code> Petals pack all <code>93</code> <code>Kimi K31H</code> layers (<code>0:14, 14:33, 33:52, 52:71, 71:93</code>) via Cold-First Best-Fit VRAM pinning alongside <code>Nemotron-120B</code>, <code>2&times; GPU Qwen3.6-35B</code>, and all 4 specialists.</p>
-          </div>
-          <div class="card">
-            <h3>2. Global Clubbing &amp; Prefix-Ordered Queue</h3>
-            <p>Because <code>k3</code> makes every routing decision centrally (and Petals enforce <code>X-Clover-Hop: 1</code> local-only execution), identical deterministic <code>T = 0</code> requests coalesce cluster-wide onto <strong>1 execution</strong>, while 3-lane priority scheduling orders same-repo prefixes onto warm Petal replicas without bounce loops.</p>
-          </div>
-          <div class="card">
-            <h3>3. Dedicated <code>tsock://</code> Socket + <code>MCP 2.0</code></h3>
-            <p>Petals stream raw <code>4-byte int32</code> token IDs over a persistent <code>TCP_NODELAY</code> binary socket (<code>tsock://</code>, <code>HMAC-SHA256</code> authenticated, <code>2.0&times;&ndash;5.4&times;</code> lower hop latency than HTTP-over-SSH), paired with stateless <code>POST /mcp</code> (<code>2026-07-28</code> spec) for <code>0.05 ms</code> <code>Mcp-Name</code> header routing &amp; <code>tools/search</code> lazy schemas.</p>
-          </div>
-        </div>
-
-        <h4 id="vram-waste-proof" style="margin-top:1.4rem">Measured Linux kernel proof: once weights sit in VRAM, host RAM, CPU, disk &amp; big networks sit idle</h4>
-        <p>To prove directly on live hardware that spending thousands of dollars on giant host DDR5 RAM, high-core CPUs, Gen5 SSDs, or InfiniBand switches adds zero value once <code>HG</code> weights fit inside GPU VRAM, we sampled Linux kernel counters (<code>/proc/self/io</code>, <code>VmRSS</code>, <code>utime+stime</code>, <code>nvidia-smi</code>, and exact binary socket frame bytes in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/benchmarks/riemann-lean4/results/vram_waste_and_tsock_proof.json"><code>vram_waste_and_tsock_proof.json</code></a>) across 5 consecutive generations between <code>k3</code> and two remote <code>4 &times; RTX 3090</code> nodes:</p>
-
-        <div class="table-wrap" style="margin-top:0.8rem;margin-bottom:1.4rem">
-          <table class="data">
-            <caption class="note">Live kernel counters during steady-state <code>RTX 3090</code> VRAM inference over Clover&rsquo;s dedicated binary token socket (<code>tsock://</code>, <code>OMP_WAIT_POLICY=PASSIVE</code>).</caption>
-            <thead>
-              <tr>
-                <th scope="col">Server Subsystem</th>
-                <th scope="col">Measured Steady-State Value</th>
-                <th scope="col">Idle / Wasted Capacity</th>
-                <th scope="col">Hardware Buying Implication</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row"><strong>NVMe / SSD Storage</strong><br><small><code>/proc/self/io read_bytes</code></small></th>
-                <td><strong><code>0 Bytes</code></strong> (<code>0.00 MB/s</code> across all 5 runs)</td>
-                <td><strong><code>100.0%</code> idle</strong> after initial load</td>
-                <td>Enterprise Gen5 RAID arrays add <strong><code>+0.0 tok/s</code></strong>; any cheap boot SSD suffices.</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Host System RAM</strong><br><small><code>VmRSS</code> vs. <code>256 GiB</code> installed</small></th>
-                <td><strong><code>1,207 MiB</code></strong> (<code>0.47%</code> used &middot; <code>0.0 MiB</code> delta)</td>
-                <td><strong><code>99.53%</code> unused</strong> (<code>256.3 GiB</code> untouched)</td>
-                <td><code>32 GB</code> host RAM is plenty when weights live in VRAM; <code>256&ndash;1024 GB</code> DDR5 is pure waste.</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Host CPU Cores</strong><br><small><code>48</code> Xeon threads, passive wait</small></th>
-                <td><strong><code>4.46% &ndash; 5.14%</code></strong> (tokenizer &amp; socket dispatch)</td>
-                <td><strong><code>~95%</code> idle</strong></td>
-                <td>An inexpensive GPU-rig CPU feeds <code>4&times;&ndash;8&times; RTX 3090</code>s identically to a <code>$5,000</code> 96-core CPU.</td>
-              </tr>
-              <tr>
-                <th scope="row"><strong>Inter-Server Network</strong><br><small><code>tsock://</code> <code>TCP_NODELAY</code> binary channel</small></th>
-                <td><strong><code>4.00 Bytes / token</code></strong> (<code>76&ndash;252 B</code> per reply)<br><small><code>69.5 ms</code> DE hop (<code>2.0&times;</code> faster) &middot; <code>205 ms</code> intercontinental (<code>5.4&times;</code> faster vs. HTTP-SSH)</small></td>
-                <td><strong><code>99.999%</code> of <code>1 Gbps</code> idle</strong></td>
-                <td>Weights stay fixed in VRAM; only tiny token IDs move over a persistent socket &mdash; zero InfiniBand needed.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 style="margin-top:2.2rem">Our recommendations: how AI systems should actually solve data movement</h3>
-        <p>Because stacking larger RAM/VRAM chips or bigger compute dies leaves the memory-wire bottleneck untouched, sustainable AI inference requires attacking data movement directly on both the <strong>model side</strong> and the <strong>hardware side</strong>:</p>
-
-        <div class="grid grid--3" style="margin-top:1.2rem">
-        <div class="card">
-            <h3>1. Smaller, Domain-Expert Models &amp; Sparse Routing</h3>
-            <p>Stop hauling multi-hundred-gigabyte monolithic dense weights for routine tasks. Pair compact, specialized models (<code>2B&ndash;35B</code> in <code>HG4</code>) with fine-grained <strong>Mixture-of-Experts (<code>MoE</code>)</strong> that activate only the tiny subset of domain experts needed per token, plus lossless multi-token verification (<code>MTP / DSpark</code>) so one weight read produces 3&ndash;4 tokens.</p>
-        </div>
-        <div class="card">
-            <h3>2. In-Memory Processing (<code>PIM</code>) &amp; Near-Memory Compute</h3>
-            <p>Instead of shuttling weights across centimeter-long PCB traces and PCIe buses on every token, move multiply-accumulate units <strong>inside or directly beneath memory arrays</strong> &mdash; DRAM Processing-in-Memory (<code>HBM-PIM</code>, <code>LPDDR-PIM</code>), 3D wafer-on-wafer Hybrid Bonding (SRAM/DRAM stacked directly on logic), and CXL near-memory engines.</p>
-        </div>
-        <div class="card">
-            <h3>3. Multi-Channel Buses &amp; Register-Level Compression</h3>
-            <p>Favor <strong>more parallel memory channels</strong> (dual/quad/octa-channel <code>LPDDR5X / HBM</code> and multi-GPU Tensor Parallelism) over single wide-capacity sticks, and keep weights in Hadamard-compressed form (<code>HG4-16R</code>) all the way into processor registers with stateful prefix caching (<code>LCP</code>) so neither weights nor context move twice.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ 6. APPENDIX: DEPLOY, CONVERT YOUR OWN MODEL & VERIFY ============ -->
-  <section class="band" id="convert-any-model">
-    <div class="wrap">
-        <h2 id="verify-it-yourself">7. Deploy any <code>HG</code> model in 1 command, convert your own (<code>convert_to_hg.py</code>) &amp; verify</h2>
-        <p class="lede">Anyone can serve any of our 4 published <code>HG</code> models as a local OpenAI-compatible <code>/v1</code> endpoint on <strong>pure CPU</strong> or <strong>single/multi-GPU NVIDIA CUDA</strong> (<code>RTX 3090</code>, <code>RTX 4090</code>, <code>A100</code>, <code>H100/H200</code>, <code>B200</code>) via <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/clover_hg_serve.py"><strong><code>clover_hg_serve.py</code></strong></a> or <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/Dockerfile.hg-server"><strong><code>Dockerfile.hg-server</code></strong></a>, or convert any Hugging Face <code>.safetensors</code> checkpoint with <a href="./convert_to_hg.py" download="convert_to_hg.py"><strong><code>convert_to_hg.py</code></strong></a>:</p>
-
-        <div class="actions" style="margin-top:1rem;margin-bottom:1.2rem">
-          <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/clover_hg_serve.py">1-Command Server (<code>clover_hg_serve.py</code>) &rarr;</a>
-          <a class="btn" href="./convert_to_hg.py" download="convert_to_hg.py">Download <code>convert_to_hg.py</code> &darr;</a>
-          <a class="btn" href="https://huggingface.co/Santhoshsathish94" target="_blank" rel="noopener noreferrer">4 HG Models on Hugging Face &rarr;</a>
-        </div>
-
-<pre class="code"><code># A. Deploy &amp; serve any Clover HG model via Docker (auto-downloads from HF; works on CPU or 1x-8x GPUs):
-git clone --depth 1 https://github.com/santhoshsathish94/clover-framework.git &amp;&amp; cd clover-framework
-docker build -f Dockerfile.hg-server -t clover-hg-server .
-docker run --gpus all -p 8000:8000 -v $(pwd)/hg-cache:/models clover-hg-server --model clover-35b-a3b
-# (Use --model lfm3-omni-2b, clover-35b-a3b, nemotron-3.5-super-vl, or kimi-k3; add --gpus none for pure CPU)
-
-# B. Or run directly without Docker (auto-compiles C11 SIMD + CUDA sm_80/86/89/90 kernels):
-pip install numpy huggingface_hub tokenizers
-python3 clover-ai-system/src/tools/clover_hg_serve.py --model lfm3-omni-2b --gpus auto --port 8000
-
-# C. Convert your own Hugging Face .safetensors model into HG4-16R (add --moe-cold-bits 2 if larger than RAM):
-curl -fsSL https://cloverframework.com/hg-format/convert_to_hg.py -O
-python3 convert_to_hg.py --self-test
-python3 convert_to_hg.py --model &lt;org/model-or-local-path&gt; --out ./my-model-hg4 --ldlq --verify</code></pre>
-
-        <dl class="kv kv--wide" style="margin-top:1.6rem">
-        <div><dt><code>rh_bench_suite_v2.jsonl</code></dt><dd><code>415c9148ad75ba7338bd365a8305baf17258e3a2fd957381ff487f7f071a1d26</code></dd></div>
-        <div><dt><code>lean_oracle.py</code></dt><dd><code>52d731367acdb28593a3d86633e2e762736ae24cd6ef7d42e780499efa58c937</code></dd></div>
-        <div><dt><code>studio_capability_probes_v2.jsonl</code></dt><dd><code>a6bcbf6a98f3b3d9d40ee58618fdcb4a5a5fbddd54ca29b6d50c28121d02f18f</code></dd></div>
-          <div><dt>CPU &amp; CUDA Benchmark Sources</dt><dd><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system/src/models"><code>src/models/*_hg4_engine.c</code></a> &middot; <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/rtx4090_all4_hg_bench.cu"><code>rtx4090_all4_hg_bench.cu</code></a> &middot; <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/clover-ai-system/src/tools/lfm3_hg4_cuda_bench.cu"><code>lfm3_hg4_cuda_bench.cu</code></a></dd></div>
-          <div><dt>Published Result Ledgers</dt><dd><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/benchmarks/riemann-lean4/results/rtx4090_hg4_4models_benchmark.json"><code>rtx4090_hg4_4models_benchmark.json</code></a> &middot; <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/benchmarks/riemann-lean4/results"><code>benchmarks/riemann-lean4/results/*.json</code> &rarr;</a></dd></div>
-      </dl>
+      <h2>The Five-Petal Clover System &mdash; own your intelligence.</h2>
+      <p><strong>Five right-sized GPU petals surround one permanent coordinator hub (<code>k3</code>).</strong> Each petal holds frozen <code>HG</code> specialists in VRAM. The hub governs every task through <a href="../getting-started/">AGENTS.md</a> (<em>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</em>), batches requests via <code>MCP 2.0</code>, and passes 4-byte tokens over dedicated sockets.</p>
+      <p><strong>Convert any Hugging Face model or verify our benchmarks in one command:</strong></p>
+      <pre style="background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:1rem 1.2rem;overflow-x:auto;font-size:0.88rem"><code>curl -fsSL https://cloverframework.com/hg-format/convert_to_hg.py -O
+python3 convert_to_hg.py --model Qwen/Qwen3.6-35B-A3B --out ./hg-model --ldlq --verify</code></pre>
+      <p style="font-size:0.92rem;color:var(--muted)">Reproducible scripts &amp; raw SHA-256 verification ledgers live openly in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/benchmarks"><code>github.com/santhoshsathish94/clover-framework/benchmarks</code> &rarr;</a> &middot; Follow the cluster build in <a href="../ai-system/">AI Studio (In Progress) &rarr;</a></p>
+
+      <svg class="clover clover--close clover--golden-close" viewBox="0 0 100 100" role="img" aria-label="All five myths broken — the five-leaf clover glowing in sunlit gold.">
+        <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
+        <g><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
+        <g transform="rotate(72 50 44)"><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
+        <g transform="rotate(144 50 44)"><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
+        <g transform="rotate(216 50 44)"><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
+        <g transform="rotate(288 50 44)"><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
+      </svg>
+      <p class="verse verse__line" style="color:#8a5607">Five myths broken. Own the wire, own the team, own the outcome.</p>
     </div>
   </section>
 
 </main>
 
 <footer class="site-foot">
-  <div class="wrap site-foot__grid">
-    <div>
-      <h4>Read</h4>
-      <ul>
-        <li><a href="../">The framework</a></li>
-        <li><a href="../origin/">Origin</a></li>
-        <li><a href="../ai-system/">AI Studio</a></li>
-        <li><a href="./">HG Format</a></li>
-        <li><a href="../getting-started/">AGENTS.md</a></li>
-        <li><a href="../governance/">Governance</a></li>
-        <li><a href="../privacy/">Privacy</a></li>
-        <li><a href="../glossary/">Glossary</a></li>
-      </ul>
-    </div>
-    <div>
-      <h4>HG Models (Hugging Face)</h4>
-      <ul>
-        <li><a href="https://huggingface.co/Santhoshsathish94/LFM3-Omni-2B-HG4-16R" target="_blank" rel="noopener noreferrer">LFM3-Omni-2B-HG4-16R (0.91 GB)</a></li>
-        <li><a href="https://huggingface.co/Santhoshsathish94/Clover-35B-A3B-HG4-16R-OP" target="_blank" rel="noopener noreferrer">Clover-35B-A3B-HG4-16R-OP (18.8 GB)</a></li>
-        <li><a href="https://huggingface.co/Santhoshsathish94/Nemotron-3.5-Super-VL-120B-HG4-16R-OP" target="_blank" rel="noopener noreferrer">Nemotron-120B-HG4-16R-OP (65.0 GB)</a></li>
-        <li><a href="https://huggingface.co/Santhoshsathish94/Kimi-K3.1-Pro-K31H-Hot-HG4-OP" target="_blank" rel="noopener noreferrer">Kimi-K3.1-Pro-K31H-Hot-HG4-OP</a></li>
-      </ul>
-    </div>
-    <div>
-      <h4>Engineering Ledgers</h4>
-      <ul>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-hg4-opencode-fusion-egm-lean-context.md">HG4 + OpenCode + Lean 4 Ledger</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/engine-and-architecture/clover-studio-capabilities-ablation-context.md">Studio Capabilities Ablation (S0&ndash;S7)</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system/src/tools/hg4-fusion-gateway">HG4 Fusion Gateway Source</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/tree/main/benchmarks/riemann-lean4">Lean 4 Benchmark &amp; Oracles</a></li>
-      </ul>
-    </div>
-    <div>
-      <h4>Project</h4>
-      <ul>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework">GitHub repository</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/CONTRIBUTING.md">Contributing</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/CHANGELOG.md">Changelog</a></li>
-        <li><a href="https://github.com/santhoshsathish94/clover-framework/blob/main/LICENSE">License</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="wrap site-foot__end">
-    <p style="max-width:none">The website explains; the repository documents. Built from real
-      delivery work and still changing as the evidence does. An open, feedback-driven project by
-      <a href="../author/">Santhosh Narayanan</a>.</p>
+  <div class="wrap">
+    <p><strong>Clover Framework</strong> &middot; System, Human and AI working together for meaningful outcomes.</p>
+    <p><a href="../hg-format/">AI Mythbuster</a> &middot; <a href="../ai-system/">AI Studio</a> &middot; <a href="../getting-started/">AGENTS.md</a> &middot; <a href="../governance/">Governance</a> &middot; <a href="../privacy/">Privacy</a> &middot; <a href="../glossary/">Glossary</a> &middot; <a href="https://github.com/santhoshsathish94/clover-framework">GitHub</a></p>
   </div>
 </footer>
 
 <script src="../website-interaction-controllers.js?v=5.0.7" defer></script>
+<script>
+  (function () {
+    var mythSections = Array.prototype.slice.call(document.querySelectorAll('[data-myth-step]'));
+    var leaves = Array.prototype.slice.call(document.querySelectorAll('[data-myth-idx]'));
+    function syncGoldenLeaves() {
+      var mid = window.innerHeight * 0.52;
+      var brokenCount = 0;
+      mythSections.forEach(function (sec) {
+        var r = sec.getBoundingClientRect();
+        if (r.top <= mid) {
+          brokenCount = Math.max(brokenCount, parseInt(sec.getAttribute('data-myth-step'), 10) || 0);
+        }
+      });
+      leaves.forEach(function (el) {
+        var idx = parseInt(el.getAttribute('data-myth-idx'), 10) || 0;
+        el.classList.toggle('is-golden', idx <= brokenCount);
+      });
+    }
+    window.addEventListener('scroll', syncGoldenLeaves, { passive: true });
+    window.addEventListener('resize', syncGoldenLeaves);
+    syncGoldenLeaves();
+  })();
+</script>
 </body>
 </html>

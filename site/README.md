@@ -34,9 +34,8 @@ python -m http.server 8000 --directory site
 ```
 site/
   index.html                             the framework: one cycle, at any scale
-  origin/                                the Origin page: 12 foundational AI chapters (1943–2026) in vertical sections
-  ai-system/                             the AI Studio page: Clover AI Studio downloads, architecture, two-way VS Code & Copilot integration, open-weight model porting guide (Kimi K3.1 Pro, Nemotron 3.5, Clover-35B-A3B, LFM3-Omni-2B), efficiency vs. official numbers, and 70-task benchmarks
-  hg-format/                             the HG Format page: universal FWHT-128 + HG4-16R / HG2-16R conversion process, standalone convert_to_hg.py CLI script, followed by 4 standalone proof case studies (2B, 35B, 120B, 2.8T) with Original vs HG tok/s, sample outputs, and SHA-256 verification
+  hg-format/                             AI Mythbuster: 5 AI myths broken with stories, inline hardware proofs, golden 5-leaf progress, and Clover HG (convert_to_hg.py)
+  ai-system/                             AI Studio (Work in Progress): live engineering status of the 5-Petal Clover Leaf HG specialist system & AGENTS.md cycle
   getting-started/                       the AGENTS.md menu page: read-only access, the agent file, multi-cycle verification, a first cycle
   governance/                            governance: vertical storyline on access, attribution, approvals, delegated execution, and k3 allowlist security
   privacy/                               privacy policy: on-device inference, local Git logging, encrypted vault, and opt-in Google OIDC collective learning
