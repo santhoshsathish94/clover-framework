@@ -23,6 +23,7 @@ REPO_URL="https://github.com/santhoshsathish94/clover-framework.git"
 API_KEY="${CLOVER_GATEWAY_API_KEY:-}"
 CLUSTER_SECRET="${CLOVER_CLUSTER_SECRET:-}"
 ALLOW_PUBLIC_BIND=0
+RUNTIME_MODE="auto"   # `auto` (uses `Dockerfile.hg-server` when `docker info` succeeds, else container-native `clover_docker_entry.py`), `docker`, or `native`
 DRY_RUN=0
 K3_CENTER=""
 NODE1=""
@@ -37,6 +38,9 @@ while [[ $# -gt 0 ]]; do
     --repo-url) REPO_URL="$2"; shift 2 ;;
     --api-key) API_KEY="$2"; shift 2 ;;
     --cluster-secret) CLUSTER_SECRET="$2"; shift 2 ;;
+    --runtime) RUNTIME_MODE="$2"; shift 2 ;;
+    --docker) RUNTIME_MODE="docker"; shift ;;
+    --bare-metal) RUNTIME_MODE="native"; shift ;;
     --k3-center) K3_CENTER="$2"; shift 2 ;;
     --node1|--petal1) NODE1="$2"; shift 2 ;;
     --node2|--petal2) NODE2="$2"; shift 2 ;;
@@ -110,21 +114,54 @@ run_remote() {
 }
 
 BOOTSTRAP_ALL_ENGINES='set -euo pipefail
-mkdir -p /workspace/hg-models/bin
+mkdir -p /workspace/hg-models/bin /workspace/hg-models/clover-context
 if [[ ! -d /workspace/clover-framework ]]; then
   git clone --depth 1 '"${REPO_URL}"' /workspace/clover-framework
 else
+  chmod u+w /workspace/clover-framework/AGENTS.md 2>/dev/null || true
   git -C /workspace/clover-framework pull --ff-only
 fi
-pip install -q numpy huggingface_hub tokenizers safetensors
-nvcc -O3 -std=c++17 --compiler-options -fPIC -shared \
-  -gencode arch=compute_86,code=sm_86 \
-  /workspace/clover-framework/clover-ai-system/src/tools/hg_cuda_accel.cu \
-  -o /workspace/hg-models/bin/libhg_cuda_accel.so -lcudart
-gcc -O3 -march=native -mavx2 -mfma -mf16c -fopenmp -fPIC -shared -I/workspace/clover-framework/clover-ai-system/src/models /workspace/clover-framework/clover-ai-system/src/models/lfm3-1.7b/lfm3_hg4_engine.c -o /workspace/hg-models/bin/liblfm3_hg4_engine.so -lm -ldl
-gcc -O3 -march=native -mavx2 -mfma -mf16c -fopenmp -fPIC -shared -I/workspace/clover-framework/clover-ai-system/src/models /workspace/clover-framework/clover-ai-system/src/models/clover-35b-a3b/clover35b_hg4_engine.c -o /workspace/hg-models/bin/libclover35b_hg4_engine.so -lm -ldl
-gcc -O3 -march=native -mavx2 -mfma -mf16c -fopenmp -fPIC -shared -I/workspace/clover-framework/clover-ai-system/src/models /workspace/clover-framework/clover-ai-system/src/models/nemotron-3.5-super-vl/nemotron_hg4_engine.c -o /workspace/hg-models/bin/libnemotron_hg4_engine.so -lm -ldl
-gcc -O3 -march=native -mavx2 -mfma -mf16c -fopenmp -fPIC -shared -I/workspace/clover-framework/clover-ai-system/src/models /workspace/clover-framework/clover-ai-system/src/models/kimi-k3/kimi_k31_hg4_engine.c -o /workspace/hg-models/bin/libkimi_k31_hg4_engine.so -lm -ldl
+# Runtime enforcement (AGENTS.md §4): mount/lock AGENTS.md read-only (0444) so no agent can rewrite its governing rules
+chmod 0444 /workspace/clover-framework/AGENTS.md
+if [[ "'"${RUNTIME_MODE}"'" == "docker" ]] || { [[ "'"${RUNTIME_MODE}"'" == "auto" ]] && docker info >/dev/null 2>&1; }; then
+  docker build -f /workspace/clover-framework/Dockerfile.hg-server -t clover-hg-server:latest /workspace/clover-framework
+  echo "DOCKER_READY=1" > /workspace/.clover_runtime
+else
+  pip install -q numpy huggingface_hub tokenizers safetensors
+  nvcc -O3 -std=c++17 --compiler-options -fPIC -shared \
+    -gencode arch=compute_86,code=sm_86 \
+    /workspace/clover-framework/clover-ai-system/src/tools/hg_cuda_accel.cu \
+    -o /workspace/hg-models/bin/libhg_cuda_accel.so -lcudart
+  gcc -O3 -march=native -mavx2 -mfma -mf16c -fopenmp -fPIC -shared -I/workspace/clover-framework/clover-ai-system/src/models /workspace/clover-framework/clover-ai-system/src/models/lfm3-1.7b/lfm3_hg4_engine.c -o /workspace/hg-models/bin/liblfm3_hg4_engine.so -lm -ldl
+  gcc -O3 -march=native -mavx2 -mfma -mf16c -fopenmp -fPIC -shared -I/workspace/clover-framework/clover-ai-system/src/models /workspace/clover-framework/clover-ai-system/src/models/clover-35b-a3b/clover35b_hg4_engine.c -o /workspace/hg-models/bin/libclover35b_hg4_engine.so -lm -ldl
+  gcc -O3 -march=native -mavx2 -mfma -mf16c -fopenmp -fPIC -shared -I/workspace/clover-framework/clover-ai-system/src/models /workspace/clover-framework/clover-ai-system/src/models/nemotron-3.5-super-vl/nemotron_hg4_engine.c -o /workspace/hg-models/bin/libnemotron_hg4_engine.so -lm -ldl
+  gcc -O3 -march=native -mavx2 -mfma -mf16c -fopenmp -fPIC -shared -I/workspace/clover-framework/clover-ai-system/src/models /workspace/clover-framework/clover-ai-system/src/models/kimi-k3/kimi_k31_hg4_engine.c -o /workspace/hg-models/bin/libkimi_k31_hg4_engine.so -lm -ldl
+  echo "DOCKER_READY=0" > /workspace/.clover_runtime
+fi
+cat << "WRAP" > /workspace/run_clover_role.sh
+#!/usr/bin/env bash
+set -euo pipefail
+ROLE_NAME="$1"; shift
+source /workspace/.clover_runtime
+if [[ "${DOCKER_READY:-0}" == "1" ]]; then
+  docker rm -f "clover-${ROLE_NAME}" >/dev/null 2>&1 || true
+  ENV_ARGS=()
+  for kv in CLOVER_NODE_ID CLOVER_GATEWAY_API_KEY CLOVER_CLUSTER_SECRET CLOVER_SHARE_CPU_LOCK CLOVER_CUDA_GPUS CLOVER_ACTIVE_MODELS CLOVER_NEMO_SPECULATIVE CLOVER_SPECIALIST_URLS CLOVER_OMNI_HG4_DIR CLOVER35B_HG4_DIR CLOVER_NEMO_HG4_DIR OMP_NUM_THREADS; do
+    [[ -n "${!kv:-}" ]] && ENV_ARGS+=(-e "${kv}=${!kv}")
+  done
+  docker run -d --name "clover-${ROLE_NAME}" --restart unless-stopped --gpus all --network host \
+    -v /workspace/hg-models:/workspace/hg-models \
+    -v /workspace/hg-models:/models \
+    -v /workspace/clover-framework/AGENTS.md:/app/AGENTS.md:ro \
+    -e CLOVER_AGENTS_MD=/app/AGENTS.md \
+    -e CLOVER_CONTEXT_DIR=/models/clover-context \
+    "${ENV_ARGS[@]}" clover-hg-server:latest "$@"
+else
+  nohup env CLOVER_AGENTS_MD=/workspace/clover-framework/AGENTS.md CLOVER_CONTEXT_DIR=/workspace/hg-models/clover-context \
+    python3 /workspace/clover-framework/clover-ai-system/src/tools/clover_docker_entry.py "$@" > "/workspace/${ROLE_NAME}.log" 2>&1 &
+fi
+WRAP
+chmod +x /workspace/run_clover_role.sh
 '
 
 # 1. Bootstrap all 5 GPU Petals in parallel
@@ -135,43 +172,43 @@ run_remote "PETAL4-BUILD" "$N4_HOST" "$N4_PORT" "$BOOTSTRAP_ALL_ENGINES" & P4=$!
 run_remote "PETAL5-BUILD" "$N5_HOST" "$N5_PORT" "$BOOTSTRAP_ALL_ENGINES" & P5=$!
 wait "$P1" "$P2" "$P3" "$P4" "$P5"
 
-# 2. Download exact slices + launch Kimi workers & LOCAL-ONLY Petal Gateways (Petals never forward to other Petals!)
+# 2. Download exact slices + launch Kimi workers & LOCAL-ONLY Petal Gateways via `run_clover_role.sh` (Docker-first!)
 run_remote "PETAL1-START" "$N1_HOST" "$N1_PORT" "
 python3 /workspace/clover-framework/clover-ai-system/src/tools/clover_hg_serve.py --model nemotron-3.5-super-vl --download-only --cache-dir /workspace/hg-models
 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 0:14 --need-emb
-nohup env CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py worker --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --layer-range 0:14 --need-emb --pin-cold-vram --gpus 3,4,5,6,7 --host ${N1_WG} --port 9100 > /workspace/kimi_stage0.log 2>&1 &
-nohup env CLOVER_NODE_ID=petal-1 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0,1,2 CLOVER_ACTIVE_MODELS=nemotron-3.5-super-vl CLOVER_NATIVE_LIB_DIR=/workspace/hg-models/bin CLOVER_NEMO_HG4_DIR=/workspace/hg-models/nemotron-3.5-super-vl CLOVER_NEMO_SPECULATIVE=1 OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host ${N1_WG} --port 8080 > /workspace/petal_gateway.log 2>&1 &
+CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 /workspace/run_clover_role.sh kimi-stage0 kimi-worker --model-dir /workspace/hg-models/kimi-slice --layer-range 0:14 --need-emb --pin-cold-vram --gpus 3,4,5,6,7 --host ${N1_WG} --port 9100
+CLOVER_NODE_ID=petal-1 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0,1,2 CLOVER_ACTIVE_MODELS=nemotron-3.5-super-vl CLOVER_NEMO_HG4_DIR=/workspace/hg-models/nemotron-3.5-super-vl CLOVER_NEMO_SPECULATIVE=1 OMP_NUM_THREADS=16 /workspace/run_clover_role.sh petal-gw gateway --mode real --host ${N1_WG} --port 8080
 " & D1=$!
 
 run_remote "PETAL2-START" "$N2_HOST" "$N2_PORT" "
 python3 /workspace/clover-framework/clover-ai-system/src/tools/clover_hg_serve.py --model lfm3-omni-2b,clover-35b-a3b --download-only --cache-dir /workspace/hg-models
 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 14:33
-nohup env CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py worker --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --layer-range 14:33 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --host ${N2_WG} --port 9101 > /workspace/kimi_stage1.log 2>&1 &
-nohup env CLOVER_NODE_ID=petal-2 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_ACTIVE_MODELS=lfm3-omni-2b,clover-35b-a3b CLOVER_NATIVE_LIB_DIR=/workspace/hg-models/bin CLOVER_OMNI_HG4_DIR=/workspace/hg-models/lfm3-omni-2b CLOVER35B_HG4_DIR=/workspace/hg-models/clover-35b-a3b OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host ${N2_WG} --port 8080 > /workspace/petal_gateway.log 2>&1 &
+CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 /workspace/run_clover_role.sh kimi-stage1 kimi-worker --model-dir /workspace/hg-models/kimi-slice --layer-range 14:33 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --host ${N2_WG} --port 9101
+CLOVER_NODE_ID=petal-2 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_ACTIVE_MODELS=lfm3-omni-2b,clover-35b-a3b CLOVER_OMNI_HG4_DIR=/workspace/hg-models/lfm3-omni-2b CLOVER35B_HG4_DIR=/workspace/hg-models/clover-35b-a3b OMP_NUM_THREADS=16 /workspace/run_clover_role.sh petal-gw gateway --mode real --host ${N2_WG} --port 8080
 " & D2=$!
 
 run_remote "PETAL3-START" "$N3_HOST" "$N3_PORT" "
 python3 /workspace/clover-framework/clover-ai-system/src/tools/clover_hg_serve.py --model lfm3-omni-2b,clover-35b-a3b --download-only --cache-dir /workspace/hg-models
 python3 -c 'from huggingface_hub import snapshot_download; snapshot_download(\"amazon/chronos-bolt-base\", local_dir=\"/workspace/hg-models/chronos-2\")' || true
 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 33:52
-nohup env CLOVER_GATEWAY_API_KEY='${API_KEY}' python3 /workspace/clover-framework/clover-ai-system/src/tools/specialist_hg_server.py --model chronos-2 --model-dir /workspace/hg-models/chronos-2 --gpu 0 --host 127.0.0.1 --port 8094 > /workspace/spec_chronos2.log 2>&1 &
-nohup env CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py worker --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --layer-range 33:52 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --host ${N3_WG} --port 9102 > /workspace/kimi_stage2.log 2>&1 &
-nohup env CLOVER_NODE_ID=petal-3 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_ACTIVE_MODELS=lfm3-omni-2b,clover-35b-a3b CLOVER_SPECIALIST_URLS='chronos-2=http://127.0.0.1:8094' CLOVER_NATIVE_LIB_DIR=/workspace/hg-models/bin CLOVER_OMNI_HG4_DIR=/workspace/hg-models/lfm3-omni-2b CLOVER35B_HG4_DIR=/workspace/hg-models/clover-35b-a3b OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host ${N3_WG} --port 8080 > /workspace/petal_gateway.log 2>&1 &
+CLOVER_GATEWAY_API_KEY='${API_KEY}' /workspace/run_clover_role.sh spec-chronos2 specialist --model chronos-2 --model-dir /workspace/hg-models/chronos-2 --gpu 0 --host 127.0.0.1 --port 8094
+CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 /workspace/run_clover_role.sh kimi-stage2 kimi-worker --model-dir /workspace/hg-models/kimi-slice --layer-range 33:52 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --host ${N3_WG} --port 9102
+CLOVER_NODE_ID=petal-3 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_ACTIVE_MODELS=lfm3-omni-2b,clover-35b-a3b CLOVER_SPECIALIST_URLS='chronos-2=http://127.0.0.1:8094' CLOVER_OMNI_HG4_DIR=/workspace/hg-models/lfm3-omni-2b CLOVER35B_HG4_DIR=/workspace/hg-models/clover-35b-a3b OMP_NUM_THREADS=16 /workspace/run_clover_role.sh petal-gw gateway --mode real --host ${N3_WG} --port 8080
 " & D3=$!
 
 run_remote "PETAL4-START" "$N4_HOST" "$N4_PORT" "
 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 52:71
 python3 -c 'from huggingface_hub import snapshot_download; [snapshot_download(r, local_dir=d) for r, d in [(\"Santhoshsathish94/Goedel-Prover-V2-32B-HG4-16R\", \"/workspace/hg-models/goedel-prover-v2-32b\"), (\"Santhoshsathish94/VJEPA2-ViTg-HG4-16R\", \"/workspace/hg-models/vjepa-2.1\"), (\"boltz-community/boltz-2\", \"/workspace/hg-models/boltz-2\")]]' || true
-nohup env CLOVER_GATEWAY_API_KEY='${API_KEY}' python3 /workspace/clover-framework/clover-ai-system/src/tools/specialist_hg_server.py --model goedel-prover-v2-32b --model-dir /workspace/hg-models/goedel-prover-v2-32b --gpu 0 --host 127.0.0.1 --port 8091 > /workspace/spec_goedel.log 2>&1 &
-nohup env CLOVER_GATEWAY_API_KEY='${API_KEY}' python3 /workspace/clover-framework/clover-ai-system/src/tools/specialist_hg_server.py --model vjepa-2.1 --model-dir /workspace/hg-models/vjepa-2.1 --gpu 0 --host 127.0.0.1 --port 8092 > /workspace/spec_vjepa.log 2>&1 &
-nohup env CLOVER_GATEWAY_API_KEY='${API_KEY}' python3 /workspace/clover-framework/clover-ai-system/src/tools/specialist_hg_server.py --model boltz-2 --model-dir /workspace/hg-models/boltz-2 --gpu 0 --host 127.0.0.1 --port 8093 > /workspace/spec_boltz2.log 2>&1 &
-nohup env CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py worker --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --layer-range 52:71 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --host ${N4_WG} --port 9103 > /workspace/kimi_stage3.log 2>&1 &
-nohup env CLOVER_NODE_ID=petal-4 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_ACTIVE_MODELS='' CLOVER_SPECIALIST_URLS='goedel-prover-v2-32b=http://127.0.0.1:8091,vjepa-2.1=http://127.0.0.1:8092,boltz-2=http://127.0.0.1:8093' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host ${N4_WG} --port 8080 > /workspace/petal_gateway.log 2>&1 &
+CLOVER_GATEWAY_API_KEY='${API_KEY}' /workspace/run_clover_role.sh spec-goedel specialist --model goedel-prover-v2-32b --model-dir /workspace/hg-models/goedel-prover-v2-32b --gpu 0 --host 127.0.0.1 --port 8091
+CLOVER_GATEWAY_API_KEY='${API_KEY}' /workspace/run_clover_role.sh spec-vjepa specialist --model vjepa-2.1 --model-dir /workspace/hg-models/vjepa-2.1 --gpu 0 --host 127.0.0.1 --port 8092
+CLOVER_GATEWAY_API_KEY='${API_KEY}' /workspace/run_clover_role.sh spec-boltz specialist --model boltz-2 --model-dir /workspace/hg-models/boltz-2 --gpu 0 --host 127.0.0.1 --port 8093
+CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 /workspace/run_clover_role.sh kimi-stage3 kimi-worker --model-dir /workspace/hg-models/kimi-slice --layer-range 52:71 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --host ${N4_WG} --port 9103
+CLOVER_NODE_ID=petal-4 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_ACTIVE_MODELS='' CLOVER_SPECIALIST_URLS='goedel-prover-v2-32b=http://127.0.0.1:8091,vjepa-2.1=http://127.0.0.1:8092,boltz-2=http://127.0.0.1:8093' OMP_NUM_THREADS=16 /workspace/run_clover_role.sh petal-gw gateway --mode real --host ${N4_WG} --port 8080
 " & D4=$!
 
 run_remote "PETAL5-START" "$N5_HOST" "$N5_PORT" "
 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 71:93 --need-emb --need-head
-nohup env CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' CLOVER_GATEWAY_API_KEY='${API_KEY}' OMP_NUM_THREADS=24 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py coordinator --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --local-range 71:93 --stages ${N1_WG}:9100@0:14,${N2_WG}:9101@14:33,${N3_WG}:9102@33:52,${N4_WG}:9103@52:71 --pin-cold-vram --wire-dtype fp32 --gpus 0,1,2,3,4,5,6,7 --host ${N5_WG} --port 8089 > /workspace/kimi_coordinator.log 2>&1 &
+CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' CLOVER_GATEWAY_API_KEY='${API_KEY}' OMP_NUM_THREADS=24 /workspace/run_clover_role.sh kimi-coord kimi-coordinator --model-dir /workspace/hg-models/kimi-slice --local-range 71:93 --stages ${N1_WG}:9100@0:14,${N2_WG}:9101@14:33,${N3_WG}:9102@33:52,${N4_WG}:9103@52:71 --pin-cold-vram --wire-dtype fp32 --gpus 0,1,2,3,4,5,6,7 --host ${N5_WG} --port 8089
 " & D5=$!
 
 wait "$D1" "$D2" "$D3" "$D4" "$D5"
@@ -181,8 +218,9 @@ if [[ -n "$K3_CENTER" ]]; then
   IFS='|' read -r K3_HOST K3_PORT K3_WG <<< "$(parse_node "$K3_CENTER")"
   K3_PEERS='{"lfm3-omni-2b":["local"],"clover-35b-a3b":["local"]}'
   run_remote "K3-CENTER-HUB" "$K3_HOST" "$K3_PORT" "
-    mkdir -p /mnt/nvme1/clover-hub
-    nohup env CLOVER_NODE_ID=k3-center CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_TASKS_DB=/mnt/nvme1/clover-hub/mcp_tasks.sqlite3 CLOVER_KIMI_URL=http://${N5_WG}:8089 CLOVER_MODEL_PEERS='${K3_PEERS}' OMP_NUM_THREADS=16 GOMP_CPU_AFFINITY=0-15 python3 /mnt/nvme1/clover-framework-repo/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host 0.0.0.0 --port 8790 > /mnt/nvme1/clover-hub/k3_hub.log 2>&1 &
+    mkdir -p /mnt/nvme1/clover-hub/context_files
+    chmod 0444 /mnt/nvme1/clover-framework-repo/AGENTS.md 2>/dev/null || true
+    nohup env CLOVER_NODE_ID=k3-center CLOVER_AGENTS_MD=/mnt/nvme1/clover-framework-repo/AGENTS.md CLOVER_CONTEXT_DIR=/mnt/nvme1/clover-hub/context_files CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_TASKS_DB=/mnt/nvme1/clover-hub/mcp_tasks.sqlite3 CLOVER_KIMI_URL=http://${N5_WG}:8089 CLOVER_MODEL_PEERS='${K3_PEERS}' OMP_NUM_THREADS=16 GOMP_CPU_AFFINITY=0-15 python3 /mnt/nvme1/clover-framework-repo/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host 0.0.0.0 --port 8790 > /mnt/nvme1/clover-hub/k3_hub.log 2>&1 &
   "
   start_hb() {
     local lbl="$1" h="$2" p="$3" pid="$4" wg="$5" mdls="$6" tls="$7"

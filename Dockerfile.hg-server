@@ -15,6 +15,8 @@ FROM nvidia/cuda:12.6.3-devel-ubuntu24.04
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     CLOVER_HG_CACHE=/models \
+    CLOVER_AGENTS_MD=/app/AGENTS.md \
+    CLOVER_CONTEXT_DIR=/models/clover-context \
     HF_HUB_ENABLE_HF_TRANSFER=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -22,14 +24,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python3 -m pip install --break-system-packages --no-cache-dir \
-        numpy huggingface_hub hf_transfer tokenizers
+        numpy huggingface_hub hf_transfer tokenizers safetensors
 
 WORKDIR /app
+COPY AGENTS.md /app/AGENTS.md
+RUN chmod 0444 /app/AGENTS.md
 COPY clover-ai-system/src /app/clover-ai-system/src
 
 # Pre-compile all 4 C11 SIMD engines + multi-arch CUDA accelerator (sm_80/86/89/90) at image build time
 RUN python3 /app/clover-ai-system/src/tools/clover_hg_serve.py --model all --gpus auto --build-only
 
-EXPOSE 8000
-ENTRYPOINT ["python3", "/app/clover-ai-system/src/tools/clover_hg_serve.py", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8000 8080 8089 9100
+ENTRYPOINT ["python3", "/app/clover-ai-system/src/tools/clover_docker_entry.py"]
 CMD ["--model", "lfm3-omni-2b"]

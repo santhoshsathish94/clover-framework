@@ -1041,7 +1041,7 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
                 etag = r.headers.get("ETag")
                 self.assertEqual(r.headers.get("Mcp-Protocol-Version"), "2026-07-28")
                 mlist = json.loads(r.read().decode("utf-8"))
-            self.assertEqual(len(mlist["result"]["tools"]), 8)
+            self.assertEqual(len(mlist["result"]["tools"]), 10)
             self.assertTrue(etag)
 
             m_304_req = urllib.request.Request(
@@ -1339,6 +1339,130 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
             k3_srv.server_close()
             petal_srv.shutdown()
             petal_srv.server_close()
+
+    def test_clover_agents_md_five_proofs(self):
+        import os
+        import shutil
+        import tempfile
+        import urllib.request
+        import clover_cycle_engine as cce
+        import gateway as GW
+
+        # Verify authentic `AGENTS.md` was discovered and hashed
+        self.assertIsNotNone(cce.AGENTS_MD_PATH)
+        self.assertEqual(len(cce.AGENTS_MD_SHA256), 64)
+
+        ctx_dir = Path(tempfile.mkdtemp(prefix="clover_ctx_proofs_"))
+        old_ctx = os.environ.get("CLOVER_CONTEXT_DIR")
+        os.environ["CLOVER_CONTEXT_DIR"] = str(ctx_dir)
+        captured_prompts: dict[str, list[str]] = {"nemotron-3.5-super-vl": [], "clover-35b-a3b": []}
+
+        def spy_responder(mid: str, prompt_text: str) -> str:
+            if mid in captured_prompts:
+                captured_prompts[mid].append(prompt_text)
+            return B.default_mock_responder(mid, prompt_text)
+
+        router = FR.FusionRouter(
+            B.build_backends("mock", responders={"nemotron-3.5-super-vl": spy_responder, "clover-35b-a3b": spy_responder})
+        )
+        srv, _ = GW.serve_in_thread(router)
+        try:
+            # PROOF 1 (Context->Growth Handoff vs Blind Escalation, AGENTS.md §5):
+            # Even when Clean-Slate Cascade strips 35B's noisy draft, Nemotron-120B receives the 8-field
+            # `[Clover Context -> Growth Handoff]` naming `RULED OUT (do NOT repeat)` AND writes a `.md` file!
+            fail_conv = [
+                {"role": "user", "content": "Implement `def rk4_step(f, t, y, h):` in solver.py."},
+                {"role": "assistant", "content": "def rk4_step(f, t, y, h): return y + h * f(t, y)  # Euler"},
+                {"role": "tool", "content": "AssertionError: Euler order-1 error 2.4e-2 exceeds RK4 tolerance 1e-8"},
+            ]
+            c_esc = router.complete({
+                "model": "clover-fusion-cluster",
+                "x_clover_task_id": "proof_rk4",
+                "messages": fail_conv,
+            })
+            self.assertEqual(c_esc.telemetry["served_by"], "nemotron-3.5-super-vl")
+            cyc1 = c_esc.telemetry["clover_cycle"]
+            self.assertEqual(cyc1["discernment_state"], "PROCEED_WITH_GROWTH")
+            self.assertTrue(cyc1["handoff_injected"])
+            self.assertTrue((ctx_dir / "proof_rk4.md").is_file())
+            self.assertIn("RULED OUT (do NOT repeat):", captured_prompts["nemotron-3.5-super-vl"][-1])
+            self.assertIn("Euler", captured_prompts["nemotron-3.5-super-vl"][-1])
+
+            # PROOF 2 (Anti-Blind-Retry Gate, AGENTS.md §6):
+            # Repeating the EXACT same failed tool execution twice without reading new Context triggers `blind_retry_blocked`!
+            dup_tc = [{"id": "t1", "type": "function", "function": {"name": "bash", "arguments": "{\"command\":\"pytest solver.py\"}"}}]
+            blind_conv = [
+                {"role": "user", "content": "Fix solver.py"},
+                {"role": "assistant", "content": "", "tool_calls": dup_tc},
+                {"role": "tool", "tool_call_id": "t1", "content": "AssertionError: step mismatch"},
+                {"role": "assistant", "content": "", "tool_calls": dup_tc},
+                {"role": "tool", "tool_call_id": "t1", "content": "AssertionError: border mismatch"},
+            ]
+            c_blind = router.complete({"model": "clover-35b-a3b", "tools": TOOLS, "messages": blind_conv})
+            self.assertTrue(c_blind.telemetry["clover_cycle"]["blind_retry_blocked"])
+            self.assertIn("BLIND-RETRY BLOCKED (AGENTS.md §6)", captured_prompts["clover-35b-a3b"][-1])
+
+            # PROOF 3 (Deliberate "Know When To Stop", AGENTS.md §1 & §6):
+            # 3 consecutive cycles with the IDENTICAL error signature and zero new Context halts (`STOP_AND_ASK`)!
+            stag_conv = [
+                {"role": "user", "content": "Deploy prod migration"},
+                {"role": "assistant", "content": "attempt 1"},
+                {"role": "tool", "content": "error: missing DB_SCHEMA_VERSION env var"},
+                {"role": "assistant", "content": "attempt 2"},
+                {"role": "tool", "content": "error: missing DB_SCHEMA_VERSION env var"},
+                {"role": "assistant", "content": "attempt 3"},
+                {"role": "tool", "content": "error: missing DB_SCHEMA_VERSION env var"},
+            ]
+            c_stop = router.complete({"model": "clover-fusion-cluster", "x_clover_task_id": "proof_stag", "messages": stag_conv})
+            self.assertEqual(c_stop.telemetry["served_by"], "clover-cycle-guard")
+            self.assertEqual(c_stop.telemetry["clover_cycle"]["discernment_state"], "STOP_AND_ASK")
+            self.assertIn("Stopping deliberately rather than blindly retrying", c_stop.content)
+
+            # PROOF 4 (Verification-Boundary Tamper Refusal, AGENTS.md §4 & §9):
+            # Agent tries to rewrite `test_solver.py` to force a passing test without human authorization -> REFUSED!
+            c_tamper = router.complete({
+                "model": "clover-35b-a3b",
+                "tools": TOOLS,
+                "messages": [{
+                    "role": "user",
+                    "content": 'Implement solver.py. MOCK_TOOL_RAW: <tool_call>\n{"name": "write", "arguments": {"filePath": "tests/test_solver.py", "content": "def test_ok(): assert True"}}\n</tool_call>',
+                }],
+            })
+            self.assertEqual(c_tamper.tool_calls, [])
+            self.assertEqual(c_tamper.telemetry["clover_cycle"]["discernment_state"], "REFUSE")
+            self.assertEqual(c_tamper.telemetry["clover_cycle"]["protected_target"], "test_solver.py")
+            self.assertIn("Clover Execution Integrity Refusal", c_tamper.content)
+
+            # PROOF 5 (Cross-Agent / Cross-Session Continuity + MCP 2.0 `clover_context_read`, AGENTS.md §5):
+            # A brand-new session (`messages` has ONLY the user prompt!) referencing `x_clover_task_id="proof_rk4"`
+            # automatically inherits Cycle 1's `RULED OUT` handoff AND can inspect it via MCP 2.0 `clover_context_read`!
+            c_resume = router.complete({
+                "model": "clover-35b-a3b",
+                "x_clover_task_id": "proof_rk4",
+                "messages": [{"role": "user", "content": "Continue implementing `rk4_step` in solver.py."}],
+            })
+            self.assertGreaterEqual(c_resume.telemetry["clover_cycle"]["ruled_out_count"], 1)
+            self.assertIn("Euler", captured_prompts["clover-35b-a3b"][-1])
+
+            mcp_url = f"http://127.0.0.1:{srv.server_address[1]}/mcp"
+            m_ctx_req = urllib.request.Request(
+                mcp_url,
+                data=json.dumps({"jsonrpc": "2.0", "id": 77, "method": "tools/call", "params": {"name": "clover_context_read", "arguments": {"task_id": "proof_rk4"}}}).encode("utf-8"),
+                headers={"Content-Type": "application/json", "Mcp-Method": "tools/call", "Mcp-Name": "clover_context_read"},
+                method="POST",
+            )
+            with urllib.request.urlopen(m_ctx_req, timeout=5) as r:
+                m_ctx = json.loads(r.read().decode("utf-8"))["result"]["structuredContent"]
+            self.assertTrue(m_ctx["found"])
+            self.assertTrue(any("Euler" in x for x in m_ctx["what_was_ruled_out"]))
+        finally:
+            if old_ctx is None:
+                os.environ.pop("CLOVER_CONTEXT_DIR", None)
+            else:
+                os.environ["CLOVER_CONTEXT_DIR"] = old_ctx
+            srv.shutdown()
+            srv.server_close()
+            shutil.rmtree(ctx_dir, ignore_errors=True)
 
 
 # ====================================================================================================================

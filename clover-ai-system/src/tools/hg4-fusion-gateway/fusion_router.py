@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+import clover_cycle_engine as cce
 import skill_loader as sl
 import studio_epistemic_memory as sem_mem
 import studio_jepa_router as sjepa
@@ -413,6 +414,7 @@ class FusionRouter:
         self.backends = backends
         self.telemetry = telemetry or Telemetry()
         self.epistemic_memory = sem_mem.EpistemicMemoryStore()
+        self.clover_cycle = cce.CloverCycleEngine(FAILURE_RE)
 
     def reset_caches(self) -> dict[str, Any]:
         reset_models: list[str] = []
@@ -421,7 +423,8 @@ class FusionRouter:
                 be.reset_cache()
                 reset_models.append(mid)
         self.epistemic_memory.reset()
-        return {"reset": reset_models, "count": len(reset_models), "epistemic_memory_reset": True}
+        self.clover_cycle.reset()
+        return {"reset": reset_models, "count": len(reset_models), "epistemic_memory_reset": True, "clover_cycle_reset": True}
 
     # -- discovery ---------------------------------------------------------------------------------------------------
     def list_models(self) -> list[dict[str, Any]]:
@@ -609,6 +612,35 @@ class FusionRouter:
             messages, s5_meta = self.epistemic_memory.build_ledger_for_messages(messages)
             studio_telem["s5_epistemic_memory"] = s5_meta
 
+        # -- Clover `AGENTS.md` Operating Cycle (`Context -> Direction -> Execution -> Outcome -> Growth`) --------------
+        use_agents_cycle = (
+            bool(body["x_clover_agents_cycle"])
+            if "x_clover_agents_cycle" in body
+            else os.environ.get("CLOVER_ENABLE_AGENTS_CYCLE", "1") != "0"
+        )
+        if use_agents_cycle:
+            messages, cycle_meta, stop_response = self.clover_cycle.prepare_cycle(body, messages)
+            telem["clover_cycle"] = cycle_meta
+            if stop_response is not None:
+                if on_delta is not None:
+                    on_delta(stop_response)
+                wall_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+                telem.update({
+                    "requested_model": requested,
+                    "served_by": "clover-cycle-guard",
+                    "steps": [],
+                    "wall_ms": wall_ms,
+                })
+                self.telemetry.record(model, telem)
+                return Completion(
+                    model=requested or model,
+                    content=stop_response,
+                    tool_calls=[],
+                    finish_reason="stop",
+                    usage={"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "prompt_tokens_details": {"cached_tokens": 0}},
+                    telemetry=telem,
+                )
+
         s3_applicable = False
         if use_s3:
             messages, s3_pre = sxc.apply_pre_xcruncher_context(messages)
@@ -692,6 +724,21 @@ class FusionRouter:
 
         content = final.parsed.content
         tool_calls = final.parsed.openai_tool_calls() if tools_active else []
+
+        # -- AGENTS.md §4 & §9 Runtime Enforcement: Refuse unrequested tampering with test/oracle files! --------------
+        if use_agents_cycle and tool_calls:
+            tampered, target_file = self.clover_cycle.check_verification_boundary_tamper(messages, tool_calls)
+            if tampered:
+                tool_calls = []
+                content = (
+                    f"[Clover Execution Integrity Refusal — AGENTS.md §4 & §9]\n"
+                    f"Refusing tool call that modifies or mutates protected verification control `{target_file}` "
+                    f"without explicit human Direction. Verification artifacts define whether the Outcome is acceptable "
+                    f"and must not be rewritten to force a passing result."
+                )
+                telem.setdefault("clover_cycle", {})["discernment_state"] = "REFUSE"
+                telem["clover_cycle"]["boundary_violation"] = "verification_control_tamper"
+                telem["clover_cycle"]["protected_target"] = target_file
         if final.parsed.tool_calls and not tool_calls:
             telem["dropped_invalid_tool_calls"] = final.parsed.problems
         if final.parsed.errors and not tool_calls:
@@ -886,6 +933,23 @@ class FusionRouter:
             break
         return (list(messages[:end]), True) if stripped_any else (messages, False)
 
+    @staticmethod
+    def _reattach_handoff_if_stripped(orig_messages: list[dict[str, Any]], esc_msgs: list[dict[str, Any]], stripped: bool) -> list[dict[str, Any]]:
+        """Preserve `[Clover Context -> Growth Handoff]` on `esc_msgs[-1]` even when noisy draft code is stripped!"""
+        if not stripped or not orig_messages or not esc_msgs:
+            return esc_msgs
+        last_orig = str(orig_messages[-1].get("content") or "")
+        marker = "[Clover Context -> Growth Handoff"
+        if marker not in last_orig:
+            return esc_msgs
+        handoff_note = marker + last_orig.split(marker, 1)[1]
+        out = [dict(m) for m in esc_msgs]
+        tail_m = dict(out[-1])
+        base = str(tail_m.get("content") or "").split(marker, 1)[0].rstrip()
+        tail_m["content"] = f"{base}\n\n{handoff_note}" if base else handoff_note
+        out[-1] = tail_m
+        return out
+
     def _cascade(self, body, messages, tools, tool_choice, streamer, steps, telem) -> StepOutcome:
         params = parse_params(body)
         tools_active = bool(tg.active_tools(tools, tool_choice))
@@ -902,6 +966,7 @@ class FusionRouter:
             esc_msgs = messages
             if use_clean:
                 esc_msgs, stripped = self._clean_slate_escalation_messages(messages, tools_active)
+                esc_msgs = self._reattach_handoff_if_stripped(messages, esc_msgs, stripped)
                 telem["clean_slate_escalation"] = stripped
             final = self._run("nemotron-3.5-super-vl", "cascade-escalated", esc_msgs, tools, tool_choice, params,
                               streamer)
@@ -983,6 +1048,7 @@ class FusionRouter:
             )
             if use_clean:
                 esc_msgs, stripped = self._clean_slate_escalation_messages(messages, tools_active)
+                esc_msgs = self._reattach_handoff_if_stripped(messages, esc_msgs, stripped)
                 telem["clean_slate_escalation"] = stripped
             second = self._run(
                 "nemotron-3.5-super-vl",

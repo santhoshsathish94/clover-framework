@@ -507,6 +507,33 @@ MCP2_TOOLS: tuple[McpToolSpec, ...] = (
         target_model="chronos-2",
     ),
     McpToolSpec(
+        name="clover_context_read",
+        domain="clover_cycle",
+        summary="Read the AGENTS.md §5 8-field Context->Growth handoff record for a task (`what_was_tried`, `what_was_ruled_out`).",
+        input_schema={
+            "type": "object",
+            "properties": {"task_id": {"type": "string"}},
+            "required": ["task_id"],
+        },
+    ),
+    McpToolSpec(
+        name="clover_context_record",
+        domain="clover_cycle",
+        summary="Record an AGENTS.md §5 Context->Growth handoff (offered, not imposed) before starting the next cycle.",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "task_id": {"type": "string"},
+                "intended_outcome": {"type": "string"},
+                "what_was_tried": {"type": "string"},
+                "what_the_system_showed": {"type": "string"},
+                "what_was_ruled_out": {"type": "string"},
+                "next_cycle_change": {"type": "string"},
+            },
+            "required": ["task_id", "intended_outcome", "next_cycle_change"],
+        },
+    ),
+    McpToolSpec(
         name="clover_exec_batch",
         domain="cluster",
         summary="Club & execute multiple MCP 2.0 tool calls in parallel in a single stateless round-trip.",
@@ -968,6 +995,59 @@ class Mcp2MeshServer:
             with urllib.request.urlopen(req, timeout=120.0) as r:
                 rpc_res = json.loads(r.read().decode("utf-8") or "{}")
             return (rpc_res.get("result") or {}).get("structuredContent") or {"forwarded_to": peer, "raw": rpc_res}
+
+        if name == "clover_context_read":
+            tid = str(args.get("task_id") or "").strip()
+            rec = self.router.clover_cycle.get_record(tid)
+            if rec is None:
+                return {"tool": name, "found": False, "task_id": tid}
+            return {
+                "tool": name,
+                "found": True,
+                "task_id": rec.task_id,
+                "cycle": rec.cycle_count,
+                "intended_outcome": rec.intended_outcome,
+                "what_was_tried": rec.what_was_tried,
+                "what_the_system_showed": rec.what_the_system_showed,
+                "what_was_ruled_out": rec.what_was_ruled_out,
+                "next_cycle_change": rec.next_cycle_change,
+                "context_file": rec.context_file_path,
+                "markdown": rec.to_markdown(),
+            }
+
+        if name == "clover_context_record":
+            from clover_cycle_engine import CloverContextRecord
+
+            tid = str(args.get("task_id") or "manual_task").strip()
+            existing = self.router.clover_cycle.get_record(tid)
+            cyc = (existing.cycle_count + 1) if existing else 1
+            tried = list(existing.what_was_tried) if existing else []
+            if args.get("what_was_tried"):
+                tried.append(str(args["what_was_tried"]))
+            showed = list(existing.what_the_system_showed) if existing else []
+            if args.get("what_the_system_showed"):
+                showed.append(str(args["what_the_system_showed"]))
+            ruled = list(existing.what_was_ruled_out) if existing else []
+            if args.get("what_was_ruled_out"):
+                ruled.append(str(args["what_was_ruled_out"]))
+            new_rec = CloverContextRecord(
+                task_id=tid,
+                cycle_count=cyc,
+                intended_outcome=str(args.get("intended_outcome") or ""),
+                what_was_tried=tried,
+                what_the_system_showed=showed,
+                what_was_ruled_out=ruled,
+                next_cycle_change=str(args.get("next_cycle_change") or ""),
+            )
+            saved = self.router.clover_cycle.save_record(new_rec)
+            return {
+                "tool": name,
+                "saved": True,
+                "offered_handoff": True,
+                "task_id": saved.task_id,
+                "cycle": saved.cycle_count,
+                "context_file": saved.context_file_path,
+            }
 
         if name == "clover_exec_batch":
             if _batch_depth >= 1:
