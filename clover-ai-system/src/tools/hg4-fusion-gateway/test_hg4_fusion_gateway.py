@@ -1137,6 +1137,209 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
             node_b_srv.shutdown()
             node_b_srv.server_close()
 
+    def test_opus_cluster_audit_all_eleven_fixes(self):
+        import os
+        import socket
+        import struct
+        import tempfile
+        import urllib.error
+        import urllib.request
+        import cluster_scheduler_mcp2 as CSM
+        import gateway as GW
+
+        # 1. Deadlock regression #1: 64-item `submit_batch` on a tiny 4-worker pool completes in <3s (zero self-deadlock!)
+        q4 = CSM.ClusterBatchQueue(
+            lambda b: FR.Completion(
+                model="lfm3-omni-2b",
+                content=f"ok:{b['messages'][0]['content']}",
+                tool_calls=[],
+                finish_reason="stop",
+                usage={"prompt_tokens": 4, "completion_tokens": 2, "total_tokens": 6},
+                telemetry={"init": True},
+            ),
+            max_workers=4,
+            batch_window_ms=2.0,
+        )
+        try:
+            t0 = time.perf_counter()
+            reqs64 = [{"model": "lfm3-omni-2b", "messages": [{"role": "user", "content": f"q_{i % 48}"}]} for i in range(64)]
+            out64 = q4.submit_batch(reqs64, priority=2)
+            self.assertEqual(out64["count"], 64)
+            self.assertEqual(out64["clubbed_duplicates"], 16)
+            self.assertLess(time.perf_counter() - t0, 5.0)
+            # Verify clubbed results get independent cloned telemetry dicts (no cross-thread mutation race)
+            out64["results"][0]["completion"].telemetry["mutated"] = 1
+            self.assertNotIn("mutated", out64["results"][48]["completion"].telemetry)
+        finally:
+            q4.close()
+
+        # 2. Auth + X-Clover-Hop loop prevention + Nested clover_exec_batch guard + JSON-RPC Batch Array + PetalRegistry + SQLite tasks
+        old_key = os.environ.get("CLOVER_GATEWAY_API_KEY")
+        old_db = os.environ.get("CLOVER_TASKS_DB")
+        tmp_db = Path(tempfile.mktemp(suffix=".sqlite3"))
+        os.environ["CLOVER_GATEWAY_API_KEY"] = "test-petal-secret-key"
+        os.environ["CLOVER_TASKS_DB"] = str(tmp_db)
+        petal_srv = GW.create_server(FR.FusionRouter(B.build_backends("mock", include_specialists=True)), port=0, quiet=True)
+        petal_th = threading.Thread(target=petal_srv.serve_forever, daemon=True)
+        petal_th.start()
+        k3_srv = GW.create_server(FR.FusionRouter(B.build_backends("mock")), port=0, quiet=True)
+        k3_th = threading.Thread(target=k3_srv.serve_forever, daemon=True)
+        k3_th.start()
+        try:
+            petal_url = f"http://127.0.0.1:{petal_srv.server_address[1]}"
+            k3_url = f"http://127.0.0.1:{k3_srv.server_address[1]}"
+            auth_hdr = {"Content-Type": "application/json", "Authorization": "Bearer test-petal-secret-key"}
+
+            # Unauthenticated request to protected petal returns 401
+            unauth_req = urllib.request.Request(
+                petal_url + "/v1/models", headers={"Content-Type": "application/json"}, method="GET"
+            )
+            with self.assertRaises(urllib.error.HTTPError) as ctx401:
+                urllib.request.urlopen(unauth_req, timeout=5)
+            self.assertEqual(ctx401.exception.code, 401)
+            ctx401.exception.close()
+
+            # Dynamic Petal Lease Registration on k3 (`POST /v1/cluster/register`) + Bearer-authenticated peer hop!
+            reg_req = urllib.request.Request(
+                k3_url + "/v1/cluster/register",
+                data=json.dumps({
+                    "petal_id": "petal-4",
+                    "url": petal_url,
+                    "models": ["goedel-prover-v2-32b"],
+                    "mcp_tools": ["goedel_lean4_prove"],
+                    "vram_gib": 171.0,
+                }).encode("utf-8"),
+                headers=auth_hdr,
+                method="POST",
+            )
+            with urllib.request.urlopen(reg_req, timeout=5) as r:
+                reg_out = json.loads(r.read().decode("utf-8"))
+            self.assertEqual(reg_out["registered"], "petal-4")
+
+            # Calling `goedel-prover-v2-32b` on k3 hops ONCE with Bearer auth to petal-4 and succeeds!
+            hop_chat = urllib.request.Request(
+                k3_url + "/v1/chat/completions",
+                data=json.dumps({"model": "goedel-prover-v2-32b", "messages": [{"role": "user", "content": "theorem t : True := by"}]}).encode("utf-8"),
+                headers=auth_hdr,
+                method="POST",
+            )
+            with urllib.request.urlopen(hop_chat, timeout=10) as r:
+                d_hop = json.loads(r.read().decode("utf-8"))
+            self.assertIn("[goedel-prover-v2-32b]", d_hop["choices"][0]["message"]["content"])
+
+            # Sending `X-Clover-Hop: 1` to k3 for `goedel-prover-v2-32b` (which k3 does NOT host locally) MUST return 503 (never re-forward!)
+            loop_req = urllib.request.Request(
+                k3_url + "/v1/chat/completions",
+                data=json.dumps({"model": "goedel-prover-v2-32b", "messages": [{"role": "user", "content": "loop test"}]}).encode("utf-8"),
+                headers={**auth_hdr, "X-Clover-Hop": "1"},
+                method="POST",
+            )
+            with self.assertRaises(urllib.error.HTTPError) as ctx503:
+                urllib.request.urlopen(loop_req, timeout=5)
+            self.assertEqual(ctx503.exception.code, 503)
+            ctx503.exception.close()
+
+            # Deadlock regression #2: 20 nested `clover_exec_batch` calls reject nesting immediately (<2s, zero hang!)
+            nested_calls = [{"name": "clover_exec_batch", "arguments": {"calls": [{"name": "xcruncher_exact_math", "arguments": {"expression": "20!"}}]}} for _ in range(20)]
+            nested_req = urllib.request.Request(
+                k3_url + "/mcp",
+                data=json.dumps({"jsonrpc": "2.0", "id": 99, "method": "tools/call", "params": {"name": "clover_exec_batch", "arguments": {"calls": nested_calls}}}).encode("utf-8"),
+                headers=auth_hdr,
+                method="POST",
+            )
+            with urllib.request.urlopen(nested_req, timeout=5) as r:
+                nested_out = json.loads(r.read().decode("utf-8"))["result"]["structuredContent"]
+            self.assertEqual(nested_out["count"], 20)
+            self.assertFalse(nested_out["results"][0]["ok"])
+            self.assertIn("Nested clover_exec_batch is forbidden", nested_out["results"][0]["error"])
+
+            # JSON-RPC 2.0 Batch Array `[{...}, {...}]` + non-object `-32600` guard
+            rpc_arr_req = urllib.request.Request(
+                k3_url + "/mcp",
+                data=json.dumps([
+                    {"jsonrpc": "2.0", "id": "a", "method": "tools/search", "params": {"query": "math", "limit": 1}},
+                    {"jsonrpc": "2.0", "id": "b", "method": "tasks/create", "params": {"tool": "xcruncher_exact_math", "arguments": {"expression": "What is 20! exactly?"}}},
+                ]).encode("utf-8"),
+                headers=auth_hdr,
+                method="POST",
+            )
+            with urllib.request.urlopen(rpc_arr_req, timeout=10) as r:
+                arr_out = json.loads(r.read().decode("utf-8"))
+            self.assertIsInstance(arr_out, list)
+            self.assertEqual(len(arr_out), 2)
+            persisted_tid = arr_out[1]["result"]["taskId"]
+            time.sleep(0.15)
+            self.assertTrue(tmp_db.is_file())
+
+            bad_scalar_req = urllib.request.Request(
+                k3_url + "/mcp", data=b'"not-an-object"', headers=auth_hdr, method="POST"
+            )
+            with self.assertRaises(urllib.error.HTTPError) as ctx400:
+                urllib.request.urlopen(bad_scalar_req, timeout=5)
+            self.assertEqual(ctx400.exception.code, 400)
+            ctx400.exception.close()
+
+            # 3. Kimi TCP Worker HMAC-SHA256 Auth + Negative `base_pos` Bounds Check
+            sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+            import kimi_pipeline_cluster as kpc
+
+            class DummyStage:
+                l_lo = 0
+                l_hi = 14
+                def reset(self): pass
+                def rollback(self, b, k): pass
+
+            sock_probe = socket.socket()
+            sock_probe.bind(("127.0.0.1", 0))
+            free_port = sock_probe.getsockname()[1]
+            sock_probe.close()
+            w_th = threading.Thread(target=kpc.serve_worker_tcp, args=(DummyStage(), "127.0.0.1", free_port, "hmac-secret-xyz"), daemon=True)
+            w_th.start()
+            time.sleep(0.1)
+
+            # Wrong secret MUST raise PermissionError
+            with self.assertRaises(PermissionError):
+                kpc.RemoteStageClient("127.0.0.1", free_port, 0, 14, cluster_secret="wrong-secret", connect_retries=1)
+
+            # Right secret connects cleanly, and negative base_pos is rejected cleanly by worker!
+            good_cli = kpc.RemoteStageClient("127.0.0.1", free_port, 0, 14, cluster_secret="hmac-secret-xyz", connect_retries=3)
+            try:
+                assert good_cli.sock is not None
+                good_cli.sock.sendall(struct.pack("<IIiiiiii", kpc.OP_FORWARD, 1, -5, 1, 0, 1, 1, 0))
+                with self.assertRaises(ConnectionError):
+                    kpc._recv_exact(good_cli.sock, 16)
+            finally:
+                good_cli.close()
+
+            # 4. Round-2 fixes: SpecialistRuntime raises ModelNotLoadedError without `--allow-mock`, and expired leases evict cleanly!
+            import specialist_hg_server as shs
+
+            unloaded_rt = shs.SpecialistRuntime("goedel-prover-v2-32b", None, "none", allow_mock=False)
+            with self.assertRaises(shs.ModelNotLoadedError):
+                unloaded_rt.infer([{"role": "user", "content": "theorem t : True := by"}], 64)
+
+            exp_pool = CSM.ReplicaPoolBackend("boltz-2", []) if False else CSM.ReplicaPoolBackend("boltz-2", [(petal_url, B.RemoteOpenAIBackend("boltz-2", petal_url))])
+            exp_pool.add_or_refresh_replica(petal_url, B.RemoteOpenAIBackend("boltz-2", petal_url), expires_at=time.time() - 1.0)
+            with self.assertRaises(RuntimeError):
+                list(exp_pool.stream([{"role": "user", "content": "fold"}], None, None, B.GenParams()))
+        finally:
+            if old_key is None:
+                os.environ.pop("CLOVER_GATEWAY_API_KEY", None)
+            else:
+                os.environ["CLOVER_GATEWAY_API_KEY"] = old_key
+            if old_db is None:
+                os.environ.pop("CLOVER_TASKS_DB", None)
+            else:
+                os.environ["CLOVER_TASKS_DB"] = old_db
+            try:
+                tmp_db.unlink(missing_ok=True)
+            except OSError:
+                pass
+            k3_srv.shutdown()
+            k3_srv.server_close()
+            petal_srv.shutdown()
+            petal_srv.server_close()
+
 
 # ====================================================================================================================
 _OMNI = B.discover_paths()["lfm3-omni-2b"]

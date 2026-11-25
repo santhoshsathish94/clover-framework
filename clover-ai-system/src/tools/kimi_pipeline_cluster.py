@@ -33,8 +33,11 @@ from __future__ import annotations
 
 import argparse
 import ctypes
+import hashlib
+import hmac
 import json
 import os
+import secrets
 import socket
 import struct
 import subprocess
@@ -49,6 +52,7 @@ from typing import Any
 import numpy as np
 
 K31_D = 7168
+K31_MAX_LAYERS = 93
 K31_MAX_BLOCKS = 8
 K31_ATTN_RES_BLK = 12
 DSPARK_TAPS = (7, 23, 67, 83, 91)
@@ -57,6 +61,7 @@ OP_RESET = 1
 OP_FORWARD = 2
 OP_ROLLBACK = 3
 OP_PING = 4
+OP_AUTH = 5
 
 HOT_REPO = "Santhoshsathish94/Kimi-K3.1-Pro-K31H-Hot-HG4-OP"
 COLD_REPOS = (
@@ -153,7 +158,14 @@ def download_slice(out_dir: Path, l_lo: int, l_hi: int, need_emb: bool, need_hea
         hot_patterns.append("embed_tokens.hg4")
     if need_head:
         hot_patterns.extend(["lm_head.hg4", "dspark.hg4"])
-    hot_needed = {"meta.bin", "tokenizer.model", "tokenizer_config.json", "config.json"}
+    hot_needed = {
+        "meta.bin",
+        "tiktoken.model",
+        "encoding_k3.py",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "config.json",
+    }
     if need_emb:
         hot_needed.add("embed_tokens.hg4")
     if need_head:
@@ -246,17 +258,39 @@ class LocalStageRunner:
             self.lib.kimi_k31_pipeline_rollback_range(self.l_lo, self.l_hi, base_pos, keep_n)
 
 
-def serve_worker_tcp(stage: LocalStageRunner, host: str, port: int) -> None:
+def serve_worker_tcp(stage: LocalStageRunner, host: str, port: int, cluster_secret: str = "") -> None:
+    secret_bytes = (cluster_secret or os.environ.get("CLOVER_CLUSTER_SECRET") or "").encode("utf-8")
     srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     srv.bind((host, port))
     srv.listen(8)
-    print(f"[kimi-worker] Serving layers [{stage.l_lo}:{stage.l_hi}) on {host}:{port}", flush=True)
+    print(
+        f"[kimi-worker] Serving layers [{stage.l_lo}:{stage.l_hi}) on {host}:{port} "
+        f"(hmac_auth={'on' if secret_bytes else 'off'})",
+        flush=True,
+    )
 
     def handle_conn(conn: socket.socket) -> None:
         conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        authed = not bool(secret_bytes)
         try:
-            while True:
+            if secret_bytes:
+                nonce = secrets.token_bytes(16)
+                conn.sendall(nonce)
+                op_hdr = _recv_exact(conn, 4)
+                (auth_op,) = struct.unpack("<I", op_hdr)
+                if auth_op != OP_AUTH:
+                    conn.sendall(struct.pack("<I", 1))
+                    return
+                client_mac = _recv_exact(conn, 32)
+                expected_mac = hmac.new(secret_bytes, nonce, hashlib.sha256).digest()
+                if not hmac.compare_digest(client_mac, expected_mac):
+                    conn.sendall(struct.pack("<I", 2))
+                    return
+                conn.sendall(struct.pack("<I", 0))
+                authed = True
+
+            while authed:
                 hdr = conn.recv(4)
                 if not hdr:
                     break
@@ -270,11 +304,15 @@ def serve_worker_tcp(stage: LocalStageRunner, host: str, port: int) -> None:
                     conn.sendall(struct.pack("<I", 0))
                 elif op == OP_ROLLBACK:
                     base_pos, keep_n = struct.unpack("<ii", _recv_exact(conn, 8))
+                    if base_pos < 0 or base_pos > 262144 or keep_n < 0 or keep_n > 32:
+                        raise ValueError(f"Invalid rollback bounds base_pos={base_pos}, keep_n={keep_n}")
                     stage.rollback(base_pos, keep_n)
                     conn.sendall(struct.pack("<I", 0))
                 elif op == OP_FORWARD:
-                    meta = _recv_exact(conn, 24)
-                    base_pos, T, save_rb, is_first, use_bf16, has_delta = struct.unpack("<iiiiii", meta)
+                    meta = _recv_exact(conn, 28)
+                    req_seq, base_pos, T, save_rb, is_first, use_bf16, has_delta = struct.unpack("<Iiiiiii", meta)
+                    if base_pos < 0 or T <= 0 or T > 8192 or base_pos + T > 262144:
+                        raise ValueError(f"Invalid forward bounds base_pos={base_pos}, T={T}")
                     elem_b = 2 if use_bf16 else 4
                     blocks = np.zeros((T, K31_MAX_BLOCKS, K31_D), dtype=np.float32)
                     feats = np.zeros((T, 5, K31_D), dtype=np.float32)
@@ -287,6 +325,8 @@ def serve_worker_tcp(stage: LocalStageRunner, host: str, port: int) -> None:
                         has_delta = 0
                     else:
                         n_blk_in, prev_mask_bits = struct.unpack("<II", _recv_exact(conn, 8))
+                        if n_blk_in > K31_MAX_BLOCKS:
+                            raise ValueError(f"Invalid n_blk_in={n_blk_in} > {K31_MAX_BLOCKS}")
                         prefix_sum = _wire_to_f32(_recv_exact(conn, T * K31_D * elem_b), (T, K31_D), bool(use_bf16))
                         if has_delta:
                             delta = _wire_to_f32(_recv_exact(conn, T * K31_D * elem_b), (T, K31_D), bool(use_bf16))
@@ -310,7 +350,7 @@ def serve_worker_tcp(stage: LocalStageRunner, host: str, port: int) -> None:
                     n_blk_out = min(K31_MAX_BLOCKS, (stage.l_hi - 1) // K31_ATTN_RES_BLK + 1)
                     out_mask_bits = sum((1 << m) for m in range(5) if fmask[m])
                     parts = [
-                        struct.pack("<iii", has_delta_out, n_blk_out, out_mask_bits),
+                        struct.pack("<Iiii", req_seq, has_delta_out, n_blk_out, out_mask_bits),
                         _f32_to_wire_fast(prefix_sum, bool(use_bf16)),
                     ]
                     if has_delta_out:
@@ -321,7 +361,9 @@ def serve_worker_tcp(stage: LocalStageRunner, host: str, port: int) -> None:
                         if fmask[m]:
                             parts.append(_f32_to_wire_fast(feats[:, m, :], bool(use_bf16)))
                     conn.sendall(b"".join(parts))
-        except ConnectionError:
+                else:
+                    break
+        except (ConnectionError, ValueError, struct.error):
             pass
         finally:
             conn.close()
@@ -332,25 +374,75 @@ def serve_worker_tcp(stage: LocalStageRunner, host: str, port: int) -> None:
 
 
 class RemoteStageClient:
-    """Persistent `TCP_NODELAY` client to one remote `serve_worker_tcp` node."""
+    """Persistent `TCP_NODELAY` client to one remote `serve_worker_tcp` node with HMAC auth & reconnect."""
 
-    def __init__(self, host: str, port: int, l_lo: int, l_hi: int) -> None:
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        l_lo: int,
+        l_hi: int,
+        cluster_secret: str = "",
+        connect_retries: int = 720,
+        retry_delay_s: float = 5.0,
+    ) -> None:
         self.host = host
         self.port = port
         self.l_lo = l_lo
         self.l_hi = l_hi
-        self.sock = socket.create_connection((host, port), timeout=120.0)
-        self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        self.sock.sendall(struct.pack("<I", OP_PING))
-        ok, r_lo, r_hi = struct.unpack("<III", _recv_exact(self.sock, 12))
-        if ok != 0 or (r_lo, r_hi) != (l_lo, l_hi):
-            raise RuntimeError(f"Worker {host}:{port} reported range [{r_lo}:{r_hi}), expected [{l_lo}:{l_hi})")
+        self.secret_bytes = (cluster_secret or os.environ.get("CLOVER_CLUSTER_SECRET") or "").encode("utf-8")
+        self._seq = 0
+        self.sock: socket.socket | None = None
+        self.reconnect(retries=connect_retries, delay_s=retry_delay_s)
+
+    def close(self) -> None:
+        if self.sock is not None:
+            try:
+                self.sock.close()
+            except Exception:
+                pass
+            self.sock = None
+
+    def reconnect(self, retries: int = 15, delay_s: float = 1.0) -> None:
+        self.close()
+        last_err: Exception | None = None
+        for attempt in range(max(1, retries)):
+            try:
+                s = socket.create_connection((self.host, self.port), timeout=180.0)
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                if self.secret_bytes:
+                    nonce = _recv_exact(s, 16)
+                    mac = hmac.new(self.secret_bytes, nonce, hashlib.sha256).digest()
+                    s.sendall(struct.pack("<I", OP_AUTH) + mac)
+                    (auth_rc,) = struct.unpack("<I", _recv_exact(s, 4))
+                    if auth_rc != 0:
+                        s.close()
+                        raise PermissionError(f"Worker {self.host}:{self.port} rejected CLOVER_CLUSTER_SECRET (rc={auth_rc})")
+                s.sendall(struct.pack("<I", OP_PING))
+                ok, r_lo, r_hi = struct.unpack("<III", _recv_exact(s, 12))
+                if ok != 0 or (r_lo, r_hi) != (self.l_lo, self.l_hi):
+                    s.close()
+                    raise RuntimeError(
+                        f"Worker {self.host}:{self.port} reported range [{r_lo}:{r_hi}), expected [{self.l_lo}:{self.l_hi})"
+                    )
+                self.sock = s
+                return
+            except PermissionError:
+                raise
+            except Exception as exc:
+                last_err = exc
+                if attempt + 1 < retries:
+                    time.sleep(delay_s)
+        assert last_err is not None
+        raise last_err
 
     def reset(self) -> None:
+        assert self.sock is not None
         self.sock.sendall(struct.pack("<I", OP_RESET))
         _recv_exact(self.sock, 4)
 
     def rollback(self, base_pos: int, keep_n: int) -> None:
+        assert self.sock is not None
         self.sock.sendall(struct.pack("<Iii", OP_ROLLBACK, base_pos, keep_n))
         _recv_exact(self.sock, 4)
 
@@ -369,9 +461,12 @@ class RemoteStageClient:
         feats: np.ndarray,
         fmask: np.ndarray,
     ) -> tuple[np.ndarray, np.ndarray, int, int, int]:
+        assert self.sock is not None
+        self._seq = (self._seq + 1) & 0xFFFFFFFF
+        req_seq = self._seq
         elem_b = 2 if use_bf16 else 4
         is_first = 1 if token_ids is not None else 0
-        pkt = [struct.pack("<Iiiiiii", OP_FORWARD, base_pos, T, save_rb, is_first, int(use_bf16), has_delta)]
+        pkt = [struct.pack("<IIiiiiii", OP_FORWARD, req_seq, base_pos, T, save_rb, is_first, int(use_bf16), has_delta)]
         if is_first:
             assert token_ids is not None
             pkt.append(np.ascontiguousarray(token_ids, dtype=np.int32).tobytes())
@@ -392,9 +487,11 @@ class RemoteStageClient:
         wire_bytes = len(raw_out)
         self.sock.sendall(raw_out)
 
-        hd_out, n_blk_out, out_mask_bits = struct.unpack("<iii", _recv_exact(self.sock, 12))
+        resp_seq, hd_out, n_blk_out, out_mask_bits = struct.unpack("<Iiii", _recv_exact(self.sock, 16))
+        if resp_seq != req_seq:
+            raise ConnectionError(f"Pipeline stream desync on {self.host}:{self.port} (got seq {resp_seq} != {req_seq})")
         ps_out = _wire_to_f32(_recv_exact(self.sock, T * K31_D * elem_b), (T, K31_D), use_bf16)
-        wire_bytes += 12 + T * K31_D * elem_b
+        wire_bytes += 16 + T * K31_D * elem_b
         if hd_out:
             dl_out = _wire_to_f32(_recv_exact(self.sock, T * K31_D * elem_b), (T, K31_D), use_bf16)
             wire_bytes += T * K31_D * elem_b
@@ -437,6 +534,19 @@ class DistributedKimiPipeline:
     def reset_all(self) -> None:
         for r in self.remotes:
             r.reset()
+        self.tail.reset()
+        self.cached_ids = []
+        self.ds_committed = 0
+        self.feat_history = []
+
+    def _recover_after_error(self) -> None:
+        """Close & reconnect all remote TCP sockets and wipe every stage's recurrent KDA state."""
+        for r in self.remotes:
+            try:
+                r.reconnect(retries=10, delay_s=1.0)
+                r.reset()
+            except Exception:
+                pass
         self.tail.reset()
         self.cached_ids = []
         self.ds_committed = 0
@@ -488,6 +598,14 @@ class DistributedKimiPipeline:
 
     def generate_ids(self, prompt_ids: list[int], max_new_tokens: int, eos_id: int, draft_k: int | None = None) -> dict[str, Any]:
         with self.lock:
+            try:
+                return self._generate_ids_locked(prompt_ids, max_new_tokens, eos_id, draft_k)
+            except Exception:
+                self._recover_after_error()
+                raise
+
+    def _generate_ids_locked(self, prompt_ids: list[int], max_new_tokens: int, eos_id: int, draft_k: int | None = None) -> dict[str, Any]:
+        if True:
             dk = self.draft_k if draft_k is None else draft_k
             lcp = 0
             if self.cached_ids and len(self.cached_ids) < len(prompt_ids):
@@ -499,12 +617,22 @@ class DistributedKimiPipeline:
                 self.reset_all()
 
             feed_ids = prompt_ids[lcp:]
+            if not feed_ids:
+                self.reset_all()
+                lcp = 0
+                feed_ids = prompt_ids
             t0 = time.perf_counter()
-            top1_pf, pf_feats, wire_pf = self._run_step(feed_ids, lcp, 0, logits_last_only=True)
+            wire_pf = 0
+            top1_pf = [eos_id]
+            prefill_chunk = 2048
+            for off in range(0, len(feed_ids), prefill_chunk):
+                chunk_ids = feed_ids[off : off + prefill_chunk]
+                top1_pf, pf_feats, wb_chunk = self._run_step(chunk_ids, lcp + off, 0, logits_last_only=True)
+                wire_pf += wb_chunk
+                self.cached_ids.extend(chunk_ids)
+                for t in range(len(chunk_ids)):
+                    self.feat_history.append(pf_feats[t].copy())
             prefill_ms = (time.perf_counter() - t0) * 1000.0
-            self.cached_ids.extend(feed_ids)
-            for t in range(len(feed_ids)):
-                self.feat_history.append(pf_feats[t].copy())
 
             td0 = time.perf_counter()
             gen_ids: list[int] = []
@@ -626,36 +754,55 @@ def serve_coordinator_http(
             else:
                 self._send(404, {"error": "not found"})
 
+        def _authorized(self) -> bool:
+            api_key = os.environ.get("CLOVER_GATEWAY_API_KEY") or ""
+            if not api_key:
+                return True
+            auth = self.headers.get("Authorization") or ""
+            return auth == f"Bearer {api_key}" or self.headers.get("api-key") == api_key
+
         def do_POST(self) -> None:
+            if not self._authorized():
+                self._send(401, {"error": "unauthorized"})
+                return
             if not self.path.startswith("/v1/chat/completions"):
                 self._send(404, {"error": "not found"})
                 return
-            n = int(self.headers.get("Content-Length") or "0")
-            body = json.loads(self.rfile.read(n).decode("utf-8"))
-            msgs = body.get("messages") or []
-            max_tok = int(body.get("max_completion_tokens") or body.get("max_tokens") or 1024)
-            prompt_str = "".join(t for t, _ in tpl.segments(msgs, body.get("tools"), body.get("tool_choice")))
-            p_ids = tok.encode(prompt_str)
-            out = pipe.generate_ids(p_ids, max_new_tokens=max_tok, eos_id=eos_primary)
-            g_ids = [tid for tid in out["gen_ids"] if tid not in eos_ids]
-            text = tok.decode(g_ids)
-            for mk in tpl.stop_markers:
-                if mk in text:
-                    text = text.split(mk)[0]
-            self._send(200, {
-                "id": f"chatcmpl-{uuid.uuid4().hex[:16]}",
-                "object": "chat.completion",
-                "created": int(time.time()),
-                "model": "kimi-k3",
-                "choices": [{"index": 0, "message": {"role": "assistant", "content": text}, "finish_reason": "stop"}],
-                "usage": {
-                    "prompt_tokens": out["prompt_tokens"],
-                    "completion_tokens": len(g_ids),
-                    "total_tokens": out["prompt_tokens"] + len(g_ids),
-                    "prompt_tokens_details": {"cached_tokens": out["cached_tokens"]},
-                },
-                "x_clover_pipeline": out,
-            })
+            try:
+                n = int(self.headers.get("Content-Length") or "0")
+                if n <= 0 or n > 64 * 1024 * 1024:
+                    self._send(413 if n > 0 else 400, {"error": "missing or oversized body"})
+                    return
+                body = json.loads(self.rfile.read(n).decode("utf-8"))
+                msgs = body.get("messages") or []
+                max_tok = int(body.get("max_completion_tokens") or body.get("max_tokens") or 1024)
+                prompt_str = "".join(t for t, _ in tpl.segments(msgs, body.get("tools"), body.get("tool_choice")))
+                p_ids = tok.encode(prompt_str)
+                if len(p_ids) + max_tok > 262000:
+                    self._send(413, {"error": f"prompt ({len(p_ids)} tokens) exceeds 256k context limit"})
+                    return
+                out = pipe.generate_ids(p_ids, max_new_tokens=max_tok, eos_id=eos_primary)
+                g_ids = [tid for tid in out["gen_ids"] if tid not in eos_ids]
+                text = tok.decode(g_ids)
+                for mk in tpl.stop_markers:
+                    if mk in text:
+                        text = text.split(mk)[0]
+                self._send(200, {
+                    "id": f"chatcmpl-{uuid.uuid4().hex[:16]}",
+                    "object": "chat.completion",
+                    "created": int(time.time()),
+                    "model": "kimi-k3",
+                    "choices": [{"index": 0, "message": {"role": "assistant", "content": text}, "finish_reason": "stop"}],
+                    "usage": {
+                        "prompt_tokens": out["prompt_tokens"],
+                        "completion_tokens": len(g_ids),
+                        "total_tokens": out["prompt_tokens"] + len(g_ids),
+                        "prompt_tokens_details": {"cached_tokens": out["cached_tokens"]},
+                    },
+                    "x_clover_pipeline": out,
+                })
+            except Exception as exc:
+                self._send(500, {"error": f"{type(exc).__name__}: {exc}"})
 
     srv = ThreadingHTTPServer((host, port), Handler)
     print(f"[kimi-coordinator] Serving distributed Kimi K31H OpenAI API on http://{host}:{port}/v1", flush=True)
@@ -757,7 +904,7 @@ def main() -> None:
     p_c.add_argument("--stages", required=True, help="Comma-separated host:port@lo:hi for earlier stages")
     p_c.add_argument("--local-range", required=True, help="lo:hi on this tail coordinator node")
     p_c.add_argument("--pin-cold-vram", action="store_true")
-    p_c.add_argument("--wire-dtype", choices=["bf16", "fp32"], default="bf16")
+    p_c.add_argument("--wire-dtype", choices=["fp32", "bf16"], default="fp32")
     p_c.add_argument("--draft-k", type=int, default=4)
     p_c.add_argument("--gpus", default="auto")
     p_c.add_argument("--host", default="0.0.0.0")
@@ -795,7 +942,8 @@ def main() -> None:
         return
 
     if args.cmd == "coordinator":
-        remotes: list[RemoteStageClient] = []
+        c_lo, c_hi = parse_range(args.local_range)
+        stage_specs: list[tuple[str, int, int, int]] = []
         for spec in args.stages.split(","):
             spec = spec.strip()
             if not spec:
@@ -803,14 +951,30 @@ def main() -> None:
             hp, rng = spec.split("@", 1)
             h, p_s = hp.rsplit(":", 1)
             r_lo, r_hi = parse_range(rng)
-            remotes.append(RemoteStageClient(h, int(p_s), r_lo, r_hi))
-        c_lo, c_hi = parse_range(args.local_range)
-        tail = LocalStageRunner(load_k31_lib(lib_path), args.model_dir, c_lo, c_hi, need_emb=True, need_head=True)
+            stage_specs.append((h, int(p_s), r_lo, r_hi))
+
+        # Verify contiguous exact layer coverage `[0, c_hi)` (must equal 93 for full Kimi K31H!)
+        all_ranges = [(lo, hi) for _, _, lo, hi in stage_specs] + [(c_lo, c_hi)]
+        cur = 0
+        for lo, hi in all_ranges:
+            if lo != cur:
+                raise ValueError(f"Non-contiguous Kimi pipeline stage ranges {all_ranges}: expected start={cur}, got {lo}")
+            cur = hi
+        if cur != K31_MAX_LAYERS and os.environ.get("CLOVER_ALLOW_PARTIAL_KIMI_LAYERS") != "1":
+            raise ValueError(f"Incomplete Kimi pipeline coverage [0:{cur}); Kimi K31H has {K31_MAX_LAYERS} layers (0..92)!")
+
+        remotes = [RemoteStageClient(h, prt, r_lo, r_hi) for h, prt, r_lo, r_hi in stage_specs]
+        # `need_emb=True` is always required on the tail coordinator so `5L-DSpark` speculative drafting
+        # (`k31_dspark_draft_query_block`) has `emb_mat` (~0.56 GiB in host RAM) loaded without null-deref!
+        tail = LocalStageRunner(
+            load_k31_lib(lib_path), args.model_dir, c_lo, c_hi, need_emb=True, need_head=True
+        )
         pipe = DistributedKimiPipeline(remotes, tail, use_bf16_wire=(args.wire_dtype == "bf16"), draft_k=args.draft_k)
 
         sys.path.insert(0, str(src_root / "tools" / "hg4-fusion-gateway"))
         import backends as bk
-        tok = bk.KimiTiktoken(args.model_dir / "tiktoken.model") if (args.model_dir / "tiktoken.model").is_file() else bk.HFTokenizer(args.model_dir / "tokenizer.json")
+        tj = args.model_dir / "tokenizer.json"
+        tok = bk.HFTokenizer(tj) if tj.is_file() else bk.TiktokenFallbackTokenizer(args.model_dir / "tiktoken.model")
         tpl = bk.TEMPLATES["kimi"]
         eos_ids = bk._eos_ids(tok, bk.MODEL_SPECS["kimi-k3"]["eos"], 163586)
         serve_coordinator_http(pipe, tok, tpl, eos_ids, args.host, args.port)

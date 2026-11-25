@@ -34,9 +34,12 @@ typedef int (*hg_cuda_try_moe_pairs_fn)(
     float *h_out_add
 );
 
+typedef int (*hg_cuda_prepin_blob_fn)(const uint8_t *h_base, size_t total_b);
+
 static int g_hg_cuda_hook_state = 0; /* 0 = uninitialized, 1 = active, -1 = disabled/absent */
 static hg_cuda_try_matmul_fn    g_fn_hg_cuda_matmul = NULL;
 static hg_cuda_try_moe_pairs_fn g_fn_hg_cuda_moe    = NULL;
+static hg_cuda_prepin_blob_fn   g_fn_hg_cuda_prepin = NULL;
 
 static void hg_cuda_hook_init_once(void) {
     if (g_hg_cuda_hook_state != 0) return;
@@ -50,6 +53,7 @@ static void hg_cuda_hook_init_once(void) {
     if (h) {
         g_fn_hg_cuda_matmul = (hg_cuda_try_matmul_fn)GetProcAddress(h, "hg_cuda_try_matmul");
         g_fn_hg_cuda_moe    = (hg_cuda_try_moe_pairs_fn)GetProcAddress(h, "hg_cuda_try_moe_pairs");
+        g_fn_hg_cuda_prepin = (hg_cuda_prepin_blob_fn)GetProcAddress(h, "hg_cuda_prepin_blob");
     }
 #else
     void *h = NULL;
@@ -79,9 +83,16 @@ static void hg_cuda_hook_init_once(void) {
     if (h) {
         g_fn_hg_cuda_matmul = (hg_cuda_try_matmul_fn)dlsym(h, "hg_cuda_try_matmul");
         g_fn_hg_cuda_moe    = (hg_cuda_try_moe_pairs_fn)dlsym(h, "hg_cuda_try_moe_pairs");
+        g_fn_hg_cuda_prepin = (hg_cuda_prepin_blob_fn)dlsym(h, "hg_cuda_prepin_blob");
     }
 #endif
     g_hg_cuda_hook_state = (g_fn_hg_cuda_matmul && g_fn_hg_cuda_moe) ? 1 : -1;
+}
+
+static inline int hg_cuda_dispatch_prepin(const uint8_t *h_base, size_t total_b) {
+    if (g_hg_cuda_hook_state == 0) hg_cuda_hook_init_once();
+    if (g_hg_cuda_hook_state != 1 || !g_fn_hg_cuda_prepin || !h_base || total_b == 0) return 0;
+    return g_fn_hg_cuda_prepin(h_base, total_b);
 }
 
 static inline int hg_cuda_dispatch_matmul(

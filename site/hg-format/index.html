@@ -903,101 +903,82 @@ The total capacity is 72 kilowatts.</code></pre>
         </div>
 
         <figure style="margin:1.3rem 0">
-          <svg viewBox="0 0 940 318" role="img" aria-label="Balanced 5-node 8x RTX 3090 server mesh with Priority Queue, Request Clubbing, Prefix Micro-Batching, and Stateless MCP 2.0 header routing across all 5 active nodes." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:12px;background:#fffefb;padding:10px">
-            <text x="18" y="22" font-size="10.8" font-weight="700" fill="#1b5e46" letter-spacing="0.8">BALANCED 5-NODE SERVER MESH (5 &times; 8&times;3090 = 960 GiB VRAM) &middot; ZERO IDLE NODES &middot; MCP 2.0 + CLUBBING &amp; MICRO-BATCHING</text>
+          <svg viewBox="0 0 940 436" role="img" aria-label="6-Node Clover 5-Petal Topology: Permanent Center Hub k3 surrounded by 5 x (8x RTX 3090) GPU Petals connected by WireGuard MCP 2.0 spokes and a 93-layer Kimi K31H perimeter pipeline." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:12px;background:#fffefb;padding:10px">
+            <text x="18" y="22" font-size="10.8" font-weight="700" fill="#1b5e46" letter-spacing="0.8">THE 6-NODE CLOVER LEAF TOPOLOGY &middot; PERMANENT CENTER HUB k3 + 5 &times; (8&times;3090) GPU PETALS (ALL 93 KIMI LAYERS)</text>
             <line x1="18" y1="32" x2="922" y2="32" stroke="#dfd8c8" stroke-width="1"></line>
 
-            <!-- Layer A: Stateless Anycast Entry + MCP 2.0 + Queue/Clubbing/Micro-Batching Bar -->
-            <rect x="18" y="42" width="904" height="62" rx="8" fill="#eef6f1" stroke="#8bb7a4" stroke-width="1.3"></rect>
-            <text x="32" y="61" font-size="10.4" font-weight="700" fill="#1b5e46">Anycast Stateless Mesh Ingress (:8080 on ALL 5 Nodes &mdash; Zero Single Point of Failure, Zero Sticky Sessions)</text>
-            <text x="32" y="79" font-size="9.4" fill="#132018">1. <tspan font-weight="700">MCP 2.0 (2026-07-28):</tspan> 0.05 ms <tspan font-family="monospace">Mcp-Name</tspan> header routing &middot; <tspan font-family="monospace">ETag 304</tspan> catalog &middot; <tspan font-family="monospace">tools/search</tspan> lazy schemas (-90% tokens) &middot; <tspan font-family="monospace">tasks/*</tspan> async queue</text>
-            <text x="32" y="95" font-size="9.4" fill="#0a6a5f" font-weight="600">2. Server Queue + Request Clubbing + Prefix Micro-Batcher: coalesces identical T=0 calls &amp; clubs B requests into 1 weight read (5&times;&ndash;7&times; throughput)</text>
+            <!-- Outer Kimi K31H 93-Layer Perimeter Pipeline Ring (Petals 1 -> 2 -> 3 -> 4 -> 5, never bouncing through k3!) -->
+            <ellipse cx="470" cy="236" rx="342" ry="152" fill="none" stroke="#8bb7a4" stroke-width="2.2" stroke-dasharray="6,4"></ellipse>
 
-            <!-- Downward dispatch arrows to all 5 nodes -->
-            <line x1="104" y1="104" x2="104" y2="124" stroke="#0a6a5f" stroke-width="1.6"></line>
-            <polygon points="100,122 104,129 108,122" fill="#0a6a5f"></polygon>
-            <line x1="287" y1="104" x2="287" y2="124" stroke="#0a6a5f" stroke-width="1.6"></line>
-            <polygon points="283,122 287,129 291,122" fill="#0a6a5f"></polygon>
-            <line x1="470" y1="104" x2="470" y2="124" stroke="#0a6a5f" stroke-width="1.6"></line>
-            <polygon points="466,122 470,129 474,122" fill="#0a6a5f"></polygon>
-            <line x1="653" y1="104" x2="653" y2="124" stroke="#0a6a5f" stroke-width="1.6"></line>
-            <polygon points="649,122 653,129 657,122" fill="#0a6a5f"></polygon>
-            <line x1="836" y1="104" x2="836" y2="124" stroke="#0a6a5f" stroke-width="1.6"></line>
-            <polygon points="832,122 836,129 840,122" fill="#0a6a5f"></polygon>
+            <!-- Control-plane WireGuard spokes from Center k3 to all 5 GPU Petals -->
+            <line x1="470" y1="184" x2="470" y2="130" stroke="#0a6a5f" stroke-width="1.6"></line>
+            <line x1="590" y1="210" x2="668" y2="162" stroke="#0a6a5f" stroke-width="1.6"></line>
+            <line x1="582" y1="274" x2="652" y2="324" stroke="#0a6a5f" stroke-width="1.6"></line>
+            <line x1="358" y1="274" x2="288" y2="324" stroke="#0a6a5f" stroke-width="1.6"></line>
+            <line x1="350" y1="210" x2="272" y2="162" stroke="#0a6a5f" stroke-width="1.6"></line>
 
-            <!-- Node 1 -->
-            <rect x="18" y="131" width="172" height="142" rx="8" fill="#f7f4ec" stroke="#c9c0ad" stroke-width="1.2"></rect>
-            <text x="27" y="149" font-size="10.2" font-weight="700" fill="#1b5e46">Node 1 &middot; 173 / 192 GiB</text>
-            <text x="27" y="166" font-size="9.0" font-weight="700" fill="#132018">GPUs 0&ndash;2 (60.2G):</text>
-            <text x="27" y="180" font-size="8.9" fill="#2d3e34">&bull; Nemotron-120B + 2L-MTP</text>
-            <text x="27" y="198" font-size="9.0" font-weight="700" fill="#132018">GPUs 3&ndash;7 (113.0G):</text>
-            <text x="27" y="212" font-size="8.9" fill="#2d3e34">&bull; Kimi Stage 0 (L00..13+Emb)</text>
-            <text x="27" y="232" font-size="8.7" fill="#596a5f">Tier-2 SWE &amp; Vision Hub</text>
-            <rect x="27" y="244" width="154" height="18" rx="4" fill="#e2efe8"></rect>
-            <text x="33" y="256" font-size="8.6" font-weight="700" fill="#0a6a5f">90% VRAM &middot; 6.8 TB/s active</text>
+            <!-- CENTER NODE 0: k3 Stem / Control Hub -->
+            <rect x="336" y="184" width="268" height="106" rx="18" fill="#e2efe8" stroke="#1b5e46" stroke-width="2"></rect>
+            <text x="350" y="203" font-size="10.4" font-weight="700" fill="#1b5e46">Center Node 0: k3 Hub ($0/hr Permanent Core)</text>
+            <text x="350" y="220" font-size="8.9" fill="#132018">&bull; Ingress + Global Priority Queue + T=0 Clubbing</text>
+            <text x="350" y="235" font-size="8.9" fill="#132018">&bull; Stateless MCP 2.0 + Durable SQLite tasks/* + Leases</text>
+            <text x="350" y="250" font-size="8.9" fill="#132018">&bull; C11 x-cruncher AVX-512 + Lean 4 + Epistemic Graph</text>
+            <text x="350" y="266" font-size="8.8" font-weight="700" fill="#0a6a5f">&bull; 35B #3 + LFM3 #3 CPU Fallback (18G DDR5, always on)</text>
+            <text x="350" y="281" font-size="8.3" fill="#2d3e34">1-hop WireGuard dispatch &middot; Petals never bounce loops</text>
 
-            <!-- Node 2 -->
-            <rect x="201" y="131" width="172" height="142" rx="8" fill="#f7f4ec" stroke="#c9c0ad" stroke-width="1.2"></rect>
-            <text x="210" y="149" font-size="10.2" font-weight="700" fill="#1b5e46">Node 2 &middot; 179 / 192 GiB</text>
-            <text x="210" y="166" font-size="9.0" font-weight="700" fill="#132018">GPU 0 (18.0G):</text>
-            <text x="210" y="180" font-size="8.9" fill="#2d3e34">&bull; Qwen3.6-35B #1 + LFM3 #1</text>
-            <text x="210" y="198" font-size="9.0" font-weight="700" fill="#132018">GPUs 1&ndash;7 (160.8G):</text>
-            <text x="210" y="212" font-size="8.9" fill="#2d3e34">&bull; Kimi Stage 1 (L14..33)</text>
-            <text x="210" y="232" font-size="8.7" fill="#596a5f">Prefix-Cached Agent Replica 1</text>
-            <rect x="210" y="244" width="154" height="18" rx="4" fill="#e2efe8"></rect>
-            <text x="216" y="256" font-size="8.6" font-weight="700" fill="#0a6a5f">93% VRAM &middot; 6.8 TB/s active</text>
+            <!-- PETAL 1 (Top) -->
+            <rect x="342" y="42" width="256" height="88" rx="14" fill="#f7f4ec" stroke="#8bb7a4" stroke-width="1.4"></rect>
+            <text x="354" y="59" font-size="9.8" font-weight="700" fill="#1b5e46">Petal 1 &middot; 8&times; RTX 3090 (164.9 / 175.2G placeable)</text>
+            <text x="354" y="75" font-size="8.8" fill="#132018">&bull; GPUs 0&ndash;2 (60.5G): Nemotron-120B HG4 + 2L-MTP</text>
+            <text x="354" y="90" font-size="8.8" fill="#132018">&bull; GPUs 3&ndash;7 (104.4G): Kimi Stage 0 (L00:14 + Embed)</text>
+            <text x="354" y="106" font-size="8.5" font-weight="700" fill="#0a6a5f">Tier-2 SWE &amp; Multimodal Hub &middot; Cold-First Pre-Pinned</text>
 
-            <!-- Node 3 -->
-            <rect x="384" y="131" width="172" height="142" rx="8" fill="#f7f4ec" stroke="#c9c0ad" stroke-width="1.2"></rect>
-            <text x="393" y="149" font-size="10.2" font-weight="700" fill="#1b5e46">Node 3 &middot; 179 / 192 GiB</text>
-            <text x="393" y="166" font-size="9.0" font-weight="700" fill="#132018">GPU 0 (18.3G):</text>
-            <text x="393" y="180" font-size="8.9" fill="#2d3e34">&bull; Qwen3.6-35B #2 + Chronos-2</text>
-            <text x="393" y="198" font-size="9.0" font-weight="700" fill="#132018">GPUs 1&ndash;7 (160.8G):</text>
-            <text x="393" y="212" font-size="8.9" fill="#2d3e34">&bull; Kimi Stage 2 (L34..53)</text>
-            <text x="393" y="232" font-size="8.7" fill="#596a5f">Agent Replica 2 + Forecasting</text>
-            <rect x="393" y="244" width="154" height="18" rx="4" fill="#e2efe8"></rect>
-            <text x="399" y="256" font-size="8.6" font-weight="700" fill="#0a6a5f">93% VRAM &middot; 6.8 TB/s active</text>
+            <!-- PETAL 2 (Upper Right) -->
+            <rect x="668" y="96" width="254" height="92" rx="14" fill="#f7f4ec" stroke="#8bb7a4" stroke-width="1.4"></rect>
+            <text x="680" y="113" font-size="9.8" font-weight="700" fill="#1b5e46">Petal 2 &middot; 8&times; RTX 3090 (170.0 / 175.2G)</text>
+            <text x="680" y="129" font-size="8.8" fill="#132018">&bull; GPU 0 (18.3G): Qwen3.6-35B #1 + LFM3 #1</text>
+            <text x="680" y="144" font-size="8.8" fill="#132018">&bull; GPUs 1&ndash;7 (151.7G): Kimi Stage 1 (L14:33)</text>
+            <text x="680" y="160" font-size="8.5" font-weight="700" fill="#0a6a5f">Prefix-Cached GPU Agent #1 &middot; 0 Cold Spills</text>
 
-            <!-- Node 4 -->
-            <rect x="567" y="131" width="172" height="142" rx="8" fill="#f7f4ec" stroke="#c9c0ad" stroke-width="1.2"></rect>
-            <text x="576" y="149" font-size="10.2" font-weight="700" fill="#1b5e46">Node 4 &middot; 177 / 192 GiB</text>
-            <text x="576" y="166" font-size="9.0" font-weight="700" fill="#132018">GPU 0 (16.3G) + 32 CPU:</text>
-            <text x="576" y="180" font-size="8.9" fill="#2d3e34">&bull; Goedel-32B + V-JEPA + Lean4</text>
-            <text x="576" y="198" font-size="9.0" font-weight="700" fill="#132018">GPUs 1&ndash;7 (160.8G):</text>
-            <text x="576" y="212" font-size="8.9" fill="#2d3e34">&bull; Kimi Stage 3 (L54..73)</text>
-            <text x="576" y="232" font-size="8.7" fill="#596a5f">Formal Proof &amp; Physics Node</text>
-            <rect x="576" y="244" width="154" height="18" rx="4" fill="#e2efe8"></rect>
-            <text x="582" y="256" font-size="8.6" font-weight="700" fill="#0a6a5f">92% VRAM &middot; 6.8 TB/s active</text>
+            <!-- PETAL 3 (Lower Right) -->
+            <rect x="646" y="294" width="276" height="92" rx="14" fill="#f7f4ec" stroke="#8bb7a4" stroke-width="1.4"></rect>
+            <text x="658" y="311" font-size="9.8" font-weight="700" fill="#1b5e46">Petal 3 &middot; 8&times; RTX 3090 (170.3 / 175.2G)</text>
+            <text x="658" y="327" font-size="8.8" fill="#132018">&bull; GPU 0 (18.6G): Qwen3.6-35B #2 + LFM3 #2 + Chronos-2</text>
+            <text x="658" y="342" font-size="8.8" fill="#132018">&bull; GPUs 1&ndash;7 (151.7G): Kimi Stage 2 (L33:52)</text>
+            <text x="658" y="358" font-size="8.5" font-weight="700" fill="#0a6a5f">GPU Agent #2 + Quantile Time-Series Forecaster</text>
 
-            <!-- Node 5 -->
-            <rect x="750" y="131" width="172" height="142" rx="8" fill="#f7f4ec" stroke="#c9c0ad" stroke-width="1.2"></rect>
-            <text x="759" y="149" font-size="10.2" font-weight="700" fill="#1b5e46">Node 5 &middot; 169 / 192 GiB</text>
-            <text x="759" y="166" font-size="9.0" font-weight="700" fill="#132018">GPU 0 (20.1G) + C11:</text>
-            <text x="759" y="180" font-size="8.9" fill="#2d3e34">&bull; Qwen3.6-35B #3 + Boltz-2</text>
-            <text x="759" y="198" font-size="9.0" font-weight="700" fill="#132018">GPUs 1&ndash;7 (148.5G):</text>
-            <text x="759" y="212" font-size="8.9" fill="#2d3e34">&bull; Kimi Stage 4 (L74..91+DSpark)</text>
-            <text x="759" y="232" font-size="8.7" fill="#596a5f">Agent #3 + Bio + x-cruncher</text>
-            <rect x="759" y="244" width="154" height="18" rx="4" fill="#e2efe8"></rect>
-            <text x="765" y="256" font-size="8.6" font-weight="700" fill="#0a6a5f">88% VRAM &middot; 6.8 TB/s active</text>
+            <!-- PETAL 4 (Lower Left) -->
+            <rect x="18" y="294" width="276" height="92" rx="14" fill="#f7f4ec" stroke="#8bb7a4" stroke-width="1.4"></rect>
+            <text x="30" y="311" font-size="9.8" font-weight="700" fill="#1b5e46">Petal 4 &middot; 8&times; RTX 3090 (171.0 / 175.2G)</text>
+            <text x="30" y="327" font-size="8.8" fill="#132018">&bull; GPU 0 (19.2G): Goedel-32B + V-JEPA 2.1 + Boltz-2</text>
+            <text x="30" y="342" font-size="8.8" fill="#132018">&bull; GPUs 1&ndash;7 (151.8G): Kimi Stage 3 (L52:71)</text>
+            <text x="30" y="358" font-size="8.5" font-weight="700" fill="#0a6a5f">Formal Lean 4 Prover + Video Physics + 3D Bio</text>
 
-            <!-- Bottom Kimi 5-stage pipeline bus -->
-            <rect x="18" y="283" width="904" height="25" rx="6" fill="#eef6f1" stroke="#8bb7a4" stroke-width="1"></rect>
-            <text x="32" y="299" font-size="9.3" font-weight="700" fill="#1b5e46">5-Stage Interleaved Kimi K31H Pipeline Bus: Stage 0 &rarr; 1 &rarr; 2 &rarr; 3 &rarr; 4 (231 KB/hop BF16 = &lt;1 MB total wire &middot; 34 TB/s aggregate GDDR6X)</text>
+            <!-- PETAL 5 (Upper Left) -->
+            <rect x="18" y="96" width="254" height="92" rx="14" fill="#f7f4ec" stroke="#8bb7a4" stroke-width="1.4"></rect>
+            <text x="30" y="113" font-size="9.8" font-weight="700" fill="#1b5e46">Petal 5 &middot; 8&times; RTX 3090 (All 8 GPUs: 175.2G)</text>
+            <text x="30" y="129" font-size="8.8" fill="#132018">&bull; GPUs 0&ndash;7: Kimi Tail Stage 4 (L71:93 &mdash; all 93L!)</text>
+            <text x="30" y="144" font-size="8.8" fill="#132018">&bull; lm_head + 5L-DSpark + Kimi Coordinator (:8089)</text>
+            <text x="30" y="160" font-size="8.5" font-weight="700" fill="#0a6a5f">Direct Petal Ring (231 KB/hop BF16, HMAC-SHA256)</text>
+
+            <!-- Footer legend bar -->
+            <rect x="18" y="398" width="904" height="26" rx="6" fill="#eef6f1" stroke="#8bb7a4" stroke-width="1"></rect>
+            <text x="30" y="415" font-size="9.1" font-weight="700" fill="#1b5e46">Elastic 0&rarr;5 Petals: k3 stays live 24/7 at $0/hr; rented same-region 3090 Petals lease-register into k3 &amp; run Kimi [0:93) directly around the outer ring.</text>
           </svg>
         </figure>
 
         <div class="grid grid--3" style="margin-top:1rem;margin-bottom:1.4rem">
           <div class="card">
-            <h3>1. Zero &ldquo;All Eggs in One Basket&rdquo;</h3>
-            <p>Instead of crowding 7 models onto Node 1 while leaving 4 Kimi nodes idle 85% of the time, <code>Kimi K31H</code> slices across <strong>all 5 nodes</strong> (<code>14+20+20+20+18 = 92L</code>), leaving dedicated GPUs &amp; 32 CPU cores per node for <strong><code>3&times; Qwen3.6-35B</code> replicas</strong> and isolated specialists (<code>88&ndash;93%</code> balanced VRAM on every box).</p>
+            <h3>1. Permanent <code>k3</code> Core + 5 Elastic GPU Petals</h3>
+            <p>Center hub <code>k3</code> holds persistent state (global queue, durable SQLite <code>tasks/*</code>, <code>x-cruncher</code>, Lean 4, and CPU replica #3 so Clover runs 24/7 even at <code>0</code> rented GPUs), while 5 same-region <code>8&times; 3090</code> Petals pack all <code>93</code> <code>Kimi K31H</code> layers (<code>0:14, 14:33, 33:52, 52:71, 71:93</code>) via Cold-First Best-Fit VRAM pinning alongside <code>Nemotron-120B</code>, <code>2&times; GPU Qwen3.6-35B</code>, and all 4 specialists.</p>
           </div>
           <div class="card">
-            <h3>2. Clubbing, Queues &amp; Micro-Batching</h3>
-            <p>Servers are not single-task desktops: reading <code>17.2 GB</code> of weights costs the exact same memory-bus traffic for <code>B = 8</code> clubbed requests as for <code>B = 1</code>. Our 3-lane queue coalesces identical <code>T = 0</code> calls onto <strong>1 execution</strong> and groups same-repo prefixes into micro-batches across warm replicas.</p>
+            <h3>2. Global Clubbing &amp; Prefix-Ordered Queue</h3>
+            <p>Because <code>k3</code> makes every routing decision centrally (and Petals enforce <code>X-Clover-Hop: 1</code> local-only execution), identical deterministic <code>T = 0</code> requests coalesce cluster-wide onto <strong>1 execution</strong>, while 3-lane priority scheduling orders same-repo prefixes onto warm Petal replicas without bounce loops.</p>
           </div>
           <div class="card">
-            <h3>3. Stateless <code>MCP 2.0</code> Mesh</h3>
-            <p>Every node exposes stateless <code>POST /mcp</code> (<code>2026-07-28</code> spec): zero sticky sessions, <code>0.05 ms</code> <code>Mcp-Name</code> HTTP header forwarding straight to the specialist node, <code>ETag 304</code> cached catalogs, <code>tools/search</code> lazy schema loading (<code>-90%</code> prompt tokens), and <code>tasks/*</code> async batch queues.</p>
+            <h3>3. Authenticated WireGuard + <code>MCP 2.0</code></h3>
+            <p>Stateless <code>POST /mcp</code> (<code>2026-07-28</code> spec) supports JSON-RPC 2.0 batch arrays, <code>0.05 ms</code> <code>Mcp-Name</code> header routing, <code>ETag 304</code> catalogs, <code>tools/search</code> lazy schemas (<code>-90%</code> prompt bloat), and <code>Bearer</code> + <code>HMAC-SHA256</code> TCP stage authentication.</p>
           </div>
         </div>
 

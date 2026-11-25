@@ -1,28 +1,30 @@
 #!/usr/bin/env bash
 # =================================================================================================
-# Clover 5 × (8× RTX 3090 = 960 GiB VRAM) Balanced All-Active Mesh + MCP 2.0 + Batch Queue Deployer
+# Clover 6-Node "5-Petal Clover Leaf + Center k3 Hub" Provisioner (`deploy_5node_cluster.sh`)
 # =================================================================================================
-# Zero "all eggs in one basket": ALL 5 nodes hold an active Kimi K31H pipeline stage (14+20+20+20+18
-# = 92 layers, ~113-161 GiB/node) PLUS dedicated Generalist/Specialist engines on remaining GPUs AND
-# an Anycast Stateless Gateway (`/v1/chat/completions`, `/v1/chat/completions/batch`, `/mcp` MCP 2.0):
+# Deploys Clover's 6-Node Topology (Opus 5.5 audited & verified against 21.9 GiB/GPU placeable VRAM):
 #
-#   * Node 1 (173.2 / 192 GiB): Nemotron-3.5-Super-VL 120B HG4 (60.2G, GPUs 0-2)
-#                               + Kimi Stage 0 (L00..13 + Embed = 113.0G, GPUs 3-7) + Mesh Gateway :8080
-#   * Node 2 (178.8 / 192 GiB): Qwen3.6-35B Replica #1 (17.2G, GPU 0) + LFM3-2B Replica #1 (0.83G, GPU 0)
-#                               + Kimi Stage 1 (L14..33 = 160.8G, GPUs 1-7) + Mesh Gateway :8080
-#   * Node 3 (179.1 / 192 GiB): Qwen3.6-35B Replica #2 (17.2G, GPU 0) + LFM3-2B Replica #2 (0.83G, GPU 0)
-#                               + Chronos-2 (0.22G, GPU 0) + Kimi Stage 2 (L34..53 = 160.8G, GPUs 1-7) + Mesh Gateway :8080
-#   * Node 4 (177.1 / 192 GiB): Goedel-Prover-V2-32B HG4 (15.8G, GPU 0) + V-JEPA 2.1 HG4 (0.52G, GPU 0)
-#                               + 32-core Lean 4 Verifier + Kimi Stage 3 (L54..73 = 160.8G, GPUs 1-7) + Mesh Gateway :8080
-#   * Node 5 (168.6 / 192 GiB): Qwen3.6-35B Replica #3 (17.2G, GPU 0) + Boltz-2 + MACE-MP-0 (2.9G, GPU 0)
-#                               + x-cruncher + Kimi Stage 4 (L74..91 + Heads + 5L-DSpark = 148.5G, GPUs 1-7)
-#                               + Kimi Pipeline Coordinator :8089 + Mesh Gateway :8080
+#   * Center Hub `k3` (Permanent $0/hr 7950X3D AVX-512 + 128 GB DDR5 + Dual NVMe):
+#       - Public Ingress, Global `ClusterBatchQueue` (Priority + T=0 Clubbing + Prefix Affinity)
+#       - Dynamic Petal Lease Registry (`POST /v1/cluster/register`), Durable SQLite `tasks/*`
+#       - C11 `x-cruncher` Exact Math, Lean 4 Verifier, Epistemic Memory
+#       - Local CPU Replica #3: `Qwen3.6-35B` + `LFM3-2B` (18 GiB DDR5 — stays up even at 0 GPU Petals!)
+#
+#   * Petal 1 (8x RTX 3090): GPUs 0-2 Nemotron-120B (60.5/65.7G)  | GPUs 3-7 Kimi L00:14+Emb (104.4/109.5G)
+#   * Petal 2 (8x RTX 3090): GPU 0 35B #1 + LFM3 #1 (18.3/21.9G)  | GPUs 1-7 Kimi L14:33     (151.7/153.3G)
+#   * Petal 3 (8x RTX 3090): GPU 0 35B #2 + LFM3 #2 + Chronos     | GPUs 1-7 Kimi L33:52     (151.7/153.3G)
+#   * Petal 4 (8x RTX 3090): GPU 0 Goedel-32B + V-JEPA + Boltz-2  | GPUs 1-7 Kimi L52:71     (151.8/153.3G)
+#   * Petal 5 (8x RTX 3090): GPUs 0-7 Kimi L71:93 (ALL 93L 0..92!) + lm_head + 5L-DSpark + Coordinator :8089
 # =================================================================================================
 set -euo pipefail
 
 SSH_KEY="${HOME}/.ssh/ssh-gpu-server"
 REPO_URL="https://github.com/santhoshsathish94/clover-framework.git"
+API_KEY="${CLOVER_GATEWAY_API_KEY:-}"
+CLUSTER_SECRET="${CLOVER_CLUSTER_SECRET:-}"
+ALLOW_PUBLIC_BIND=0
 DRY_RUN=0
+K3_CENTER=""
 NODE1=""
 NODE2=""
 NODE3=""
@@ -33,19 +35,30 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --ssh-key) SSH_KEY="$2"; shift 2 ;;
     --repo-url) REPO_URL="$2"; shift 2 ;;
-    --node1) NODE1="$2"; shift 2 ;;
-    --node2) NODE2="$2"; shift 2 ;;
-    --node3) NODE3="$2"; shift 2 ;;
-    --node4) NODE4="$2"; shift 2 ;;
-    --node5) NODE5="$2"; shift 2 ;;
+    --api-key) API_KEY="$2"; shift 2 ;;
+    --cluster-secret) CLUSTER_SECRET="$2"; shift 2 ;;
+    --k3-center) K3_CENTER="$2"; shift 2 ;;
+    --node1|--petal1) NODE1="$2"; shift 2 ;;
+    --node2|--petal2) NODE2="$2"; shift 2 ;;
+    --node3|--petal3) NODE3="$2"; shift 2 ;;
+    --node4|--petal4) NODE4="$2"; shift 2 ;;
+    --node5|--petal5) NODE5="$2"; shift 2 ;;
+    --allow-public-bind) ALLOW_PUBLIC_BIND=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
     *) echo "Unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 
 if [[ -z "$NODE1" || -z "$NODE2" || -z "$NODE3" || -z "$NODE4" || -z "$NODE5" ]]; then
-  echo "Usage: $0 [--dry-run] --node1 user@ip:ssh_port[:lan_ip] ... --node5 user@ip:ssh_port[:lan_ip]" >&2
+  echo "Usage: $0 [--dry-run] [--k3-center user@k3:22:wg_ip] --petal1 user@ip:port:wg_ip ... --petal5 user@ip:port:wg_ip" >&2
   exit 2
+fi
+
+if [[ -z "$API_KEY" ]]; then
+  API_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(24))' 2>/dev/null || openssl rand -hex 24)"
+fi
+if [[ -z "$CLUSTER_SECRET" ]]; then
+  CLUSTER_SECRET="$(python3 -c 'import secrets; print(secrets.token_hex(32))' 2>/dev/null || openssl rand -hex 32)"
 fi
 
 parse_node() {
@@ -53,31 +66,35 @@ parse_node() {
   local host_part="${spec%%:*}"
   local rest="${spec#*:}"
   local port="${rest%%:*}"
-  local lan_ip=""
+  local wg_ip=""
   if [[ "$rest" == *:* ]]; then
-    lan_ip="${rest#*:}"
+    wg_ip="${rest#*:}"
+  elif [[ "$ALLOW_PUBLIC_BIND" -eq 1 || "$DRY_RUN" -eq 1 ]]; then
+    wg_ip="${host_part#*@}"
   else
-    lan_ip="${host_part#*@}"
+    echo "ERROR: Node '$spec' omits private/WireGuard IP (:wg_ip). Pass user@pub_ip:ssh_port:10.x.x.x or --allow-public-bind." >&2
+    exit 2
   fi
-  echo "${host_part}|${port}|${lan_ip}"
+  echo "${host_part}|${port}|${wg_ip}"
 }
 
-IFS='|' read -r N1_HOST N1_PORT N1_LAN <<< "$(parse_node "$NODE1")"
-IFS='|' read -r N2_HOST N2_PORT N2_LAN <<< "$(parse_node "$NODE2")"
-IFS='|' read -r N3_HOST N3_PORT N3_LAN <<< "$(parse_node "$NODE3")"
-IFS='|' read -r N4_HOST N4_PORT N4_LAN <<< "$(parse_node "$NODE4")"
-IFS='|' read -r N5_HOST N5_PORT N5_LAN <<< "$(parse_node "$NODE5")"
+IFS='|' read -r N1_HOST N1_PORT N1_WG <<< "$(parse_node "$NODE1")"
+IFS='|' read -r N2_HOST N2_PORT N2_WG <<< "$(parse_node "$NODE2")"
+IFS='|' read -r N3_HOST N3_PORT N3_WG <<< "$(parse_node "$NODE3")"
+IFS='|' read -r N4_HOST N4_PORT N4_WG <<< "$(parse_node "$NODE4")"
+IFS='|' read -r N5_HOST N5_PORT N5_WG <<< "$(parse_node "$NODE5")"
 
-echo "==========================================================================="
-echo " Clover 5 × (8× RTX 3090 = 960 GiB VRAM) Balanced All-Active Server Mesh"
-echo "==========================================================================="
-echo " Node 1 (173G/192G): Nemotron-120B (GPUs 0-2) + Kimi L00..13 (GPUs 3-7) + MCP 2.0 :8080"
-echo " Node 2 (179G/192G): Qwen3.6-35B #1 + LFM3 #1 (GPU 0) + Kimi L14..33 (GPUs 1-7) + MCP 2.0 :8080"
-echo " Node 3 (179G/192G): Qwen3.6-35B #2 + LFM3 #2 + Chronos-2 (GPU 0) + Kimi L34..53 + MCP 2.0 :8080"
-echo " Node 4 (177G/192G): Goedel-32B + V-JEPA + Lean4 (GPU 0) + Kimi L54..73 (GPUs 1-7) + MCP 2.0 :8080"
-echo " Node 5 (169G/192G): Qwen3.6-35B #3 + Boltz-2 (GPU 0) + Kimi L74..91+Heads (GPUs 1-7) + MCP 2.0 :8080"
-echo " Anycast Entry:      Every node (:8080) accepts OpenAI /v1, /v1/chat/completions/batch & /mcp"
-echo "==========================================================================="
+echo "================================================================================"
+echo " Clover 6-Node Topology: Center Hub k3 + 5 x (8x RTX 3090) GPU Petals (93/93L)"
+echo "================================================================================"
+echo " Petal 1 (GPUs 0-2 Nemotron-120B | GPUs 3-7 Kimi L00:14+Emb): ${N1_WG}"
+echo " Petal 2 (GPU 0 35B #1 + LFM3 #1 | GPUs 1-7 Kimi L14:33):     ${N2_WG}"
+echo " Petal 3 (GPU 0 35B #2 + Chronos | GPUs 1-7 Kimi L33:52):     ${N3_WG}"
+echo " Petal 4 (GPU 0 Goedel+VJEPA+Bio | GPUs 1-7 Kimi L52:71):     ${N4_WG}"
+echo " Petal 5 (GPUs 0-7 Kimi L71:93 + Heads + Coordinator :8089):  ${N5_WG}"
+[[ -n "$K3_CENTER" ]] && echo " Center Hub k3 (Global Queue + Clubbing + MCP 2.0 + 35B #3):  ${K3_CENTER}"
+echo " Auth: Bearer API key + HMAC-SHA256 TCP worker handshake active"
+echo "================================================================================"
 
 run_remote() {
   local label="$1"
@@ -110,57 +127,71 @@ gcc -O3 -march=native -mavx2 -mfma -mf16c -fopenmp -fPIC -shared -I/workspace/cl
 gcc -O3 -march=native -mavx2 -mfma -mf16c -fopenmp -fPIC -shared -I/workspace/clover-framework/clover-ai-system/src/models /workspace/clover-framework/clover-ai-system/src/models/kimi-k3/kimi_k31_hg4_engine.c -o /workspace/hg-models/bin/libkimi_k31_hg4_engine.so -lm -ldl
 '
 
-MCP_PEERS="goedel_lean4_prove=http://${N4_LAN}:8080,vjepa2_predict_physics=http://${N4_LAN}:8080,boltz2_fold_structure=http://${N5_LAN}:8080,chronos2_forecast=http://${N3_LAN}:8080"
-SPEC_URLS="goedel-prover-v2-32b=http://${N4_LAN}:8091,vjepa-2.1=http://${N4_LAN}:8092,boltz-2=http://${N5_LAN}:8093,chronos-2=http://${N3_LAN}:8094"
-
-# 1. Bootstrap all 5 nodes in parallel
-run_remote "NODE1-BUILD" "$N1_HOST" "$N1_PORT" "$BOOTSTRAP_ALL_ENGINES" & P1=$!
-run_remote "NODE2-BUILD" "$N2_HOST" "$N2_PORT" "$BOOTSTRAP_ALL_ENGINES" & P2=$!
-run_remote "NODE3-BUILD" "$N3_HOST" "$N3_PORT" "$BOOTSTRAP_ALL_ENGINES" & P3=$!
-run_remote "NODE4-BUILD" "$N4_HOST" "$N4_PORT" "$BOOTSTRAP_ALL_ENGINES" & P4=$!
-run_remote "NODE5-BUILD" "$N5_HOST" "$N5_PORT" "$BOOTSTRAP_ALL_ENGINES" & P5=$!
+# 1. Bootstrap all 5 GPU Petals in parallel
+run_remote "PETAL1-BUILD" "$N1_HOST" "$N1_PORT" "$BOOTSTRAP_ALL_ENGINES" & P1=$!
+run_remote "PETAL2-BUILD" "$N2_HOST" "$N2_PORT" "$BOOTSTRAP_ALL_ENGINES" & P2=$!
+run_remote "PETAL3-BUILD" "$N3_HOST" "$N3_PORT" "$BOOTSTRAP_ALL_ENGINES" & P3=$!
+run_remote "PETAL4-BUILD" "$N4_HOST" "$N4_PORT" "$BOOTSTRAP_ALL_ENGINES" & P4=$!
+run_remote "PETAL5-BUILD" "$N5_HOST" "$N5_PORT" "$BOOTSTRAP_ALL_ENGINES" & P5=$!
 wait "$P1" "$P2" "$P3" "$P4" "$P5"
 
-# 2. Provision balanced Kimi slice + local Generalist/Specialist engines + Anycast MCP 2.0 Mesh Gateway on all 5 nodes!
-PEERS_N1='{"lfm3-omni-2b":["http://'"${N2_LAN}"':8080","http://'"${N3_LAN}"':8080"],"clover-35b-a3b":["http://'"${N2_LAN}"':8080","http://'"${N3_LAN}"':8080","http://'"${N5_LAN}"':8080"],"nemotron-3.5-super-vl":["local"]}'
-PEERS_N2='{"lfm3-omni-2b":["local","http://'"${N3_LAN}"':8080"],"clover-35b-a3b":["local","http://'"${N3_LAN}"':8080","http://'"${N5_LAN}"':8080"],"nemotron-3.5-super-vl":["http://'"${N1_LAN}"':8080"]}'
-PEERS_N3='{"lfm3-omni-2b":["local","http://'"${N2_LAN}"':8080"],"clover-35b-a3b":["local","http://'"${N2_LAN}"':8080","http://'"${N5_LAN}"':8080"],"nemotron-3.5-super-vl":["http://'"${N1_LAN}"':8080"]}'
-PEERS_N4='{"lfm3-omni-2b":["http://'"${N2_LAN}"':8080","http://'"${N3_LAN}"':8080"],"clover-35b-a3b":["http://'"${N2_LAN}"':8080","http://'"${N3_LAN}"':8080","http://'"${N5_LAN}"':8080"],"nemotron-3.5-super-vl":["http://'"${N1_LAN}"':8080"]}'
-PEERS_N5='{"lfm3-omni-2b":["http://'"${N2_LAN}"':8080","http://'"${N3_LAN}"':8080"],"clover-35b-a3b":["local","http://'"${N2_LAN}"':8080","http://'"${N3_LAN}"':8080"],"nemotron-3.5-super-vl":["http://'"${N1_LAN}"':8080"]}'
-
-run_remote "NODE1-PROVISION" "$N1_HOST" "$N1_PORT" "
+# 2. Download exact slices + launch Kimi workers & LOCAL-ONLY Petal Gateways (Petals never forward to other Petals!)
+run_remote "PETAL1-START" "$N1_HOST" "$N1_PORT" "
 python3 /workspace/clover-framework/clover-ai-system/src/tools/clover_hg_serve.py --model nemotron-3.5-super-vl --download-only --cache-dir /workspace/hg-models
 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 0:14 --need-emb
-nohup env OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py worker --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --layer-range 0:14 --need-emb --pin-cold-vram --gpus 3,4,5,6,7 --port 9100 > /workspace/kimi_stage0.log 2>&1 &
-nohup env CLOVER_NODE_ID=node-1 CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0,1,2 CLOVER_NATIVE_LIB_DIR=/workspace/hg-models/bin CLOVER_NEMO_HG4_DIR=/workspace/hg-models/nemotron-3.5-super-vl CLOVER_NEMO_SPECULATIVE=1 CLOVER_KIMI_URL=http://${N5_LAN}:8089 CLOVER_SPECIALIST_URLS='${SPEC_URLS}' CLOVER_MCP_TOOL_PEERS='${MCP_PEERS}' CLOVER_MODEL_PEERS='${PEERS_N1}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host 0.0.0.0 --port 8080 > /workspace/mesh_gateway.log 2>&1 &
+nohup env CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py worker --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --layer-range 0:14 --need-emb --pin-cold-vram --gpus 3,4,5,6,7 --host ${N1_WG} --port 9100 > /workspace/kimi_stage0.log 2>&1 &
+nohup env CLOVER_NODE_ID=petal-1 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0,1,2 CLOVER_ACTIVE_MODELS=nemotron-3.5-super-vl CLOVER_NATIVE_LIB_DIR=/workspace/hg-models/bin CLOVER_NEMO_HG4_DIR=/workspace/hg-models/nemotron-3.5-super-vl CLOVER_NEMO_SPECULATIVE=1 OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host ${N1_WG} --port 8080 > /workspace/petal_gateway.log 2>&1 &
 " & D1=$!
 
-run_remote "NODE2-PROVISION" "$N2_HOST" "$N2_PORT" "
+run_remote "PETAL2-START" "$N2_HOST" "$N2_PORT" "
 python3 /workspace/clover-framework/clover-ai-system/src/tools/clover_hg_serve.py --model lfm3-omni-2b,clover-35b-a3b --download-only --cache-dir /workspace/hg-models
-python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 14:34
-nohup env OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py worker --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --layer-range 14:34 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --port 9101 > /workspace/kimi_stage1.log 2>&1 &
-nohup env CLOVER_NODE_ID=node-2 CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_NATIVE_LIB_DIR=/workspace/hg-models/bin CLOVER_OMNI_HG4_DIR=/workspace/hg-models/lfm3-omni-2b CLOVER35B_HG4_DIR=/workspace/hg-models/clover-35b-a3b CLOVER_KIMI_URL=http://${N5_LAN}:8089 CLOVER_SPECIALIST_URLS='${SPEC_URLS}' CLOVER_MCP_TOOL_PEERS='${MCP_PEERS}' CLOVER_MODEL_PEERS='${PEERS_N2}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host 0.0.0.0 --port 8080 > /workspace/mesh_gateway.log 2>&1 &
+python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 14:33
+nohup env CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py worker --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --layer-range 14:33 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --host ${N2_WG} --port 9101 > /workspace/kimi_stage1.log 2>&1 &
+nohup env CLOVER_NODE_ID=petal-2 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_ACTIVE_MODELS=lfm3-omni-2b,clover-35b-a3b CLOVER_NATIVE_LIB_DIR=/workspace/hg-models/bin CLOVER_OMNI_HG4_DIR=/workspace/hg-models/lfm3-omni-2b CLOVER35B_HG4_DIR=/workspace/hg-models/clover-35b-a3b OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host ${N2_WG} --port 8080 > /workspace/petal_gateway.log 2>&1 &
 " & D2=$!
 
-run_remote "NODE3-PROVISION" "$N3_HOST" "$N3_PORT" "
+run_remote "PETAL3-START" "$N3_HOST" "$N3_PORT" "
 python3 /workspace/clover-framework/clover-ai-system/src/tools/clover_hg_serve.py --model lfm3-omni-2b,clover-35b-a3b --download-only --cache-dir /workspace/hg-models
-python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 34:54
-nohup env OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py worker --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --layer-range 34:54 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --port 9102 > /workspace/kimi_stage2.log 2>&1 &
-nohup env CLOVER_NODE_ID=node-3 CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_NATIVE_LIB_DIR=/workspace/hg-models/bin CLOVER_OMNI_HG4_DIR=/workspace/hg-models/lfm3-omni-2b CLOVER35B_HG4_DIR=/workspace/hg-models/clover-35b-a3b CLOVER_KIMI_URL=http://${N5_LAN}:8089 CLOVER_SPECIALIST_URLS='${SPEC_URLS}' CLOVER_MCP_TOOL_PEERS='${MCP_PEERS}' CLOVER_MODEL_PEERS='${PEERS_N3}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host 0.0.0.0 --port 8080 > /workspace/mesh_gateway.log 2>&1 &
+python3 -c 'from huggingface_hub import snapshot_download; snapshot_download(\"amazon/chronos-bolt-base\", local_dir=\"/workspace/hg-models/chronos-2\")' || true
+python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 33:52
+nohup env CLOVER_GATEWAY_API_KEY='${API_KEY}' python3 /workspace/clover-framework/clover-ai-system/src/tools/specialist_hg_server.py --model chronos-2 --model-dir /workspace/hg-models/chronos-2 --gpu 0 --host 127.0.0.1 --port 8094 > /workspace/spec_chronos2.log 2>&1 &
+nohup env CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py worker --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --layer-range 33:52 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --host ${N3_WG} --port 9102 > /workspace/kimi_stage2.log 2>&1 &
+nohup env CLOVER_NODE_ID=petal-3 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_ACTIVE_MODELS=lfm3-omni-2b,clover-35b-a3b CLOVER_SPECIALIST_URLS='chronos-2=http://127.0.0.1:8094' CLOVER_NATIVE_LIB_DIR=/workspace/hg-models/bin CLOVER_OMNI_HG4_DIR=/workspace/hg-models/lfm3-omni-2b CLOVER35B_HG4_DIR=/workspace/hg-models/clover-35b-a3b OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host ${N3_WG} --port 8080 > /workspace/petal_gateway.log 2>&1 &
 " & D3=$!
 
-run_remote "NODE4-PROVISION" "$N4_HOST" "$N4_PORT" "
-python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 54:74
-nohup env OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py worker --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --layer-range 54:74 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --port 9103 > /workspace/kimi_stage3.log 2>&1 &
-nohup env CLOVER_NODE_ID=node-4 CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_NATIVE_LIB_DIR=/workspace/hg-models/bin CLOVER_KIMI_URL=http://${N5_LAN}:8089 CLOVER_SPECIALIST_URLS='${SPEC_URLS}' CLOVER_MCP_TOOL_PEERS='${MCP_PEERS}' CLOVER_MODEL_PEERS='${PEERS_N4}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host 0.0.0.0 --port 8080 > /workspace/mesh_gateway.log 2>&1 &
+run_remote "PETAL4-START" "$N4_HOST" "$N4_PORT" "
+python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 52:71
+python3 -c 'from huggingface_hub import snapshot_download; [snapshot_download(r, local_dir=d) for r, d in [(\"Santhoshsathish94/Goedel-Prover-V2-32B-HG4-16R\", \"/workspace/hg-models/goedel-prover-v2-32b\"), (\"Santhoshsathish94/VJEPA2-ViTg-HG4-16R\", \"/workspace/hg-models/vjepa-2.1\"), (\"boltz-community/boltz-2\", \"/workspace/hg-models/boltz-2\")]]' || true
+nohup env CLOVER_GATEWAY_API_KEY='${API_KEY}' python3 /workspace/clover-framework/clover-ai-system/src/tools/specialist_hg_server.py --model goedel-prover-v2-32b --model-dir /workspace/hg-models/goedel-prover-v2-32b --gpu 0 --host 127.0.0.1 --port 8091 > /workspace/spec_goedel.log 2>&1 &
+nohup env CLOVER_GATEWAY_API_KEY='${API_KEY}' python3 /workspace/clover-framework/clover-ai-system/src/tools/specialist_hg_server.py --model vjepa-2.1 --model-dir /workspace/hg-models/vjepa-2.1 --gpu 0 --host 127.0.0.1 --port 8092 > /workspace/spec_vjepa.log 2>&1 &
+nohup env CLOVER_GATEWAY_API_KEY='${API_KEY}' python3 /workspace/clover-framework/clover-ai-system/src/tools/specialist_hg_server.py --model boltz-2 --model-dir /workspace/hg-models/boltz-2 --gpu 0 --host 127.0.0.1 --port 8093 > /workspace/spec_boltz2.log 2>&1 &
+nohup env CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py worker --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --layer-range 52:71 --pin-cold-vram --gpus 1,2,3,4,5,6,7 --host ${N4_WG} --port 9103 > /workspace/kimi_stage3.log 2>&1 &
+nohup env CLOVER_NODE_ID=petal-4 CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_SHARE_CPU_LOCK=0 CLOVER_ACTIVE_MODELS='' CLOVER_SPECIALIST_URLS='goedel-prover-v2-32b=http://127.0.0.1:8091,vjepa-2.1=http://127.0.0.1:8092,boltz-2=http://127.0.0.1:8093' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host ${N4_WG} --port 8080 > /workspace/petal_gateway.log 2>&1 &
 " & D4=$!
 
-run_remote "NODE5-PROVISION" "$N5_HOST" "$N5_PORT" "
-python3 /workspace/clover-framework/clover-ai-system/src/tools/clover_hg_serve.py --model clover-35b-a3b --download-only --cache-dir /workspace/hg-models
-python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 74:92 --need-head
-nohup env OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py coordinator --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --local-range 74:92 --stages ${N1_LAN}:9100@0:14,${N2_LAN}:9101@14:34,${N3_LAN}:9102@34:54,${N4_LAN}:9103@54:74 --pin-cold-vram --wire-dtype bf16 --gpus 1,2,3,4,5,6,7 --port 8089 > /workspace/kimi_coordinator.log 2>&1 &
-nohup env CLOVER_NODE_ID=node-5 CLOVER_SHARE_CPU_LOCK=0 CLOVER_CUDA_GPUS=0 CLOVER_NATIVE_LIB_DIR=/workspace/hg-models/bin CLOVER35B_HG4_DIR=/workspace/hg-models/clover-35b-a3b CLOVER_KIMI_URL=http://${N5_LAN}:8089 CLOVER_SPECIALIST_URLS='${SPEC_URLS}' CLOVER_MCP_TOOL_PEERS='${MCP_PEERS}' CLOVER_MODEL_PEERS='${PEERS_N5}' OMP_NUM_THREADS=16 python3 /workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host 0.0.0.0 --port 8080 > /workspace/mesh_gateway.log 2>&1 &
+run_remote "PETAL5-START" "$N5_HOST" "$N5_PORT" "
+python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py download-slice --out /workspace/hg-models/kimi-slice --layer-range 71:93 --need-emb --need-head
+nohup env CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' CLOVER_GATEWAY_API_KEY='${API_KEY}' OMP_NUM_THREADS=24 python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_cluster.py coordinator --model-dir /workspace/hg-models/kimi-slice --lib-path /workspace/hg-models/bin/libkimi_k31_hg4_engine.so --local-range 71:93 --stages ${N1_WG}:9100@0:14,${N2_WG}:9101@14:33,${N3_WG}:9102@33:52,${N4_WG}:9103@52:71 --pin-cold-vram --wire-dtype fp32 --gpus 0,1,2,3,4,5,6,7 --host ${N5_WG} --port 8089 > /workspace/kimi_coordinator.log 2>&1 &
 " & D5=$!
 
 wait "$D1" "$D2" "$D3" "$D4" "$D5"
-echo "BALANCED_5NODE_MESH_DEPLOYED_OK"
+
+# 3. If `--k3-center` is provided, start/update Center Hub `k3` and launch 30s lease heartbeats on Petals 1..4!
+if [[ -n "$K3_CENTER" ]]; then
+  IFS='|' read -r K3_HOST K3_PORT K3_WG <<< "$(parse_node "$K3_CENTER")"
+  K3_PEERS='{"lfm3-omni-2b":["local"],"clover-35b-a3b":["local"]}'
+  run_remote "K3-CENTER-HUB" "$K3_HOST" "$K3_PORT" "
+    mkdir -p /mnt/nvme1/clover-hub
+    nohup env CLOVER_NODE_ID=k3-center CLOVER_GATEWAY_API_KEY='${API_KEY}' CLOVER_TASKS_DB=/mnt/nvme1/clover-hub/mcp_tasks.sqlite3 CLOVER_KIMI_URL=http://${N5_WG}:8089 CLOVER_MODEL_PEERS='${K3_PEERS}' OMP_NUM_THREADS=16 GOMP_CPU_AFFINITY=0-15 python3 /mnt/nvme1/clover-framework-repo/clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host 0.0.0.0 --port 8790 > /mnt/nvme1/clover-hub/k3_hub.log 2>&1 &
+  "
+  start_hb() {
+    local lbl="$1" h="$2" p="$3" pid="$4" wg="$5" mdls="$6" tls="$7"
+    run_remote "$lbl" "$h" "$p" "nohup bash -c 'while true; do curl -fsS -m 5 -X POST http://${K3_WG}:8790/v1/cluster/register -H \"Authorization: Bearer ${API_KEY}\" -H \"Content-Type: application/json\" -d \"{\\\"petal_id\\\":\\\"${pid}\\\",\\\"url\\\":\\\"http://${wg}:8080\\\",\\\"models\\\":${mdls},\\\"mcp_tools\\\":${tls}}\" >/dev/null 2>&1 || true; sleep 30; done' > /workspace/petal_hb.log 2>&1 &"
+  }
+  start_hb "PETAL1-HB" "$N1_HOST" "$N1_PORT" "petal-1" "$N1_WG" '["nemotron-3.5-super-vl"]' '[]'
+  start_hb "PETAL2-HB" "$N2_HOST" "$N2_PORT" "petal-2" "$N2_WG" '["lfm3-omni-2b","clover-35b-a3b"]' '[]'
+  start_hb "PETAL3-HB" "$N3_HOST" "$N3_PORT" "petal-3" "$N3_WG" '["lfm3-omni-2b","clover-35b-a3b","chronos-2"]' '["chronos2_forecast"]'
+  start_hb "PETAL4-HB" "$N4_HOST" "$N4_PORT" "petal-4" "$N4_WG" '["goedel-prover-v2-32b","vjepa-2.1","boltz-2"]' '["goedel_lean4_prove","vjepa2_predict_physics","boltz2_fold_structure"]'
+fi
+
+echo "CLOVER_6NODE_5PETAL_K3_DEPLOYED_OK"

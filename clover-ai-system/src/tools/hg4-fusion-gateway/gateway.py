@@ -26,7 +26,14 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from backends import build_backends  # noqa: E402
-from cluster_scheduler_mcp2 import ClusterBatchQueue, MCP2_PROTOCOL_VERSION, Mcp2MeshServer, ReplicaPoolBackend  # noqa: E402
+from cluster_scheduler_mcp2 import (  # noqa: E402
+    HOP_CTX,
+    MCP2_PROTOCOL_VERSION,
+    ClusterBatchQueue,
+    Mcp2MeshServer,
+    PetalRegistry,
+    ReplicaPoolBackend,
+)
 from fusion_router import Completion, FusionRouter, RouterError  # noqa: E402
 
 DEFAULT_PORT = 8790
@@ -53,6 +60,7 @@ class GatewayHandler(BaseHTTPRequestHandler):
     router: FusionRouter
     batch_queue: ClusterBatchQueue
     mcp2: Mcp2MeshServer
+    petal_registry: PetalRegistry
     api_key: str | None = None
     quiet = False
     socket_timeout_s: float = float(os.environ.get("CLOVER_GATEWAY_SOCKET_TIMEOUT", "30.0"))
@@ -71,7 +79,7 @@ class GatewayHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header(
             "Access-Control-Allow-Headers",
-            "Authorization, Content-Type, OpenAI-Organization, X-Request-Id, Mcp-Method, Mcp-Name, Mcp-Priority, If-None-Match",
+            "Authorization, Content-Type, OpenAI-Organization, X-Request-Id, X-Clover-Hop, Mcp-Method, Mcp-Name, Mcp-Priority, If-None-Match",
         )
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 
@@ -135,6 +143,8 @@ class GatewayHandler(BaseHTTPRequestHandler):
                 k: b.snapshot() for k, b in self.router.backends.items() if isinstance(b, ReplicaPoolBackend)
             }
             self._send_json({"queue": self.batch_queue.snapshot(), "replica_pools": pools})
+        elif p in ("/v1/cluster/petals", "/cluster/petals"):
+            self._send_json(self.petal_registry.snapshot())
         elif p in ("/mcp", "/v1/mcp"):
             self._send_json({
                 "protocol": "mcp",
@@ -154,6 +164,15 @@ class GatewayHandler(BaseHTTPRequestHandler):
             return
         if p in ("/v1/cache/reset", "/cache/reset"):
             self._send_json(self.router.reset_caches())
+            return
+        if p in ("/v1/cluster/register", "/cluster/register"):
+            try:
+                n_reg = int(self.headers.get("Content-Length") or 0)
+                reg_body = json.loads(self.rfile.read(n_reg).decode("utf-8")) if 0 < n_reg <= MAX_BODY else {}
+                out_reg = self.petal_registry.register(reg_body)
+                self._send_json(out_reg)
+            except (ValueError, UnicodeDecodeError) as exc:
+                self._error(400, f"invalid petal registration: {exc}")
             return
         if p in ("/mcp", "/v1/mcp"):
             try:
@@ -184,7 +203,8 @@ class GatewayHandler(BaseHTTPRequestHandler):
                 self._error(400, f"invalid batch JSON: {exc}")
                 return
             prio = int(bbody.get("priority", 2)) if isinstance(bbody, dict) else 2
-            batch_out = self.batch_queue.submit_batch(reqs, priority=prio)
+            is_hop = bool(self.headers.get("X-Clover-Hop"))
+            batch_out = self.batch_queue.submit_batch(reqs, priority=prio, local_only_hop=is_hop)
             now_ts = int(time.time())
             for item in batch_out["results"]:
                 if "completion" in item:
@@ -219,11 +239,16 @@ class GatewayHandler(BaseHTTPRequestHandler):
     def _complete(self, body: dict[str, Any]) -> None:
         cid = "chatcmpl-" + uuid.uuid4().hex[:24]
         prio = int(body.get("x_clover_priority", 1))
+        is_hop = bool(self.headers.get("X-Clover-Hop"))
         try:
-            c, q_meta = self.batch_queue.submit(body, priority=prio)
+            c, q_meta = self.batch_queue.submit(body, priority=prio, local_only_hop=is_hop)
             c.telemetry["queue"] = q_meta
         except RouterError as exc:
             self._error(exc.status, str(exc), exc.code)
+            return
+        except RuntimeError as exc:
+            code = 503 if "X-Clover-Hop" in str(exc) else 500
+            self._error(code, str(exc), "service_unavailable" if code == 503 else "server_error")
             return
         except Exception as exc:  # engine failure
             self._error(500, f"{type(exc).__name__}: {exc}", "server_error")
@@ -278,12 +303,15 @@ class GatewayHandler(BaseHTTPRequestHandler):
             if text:
                 write(chunk({"content": text}))
 
+        HOP_CTX.local_only = bool(self.headers.get("X-Clover-Hop"))
         try:
             c = self.router.complete(body, on_delta=on_delta)
         except ConnectionAbortedError:
+            HOP_CTX.local_only = False
             self.close_connection = True
             return
         except RouterError as exc:
+            HOP_CTX.local_only = False
             if not state["headers"]:
                 self._error(exc.status, str(exc), exc.code)
                 return
@@ -292,8 +320,10 @@ class GatewayHandler(BaseHTTPRequestHandler):
             self.close_connection = True
             return
         except Exception as exc:
+            HOP_CTX.local_only = False
             if not state["headers"]:
-                self._error(500, f"{type(exc).__name__}: {exc}", "server_error")
+                code = 503 if "X-Clover-Hop" in str(exc) else 500
+                self._error(code, f"{type(exc).__name__}: {exc}", "server_error")
                 return
             try:
                 write({"error": {"message": f"{type(exc).__name__}: {exc}", "type": "server_error"}})
@@ -302,6 +332,7 @@ class GatewayHandler(BaseHTTPRequestHandler):
                 pass
             self.close_connection = True
             return
+        HOP_CTX.local_only = False
         try:
             role_once()
             for i, tc in enumerate(c.tool_calls):
@@ -323,12 +354,14 @@ class GatewayHandler(BaseHTTPRequestHandler):
 def create_server(router: FusionRouter, host: str = "127.0.0.1", port: int = DEFAULT_PORT,
                   api_key: str | None = None, quiet: bool = False,
                   batch_window_ms: float | None = None) -> ThreadingHTTPServer:
+    eff_key = api_key if api_key is not None else (os.environ.get("CLOVER_GATEWAY_API_KEY") or None)
     bqueue = ClusterBatchQueue(router.complete, batch_window_ms=batch_window_ms)
     mcp2 = Mcp2MeshServer(router, bqueue)
+    preg = PetalRegistry(router, mcp2)
     handler = type(
         "BoundGatewayHandler",
         (GatewayHandler,),
-        {"router": router, "batch_queue": bqueue, "mcp2": mcp2, "api_key": api_key, "quiet": quiet},
+        {"router": router, "batch_queue": bqueue, "mcp2": mcp2, "petal_registry": preg, "api_key": eff_key, "quiet": quiet},
     )
     srv = ThreadingHTTPServer((host, port), handler)
     srv.daemon_threads = True

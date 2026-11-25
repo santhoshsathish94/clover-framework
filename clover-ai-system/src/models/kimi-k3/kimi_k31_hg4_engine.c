@@ -1740,6 +1740,26 @@ K31_API int kimi_k31_hg4_init_range(const char *hg4_dir, int l_lo, int l_hi, int
     }
     if (g_k31.cold_stage_buf) free(g_k31.cold_stage_buf);
     g_k31.cold_stage_buf = (uint8_t *)malloc((size_t)16 * (size_t)max_cold_stride);
+
+    /* Eager Cold-First Best-Fit-Decreasing GPU VRAM Pre-Pinning when `CLOVER_PIN_COLD_VRAM=1`:
+     * Pass 1 pins ~6.99 GiB Cold HG2 expert blocks BEFORE smaller Hot HG4 / Trunk matrices so
+     * 7-GPU and 8-GPU petals never fragment VRAM or suffer a 150 GB first-request copy timeout. */
+    const char *pin_env = getenv("CLOVER_PIN_COLD_VRAM");
+    if (pin_env && strcmp(pin_env, "1") == 0) {
+        for (int l = l_lo; l < l_hi; l++) {
+            k31_experts_t *ex = &g_k31.layers[l].ex;
+            if (ex->cold_base && ex->n_cold > 0 && ex->cold_stride > 0) {
+                hg_cuda_dispatch_prepin(ex->cold_base, (size_t)ex->n_cold * (size_t)ex->cold_stride);
+            }
+        }
+        for (int l = l_lo; l < l_hi; l++) {
+            k31_experts_t *ex = &g_k31.layers[l].ex;
+            if (ex->exp_base && ex->n_hot > 0 && ex->exp_stride > 0) {
+                hg_cuda_dispatch_prepin(ex->exp_base, (size_t)ex->n_hot * (size_t)ex->exp_stride);
+            }
+        }
+    }
+
     snprintf(g_k31.loaded_dir, sizeof(g_k31.loaded_dir), "%s[%d:%d]", hg4_dir, l_lo, l_hi);
     g_k31.ready = 1;
     return 0;
@@ -2981,9 +3001,12 @@ K31_API int kimi_k31_generate_speculative(
  * ============================================================================================================ */
 
 K31_API void kimi_k31_pipeline_embed(const int *token_ids, int T, float *out_prefix_sum) {
+    if (!g_k31.ready || !token_ids || !out_prefix_sum || T <= 0 || T > 32768 || !g_k31.emb_mat.tiles) return;
     #pragma omp parallel for schedule(static) if (T >= 4)
     for (int t = 0; t < T; t++) {
-        k31_embed_lookup_row(&g_k31.emb_mat, token_ids[t], out_prefix_sum + (size_t)t * K31_D);
+        int tid = token_ids[t];
+        if (tid < 0 || tid >= K31_VOCAB) tid = 0;
+        k31_embed_lookup_row(&g_k31.emb_mat, tid, out_prefix_sum + (size_t)t * K31_D);
     }
 }
 
@@ -2992,7 +3015,8 @@ K31_API void kimi_k31_pipeline_forward_range(
     float *io_prefix_sum, float *io_delta, int *io_has_delta,
     float *io_blocks, float *io_dspark_feats_35840, uint8_t *io_feat_mask_5
 ) {
-    if (!g_k31.ready || T <= 0 || l_lo >= l_hi) return;
+    if (!g_k31.ready || base_pos < 0 || T <= 0 || T > 32768 || base_pos > 262144 - T || l_lo >= l_hi) return;
+    if (!io_prefix_sum || !io_delta || !io_has_delta || !io_blocks) return;
     if (l_lo < 0) l_lo = 0;
     if (l_hi > g_k31.n_layers) l_hi = g_k31.n_layers;
     if (l_lo >= l_hi) return;
@@ -3118,6 +3142,7 @@ K31_API void kimi_k31_pipeline_tail_logits(
 }
 
 K31_API void kimi_k31_pipeline_rollback_range(int l_lo, int l_hi, int base_pos, int keep_n) {
+    if (!g_k31.ready || base_pos < 0 || keep_n < 0 || keep_n > 32 || base_pos > 262144) return;
     if (l_lo < 0) l_lo = 0;
     if (l_hi > g_k31.n_layers) l_hi = g_k31.n_layers;
     for (int lid = l_lo; lid < l_hi; lid++) {
@@ -3131,7 +3156,7 @@ K31_API int kimi_k31_pipeline_dspark_draft(
     int cur_tok, int cur_len, int K_max, float conf_thresh, int eos_id,
     const float *new_feats_35840, int n_new_feats, int *out_drafts
 ) {
-    if (!g_k31.dspark.loaded || K_max <= 0) return 0;
+    if (!g_k31.dspark.loaded || !g_k31.emb_mat.tiles || !g_k31.emb_mat.scales || K_max <= 0) return 0;
     if (K_max > 5) K_max = 5;
     int need_cap = cur_len + K_max + 16;
     if (need_cap > g_k31_cache.alloc_cap) {

@@ -1100,8 +1100,12 @@ class KimiBackend(BackendBase):
             body["tools"] = tools
         if tool_choice is not None:
             body["tool_choice"] = tool_choice
+        hdrs = {"Content-Type": "application/json"}
+        api_key = (os.environ.get("CLOVER_GATEWAY_API_KEY") or "").strip()
+        if api_key:
+            hdrs["Authorization"] = f"Bearer {api_key}"
         req = urllib.request.Request(self.url + "/v1/chat/completions", data=json.dumps(body).encode("utf-8"),
-                                     headers={"Content-Type": "application/json"}, method="POST")
+                                     headers=hdrs, method="POST")
         with urllib.request.urlopen(req, timeout=self.timeout_s) as r:
             data = json.loads(r.read().decode("utf-8") or "{}")
         ch = data.get("choices")
@@ -1436,10 +1440,14 @@ class RemoteOpenAIBackend(BackendBase):
             body["tools"] = tools
         if tool_choice is not None:
             body["tool_choice"] = tool_choice
+        hdrs: dict[str, str] = {"Content-Type": "application/json", "X-Clover-Hop": "1"}
+        api_key = (os.environ.get("CLOVER_GATEWAY_API_KEY") or "").strip()
+        if api_key:
+            hdrs["Authorization"] = f"Bearer {api_key}"
         req = urllib.request.Request(
             self.url + "/v1/chat/completions",
             data=json.dumps(body).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers=hdrs,
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=self.timeout_s) as r:
@@ -1650,7 +1658,8 @@ def build_backends(mode: str = "auto", responders: dict[str, Responder] | None =
             continue
         try:
             be = make_native_backend(mid, paths.get(mid, {}))
-            if isinstance(be, KimiBackend) and not (KimiBackend.reachable(be.url) or be.native_available()):
+            explicit_kimi = bool((os.environ.get("CLOVER_KIMI_URL") or "").strip())
+            if isinstance(be, KimiBackend) and not explicit_kimi and not (KimiBackend.reachable(be.url) or be.native_available()):
                 raise FileNotFoundError(f"kimi: {be.url} unreachable and no native engine")
             out[mid] = be
             log(f"[backends] {mid}: {be.kind} ready")

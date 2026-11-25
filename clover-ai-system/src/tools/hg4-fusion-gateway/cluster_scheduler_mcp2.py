@@ -19,16 +19,20 @@ from __future__ import annotations
 
 import collections
 import concurrent.futures
+import contextlib
+import copy
 import hashlib
 import heapq
 import json
 import os
+import sqlite3
 import threading
 import time
 import urllib.error
 import urllib.request
 import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Callable
 
 import studio_outcome_verifier as sout
@@ -36,6 +40,18 @@ import studio_xcruncher_verifier as sxc
 from backends import BackendBase, GenParams
 
 MCP2_PROTOCOL_VERSION = "2026-07-28"
+HOP_CTX = threading.local()
+
+
+def peer_auth_headers(extra: dict[str, str] | None = None) -> dict[str, str]:
+    """Build inter-node headers carrying `Authorization: Bearer` + single-hop loop prevention."""
+    hdrs: dict[str, str] = {"Content-Type": "application/json", "X-Clover-Hop": "1"}
+    api_key = (os.environ.get("CLOVER_GATEWAY_API_KEY") or "").strip()
+    if api_key:
+        hdrs["Authorization"] = f"Bearer {api_key}"
+    if extra:
+        hdrs.update(extra)
+    return hdrs
 
 
 def compute_prefix_hash(messages: list[dict[str, Any]] | None) -> str:
@@ -100,6 +116,7 @@ class ReplicaPoolBackend(BackendBase):
         self._mu = threading.Lock()
         self._in_flight: dict[int, int] = {i: 0 for i in range(len(self.replicas))}
         self._unhealthy_until: dict[int, float] = {}
+        self._lease_expires_at: dict[int, float] = {}
         self._prefix_owner: collections.OrderedDict[str, int] = collections.OrderedDict()
         self._rr = 0
         self.routed_counts: collections.Counter = collections.Counter()
@@ -119,26 +136,54 @@ class ReplicaPoolBackend(BackendBase):
                 be.remember_assistant(content, tool_calls, gen_ids, prefix_messages)
 
     def _pick_order(self, prefix_hash: str) -> list[int]:
+        local_only = bool(getattr(HOP_CTX, "local_only", False))
         now = time.monotonic()
+        wall_now = time.time()
         with self._mu:
-            healthy = [i for i in range(len(self.replicas)) if self._unhealthy_until.get(i, 0.0) <= now]
+            if local_only:
+                local_idxs = [i for i, (lbl, _) in enumerate(self.replicas) if lbl == "local"]
+                if not local_idxs:
+                    raise RuntimeError(f"X-Clover-Hop forbids multi-hop forwarding, and {self.model_id} has no local replica")
+                return local_idxs
+            live = [
+                i for i in range(len(self.replicas))
+                if self._lease_expires_at.get(i, float("inf")) > wall_now
+            ]
+            if not live:
+                raise RuntimeError(f"all dynamic petal leases for '{self.model_id}' have expired")
+            healthy = [i for i in live if self._unhealthy_until.get(i, 0.0) <= now]
             if not healthy:
-                healthy = list(range(len(self.replicas)))
+                healthy = list(live)
             min_load = min(self._in_flight[i] for i in healthy)
             owner = self._prefix_owner.get(prefix_hash)
             if owner is not None and owner in healthy and self._in_flight[owner] <= min_load + 1:
                 self._prefix_owner.move_to_end(prefix_hash)
                 primary = owner
             else:
-                # Pick least in-flight replica (round-robin tie-breaker)
                 best: list[int] = [i for i in healthy if self._in_flight[i] == min_load]
                 primary = best[self._rr % len(best)]
                 self._rr += 1
                 self._prefix_owner[prefix_hash] = primary
                 while len(self._prefix_owner) > 2048:
                     self._prefix_owner.popitem(last=False)
-            rest = [i for i in healthy if i != primary] + [i for i in range(len(self.replicas)) if i not in healthy]
+            rest = [i for i in healthy if i != primary] + [i for i in live if i not in healthy]
             return [primary] + rest
+
+    def add_or_refresh_replica(self, label: str, backend: BackendBase, expires_at: float | None = None) -> None:
+        with self._mu:
+            for idx, (lbl, _) in enumerate(self.replicas):
+                if lbl == label:
+                    self.replicas[idx] = (label, backend)
+                    self._unhealthy_until.pop(idx, None)
+                    if expires_at is not None:
+                        self._lease_expires_at[idx] = expires_at
+                    return
+            new_idx = len(self.replicas)
+            self.replicas.append((label, backend))
+            self._in_flight[new_idx] = 0
+            if expires_at is not None:
+                self._lease_expires_at[new_idx] = expires_at
+            self.kind = "replica-pool"
 
     def stream(self, messages, tools, tool_choice, params: GenParams):
         pf_hash = compute_prefix_hash(messages)
@@ -237,40 +282,54 @@ class ClusterBatchQueue:
             self._cv.notify_all()
         self._pool.shutdown(wait=False)
 
-    def submit(self, body: dict[str, Any], priority: int = 1) -> tuple[Any, dict[str, Any]]:
+    @staticmethod
+    def _clone_result(res: Any) -> Any:
+        c = copy.copy(res)
+        if hasattr(c, "telemetry") and isinstance(c.telemetry, dict):
+            c.telemetry = dict(c.telemetry)
+        return c
+
+    def _enqueue_locked(
+        self, body: dict[str, Any], priority: int, ckey: str | None, t_enq: float
+    ) -> tuple[concurrent.futures.Future, bool]:
+        """Must hold `self._cv`. Enqueues directly onto `self._heap` without consuming any worker thread."""
+        self._stats["submitted"] += 1
+        if ckey is not None and ckey in self._inflight_clubs:
+            fut, fanout = self._inflight_clubs[ckey]
+            self._inflight_clubs[ckey] = (fut, fanout + 1)
+            self._stats["clubbed_coalesced"] += 1
+            return fut, True
+        if len(self._heap) >= self.max_queue_depth:
+            self._stats["rejected_full"] += 1
+            raise RuntimeError(f"server queue full ({self.max_queue_depth} pending)")
+        fut = concurrent.futures.Future()
+        if ckey is not None:
+            self._inflight_clubs[ckey] = (fut, 1)
+        pf_hash = compute_prefix_hash(body.get("messages"))
+        self._seq += 1
+        item = _QueuedItem(
+            priority=max(0, min(2, int(priority))),
+            prefix_bucket=pf_hash,
+            seq=self._seq,
+            body=body,
+            club_key=ckey,
+            enqueued_t=t_enq,
+            future=fut,
+        )
+        heapq.heappush(self._heap, item)
+        self._cv.notify()
+        return fut, False
+
+    def submit(self, body: dict[str, Any], priority: int = 1, local_only_hop: bool = False) -> tuple[Any, dict[str, Any]]:
         """Enqueue request (or club onto an identical in-flight deterministic request) and return `(result, q_meta)`."""
+        if local_only_hop:
+            body = {**body, "_x_local_only_hop": True}
         club_enabled = os.environ.get("CLOVER_ENABLE_CLUBBING", "1") != "0" and body.get("x_clover_clubbing", True) is not False
         ckey = compute_clubbing_key(body) if club_enabled else None
         t_enq = time.perf_counter()
 
         with self._cv:
-            self._stats["submitted"] += 1
-            if ckey is not None and ckey in self._inflight_clubs:
-                fut, fanout = self._inflight_clubs[ckey]
-                self._inflight_clubs[ckey] = (fut, fanout + 1)
-                self._stats["clubbed_coalesced"] += 1
-                is_follower = True
-            else:
-                if len(self._heap) >= self.max_queue_depth:
-                    self._stats["rejected_full"] += 1
-                    raise RuntimeError(f"server queue full ({self.max_queue_depth} pending)")
-                fut = concurrent.futures.Future()
-                if ckey is not None:
-                    self._inflight_clubs[ckey] = (fut, 1)
-                pf_hash = compute_prefix_hash(body.get("messages"))
-                self._seq += 1
-                item = _QueuedItem(
-                    priority=max(0, min(2, int(priority))),
-                    prefix_bucket=pf_hash,
-                    seq=self._seq,
-                    body=body,
-                    club_key=ckey,
-                    enqueued_t=t_enq,
-                    future=fut,
-                )
-                heapq.heappush(self._heap, item)
-                self._cv.notify()
-                is_follower = False
+            fut, is_follower = self._enqueue_locked(body, priority, ckey, t_enq)
 
         res, leader_meta = fut.result()
         wait_ms = round((time.perf_counter() - t_enq) * 1000.0, 2)
@@ -278,52 +337,51 @@ class ClusterBatchQueue:
         q_meta["clubbed_coalesced"] = is_follower
         if is_follower:
             q_meta["total_wait_ms"] = wait_ms
-        return res, q_meta
+        return self._clone_result(res), q_meta
 
-    def submit_batch(self, items: list[dict[str, Any]], priority: int = 2) -> dict[str, Any]:
-        """Club & execute an array of `N` completion requests concurrently with Prefix-Affinity ordering."""
+    def submit_batch(self, items: list[dict[str, Any]], priority: int = 2, local_only_hop: bool = False) -> dict[str, Any]:
+        """Club & enqueue an array of `N` requests directly onto `_heap` (zero worker-pool self-deadlock!)."""
         t0 = time.perf_counter()
         if not items:
             return {"object": "clover.batch", "count": 0, "clubbed_duplicates": 0, "results": [], "wall_ms": 0.0}
 
-        # Deduplicate identical deterministic items inside the batch immediately before enqueuing!
-        unique_futures: dict[str, concurrent.futures.Future] = {}
-        item_slots: list[tuple[int, concurrent.futures.Future, bool]] = []
-        clubbed_dups = 0
-
-        def _call_one(req_body: dict[str, Any], prio: int) -> tuple[Any, dict[str, Any]]:
-            return self.submit(req_body, priority=prio)
-
-        # Sort indices by prefix hash so warm-prefix groups enter the replica pool together
         indexed = list(enumerate(items))
         indexed.sort(key=lambda pair: compute_prefix_hash(pair[1].get("messages")))
 
-        slot_map: dict[int, tuple[concurrent.futures.Future, bool]] = {}
-        for orig_idx, req_body in indexed:
-            ck = compute_clubbing_key(req_body)
-            if ck is not None and ck in unique_futures:
-                slot_map[orig_idx] = (unique_futures[ck], True)
-                clubbed_dups += 1
-            else:
-                f = self._pool.submit(_call_one, req_body, priority)
-                if ck is not None:
-                    unique_futures[ck] = f
-                slot_map[orig_idx] = (f, False)
+        unique_futures: dict[str, concurrent.futures.Future] = {}
+        slot_map: dict[int, tuple[concurrent.futures.Future, bool, float]] = {}
+        clubbed_dups = 0
 
-        for i in range(len(items)):
-            f, was_dup = slot_map[i]
-            item_slots.append((i, f, was_dup))
+        with self._cv:
+            for orig_idx, raw_req in indexed:
+                req_body = {**raw_req, "_x_local_only_hop": True} if local_only_hop else raw_req
+                ck = compute_clubbing_key(req_body)
+                t_enq = time.perf_counter()
+                if ck is not None and ck in unique_futures:
+                    slot_map[orig_idx] = (unique_futures[ck], True, t_enq)
+                    clubbed_dups += 1
+                else:
+                    fut, was_inflight_club = self._enqueue_locked(req_body, priority, ck, t_enq)
+                    if ck is not None:
+                        unique_futures[ck] = fut
+                    if was_inflight_club:
+                        clubbed_dups += 1
+                    slot_map[orig_idx] = (fut, was_inflight_club, t_enq)
+            self._stats["batch_calls"] += 1
+            self._stats["batch_items"] += len(items)
+            self._stats["clubbed_coalesced"] += clubbed_dups
 
         out_results: list[dict[str, Any]] = []
-        for idx, f, was_dup in item_slots:
+        for idx in range(len(items)):
+            f, was_dup, _ = slot_map[idx]
             try:
                 comp, qm = f.result()
                 out_results.append({
                     "index": idx,
                     "status": 200,
                     "clubbed_in_batch": was_dup or bool(qm.get("clubbed_coalesced")),
-                    "completion": comp,
-                    "queue": qm,
+                    "completion": self._clone_result(comp),
+                    "queue": dict(qm),
                 })
             except Exception as exc:
                 out_results.append({
@@ -331,11 +389,6 @@ class ClusterBatchQueue:
                     "status": getattr(exc, "status", 500),
                     "error": str(exc),
                 })
-
-        with self._cv:
-            self._stats["batch_calls"] += 1
-            self._stats["batch_items"] += len(items)
-            self._stats["clubbed_coalesced"] += clubbed_dups
 
         return {
             "object": "clover.batch",
@@ -372,8 +425,10 @@ class ClusterBatchQueue:
 
     def _run_item(self, item: _QueuedItem, microbatch_size: int, rank: int) -> None:
         q_wait_ms = round((time.perf_counter() - item.enqueued_t) * 1000.0, 2)
+        HOP_CTX.local_only = bool(item.body.get("_x_local_only_hop"))
         try:
-            res = self._execute_fn(item.body)
+            clean_body = {k: v for k, v in item.body.items() if k != "_x_local_only_hop"}
+            res = self._execute_fn(clean_body)
             fanout = 1
             with self._cv:
                 if item.club_key is not None and item.club_key in self._inflight_clubs:
@@ -394,6 +449,8 @@ class ClusterBatchQueue:
                     self._inflight_clubs.pop(item.club_key, None)
                 self._stats["failed"] += 1
             item.future.set_exception(exc)
+        finally:
+            HOP_CTX.local_only = False
 
     def snapshot(self) -> dict[str, Any]:
         with self._cv:
@@ -561,17 +618,102 @@ def _parse_kv_peers(raw: str) -> dict[str, str]:
     return out
 
 
+class PetalRegistry:
+    """Dynamic Lease Registry on Center Node `k3` (`POST /v1/cluster/register`) for ephemeral GPU Petals."""
+
+    def __init__(self, router: Any, mcp2: Mcp2MeshServer, lease_ttl_s: float = 90.0) -> None:
+        self.router = router
+        self.mcp2 = mcp2
+        self.lease_ttl_s = lease_ttl_s
+        self._mu = threading.Lock()
+        self._petals: dict[str, dict[str, Any]] = {}
+
+    def register(self, payload: dict[str, Any]) -> dict[str, Any]:
+        from backends import MODEL_ALIASES, MODEL_SPECS, RemoteOpenAIBackend
+
+        petal_id = str(payload.get("petal_id") or "").strip()
+        url = str(payload.get("url") or "").strip().rstrip("/")
+        models = payload.get("models") if isinstance(payload.get("models"), list) else []
+        mcp_tools = payload.get("mcp_tools") if isinstance(payload.get("mcp_tools"), list) else []
+        kimi_url = str(payload.get("kimi_coordinator_url") or "").strip().rstrip("/")
+        if not petal_id or not (url.startswith("http://") or url.startswith("https://")):
+            raise ValueError("petal_id and valid http(s) url are required")
+
+        now = time.time()
+        exp = now + self.lease_ttl_s
+        with self._mu:
+            self._prune_locked(now)
+            self._petals[petal_id] = {
+                "petal_id": petal_id,
+                "url": url,
+                "models": [str(m) for m in models],
+                "mcp_tools": [str(t) for t in mcp_tools],
+                "kimi_coordinator_url": kimi_url or None,
+                "vram_gib": payload.get("vram_gib"),
+                "expires_at": exp,
+                "updated_at": now,
+            }
+
+        for raw_m in models:
+            mid = MODEL_ALIASES.get(str(raw_m).strip(), str(raw_m).strip())
+            fam = MODEL_SPECS.get(mid, {}).get("family", "remote")
+            rem_be = RemoteOpenAIBackend(mid, url, family=fam)
+            existing = self.router.backends.get(mid)
+            if isinstance(existing, ReplicaPoolBackend):
+                existing.add_or_refresh_replica(url, rem_be, expires_at=exp)
+            elif existing is not None:
+                pool = ReplicaPoolBackend(mid, [("local", existing)])
+                pool.add_or_refresh_replica(url, rem_be, expires_at=exp)
+                self.router.backends[mid] = pool
+            else:
+                pool = ReplicaPoolBackend(mid, [(url, rem_be)])
+                pool.add_or_refresh_replica(url, rem_be, expires_at=exp)
+                self.router.backends[mid] = pool
+
+        if kimi_url and "kimi-k3" in self.router.backends and hasattr(self.router.backends["kimi-k3"], "url"):
+            self.router.backends["kimi-k3"].url = kimi_url  # type: ignore[attr-defined]
+
+        for tname in mcp_tools:
+            self.mcp2.tool_peers[str(tname).strip()] = url
+
+        return {"registered": petal_id, "lease_ttl_s": self.lease_ttl_s, "active_petals": len(self._petals)}
+
+    def _prune_locked(self, now: float) -> None:
+        expired_ids = [pid for pid, rec in self._petals.items() if rec["expires_at"] <= now]
+        for pid in expired_ids:
+            rec = self._petals.pop(pid)
+            dead_url = rec["url"]
+            for tname in rec.get("mcp_tools", []):
+                if self.mcp2.tool_peers.get(tname) == dead_url:
+                    self.mcp2.tool_peers.pop(tname, None)
+
+    def snapshot(self) -> dict[str, Any]:
+        now = time.time()
+        with self._mu:
+            self._prune_locked(now)
+            return {"active_count": len(self._petals), "petals": dict(self._petals)}
+
+
 class Mcp2MeshServer:
-    """Stateless MCP 2.0 (`2026-07-28`) endpoint with Header Mesh Routing, Lazy Search, Batch Clubbing & `tasks/*`."""
+    """Stateless MCP 2.0 (`2026-07-28`) endpoint with Header Mesh Routing, Lazy Search, Batch Clubbing & Durable `tasks/*`."""
 
     def __init__(self, router: Any, batch_queue: ClusterBatchQueue, node_id: str | None = None) -> None:
         self.router = router
         self.queue = batch_queue
-        self.node_id = node_id or os.environ.get("CLOVER_NODE_ID", "node-local")
+        self.node_id = node_id or os.environ.get("CLOVER_NODE_ID", "k3-center")
         self.tool_peers: dict[str, str] = _parse_kv_peers(os.environ.get("CLOVER_MCP_TOOL_PEERS", ""))
         self._tasks_mu = threading.Lock()
         self._tasks: collections.OrderedDict[str, dict[str, Any]] = collections.OrderedDict()
-        self._pool = concurrent.futures.ThreadPoolExecutor(max_workers=8, thread_name_prefix="clover-mcp2")
+        self._batch_pool = concurrent.futures.ThreadPoolExecutor(max_workers=12, thread_name_prefix="clover-mcp-b")
+        self._tasks_pool = concurrent.futures.ThreadPoolExecutor(max_workers=8, thread_name_prefix="clover-mcp-t")
+        self._db_path = (os.environ.get("CLOVER_TASKS_DB") or "").strip()
+        if self._db_path:
+            Path(self._db_path).parent.mkdir(parents=True, exist_ok=True)
+            with contextlib.closing(sqlite3.connect(self._db_path)) as conn:
+                with conn:
+                    conn.execute(
+                        "CREATE TABLE IF NOT EXISTS mcp_tasks (task_id TEXT PRIMARY KEY, json_data TEXT NOT NULL, updated_at REAL)"
+                    )
 
         # Precompute deterministic sorted `tools/list` payload + strong ETag for MCP 2.0 cacheable catalogs
         full_list = [self._render_tool(t, compact=False) for t in sorted(MCP2_TOOLS, key=lambda x: x.name)]
@@ -594,36 +736,41 @@ class Mcp2MeshServer:
         self, raw_body: bytes, headers: dict[str, str]
     ) -> tuple[int, dict[str, str], dict[str, Any]] | None:
         """0.05 ms Header-Based Mesh Routing: forward `Mcp-Method: tools/call` + `Mcp-Name` without parsing JSON!"""
-        if headers.get("x-clover-mcp-hop"):
+        if headers.get("x-clover-mcp-hop") or headers.get("x-clover-hop"):
             return None
         mcp_method = (headers.get("mcp-method") or "").strip()
         mcp_name = (headers.get("mcp-name") or "").strip()
         if mcp_method == "tools/call" and mcp_name in self.tool_peers:
             spec = _TOOL_BY_NAME.get(mcp_name)
-            # Only forward if this node does NOT already host that specialist locally
             if spec and spec.target_model and spec.target_model in self.router.backends:
-                return None
+                be = self.router.backends[spec.target_model]
+                if getattr(be, "kind", "") != "remote-http":
+                    return None
             peer_base = self.tool_peers[mcp_name]
             req = urllib.request.Request(
                 peer_base + "/mcp",
                 data=raw_body,
-                headers={
-                    "Content-Type": "application/json",
+                headers=peer_auth_headers({
                     "Mcp-Method": mcp_method,
                     "Mcp-Name": mcp_name,
                     "X-Clover-Mcp-Hop": self.node_id,
-                },
+                }),
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=120.0) as r:
-                resp_obj = json.loads(r.read().decode("utf-8") or "{}")
-                return r.status, {"X-Clover-Mcp-Routed-To": peer_base, "Mcp-Protocol-Version": MCP2_PROTOCOL_VERSION}, resp_obj
+            try:
+                with urllib.request.urlopen(req, timeout=120.0) as r:
+                    resp_obj = json.loads(r.read().decode("utf-8") or "{}")
+                    return r.status, {"X-Clover-Mcp-Routed-To": peer_base, "Mcp-Protocol-Version": MCP2_PROTOCOL_VERSION}, resp_obj
+            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as exc:
+                return 502, {"Mcp-Protocol-Version": MCP2_PROTOCOL_VERSION}, {
+                    "jsonrpc": "2.0", "id": None, "error": {"code": -32002, "message": f"Upstream petal {peer_base} error: {exc}"}
+                }
         return None
 
     def handle_http(
         self, raw_body: bytes, headers: dict[str, str]
-    ) -> tuple[int, dict[str, str], dict[str, Any] | None]:
-        """Process a stateless MCP 2.0 HTTP POST request (`status, extra_headers, json_body`)."""
+    ) -> tuple[int, dict[str, str], Any]:
+        """Process a stateless MCP 2.0 HTTP POST request (`status, extra_headers, json_body_or_list`)."""
         norm_hdrs = {k.lower(): v for k, v in headers.items()}
         routed = self.maybe_forward_by_header(raw_body, norm_hdrs)
         if routed is not None:
@@ -636,6 +783,32 @@ class Mcp2MeshServer:
                 "jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": f"Parse error: {exc}"}
             }
 
+        # Standard JSON-RPC 2.0 Batch Array (`[{...}, {...}]`) support!
+        if isinstance(rpc, list):
+            if not rpc:
+                return 400, {"Mcp-Protocol-Version": MCP2_PROTOCOL_VERSION}, {
+                    "jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Invalid Request: empty batch"}
+                }
+            batch_replies = []
+            for elem in rpc:
+                if not isinstance(elem, dict):
+                    batch_replies.append({"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Invalid Request"}})
+                else:
+                    _, _, sub_body = self._handle_single_rpc(elem, norm_hdrs)
+                    if sub_body is not None:
+                        batch_replies.append(sub_body)
+            return 200, {"Mcp-Protocol-Version": MCP2_PROTOCOL_VERSION, "X-Clover-Node": self.node_id}, batch_replies
+
+        if not isinstance(rpc, dict):
+            return 400, {"Mcp-Protocol-Version": MCP2_PROTOCOL_VERSION}, {
+                "jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Invalid Request: expected JSON object"}
+            }
+
+        return self._handle_single_rpc(rpc, norm_hdrs)
+
+    def _handle_single_rpc(
+        self, rpc: dict[str, Any], norm_hdrs: dict[str, str]
+    ) -> tuple[int, dict[str, str], dict[str, Any] | None]:
         req_id = rpc.get("id")
         method = str(rpc.get("method") or norm_hdrs.get("mcp-method") or "").strip()
         params = rpc.get("params") if isinstance(rpc.get("params"), dict) else {}
@@ -765,13 +938,18 @@ class Mcp2MeshServer:
         }
 
     # -- Tool & Specialist implementations ---------------------------------------------------------------------------
-    def _invoke_tool(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
+    def _invoke_tool(self, name: str, args: dict[str, Any], _batch_depth: int = 0) -> dict[str, Any]:
         if name not in _TOOL_BY_NAME:
             raise KeyError(name)
         spec = _TOOL_BY_NAME[name]
 
         # If mapped to a remote specialist peer and not hosted locally, forward via stateless MCP 2.0!
-        if name in self.tool_peers and (not spec.target_model or spec.target_model not in self.router.backends):
+        local_hosted = bool(
+            spec.target_model
+            and spec.target_model in self.router.backends
+            and getattr(self.router.backends[spec.target_model], "kind", "") != "remote-http"
+        )
+        if name in self.tool_peers and not local_hosted:
             peer = self.tool_peers[name]
             payload = json.dumps({
                 "jsonrpc": "2.0", "id": uuid.uuid4().hex[:12], "method": "tools/call",
@@ -780,12 +958,11 @@ class Mcp2MeshServer:
             req = urllib.request.Request(
                 peer + "/mcp",
                 data=payload,
-                headers={
-                    "Content-Type": "application/json",
+                headers=peer_auth_headers({
                     "Mcp-Method": "tools/call",
                     "Mcp-Name": name,
                     "X-Clover-Mcp-Hop": self.node_id,
-                },
+                }),
                 method="POST",
             )
             with urllib.request.urlopen(req, timeout=120.0) as r:
@@ -793,8 +970,10 @@ class Mcp2MeshServer:
             return (rpc_res.get("result") or {}).get("structuredContent") or {"forwarded_to": peer, "raw": rpc_res}
 
         if name == "clover_exec_batch":
+            if _batch_depth >= 1:
+                raise ValueError("Nested clover_exec_batch is forbidden (max batch depth = 1)")
             calls = args.get("calls") if isinstance(args.get("calls"), list) else []
-            return self._exec_batch_calls(calls)
+            return self._exec_batch_calls(calls, _batch_depth=_batch_depth + 1)
 
         if name == "xcruncher_exact_math":
             expr = str(args.get("expression") or "")
@@ -853,11 +1032,11 @@ class Mcp2MeshServer:
                 out["lean_finding"] = finding
         return out
 
-    def _exec_batch_calls(self, calls: list[Any]) -> dict[str, Any]:
-        """Club duplicate tool calls & run independent specialist calls across the mesh in parallel!"""
+    def _exec_batch_calls(self, calls: list[Any], _batch_depth: int = 1) -> dict[str, Any]:
+        """Club duplicate tool calls & run independent specialist calls in parallel without pool self-deadlock!"""
         t0 = time.perf_counter()
         dedup_futures: dict[str, concurrent.futures.Future] = {}
-        slots: list[tuple[int, concurrent.futures.Future, bool]] = []
+        slots: list[tuple[int, concurrent.futures.Future | None, str | None, bool]] = []
         clubbed_n = 0
 
         for idx, c in enumerate(calls):
@@ -865,19 +1044,25 @@ class Mcp2MeshServer:
                 continue
             cname = str(c.get("name") or "")
             cargs = c.get("arguments") if isinstance(c.get("arguments"), dict) else {}
+            if cname == "clover_exec_batch":
+                slots.append((idx, None, "Nested clover_exec_batch is forbidden (max batch depth = 1)", False))
+                continue
             sig = hashlib.sha256(
                 json.dumps({"n": cname, "a": cargs}, sort_keys=True, separators=(",", ":")).encode("utf-8")
             ).hexdigest()
             if sig in dedup_futures:
-                slots.append((idx, dedup_futures[sig], True))
+                slots.append((idx, dedup_futures[sig], None, True))
                 clubbed_n += 1
             else:
-                f = self._pool.submit(self._invoke_tool, cname, cargs)
+                f = self._batch_pool.submit(self._invoke_tool, cname, cargs, _batch_depth)
                 dedup_futures[sig] = f
-                slots.append((idx, f, False))
+                slots.append((idx, f, None, False))
 
         results = []
-        for idx, f, was_clubbed in slots:
+        for idx, f, imm_err, was_clubbed in slots:
+            if imm_err is not None or f is None:
+                results.append({"index": idx, "clubbed": was_clubbed, "ok": False, "error": imm_err or "invalid"})
+                continue
             try:
                 val = f.result()
                 results.append({"index": idx, "clubbed": was_clubbed, "ok": True, "result": val})
@@ -890,6 +1075,17 @@ class Mcp2MeshServer:
             "wall_ms": round((time.perf_counter() - t0) * 1000.0, 2),
             "results": results,
         }
+
+    def _persist_task_db(self, rec: dict[str, Any]) -> None:
+        if not self._db_path:
+            return
+        pub = self._public_task(rec)
+        with contextlib.closing(sqlite3.connect(self._db_path)) as conn:
+            with conn:
+                conn.execute(
+                    "INSERT OR REPLACE INTO mcp_tasks (task_id, json_data, updated_at) VALUES (?, ?, ?)",
+                    (pub["taskId"], json.dumps(pub, ensure_ascii=False), time.time()),
+                )
 
     # -- MCP 2.0 Async `tasks/*` implementation ----------------------------------------------------------------------
     def _create_async_task(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -907,6 +1103,7 @@ class Mcp2MeshServer:
             self._tasks[tid] = rec
             while len(self._tasks) > 2048:
                 self._tasks.popitem(last=False)
+        self._persist_task_db(rec)
 
         def _worker() -> None:
             with self._tasks_mu:
@@ -914,6 +1111,7 @@ class Mcp2MeshServer:
                     ev.set()
                     return
                 rec["status"] = "running"
+            self._persist_task_db(rec)
             try:
                 if "tool" in params or "name" in params:
                     tname = str(params.get("tool") or params.get("name") or "")
@@ -934,9 +1132,10 @@ class Mcp2MeshServer:
                     rec["error"] = str(exc)
                     rec["completedAt"] = time.time()
             finally:
+                self._persist_task_db(rec)
                 ev.set()
 
-        fut = self._pool.submit(_worker)
+        fut = self._tasks_pool.submit(_worker)
         rec["_fut"] = fut
         return self._public_task(rec)
 
@@ -948,6 +1147,11 @@ class Mcp2MeshServer:
         with self._tasks_mu:
             rec = self._tasks.get(tid)
         if rec is None:
+            if self._db_path and Path(self._db_path).is_file():
+                with contextlib.closing(sqlite3.connect(self._db_path)) as conn:
+                    row = conn.execute("SELECT json_data FROM mcp_tasks WHERE task_id = ?", (tid,)).fetchone()
+                    if row:
+                        return json.loads(row[0])
             return None
         if wait_ms > 0:
             rec["_done_ev"].wait(timeout=wait_ms / 1000.0)
@@ -965,4 +1169,6 @@ class Mcp2MeshServer:
                 if fut is not None:
                     fut.cancel()
                 rec["_done_ev"].set()
-            return self._public_task(rec)
+            pub = self._public_task(rec)
+        self._persist_task_db(rec)
+        return pub

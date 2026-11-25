@@ -422,6 +422,7 @@ static int g_enabled = 0;
 static int g_gpus[8];
 static int g_n_gpus = 0;
 static int g_rr_gpu = 0;
+static pthread_mutex_t g_dev_mu[8];
 static cache_slot_t g_ht[HT_CAP];
 
 static int8_t *g_dxq[8], *g_dzq[8];
@@ -434,6 +435,7 @@ static cudaStream_t g_st[8];
 static void ensure_init_locked(void) {
     if (g_inited) return;
     g_inited = 1;
+    for (int i = 0; i < 8; i++) pthread_mutex_init(&g_dev_mu[i], NULL);
     const char *env = getenv("CLOVER_CUDA_GPUS");
     if (env && (strcmp(env, "none") == 0 || strcmp(env, "off") == 0 || strcmp(env, "cpu") == 0)) {
         g_enabled = 0;
@@ -481,6 +483,67 @@ static inline uint32_t ptr_hash(const void *p) {
     return (uint32_t)x & (HT_CAP - 1u);
 }
 
+/* Best-Fit-Decreasing GPU selector: picks the GPU with the tightest sufficient free VRAM (`free > need + floor`)
+ * so ~7 GiB Kimi Cold HG2 blocks pack 3-per-GPU cleanly without fragmenting across devices. */
+static int pick_best_fit_gpu_locked(size_t need_b, size_t floor_b) {
+    int best_dev = -1;
+    size_t best_free = (size_t)-1;
+    for (int a = 0; a < g_n_gpus; a++) {
+        int dev = g_gpus[(g_rr_gpu + a) % g_n_gpus];
+        cudaSetDevice(dev);
+        size_t free_b = 0, tot_b = 0;
+        if (cudaMemGetInfo(&free_b, &tot_b) == cudaSuccess && free_b > need_b + floor_b) {
+            if (free_b < best_free) {
+                best_free = free_b;
+                best_dev = dev;
+            }
+        }
+    }
+    if (best_dev >= 0) g_rr_gpu = (g_rr_gpu + 1) % g_n_gpus;
+    return best_dev;
+}
+
+extern "C" int hg_cuda_prepin_blob(const uint8_t *h_base, size_t total_b) {
+    if (!h_base || total_b == 0) return 0;
+    pthread_mutex_lock(&g_mu);
+    ensure_init_locked();
+    if (!g_enabled) { pthread_mutex_unlock(&g_mu); return 0; }
+
+    uint32_t idx = ptr_hash(h_base);
+    cache_slot_t *slot = NULL;
+    for (uint32_t probe = 0; probe < 1024u; probe++) {
+        cache_slot_t *s = &g_ht[(idx + probe) & (HT_CAP - 1u)];
+        if (s->status == 0) { slot = s; break; }
+        if (s->h_tiles == h_base) { slot = s; break; }
+    }
+    if (!slot) { pthread_mutex_unlock(&g_mu); return 0; }
+    if (slot->status == 1) { pthread_mutex_unlock(&g_mu); return 1; }
+    if (slot->status == -1) { pthread_mutex_unlock(&g_mu); return 0; }
+
+    size_t floor_b = (total_b >= ((size_t)4 << 30)) ? ((size_t)768 * 1024 * 1024) : ((size_t)1280 * 1024 * 1024);
+    int dev = pick_best_fit_gpu_locked(total_b, floor_b);
+    if (dev >= 0) {
+        cudaSetDevice(dev);
+        uint8_t *dt = NULL;
+        if (cudaMalloc(&dt, total_b) == cudaSuccess) {
+            cudaMemcpy(dt, h_base, total_b, cudaMemcpyHostToDevice);
+            release_host_pages(h_base, total_b);
+            slot->h_tiles = h_base;
+            slot->d_tiles = dt;
+            slot->d_scales = NULL;
+            slot->dev = dev;
+            slot->status = 1;
+            pthread_mutex_unlock(&g_mu);
+            return 1;
+        }
+        cudaGetLastError();
+    }
+    slot->h_tiles = h_base;
+    slot->status = -1;
+    pthread_mutex_unlock(&g_mu);
+    return 0;
+}
+
 extern "C" int hg_cuda_try_matmul(
     const uint8_t *h_tiles, const uint16_t *h_scales,
     uint32_t R, uint32_t K, uint32_t bits,
@@ -509,34 +572,28 @@ extern "C" int hg_cuda_try_matmul(
     if (!slot || slot->status == -1) { pthread_mutex_unlock(&g_mu); return 0; }
 
     if (slot->status == 0) {
+        int dev_pick = pick_best_fit_gpu_locked(tiles_b + scales_b, (size_t)1280 * 1024 * 1024);
         int placed = 0;
-        for (int a = 0; a < g_n_gpus; a++) {
-            int dev = g_gpus[(g_rr_gpu + a) % g_n_gpus];
-            cudaSetDevice(dev);
-            size_t free_b = 0, tot_b = 0;
-            cudaMemGetInfo(&free_b, &tot_b);
-            if (free_b > tiles_b + scales_b + (size_t)1536 * 1024 * 1024) {
-                uint8_t *dt = NULL; uint16_t *ds = NULL;
-                if (cudaMalloc(&dt, tiles_b) == cudaSuccess && cudaMalloc(&ds, scales_b) == cudaSuccess) {
-                    cudaMemcpy(dt, h_tiles, tiles_b, cudaMemcpyHostToDevice);
-                    cudaMemcpy(ds, h_scales, scales_b, cudaMemcpyHostToDevice);
-                    if (R < 65536u && tiles_b >= (size_t)16 * 1024 * 1024) {
-                        release_host_pages(h_tiles, tiles_b);
-                        release_host_pages(h_scales, scales_b);
-                    }
-                    slot->h_tiles = h_tiles;
-                    slot->d_tiles = dt;
-                    slot->d_scales = ds;
-                    slot->dev = dev;
-                    slot->status = 1;
-                    g_rr_gpu = (g_rr_gpu + a + 1) % g_n_gpus;
-                    placed = 1;
-                    break;
-                } else {
-                    if (dt) cudaFree(dt);
-                    if (ds) cudaFree(ds);
-                    cudaGetLastError();
+        if (dev_pick >= 0) {
+            cudaSetDevice(dev_pick);
+            uint8_t *dt = NULL; uint16_t *ds = NULL;
+            if (cudaMalloc(&dt, tiles_b) == cudaSuccess && cudaMalloc(&ds, scales_b) == cudaSuccess) {
+                cudaMemcpy(dt, h_tiles, tiles_b, cudaMemcpyHostToDevice);
+                cudaMemcpy(ds, h_scales, scales_b, cudaMemcpyHostToDevice);
+                if (R < 65536u && tiles_b >= (size_t)16 * 1024 * 1024) {
+                    release_host_pages(h_tiles, tiles_b);
+                    release_host_pages(h_scales, scales_b);
                 }
+                slot->h_tiles = h_tiles;
+                slot->d_tiles = dt;
+                slot->d_scales = ds;
+                slot->dev = dev_pick;
+                slot->status = 1;
+                placed = 1;
+            } else {
+                if (dt) cudaFree(dt);
+                if (ds) cudaFree(ds);
+                cudaGetLastError();
             }
         }
         if (!placed) {
@@ -548,6 +605,11 @@ extern "C" int hg_cuda_try_matmul(
     }
 
     int dev = slot->dev;
+    const uint8_t *d_tiles_ptr = slot->d_tiles;
+    const uint16_t *d_scales_ptr = slot->d_scales;
+    pthread_mutex_unlock(&g_mu);
+
+    pthread_mutex_lock(&g_dev_mu[dev]);
     cudaSetDevice(dev);
     cudaStream_t st = g_st[dev];
     size_t xq_b  = (size_t)T * K;
@@ -561,7 +623,7 @@ extern "C" int hg_cuda_try_matmul(
             T_elem *np_ = NULL; \
             if (cudaMalloc(&np_, new_b) != cudaSuccess) { \
                 cudaGetLastError(); \
-                pthread_mutex_unlock(&g_mu); \
+                pthread_mutex_unlock(&g_dev_mu[dev]); \
                 return 0; \
             } \
             if (ptr) cudaFree(ptr); \
@@ -577,12 +639,12 @@ extern "C" int hg_cuda_try_matmul(
     cudaMemcpyAsync(g_dxq[dev],  h_xq,  xq_b,  cudaMemcpyHostToDevice, st);
     cudaMemcpyAsync(g_dxsc[dev], h_xsc, xsc_b, cudaMemcpyHostToDevice, st);
     k_hg_accel_16r<<<dim3(R >> 4, (T + 3) / 4), 256, 0, st>>>(
-        slot->d_tiles, slot->d_scales, (int)R, (int)K, (int)bits,
+        d_tiles_ptr, d_scales_ptr, (int)R, (int)K, (int)bits,
         g_dxq[dev], g_dxsc[dev], g_dy[dev], T, act_mode
     );
     cudaMemcpyAsync(h_Y, g_dy[dev], y_b, cudaMemcpyDeviceToHost, st);
     cudaStreamSynchronize(st);
-    pthread_mutex_unlock(&g_mu);
+    pthread_mutex_unlock(&g_dev_mu[dev]);
     return 1;
 }
 
@@ -612,28 +674,23 @@ extern "C" int hg_cuda_try_moe_pairs(
     if (!slot || slot->status == -1) { pthread_mutex_unlock(&g_mu); return 0; }
 
     if (slot->status == 0) {
+        size_t floor_b = (total_exp_b >= ((size_t)4 << 30)) ? ((size_t)768 * 1024 * 1024) : ((size_t)1280 * 1024 * 1024);
+        int dev_pick = pick_best_fit_gpu_locked(total_exp_b, floor_b);
         int placed = 0;
-        for (int a = 0; a < g_n_gpus; a++) {
-            int dev = g_gpus[(g_rr_gpu + a) % g_n_gpus];
-            cudaSetDevice(dev);
-            size_t free_b = 0, tot_b = 0;
-            cudaMemGetInfo(&free_b, &tot_b);
-            if (free_b > total_exp_b + (size_t)1536 * 1024 * 1024) {
-                uint8_t *dt = NULL;
-                if (cudaMalloc(&dt, total_exp_b) == cudaSuccess) {
-                    cudaMemcpy(dt, h_exp_base, total_exp_b, cudaMemcpyHostToDevice);
-                    release_host_pages(h_exp_base, total_exp_b);
-                    slot->h_tiles = h_exp_base;
-                    slot->d_tiles = dt;
-                    slot->d_scales = NULL;
-                    slot->dev = dev;
-                    slot->status = 1;
-                    g_rr_gpu = (g_rr_gpu + a + 1) % g_n_gpus;
-                    placed = 1;
-                    break;
-                } else {
-                    cudaGetLastError();
-                }
+        if (dev_pick >= 0) {
+            cudaSetDevice(dev_pick);
+            uint8_t *dt = NULL;
+            if (cudaMalloc(&dt, total_exp_b) == cudaSuccess) {
+                cudaMemcpy(dt, h_exp_base, total_exp_b, cudaMemcpyHostToDevice);
+                release_host_pages(h_exp_base, total_exp_b);
+                slot->h_tiles = h_exp_base;
+                slot->d_tiles = dt;
+                slot->d_scales = NULL;
+                slot->dev = dev_pick;
+                slot->status = 1;
+                placed = 1;
+            } else {
+                cudaGetLastError();
             }
         }
         if (!placed) {
@@ -645,6 +702,10 @@ extern "C" int hg_cuda_try_moe_pairs(
     }
 
     int dev = slot->dev;
+    const uint8_t *d_tiles_ptr = slot->d_tiles;
+    pthread_mutex_unlock(&g_mu);
+
+    pthread_mutex_lock(&g_dev_mu[dev]);
     cudaSetDevice(dev);
     cudaStream_t st = g_st[dev];
     const int MAX_CHUNK_PAIRS = 4096;
@@ -664,7 +725,7 @@ extern "C" int hg_cuda_try_moe_pairs(
             T_elem *np_ = NULL; \
             if (cudaMalloc(&np_, new_b) != cudaSuccess) { \
                 cudaGetLastError(); \
-                pthread_mutex_unlock(&g_mu); \
+                pthread_mutex_unlock(&g_dev_mu[dev]); \
                 return 0; \
             } \
             if (ptr) cudaFree(ptr); \
@@ -689,7 +750,7 @@ extern "C" int hg_cuda_try_moe_pairs(
             if (ns) cudaFree(ns);
             if (nw) cudaFree(nw);
             cudaGetLastError();
-            pthread_mutex_unlock(&g_mu);
+            pthread_mutex_unlock(&g_dev_mu[dev]);
             return 0;
         }
         if (g_dptok[dev])  cudaFree(g_dptok[dev]);
@@ -711,15 +772,15 @@ extern "C" int hg_cuda_try_moe_pairs(
         cudaMemcpyAsync(g_dpw[dev],    h_pair_w    + p0, (size_t)chunk_p * sizeof(float), cudaMemcpyHostToDevice, st);
 
         k_moe_pairs_up<<<dim3(R_up >> 4, chunk_p), 128, 0, st>>>(
-            slot->d_tiles, exp_stride, up_tiles_off, (int)R_up, (int)K_up, (int)bits, act_mode,
+            d_tiles_ptr, exp_stride, up_tiles_off, (int)R_up, (int)K_up, (int)bits, act_mode,
             g_dxq[dev], g_dxsc[dev], g_dptok[dev], g_dpslot[dev], g_dhid[dev], chunk_p
         );
         k_moe_pairs_rot_quant<<<dim3(nb_dn, chunk_p), 128, 0, st>>>(
-            slot->d_tiles, exp_stride, dn_blob_off, g_dhid[dev], g_dpslot[dev],
+            d_tiles_ptr, exp_stride, dn_blob_off, g_dhid[dev], g_dpslot[dev],
             (int)K_dn, chunk_p, g_dzq[dev], g_dzsc[dev]
         );
         k_moe_pairs_down<<<dim3(R_dn >> 4, chunk_p), 128, 0, st>>>(
-            slot->d_tiles, exp_stride, dn_blob_off, (int)R_dn, (int)K_dn, (int)bits, bf16_dn_round,
+            d_tiles_ptr, exp_stride, dn_blob_off, (int)R_dn, (int)K_dn, (int)bits, bf16_dn_round,
             g_dzq[dev], g_dzsc[dev], g_dptok[dev], g_dpslot[dev], g_dpw[dev], g_dy[dev], chunk_p
         );
     }
@@ -727,10 +788,10 @@ extern "C" int hg_cuda_try_moe_pairs(
     cudaMemcpyAsync(h_out_add, g_dy[dev], out_b, cudaMemcpyDeviceToHost, st);
     if (cudaStreamSynchronize(st) != cudaSuccess) {
         cudaGetLastError();
-        pthread_mutex_unlock(&g_mu);
+        pthread_mutex_unlock(&g_dev_mu[dev]);
         return 0;
     }
-    pthread_mutex_unlock(&g_mu);
+    pthread_mutex_unlock(&g_dev_mu[dev]);
     return 1;
 }
 
