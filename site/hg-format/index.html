@@ -713,9 +713,67 @@ The total capacity is 72 kilowatts.</code></pre>
                 <td><code>12.4 &rarr; 33.4</code></td>
                 <td><strong><code>2.7&times;</code> faster with half the GB</strong> because 4 channels widen the pipe.</td>
             </tr>
+            <tr>
+                <th scope="row"><strong>1 giant box vs. 4 small boxes</strong> <small>(35B)</small></th>
+                <td>4 workers in <code>1&times;128G</code> CPU<br><small>(1 shared <code>83 GB/s</code> bus)</small></td>
+                <td><code>4&times;32G</code> CPUs / <code>4&times;24G 3090</code><br><small>(4 independent buses)</small></td>
+                <td><code>~16.0</code> vs. <strong><code>66.4</code></strong> <small>(CPU)</small><br><strong><code>234.1</code></strong> <small>(<code>4&times;3090</code>)</small></td>
+                <td><strong><code>4.0&times;&ndash;14&times;</code> throughput</strong> &mdash; each small node brings its own memory bus.</td>
+            </tr>
           </tbody>
         </table>
       </div>
+
+        <h3 id="many-small-machines" style="margin-top:2.2rem">Practical sizing law: deploy more small right-sized machines, not one giant-RAM machine</h3>
+        <p>Once <code>HG</code> shrinks a model by <code>~4&times;</code> (for example, <code>Clover-35B</code> from <code>68 GiB</code> down to <code>17.2 GiB</code>), a natural question arises: <em>can we run four instances inside one <code>128 GB</code> server to finish 4&times; more work?</em> Even though four read-only <code>mmap</code> processes easily fit inside <code>128 GB</code> RAM, they all compete for the <strong>same single <code>83.2 GB/s</code> memory bus</strong> &mdash; each instance slows down by <code>4&times;</code> (<code>~4.0 tok/s &times; 4 = ~16.0 tok/s</code> total, zero net speedup). By contrast, deploying <strong>four small right-sized nodes</strong> (four <code>32 GB</code> dual-channel mini-servers or four <code>24 GB RTX 3090</code> GPUs) gives every replica its <strong>own dedicated memory bus</strong>, multiplying aggregate throughput linearly while costing less:</p>
+
+        <figure style="margin:1.3rem 0">
+          <svg viewBox="0 0 900 226" role="img" aria-label="Comparison between 1 giant 128 GB server with 1 shared 83.2 GB/s memory bus (4 instances contend for 16.0 tok/s total) versus 4 smaller right-sized 32 GB CPU nodes or 4x 24 GB RTX 3090 GPUs where 4 independent memory buses scale throughput linearly to 66.4 tok/s on CPU or 234.1 tok/s on 4x RTX 3090." style="width:100%;height:auto;display:block;border:1px solid #dfd8c8;border-radius:12px;background:#fffefb;padding:10px">
+            <text x="20" y="24" font-size="11.5" font-weight="700" fill="#1b5e46" letter-spacing="1.0">SCALE OUT SMALL RIGHT-SIZED NODES (MORE MEMORY BUSES), NOT UP INTO UNUSED GB CAPACITY</text>
+
+            <!-- Left Box: 1 Giant Machine = 1 Bottlenecked Bus -->
+            <rect x="18" y="38" width="420" height="172" rx="10" fill="#f7f4ec" stroke="#dcd4c2"></rect>
+            <text x="34" y="60" font-size="12" font-weight="700" fill="#7d5312">1 &times; Giant 128 GB Server (4 Instances, Only 1 Memory Bus)</text>
+            <rect x="34" y="72" width="90" height="32" rx="5" fill="#fff" stroke="#c9c0ad"></rect>
+            <text x="44" y="92" font-size="9.5" fill="#2d3e34">Inst 1 (~4 t/s)</text>
+            <rect x="132" y="72" width="90" height="32" rx="5" fill="#fff" stroke="#c9c0ad"></rect>
+            <text x="142" y="92" font-size="9.5" fill="#2d3e34">Inst 2 (~4 t/s)</text>
+            <rect x="230" y="72" width="90" height="32" rx="5" fill="#fff" stroke="#c9c0ad"></rect>
+            <text x="240" y="92" font-size="9.5" fill="#2d3e34">Inst 3 (~4 t/s)</text>
+            <rect x="328" y="72" width="90" height="32" rx="5" fill="#fff" stroke="#c9c0ad"></rect>
+            <text x="338" y="92" font-size="9.5" fill="#2d3e34">Inst 4 (~4 t/s)</text>
+            <rect x="34" y="118" width="384" height="26" rx="5" fill="#e9e1cf" stroke="#b9ad95"></rect>
+            <text x="74" y="135" font-size="10.5" font-weight="700" fill="#5b4626">1 Shared Memory Bus (83.2 GB/s split 4 ways!)</text>
+            <text x="34" y="166" font-size="10.5" font-weight="700" fill="#7d5312">Total Output: ~16.0 tok/s (0&times; gain over 1 instance&rsquo;s 16.6 tok/s)</text>
+            <text x="34" y="186" font-size="9.8" fill="#596a5f">100+ GB of extra RAM capacity adds zero memory channels.</text>
+
+            <!-- Right Box: 4 Small Right-Sized Nodes = 4 Independent Buses -->
+            <rect x="462" y="38" width="420" height="172" rx="10" fill="#eef6f1" stroke="#8bb7a4"></rect>
+            <text x="478" y="60" font-size="12" font-weight="700" fill="#1b5e46">4 &times; Right-Sized Small Nodes / GPUs (4 Independent Buses)</text>
+            <rect x="478" y="72" width="90" height="68" rx="5" fill="#fff" stroke="#8bb7a4"></rect>
+            <text x="488" y="92" font-size="9.5" font-weight="700" fill="#132018">Node/GPU 1</text>
+            <text x="488" y="109" font-size="9" fill="#1b5e46">Own Bus #1</text>
+            <text x="488" y="126" font-size="9" fill="#2d3e34">16.6 / 58.5 t/s</text>
+
+            <rect x="576" y="72" width="90" height="68" rx="5" fill="#fff" stroke="#8bb7a4"></rect>
+            <text x="586" y="92" font-size="9.5" font-weight="700" fill="#132018">Node/GPU 2</text>
+            <text x="586" y="109" font-size="9" fill="#1b5e46">Own Bus #2</text>
+            <text x="586" y="126" font-size="9" fill="#2d3e34">16.6 / 58.5 t/s</text>
+
+            <rect x="674" y="72" width="90" height="68" rx="5" fill="#fff" stroke="#8bb7a4"></rect>
+            <text x="684" y="92" font-size="9.5" font-weight="700" fill="#132018">Node/GPU 3</text>
+            <text x="684" y="109" font-size="9" fill="#1b5e46">Own Bus #3</text>
+            <text x="684" y="126" font-size="9" fill="#2d3e34">16.6 / 58.5 t/s</text>
+
+            <rect x="772" y="72" width="90" height="68" rx="5" fill="#fff" stroke="#8bb7a4"></rect>
+            <text x="782" y="92" font-size="9.5" font-weight="700" fill="#132018">Node/GPU 4</text>
+            <text x="782" y="109" font-size="9" fill="#1b5e46">Own Bus #4</text>
+            <text x="782" y="126" font-size="9" fill="#2d3e34">16.6 / 58.5 t/s</text>
+
+            <text x="478" y="164" font-size="10.5" font-weight="700" fill="#1b5e46">4&times;32G CPUs = 66.4 tok/s (4.0&times;) &middot; 4&times;24G RTX 3090 = 234.1 tok/s!</text>
+            <text x="478" y="185" font-size="9.8" fill="#2d3e34">Rule: Shrink with HG &rarr; pick smallest RAM/VRAM that fits &rarr; multiply buses.</text>
+          </svg>
+        </figure>
 
         <h3 style="margin-top:2.2rem">Our recommendations: how AI systems should actually solve data movement</h3>
         <p>Because stacking larger RAM/VRAM chips or bigger compute dies leaves the memory-wire bottleneck untouched, sustainable AI inference requires attacking data movement directly on both the <strong>model side</strong> and the <strong>hardware side</strong>:</p>
