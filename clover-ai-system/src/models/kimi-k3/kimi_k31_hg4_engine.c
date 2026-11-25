@@ -47,6 +47,7 @@
 #include <unistd.h>
 #define K31_API __attribute__((visibility("default")))
 #endif
+#include "../hg_cuda_hook.h"
 
 enum {
     K31_D            = 7168,
@@ -770,6 +771,9 @@ static inline void k31_run_one_group16(const k31_mat_t *M, const int8_t *xq, con
 }
 
 static void k31_matmul_prequant(const k31_mat_t *M, const int8_t *xq, const float *xsc, const int32_t *xsum, float *Y, int T, int glu_mode, int use_omp) {
+    if (use_omp && hg_cuda_dispatch_matmul(M->tiles, M->scales_fp16, M->R, M->K, M->bits, xq, xsc, Y, T, glu_mode)) {
+        return;
+    }
     const int n_rg = (int)(M->R / 16);
     #pragma omp parallel for schedule(static) if (use_omp)
     for (int rg = 0; rg < n_rg; rg++)
@@ -1113,6 +1117,7 @@ static void k31_eval_expert_batch(
     const int8_t *x_xq, const float *x_xsc, const int32_t *x_xsum,
     const int *tok_ids, const float *tok_w, int T_e, float *lat_acc, int use_omp
 ) {
+    if (T_e <= 0) return;
     const int nb_up = K31_LATENT / 128; /* 28 */
     k31_mat_t gu_m, dn_m;
     gu_m.R = 6144; gu_m.K = 3584; gu_m.bits = is_hg2 ? 2u : 4u;
@@ -1258,13 +1263,39 @@ static void k31_run_moe(const k31_moe_trunk_t *m, k31_experts_t *ex, const float
         else cold_active[n_cold_act++] = e;
     }
 
-    /* 1. Evaluate all active DDR5-resident hot HG4-16R experts (zero NVMe I/O!) */
-    for (int hi = 0; hi < n_hot_act; hi++) {
-        int e = hot_active[hi];
-        int slot = ex->is_hybrid ? (int)ex->slot_map[e] : e;
-        const uint8_t *ep = ex->exp_base + (size_t)slot * ex->exp_stride;
-        k31_eval_expert_batch(ep, 0, ex->pre_diag_up, x_xq, x_xsc, x_xsum,
-                              grp_tok + off_e[e], grp_w + off_e[e], cnt[e], lat_acc, 1);
+    /* 1. Evaluate all active hot HG4-16R experts (GPU VRAM if available, else DDR5 CPU!) */
+    int k31_hot_gpu_done = 0;
+    if (n_hot_act > 0) {
+        int n_hp = 0;
+        for (int hi = 0; hi < n_hot_act; hi++) n_hp += cnt[hot_active[hi]];
+        int   *hp_tok  = (int *)malloc((size_t)n_hp * sizeof(int));
+        int   *hp_slot = (int *)malloc((size_t)n_hp * sizeof(int));
+        float *hp_w    = (float *)malloc((size_t)n_hp * sizeof(float));
+        int cur_hp = 0;
+        for (int hi = 0; hi < n_hot_act; hi++) {
+            int e = hot_active[hi];
+            int slot = ex->is_hybrid ? (int)ex->slot_map[e] : e;
+            for (int j = 0; j < cnt[e]; j++) {
+                hp_tok[cur_hp]  = grp_tok[off_e[e] + j];
+                hp_slot[cur_hp] = slot;
+                hp_w[cur_hp]    = grp_w[off_e[e] + j];
+                cur_hp++;
+            }
+        }
+        k31_hot_gpu_done = hg_cuda_dispatch_moe_pairs(
+            ex->exp_base, ex->is_hybrid ? ex->n_hot : ex->n_cached, ex->exp_stride,
+            344064u, 11354112u, 6144u, K31_LATENT, K31_LATENT, K31_EXP_INTER, 4u, 2, 0,
+            x_xq, x_xsc, T, hp_tok, hp_slot, hp_w, n_hp, lat_acc);
+        free(hp_tok); free(hp_slot); free(hp_w);
+    }
+    if (!k31_hot_gpu_done) {
+        for (int hi = 0; hi < n_hot_act; hi++) {
+            int e = hot_active[hi];
+            int slot = ex->is_hybrid ? (int)ex->slot_map[e] : e;
+            const uint8_t *ep = ex->exp_base + (size_t)slot * ex->exp_stride;
+            k31_eval_expert_batch(ep, 0, ex->pre_diag_up, x_xq, x_xsc, x_xsum,
+                                  grp_tok + off_e[e], grp_w + off_e[e], cnt[e], lat_acc, 1);
+        }
     }
 
     /* 2. Fused 16-Lane Dynamic `pread + GEMV` Pipeline with Deterministic Fixed-Order Reduction (`ci = 0..n_cold_act-1`) */

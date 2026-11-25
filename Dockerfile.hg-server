@@ -1,0 +1,35 @@
+# One-command CPU + Multi-GPU CUDA OpenAI-compatible Server for Clover HG Models
+# Supports: RTX 3090 (sm_86), A100 (sm_80), RTX 4090 (sm_89), H100/H200 (sm_90), and x86_64/ARM64 CPUs
+#
+# Build:
+#   docker build -f Dockerfile.hg-server -t clover-hg-server .
+#
+# Run (GPU — e.g. 1x RTX 3090/4090 for Clover-35B, or 4x RTX 3090/4090 for Nemotron-120B):
+#   docker run --gpus all -p 8000:8000 -v $(pwd)/hg-cache:/models clover-hg-server --model clover-35b-a3b
+#
+# Run (Pure CPU — zero GPUs needed):
+#   docker run -p 8000:8000 -v $(pwd)/hg-cache:/models clover-hg-server --model lfm3-omni-2b --gpus none
+
+FROM nvidia/cuda:12.6.3-devel-ubuntu24.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    CLOVER_HG_CACHE=/models \
+    HF_HUB_ENABLE_HF_TRANSFER=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential gcc g++ libgomp1 python3 python3-pip python3-venv curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m pip install --break-system-packages --no-cache-dir \
+        numpy huggingface_hub hf_transfer tokenizers
+
+WORKDIR /app
+COPY clover-ai-system/src /app/clover-ai-system/src
+
+# Pre-compile all 4 C11 SIMD engines + multi-arch CUDA accelerator (sm_80/86/89/90) at image build time
+RUN python3 /app/clover-ai-system/src/tools/clover_hg_serve.py --model all --gpus auto --build-only
+
+EXPOSE 8000
+ENTRYPOINT ["python3", "/app/clover-ai-system/src/tools/clover_hg_serve.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["--model", "lfm3-omni-2b"]

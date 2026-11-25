@@ -43,6 +43,7 @@
 #include <unistd.h>
 #define C35_API __attribute__((visibility("default")))
 #endif
+#include "../hg_cuda_hook.h"
 
 enum {
     C35_D          = 2048,
@@ -861,6 +862,9 @@ static void c35_matmul_prequant(
     float *Y, int T, int fused_swiglu, int use_omp
 ) {
     if (g_c35.is_16r) {
+        if (use_omp && hg_cuda_dispatch_matmul(M->tiles, M->scales_fp16, M->R, M->K, M->bits, xq, xsc, Y, T, fused_swiglu ? 1 : 0)) {
+            return;
+        }
         const int n_rg = (int)(M->R / 16);
         #pragma omp parallel for schedule(static) if (use_omp)
         for (int rg = 0; rg < n_rg; rg++)
@@ -1015,6 +1019,23 @@ static void c35_run_moe(
         c35_rot_quant_dispatch(x, ex->pre_diag_up, 1, C35_D, x_xq, x_xsc, x_xsum, 0);
         c35_rot_quant_dispatch(x, mt->sh_w13.pre_diag, 1, C35_D, sh_xq, sh_xsc, sh_xsum, 0);
 
+        int zero_toks[C35_TOP_K] = {0};
+        float routed_sum[C35_D] = {0};
+        if (hg_cuda_dispatch_moe_pairs(
+                ex->exp_base, ex->k_exp, ex->exp_stride, 32768u, 1081344u,
+                1024u, C35_D, C35_D, C35_MOE_INT, 4u, 1, 0,
+                x_xq, x_xsc, 1, zero_toks, sel_e, sel_w, top_k, routed_sum)) {
+            float sh_hid_c[C35_MOE_INT], sh_out_c[C35_D];
+            c35_matmul_prequant(&mt->sh_w13, sh_xq, sh_xsc, sh_xsum, sh_hid_c, 1, 1, 1);
+            c35_matmul(&mt->sh_dn, sh_hid_c, sh_out_c, 1, 0, 1);
+            float gdot = 0.0f;
+            #pragma omp simd reduction(+:gdot)
+            for (int d = 0; d < C35_D; d++) gdot += x[d] * mt->sh_g[d];
+            float sh_sc = 1.0f / (1.0f + expf(-gdot));
+            for (int d = 0; d < C35_D; d++) y_out[d] = sh_out_c[d] * sh_sc + routed_sum[d];
+            return;
+        }
+
         c35_mat_t gu_m[C35_TOP_K], dn_m[C35_TOP_K];
         for (int k = 0; k < top_k; k++) {
             const uint8_t *ep = ex->exp_base + (size_t)sel_e[k] * ex->exp_stride;
@@ -1158,62 +1179,77 @@ static void c35_run_moe(
     int32_t *x_xsum = (int32_t *)malloc((size_t)T * nb_up * sizeof(int32_t));
     c35_rot_quant_dispatch(x, ex->pre_diag_up, T, C35_D, x_xq, x_xsc, x_xsum, 1);
 
-    int active_list[256], n_act = 0;
-    for (int e = 0; e < E; e++) if (active_mask[e]) active_list[n_act++] = e;
+    int c35_gpu_done = 0;
+    if (g_c35.is_16r) {
+        int *p_tok = (int *)malloc((size_t)T * top_k * sizeof(int));
+        for (int t = 0; t < T; t++)
+            for (int k = 0; k < top_k; k++) p_tok[t * top_k + k] = t;
+        c35_gpu_done = hg_cuda_dispatch_moe_pairs(
+            ex->exp_base, ex->k_exp, ex->exp_stride, 32768u, 1081344u,
+            1024u, C35_D, C35_D, C35_MOE_INT, 4u, 1, 0,
+            x_xq, x_xsc, T, p_tok, topk_ids, topk_w, T * top_k, y_out);
+        free(p_tok);
+    }
 
-    float *exp_acc = (float *)calloc((size_t)n_act * T * C35_D, sizeof(float));
-    #pragma omp parallel for schedule(dynamic, 1)
-    for (int ai = 0; ai < n_act; ai++) {
-        int e = active_list[ai];
-        int   *m_toks = (int *)malloc((size_t)T * sizeof(int));
-        float *m_rw   = (float *)malloc((size_t)T * sizeof(float));
-        int8_t  *g_xq   = (int8_t *)malloc((size_t)T * C35_D);
-        float   *g_xsc  = (float *)malloc((size_t)T * nb_up * sizeof(float));
-        int32_t *g_xsum = (int32_t *)malloc((size_t)T * nb_up * sizeof(int32_t));
-        int n_m = 0;
-        for (int t = 0; t < T; t++) {
-            for (int k = 0; k < top_k; k++) {
-                if (topk_ids[t * top_k + k] == e) {
-                    m_toks[n_m] = t;
-                    m_rw[n_m] = topk_w[t * top_k + k];
-                    memcpy(g_xq + (size_t)n_m * C35_D, x_xq + (size_t)t * C35_D, C35_D);
-                    memcpy(g_xsc + (size_t)n_m * nb_up, x_xsc + (size_t)t * nb_up, nb_up * sizeof(float));
-                    memcpy(g_xsum + (size_t)n_m * nb_up, x_xsum + (size_t)t * nb_up, nb_up * sizeof(int32_t));
-                    n_m++;
-                    break;
+    if (!c35_gpu_done) {
+        int active_list[256], n_act = 0;
+        for (int e = 0; e < E; e++) if (active_mask[e]) active_list[n_act++] = e;
+
+        float *exp_acc = (float *)calloc((size_t)n_act * T * C35_D, sizeof(float));
+        #pragma omp parallel for schedule(dynamic, 1)
+        for (int ai = 0; ai < n_act; ai++) {
+            int e = active_list[ai];
+            int   *m_toks = (int *)malloc((size_t)T * sizeof(int));
+            float *m_rw   = (float *)malloc((size_t)T * sizeof(float));
+            int8_t  *g_xq   = (int8_t *)malloc((size_t)T * C35_D);
+            float   *g_xsc  = (float *)malloc((size_t)T * nb_up * sizeof(float));
+            int32_t *g_xsum = (int32_t *)malloc((size_t)T * nb_up * sizeof(int32_t));
+            int n_m = 0;
+            for (int t = 0; t < T; t++) {
+                for (int k = 0; k < top_k; k++) {
+                    if (topk_ids[t * top_k + k] == e) {
+                        m_toks[n_m] = t;
+                        m_rw[n_m] = topk_w[t * top_k + k];
+                        memcpy(g_xq + (size_t)n_m * C35_D, x_xq + (size_t)t * C35_D, C35_D);
+                        memcpy(g_xsc + (size_t)n_m * nb_up, x_xsc + (size_t)t * nb_up, nb_up * sizeof(float));
+                        memcpy(g_xsum + (size_t)n_m * nb_up, x_xsum + (size_t)t * nb_up, nb_up * sizeof(int32_t));
+                        n_m++;
+                        break;
+                    }
                 }
             }
-        }
-        if (n_m > 0) {
-            const uint8_t *ep = ex->exp_base + (size_t)e * ex->exp_stride;
-            c35_mat_t gu_m, dn_m;
-            gu_m.R = 1024; gu_m.K = 2048; gu_m.bits = 4;
-            gu_m.pre_diag = ex->pre_diag_up;
-            gu_m.scales_fp16 = (const uint16_t *)ep;
-            gu_m.tiles = ep + 32768;
-            parse_c35_mat(ep + 1081344, &dn_m);
+            if (n_m > 0) {
+                const uint8_t *ep = ex->exp_base + (size_t)e * ex->exp_stride;
+                c35_mat_t gu_m, dn_m;
+                gu_m.R = 1024; gu_m.K = 2048; gu_m.bits = 4;
+                gu_m.pre_diag = ex->pre_diag_up;
+                gu_m.scales_fp16 = (const uint16_t *)ep;
+                gu_m.tiles = ep + 32768;
+                parse_c35_mat(ep + 1081344, &dn_m);
 
-            float *hid = (float *)malloc((size_t)n_m * C35_MOE_INT * sizeof(float));
-            float *ey  = (float *)malloc((size_t)n_m * C35_D * sizeof(float));
-            c35_matmul_prequant(&gu_m, g_xq, g_xsc, g_xsum, hid, n_m, 1, 0);
-            c35_matmul(&dn_m, hid, ey, n_m, 0, 0);
+                float *hid = (float *)malloc((size_t)n_m * C35_MOE_INT * sizeof(float));
+                float *ey  = (float *)malloc((size_t)n_m * C35_D * sizeof(float));
+                c35_matmul_prequant(&gu_m, g_xq, g_xsc, g_xsum, hid, n_m, 1, 0);
+                c35_matmul(&dn_m, hid, ey, n_m, 0, 0);
 
-            float *dst_a = exp_acc + (size_t)ai * T * C35_D;
-            for (int im = 0; im < n_m; im++) {
-                float *dt = dst_a + (size_t)m_toks[im] * C35_D;
-                const float *src_e = ey + (size_t)im * C35_D;
-                float rw = m_rw[im];
-                for (int d = 0; d < C35_D; d++) dt[d] += src_e[d] * rw;
+                float *dst_a = exp_acc + (size_t)ai * T * C35_D;
+                for (int im = 0; im < n_m; im++) {
+                    float *dt = dst_a + (size_t)m_toks[im] * C35_D;
+                    const float *src_e = ey + (size_t)im * C35_D;
+                    float rw = m_rw[im];
+                    for (int d = 0; d < C35_D; d++) dt[d] += src_e[d] * rw;
+                }
+                free(hid); free(ey);
             }
-            free(hid); free(ey);
+            free(m_toks); free(m_rw); free(g_xq); free(g_xsc); free(g_xsum);
         }
-        free(m_toks); free(m_rw); free(g_xq); free(g_xsc); free(g_xsum);
+        for (int ai = 0; ai < n_act; ai++) {
+            const float *src_a = exp_acc + (size_t)ai * T * C35_D;
+            for (int i = 0; i < T * C35_D; i++) y_out[i] += src_a[i];
+        }
+        free(exp_acc);
     }
-    for (int ai = 0; ai < n_act; ai++) {
-        const float *src_a = exp_acc + (size_t)ai * T * C35_D;
-        for (int i = 0; i < T * C35_D; i++) y_out[i] += src_a[i];
-    }
-    free(exp_acc); free(x_xq); free(x_xsc); free(x_xsum);
+    free(x_xq); free(x_xsc); free(x_xsum);
 
     float *sh_hid = (float *)malloc((size_t)T * C35_MOE_INT * sizeof(float));
     float *sh_out = (float *)malloc((size_t)T * C35_D * sizeof(float));

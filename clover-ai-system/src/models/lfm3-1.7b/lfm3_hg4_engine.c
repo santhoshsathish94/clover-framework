@@ -64,6 +64,7 @@
 #include <unistd.h>
 #define HG4_API __attribute__((visibility("default")))
 #endif
+#include "../hg_cuda_hook.h"
 
 #define HG4_LAYERS      24
 #define HG4_D           2048
@@ -1328,6 +1329,9 @@ static void hg4_matmul(const hg4_mat_view_t *M, const float *X, float *Y, int T,
 #if HG4_X86
         if (g_hg4.isa_tier >= 1 && g_hg4.isa_tier <= 3) {
             rotate_and_quantize_128_avx2(X, M->pre_diag, T, K, g_hg4.scr_xq, g_hg4.scr_xsc, g_hg4.scr_xsum);
+            if (hg_cuda_dispatch_matmul(M->tiles, M->scales_fp16, M->R, M->K, 4u, g_hg4.scr_xq, g_hg4.scr_xsc, Y, T, fused_swiglu ? 1 : 0)) {
+                return;
+            }
             if (g_hg4.isa_tier == 3) {
                 #pragma omp parallel for schedule(static)
                 for (int rg = 0; rg < n_groups; rg++)

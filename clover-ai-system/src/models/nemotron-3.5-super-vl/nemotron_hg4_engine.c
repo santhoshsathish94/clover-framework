@@ -56,6 +56,7 @@
 #include <unistd.h>
 #define NEMO_API __attribute__((visibility("default")))
 #endif
+#include "../hg_cuda_hook.h"
 
 enum {
     NEMO_D            = 4096,
@@ -1110,6 +1111,9 @@ static void nhg4_matmul_prequant(
         g_nhg4.bytes_saved_q4_and_broadcast += (unsigned long long)((bf16_equiv - hg4_bytes) + (size_t)(T > 1 ? (T - 1) : 0) * hg4_bytes);
     }
     if (g_nhg4.is_16r) {
+        if (use_omp && hg_cuda_dispatch_matmul(M->tiles, M->scales_fp16, M->R, M->K, M->bits, xq, xsc, Y, T, apply_relu2 ? 3 : 4)) {
+            return;
+        }
         const int n_rg = (int)(M->R / 16);
         #pragma omp parallel for schedule(static) if (use_omp)
         for (int rg = 0; rg < n_rg; rg++)
@@ -1471,6 +1475,24 @@ static void nhg4_latent_moe_forward(
         int32_t lat_xsum[8];
         nhg4_rot_quant_dispatch(latent_in, ex->pre_diag_up, 1, NEMO_LATENT, lat_xq, lat_xsc, lat_xsum, 0);
 
+        int zero_toks[NEMO_TOP_K] = {0};
+        memset(latent_acc, 0, sizeof(latent_acc));
+        if (hg_cuda_dispatch_moe_pairs(
+                ex->exp_base, ex->n_exp, ex->exp_stride, 43008u, 1419264u,
+                NEMO_MOE_INTER, NEMO_LATENT, NEMO_LATENT, NEMO_MOE_INTER, 4u, 3, 1,
+                lat_xq, lat_xsc, 1, zero_toks, sel_e, sel_w, NEMO_TOP_K, latent_acc)) {
+            for (int d = 0; d < NEMO_LATENT; d++) latent_acc[d] = bf16_round_f32(latent_acc[d]);
+            nhg4_matmul(&tr->fc2, latent_acc, routed_4096, 1, 0, 1);
+            nhg4_matmul(&tr->sh_up, u, sh_inter, 1, 1, 1);
+            nhg4_matmul(&tr->sh_dn, sh_inter, shared_4096, 1, 0, 1);
+            for (int d = 0; d < NEMO_D; d++) {
+                float comb = bf16_round_f32(routed_4096[d] + shared_4096[d]);
+                h_out[d] = bf16_round_f32(h_in[d] + comb);
+            }
+            g_nhg4.bytes_tier2_ddr5 += (unsigned long long)NEMO_TOP_K * ex->exp_stride;
+            return;
+        }
+
         nhg4_mat_t up_m[NEMO_TOP_K], dn_m[NEMO_TOP_K];
         for (int k = 0; k < NEMO_TOP_K; k++) {
             const uint8_t *ep = ex->exp_base + (size_t)sel_e[k] * ex->exp_stride;
@@ -1589,66 +1611,81 @@ static void nhg4_latent_moe_forward(
     int32_t *lat_xsum = (int32_t *)malloc((size_t)T * nb_up * sizeof(int32_t));
     nhg4_rot_quant_dispatch(latent_in, ex->pre_diag_up, T, NEMO_LATENT, lat_xq, lat_xsc, lat_xsum, 1);
 
-    float *exp_outs = (float *)calloc((size_t)n_active * T * NEMO_LATENT, sizeof(float));
-    #pragma omp parallel for schedule(dynamic, 1)
-    for (int ai = 0; ai < n_active; ai++) {
-        int e = active_list[ai];
-        int     s_toks[8];
-        float   s_rw[8];
-        int8_t  s_xq[8 * NEMO_LATENT];
-        float   s_xsc[8 * 8];
-        int32_t s_xsum[8 * 8];
-        int   *m_toks = (T <= 8) ? s_toks : (int *)malloc((size_t)T * sizeof(int));
-        float *m_rw   = (T <= 8) ? s_rw   : (float *)malloc((size_t)T * sizeof(float));
-        int8_t  *g_xq   = (T <= 8) ? s_xq   : (int8_t *)malloc((size_t)T * NEMO_LATENT);
-        float   *g_xsc  = (T <= 8) ? s_xsc  : (float *)malloc((size_t)T * 8 * sizeof(float));
-        int32_t *g_xsum = (T <= 8) ? s_xsum : (int32_t *)malloc((size_t)T * 8 * sizeof(int32_t));
-        int n_m = 0;
-        for (int t = 0; t < T; t++) {
-            for (int k = 0; k < NEMO_TOP_K; k++) {
-                if (topk_idx[t * NEMO_TOP_K + k] == e) {
-                    m_toks[n_m] = t;
-                    m_rw[n_m] = topk_w[t * NEMO_TOP_K + k];
-                    memcpy(g_xq + (size_t)n_m * NEMO_LATENT, lat_xq + (size_t)t * NEMO_LATENT, NEMO_LATENT);
-                    memcpy(g_xsc + (size_t)n_m * 8, lat_xsc + (size_t)t * 8, 8 * sizeof(float));
-                    memcpy(g_xsum + (size_t)n_m * 8, lat_xsum + (size_t)t * 8, 8 * sizeof(int32_t));
-                    n_m++;
-                    break;
+    int nemo_gpu_done = 0;
+    if (g_nhg4.is_16r) {
+        int *p_tok = (int *)malloc((size_t)T * NEMO_TOP_K * sizeof(int));
+        for (int t = 0; t < T; t++)
+            for (int k = 0; k < NEMO_TOP_K; k++) p_tok[t * NEMO_TOP_K + k] = t;
+        nemo_gpu_done = hg_cuda_dispatch_moe_pairs(
+            ex->exp_base, ex->n_exp, ex->exp_stride, 43008u, 1419264u,
+            NEMO_MOE_INTER, NEMO_LATENT, NEMO_LATENT, NEMO_MOE_INTER, 4u, 3, 1,
+            lat_xq, lat_xsc, T, p_tok, topk_idx, topk_w, T * NEMO_TOP_K, latent_acc);
+        free(p_tok);
+    }
+
+    if (!nemo_gpu_done) {
+        float *exp_outs = (float *)calloc((size_t)n_active * T * NEMO_LATENT, sizeof(float));
+        #pragma omp parallel for schedule(dynamic, 1)
+        for (int ai = 0; ai < n_active; ai++) {
+            int e = active_list[ai];
+            int     s_toks[8];
+            float   s_rw[8];
+            int8_t  s_xq[8 * NEMO_LATENT];
+            float   s_xsc[8 * 8];
+            int32_t s_xsum[8 * 8];
+            int   *m_toks = (T <= 8) ? s_toks : (int *)malloc((size_t)T * sizeof(int));
+            float *m_rw   = (T <= 8) ? s_rw   : (float *)malloc((size_t)T * sizeof(float));
+            int8_t  *g_xq   = (T <= 8) ? s_xq   : (int8_t *)malloc((size_t)T * NEMO_LATENT);
+            float   *g_xsc  = (T <= 8) ? s_xsc  : (float *)malloc((size_t)T * 8 * sizeof(float));
+            int32_t *g_xsum = (T <= 8) ? s_xsum : (int32_t *)malloc((size_t)T * 8 * sizeof(int32_t));
+            int n_m = 0;
+            for (int t = 0; t < T; t++) {
+                for (int k = 0; k < NEMO_TOP_K; k++) {
+                    if (topk_idx[t * NEMO_TOP_K + k] == e) {
+                        m_toks[n_m] = t;
+                        m_rw[n_m] = topk_w[t * NEMO_TOP_K + k];
+                        memcpy(g_xq + (size_t)n_m * NEMO_LATENT, lat_xq + (size_t)t * NEMO_LATENT, NEMO_LATENT);
+                        memcpy(g_xsc + (size_t)n_m * 8, lat_xsc + (size_t)t * 8, 8 * sizeof(float));
+                        memcpy(g_xsum + (size_t)n_m * 8, lat_xsum + (size_t)t * 8, 8 * sizeof(int32_t));
+                        n_m++;
+                        break;
+                    }
                 }
             }
-        }
-        if (n_m > 0) {
-            const uint8_t *ep = ex->exp_base + (size_t)e * ex->exp_stride;
-            nhg4_mat_t up_m, dn_m;
-            up_m.R = NEMO_MOE_INTER; up_m.K = NEMO_LATENT; up_m.bits = 4;
-            up_m.pre_diag = ex->pre_diag_up;
-            up_m.scales_fp16 = (const uint16_t *)ep;
-            up_m.tiles = ep + 43008;
-            parse_nhg4_mat(ep + 1419264, &dn_m);
+            if (n_m > 0) {
+                const uint8_t *ep = ex->exp_base + (size_t)e * ex->exp_stride;
+                nhg4_mat_t up_m, dn_m;
+                up_m.R = NEMO_MOE_INTER; up_m.K = NEMO_LATENT; up_m.bits = 4;
+                up_m.pre_diag = ex->pre_diag_up;
+                up_m.scales_fp16 = (const uint16_t *)ep;
+                up_m.tiles = ep + 43008;
+                parse_nhg4_mat(ep + 1419264, &dn_m);
 
-            float s_inter[8 * NEMO_MOE_INTER];
-            float s_out[8 * NEMO_LATENT];
-            float *g_inter = (n_m <= 8) ? s_inter : (float *)malloc((size_t)n_m * NEMO_MOE_INTER * sizeof(float));
-            float *g_out   = (n_m <= 8) ? s_out   : (float *)malloc((size_t)n_m * NEMO_LATENT * sizeof(float));
-            nhg4_matmul_prequant(&up_m, g_xq, g_xsc, g_xsum, g_inter, n_m, 1, 0);
-            nhg4_matmul(&dn_m, g_inter, g_out, n_m, 0, 0);
+                float s_inter[8 * NEMO_MOE_INTER];
+                float s_out[8 * NEMO_LATENT];
+                float *g_inter = (n_m <= 8) ? s_inter : (float *)malloc((size_t)n_m * NEMO_MOE_INTER * sizeof(float));
+                float *g_out   = (n_m <= 8) ? s_out   : (float *)malloc((size_t)n_m * NEMO_LATENT * sizeof(float));
+                nhg4_matmul_prequant(&up_m, g_xq, g_xsc, g_xsum, g_inter, n_m, 1, 0);
+                nhg4_matmul(&dn_m, g_inter, g_out, n_m, 0, 0);
 
-            float *dst_ai = exp_outs + (size_t)ai * T * NEMO_LATENT;
-            for (int im = 0; im < n_m; im++) {
-                float *dt = dst_ai + (size_t)m_toks[im] * NEMO_LATENT;
-                const float *go = g_out + (size_t)im * NEMO_LATENT;
-                float rw = m_rw[im];
-                for (int d = 0; d < NEMO_LATENT; d++) dt[d] += go[d] * rw;
+                float *dst_ai = exp_outs + (size_t)ai * T * NEMO_LATENT;
+                for (int im = 0; im < n_m; im++) {
+                    float *dt = dst_ai + (size_t)m_toks[im] * NEMO_LATENT;
+                    const float *go = g_out + (size_t)im * NEMO_LATENT;
+                    float rw = m_rw[im];
+                    for (int d = 0; d < NEMO_LATENT; d++) dt[d] += go[d] * rw;
+                }
+                if (n_m > 8) { free(g_inter); free(g_out); }
             }
-            if (n_m > 8) { free(g_inter); free(g_out); }
+            if (T > 8) { free(m_toks); free(m_rw); free(g_xq); free(g_xsc); free(g_xsum); }
         }
-        if (T > 8) { free(m_toks); free(m_rw); free(g_xq); free(g_xsc); free(g_xsum); }
+        for (int ai = 0; ai < n_active; ai++) {
+            const float *src_ai = exp_outs + (size_t)ai * T * NEMO_LATENT;
+            for (int i = 0; i < T * NEMO_LATENT; i++) latent_acc[i] += src_ai[i];
+        }
+        free(exp_outs);
     }
-    for (int ai = 0; ai < n_active; ai++) {
-        const float *src_ai = exp_outs + (size_t)ai * T * NEMO_LATENT;
-        for (int i = 0; i < T * NEMO_LATENT; i++) latent_acc[i] += src_ai[i];
-    }
-    free(exp_outs); free(lat_xq); free(lat_xsc); free(lat_xsum);
+    free(lat_xq); free(lat_xsc); free(lat_xsum);
     g_nhg4.bytes_tier2_ddr5 += (unsigned long long)n_active * ex->exp_stride;
 
     for (int i = 0; i < T * NEMO_LATENT; i++) latent_acc[i] = bf16_round_f32(latent_acc[i]);
