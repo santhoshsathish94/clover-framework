@@ -168,6 +168,54 @@
             <text x="738" y="198" font-size="10" font-weight="700" fill="#1b5e46">OpenAI /v1 compatible</text>
         </svg>
       </figure>
+
+        <h3 id="hg-vs-sub2bit" style="margin-top:2.2rem">How <code>HG</code> differs from <code>2-bit</code>, <code>1.58-bit</code>, <code>1-bit</code>, and <code>0.5-bit</code> quantization</h3>
+        <p>Aggressive sub-2-bit compression methods split sharply on three practical axes: whether they require expensive GPU retraining or calibration datasets, whether they crush high-entropy attention and router layers below their information floor, and whether large vector codebooks introduce new memory-lookup bottlenecks at runtime:</p>
+
+        <div class="table-wrap" style="margin-top:1rem">
+          <table class="data">
+            <caption class="note">Structural comparison between <code>1.58-bit</code> from-scratch training, <code>0.5-bit / 1-bit / 2-bit</code> post-training quantization, and Clover <code>HG</code>.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Method</th>
+                <th scope="col">Retraining / Calibration?</th>
+                <th scope="col">How Weights Are Stored</th>
+                <th scope="col">Code, Math &amp; Proof Fidelity</th>
+                <th scope="col">Runtime Lookup Overhead</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row"><strong>Native <code>1.58-bit</code></strong><br><small><code>BitNet b1.58</code></small></th>
+                <td><strong>Pre-train from scratch</strong><br><small>(<code>$10M+</code>, trillions of tokens)</small></td>
+                <td>Ternary <code>{-1, 0, +1}</code> learned during pre-training</td>
+                <td>Strong when trained natively; <strong>cannot convert</strong> existing models</td>
+                <td>Fast integer add/sub</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Post-Training <code>0.5b&ndash;1b</code></strong><br><small><code>OneBit</code>, <code>BiLLM</code>, <code>SVD+VQ</code></small></th>
+                <td><strong>Heavy GPU Hessian / QAT</strong><br><small>(hours to days on GPUs)</small></td>
+                <td>Forces all layers <code>&le;1 bpw</code> via low-rank <code>U&middot;V</code> + sign masks or VQ</td>
+                <td><strong>Severe drop (<code>-15%</code> to <code>-45%</code>)</strong> on exact code, math &amp; proofs</td>
+                <td><code>64 KB&ndash;2 MB</code> VQ tables <strong>spill out of registers into RAM/L2</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Uniform <code>2-bit</code> PTQ</strong><br><small><code>QuIP#</code>, <code>AQLM</code></small></th>
+                <td>Needs calibration data + GPU Hessian pass</td>
+                <td>Compresses attention, trunks &amp; routers uniformly to <code>2 bpw</code></td>
+                <td>Good chat prose; <code>~5&ndash;12%</code> drop on hard multi-step coding/math</td>
+                <td>Multi-KB codebook lookups or E8 lattice decode</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Clover <code>HG</code></strong><br><small><code>HG4-16R-OP</code> + <code>K31H</code></small></th>
+                <td><strong>Zero retraining, zero dataset</strong><br><small>Runs on CPU (<code>convert_to_hg.py</code>)</small></td>
+                <td><strong>3-tier entropy match:</strong> <code>FP32</code> routers, <code>4.125b HG4</code> hot/trunks, <code>2.125b HG2</code> cold tail</td>
+                <td><strong><code>~98&ndash;99%+</code> of <code>BF16</code></strong><br><small><code>86/86</code> code match &middot; <code>#1</code> Lean 4 proofs</small></td>
+                <td><strong><code>16 B</code> <code>LUT16</code> stays inside <code>1</code> SIMD/warp register (<code>1</code> cycle)</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
     </div>
   </section>
 
@@ -312,12 +360,11 @@ The total capacity is 72 kilowatts.</code></pre>
           </div>
 
           <div class="card">
-            <h3>Testbed 4 &mdash; GPU Server: <code>8 &times; NVIDIA RTX 4090</code> Node</h3>
+            <h3>Testbed 4 &mdash; GPU Servers: <code>8&times; RTX 4090</code> &amp; <code>4&times; PRO 6000</code></h3>
             <ul>
-              <li><strong>GPUs &amp; VRAM:</strong> <strong><code>8 &times; GeForce RTX 4090</code></strong> (<code>24 GB GDDR6X</code> each = <strong><code>192 GiB</code> VRAM</strong>, <strong><code>1,008 GB/s</code> per GPU</strong>, CUDA 13.2)</li>
-              <li><strong>Host CPUs:</strong> Dual <code>AMD EPYC 7742</code> (<code>128</code> physical cores / <code>256</code> threads across 2 sockets)</li>
-              <li><strong>System RAM:</strong> <strong><code>503 GiB</code> DDR4 ECC</strong> (used for hybrid PCIe expert caching)</li>
-              <li><strong>Storage:</strong> <code>1.0 TB</code> WD_BLACK SN850X NVMe (<code>6.12 GB/s</code> measured parallel <code>pread</code>)</li>
+              <li><strong>Ada Node:</strong> <strong><code>8 &times; RTX 4090</code></strong> (<code>192 GiB</code> GDDR6X, <code>1,008 GB/s</code>/GPU) + Dual EPYC 7742 + <code>503 GiB</code> RAM + <code>6.12 GB/s</code> NVMe</li>
+              <li><strong>Blackwell Node:</strong> <strong><code>4 &times; RTX PRO 6000 Server</code></strong> (<code>382 GiB</code> GDDR7, <code>1,400+ GB/s</code>/GPU) + <code>516 GB</code> RAM + <code>14.3 GB/s</code> Gen5 NVMe</li>
+              <li><strong>CUDA Engine:</strong> Native <code>sm_89 / sm_120</code> <code>HG4 / HG2</code> register kernels + <code>64 MB</code> sequential <code>pread</code> preloader</li>
             </ul>
           </div>
         </div>
@@ -463,11 +510,66 @@ The total capacity is 72 kilowatts.</code></pre>
               <td><strong><code>287</code> draft / <code>7.89</code> decode</strong></td>
                 <td><strong><code>~40&times;</code> faster decode</strong> <small>(3-tier parallel)</small></td>
             </tr>
+            <tr>
+              <th scope="row"><strong>2.8T</strong> &middot; <code>4&times; PRO 6000</code> <small>(382G)</small></th>
+              <td><code>377G</code> VRAM + <code>363G</code> RAM</td>
+              <td><code>&lt;1</code> / <code>~0.3</code> <small>(1.1 TB spills)</small></td>
+              <td><strong><code>4.98</code> prefill / <code>2.56</code> decode</strong> <small>(end-to-end)</small></td>
+              <td><strong><code>4.0&times;</code> prefill &middot; <code>2.5&times;</code> decode</strong> vs 8&times; 4090 <small>(75% DSpark)</small></td>
+            </tr>
           </tbody>
         </table>
       </div>
 
-        <h3 style="margin-top:2.2rem">4C. Quality, software engineering &amp; formal Lean 4 mathematical proof benchmarks</h3>
+        <h3 id="kimi-full-vram" style="margin-top:2.2rem">4C. What single-node GPU server fits <code>100%</code> of <code>Kimi-K3.1-Pro HG</code> (<code>740 GiB</code>) in VRAM?</h3>
+        <p>Even on <code>4&times; RTX PRO 6000 Blackwell</code> (<code>382 GiB</code> GDDR7), <code>56</code> cold MoE layers (<code>~363 GiB</code>) still reside in CPU RAM, capping single-stream throughput at the host memory bus. Fitting all <strong><code>739.6 GiB</code> (<code>794.2 GB</code>)</strong> of <code>K31H</code> weights plus <code>~25 GiB</code> of KV/KDA context inside GPU VRAM eliminates host RAM traffic completely &mdash; and cuts the required datacenter cluster in half compared to upstream <code>Kimi-K3.1-Pro</code> (<code>1,472 GiB</code>):</p>
+
+        <div class="table-wrap" style="margin-top:1rem">
+          <table class="data">
+            <caption class="note">Single-server GPU configurations capable of holding <code>100%</code> of <code>Kimi-K3.1-Pro K31H</code> (<code>740 GiB</code>) in high-bandwidth VRAM.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Single-Server Node</th>
+                <th scope="col">Total VRAM &amp; Bandwidth</th>
+                <th scope="col">Upstream <code>Kimi</code> (<code>1,472 GiB</code>)</th>
+                <th scope="col">Clover <code>K31H</code> (<code>740 GiB</code>)</th>
+                <th scope="col">All-VRAM Decode</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row"><strong><code>8 &times; RTX PRO 6000</code></strong><br><small><code>96 GB</code> GDDR7 / GPU</small></th>
+                <td><strong><code>768 GB</code></strong><br><small><code>11.2 TB/s</code> aggregate</small></td>
+                <td>Does not fit <small>(needs 16 GPUs)</small></td>
+                <td><strong>Tight 98% fit</strong> <small>(~10G KV spill)</small></td>
+                <td><code>~65&ndash;110 tok/s</code></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong><code>8 &times; NVIDIA H200 SXM</code></strong><br><small><code>141 GB</code> HBM3e / GPU</small></th>
+                <td><strong><code>1,128 GB</code></strong><br><small><code>38.4 TB/s</code> + NVLink</small></td>
+                <td><strong>Does not fit</strong> <small>(needs 2 nodes / 16&times; H200)</small></td>
+                <td><strong>100% Fits in 1 Node</strong> <small>(<code>388 GB</code> free)</small></td>
+                <td><strong><code>~200&ndash;300+ tok/s</code></strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong><code>8 &times; AMD MI300X</code></strong><br><small><code>192 GB</code> HBM3 / GPU</small></th>
+                <td><strong><code>1,536 GB</code></strong><br><small><code>42.4 TB/s</code> + Infinity Fabric</small></td>
+                <td>Barely fits <small>(zero KV headroom)</small></td>
+                <td><strong>100% Fits in 1 Node</strong> <small>(<code>796 GB</code> for 1M KV)</small></td>
+                <td><strong><code>~180&ndash;260 tok/s</code></strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong><code>8 &times; NVIDIA B200 SXM</code></strong><br><small><code>192 GB</code> HBM3e / GPU</small></th>
+                <td><strong><code>1,536 GB</code></strong><br><small><code>64.0 TB/s</code> + NVLink 5</small></td>
+                <td>Tight 1-node fit</td>
+                <td><strong>100% Fits on just <code>5</code> of <code>8</code> GPUs</strong></td>
+                <td><strong><code>~350&ndash;500+ tok/s</code></strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin-top:2.2rem">4D. Quality, software engineering &amp; formal Lean 4 mathematical proof benchmarks</h3>
         <p>To verify zero silent reasoning collapse after compression, we evaluated the converted <code>HG</code> checkpoints on held-out perplexity, <code>48</code> sealed Clover Studio capability probes (tool discipline, epistemic memory, and exact big-integer math via native C11 <code>x-cruncher</code>), and <code>23</code> frozen Lean 4 <code>RiemannHypothesis</code> + Systems SWE + Binary Reverse-Engineering tasks verified by the official <code>leanprover/lean4:v4.33.1</code> kernel:</p>
 
       <div class="table-wrap">
