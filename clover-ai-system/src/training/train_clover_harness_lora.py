@@ -114,6 +114,12 @@ def build_4gpu_qwen36_device_map(num_layers: int = 40, num_gpus: int = 4) -> dic
         "model.language_model.norm": num_gpus - 1,
         "lm_head": num_gpus - 1,
     }
+    if num_gpus == 4 and num_layers == 40:
+        # Balanced for embed_tokens on GPU 0, LFM3 on GPU 2, and lm_head on GPU 3: 8 / 11 / 10 / 11 layers
+        splits = [0] * 8 + [1] * 11 + [2] * 10 + [3] * 11
+        for lid, gid in enumerate(splits):
+            dmap[f"model.language_model.layers.{lid}"] = gid
+        return dmap
     per_gpu = math.ceil(num_layers / num_gpus)
     for lid in range(num_layers):
         dmap[f"model.language_model.layers.{lid}"] = min(lid // per_gpu, num_gpus - 1)
@@ -210,9 +216,13 @@ def run_coordinator_35b(args: argparse.Namespace) -> None:
                 random.shuffle(sft_tensors)
             inp_b = inp.unsqueeze(0).to(first_dev)
             out = model(input_ids=inp_b, use_cache=False)
-            logits = out.logits[0, :-1, :].float()
-            targets = lbl[1:].to(logits.device)
-            loss = F.cross_entropy(logits, targets, ignore_index=-100) / args.grad_accum
+            shift_logits = out.logits[0, :-1, :]
+            targets = lbl[1:].to(shift_logits.device)
+            valid_mask = targets != -100
+            if valid_mask.any():
+                loss = F.cross_entropy(shift_logits[valid_mask].float(), targets[valid_mask]) / args.grad_accum
+            else:
+                loss = shift_logits.sum() * 0.0
             loss.backward()
             step_loss += float(loss.item())
             step_toks += int(inp.numel())
