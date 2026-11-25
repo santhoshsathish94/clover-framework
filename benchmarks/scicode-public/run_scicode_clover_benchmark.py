@@ -552,7 +552,7 @@ def worker_loop(
         paths = bk.discover_paths()
         be: Any = bk.make_native_backend(api_model, paths[api_model])
         GenParamsCls: Any = bk.GenParams
-        default_max_tok = 2048
+        default_max_tok = 1024
         print(f"[Worker {worker_id} | GPU {gpu_id}] Initialized native `{api_model}` backend.", flush=True)
     else:
         api_key = Path(api_key_file).read_text(encoding="utf-8").strip() if Path(api_key_file).is_file() else os.environ.get("OPENROUTER_API_KEY", "local")
