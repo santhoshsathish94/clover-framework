@@ -39,39 +39,148 @@
     font-weight: 700;
   }
 
-  /* Compact Inline Proof Strip inside each Myth chapter (no bottom table dumps) */
+  /* Apple-Keynote Spotlight Proof Stage inside each Myth chapter */
+  .spotlight-proof {
+    margin-top: 1.85rem;
+    background: var(--surface);
+    border: 1.5px solid #d9be84;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+  .spotlight-proof__head {
+    padding: 1.25rem 1.5rem 1rem;
+    background: linear-gradient(180deg, #fdf8ec 0%, #fffefb 100%);
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .spotlight-proof__badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: #7c4d05;
+    background: #f9ebc8;
+    border: 1px solid #e2c178;
+    padding: 0.2rem 0.68rem;
+    border-radius: var(--radius-pill);
+    margin-bottom: 0.55rem;
+  }
+  .spotlight-proof__title {
+    font-family: var(--serif);
+    font-size: clamp(1.15rem, 2.1vw, 1.38rem);
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--ink);
+    margin: 0;
+  }
+  .spotlight-proof__sub {
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin: 0.35rem 0 0;
+  }
+  .spotlight-proof__body {
+    padding: 1.2rem 1.5rem;
+    display: grid;
+    gap: 0.95rem;
+  }
+  .proof-row {
+    display: grid;
+    gap: 0.32rem;
+  }
+  .proof-row__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+  }
+  .proof-row__label {
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+  .proof-row__val {
+    font-family: var(--serif);
+    font-size: 1.16rem;
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .proof-row__val--gold {
+    color: #8a5607;
+    font-size: 1.26rem;
+  }
+  .proof-track {
+    height: 11px;
+    background: var(--soft);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .proof-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+  }
+  .proof-fill--muted {
+    background: #9a9588;
+  }
+  .proof-fill--gold {
+    background: linear-gradient(90deg, #e5a524 0%, #b8790e 55%, #1b5e46 100%);
+  }
+  .kernel-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+  @media (max-width: 640px) {
+    .kernel-grid { grid-template-columns: 1fr; }
+    .proof-row__top { flex-direction: column; gap: 0.15rem; }
+  }
+  .kernel-stat {
+    background: var(--surface-tint);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 1rem;
+  }
+  .kernel-stat__num {
+    font-family: var(--serif);
+    font-size: 1.48rem;
+    font-weight: 700;
+    color: #8a5607;
+    line-height: 1.15;
+  }
+  .kernel-stat__lbl {
+    font-size: 0.85rem;
+    color: var(--ink-2);
+    margin-top: 0.2rem;
+  }
+  .spotlight-proof__significance {
+    padding: 0.95rem 1.5rem;
+    background: #fbf3e2;
+    border-top: 1px solid #e6cf99;
+    font-size: 0.93rem;
+    line-height: 1.55;
+    color: #4f3306;
+  }
+  .spotlight-proof__significance strong {
+    color: #362102;
+  }
   .inline-proof {
     margin-top: 1.45rem;
-    padding: 1.15rem 1.35rem;
+    padding: 1.35rem 1.5rem;
     background: var(--surface);
-    border: 1px solid var(--warn-line);
-    border-left: 4px solid #d4921c;
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-xs);
+    border: 1px solid var(--accent-line);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
   }
   .inline-proof__eyebrow {
     font-size: 0.76rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #8a5607;
+    color: var(--accent);
     margin-bottom: 0.35rem;
-  }
-  .inline-proof__metrics {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.85rem 1.8rem;
-    margin-top: 0.55rem;
-    padding-top: 0.6rem;
-    border-top: 1px solid var(--line-soft);
-    font-size: 0.94rem;
-    color: var(--ink-2);
-  }
-  .inline-proof__metrics strong {
-    font-family: var(--serif);
-    font-size: 1.22rem;
-    color: #8a5607;
-    margin-right: 0.25rem;
   }
   .spotlight-pair {
     display: grid;
@@ -224,12 +333,38 @@
         <p><strong>Imagine hiring the world&rsquo;s fastest chef, then sliding ingredients into the kitchen one spoonful at a time through a tiny mail slot.</strong></p>
         <p>Buying a hotter stove changes nothing. The chef spends almost the entire evening standing by the door, waiting for the next spoonful to arrive.</p>
         <p><strong>AI works the same way.</strong> Writing each word requires hauling billions of model weights from memory into the processor. The processor is not struggling with the math &mdash; it is waiting on the wire.</p>
-        <div class="inline-proof">
-          <div class="inline-proof__eyebrow">Leaf 1 Proven &middot; Same Wire, Faster Processor</div>
-          <p style="margin:0">On the same laptop memory wire (<code>25.6 GB/s</code>), switching from the CPU to a much faster GPU barely moved speed at all &mdash; because both waited on the exact same wire. Shrinking the weights fourfold with Clover <code>HG</code> immediately multiplied throughput.</p>
-          <div class="inline-proof__metrics">
-            <span><strong>12.4 &rarr; 12.8 tok/s</strong> CPU vs. GPU on the same wire</span>
-            <span><strong>4.4&times; &ndash; 45&times;</strong> faster once <code>HG</code> cuts wire traffic 4&times;</span>
+
+        <div class="spotlight-proof">
+          <div class="spotlight-proof__head">
+            <span class="spotlight-proof__badge">Spotlight Proof &middot; Leaf 1 of 5</span>
+            <h3 class="spotlight-proof__title">Faster GPU on the same wire: +3%. Shrinking wire traffic 4&times; with HG: up to 45&times; faster.</h3>
+            <p class="spotlight-proof__sub">Controlled test at deterministic <code>T = 0</code>: first we upgraded compute on the exact same memory wire; then we kept the hardware fixed and shrank the weights 4&times;.</p>
+          </div>
+          <div class="spotlight-proof__body">
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label">Laptop CPU on <code>25.6 GB/s</code> RAM wire (<code>LFM3-2B</code>)</span>
+                <span class="proof-row__val">12.4 tok/s</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--muted" style="width:11%"></span></div>
+            </div>
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label">Switch to 10&times; faster GPU on that <em>exact same</em> <code>25.6 GB/s</code> wire</span>
+                <span class="proof-row__val">12.8 tok/s (+3%)</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--muted" style="width:11.5%"></span></div>
+            </div>
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label">Cut wire traffic 4&times; with Clover <code>HG</code> (<code>16-bit BF16 &rarr; 4-bit HG</code>, <code>86/86</code> identical tokens)</span>
+                <span class="proof-row__val proof-row__val--gold">4.5&times; &ndash; 45&times; Faster</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:100%"></span></div>
+            </div>
+          </div>
+          <div class="spotlight-proof__significance">
+            <strong>Why this changes everything:</strong> Upgrading chip FLOPs while hauling bloated 16-bit weights across the wire buys almost zero real speed. Cutting the bytes crossing the wire fourfold unlocks immediate <code>4.5&times;&ndash;45&times;</code> speedups on hardware you already own.
           </div>
         </div>
       </div>
@@ -240,13 +375,45 @@
         <h2>Myth 2: &ldquo;Adding more RAM or VRAM makes AI faster.&rdquo;</h2>
         <p><strong>If your books already fit on one shelf, buying an empty warehouse next door does not help you read a single page faster.</strong></p>
         <p>Memory size (<code>GB</code>) only decides whether a model <em>fits</em>. Once it fits, extra gigabytes sit completely untouched. What sets speed is how many lanes the memory highway has (<code>GB/s</code>).</p>
-        <div class="inline-proof">
-          <div class="inline-proof__eyebrow">Leaf 2 Proven &middot; Warehouse Size vs. Highway Width</div>
-          <p style="margin:0">Expanding server RAM 64-fold or doubling GPU VRAM added <strong>zero</strong> speed once the model fit &mdash; and an <code>8 GB</code> phone with a 4-lane memory bus beat a <code>16 GB</code> 1-lane laptop by nearly three times.</p>
-          <div class="inline-proof__metrics">
-            <span><strong>+0.0 tok/s</strong> from <code>2 GB &rarr; 128 GB</code> RAM</span>
-            <span><strong>+0.0 tok/s</strong> from <code>96 GB &rarr; 192 GB</code> VRAM</span>
-            <span><strong>33.4 vs. 12.4 tok/s</strong> 8 GB Phone beat 16 GB Laptop (<code>2.7&times;</code>)</span>
+
+        <div class="spotlight-proof">
+          <div class="spotlight-proof__head">
+            <span class="spotlight-proof__badge">Spotlight Proof &middot; Leaf 2 of 5</span>
+            <h3 class="spotlight-proof__title">64&times; more RAM added +0.0 tok/s &mdash; while an 8 GB phone beat a 16 GB laptop by 2.7&times;.</h3>
+            <p class="spotlight-proof__sub">Three controlled capacity vs. bandwidth tests running the exact same <code>HG</code> model weights:</p>
+          </div>
+          <div class="spotlight-proof__body">
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label">Expand Server RAM 64&times; after model fits (<code>2 GB &rarr; 128 GB</code> on Hetzner <code>k3</code>)</span>
+                <span class="proof-row__val">48.7 &rarr; 48.7 tok/s (+0.0)</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--muted" style="width:4%"></span></div>
+            </div>
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label">Double GPU Cluster VRAM after model fits (<code>96 GB &rarr; 192 GB</code> across GPUs)</span>
+                <span class="proof-row__val">172.2 &rarr; 171.8 tok/s (+0.0)</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--muted" style="width:4%"></span></div>
+            </div>
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label">16 GB Laptop (1-lane DDR4 highway &middot; <code>25.6 GB/s</code>)</span>
+                <span class="proof-row__val">12.4 tok/s</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--muted" style="width:37%"></span></div>
+            </div>
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label"><strong>8 GB Samsung Galaxy S23 Phone</strong> (half the RAM, 4-lane LPDDR5X highway &middot; <code>68 GB/s</code>)</span>
+                <span class="proof-row__val proof-row__val--gold">33.4 tok/s (2.7&times; Faster)</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:100%"></span></div>
+            </div>
+          </div>
+          <div class="spotlight-proof__significance">
+            <strong>Why this changes everything:</strong> Paying $15,000&ndash;$30,000 for 80 GB&ndash;192 GB enterprise GPUs to run a 17.4 GB model buys <strong>zero</strong> extra tokens per second. Capacity (<code>GB</code>) is only admission; bandwidth (<code>GB/s</code>) is speed.
           </div>
         </div>
       </div>
@@ -258,13 +425,38 @@
         <p><strong>Put four cashiers behind one narrow front door, and customers still wait in a single line.</strong></p>
         <p>Open four small shops side by side &mdash; each with its own door &mdash; and four times as many people walk through at once.</p>
         <p><strong>Inside one giant server, multiple AI workers fight over the same memory bus.</strong> Across smaller right-sized machines, every GPU gets its own dedicated highway.</p>
-        <div class="inline-proof">
-          <div class="inline-proof__eyebrow">Leaf 3 Proven &middot; Shared Bus vs. Independent Buses</div>
-          <p style="margin:0">Four workers inside one <code>128 GB</code> server split a single bus and gained nothing (<code>16.0 tok/s</code> total). Splitting across four small <code>32 GB</code> nodes gave linear <code>4.0&times;</code> scaling &mdash; and four independent <code>24 GB RTX 3090</code> cards reached <code>234.1 tok/s</code>.</p>
-          <div class="inline-proof__metrics">
-            <span><strong>16.0 tok/s</strong> 4 workers in one 128 GB box</span>
-            <span><strong>66.4 tok/s</strong> 4 small 32 GB nodes (<code>4.0&times;</code>)</span>
-            <span><strong>234.1 tok/s</strong> 4&times; right-sized 24 GB GPUs</span>
+
+        <div class="spotlight-proof">
+          <div class="spotlight-proof__head">
+            <span class="spotlight-proof__badge">Spotlight Proof &middot; Leaf 3 of 5</span>
+            <h3 class="spotlight-proof__title">Four workers in one 128 GB box: 16 tok/s. Across four right-sized GPUs: 234.1 tok/s (14.6&times;).</h3>
+            <p class="spotlight-proof__sub">Aggregate throughput under 4 concurrent requests &mdash; one shared memory bus vs. four independent buses:</p>
+          </div>
+          <div class="spotlight-proof__body">
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label">1 &times; Giant 128 GB Server (4 workers splitting <strong>one</strong> <code>83.2 GB/s</code> bus)</span>
+                <span class="proof-row__val">16.0 tok/s (1.0&times; &middot; stalls)</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--muted" style="width:7%"></span></div>
+            </div>
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label">4 &times; Small 32 GB CPU Nodes (4 independent buses &middot; <code>332 GB/s</code> aggregate)</span>
+                <span class="proof-row__val">66.4 tok/s (4.1&times; linear)</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:29%"></span></div>
+            </div>
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label"><strong>4 &times; Right-Sized 24 GB RTX 3090 Cards</strong> (4 VRAM buses &middot; <code>3,744 GB/s</code> aggregate)</span>
+                <span class="proof-row__val proof-row__val--gold">234.1 tok/s (14.6&times; Faster)</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:100%"></span></div>
+            </div>
+          </div>
+          <div class="spotlight-proof__significance">
+            <strong>Why this changes everything:</strong> Cloud vendors charge steep premiums for giant monolithic boxes, yet physics punishes them &mdash; every added worker splits the same bus. Small right-sized rigs multiply bandwidth linearly at a fraction of the price.
           </div>
         </div>
       </div>
@@ -275,14 +467,35 @@
         <h2>Myth 4: &ldquo;AI servers need big CPUs, 512 GB RAM, fast SSDs, and huge networks.&rdquo;</h2>
         <p><strong>Before a concert, a pianist reads the sheet music into memory. Once the concert begins, the filing cabinet, the desk, and the delivery van outside do nothing at all.</strong></p>
         <p>Model weights never change while answering you. Once they sit inside GPU VRAM, the disk is silent, system RAM sits empty, and the CPU barely wakes up. Between servers, GPUs do not send weights &mdash; they pass only the next token ID over a dedicated socket.</p>
-        <div class="inline-proof">
-          <div class="inline-proof__eyebrow">Leaf 4 Proven &middot; Live Linux Kernel Counters on Rented RTX 3090 Nodes</div>
-          <p style="margin:0">Measured across steady-state inference once <code>HG</code> weights were pinned in VRAM, paired over Clover&rsquo;s raw binary token socket (<code>tsock://</code>):</p>
-          <div class="inline-proof__metrics">
-            <span><strong>0 Bytes</strong> Disk read</span>
-            <span><strong>99.5%</strong> Host RAM unused (<code>256 GB</code> box)</span>
-            <span><strong>95%</strong> CPU idle</span>
-            <span><strong>4 Bytes/token</strong> Network wire (<code>5.4&times;</code> faster than HTTP)</span>
+
+        <div class="spotlight-proof">
+          <div class="spotlight-proof__head">
+            <span class="spotlight-proof__badge">Spotlight Proof &middot; Leaf 4 of 5</span>
+            <h3 class="spotlight-proof__title">Linux kernel audit on a 256 GB server: 0 Bytes disk read, 99.5% RAM empty, 95% CPU idle.</h3>
+            <p class="spotlight-proof__sub">Measured directly from Linux <code>/proc/self/io</code> &amp; <code>VmRSS</code> counters across 5 consecutive live <code>RTX 3090</code> runs paired Europe &harr; Asia over Clover&rsquo;s binary socket (<code>tsock://</code>):</p>
+          </div>
+          <div class="spotlight-proof__body">
+            <div class="kernel-grid">
+              <div class="kernel-stat">
+                <div class="kernel-stat__num">0 Bytes</div>
+                <div class="kernel-stat__lbl"><strong>NVMe SSD read</strong> during inference &mdash; 100.0% idle once weights load into VRAM</div>
+              </div>
+              <div class="kernel-stat">
+                <div class="kernel-stat__num">99.53% Empty</div>
+                <div class="kernel-stat__lbl"><strong>254.8 GB of 256 GB</strong> host RAM untouched (<code>0.0 MB</code> growth per reply)</div>
+              </div>
+              <div class="kernel-stat">
+                <div class="kernel-stat__num">95.5% Idle</div>
+                <div class="kernel-stat__lbl"><strong>32-core host CPU</strong> sleeps passively (<code>4.5%</code> used solely to launch GPU kernels)</div>
+              </div>
+              <div class="kernel-stat">
+                <div class="kernel-stat__num">4 Bytes / Token</div>
+                <div class="kernel-stat__lbl"><strong>Dedicated <code>tsock://</code> wire</strong> (&lt;252 B/reply &mdash; <code>5.4&times;</code> lower latency than HTTP JSON)</div>
+              </div>
+            </div>
+          </div>
+          <div class="spotlight-proof__significance">
+            <strong>Why this changes everything:</strong> Enterprise AI quotes bundle $10,000+ of host CPUs, 512 GB system RAM, RAID NVMe drives, and 400G networking that sit <strong>95%&ndash;100% idle</strong> the moment weights enter VRAM. All inference actually needs is right-sized GPU VRAM and a 4-byte socket.
           </div>
         </div>
       </div>
@@ -294,13 +507,38 @@
         <p><strong>Put the world&rsquo;s best mathematician, best chef, and best Formula 1 driver in one room, and ask them to trade jobs.</strong></p>
         <p>The chef spins out on the first corner. The driver burns the sauce. Even brilliant minds master what they actually practiced &mdash; and check their work differently.</p>
         <p><strong>AI models are no different.</strong> A language model predicts likely words; it is not a formal proof compiler, a 3D physics simulator, a protein folder, or a 100-digit calculator. Because <code>HG</code> shrinks models fourfold, Clover hosts a <strong>team of specialists</strong> on affordable 24 GB GPUs and verifies every answer objectively.</p>
-        <div class="inline-proof">
-          <div class="inline-proof__eyebrow">All 5 Leaves Golden &middot; Specialist Team vs. One Giant Model</div>
-          <p style="margin:0">Across sealed benchmarks, focused specialists beat models <code>15&times;&ndash;300,000&times;</code> larger on their home turf &mdash; while one <code>300 MB</code> Harness LoRA on our <code>35B</code> coordinator orchestrates the whole team.</p>
-          <div class="inline-proof__metrics">
-            <span><strong>8 / 8 vs. 0 / 8</strong> Exact math (<code>0.2 MB x-cruncher</code> vs. raw LLM)</span>
-            <span><strong>90.4% vs. 88.9%</strong> Lean 4 proofs (<code>32B Goedel</code> vs. <code>671B</code>)</span>
-            <span><strong>0.51 GB</strong> <code>V-JEPA 2.1 HG4</code> physical video world model</span>
+
+        <div class="spotlight-proof">
+          <div class="spotlight-proof__head">
+            <span class="spotlight-proof__badge">Spotlight Proof &middot; All 5 Leaves Golden</span>
+            <h3 class="spotlight-proof__title">Focused specialists beat universal models 20&times;&ndash;300,000&times; larger on sealed verifiers.</h3>
+            <p class="spotlight-proof__sub">Head-to-head results when giant generalists (<code>120B</code> to <code>2,800B</code> parameters) face small domain specialists on deterministic ground-truth checks:</p>
+          </div>
+          <div class="spotlight-proof__body">
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label"><strong>100-Digit Exact Math &amp; &pi;:</strong> Universal LLM alone (<code>0/8</code>) vs. <code>0.2 MB</code> C11 <code>x-cruncher</code> specialist (<code>0.4 ms</code>)</span>
+                <span class="proof-row__val proof-row__val--gold">100% vs. 0%</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:100%"></span></div>
+            </div>
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label"><strong>Machine-Checked Lean 4 Proofs:</strong> <code>32B Goedel-Prover</code> (<code>15.8 GB HG4</code>) vs. <code>671B</code> generalist (<code>88.9%</code>) &amp; <code>2.8T</code> on RH Tier-2 (<code>1/9</code>)</span>
+                <span class="proof-row__val proof-row__val--gold">90.4% at 21&times; Smaller</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:90.4%"></span></div>
+            </div>
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label"><strong>Coding Agent Harness (SWE-bench Pro):</strong> Base <code>Qwen</code> (<code>39.2%</code>) vs. <code>+300 MB</code> Specialist Harness LoRA (2.5&times; fewer turns)</span>
+                <span class="proof-row__val proof-row__val--gold">64.7% vs. 39.2%</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:65%"></span></div>
+            </div>
+          </div>
+          <div class="spotlight-proof__significance">
+            <strong>Why this changes everything:</strong> Scaling one monolith to trillions of parameters still loses to dedicated formal-proof, physics (<code>0.51 GB V-JEPA 2.1</code>), forecasting (<code>102 MB Chronos</code>), and exact-math specialists. Shrinking every specialist 4&times; with <code>HG</code> lets one <code>35B</code> coordinator run the entire team on everyday 24 GB cards.
           </div>
         </div>
       </div>
