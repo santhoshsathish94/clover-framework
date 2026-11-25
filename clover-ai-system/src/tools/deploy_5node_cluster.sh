@@ -146,7 +146,7 @@ source /workspace/.clover_runtime
 if [[ "${DOCKER_READY:-0}" == "1" ]]; then
   docker rm -f "clover-${ROLE_NAME}" >/dev/null 2>&1 || true
   ENV_ARGS=()
-  for kv in CLOVER_NODE_ID CLOVER_GATEWAY_API_KEY CLOVER_CLUSTER_SECRET CLOVER_SHARE_CPU_LOCK CLOVER_CUDA_GPUS CLOVER_ACTIVE_MODELS CLOVER_NEMO_SPECULATIVE CLOVER_SPECIALIST_URLS CLOVER_OMNI_HG4_DIR CLOVER35B_HG4_DIR CLOVER_NEMO_HG4_DIR OMP_NUM_THREADS; do
+  for kv in CLOVER_NODE_ID CLOVER_GATEWAY_API_KEY CLOVER_CLUSTER_SECRET CLOVER_SHARE_CPU_LOCK CLOVER_CUDA_GPUS CLOVER_ACTIVE_MODELS CLOVER_NEMO_SPECULATIVE CLOVER_SPECIALIST_URLS CLOVER_OMNI_HG4_DIR CLOVER35B_HG4_DIR CLOVER_NEMO_HG4_DIR OMP_NUM_THREADS OMP_WAIT_POLICY; do
     [[ -n "${!kv:-}" ]] && ENV_ARGS+=(-e "${kv}=${!kv}")
   done
   docker run -d --name "clover-${ROLE_NAME}" --restart unless-stopped --gpus all --network host \
@@ -155,9 +155,10 @@ if [[ "${DOCKER_READY:-0}" == "1" ]]; then
     -v /workspace/clover-framework/AGENTS.md:/app/AGENTS.md:ro \
     -e CLOVER_AGENTS_MD=/app/AGENTS.md \
     -e CLOVER_CONTEXT_DIR=/models/clover-context \
+    -e OMP_WAIT_POLICY=PASSIVE \
     "${ENV_ARGS[@]}" clover-hg-server:latest "$@"
 else
-  nohup env CLOVER_AGENTS_MD=/workspace/clover-framework/AGENTS.md CLOVER_CONTEXT_DIR=/workspace/hg-models/clover-context \
+  nohup env OMP_WAIT_POLICY=PASSIVE CLOVER_AGENTS_MD=/workspace/clover-framework/AGENTS.md CLOVER_CONTEXT_DIR=/workspace/hg-models/clover-context \
     python3 /workspace/clover-framework/clover-ai-system/src/tools/clover_docker_entry.py "$@" > "/workspace/${ROLE_NAME}.log" 2>&1 &
 fi
 WRAP
