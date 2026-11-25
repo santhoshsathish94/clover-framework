@@ -26,6 +26,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from backends import build_backends  # noqa: E402
+from clover_token_socket import StepHardwareMeter, TokenSocketServer  # noqa: E402
 from cluster_scheduler_mcp2 import (  # noqa: E402
     HOP_CTX,
     MCP2_PROTOCOL_VERSION,
@@ -145,6 +146,8 @@ class GatewayHandler(BaseHTTPRequestHandler):
             self._send_json({"queue": self.batch_queue.snapshot(), "replica_pools": pools})
         elif p in ("/v1/cluster/petals", "/cluster/petals"):
             self._send_json(self.petal_registry.snapshot())
+        elif p in ("/v1/hw", "/hw"):
+            self._send_json(StepHardwareMeter().finish(1, 0, 0))
         elif p in ("/mcp", "/v1/mcp"):
             self._send_json({
                 "protocol": "mcp",
@@ -387,6 +390,12 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Clover HG4 Fusion Gateway (OpenAI /v1 + Copilot Fusion + EGM)")
     ap.add_argument("--host", default=os.environ.get("CLOVER_GATEWAY_HOST", "127.0.0.1"))
     ap.add_argument("--port", type=int, default=int(os.environ.get("CLOVER_GATEWAY_PORT", DEFAULT_PORT)))
+    ap.add_argument(
+        "--token-socket-port",
+        type=int,
+        default=int(os.environ.get("CLOVER_TOKEN_SOCKET_PORT", "0")),
+        help="Optional dedicated binary TCP_NODELAY token socket port (e.g. 10100 for tsock:// peer hops)",
+    )
     ap.add_argument("--mode", choices=("auto", "real", "mock"), default=os.environ.get("CLOVER_GATEWAY_MODE", "auto"))
     ap.add_argument("--api-key", default=os.environ.get("CLOVER_GATEWAY_API_KEY") or None)
     ap.add_argument("--quiet", action="store_true")
@@ -396,6 +405,10 @@ def main(argv: list[str] | None = None) -> int:
         print("no backends available", file=sys.stderr)
         return 2
     router = FusionRouter(backends)
+    tsock_srv = None
+    if a.token_socket_port > 0:
+        tsock_srv = TokenSocketServer(router, host=a.host, port=a.token_socket_port, secret=a.api_key)
+        print(f"[gateway] Binary TokenSocket listening on tsock://{a.host}:{tsock_srv.bound_port}", flush=True)
     srv = create_server(router, a.host, a.port, api_key=a.api_key, quiet=a.quiet)
     print(f"[gateway] Clover HG4 Fusion Gateway {VERSION} on http://{a.host}:{srv.server_address[1]}/v1 "
           f"models={[m['id'] for m in router.list_models()]}", flush=True)
@@ -404,6 +417,8 @@ def main(argv: list[str] | None = None) -> int:
     except KeyboardInterrupt:
         pass
     finally:
+        if tsock_srv is not None:
+            tsock_srv.close()
         srv.server_close()
     return 0
 

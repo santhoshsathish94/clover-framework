@@ -1479,14 +1479,14 @@ HTTP_POOL = _KeepAlivePool()
 
 
 class RemoteOpenAIBackend(BackendBase):
-    """Lightweight OpenAI-compatible HTTP `/v1/chat/completions` client with HTTP/1.1 Keep-Alive pooling."""
+    """Remote peer client supporting both dedicated binary `tsock://host:port` token sockets & HTTP/1.1 Keep-Alive."""
 
     def __init__(self, model_id: str, url: str, family: str = "specialist", timeout_s: float = 600.0):
         super().__init__()
         self.model_id = model_id
         self.url = url.rstrip("/")
         self.family = family
-        self.kind = "remote-http"
+        self.kind = "token-socket" if self.url.startswith("tsock://") else "remote-http"
         self.timeout_s = timeout_s
 
     def stream(self, messages, tools, tool_choice, params: GenParams):
@@ -1505,6 +1505,57 @@ class RemoteOpenAIBackend(BackendBase):
             body["tools"] = tools
         if tool_choice is not None:
             body["tool_choice"] = tool_choice
+
+        # Fast-path: Dedicated persistent binary `TCP_NODELAY` Token Socket (`tsock://host:port`, 4 bytes/token!)
+        if self.url.startswith("tsock://"):
+            import urllib.parse
+            from clover_token_socket import TSOCK_POOL
+
+            u = urllib.parse.urlsplit(self.url)
+            host = u.hostname or "127.0.0.1"
+            port = int(u.port or 10100)
+            tok_ids, done_obj = TSOCK_POOL.generate(host, port, body, timeout_s=self.timeout_s)
+            content = str(done_obj.get("content") or "")
+            tcs = done_obj.get("tool_calls") or []
+            if tcs:
+                tc_blocks = []
+                for tc in tcs:
+                    fn = tc.get("function") or {}
+                    args = fn.get("arguments") or "{}"
+                    if isinstance(args, str):
+                        try:
+                            args = json.loads(args)
+                        except ValueError:
+                            args = {}
+                    tc_blocks.append(
+                        "<tool_call>\n" + json.dumps({"name": fn.get("name", ""), "arguments": args}) + "\n</tool_call>"
+                    )
+                content = (content + "\n" if content else "") + "\n".join(tc_blocks)
+            usage = done_obj.get("usage") or {}
+            pt = int(usage.get("prompt_tokens") or 0)
+            ct = int(usage.get("completion_tokens") or len(tok_ids))
+            cached = int((usage.get("prompt_tokens_details") or {}).get("cached_tokens") or 0)
+            res = GenResult(
+                model=self.model_id,
+                text=content,
+                finish_reason=str(done_obj.get("finish_reason") or "stop"),
+                prompt_tokens=pt,
+                cached_tokens=cached,
+                prefill_tokens=max(0, pt - cached),
+                completion_tokens=ct,
+                decode_ms=(time.perf_counter() - t0) * 1000.0,
+                backend_kind="token-socket",
+                extra={
+                    "token_wire_bytes": done_obj.get("token_wire_bytes", len(tok_ids) * 4),
+                    "hw_proof": done_obj.get("hw_proof"),
+                },
+            )
+            if content:
+                yield "delta", content
+            self._account(res)
+            yield "done", res
+            return
+
         hdrs: dict[str, str] = {"Content-Type": "application/json", "X-Clover-Hop": "1"}
         api_key = (os.environ.get("CLOVER_GATEWAY_API_KEY") or "").strip()
         if api_key:
@@ -1761,7 +1812,7 @@ def build_backends(mode: str = "auto", responders: dict[str, Responder] | None =
                     ep_s = str(ep).strip()
                     if ep_s == "local" and mid in out:
                         replicas.append(("local", out[mid]))
-                    elif ep_s.startswith("http://") or ep_s.startswith("https://"):
+                    elif ep_s.startswith(("http://", "https://", "tsock://")):
                         replicas.append((ep_s, RemoteOpenAIBackend(mid, ep_s, family=fam)))
                 if replicas:
                     out[mid] = ReplicaPoolBackend(mid, replicas) if len(replicas) > 1 else replicas[0][1]

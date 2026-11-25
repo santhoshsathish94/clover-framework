@@ -1464,6 +1464,45 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
             srv.server_close()
             shutil.rmtree(ctx_dir, ignore_errors=True)
 
+    def test_binary_token_socket_and_hw_proof(self):
+        import os
+        import clover_token_socket as cts
+
+        old_key = os.environ.get("CLOVER_GATEWAY_API_KEY")
+        os.environ["CLOVER_GATEWAY_API_KEY"] = "tsock-hmac-key-99"
+        petal_router = FR.FusionRouter(B.build_backends("mock"))
+        tsrv = cts.TokenSocketServer(petal_router, host="127.0.0.1", port=0, secret="tsock-hmac-key-99")
+        try:
+            # Wrong HMAC secret must raise PermissionError
+            with self.assertRaises(PermissionError):
+                cts.TSOCK_POOL.ping_ms("127.0.0.1", tsrv.bound_port, secret="wrong-secret")
+
+            # Warm binary ping + remote `tsock://` backend streaming 4-byte int32 token IDs + hw_proof!
+            rtt = cts.TSOCK_POOL.ping_ms("127.0.0.1", tsrv.bound_port, secret="tsock-hmac-key-99")
+            self.assertGreaterEqual(rtt, 0.0)
+
+            hub_backends = B.build_backends("mock")
+            hub_backends["clover-35b-a3b"] = B.RemoteOpenAIBackend(
+                "clover-35b-a3b", f"tsock://127.0.0.1:{tsrv.bound_port}", family="clover35b"
+            )
+            hub_router = FR.FusionRouter(hub_backends)
+            comp = hub_router.complete({
+                "model": "clover-35b-a3b",
+                "messages": [{"role": "user", "content": "Binary token socket test"}],
+            })
+            self.assertIn("Binary token socket test", comp.content)
+            step0 = comp.telemetry["steps"][0]
+            self.assertEqual(step0["backend_kind"], "token-socket")
+            self.assertIn("hw_proof", step0)
+            self.assertIn("disk_read_bytes", step0["hw_proof"])
+            self.assertGreater(step0["token_wire_bytes"], 0)
+        finally:
+            if old_key is None:
+                os.environ.pop("CLOVER_GATEWAY_API_KEY", None)
+            else:
+                os.environ["CLOVER_GATEWAY_API_KEY"] = old_key
+            tsrv.close()
+
 
 # ====================================================================================================================
 _OMNI = B.discover_paths()["lfm3-omni-2b"]

@@ -766,14 +766,18 @@ class FusionRouter:
                     "prompt_tokens": r.prompt_tokens, "cached_tokens": r.cached_tokens,
                     "prefill_tokens": r.prefill_tokens, "completion_tokens": r.completion_tokens,
                     "prefill_ms": r.prefill_ms, "decode_ms": r.decode_ms}
-                step_rows.append({
+                row_d: dict[str, Any] = {
                     "model": s.model, "role": s.role, **{k: g[k] for k in ("prompt_tokens", "cached_tokens",
                                                                           "prefill_tokens", "completion_tokens")},
                     "prefill_ms": round(g["prefill_ms"], 2), "decode_ms": round(g["decode_ms"], 2),
                     "cache_hit_pct": round(100.0 * g["cached_tokens"] / g["prompt_tokens"], 2)
                     if g["prompt_tokens"] else 0.0,
                     "backend_kind": self.backends[s.model].kind,
-                })
+                }
+                if not isinstance(r, dict) and r.extra.get("hw_proof"):
+                    row_d["hw_proof"] = r.extra["hw_proof"]
+                    row_d["token_wire_bytes"] = r.extra.get("token_wire_bytes")
+                step_rows.append(row_d)
         pt = sum(r["prompt_tokens"] for r in step_rows)
         ct = sum(r["completion_tokens"] for r in step_rows)
         cached = sum(r["cached_tokens"] for r in step_rows)

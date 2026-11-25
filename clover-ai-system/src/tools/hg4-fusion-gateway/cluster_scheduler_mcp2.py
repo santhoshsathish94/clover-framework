@@ -663,8 +663,8 @@ class PetalRegistry:
         models = payload.get("models") if isinstance(payload.get("models"), list) else []
         mcp_tools = payload.get("mcp_tools") if isinstance(payload.get("mcp_tools"), list) else []
         kimi_url = str(payload.get("kimi_coordinator_url") or "").strip().rstrip("/")
-        if not petal_id or not (url.startswith("http://") or url.startswith("https://")):
-            raise ValueError("petal_id and valid http(s) url are required")
+        if not petal_id or not url.startswith(("http://", "https://", "tsock://")):
+            raise ValueError("petal_id and valid http(s)/tsock url are required")
 
         now = time.time()
         exp = now + self.lease_ttl_s
