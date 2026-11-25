@@ -918,7 +918,8 @@ class NemotronBackend(StatefulBackend):
             return
         with ENGINE_LOCK:
             ids = self._fit_context(messages, tools, tool_choice, params.max_tokens)
-            eos = min(self.eos_ids)
+            im_end_id = self.tok.token_to_id("<|im_end|>")
+            eos = int(im_end_id) if im_end_id in self.eos_ids else max(self.eos_ids)
             draft_k = 2
             spec_max_new = max(1, min(int(params.max_tokens), eng.max_seq - len(ids) - draft_k - 3))
             gen, pf, dc, acc, tot = eng.generate_speculative(ids, spec_max_new, eos, draft_k)

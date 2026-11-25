@@ -498,13 +498,19 @@ def worker_loop(
     clover_stack_dir: str = "/workspace/clover_stack",
 ) -> None:
     """SciCode Clover System Worker (supports native HG4/K31H engine or OpenAI-compatible API)."""
-    try:
-        os.sched_setaffinity(0, set(range(cpu_lo, cpu_hi + 1)))
-    except Exception:
-        pass
+    if "GOMP_CPU_AFFINITY" not in os.environ:
+        try:
+            os.sched_setaffinity(0, set(range(cpu_lo, cpu_hi + 1)))
+        except Exception:
+            pass
 
     stack_p = Path(clover_stack_dir)
-    for cand_gw in [stack_p / "hg4-fusion-gateway", Path("/opt/clover-k3/hg4-fusion-gateway")]:
+    for cand_gw in [
+        stack_p / "hg4-fusion-gateway",
+        stack_p / "clover-ai-system" / "src" / "tools" / "hg4-fusion-gateway",
+        Path("/workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway"),
+        Path("/opt/clover-k3/hg4-fusion-gateway"),
+    ]:
         if cand_gw.is_dir() and str(cand_gw) not in sys.path:
             sys.path.insert(0, str(cand_gw))
 
@@ -514,7 +520,11 @@ def worker_loop(
         sxc = None  # type: ignore[assignment]
 
     skill_txt = ""
-    for cand_sk in [stack_p / "scientific_computing_skill.md", Path("/opt/scicode_bench/scientific_computing_skill.md")]:
+    for cand_sk in [
+        stack_p / "scientific_computing_skill.md",
+        Path("/workspace/clover-framework/clover-ai-system/src/tools/hg4-fusion-gateway/scientific_computing_skill.md"),
+        Path("/opt/scicode_bench/scientific_computing_skill.md"),
+    ]:
         if cand_sk.is_file():
             skill_txt = cand_sk.read_text(encoding="utf-8")
             break
@@ -530,18 +540,19 @@ def worker_loop(
     if backend_mode == "native":
         os.environ["CLOVER_CUDA_GPUS"] = str(gpu_id)
         os.environ["CLOVER_MMAP_COLD"] = "1"
-        os.environ["CLOVER_NATIVE_LIB_DIR"] = str(stack_p)
+        os.environ["CLOVER_NATIVE_LIB_DIR"] = os.environ.get("CLOVER_NATIVE_LIB_DIR", str(stack_p))
         os.environ["CLOVER_KIMI_HG4_DIR"] = os.environ.get("CLOVER_KIMI_HG4_DIR", "/workspace/hg/kimi-k31")
         os.environ["CLOVER_KIMI_COLD_DIR"] = os.environ.get("CLOVER_KIMI_COLD_DIR", "/workspace/hg/kimi-k31")
         os.environ["CLOVER_KIMI_PREFER_NATIVE"] = "1"
         os.environ["CLOVER_KIMI_THINKING"] = "bounded"
         os.environ["CLOVER_KIMI_THINK_CAP"] = str(think_cap)
-        os.environ["OMP_NUM_THREADS"] = str(min(56, max(8, cpu_hi - cpu_lo + 1)))
+        os.environ.setdefault("CLOVER_NEMO_SPECULATIVE", "1")
+        os.environ.setdefault("OMP_NUM_THREADS", str(min(64, max(8, cpu_hi - cpu_lo + 1))))
         import backends as bk
         paths = bk.discover_paths()
         be: Any = bk.make_native_backend(api_model, paths[api_model])
         GenParamsCls: Any = bk.GenParams
-        default_max_tok = 1536
+        default_max_tok = 2048
         print(f"[Worker {worker_id} | GPU {gpu_id}] Initialized native `{api_model}` backend.", flush=True)
     else:
         api_key = Path(api_key_file).read_text(encoding="utf-8").strip() if Path(api_key_file).is_file() else os.environ.get("OPENROUTER_API_KEY", "local")
@@ -550,9 +561,10 @@ def worker_loop(
         default_max_tok = 6144
         print(f"[Worker {worker_id}] Initialized `{backend_mode}` backend (`{api_model}`).", flush=True)
 
+    mslug = re.sub(r"[^a-zA-Z0-9]+", "_", api_model.split("/")[-1]).strip("_").lower()
     out_base = Path(out_root)
-    dir_clover = out_base / "submissions" / "clover_system_kimi_k31" / "with_background"
-    dir_turn1  = out_base / "submissions" / "kimi_k31_turn1_draft" / "with_background"
+    dir_clover = out_base / "submissions" / f"clover_system_{mslug}" / "with_background"
+    dir_turn1  = out_base / "submissions" / f"{mslug}_turn1_draft" / "with_background"
     dir_meta   = out_base / "telemetry"
     dir_clover.mkdir(parents=True, exist_ok=True)
     dir_turn1.mkdir(parents=True, exist_ok=True)
