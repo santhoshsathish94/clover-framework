@@ -749,6 +749,9 @@ class StatefulBackend(BackendBase):
         self._seg_cache: collections.OrderedDict[str, list[int]] = collections.OrderedDict()
         self._splice: collections.OrderedDict[str, list[int]] = collections.OrderedDict()
         self._splice_cap = splice_capacity
+        # On multi-GPU servers (`CLOVER_SHARE_CPU_LOCK=0`), each backend runs on its own dedicated GPU(s)
+        # without blocking sibling backends on the same node.
+        self._lock = ENGINE_LOCK if os.environ.get("CLOVER_SHARE_CPU_LOCK", "1") != "0" else threading.RLock()
 
     # -- prompt construction ---------------------------------------------------------------------------------------
     def _encode_seg(self, text: str) -> list[int]:
@@ -786,7 +789,7 @@ class StatefulBackend(BackendBase):
         if not gen_ids:
             return
         key = assistant_signature(content, tool_calls, prefix_messages)
-        with ENGINE_LOCK:
+        with self._lock:
             self._splice[key] = list(gen_ids)
             self._splice.move_to_end(key)
             while len(self._splice) > self._splice_cap:
@@ -808,7 +811,7 @@ class StatefulBackend(BackendBase):
 
     # -- LCP prefill ------------------------------------------------------------------------------------------------
     def reset_cache(self) -> None:
-        with ENGINE_LOCK:
+        with self._lock:
             self.engine.reset()
             self.last_cached_ids = []
             self._last_logits = None
@@ -838,7 +841,7 @@ class StatefulBackend(BackendBase):
         return logits, lcp, len(suffix)
 
     def stream(self, messages, tools, tool_choice, params: GenParams) -> Iterator[tuple[str, Any]]:
-        with ENGINE_LOCK:
+        with self._lock:
             ids = self._fit_context(messages, tools, tool_choice, params.max_tokens)
             max_new = max(1, min(int(params.max_tokens), self.engine.max_seq - len(ids) - 1))
             t0 = time.perf_counter()
@@ -916,7 +919,7 @@ class NemotronBackend(StatefulBackend):
         if not use_spec:
             yield from super().stream(messages, tools, tool_choice, params)
             return
-        with ENGINE_LOCK:
+        with self._lock:
             ids = self._fit_context(messages, tools, tool_choice, params.max_tokens)
             im_end_id = self.tok.token_to_id("<|im_end|>")
             eos = int(im_end_id) if im_end_id in self.eos_ids else max(self.eos_ids)
@@ -1667,4 +1670,30 @@ def build_backends(mode: str = "auto", responders: dict[str, Responder] | None =
             elif include_specialists and mode in ("mock", "auto"):
                 out[smid] = make_mock_backend(smid, responders.get(smid))
                 log(f"[backends] specialist {smid}: mock ready")
+
+    # Distributed Multi-Node Replica Mesh (`CLOVER_MODEL_PEERS` JSON: `{"clover-35b-a3b": ["local", "http://node3:8080"]}`)
+    peers_raw = (os.environ.get("CLOVER_MODEL_PEERS") or "").strip()
+    if peers_raw.startswith("{") and mode != "mock":
+        try:
+            peers_cfg = json.loads(peers_raw)
+        except ValueError:
+            peers_cfg = {}
+        if isinstance(peers_cfg, dict):
+            from cluster_scheduler_mcp2 import ReplicaPoolBackend
+
+            for raw_mid, endpoints in peers_cfg.items():
+                mid = MODEL_ALIASES.get(str(raw_mid).strip(), str(raw_mid).strip())
+                if not isinstance(endpoints, list) or not endpoints:
+                    continue
+                fam = MODEL_SPECS.get(mid, {}).get("family", "remote")
+                replicas: list[tuple[str, BackendBase]] = []
+                for ep in endpoints:
+                    ep_s = str(ep).strip()
+                    if ep_s == "local" and mid in out:
+                        replicas.append(("local", out[mid]))
+                    elif ep_s.startswith("http://") or ep_s.startswith("https://"):
+                        replicas.append((ep_s, RemoteOpenAIBackend(mid, ep_s, family=fam)))
+                if replicas:
+                    out[mid] = ReplicaPoolBackend(mid, replicas) if len(replicas) > 1 else replicas[0][1]
+                    log(f"[backends] mesh {mid}: {len(replicas)} replica(s) -> {[lbl for lbl, _ in replicas]}")
     return out

@@ -26,11 +26,12 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from backends import build_backends  # noqa: E402
+from cluster_scheduler_mcp2 import ClusterBatchQueue, MCP2_PROTOCOL_VERSION, Mcp2MeshServer, ReplicaPoolBackend  # noqa: E402
 from fusion_router import Completion, FusionRouter, RouterError  # noqa: E402
 
 DEFAULT_PORT = 8790
 MAX_BODY = 64 * 1024 * 1024
-VERSION = "1a.0"
+VERSION = "2.0"
 
 
 def _completion_json(c: Completion, cid: str, created: int) -> dict[str, Any]:
@@ -50,6 +51,8 @@ class GatewayHandler(BaseHTTPRequestHandler):
     server_version = "CloverHG4FusionGateway/" + VERSION
     protocol_version = "HTTP/1.1"
     router: FusionRouter
+    batch_queue: ClusterBatchQueue
+    mcp2: Mcp2MeshServer
     api_key: str | None = None
     quiet = False
     socket_timeout_s: float = float(os.environ.get("CLOVER_GATEWAY_SOCKET_TIMEOUT", "30.0"))
@@ -66,17 +69,24 @@ class GatewayHandler(BaseHTTPRequestHandler):
 
     def _cors(self) -> None:
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type, OpenAI-Organization, X-Request-Id")
+        self.send_header(
+            "Access-Control-Allow-Headers",
+            "Authorization, Content-Type, OpenAI-Organization, X-Request-Id, Mcp-Method, Mcp-Name, Mcp-Priority, If-None-Match",
+        )
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 
-    def _send_json(self, obj: Any, status: int = 200) -> None:
-        data = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+    def _send_json(self, obj: Any, status: int = 200, extra_headers: dict[str, str] | None = None) -> None:
+        data = b"" if obj is None else json.dumps(obj, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
+        if obj is not None:
+            self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(data)))
+        for hk, hv in (extra_headers or {}).items():
+            self.send_header(hk, hv)
         self._cors()
         self.end_headers()
-        self.wfile.write(data)
+        if data:
+            self.wfile.write(data)
 
     def _error(self, status: int, message: str, code: str = "invalid_request_error") -> None:
         self._send_json({"error": {"message": message, "type": code, "code": code, "param": None}}, status)
@@ -120,6 +130,20 @@ class GatewayHandler(BaseHTTPRequestHandler):
             self._error(404, f"model '{mid}' not found", "model_not_found")
         elif p in ("/v1/telemetry", "/telemetry"):
             self._send_json(self.router.telemetry.snapshot())
+        elif p in ("/v1/queue", "/queue"):
+            pools = {
+                k: b.snapshot() for k, b in self.router.backends.items() if isinstance(b, ReplicaPoolBackend)
+            }
+            self._send_json({"queue": self.batch_queue.snapshot(), "replica_pools": pools})
+        elif p in ("/mcp", "/v1/mcp"):
+            self._send_json({
+                "protocol": "mcp",
+                "protocolVersion": MCP2_PROTOCOL_VERSION,
+                "stateless": True,
+                "node": self.mcp2.node_id,
+                "catalogEtag": self.mcp2.catalog_etag,
+                "endpoints": {"jsonrpc": "/mcp", "batchCompletions": "/v1/chat/completions/batch", "queue": "/v1/queue"},
+            }, extra_headers={"Mcp-Protocol-Version": MCP2_PROTOCOL_VERSION})
         else:
             self._error(404, f"unknown endpoint {p}", "not_found")
 
@@ -130,6 +154,42 @@ class GatewayHandler(BaseHTTPRequestHandler):
             return
         if p in ("/v1/cache/reset", "/cache/reset"):
             self._send_json(self.router.reset_caches())
+            return
+        if p in ("/mcp", "/v1/mcp"):
+            try:
+                n_mcp = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                n_mcp = 0
+            if n_mcp <= 0 or n_mcp > MAX_BODY:
+                self._error(400 if n_mcp <= 0 else 413, "missing or oversized MCP body")
+                return
+            raw_mcp = self.rfile.read(n_mcp)
+            status, extra_hdrs, resp_obj = self.mcp2.handle_http(raw_mcp, dict(self.headers.items()))
+            self._send_json(resp_obj, status=status, extra_headers=extra_hdrs)
+            return
+        if p in ("/v1/chat/completions/batch", "/chat/completions/batch"):
+            try:
+                n_b = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                n_b = 0
+            if n_b <= 0 or n_b > MAX_BODY:
+                self._error(400 if n_b <= 0 else 413, "missing or oversized batch body")
+                return
+            try:
+                bbody = json.loads(self.rfile.read(n_b).decode("utf-8"))
+                reqs = bbody.get("requests") if isinstance(bbody, dict) else bbody
+                if not isinstance(reqs, list):
+                    raise ValueError("expected `{\"requests\": [...]}` or a JSON list")
+            except (ValueError, UnicodeDecodeError) as exc:
+                self._error(400, f"invalid batch JSON: {exc}")
+                return
+            prio = int(bbody.get("priority", 2)) if isinstance(bbody, dict) else 2
+            batch_out = self.batch_queue.submit_batch(reqs, priority=prio)
+            now_ts = int(time.time())
+            for item in batch_out["results"]:
+                if "completion" in item:
+                    item["completion"] = _completion_json(item["completion"], "chatcmpl-" + uuid.uuid4().hex[:24], now_ts)
+            self._send_json(batch_out)
             return
         if p not in ("/v1/chat/completions", "/chat/completions"):
             self._error(404, f"unknown endpoint {p}", "not_found")
@@ -158,8 +218,10 @@ class GatewayHandler(BaseHTTPRequestHandler):
 
     def _complete(self, body: dict[str, Any]) -> None:
         cid = "chatcmpl-" + uuid.uuid4().hex[:24]
+        prio = int(body.get("x_clover_priority", 1))
         try:
-            c = self.router.complete(body)
+            c, q_meta = self.batch_queue.submit(body, priority=prio)
+            c.telemetry["queue"] = q_meta
         except RouterError as exc:
             self._error(exc.status, str(exc), exc.code)
             return
@@ -259,10 +321,24 @@ class GatewayHandler(BaseHTTPRequestHandler):
 
 
 def create_server(router: FusionRouter, host: str = "127.0.0.1", port: int = DEFAULT_PORT,
-                  api_key: str | None = None, quiet: bool = False) -> ThreadingHTTPServer:
-    handler = type("BoundGatewayHandler", (GatewayHandler,), {"router": router, "api_key": api_key, "quiet": quiet})
+                  api_key: str | None = None, quiet: bool = False,
+                  batch_window_ms: float | None = None) -> ThreadingHTTPServer:
+    bqueue = ClusterBatchQueue(router.complete, batch_window_ms=batch_window_ms)
+    mcp2 = Mcp2MeshServer(router, bqueue)
+    handler = type(
+        "BoundGatewayHandler",
+        (GatewayHandler,),
+        {"router": router, "batch_queue": bqueue, "mcp2": mcp2, "api_key": api_key, "quiet": quiet},
+    )
     srv = ThreadingHTTPServer((host, port), handler)
     srv.daemon_threads = True
+    orig_close = srv.server_close
+
+    def _close() -> None:
+        bqueue.close()
+        orig_close()
+
+    srv.server_close = _close  # type: ignore[method-assign]
     return srv
 
 

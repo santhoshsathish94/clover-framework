@@ -949,6 +949,194 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
             sub_srv.shutdown()
             sub_srv.server_close()
 
+    def test_mcp2_queue_clubbing_and_replica_mesh(self):
+        import concurrent.futures
+        import os
+        import urllib.error
+        import urllib.request
+        import cluster_scheduler_mcp2 as CSM
+        import gateway as GW
+
+        # 1. In-Flight Request Clubbing: 6 concurrent identical deterministic requests execute engine ONLY ONCE!
+        call_counter = {"n": 0}
+        cnt_lock = threading.Lock()
+
+        def slow_execute(body: dict):
+            with cnt_lock:
+                call_counter["n"] += 1
+            time.sleep(0.06)
+            return FR.Completion(model="clover-35b-a3b", content="clubbed_answer_42", tool_calls=[], finish_reason="stop",
+                                 usage={"prompt_tokens": 10, "completion_tokens": 4, "total_tokens": 14}, telemetry={})
+
+        q = CSM.ClusterBatchQueue(slow_execute, max_workers=8, batch_window_ms=8.0)
+        try:
+            same_req = {"model": "clover-35b-a3b", "temperature": 0.0, "messages": [{"role": "user", "content": "Compute 6*7"}]}
+            with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
+                futs = [ex.submit(q.submit, same_req, 1) for _ in range(6)]
+                outs = [f.result() for f in futs]
+            self.assertEqual(call_counter["n"], 1, "All 6 identical in-flight T=0 requests must club onto 1 execution")
+            self.assertEqual(sum(1 for _, m in outs if m["clubbed_coalesced"]), 5)
+            self.assertEqual(outs[0][1]["clubbed_fanout"], 6)
+        finally:
+            q.close()
+
+        # 2. Multi-Replica Prefix-Affinity + Automatic Failover (`ReplicaPoolBackend`)
+        node_b_srv, _ = GW.serve_in_thread(FR.FusionRouter(B.build_backends("mock", include_specialists=True)))
+        node_a_srv = None
+        old_peers = os.environ.get("CLOVER_MCP_TOOL_PEERS")
+        try:
+            node_b_url = f"http://127.0.0.1:{node_b_srv.server_address[1]}"
+            dead_peer = B.RemoteOpenAIBackend("clover-35b-a3b", "http://127.0.0.1:9", family="clover35b", timeout_s=0.2)
+            live_peer = B.RemoteOpenAIBackend("clover-35b-a3b", node_b_url, family="clover35b", timeout_s=5.0)
+            pool = CSM.ReplicaPoolBackend("clover-35b-a3b", [("dead-node", dead_peer), ("node-b", live_peer)], cooldown_s=30.0)
+
+            os.environ["CLOVER_MCP_TOOL_PEERS"] = f"boltz2_fold_structure={node_b_url}"
+            node_a_backends = B.build_backends("mock")
+            node_a_backends["clover-35b-a3b"] = pool
+            node_a_srv, _ = GW.serve_in_thread(FR.FusionRouter(node_a_backends))
+            node_a_url = f"http://127.0.0.1:{node_a_srv.server_address[1]}"
+
+            # First call hits `dead-node`, automatically fails over to `node-b` (`failovers == 1`)!
+            req1 = urllib.request.Request(
+                node_a_url + "/v1/chat/completions",
+                data=json.dumps({"model": "clover-35b-a3b", "messages": [{"role": "user", "content": "Hello mesh"}]}).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req1, timeout=10) as r:
+                d1 = json.loads(r.read().decode("utf-8"))
+            self.assertIn("Hello mesh", d1["choices"][0]["message"]["content"])
+            self.assertEqual(pool.snapshot()["failovers"], 1)
+
+            # 3. Batch Endpoint (`POST /v1/chat/completions/batch`): 4 items with 2 duplicates -> clubs duplicates!
+            batch_payload = {
+                "requests": [
+                    {"model": "lfm3-omni-2b", "temperature": 0.0, "messages": [{"role": "user", "content": "Dup item"}]},
+                    {"model": "lfm3-omni-2b", "temperature": 0.0, "messages": [{"role": "user", "content": "Unique A"}]},
+                    {"model": "lfm3-omni-2b", "temperature": 0.0, "messages": [{"role": "user", "content": "Dup item"}]},
+                    {"model": "lfm3-omni-2b", "temperature": 0.0, "messages": [{"role": "user", "content": "Unique B"}]},
+                ]
+            }
+            breq = urllib.request.Request(
+                node_a_url + "/v1/chat/completions/batch",
+                data=json.dumps(batch_payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(breq, timeout=10) as r:
+                bout = json.loads(r.read().decode("utf-8"))
+            self.assertEqual(bout["count"], 4)
+            self.assertEqual(bout["clubbed_duplicates"], 1)
+            self.assertEqual(bout["unique_executed"], 3)
+            self.assertTrue(bout["results"][2]["clubbed_in_batch"])
+
+            # 4. MCP 2.0 Stateless Endpoint (`POST /mcp`): zero-handshake `tools/list` + `ETag` `304 Not Modified`
+            m_list_req = urllib.request.Request(
+                node_a_url + "/mcp",
+                data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}).encode("utf-8"),
+                headers={"Content-Type": "application/json", "Mcp-Method": "tools/list"},
+                method="POST",
+            )
+            with urllib.request.urlopen(m_list_req, timeout=10) as r:
+                etag = r.headers.get("ETag")
+                self.assertEqual(r.headers.get("Mcp-Protocol-Version"), "2026-07-28")
+                mlist = json.loads(r.read().decode("utf-8"))
+            self.assertEqual(len(mlist["result"]["tools"]), 8)
+            self.assertTrue(etag)
+
+            m_304_req = urllib.request.Request(
+                node_a_url + "/mcp",
+                data=json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}).encode("utf-8"),
+                headers={"Content-Type": "application/json", "If-None-Match": etag},
+                method="POST",
+            )
+            with self.assertRaises(urllib.error.HTTPError) as ctx304:
+                urllib.request.urlopen(m_304_req, timeout=10)
+            self.assertEqual(ctx304.exception.code, 304)
+            ctx304.exception.close()
+
+            # 5. MCP 2.0 Lazy Tool Search (`tools/search`) -> returns ONLY Lean tools instead of all 8!
+            m_search_req = urllib.request.Request(
+                node_a_url + "/mcp",
+                data=json.dumps({"jsonrpc": "2.0", "id": 3, "method": "tools/search", "params": {"query": "lean", "limit": 2}}).encode("utf-8"),
+                headers={"Content-Type": "application/json", "Mcp-Method": "tools/search"},
+                method="POST",
+            )
+            with urllib.request.urlopen(m_search_req, timeout=10) as r:
+                msearch = json.loads(r.read().decode("utf-8"))
+            found_names = [t["name"] for t in msearch["result"]["tools"]]
+            self.assertEqual(found_names, ["goedel_lean4_prove", "lean4_surface_verify"])
+
+            # 6. MCP 2.0 Header-Based 0.05 ms Mesh Routing (`Mcp-Method: tools/call`, `Mcp-Name: boltz2_fold_structure`) -> forwards Node A -> Node B!
+            m_hop_req = urllib.request.Request(
+                node_a_url + "/mcp",
+                data=json.dumps({
+                    "jsonrpc": "2.0", "id": 4, "method": "tools/call",
+                    "params": {"name": "boltz2_fold_structure", "arguments": {"sequence_or_fasta": "MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKT"}},
+                }).encode("utf-8"),
+                headers={"Content-Type": "application/json", "Mcp-Method": "tools/call", "Mcp-Name": "boltz2_fold_structure"},
+                method="POST",
+            )
+            with urllib.request.urlopen(m_hop_req, timeout=10) as r:
+                routed_hdr = r.headers.get("X-Clover-Mcp-Routed-To")
+                mhop = json.loads(r.read().decode("utf-8"))
+            self.assertEqual(routed_hdr, node_b_url)
+            self.assertEqual(mhop["result"]["structuredContent"]["served_by"], "boltz-2")
+
+            # 7. MCP 2.0 `tools/call_batch` (clubs duplicates & executes verifiers in parallel) + Async `tasks/create`
+            m_batch_req = urllib.request.Request(
+                node_a_url + "/mcp",
+                data=json.dumps({
+                    "jsonrpc": "2.0", "id": 5, "method": "tools/call_batch",
+                    "params": {"calls": [
+                        {"name": "xcruncher_exact_math", "arguments": {"expression": "What is 20! exactly?"}},
+                        {"name": "xcruncher_exact_math", "arguments": {"expression": "What is 20! exactly?"}},
+                        {"name": "lean4_surface_verify", "arguments": {"statement": "Prove in Lean 4: theorem t : True := by", "candidate": "```lean\ntrivial\n```"}},
+                    ]},
+                }).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(m_batch_req, timeout=10) as r:
+                mbatch = json.loads(r.read().decode("utf-8"))["result"]
+            self.assertEqual(mbatch["count"], 3)
+            self.assertEqual(mbatch["clubbed_duplicates"], 1)
+            self.assertEqual(mbatch["results"][0]["result"]["verified_values"][0]["exact"], "2432902008176640000")
+            self.assertTrue(mbatch["results"][2]["result"]["passed"])
+
+            m_task_req = urllib.request.Request(
+                node_a_url + "/mcp",
+                data=json.dumps({
+                    "jsonrpc": "2.0", "id": 6, "method": "tasks/create",
+                    "params": {"tool": "xcruncher_exact_math", "arguments": {"expression": "10 hex digits of pi at offset 5000"}},
+                }).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(m_task_req, timeout=10) as r:
+                self.assertEqual(r.status, 202)
+                tid = json.loads(r.read().decode("utf-8"))["result"]["taskId"]
+            m_res_req = urllib.request.Request(
+                node_a_url + "/mcp",
+                data=json.dumps({"jsonrpc": "2.0", "id": 7, "method": "tasks/result", "params": {"taskId": tid, "waitMs": 5000}}).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(m_res_req, timeout=10) as r:
+                tres = json.loads(r.read().decode("utf-8"))["result"]
+            self.assertEqual(tres["status"], "completed")
+            self.assertEqual(tres["result"]["verified_values"][0]["exact"], "CAD181156B")
+        finally:
+            if old_peers is None:
+                os.environ.pop("CLOVER_MCP_TOOL_PEERS", None)
+            else:
+                os.environ["CLOVER_MCP_TOOL_PEERS"] = old_peers
+            if node_a_srv is not None:
+                node_a_srv.shutdown()
+                node_a_srv.server_close()
+            node_b_srv.shutdown()
+            node_b_srv.server_close()
+
 
 # ====================================================================================================================
 _OMNI = B.discover_paths()["lfm3-omni-2b"]
