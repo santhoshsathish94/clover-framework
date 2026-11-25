@@ -545,6 +545,7 @@ def pack_all_256_experts_ldlq(
 
 def main() -> None:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--repo-id", default="Diffuspace/Clover-35B-A3B-Preview", help="HF repo ID (e.g. Qwen/Qwen3.6-35B-A3B)")
     ap.add_argument("--out-dir", default="/opt/clover-k3/clover35b-full-hg4")
     ap.add_argument("--max-layers", type=int, default=40)
     ap.add_argument("--calib-seqs", type=int, default=16)
@@ -555,25 +556,33 @@ def main() -> None:
     cb.enable_ipv4_only()
     t0 = time.perf_counter()
 
-    repo_id = "Diffuspace/Clover-35B-A3B-Preview"
-    stage_trunks = Path("/opt/clover-k3/clover-35b-computed/hf-stage/trunks")
-    pruned_dir = Path("/opt/clover-k3/clover-35b-computed/pruned")
+    repo_id = args.repo_id
+    is_default_repo = (repo_id == "Diffuspace/Clover-35B-A3B-Preview")
+    stage_trunks = Path("/opt/clover-k3/clover-35b-computed/hf-stage/trunks") if is_default_repo else Path("/nonexistent")
+    pruned_dir = Path("/opt/clover-k3/clover-35b-computed/pruned") if is_default_repo else Path("/nonexistent")
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     idx_path = hf_hub_download(repo_id, "model.safetensors.index.json", token=os.environ.get("HF_TOKEN"))
     weight_map: dict[str, str] = json.loads(Path(idx_path).read_text())["weight_map"]
-    tok = Tokenizer.from_file(str(stage_trunks / "tokenizer.json"))
+    model_pfx = "model.language_model." if any(k.startswith("model.language_model.") for k in weight_map) else "model."
+
+    if (stage_trunks / "tokenizer.json").is_file():
+        tok_src = stage_trunks / "tokenizer.json"
+    else:
+        tok_src = Path(hf_hub_download(repo_id, "tokenizer.json", token=os.environ.get("HF_TOKEN")))
+    tok = Tokenizer.from_file(str(tok_src))
     calib_ids = build_calibration_ids(tok, n_seqs=args.calib_seqs, seq_len=args.calib_len)
     B_CAL, T_CAL = calib_ids.shape
     N_CAL = B_CAL * T_CAL
-    print(f"Calibration batch: {B_CAL} x {T_CAL} = {N_CAL} tokens", flush=True)
+    print(f"Converting `{repo_id}` (prefix `{model_pfx}`): Calibration batch {B_CAL} x {T_CAL} = {N_CAL} tokens", flush=True)
 
+    norm_key = model_pfx + "norm.weight"
     norm_path = stage_trunks / "global-0" / "norm.bf16.bin"
     if norm_path.is_file():
         norm_raw = cb.bytes_to_tensor(norm_path.read_bytes(), cb.DTYPE_BF16, (2048,)).float()
     else:
-        norm_raw = fetch_tensors_ram(repo_id, weight_map, ["model.norm.weight"])["model.norm.weight"].float()
+        norm_raw = fetch_tensors_ram(repo_id, weight_map, [norm_key])[norm_key].float()
     norm_w = (1.0 + norm_raw).contiguous()
     inv_freq = (1.0 / (10000000.0 ** (torch.arange(0, 64, 2, dtype=torch.float32) / 64.0))).contiguous()
     kinds = [1 if l in FULL_ATTN_SET else 0 for l in range(args.max_layers)]
@@ -586,13 +595,14 @@ def main() -> None:
         + struct.pack(f"<{args.max_layers}I", *kinds)
     )
 
+    emb_key = model_pfx + "embed_tokens.weight"
     emb_p = out_dir / "embed_tokens.hg4"
     emb_bf16_path = stage_trunks / "global-0" / "embed_tokens.bf16.bin"
     if emb_bf16_path.is_file():
         emb_mm = np.memmap(emb_bf16_path, dtype=np.uint16, mode="r").reshape(248320, 2048)
         emb_f32 = torch.from_numpy(np.left_shift(np.asarray(emb_mm, dtype=np.uint32), np.uint32(16)).view(np.float32))
     else:
-        emb_f32 = fetch_tensors_ram(repo_id, weight_map, ["model.embed_tokens.weight"])["model.embed_tokens.weight"].float()
+        emb_f32 = fetch_tensors_ram(repo_id, weight_map, [emb_key])[emb_key].float()
 
     if not emb_p.is_file():
         t_e = time.perf_counter()
@@ -608,7 +618,7 @@ def main() -> None:
     rope_cos, rope_sin = torch.cos(pos_t), torch.sin(pos_t)
 
     def keys_for_layer(lid: int) -> list[str]:
-        lp = f"model.layers.{lid}."
+        lp = f"{model_pfx}layers.{lid}."
         bd_loc = pruned_dir / f"trunk-{lid}" / "bd_gdn.bin"
         return [
             k for k in weight_map
@@ -620,7 +630,7 @@ def main() -> None:
 
     for l in range(args.max_layers):
         tl0 = time.perf_counter()
-        pfx = f"model.layers.{l}."
+        pfx = f"{model_pfx}layers.{l}."
         is_gqa = l in FULL_ATTN_SET
         bd_local = pruned_dir / f"trunk-{l}" / "bd_gdn.bin"
 
@@ -654,11 +664,16 @@ def main() -> None:
                 ls_v = cb.bytes_to_tensor(bd_raw[off_b:off_b + l_ls], cb.DTYPE_FP32, (32,)).float(); off_b += l_ls
                 hb_v = cb.bytes_to_tensor(bd_raw[off_b:off_b + l_hb], cb.DTYPE_FP32, (32,)).float(); off_b += l_hb
                 hc_v = cb.bytes_to_tensor(bd_raw[off_b:off_b + l_hc], cb.DTYPE_FP32, (32,)).float()
-            else:
+            elif (apfx + "conv_right_weight") in td:
                 conv_rw = td.pop(apfx + "conv_right_weight").float().reshape(8192, 1, 3)
                 ls_v = td.pop(apfx + "bd_softmax_logit_scale").float().reshape(32)
                 hb_v = td.pop(apfx + "bd_softmax_history_bias").float().reshape(32)
                 hc_v = td.pop(apfx + "bd_softmax_history_c").float().reshape(32)
+            else:
+                conv_rw = torch.zeros((8192, 1, 3), dtype=torch.float32)
+                ls_v = torch.zeros((32,), dtype=torch.float32)
+                hb_v = torch.zeros((32,), dtype=torch.float32)
+                hc_v = torch.zeros((32,), dtype=torch.float32)
 
             a_w = td.pop(apfx + "in_proj_a.weight").float().contiguous()
             b_w = td.pop(apfx + "in_proj_b.weight").float().contiguous()
@@ -787,12 +802,13 @@ def main() -> None:
 
     tl_lm = time.perf_counter()
     h_final = (h_cal.float() * torch.rsqrt(h_cal.float().pow(2).mean(dim=-1, keepdim=True) + 1e-6) * norm_w.view(1, 1, 2048)).reshape(N_CAL, 2048)
+    lm_key = "lm_head.weight" if "lm_head.weight" in weight_map else (model_pfx + "lm_head.weight")
     lm_bf16_path = stage_trunks / "global-0" / "lm_head.bf16.bin"
     if lm_bf16_path.is_file():
         lm_mm = np.memmap(lm_bf16_path, dtype=np.uint16, mode="r").reshape(248320, 2048)
         lm_f32 = torch.from_numpy(np.left_shift(np.asarray(lm_mm, dtype=np.uint32), np.uint32(16)).view(np.float32))
     else:
-        lm_f32 = fetch_tensors_ram(repo_id, weight_map, ["lm_head.weight"])["lm_head.weight"].float()
+        lm_f32 = fetch_tensors_ram(repo_id, weight_map, [lm_key])[lm_key].float()
 
     col_rms_lm = torch.sqrt(torch.mean(lm_f32 * lm_f32, dim=0).clamp_min(1e-12)).pow(0.5)
     pd_lm = (col_rms_lm * make_signs(2048, 202)).contiguous()
@@ -803,7 +819,7 @@ def main() -> None:
     print(f"[Global] lm_head.hg4 (HG4-16R + LDLQ): {len(lm_blob)/1048576:.2f} MiB in {time.perf_counter()-tl_lm:.1f}s", flush=True)
 
     if not (out_dir / "tokenizer.json").is_file():
-        shutil.copy2(stage_trunks / "tokenizer.json", out_dir / "tokenizer.json")
+        shutil.copy2(tok_src, out_dir / "tokenizer.json")
 
     tot_b = sum(f.stat().st_size for f in out_dir.iterdir() if f.is_file() and f.suffix in (".bin", ".hg4"))
     print(
