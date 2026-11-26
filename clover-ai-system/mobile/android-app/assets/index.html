@@ -1073,7 +1073,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           <div class="kv" id="lg-auto-kv"></div>
           <div class="btns" style="margin-top:.6rem">
             <button type="button" class="btn pri sm" id="lg-auto-run">Run Autonomous Cycle &amp; Self-Train</button>
-            <button type="button" class="btn sm" data-go="layers">Inspect Clover Layers (C1–C3 &amp; S1–S3)</button>
+            <button type="button" class="btn sm" data-go="layers">Inspect Clover v6.0 Architecture</button>
           </div>
           <pre class="dbg-pre" id="lg-auto-out" hidden></pre>
         </div>
@@ -1257,7 +1257,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       </div>
       <div class="glabel">Runs on</div>
       <div class="group pad">
-        <div class="seg full" id="s-engine"><button type="button" data-v="gpu">GPU</button><button type="button" data-v="cpu">CPU</button><button type="button" data-v="hg4">HG4 (854 MB)</button><button type="button" data-v="fused" class="laptop-only">C1 + C2 + C3</button></div>
+        <div class="seg full" id="s-engine"><button type="button" data-v="gpu">GPU</button><button type="button" data-v="cpu">CPU</button><button type="button" data-v="hg4">HG4 (854 MB)</button><button type="button" data-v="fused" class="laptop-only">Fused Trunk</button></div>
         <p class="fine" id="engine-d"></p>
         <div class="note" id="engine-note" hidden></div>
       </div>
@@ -3006,7 +3006,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       }
       else {
         setStatus('ok', 'Clover Ready');
-        $('status-text').title = 'Clover Ready · ' + info.name + ' · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'hg4' ? 'HG4-128 (CPU)' : st.engine === 'fused' ? 'C1 + C2 + C3 (CPU)' : 'CPU');
+        $('status-text').title = 'Clover Ready · ' + info.name + ' · ' + (st.engine === 'gpu' ? gpuName() : st.engine === 'hg4' ? 'HG4-16R (CPU)' : st.engine === 'fused' ? 'Fused Trunk (CPU)' : 'CPU');
       }
       updateSend();
     }).catch(function (e) {
@@ -3096,11 +3096,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var isRemote = info && !info.local && !WEB;
     setNote('model-note', sv.omni_available === false ? 'LFM3-Omni-2B not installed: ' + sv.omni_reason : '');
     $('engine-d').textContent = WEB
-      ? 'Runs on the k3 server (AMD Ryzen 9 7950X3D, 124 GB RAM): LFM3-Omni-2B in llama.cpp (Zen 4 AVX-512), Clover-35B-A3B (40-layer BD-GDN/GQA MoE), Nemotron 3.5 Super VL (88-layer C engine + NCM) and Kimi K3.1 Pro 2.8T MoE (93-layer C/Rust engine + Gated DSA + NCM).'
+      ? 'Runs on the k3 server & connected HG4 GPU gateways: LFM3-Omni-2B, Clover-35B-A3B (Qwen3.6-35B-A3B + LoRA, HG4-16R-OP), Nemotron 3.5 Super VL (120B-A12B HG4-16R, 1M context) and Kimi K3.1 Pro 2.8T MoE (K31H).'
       : isRemote
-        ? (info.name + ' hosted on ' + (info.host || 'k3') + ' — ' + (info.desc || 'Connected remote engine.') + ' Local tools, permissions, memory and Clover Cycle run on this device.')
-        : 'GPU runs LFM3-Omni-2B on ' + gpuName() + '; CPU and HG4 (854 MB) run Clover\'s native 4.14-bit Hadamard-Gaussian LUT16 engine (with automatic llama.cpp fallback when HG4 is not installed). ' +
-          'C1 + C2 + C3 runs the standalone fused trunk worker.';
+        ? (info.name + ' hosted on ' + (info.host || 'k3') + ' — ' + (info.desc || 'Connected remote engine.') + ' Local 0B computed tools, permissions, memory and 4-Part Clover Harness run on this device.')
+        : 'GPU runs LFM3-Omni-2B on ' + gpuName() + '; CPU and HG4 (854 MB) run Clover\'s native 4-bit Hadamard-Grouped LUT16 engine (with automatic llama.cpp fallback when HG4 is not installed). ' +
+          'Fused Trunk runs the standalone precomputed trunk worker.';
     $('s-engine').children[0].textContent = gpuName();
     Array.prototype.forEach.call($('s-engine').children, function (b) {
       var v = b.getAttribute('data-v'); b.classList.toggle('on', v === st.engine);
@@ -3125,31 +3125,24 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     }
   }
 
-  /* Clover layers: 3 core (C1 inference, C2 HybridAgent plan, C3 Bridges + 11-level NCM decode), 3 supporting
-     (S1 memory, S2 relationships, S3 tools & compiler), and semantics (CSI & PPL) are always on; only CPSL
-     (Collective Learning) has opt-in toggle switches. */
+  /* Clover v6.0 architecture: HG4-16R Model + 4-Part Steerable Harness (AGENTS.md, mcp.json 0B Computed Specialists,
+     <task_id>.md Context, Prerequisite-Gated SQLite Todo) + Local Git Memory, Recall & Semantics. */
   function renderLayers() {
     var sv = state.server; if (!sv || !sv.settings) return;
     var st = sv.settings, L = st.layers || {}, info = modelInfo(st.model);
-    var omni = true, k3Big = /nemotron|kimi/i.test(st.model || '');
     var mLabel = info ? info.name : 'LFM3-Omni-2B';
     var rec = (state.health && state.health.recall) || null, mc = state.memCount;
     var recallNote = !rec ? '' : rec.state === 'ready' ? ' ' + Number(rec.messages || 0).toLocaleString() + ' messages indexed.'
       : rec.state === 'loading' ? ' Getting ready…' : '';
     var whereDesc = (info && info.host && info.host !== 'local') ? ('hosted on ' + info.host) : ('the ' + (st.engine === 'gpu' ? gpuName() : 'CPU'));
-    var fusedOk = !!sv.fused_available, c2c3Ok = sv.c2c3_available !== false || fusedOk || k3Big;
     var core = [
-      { tag: 'C1', name: 'Inference', badge: 'On', on: true,
-        desc: mLabel + ' on ' + whereDesc + '. Performs model inference only (planning is C2 HybridAgent; decoding is C3 NCM).',
-        links: [['model', 'Model and voice']] },
-      { tag: 'C2', name: 'Plan · HybridAgent', badge: 'On', on: true,
-        desc: c2c3Ok
-          ? ('HybridAgent (HybridLink2048 + Lfm3NativeHybridLink, plan-trunk-0) continuous latent planning & Studio tool loop for ' + mLabel + ', plus Try again verification cycle.')
-          : ('HybridAgent planner for LFM3-Omni-2B is not installed on this laptop (' + (sv.c2c3_reason || sv.fused_reason || 'downloading c2c3') + ').') },
-      { tag: 'C3', name: 'Decode · Bridges & 11-Level NCM', badge: 'On', on: true,
-        desc: c2c3Ok
-          ? ('Lfm3ComboBridge(2048\u2192384) + Lfm3ExpertBridge(2048\u2192384) (bridge-trunk-0) into 11-level multiscale VQ-VAE, 12-layer NextConceptTransformer & 3-layer LexicalPointerDecoder.')
-          : ('The precomputed 11-level NCM concept renderer for LFM3-Omni-2B is not installed on this laptop (' + (sv.c2c3_reason || sv.fused_reason || 'downloading c2c3') + ').') }
+      { tag: 'HG4', name: 'Model Backbone', badge: 'On', on: true,
+        desc: mLabel + ' running on ' + whereDesc + ' with 4-bit Hadamard-Grouped (HG4-16R) weights and interactive hardware gating.',
+        links: [['model', 'Model and servers']] },
+      { tag: 'P1–2', name: 'AGENTS.md & 0B Computed MCP Tools', badge: 'On', on: true,
+        desc: 'Enforces Context \u2192 Direction \u2192 Execution \u2192 Outcome \u2192 Growth, STOP_AND_ASK steering, x-cruncher exact math, 0B Periodogram-Conformal forecasting, and 0B Defeasible Rule Resolution.' },
+      { tag: 'P3–4', name: 'Context Ledger, Todo & Telemetry', badge: 'On', on: true,
+        desc: 'Maintains <task_id>.md context files, prerequisite-gated SQLite todos, multi-cycle verification, and CloverMetricsLedger (used vs. idle models/tools & tok/s).' }
     ];
     var support = [
       { tag: 'S1', name: 'Memory', badge: 'On', on: true,
@@ -5225,25 +5218,25 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             detail: (ev.tokens ? ev.tokens + ' tokens \u00b7 ' : '') + c1Desc + ' (' + (ev.window_tokens || 512) + '-tok window)',
             badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
         } else if (ev.layer === 'c2_hybridagent' && ev.ran === false) {
-          upsertStep('layer_c2', { icon: 'models', state: 'no', name: 'C2 Plan (HybridAgent)',
+          upsertStep('layer_c2', { icon: 'models', state: 'no', name: 'Direction & Plan',
             detail: ev.reason || 'Not run', badge: 'Not run' });
         } else if (ev.layer === 'c2_hybridagent') {
-          upsertStep('layer_c2', { icon: 'models', state: 'ok', name: 'C2 Plan (HybridAgent)',
-            detail: (ev.module || 'HybridLink') + ' \u00b7 ' + (ev.latent_steps || 3) + ' latent steps' + (ev.hybridlink_cos ? ' \u00b7 cos ' + ev.hybridlink_cos : ''),
+          upsertStep('layer_c2', { icon: 'models', state: 'ok', name: 'Direction & Plan',
+            detail: '4-Part Clover Harness planning & tool check',
             badge: '\u2713 Planned' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
         } else if (ev.layer === 'ncm' && ev.ran === false) {
-          upsertStep('layer_c3', { icon: 'spark', state: 'no', name: 'C3 Decode (Bridges + 11L NCM)',
+          upsertStep('layer_c3', { icon: 'spark', state: 'no', name: 'Outcome Verification',
             detail: ev.reason || 'Not run', badge: 'Not run' });
         } else if (ev.layer === 'ncm') {
-          upsertStep('layer_c3', { icon: 'spark', state: 'ok', name: 'C3 Decode (Bridges + 11L NCM)',
-            detail: (ev.bridges || 'ComboBridge + ExpertBridge') + (ev.codes ? ' \u2192 ' + ev.codes + ' VQ codes' : '') + ' (' + (ev.window_tokens || 512) + '-tok window)',
-            badge: '\u2713 Decoded' + (ev.s ? ' \u00b7 ' + ev.s + 's' : '') });
+          upsertStep('layer_c3', { icon: 'spark', state: 'ok', name: 'Outcome Verification',
+            detail: 'Verified reply formatting & grounding',
+            badge: '\u2713 Verified' + (ev.s ? ' \u00b7 ' + ev.s + 's' : '') });
         } else if (ev.layer === 'compiler') {
           if (ev.ok || !ev.feedback) {
-            upsertStep('compiler', { icon: 'code', state: 'ok', name: 'Code check (S3)',
+            upsertStep('compiler', { icon: 'code', state: 'ok', name: 'Code check (AST)',
               detail: 'Verified executable code in answer', badge: '\u2713 Worked' });
           } else {
-            upsertStep('compiler', { icon: 'warning', state: 'run', name: 'Code check (S3)',
+            upsertStep('compiler', { icon: 'warning', state: 'run', name: 'Code check (AST)',
               detail: 'Fixing issue: ' + String(ev.feedback).slice(0, 76), badge: 'Fixing\u2026' });
             setStage('fixing code issue');
           }
@@ -5265,12 +5258,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         }
         if (ev.stage === 'planning') {
           var plTools = (ev.tools || []).slice(0, 5).map(toolName);
-          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning (C2 HybridAgent)',
+          upsertStep('plan', { icon: 'models', state: 'run', name: 'Direction & Tools',
             detail: plTools.length ? 'Choosing how to use ' + plTools.join(', ') : 'Formulating response plan\u2026', badge: 'Planning\u2026' });
           setStage(plTools.length ? 'planning \u00b7 ' + plTools.join(', ') : 'planning response');
         } else if (ev.stage === 'preparing_tool' && ev.tool) {
           var prepName = toolName(ev.tool);
-          upsertStep('plan', { icon: 'models', state: 'run', name: 'Planning (C2 HybridAgent)',
+          upsertStep('plan', { icon: 'models', state: 'run', name: 'Direction & Tools',
             detail: 'Preparing ' + prepName + ' input\u2026', badge: 'Preparing\u2026' });
           setStage('preparing ' + prepName);
         } else if (ev.stage === 'vscode_wait') {
@@ -5288,10 +5281,10 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           setStage('verifying facts & tools');
         } else if (ev.stage === 'c1_inference') {
           var pModel = ev.model || (modelInfo(state.settings.model) && modelInfo(state.settings.model).name) || 'LFM3-Omni-2B';
-          var pDesc = ev.layers_desc || (/35b/i.test(pModel) ? 'Running 40-layer BD-GDN + Gated GQA + 256-expert MoE inference\u2026' : /nemotron/i.test(pModel) ? 'Running 88-layer 120B-A12B MoE inference\u2026' : /kimi/i.test(pModel) ? 'Running 93-layer 2.8T MoE + Gated DSA inference\u2026' : 'Running 24-layer model inference (no direct decoding)\u2026');
-          upsertStep('layer_c1', { icon: 'model', state: 'run', name: 'C1 Inference (' + pModel + ')',
+          var pDesc = ev.layers_desc || (/35b/i.test(pModel) ? 'Running Qwen3.6-35B-A3B + Clover-Harness-LoRA (HG4-16R-OP)\u2026' : /nemotron/i.test(pModel) ? 'Running Nemotron 3.5 Super VL (120B-A12B HG4-16R)\u2026' : /kimi/i.test(pModel) ? 'Running Kimi K3.1 Pro (2.8T K31H)\u2026' : 'Running LFM3-Omni-2B (HG4-16R)\u2026');
+          upsertStep('layer_c1', { icon: 'model', state: 'run', name: 'Inference (' + pModel + ')',
             detail: pDesc, badge: 'Inferring\u2026' });
-          setStage('C1 inference \u00b7 ' + pModel);
+          setStage('inference \u00b7 ' + pModel);
         } else if (ev.stage === 'c1_done') {
           if (stepMap.layer_c1 && stepMap.layer_c1.data.state === 'run') {
             stepMap.layer_c1.update({ state: 'ok', badge: '\u2713 Inferred' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
@@ -5300,9 +5293,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           if (stepMap.layer_c1 && stepMap.layer_c1.data.state === 'run') {
             stepMap.layer_c1.update({ state: 'ok', badge: '\u2713 Inferred' });
           }
-          upsertStep('layer_c2', { icon: 'models', state: 'run', name: 'C2 Plan (HybridAgent)',
-            detail: 'Running HybridLink2048 + Lfm3NativeHybridLink continuous latent planning\u2026', badge: 'Planning\u2026' });
-          setStage('planning with C2 HybridAgent');
+          upsertStep('layer_c2', { icon: 'models', state: 'run', name: 'Direction & Plan',
+            detail: 'Running 4-Part Clover Harness planning\u2026', badge: 'Planning\u2026' });
+          setStage('planning direction');
         } else if (ev.stage === 'c2_done') {
           if (stepMap.layer_c2 && stepMap.layer_c2.data.state === 'run') {
             stepMap.layer_c2.update({ state: 'ok', badge: '\u2713 Planned' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(2) + 's' : '') });
@@ -5311,19 +5304,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           if (stepMap.layer_c2 && stepMap.layer_c2.data.state === 'run') {
             stepMap.layer_c2.update({ state: 'ok', badge: '\u2713 Planned' });
           }
-          upsertStep('layer_c3', { icon: 'spark', state: 'run', name: 'C3 Decode (Bridges + 11L NCM)',
-            detail: 'Running ComboBridge + ExpertBridge \u2192 11-level VQ-VAE & NextConceptTransformer\u2026', badge: 'Decoding\u2026' });
-          setStage('decoding with C3 (11-level NCM)');
+          upsertStep('layer_c3', { icon: 'spark', state: 'run', name: 'Outcome Verification',
+            detail: 'Verifying output & grounding\u2026', badge: 'Verifying\u2026' });
+          setStage('verifying outcome');
         } else if (ev.stage === 'ncm_done') {
           if (stepMap.layer_c3 && stepMap.layer_c3.data.state === 'run') {
-            stepMap.layer_c3.update({ state: 'ok', badge: '\u2713 Decoded' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(1) + 's' : '') });
+            stepMap.layer_c3.update({ state: 'ok', badge: '\u2713 Verified' + (ev.ms ? ' \u00b7 ' + (ev.ms / 1000).toFixed(1) + 's' : '') });
           }
         } else if (ev.stage === 'k3_synthesis' || ev.stage === 'fused_c1_c2_c3') {
           if (stepMap.draft) stepMap.draft.update({ state: 'ok', badge: '\u2713 Verified' });
           if (stepMap.plan) stepMap.plan.update({ state: 'ok', badge: '\u2713 Planned' });
-          var mTitle = ev.model || 'C1 + C2 + C3';
+          var mTitle = ev.model || 'Clover v6.0';
           upsertStep('synth', { icon: 'model', state: 'run', name: mTitle + ' synthesis',
-            detail: 'Running ' + (ev.full_name || mTitle) + ' + C2 HybridAgent + C3 11-level NCM', badge: 'Synthesizing\u2026' });
+            detail: 'Running ' + (ev.full_name || mTitle) + ' + 4-Part Clover Harness', badge: 'Synthesizing\u2026' });
           setStage('synthesizing with ' + mTitle);
         } else if (ev.stage === 'k3_done' || ev.stage === 'fused_done') {
           if (stepMap.synth) {
@@ -5538,7 +5531,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       else if (l.layer === 'jepa_audio') out.push('S3 Audio-JEPA (' + (l.acoustic_regime || 'audio') + ')');
       else if (l.layer === 'compiler' && l.checked) out.push(l.ok ? 'S3 code checked' : 'S3 code issue');
       else if (l.layer === 'c1_inference') out.push('C1 Inference' + (l.model ? ' · ' + l.model : ''));
-      else if (l.layer === 'c2_hybridagent' && l.ran !== false) out.push('C2 HybridAgent');
+      else if (l.layer === 'c2_hybridagent' && l.ran !== false) out.push('4-Part Plan');
       else if (l.layer === 'ncm' && l.windows && l.ran !== false) out.push('C3 11L NCM' + (l.model && !/^11-Level/i.test(l.model) ? ' · ' + l.model : ''));
       else if (l.layer === 'workspace') out.push('workspace ' + l.workspace);
       else if (l.layer === 'cycle' && l.trigger === 'user') {

@@ -24,8 +24,8 @@
   - Size: `4,786,629` bytes (`4.56 MB`)
   - SHA-256: `061797c889d2a3ffc26b0b8dac148b4e9780cf617d7cf73831b228fe904cbb21`
 - **Standalone Direct-Download Setup EXE (`x64`)**: `release/beta/windows/clover-ai-studio-beta-setup.exe`
-  - Size: `10,455,000` bytes (`9.97 MB`)
-  - SHA-256: `115f10bdd354a41088ab9bf068222810eab09cf23f0e04bc81a7a62dbee7a4fb`
+  - Size: `10,454,488` bytes (`9.97 MB`)
+  - SHA-256: `2be3467c0330277403a1be2f5b84d58d034fdab5830480eade8167ef7ef9bcef`
 
 ---
 

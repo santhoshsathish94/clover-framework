@@ -1,14 +1,18 @@
-# Clover AI System for VS Code (Option A & Option B)
+# Clover AI Studio for VS Code (`v6.0.0`)
 
-This folder provides both ways to use the **Clover AI System (`clover-ai-system`)** and all three switchable Layer-1 Foundation Model Backbones (`nemotron-3.5-super-vl`, `lfm3-1.7b`, and `clover-kimi-k3`, each governed by Clover's 7-layer stack with `1,048,576`-token session context) directly inside the **VS Code Chat & Agent Model Picker**:
+Connect **Clover AI Studio (`v6.0.0`)** — including local `LFM3-Omni-2B`, `0B` Computed Specialists (`x-cruncher`, Conformal Forecaster, Defeasible Resolver), and your configured `HG4` GPU servers (`Clover-35B-A3B`, `Nemotron 3.5 Super VL`, `Kimi K3.1 Pro`) — directly to VS Code's Copilot Chat & Agent Model Picker, File Viewer, Side-by-Side Diff, Shared Integrated Browser, Terminal, and Language Server Diagnostics.
 
 ---
 
-## Option A — Built-In VS Code `Custom Endpoint` (`chatLanguageModels.json`, Zero Extension Install)
+## Option A — Bundled `clover-local-6.0.0.vsix` (Installed Automatically by `CloverAIStudio-Setup.exe`)
 
-VS Code (`1.105+` / `copilot-chat 0.70+`) includes a native `customendpoint` provider.
+Installing [`CloverAIStudio-Setup.exe`](../../download/laptop/CloverAIStudio-Setup.exe) automatically installs [`clover-local-6.0.0.vsix`](../studio/studio/dist/clover-local-6.0.0.vsix), exposing your local and remote Clover Studio models (`http://127.0.0.1:8765/v1/chat/completions`) inside VS Code's Chat model picker alongside two-way workbench tools (`vscode_editor`, `vscode_diff`, `vscode_diagnostics`, `vscode_browser`).
 
-1. Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run **`Chat: Manage Language Models`** (or click the model picker in the Chat panel $\to$ **`+`** $\to$ **`Custom Endpoint`**), or edit `%APPDATA%\Code\User\chatLanguageModels.json` (`~/.config/Code/User/chatLanguageModels.json` on Linux, `~/Library/Application Support/Code/User/chatLanguageModels.json` on macOS):
+---
+
+## Option B — Built-In VS Code `Custom Endpoint` (`chatLanguageModels.json`)
+
+VS Code (`1.105+`) also supports connecting directly to any Clover v6.0 Studio or `HG4` Fusion Gateway endpoint via `chatLanguageModels.json`:
 
 ```json
 [
@@ -18,19 +22,8 @@ VS Code (`1.105+` / `copilot-chat 0.70+`) includes a native `customendpoint` pro
     "apiType": "chat-completions",
     "models": [
       {
-        "id": "nemotron-3.5-super-vl",
-        "name": "Clover — Nemotron 3.5 Super VL (120B-A12B)",
-        "url": "https://api.cloverframework.com/v1/chat/completions",
-        "apiType": "chat-completions",
-        "toolCalling": true,
-        "vision": true,
-        "contextWindow": 1048576,
-        "maxOutputTokens": 16000,
-        "streaming": true
-      },
-      {
         "id": "clover-35b-a3b",
-        "name": "Clover — Clover-35B-A3B (35B-A3B Block Diffusion MoE)",
+        "name": "Clover — Clover-35B-A3B Coordinator (Qwen3.6-35B-A3B + LoRA, HG4-16R-OP)",
         "url": "https://api.cloverframework.com/v1/chat/completions",
         "apiType": "chat-completions",
         "toolCalling": true,
@@ -40,8 +33,8 @@ VS Code (`1.105+` / `copilot-chat 0.70+`) includes a native `customendpoint` pro
         "streaming": true
       },
       {
-        "id": "lfm3-1.7b",
-        "name": "Clover — Liquid LFM3-1.7B (24L Tri-Hybrid)",
+        "id": "nemotron-3.5-super-vl",
+        "name": "Clover — Nemotron 3.5 Super VL (120B-A12B HG4-16R, 1M Context)",
         "url": "https://api.cloverframework.com/v1/chat/completions",
         "apiType": "chat-completions",
         "toolCalling": true,
@@ -51,8 +44,19 @@ VS Code (`1.105+` / `copilot-chat 0.70+`) includes a native `customendpoint` pro
         "streaming": true
       },
       {
-        "id": "clover-kimi-k3",
-        "name": "Clover — Kimi K3 (2.78T MoE)",
+        "id": "lfm3-omni-2b",
+        "name": "Clover — LFM3-Omni-2B (HG4-16R Fast Assistant)",
+        "url": "https://api.cloverframework.com/v1/chat/completions",
+        "apiType": "chat-completions",
+        "toolCalling": true,
+        "vision": true,
+        "contextWindow": 32768,
+        "maxOutputTokens": 8192,
+        "streaming": true
+      },
+      {
+        "id": "kimi-k3",
+        "name": "Clover — Kimi K3.1 Pro (2.8T MoE K31H)",
         "url": "https://api.cloverframework.com/v1/chat/completions",
         "apiType": "chat-completions",
         "toolCalling": true,
@@ -65,18 +69,3 @@ VS Code (`1.105+` / `copilot-chat 0.70+`) includes a native `customendpoint` pro
   }
 ]
 ```
-
-2. Open the model picker in the VS Code Chat view and select **`Clover — Nemotron 3.5 Super VL (120B-A12B)`**, **`Clover — Clover-35B-A3B (35B-A3B Block Diffusion MoE)`**, **`Clover — Liquid LFM3-1.7B (24L Tri-Hybrid)`**, or **`Clover — Kimi K3 (2.78T MoE)`**.
-
----
-
-## Option B — Standalone `clover-vscode-provider` Extension (For Any User / Any Account)
-
-For users who want a one-click install (or whose GitHub Enterprise organization disables client BYOK providers), this extension registers `"vendor": "clover"` via VS Code's official `vscode.lm.registerLanguageModelChatProvider('clover', provider)` API:
-
-### Install Locally
-```bash
-# Symlink or copy into ~/.vscode/extensions/
-cp -r vscode-extension ~/.vscode/extensions/clover-framework.clover-vscode-provider-6.0.0
-```
-Reload VS Code (`Developer: Reload Window`), open the Chat model picker, and select any of the four Clover models under the **Clover** provider.

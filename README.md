@@ -12,6 +12,10 @@
 <p align="center">
   <a href="https://cloverframework.com/"><strong>cloverframework.com</strong></a>
   ·
+  <a href="https://cloverframework.com/ai-system/"><strong>AI Studio (v6.0)</strong></a>
+  ·
+  <a href="https://cloverframework.com/hg-format/"><strong>AI Mythbuster</strong></a>
+  ·
   <a href="QUICKSTART.md">Quickstart</a>
   ·
   <a href="AGENTS.md">AGENTS.md</a>
@@ -21,132 +25,87 @@
 
 ---
 
-# Clover
+# Clover (`v6.0.0`)
 
-Clover is a framework for working with System, Human, and AI to produce meaningful outcomes.
+**Clover** is a framework and open-source AI system for working with **System, Human, and AI** to produce meaningful outcomes through a repeating five-stage cycle:
 
-The framework itself is documented at **[cloverframework.com](https://cloverframework.com/)** and in `docs/`.
+```text
+Context → Direction → Execution → Outcome → Growth
+```
 
-This repository contains the documentation, practical guidance, case studies, and the implementation work around Clover.
+- **Context** — establish what is actually true in the system before deciding.
+- **Direction** — define the objective, priorities, and boundaries *(owned by a named, accountable human)*.
+- **Execution** — carry out the work within human Direction and system boundaries.
+- **Outcome** — verify what the real system shows *(never claim unverified output as success)*.
+- **Growth** — carry what the Outcome taught into the next cycle's Context.
 
-## Start here — Repository Navigation Map
+> **The model can propose. The system decides. Deterministic tools compute. Evidence verifies. Humans remain accountable.**
+
+---
+
+## Start Here — Repository Navigation Map
 
 | What you want to do | Where to go |
 | :--- | :--- |
-| **Understand the Clover Framework (`Context → Direction → Execution → Outcome → Growth`)** | [**cloverframework.com**](https://cloverframework.com/) · [`QUICKSTART.md`](QUICKSTART.md) · [`docs/README.md`](docs/README.md) · [`docs/case-studies/`](docs/case-studies/) |
-| **Operate any AI agent under Clover** | [`AGENTS.md`](AGENTS.md) — self-contained operating contract |
-| **Read the 6 Broken AI Myths & `HG` 4-Bit Hadamard Format** | [**AI Mythbuster (`cloverframework.com/hg-format/`)**](https://cloverframework.com/hg-format/) · [`site/hg-format/index.html`](site/hg-format/index.html) |
-| **Verify all 6 Myths & `HG4` on your own machine (Zero Human Setup)** | [`site/hg-format/REPRODUCE_AGENTS.md`](site/hg-format/REPRODUCE_AGENTS.md) *(paste into any AI agent)* · [`site/hg-format/reproduce_hg_myths.py`](site/hg-format/reproduce_hg_myths.py) · [`site/hg-format/convert_to_hg.py`](site/hg-format/convert_to_hg.py) |
+| **Understand the Clover Framework** | [**cloverframework.com**](https://cloverframework.com/) · [`QUICKSTART.md`](QUICKSTART.md) · [`docs/README.md`](docs/README.md) · [`docs/case-studies/`](docs/case-studies/) |
+| **Operate any AI agent under Clover** | [`AGENTS.md`](AGENTS.md) — drop-in self-contained operating contract |
+| **Launch or Download Clover AI Studio `v6.0.0` (Web, Windows, Android, VS Code)** | [**cloverframework.com/ai-system/**](https://cloverframework.com/ai-system/) · [**Open Web Studio**](https://cloverframework.com/clover-ai/) · [`download/`](download/SHA256SUMS.txt) · [`clover-ai-system/README.md`](clover-ai-system/README.md) |
+| **Read the 6 Broken AI Myths & `HG4` 4-Bit Hadamard Format** | [**AI Mythbuster (`cloverframework.com/hg-format/`)**](https://cloverframework.com/hg-format/) · [`site/hg-format/index.html`](site/hg-format/index.html) |
+| **Reproduce all 6 Myths & `HG4` on your own machine (Zero Human Setup)** | [`site/hg-format/REPRODUCE_AGENTS.md`](site/hg-format/REPRODUCE_AGENTS.md) *(paste into any AI agent)* · [`site/hg-format/reproduce_hg_myths.py`](site/hg-format/reproduce_hg_myths.py) · [`site/hg-format/convert_to_hg.py`](site/hg-format/convert_to_hg.py) |
 | **Inspect raw public benchmark ledgers (`2026-11-26`)** | [`benchmarks/public-runs-20261126/README.md`](benchmarks/public-runs-20261126/README.md) · [`research/benchmarks/`](research/benchmarks/) |
-| **Run the Minimal 4-Part Clover Harness, `tsock://` Mesh & Studio** | [`clover-ai-system/README.md`](clover-ai-system/README.md) · [`docs/reference/release-v6.md`](docs/reference/release-v6.md) · [`CHANGELOG.md`](CHANGELOG.md) |
-| **Read the v6.x → v7.0 Next Milestone Roadmap (5 Senses + 1 Brain + `JEPA` + `Tool-NCM`)** | [`docs/runtime-context/one-brain-five-senses-research-context.md`](docs/runtime-context/one-brain-five-senses-research-context.md) |
-| **Browse full research papers & directory layout** | [`research/clover-ai-system-paper/README.md`](research/clover-ai-system-paper/README.md) · [`research/README.md`](research/README.md) · [`docs/repository-organization.md`](docs/repository-organization.md) |
-
-## Clover System &amp; Architecture (`Clover v6.0` &amp; Foundational 7-Layer Stack)
-
-**Clover** is both the operating methodology (`Context → Direction → Execution → Outcome → Growth` in [`AGENTS.md`](AGENTS.md)) and the open-source AI system built under it ([`clover-ai-system/`](clover-ai-system/)). In **v6.0** ([`release-v6.md`](docs/reference/release-v6.md)), Clover pairs Hadamard-Grouped (`HG4-16R-OP` / `K31H`) specialist models, deterministic `0B` computation tools (`x-cruncher`, `Lean 4`, `Periodogram+Conformal`, Defeasible Rule Resolution), a `4 Bytes/token` binary mesh (`tsock://`), and `CloverMetricsLedger` telemetry behind a minimal **4-part human-steerable harness** (`AGENTS.md` + `mcp.json` + `<task_id>.md` Context + Prerequisite-Gated Todo).
-
-Below is the foundational 7-layer neuro-symbolic architecture first established in [`release-v4.md`](docs/reference/release-v4.md) and [`research/observe/README.md`](research/observe/README.md):
-
-It began on a single CPU host from the Clover equation of Kimi K3 and from Fareed Khan's `kimi-k3-in-c` (with its first snapshot [`clover-k3`](https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/) in git history), and currently stands as a **7-layer neuro-symbolic, compiler-verified, memory-accumulating system** running across a single CPU workstation (`Ryzen 9 7950X3D`, `124 GB` RAM), an `8 × NVIDIA RTX 3090` GPU server (`192 GiB` VRAM), laptops, and mobile (`Samsung Galaxy S23`), reproducibly bootstrapped from GitHub and Hugging Face ([`Santhoshsathish94/clover-ai-studio`](https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio), organized under `kimi/`, `nemotron/`, and `liquid-lfm3/`):
-
-1. **Governance &amp; Discernment Kernel ([`AGENTS.md`](AGENTS.md)):** Operates under `Context → Direction → Execution → Outcome → Growth`, keeping epistemic states (`observed`, `externally_verified`, `hypothesis`, `user_stated_belief`, `unresolved`) distinct.
-2. **File-Based Memory Tree &amp; Relational Knowledge Graph ([`k3_memory_graph.py`](clover-ai-system/src/tools/hybrid-ncm-k3/k3_memory_graph.py), [context](docs/runtime-context/engine-and-architecture/clover-memory-graph-context.md)):** Human-readable Markdown memory files with YAML front matter (`32` canonical seed entries, `65` typed cross-branch relationships), a closed-loop `staging/` promotion gate, and six mechanisms from the 11 foundational AI papers ([`foundations-11-papers-human-guide.md`](docs/runtime-context/foundational-papers-1943-to-2017/foundations-11-papers-human-guide.md) &amp; [`clover-foundations-to-clover-gpu-context.md`](docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md)).
-3. **Ontology-Guided Neuro-Symbolic GraphRAG &amp; Symbolic Verifier ([`k3_ontology_graph.py`](clover-ai-system/src/tools/hybrid-ncm-k3/k3_ontology_graph.py), [context](docs/runtime-context/engine-and-architecture/clover-ontology-graphrag-research-context.md)):** Deterministic property graph + 4 Horn inference rules + Newell–Simon `CSm`/`VCt` signature pruning + `[E#]` / `[P#]` provenance + `CloverSymbolicVerifier`.
-4. **HybridAgent Continuous `<latent>` Reasoning &amp; Live Tools ([`k3_agent_engine.py`](clover-ai-system/src/tools/hybrid-ncm-k3/k3_agent_engine.py), [context](docs/runtime-context/engine-and-architecture/clover-hybridagent-research-context.md)):** 14-step continuous `<latent>` reasoning (`K3NativeHybridLink` `7,168 → 7,168`), live `<search>` (arXiv, Wikipedia, DuckDuckGo, URL fetch), sandboxed `<python>` (math, unit tests, charts), and `MoonViT3d` vision.
-5. **On-the-Fly Generative Compilation for Python &amp; Rust ([`k3_generative_compiler.py`](clover-ai-system/src/tools/hybrid-ncm-k3/k3_generative_compiler.py), [context](docs/runtime-context/engine-and-architecture/clover-generative-compilation-research-context.md)):** Statement-boundary partial-program sealors ($\mathcal{S}_{\text{PY}}, \mathcal{S}_{\text{RS}}$ via `rustc`) that catch syntax, arity, prefix-shadowing, stagnant loops, doctests, and Rust borrow/type errors mid-generation and roll back the KV cache.
-6. **93-Layer 2.78T MoE GPU/CPU Engine, Validated Rust Host Path &amp; Direction B Data Movement ([`k3_gpu_experts_lib.cu`](clover-ai-system/src/tools/hybrid-ncm-k3/k3_gpu_experts_lib.cu), [`clover-kimi-k3/src/rust/`](clover-ai-system/src/rust/), [context](docs/runtime-context/engine-and-architecture/clover-data-movement-direction-b-context.md)):** Full 93-layer Kimi K3 backbone + 8 validated Rust host-path crates (`slotcache`, `poolinit`, `supply`, `copyq`, `routetable`, `planner`, `loader`, `engcfg` — `213/213` unit tests, `max_abs_diff = 0.0` C++ vs. Rust parity) + five Direction B data-movement upgrades (`95.22%–95.29%` overall VRAM hit rate, `0` PCIe D2H writebacks on cold/warm reads, `148.5 K3 tok/s` across 93 GPU layers).
-7. **11-Pass Parallel Next-Concept Modeling (NCM) &amp; Native Web / VS Code Agent Surfaces ([`k3_chat_server.py`](clover-ai-system/src/tools/hybrid-ncm-k3/k3_chat_server.py), [`extension.js`](clover-ai-system/vscode-extension/extension.js)):** 11-level multiscale residual VQ-VAE and `NextConceptTransformer` emitting 64-token windows in 11 parallel passes (`17,869.8 tok/s` 8-GPU DDP ceiling), serving both the Clover Web UI (`256K` session context) and the native VS Code Agent extension.
-
-## Core Research Thesis: The System Around the Model Matters
-
-**Clover is a systems-level experiment, not a model-selection contest.** We deliberately chose Kimi K3—a normal, open-weights model that scored **33 of 70 tasks (47.14%)** when evaluated on its own in our custom suite—instead of choosing the strongest available model and treating its raw score as the result. The question was not, “Which model scores highest?” It was, **“What can an AI system accomplish when a model is one component of a larger, structured system?”**
-
-The model provides underlying capability. Clover organizes how that capability is applied through context, direction, action, verification, memory, ontology, tools, generative compilation, and governance. The system can inspect the problem, gather relevant context, make and apply changes, test its work, and use evidence to determine whether the intended outcome was achieved. The model is important, but the system's ability to coordinate and verify work is the object of this research.
-
-Our current 70-task evaluation across all three switchable foundation models in [`clover-ai-system/`](clover-ai-system/README.md) (`kimi-k3`, `nemotron-3.5-super-vl`, and `lfm3-1.7b`, spanning `1.73B` to `2.78T` parameters) provides a concrete result ([`clover_3_models_without_vs_with_clover_70_task_report.json`](research/clover_3_models_without_vs_with_clover_70_task_report.json)):
-
-| Foundation Model &amp; Configuration | Without Clover (`Arm 0`, Model Alone) | With Full 7-Layer Clover Cycle (`Arm 2`) | Clover Cycle Lift |
-| :--- | :---: | :---: | :---: |
-| **`kimi-k3`** (`MoonshotAI Kimi K3` — `2.78T` MoE, 93 layers) | **`33 / 70` (`47.14%`)** *(57/70 = 81.43% in Arm 1)* | **`70 / 70` (`100.00%`)** | **`+37 tasks` (`+52.86 pp`)** |
-| **`nemotron-3.5-super-vl`** (`NVIDIA Nemotron 3.5 Super VL` — `124.45B-A12B`, 88 layers, Default) | **`16 / 70` (`22.86%`)** | **`70 / 70` (`100.00%`)** | **`+54 tasks` (`+77.14 pp`)** |
-| **`lfm3-1.7b`** (`Liquid AI LFM3-1.7B` — `1.73B` dense tri-hybrid, 24 layers) | **`19 / 70` (`27.14%`)** | **`70 / 70` (`100.00%`)** | **`+51 tasks` (`+72.86 pp`)** |
-
-The point is not that any single model is the best model. **All three models fail over half the suite when run on their own (`22.86%–47.14%`), and all three solve all 70 tasks (`70 / 70 = 100.00%`) when governed by the Clover cycle.** That is evidence worth investigating about system design—not a universal measure of intelligence or proof that every model, task, or environment will produce the same result.
-
-A stronger model may also benefit from Clover's surrounding architecture. That is a reason to study model portability and complete-system capability, not to make model rankings the central claim. Standalone frontier-model results are not direct comparisons between complete systems because those models were not run with Clover's surrounding layers attached.
-
-We welcome independent reproduction, held-out tasks, scrutiny of the evaluation protocol, alternative scoring, and published failures as well as successes. The broader claim must remain proportional to the evidence: these results are from a custom 70-task suite and need independent validation before they can support general conclusions.
-
-> **The model provides a capability. The system organizes, extends, and verifies how that capability is used to solve problems.**
-
-Clover's research goal is to make AI systems more capable—not to prove that one model is the winner. The practical goal is to publish an architecture and evidence that researchers can challenge, reproduce, and extend.
-
-### The Clover cycle
-
-Clover organizes its operating methodology as five connected stages:
-
-```text
-Context → Direction → Execution → Outcome → Growth
-```
-
-- **Context** — establish relevant information, memory, and constraints.
-- **Direction** — define the objective and choose a path.
-- **Execution** — determine and carry out the means within Direction and system boundaries.
-- **Outcome** — establish what actually happened through evidence from the System.
-- **Growth** — use validated experience to improve future work.
-
-Growth is part of the framework's cycle; claims of persistent learning or general improvement require their own evidence.
+| **Read `v6.0.0` Release Notes & Changelog** | [`docs/reference/release-v6.md`](docs/reference/release-v6.md) · [`CHANGELOG.md`](CHANGELOG.md) |
+| **Read the Next Milestone Roadmap (`v6.x → v7.0`: 5 Senses + 1 Brain)** | [`docs/runtime-context/one-brain-five-senses-research-context.md`](docs/runtime-context/one-brain-five-senses-research-context.md) |
+| **Browse full repository layout & historical research** | [`docs/repository-organization.md`](docs/repository-organization.md) · [`research/README.md`](research/README.md) · [`TODO.md`](TODO.md) |
 
 ---
 
-### What the 70-Task Evaluation &amp; Head-to-Head Comparison Show
+## Clover AI Studio & System (`v6.0.0`)
 
-We ran the **exact same 70 prompts** ([`run_real_ai_benchmark_suite.py`](clover-ai-system/src/tools/hybrid-ncm-k3/run_real_ai_benchmark_suite.py)) through **Clover AI (`v4`)** on our `8 × RTX 3090` server and through **GPT-6 Astra**, **Claude Opus 5.5**, and **Gemini 4 Argon**. For the three frontier models, our benchmark harness called their raw models directly without attaching Clover's surrounding layers (tools, compiler, ontology, and memory graph). The full 3-arm ablation (`Arm 0: 33/70 → Arm 1: 57/70 → Arm 2: 70/70`) and per-category breakdown live in the [full evaluation report](docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md) and [`clover-kimi-k3/README.md`](clover-ai-system/README.md):
+In **Clover v6.0** ([`clover-ai-system/`](clover-ai-system/README.md), [`docs/reference/release-v6.md`](docs/reference/release-v6.md)), **Windows Desktop**, **Android Mobile**, **Web Studio**, and **VS Code** run one shared, simpler **4-Part Steerable Clover System**:
 
-| System / Model | Public Tasks (`N=58`) | Organization Ontology + Memory (`N=12`) | All 70 Tasks | Total Time (`70` tasks) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Clover AI (`v4`)** *(Model + 6 Surrounding Layers)* | **`58 / 58` (`100.0%`)** | **`12 / 12` (`100.0%`)** | **`70 / 70` (`100.0%`)** | `1,002.3 s` (`8 × RTX 3090`) |
-| **Claude Opus 5.5** *(Clover layers not attached in harness)* | `57 / 58` (`98.3%`) | `8 / 12` (`66.7%`) | **`65 / 70` (`92.9%`)** | `263.2 s` (Cloud API) |
-| **GPT-6 Astra** *(Clover layers not attached in harness)* | `56 / 58` (`96.6%`) | `7 / 12` (`58.3%`) | **`63 / 70` (`90.0%`)** | `333.6 s` (Cloud API) |
-| **Gemini 4 Argon** *(Clover layers not attached in harness)* | `50 / 58` (`86.2%`) | `7 / 12` (`58.3%`) | **`57 / 70` (`81.4%`)** | `206.4 s` (Cloud API) |
+1. **Part 1 — `AGENTS.md` Steering & Epistemic Boundaries:** Enforces `Context → Direction → Execution → Outcome → Growth`, pauses with `STOP_AND_ASK` before destructive or underspecified actions, and applies a Tier-0 tool-exposure gate so small `2B` models are never flooded with unrequested schemas.
+2. **Part 2 — `mcp.json` (`0B` Computed Specialists First + `HG4` Specialist Mesh):**
+   - **Computed > Predicted:** Built-in zero-parameter deterministic tools compute what neural weights should never guess: `x-cruncher` exact arbitrary-precision arithmetic (`A*B`, `A^B` past `6,000+` digits, `N!`, BBP hexadecimal $\pi$), a `0B` Periodogram + Split-Conformal `P10/P50/P90` time-series forecaster (`MASE = 0.3084` in `<50 ms` CPU, beating `2B/35B/120B` LLMs and `Chronos-0.2B`), a `0B` Defeasible Epistemic Rule Resolver (`180/180` accuracy), and Python AST verification.
+   - **Hadamard-Grouped (`HG4-16R` / `K31H`) Models & `tsock://` `4 B/tok` Mesh:** Shrinks open models ~4× (`70 GB` BF16 → `17.4 GB` `HG4` at `99.6%+` cosine fidelity) and streams binary token IDs at `4 Bytes/token` (`49.4×` smaller than HTTP JSON SSE).
+3. **Part 3 — `<task_id>.md` Context Ledger & Local-First Git Memory:** Writes human-readable per-task context files and stores chats, verified outcomes, and encrypted credentials locally on your device (Windows DPAPI / Android KeyStore) with optional sync to your own **private** GitHub repository.
+4. **Part 4 — Prerequisite-Gated SQLite Todo & `CloverMetricsLedger` Telemetry:** Tracks step dependencies (`todos` + `todo_deps`) and records live runtime metrics (`GET /api/clover/metrics`): used vs. idle models and tools, measured decode `tok/s` (`mean`/`p50`/`p95`/`max`), solver cycle counts, and Cycle-2 repair signals.
 
-**Three takeaways:**
-1. **On the 58 public tasks, frontier models are already near-perfect (`96.6%–98.3%`) from their weights alone.** When Clover's own local model is run the same way without its surrounding layers (`Arm 0`), it scores **`30 / 58` (`51.7%`)** on public tasks and **`33 / 70` (`47.1%`)** overall ([full 3-arm ablation](docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md)).
-2. **Why the 12 Ontology + Memory tasks require the surrounding layers:** Those 12 tasks test organization-specific records and prior session measurements stored in Clover's local ontology and memory files. Because our harness did not attach Clover's Ontology and Memory layers to the frontier model calls, they rightly abstained on records not present in the prompt (`7/12–8/12`).
-3. **What Clover adds (`33/70 → 57/70 → 70/70`):** Surrounding Clover's local open-weights model with Tools + Generative Compilation (`57/70 = 81.4%`) and Ontology + Persistent Memory (`70/70 = 100.0%`) lifts it by **`+52.9 percentage points`** while cutting GPU-seconds per solved task by **`2.04×`** ([details & raw JSON artifacts](docs/runtime-context/engine-and-architecture/clover-foundations-to-clover-gpu-context.md)).
+### Set Up One Model — or the Full Clover AI System — on Your Own Hardware
 
-Its central principle is:
+Inside **Settings → Model → Clover System Setup** (or from first launch via *Choose models / Use server*), users can configure **1 model**, a **custom subset**, or the **complete Clover AI System** across their device and any GPU servers they provide:
 
-> **The model can propose.  
-> The system decides.  
-> The tools enforce.  
-> Evidence verifies.  
-> Humans remain accountable.**
+- **Small models & `0B` tools run interactively on *any* phone, laptop, or CPU machine (`0` GPUs required).**
+- **Big models require GPUs to be interactive** — if a machine is CPU-only or lacks the required GPU VRAM, Studio automatically skips those models and displays the exact minimum server needed rather than letting a model crawl at `<1 tok/s`.
 
-The implementation follows the Clover cycle:
-
-```text
-Context → Direction → Execution → Outcome → Growth
-```
-
-**Upstream work:** [FareedKhan-dev/kimi-k3-in-c](https://github.com/FareedKhan-dev/kimi-k3-in-c) · [moonshotai/Kimi-K3](https://huggingface.co/moonshotai/Kimi-K3) · [togethercomputer/HybridAgent](https://github.com/togethercomputer/HybridAgent) · [HazyResearch/ncm](https://github.com/HazyResearch/ncm) · [CosmoIknosLab/ontology-guided-graphrag](https://github.com/CosmoIknosLab/ontology-guided-graphrag).
+| Model / Specialist | `HG4` Footprint | Minimum Required Hardware / Servers | Interactive Gate |
+| :--- | :--- | :--- | :--- |
+| **`0B` Computed Pack** (`x-cruncher` + Conformal + Defeasible) | `0 MB` | Any phone, laptop, or CPU machine (`0` GPUs) | **Ready on any device** (`<50 ms` CPU) |
+| **`LFM3-Omni-2B`** (`HG4-16R` local multimodal assistant) | `0.98 GB` | Any phone, laptop, or CPU/GPU machine (`0` GPUs) | **Ready on any device** (`18–65 tok/s` CPU · `163 tok/s` GPU) |
+| **`Chronos-Bolt 0.2B` & `V-JEPA 2.1`** (`HG4`) | `0.12–1.2 GB` | Any phone, laptop, or CPU/GPU machine (`0` GPUs) | **Ready on any device** |
+| **`Boltz-2`** (`HG4` 3D biomolecular folding) | `3.5 GB` (`~14 GB` resident) | `1×` GPU server `>= 16 GB` VRAM (`RTX 4080 / A10G / T4 / 3090`) | **GPU required** *(skipped on CPU)* |
+| **`Goedel-Prover-V2-32B`** (`HG4-16R` `Lean 4` prover) | `16.4 GB` (`21.6 GB` @ 16k KV) | `1×` GPU server `>= 24 GB` VRAM (`1× RTX 3090 / 4090 / L4`) | **GPU required** (`18.4 tok/s`; *skipped on CPU*) |
+| **`Clover-35B-A3B` Coordinator** (`Qwen3.6-35B-A3B + LoRA`, `HG4-16R-OP`) | `17.4 GB` (`20.2 GB` @ 32k KV) | `1×` GPU server `>= 24 GB` VRAM (`1× RTX 3090 / 4090 / L4`) | **GPU required** (`35.8 tok/s`; *skipped on CPU*) |
+| **`Nemotron 3.5 Super VL`** (`120B-A12B` `HG4-16R`, `1M` context) | `60.2 GB` (`68 GB` resident) | `1× 80 GB` GPU (`A100/H100`) or `4× 24 GB` GPU server (`>= 72 GB` VRAM) | **GPU required** (`22–38 tok/s`; *skipped on CPU*) |
+| **`Kimi K3.1 Pro`** (`2.8T MoE` `K31H` escalation) | `1,420 GB` | `>= 8` same-rack GPU servers (`>= 1,400 GB` aggregate VRAM) | **In-rack cluster** (`6–18 tok/s`; *skipped without cluster*) |
 
 ---
 
-### Supporting areas &amp; boundaries
+## Six Broken AI Myths — Verified on Real Hardware (`2026-11-26`)
 
-- **Single-workstation CPU engine (`clover-kimi-k3`):** A 2.78-trillion-parameter model runs on a single Ryzen 9 7950X3D with 124 GB of RAM ([status log](docs/runtime-context/engine-and-architecture/clover-kimi-k3-cpu-context.md)). The recorded 1,000-token prompt takes `297.5–301.0 s` (`~0.3 s` per input token) and is bit-identical to the reference chain (`1,000/1,000` embeddings, `1,000/1,000` layer-92 outputs, `8,000/8,000` snapshots); decoding costs `3.1–3.5 s` per output token plain, and `2.7 s` per token with DSpark speculative decoding.
-- **8 × RTX 3090 GPU 7-layer stack (`clover-kimi-k3/src/tools/hybrid-ncm-k3/`):** Bootstrapped from GitHub and Hugging Face ([`set-up-new-machine.sh`](clover-ai-system/src/scripts/set-up-new-machine.sh), [`download-hybrid-ncm-datasets.sh`](clover-ai-system/src/scripts/download-hybrid-ncm-datasets.sh)), verified across the 70-task suite ([`benchmarks/results/1936d4eb0d53/gpu/`](benchmarks/verified-runs/run-baseline-before-foundations/gpu/)).
-- **Multi-domain SWE-Bench Pro V2 (`HARD-51`) verification suite ([`benchmarks/swebench-pro-v2/`](benchmarks/swebench-pro-v2/README.md)):** Reproducible, domain-by-domain engineering challenges from SWE-Bench Pro V2 (`HARD-51`, `0/9` frontier baseline in `traj/*`) showing what fails when a model acts without surrounding system verification (`Attempt 1`, `REWARD=0`) and how the full Clover AI v4 system resolves and re-grades each problem in a pristine sandbox (`REWARD=1`), with one-command `reproduce.sh` scripts.
-- **Historical &amp; research material:**
-  - [`clover-k3/`, first version](https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/) — historical snapshot at commit `013cbc8` (`~5.9 s` per generated token on CPU)
-  - [K3 investigation](research/k3/README.md) &amp; [Model equation](research/k3/model/k3-model-equation.md) — grouped derivations, measurements, and float-for-float verification
-  - [Observe experiment](research/observe/README.md) — the next experiment (reciprocal observation, mutual change, and distributed learning; tracked separately from `Clover AI v4`)
-  - [`docs/framework/07-outcome.md`](docs/framework/07-outcome.md) &amp; [`docs/governance/08-governance.md`](docs/governance/08-governance.md) — what counts as evidence, accountability, and governance
+Every engineering claim in Clover v6.0 is backed by raw JSON ledgers ([`benchmarks/public-runs-20261126/`](benchmarks/public-runs-20261126/README.md)) and a standalone `<5s` zero-GPU/zero-API-key reproducibility suite (`python -W error site/hg-format/reproduce_hg_myths.py` or paste [`site/hg-format/REPRODUCE_AGENTS.md`](site/hg-format/REPRODUCE_AGENTS.md) into any coding agent):
+
+1. **Myth 1 (*"Models need giant BF16 VRAM"*):** Block-16 Walsh-Hadamard rotation (`HG4-16R`) suppresses activation/weight outliers (`+6.0 dB` to `+20.9 dB` SQNR, `0.996–0.9985` cosine), shrinking `Qwen3.6-35B-A3B` from `70 GB` → `17.4 GB` (`1× 24 GB` GPU) and `Boltz-2` by `7.57×` (`pLDDT = 0.931` live 3D folding).
+2. **Myth 2 & 3 (*"Bigger single monoliths beat coordinated specialists"*):** On `Lean 4 + Mathlib` MiniF2F, `Goedel-Prover-V2-32B + Clover` (`66.7%`) and a 10-line `0B` tactic cascade (`50.0%`) both beat standalone `120B` (`41.7%`).
+3. **Myth 4 (*"Agents must chat over verbose HTTP JSON"*):** Binary token sockets (`tsock://`) pass `4 Bytes/token` (`49.4×` smaller wire payload than HTTP JSON SSE) with `T=0` priority clubbing.
+4. **Myth 5 (*"Train neurons to predict math, forecasts, and rule overrides"*):** `0B` computed tools (`x-cruncher`, `0B` Periodogram+Conformal `MASE = 0.3084` in `52 ms` CPU, `0B` Defeasible Resolver `180/180`) beat `2B/35B/120B` LLMs at zero GPU cost.
+5. **Myth 6 (*"AI solves real-world problems alone without human steering"*):** On 6 domain-policy & hidden-constraint tasks, unsteered AI-alone scored `0/6` (`0.0%`) while Human Steering + Clover scored `5/6` (`83.3%`) in `1.17` mean cycles using `53%` fewer tokens.
+
+---
+
+## Prior Research Lineage (`v4–v5`, Archived in Repo)
+
+Earlier neuro-symbolic research milestones — including the single-workstation `Kimi K3` CPU engine ([`clover-kimi-k3-cpu-context.md`](docs/runtime-context/engine-and-architecture/clover-kimi-k3-cpu-context.md)), the 11 Foundational Papers (`1943–2017`) & Direction B hardware data-movement study ([`research/clover-ai-system-paper/README.md`](research/clover-ai-system-paper/README.md), `33/70 → 70/70` across 3 backbones), Collective Problem-Solving Learning ([`research/collective-learning/`](research/collective-learning/README.md)), and SWE-Bench Pro V2 verification ([`benchmarks/swebench-pro-v2/`](benchmarks/swebench-pro-v2/README.md)) — remain preserved with full scripts and raw logs under `research/`, `benchmarks/`, and [`docs/reference/release-v4.md`](docs/reference/release-v4.md).
 
 ## Contributing
 
-Clover is an open, evidence-driven project. Corrections, disagreements, evidence, implementation experiments, and practical improvements are welcome.
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Clover is an open, evidence-driven project. Corrections, disagreements, independent reproductions, and practical improvements are welcome — see [`CONTRIBUTING.md`](CONTRIBUTING.md).

@@ -1,7 +1,5 @@
-Clover AI Studio v5.0.7 (Package Version 5.0.7.0) — Release:
-• Long answers are no longer cut at 512 tokens; an answer that repeats itself ends on its last full sentence, and a runaway Python tool call is stopped early.
-• A chat answers from its own conversation: other chats are recalled only when you ask about the past.
-• Attached spreadsheets and CSV files: exact counts per value, and Python opens the file reliably.
-• Notes to rewrite into a sentence are written by the model.
-• 3D Clover Robot voice mode for hands-free conversation.
-• Packaged as an x64 MSIX / `.msixupload` bundle (`SanthoshNarayanan.CloverAIStudio`, `5.0.7.0`) alongside the Authenticode-signed standalone x64 installer (`CloverAIStudio-Setup.exe`).
+Clover AI Studio v6.0.0 (Package Version 6.0.0.0) — Release:
+• Upgraded onto the simpler v6.0 4-Part Steerable Clover System (AGENTS.md + mcp.json 0B Computed Specialists + <task_id>.md Context + Prerequisite-Gated SQLite Todo + Live CloverMetricsLedger Telemetry).
+• Built-in 0B Computed Specialists: exact x-cruncher big-integer math (A*B, A^B past 6,000+ digits, N!, BBP hexadecimal Pi), 0B Periodogram + Split-Conformal time-series forecaster (<50 ms CPU), and 0B Defeasible Rule Resolver.
+• New Clover System Setup (Settings -> Model): deploy one model, a custom selection, or the full 9-component Clover AI System across your PC and any GPU servers you provide — small models run interactively on any laptop/CPU, while big GPU models verify live tok/s and skip CPU-only/undersized machines with exact minimum server specs.
+• Bundled clover-local-6.0.0.vsix for two-way VS Code Copilot Chat, File Viewer, Diff, Integrated Browser, and Terminal integration, Authenticode SHA-256 signed (CloverAIStudio-Setup.exe).

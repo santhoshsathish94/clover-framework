@@ -3,11 +3,11 @@
 ## 1. Release Artifacts & Signing
 
 - **Upload Artifact (Google Play Console)**: `release/beta/android/clover-ai-studio-beta.aab`
-  - Size: `81,672,344` bytes (`77.89 MB`)
-  - SHA-256: `bd022107dacea6b8dac999661f740d9bc207934cd3253b5b6340e95634492763`
+  - Size: `81,671,951` bytes (`77.89 MB`)
+  - SHA-256: `b4c0adb27c39059e051db6a69a266849696a6ecf3caf6fd67c6eea9bd27f7541`
 - **Direct ADB / Tester APK**: `release/beta/android/clover-ai-studio-beta.apk`
-  - Size: `82,748,835` bytes (`78.92 MB`)
-  - SHA-256: `22e162f56a8d53c2b294e076d6ad089d68be56b749512c2372e62c308bed5ee7`
+  - Size: `82,748,417` bytes (`78.92 MB`)
+  - SHA-256: `b89e793e19fcb282ac79ad8b3c25850afb9902624c8730c67047c431c6dc315a`
 - **Package Identity**:
   - `applicationId`: `ai.clover.studio`
   - `versionCode`: `22`

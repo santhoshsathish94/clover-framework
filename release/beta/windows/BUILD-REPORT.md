@@ -16,7 +16,7 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/windows/clover-ai-studio-beta-setup.exe` | `download/laptop/CloverAIStudio-Setup.exe` | Standalone direct-download Windows x64 installer | `10,455,000` bytes (`9.97 MB`) | `115f10bdd354a41088ab9bf068222810eab09cf23f0e04bc81a7a62dbee7a4fb` |
+| `release/beta/windows/clover-ai-studio-beta-setup.exe` | `download/laptop/CloverAIStudio-Setup.exe` | Standalone direct-download Windows x64 installer | `10,454,488` bytes (`9.97 MB`) | `2be3467c0330277403a1be2f5b84d58d034fdab5830480eade8167ef7ef9bcef` |
 | `release/beta/windows/CloverFramework-CodeSign.cer` | `download/laptop/CloverFramework-CodeSign.cer` | Authenticode code-signing public certificate | `832` bytes | `9365ec5d455b0ef8179ccf1c061cf481c86dad234b9f3dc62244e487c659072d` |
 
 ---

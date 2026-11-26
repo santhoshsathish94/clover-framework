@@ -1,99 +1,29 @@
-# Clover AI Studio — Mobile Edition (`clover-ai-system/mobile/`)
+# Clover AI Studio — Android Mobile Edition (`v6.0.0`, `versionCode 22`)
 
-Complete on-device Clover AI System and signed Android APK (`ai.clover.studio`) engineered for the **Samsung Galaxy S23 (`Qualcomm Snapdragon 8 Gen 2 for Galaxy`, `SM8550-AC`)** unified SoC, organized around **3 Core Pipeline Components (`Inference → Plan → Decode`)** supported by **3 Shared Supporting Components (`Memory · Relationships · Tools`)**:
+`clover-ai-system/mobile/` contains the Android assets and native ARM64/Snapdragon C11 acceleration modules for **Clover AI Studio** (`ai.clover.studio`, `minSdk 26`, `targetSdk 36`, `compileSdk 36`).
 
-## 1. The 3 Core Pipeline Components (`Inference → Plan → Decode`)
+---
 
-1. **Core 1 — Inference (`Base Model` + Built-In Direction B Unified SoC Engine, `lfm3_cpu_engine.c`)**:
-   - Executes all 24 Tri-Hybrid layers of `LiquidAI/LFM3-Omni-2B` (`13` width-7 `Gated ShortConv` + `5` Sliding-256 `GQA` + `6` Full Global `GQA` + `SwiGLU FFN`).
-   - **Built-In Direction B Hardware & Memory Engine**:
-     - **Heterogeneous Adreno 740 GPU + Kryo ARMv9 CPU Co-Execution**: Zero-copy OpenCL 3.0 `CL_MEM_USE_HOST_PTR` + `cl_khr_integer_dot_product` (`dot_acc_sat`) running SwiGLU rows `0..3839` on the Adreno 740 GPU while the Kryo CPU cores simultaneously compute rows `3840..7679` via `SDOT` (`7680 / 7680` bit-identical parity, `max_abs_diff = 0.0`).
-     - **ARMv8.6-A `i8mm` (`SMMLA` `vmmlaq_s32`)**: 2×2 matrix tile broadcast coalescing (`32` Int8 MACs/instruction) for `T >= 2`.
-     - **1-Pass `FlashAttention-2` Online Softmax**: Register-resident `(m_i, l_i, o_acc[0..127])` across all 11 GQA layers (`0` `scores[]` allocations, `0` strided V-cache misses).
-     - **`LFM3-SoC-Q4` Mobile Format (`894.4 MB` Working Set)**: Two-stage 4-bit `lm_head.4bit.bin` (`129.39 MiB`) with Top-64 exact BF16 refinement (`23.65 ms`, `100.00%` top-1 match) + 4-bit planar group-64 `operator.4bit.bin` (`164.59 MiB`) + `ffn.4bit.bin` (`586.1 MB`).
-     - **`SpecMD Policy 3` OS `madvise(MADV_WILLNEED)` Lookahead & `LCP` Cache Reuse**: Cuts major flash page faults (`majflt`) by `254.7×` (`2,292 -> 9`) and skips re-prefilling matching prompt prefixes.
-2. **Core 2 — Plan (`HybridAgent` & Stage-3 `HybridLink2048` + Clover Retry Cycle, `s23_on_device_clover.py` & `clover_cycle.py`)**:
-   - Runs *after* Base Model inference on $h_t \to r_t = R(h_t)$, stepping continuous `<latent>` reasoning vectors into the 24-layer cache and coordinating multi-turn tool calls.
-   - Runs the user-triggered **Clover Retry Cycle** (`Context → Direction → Execution → Outcome → Growth` with deterministic arithmetic/format/compiler checks and 3-way independent majority voting).
-3. **Core 3 — Decode (`11-Level NCM` Concept Renderer, `S23HybridAgentAndNCM`)**:
-   - Maps `(h_t, r_t)` through `Lfm3ComboBridge(2048 -> 384)` + `Lfm3ExpertBridge(2048 -> 384)` into an **11-level multiscale residual `VQVAE`** (`[1, 4, 8, 14, 20, 26, 32, 40, 48, 56, 64]` = `313` concept codes), predicts the concept hierarchy via `NextConceptTransformer`, and decodes to final words via `LexicalPointerDecoder`.
-   - All **C1, C2, and C3 layers execute 100% from precomputed `CLVRTRK1` + `CLVR4B01` trunks & experts** (`24` C1 trunks + `24` C1 SwiGLU experts + `31` C2/C3 precomputed directories: `plan-trunk-0/`, `bridge-trunk-0/`, `vqvae-trunk-0/`, `vqvae-expert-0..10/`, `ncm-trunk-0..11/`, `ncm-global-0/`, `ptr-trunk-0..2/`, `ptr-global-0/`).
+## 1. Shared Core with Desktop & Web (`v6.0.0`)
 
-## 2. The 3 Supporting Components (`Memory · Relationships · Tools`)
+Android Mobile embeds CPython `3.12` via Chaquopy (`clover.zip` built directly from [`../studio/clover/`](../studio/clover/)) and keeps [`android-app/assets/index.html`](android-app/assets/index.html) **byte-identical** to [`../studio/clover/web/app.html`](../studio/clover/web/app.html) (enforced by [`../studio/tests/test_studio_unified_ui.py`](../studio/tests/test_studio_unified_ui.py)).
 
-All 3 supporting components serve **Inference**, **Plan**, and **Decode**:
+Every Android install runs the exact same **4-Part Steerable Clover System** (`clover_v6_system.py`):
+1. **`AGENTS.md` Steering & Epistemic Boundaries:** `Context → Direction → Execution → Outcome → Growth` + `STOP_AND_ASK` confirmation gates before risky actions.
+2. **On-Device `0B` Computed Specialists (`libxcruncher.so` & Pure Python):**
+   - Exact big-integer arithmetic (`A*B`, `A^B` past `6,000+` digits, `N!`, BBP hexadecimal $\pi$).
+   - `0B` Periodogram + Split-Conformal time-series forecaster (`<50 ms` on mobile CPU).
+   - `0B` Defeasible Epistemic Rule Resolver & Python AST verifier.
+3. **On-Device `LFM3-Omni-2B` (`HG4-16R` / `Q4_0`):**
+   - Packaged with Snapdragon `arm64-v8a` native libraries (`libllama_server.so`, `liblfm3_cpu_engine.so`, `libxcruncher.so`, Adreno OpenCL `libggml-opencl.so`, and Hexagon HTP `libggml-hexagon.so` / `v73..v81`).
+4. **Interactive Server Pairing (`Clover System Setup`):**
+   - Small models (`0B` Computed Pack, `LFM3-Omni-2B`, `Chronos-Bolt 0.2B`, `V-JEPA 2.1`) run interactively right on the phone (`0` external GPUs needed).
+   - Users can also pair their phone with one or more remote GPU servers (`Clover-35B-A3B` on `1× 24 GB` GPU, `Nemotron 3.5 Super VL 120B` on `>=72 GB` GPU) from **Settings → Model → Clover System Setup** or on first launch via *Choose models / Use server*; CPU-only or undersized servers automatically skip big GPU models that cannot run interactively.
 
-1. **Support 1 — Memory (`5-Stage Git Repository, GitHub-Only Session Sync & Encrypted Vault`, `clover_git_memory_repo.py` & `mobile_vault.py`)**:
-   - Organizes `clover-memory-repo/` around the 5 Clover stages (`sessions/<YYYY-MM>/<chat>.jsonl`, `execution/<YYYY-MM>/<chat>-t<N>.json`, `outcomes/<YYYY-MM>/<chat>.jsonl`, `growth/knowledge/entries.jsonl`, `growth/notes/<YYYY-MM>/<chat>.jsonl`, `config/<device>/`).
-   - **GitHub-Only Logged-In Sessions**: Users sign in exclusively with their GitHub account (via OAuth Device Flow or personal token); Clover never maintains its own user/password database. Signing in automatically links `<user>/clover-memory-repo` (strictly private `"private": true`), pulls sessions & memory on startup, and pushes new turns in the background.
-   - **Configurable Storage Locations (No In-App File Explorer Clutter)**: Users configure where **Media & Attachments** (`Local` folder or `Cloud-Synced` folder such as OneDrive/Google Drive/Dropbox/Nextcloud), **Memory Repository**, and **Project Workspaces** sit on disk; users browse files directly in their native OS file explorer.
-2. **Support 2 — Relationships (`Turn-Level Recall Index + Ontology Graph + 11 Foundational Papers`, `memory_index.py`, `k3_ontology_graph.py` & `k3_memory_graph.py`)**:
-   - **Turn-Level Recall (`memory_index.py`)**: Indexes every single message (`sessions/<month>/<chat>.jsonl#<n>:<role>`) and idle background `v3` exchange note (`USER:` + `ASSISTANT:`), retrieves via `BM25 + dense vector RRF`, excludes negative-outcome turns, and injects recalled context as a dated background system message (`F6`).
-   - **Symbolic Ontology GraphRAG & 11 Foundational Papers (`1943–2017`)**: Multi-hop causal & relational traversal (`CVE -> CWE -> CAPEC`), Horn-rule inference, and post-generation source grounding audit.
-3. **Support 3 — Tools (`On-Demand Tool Gate, Relevance-Filtered WebSearch, Terminal/SSH & Compiler Check`, `web_search.py`, `local_terminal.py` & `k3_generative_compiler.py`)**:
-   - **Best Measured Default (`tools: "ask"` — "When I ask")**: Runs tools only when the prompt requests calculation, code execution, web lookup, or file/shell inspection (`asked_tools`), keeping everyday conversation fast (`~3.4 s` vs `~32 s` when unrequested tools fire).
-   - **Relevance-Filtered Multi-Provider WebSearch (`web_search.py`)**: Supports free **Wikipedia & arXiv**, **Tavily**, and **Brave Search** with encrypted API keys in `mobile_vault.py` and automatic content-word overlap filtering to drop false-positive pages.
-   - **Local Terminal & Remote SSH (`local_terminal.py`)**: Process-group timeout enforcement (`os.setsid` + `os.killpg`), 1 MB UTF-8 output cap, and device-local Ed25519 SSH public key generation (`SSHHosts`) where the private key never leaves the device.
-   - **Generative Compiler Check (`CloverPythonGenerativeCompiler`)**: AST/scope/doctest/`assert` verifier with Sutton `TD(0)` statement survival and true `Allow / Ask / Off` permission prompts.
+---
 
-## 3. Apple-Style Progressive Disclosure & Universal `robo-icon` Pack (`v2.1.0`)
+## 2. Privacy & Security on Android
 
-- **Palette & Assets (`assets/robo-icon/`)**: Warm cream `#F7F3E9`, Clover green `#176B2C`, deep green `#0D4D20`, and leaf highlight `#83B83D`, featuring the 4-leaf `clover-mark.svg`, `robo-clover.webp` / `robo-clover.png` hero mascot, Android adaptive icon (`ic_launcher_foreground.png` + `ic_launcher_background.png`), and 30 stroke-matched SVG interface icons.
-- **Progressive Disclosure**: Opens directly to a clean chat canvas (`Chats`, `Clover · Title`, `Settings`). Tapping `Settings` shows only 3 top-level rows (**GitHub Account**, **Storage Locations**, **Advanced**) that drill into dedicated `< Back` sub-views on demand.
-
-## 4. Laptop Step 21D–25 Parity & Real-User Regression Fixes Verified on Mobile (`11 / 11` Suites)
-
-All laptop real-user findings and regression fixes (`Steps 21D–25`) are implemented and verified across Windows and Samsung Galaxy S23 (`SM-S911B`):
-1. **Follow-Up Context & Exact Written Precision in `clover_cycle.py`**:
-   - `follow_up()` + `context_before(history, msg)` prepend the preceding exchange before follow-up retries (`"And how much would 30 pens cost?"`), and `needs_web(context + question)` sees the earlier numbers so unnecessary web searches are skipped.
-   - `same(a, b)` requires `0.2%` numeric precision (`same(20.1, 20) == False`), and overturn lessons are recorded only when backed by user detail or a verified Python calculation (`program_at in best[1]`).
-2. **Non-Interactive Git, ANSI Stripping & Destructive Command Gate in `local_terminal.py`**:
-   - `QUIET_GIT` (`GIT_EDITOR=true`, `GIT_SEQUENCE_EDITOR=true`, `GIT_PAGER=cat`, `GIT_TERMINAL_PROMPT=0`, `GCM_INTERACTIVE=never`) prevents interactive git commands from hanging.
-   - `local_terminal.risky(cmd)` detects destructive commands (`git rebase/reset/clean/push/restore`, `rm/rmdir/del/Remove-Item`, `kill/taskkill/Stop-Process`, `shutdown/reboot/mkfs`) and always triggers an `Ask` confirmation card (`Allow once` / `Don't allow`, with `Always allow` hidden) even when `shell` permission is set to `Allow`.
-3. **Conceptual Question vs. Tool Routing, Ontology URL/Path Filtering & 2-Topic-Word Learning Filter**:
-   - `asked_tools()` distinguishes conceptual questions (`"In one sentence, what does git rebase do?"` -> `[]`) from explicit tool requests, offers both `repo_read` and `repo_write` on file-edit prompts, and routes image requests to `generate_image`.
-   - `_LINKS_AND_PATHS` strips URLs and file paths before ontology matching, skips ontology on pure tool turns, and requires `>= 2` shared topic words (`topic_terms`) before injecting learned lessons.
-4. **Clean User Git Status (`.git/info/exclude`) & Safe Shared Media Folder Clear**:
-   - `_git_exclude()` records Clover's exact `<folder>-context.md` and `<repo>-context-index.md` paths in `<workspace>/.git/info/exclude` (and removes them on `clean`) so `git status` in the user's repo stays completely clean.
-   - `get_storage_locations()` and `clear_media_storage()` count and remove only Clover's content-hash files (`^[0-9a-f]{24,32}\.[a-z0-9]{2,5}$`), preserving any user files in shared local or cloud folders.
-
-## 5. Central Semantic Interface (`clover_semantics.py` — `Meaning · Context · Interpretation · Alignment`)
-
-Rather than adding a separate sequential processing layer, `clover_semantics.py` provides the shared coordinate and interpretation protocol connecting the **User**, the **Fuel System (`S1 Memory · S2 Relationships · S3 Tools`)**, and the **Model Engine (`C1 Inference · C2 Plan · C3 Decode`)**, verified in situ on `k3` (`semantic_architecture_study_report.json`) and `s23` (`12 / 12` suites):
-
-1. **Meaning — Mean-Centered Layer-Selective Geometry & Forced-Choice Readout** (*Schiekiera et al., ICML 2026*):
-   - Empirical inspection across all 24 Tri-Hybrid layers of `LFM3-Omni-2B` (`lfm3_forward_all_layers` in `lfm3_cpu_engine.c`) showed that raw hidden states exhibit strong cone anisotropy (`mean cos = 0.344 -> 0.860` at Layer 12, `0.799` at Layer 23).
-   - Subtracting the empirical mean $\tilde{\mathbf{h}}^{(\ell)} = \mathbf{h}^{(\ell)} - \boldsymbol{\mu}^{(\ell)}$ collapses anisotropy to `-0.034` and increases Representational Similarity Analysis (RSA) correlation with 3-model semantic consensus (`BGE-small` + `E5-small` + `MiniLM-L6`) from `0.238 -> 0.554` (`+0.317`, `NN@5 = 0.500`), peaking at **Layer 18 (`full_gqa`)** rather than Layer 23 (`0.478`).
-   - Constrained Forced-Choice (`FC`) candidate comparison aligns substantially better with internal semantic geometry than open-vocabulary Free Association (`FA`) (`0.4712` vs `0.3053`, `+0.1659` advantage).
-2. **Cross-Module Alignment — $\mathcal{V}$-Enriched Yoneda Embedding (`IndraSemanticSpace`)** (*Lu et al., NeurIPS 2025*):
-   - Maps vectors from any module (`S2` `384d`, `C1` `2048d`, `C2` `2048d`, `C3 VQ-VAE` `384d`) to their angular-distance relational profile $\mathbf{I}(x) = [\arccos(\cos(\tilde{x}, \tilde{A}_1)), \dots, \arccos(\cos(\tilde{x}, \tilde{A}_K))] \in [0, \pi]^K$ over 18 canonical Clover Semantic Anchors.
-   - Verified on `27,000 / 27,000` triples with `0` triangle-inequality violations (`identity_max_error = 3.33e-8`), boosting training-free cross-module retrieval (`S2 BGE 384d -> C1 Layer 18 2048d`) by **`6.0×` Top-1 (`5.56% -> 33.33%`)** and **`5.0×` Top-3 (`11.11% -> 55.56%`)**, while preserving `2.17×` higher structural similarity under $\sigma = 1.5$ Gaussian noise (`0.7409` vs `0.3421`).
-3. **Context — 3-Layer Neuro-Symbolic Memory & 4-Graph Traversal (`NeuroSymbolicMultiGraphMemory`)** (*Jiang et al., 2026, NS-Mem; Jiang et al., ACL 2026, MAGMA*):
-   - Organizes experiences across `Episodic` ($\mathcal{L}_{\text{epi}}$), `Semantic` ($\mathcal{L}_{\text{sem}}$), and `Procedural Logic DAG` ($\mathcal{L}_{\text{logic}}$) layers with 4 orthogonal relation graphs (`Temporal`, `Causal`, `Semantic`, `Entity`).
-   - Scores Logic Nodes via dual-level Index Vectors ($\alpha = 0.3$ goal + $0.7$ step, updated via EMA $\beta = 0.9$), tracks Beta-Binomial node reliability and Dirichlet-Multinomial transition posteriors, and runs deterministic symbolic queries (`getProcedureWithEvidence`, `queryStepSequence(goal, C)`, `aggregateEntityBehaviors`) to filter out infeasible action paths when world constraints change.
-4. **Interpretation & Bidirectional Neuro-Symbolic Alignment (`I_DAT` + `BiNS` + `DualMemory` + Dharma)** (*Odense & d'Avila Garcez, AIJ 2025; Wang et al., EMNLP 2026; Wen et al., EMNLP 2026; Saglam et al., 2025*):
-   - Latent intent and Dharma discernment (`concept_only` vs `safe_tool` vs `risky_ask`) reach **`97.22%` 6-fold CV accuracy at Layer 8 (`sliding_gqa`)** (`94.44%` linear probe at Layer 4) vs `30.56%` for naive keyword triggers.
-   - `verify_idat_semantic_encoding()` verifies Distributed-Atoms (`I_DAT`) least fixed-point soundness ($\emptyset \subset \mathcal{M}_N \subseteq \mathcal{M}_L$) and completeness ($\mathcal{M}_N = \mathcal{M}_L$), and `bidirectional_bins_diagnose()` implements `Mode i` (Conflict/Feasibility Rectification) and `Mode ii` (Deductive Deadlock Auxiliary Hypothesis Generation).
-
-## 6. Personal learning (`personal.py`, on by default, with a switch)
-
-Clover can learn from one person's own interactions how they mean things and how they like answers
-(research/personal-process-learning, experiment PPL-1). It is **on by default** (the human's direction, 2026-11-03:
-"keep the learning on by default ... give option to disable"), on the person's own device only: the phone runtime keeps
-the store in `<base>/personal` (or `CLOVER_PPL_DIR`); the laptop Studio has a Settings switch (`personal`). Turning it
-off (`POST /api/personal/learning` `{"on": false}`, or the Settings switch) stops reading and recording at once;
-viewing and deleting still work. `CLOVER_PPL=off` turns it off for the whole process.
-
-- **What it changes:** a habit validated from the person's corrections (after "Dig into X" was twice followed by "No,
-  look it up online", "Dig into Y" is offered web search) replaces the general reading of what is asked for; preferred
-  form ("Shorter, please", "I prefer bullet points") goes to the model as a second system message. A capability the
-  message declines is never offered, and a learned preference can add a question before acting but never remove one.
-- **What it learns from:** thanks or the Helpful button, a correction that names what was wanted, a request for another
-  form, a retry right after a personal reading (counts against it), and statements ("When I say X, I mean Y"), which
-  are evidence, not rules. The learner and its settings are PPL-1's.
-- **The person's choices:** `GET /api/personal` lists every experience and what was learned from which ones;
-  `POST /api/personal/retention` `{"ids": [...], "choice": "keep" | "stop" | "delete"}`; `POST /api/personal/forget`
-  `{"confirm": true}`. Deleting removes the experience from the store and its whole git history (git-filter-repo
-  when installed, otherwise the repository is rebuilt from what remains); deleting a conversation deletes its
-  experiences. Knowledge is never stored; it is recomputed from the experiences that remain.
-- **Tests:** `python test_personal.py` (no model needed).
+- **Android KeyStore AES-256-GCM Vault:** API keys and GitHub OAuth tokens are encrypted on-device and never transmitted to third parties.
+- **Loopback Cleartext Isolation:** `network_security_config.xml` restricts cleartext HTTP strictly to `127.0.0.1` for the embedded Python server.
+- **Signed Artifacts (`v6.0.0`, `versionCode 22`):** See [`../../release/beta/android/BUILD-REPORT.md`](../../release/beta/android/BUILD-REPORT.md) and [`../../download/SHA256SUMS.txt`](../../download/SHA256SUMS.txt).

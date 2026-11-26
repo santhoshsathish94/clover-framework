@@ -1,7 +1,7 @@
 {
   "name": "clover-vscode-provider",
   "displayName": "Clover — VS Code Language Model Provider",
-  "description": "Adds Clover (7-Layer Neuro-Symbolic, Compiler-Verified & Memory-Accumulating System) directly to the VS Code Chat & Agent model picker.",
+  "description": "Adds Clover v6.0 (4-Part Steerable Harness, 0B Computed Specialists & HG4-16R Models) directly to the VS Code Chat & Agent model picker.",
   "version": "6.0.0",
   "publisher": "clover-framework",
   "license": "MIT",
@@ -48,10 +48,10 @@
             "clover-kimi-k3"
           ],
           "enumDescriptions": [
-            "NVIDIA Nemotron 3.5 Super VL (120B-A12B Hybrid Mamba-2 + Latent ReLU² MoE + NoPE GQA + C-RADIO + 2-Layer Native MTP, 1M context)",
-            "DiffuSpace Clover-35B-A3B-Preview (35B-A3B Block Diffusion MoE: 30 BD-GDN + 10 Gated GQA + 256 Experts Top-8 Coreset + HybridAgent + JEPA + 11-Level NCM, 128K context)",
-            "Liquid AI LFM3-1.7B (24-Layer Tri-Hybrid Width-7 Gated ShortConv + Sliding/Full GQA, 1M session context)",
-            "MoonshotAI Kimi K3.1 Pro (93-Layer 2.8T MoE + Gated DSA + MoonViT-V2 + DSpark, 1M session context)"
+            "NVIDIA Nemotron 3.5 Super VL (120B-A12B HG4-16R MoE + Mamba-2/GQA + C-RADIO Vision, 1M context)",
+            "Clover-35B-A3B Coordinator (Qwen3.6-35B-A3B + Clover-Harness-LoRA in HG4-16R-OP, 17.4 GB, 128K context)",
+            "Liquid AI LFM3-Omni-2B / LFM3-1.7B (HG4-16R Tri-Hybrid local & server assistant)",
+            "MoonshotAI Kimi K3.1 Pro (93-Layer 2.8T MoE K31H + Gated DSA, 1M context)"
           ],
           "description": "Default Layer-1 foundation model backbone used when a generic Clover model ID is requested."
         },

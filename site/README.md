@@ -34,11 +34,11 @@ python -m http.server 8000 --directory site
 ```
 site/
   index.html                             the framework: one cycle, at any scale
-  hg-format/                             AI Mythbuster: 5 AI myths broken with stories, inline hardware proofs, golden 5-leaf progress, and Clover HG (convert_to_hg.py)
-  ai-system/                             AI Studio (Work in Progress): live engineering status of the 5-Petal Clover Leaf HG specialist system & AGENTS.md cycle
+  hg-format/                             AI Mythbuster: 6 AI myths broken with stories, live hardware proofs, REPRODUCE_AGENTS.md, golden 5-leaf + center steering wheel SVG, and Clover HG4 (convert_to_hg.py)
+  ai-system/                             AI Studio (v6.0): 4-Part Steerable Clover System, 0B Computed Specialists, Web/Windows/Android/VS Code downloads, and minimum server hardware table
   getting-started/                       the AGENTS.md menu page: read-only access, the agent file, multi-cycle verification, a first cycle
   governance/                            governance: vertical storyline on access, attribution, approvals, delegated execution, and k3 allowlist security
-  privacy/                               privacy policy: on-device inference, local Git logging, encrypted vault, and opt-in Google OIDC collective learning
+  privacy/                               privacy policy: on-device inference, local Git logging, encrypted vault, and opt-in GitHub collective learning
   clover-ai/                             full-viewport interactive Clover AI studio
   admin/                                 GitHub-authenticated owner console for managing the k3 model allowlist
   glossary/                              searchable terms
