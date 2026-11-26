@@ -30,16 +30,17 @@ Instead of forcing every request through heavyweight post-inference neural layer
 
 In **Settings → Model → Clover System Setup** (or on first launch via *Choose models / Use server*), users can deploy **1 model**, a **custom subset**, or the **complete Clover AI System** across their own device and any GPU servers they provide (`GET /api/clover/setup/catalog`, `POST /api/clover/setup/plan`, `POST /api/clover/setup/apply`):
 
-| Model / Specialist | `HG4` Footprint | Minimum Required Hardware / Servers | Interactive Gate |
+| Model / Specialist | `HG4` Footprint | Minimum Required Hardware / Servers | Measured `RTX 3090` Single-User Decode (`batch = 1`) |
 | :--- | :--- | :--- | :--- |
-| **`0B` Computed Pack** | `0 MB` | Any phone, laptop, or CPU machine (`0` GPUs) | **Ready on any device** (`<50 ms` CPU) |
-| **`LFM3-Omni-2B`** (`HG4-16R`) | `0.98 GB` | Any phone, laptop, or CPU/GPU machine (`0` GPUs) | **Ready on any device** (`18–65 tok/s` CPU · `163 tok/s` GPU) |
-| **`Chronos-Bolt 0.2B` & `V-JEPA 2.1`** (`HG4`) | `0.12–1.2 GB` | Any phone, laptop, or CPU/GPU machine (`0` GPUs) | **Ready on any device** |
-| **`Boltz-2`** (`HG4` 3D folding) | `3.5 GB` (`~14 GB` resident) | `1×` GPU server `>= 16 GB` VRAM | **GPU required** *(skipped on CPU)* |
-| **`Goedel-Prover-V2-32B`** (`HG4-16R`) | `16.4 GB` (`21.6 GB` @ 16k KV) | `1×` GPU server `>= 24 GB` VRAM (`RTX 3090 / 4090 / L4`) | **GPU required** (`18.4 tok/s`; *skipped on CPU*) |
-| **`Clover-35B-A3B` Coordinator** (`HG4-16R-OP`) | `17.4 GB` (`20.2 GB` @ 32k KV) | `1×` GPU server `>= 24 GB` VRAM (`RTX 3090 / 4090 / L4`) | **GPU required** (`35.8 tok/s`; *skipped on CPU*) |
-| **`Nemotron 3.5 Super VL`** (`120B-A12B` `HG4-16R`) | `60.2 GB` (`68 GB` resident) | `1× 80 GB` GPU or `4× 24 GB` GPU server (`>= 72 GB` VRAM) | **GPU required** (`22–38 tok/s`; *skipped on CPU*) |
-| **`Kimi K3.1 Pro`** (`2.8T MoE` `K31H` two-tier `HG4+HG2`) | `741 GB` (`~780 GB` resident) | Same-rack GPU cluster `>= 780 GB` VRAM (`5× 8-GPU 24 GB` or `2× 8×80 GB`) | **In-rack cluster** (`6–18 decode tok/s`; *skipped without cluster*) |
+| **`0B` Computed Pack** | `0 MB` | Any phone, laptop, or CPU machine (`0` GPUs) | **`0.02–52 ms`** exact on CPU (`0` GPUs) |
+| **`LFM3-Omni-2B` & Small Drafters** (`HG4-16R` & `5L-DSpark`) | `0.85 GB` | Any phone, laptop, CPU, or `1×` GPU | **`240–288 decode tok/s`** on `1× 3090` · `50.3 tok/s` CPU |
+| **`Chronos-Bolt 0.2B`** (`HG4`) | `0.10 GB` | Any phone, laptop, CPU, or `1×` GPU | **`187–191 decode tok/s`** (`0.37 s`) · `<52 ms` `0B` Conformal |
+| **`V-JEPA 2.1`** (`HG4-16R`) | `0.51 GB` | Any laptop, CPU, or `1×` GPU | **`0.12 s`/clip** (`1408-d` rollout) · `0.9 s` CPU |
+| **`Boltz-2`** (`HG4-16R` 3D folding) | `0.53 GB` (`~14 GB` resident) | `1×` GPU server `>= 16 GB` VRAM (`1× RTX 3090`) | **`~12 s`/complex** on `1× 3090` *(skipped on CPU)* |
+| **`Goedel-Prover-V2-32B`** (`HG4-16R`) | `15.8 GB` (`21.6 GB` @ 16k KV) | `1×` GPU server `>= 24 GB` VRAM (`1× RTX 3090`) | **`18.4–28.6 decode tok/s`** *(skipped on CPU: `0.9 tok/s`)* |
+| **`Clover-35B-A3B` Coordinator** (`HG4-16R-OP`) | `17.4 GB` (`20.2 GB` @ 32k KV) | `1×` GPU server `>= 24 GB` VRAM (`1× RTX 3090`) | **`58.5 decode tok/s`** CUDA (`35.8 tok/s` HTTP; `4×` GPUs add `+0.0 tok/s`) |
+| **`Nemotron 3.5 Super VL`** (`120B-A12B` `HG4-16R`) | `58.2 GB` (`68 GB` resident) | `4× 24 GB RTX 3090` server or `1× 80 GB` GPU (`>= 72 GB` VRAM) | **`38.4–55+ decode tok/s`** (`2L-MTP`; `8×` GPUs add `+0.0 tok/s`) |
+| **`Kimi K3.1 Pro`** (`2.8T MoE` `K31H` two-tier `HG4+HG2`) | `741 GB` (`~780 GB` resident) | Same-rack GPU cluster `>= 780 GB` VRAM (`5× 8-GPU 3090` or `2× 8×80 GB`) | **`6.0–18 decode tok/s`** (`T=1` to `+DSpark`; *skipped without cluster*) |
 
 ---
 

@@ -73,7 +73,7 @@
 
   <section class="band" id="build-not-run">
     <div class="wrap">
-      <p class="note">Chapter 1 of 6 &middot; First Principle &middot; Build vs. Run</p>
+      <p class="note">Chapter 1 of 7 &middot; First Principle &middot; Build vs. Run</p>
       <h2>Build with AI. Run the Validated Code.</h2>
       <p class="lede"><strong>Use AI in development to build and test software — then deploy the deterministic code to production instead of keeping a live model in the runtime path.</strong></p>
 
@@ -139,7 +139,7 @@
 
   <section class="band" id="policy">
     <div class="wrap">
-      <p class="note">Chapter 2 of 6 &middot; Direction &amp; Accountability</p>
+      <p class="note">Chapter 2 of 7 &middot; Direction &amp; Accountability</p>
       <h2>Capability Is Not Authority</h2>
       <p class="lede"><strong>Capability may scale. Direction remains human.</strong></p>
       <p>A model can execute work and report success, but it cannot be held accountable when the outcome is wrong. Clover names the accountable human before the work begins and keeps purpose, acceptable risk, and approval boundaries with that human.</p>
@@ -148,7 +148,7 @@
 
   <section class="band" id="happening">
     <div class="wrap">
-      <p class="note">Chapter 3 of 6 &middot; Access Reality</p>
+      <p class="note">Chapter 3 of 7 &middot; Access Reality</p>
       <h2>What Changes — and What Does Not</h2>
       <div class="apple-grid apple-grid--3">
         <div class="apple-card">
@@ -172,7 +172,7 @@
 
   <section class="band" id="needs">
     <div class="wrap">
-      <p class="note">Chapter 4 of 6 &middot; Operating Rules</p>
+      <p class="note">Chapter 4 of 7 &middot; Operating Rules</p>
       <h2>Four Non-Negotiable Rules</h2>
       <div class="apple-grid apple-grid--2">
         <div class="apple-card">
@@ -201,7 +201,7 @@
 
   <section class="band" id="objections">
     <div class="wrap">
-      <p class="note">Chapter 5 of 6 &middot; Monitoring &amp; Delegated Execution</p>
+      <p class="note">Chapter 5 of 7 &middot; Monitoring &amp; Delegated Execution</p>
       <h2>Monitor Behavior and Scope Delegation</h2>
       <p class="lede">Approval gates stop big mistakes before they run; behavioral monitoring catches unintended reads inside legitimate access.</p>
 
@@ -233,7 +233,7 @@
 
   <section class="band" id="obligations">
     <div class="wrap">
-      <p class="note">Chapter 6 of 6 &middot; Legal &amp; Organizational Obligations</p>
+      <p class="note">Chapter 6 of 7 &middot; Legal &amp; Organizational Obligations</p>
       <h2>Three Duties Inside Every Cycle</h2>
       <p class="lede">Clover sits inside legal and regulatory obligations, never above them.</p>
 
@@ -263,40 +263,40 @@
 
   <section class="band" id="privacy">
     <div class="wrap">
-      <p class="note">Chapter 7 of 7 &middot; Clover AI Studio Privacy &amp; Local Data Logging</p>
-      <h2>How Clover AI Studio Logs Data — and Why Nothing Leaves Your Device</h2>
-      <p class="lede"><strong>Clover AI Studio runs its models, semantic parser, memory repository, and tools on your own laptop or phone over <code>127.0.0.1</code>. There is zero telemetry, zero analytics, and zero off-device data collection.</strong></p>
+      <p class="note">Chapter 7 of 7 &middot; Runtime Enforcement in Clover v6.0</p>
+      <h2>Enforce Boundaries in Code — Not in Model Hopes</h2>
+      <p class="lede"><strong>An instruction alone cannot stop a statistical model from crossing a boundary. Clover v6.0 enforces human steering, deterministic verification, and local-only logging in code outside the model.</strong></p>
 
       <div class="apple-grid apple-grid--2" style="margin-top:1.2rem">
         <div class="apple-card">
-          <span class="apple-card__eyebrow">Where Data Lives Locally</span>
-          <h3>On-Device Storage Paths</h3>
-          <p>On Windows, all state lives in <code>%USERPROFILE%\CloverAI\</code>. On Android, all state lives inside the private app sandbox <code>/data/user/0/ai.clover.studio/files/CloverAI/</code> (<code>allowBackup="false"</code>). Media attachments stay in <code>media/</code>, and optional API keys stay in <code>vault/</code> encrypted with Windows DPAPI or Android AES-GCM.</p>
+          <span class="apple-card__eyebrow">1 &middot; Human Steering Gate</span>
+          <h3><code>STOP_AND_ASK</code> Before High-Blast-Radius Actions</h3>
+          <p>When a task touches destructive commands, production migrations, or underspecified domain policy, the 4-Part Clover Harness halts execution in code and asks the named human to confirm scope, environment, and rollback rather than guessing (<a href="../hg-format/#myth-6-driver">Myth 6 proof: <code>0/6</code> unsteered vs. <code>5/6</code> steered &rarr;</a>).</p>
         </div>
         <div class="apple-card">
-          <span class="apple-card__eyebrow">How Data Is Logged</span>
-          <h3>Local Git Repository &amp; Secret Redaction</h3>
-          <p>Inside <code>clover-ai-studio/</code>, conversations are logged to <code>sessions/</code>, turn step traces to <code>execution/</code>, outcomes to <code>outcomes/</code>, and learned notes to <code>growth/</code>. Every write passes through <code>clover_repo.redact()</code> to scrub tokens and API keys before touching disk, and model tools are blocked in code from reading <code>vault/</code> or altering <code>clover-ai-studio/</code>.</p>
+          <span class="apple-card__eyebrow">2 &middot; Verification Outside the Model</span>
+          <h3>Deterministic Tools &amp; Tamper-Blocked Sandboxes</h3>
+          <p>Exact math (<code>x-cruncher</code>), formal proofs (<code>Lean 4</code>), defeasible policy rules, and compiler checks run in deterministic code outside the model. Path guards (<code>paths.py</code>) block model tools from reading secret vaults or tampering with <code>test_*.py</code>, <code>AGENTS.md</code>, or audit logs.</p>
         </div>
       </div>
 
       <div class="apple-grid apple-grid--2" style="margin-top:1.2rem">
         <div class="apple-card">
-          <span class="apple-card__eyebrow">Hosted k3 Access Control</span>
-          <h3>GitHub-Gated Admin Allowlist (<code>/admin/</code>)</h3>
-          <p>Access to the four hosted <code>k3</code> models (<code>LFM3-Omni</code>, <code>Clover-35B-A3B</code>, <code>Nemotron 3.5</code>, <code>Kimi K3.1 Pro</code>) is restricted to approved accounts in <code>allowed-accounts.json</code> (`0600`), managed behind owner GitHub OAuth Device Flow at <a href="../admin/"><code>cloverframework.com/admin/</code></a> with domain-separated HMAC tokens (<code>admin:...</code> vs. <code>acct:...</code>) and per-IP rate limiting.</p>
+          <span class="apple-card__eyebrow">3 &middot; Self-Hosted Infrastructure</span>
+          <h3>Own the Server, Own the Audit Trail</h3>
+          <p>Clover runs on your own self-hosted hardware over loopback or your private server network — never on a shared public cloud. Every turn records human-readable <code>&lt;task_id&gt;.md</code> context, <code>CloverMetricsLedger</code> telemetry (which models and tools ran, decode <code>tok/s</code>, and cycle retries), and Git-backed session history on disk.</p>
         </div>
         <div class="apple-card">
-          <span class="apple-card__eyebrow">Security &amp; Hardcoding Audit</span>
-          <h3>Independently Verified Controls</h3>
-          <p>All 72 modified modules across Studio, VS Code Bridge, Android, and the <code>k3</code> gateway are audited against passwordless bypasses, launch-token shadowing, temp-file races, and secret hardcoding in <a href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/security-and-code-review-2026-11-08.md"><code>security-and-code-review-2026-11-08.md</code></a>.</p>
+          <span class="apple-card__eyebrow">4 &middot; Zero Telemetry &amp; Secret Redaction</span>
+          <h3>Secrets Scrubbed Before Touching Disk</h3>
+          <p>Every log write passes through automatic credential redaction (<code>clover_repo.redact()</code>) to strip API keys, OAuth tokens, and private keys before storage, while credentials at rest stay in OS-encrypted vaults (<a href="../privacy/">Privacy Policy &rarr;</a>).</p>
         </div>
       </div>
 
       <div class="actions" style="margin-top:1.6rem">
         <a class="btn btn--primary" href="../privacy/">Read the Full Privacy Policy &rarr;</a>
-        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/blob/main/docs/runtime-context/security-and-code-review-2026-11-08.md">Read Security Audit Report &rarr;</a>
-        <a class="btn" href="../ai-system/">Explore Clover AI Studio &rarr;</a>
+        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/tree/main/docs/runtime-enforcement">Runtime Enforcement Reference &rarr;</a>
+        <a class="btn" href="../ai-system/">Explore Clover AI Studio (v6.0) &rarr;</a>
       </div>
     </div>
   </section>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy Policy — Clover AI Studio &amp; Clover Framework</title>
-<meta name="description" content="Privacy Policy for Clover AI Studio (Windows, Android, Web, and VS Code): how data is logged locally on your device, where it is stored, and why nothing leaves your device unless you explicitly allow it.">
+<meta name="description" content="Privacy Policy for Clover AI System &amp; Clover AI Studio: how data is logged locally on your self-hosted hardware, where it is stored, and why nothing leaves your machine unless you explicitly allow it.">
 <link rel="canonical" href="https://cloverframework.com/privacy/">
 <meta property="og:title" content="Privacy Policy — Clover AI Studio &amp; Clover Framework">
 <meta property="og:description" content="On-device AI inference, local Git-backed logging, encrypted vault storage, and zero telemetry. Nothing leaves your device unless you allow it.">
@@ -59,9 +59,9 @@
 
   <section class="hero" id="overview">
     <div class="wrap">
-      <p class="note">Privacy Policy &middot; Clover AI Studio (`ai.clover.studio` &amp; `SanthoshNarayanan.CloverAIStudio`) &middot; Effective November 5, 2026</p>
-      <h1>Nothing leaves your device unless you allow it.</h1>
-      <p class="lede">Clover AI Studio runs its AI models, semantic parser, memory graph, personal learning, and tools directly on your phone or laptop. There are no analytics SDKs, no telemetry servers, no advertising identifiers, and no cloud accounts required.</p>
+      <p class="note">Privacy Policy &middot; Clover AI System &amp; Clover AI Studio (v6.0) &middot; Updated November 26, 2026</p>
+      <h1>Nothing leaves your machine unless you allow it.</h1>
+      <p class="lede">Clover runs its models, 4-Part Steerable Harness, <code>0B</code> computed tools, memory repository, and telemetry ledger directly on your own self-hosted hardware (with standalone Windows &amp; Android GUI wrappers in active Work in Progress). There are no analytics SDKs, no third-party telemetry servers, no advertising identifiers, and no cloud accounts required.</p>
       <div class="actions">
         <a class="btn btn--primary" href="#where-data-lives">Where data is stored ↓</a>
         <a class="btn" href="#how-data-is-logged">How data is logged ↓</a>
@@ -99,30 +99,30 @@
   <section class="band" id="where-data-lives">
     <div class="wrap">
       <p class="note">Section 2 of 6 &middot; Exact Storage Locations</p>
-      <h2>Where Your Data Is Stored on Your Device</h2>
-      <p class="lede">Clover AI Studio stores all state inside a single base directory on your device. You can view these exact paths at any time in <code>Settings &rarr; Storage</code>.</p>
+      <h2>Where Your Data Is Stored Locally</h2>
+      <p class="lede">Clover stores all state inside a single self-hosted <code>--base</code> directory on your machine (and in isolated per-user paths in the in-progress Windows &amp; Android Studio builds):</p>
 
       <div class="apple-grid apple-grid--2">
         <div class="apple-card">
-          <span class="apple-card__eyebrow">Windows 10 &amp; 11 (`CloverAIStudio.exe`)</span>
-          <h3><code>%USERPROFILE%\CloverAI\</code></h3>
-          <p>All files reside in your Windows user profile folder (for example, <code>C:\Users\&lt;you&gt;\CloverAI\</code>):</p>
+          <span class="apple-card__eyebrow">Self-Hosted Server &amp; Windows (<code>--base</code> / <code>%USERPROFILE%\CloverAI\</code>)</span>
+          <h3>Local Base Directory</h3>
+          <p>All files reside inside your chosen self-hosted folder:</p>
           <ul>
-            <li><strong><code>clover-ai-studio\</code></strong> — Local Git repository holding conversations, execution logs, outcomes, learned memory, and settings.</li>
-            <li><strong><code>media\</code></strong> — Photos, voice recordings, videos, charts, and attached documents (<code>media\documents\</code>). Kept outside the Git repository.</li>
-            <li><strong><code>vault\</code></strong> — Optional API keys and tokens encrypted with <strong>Windows DPAPI (<code>CryptProtectData</code>)</strong> bound to your Windows user login.</li>
-            <li><strong><code>models\</code></strong> — Local GGUF model weights verified against pinned SHA-256 hashes.</li>
+            <li><strong><code>clover-ai-studio/</code></strong> — Local Git repository holding conversations, <code>&lt;task_id&gt;.md</code> context files, SQLite todos, <code>CloverMetricsLedger</code> telemetry, outcomes, and settings.</li>
+            <li><strong><code>media/</code></strong> — Attached images, voice clips, videos, charts, and documents. Kept outside the Git repository.</li>
+            <li><strong><code>vault/</code></strong> — Optional API keys and tokens encrypted at rest (Windows DPAPI or <code>0600</code> local key).</li>
+            <li><strong><code>models/</code></strong> — Local <code>HG4-16R</code> / open-weight model files verified against SHA-256 hashes.</li>
           </ul>
         </div>
         <div class="apple-card">
-          <span class="apple-card__eyebrow">Android (`ai.clover.studio`)</span>
+          <span class="apple-card__eyebrow">Android Sandbox (<code>ai.clover.studio</code> &middot; Work in Progress)</span>
           <h3><code>/data/user/0/ai.clover.studio/files/CloverAI/</code></h3>
-          <p>All files reside inside Android's private application sandbox with <code>android:allowBackup="false"</code> so other apps and cloud backups cannot read them:</p>
+          <p>In the Android build (currently Work in Progress), all files reside inside Android's private application sandbox with <code>android:allowBackup="false"</code>:</p>
           <ul>
-            <li><strong><code>clover-ai-studio/</code></strong> — Local on-device Git repository holding your chats, execution logs, outcomes, memory graph, and settings.</li>
-            <li><strong><code>media/</code></strong> — Attached images, audio clips, videos, and documents. Kept outside the Git repository so you can clear them in one tap.</li>
-            <li><strong><code>vault/</code></strong> — Optional API keys encrypted at rest with <strong>AES-GCM</strong> using a local device-bound key (<code>0600</code> permissions).</li>
-            <li><strong><code>models/</code></strong> — On-device <code>LFM3-Omni-2B</code> GGUF weights and vision/audio projector.</li>
+            <li><strong><code>clover-ai-studio/</code></strong> — Local on-device Git repository holding chats, execution logs, outcomes, and settings.</li>
+            <li><strong><code>media/</code></strong> — Attached images, audio clips, videos, and documents, kept outside Git so you can clear them in one tap.</li>
+            <li><strong><code>vault/</code></strong> — Optional API keys encrypted at rest with Android KeyStore <strong>AES-256-GCM</strong>.</li>
+            <li><strong><code>models/</code></strong> — On-device <code>LFM3-Omni-2B</code> (<code>HG4-16R</code> / GGUF) weights and projector.</li>
           </ul>
         </div>
       </div>
@@ -201,8 +201,8 @@
         </div>
         <div class="apple-card">
           <span class="apple-card__eyebrow">4 &middot; Collective Problem-Solving Learning (Opt-In)</span>
-          <h3>Off by Default &middot; Google OIDC &amp; Zero Verbatim Text</h3>
-          <p>Collective Problem-Solving Learning (<code>CPSL</code>) in <code>Settings &rarr; Learning &amp; Growth</code> is <strong>off by default</strong>. When opted in, it authenticates via stateless Google OpenID Connect (<code>sub</code> claim only; no emails, passwords, or OAuth access tokens stored) and strips all user text, file paths, numbers, and identifiers locally before uploading closed-vocabulary candidate strategies or downloading Ed25519-signed shared-core rules.</p>
+          <h3>Off by Default &middot; Signed GitHub Releases &amp; Zero Verbatim Text</h3>
+          <p>Collective Problem-Solving Learning (<code>CPSL</code>) is <strong>off by default</strong>. Receiving downloads Ed25519-signed shared-core rules from the public <code>clover-collective</code> GitHub repository with no account required; contributing strips all user text, file paths, numbers, and identifiers locally through a closed WordNet vocabulary gate before opening a transparent GitHub contribution under your own GitHub sign-in.</p>
         </div>
       </div>
     </div>

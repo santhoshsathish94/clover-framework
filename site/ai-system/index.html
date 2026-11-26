@@ -198,10 +198,10 @@
       <p><strong>Honest interactive hardware gate:</strong> Small models and <code>0B</code> computed tools run interactively on <em>any</em> phone, laptop, or CPU server with zero GPUs. Big models require GPUs to run at interactive speed &mdash; if a machine is CPU-only or lacks the required GPU VRAM, Studio automatically skips those models and tells you the exact minimum server needed rather than letting a model crawl at <code>&lt;1 decode tok/s</code>.</p>
 
       <div class="studio-card" style="margin-top:1.2rem;border-left:4px solid var(--accent)">
-        <span class="studio-tag studio-tag--ready">Real Single-User Decode tok/s &middot; Not Vendor Batch Marketing</span>
+        <span class="studio-tag studio-tag--ready">Real Single-User Decode tok/s on RTX 3090 &middot; Not Vendor Batch Marketing</span>
         <h3 style="margin-bottom:0.45rem">Why adding a bigger server does not make a model decode faster</h3>
         <p style="margin-bottom:0.65rem"><strong>Many NVIDIA and cloud server benchmarks advertise &ldquo;inference throughput&rdquo; of <code>2,000&ndash;10,000+ tok/s</code></strong> by summing <code>64&ndash;256</code> concurrent users together or counting prompt-reading (<em>prefill</em>) tokens. One person waiting on one answer never sees that speed &mdash; you experience <strong>actual single-stream autoregressive decode (<code>batch = 1 tok/s</code>)</strong>, where each new token cannot start until the previous token finishes.</p>
-        <p style="margin:0"><strong>Once a model fits in memory, buying a bigger system or adding extra VRAM GBs adds <code>+0.0 decode tok/s</code>.</strong> Single-user decode speed is strictly governed by <strong>memory-wire bandwidth &divide; active bytes read per token</strong> &mdash; for example, <code>Clover-35B-A3B</code> reads <code>~1.7 GB</code> of active <code>HG4</code> weights per token on a <code>936 GB/s</code> <code>RTX 3090</code> (<code>35.8 decode tok/s</code>). Putting that same <code>17.4 GB</code> model onto four or eight servers will not make one answer write faster (cross-server hops can even slow single-user decode down); extra servers only add multi-user capacity or hold a larger model that cannot fit on one card (<a href="../hg-format/">see Myth 1 &amp; Myth 2 proofs &rarr;</a>).</p>
+        <p style="margin:0"><strong>Once a model fits in VRAM, buying a bigger system or adding extra GPUs adds <code>+0.0 decode tok/s</code>.</strong> Single-user decode speed is governed by <strong>memory-wire bandwidth &divide; active bytes read per token</strong>: in our measured 24 GB GPU runs, small <code>0.2B&ndash;2B</code> models hit <strong><code>187&ndash;250+ decode tok/s</code></strong> on a single card, <code>Clover-35B-A3B</code> hits <strong><code>58.5 decode tok/s</code></strong> on <code>1&times; RTX 3090</code> (and moving from <code>1&times;</code> to <code>4&times;</code> GPUs measured <code>168.4 &rarr; 167.6 tok/s = +0.0</code>), and <code>Nemotron 120B</code> hits <strong><code>38.4&ndash;55+ decode tok/s</code></strong> on <code>4&times; RTX 3090</code> (moving from <code>4&times;</code> to <code>8&times;</code> GPUs measured <code>172.2 &rarr; 171.8 tok/s = +0.0</code>). Extra servers only add multi-user capacity or hold a larger model (<a href="../hg-format/">see Myth 1 &amp; Myth 2 proofs &rarr;</a>).</p>
       </div>
 
       <div class="hw-wrap">
@@ -211,7 +211,7 @@
               <th>Model / Specialist</th>
               <th>HG4 Footprint</th>
               <th>Minimum Required Hardware / Servers</th>
-              <th>Single-User Decode Speed (batch = 1)</th>
+              <th>Measured RTX 3090 Decode Speed (batch = 1)</th>
             </tr>
           </thead>
           <tbody>
@@ -219,49 +219,55 @@
               <td><strong>0B Computed Pack</strong><br><small><code>x-cruncher</code> + Conformal Forecaster + Defeasible Resolver</small></td>
               <td><code>0 MB</code></td>
               <td>Any phone, laptop, or CPU machine (<code>0</code> GPUs)</td>
-              <td><span class="studio-tag studio-tag--ready">Any Device</span><br><small><code>&lt; 50 ms</code> exact computation</small></td>
+              <td><span class="studio-tag studio-tag--ready">0 GPUs</span><br><small><strong><code>0.02&ndash;52 ms</code></strong> exact on CPU</small></td>
             </tr>
             <tr>
-              <td><strong>LFM3-Omni-2B</strong><br><small>Everyday local multimodal assistant (<code>HG4-16R</code>)</small></td>
-              <td><code>0.98 GB</code></td>
-              <td>Any phone, laptop, or CPU/GPU machine (<code>0</code> GPUs)</td>
-              <td><span class="studio-tag studio-tag--ready">Any Device</span><br><small><code>18&ndash;65 decode tok/s</code> CPU &middot; <code>163 decode tok/s</code> GPU</small></td>
+              <td><strong>LFM3-Omni-2B &amp; Small Drafters</strong><br><small>Everyday multimodal assistant (<code>HG4-16R</code>) &amp; <code>5L-DSpark</code></small></td>
+              <td><code>0.85 GB</code></td>
+              <td>Any phone, laptop, CPU, or <code>1&times;</code> GPU</td>
+              <td><span class="studio-tag studio-tag--ready">~250 tok/s on 1&times; 3090</span><br><small><strong><code>240&ndash;288 decode tok/s</code></strong> GPU &middot; <code>50.3 tok/s</code> CPU &middot; <code>33.4 tok/s</code> S23 phone</small></td>
             </tr>
             <tr>
-              <td><strong>Chronos-Bolt 0.2B &amp; V-JEPA 2.1</strong><br><small>Time-series &amp; physical dynamics specialists (<code>HG4</code>)</small></td>
-              <td><code>0.12 &ndash; 1.2 GB</code></td>
-              <td>Any phone, laptop, or CPU/GPU machine (<code>0</code> GPUs)</td>
-              <td><span class="studio-tag studio-tag--ready">Any Device</span><br><small><code>&lt; 50 ms</code> <code>0B</code> Conformal &middot; <code>0.8 s</code> CPU</small></td>
+              <td><strong>Chronos-Bolt 0.2B</strong><br><small>Probabilistic time-series specialist (<code>HG4</code>)</small></td>
+              <td><code>0.10 GB</code></td>
+              <td>Any phone, laptop, CPU, or <code>1&times;</code> GPU</td>
+              <td><span class="studio-tag studio-tag--ready">191 tok/s on 1&times; 3090</span><br><small><strong><code>187&ndash;191 decode tok/s</code></strong> (<code>0.37 s</code>/series) &middot; <code>&lt;52 ms</code> <code>0B</code> Conformal</small></td>
             </tr>
             <tr>
-              <td><strong>Boltz-2</strong><br><small>3D protein/RNA/ligand structure folding (<code>HG4</code>)</small></td>
-              <td><code>3.5 GB</code><br><small>(<code>~14 GB</code> w/ pairformer)</small></td>
-              <td><code>1&times;</code> GPU server with <code>&ge; 16 GB</code> VRAM (<code>RTX 4080 / A10G / T4 / 3090</code>)</td>
-              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><code>~12 s</code> per complex on GPU; skipped on CPU</small></td>
+              <td><strong>V-JEPA 2.1</strong><br><small>Physical video dynamics &amp; surprise model (<code>HG4-16R</code>)</small></td>
+              <td><code>0.51 GB</code></td>
+              <td>Any laptop, CPU, or <code>1&times;</code> GPU</td>
+              <td><span class="studio-tag studio-tag--ready">0.12 s on 1&times; 3090</span><br><small><strong><code>0.12 s</code></strong>/video clip (<code>1408-d</code> rollout) &middot; <code>0.9 s</code> CPU</small></td>
+            </tr>
+            <tr>
+              <td><strong>Boltz-2</strong><br><small>3D protein/RNA/ligand structure folding (<code>HG4-16R</code>)</small></td>
+              <td><code>0.53 GB</code><br><small>(<code>~14 GB</code> w/ pairformer)</small></td>
+              <td><code>1&times;</code> GPU server with <code>&ge; 16 GB</code> VRAM (<code>1&times; RTX 3090</code>)</td>
+              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><strong><code>~12 s</code></strong> per 3D <code>.cif</code> complex on <code>1&times; RTX 3090</code>; skipped on CPU</small></td>
             </tr>
             <tr>
               <td><strong>Goedel-Prover-V2-32B</strong><br><small>Formal <code>Lean 4</code> theorem proving specialist (<code>HG4-16R</code>)</small></td>
-              <td><code>16.4 GB</code><br><small>(<code>21.6 GB</code> w/ 16k KV)</small></td>
-              <td><code>1&times;</code> GPU server with <code>&ge; 24 GB</code> VRAM (<code>1&times; RTX 3090 / 4090 / L4</code>)</td>
-              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><code>18.4 decode tok/s</code> GPU; skipped on CPU (<code>~0.8 tok/s</code>)</small></td>
+              <td><code>15.8 GB</code><br><small>(<code>21.6 GB</code> w/ 16k KV)</small></td>
+              <td><code>1&times;</code> GPU server with <code>&ge; 24 GB</code> VRAM (<code>1&times; RTX 3090</code>)</td>
+              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><strong><code>18.4&ndash;28.6 decode tok/s</code></strong> on <code>RTX 3090</code>; skipped on CPU (<code>0.9 tok/s</code>)</small></td>
             </tr>
             <tr>
               <td><strong>Clover-35B-A3B Coordinator</strong><br><small><code>Qwen3.6-35B-A3B + Clover-Harness-LoRA</code> (<code>HG4-16R-OP</code>)</small></td>
               <td><code>17.4 GB</code><br><small>(<code>20.2 GB</code> w/ 32k KV)</small></td>
-              <td><code>1&times;</code> GPU server with <code>&ge; 24 GB</code> VRAM (<code>1&times; RTX 3090 / 4090 / L4</code>)</td>
-              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><code>35.8 decode tok/s</code> GPU; extra servers add <code>+0.0 tok/s</code></small></td>
+              <td><code>1&times;</code> GPU server with <code>&ge; 24 GB</code> VRAM (<code>1&times; RTX 3090</code>)</td>
+              <td><span class="studio-tag studio-tag--gpu">58.5 tok/s on 1&times; 3090</span><br><small><strong><code>58.5 decode tok/s</code></strong> native CUDA (<code>35.8 tok/s</code> HTTP); <code>4&times;</code> GPUs add <code>+0.0 tok/s</code></small></td>
             </tr>
             <tr>
               <td><strong>Nemotron 3.5 Super VL</strong><br><small><code>120B-A12B</code> <code>1M</code> context &amp; C-RADIO vision escalation (<code>HG4-16R</code>)</small></td>
-              <td><code>60.2 GB</code><br><small>(<code>68 GB</code> resident)</small></td>
-              <td><code>1&times; 80 GB</code> GPU (<code>A100/H100</code>) or <code>4&times; 24 GB</code> GPU server (<code>&ge; 72 GB</code> VRAM)</td>
-              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><code>22&ndash;38 decode tok/s</code> GPU; skipped on CPU (<code>&lt;0.8 tok/s</code>)</small></td>
+              <td><code>58.2 GB</code><br><small>(<code>68 GB</code> resident)</small></td>
+              <td><code>4&times; 24 GB RTX 3090</code> server or <code>1&times; 80 GB</code> GPU (<code>&ge; 72 GB</code> VRAM)</td>
+              <td><span class="studio-tag studio-tag--gpu">38&ndash;55+ tok/s on 4&times; 3090</span><br><small><strong><code>38.4&ndash;55+ decode tok/s</code></strong> (<code>2L-MTP</code>); <code>8&times;</code> GPUs add <code>+0.0 tok/s</code></small></td>
             </tr>
             <tr>
               <td><strong>Kimi K3.1 Pro</strong><br><small><code>2.8T</code> MoE frontier derivation escalation (<code>K31H</code> two-tier <code>HG4 + HG2</code>)</small></td>
               <td><code>741 GB</code><br><small>(<code>~780 GB</code> resident)</small></td>
-              <td>Same-rack GPU cluster with <code>&ge; 780 GB</code> aggregate VRAM (<code>5&times; 8-GPU 24 GB</code> or <code>2&times; 8&times;80 GB</code>)</td>
-              <td><span class="studio-tag studio-tag--gpu">In-Rack Cluster</span><br><small><code>6&ndash;18 decode tok/s</code>; skipped without cluster</small></td>
+              <td>Same-rack GPU cluster with <code>&ge; 780 GB</code> aggregate VRAM (<code>5&times; 8-GPU RTX 3090</code> or <code>2&times; 8&times;80 GB</code>)</td>
+              <td><span class="studio-tag studio-tag--gpu">6&ndash;18 tok/s on 5&times; 8-GPU 3090</span><br><small><strong><code>6.0 decode tok/s</code></strong> (<code>T=1</code>) to <strong><code>~18 tok/s</code></strong> (<code>+DSpark</code>); skipped without cluster</small></td>
             </tr>
           </tbody>
         </table>
