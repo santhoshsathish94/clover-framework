@@ -7,7 +7,7 @@
 <meta name="description" content="Six everyday stories and real hardware measurements that break six myths about AI chips, memory, servers, networks, universal models, and autonomous AI — powered by Clover.">
 <link rel="canonical" href="https://cloverframework.com/hg-format/">
 <meta property="og:title" content="AI Mythbuster — Six AI Myths Broken With Real Hardware &amp; Human Steering">
-<meta property="og:description" content="Watch five grey clover leaves and the center steering wheel turn gold as six AI myths break: why the wire limits speed, extra GBs add +0.0 tok/s, small rigs beat giant servers, VRAM leaves everything else idle, specialist teams beat monoliths, and AI breakthroughs are always Human + AI.">
+<meta property="og:description" content="Watch five grey clover leaves turn gold as six AI myths break: why the wire limits speed, extra GBs add +0.0 tok/s, small rigs beat giant servers, VRAM leaves everything else idle, specialist teams beat monoliths, and AI breakthroughs are always Human + AI.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cloverframework.com/hg-format/">
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
@@ -37,25 +37,6 @@
     fill: #8a5607;
     opacity: 1;
     font-weight: 700;
-  }
-  .pinned[data-myth-story] .story__wheel {
-    stroke: #787366;
-    opacity: 0.55;
-    transition: stroke 420ms var(--ease-nature), opacity 420ms var(--ease-nature), filter 420ms var(--ease-nature);
-  }
-  .pinned[data-myth-story] .story__wheel.is-golden {
-    stroke: #c88412;
-    opacity: 1;
-    filter: drop-shadow(0 0 10px rgba(212, 146, 28, 0.52));
-  }
-  .pinned[data-myth-story] .story__wheel-hub {
-    fill: #787366;
-    opacity: 0.65;
-    transition: fill 420ms var(--ease-nature), opacity 420ms var(--ease-nature);
-  }
-  .pinned[data-myth-story] .story__wheel-hub.is-golden {
-    fill: #b87409;
-    opacity: 1;
   }
 
   /* Apple-Keynote Spotlight Proof Stage inside each Myth chapter */
@@ -294,7 +275,7 @@
 
   <div class="pinned" data-story data-myth-story>
     <div class="pinned__mark">
-      <svg class="clover clover--hero" viewBox="-6 -10 112 110" role="group" aria-label="Six myths of AI. Five grey leaves and the center steering wheel turn golden as each myth is broken.">
+      <svg class="clover clover--hero" viewBox="-6 -10 112 110" role="group" aria-label="Five grey clover leaves turn golden as the six myths of AI are broken.">
         <g class="clover__spin">
           <a class="clover__leaf-hit" href="#myth-1-wire" aria-label="Myth 1: The Wire">
             <g transform="translate(50 44) scale(1.005 1.02) translate(-50 -44)">
@@ -331,11 +312,6 @@
             </g>
             <text class="clover__label story__label" data-myth-idx="5" text-anchor="middle"><textPath href="#arc-upper-left" startOffset="50%">Team</textPath></text>
           </a>
-          <a class="clover__leaf-hit" href="#myth-6-driver" aria-label="Myth 6: Human Steering Wheel">
-            <circle class="story__wheel" data-myth-idx="6" cx="50" cy="44" r="7.2" fill="#fbf9f3" stroke-width="2.1"/>
-            <path class="story__wheel" data-myth-idx="6" d="M50 36.8 L50 44 M43.8 47.6 L50 44 M56.2 47.6 L50 44" fill="none" stroke-width="1.65" stroke-linecap="round"/>
-            <circle class="story__wheel-hub" data-myth-idx="6" cx="50" cy="44" r="2.1"/>
-          </a>
         </g>
       </svg>
     </div>
@@ -346,7 +322,7 @@
           <h1>AI Mythbuster</h1>
           <p class="hero__tagline">Six myths hid how AI really works &mdash; five about the machine, and one bigger myth about who is driving.</p>
           <p class="lede">For years, the industry has repeated five myths about AI hardware &mdash; faster chips, more gigabytes, giant servers, massive networks, and one universal model &mdash; plus one overarching myth: that AI solves problems all on its own.</p>
-          <p style="margin-top:1rem"><strong>All six myths fall apart the moment you look at real work and real hardware.</strong><br>Watch the five grey leaves and the center steering wheel on the right. Scroll down as each simple story and live proof breaks one myth &mdash; turning the entire Clover to gold.</p>
+          <p style="margin-top:1rem"><strong>All six myths fall apart the moment you look at real work and real hardware.</strong><br>Watch the five grey clover leaves on the right. Scroll down as each simple story and live proof breaks one myth &mdash; turning the entire Clover to gold.</p>
         </div>
       </div>
     </section>
@@ -688,7 +664,7 @@ python3 reproduce_hg_myths.py --verify-all --out ./repro_hg_myths_report.json</c
 python3 convert_to_hg.py --model Qwen/Qwen3.6-35B-A3B --out ./hg-model --ldlq --verify</code></pre>
       <p style="font-size:0.92rem;color:var(--muted)">Reproducible scripts &amp; raw SHA-256 verification ledgers live openly in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/benchmarks"><code>github.com/santhoshsathish94/clover-framework/benchmarks</code> &rarr;</a> &middot; Run or download the system in <a href="../ai-system/">Clover AI Studio (v6.0) &rarr;</a></p>
 
-      <svg class="clover clover--close clover--golden-close" viewBox="0 0 100 100" role="img" aria-label="All six myths broken — the five-leaf clover and center steering wheel glowing in sunlit gold.">
+      <svg class="clover clover--close clover--golden-close" viewBox="0 0 100 100" role="img" aria-label="All six myths broken — the five-leaf clover glowing in sunlit gold.">
         <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
         <g><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
         <g transform="rotate(72 50 44)"><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
