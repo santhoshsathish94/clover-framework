@@ -1,6 +1,8 @@
 # Clover AI System & Clover AI Studio (`v6.0.0`)
 
-`clover-ai-system/` contains the open-source **Clover AI Studio** applications (**Windows Desktop**, **Android Mobile**, **Web Studio**, and **VS Code**) and the **Clover v6.0 HG4 Fusion & Specialist Mesh** — see [`CLOVER_FRAMEWORK_ARCHITECTURE.md`](CLOVER_FRAMEWORK_ARCHITECTURE.md) and [`../docs/reference/release-v6.md`](../docs/reference/release-v6.md).
+`clover-ai-system/` contains the self-hosted **Clover v6.0 HG4 Fusion & Specialist Mesh** (`src/tools/hg4-fusion-gateway/`, `studio/clover/clover_v6_system.py`) alongside the **Work in Progress (`WIP`)** standalone Desktop (`studio/`) and Android Mobile (`mobile/`) GUI wrappers — see [`CLOVER_FRAMEWORK_ARCHITECTURE.md`](CLOVER_FRAMEWORK_ARCHITECTURE.md) and [`../docs/reference/release-v6.md`](../docs/reference/release-v6.md).
+
+> **Work in Progress Note:** Standalone Windows `.exe` and Android `.apk` GUI installers are **Work in Progress** and are not published for download ([`../download/README.md`](../download/README.md)). Run Clover v6.0 directly from Python/C source on your own Linux/Windows/GPU machine as shown below.
 
 ---
 
@@ -37,7 +39,7 @@ In **Settings → Model → Clover System Setup** (or on first launch via *Choos
 | **`Goedel-Prover-V2-32B`** (`HG4-16R`) | `16.4 GB` (`21.6 GB` @ 16k KV) | `1×` GPU server `>= 24 GB` VRAM (`RTX 3090 / 4090 / L4`) | **GPU required** (`18.4 tok/s`; *skipped on CPU*) |
 | **`Clover-35B-A3B` Coordinator** (`HG4-16R-OP`) | `17.4 GB` (`20.2 GB` @ 32k KV) | `1×` GPU server `>= 24 GB` VRAM (`RTX 3090 / 4090 / L4`) | **GPU required** (`35.8 tok/s`; *skipped on CPU*) |
 | **`Nemotron 3.5 Super VL`** (`120B-A12B` `HG4-16R`) | `60.2 GB` (`68 GB` resident) | `1× 80 GB` GPU or `4× 24 GB` GPU server (`>= 72 GB` VRAM) | **GPU required** (`22–38 tok/s`; *skipped on CPU*) |
-| **`Kimi K3.1 Pro`** (`2.8T MoE` `K31H`) | `1,420 GB` | `>= 8` same-rack GPU servers (`>= 1,400 GB` aggregate VRAM) | **In-rack cluster** (`6–18 tok/s`; *skipped without cluster*) |
+| **`Kimi K3.1 Pro`** (`2.8T MoE` `K31H` two-tier `HG4+HG2`) | `741 GB` (`~780 GB` resident) | Same-rack GPU cluster `>= 780 GB` VRAM (`5× 8-GPU 24 GB` or `2× 8×80 GB`) | **In-rack cluster** (`6–18 decode tok/s`; *skipped without cluster*) |
 
 ---
 

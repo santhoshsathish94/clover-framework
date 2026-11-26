@@ -4,9 +4,9 @@ Connect **Clover AI Studio (`v6.0.0`)** — including local `LFM3-Omni-2B`, `0B`
 
 ---
 
-## Option A — Bundled `clover-local-6.0.0.vsix` (Installed Automatically by `CloverAIStudio-Setup.exe`)
+## Option A — Self-Hosted `clover-local` Extension *(Standalone Desktop Installer: WIP)*
 
-Installing [`CloverAIStudio-Setup.exe`](../../download/laptop/CloverAIStudio-Setup.exe) automatically installs [`clover-local-6.0.0.vsix`](../studio/studio/dist/clover-local-6.0.0.vsix), exposing your local and remote Clover Studio models (`http://127.0.0.1:8765/v1/chat/completions`) inside VS Code's Chat model picker alongside two-way workbench tools (`vscode_editor`, `vscode_diff`, `vscode_diagnostics`, `vscode_browser`).
+When running a local or self-hosted Clover `server.py` / `gateway.py` endpoint, [`clover-local-6.0.0.vsix`](../studio/studio/dist/clover-local-6.0.0.vsix) exposes your local and remote Clover models (`http://127.0.0.1:8765/v1/chat/completions`) inside VS Code's Chat model picker alongside two-way workbench tools (`vscode_editor`, `vscode_diff`, `vscode_diagnostics`, `vscode_browser`). *(Note: the standalone Windows `.exe` installer is currently Work in Progress — see [`../../download/README.md`](../../download/README.md).)*
 
 ---
 

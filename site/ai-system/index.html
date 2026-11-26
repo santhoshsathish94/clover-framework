@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Studio (v6.0) — Clover</title>
-<meta name="description" content="Clover AI Studio v6.0 across Web, Windows, Android, and VS Code: run the simpler 4-Part Steerable Clover System, deterministic 0B computed tools, and one model or the full HG4 specialist fleet across your own device and GPU servers.">
+<meta name="description" content="Clover AI System v6.0 for self-hosted machines and GPU servers: run the simpler 4-Part Steerable Clover System, deterministic 0B computed tools, and one model or the full HG4 specialist fleet from source on your own hardware.">
 <link rel="canonical" href="https://cloverframework.com/ai-system/">
 <meta property="og:title" content="AI Studio (v6.0) — Clover">
-<meta property="og:description" content="Run Clover AI Studio v6.0 on Web, Windows, Android, and VS Code — set up one model or the complete Clover AI System on your own device and servers.">
+<meta property="og:description" content="Self-host Clover AI System v6.0 from source — run one model or the complete Clover AI System on your own machine and GPU servers.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cloverframework.com/ai-system/">
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
@@ -115,7 +115,7 @@
 
 <header class="site-head">
   <div class="wrap">
-    <a class="brand-icon" href="../clover-ai/" aria-label="Clover">
+    <a class="brand-icon" href="../" aria-label="Clover">
       <svg class="clover clover--brand" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
         <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
         <use class="clover__leaf is-filled" href="#clover-leaf"/>
@@ -146,15 +146,14 @@
 
   <section class="hero" id="overview">
     <div class="wrap">
-      <span class="rel-pill">Clover AI Studio v6.0.0 &middot; Web &middot; Windows &middot; Android &middot; VS Code</span>
+      <span class="rel-pill">Clover AI System v6.0.0 &middot; Open Source &middot; Self-Hosted on Your Hardware</span>
       <h1>Clover AI Studio</h1>
-      <p class="hero__tagline">One simpler 4-part steerable system &mdash; run one model on a phone or laptop, or the full specialist system across your own GPU servers.</p>
-      <p class="lede"><strong>Clover AI Studio v6.0</strong> replaces heavyweight post-inference stacks with the four pieces that actually move real-world outcomes: <a href="../getting-started/"><code>AGENTS.md</code></a> steering, deterministic <code>0B</code> computed tools in <code>mcp.json</code>, human-readable <code>&lt;task_id&gt;.md</code> context files, and a prerequisite-gated SQLite todo graph &mdash; backed by Hadamard-Grouped (<code>HG4-16R</code>) open models and live runtime telemetry.</p>
+      <p class="hero__tagline">One simpler 4-part steerable system &mdash; run one model on a small machine, or self-host the full specialist system across your own GPU servers.</p>
+      <p class="lede"><strong>Clover AI System v6.0 runs from source on your own hardware &mdash; never on a public shared cloud.</strong> It replaces heavyweight post-inference stacks with the four pieces that actually move real-world outcomes: <a href="../getting-started/"><code>AGENTS.md</code></a> steering, deterministic <code>0B</code> computed tools in <code>mcp.json</code>, human-readable <code>&lt;task_id&gt;.md</code> context files, and a prerequisite-gated SQLite todo graph &mdash; backed by Hadamard-Grouped (<code>HG4-16R</code>) open models and live runtime telemetry.</p>
       <div class="actions" style="margin-top:1.5rem">
-        <a class="btn btn--primary" href="../clover-ai/">Open Web Studio &rarr;</a>
-        <a class="btn" href="../download/laptop/CloverAIStudio-Setup.exe">Download for Windows (x64)</a>
-        <a class="btn" href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk">Download Android APK (v6.0.0)</a>
-        <a class="btn btn--plain" href="../download/SHA256SUMS.txt">SHA-256 Checksums &rarr;</a>
+        <a class="btn btn--primary" href="https://github.com/santhoshsathish94/clover-framework/tree/main/clover-ai-system">Run From Source on GitHub &rarr;</a>
+        <a class="btn" href="../hg-format/#verify-yourself">Verify All 6 Myths Yourself &rarr;</a>
+        <a class="btn btn--plain" href="https://huggingface.co/Santhoshsathish94">Converted HG Models &rarr;</a>
       </div>
     </div>
   </section>
@@ -162,7 +161,7 @@
   <section class="band" id="four-part-system">
     <div class="wrap">
       <h2>The simpler v6.0 4-Part Clover System</h2>
-      <p class="lede">Desktop, Android Mobile, and Web Studio all share the exact same codebase (<code>clover-ai-system/studio/clover/</code>) and run the same four-part steerable loop.</p>
+      <p class="lede">Every self-hosted Clover deployment runs the same four-part steerable loop directly from open source (<code>clover-ai-system/</code>).</p>
 
       <div class="studio-grid">
         <div class="studio-card">
@@ -196,7 +195,14 @@
     <div class="wrap">
       <h2>Set up one model &mdash; or the full Clover AI System &mdash; on your own hardware</h2>
       <p class="lede">Inside <strong>Settings &rarr; Model &rarr; Clover System Setup</strong> (and right from first launch via <em>Choose models / Use server</em>), you can select <strong>a single model</strong>, a <strong>custom subset</strong>, or the <strong>complete Clover AI System</strong> across your device and any GPU servers you provide.</p>
-      <p><strong>Honest interactive hardware gate:</strong> Small models and <code>0B</code> computed tools run interactively on <em>any</em> phone, laptop, or CPU server with zero GPUs. Big models require GPUs to run at interactive speed &mdash; if a machine is CPU-only or lacks the required GPU VRAM, Studio automatically skips those models and tells you the exact minimum server needed rather than letting a model crawl at <code>&lt;1 tok/s</code>.</p>
+      <p><strong>Honest interactive hardware gate:</strong> Small models and <code>0B</code> computed tools run interactively on <em>any</em> phone, laptop, or CPU server with zero GPUs. Big models require GPUs to run at interactive speed &mdash; if a machine is CPU-only or lacks the required GPU VRAM, Studio automatically skips those models and tells you the exact minimum server needed rather than letting a model crawl at <code>&lt;1 decode tok/s</code>.</p>
+
+      <div class="studio-card" style="margin-top:1.2rem;border-left:4px solid var(--accent)">
+        <span class="studio-tag studio-tag--ready">Real Single-User Decode tok/s &middot; Not Vendor Batch Marketing</span>
+        <h3 style="margin-bottom:0.45rem">Why adding a bigger server does not make a model decode faster</h3>
+        <p style="margin-bottom:0.65rem"><strong>Many NVIDIA and cloud server benchmarks advertise &ldquo;inference throughput&rdquo; of <code>2,000&ndash;10,000+ tok/s</code></strong> by summing <code>64&ndash;256</code> concurrent users together or counting prompt-reading (<em>prefill</em>) tokens. One person waiting on one answer never sees that speed &mdash; you experience <strong>actual single-stream autoregressive decode (<code>batch = 1 tok/s</code>)</strong>, where each new token cannot start until the previous token finishes.</p>
+        <p style="margin:0"><strong>Once a model fits in memory, buying a bigger system or adding extra VRAM GBs adds <code>+0.0 decode tok/s</code>.</strong> Single-user decode speed is strictly governed by <strong>memory-wire bandwidth &divide; active bytes read per token</strong> &mdash; for example, <code>Clover-35B-A3B</code> reads <code>~1.7 GB</code> of active <code>HG4</code> weights per token on a <code>936 GB/s</code> <code>RTX 3090</code> (<code>35.8 decode tok/s</code>). Putting that same <code>17.4 GB</code> model onto four or eight servers will not make one answer write faster (cross-server hops can even slow single-user decode down); extra servers only add multi-user capacity or hold a larger model that cannot fit on one card (<a href="../hg-format/">see Myth 1 &amp; Myth 2 proofs &rarr;</a>).</p>
+      </div>
 
       <div class="hw-wrap">
         <table class="hw-table">
@@ -205,7 +211,7 @@
               <th>Model / Specialist</th>
               <th>HG4 Footprint</th>
               <th>Minimum Required Hardware / Servers</th>
-              <th>Interactive Gate</th>
+              <th>Single-User Decode Speed (batch = 1)</th>
             </tr>
           </thead>
           <tbody>
@@ -213,71 +219,52 @@
               <td><strong>0B Computed Pack</strong><br><small><code>x-cruncher</code> + Conformal Forecaster + Defeasible Resolver</small></td>
               <td><code>0 MB</code></td>
               <td>Any phone, laptop, or CPU machine (<code>0</code> GPUs)</td>
-              <td><span class="studio-tag studio-tag--ready">Any Device</span><br><small><code>&lt; 50 ms</code> on CPU</small></td>
+              <td><span class="studio-tag studio-tag--ready">Any Device</span><br><small><code>&lt; 50 ms</code> exact computation</small></td>
             </tr>
             <tr>
               <td><strong>LFM3-Omni-2B</strong><br><small>Everyday local multimodal assistant (<code>HG4-16R</code>)</small></td>
               <td><code>0.98 GB</code></td>
               <td>Any phone, laptop, or CPU/GPU machine (<code>0</code> GPUs)</td>
-              <td><span class="studio-tag studio-tag--ready">Any Device</span><br><small><code>18&ndash;65 tok/s</code> CPU &middot; <code>163 tok/s</code> GPU</small></td>
+              <td><span class="studio-tag studio-tag--ready">Any Device</span><br><small><code>18&ndash;65 decode tok/s</code> CPU &middot; <code>163 decode tok/s</code> GPU</small></td>
             </tr>
             <tr>
               <td><strong>Chronos-Bolt 0.2B &amp; V-JEPA 2.1</strong><br><small>Time-series &amp; physical dynamics specialists (<code>HG4</code>)</small></td>
               <td><code>0.12 &ndash; 1.2 GB</code></td>
               <td>Any phone, laptop, or CPU/GPU machine (<code>0</code> GPUs)</td>
-              <td><span class="studio-tag studio-tag--ready">Any Device</span><br><small>Local <code>0B</code> Conformal &amp; JEPA runtime</small></td>
+              <td><span class="studio-tag studio-tag--ready">Any Device</span><br><small><code>&lt; 50 ms</code> <code>0B</code> Conformal &middot; <code>0.8 s</code> CPU</small></td>
             </tr>
             <tr>
               <td><strong>Boltz-2</strong><br><small>3D protein/RNA/ligand structure folding (<code>HG4</code>)</small></td>
               <td><code>3.5 GB</code><br><small>(<code>~14 GB</code> w/ pairformer)</small></td>
               <td><code>1&times;</code> GPU server with <code>&ge; 16 GB</code> VRAM (<code>RTX 4080 / A10G / T4 / 3090</code>)</td>
-              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small>Skipped on CPU-only machines</small></td>
+              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><code>~12 s</code> per complex on GPU; skipped on CPU</small></td>
             </tr>
             <tr>
               <td><strong>Goedel-Prover-V2-32B</strong><br><small>Formal <code>Lean 4</code> theorem proving specialist (<code>HG4-16R</code>)</small></td>
               <td><code>16.4 GB</code><br><small>(<code>21.6 GB</code> w/ 16k KV)</small></td>
               <td><code>1&times;</code> GPU server with <code>&ge; 24 GB</code> VRAM (<code>1&times; RTX 3090 / 4090 / L4</code>)</td>
-              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><code>18.4 tok/s</code> GPU; skipped on CPU</small></td>
+              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><code>18.4 decode tok/s</code> GPU; skipped on CPU (<code>~0.8 tok/s</code>)</small></td>
             </tr>
             <tr>
               <td><strong>Clover-35B-A3B Coordinator</strong><br><small><code>Qwen3.6-35B-A3B + Clover-Harness-LoRA</code> (<code>HG4-16R-OP</code>)</small></td>
               <td><code>17.4 GB</code><br><small>(<code>20.2 GB</code> w/ 32k KV)</small></td>
               <td><code>1&times;</code> GPU server with <code>&ge; 24 GB</code> VRAM (<code>1&times; RTX 3090 / 4090 / L4</code>)</td>
-              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><code>35.8 tok/s</code> GPU; skipped on CPU</small></td>
+              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><code>35.8 decode tok/s</code> GPU; extra servers add <code>+0.0 tok/s</code></small></td>
             </tr>
             <tr>
               <td><strong>Nemotron 3.5 Super VL</strong><br><small><code>120B-A12B</code> <code>1M</code> context &amp; C-RADIO vision escalation (<code>HG4-16R</code>)</small></td>
               <td><code>60.2 GB</code><br><small>(<code>68 GB</code> resident)</small></td>
               <td><code>1&times; 80 GB</code> GPU (<code>A100/H100</code>) or <code>4&times; 24 GB</code> GPU server (<code>&ge; 72 GB</code> VRAM)</td>
-              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><code>22&ndash;38 tok/s</code> GPU; skipped on CPU</small></td>
+              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><code>22&ndash;38 decode tok/s</code> GPU; skipped on CPU (<code>&lt;0.8 tok/s</code>)</small></td>
             </tr>
             <tr>
-              <td><strong>Kimi K3.1 Pro</strong><br><small><code>2.8T</code> MoE frontier derivation escalation (<code>K31H</code>)</small></td>
-              <td><code>1,420 GB</code></td>
-              <td><code>&ge; 8</code> same-rack GPU servers with <code>&ge; 1,400 GB</code> aggregate VRAM</td>
-              <td><span class="studio-tag studio-tag--gpu">In-Rack Cluster</span><br><small><code>6&ndash;18 tok/s</code>; skipped without cluster</small></td>
+              <td><strong>Kimi K3.1 Pro</strong><br><small><code>2.8T</code> MoE frontier derivation escalation (<code>K31H</code> two-tier <code>HG4 + HG2</code>)</small></td>
+              <td><code>741 GB</code><br><small>(<code>~780 GB</code> resident)</small></td>
+              <td>Same-rack GPU cluster with <code>&ge; 780 GB</code> aggregate VRAM (<code>5&times; 8-GPU 24 GB</code> or <code>2&times; 8&times;80 GB</code>)</td>
+              <td><span class="studio-tag studio-tag--gpu">In-Rack Cluster</span><br><small><code>6&ndash;18 decode tok/s</code>; skipped without cluster</small></td>
             </tr>
           </tbody>
         </table>
-      </div>
-    </div>
-  </section>
-
-  <section class="band" id="platforms">
-    <div class="wrap">
-      <h2>Every surface stays in sync</h2>
-      <div class="studio-grid">
-        <div class="studio-card">
-          <span class="studio-tag studio-tag--ready">Windows x64 &middot; v6.0.0</span>
-          <h3>Desktop Installer &amp; VS Code Extension</h3>
-          <p>Authenticode SHA-256 signed per-user installer (<a href="../download/laptop/CloverAIStudio-Setup.exe"><code>CloverAIStudio-Setup.exe</code></a>, <code>10.0 MB</code>, no Administrator UAC required) bundling <code>clover-local-6.0.0.vsix</code> for two-way VS Code Copilot Chat, File Viewer, Diff, Integrated Browser, and Terminal integration.</p>
-        </div>
-
-        <div class="studio-card">
-          <span class="studio-tag studio-tag--ready">Android arm64 &middot; v6.0.0 (Code 22)</span>
-          <h3>On-Device Mobile App &amp; Snapdragon Acceleration</h3>
-          <p>Signed Android <code>APK</code> &amp; Play Bundle (<a href="https://github.com/santhoshsathish94/clover-framework/raw/main/download/mobile/CloverAIStudio.apk"><code>CloverAIStudio.apk</code></a>, <code>targetSdk 36</code>) embedding Python 3.12 via Chaquopy, <code>libxcruncher.so</code>, Adreno OpenCL, and Hexagon DSP &mdash; plus seamless remote GPU server pairing.</p>
-        </div>
       </div>
     </div>
   </section>

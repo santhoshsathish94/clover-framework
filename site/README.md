@@ -35,7 +35,7 @@ python -m http.server 8000 --directory site
 site/
   index.html                             the framework: one cycle, at any scale
   hg-format/                             AI Mythbuster: 6 AI myths broken with stories, live hardware proofs, REPRODUCE_AGENTS.md, golden 5-leaf + center steering wheel SVG, and Clover HG4 (convert_to_hg.py)
-  ai-system/                             AI Studio (v6.0): 4-Part Steerable Clover System, 0B Computed Specialists, Web/Windows/Android/VS Code downloads, and minimum server hardware table
+  ai-system/                             AI Studio (v6.0): 4-Part Steerable Clover System, 0B Computed Specialists, single-user decode tok/s hardware table, and 5-Senses research horizon
   getting-started/                       the AGENTS.md menu page: read-only access, the agent file, multi-cycle verification, a first cycle
   governance/                            governance: vertical storyline on access, attribution, approvals, delegated execution, and k3 allowlist security
   privacy/                               privacy policy: on-device inference, local Git logging, encrypted vault, and opt-in GitHub collective learning

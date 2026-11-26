@@ -49,7 +49,7 @@ Context → Direction → Execution → Outcome → Growth
 | :--- | :--- |
 | **Understand the Clover Framework** | [**cloverframework.com**](https://cloverframework.com/) · [`QUICKSTART.md`](QUICKSTART.md) · [`docs/README.md`](docs/README.md) · [`docs/case-studies/`](docs/case-studies/) |
 | **Operate any AI agent under Clover** | [`AGENTS.md`](AGENTS.md) — drop-in self-contained operating contract |
-| **Launch or Download Clover AI Studio `v6.0.0` (Web, Windows, Android, VS Code)** | [**cloverframework.com/ai-system/**](https://cloverframework.com/ai-system/) · [**Open Web Studio**](https://cloverframework.com/clover-ai/) · [`download/`](download/SHA256SUMS.txt) · [`clover-ai-system/README.md`](clover-ai-system/README.md) |
+| **Self-Host Clover AI System `v6.0.0` From Source *(Desktop/Mobile GUI Apps: WIP)*** | [**cloverframework.com/ai-system/**](https://cloverframework.com/ai-system/) · [`clover-ai-system/README.md`](clover-ai-system/README.md) · [`download/README.md`](download/README.md) |
 | **Read the 6 Broken AI Myths & `HG4` 4-Bit Hadamard Format** | [**AI Mythbuster (`cloverframework.com/hg-format/`)**](https://cloverframework.com/hg-format/) · [`site/hg-format/index.html`](site/hg-format/index.html) |
 | **Reproduce all 6 Myths & `HG4` on your own machine (Zero Human Setup)** | [`site/hg-format/REPRODUCE_AGENTS.md`](site/hg-format/REPRODUCE_AGENTS.md) *(paste into any AI agent)* · [`site/hg-format/reproduce_hg_myths.py`](site/hg-format/reproduce_hg_myths.py) · [`site/hg-format/convert_to_hg.py`](site/hg-format/convert_to_hg.py) |
 | **Inspect raw public benchmark ledgers (`2026-11-26`)** | [`benchmarks/public-runs-20261126/README.md`](benchmarks/public-runs-20261126/README.md) · [`research/benchmarks/`](research/benchmarks/) |
@@ -59,9 +59,9 @@ Context → Direction → Execution → Outcome → Growth
 
 ---
 
-## Clover AI Studio & System (`v6.0.0`)
+## Clover AI System (`v6.0.0` Self-Hosted Source · Desktop & Mobile GUI Apps in WIP)
 
-In **Clover v6.0** ([`clover-ai-system/`](clover-ai-system/README.md), [`docs/reference/release-v6.md`](docs/reference/release-v6.md)), **Windows Desktop**, **Android Mobile**, **Web Studio**, and **VS Code** run one shared, simpler **4-Part Steerable Clover System**:
+In **Clover v6.0** ([`clover-ai-system/`](clover-ai-system/README.md), [`docs/reference/release-v6.md`](docs/reference/release-v6.md)), self-hosted deployments run one simpler **4-Part Steerable Clover System** directly from open source on your own hardware *(note: standalone Windows `.exe` and Android `.apk` GUI installers are **Work in Progress** and withheld until end-to-end UX verification completes)*:
 
 1. **Part 1 — `AGENTS.md` Steering & Epistemic Boundaries:** Enforces `Context → Direction → Execution → Outcome → Growth`, pauses with `STOP_AND_ASK` before destructive or underspecified actions, and applies a Tier-0 tool-exposure gate so small `2B` models are never flooded with unrequested schemas.
 2. **Part 2 — `mcp.json` (`0B` Computed Specialists First + `HG4` Specialist Mesh):**
@@ -86,7 +86,7 @@ Inside **Settings → Model → Clover System Setup** (or from first launch via 
 | **`Goedel-Prover-V2-32B`** (`HG4-16R` `Lean 4` prover) | `16.4 GB` (`21.6 GB` @ 16k KV) | `1×` GPU server `>= 24 GB` VRAM (`1× RTX 3090 / 4090 / L4`) | **GPU required** (`18.4 tok/s`; *skipped on CPU*) |
 | **`Clover-35B-A3B` Coordinator** (`Qwen3.6-35B-A3B + LoRA`, `HG4-16R-OP`) | `17.4 GB` (`20.2 GB` @ 32k KV) | `1×` GPU server `>= 24 GB` VRAM (`1× RTX 3090 / 4090 / L4`) | **GPU required** (`35.8 tok/s`; *skipped on CPU*) |
 | **`Nemotron 3.5 Super VL`** (`120B-A12B` `HG4-16R`, `1M` context) | `60.2 GB` (`68 GB` resident) | `1× 80 GB` GPU (`A100/H100`) or `4× 24 GB` GPU server (`>= 72 GB` VRAM) | **GPU required** (`22–38 tok/s`; *skipped on CPU*) |
-| **`Kimi K3.1 Pro`** (`2.8T MoE` `K31H` escalation) | `1,420 GB` | `>= 8` same-rack GPU servers (`>= 1,400 GB` aggregate VRAM) | **In-rack cluster** (`6–18 tok/s`; *skipped without cluster*) |
+| **`Kimi K3.1 Pro`** (`2.8T MoE` `K31H` two-tier `HG4+HG2`) | `741 GB` (`~780 GB` resident) | Same-rack GPU cluster `>= 780 GB` VRAM (`5× 8-GPU 24 GB` or `2× 8×80 GB`) | **In-rack cluster** (`6–18 decode tok/s`; *skipped without cluster*) |
 
 ---
 

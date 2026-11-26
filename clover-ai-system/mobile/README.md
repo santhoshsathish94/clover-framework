@@ -1,6 +1,8 @@
-# Clover AI Studio — Android Mobile Edition (`v6.0.0`, `versionCode 22`)
+# Clover AI Studio — Android Mobile Edition (`Work in Progress`)
 
-`clover-ai-system/mobile/` contains the Android assets and native ARM64/Snapdragon C11 acceleration modules for **Clover AI Studio** (`ai.clover.studio`, `minSdk 26`, `targetSdk 36`, `compileSdk 36`).
+> **Work in Progress (`WIP`):** The standalone Android Mobile application (`ai.clover.studio`) is under active engineering and stabilization; public `.apk` / `.aab` binaries are currently withheld ([`../../download/README.md`](../../download/README.md)).
+
+`clover-ai-system/mobile/` contains the in-progress Android packaging assets and native ARM64/Snapdragon C11 acceleration modules (`minSdk 26`, `targetSdk 36`, `compileSdk 36`).
 
 ---
 
@@ -26,4 +28,4 @@ Every Android install runs the exact same **4-Part Steerable Clover System** (`c
 
 - **Android KeyStore AES-256-GCM Vault:** API keys and GitHub OAuth tokens are encrypted on-device and never transmitted to third parties.
 - **Loopback Cleartext Isolation:** `network_security_config.xml` restricts cleartext HTTP strictly to `127.0.0.1` for the embedded Python server.
-- **Signed Artifacts (`v6.0.0`, `versionCode 22`):** See [`../../release/beta/android/BUILD-REPORT.md`](../../release/beta/android/BUILD-REPORT.md) and [`../../download/SHA256SUMS.txt`](../../download/SHA256SUMS.txt).
+- **Packaging Status:** Work in Progress (`WIP`) — see [`../../download/README.md`](../../download/README.md).

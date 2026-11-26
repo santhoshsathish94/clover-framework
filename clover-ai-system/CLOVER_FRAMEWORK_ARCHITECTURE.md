@@ -1,6 +1,6 @@
 # Clover AI System — v6.0 Unified Architecture (`CLOVER_FRAMEWORK_ARCHITECTURE.md`)
 
-**Clover v6.0** unifies **Windows Desktop**, **Android Mobile**, **Web Studio**, **VS Code**, and the **`HG4` Fusion Gateway** around two core principles governed by the five-stage Clover cycle (**`Context → Direction → Execution → Outcome → Growth`** in [`../AGENTS.md`](../AGENTS.md)):
+**Clover v6.0** unifies self-hosted Python/C deployments and the **`HG4` Fusion Gateway** *(with standalone Windows & Android GUI apps in active **Work in Progress**)* around two core principles governed by the five-stage Clover cycle (**`Context → Direction → Execution → Outcome → Growth`** in [`../AGENTS.md`](../AGENTS.md)):
 
 1. **Computed vs. Predicted:** Deterministic algorithms (`0B` computed tools) execute exact math, spectral/conformal forecasting, defeasible rule resolution, and syntax/type verification; neural weights are invoked only where judgment, synthesis, or open-world perception is needed.
 2. **Human Direction at the Steering Wheel:** A named human owns Direction and accountability (`STOP_AND_ASK` on irreversible or underspecified risk), while Clover coordinates the smallest capable interactive model or specialist tool.
@@ -23,7 +23,7 @@ flowchart TB
     subgraph Fleet["Interactive Hardware-Gated Model & Specialist Tiers (HG4-16R / K31H)"]
         S_ANY["Small Tier (Runs Interactively on Any Phone, Laptop, or CPU)\n• LFM3-Omni-2B (0.98 GB HG4-16R)\n• Chronos-Bolt 0.2B & V-JEPA 2.1"]
         S_24["1x 24 GB GPU Tier\n• Clover-35B-A3B Coordinator (Qwen3.6-35B-A3B + LoRA, 17.4 GB, 35.8 tok/s)\n• Goedel-Prover-V2-32B (Lean 4, 16.4 GB) & Boltz-2 (3D folding)"]
-        S_72["Multi-GPU / 80 GB Escalation Tier\n• Nemotron 3.5 Super VL (120B-A12B HG4-16R, 60.2 GB, 1M context)\n• Kimi K3.1 Pro (2.8T K31H across >=8 same-rack GPU nodes)"]
+        S_72["Multi-GPU / 80 GB Escalation Tier\n• Nemotron 3.5 Super VL (120B-A12B HG4-16R, 60.2 GB, 1M context)\n• Kimi K3.1 Pro (2.8T K31H, 741 GB across >=780 GB same-rack GPU cluster)"]
     end
 
     H <-->|"Direction & Approvals"| Harness

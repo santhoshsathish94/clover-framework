@@ -14,11 +14,16 @@ Governed by the canonical Clover Cycle (**`Context → Direction → Execution �
   - Exact big-integer multiplication, factorials, BBP hexadecimal $\pi$, and binary exponentiation (`A^B` / `A**B` past `6,000+` digits) via `x-cruncher` ([`local_tool_packs.py`](clover-ai-system/studio/clover/local_tool_packs.py), [`studio_xcruncher_verifier.py`](clover-ai-system/src/tools/hg4-fusion-gateway/studio_xcruncher_verifier.py)).
   - `0B` Periodogram + Joint Harmonic OLS + Split-Conformal `P10/P50/P90` forecaster (`MASE = 0.3084`, `<50 ms` CPU) and `0B` Defeasible Epistemic Rule Resolver (`180/180` accuracy).
 
-- [x] **3. Clover AI Studio `v6.0.0` Rebuild Across Desktop, Android Mobile, Web & VS Code**
-  - Added **Clover System Setup** (`1` model, custom subset, or full Clover AI System) across local device and user-supplied GPU servers with per-GPU VRAM placement (`ready_served`, `ready_pinned`, `ready_swap`, `needs_gateway`, `skipped_not_interactive`) and multi-token live decode `tok/s` verification.
-  - Small models & `0B` tools run interactively on any phone, laptop, or CPU machine; big GPU models are automatically skipped on CPU-only/undersized machines with explicit minimum server requirements.
-  - Updated first-run [`setup.html`](clover-ai-system/studio/clover/web/setup.html) with **Choose models / Use server** so users connecting remote servers are never forced into a `3 GB` local download first.
-  - Rebuilt and signed Windows [`CloverAIStudio-Setup.exe`](download/laptop/CloverAIStudio-Setup.exe) (`6.0.0`), [`clover-local-6.0.0.vsix`](clover-ai-system/studio/studio/dist/clover-local-6.0.0.vsix), Android [`CloverAIStudio.apk`](download/mobile/CloverAIStudio.apk) & [`CloverAIStudio.aab`](download/mobile/CloverAIStudio.aab) (`versionCode 22`), live `k3` Web Studio (`https://api.cloverframework.com`), and deterministic [`RELEASE-MANIFEST.json`](release/beta/RELEASE-MANIFEST.json) + [`SHA256SUMS.txt`](download/SHA256SUMS.txt).
+- [x] **3. Self-Hosted v6.0 Server & Hardware-Gated Model Setup (`clover_v6_system.py` & `gateway.py`)**
+  - Added **Clover System Setup** (`1` model, custom subset, or full Clover AI System) across local machines and user-supplied GPU servers with per-GPU VRAM placement (`ready_served`, `ready_pinned`, `ready_swap`, `needs_gateway`, `skipped_not_interactive`) and multi-token single-user (`batch = 1`) decode `tok/s` verification.
+  - Small models & `0B` tools run interactively on any CPU machine; big GPU models are automatically skipped on CPU-only/undersized machines with explicit minimum server requirements.
+
+---
+
+## Active Work in Progress (`WIP`) — Standalone Desktop & Mobile GUI Apps
+
+- [ ] **Standalone Windows (`.exe`) & Android (`.apk` / `.aab`) Clover AI Studio Apps ([`clover-ai-system/studio/`](clover-ai-system/studio/), [`clover-ai-system/mobile/`](clover-ai-system/mobile/), [`download/README.md`](download/README.md))**
+  - Stabilizing end-to-end first-run UX, local weight provisioning, and packaged desktop/mobile runtime reliability before publishing standalone binary installers.
 
 - [x] **4. Six Broken AI Myths, `CloverMetricsLedger` Telemetry & Zero-Setup Public Reproducibility**
   - Published live cluster proofs in [`benchmarks/public-runs-20261126/`](benchmarks/public-runs-20261126/README.md), updated [`site/hg-format/index.html`](site/hg-format/index.html) and [`site/ai-system/index.html`](site/ai-system/index.html), and shipped [`site/hg-format/REPRODUCE_AGENTS.md`](site/hg-format/REPRODUCE_AGENTS.md) + [`site/hg-format/reproduce_hg_myths.py`](site/hg-format/reproduce_hg_myths.py) (`6/6 PASS` in `<5s`).
