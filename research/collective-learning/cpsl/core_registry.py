@@ -23,7 +23,6 @@ Implements the exact Git repository structure from `whats-needed-for-clover.txt`
 from __future__ import annotations
 
 import hashlib
-import hmac
 import json
 import os
 import shutil
@@ -33,6 +32,131 @@ import time
 from pathlib import Path
 
 from .collective_gateway import LEARNING_EVENT_SCHEMA
+
+# --- RFC 8032 Ed25519 Asymmetric Signing (private key is NEVER embedded in client builds) ---
+_Q = 2**255 - 19
+_L = 2**252 + 27742317777372353535851937790883648493
+_D = (-121665 * pow(121666, _Q - 2, _Q)) % _Q
+_I = pow(2, (_Q - 1) // 4, _Q)
+
+
+def _xrecover(y: int) -> int:
+    xx = (y * y - 1) * pow(_D * y * y + 1, _Q - 2, _Q) % _Q
+    x = pow(xx, (_Q + 3) // 8, _Q)
+    if (x * x - xx) % _Q != 0:
+        x = (x * _I) % _Q
+    return _Q - x if x % 2 != 0 else x
+
+
+_BY = 4 * pow(5, _Q - 2, _Q) % _Q
+_BX = _xrecover(_BY)
+_B_PT = (_BX % _Q, _BY % _Q, 1, (_BX * _BY) % _Q)
+_IDENT = (0, 1, 1, 0)
+
+
+def _edwards_add(P: tuple[int, int, int, int], Q: tuple[int, int, int, int]) -> tuple[int, int, int, int]:
+    x1, y1, z1, t1 = P
+    x2, y2, z2, t2 = Q
+    a = (y1 - x1) * (y2 - x2) % _Q
+    b = (y1 + x1) * (y2 + x2) % _Q
+    c = t1 * 2 * _D * t2 % _Q
+    d = z1 * 2 * z2 % _Q
+    e = (b - a) % _Q
+    f = (d - c) % _Q
+    g = (d + c) % _Q
+    h = (b + a) % _Q
+    return (e * f % _Q, g * h % _Q, f * g % _Q, e * h % _Q)
+
+
+def _scalarmult(P: tuple[int, int, int, int], e: int) -> tuple[int, int, int, int]:
+    Q = _IDENT
+    addend = P
+    while e > 0:
+        if e & 1:
+            Q = _edwards_add(Q, addend)
+        addend = _edwards_add(addend, addend)
+        e >>= 1
+    return Q
+
+
+def _encodepoint(P: tuple[int, int, int, int]) -> bytes:
+    x, y, z, _ = P
+    zi = pow(z, _Q - 2, _Q)
+    x = (x * zi) % _Q
+    y = (y * zi) % _Q
+    res = bytearray(y.to_bytes(32, "little"))
+    res[31] |= (x & 1) << 7
+    return bytes(res)
+
+
+def _normalize_seed(signing_key: str | bytes) -> bytes:
+    if isinstance(signing_key, bytes):
+        if len(signing_key) == 32:
+            return signing_key
+        signing_key = signing_key.decode("utf-8").strip()
+    s = str(signing_key).strip()
+    if len(s) == 64:
+        try:
+            return bytes.fromhex(s)
+        except ValueError:
+            pass
+    raise ValueError("Ed25519 signing_key must be a 32-byte raw seed or 64-character hex seed")
+
+
+def ed25519_public_key(seed: bytes) -> bytes:
+    """Derive 32-byte RFC 8032 Ed25519 public key from 32-byte private seed."""
+    if len(seed) != 32:
+        raise ValueError("Ed25519 private seed must be 32 bytes")
+    h = bytearray(hashlib.sha512(seed).digest())
+    h[0] &= 248
+    h[31] &= 127
+    h[31] |= 64
+    a = int.from_bytes(h[:32], "little")
+    return _encodepoint(_scalarmult(_B_PT, a))
+
+
+def ed25519_sign(seed: bytes, msg: bytes) -> bytes:
+    """Sign `msg` with 32-byte RFC 8032 Ed25519 private `seed` -> 64-byte signature."""
+    if len(seed) != 32:
+        raise ValueError("Ed25519 private seed must be 32 bytes")
+    h = bytearray(hashlib.sha512(seed).digest())
+    h[0] &= 248
+    h[31] &= 127
+    h[31] |= 64
+    a = int.from_bytes(h[:32], "little")
+    prefix = bytes(h[32:64])
+    A = _encodepoint(_scalarmult(_B_PT, a))
+    r = int.from_bytes(hashlib.sha512(prefix + msg).digest(), "little") % _L
+    R = _encodepoint(_scalarmult(_B_PT, r))
+    k = int.from_bytes(hashlib.sha512(R + A + msg).digest(), "little") % _L
+    S = ((r + k * a) % _L).to_bytes(32, "little")
+    return R + S
+
+
+def generate_ed25519_keypair() -> tuple[str, str]:
+    """Generate a fresh 32-byte Ed25519 `(private_seed_hex, public_key_hex)` pair."""
+    seed = os.urandom(32)
+    return seed.hex(), ed25519_public_key(seed).hex()
+
+
+def _resolve_signing_seed(signing_key: str | bytes | None) -> bytes | None:
+    if signing_key is not None:
+        return _normalize_seed(signing_key)
+    env_key = os.environ.get("CLOVER_CPSL_PRIVATE_KEY", "").strip()
+    if env_key:
+        return _normalize_seed(env_key)
+    key_file = os.environ.get("CLOVER_CPSL_PRIVATE_KEY_FILE", "").strip()
+    if not key_file and os.environ.get("CLOVER_CPSL_USE_SERVER_VAULT") == "1":
+        key_file = "/opt/clover-k3/web-studio/vault/cpsl_release_ed25519.key"
+    if key_file:
+        vault_key = Path(key_file)
+        if vault_key.is_file():
+            try:
+                return _normalize_seed(vault_key.read_text(encoding="utf-8").strip())
+            except Exception:
+                return None
+    return None
+
 
 CORE_KNOWLEDGE_SCHEMA = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -59,11 +183,12 @@ def _writable(func, path, _exc):
 
 
 class CoreRegistry:
-    """Manages the Git-backed `clover-collective` repository, signed releases, and consent-withdrawal recomputations."""
+    """Manages the Git-backed `clover-collective` repository, Ed25519-signed releases, and consent-withdrawal recomputations."""
 
-    def __init__(self, repo_dir: str | Path, signing_key: str = "clover-collective-core-signing-key-v1"):
+    def __init__(self, repo_dir: str | Path, signing_key: str | bytes | None = None):
         self.root = Path(repo_dir)
-        self.signing_key = signing_key.encode("utf-8")
+        self._seed = _resolve_signing_seed(signing_key)
+        self.public_key_hex = ed25519_public_key(self._seed).hex() if self._seed is not None else None
         self.git = shutil.which("git")
         self.version_num = 0
         self._init_repo()
@@ -191,11 +316,16 @@ class CoreRegistry:
             file_hashes[rel_path] = hashlib.sha256(raw_bytes).hexdigest()
             promoted_rules.append(rule_obj)
 
+        if self._seed is None:
+            raise RuntimeError(
+                "CoreRegistry.publish_release requires an Ed25519 private signing key "
+                "(pass signing_key=... or set CLOVER_CPSL_PRIVATE_KEY); client builds only ship the public key."
+            )
         payload_to_sign = json.dumps(
             {"version": version, "rules": promoted_rules, "file_hashes": file_hashes},
             sort_keys=True,
         ).encode("utf-8")
-        signature = hmac.new(self.signing_key, payload_to_sign, hashlib.sha256).hexdigest()
+        signature = ed25519_sign(self._seed, payload_to_sign).hex()
 
         manifest = {
             "version": version,
@@ -204,7 +334,8 @@ class CoreRegistry:
             "rules_count": len(promoted_rules),
             "rules": promoted_rules,
             "file_hashes": file_hashes,
-            "signature_alg": "HMAC-SHA256",
+            "signature_alg": "Ed25519",
+            "public_key": self.public_key_hex,
             "signature": signature,
         }
         self._write_json("releases/manifest.json", manifest)

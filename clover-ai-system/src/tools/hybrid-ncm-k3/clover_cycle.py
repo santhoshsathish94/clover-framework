@@ -136,6 +136,59 @@ def _eval(expr):
     return v if isinstance(v, (int, float)) and math.isfinite(v) else None
 
 
+_DIRECT_EXPR = re.compile(
+    r"^\s*(?:(?:what(?:'?s|\s+is|\s+are)|calculate|compute|evaluate)\s+)?([0-9\s(),.+\-*/x\u00d7\u00f7\u2212^]+?)"
+    r"\s*(?:=\s*\?)?[?.!]?(?:\s+(?:return|reply\s+with|output|give|provide|write|respond\s+with)\s+(?:only|just)\b[\s\S]*)?$",
+    re.I,
+)
+
+
+def direct_arithmetic_value(question):
+    """Exact value when `question` is a pure arithmetic expression (e.g. 'What is 137 × 29 + 46? Return only the number.'),
+    or None when it is a word problem or contains anything else."""
+    m = _DIRECT_EXPR.match(normalize(question or "").strip())
+    if not m:
+        return None
+    expr = m.group(1).strip()
+    if not re.search(r"[+\-*/x\u00d7\u00f7^]", expr) or len(re.findall(r"\d+", expr)) < 2:
+        return None
+    return _eval(expr)
+
+
+def trim_only_value(question, reply):
+    """When `question` explicitly asks to return/reply with ONLY a single value (number, year, or code), strips wrapper
+    words like 'The archive code is: **CLOVER-7429**' or 'Augusta Ada King — 1815' down to the exact value."""
+    q, r = (question or "").strip(), (reply or "").strip()
+    if not q or not r or "\n\n" in r or len(r) > 240:
+        return reply
+    if not re.search(
+        r"\b(?:return|reply\s+with|output|respond\s+with|give|provide|write)\s+(?:only|just)\b|\bonly\s+the\s+(?:number|year|code|value|result|answer)\b",
+        q,
+        re.I,
+    ):
+        return reply
+    clean = re.sub(r"[*_`]+", "", r).strip()
+    if re.search(r"\bonly\s+(?:the\s+|a\s+)?(?:[\w'\-]+\s+){0,3}?(?:year|number|result|value|total|sum|product|count)\b", q, re.I):
+        if re.search(r"\byear\b", q, re.I):
+            yrs = re.findall(r"\b(1\d{3}|20\d{2})\b", clean)
+            if len(yrs) == 1:
+                return yrs[0]
+        v = direct_arithmetic_value(q)
+        if v is not None:
+            return f"{int(v)}" if float(v).is_integer() else f"{v:g}"
+        nums = re.findall(r"-?\d[\d,]*(?:\.\d+)?", clean)
+        if len(nums) == 1:
+            return nums[0].replace(",", "")
+    if re.search(r"\bonly\s+(?:the\s+|a\s+)?(?:[\w'\-]+\s+){0,3}?code\b", q, re.I):
+        codes = re.findall(r"\b[A-Z]{2,16}-\d{2,10}\b", clean)
+        if len(codes) == 1:
+            return codes[0]
+        m = re.match(r"^(?:the\s+)?(?:[\w\s]{1,35}?)\s+(?:is|was|:)\s*:?\s*([A-Za-z0-9_\-]+)[.!]?$", clean, re.I)
+        if m:
+            return m.group(1)
+    return reply
+
+
 def arithmetic_findings(answer):
     """'a op b = c' statements in the answer whose c is wrong (allowing the rounding the answer shows)."""
     out = []
@@ -299,9 +352,13 @@ def final_answer(question, text):
                 return m[0].upper()
         return None
     if is_numeric(question):
-        m = re.findall(r"####\s*(-?[\d,]*\.?\d+)", t) or re.findall(r"ANSWER:\s*(-?[\d,]*\.?\d+)", t, re.I)
+        m = re.findall(r"####\s*(-?[\d,]*\.?\d+)", t)
         if m:
             return _num(m[-1])
+        for line in reversed(re.findall(r"ANSWER:\s*([^\n]+)", text or "", re.I)):
+            v = _stated_value(line)
+            if v is not None:
+                return v
         tail = " ".join(t.strip().splitlines()[-3:])
         # a stated result ("There are 15 primes: 2, 3, ..., 47", "the answer is 21") before the last number in a list
         m = re.findall(r"\b(?:there\s+(?:are|is|were)|answer\s+is|result\s+is|total\s+(?:is|of)|equals?|comes\s+to|"
@@ -314,14 +371,34 @@ def final_answer(question, text):
     return None
 
 
+def _stated_value(line):
+    """The amount an answer line states: its only number, else its last money amount, else its last number.
+    "Answer: 30 pens cost about $20.01" was read as 30 (2026-11-01)."""
+    money = re.findall(r"[$\u20ac\u00a3\u20b9]\s*(-?\d[\d,]*(?:\.\d+)?)", line)
+    if money:
+        return _num(money[-1])
+    nums = re.findall(r"-?\d[\d,]*(?:\.\d+)?", normalize(line))
+    return _num(nums[-1]) if nums else None
+
+
+def _decimals(x):
+    s = f"{x:.6f}".rstrip("0").rstrip(".")
+    return len(s.split(".")[1]) if "." in s else 0
+
+
 def same(a, b):
+    """Two answers agree: equal letters, or numbers equal at the precision they were written. Roundings of one value
+    agree (3.33 and 3.333); an exact whole number does not (a program's 20.0 and the model's $20.01 differ: within 0.2%
+    they counted as one answer and made a false "verified" lesson, 2026-11-01). Float noise (19.999999999999996) is
+    ignored."""
     if a is None or b is None:
         return False
     if isinstance(a, str) or isinstance(b, str):
         return a == b
-    if abs(a - b) <= 1e-6 * max(1.0, abs(a), abs(b)):
-        return True
-    return (float(b).is_integer() and round(a) == b) or (float(a).is_integer() and round(b) == a)
+    a, b = round(a, 6), round(b, 6)
+    da, db = _decimals(a), _decimals(b)
+    d = min(da, db) if da and db else max(da, db)
+    return abs(a - b) <= 0.5 * 10 ** -d + 1e-9 * max(1.0, abs(a), abs(b))
 
 
 def second_solve_prompt(question_text, question, k=1, note=None):
@@ -391,6 +468,36 @@ def last_exchange(history):
         elif m.get("role") == "user" and not is_retry_message(m):
             return m, answer
     return None
+
+
+_FOLLOW = re.compile(r"^\W*(?:and|but|so|then|also|now|ok(?:ay)?|what\s+about|how\s+about|what\s+if)\b|"
+                     r"\b(?:it|that|this|those|these|them|they|same|instead)\b", re.I)
+
+
+def follow_up(question):
+    """A message that leans on the turn before it ("And how much would 30 pens cost?", "what about it?")."""
+    return bool(_FOLLOW.search(question or "")) or len(_content(question)) < 3
+
+
+def context_before(history, msg, chars=700):
+    """The exchange before `msg` (a user message in `history`) when `msg` follows from it, as text that goes before the
+    question in the checks; "" otherwise. A retry of "And how much would 30 pens cost?" was solved without "3 for $2"."""
+    if not isinstance(msg.get("content"), str) or not follow_up(msg["content"]):
+        return ""
+    at = next((i for i, m in enumerate(history or []) if m is msg), None)
+    q = a = None
+    for m in reversed((history or [])[:at] if at else []):
+        if a is None:
+            if m.get("role") == "assistant" and isinstance(m.get("content"), str) and m["content"].strip():
+                a = m["content"]
+        elif m.get("role") == "user" and isinstance(m.get("content"), str) and not is_retry_message(m):
+            q = m["content"]
+            break
+    if not (q and a):
+        return ""
+    clip = lambda s: " ".join(s.split())[:chars]  # noqa: E731
+    return (f"Earlier in this conversation the user asked: \"{clip(q)}\"\nThe answer was: \"{clip(a)}\"\n"
+            "The question below follows from that exchange.\n\n")
 
 
 def _fmt(v):
@@ -585,8 +692,12 @@ def retry_cycle(question, previous, feedback, rewrite, solve=None, code_check=No
             head += f" **{_fmt(v1)}**" + _dissent(vals, v1, program_at)
             if mine is not None:
                 head += ", so my earlier answer" + ("" if is_choice(question) else f" ({_fmt(mine)})") + " was wrong"
-                info.update(lesson=lesson_text(question, [f"{words[n]} independent solutions gave {_fmt(v1)}, not "
-                                                          f"{_fmt(mine)}"], detail), lesson_kind="user")
+                # a lesson needs more than a majority of the model's own solves: what the user said, or the program
+                # (a wrong overturn became a "user_stated_belief" and leaked into an unrelated question, 2026-11-01)
+                if detail or (program_at is not None and program_at in best[1]):
+                    info.update(lesson=lesson_text(question, [f"{words[n]} independent solutions gave {_fmt(v1)}, not "
+                                                              f"{_fmt(mine)}"], detail),
+                                lesson_kind="user" if detail else "verified")
             return head + ". Here is the working:\n\n" + _as_answer(question, texts[best[1][0]], v1), info
         if backing:
             info["action"] = "kept"

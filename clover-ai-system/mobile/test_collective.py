@@ -229,19 +229,40 @@ with tempfile.TemporaryDirectory() as tmp:
     check(eval_res["promoted_count"] == 1 and "tok=corroborate" in eval_res["promoted"][0]["trigger"],
           "evaluator promotes only 'corroborate' and rejects Sybil ('dig'), conflicting ('scrub'), and Byzantine ('check')")
 
-    # 5. CoreRegistry Git publication, HMAC-SHA256 verification, and tamper rejection
+    # 5. CoreRegistry Git publication, Ed25519 public-key verification, and tamper / forged-key rejection
     reg_dir = tmp_path / "clover-collective"
-    reg = core_registry.CoreRegistry(reg_dir)
+    # Verify that CoreRegistry refuses to sign without a private signing key
+    reg_unsigned = core_registry.CoreRegistry(reg_dir)
+    no_key_refused = False
+    try:
+        reg_unsigned.publish_release(eval_res, note="Should fail without private key")
+    except RuntimeError:
+        no_key_refused = True
+    check(no_key_refused, "CoreRegistry refuses to publish a release when no Ed25519 private signing key is provided")
+
+    # Generate an ephemeral Ed25519 keypair for this test release
+    priv_hex, pub_hex = core_registry.generate_ed25519_keypair()
+    reg = core_registry.CoreRegistry(reg_dir, signing_key=priv_hex)
     manifest = reg.publish_release(eval_res, note="Release v1.0.1")
-    check(manifest["rules_count"] == 1 and (reg_dir / "releases" / "manifest.json").is_file(),
-          "CoreRegistry writes signed releases/manifest.json and commits to Git")
-    check(reg.find_strings_anywhere_in_repo(["secret_project", "acmecorp", "alice0"]) == [],
-          "0 private tokens anywhere in clover-collective Git objects or working tree")
+    check(manifest["rules_count"] == 1 and manifest["signature_alg"] == "Ed25519"
+          and manifest["public_key"] == pub_hex and (reg_dir / "releases" / "manifest.json").is_file(),
+          "CoreRegistry writes Ed25519-signed releases/manifest.json and commits to Git")
+    check(reg.find_strings_anywhere_in_repo(["secret_project", "acmecorp", "alice0", priv_hex]) == [],
+          "0 private tokens or private signing keys anywhere in clover-collective Git objects or working tree")
+
+    # Verify that an attacker with a different Ed25519 keypair is rejected by CoreSync
+    attacker_priv, _attacker_pub = core_registry.generate_ed25519_keypair()
+    forged_rejected = False
+    try:
+        core_sync.CoreSync(verify_key=core_registry.ed25519_public_key(bytes.fromhex(attacker_priv)).hex()).verify_and_load(reg_dir)
+    except core_sync.CoreSyncError:
+        forged_rejected = True
+    check(forged_rejected, "CoreSync rejects manifest when verified against a different Ed25519 public key")
 
     # 6. Recipient installation: CoreSync + semantics.Runtime.collective + Personal > Collective > General priority
     recip_coll_dir = tmp_path / "recip_collective"
     recip_pers_dir = tmp_path / "recip_personal"
-    recip_coll = core_sync.Collective(recip_coll_dir, device="phone")
+    recip_coll = core_sync.Collective(recip_coll_dir, device="phone", verify_key=pub_hex)
     recip_pers = personal.Personal(recip_pers_dir, device="phone", filter_repo=[])
     rt_recip = semantics.Runtime(
         tools=PHONE_TOOLS, device="phone", risky=_RISKY,

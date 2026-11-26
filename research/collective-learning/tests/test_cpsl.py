@@ -16,7 +16,7 @@ for p in (str(COLL_ROOT), str(PPL_ROOT)):
 
 from cpsl.collective import LocalCollectiveExtractor, is_allowed_collective_feature, load_closed_general_vocabulary
 from cpsl.collective_gateway import CollectiveGateway
-from cpsl.core_registry import CoreRegistry
+from cpsl.core_registry import CoreRegistry, generate_ed25519_keypair
 from cpsl.core_sync import CoreSync, CoreSyncError
 
 
@@ -82,7 +82,8 @@ class TestCPSLProtocol(unittest.TestCase):
 
     def test_registry_signing_and_tamper_rejection(self):
         with tempfile.TemporaryDirectory() as tmp:
-            reg = CoreRegistry(tmp)
+            # Verify that CoreRegistry refuses to sign without a private signing key
+            reg_unsigned = CoreRegistry(tmp)
             fake_eval = {
                 "total_evaluated": 1,
                 "promoted_count": 1,
@@ -99,11 +100,24 @@ class TestCPSLProtocol(unittest.TestCase):
                 "rejected": [],
                 "all_reports": [],
             }
-            reg.publish_release(fake_eval, note="unit test")
-            sync = CoreSync()
+            with self.assertRaises(RuntimeError):
+                reg_unsigned.publish_release(fake_eval, note="must fail without private key")
+
+            priv_hex, pub_hex = generate_ed25519_keypair()
+            reg = CoreRegistry(tmp, signing_key=priv_hex)
+            manifest = reg.publish_release(fake_eval, note="unit test")
+            self.assertEqual(manifest["signature_alg"], "Ed25519")
+            self.assertEqual(manifest["public_key"], pub_hex)
+
+            sync = CoreSync(verify_key=pub_hex)
             rules = sync.verify_and_load(tmp, consent_receive=True)
             self.assertEqual(len(rules), 1)
             self.assertEqual(sync.verify_and_load(tmp, consent_receive=False), [])
+
+            # Reject forged verification public key
+            _attacker_priv, attacker_pub = generate_ed25519_keypair()
+            with self.assertRaises(CoreSyncError):
+                CoreSync(verify_key=attacker_pub).verify_and_load(tmp, consent_receive=True)
 
             # Tamper with the rule file on disk
             rule_file = next((Path(tmp) / "core" / "problem-solving").glob("*.json"))
