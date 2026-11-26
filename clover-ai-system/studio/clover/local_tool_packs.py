@@ -203,6 +203,16 @@ def calculate(expression: str) -> str:
             import xcruncher_bridge
             return xcruncher_bridge.run_xcruncher_compute(operation="factorial", n=n_val)
 
+    # 2b. Exact big-integer binary exponentiation: a ^ b or a ** b (e.g. 3^89, 7^61, 2^127)
+    m_pow = re.fullmatch(r"(-?\d[\d_]*)\s*(?:\^|\*\*)\s*(\d[\d_]*)", norm_head)
+    if m_pow:
+        import clover_v6_system
+        try:
+            p_res = clover_v6_system.exact_bigint_power(m_pow.group(1), m_pow.group(2))
+            return p_res["exact_decimal"] if "exact_decimal" in p_res else json.dumps(p_res, indent=2)
+        except (ValueError, RuntimeError, OverflowError) as exc:
+            return f"Error: {exc}"
+
     # 3. Huge integer / bit-shift multiplication (> 64-digit literals or `<<` shifts, without chained `**`)
     has_shift = "<<" in norm_head
     has_big_lit = any(len(m.group(0)) > MAX_LITERAL_DIGITS for m in re.finditer(r"\d+", norm_head))
@@ -1387,6 +1397,24 @@ PACK_TOOLS = [
         },
         ["path"],
     ),
+    _fn(
+        "forecast_series",
+        "0B deterministic Periodogram + Harmonic OLS + Split-Conformal P10/P50/P90 quantile forecaster for numeric time series (<50 ms CPU, zero neural hallucinations).",
+        {
+            "values": {"type": "array", "items": {"type": "number"}, "description": "historical numeric observations (>= 4 points)"},
+            "horizon": {"type": "integer", "description": "number of future steps to forecast (1-256, default 12)"},
+        },
+        ["values"],
+    ),
+    _fn(
+        "resolve_rules",
+        "0B deterministic defeasible epistemic rule resolver: filters rejected/revoked rules, evaluates conditions and `unless` exceptions, and selects the most specific rule.",
+        {
+            "rules": {"type": "array", "items": {"type": "object"}, "description": "list of rule objects with id, status, conditions, unless, priority, action"},
+            "context_facts": {"type": "array", "items": {"type": "string"}, "description": "active context facts"},
+        },
+        ["rules"],
+    ),
 ]
 
 XCRUNCHER_TOOL_SCHEMA = _fn(
@@ -1407,6 +1435,8 @@ XCRUNCHER_TOOL_SCHEMA = _fn(
 PACK_PERMISSIONS = {
     "calculate": None,
     "convert_units": None,
+    "forecast_series": None,
+    "resolve_rules": None,
     "search_files": "files",
     "file_info": "files",
     "git_inspect": "files",
@@ -1443,6 +1473,10 @@ def tool_detail(name: str, args: dict, workdir: Path | None = None) -> str:
         return f"Extract video frame at {a.get('timestamp_s', 0)}s from {loc}"
     if name == "xcruncher_compute":
         return f"x-cruncher exact {a.get('operation', 'mul')}"
+    if name == "forecast_series":
+        return f"0B Periodogram + Conformal forecast (horizon={a.get('horizon', 12)})"
+    if name == "resolve_rules":
+        return f"0B Defeasible rule resolution ({len(a.get('rules') or ())} rules)"
     return f"{name}: {loc}"
 
 
@@ -1468,6 +1502,18 @@ def run_pack_tool(name: str, args: dict, engine) -> str:
         )
     if name == "convert_units":
         return convert_units(a.get("value"), a.get("from_unit", ""), a.get("to_unit", ""))
+    if name == "forecast_series":
+        import clover_v6_system
+        try:
+            return json.dumps(clover_v6_system.forecast_series_0b(a.get("values") or [], int(a.get("horizon") or 12)), indent=2)
+        except Exception as exc:
+            return f"Error: {exc}"
+    if name == "resolve_rules":
+        import clover_v6_system
+        try:
+            return json.dumps(clover_v6_system.resolve_defeasible_rules_0b(a.get("rules") or [], a.get("context_facts") or []), indent=2)
+        except Exception as exc:
+            return f"Error: {exc}"
     if name == "search_files":
         return search_files(
             a.get("root"),

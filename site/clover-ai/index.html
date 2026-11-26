@@ -1240,6 +1240,21 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         <div class="keyrow" style="margin-top:.45rem"><input type="text" id="rm-model" autocomplete="off" spellcheck="false" placeholder="Model ID (optional, auto-detected)" aria-label="Model ID"><button type="button" class="btn pri" id="rm-add">Add model</button></div>
         <div class="note" id="rm-note" hidden></div>
       </div>
+      <div class="glabel">Clover System Setup (Your Device &amp; Servers)</div>
+      <div class="group pad" id="sys-setup">
+        <p class="fine" style="margin-top:0">Set up <b>one model</b>, a <b>custom set</b>, or the <b>full Clover AI System</b> across this device and any GPU servers you provide. Small models &amp; 0B tools run interactively on any phone, laptop, or CPU machine; big models require GPUs to run interactively and are skipped on CPU-only machines.</p>
+        <div class="seg full" id="sys-scope" style="margin-top:.5rem;flex-wrap:wrap"><button type="button" data-v="one" class="on">One model</button><button type="button" data-v="custom">Select models</button><button type="button" data-v="all">Full Clover System</button></div>
+        <div class="keyrow" style="margin-top:.55rem" id="sys-one-row"><select id="sys-model" style="width:100%;padding:.52rem .65rem;border-radius:10px;border:1px solid rgba(23,107,44,.22);background:var(--surface);font:inherit" aria-label="Model to set up"></select></div>
+        <div id="sys-custom-list" style="margin-top:.5rem" hidden></div>
+        <p class="fine" id="sys-req" aria-live="polite" style="margin:.45rem 0 0"></p>
+        <div class="keyrow" style="margin-top:.5rem"><textarea id="sys-servers" rows="2" style="width:100%;padding:.52rem .65rem;border-radius:10px;border:1px solid rgba(23,107,44,.22);background:var(--surface);font:inherit;resize:vertical" spellcheck="false" autocomplete="off" placeholder="Optional GPU servers (one per line): http://gpu-server:8790" aria-label="Machines or servers"></textarea></div>
+        <div class="keyrow" style="margin-top:.45rem"><input type="password" id="sys-key" autocomplete="off" placeholder="Server API key (optional)" aria-label="Server API key"></div>
+        <label class="row static" style="padding-left:0;padding-right:0"><span class="row__t">Include this device<small id="sys-local">Detecting local hardware…</small></span><span class="switch"><input type="checkbox" id="sys-inc-local" checked><span></span></span></label>
+        <div class="keyrow" style="margin-top:.45rem"><button type="button" class="btn" id="sys-check">Check hardware &amp; servers</button><button type="button" class="btn pri" id="sys-apply" disabled>Setup interactive models</button></div>
+        <div id="sys-plan" style="margin-top:.6rem" hidden></div>
+        <pre class="dbg-pre" id="sys-bootstrap" style="margin-top:.5rem" hidden></pre>
+        <div class="note" id="sys-note" hidden></div>
+      </div>
       <div class="glabel">Runs on</div>
       <div class="group pad">
         <div class="seg full" id="s-engine"><button type="button" data-v="gpu">GPU</button><button type="button" data-v="cpu">CPU</button><button type="button" data-v="hg4">HG4 (854 MB)</button><button type="button" data-v="fused" class="laptop-only">C1 + C2 + C3</button></div>
@@ -2619,6 +2634,161 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var b = ev.target.closest('button[data-rm-model]');
     if (b) removeRemoteModel(b.getAttribute('data-rm-model'));
   });
+  var sysCat = [], sysScope = 'one', sysPlanId = '';
+  var FALLBACK_SYS_CAT = [
+    { id: '0b-computed-pack', name: '0B Computed Specialists (x-cruncher + Conformal + Defeasible)', tier: 'small', min_server_spec: 'Any phone, laptop, or CPU machine (0 GPUs required)', interactive_speed: '< 50 ms on any CPU' },
+    { id: 'omni', name: 'LFM3-Omni-2B (HG4-16R)', tier: 'small', min_server_spec: 'Any phone, laptop, or CPU/GPU machine (0 GPUs required)', interactive_speed: '18–65 tok/s CPU/Phone · 163 tok/s GPU' },
+    { id: 'chronos-2', name: 'Chronos-Bolt 0.2B (HG4)', tier: 'small', min_server_spec: 'Any phone, laptop, or CPU/GPU machine (0 GPUs required)', interactive_speed: '< 50 ms 0B Conformal / 0.8 s CPU' },
+    { id: 'vjepa-2.1', name: 'V-JEPA 2.1 (HG4)', tier: 'small', min_server_spec: 'Any phone, laptop, or CPU/GPU machine (0 GPUs required)', interactive_speed: '0.9 s CPU · 0.12 s GPU' },
+    { id: 'boltz-2', name: 'Boltz-2 Biomolecular Folding (HG4)', tier: 'big_gpu', min_server_spec: '1x GPU server >= 16 GB VRAM', interactive_speed: '~12 s on 16–24 GB GPU' },
+    { id: 'goedel-prover-v2-32b', name: 'Goedel-Prover-V2-32B (HG4-16R)', tier: 'big_gpu', min_server_spec: '1x GPU server >= 24 GB VRAM (RTX 3090/4090/L4)', interactive_speed: '18.4 tok/s on 24 GB GPU' },
+    { id: 'clover-35b-a3b', name: 'Clover-35B-A3B Coordinator (HG4-16R-OP)', tier: 'big_gpu', min_server_spec: '1x GPU server >= 24 GB VRAM (RTX 3090/4090/L4)', interactive_speed: '35.8 tok/s on 24 GB GPU' },
+    { id: 'nemotron-3.5-super-vl', name: 'Nemotron 3.5 Super VL (120B-A12B HG4-16R)', tier: 'big_gpu', min_server_spec: '1x 80 GB GPU OR 4x 24 GB GPU server (>= 72 GB VRAM)', interactive_speed: '22–38 tok/s on >= 72 GB GPU' },
+    { id: 'kimi-k3', name: 'Kimi K3.1 Pro (2.8T MoE K31H)', tier: 'big_gpu', min_server_spec: 'Same-rack GPU cluster >= 1,400 GB VRAM (8x 8-GPU 24 GB or 3x 8x80 GB)', interactive_speed: '6–18 tok/s in-rack VRAM' }
+  ];
+  function getSelectedSysModels() {
+    if (sysScope === 'all') return (sysCat.length ? sysCat : FALLBACK_SYS_CAT).map(function (m) { return m.id; });
+    if (sysScope === 'custom') {
+      var boxes = document.querySelectorAll('#sys-custom-list input[data-sys-mid]:checked');
+      var out = [];
+      for (var i = 0; i < boxes.length; i++) out.push(boxes[i].getAttribute('data-sys-mid'));
+      return out.length ? out : ['omni'];
+    }
+    return [($('sys-model') && $('sys-model').value) || 'omni'];
+  }
+  function renderSysReq() {
+    var cat = sysCat.length ? sysCat : FALLBACK_SYS_CAT;
+    if (!$('sys-req')) return;
+    if (sysScope === 'one') {
+      var curId = ($('sys-model') && $('sys-model').value) || 'omni';
+      var sp = cat.filter(function (x) { return x.id === curId; })[0] || cat[0];
+      $('sys-req').innerHTML = '<b>Minimum required:</b> ' + esc(sp.min_server_spec) + ' · <b>Interactive speed:</b> ' + esc(sp.interactive_speed);
+    } else if (sysScope === 'all') {
+      $('sys-req').innerHTML = '<b>Minimum servers for Full System:</b> Small models &amp; 0B tools run on any phone/laptop/CPU · <b>Clover-35B + Goedel-32B + Boltz-2</b>: 1–2× 24 GB GPU · <b>Nemotron 120B</b>: 4× 24 GB or 1× 80 GB GPU · <b>Kimi 2.8T</b>: 8-node same-rack GPU cluster (models exceeding your hardware are automatically skipped).';
+    } else {
+      var sel = getSelectedSysModels();
+      var needsGpu = cat.filter(function (x) { return sel.indexOf(x.id) >= 0 && x.tier === 'big_gpu'; });
+      $('sys-req').innerHTML = needsGpu.length
+        ? ('<b>Selected (' + sel.length + '):</b> ' + needsGpu.map(function (x) { return esc(x.name.split(' (')[0] + ' → ' + x.min_server_spec); }).join(' · '))
+        : ('<b>Selected (' + sel.length + '):</b> Runs interactively on any phone, laptop, or CPU machine (0 GPUs needed).');
+    }
+  }
+  function populateSysCatalog(cat, localSpec) {
+    sysCat = (cat && cat.length) ? cat : FALLBACK_SYS_CAT;
+    if ($('sys-servers')) {
+      $('sys-servers').placeholder = (WEB || PHONE)
+        ? 'Optional GPU gateway URLs (one per line): https://gpu-host:8790'
+        : 'Optional GPU servers (one per line): http://gpu-box:8790  or  ssh://root@host:22';
+    }
+    if ($('sys-local') && localSpec && localSpec.label) $('sys-local').textContent = localSpec.label;
+    if ($('sys-model')) {
+      var prev = $('sys-model').value || 'clover-35b-a3b';
+      $('sys-model').innerHTML = sysCat.map(function (m) {
+        return '<option value="' + esc(m.id) + '">' + esc(m.name) + (m.tier === 'small' ? ' — Any device' : ' — GPU required') + '</option>';
+      }).join('');
+      $('sys-model').value = sysCat.some(function (m) { return m.id === prev; }) ? prev : sysCat[0].id;
+    }
+    if ($('sys-custom-list')) {
+      $('sys-custom-list').innerHTML = sysCat.map(function (m) {
+        var checked = (m.id === '0b-computed-pack' || m.id === 'omni' || m.id === 'clover-35b-a3b') ? ' checked' : '';
+        return '<label class="row static" style="padding:.4rem 0"><span class="row__t">' + esc(m.name) + '<small>Min: ' + esc(m.min_server_spec) + ' · ' + esc(m.interactive_speed) + '</small></span><input type="checkbox" data-sys-mid="' + esc(m.id) + '"' + checked + '></label>';
+      }).join('');
+    }
+    renderSysReq();
+  }
+  function loadSetupCatalog() {
+    populateSysCatalog(FALLBACK_SYS_CAT, { label: WEB ? 'k3 Web Host (CPU + hosted gateways)' : (PHONE ? 'This phone (CPU / NPU)' : 'This laptop') });
+    api('GET', '/api/clover/setup/catalog').then(function (r) {
+      populateSysCatalog(r.models || FALLBACK_SYS_CAT, r.local_machine || null);
+      if (r.active_setup && r.active_setup.placements && r.active_setup.placements.length) {
+        renderSysPlan(r.active_setup, false);
+      }
+    }).catch(function () {});
+  }
+  function renderSysPlan(r, allowApply) {
+    if (!$('sys-plan')) return;
+    sysPlanId = r.plan_id || '';
+    var rows = (r.placements || []).map(function (p) {
+      var st = String(p.status || '');
+      var isReady = st.indexOf('ready') === 0;
+      var isWarn = (st.indexOf('preview') === 0 || st === 'needs_gateway');
+      var isRemoved = (st === 'removed_by_user');
+      var icon = isReady ? '✓ Ready' : (st === 'needs_gateway' ? '⚠ Start gateway' : (isWarn ? '⚠ Preview' : (isRemoved ? 'Removed' : '⨯ Skipped')));
+      var badgeStyle = isReady
+        ? 'color:var(--green);font-weight:700'
+        : (isWarn ? 'color:#9a6700;font-weight:700' : (isRemoved ? 'color:var(--muted);font-weight:600' : 'color:#9e2a2b;font-weight:700'));
+      var detail = p.reason || ('Min required: ' + (p.min_server_spec || ''));
+      return '<div class="row static" style="padding:.48rem 0;align-items:flex-start"><span class="row__t"><b>' + esc(p.name) + '</b><small>' + esc(detail) + '</small></span><span style="font-size:.82rem;white-space:nowrap;' + badgeStyle + '">' + esc(icon) + '</span></div>';
+    }).join('');
+    $('sys-plan').innerHTML = '<div class="fine" style="margin-bottom:.35rem"><b>' + esc(r.summary || '') + '</b></div>' + rows;
+    $('sys-plan').hidden = false;
+    if ($('sys-apply')) $('sys-apply').disabled = !(allowApply && (r.ready_count || 0) > 0);
+    if ($('sys-bootstrap')) {
+      var cmds = r.ssh_bootstrap_commands || [];
+      if (cmds.length) {
+        $('sys-bootstrap').hidden = false;
+        $('sys-bootstrap').textContent = '# Bootstrap Clover HG4 Gateway on your GPU server(s):\n' + cmds.join('\n');
+      } else {
+        $('sys-bootstrap').hidden = true;
+      }
+    }
+  }
+  if ($('sys-scope')) {
+    segClick('sys-scope', function (v) {
+      sysScope = v; sysPlanId = '';
+      pick('sys-scope', v);
+      if ($('sys-one-row')) $('sys-one-row').hidden = (v !== 'one');
+      if ($('sys-custom-list')) $('sys-custom-list').hidden = (v !== 'custom');
+      if ($('sys-apply')) $('sys-apply').disabled = true;
+      renderSysReq();
+    });
+  }
+  if ($('sys-model')) $('sys-model').addEventListener('change', function () { sysPlanId = ''; if ($('sys-apply')) $('sys-apply').disabled = true; renderSysReq(); });
+  if ($('sys-custom-list')) $('sys-custom-list').addEventListener('change', function () { sysPlanId = ''; if ($('sys-apply')) $('sys-apply').disabled = true; renderSysReq(); });
+  if ($('sys-servers')) $('sys-servers').addEventListener('input', function () { sysPlanId = ''; if ($('sys-apply')) $('sys-apply').disabled = true; });
+  if ($('sys-key')) $('sys-key').addEventListener('input', function () { sysPlanId = ''; if ($('sys-apply')) $('sys-apply').disabled = true; });
+  if ($('sys-inc-local')) $('sys-inc-local').addEventListener('change', function () { sysPlanId = ''; if ($('sys-apply')) $('sys-apply').disabled = true; });
+  if ($('sys-check')) $('sys-check').addEventListener('click', function () {
+    var b = $('sys-check'); b.disabled = true; b.textContent = 'Checking…';
+    setNote('sys-note', 'Probing local hardware and target servers…', true);
+    api('POST', '/api/clover/setup/plan', {
+      selected_models: getSelectedSysModels(),
+      servers: ($('sys-servers') && $('sys-servers').value) || '',
+      api_key: ($('sys-key') && $('sys-key').value) || '',
+      include_local: $('sys-inc-local') ? $('sys-inc-local').checked : true
+    }).then(function (r) {
+      b.disabled = false; b.textContent = 'Check hardware & servers';
+      renderSysPlan(r, true);
+      var errTxt = (r.errors && r.errors.length) ? (' (' + r.errors.map(function (e) { return e.target + ': ' + e.error; }).join('; ') + ')') : '';
+      setNote('sys-note', (r.summary || 'Hardware check complete.') + errTxt, !(r.errors && r.errors.length));
+    }).catch(function (e) {
+      b.disabled = false; b.textContent = 'Check hardware & servers';
+      setNote('sys-note', e.message);
+    });
+  });
+  if ($('sys-apply')) $('sys-apply').addEventListener('click', function () {
+    var b = $('sys-apply'); b.disabled = true; b.textContent = 'Applying…';
+    api('POST', '/api/clover/setup/apply', {
+      plan_id: sysPlanId,
+      selected_models: getSelectedSysModels(),
+      servers: ($('sys-servers') && $('sys-servers').value) || '',
+      api_key: ($('sys-key') && $('sys-key').value) || '',
+      include_local: $('sys-inc-local') ? $('sys-inc-local').checked : true
+    }).then(function (r) {
+      b.disabled = false; b.textContent = 'Setup interactive models';
+      renderSysPlan(r, false);
+      if (r.model_catalog) {
+        state.catalog = r.model_catalog;
+        if (state.server) state.server.model_catalog = r.model_catalog;
+      }
+      if (r.settings && state.server) state.server.settings = r.settings;
+      renderServerSettings(); renderModelPicker(); pollStatus();
+      setNote('sys-note', 'Clover v6.0 setup applied: ' + (r.ready_count || 0) + ' interactive model(s) active.', true);
+    }).catch(function (e) {
+      b.disabled = false; b.textContent = 'Setup interactive models';
+      setNote('sys-note', e.message);
+    });
+  });
   $('s-think').addEventListener('change', function () { state.settings.thinking = this.checked; saveSettings(); });
   $('s-autospeak').addEventListener('change', function () { state.settings.autospeak = this.checked; saveSettings(); });
   segClick('s-tools', function (v) { saveServer({ tools: v }); });
@@ -2797,7 +2967,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   function pollStatus() {
     api('GET', '/api/status').then(function (st) {
       if (WEB) showAuthGate(false);
-      if (st.status === 'setup' && !WEB) { location.replace('/'); return; }
+      if (st.status === 'setup' && !WEB && location.search.indexOf('app=1') < 0) { location.replace('/'); return; }
       if (typeof st.inbox === 'number' && st.inbox !== state.inboxCount) { state.inboxCount = st.inbox; loadInbox(); }
       state.ready = st.status === 'ready';
       if (st.model_catalog && st.model_catalog.length) {
@@ -3569,7 +3739,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     else if (name === 'layers') { loadServerSettings(); loadHealth(); loadMemoryCount(); loadPersonal(); loadCollective(); loadAutonomous(); }
     else if (name === 'personal') loadPersonal();
     else if (name === 'collective') loadCollective();
-    else if (name === 'model') { renderEngine(); renderSettings(); loadServerSettings(); loadHealth(); }
+    else if (name === 'model') { renderEngine(); renderSettings(); loadServerSettings(); loadHealth(); loadSetupCatalog(); }
     else if (name === 'perms') loadPerms();
     else if (name === 'tools') { loadServerSettings(); loadPerms(); loadSearch(); loadInbox(); loadVscode(); loadWorkspaces(); }
     else if (name === 'workspaces') loadWorkspaces();
@@ -3617,13 +3787,17 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   });
   function loadAutonomous() {
     api('GET', '/api/autonomous').then(function (r) {
-      var j = r.jepa || {}, cm = r.collective_jepa_metrics || {};
+      var j = r.jepa || {}, cm = r.collective_jepa_metrics || {}, v6 = r.clover_v6_metrics || {};
+      var uvu = v6.used_vs_unused || {}, sc = v6.solver_cycles || {};
       if ($('lg-auto-kv')) {
         var rows = [
+          ['Clover v6.0 architecture', '4-Part Steerable Harness (AGENTS.md + mcp.json + Context + Todo)'],
+          ['Models used vs unused', ((uvu.models_used || []).length + ' used / ' + (uvu.models_unused || []).length + ' idle') + ((uvu.models_used || []).length ? (' (' + uvu.models_used.join(', ') + ')') : '')],
+          ['0B & MCP tools used', ((uvu.tools_used || []).length + ' active / ' + (uvu.tools_unused || []).length + ' idle') + ((uvu.tools_used || []).length ? (' (' + uvu.tools_used.join(', ') + ')') : '')],
+          ['Solver cycles & retries', (sc.total_problems || 0) + ' runs · mean ' + (sc.mean_cycles || 0) + ' cycles · ' + (sc.solved_after_retry_count || 0) + ' Cycle-2 repairs'],
           ['JEPA architecture', j.configured_arch || 'auto'],
           ['Verified outcome updates', String(j.cycle_updates || 0)],
-          ['8x RTX 3090 collective round', cm.round ? ('Round ' + cm.round + ' (' + (cm.verified_outcomes_count || 0) + ' verified trajectories)') : 'Sync collective core to load'],
-          ['Collective IDM / Trans MSE', cm.idm_mse_after != null ? (cm.idm_mse_after + ' / ' + cm.trans_mse_after) : '—']
+          ['Collective round', cm.round ? ('Round ' + cm.round + ' (' + (cm.verified_outcomes_count || 0) + ' verified trajectories)') : 'Sync collective core to load']
         ];
         $('lg-auto-kv').innerHTML = rows.map(function (x) { return '<span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b>'; }).join('');
       }
@@ -6870,6 +7044,9 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     setTimeout(tick, state.ready ? 15000 : 3000);
   }
   loadSettings(); renderHero(); load(); renderSettings(); loadPerms(); loadWorkspaces(); tick(); $('prompt').focus();
+  if (location.hash === '#setup-models') {
+    setTimeout(function () { openSettings('model'); }, 150);
+  }
 })();
 </script>
 </body>

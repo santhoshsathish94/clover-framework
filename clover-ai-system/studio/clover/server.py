@@ -23,6 +23,7 @@ import sys
 import threading
 import time
 import traceback
+import urllib.parse
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -100,6 +101,7 @@ class S:
     sess_lock = threading.Lock()
     turn_lock = threading.Lock()
     turns_lock = threading.Lock()
+    models_lock = threading.RLock()
     active = {}  # turn_id -> {"cancel": Event, "pending": {request_id: {"event": Event, "decision": str}}, "seq": int, "events": list}
     recent_turns = {}  # turn_id -> completed turn state for SSE reconnection replay (bounded to 32)
     busy = None
@@ -155,6 +157,7 @@ def _clean_remote_models(items):
             "remote_model": str(it.get("remote_model") or name)[:120],
             "kind": "clover" if it.get("kind") == "clover" else "openai",
             "key_id": str(it.get("key_id") or "")[:60],
+            "source": "v6_setup" if it.get("source") == "v6_setup" else "",
         })
     return out
 
@@ -212,29 +215,34 @@ def engine_for(model_key=None):
         return S.omni_engine or S.engine
     if paths.WEB and m in S.k3_engines:
         return S.k3_engines[m]
-    if m in S.remote_engines:
-        return S.remote_engines[m]
-    base_dir = Path(S.args.base) if S.args else HERE.parent
-    ent = next((x for x in model_catalog(base=base_dir) if x["id"] == m or x.get("remote_model") == m), None)
-    if ent is None:
-        return S.omni_engine or S.engine
-    key = ""
-    if ent.get("host") == "k3" and k3_host_engine.is_owner_device(base_dir):
-        key = k3_host_engine.k3_host_key(base_dir)
-    elif ent.get("key_id"):
-        key = vault.get(base_dir, ent["key_id"])
-    rm_name = ent.get("remote_model") or ""
-    if ent.get("host") == "k3" and rm_name in ("clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3"):
-        k3_omni_ent = next((x for x in k3_host_engine.owner_k3_models() if x.get("remote_model") == "omni"), ent)
-        r_omni = k3_host_engine.RemoteOmniEngine(k3_omni_ent, base_dir, S.perms, api_key=key, local_omni=S.omni_engine)
-        eng = k3_host_engine.K3HostEngine(
-            rm_name, r_omni, base_dir, S.perms,
-            remote_urls=k3_host_engine.K3_URLS, api_key=key, display_key=ent["id"],
+    with S.models_lock:
+        if m in S.remote_engines:
+            return S.remote_engines[m]
+        base_dir = Path(S.args.base) if S.args else HERE.parent
+        cat_now = model_catalog(base=base_dir)
+        ent = next((x for x in cat_now if x["id"] == m), None) or next(
+            (x for x in cat_now if x.get("remote_model") == m and x.get("host") == "k3"),
+            None,
         )
-    else:
-        eng = k3_host_engine.RemoteOmniEngine(ent, base_dir, S.perms, api_key=key, local_omni=S.omni_engine)
-    S.remote_engines[m] = eng
-    return eng
+        if ent is None:
+            return S.omni_engine or S.engine
+        key = ""
+        if ent.get("host") == "k3" and k3_host_engine.is_owner_device(base_dir):
+            key = k3_host_engine.k3_host_key(base_dir)
+        elif ent.get("key_id"):
+            key = vault.get(base_dir, ent["key_id"])
+        rm_name = ent.get("remote_model") or ""
+        if ent.get("host") == "k3" and rm_name in ("clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3"):
+            k3_omni_ent = next((x for x in k3_host_engine.owner_k3_models() if x.get("remote_model") == "omni"), ent)
+            r_omni = k3_host_engine.RemoteOmniEngine(k3_omni_ent, base_dir, S.perms, api_key=key, local_omni=S.omni_engine)
+            eng = k3_host_engine.K3HostEngine(
+                rm_name, r_omni, base_dir, S.perms,
+                remote_urls=k3_host_engine.K3_URLS, api_key=key, display_key=ent["id"],
+            )
+        else:
+            eng = k3_host_engine.RemoteOmniEngine(ent, base_dir, S.perms, api_key=key, local_omni=S.omni_engine)
+        S.remote_engines[m] = eng
+        return eng
 
 
 def _csi_url_ok(url):
@@ -280,7 +288,9 @@ class Settings:
             self.data["engine"] = saved["engine"]
         self.data["remote_models"] = _clean_remote_models(saved.get("remote_models"))
         saved_m = _norm_model(saved.get("model"))
-        if paths.WEB and saved_m in WEB_MODELS:
+        if paths.WEB and (
+            saved_m in WEB_MODELS or any(x.get("id") == saved_m for x in self.data["remote_models"])
+        ):
             self.data["model"] = saved_m
         elif not paths.WEB and saved_m and (
             saved_m in ("auto", "omni", "k3:omni", "k3:clover-35b-a3b", "k3:nemotron-3.5-super-vl", "k3:kimi-k3")
@@ -409,12 +419,21 @@ def _walkthrough_flag(base):
     return Path(base) / "config" / "setup-walkthrough.flag"
 
 
+def _skip_setup_flag(base):
+    return Path(base) / "config" / "skip-local-setup.flag"
+
+
 def setup_needed():
     """The phone and laptop apps show the clean setup screen when the model is not downloaded yet, while first-start
-    setup is still running, or right after Setup.exe launches the Studio for its first-run walkthrough."""
+    setup is still running, or right after Setup.exe launches the Studio for its first-run walkthrough—unless the user
+    chose to connect remote servers / configure models inside Studio instead."""
     if paths.WEB or S.args is None:
         return False
     base = Path(S.args.base)
+    if _skip_setup_flag(base).is_file():
+        return False
+    if S.settings and (S.settings.get().get("remote_models") or []):
+        return False
     if _walkthrough_flag(base).is_file():
         return True
     if S.load.get("status") == "setup" and S.setup is not None and S.setup.state in ("running", "stopped", "failed"):
@@ -1792,6 +1811,23 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
         sm_id, sm_name, sm_reason = k3_host_engine.select_smart_model_for_turn(
             typed, media=media, docs=docs, attached=attached, web_mode=paths.WEB
         )
+        # Prefer the user's own v6_setup server for big GPU tiers (keeping everyday `omni` fast on the local device)
+        try:
+            import clover_v6_system
+            want_tier = clover_v6_system.canon_model_id(sm_id)
+            if want_tier != "omni":
+                user_ent = next(
+                    (
+                        x for x in (settings.get("remote_models") or [])
+                        if x.get("source") == "v6_setup" and clover_v6_system.canon_model_id(x.get("remote_model") or "") == want_tier
+                    ),
+                    None,
+                )
+                if user_ent is not None:
+                    sm_id = user_ent["id"]
+                    sm_name = user_ent["name"]
+        except Exception:
+            pass
         smart_routed = {"model": sm_id, "name": sm_name, "reason": sm_reason}
         eng = engine_for(sm_id)
     else:
@@ -2144,6 +2180,44 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
     res.update(session_id=sid, model=m_id, mode="lfm3", wall_ms=round((time.perf_counter() - t0) * 1000.0, 1))
     if smart_routed is not None:
         res["smart_routed"] = smart_routed
+    try:
+        if S.args and getattr(S.args, "base", None):
+            import clover_v6_system
+            v6 = clover_v6_system.for_base(S.args.base)
+            ran_tools = [str(tc.get("tool")) for tc in (res.get("tool_calls") or []) if tc.get("ran") and tc.get("tool")]
+            for tn in ran_tools:
+                v6.metrics.record_tool_call(task_id=sid, tool_name=tn, instance="studio-local", cycle=1, elapsed_ms=0.0, ok=True)
+            ans_txt = str(res.get("reply") or res.get("answer") or "")
+            comp_toks = max(1, len(ans_txt.split())) if ans_txt else 0
+            cyc_used = int(res.get("cycles") or res.get("cycle") or 1)
+            ent_url = str((getattr(eng, "entry", None) or {}).get("url") or "")
+            inst_lbl = (
+                urllib.parse.urlparse(ent_url).hostname or ent_url
+                if ent_url
+                else ("k3" if (str(m_id).startswith("k3:") or paths.WEB) else "local")
+            )
+            v6.metrics.record_model_call(
+                task_id=sid,
+                model=str(m_id),
+                instance=inst_lbl,
+                cycle=cyc_used,
+                prompt_tokens=max(1, len(str(prompt or "").split())),
+                completion_tokens=comp_toks,
+                elapsed_ms=float(res["wall_ms"]),
+                ok=not bool(res.get("error")),
+            )
+            v6.metrics.record_problem_run(
+                task_id=sid,
+                model=str(m_id),
+                status="SOLVED" if not res.get("error") else "FAILED",
+                domain="chat",
+                cycles_used=cyc_used,
+                tools_used=ran_tools,
+                total_ms=float(res["wall_ms"]),
+            )
+            v6.write_task_context(sid, str(ask_text or prompt or ""), f"STUDIO_{m_id}", ans_txt or "OK", ran_tools)
+    except Exception:
+        pass
     try:
         import device_actions
         c2_l = next((x for x in (res.get("layers") or []) if x.get("layer") == "c2_hybridagent"), {})
@@ -2952,7 +3026,7 @@ class Handler(BaseHTTPRequestHandler):
             base_dir = Path(S.args.base) if S.args else HERE.parent
             coord = multi_node_coordinator.K3MultiNodeCoordinator(base_dir)
             return self._send(200, coord.topology_status())
-        if path in ("/", "/index.html") and setup_needed():
+        if path in ("/", "/index.html") and setup_needed() and "app=1" not in (query or ""):
             nonce = secrets.token_urlsafe(18)
             html = (HERE / "web" / "setup.html").read_text(encoding="utf-8").replace("__CSP_NONCE__", nonce)
             csp = (f"default-src 'none'; script-src 'nonce-{nonce}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
@@ -3008,7 +3082,12 @@ class Handler(BaseHTTPRequestHandler):
             desc = eng.describe() if eng else {}
             cat = model_catalog()
             mkey = desc.get("model_key") or (S.settings.get().get("model") if S.settings else "omni")
-            st = {"status": "ready" if (eng is not None and mkey != "omni") else S.load["status"],
+            st_val = (
+                "ready"
+                if ((eng is not None and mkey != "omni") or (S.load["status"] == "setup" and not setup_needed()))
+                else S.load["status"]
+            )
+            st = {"status": st_val,
                   "version": STUDIO_VERSION, "channel": RELEASE_CHANNEL,
                   "mode": S.mode, "load_step": S.load["step"], "error": S.load["error"],
                   "load_elapsed_s": round(time.time() - S.load["since"]), "busy": None, "warning": S.load.get("warning"),
@@ -3020,6 +3099,7 @@ class Handler(BaseHTTPRequestHandler):
                   "account": getattr(self, "_authed_account", None),
                   "inputs": getattr(eng, "inputs", ["text"]) if eng else None,
                   "image_capabilities": (__import__("image_gen").capabilities(S.args.base) if S.args else None),
+                  "clover_v6": (__import__("clover_v6_system").for_base(S.args.base).describe() if (S.args and getattr(S.args, "base", None)) else None),
                   "inbox": inbox_count()}
             if busy:
                 st["busy"] = {"kind": busy["kind"], "elapsed_s": round(time.time() - busy["since"]),
@@ -3068,9 +3148,23 @@ class Handler(BaseHTTPRequestHandler):
                 category=str(q.get("category") or ""),
                 limit=lim,
             ))
+        if path in ("/api/clover/metrics", "/v1/clover/metrics"):
+            import clover_v6_system
+            v6 = clover_v6_system.for_base(S.args.base)
+            return self._send(200, v6.metrics.summary())
+        if path in ("/api/clover/mcp", "/v1/clover/mcp"):
+            import clover_v6_system
+            v6 = clover_v6_system.for_base(S.args.base)
+            return self._send(200, v6.mcp_manifest())
+        if path in ("/api/clover/setup/catalog", "/v1/clover/setup/catalog"):
+            import clover_v6_system
+            v6 = clover_v6_system.for_base(S.args.base)
+            return self._send(200, v6.setup_catalog(getattr(S, "hardware", None), is_android=paths.ANDROID, is_web=paths.WEB))
         if path == "/api/autonomous":
+            import clover_v6_system
             import jepa_engine
             jrt = jepa_engine.for_base(S.args.base)
+            v6 = clover_v6_system.for_base(S.args.base)
             st_cur = S.settings.get() if S.settings else {}
             j_coll = Path(S.args.base) / "collective" / "jepa_collective_growth.json"
             coll_metrics = {}
@@ -3082,6 +3176,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {
                 "jepa": jrt.describe(st_cur.get("jepa_arch", "auto")),
                 "collective_jepa_metrics": coll_metrics,
+                "clover_v6_metrics": v6.metrics.summary(),
                 "last_autonomous_run": getattr(S, "last_autonomous_run", None),
             })
         if path == "/api/tasks":  # the tool-task record: recent calls, how each was checked, unfinished ones
@@ -3460,7 +3555,21 @@ class Handler(BaseHTTPRequestHandler):
                     "model_catalog": cat,
                     "settings": S.settings.get() if S.settings else {},
                 })
-            if path in ("/api/setup/start", "/api/setup/stop"):
+            if path in ("/api/setup/start", "/api/setup/stop", "/api/setup/skip"):
+                if path.endswith("/skip"):
+                    if S.setup is not None:
+                        S.setup.stop.set()
+                    base_sk = Path(S.args.base)
+                    (base_sk / "config").mkdir(parents=True, exist_ok=True)
+                    _skip_setup_flag(base_sk).write_text("server_or_custom_setup\n", encoding="utf-8")
+                    if S.load.get("status") == "setup":
+                        S.load["status"] = "ready"
+                        S.load["step"] = "ready"
+                    try:
+                        _walkthrough_flag(base_sk).unlink(missing_ok=True)
+                    except OSError:
+                        pass
+                    return self._send(200, {"ok": True, "skipped": True})
                 if S.setup is None:
                     return self._send(400, {"error": "setup runs in the installer on this computer"})
                 if path.endswith("/stop"):
@@ -3578,6 +3687,8 @@ class Handler(BaseHTTPRequestHandler):
                 with urllib.request.urlopen(req, timeout=10) as resp:
                     return self._send(200, resp.read(), "application/json")
             if path == "/api/models/add":
+                if paths.WEB and (getattr(self, "_authed_account", None) or DEFAULT_ALLOWED_ACCOUNTS[0]) != DEFAULT_ALLOWED_ACCOUNTS[0]:
+                    return self._send(403, {"error": "Only the host owner can modify shared Web Studio server models."})
                 import k3_host_engine
                 import vault
                 url = str(body.get("url") or "").strip()
@@ -3613,20 +3724,29 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, {"ok": True, "added": entries, "settings": new,
                                         "models": [x["id"] for x in cat], "model_catalog": cat})
             if path == "/api/models/remove":
+                if paths.WEB and (getattr(self, "_authed_account", None) or DEFAULT_ALLOWED_ACCOUNTS[0]) != DEFAULT_ALLOWED_ACCOUNTS[0]:
+                    return self._send(403, {"error": "Only the host owner can modify shared Web Studio server models."})
+                import clover_v6_system
                 import vault
                 rm_id = str(body.get("id") or "").strip()
-                cur = list(S.settings.get().get("remote_models") or [])
-                removed = [x for x in cur if x.get("id") == rm_id]
-                kept = [x for x in cur if x.get("id") != rm_id]
-                for r in removed:
-                    kid = r.get("key_id")
-                    if kid and not any(x.get("key_id") == kid for x in kept):
-                        vault.delete(S.args.base, kid)
-                S.remote_engines.pop(rm_id, None)
-                next_model = S.settings.get().get("model") or "omni"
-                if next_model == rm_id:
-                    next_model = "omni"
-                new = S.settings.update({"remote_models": kept, "model": next_model})
+                v6 = clover_v6_system.for_base(S.args.base)
+                with S.models_lock:
+                    cur = list(S.settings.get().get("remote_models") or [])
+                    removed = [x for x in cur if x.get("id") == rm_id]
+                    kept = [x for x in cur if x.get("id") != rm_id]
+                    for r in removed:
+                        if r.get("source") == "v6_setup":
+                            v6.mark_placement_removed(clover_v6_system.canon_model_id(rm_id), r.get("url") or "")
+                    route_kids = {rt.get("key_id") for rt in clover_v6_system.setup_mcp_routes(v6.load_saved_setup()).values()}
+                    for r in removed:
+                        kid = r.get("key_id")
+                        if kid and kid not in route_kids and not any(x.get("key_id") == kid for x in kept):
+                            vault.delete(S.args.base, kid)
+                    S.remote_engines.pop(rm_id, None)
+                    next_model = S.settings.get().get("model") or "omni"
+                    if next_model == rm_id:
+                        next_model = "omni"
+                    new = S.settings.update({"remote_models": kept, "model": next_model})
                 S.engine = engine_for(next_model)
                 cat = model_catalog()
                 return self._send(200, {"ok": True, "settings": new, "models": [x["id"] for x in cat], "model_catalog": cat})
@@ -3823,6 +3943,100 @@ class Handler(BaseHTTPRequestHandler):
                 S.last_autonomous_run = out_auto
                 device_actions.log_debug("jepa", "autonomous_cycle_and_self_train", out_auto, base_dir=base_p)
                 return self._send(200, out_auto)
+            if path in ("/api/clover/metrics/reset", "/v1/clover/metrics/reset"):
+                import clover_v6_system
+                return self._send(200, clover_v6_system.for_base(S.args.base).metrics.reset())
+            if path in ("/api/clover/mcp", "/v1/clover/mcp"):
+                import clover_v6_system
+                import vault
+                v6 = clover_v6_system.for_base(S.args.base)
+                t_name = str(body.get("tool") or body.get("name") or "").strip()
+                if not t_name:
+                    return self._send(400, {"error": "tool name is required"})
+                return self._send(
+                    200,
+                    v6.call_mcp_tool(
+                        t_name,
+                        body.get("arguments") or body.get("args") or {},
+                        task_id=str(body.get("task_id") or "mcp"),
+                        key_lookup=lambda kid: vault.get(Path(S.args.base), kid),
+                    ),
+                )
+            if path in ("/api/clover/solve", "/v1/clover/solve"):
+                import clover_v6_system
+                v6 = clover_v6_system.for_base(S.args.base)
+                q_solve = str(body.get("prompt") or "").strip()
+                if not q_solve:
+                    return self._send(400, {"error": "prompt is required"})
+                m_req = str(body.get("model") or (S.settings.get().get("model") if S.settings else "omni") or "omni")
+                tid_s = str(body.get("task_id") or f"v6_{uuid.uuid4().hex[:8]}")
+
+                def _gen_turn(p_txt, _cyc):
+                    if S.mode == "lfm3" and engine_for(m_req) is not None:
+                        r_t = lfm3_turn(tid_s, p_txt, {"model": m_req}, ask_text=p_txt)
+                        return str(r_t.get("reply") or r_t.get("answer") or "")
+                    return ""
+
+                eng_s = engine_for(m_req)
+                ent_u = str((getattr(eng_s, "entry", None) or {}).get("url") or "")
+                inst_s = urllib.parse.urlparse(ent_u).hostname if ent_u else ("k3" if paths.WEB else "local")
+                gen_callable = _gen_turn if bool(body.get("use_model", True)) and eng_s is not None else None
+                return self._send(200, v6.solve_4part(q_solve, model=m_req, instance=inst_s or "local", task_id=tid_s, generate_fn=gen_callable, max_cycles=int(body.get("max_cycles") or 2)))
+            if path in ("/api/clover/setup/plan", "/v1/clover/setup/plan", "/api/clover/setup/apply", "/v1/clover/setup/apply"):
+                import clover_v6_system
+                import vault
+                v6 = clover_v6_system.for_base(S.args.base)
+                sel_m = body.get("selected_models") or body.get("models") or []
+                if isinstance(sel_m, str):
+                    sel_m = [x.strip() for x in sel_m.split(",") if x.strip()]
+                raw_sv = body.get("servers") or []
+                if isinstance(raw_sv, str):
+                    raw_sv = [ln.strip() for ln in raw_sv.splitlines() if ln.strip()]
+                inc_loc = bool(body.get("include_local", True))
+                ak = str(body.get("api_key") or "").strip()
+                plan_id = str(body.get("plan_id") or "").strip()
+                hw_hint = getattr(S, "hardware", None)
+                if path.endswith("/plan"):
+                    return self._send(
+                        200,
+                        v6.plan_system_setup(
+                            sel_m, raw_sv, include_local=inc_loc, api_key=ak, hardware_hint=hw_hint,
+                            is_android=paths.ANDROID, is_web=paths.WEB,
+                        ),
+                    )
+                if paths.WEB and (getattr(self, "_authed_account", None) or DEFAULT_ALLOWED_ACCOUNTS[0]) != DEFAULT_ALLOWED_ACCOUNTS[0]:
+                    return self._send(403, {"error": "Only the host owner can apply shared Web Studio server changes."})
+                applied = v6.apply_system_setup(
+                    sel_m, raw_sv, plan_id=plan_id, include_local=inc_loc, api_key=ak, hardware_hint=hw_hint,
+                    is_android=paths.ANDROID, is_web=paths.WEB,
+                )
+                machine_keys = applied.pop("_machine_keys", None) or {}
+                base_p = Path(S.args.base)
+                for ep_url, ep_key in machine_keys.items():
+                    if ep_url and ep_key:
+                        kid = "rm_" + hashlib.sha256(str(ep_url).encode("utf-8")).hexdigest()[:12]
+                        vault.put(base_p, kid, ep_key)
+                with S.models_lock:
+                    new_entries = applied.get("chat_entries") or []
+                    cur_all = S.settings.get().get("remote_models") or []
+                    for old in cur_all:
+                        if old.get("source") == "v6_setup":
+                            S.remote_engines.pop(old["id"], None)
+                    for ne in new_entries:
+                        S.remote_engines.pop(ne["id"], None)
+                    kept = [x for x in cur_all if x.get("source") != "v6_setup"]
+                    merged = kept + list(new_entries)
+                    cur_model = S.settings.get().get("model")
+                    upd = {"remote_models": merged}
+                    valid_ids = {x["id"] for x in merged} | set(MODELS)
+                    if str(cur_model or "").startswith("v6:") and cur_model not in valid_ids:
+                        upd["model"] = new_entries[0]["id"] if new_entries else "omni"
+                    elif len(new_entries) == 1 and body.get("select_if_single", True):
+                        upd["model"] = new_entries[0]["id"]
+                    new_settings = S.settings.update(upd)
+                applied["settings"] = new_settings
+                applied["model_catalog"] = model_catalog()
+                return self._send(200, applied)
             if path in ("/api/inbox/take", "/api/inbox/dismiss", "/api/browser/register"):
                 if paths.PLATFORM != "windows":
                     raise ValueError("pages come from the browser on the laptop only")

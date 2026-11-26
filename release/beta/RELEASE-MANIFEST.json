@@ -4,7 +4,6 @@
   "release_version": "6.0.0",
   "release_channel": "release",
   "release_date": "2026-11-26",
-  "binary_packaging_note": "Source, web, extensions, and manifests prepared for v6.0.0; binary installer/APK SHA-256s reflect the last signed binary build prior to v6.0.0 binary packaging.",
   "generated_by": "release/beta/generate_release_reports.py",
   "cpsl_release_signing": {
     "algorithm": "Ed25519 (RFC 8032)",
@@ -47,15 +46,15 @@
       {
         "file": "release/beta/android/clover-ai-studio-beta.aab",
         "type": "aab",
-        "size_bytes": 81563089,
-        "sha256": "c895d129af80bb0ce21e87e4e971bfa585b18ef20adb73ce660dc87b721e4f6b"
+        "size_bytes": 81672344,
+        "sha256": "bd022107dacea6b8dac999661f740d9bc207934cd3253b5b6340e95634492763"
       },
       {
         "file": "release/beta/android/clover-ai-studio-beta.apk",
         "mirror": "download/mobile/CloverAIStudio.apk",
         "type": "apk",
-        "size_bytes": 82639595,
-        "sha256": "4568fca5d957ed5eaf4c789879e8224dae820393b97a03e7ccab3596e1083d3a"
+        "size_bytes": 82748835,
+        "sha256": "22e162f56a8d53c2b294e076d6ad089d68be56b749512c2372e62c308bed5ee7"
       }
     ],
     "verification": {
@@ -108,8 +107,8 @@
         "file": "release/beta/windows/clover-ai-studio-beta-setup.exe",
         "mirror": "download/laptop/CloverAIStudio-Setup.exe",
         "type": "exe",
-        "size_bytes": 9592280,
-        "sha256": "1ac5091885360d4fcd3eff0f0209fd25de7b4c556eda306928ebcff74ca2603b"
+        "size_bytes": 10455000,
+        "sha256": "115f10bdd354a41088ab9bf068222810eab09cf23f0e04bc81a7a62dbee7a4fb"
       },
       {
         "file": "release/beta/windows/CloverFramework-CodeSign.cer",

@@ -2,12 +2,12 @@
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `5.0.7` (`5.0.7.0` Win32 PE `AssemblyVersion`)  
+**Release Version**: `6.0.0` (`6.0.0.0` Win32 PE `AssemblyVersion`)  
 **Product Name**: `Clover AI Studio`  
 **Publisher**: `Santhosh Narayanan`  
 **Distribution Model**: Standalone Native C# Win32 Per-User Installer (`CloverAIStudio-Setup.exe` / `clover-ai-studio-beta-setup.exe`)  
 **Target Architecture**: `x64` (`Windows.Desktop`, `MinVersion="10.0.19041.0"`, `MaxVersionTested="10.0.26100.0"`)  
-**Build Date**: `2026-11-11`  
+**Build Date**: `2026-11-26`  
 **Build Environment**: Windows 11 x64 (`10.0.26200`), `.NET Framework 4.8` `csc.exe` (`v4.0.30319`).
 
 ---
@@ -16,7 +16,7 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/windows/clover-ai-studio-beta-setup.exe` | `download/laptop/CloverAIStudio-Setup.exe` | Standalone direct-download Windows x64 installer | `9,592,280` bytes (`9.15 MB`) | `1ac5091885360d4fcd3eff0f0209fd25de7b4c556eda306928ebcff74ca2603b` |
+| `release/beta/windows/clover-ai-studio-beta-setup.exe` | `download/laptop/CloverAIStudio-Setup.exe` | Standalone direct-download Windows x64 installer | `10,455,000` bytes (`9.97 MB`) | `115f10bdd354a41088ab9bf068222810eab09cf23f0e04bc81a7a62dbee7a4fb` |
 | `release/beta/windows/CloverFramework-CodeSign.cer` | `download/laptop/CloverFramework-CodeSign.cer` | Authenticode code-signing public certificate | `832` bytes | `9365ec5d455b0ef8179ccf1c061cf481c86dad234b9f3dc62244e487c659072d` |
 
 ---

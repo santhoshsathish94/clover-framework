@@ -26,6 +26,7 @@ import lfm3_native as N
 import omni_native
 import paths
 
+HG4_GATEWAY_URL = os.environ.get("CLOVER_HG4_GATEWAY_URL", "http://127.0.0.1:8790")
 WORKER_URL = os.environ.get("CLOVER_K3_WORKER_URL", "http://127.0.0.1:8765")
 K3_URLS = (
     "https://api.cloverframework.com",
@@ -34,50 +35,50 @@ SPECS = {
     "omni": {
         "model": "LFM3-Omni (k3)",
         "short": "LFM3-Omni",
-        "full_name": "LFM3-Omni-2B",
+        "full_name": "LFM3-Omni-2B (HG4-16R)",
         "maker": "Liquid AI",
         "badge": "k3",
-        "desc": "Liquid AI 2B Omni hosted on k3 · Text, images, audio, video & speech",
-        "backend": "llama.cpp Zen 4 AVX-512 (k3)",
-        "weights": "4-bit (Q4_0) + projector Q8_0",
+        "desc": "Liquid AI 2B Omni on k3 · Fast everyday assistant · HG4-16R + 4-Part Clover Harness + 0B Computed Tools",
+        "backend": "Clover HG4-16R + x-cruncher SIMD + 4-Part Steerable Harness (k3)",
+        "weights": "HG4-16R / Q4_0 + projector Q8_0 (0.98 GB)",
         "max_tokens": 32768,
-        "layers": ["C1 LFM3-Omni-2B on k3 (Zen 4 AVX-512)"],
+        "layers": ["HG4-16R LFM3-Omni-2B", "4-Part Clover Harness (AGENTS.md + mcp.json + Context + Todo)", "0B Computed Tools (x-cruncher + Conformal + Defeasible)"],
     },
     "clover-35b-a3b": {
         "model": "Clover-35B-A3B",
         "short": "Clover-35B-A3B",
-        "full_name": "DiffuSpace Clover-35B-A3B-Preview (35B-A3B Block Diffusion MoE)",
-        "maker": "DiffuSpace",
+        "full_name": "Qwen3.6-35B-A3B + Clover-Harness-LoRA (HG4-16R-OP)",
+        "maker": "Clover / Qwen",
         "badge": "k3",
-        "desc": "Coordinator on k3 · Splits tasks, compares options, coordinates workflows & holds memory/learning · C1 + C2 + C3",
-        "backend": "Clover BD-GDN/GQA MoE C1 + HybridAgent/JEPA C2 + 11-level NCM C3 (k3)",
-        "weights": "4-bit MoE + BD-GDN preview (40 layers, 256 experts top-8, coreset top_p=0.9)",
+        "desc": "Primary Coordinator Brain on k3 · 35B-A3B MoE (17.4 GB HG4-16R) · 4-Part Steerable Harness + Specialist MCP Mesh",
+        "backend": "Clover HG4-16R-OP + Clover-Harness-LoRA + MCP 2.0 Specialist Mesh (k3)",
+        "weights": "HG4-16R-OP 4-bit MoE (17.4 GB, 40 layers, 256 experts top-8, 35.8 tok/s)",
         "max_tokens": 131072,
-        "layers": ["C1 Clover-35B-A3B (40L BD-GDN + Gated GQA + 256-Expert 4-Bit MoE)", "C2 HybridAgent + JEPA latent steps", "C3 11-level NCM (248,320 vocab)"],
+        "layers": ["HG4-16R-OP Qwen3.6-35B-A3B + Clover-Harness-LoRA", "4-Part Steerable Harness (AGENTS.md + mcp.json + <task_id>.md + Todo)", "0B Computed Tools + Goedel/Boltz-2/Chronos/V-JEPA Specialists"],
     },
     "nemotron-3.5-super-vl": {
         "model": "Nemotron 3.5",
         "short": "Nemotron 3.5",
-        "full_name": "NVIDIA Nemotron 3.5 Super VL (120B-A12B MoE, 4-bit only)",
+        "full_name": "NVIDIA Nemotron 3.5 Super VL (120B-A12B HG4-16R)",
         "maker": "NVIDIA",
         "badge": "k3",
-        "desc": "NVIDIA 120B-A12B 4-bit MoE on k3 · Vision, images, video (EVS) & audio (AudioMamba) · C1 + C2 + C3",
-        "backend": "Clover 4-bit C1 (C-RADIO 32L + EVS + AudioMamba) + HybridAgent/JEPA C2 + 11-level NCM C3 (k3)",
-        "weights": "4-bit only (CLVR4B01 planar group-64, 88 layers, 120B-A12B MoE on k3)",
+        "desc": "NVIDIA 120B-A12B HG4-16R MoE on k3 · 1M native Mamba-2 + GQA context, C-RADIO Vision & heavy escalation",
+        "backend": "Clover HG4-16R (C-RADIO 32L + Mamba-2/GQA 1M Context) + 4-Part Clover Harness (k3)",
+        "weights": "HG4-16R group-64 (60.2 GB, 88 layers, 120B-A12B MoE on k3)",
         "max_tokens": 1048576,
-        "layers": ["C1 Nemotron 3.5 Super VL 4-Bit (k3 C-RADIO 32L + EVS + AudioMamba)", "C2 HybridAgent + JEPA latent steps", "C3 11-level NCM (131,072 vocab)"],
+        "layers": ["HG4-16R Nemotron 3.5 Super VL (120B-A12B + C-RADIO 32L)", "4-Part Steerable Harness (AGENTS.md + mcp.json + <task_id>.md + Todo)", "1M Mamba-2 + GQA Escalation Tier"],
     },
     "kimi-k3": {
         "model": "Kimi K3.1 Pro",
         "short": "Kimi K3.1 Pro",
-        "full_name": "Kimi K3.1 Pro 2.8T MoE",
+        "full_name": "Kimi K3.1 Pro 2.8T MoE (K31H)",
         "maker": "Moonshot AI",
         "badge": "k3",
-        "desc": "Deep reasoning engine on k3 · 93 layers (69 KDA + 24 Gated DSA) · Coding, math, proofs & research · C1 + C2 + C3",
-        "backend": "Clover C/Rust C1 + HybridAgent/JEPA C2 + 11-level NCM C3 (k3)",
-        "weights": "4-bit MoE + 8-bit palette trunk + Gated DSA Indexers (93 layers, 2.8T MoE)",
+        "desc": "Deep frontier derivation engine on k3 · 93 layers (69 KDA + 24 Gated DSA) · Hard math, proofs & algorithms",
+        "backend": "Clover K31H C/Rust Engine + 4-Part Steerable Harness + Goedel-32B / x-cruncher MCP (k3)",
+        "weights": "K31H 4-bit MoE + 8-bit trunk + Gated DSA Indexers (93 layers, 2.8T MoE)",
         "max_tokens": 1048576,
-        "layers": ["C1 Kimi K3.1 Pro 2.8T MoE (93L C/Rust engine + Gated DSA)", "C2 HybridAgent + JEPA latent steps", "C3 11-level NCM (163,840 vocab)"],
+        "layers": ["K31H Kimi K3.1 Pro 2.8T MoE (93L C/Rust engine + Gated DSA)", "4-Part Steerable Harness (AGENTS.md + mcp.json + <task_id>.md + Todo)", "Goedel-Prover-V2-32B + x-cruncher Verification"],
     },
 }
 _SIGN_OFF_PARA = re.compile(
@@ -728,6 +729,41 @@ class K3HostEngine:
                             }
                 except Exception:
                     pass
+        # Try the Clover v6.0 HG4 Fusion Gateway (:8790) first when running locally on k3 (or a configured HG4 host)
+        if not self.remote_urls and not image_b64 and HG4_GATEWAY_URL:
+            try:
+                gw_base = HG4_GATEWAY_URL.rstrip("/")
+                gw_msgs = []
+                for hp in hist_pairs[-6:]:
+                    gw_msgs.append({"role": "user", "content": hp["user"]})
+                    gw_msgs.append({"role": "assistant", "content": hp["reply"]})
+                gw_msgs.append({"role": "user", "content": str(prompt or "")})
+                gw_req = urllib.request.Request(
+                    f"{gw_base}/v1/chat/completions",
+                    json.dumps({
+                        "model": "lfm3-omni-2b" if self.raw_key == "omni" else self.raw_key,
+                        "messages": gw_msgs,
+                        "max_tokens": 1024,
+                        "temperature": 0.2,
+                    }).encode("utf-8"),
+                    _auth_headers(self.api_key),
+                )
+                t_gw = time.perf_counter()
+                with urllib.request.urlopen(gw_req, timeout=180) as r_gw:
+                    gw_res = json.loads(r_gw.read().decode("utf-8", "replace"))
+                choices = gw_res.get("choices") or []
+                gw_txt = str(((choices[0].get("message") or {}).get("content")) if choices else "").strip()
+                if gw_txt:
+                    gw_ms = round((time.perf_counter() - t_gw) * 1000.0, 1)
+                    comp_tok = int((gw_res.get("usage") or {}).get("completion_tokens") or max(1, len(gw_txt.split())))
+                    return {
+                        "reply": gw_txt,
+                        "plans": [f"[Clover v6.0 HG4-16R Gateway ({self.raw_key})] {gw_ms} ms · {comp_tok} tokens"],
+                        "k3_experts": {"c_engine_ms": gw_ms},
+                        "n_tokens": comp_tok,
+                    }
+            except Exception:
+                pass
         data = json.dumps(payload).encode("utf-8")
         targets = (
             [f"{u}/api/worker/chat" for u in self.remote_urls]

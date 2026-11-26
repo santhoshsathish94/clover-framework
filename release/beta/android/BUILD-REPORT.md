@@ -2,10 +2,10 @@
 
 > **Generated deterministically by `release/beta/generate_release_reports.py` from final build artifacts.**
 
-**Release Version**: `5.0.7`  
-**Version Code**: `20`  
+**Release Version**: `6.0.0`  
+**Version Code**: `22`  
 **Package Name**: `ai.clover.studio`  
-**Build Date**: `2026-11-11`  
+**Build Date**: `2026-11-26`  
 **Build Environment**: `k3` (`/opt/clover-k3/studio-android`), OpenJDK `17.0.20`, Gradle `8.9`, Android Gradle Plugin `8.5.2`, Chaquopy `17.2.0` (CPython `3.12`), Android SDK `36` (`minSdk 26`, `targetSdk 36`, `compileSdk 36`), Android NDK `llvm-strip`.
 
 ---
@@ -14,8 +14,8 @@
 
 | Artifact | Mirror Path | Purpose | Size | SHA-256 |
 |---|---|---|---:|---|
-| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 21`, `targetSdk 36`) | `81,563,089` bytes (`77.78 MB`) | `c895d129af80bb0ce21e87e4e971bfa585b18ef20adb73ce660dc87b721e4f6b` |
-| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 21`, `targetSdk 36`) | `82,639,595` bytes (`78.81 MB`) | `4568fca5d957ed5eaf4c789879e8224dae820393b97a03e7ccab3596e1083d3a` |
+| `release/beta/android/clover-ai-studio-beta.aab` | — | Google Play Console upload (`versionCode 22`, `targetSdk 36`) | `81,672,344` bytes (`77.89 MB`) | `bd022107dacea6b8dac999661f740d9bc207934cd3253b5b6340e95634492763` |
+| `release/beta/android/clover-ai-studio-beta.apk` | `download/mobile/CloverAIStudio.apk` | Direct device / ADB installation & testing (`versionCode 22`, `targetSdk 36`) | `82,748,835` bytes (`78.92 MB`) | `22e162f56a8d53c2b294e076d6ad089d68be56b749512c2372e62c308bed5ee7` |
 
 ---
 
@@ -38,7 +38,7 @@
 ## 3. Package & Manifest Audit (`build.gradle`)
 
 ```text
-package: name='ai.clover.studio' versionCode='21' versionName='5.0.7'
+package: name='ai.clover.studio' versionCode='22' versionName='6.0.0'
 sdkVersion:'26'
 targetSdkVersion:'36'
 compileSdkVersion:'36'
