@@ -361,41 +361,41 @@
     <section class="band stage" id="myth-1-wire" data-myth-step="1">
       <div class="wrap">
         <h2>Myth 1: &ldquo;AI is slow because chips calculate too slowly.&rdquo;</h2>
-        <p><strong>Imagine hiring the world&rsquo;s fastest chef, then sliding ingredients into the kitchen one spoonful at a time through a tiny mail slot.</strong></p>
-        <p>Buying a hotter stove changes nothing. The chef spends almost the entire evening standing by the door, waiting for the next spoonful to arrive.</p>
-        <p><strong>AI works the same way.</strong> Writing each word requires hauling billions of model weights from memory into the processor. The processor is not struggling with the math &mdash; it is waiting on the wire.</p>
+        <p><strong>Imagine building a hyper-fast factory production line, while small trucks inside the warehouse haul cargo from the racks to the line one load at a time.</strong></p>
+        <p>Installing faster assembly machines changes nothing. The production line spends almost the entire shift idling, waiting for the warehouse trucks to arrive with the next load of cargo.</p>
+        <p><strong>AI works the exact same way.</strong> The processor is the production line, the model weights are the cargo, and the memory wires are the small warehouse trucks moving weights to the line. System <code>RAM</code> is a fleet of slower warehouse trucks; dedicated GPU <code>VRAM</code> is a fleet of much faster warehouse trucks. When there is no dedicated <code>VRAM</code>, switching from a CPU to a GPU gives <strong>no speedup at all</strong> &mdash; both wait on the exact same slow <code>RAM</code> trucks.</p>
 
         <div class="spotlight-proof">
           <div class="spotlight-proof__head">
             <span class="spotlight-proof__badge">Spotlight Proof &middot; Myth 1 of 6</span>
-            <h3 class="spotlight-proof__title">Faster GPU on the same wire: +3%. Shrinking wire traffic 4&times; with HG: up to 45&times; faster.</h3>
-            <p class="spotlight-proof__sub">Controlled test at deterministic <code>T = 0</code>: first we upgraded compute on the exact same memory wire; then we kept the hardware fixed and shrank the weights 4&times;.</p>
+            <h3 class="spotlight-proof__title">CPU vs. GPU with no VRAM: identical speed. Shrinking cargo 4&times; with HG: up to 45&times; faster.</h3>
+            <p class="spotlight-proof__sub">Controlled test at deterministic <code>T = 0</code>: on a laptop with only system <code>RAM</code> (slower warehouse trucks) and no dedicated <code>VRAM</code>, CPU and GPU run identically &mdash; while shrinking the weight cargo 4&times; multiplies speed across both <code>RAM</code> and fast <code>VRAM</code> trucks.</p>
           </div>
           <div class="spotlight-proof__body">
             <div class="proof-row">
               <div class="proof-row__top">
-                <span class="proof-row__label">Laptop CPU on <code>25.6 GB/s</code> RAM wire (<code>LFM3-2B</code>)</span>
+                <span class="proof-row__label">Laptop CPU &mdash; system <code>RAM</code> only, slower <code>25.6 GB/s</code> warehouse trucks (<code style="white-space:nowrap">LFM3-2B</code>)</span>
                 <span class="proof-row__val">12.4 tok/s</span>
               </div>
               <div class="proof-track"><span class="proof-fill proof-fill--muted" style="width:11%"></span></div>
             </div>
             <div class="proof-row">
               <div class="proof-row__top">
-                <span class="proof-row__label">Switch to 10&times; faster GPU on that <em>exact same</em> <code>25.6 GB/s</code> wire</span>
-                <span class="proof-row__val">12.8 tok/s (+3%)</span>
+                <span class="proof-row__label">Same Laptop GPU &mdash; no dedicated <code>VRAM</code>, sharing those <em>exact same</em> <code>RAM</code> trucks</span>
+                <span class="proof-row__val">12.8 tok/s (identical &middot; noise)</span>
               </div>
-              <div class="proof-track"><span class="proof-fill proof-fill--muted" style="width:11.5%"></span></div>
+              <div class="proof-track"><span class="proof-fill proof-fill--muted" style="width:11%"></span></div>
             </div>
             <div class="proof-row">
               <div class="proof-row__top">
-                <span class="proof-row__label">Cut wire traffic 4&times; with Clover <code>HG</code> (<code>16-bit BF16 &rarr; 4-bit HG</code>, <code>86/86</code> identical tokens)</span>
+                <span class="proof-row__label">Shrink weight cargo 4&times; with Clover <code>HG</code> (<code>16-bit BF16 &rarr; 4-bit HG</code>, 4&times; fewer truck trips &middot; <code>86/86</code> identical tokens)</span>
                 <span class="proof-row__val proof-row__val--gold">4.5&times; &ndash; 45&times; Faster</span>
               </div>
               <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:100%"></span></div>
             </div>
           </div>
           <div class="spotlight-proof__significance">
-            <strong>Why this changes everything:</strong> Upgrading chip FLOPs while hauling bloated 16-bit weights across the wire buys almost zero real speed. Cutting the bytes crossing the wire fourfold unlocks immediate <code>4.5&times;&ndash;45&times;</code> speedups on hardware you already own.
+            <strong>Why this changes everything:</strong> Without dedicated <code>VRAM</code>, a faster GPU adds zero real decoding speed over a CPU because both sit waiting on the same slower <code>RAM</code> warehouse trucks (<code>12.4</code> vs. <code>12.8 tok/s</code> is pure run-to-run noise). Dedicated <code>VRAM</code> brings faster warehouse trucks (<code>936&ndash;1,008 GB/s</code>), and shrinking the weight cargo fourfold with <code>HG</code> cuts truck trips <code>4&times;</code> per word &mdash; unlocking immediate <code>4.5&times;&ndash;45&times;</code> speedups.
           </div>
         </div>
       </div>
