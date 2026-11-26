@@ -215,6 +215,37 @@
     fill: url(#leaf-golden-amber) !important;
     stroke: none;
   }
+  .hg-table-wrap {
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    border: 1.5px solid #d9be84;
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-xs);
+  }
+  .hg-table {
+    width: 100%;
+    min-width: 680px;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .hg-table th,
+  .hg-table td {
+    text-align: left;
+    padding: 0.78rem 0.95rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .hg-table th {
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #7c4d05;
+    background: linear-gradient(180deg, #fdf8ec 0%, #fffefb 100%);
+  }
+  .hg-table tr:last-child td {
+    border-bottom: none;
+  }
 </style>
 </head>
 <body>
@@ -659,6 +690,91 @@ python3 reproduce_hg_myths.py --verify-all --out ./repro_hg_myths_report.json</c
       <h2>The Five-Petal Clover System &mdash; never bet everything on one basket.</h2>
       <p><strong>Every myth above was the same mistake wearing a different mask: putting everything into one giant server, one universal model, or one hardware technology.</strong></p>
       <p>Today, GPU VRAM happens to be the fastest memory bus &mdash; very soon, unified memory, stacked on-die memory, or optical interconnects will take its place. Building massive datacenters assuming VRAM is the permanent universal answer locks you into yesterday&rsquo;s bottleneck. Because Clover <code>HG</code> is hardware-agnostic math (<code>87/87</code> bit-exact across phones, CPUs, GPUs, and whatever fast bus comes next), five modular petals surround one permanent hub (<code>k3</code>) governed by <a href="../getting-started/">AGENTS.md</a> and <code>MCP 2.0</code> &mdash; so you swap any node, bus, or specialist without rebuilding your system.</p>
+
+      <h3 style="margin-top:1.75rem">Complete Clover <code>HG</code> Model Compression &amp; <code>RTX 3090</code> Speed Ledger</h3>
+      <p style="font-size:0.93rem;color:var(--muted);margin-top:0.25rem">Every open model we converted with <code>convert_to_hg.py</code> and measured on <code>24 GB NVIDIA RTX 3090</code> servers (<code>Inference /s</code> = prompt prefill throughput; <code>Decode /s</code> = actual single-user <code>batch = 1</code> generation speed):</p>
+
+      <div class="hg-table-wrap">
+        <table class="hg-table">
+          <thead>
+            <tr>
+              <th>Model Name</th>
+              <th>Original Size</th>
+              <th>HG Size</th>
+              <th>3090 Server Setup</th>
+              <th>Inference /s (Prefill)</th>
+              <th>Decode /s (batch = 1)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Chronos-Bolt 0.2B</strong><br><small><code>amazon/chronos-bolt-base</code></small></td>
+              <td><code>0.41 GB</code><br><small>BF16</small></td>
+              <td><strong><code>0.10 GB</code></strong><br><small><code>HG4-16R</code> (4.0&times;)</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small>Shared VRAM</small></td>
+              <td><code>~6,400 tok/s</code><br><small><code>0.37 s</code> / 512 steps</small></td>
+              <td><strong><code>187.1&ndash;191.5 tok/s</code></strong></td>
+            </tr>
+            <tr>
+              <td><strong>Meta V-JEPA 2.1</strong><br><small><code>vjepa2-vitg-fpc64-256</code></small></td>
+              <td><code>2.04 GB</code><br><small>BF16</small></td>
+              <td><strong><code>0.51 GB</code></strong><br><small><code>HG4-16R</code> (<code>0.9968</code> cos)</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small>Shared VRAM</small></td>
+              <td><code>533 frames/s</code><br><small>64-frame clip</small></td>
+              <td><strong><code>0.12 s / rollout</code></strong><br><small><code>1408-d</code> physics state</small></td>
+            </tr>
+            <tr>
+              <td><strong>Boltz-2</strong><br><small><code>boltz-community/boltz-2</code></small></td>
+              <td><code>3.91 GB</code><br><small><code>4,007 MiB</code> FP32/BF16</small></td>
+              <td><strong><code>0.52 GB</code></strong><br><small><code>529.6 MiB</code> (<strong>7.57&times;</strong>)</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small><code>~14 GB</code> w/ pairformer</small></td>
+              <td><code>~3.8 s</code><br><small>Pairformer trunk</small></td>
+              <td><strong><code>~12 s / 3D .cif</code></strong><br><small><code>pLDDT = 0.931</code></small></td>
+            </tr>
+            <tr>
+              <td><strong>LFM3-Omni-2B</strong><br><small><code>LiquidAI/LFM3-Omni-2B</code> + <code>DSpark</code></small></td>
+              <td><code>3.22 GB</code><br><small><code>3,297 MiB</code> BF16</small></td>
+              <td><strong><code>0.83 GB</code></strong><br><small><code>853.9 MiB</code> (<code>87/87</code> exact)</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small><code>24 GB</code> VRAM</small></td>
+              <td><strong><code>3,962&ndash;4,633 tok/s</code></strong></td>
+              <td><strong><code>240.2&ndash;288.4 tok/s</code></strong><br><small><code>50.3</code> CPU &middot; <code>33.4</code> S23</small></td>
+            </tr>
+            <tr>
+              <td><strong>Goedel-Prover-V2-32B</strong><br><small><code>Goedel-LM/Goedel-Prover-V2-32B</code></small></td>
+              <td><code>65.5 GB</code><br><small>BF16 dense 32B</small></td>
+              <td><strong><code>15.8 GB</code></strong><br><small><code>HG4-16R</code> (<code>0.9962</code> cos)</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small><code>21.6 GB</code> w/ 16k KV</small></td>
+              <td><strong><code>185.0 tok/s</code></strong></td>
+              <td><strong><code>18.4&ndash;28.6 tok/s</code></strong></td>
+            </tr>
+            <tr>
+              <td><strong>Qwen3.6-35B-A3B (+ LoRA)</strong><br><small><code>Clover-35B-A3B</code> Coordinator</small></td>
+              <td><code>70.0 GB</code><br><small>BF16 35B-A3B MoE</small></td>
+              <td><strong><code>17.4 GB</code></strong><br><small><code>HG4-16R-OP</code> (<code>86/86</code> exact)</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small><code>20.2 GB</code> w/ 32k KV</small></td>
+              <td><strong><code>200.5&ndash;1,469.8 tok/s</code></strong></td>
+              <td><strong><code>58.5 tok/s</code></strong><br><small>CUDA (<code>35.8</code> HTTP)</small></td>
+            </tr>
+            <tr>
+              <td><strong>Nemotron 3.5 Super VL 120B</strong><br><small><code>120B-A12B</code> <code>1M</code> context + Vision</small></td>
+              <td><code>241.0 GB</code><br><small>BF16 MoE</small></td>
+              <td><strong><code>58.2 GB</code></strong><br><small><code>HG4-16R-OP</code> (4.1&times;)</small></td>
+              <td><code>4 &times; RTX 3090</code><br><small><code>96 GB</code> (<code>14.6 GB</code>/GPU)</small></td>
+              <td><strong><code>80.8&ndash;549.2 tok/s</code></strong></td>
+              <td><strong><code>38.4&ndash;55+ tok/s</code></strong><br><small>with <code>2L-MTP</code></small></td>
+            </tr>
+            <tr>
+              <td><strong>Kimi K3.1 Pro 2.8T</strong><br><small><code>moonshotai/Kimi-K3.1-Pro</code></small></td>
+              <td><code>2,800 GB</code><br><small>FP8 (<code>~5.5 TB</code> BF16)</small></td>
+              <td><strong><code>741 GB</code></strong><br><small><code>K31H</code> (<code>HG4</code> hot + <code>HG2</code> cold)</small></td>
+              <td><code>5 &times; (8&times; RTX 3090)</code><br><small><code>960 GB</code> same-rack VRAM</small></td>
+              <td><strong><code>18.2 tok/s</code></strong><br><small>In-rack pipeline</small></td>
+              <td><strong><code>6.0&ndash;18.0 tok/s</code></strong><br><small><code>T=1</code> to <code>+DSpark</code></small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
       <p><strong>Convert any Hugging Face model or verify our benchmarks in one command:</strong></p>
       <pre style="background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:1rem 1.2rem;overflow-x:auto;font-size:0.88rem"><code>curl -fsSL https://cloverframework.com/hg-format/convert_to_hg.py -O
 python3 convert_to_hg.py --model Qwen/Qwen3.6-35B-A3B --out ./hg-model --ldlq --verify</code></pre>

@@ -275,6 +275,211 @@
     </div>
   </section>
 
+  <section class="band" id="complete-system-routing">
+    <div class="wrap">
+      <h2>How <code>k3</code> and the <code>RTX 3090</code> servers ran as one complete system</h2>
+      <p class="lede"><strong>Instead of renting one giant monolithic supercomputer, Clover connected one permanent CPU coordinator hub (<code>k3</code>) to modular, right-sized <code>24 GB RTX 3090</code> GPU petals over <code>4 Bytes/token</code> binary sockets (<code>tsock://</code>).</strong></p>
+
+      <figure class="diagram" style="margin:1.6rem 0">
+        <svg viewBox="0 0 880 340" role="img" aria-label="Architecture diagram showing how the k3 CPU hub routes tasks across Tier-0 0B computed tools, Tier-1 1x RTX 3090 coordinator and domain specialists, and Tier-2/3 multi-GPU escalation servers.">
+          <rect x="0" y="0" width="880" height="340" rx="12" fill="#ffffff" stroke="#d6e2e0" stroke-width="1.2"/>
+          <text x="22" y="27" font-size="11.5" font-weight="700" fill="#0a6a5f" letter-spacing="1.1">CLOVER COMPLETE SYSTEM ROUTING: k3 PERMANENT HUB + MODULAR RTX 3090 GPU PETALS</text>
+          <line x1="22" y1="38" x2="858" y2="38" stroke="#d6e2e0" stroke-width="1"/>
+
+          <!-- Left Box: Human + k3 Permanent Hub -->
+          <rect x="22" y="54" width="256" height="266" rx="10" fill="#e6f2f0" stroke="#0a6a5f" stroke-width="1.8"/>
+          <text x="150" y="76" text-anchor="middle" font-size="11" font-weight="700" fill="#0a6a5f">k3 PERMANENT HUB (0 GPUs, 128 GB RAM)</text>
+          <rect x="36" y="88" width="228" height="52" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.3"/>
+          <text x="150" y="107" text-anchor="middle" font-size="10.2" font-weight="700" fill="#14181d">Human Steering + 4-Part Harness</text>
+          <text x="150" y="123" text-anchor="middle" font-size="9.2" fill="#39424d">AGENTS.md · STOP_AND_ASK · Todo · &lt;id&gt;.md</text>
+
+          <rect x="36" y="150" width="228" height="68" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.3"/>
+          <text x="150" y="169" text-anchor="middle" font-size="10.2" font-weight="700" fill="#0a6a5f">Tier 0 · 0B Computed Tools (&lt;52 ms)</text>
+          <text x="150" y="185" text-anchor="middle" font-size="9.1" fill="#39424d">x-cruncher BigInt/Pi · 0B Conformal TS</text>
+          <text x="150" y="200" text-anchor="middle" font-size="9.1" fill="#39424d">0B Defeasible Rules · Lean 4 &amp; AST Checks</text>
+
+          <rect x="36" y="228" width="228" height="78" rx="7" fill="#0a6a5f"/>
+          <text x="150" y="248" text-anchor="middle" font-size="10.1" font-weight="700" fill="#ffffff">HG4 Fusion Gateway (:8790)</text>
+          <text x="150" y="265" text-anchor="middle" font-size="9.1" fill="#e6f2f0">• T=0 Priority Request Clubbing</text>
+          <text x="150" y="280" text-anchor="middle" font-size="9.1" fill="#e6f2f0">• PetalRegistry (30s leases) + tsock://</text>
+          <text x="150" y="295" text-anchor="middle" font-size="9.1" font-weight="700" fill="#ffd97d">• CloverMetricsLedger Telemetry</text>
+
+          <!-- Arrows from k3 Hub to 3 GPU Tiers -->
+          <line x1="278" y1="104" x2="334" y2="104" stroke="#0a6a5f" stroke-width="2"/>
+          <polygon points="334,100 342,104 334,108" fill="#0a6a5f"/>
+          <text x="308" y="96" text-anchor="middle" font-size="8.6" font-weight="700" fill="#0a6a5f">tsock:// 4 B/tok</text>
+
+          <line x1="278" y1="192" x2="334" y2="192" stroke="#0a6a5f" stroke-width="2"/>
+          <polygon points="334,188 342,192 334,196" fill="#0a6a5f"/>
+          <text x="308" y="184" text-anchor="middle" font-size="8.6" font-weight="700" fill="#0a6a5f">MCP 2.0 Tools</text>
+
+          <line x1="278" y1="278" x2="334" y2="278" stroke="#8a5607" stroke-width="2"/>
+          <polygon points="334,274 342,278 334,282" fill="#8a5607"/>
+          <text x="308" y="270" text-anchor="middle" font-size="8.6" font-weight="700" fill="#8a5607">On Verifier Fail</text>
+
+          <!-- Right Tier 1: Front-Door Coordinator (1x RTX 3090) -->
+          <rect x="344" y="54" width="514" height="82" rx="9" fill="#f6fbfa" stroke="#0a6a5f" stroke-width="1.5"/>
+          <text x="360" y="75" font-size="10.5" font-weight="700" fill="#0a6a5f">TIER 1A · FRONT-DOOR COORDINATOR PETALS (1 × 24 GB RTX 3090 EACH)</text>
+          <text x="360" y="95" font-size="9.5" fill="#14181d">• Qwen3.6-35B-A3B + Clover-Harness-LoRA (17.4 GB HG4-16R-OP · 58.5 decode tok/s) — plans &amp; calls MCP tools</text>
+          <text x="360" y="113" font-size="9.5" fill="#39424d">• LFM3-Omni-2B (0.83 GB HG4-16R · 240–288 decode tok/s) — fast everyday single-turn queries</text>
+
+          <!-- Right Tier 1B: Domain Specialist Petals (1x RTX 3090) -->
+          <rect x="344" y="148" width="514" height="82" rx="9" fill="#f6fbfa" stroke="#0a6a5f" stroke-width="1.5"/>
+          <text x="360" y="169" font-size="10.5" font-weight="700" fill="#0a6a5f">TIER 1B · DOMAIN SPECIALIST PETALS (1 × 24 GB RTX 3090, CALLED VIA mcp.json)</text>
+          <text x="360" y="189" font-size="9.5" fill="#14181d">• Goedel-Prover-V2-32B (15.8 GB · Lean 4 formal proofs: 66.7% MiniF2F w/ Cycle-2 compiler repair)</text>
+          <text x="360" y="207" font-size="9.5" fill="#39424d">• Boltz-2 (0.52 GB · 3D .cif folding pLDDT 0.931) · Chronos-Bolt (191 tok/s) · V-JEPA 2.1 (1408-d physics)</text>
+
+          <!-- Right Tier 2 & 3: Heavy Verifier-Gated Escalation -->
+          <rect x="344" y="242" width="514" height="78" rx="9" fill="#fdf8ec" stroke="#d9be84" stroke-width="1.6"/>
+          <text x="360" y="263" font-size="10.5" font-weight="700" fill="#8a5607">TIER 2 &amp; 3 · OBJECTIVE VERIFIER-GATED ESCALATION (ONLY WHEN TIER 1 FAILS CHECKS)</text>
+          <text x="360" y="283" font-size="9.5" fill="#14181d">• Nemotron 3.5 Super VL 120B (58.2 GB on 4 × RTX 3090 · 38–55+ tok/s · 1M context &amp; C-RADIO vision)</text>
+          <text x="360" y="301" font-size="9.5" fill="#39424d">• Kimi K3.1 Pro 2.8T (741 GB K31H pipeline across 5 × 8-GPU RTX 3090 · 6–18 tok/s · deep derivations)</text>
+        </svg>
+        <figcaption>One lightweight CPU hub (<code>k3</code>) orchestrates deterministic <code>0B</code> tools and right-sized <code>RTX 3090</code> petals — escalating to larger models only when objective verifiers prove it necessary.</figcaption>
+      </figure>
+
+      <div class="studio-grid">
+        <div class="studio-card">
+          <span class="studio-tag studio-tag--ready">Step 1 &middot; 0 ms on k3 CPU</span>
+          <h3>Compute Deterministically Before Touching Any GPU</h3>
+          <p>Every request hits <code>k3</code> first. High-risk or ambiguous actions trigger <code>STOP_AND_ASK</code>; exact integer/factorial/&pi; math runs in <code>x-cruncher</code> (<code>0.02 ms</code>); periodic time-series run in the <code>0B</code> Periodogram+Conformal solver (<code>52 ms</code>); policy overrides run in the <code>0B</code> Defeasible Resolver &mdash; consuming <strong>zero GPU tokens</strong>.</p>
+        </div>
+
+        <div class="studio-card">
+          <span class="studio-tag studio-tag--ready">Step 2 &middot; tsock:// + Verifier Cascade</span>
+          <h3>Right-Sized <code>RTX 3090</code> Petals &amp; Escalation</h3>
+          <p>Each <code>RTX 3090</code> server registers into <code>k3</code>&rsquo;s <code>PetalRegistry</code> over <code>4 B/tok</code> <code>tsock://</code> sockets with <code>T = 0</code> request clubbing. <code>Qwen3.6-35B-A3B + LoRA</code> handles coordination and invokes <code>Goedel-32B</code> or <code>Boltz-2</code> via <code>mcp.json</code>; only if an AST, unit-test, or <code>Lean 4</code> check still fails after Cycle-2 repair does <code>k3</code> escalate to <code>Nemotron 120B</code> or <code>Kimi 2.8T</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="benchmark-matrix">
+    <div class="wrap">
+      <h2>Every model, server, and benchmark we ran</h2>
+      <p class="lede">Raw results across all seven public evaluation suites we executed across <code>k3</code> and our <code>RTX 3090</code> servers (all raw JSON ledgers committed under <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/benchmarks"><code>benchmarks/</code></a>).</p>
+
+      <div class="hw-wrap">
+        <table class="hw-table" style="min-width:920px">
+          <thead>
+            <tr>
+              <th>Model / Component</th>
+              <th>Server Ran On</th>
+              <th>SciCode<br><small>(288 Sealed Steps)</small></th>
+              <th>HumanEval<br><small>(164 Python)</small></th>
+              <th>Lean 4 MiniF2F<br><small>(12 Theorems)</small></th>
+              <th>Riemann Lean 4<br><small>(23 Obligations)</small></th>
+              <th>Time-Series<br><small>(512&rarr;48 MASE, lower=better)</small></th>
+              <th>Exact Math, Rules &amp; Biology</th>
+              <th>Discernment (19) &amp; Steering (6)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>0B Computed Specialists</strong><br><small><code>x-cruncher</code> + Conformal + Defeasible + Tactics</small></td>
+              <td><code>k3</code> CPU<br><small>(0 GPUs)</small></td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td><strong><code>6 / 12</code> (50.0%)</strong><br><small>10-line tactic cascade</small></td>
+              <td>&mdash;</td>
+              <td><strong><code>0.3084</code> (#1)</strong><br><small><code>52 ms</code> CPU</small></td>
+              <td><strong><code>10/10</code> BigInt</strong><br><small><strong><code>180/180</code> Rules</strong></small></td>
+              <td><code>STOP_AND_ASK</code><br><small>Boundary gate</small></td>
+            </tr>
+            <tr>
+              <td><strong>LFM3-Omni-2B</strong><br><small><code>HG4-16R</code> (<code>0.83 GB</code>)</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small>(24 GB VRAM)</small></td>
+              <td><code>17 / 288</code><br><small>(5.90%)</small></td>
+              <td><code>64 / 164</code><br><small>(39.02%)</small></td>
+              <td>&mdash;</td>
+              <td><code>3 / 23</code><br><small>(13.04%)</small></td>
+              <td><code>Failed</code><br><small>(LLM text drift)</small></td>
+              <td><code>0/16</code> solo &rarr;<br><small><strong><code>16/16</code> w/ tool</strong></small></td>
+              <td>Tier-0 gate<br><small>prevents flooding</small></td>
+            </tr>
+            <tr>
+              <td><strong>Chronos-Bolt 0.2B</strong><br><small><code>HG4-16R</code> (<code>0.10 GB</code>)</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small>(Shared VRAM)</small></td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td><strong><code>0.4157</code></strong><br><small>(<code>0.37 s</code> GPU)</small></td>
+              <td>&mdash;</td>
+              <td><code>mcp.json</code><br><small>specialist</small></td>
+            </tr>
+            <tr>
+              <td><strong>Boltz-2 &amp; V-JEPA 2.1</strong><br><small><code>HG4-16R</code> (<code>0.52</code> &amp; <code>0.51 GB</code>)</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small>(Shared VRAM)</small></td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td><strong><code>pLDDT 0.931</code></strong><br><small>3D <code>.cif</code> &middot; <code>1408-d</code></small></td>
+              <td><code>mcp.json</code><br><small>specialists</small></td>
+            </tr>
+            <tr>
+              <td><strong>Goedel-Prover-V2-32B</strong><br><small><code>HG4-16R</code> (<code>15.8 GB</code>) + Clover Cycle</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small>+ <code>k3</code> Lean 4</small></td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td><strong><code>8 / 12</code> (66.7%, #1)</strong><br><small>3 Cycle-2 repairs</small></td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td>Kernel-verified<br><small><code>Lean 4.33.1</code></small></td>
+              <td><code>mcp.json</code><br><small>prover tool</small></td>
+            </tr>
+            <tr>
+              <td><strong>Qwen3.6-35B-A3B (+ LoRA)</strong><br><small><code>Clover-35B-A3B</code> (<code>17.4 GB</code>)</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small>(24 GB VRAM)</small></td>
+              <td><code>81 / 288</code><br><small>(28.12% &middot; 6 main)</small></td>
+              <td><strong><code>113 / 164</code></strong><br><small>(<strong>68.90%</strong>)</small></td>
+              <td>&mdash;</td>
+              <td><code>11 / 23</code><br><small>(47.8% w/ 120B)</small></td>
+              <td><code>Failed</code> solo &rarr;<br><small><strong><code>0.3084</code> w/ tool</strong></small></td>
+              <td><code>0%</code> solo &rarr;<br><small><strong><code>100%</code> w/ tool</strong></small></td>
+              <td><strong><code>19 / 19</code></strong> binary<br><small>(<code>11/19</code> 4-way)</small></td>
+            </tr>
+            <tr>
+              <td><strong>Nemotron 3.5 Super VL 120B</strong><br><small><code>HG4-16R-OP</code> (<code>58.2 GB</code>)</small></td>
+              <td><code>4 &times; RTX 3090</code><br><small>(96 GB VRAM)</small></td>
+              <td><code>99 / 288</code><br><small>(34.38% &middot; 6 main)</small></td>
+              <td><small>Escalation tier</small></td>
+              <td><code>5 / 12</code><br><small>(41.7% solo)</small></td>
+              <td><code>9 / 23</code><br><small>(39.13%)</small></td>
+              <td><code>Failed</code> solo<br><small>(0/3 LLMs)</small></td>
+              <td>Passed <code>yoshida4</code><br><small>(<code>r1 = 15.999</code>)</small></td>
+              <td><strong><code>19 / 19</code></strong> binary<br><small>(<strong><code>14/19</code></strong> 4-way)</small></td>
+            </tr>
+            <tr>
+              <td><strong>Kimi K3.1 Pro 2.8T</strong><br><small><code>K31H</code> (<code>741 GB</code>)</small></td>
+              <td><code>5 &times; (8&times; 3090)</code><br><small>/ API + <code>k3</code></small></td>
+              <td><strong><code>139 / 288</code></strong><br><small>(<strong>48.26%</strong> &middot; 14 main)</small></td>
+              <td><small>Frontier escalation</small></td>
+              <td>&mdash;</td>
+              <td><strong><code>12 / 23</code></strong><br><small>(<strong>52.17%</strong>, #1)</small></td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td>Frontier<br><small>derivation tier</small></td>
+            </tr>
+            <tr style="background:rgba(10,106,95,0.05)">
+              <td><strong>Complete Clover v6.0 System</strong><br><small><code>k3</code> Hub + <code>RTX 3090</code> Mesh + Human</small></td>
+              <td><code>k3</code> + Modular<br><small><code>RTX 3090</code> Petals</small></td>
+              <td><strong><code>28.1% &rarr; 48.3%</code></strong><br><small>verifier cascade</small></td>
+              <td><strong><code>68.9%+</code></strong><br><small>AST-verified</small></td>
+              <td><strong><code>8 / 12</code> (66.7%)</strong><br><small>beats 120B solo</small></td>
+              <td><strong><code>12 / 23</code> (52.2%)</strong></td>
+              <td><strong><code>0.3084</code></strong><br><small>beats Chronos &amp; LLMs</small></td>
+              <td><strong><code>100%</code> Math/Rules</strong><br><small><strong><code>0.931</code> pLDDT</strong></small></td>
+              <td><strong><code>5 / 6</code> (83.3%)</strong><br><small>vs <code>0/6</code> AI alone (<code>-53%</code> tok)</small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <section class="band" id="ambitious-research">
     <div class="wrap">
       <span class="studio-tag studio-tag--gpu">Ambitious Research &middot; Next Clover Milestone</span>
