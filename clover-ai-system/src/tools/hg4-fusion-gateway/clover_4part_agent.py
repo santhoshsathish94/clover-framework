@@ -21,6 +21,7 @@ import time
 from typing import Any
 
 from clover_cycle_engine import AGENTS_MD_SHA256, CloverContextRecord
+from clover_telemetry_ledger import CloverMetricsLedger
 
 
 CLOVER_4PART_BASE_PROMPT = (
@@ -48,9 +49,10 @@ def _extract_code_block(text: str) -> str:
 class Clover4PartAgent:
     """Executes bounded multi-turn 4-Part Clover cycles over `ClusterBatchQueue` + `Mcp2MeshServer`."""
 
-    def __init__(self, batch_queue: Any, mcp2: Any) -> None:
+    def __init__(self, batch_queue: Any, mcp2: Any, metrics_ledger: CloverMetricsLedger | None = None) -> None:
         self.queue = batch_queue
         self.mcp2 = mcp2
+        self.metrics = metrics_ledger or CloverMetricsLedger()
 
     def _openai_tools_schema(self, allowed_names: list[str] | None = None) -> list[dict[str, Any]]:
         allow = set(allowed_names) if allowed_names else None
@@ -81,6 +83,16 @@ class Clover4PartAgent:
         test_code = str(req.get("test_code") or "").strip()
         lean_statement = str(req.get("lean_statement") or "").strip()
         allowed_tools = req.get("tools") if isinstance(req.get("tools"), list) else None
+        # Tier-0 Tool-Exposure Gate: prevent small 1.7B/2B models from getting flooded by planning
+        # tools (`todo_upsert`/`context_*`) on single-function code completions unless explicitly requested.
+        if (
+            allowed_tools is None
+            and ("2b" in model.lower() or "1.7b" in model.lower())
+            and not isinstance(req.get("initial_todos"), list)
+            and not re.search(r"\b(?:todo|plan|context|multi[\s-]*step)\b", prompt, re.IGNORECASE)
+            and re.search(r"\bdef\s+[A-Za-z_]\w*\s*\(", prompt)
+        ):
+            allowed_tools = ["python_ast_verify", "xcruncher_exact_math"]
         allowed_set = {str(x) for x in allowed_tools} if allowed_tools is not None else None
 
         raw_tid = req.get("task_id")
@@ -127,8 +139,16 @@ class Clover4PartAgent:
         total_prompt_tokens = 0
         total_completion_tokens = 0
         models_used: list[str] = []
+        turn_tok_s_list: list[float] = []
+        cycles_tried = 0
+        solved_on_cycle = 0
+        benchmark_tag = str(req.get("benchmark_tag") or "").strip()
+
+        be_obj = self.mcp2.router.backends.get(model)
+        instances_available = len(getattr(be_obj, "endpoints", None) or [1])
 
         for turn_idx in range(1, max_turns + 1):
+            t_turn0 = time.perf_counter()
             comp, _ = self.queue.submit(
                 {
                     "model": model,
@@ -140,9 +160,23 @@ class Clover4PartAgent:
                 },
                 priority=1,
             )
-            total_prompt_tokens += int(comp.usage.get("prompt_tokens") or 0)
-            total_completion_tokens += int(comp.usage.get("completion_tokens") or 0)
+            turn_wall_ms = (time.perf_counter() - t_turn0) * 1000.0
+            p_toks = int(comp.usage.get("prompt_tokens") or 0)
+            c_toks = int(comp.usage.get("completion_tokens") or 0)
+            total_prompt_tokens += p_toks
+            total_completion_tokens += c_toks
             served = str(comp.telemetry.get("served_by") or comp.model)
+            inst_id = f"{served}@{comp.telemetry.get('replica_url') or 'local'}"
+            t_tok_s = self.metrics.record_completion(
+                model=served,
+                prompt_tokens=p_toks,
+                completion_tokens=c_toks,
+                wall_ms=turn_wall_ms,
+                instance_id=inst_id,
+                benchmark_tag=benchmark_tag,
+            )
+            if t_tok_s > 0:
+                turn_tok_s_list.append(t_tok_s)
             if served not in models_used:
                 models_used.append(served)
 
@@ -171,6 +205,7 @@ class Clover4PartAgent:
                     if tname in ("clover_context_read", "clover_context_record", "clover_todo_list", "clover_todo_upsert"):
                         if not parsed_args.get("task_id") or parsed_args.get("task_id") == "default_task":
                             parsed_args["task_id"] = task_id
+                    t_tool0 = time.perf_counter()
                     if allowed_set is not None and tname not in allowed_set:
                         tout = {
                             "error": f"PermissionError: tool '{tname}' is not allowed for this request",
@@ -184,7 +219,9 @@ class Clover4PartAgent:
                         except Exception as exc:
                             tout = {"error": f"{type(exc).__name__}: {exc}", "tool": tname}
                             ok_tool = False
-                    tool_trace.append({"turn": turn_idx, "tool": tname, "args": parsed_args, "ok": ok_tool, "result": tout})
+                    tool_ms = round((time.perf_counter() - t_tool0) * 1000.0, 2)
+                    self.metrics.record_tool(tname, ok_tool, tool_ms)
+                    tool_trace.append({"turn": turn_idx, "tool": tname, "args": parsed_args, "ok": ok_tool, "wall_ms": tool_ms, "result": tout})
                     messages.append({
                         "role": "tool",
                         "tool_call_id": tc.get("id") or f"call_{turn_idx}",
@@ -194,13 +231,16 @@ class Clover4PartAgent:
                 continue
 
             # Model emitted final answer (no tool calls) -> run deterministic Outcome Verifier if configured!
+            cycles_tried += 1
             final_answer = comp.content or ""
             if test_code:
+                t_v0 = time.perf_counter()
                 cand_py = _extract_code_block(final_answer)
                 v_out = self.mcp2._invoke_tool(
                     "python_ast_verify",
                     {"candidate_code": cand_py, "test_code": test_code},
                 )
+                self.metrics.record_tool("python_ast_verify", bool(v_out.get("passed")), (time.perf_counter() - t_v0) * 1000.0)
                 verified_outcome = v_out
                 if not v_out.get("passed"):
                     diag = v_out.get("diagnostics") or ("unsafe_ast" if not v_out.get("safe_ast") else "verification_failed")
@@ -225,13 +265,17 @@ class Clover4PartAgent:
                             ),
                         })
                         continue
+                else:
+                    solved_on_cycle = cycles_tried
                 break
 
             if lean_statement:
+                t_l0 = time.perf_counter()
                 v_lean = self.mcp2._invoke_tool(
                     "lean4_surface_verify",
                     {"statement": lean_statement, "candidate": final_answer, "compile": bool(req.get("lean_compile", False))},
                 )
+                self.metrics.record_tool("lean4_surface_verify", bool(v_lean.get("passed")), (time.perf_counter() - t_l0) * 1000.0)
                 verified_outcome = v_lean
                 if not v_lean.get("passed") and turn_idx < max_turns:
                     v_cid = f"verify_lean_{turn_idx}"
@@ -254,8 +298,11 @@ class Clover4PartAgent:
                         ),
                     })
                     continue
+                if v_lean.get("passed"):
+                    solved_on_cycle = cycles_tried
                 break
 
+            solved_on_cycle = cycles_tried
             break
 
         # Persist final Outcome -> Growth into `<task_id>.md`
@@ -282,6 +329,60 @@ class Clover4PartAgent:
         saved_ctx = self.mcp2.router.clover_cycle.save_record(cur_rec)
         todos_snapshot = self.mcp2.todo_store.list_todos(task_id)
 
+        eff_cycles = max(1, cycles_tried)
+        wall_ms_tot = round((time.perf_counter() - t0) * 1000.0, 2)
+        mean_tok_s = round(sum(turn_tok_s_list) / len(turn_tok_s_list), 2) if turn_tok_s_list else round(
+            total_completion_tokens / max(wall_ms_tot / 1000.0, 1e-6), 2
+        )
+        tools_used_names = sorted({t["tool"] for t in tool_trace})
+        if test_code and "python_ast_verify" not in tools_used_names:
+            tools_used_names.append("python_ast_verify")
+        if lean_statement and "lean4_surface_verify" not in tools_used_names:
+            tools_used_names.append("lean4_surface_verify")
+        offered_tool_names = [t["function"]["name"] for t in tools_schema]
+        tools_unused_names = sorted(set(offered_tool_names) - set(tools_used_names))
+
+        passed_val: bool | None = None
+        fail_cat = ""
+        if verified_outcome is not None:
+            passed_val = bool(verified_outcome.get("passed"))
+            if not passed_val:
+                raw_d = str(verified_outcome.get("diagnostics") or verified_outcome.get("finding") or "verification_failed")
+                if "SyntaxError" in raw_d:
+                    fail_cat = "syntax_error"
+                elif "Timeout" in raw_d or "timeout" in raw_d:
+                    fail_cat = "timeout"
+                elif "unsafe_ast" in raw_d:
+                    fail_cat = "unsafe_ast"
+                elif "sorry" in raw_d or "admit" in raw_d:
+                    fail_cat = "incomplete_proof_sorry"
+                elif "lean4" in raw_d.lower() or lean_statement:
+                    fail_cat = "lean4_kernel_error"
+                else:
+                    fail_cat = "assertion_or_runtime_error"
+
+        solve_metrics = {
+            "benchmark_tag": benchmark_tag,
+            "task_id": task_id,
+            "requested_model": model,
+            "models_used": models_used,
+            "tools_used": tools_used_names,
+            "tools_unused": tools_unused_names,
+            "instances_available": instances_available,
+            "turns_used": turn_idx,
+            "cycles_tried": eff_cycles,
+            "solved_on_cycle": solved_on_cycle,
+            "passed": passed_val,
+            "discernment_state": discernment_state,
+            "prompt_tokens": total_prompt_tokens,
+            "completion_tokens": total_completion_tokens,
+            "wall_ms": wall_ms_tot,
+            "mean_decode_tok_per_s": mean_tok_s,
+            "per_turn_decode_tok_per_s": turn_tok_s_list,
+            "failure_category": fail_cat,
+        }
+        self.metrics.record_solve(solve_metrics)
+
         return {
             "object": "clover.solve",
             "task_id": task_id,
@@ -291,8 +392,13 @@ class Clover4PartAgent:
             "verified_outcome": verified_outcome,
             "models_used": models_used,
             "turns_used": turn_idx,
+            "cycles_tried": eff_cycles,
+            "solved_on_cycle": solved_on_cycle,
+            "instances_available": instances_available,
+            "mean_decode_tok_per_s": mean_tok_s,
             "tool_calls_executed": len(tool_trace),
             "tool_trace": tool_trace,
+            "metrics": solve_metrics,
             "context_file": saved_ctx.context_file_path,
             "context_markdown": saved_ctx.to_markdown(),
             "todos": todos_snapshot,
@@ -301,7 +407,7 @@ class Clover4PartAgent:
                 "completion_tokens": total_completion_tokens,
                 "total_tokens": total_prompt_tokens + total_completion_tokens,
             },
-            "wall_ms": round((time.perf_counter() - t0) * 1000.0, 2),
+            "wall_ms": wall_ms_tot,
         }
 
 

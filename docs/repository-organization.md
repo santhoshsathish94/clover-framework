@@ -7,6 +7,8 @@
 | Understand Clover | [Framework](framework/04-framework.md), [philosophy](framework/02-philosophy.md), [principles](framework/03-principles.md) |
 | Apply it | [Quickstart](../QUICKSTART.md), [guidance index](README.md), [templates](templates/) |
 | Operate an agent | [AGENTS.md](../AGENTS.md), the self-contained operating specification |
+| Verify HG4 & all 6 AI Myths | [AI Mythbuster](../site/hg-format/index.html), [REPRODUCE_AGENTS.md](../site/hg-format/REPRODUCE_AGENTS.md), [public ledgers](../benchmarks/public-runs-20261126/README.md) |
+| Inspect v6.0 release & next milestone | [Clover v6.0 release](reference/release-v6.md), [5-Senses + 1-Brain roadmap](runtime-context/one-brain-five-senses-research-context.md) |
 | Inspect real outcomes | [Case studies](case-studies/README.md) |
 | Read an illustrative scenario | [Examples](examples/) |
 | Inspect executable controls | [Runtime enforcement reference](runtime-enforcement/README.md) |

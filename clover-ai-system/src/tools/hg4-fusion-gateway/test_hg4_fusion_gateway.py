@@ -1670,6 +1670,28 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
                     stag_out = json.loads(r.read().decode("utf-8"))
                 self.assertEqual(stag_out["discernment_state"], "STOP_AND_ASK")
                 self.assertEqual(stag_out["turns_used"], 4)
+
+                # 5. Verify comprehensive Clover Metrics Ledger (`GET /v1/clover/metrics`):
+                #    `solve_ten_fact` failed verifier on cycle 1 and passed on cycle 2 (`cycles_tried=2`, `solved_on_cycle=2`),
+                #    while `stag_gate` failed across 3 cycles; verify `used_vs_unused`, `decode_tok_per_s`, and `fine_tune_signals`!
+                self.assertEqual(sout_json["cycles_tried"], 2)
+                self.assertEqual(sout_json["solved_on_cycle"], 2)
+                self.assertGreaterEqual(sout_json["instances_available"], 1)
+                self.assertGreaterEqual(sout_json["mean_decode_tok_per_s"], 0.0)
+
+                with urllib.request.urlopen(base_url + "/v1/clover/metrics", timeout=10) as r:
+                    m_snap = json.loads(r.read().decode("utf-8"))
+                uvu = m_snap["used_vs_unused"]
+                self.assertIn("clover-35b-a3b", uvu["models_used"])
+                self.assertIn("nemotron-3.5-super-vl", uvu["models_unused"])
+                self.assertIn("xcruncher_exact_math", uvu["tools_used"])
+                self.assertIn("boltz2_fold_structure", uvu["tools_unused"])
+                scyc = m_snap["solver_cycles"]
+                self.assertEqual(scyc["problems_run"], 3)
+                self.assertEqual(scyc["solved_after_retry_count"], 1)
+                self.assertEqual(scyc["unsolved_count"], 1)
+                self.assertIn("2", scyc["cycles_histogram"])
+                self.assertTrue(len(m_snap["fine_tune_signals"]) >= 1)
             finally:
                 srv.shutdown()
                 srv.server_close()
@@ -1720,6 +1742,33 @@ class TestRealOmniDLL(unittest.TestCase):
         self.assertEqual(c.finish_reason, "tool_calls")
         self.assertEqual(c.tool_calls[0]["function"]["name"], "get_weather")
         self.assertEqual(json.loads(c.tool_calls[0]["function"]["arguments"])["city"], "Paris")
+
+    def test_xcruncher_big_pow_and_2b_tool_exposure_gate(self):
+        import studio_xcruncher_verifier as sxc
+        from clover_4part_agent import Clover4PartAgent
+        from cluster_scheduler_mcp2 import ClusterBatchQueue, Mcp2MeshServer
+
+        obs = sxc.extract_prompt_math_obligations("Compute the exact decimal integer 3^89 and 2^127.")
+        exact_map = {o["expr"]: o["exact"] for o in obs}
+        self.assertEqual(exact_map.get("3^89"), str(3**89))
+        self.assertEqual(exact_map.get("2^127"), str(2**127))
+
+        mock_router = FR.FusionRouter({"lfm3-omni-2b": B.make_mock_backend("lfm3-omni-2b")})
+        bq = ClusterBatchQueue(mock_router.complete)
+        mcp = Mcp2MeshServer(mock_router, bq)
+        agent = Clover4PartAgent(bq, mcp)
+        try:
+            res = agent.solve({
+                "model": "lfm3-omni-2b",
+                "prompt": "Complete the Python function:\ndef add_two(x: int) -> int:\n",
+                "max_turns": 2,
+                "max_tokens": 64,
+            })
+            self.assertIn("task_id", res)
+            for step in res.get("tool_trace", []):
+                self.assertNotIn(step.get("tool"), ("clover_todo_upsert", "clover_todo_list"))
+        finally:
+            mcp.todo_store.close()
 
 
 if __name__ == "__main__":

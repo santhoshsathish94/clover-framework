@@ -3156,7 +3156,7 @@ K31_API int kimi_k31_pipeline_dspark_draft(
     int cur_tok, int cur_len, int K_max, float conf_thresh, int eos_id,
     const float *new_feats_35840, int n_new_feats, int *out_drafts
 ) {
-    if (!g_k31.dspark.loaded || !g_k31.emb_mat.tiles || !g_k31.emb_mat.scales || K_max <= 0) return 0;
+    if (!g_k31.dspark.loaded || !g_k31.emb_mat.tiles || !g_k31.emb_mat.scales_fp16 || K_max <= 0) return 0;
     if (K_max > 5) K_max = 5;
     int need_cap = cur_len + K_max + 16;
     if (need_cap > g_k31_cache.alloc_cap) {

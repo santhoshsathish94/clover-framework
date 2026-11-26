@@ -1,0 +1,396 @@
+{
+  "stage": "stage2_mesh_verify",
+  "petals": {
+    "active_count": 14,
+    "petals": {
+      "s1-lora-tsock": {
+        "petal_id": "s1-lora-tsock",
+        "url": "tsock://175.155.64.158:19449",
+        "models": [
+          "clover-35b-a3b",
+          "goedel-prover-v2-32b"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 72,
+        "expires_at": 1795650627.7400784,
+        "updated_at": 1795650537.7400784
+      },
+      "s2-lora-tsock": {
+        "petal_id": "s2-lora-tsock",
+        "url": "tsock://175.155.64.155:19758",
+        "models": [
+          "clover-35b-a3b"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 24,
+        "expires_at": 1795650627.7410758,
+        "updated_at": 1795650537.7410758
+      },
+      "s8-lora-tsock": {
+        "petal_id": "s8-lora-tsock",
+        "url": "tsock://154.64.230.50:53450",
+        "models": [
+          "clover-35b-a3b"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 24,
+        "expires_at": 1795650627.7417014,
+        "updated_at": 1795650537.7417014
+      },
+      "s11-lora0-tsock": {
+        "petal_id": "s11-lora0-tsock",
+        "url": "tsock://154.64.230.50:50435",
+        "models": [
+          "clover-35b-a3b"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 24,
+        "expires_at": 1795650627.7423198,
+        "updated_at": 1795650537.7423198
+      },
+      "s11-lora1-http": {
+        "petal_id": "s11-lora1-http",
+        "url": "http://154.64.230.50:50436",
+        "models": [
+          "clover-35b-a3b"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 24,
+        "expires_at": 1795650627.7428968,
+        "updated_at": 1795650537.7428968
+      },
+      "s6-lora0-tsock": {
+        "petal_id": "s6-lora0-tsock",
+        "url": "tsock://221.6.203.117:50271",
+        "models": [
+          "clover-35b-a3b"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 24,
+        "expires_at": 1795650627.743462,
+        "updated_at": 1795650537.743462
+      },
+      "s6-lora1-http": {
+        "petal_id": "s6-lora1-http",
+        "url": "http://221.6.203.117:50484",
+        "models": [
+          "clover-35b-a3b"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 24,
+        "expires_at": 1795650627.7440298,
+        "updated_at": 1795650537.7440298
+      },
+      "s6-lora3-http": {
+        "petal_id": "s6-lora3-http",
+        "url": "http://221.6.203.117:50149",
+        "models": [
+          "clover-35b-a3b"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 24,
+        "expires_at": 1795650627.7446315,
+        "updated_at": 1795650537.7446315
+      },
+      "s14-lora0-tsock": {
+        "petal_id": "s14-lora0-tsock",
+        "url": "tsock://154.21.201.159:5060",
+        "models": [
+          "clover-35b-a3b"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 24,
+        "expires_at": 1795650627.7452085,
+        "updated_at": 1795650537.7452085
+      },
+      "s14-lora1-http": {
+        "petal_id": "s14-lora1-http",
+        "url": "http://154.21.201.159:5089",
+        "models": [
+          "clover-35b-a3b"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 24,
+        "expires_at": 1795650627.7457843,
+        "updated_at": 1795650537.7457843
+      },
+      "s2-nemo-tsock": {
+        "petal_id": "s2-nemo-tsock",
+        "url": "tsock://175.155.64.155:19336",
+        "models": [
+          "nemotron-3.5-super-vl"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 72,
+        "expires_at": 1795650627.7463806,
+        "updated_at": 1795650537.7463806
+      },
+      "s8-nemo-tsock": {
+        "petal_id": "s8-nemo-tsock",
+        "url": "tsock://154.64.230.50:53417",
+        "models": [
+          "nemotron-3.5-super-vl"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 72,
+        "expires_at": 1795650627.7469707,
+        "updated_at": 1795650537.7469707
+      },
+      "s3-specs-tsock": {
+        "petal_id": "s3-specs-tsock",
+        "url": "tsock://175.155.64.150:19111",
+        "models": [
+          "lfm3-omni-2b",
+          "vjepa-2.1",
+          "chronos-2",
+          "boltz-2"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 96,
+        "expires_at": 1795650627.7475119,
+        "updated_at": 1795650537.7475119
+      },
+      "s11-lfm3-http": {
+        "petal_id": "s11-lfm3-http",
+        "url": "http://154.64.230.50:50453",
+        "models": [
+          "lfm3-omni-2b"
+        ],
+        "mcp_tools": [],
+        "kimi_coordinator_url": null,
+        "vram_gib": 24,
+        "expires_at": 1795650627.7480557,
+        "updated_at": 1795650537.7480557
+      }
+    }
+  },
+  "clubbing_4way_wall_ms": 1950.09,
+  "clubbing_answers_identical": true,
+  "queue_delta": {
+    "before": {
+      "pending": 0,
+      "inflight_clubs": 0,
+      "max_workers": 16,
+      "batch_window_ms": 6.0,
+      "max_batch_size": 8,
+      "stats": {
+        "submitted": 1,
+        "completed": 1
+      }
+    },
+    "after": {
+      "pending": 0,
+      "inflight_clubs": 0,
+      "max_workers": 16,
+      "batch_window_ms": 6.0,
+      "max_batch_size": 8,
+      "stats": {
+        "submitted": 2,
+        "completed": 2,
+        "batch_calls": 1,
+        "batch_items": 4,
+        "clubbed_coalesced": 3
+      }
+    },
+    "replica_pools": {
+      "lfm3-omni-2b": {
+        "replicas": [
+          "local",
+          "tsock://175.155.64.150:19111",
+          "http://154.64.230.50:50453"
+        ],
+        "in_flight": {
+          "local": 0,
+          "tsock://175.155.64.150:19111": 0,
+          "http://154.64.230.50:50453": 0
+        },
+        "routed_counts": {},
+        "failovers": 0
+      },
+      "clover-35b-a3b": {
+        "replicas": [
+          "local",
+          "tsock://175.155.64.155:19758",
+          "tsock://175.155.64.158:19449",
+          "tsock://154.64.230.50:53450",
+          "tsock://154.64.230.50:50435",
+          "http://154.64.230.50:50436",
+          "tsock://221.6.203.117:50271",
+          "http://221.6.203.117:50484",
+          "http://221.6.203.117:50149",
+          "tsock://154.21.201.159:5060",
+          "http://154.21.201.159:5089"
+        ],
+        "in_flight": {
+          "local": 0,
+          "tsock://175.155.64.155:19758": 0,
+          "tsock://175.155.64.158:19449": 0,
+          "tsock://154.64.230.50:53450": 0,
+          "tsock://154.64.230.50:50435": 0,
+          "http://154.64.230.50:50436": 0,
+          "tsock://221.6.203.117:50271": 0,
+          "http://221.6.203.117:50484": 0,
+          "http://221.6.203.117:50149": 0,
+          "tsock://154.21.201.159:5060": 0,
+          "http://154.21.201.159:5089": 0
+        },
+        "routed_counts": {
+          "local": 1
+        },
+        "failovers": 0
+      },
+      "nemotron-3.5-super-vl": {
+        "replicas": [
+          "local",
+          "tsock://175.155.64.155:19336",
+          "tsock://154.64.230.50:53417"
+        ],
+        "in_flight": {
+          "local": 0,
+          "tsock://175.155.64.155:19336": 0,
+          "tsock://154.64.230.50:53417": 0
+        },
+        "routed_counts": {
+          "local": 1
+        },
+        "failovers": 0
+      },
+      "goedel-prover-v2-32b": {
+        "replicas": [
+          "tsock://175.155.64.158:19449"
+        ],
+        "in_flight": {
+          "tsock://175.155.64.158:19449": 0
+        },
+        "routed_counts": {},
+        "failovers": 0
+      },
+      "vjepa-2.1": {
+        "replicas": [
+          "tsock://175.155.64.150:19111"
+        ],
+        "in_flight": {
+          "tsock://175.155.64.150:19111": 0
+        },
+        "routed_counts": {},
+        "failovers": 0
+      },
+      "chronos-2": {
+        "replicas": [
+          "tsock://175.155.64.150:19111"
+        ],
+        "in_flight": {
+          "tsock://175.155.64.150:19111": 0
+        },
+        "routed_counts": {},
+        "failovers": 0
+      },
+      "boltz-2": {
+        "replicas": [
+          "tsock://175.155.64.150:19111"
+        ],
+        "in_flight": {
+          "tsock://175.155.64.150:19111": 0
+        },
+        "routed_counts": {},
+        "failovers": 0
+      }
+    }
+  },
+  "mcp_stdio_tools_count": 13,
+  "mcp_stdio_20_factorial": {
+    "tool": "xcruncher_exact_math",
+    "obligations_solved": 0,
+    "verified_values": []
+  },
+  "metrics": {
+    "uptime_s": 5470.87,
+    "benchmark_filter": "stage2_mesh_verify",
+    "used_vs_unused": {
+      "models_used": {
+        "nemotron-3.5-super-vl": {
+          "calls": 1,
+          "prompt_tokens": 121,
+          "completion_tokens": 5,
+          "mean_wall_ms": 5030.45,
+          "decode_tok_per_s": {
+            "mean": 0.99,
+            "p50": 0.99,
+            "p95": 0.99,
+            "max": 0.99
+          },
+          "instances_registered": 1,
+          "instances_hit_count": 1,
+          "instances_hit": [
+            "nemotron-3.5-super-vl@local"
+          ]
+        }
+      },
+      "models_unused": [
+        "boltz-2",
+        "chronos-2",
+        "clover-35b-a3b",
+        "goedel-prover-v2-32b",
+        "kimi-k3",
+        "lfm3-omni-2b",
+        "vjepa-2.1"
+      ],
+      "tools_used": {},
+      "tools_unused": [
+        "boltz2_fold_structure",
+        "chronos2_forecast",
+        "clover_context_read",
+        "clover_context_record",
+        "clover_exec_batch",
+        "clover_route_and_guard",
+        "clover_todo_list",
+        "clover_todo_upsert",
+        "goedel_lean4_prove",
+        "lean4_surface_verify",
+        "python_ast_verify",
+        "vjepa2_predict_physics",
+        "xcruncher_exact_math"
+      ],
+      "instances_total_registered": 8,
+      "instances_used_count": 1,
+      "instances_unused": [
+        "boltz-2@local",
+        "chronos-2@local",
+        "clover-35b-a3b@local",
+        "goedel-prover-v2-32b@local",
+        "kimi-k3@local",
+        "lfm3-omni-2b@local",
+        "vjepa-2.1@local"
+      ],
+      "instance_hit_counts": {
+        "nemotron-3.5-super-vl@local": 1
+      }
+    },
+    "solver_cycles": {
+      "problems_run": 0,
+      "verified_problems": 0,
+      "verified_passed": 0,
+      "pass_rate_pct": null,
+      "solved_after_retry_count": 0,
+      "unsolved_count": 0,
+      "mean_cycles_per_problem": 0.0,
+      "mean_turns_per_problem": 0.0,
+      "cycles_histogram": {},
+      "failure_categories": {}
+    },
+    "fine_tune_signals": []
+  }
+}

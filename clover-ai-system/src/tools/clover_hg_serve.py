@@ -198,6 +198,7 @@ def main() -> None:
     ap.add_argument("--gpus", default=os.environ.get("CLOVER_CUDA_GPUS", "auto"), help="'auto' (all NVIDIA GPUs), '0,1,2,3', or 'none' for pure CPU")
     ap.add_argument("--host", default="0.0.0.0")
     ap.add_argument("--port", type=int, default=8000)
+    ap.add_argument("--token-socket-port", type=int, default=0, help="Optional binary TokenSocket port (tsock://)")
     ap.add_argument("--api-key", default=os.environ.get("CLOVER_GATEWAY_API_KEY", ""))
     ap.add_argument("--rebuild", action="store_true", help="Force recompiling C11 / CUDA shared libraries")
     ap.add_argument("--build-only", action="store_true", help="Compile shared libraries (and optionally verify) without starting HTTP server")
@@ -243,6 +244,8 @@ def main() -> None:
     import gateway  # type: ignore[import-not-found]
 
     gw_argv = ["gateway.py", "--mode", "real", "--host", args.host, "--port", str(args.port)]
+    if args.token_socket_port > 0:
+        gw_argv.extend(["--token-socket-port", str(args.token_socket_port)])
     if args.api_key:
         gw_argv.extend(["--api-key", args.api_key])
     print(f"[clover-hg] Serving OpenAI-compatible API at http://{args.host}:{args.port}/v1 (models: {', '.join(models)})", flush=True)

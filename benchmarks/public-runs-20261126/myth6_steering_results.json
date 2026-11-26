@@ -1,0 +1,130 @@
+{
+  "benchmark": "myth6_human_steering_vs_ai_alone",
+  "tasks_total": 6,
+  "unsteered_ai_alone": {
+    "passed": 0,
+    "pass_rate_pct": 0.0,
+    "clover_stop_and_ask_triggered": 0,
+    "mean_completion_tokens": 595.0,
+    "mean_decode_tok_per_s": 5.46,
+    "per_task": [
+      {
+        "task_id": "m6_wire_header_crc",
+        "passed": false,
+        "discernment_state": "PROCEED_WITH_GROWTH",
+        "turns_used": 5,
+        "cycles_tried": 1,
+        "completion_tokens": 1044,
+        "decode_tok_per_s": 2.56
+      },
+      {
+        "task_id": "m6_fiscal_quarter",
+        "passed": false,
+        "discernment_state": "PROCEED",
+        "turns_used": 5,
+        "cycles_tried": 1,
+        "completion_tokens": 392,
+        "decode_tok_per_s": 6.84
+      },
+      {
+        "task_id": "m6_invoice_rounding",
+        "passed": false,
+        "discernment_state": "PROCEED_WITH_GROWTH",
+        "turns_used": 5,
+        "cycles_tried": 1,
+        "completion_tokens": 552,
+        "decode_tok_per_s": 4.93
+      },
+      {
+        "task_id": "m6_sensor_kelvin_clamp",
+        "passed": false,
+        "discernment_state": "PROCEED_WITH_GROWTH",
+        "turns_used": 5,
+        "cycles_tried": 2,
+        "completion_tokens": 636,
+        "decode_tok_per_s": 7.1
+      },
+      {
+        "task_id": "m6_rate_bucket_tier",
+        "passed": false,
+        "discernment_state": "PROCEED_WITH_GROWTH",
+        "turns_used": 5,
+        "cycles_tried": 1,
+        "completion_tokens": 403,
+        "decode_tok_per_s": 6.3
+      },
+      {
+        "task_id": "m6_ring_hash_slot",
+        "passed": false,
+        "discernment_state": "PROCEED_WITH_GROWTH",
+        "turns_used": 5,
+        "cycles_tried": 1,
+        "completion_tokens": 543,
+        "decode_tok_per_s": 5.03
+      }
+    ]
+  },
+  "human_steered_plus_ai": {
+    "passed": 5,
+    "pass_rate_pct": 83.33,
+    "mean_cycles_per_task": 1.17,
+    "mean_completion_tokens": 277.5,
+    "mean_decode_tok_per_s": 6.99,
+    "per_task": [
+      {
+        "task_id": "m6_wire_header_crc",
+        "passed": false,
+        "discernment_state": "PROCEED_WITH_GROWTH",
+        "turns_used": 4,
+        "cycles_tried": 2,
+        "completion_tokens": 433,
+        "decode_tok_per_s": 4.28
+      },
+      {
+        "task_id": "m6_fiscal_quarter",
+        "passed": true,
+        "discernment_state": "PROCEED",
+        "turns_used": 2,
+        "cycles_tried": 1,
+        "completion_tokens": 252,
+        "decode_tok_per_s": 7.6
+      },
+      {
+        "task_id": "m6_invoice_rounding",
+        "passed": true,
+        "discernment_state": "PROCEED",
+        "turns_used": 2,
+        "cycles_tried": 1,
+        "completion_tokens": 347,
+        "decode_tok_per_s": 5.74
+      },
+      {
+        "task_id": "m6_sensor_kelvin_clamp",
+        "passed": true,
+        "discernment_state": "PROCEED",
+        "turns_used": 2,
+        "cycles_tried": 1,
+        "completion_tokens": 343,
+        "decode_tok_per_s": 8.87
+      },
+      {
+        "task_id": "m6_rate_bucket_tier",
+        "passed": true,
+        "discernment_state": "PROCEED",
+        "turns_used": 2,
+        "cycles_tried": 1,
+        "completion_tokens": 123,
+        "decode_tok_per_s": 7.85
+      },
+      {
+        "task_id": "m6_ring_hash_slot",
+        "passed": true,
+        "discernment_state": "PROCEED",
+        "turns_used": 2,
+        "cycles_tried": 1,
+        "completion_tokens": 167,
+        "decode_tok_per_s": 7.62
+      }
+    ]
+  }
+}

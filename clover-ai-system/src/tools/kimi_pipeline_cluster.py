@@ -410,6 +410,14 @@ class RemoteStageClient:
             try:
                 s = socket.create_connection((self.host, self.port), timeout=180.0)
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                for opt_name, opt_val in (("TCP_KEEPIDLE", 15), ("TCP_KEEPINTVL", 10), ("TCP_KEEPCNT", 6)):
+                    opt = getattr(socket, opt_name, None)
+                    if opt is not None:
+                        try:
+                            s.setsockopt(socket.IPPROTO_TCP, opt, opt_val)
+                        except OSError:
+                            pass
                 if self.secret_bytes:
                     nonce = _recv_exact(s, 16)
                     mac = hmac.new(self.secret_bytes, nonce, hashlib.sha256).digest()
@@ -437,9 +445,19 @@ class RemoteStageClient:
         raise last_err
 
     def reset(self) -> None:
-        assert self.sock is not None
-        self.sock.sendall(struct.pack("<I", OP_RESET))
-        _recv_exact(self.sock, 4)
+        for attempt in range(2):
+            try:
+                if self.sock is None:
+                    self.reconnect(retries=3, delay_s=0.5)
+                assert self.sock is not None
+                self.sock.sendall(struct.pack("<I", OP_RESET))
+                _recv_exact(self.sock, 4)
+                return
+            except (ConnectionError, OSError):
+                if attempt == 0:
+                    self.reconnect(retries=3, delay_s=0.5)
+                else:
+                    raise
 
     def rollback(self, base_pos: int, keep_n: int) -> None:
         assert self.sock is not None
@@ -461,35 +479,46 @@ class RemoteStageClient:
         feats: np.ndarray,
         fmask: np.ndarray,
     ) -> tuple[np.ndarray, np.ndarray, int, int, int]:
-        assert self.sock is not None
-        self._seq = (self._seq + 1) & 0xFFFFFFFF
-        req_seq = self._seq
-        elem_b = 2 if use_bf16 else 4
-        is_first = 1 if token_ids is not None else 0
-        pkt = [struct.pack("<IIiiiiii", OP_FORWARD, req_seq, base_pos, T, save_rb, is_first, int(use_bf16), has_delta)]
-        if is_first:
-            assert token_ids is not None
-            pkt.append(np.ascontiguousarray(token_ids, dtype=np.int32).tobytes())
-        else:
-            assert prefix_sum is not None
-            mask_bits = sum((1 << m) for m in range(5) if fmask[m])
-            pkt.append(struct.pack("<II", n_blk_valid, mask_bits))
-            pkt.append(_f32_to_wire_fast(prefix_sum, use_bf16))
-            if has_delta and delta is not None:
-                pkt.append(_f32_to_wire_fast(delta, use_bf16))
-            if n_blk_valid > 0:
-                pkt.append(_f32_to_wire_fast(blocks[:, :n_blk_valid, :], use_bf16))
-            for m in range(5):
-                if fmask[m]:
-                    pkt.append(_f32_to_wire_fast(feats[:, m, :], use_bf16))
+        max_attempts = 2 if base_pos == 0 else 1
+        for attempt in range(max_attempts):
+            try:
+                if self.sock is None:
+                    self.reconnect(retries=3, delay_s=0.3)
+                assert self.sock is not None
+                self._seq = (self._seq + 1) & 0xFFFFFFFF
+                req_seq = self._seq
+                elem_b = 2 if use_bf16 else 4
+                is_first = 1 if token_ids is not None else 0
+                pkt = [struct.pack("<IIiiiiii", OP_FORWARD, req_seq, base_pos, T, save_rb, is_first, int(use_bf16), has_delta)]
+                if is_first:
+                    assert token_ids is not None
+                    pkt.append(np.ascontiguousarray(token_ids, dtype=np.int32).tobytes())
+                else:
+                    assert prefix_sum is not None
+                    mask_bits = sum((1 << m) for m in range(5) if fmask[m])
+                    pkt.append(struct.pack("<II", n_blk_valid, mask_bits))
+                    pkt.append(_f32_to_wire_fast(prefix_sum, use_bf16))
+                    if has_delta and delta is not None:
+                        pkt.append(_f32_to_wire_fast(delta, use_bf16))
+                    if n_blk_valid > 0:
+                        pkt.append(_f32_to_wire_fast(blocks[:, :n_blk_valid, :], use_bf16))
+                    for m in range(5):
+                        if fmask[m]:
+                            pkt.append(_f32_to_wire_fast(feats[:, m, :], use_bf16))
 
-        raw_out = b"".join(pkt)
-        wire_bytes = len(raw_out)
-        self.sock.sendall(raw_out)
+                raw_out = b"".join(pkt)
+                wire_bytes = len(raw_out)
+                self.sock.sendall(raw_out)
 
-        resp_seq, hd_out, n_blk_out, out_mask_bits = struct.unpack("<Iiii", _recv_exact(self.sock, 16))
-        if resp_seq != req_seq:
-            raise ConnectionError(f"Pipeline stream desync on {self.host}:{self.port} (got seq {resp_seq} != {req_seq})")
+                resp_seq, hd_out, n_blk_out, out_mask_bits = struct.unpack("<Iiii", _recv_exact(self.sock, 16))
+                if resp_seq != req_seq:
+                    raise ConnectionError(f"Pipeline stream desync on {self.host}:{self.port} (got seq {resp_seq} != {req_seq})")
+                break
+            except (ConnectionError, OSError):
+                if attempt + 1 < max_attempts:
+                    self.reconnect(retries=3, delay_s=0.3)
+                else:
+                    raise
         ps_out = _wire_to_f32(_recv_exact(self.sock, T * K31_D * elem_b), (T, K31_D), use_bf16)
         wire_bytes += 16 + T * K31_D * elem_b
         if hd_out:
@@ -567,19 +596,29 @@ class DistributedKimiPipeline:
             dl = None
             hd = 0
             n_blk = 0
+            stage_prof = os.environ.get("CLOVER_STAGE_PROF") == "1"
             for idx, r in enumerate(self.remotes):
+                t_s0 = time.perf_counter() if stage_prof else 0.0
                 ps, dl, hd, n_blk, wb = r.forward(
                     base_pos, T, save_rb, self.use_bf16_wire,
                     t_arr if idx == 0 else None,
                     ps, dl, hd, blocks, n_blk, feats, fmask,
                 )
+                if stage_prof:
+                    dt_ms = (time.perf_counter() - t_s0) * 1000.0
+                    print(
+                        f"[stage-prof] stage {idx} [{r.l_lo}:{r.l_hi}) {r.host}:{r.port} T={T} pos={base_pos}: {dt_ms:.1f} ms ({wb/1024.0:.1f} KB)",
+                        flush=True,
+                    )
                 total_wire_b += wb
             assert ps is not None and dl is not None
         else:
+            stage_prof = os.environ.get("CLOVER_STAGE_PROF") == "1"
             ps = self.tail.embed(t_arr)
             dl = np.zeros((T, K31_D), dtype=np.float32)
             hd = 0
 
+        t_tail0 = time.perf_counter() if stage_prof else 0.0
         hd = self.tail.forward(base_pos, T, save_rb, ps, dl, hd, blocks, feats, fmask)
         eval_T = 1 if logits_last_only else T
         top1 = np.empty((eval_T,), dtype=np.int32)
@@ -594,6 +633,9 @@ class DistributedKimiPipeline:
                 fmask.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8)),
                 top1.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
             )
+        if stage_prof:
+            dt_tail_ms = (time.perf_counter() - t_tail0) * 1000.0
+            print(f"[stage-prof] tail [{self.tail.l_lo}:{self.tail.l_hi})+head T={T} pos={base_pos}: {dt_tail_ms:.1f} ms", flush=True)
         return [int(x) for x in top1], feats, total_wire_b
 
     def generate_ids(self, prompt_ids: list[int], max_new_tokens: int, eos_id: int, draft_k: int | None = None) -> dict[str, Any]:

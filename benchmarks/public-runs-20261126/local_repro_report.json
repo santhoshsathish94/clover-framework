@@ -1,0 +1,150 @@
+{
+  "suite": "clover_hg4_and_6_ai_myths_reproducibility",
+  "all_passed": true,
+  "wall_time_s": 1.519,
+  "environment": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "python": "3.14.7",
+    "cpu_count": 12,
+    "numpy": "2.5.4"
+  },
+  "local_verified_proofs": {
+    "check0_hg4_hadamard_outlier_rotation": {
+      "passed": true,
+      "bf16_bytes": 1048576,
+      "hg4_packed_bytes": 270336,
+      "compression_ratio_x": 3.88,
+      "naive_int4_output_cosine": 0.994108,
+      "naive_int4_sqnr_db": 19.26,
+      "clover_hg4_output_cosine": 0.998516,
+      "clover_hg4_sqnr_db": 25.26,
+      "sqnr_gain_db": 6.0
+    },
+    "myth1_wire_bandwidth_4x_reduction": {
+      "passed": true,
+      "bf16_weight_bytes": 33554432,
+      "hg4_weight_bytes": 8388608,
+      "wire_bytes_reduction_x": 4.0,
+      "measured_fp32_matvec_ms": 4.63,
+      "measured_packed_bus_read_ms": 7.97,
+      "effective_host_ram_gbps": 14.49
+    },
+    "myth2_and_3_bus_clubbing_throughput": {
+      "passed": true,
+      "serial_4_hauls_ms": 13.96,
+      "clubbed_1_haul_ms": 6.35,
+      "throughput_gain_x": 2.2,
+      "max_numerical_diff": 9.918212890625e-05
+    },
+    "myth4_tsock_4byte_wire_vs_http_json": {
+      "passed": true,
+      "tokens_streamed": 128,
+      "tsock_total_bytes": 524,
+      "tsock_bytes_per_token": 4,
+      "http_json_sse_bytes": 25870,
+      "wire_bloat_reduction_x": 49.4,
+      "tsock_loopback_ms": 16.48,
+      "http_sse_loopback_ms": 92.38
+    },
+    "myth5_computed_0b_specialists_vs_prediction": {
+      "passed": true,
+      "exact_bigint_obligations": "4/4 (0.011 ms)",
+      "0b_timeseries_forecaster": {
+        "mase": 0.3084,
+        "pinball_loss": 0.1212,
+        "detected_period": 24.0,
+        "wall_ms": 105.15,
+        "vs_chronos_bolt_gpu_mase": 0.4157,
+        "vs_llms_2b_35b_120b": "0/3 valid"
+      },
+      "0b_defeasible_rule_resolver": {
+        "grid_passed": "180/180",
+        "score": 1.0,
+        "wall_ms": 0.55
+      }
+    },
+    "myth6_human_steering_wheel": {
+      "passed": true,
+      "oracle_unsteered_default_guess": "0/3",
+      "oracle_human_steered": "3/3",
+      "published_cluster_6task_run": {
+        "unsteered_ai_alone": "0/6 (0.0%, mean 595.0 completion tokens)",
+        "human_steered_plus_ai": "5/6 (83.33%, mean 1.17 cycles, 277.5 completion tokens = -53% tokens)"
+      }
+    }
+  },
+  "published_reference_cluster_ledger": {
+    "run_date": "2026-11-26",
+    "cluster": "Hetzner k3 hub + 24 GB RTX 3090 HG4-16R Petals (tsock:// 4 B/tok)",
+    "hg_conversions": {
+      "qwen3.6_35b_a3b_hg4": {
+        "bf16_gb": 70.0,
+        "hg4_gb": 17.4,
+        "ratio_x": 4.02,
+        "top8_router_match_pct": 100.0
+      },
+      "nemotron_3.5_120b_hg4": {
+        "bf16_gb": 240.0,
+        "hg4_gb": 60.2,
+        "ratio_x": 3.99
+      },
+      "goedel_prover_v2_32b_hg4": {
+        "bf16_gb": 64.0,
+        "hg4_gb": 15.8,
+        "ratio_x": 4.05
+      },
+      "boltz_2_hg4_16r": {
+        "fp32_mib": 4007.0,
+        "hg4_mib": 529.55,
+        "ratio_x": 7.57,
+        "cosine": 0.995939,
+        "sqnr_db": 20.92
+      },
+      "chronos_bolt_hg4_16r": {
+        "hg4_mb": 102.0
+      },
+      "vjepa_2.1_hg4_16r": {
+        "hg4_gb": 0.51
+      }
+    },
+    "live_benchmarks": {
+      "stage2_tsock_4way_clubbing": {
+        "answers_identical": true,
+        "clubbed_coalesced": 3,
+        "wall_ms": 1950.09
+      },
+      "stage3_humaneval_164": {
+        "lfm3_2b_solo_pct": 39.02,
+        "lfm3_2b_unfiltered_5tools_pct": 18.9,
+        "qwen36_35b_base_solo_pct": 68.9,
+        "qwen36_35b_lora_solo_pct": 67.68,
+        "local_3090_decode_tok_s": 35.8
+      },
+      "stage4a_lean4_minif2f_12": {
+        "nemotron_120b_solo": "5/12 (41.7%)",
+        "0b_lean_tactic_cascade": "6/12 (50.0%, 0 GPUs)",
+        "goedel_32b_plus_clover_4part": "8/12 (66.7%)"
+      },
+      "stage4b_exact_math_10": {
+        "llm_120b_solo": "0/10 exact on 50! & 18-digit products",
+        "xcruncher_0b_mcp": "10/10 (100% exact, <5 ms)"
+      },
+      "probe0_timeseries_512_to_48": {
+        "llms_2b_35b_120b_valid": "0/3",
+        "chronos_bolt_0.2b_mase": 0.4157,
+        "0b_periodogram_ols_conformal_mase": 0.3084
+      },
+      "probe6_implicit_discernment_19": {
+        "router_0.6b_binary": "9/19",
+        "lfm3_2b_binary": "12/19",
+        "qwen36_35b_lora_binary": "19/19 (11/19 4-way)",
+        "nemotron_120b_binary": "19/19 (14/19 4-way)"
+      },
+      "myth6_human_steering_6tasks": {
+        "unsteered_ai_alone": "0/6 (0.0%, mean 595.0 completion tokens)",
+        "human_steered_plus_ai": "5/6 (83.33%, mean 1.17 cycles, 277.5 completion tokens = -53% tokens)"
+      }
+    }
+  },
+  "report_sha256": "c183c89f4e4b9052f20183e39802b9d3cf0a156eff1928ff8e94d9259cb7bf48"
+}

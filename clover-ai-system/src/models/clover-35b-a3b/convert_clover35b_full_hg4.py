@@ -42,7 +42,10 @@ for p in (
     if p.is_dir() and str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
-import clover_35b_gpu_backbone as cb  # noqa: E402
+try:
+    import clover_35b_gpu_backbone as cb  # noqa: E402
+except ImportError:
+    cb = None  # type: ignore[assignment]
 
 LUT16_U8 = np.array([1, 32, 53, 70, 84, 97, 110, 122, 134, 146, 159, 172, 186, 203, 224, 255], dtype=np.uint8)
 LUT16_S8_F = (LUT16_U8.astype(np.int32) - 128).astype(np.float32)

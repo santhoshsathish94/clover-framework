@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-11-11T03:18:40Z",
-  "version": "5.0.5",
-  "elapsed_s": 25.57,
+  "timestamp": "2026-11-26T04:57:47Z",
+  "version": "6.0.0",
+  "elapsed_s": 42.34,
   "goal_1_stabilize_v5": {
     "status": "passed",
-    "version": "5.0.5",
+    "version": "6.0.0",
     "checked_manifests": [
       "VERSION",
       "server.STUDIO_VERSION",
@@ -37,7 +37,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261111-084816-ba91e8"
+          "learned LRN-20261126-102712-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       },
@@ -59,7 +59,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261111-084818-ba91e8"
+          "learned LRN-20261126-102714-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       },
@@ -81,7 +81,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261111-084819-ba91e8"
+          "learned LRN-20261126-102716-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       },
@@ -103,7 +103,7 @@
         "todos_completed": 5,
         "repaired_answer_verified": true,
         "growth_recorded": [
-          "learned LRN-20261111-084820-ba91e8"
+          "learned LRN-20261126-102719-ba91e8"
         ],
         "workspace_context_updated": "src-context.md"
       }
@@ -136,7 +136,7 @@
         "CWE-362"
       ],
       "with_bridge_from_memory": [
-        "MEM-USER-20261111-084822-64053c"
+        "MEM-USER-20261126-102721-64053c"
       ],
       "without_bridge_entities": []
     },
@@ -155,7 +155,7 @@
               "calculate",
               "web_search"
             ],
-            "jepa_energy_reduction_pct": 0.0,
+            "jepa_energy_reduction_pct": 89.9,
             "passed": true
           },
           {
@@ -165,9 +165,9 @@
             "ranked_top3": [
               "read_file",
               "laptop_status",
-              "web_search"
+              "run_python"
             ],
-            "jepa_energy_reduction_pct": 0.0,
+            "jepa_energy_reduction_pct": 85.5,
             "passed": true
           },
           {
@@ -176,10 +176,10 @@
             "got_top1": "web_search",
             "ranked_top3": [
               "web_search",
-              "calculate",
-              "run_python"
+              "read_file",
+              "laptop_status"
             ],
-            "jepa_energy_reduction_pct": 0.0,
+            "jepa_energy_reduction_pct": 91.7,
             "passed": true
           },
           {
@@ -188,10 +188,10 @@
             "got_top1": "laptop_status",
             "ranked_top3": [
               "laptop_status",
-              "web_search",
-              "read_file"
+              "read_file",
+              "run_python"
             ],
-            "jepa_energy_reduction_pct": 0.0,
+            "jepa_energy_reduction_pct": 85.1,
             "passed": true
           },
           {
@@ -201,9 +201,9 @@
             "ranked_top3": [
               "generate_image",
               "web_search",
-              "laptop_status"
+              "run_python"
             ],
-            "jepa_energy_reduction_pct": 0.0,
+            "jepa_energy_reduction_pct": 90.7,
             "passed": true
           },
           {
@@ -215,7 +215,7 @@
               "calculate",
               "web_search"
             ],
-            "jepa_energy_reduction_pct": 0.0,
+            "jepa_energy_reduction_pct": 88.7,
             "passed": true
           }
         ]
@@ -228,25 +228,25 @@
           {
             "id": "M2O-1",
             "expected": "run_python",
-            "got_top1": "generate_image",
+            "got_top1": "calculate",
             "ranked_top3": [
-              "generate_image",
-              "laptop_status",
-              "web_search"
+              "calculate",
+              "run_python",
+              "generate_image"
             ],
-            "jepa_energy_reduction_pct": 0.0,
+            "jepa_energy_reduction_pct": 90.4,
             "passed": false
           },
           {
             "id": "M2O-2",
             "expected": "read_file",
-            "got_top1": "laptop_status",
+            "got_top1": "run_python",
             "ranked_top3": [
-              "laptop_status",
-              "generate_image",
-              "web_search"
+              "run_python",
+              "calculate",
+              "laptop_status"
             ],
-            "jepa_energy_reduction_pct": 0.0,
+            "jepa_energy_reduction_pct": 85.5,
             "passed": false
           },
           {
@@ -255,22 +255,22 @@
             "got_top1": "web_search",
             "ranked_top3": [
               "web_search",
-              "calculate",
-              "generate_image"
+              "read_file",
+              "calculate"
             ],
-            "jepa_energy_reduction_pct": 0.0,
+            "jepa_energy_reduction_pct": 91.9,
             "passed": true
           },
           {
             "id": "M2O-4",
             "expected": "laptop_status",
-            "got_top1": "generate_image",
+            "got_top1": "run_python",
             "ranked_top3": [
-              "generate_image",
-              "laptop_status",
+              "run_python",
+              "calculate",
               "web_search"
             ],
-            "jepa_energy_reduction_pct": 0.0,
+            "jepa_energy_reduction_pct": 85.1,
             "passed": false
           },
           {
@@ -279,22 +279,22 @@
             "got_top1": "web_search",
             "ranked_top3": [
               "web_search",
-              "generate_image",
-              "laptop_status"
+              "run_python",
+              "calculate"
             ],
-            "jepa_energy_reduction_pct": 0.0,
+            "jepa_energy_reduction_pct": 90.7,
             "passed": false
           },
           {
             "id": "M2O-6",
             "expected": "run_python",
-            "got_top1": "generate_image",
+            "got_top1": "web_search",
             "ranked_top3": [
-              "generate_image",
-              "laptop_status",
-              "web_search"
+              "web_search",
+              "run_python",
+              "calculate"
             ],
-            "jepa_energy_reduction_pct": 0.0,
+            "jepa_energy_reduction_pct": 88.7,
             "passed": false
           }
         ]
@@ -307,14 +307,14 @@
           {
             "id": "M2O-1",
             "expected": "run_python",
-            "got_top1": "run_python",
+            "got_top1": "calculate",
             "ranked_top3": [
-              "run_python",
               "calculate",
+              "run_python",
               "web_search"
             ],
-            "jepa_energy_reduction_pct": 0.0,
-            "passed": true
+            "jepa_energy_reduction_pct": 94.6,
+            "passed": false
           },
           {
             "id": "M2O-2",
@@ -322,46 +322,46 @@
             "got_top1": "run_python",
             "ranked_top3": [
               "run_python",
-              "calculate",
-              "web_search"
+              "web_search",
+              "laptop_status"
             ],
-            "jepa_energy_reduction_pct": 2.0,
+            "jepa_energy_reduction_pct": 95.6,
             "passed": false
           },
           {
             "id": "M2O-3",
             "expected": "web_search",
-            "got_top1": "calculate",
+            "got_top1": "web_search",
             "ranked_top3": [
-              "calculate",
+              "web_search",
               "run_python",
-              "generate_image"
+              "calculate"
             ],
-            "jepa_energy_reduction_pct": 13.7,
-            "passed": false
+            "jepa_energy_reduction_pct": 96.0,
+            "passed": true
           },
           {
             "id": "M2O-4",
             "expected": "laptop_status",
-            "got_top1": "run_python",
+            "got_top1": "web_search",
             "ranked_top3": [
+              "web_search",
               "run_python",
-              "calculate",
-              "web_search"
+              "calculate"
             ],
-            "jepa_energy_reduction_pct": 1.1,
+            "jepa_energy_reduction_pct": 95.1,
             "passed": false
           },
           {
             "id": "M2O-5",
             "expected": "generate_image",
-            "got_top1": "calculate",
+            "got_top1": "web_search",
             "ranked_top3": [
-              "calculate",
-              "run_python",
-              "generate_image"
+              "web_search",
+              "read_file",
+              "run_python"
             ],
-            "jepa_energy_reduction_pct": 2.4,
+            "jepa_energy_reduction_pct": 95.0,
             "passed": false
           },
           {
@@ -371,9 +371,9 @@
             "ranked_top3": [
               "calculate",
               "run_python",
-              "generate_image"
+              "web_search"
             ],
-            "jepa_energy_reduction_pct": 8.4,
+            "jepa_energy_reduction_pct": 94.0,
             "passed": false
           }
         ]
@@ -452,7 +452,7 @@
     "status": "passed",
     "ablation_matrix": [
       {
-        "configuration": "Full Clover v5.0.5 System (All 5 Stages + Meaning Bridge + JEPA Prior + 3-Cycle Retry + CPSL)",
+        "configuration": "Full Clover v5.0.7 System (All 5 Stages + Meaning Bridge + JEPA Prior + 3-Cycle Retry + CPSL)",
         "multi_cycle_4model": "4/4 (100.0%)",
         "meaning_bridge_6tasks": "6/6 (100.0%)",
         "collective_transfer_4tasks": "4/4 (100.0%)",

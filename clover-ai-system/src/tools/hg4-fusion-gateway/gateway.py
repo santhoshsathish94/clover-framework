@@ -18,6 +18,7 @@ import os
 import sys
 import threading
 import time
+import urllib.parse
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -27,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from backends import build_backends  # noqa: E402
 from clover_4part_agent import Clover4PartAgent  # noqa: E402
+from clover_telemetry_ledger import CloverMetricsLedger  # noqa: E402
 from clover_token_socket import StepHardwareMeter, TokenSocketServer  # noqa: E402
 from cluster_scheduler_mcp2 import (  # noqa: E402
     HOP_CTX,
@@ -140,6 +142,20 @@ class GatewayHandler(BaseHTTPRequestHandler):
             self._error(404, f"model '{mid}' not found", "model_not_found")
         elif p in ("/v1/telemetry", "/telemetry"):
             self._send_json(self.router.telemetry.snapshot())
+        elif p in ("/v1/clover/metrics", "/clover/metrics"):
+            qs = urllib.parse.parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
+            btag = (qs.get("benchmark_tag") or [""])[0].strip() or None
+            reg_inst: dict[str, list[str]] = {}
+            for k, b in self.router.backends.items():
+                reg_inst[k] = list(getattr(b, "endpoints", None) or ["local"])
+            self._send_json(
+                self.metrics_ledger.snapshot(
+                    registered_models=list(self.router.backends.keys()),
+                    registered_tools=[t["name"] for t in self.mcp2._full_tools_list],
+                    registered_instances=reg_inst,
+                    benchmark_tag=btag,
+                )
+            )
         elif p in ("/v1/queue", "/queue"):
             pools = {
                 k: b.snapshot() for k, b in self.router.backends.items() if isinstance(b, ReplicaPoolBackend)
@@ -168,6 +184,9 @@ class GatewayHandler(BaseHTTPRequestHandler):
             return
         if p in ("/v1/cache/reset", "/cache/reset"):
             self._send_json(self.router.reset_caches())
+            return
+        if p in ("/v1/clover/metrics/reset", "/clover/metrics/reset"):
+            self._send_json(self.metrics_ledger.reset())
             return
         if p in ("/v1/cluster/register", "/cluster/register"):
             try:
@@ -265,9 +284,23 @@ class GatewayHandler(BaseHTTPRequestHandler):
         cid = "chatcmpl-" + uuid.uuid4().hex[:24]
         prio = int(body.get("x_clover_priority", 1))
         is_hop = bool(self.headers.get("X-Clover-Hop"))
+        t_c0 = time.perf_counter()
         try:
             c, q_meta = self.batch_queue.submit(body, priority=prio, local_only_hop=is_hop)
             c.telemetry["queue"] = q_meta
+            wall_ms = (time.perf_counter() - t_c0) * 1000.0
+            served_m = str(c.telemetry.get("served_by") or c.model)
+            inst_id = f"{served_m}@{c.telemetry.get('replica_url') or 'local'}"
+            tok_s = self.metrics_ledger.record_completion(
+                model=served_m,
+                prompt_tokens=int(c.usage.get("prompt_tokens") or 0),
+                completion_tokens=int(c.usage.get("completion_tokens") or 0),
+                wall_ms=wall_ms,
+                instance_id=inst_id,
+                benchmark_tag=str(body.get("x_clover_benchmark_tag") or ""),
+            )
+            c.telemetry["decode_tok_per_s"] = tok_s
+            c.telemetry["wall_ms"] = round(wall_ms, 2)
         except RouterError as exc:
             self._error(exc.status, str(exc), exc.code)
             return
@@ -383,7 +416,8 @@ def create_server(router: FusionRouter, host: str = "127.0.0.1", port: int = DEF
     bqueue = ClusterBatchQueue(router.complete, batch_window_ms=batch_window_ms)
     mcp2 = Mcp2MeshServer(router, bqueue)
     preg = PetalRegistry(router, mcp2)
-    agent4 = Clover4PartAgent(bqueue, mcp2)
+    mledger = CloverMetricsLedger()
+    agent4 = Clover4PartAgent(bqueue, mcp2, metrics_ledger=mledger)
     handler = type(
         "BoundGatewayHandler",
         (GatewayHandler,),
@@ -392,6 +426,7 @@ def create_server(router: FusionRouter, host: str = "127.0.0.1", port: int = DEF
             "batch_queue": bqueue,
             "mcp2": mcp2,
             "petal_registry": preg,
+            "metrics_ledger": mledger,
             "agent4": agent4,
             "api_key": eff_key,
             "quiet": quiet,

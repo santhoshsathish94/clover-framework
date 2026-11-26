@@ -4,17 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Mythbuster (HG Format) — Clover</title>
-<meta name="description" content="Five everyday stories and real hardware measurements that break five myths about AI chips, memory, servers, networks, and universal models — powered by Clover's Hadamard-Grouped (HG) 4x compression format.">
+<meta name="description" content="Six everyday stories and real hardware measurements that break six myths about AI chips, memory, servers, networks, universal models, and autonomous AI — powered by Clover.">
 <link rel="canonical" href="https://cloverframework.com/hg-format/">
-<meta property="og:title" content="AI Mythbuster — Five AI Myths Broken With Real Hardware &amp; Clover HG">
-<meta property="og:description" content="Watch five grey clover leaves turn gold as each AI myth breaks: why the wire limits speed, extra GBs add +0.0 tok/s, small rigs beat giant servers, VRAM leaves everything else idle, and specialist teams beat one universal model.">
+<meta property="og:title" content="AI Mythbuster — Six AI Myths Broken With Real Hardware &amp; Human Steering">
+<meta property="og:description" content="Watch five grey clover leaves and the center steering wheel turn gold as six AI myths break: why the wire limits speed, extra GBs add +0.0 tok/s, small rigs beat giant servers, VRAM leaves everything else idle, specialist teams beat monoliths, and AI breakthroughs are always Human + AI.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://cloverframework.com/hg-format/">
 <meta property="og:image" content="https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/assets/branding/social-preview.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a6a5f">
 <link rel="icon" type="image/svg+xml" href="../clover-leaf-favicon.svg">
-<link rel="stylesheet" href="../botanical-design-system.css?v=5.0.7">
+<link rel="stylesheet" href="../botanical-design-system.css?v=6.0.0">
 <script>document.documentElement.className = 'js';</script>
 <style>
   /* Golden Myth-Breaking Clover Leaf Progression (Grey -> Sunlit Golden Amber 1..5) */
@@ -37,6 +37,25 @@
     fill: #8a5607;
     opacity: 1;
     font-weight: 700;
+  }
+  .pinned[data-myth-story] .story__wheel {
+    stroke: #787366;
+    opacity: 0.55;
+    transition: stroke 420ms var(--ease-nature), opacity 420ms var(--ease-nature), filter 420ms var(--ease-nature);
+  }
+  .pinned[data-myth-story] .story__wheel.is-golden {
+    stroke: #c88412;
+    opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(212, 146, 28, 0.52));
+  }
+  .pinned[data-myth-story] .story__wheel-hub {
+    fill: #787366;
+    opacity: 0.65;
+    transition: fill 420ms var(--ease-nature), opacity 420ms var(--ease-nature);
+  }
+  .pinned[data-myth-story] .story__wheel-hub.is-golden {
+    fill: #b87409;
+    opacity: 1;
   }
 
   /* Apple-Keynote Spotlight Proof Stage inside each Myth chapter */
@@ -275,7 +294,7 @@
 
   <div class="pinned" data-story data-myth-story>
     <div class="pinned__mark">
-      <svg class="clover clover--hero" viewBox="-6 -10 112 110" role="group" aria-label="Five myths of AI. Each grey leaf turns golden as its myth is broken.">
+      <svg class="clover clover--hero" viewBox="-6 -10 112 114" role="group" aria-label="Six myths of AI. Five grey leaves and the center steering wheel turn golden as each myth is broken.">
         <g class="clover__spin">
           <a class="clover__leaf-hit" href="#myth-1-wire" aria-label="Myth 1: The Wire">
             <g transform="translate(50 44) scale(1.005 1.02) translate(-50 -44)">
@@ -312,6 +331,13 @@
             </g>
             <text class="clover__label story__label" data-myth-idx="5" text-anchor="middle"><textPath href="#arc-upper-left" startOffset="50%">Team</textPath></text>
           </a>
+          <a class="clover__leaf-hit" href="#myth-6-driver" aria-label="Myth 6: Human Steering Wheel">
+            <path class="story__wheel" data-myth-idx="6" d="M50 51.5C50 69 50 81 50 93" fill="none" stroke-width="2.1" stroke-linecap="round"/>
+            <circle class="story__wheel" data-myth-idx="6" cx="50" cy="44" r="7.2" fill="#fbf9f3" stroke-width="2.1"/>
+            <path class="story__wheel" data-myth-idx="6" d="M50 36.8 L50 44 M43.8 47.6 L50 44 M56.2 47.6 L50 44" fill="none" stroke-width="1.65" stroke-linecap="round"/>
+            <circle class="story__wheel-hub" data-myth-idx="6" cx="50" cy="44" r="2.1"/>
+            <text class="clover__label story__label" data-myth-idx="6" x="50" y="100.5" text-anchor="middle">Driver</text>
+          </a>
         </g>
       </svg>
     </div>
@@ -320,9 +346,9 @@
       <div class="wrap">
         <div>
           <h1>AI Mythbuster</h1>
-          <p class="hero__tagline">Five myths made AI look impossible to own. Clover <code>HG</code> breaks all five.</p>
-          <p class="lede">For years, the industry has repeated five beliefs about AI &mdash; that you need faster chips, more gigabytes, giant servers, massive networks, and one giant universal model.</p>
-          <p style="margin-top:1rem"><strong>All five beliefs fall apart the moment you measure real hardware.</strong><br>Look at the five grey leaves on the right. Scroll down as each everyday story and real measurement breaks one myth &mdash; turning every leaf to gold.</p>
+          <p class="hero__tagline">Six myths hid how AI really works &mdash; five about the machine, and one bigger myth about who is driving.</p>
+          <p class="lede">For years, the industry has repeated five myths about AI hardware &mdash; faster chips, more gigabytes, giant servers, massive networks, and one universal model &mdash; plus one overarching myth: that AI solves problems all on its own.</p>
+          <p style="margin-top:1rem"><strong>All six myths fall apart the moment you look at real work and real hardware.</strong><br>Watch the five grey leaves and the center steering wheel on the right. Scroll down as each simple story and live proof breaks one myth &mdash; turning the entire Clover to gold.</p>
         </div>
       </div>
     </section>
@@ -336,7 +362,7 @@
 
         <div class="spotlight-proof">
           <div class="spotlight-proof__head">
-            <span class="spotlight-proof__badge">Spotlight Proof &middot; Leaf 1 of 5</span>
+            <span class="spotlight-proof__badge">Spotlight Proof &middot; Myth 1 of 6</span>
             <h3 class="spotlight-proof__title">Faster GPU on the same wire: +3%. Shrinking wire traffic 4&times; with HG: up to 45&times; faster.</h3>
             <p class="spotlight-proof__sub">Controlled test at deterministic <code>T = 0</code>: first we upgraded compute on the exact same memory wire; then we kept the hardware fixed and shrank the weights 4&times;.</p>
           </div>
@@ -378,7 +404,7 @@
 
         <div class="spotlight-proof">
           <div class="spotlight-proof__head">
-            <span class="spotlight-proof__badge">Spotlight Proof &middot; Leaf 2 of 5</span>
+            <span class="spotlight-proof__badge">Spotlight Proof &middot; Myth 2 of 6</span>
             <h3 class="spotlight-proof__title">64&times; more RAM added +0.0 tok/s &mdash; while an 8 GB phone beat a 16 GB laptop by 2.7&times;.</h3>
             <p class="spotlight-proof__sub">Three controlled capacity vs. bandwidth tests running the exact same <code>HG</code> model weights:</p>
           </div>
@@ -428,7 +454,7 @@
 
         <div class="spotlight-proof">
           <div class="spotlight-proof__head">
-            <span class="spotlight-proof__badge">Spotlight Proof &middot; Leaf 3 of 5</span>
+            <span class="spotlight-proof__badge">Spotlight Proof &middot; Myth 3 of 6</span>
             <h3 class="spotlight-proof__title">Four workers in one 128 GB box: 16 tok/s. Across four right-sized GPUs: 234.1 tok/s (14.6&times;).</h3>
             <p class="spotlight-proof__sub">Aggregate throughput under 4 concurrent requests &mdash; one shared memory bus vs. four independent buses:</p>
           </div>
@@ -470,7 +496,7 @@
 
         <div class="spotlight-proof">
           <div class="spotlight-proof__head">
-            <span class="spotlight-proof__badge">Spotlight Proof &middot; Leaf 4 of 5</span>
+            <span class="spotlight-proof__badge">Spotlight Proof &middot; Myth 4 of 6</span>
             <h3 class="spotlight-proof__title">Linux kernel audit on a 256 GB server: 0 Bytes disk read, 99.5% RAM empty, 95% CPU idle.</h3>
             <p class="spotlight-proof__sub">Measured directly from Linux <code>/proc/self/io</code> &amp; <code>VmRSS</code> counters across 5 consecutive live <code>RTX 3090</code> runs paired Europe &harr; Asia over Clover&rsquo;s binary socket (<code>tsock://</code>):</p>
           </div>
@@ -510,24 +536,31 @@
 
         <div class="spotlight-proof">
           <div class="spotlight-proof__head">
-            <span class="spotlight-proof__badge">Spotlight Proof &middot; All 5 Leaves Golden</span>
+            <span class="spotlight-proof__badge">Spotlight Proof &middot; Myth 5 of 6</span>
             <h3 class="spotlight-proof__title">Focused specialists beat universal models 20&times;&ndash;300,000&times; larger on sealed verifiers.</h3>
             <p class="spotlight-proof__sub">Head-to-head results when giant generalists (<code>120B</code> to <code>2,800B</code> parameters) face small domain specialists on deterministic ground-truth checks:</p>
           </div>
           <div class="spotlight-proof__body">
             <div class="proof-row">
               <div class="proof-row__top">
-                <span class="proof-row__label"><strong>100-Digit Exact Math &amp; &pi;:</strong> Universal LLM alone (<code>0/8</code>) vs. <code>0.2 MB</code> C11 <code>x-cruncher</code> specialist (<code>0.4 ms</code>)</span>
-                <span class="proof-row__val proof-row__val--gold">100% vs. 0%</span>
+                <span class="proof-row__label"><strong>Exact BigInt &amp; &pi; Math:</strong> Universal <code>120B</code> LLM alone vs. <code>0.2 MB</code> C11 <code>x-cruncher</code> computed tool (<code>&lt;5 ms</code>)</span>
+                <span class="proof-row__val proof-row__val--gold">100% Exact vs. Hallucinated</span>
               </div>
               <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:100%"></span></div>
             </div>
             <div class="proof-row">
               <div class="proof-row__top">
-                <span class="proof-row__label"><strong>Machine-Checked Lean 4 Proofs:</strong> <code>32B Goedel-Prover</code> (<code>15.8 GB HG4</code>) vs. <code>671B</code> generalist (<code>88.9%</code>) &amp; <code>2.8T</code> on RH Tier-2 (<code>1/9</code>)</span>
-                <span class="proof-row__val proof-row__val--gold">90.4% at 21&times; Smaller</span>
+                <span class="proof-row__label"><strong>Live <code>Lean 4 v4.33.1</code> MiniF2F:</strong> <code>120B</code> solo (<code>5/12 = 41.7%</code>) vs. <code>0B</code> tactic cascade (<code>50.0%</code>) &amp; <code>32B Goedel-HG4</code> + Clover (<code>8/12 = 66.7%</code>)</span>
+                <span class="proof-row__val proof-row__val--gold">66.7% vs. 41.7% (4.5&times; Smaller)</span>
               </div>
-              <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:90.4%"></span></div>
+              <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:88%"></span></div>
+            </div>
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label"><strong>512&rarr;48 Time-Series Quantiles:</strong> <code>2B/35B/120B</code> LLMs (<code>0/3</code> valid) vs. <code>Chronos-0.2B</code> (<code>0.416</code>) &amp; <code>0B</code> Periodogram tool</span>
+                <span class="proof-row__val proof-row__val--gold">MASE 0.308 in 52 ms (0 GPUs)</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:94%"></span></div>
             </div>
             <div class="proof-row">
               <div class="proof-row__top">
@@ -538,7 +571,51 @@
             </div>
           </div>
           <div class="spotlight-proof__significance">
-            <strong>Why this changes everything:</strong> Scaling one monolith to trillions of parameters still loses to dedicated formal-proof, physics (<code>0.51 GB V-JEPA 2.1</code>), forecasting (<code>102 MB Chronos</code>), and exact-math specialists. Shrinking every specialist 4&times; with <code>HG</code> lets one <code>35B</code> coordinator run the entire team on everyday 24 GB cards.
+            <strong>Why this changes everything:</strong> Never force neurons to <em>predict</em> what a deterministic tool can <em>compute</em>. Scaling one monolith to trillions of parameters still loses to exact C11 math (<code>x-cruncher</code>), formal-proof specialists (<code>Goedel-32B</code>), physical motion (<code>0.51 GB V-JEPA 2.1</code>), 3D protein folding (<code>530 MB Boltz-2-HG4</code>, <code>7.57&times;</code> smaller, <code>0.9959</code> cosine), and forecasting (<code>102 MB Chronos</code>).
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band stage" id="myth-6-driver" data-myth-step="6">
+      <div class="wrap">
+        <h2>Myth 6: &ldquo;AI agents solve problems &mdash; or hack systems, or discover math &mdash; all on their own.&rdquo;</h2>
+        <p><strong>An AI model is a prediction engine. Think of it like a car.</strong></p>
+        <p>Give it full access and it behaves like an <strong>autonomous car</strong>; keep your hands on the wheel and it behaves like a <strong>regular car</strong>. On clean, well-marked highways, autopilot can handle sub-goals smoothly &mdash; holding a lane, changing highway exits, covering miles fast toward your destination.</p>
+        <p><strong>But a car never wakes up wanting to go somewhere.</strong> Even when autopilot handles ninety percent of the drive, <strong>a human still chose the destination, owns responsibility for the journey, and grabs the steering wheel the instant the road goes off-map.</strong></p>
+        <p>Every breathless headline you read &mdash; <em>&ldquo;AI hacked a network,&rdquo; &ldquo;AI proved a mathematical breakthrough,&rdquo; &ldquo;AI built software&rdquo;</em> &mdash; was never AI alone. Every single one was <strong>AI + Human Expertise</strong>: AI accelerating the sub-goals, and a human expert setting the true goal and steering whenever prediction drifts from reality.</p>
+
+        <div class="spotlight-proof">
+          <div class="spotlight-proof__head">
+            <span class="spotlight-proof__badge">Spotlight Proof &middot; Myth 6 &middot; The Center Steering Wheel</span>
+            <h3 class="spotlight-proof__title">Live 6-task domain spec run: unsteered &ldquo;AI Alone&rdquo; hit 0/6 (0%). One human steering line hit 5/6 (83.3%) in half the tokens.</h3>
+            <p class="spotlight-proof__sub">Measured live on <code>k3</code> (<code>myth6_steering_results.json</code>) across 6 domain-specific engineering tasks (fiscal calendar, cash rounding, mK sensor clamp, rate tiers, ring hash, wire CRC):</p>
+          </div>
+          <div class="spotlight-proof__body">
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label"><strong>Unsteered Full-Autopilot (AI Alone):</strong> Guessed generic textbook defaults instead of asking &mdash; <code>595.0</code> mean tokens wasted</span>
+                <span class="proof-row__val">0 / 6 Passed (0.0%)</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--muted" style="width:4%"></span></div>
+            </div>
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label"><strong>1-Sentence Human Steering + Clover Cycle:</strong> Solved in <code>1.17</code> mean cycles &amp; <code>277.5</code> mean tokens (<code>53%</code> fewer tokens)</span>
+                <span class="proof-row__val proof-row__val--gold">5 / 6 Passed (83.33%)</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:83.3%"></span></div>
+            </div>
+            <div class="proof-row">
+              <div class="proof-row__top">
+                <span class="proof-row__label"><strong>Implicit Boundary Discernment (19 Traps):</strong> <code>Tier-0</code> regex &amp; <code>0.6B</code> (<code>9/19</code>) vs. <code>35B-LoRA</code> &amp; <code>120B</code> catching when to <code>ASK / ESCALATE</code></span>
+                <span class="proof-row__val proof-row__val--gold">19 / 19 Binary Match</span>
+              </div>
+              <div class="proof-track"><span class="proof-fill proof-fill--gold" style="width:100%"></span></div>
+            </div>
+          </div>
+          <div class="spotlight-proof__significance">
+            <strong>Why this is the most important myth around AI:</strong> Calling AI an independent actor erases both <strong>human credit</strong> and <strong>human responsibility</strong>. When a theorem falls, a mathematician framed the problem and steered past dead ends; when a system is attacked, a human operator aimed the tool. That is why Clover&rsquo;s entire AI harness is just four human-steerable parts (<a href="../getting-started/"><code>AGENTS.md</code></a> + <code>mcp.json</code> + a <code>.md</code> Context file + a Todo list) &mdash; fast autopilot on clear sub-goals, and an honest steering wheel in human hands whenever judgment matters.
           </div>
         </div>
       </div>
@@ -547,7 +624,7 @@
 
   <section class="band" id="what-now">
     <div class="wrap">
-      <h2>How Clover <code>HG</code> makes all five possible</h2>
+      <h2>How Clover <code>HG</code> powers the engine beneath the wheel</h2>
       <p class="lede"><strong>Why did ordinary 4-bit compression break reasoning in the first place?</strong></p>
       <p>Imagine trying to record a quiet conversation in the same room as a sudden thunderclap. If you turn the volume down to fit the thunderclap, every quiet voice disappears.</p>
       <p><strong>Neural networks have the same thunderclaps &mdash; rare outlier weights ten times larger than their neighbors.</strong> Clover&rsquo;s Hadamard-Grouped (<code>HG</code>) format applies a fast, reversible mathematical rotation across every 128 weights first. The spike spreads evenly across its neighbors, packs cleanly into <code>4 bits</code>, and travels all the way into CPU and GPU registers before unpacking.</p>
@@ -570,10 +647,36 @@
           </div>
         </div>
         <p style="margin:1rem 0 0;font-size:0.95rem">
-          <strong>Want to check all converted models?</strong> Browse <code>Goedel-Prover-32B</code> (Lean 4), <code>Meta V-JEPA 2.1</code> (0.51 GB physical motion), <code>Chronos-Bolt</code> (102 MB forecasting), <code>LFM3-Omni-2B</code>, and <code>Kimi-K3.1</code> on Hugging Face:
+          <strong>Want to check all 8 converted models?</strong> Browse <code>Qwen3.6-35B-A3B</code> (<code>68.9%</code> HumanEval, <code>35.8 tok/s</code> on 1&times; 3090), <code>Goedel-Prover-32B</code> (Lean 4), <code>Boltz-2-HG4-16R</code> (<code>4,007 &rarr; 529.6 MiB = 7.57&times;</code> smaller, <code>0.9959</code> cosine, 3D <code>.cif</code> folding), <code>Meta V-JEPA 2.1</code> (0.51 GB motion), <code>Chronos-Bolt</code> (102 MB forecasting), <code>LFM3-Omni-2B</code>, and <code>Kimi-K3.1</code> on Hugging Face:
           <a href="https://huggingface.co/Santhoshsathish94"><strong>huggingface.co/Santhoshsathish94 &rarr;</strong></a>
         </p>
       </div>
+    </div>
+  </section>
+
+  <section class="band" id="verify-yourself">
+    <div class="wrap">
+      <h2>Run and see for yourself &mdash; zero human setup required</h2>
+      <p class="lede"><strong>Don&rsquo;t take our charts on trust. Let your own AI coding agent set up, execute, and verify every proof on your machine in seconds.</strong></p>
+      <p>We packaged an autonomous agent instruction file (<a href="REPRODUCE_AGENTS.md"><code>REPRODUCE_AGENTS.md</code></a>) and a zero-API-key standalone verifier (<a href="reproduce_hg_myths.py"><code>reproduce_hg_myths.py</code></a>). Paste the one-line prompt below into <strong>GitHub Copilot, Claude Code, Cursor, Codex, or OpenCode</strong> &mdash; your agent will detect your OS and hardware, create an isolated environment, run all 6 myth proofs (<code>HG4</code> Hadamard outlier rotation, memory-bus wire speed, <code>T=0</code> clubbing, live <code>tsock://</code> <code>4 B/tok</code> vs. HTTP SSE sockets, <code>0B</code> computed specialists, and Human Steering), and print a SHA-256 scorecard without asking you for setup help:</p>
+
+      <div class="inline-proof" style="border-left-color:var(--accent);border-color:var(--accent-line);margin-top:1.1rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.55rem">
+          <div class="inline-proof__eyebrow" style="color:var(--accent);margin:0">Option 1 &middot; Zero-Touch Prompt for Any AI Agent</div>
+          <button type="button" id="copy-repro-prompt" class="btn" style="padding:0.32rem 0.85rem;font-size:0.82rem;cursor:pointer" onclick="navigator.clipboard.writeText(document.getElementById('repro-agent-prompt').innerText).then(function(){var b=document.getElementById('copy-repro-prompt');b.textContent='Copied Prompt ✓';setTimeout(function(){b.textContent='Copy Prompt for My Agent';},2200);})">Copy Prompt for My Agent</button>
+        </div>
+        <pre id="repro-agent-prompt" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:0.9rem 1.1rem;overflow-x:auto;font-size:0.86rem;white-space:pre-wrap;margin:0"><code>Fetch https://cloverframework.com/hg-format/REPRODUCE_AGENTS.md and execute every step autonomously to set up, run, and verify the Clover HG4 &amp; 6-Myth benchmarks on my machine without asking me for setup help.</code></pre>
+        <p style="margin:0.75rem 0 0;font-size:0.88rem;color:var(--muted)">
+          Direct files: <a href="REPRODUCE_AGENTS.md"><strong><code>REPRODUCE_AGENTS.md</code></strong></a> &middot;
+          <a href="reproduce_hg_myths.py"><strong><code>reproduce_hg_myths.py</code></strong></a> &middot;
+          <a href="convert_to_hg.py"><strong><code>convert_to_hg.py</code></strong></a> &middot;
+          Raw cluster JSON ledgers: <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/benchmarks/public-runs-20261126"><strong><code>benchmarks/public-runs-20261126/</code> &rarr;</strong></a>
+        </p>
+      </div>
+
+      <p style="margin-top:1.25rem"><strong>Option 2 &middot; Run directly in your terminal (&lt;5 seconds on any laptop CPU or GPU):</strong></p>
+      <pre style="background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:1rem 1.2rem;overflow-x:auto;font-size:0.88rem"><code>curl -fsSL https://cloverframework.com/hg-format/reproduce_hg_myths.py -O
+python3 reproduce_hg_myths.py --verify-all --out ./repro_hg_myths_report.json</code></pre>
     </div>
   </section>
 
@@ -587,7 +690,7 @@
 python3 convert_to_hg.py --model Qwen/Qwen3.6-35B-A3B --out ./hg-model --ldlq --verify</code></pre>
       <p style="font-size:0.92rem;color:var(--muted)">Reproducible scripts &amp; raw SHA-256 verification ledgers live openly in <a href="https://github.com/santhoshsathish94/clover-framework/tree/main/benchmarks"><code>github.com/santhoshsathish94/clover-framework/benchmarks</code> &rarr;</a> &middot; Follow the cluster build in <a href="../ai-system/">AI Studio (In Progress) &rarr;</a></p>
 
-      <svg class="clover clover--close clover--golden-close" viewBox="0 0 100 100" role="img" aria-label="All five myths broken — the five-leaf clover glowing in sunlit gold.">
+      <svg class="clover clover--close clover--golden-close" viewBox="0 0 100 100" role="img" aria-label="All six myths broken — the five-leaf clover and center steering wheel glowing in sunlit gold.">
         <path class="clover__stem" d="M50 48C50 68 50 80 50 95"/>
         <g><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
         <g transform="rotate(72 50 44)"><use class="clover__leaf is-filled" href="#clover-leaf"/><use class="clover__vein" href="#clover-vein"/></g>
@@ -608,7 +711,7 @@ python3 convert_to_hg.py --model Qwen/Qwen3.6-35B-A3B --out ./hg-model --ldlq --
   </div>
 </footer>
 
-<script src="../website-interaction-controllers.js?v=5.0.7" defer></script>
+<script src="../website-interaction-controllers.js?v=6.0.0" defer></script>
 <script>
   (function () {
     var mythSections = Array.prototype.slice.call(document.querySelectorAll('[data-myth-step]'));

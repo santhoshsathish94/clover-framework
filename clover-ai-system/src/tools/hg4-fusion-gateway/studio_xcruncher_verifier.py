@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import functools
 import importlib.util
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -122,10 +123,27 @@ def compute_pi_hex_exact(offset: int, digits: int) -> tuple[str, str]:
     return _bbp_pi_hex_fallback(offset, digits), "python-bbp-fallback"
 
 
+@functools.lru_cache(maxsize=512)
+def compute_pow_exact(base: int, exp: int) -> tuple[int, str]:
+    xb = _load_xcruncher_bridge()
+    backend = str(xb.active_isa_info().get("backend", "xcruncher")) if xb is not None else "python-bigint-fallback"
+    res = 1
+    b = base
+    e = exp
+    while e > 0:
+        if e & 1:
+            res = int(xb.mul_exact(res, b)) if xb is not None else (res * b)
+        e >>= 1
+        if e > 0:
+            b = int(xb.mul_exact(b, b)) if xb is not None else (b * b)
+    return res, backend
+
+
 _MERSENNE_MUL_RE = re.compile(
     r"\(\s*2\s*(?:\^|\*\*)\s*(\d{2,4})\s*-\s*1\s*\)\s*\*\s*\(\s*2\s*(?:\^|\*\*)\s*(\d{2,4})\s*-\s*1\s*\)"
 )
 _BIG_MUL_RE = re.compile(r"(?<!\d)(\d{12,1200})\s*\*\s*(\d{12,1200})(?!\d)")
+_BIG_POW_RE = re.compile(r"(?<![\w\d.])(\d{1,30})\s*(?:\^|\*\*)\s*(\d{2,4})(?![\w\d]|\.\d)")
 _FACTORIAL_RE = re.compile(
     r"(?:"
     r"`(\d{2,4})\s*!(?!=)`"
@@ -173,6 +191,23 @@ def extract_prompt_math_obligations(prompt_text: str) -> list[dict[str, Any]]:
                 "exact": str(val),
                 "backend": backend,
             })
+
+        mersenne_spans = [(m.start(), m.end()) for m in _MERSENNE_MUL_RE.finditer(base_text)]
+        for m in _BIG_POW_RE.finditer(base_text):
+            if len(obligations) >= _MAX_OBLIGATIONS_PER_TURN:
+                return obligations
+            if any(ms <= m.start() and m.end() <= me for ms, me in mersenne_spans):
+                continue
+            a, b = int(m.group(1)), int(m.group(2))
+            est_bits = b * math.log2(max(a, 2))
+            if a >= 2 and 16 <= b <= 4096 and 48.0 <= est_bits <= 65536.0:
+                val, backend = compute_pow_exact(a, b)
+                obligations.append({
+                    "kind": "big_pow",
+                    "expr": f"{a}^{b}",
+                    "exact": str(val),
+                    "backend": backend,
+                })
 
         seen_fact: set[int] = set()
         for m in _FACTORIAL_RE.finditer(base_text):

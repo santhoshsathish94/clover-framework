@@ -29,23 +29,24 @@ The framework itself is documented at **[cloverframework.com](https://cloverfram
 
 This repository contains the documentation, practical guidance, case studies, and the implementation work around Clover.
 
-## Start here
+## Start here — Repository Navigation Map
 
-- **[Clover Framework](https://cloverframework.com/)** — understand the framework
-- [`QUICKSTART.md`](QUICKSTART.md) — use Clover on real work
-- [`AGENTS.md`](AGENTS.md) — AI agent operating guidance
-- [`docs/README.md`](docs/README.md) — documentation index
-- [`case-studies/`](docs/case-studies/) — real work and outcomes
-- **[Clover AI System Research Paper](research/clover-ai-system-paper/README.md)** — step-by-step model optimization (`Kimi K3`, `Nemotron 3.5 Super VL`, `LFM3-1.7B`), the 7 layers, the 11 foundational papers (`1943–2017`), the 5 data-movement studies across CPU &amp; GPU, and why standalone models (`22.86%–47.14%`) reach `70 / 70` (`100.00%`) under Clover
-- [Research](research/README.md) — investigations, proposals and hypotheses, with their limits
-- [Clover AI v4 release notes](docs/reference/release-v4.md) — the current seven-layer system
-- [Observe experiment](research/observe/README.md) — the next experiment: reciprocal observation, mutual change, and distributed learning
-- [Run Clover](clover-ai-system/README.md) — the 7-layer Clover system (CPU workstation engine &amp; 8 &times; RTX 3090 GPU neuro-symbolic, compiler-verified, memory-accumulating stack): set it up, tune it to your machine, run it
-- [Repository map](docs/repository-organization.md) — where each kind of material belongs
+| What you want to do | Where to go |
+| :--- | :--- |
+| **Understand the Clover Framework (`Context → Direction → Execution → Outcome → Growth`)** | [**cloverframework.com**](https://cloverframework.com/) · [`QUICKSTART.md`](QUICKSTART.md) · [`docs/README.md`](docs/README.md) · [`docs/case-studies/`](docs/case-studies/) |
+| **Operate any AI agent under Clover** | [`AGENTS.md`](AGENTS.md) — self-contained operating contract |
+| **Read the 6 Broken AI Myths & `HG` 4-Bit Hadamard Format** | [**AI Mythbuster (`cloverframework.com/hg-format/`)**](https://cloverframework.com/hg-format/) · [`site/hg-format/index.html`](site/hg-format/index.html) |
+| **Verify all 6 Myths & `HG4` on your own machine (Zero Human Setup)** | [`site/hg-format/REPRODUCE_AGENTS.md`](site/hg-format/REPRODUCE_AGENTS.md) *(paste into any AI agent)* · [`site/hg-format/reproduce_hg_myths.py`](site/hg-format/reproduce_hg_myths.py) · [`site/hg-format/convert_to_hg.py`](site/hg-format/convert_to_hg.py) |
+| **Inspect raw public benchmark ledgers (`2026-11-26`)** | [`benchmarks/public-runs-20261126/README.md`](benchmarks/public-runs-20261126/README.md) · [`research/benchmarks/`](research/benchmarks/) |
+| **Run the Minimal 4-Part Clover Harness, `tsock://` Mesh & Studio** | [`clover-ai-system/README.md`](clover-ai-system/README.md) · [`docs/reference/release-v6.md`](docs/reference/release-v6.md) · [`CHANGELOG.md`](CHANGELOG.md) |
+| **Read the v6.x → v7.0 Next Milestone Roadmap (5 Senses + 1 Brain + `JEPA` + `Tool-NCM`)** | [`docs/runtime-context/one-brain-five-senses-research-context.md`](docs/runtime-context/one-brain-five-senses-research-context.md) |
+| **Browse full research papers & directory layout** | [`research/clover-ai-system-paper/README.md`](research/clover-ai-system-paper/README.md) · [`research/README.md`](research/README.md) · [`docs/repository-organization.md`](docs/repository-organization.md) |
 
-## Clover System &amp; Architecture (`Clover AI v4`)
+## Clover System &amp; Architecture (`Clover v6.0` &amp; Foundational 7-Layer Stack)
 
-**Clover** is both the operating methodology (`Context → Direction → Execution → Outcome → Growth` in [`AGENTS.md`](AGENTS.md)) and the unified open-source AI system built under it ([`clover-kimi-k3/`](clover-ai-system/)) — designed to produce meaningful outcomes while remaining bounded, observable, verifiable, and accountable.
+**Clover** is both the operating methodology (`Context → Direction → Execution → Outcome → Growth` in [`AGENTS.md`](AGENTS.md)) and the open-source AI system built under it ([`clover-ai-system/`](clover-ai-system/)). In **v6.0** ([`release-v6.md`](docs/reference/release-v6.md)), Clover pairs Hadamard-Grouped (`HG4-16R-OP` / `K31H`) specialist models, deterministic `0B` computation tools (`x-cruncher`, `Lean 4`, `Periodogram+Conformal`, Defeasible Rule Resolution), a `4 Bytes/token` binary mesh (`tsock://`), and `CloverMetricsLedger` telemetry behind a minimal **4-part human-steerable harness** (`AGENTS.md` + `mcp.json` + `<task_id>.md` Context + Prerequisite-Gated Todo).
+
+Below is the foundational 7-layer neuro-symbolic architecture first established in [`release-v4.md`](docs/reference/release-v4.md) and [`research/observe/README.md`](research/observe/README.md):
 
 It began on a single CPU host from the Clover equation of Kimi K3 and from Fareed Khan's `kimi-k3-in-c` (with its first snapshot [`clover-k3`](https://github.com/santhoshsathish94/clover-framework/tree/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/) in git history), and currently stands as a **7-layer neuro-symbolic, compiler-verified, memory-accumulating system** running across a single CPU workstation (`Ryzen 9 7950X3D`, `124 GB` RAM), an `8 × NVIDIA RTX 3090` GPU server (`192 GiB` VRAM), laptops, and mobile (`Samsung Galaxy S23`), reproducibly bootstrapped from GitHub and Hugging Face ([`Santhoshsathish94/clover-ai-studio`](https://huggingface.co/datasets/Santhoshsathish94/clover-ai-studio), organized under `kimi/`, `nemotron/`, and `liquid-lfm3/`):
 

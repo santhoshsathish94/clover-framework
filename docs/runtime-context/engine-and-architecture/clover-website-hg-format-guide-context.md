@@ -18,6 +18,6 @@ Users visiting `https://cloverframework.com/` need a clear, self-contained, prim
    - Exact copy-paste verification commands (`test_hg4_fusion_gateway.py`, `run_studio_phase.py`, and SHA-256 boundary checks).
 
 ## 2. Website Integration Invariants (`scripts/check-site.py`)
-- Uses `../botanical-design-system.css?v=5.0.7` and `../website-interaction-controllers.js?v=5.0.7` matching `VERSION` (`5.0.7`).
+- Uses `../botanical-design-system.css?v=6.0.0` and `../website-interaction-controllers.js?v=6.0.0` matching `VERSION` (`6.0.0`).
 - Primary `<nav class="site-nav">` must remain byte-normalized identical across all 9 navigable HTML pages (`index.html`, `origin/`, `ai-system/`, `hg-format/`, `getting-started/`, `governance/`, `privacy/`, `glossary/`, `author/`).
 - Visually verified in the built-in browser via Playwright (`desktop 1280px` and `mobile 390px`) with zero console/layout errors and `0` errors in `check-site.py`, `check-links.py`, and `scripts/tests`.

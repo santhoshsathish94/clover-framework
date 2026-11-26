@@ -47,7 +47,7 @@ import workspaces as WS  # noqa: E402
 # Goal 1: Version & Artifact Consistency Check
 # ---------------------------------------------------------------------------
 
-EXPECTED_VERSION, EXPECTED_ANDROID_CODE = "5.0.7", 21
+EXPECTED_VERSION, EXPECTED_ANDROID_CODE = "6.0.0", 22
 
 
 def run_goal1_version_and_security_check() -> dict[str, Any]:
