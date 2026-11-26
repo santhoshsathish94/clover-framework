@@ -1169,30 +1169,10 @@ class Mcp2MeshServer:
             if obs:
                 direct_result = str(obs[0].get("exact") or "")
             else:
-                import math as _m
-                import re as _re
-
-                s_clean = expr.replace(",", "").replace("_", "").strip()
-                m_f = _re.fullmatch(r"(?:factorial\(\s*(\d{1,6})\s*\)|(\d{1,6})\s*!)", s_clean, flags=_re.I)
-                m_p = _re.fullmatch(r"(-?\d{1,40})\s*(?:\^|\*\*)\s*(\d{1,6})", s_clean)
-                m_m = _re.fullmatch(r"(-?\d{1,1200})\s*\*\s*(-?\d{1,1200})", s_clean)
-                if m_f:
-                    nv = int(m_f.group(1) or m_f.group(2))
-                    if 0 <= nv <= 200_000:
-                        val_f, b_f = sxc.compute_factorial_exact(nv) if nv >= 20 else (_m.factorial(nv), "python_int")
-                        direct_result = str(val_f)
-                        obs = [{"kind": "factorial", "expr": f"{nv}!", "exact": direct_result, "backend": b_f}]
-                elif m_p:
-                    bv, ev = int(m_p.group(1)), int(m_p.group(2))
-                    if 0 <= ev <= 200_000 and (abs(bv) <= 1 or ev * _m.log10(abs(bv)) <= 200_000):
-                        val_p, b_p = sxc.compute_pow_exact(bv, ev)
-                        direct_result = str(val_p)
-                        obs = [{"kind": "pow", "expr": f"{bv}^{ev}", "exact": direct_result, "backend": b_p}]
-                elif m_m:
-                    av, bv2 = int(m_m.group(1)), int(m_m.group(2))
-                    val_m, b_m = sxc.compute_mul_exact(av, bv2)
-                    direct_result = str(val_m)
-                    obs = [{"kind": "mul", "expr": f"{av} * {bv2}", "exact": direct_result, "backend": b_m}]
+                ev_pair = sxc.eval_exact_bigint_expr(expr)
+                if ev_pair is not None:
+                    direct_result, ev_backend = ev_pair
+                    obs = [{"kind": "exact_expr", "expr": expr, "exact": direct_result, "backend": ev_backend}]
             return {
                 "tool": name,
                 "result": direct_result,

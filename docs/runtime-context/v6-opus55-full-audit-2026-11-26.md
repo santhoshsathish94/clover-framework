@@ -165,6 +165,38 @@ In Pass 5, `Claude Opus 5.5` signed off on `M1`, `M3`, and all LOW items, requir
   - `python scripts/check-links.py`: `416` markdown files, `1,855` relative links, `0` broken links, `0` dead anchors
   - `python scripts/check-site.py`: `8 / 8` public pages, `0` site errors
 
+---
+
+## 5. Live 3-Server Hardware & Cross-Internet Validation (`k3` + `2× RTX 3090`, `2026-11-26`)
+
+Before merging PR #4 to `main`, every runtime, security, `tsock://`, pipeline, Lean 4, LoRA, and specialist path was validated end-to-end across **3 real Linux servers over public WAN**:
+- **Center Hub (`k3`):** Hetzner Ubuntu Noble (`32` vCPU, `128 GB` RAM, real Lean 4 + Mathlib `/mnt/nvme1/clover-rh-bench`, Studio Web vault)
+- **GPU Petal 1 (`198.44.98.101`):** `1× NVIDIA GeForce RTX 3090 (24 GB)`, CUDA `sm_86` `libhg_cuda_accel.so` + C11 `liblfm3_hg4_engine.so` / `libclover35b_hg4_engine.so` / `libkimi_k31_hg4_engine.so`
+- **GPU Petal 2 (`179.41.25.132`):** `1× NVIDIA GeForce RTX 3090 (24 GB)`, CUDA `sm_86` `libhg_cuda_accel.so`, `Goedel-Prover-V2-32B-HG4-16R` (`17.68 GiB` peak VRAM), `VJEPA2-ViTg-HG4-16R` (`40L`, `1408`-dim), and `LFM3-Omni-2B-HG4-16R` Replica 2
+
+### 6 Additional Real-Machine Defects Caught & Fixed During Live Server Testing
+1. **`k3_host_key(base_dir)` Multi-Tenant Host Key Isolation (`k3_host_engine.py`):** On real `k3` (where `/opt/clover-k3/web-studio/vault/k3_host.key` exists on disk), `k3_host_key(base_dir)` previously checked `/opt/clover-k3/web-studio/vault/k3_host.key` before scoping to `base_dir`, leaking the global key across isolated tenant/test `base_dir`s. Fixed so explicit `base_dir` scopes strictly to `base_dir/vault/k3_host.key` and `vault.get(base_dir, "rm_k3")`.
+2. **`ELAN_HOME` Stripped in `_minimal_subprocess_env` (`studio_outcome_verifier.py`):** Stripping environment variables for `lake env lean` removed `ELAN_HOME` (`/mnt/nvme1/clover-rh-bench/elan` on `k3`), causing `no default toolchain configured`. Retained `ELAN_HOME` + `LD_LIBRARY_PATH` while keeping all gateway/API secrets stripped.
+3. **Compound Exact-Int Expressions in `xcruncher_exact_math` (`studio_xcruncher_verifier.py`, `cluster_scheduler_mcp2.py`):** Live `LFM3-Omni-2B` on Node 1's `RTX 3090` invoked `xcruncher_exact_math("2^64 + 1")`, which previously returned `result: None` because only single `A^B` / `N!` / `A*B` patterns were matched. Added AST-bounded `eval_exact_bigint_expr` (`+`, `-`, `*`, `//`, `%`, `**`/`^`, `factorial`/`!`, `gcd`, `abs` backed by C11 `xcruncher`).
+4. **`>4,300`-Digit Formatting in `extract_prompt_math_obligations` (`studio_xcruncher_verifier.py`):** Replaced 4 `str(val)` calls with base-$10^{2000}$ `_bigint_to_decimal_safe(val)` so `>4,300`-digit obligations (`30^4096` = `6,050` digits) succeed with `sys.get_int_max_str_digits() == 4300`.
+5. **Netlib `libblas.so.3` Independence in `check_myth23_bus_clubbing` (`site/hg-format/reproduce_hg_myths.py`):** Ubuntu Noble's reference `libblas.so.3` loops `4 × sgemv` for `N=4` `SGEMM`. Updated `check_myth23_bus_clubbing` to benchmark `T=0` Deterministic Request Clubbing (`1` `64 MiB` DRAM weight haul vs `4` unclubbed hauls) plus live 4-thread `ClusterBatchQueue` coalescing (`coalesced == 3`, `backend_calls == 1`).
+6. **`reproduce_hg_myths.py --endpoint` `/v1` Suffix & Env API Key (`site/hg-format/reproduce_hg_myths.py`):** Normalized trailing `/v1` on `--endpoint` (preventing `/v1/v1/chat/completions` `404`s) and defaulted `--api-key` to `CLOVER_GATEWAY_API_KEY` / `OPENAI_API_KEY`.
+
+### 12 / 12 Live Cross-Internet Hardware Gates Passed
+- **Gate 1:** Non-loopback WAN HTTP auth (`401` unauth/wrong key; `200 OK` with `Bearer` on `RTX 3090`).
+- **Gate 2:** Public WAN `0xC107` `tsock://` HMAC enforced, slow-drip `1 B / 1.5s` severed in `5.49s`, valid `tsock://` streamed `4 B/token` IDs.
+- **Gate 3:** `VJEPA2-ViTg-HG4-16R` (`40L`, `1408`-dim) verified on Node 2 `RTX 3090` over both WAN HTTP and `tsock://`.
+- **Gate 4:** 2-node WAN `tsock://` `ReplicaPoolBackend` + `ClusterBatchQueue` clubbed `4` concurrent `T=0` callers into `1` `RTX 3090` pass (`coalesced=3`) and failed over automatically (`failovers=1`, `FAILOVER_OK`) onto Node 2 when Node 1 was killed.
+- **Gate 5:** Pinned-IP SSRF guard blocked loopback/IMDS/CGNAT (`100.64.0.1`)/RFC1918 and pinned real public GPU IPs (`198.44.98.101`, `179.41.25.132`).
+- **Gate 6:** Live `/v1/clover/solve` on Node 1 `RTX 3090` solved `2^64 + 1 = 18446744073709551617`, verified SHA-256 non-destructive test-tamper rollback (`.venv` & `api/spec/openapi.yaml` ignored), `denied_calls` separation, and append-only SQLite `reset()`.
+- **Gate 7:** `249,304`-digit exact round-trip with process-wide `sys.get_int_max_str_digits() == 4300` (`10k`-digit JSON DoS blocked in `0.02 ms`).
+- **Gate 8:** `Goedel-Prover-V2-32B-HG4-16R` (`17.68 GiB` VRAM on Node 2 `RTX 3090`) generated constructive Lean 4 proof elaborated cleanly via real `lake env lean` + Mathlib on `k3`; `#eval`/`xverdict:ok`/`sorry`/`axiom` all blocked.
+- **Gate 9:** `fold_lora_into_c35_hg4.py` same-dir, DoRA, and non-LoRA tensor guards verified with PyTorch/Safetensors on Node 1.
+- **Gate 10:** Cross-internet `kimi_pipeline_cluster.py` TCP pipeline (`179.41.25.132 -> 198.44.98.101:43456`) refused unauthenticated `0.0.0.0`, rejected forged HMAC, severed slow-drip in `6.04s`, and completed authenticated `OP_AUTH` + `OP_RESET`.
+- **Gate 11:** `reproduce_hg_myths.py --endpoint` + `--execute-model-code` passed live against Node 1 `RTX 3090` and blocked `.gi_frame.f_back` / `os.open` / `print(PASS_OK)` exploits on Linux `python3 -I -S`.
+- **Gate 12:** `k3_host_key(base_dir)` tenant isolation verified on real `k3` alongside forged `oauth:verified` confused-deputy rejection.
+
+
 
 
 

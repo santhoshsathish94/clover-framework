@@ -90,19 +90,28 @@ def k3_host_key(base_dir=None):
     env = (os.environ.get("CLOVER_K3_KEY") or os.environ.get("CLOVER_HOST_KEY") or "").strip()
     if env:
         return env
-    key_file = Path("/opt/clover-k3/web-studio/vault/k3_host.key")
+    sys_root = Path("/opt/clover-k3/web-studio")
+    if base_dir is not None:
+        bp = Path(base_dir)
+        local_kf = bp / "vault" / "k3_host.key"
+        if local_kf.is_file():
+            try:
+                return local_kf.read_text(encoding="utf-8").strip()
+            except OSError:
+                pass
+        try:
+            import vault
+            saved = (vault.get(bp, "rm_k3") or "").strip()
+            if saved:
+                return saved
+        except Exception:
+            pass
+        return ""
+    key_file = sys_root / "vault" / "k3_host.key"
     if key_file.is_file():
         try:
             return key_file.read_text(encoding="utf-8").strip()
         except OSError:
-            pass
-    if base_dir is not None:
-        try:
-            import vault
-            saved = (vault.get(base_dir, "rm_k3") or "").strip()
-            if saved:
-                return saved
-        except Exception:
             pass
     return ""
 

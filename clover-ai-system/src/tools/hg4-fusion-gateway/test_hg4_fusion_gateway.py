@@ -1724,8 +1724,20 @@ class TestStudioCapabilitiesSuite(unittest.TestCase):
                 self.assertEqual(sxc_mod.extract_prompt_math_obligations("What is 2^64 - 1?"), [])
                 self.assertEqual(sxc_mod.extract_prompt_math_obligations("What is 7^20^2?"), [])
                 self.assertEqual(sxc_mod.extract_prompt_math_obligations("Compute 20!/18!"), [])
-                #    - Unified xcruncher_exact_math("2^10") == "1024", empty tools=[] exposes 0 tools, small model gate
+                #    - Unified xcruncher_exact_math("2^10") == "1024", compound "2^64 + 1", >4300-digit obligations, and ELAN_HOME retention
                 self.assertEqual(mcp2_inst._invoke_tool("xcruncher_exact_math", {"expression": "2^10"})["result"], "1024")
+                self.assertEqual(mcp2_inst._invoke_tool("xcruncher_exact_math", {"expression": "2^64 + 1"})["result"], "18446744073709551617")
+                self.assertEqual(mcp2_inst._invoke_tool("xcruncher_exact_math", {"expression": "(3^20 - 1) // 2"})["result"], str((3**20 - 1) // 2))
+                self.assertIsNone(mcp2_inst._invoke_tool("xcruncher_exact_math", {"expression": "2^3^2"})["result"])
+                obs_6k = sxc_mod.extract_prompt_math_obligations("Compute 30^4096")
+                self.assertEqual(len(obs_6k), 1)
+                self.assertTrue(len(obs_6k[0]["exact"]) > 6000)
+                import studio_outcome_verifier as sov_mod
+                from unittest import mock as _umock
+                with _umock.patch.dict(os.environ, {"ELAN_HOME": "/mnt/nvme1/elan", "CLOVER_GATEWAY_API_KEY": "secret123"}):
+                    clean_e = sov_mod._minimal_subprocess_env()
+                    self.assertEqual(clean_e.get("ELAN_HOME"), "/mnt/nvme1/elan")
+                    self.assertNotIn("CLOVER_GATEWAY_API_KEY", clean_e)
                 from clover_4part_agent import _is_small_tier0_model
                 self.assertEqual(srv.RequestHandlerClass.agent4._openai_tools_schema([]), [])
                 self.assertTrue(_is_small_tier0_model("omni"))

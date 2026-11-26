@@ -162,8 +162,8 @@ def test_v6_4part_harness_and_telemetry():
         assert "clover-35b-a3b" not in reloaded["ready_models"], reloaded["ready_models"]
 
         # 12. Opus 5.5 Audit Regressions:
-        #     - No hardcoded fallback owner credential
-        assert k3_host_engine.k3_host_key(tmp) == "", k3_host_engine.k3_host_key(tmp)
+        #     - No hardcoded fallback owner credential (and isolated base_dir never leaks global /opt/clover-k3 vault)
+        assert k3_host_engine.k3_host_key(tmp) == "", "isolated base_dir must not leak global host key"
         #     - Precedence, floor-div/modulo, and small factorials in calculate()
         assert local_tool_packs.calculate("-2^2") == "-4", local_tool_packs.calculate("-2^2")
         assert local_tool_packs.calculate("-7 // 2") == "-4", local_tool_packs.calculate("-7 // 2")

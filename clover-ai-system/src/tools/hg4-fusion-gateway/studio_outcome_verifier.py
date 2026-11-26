@@ -305,9 +305,9 @@ def _extract_prompt_doctest_runner(prompt_text: str, preload_modules: list[str] 
 
 
 def _minimal_subprocess_env() -> dict[str, str]:
-    """Strip all gateway secrets/tokens from child environment; retain only minimal OS loader keys."""
+    """Strip all gateway secrets/tokens from child environment; retain only minimal OS/toolchain loader keys."""
     clean: dict[str, str] = {"PATH": os.environ.get("PATH", ""), "PYTHONIOENCODING": "utf-8"}
-    for k in ("SYSTEMROOT", "WINDIR", "TEMP", "TMP", "HOME", "LANG", "LC_ALL"):
+    for k in ("SYSTEMROOT", "WINDIR", "TEMP", "TMP", "HOME", "LANG", "LC_ALL", "ELAN_HOME", "LD_LIBRARY_PATH"):
         if k in os.environ:
             clean[k] = os.environ[k]
     return clean

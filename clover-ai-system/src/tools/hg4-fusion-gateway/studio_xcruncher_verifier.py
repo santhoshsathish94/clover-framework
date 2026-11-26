@@ -87,6 +87,122 @@ _MAX_NATIVE_PI_OFFSET = 500_000   # <= ~12 ms per call on native C11 libxcrunche
 _MAX_FALLBACK_PI_OFFSET = 1_500     # <= ~35 ms even at 20 digits on pure-Python BBP fallback
 _MAX_OBLIGATIONS_PER_TURN = 4
 _MAX_TOTAL_SESSION_OBLIGATIONS = 12
+_MAX_EXACT_EXPR_BITS = 700_000
+
+
+def _bigint_to_decimal_safe(v: int) -> str:
+    """Convert arbitrarily large int to decimal without mutating sys.set_int_max_str_digits()."""
+    if v < 0:
+        return "-" + _bigint_to_decimal_safe(-v)
+    if v.bit_length() <= 14_000:
+        return str(v)
+
+    def _fmt(n: int, digits: int) -> str:
+        if n.bit_length() <= 14_000:
+            s = str(n)
+            return s.zfill(digits) if digits > 0 else s
+        half = max(2000, ((digits // 2) // 2000) * 2000)
+        base = 10 ** half
+        hi, lo = divmod(n, base)
+        lo_s = _fmt(lo, half)
+        if hi == 0:
+            return lo_s.zfill(digits) if digits > 0 else lo_s.lstrip("0") or "0"
+        hi_s = _fmt(hi, digits - half if digits > half else 0)
+        return hi_s + lo_s
+
+    est_digits = int(v.bit_length() * 0.30103) + 2
+    return _fmt(v, est_digits).lstrip("0") or "0"
+
+
+def eval_exact_bigint_expr(raw_expr: str) -> tuple[str, str] | None:
+    """Safely evaluate compound exact integer expressions (`2^64 + 1`, `20! + 1`, `(3^89 - 1) // 2`) via C11 x-cruncher."""
+    import ast as _ast
+
+    s = (raw_expr or "").strip().strip("`")
+    s = re.sub(r"^(?:what\s+is|compute|calculate|evaluate)\s+", "", s, flags=re.IGNORECASE).strip()
+    s = re.sub(r"\s+(?:exactly|in\s+decimal)\s*[?.!]*$", "", s, flags=re.IGNORECASE).strip().rstrip("?.=")
+    s = s.replace(",", "").replace("_", "")
+    if not s or len(s) > 2500:
+        return None
+    if re.search(r"\^\s*[-+]?\d+\s*\^", s):
+        return None  # Reject ambiguous unparenthesized `a^b^c`
+    s = re.sub(r"(\d+)\s*!(?!=)", r"factorial(\1)", s)
+    s = s.replace("^", "**")
+    try:
+        tree = _ast.parse(s, mode="eval")
+    except SyntaxError:
+        return None
+
+    used_native = False
+
+    def _ev(node: _ast.AST, depth: int = 0) -> int:
+        nonlocal used_native
+        if depth > 40:
+            raise ValueError("expression too deep")
+        if isinstance(node, _ast.Constant) and type(node.value) is int:
+            if node.value.bit_length() > _MAX_EXACT_EXPR_BITS:
+                raise ValueError("integer too large")
+            return node.value
+        if isinstance(node, _ast.UnaryOp) and isinstance(node.op, (_ast.UAdd, _ast.USub)):
+            v = _ev(node.operand, depth + 1)
+            return v if isinstance(node.op, _ast.UAdd) else -v
+        if isinstance(node, _ast.BinOp):
+            lv = _ev(node.left, depth + 1)
+            rv = _ev(node.right, depth + 1)
+            if isinstance(node.op, _ast.Add):
+                out = lv + rv
+            elif isinstance(node.op, _ast.Sub):
+                out = lv - rv
+            elif isinstance(node.op, _ast.Mult):
+                if max(lv.bit_length(), rv.bit_length()) >= 64:
+                    out, b = compute_mul_exact(lv, rv)
+                    used_native = used_native or ("xcruncher" in b)
+                else:
+                    out = lv * rv
+            elif isinstance(node.op, _ast.FloorDiv):
+                if rv == 0:
+                    raise ValueError("division by zero")
+                out = lv // rv
+            elif isinstance(node.op, _ast.Mod):
+                if rv == 0:
+                    raise ValueError("modulo by zero")
+                out = lv % rv
+            elif isinstance(node.op, _ast.Pow):
+                if rv < 0 or rv > 200_000:
+                    raise ValueError("exponent out of exact integer bounds")
+                if abs(lv) > 1 and rv * max(1, lv.bit_length() - 1) > _MAX_EXACT_EXPR_BITS:
+                    raise ValueError("power result exceeds exact bit budget")
+                out, b = compute_pow_exact(lv, rv)
+                used_native = used_native or ("xcruncher" in b)
+            else:
+                raise ValueError("unsupported operator")
+            if out.bit_length() > _MAX_EXACT_EXPR_BITS:
+                raise ValueError("intermediate exceeds bit budget")
+            return out
+        if isinstance(node, _ast.Call) and isinstance(node.func, _ast.Name) and not node.keywords:
+            fn = node.func.id.lower()
+            if fn == "factorial" and len(node.args) == 1:
+                nv = _ev(node.args[0], depth + 1)
+                if nv < 0 or nv > 50_000:
+                    raise ValueError("factorial out of bounds")
+                if nv >= 20:
+                    out, b = compute_factorial_exact(nv)
+                    used_native = used_native or ("xcruncher" in b)
+                    return out
+                return math.factorial(nv)
+            if fn == "gcd" and len(node.args) == 2:
+                return math.gcd(_ev(node.args[0], depth + 1), _ev(node.args[1], depth + 1))
+            if fn == "abs" and len(node.args) == 1:
+                return abs(_ev(node.args[0], depth + 1))
+        raise ValueError("unsupported AST node")
+
+    try:
+        val = _ev(tree.body)
+    except Exception:
+        return None
+    xb = _load_xcruncher_bridge()
+    backend = str(xb.active_isa_info().get("backend", "xcruncher")) if (used_native and xb is not None) else "exact-bigint-ast"
+    return _bigint_to_decimal_safe(val), backend
 
 
 @functools.lru_cache(maxsize=512)
@@ -178,7 +294,7 @@ def extract_prompt_math_obligations(prompt_text: str) -> list[dict[str, Any]]:
                 obligations.append({
                     "kind": "mersenne_mul",
                     "expr": f"(2^{p} - 1) * (2^{q} - 1)",
-                    "exact": str(val),
+                    "exact": _bigint_to_decimal_safe(val),
                     "backend": backend,
                 })
 
@@ -190,7 +306,7 @@ def extract_prompt_math_obligations(prompt_text: str) -> list[dict[str, Any]]:
             obligations.append({
                 "kind": "big_mul",
                 "expr": f"{a} * {b}",
-                "exact": str(val),
+                "exact": _bigint_to_decimal_safe(val),
                 "backend": backend,
             })
 
@@ -207,7 +323,7 @@ def extract_prompt_math_obligations(prompt_text: str) -> list[dict[str, Any]]:
                 obligations.append({
                     "kind": "big_pow",
                     "expr": f"{a}^{b}",
-                    "exact": str(val),
+                    "exact": _bigint_to_decimal_safe(val),
                     "backend": backend,
                 })
 
@@ -225,7 +341,7 @@ def extract_prompt_math_obligations(prompt_text: str) -> list[dict[str, Any]]:
                 obligations.append({
                     "kind": "factorial",
                     "expr": f"{n}!",
-                    "exact": str(val),
+                    "exact": _bigint_to_decimal_safe(val),
                     "backend": backend,
                 })
 
